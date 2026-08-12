@@ -158,13 +158,13 @@ void main() {
     });
 
     testWidgets(
-      'negotiable=false, targetPriceEur=35 → texte "Prendre à 35,00 €" visible',
+      'negotiable=false, targetPriceEur=35 → texte "Prendre à 35,00 €" visible',
       (tester) async {
         await tester.pumpWidget(wrap(_firmRequest(targetPriceEur: 35)));
         await tester.pumpAndSettle();
 
         expect(find.textContaining('Prendre à'), findsOneWidget);
-        expect(find.textContaining('Prendre à 35,00 €'), findsOneWidget);
+        expect(find.textContaining('Prendre à 35,00 €'), findsOneWidget);
       },
     );
 

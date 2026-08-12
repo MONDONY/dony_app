@@ -26,12 +26,20 @@ abstract final class AppTheme {
       onPrimary: hc && !isLight
           ? DonyColors.onBrandHcDark
           : DonyColors.textOnBrand,
-      primaryContainer: isLight ? DonyColors.primarySoft : DonyColors.blueDark50,
-      onPrimaryContainer: isLight ? DonyColors.primaryHover : DonyColors.blueDark500,
+      primaryContainer: isLight
+          ? DonyColors.primarySoft
+          : DonyColors.blueDark50,
+      onPrimaryContainer: isLight
+          ? DonyColors.primaryHover
+          : DonyColors.blueDark500,
       secondary: isLight ? DonyColors.accent : DonyColors.terraDark500,
       onSecondary: DonyColors.textOnBrand,
-      secondaryContainer: isLight ? DonyColors.accentSoft : DonyColors.terraDark50,
-      onSecondaryContainer: isLight ? DonyColors.terra700 : DonyColors.terraDark500,
+      secondaryContainer: isLight
+          ? DonyColors.accentSoft
+          : DonyColors.terraDark50,
+      onSecondaryContainer: isLight
+          ? DonyColors.terra700
+          : DonyColors.terraDark500,
       surface: hc
           ? (isLight ? DonyColors.surfaceHc : DonyColors.surfaceHcDark)
           : (isLight ? DonyColors.surface : DonyColors.neutralDark100),
@@ -41,12 +49,20 @@ abstract final class AppTheme {
       onSurfaceVariant: hc
           ? (isLight ? DonyColors.textMutedHc : DonyColors.textMutedHcDark)
           : (isLight ? DonyColors.textMuted : DonyColors.neutralDark500),
-      surfaceContainerHighest: isLight ? DonyColors.neutral100 : DonyColors.neutralDark200,
-      surfaceContainerLow: isLight ? DonyColors.bgApp : DonyColors.neutralDark50,
+      surfaceContainerHighest: isLight
+          ? DonyColors.neutral100
+          : DonyColors.neutralDark200,
+      surfaceContainerLow: isLight
+          ? DonyColors.bgApp
+          : DonyColors.neutralDark50,
       outline: hc
-          ? (isLight ? DonyColors.borderDefaultHc : DonyColors.borderDefaultHcDark)
+          ? (isLight
+                ? DonyColors.borderDefaultHc
+                : DonyColors.borderDefaultHcDark)
           : (isLight ? DonyColors.borderDefault : DonyColors.neutralDark300),
-      outlineVariant: isLight ? DonyColors.neutral100 : DonyColors.neutralDark200,
+      outlineVariant: isLight
+          ? DonyColors.neutral100
+          : DonyColors.neutralDark200,
       error: isLight ? DonyColors.danger500 : DonyColors.dangerDark500,
       // Le rouge d'erreur du thème sombre est clair : un libellé blanc dessus
       // ne fait que 3.55:1. Le noir y monte à 5.91:1. Contrairement à
@@ -54,7 +70,9 @@ abstract final class AppTheme {
       // sur un dégradé, donc la bascule est sans risque.
       onError: isLight ? DonyColors.textOnBrand : DonyColors.onBrandHcDark,
       errorContainer: isLight ? DonyColors.danger50 : DonyColors.dangerDark50,
-      onErrorContainer: isLight ? DonyColors.danger500 : DonyColors.dangerDark500,
+      onErrorContainer: isLight
+          ? DonyColors.danger500
+          : DonyColors.dangerDark500,
       shadow: isLight ? DonyColors.shadow : DonyColors.shadowDark,
       inverseSurface: isLight ? DonyColors.ink800 : DonyColors.neutral0,
       onInverseSurface: isLight ? DonyColors.neutral0 : DonyColors.textPrimary,
@@ -133,7 +151,9 @@ abstract final class AppTheme {
           borderRadius: BorderRadius.circular(DonyRadius.md),
           borderSide: BorderSide(color: cs.error),
         ),
-        labelStyle: DonyTypography.textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+        labelStyle: DonyTypography.textTheme.bodyMedium?.copyWith(
+          color: cs.onSurfaceVariant,
+        ),
         // Un placeholder est du texte, donc 4.5:1. neutral400 n'en donnait que
         // 2.54:1 sur blanc ; textSubtle (neutral500) monte à 4.71:1.
         hintStyle: DonyTypography.textTheme.bodyMedium?.copyWith(
@@ -147,8 +167,7 @@ abstract final class AppTheme {
           // de marque allant du bleu très sombre au bleu clair, où le noir
           // serait illisible. Ici le fond est l'aplat `cs.primary`, connu, et
           // en thème sombre il est trop clair pour un libellé blanc (3.28:1).
-          foregroundColor:
-              isLight ? cs.onPrimary : DonyColors.onBrandHcDark,
+          foregroundColor: isLight ? cs.onPrimary : DonyColors.onBrandHcDark,
           minimumSize: const Size.fromHeight(52),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(DonyRadius.lg),
@@ -198,10 +217,12 @@ abstract final class AppTheme {
         thumbShape: const RoundSliderThumbShape(),
       ),
       pageTransitionsTheme: a11y.reduceMotion
-          ? const PageTransitionsTheme(builders: {
-              TargetPlatform.android: _NoTransitionsBuilder(),
-              TargetPlatform.iOS: _NoTransitionsBuilder(),
-            })
+          ? const PageTransitionsTheme(
+              builders: {
+                TargetPlatform.android: _NoTransitionsBuilder(),
+                TargetPlatform.iOS: _NoTransitionsBuilder(),
+              },
+            )
           : const PageTransitionsTheme(),
     );
   }
@@ -221,6 +242,5 @@ class _NoTransitionsBuilder extends PageTransitionsBuilder {
     Animation<double> animation,
     Animation<double> secondaryAnimation,
     Widget child,
-  ) =>
-      child;
+  ) => child;
 }

@@ -47,9 +47,9 @@ class _MesAbonnementsScreenState extends State<MesAbonnementsScreen> {
               title: 'Erreur de chargement',
               description: state.error ?? 'Une erreur est survenue.',
               actionLabel: 'Réessayer',
-              onAction: () => context
-                  .read<SubscriptionsBloc>()
-                  .add(const LoadSubscriptions()),
+              onAction: () => context.read<SubscriptionsBloc>().add(
+                const LoadSubscriptions(),
+              ),
             );
           }
           if (state.items.isEmpty) {
@@ -64,8 +64,8 @@ class _MesAbonnementsScreenState extends State<MesAbonnementsScreen> {
           final filtered = q.isEmpty
               ? state.items
               : state.items
-                  .where((i) => i.travelerName.toLowerCase().contains(q))
-                  .toList();
+                    .where((i) => i.travelerName.toLowerCase().contains(q))
+                    .toList();
           final recent = filtered.where((i) => i.hasNew).toList();
           final others = filtered.where((i) => !i.hasNew).toList();
 
@@ -111,9 +111,9 @@ class _MesAbonnementsScreenState extends State<MesAbonnementsScreen> {
         motion: const DrawerMotion(),
         children: [
           CustomSlidableAction(
-            onPressed: (_) => context
-                .read<SubscriptionsBloc>()
-                .add(UnsubscribeTraveler(item.travelerId)),
+            onPressed: (_) => context.read<SubscriptionsBloc>().add(
+              UnsubscribeTraveler(item.travelerId),
+            ),
             backgroundColor: Theme.of(context).colorScheme.error,
             foregroundColor: Colors.white,
             child: Column(
@@ -124,10 +124,9 @@ class _MesAbonnementsScreenState extends State<MesAbonnementsScreen> {
                 Text(
                   'Désabonner',
                   textAlign: TextAlign.center,
-                  style: Theme.of(context)
-                      .textTheme
-                      .labelSmall
-                      ?.copyWith(color: Colors.white),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.labelSmall?.copyWith(color: Colors.white),
                 ),
               ],
             ),
@@ -137,9 +136,9 @@ class _MesAbonnementsScreenState extends State<MesAbonnementsScreen> {
       child: SubscriptionTile(
         item: item,
         onTap: () => context.push('/travelers/${item.travelerId}'),
-        onToggleBell: () => context
-            .read<SubscriptionsBloc>()
-            .add(ToggleSubscriptionPush(item.travelerId, !item.pushEnabled)),
+        onToggleBell: () => context.read<SubscriptionsBloc>().add(
+          ToggleSubscriptionPush(item.travelerId, !item.pushEnabled),
+        ),
       ),
     );
   }
@@ -161,9 +160,9 @@ class _SectionLabel extends StatelessWidget {
       child: Text(
         label.toUpperCase(),
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: cs.onSurfaceVariant,
-              fontWeight: FontWeight.w800,
-            ),
+          color: cs.onSurfaceVariant,
+          fontWeight: FontWeight.w800,
+        ),
       ),
     );
   }
@@ -219,7 +218,10 @@ class _StoryAvatar extends StatelessWidget {
                     end: Alignment.bottomRight,
                   ),
                 ),
-                child: DonyAvatar(name: item.travelerName, imageUrl: item.avatarUrl),
+                child: DonyAvatar(
+                  name: item.travelerName,
+                  imageUrl: item.avatarUrl,
+                ),
               ),
               const SizedBox(height: DonySpacing.xs),
               Text(

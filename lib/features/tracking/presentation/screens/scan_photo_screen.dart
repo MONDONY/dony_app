@@ -56,8 +56,9 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
       if (permission == LocationPermission.always ||
           permission == LocationPermission.whileInUse) {
         _position = await Geolocator.getCurrentPosition(
-          locationSettings:
-              const LocationSettings(accuracy: LocationAccuracy.high),
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.high,
+          ),
         );
       }
     } catch (_) {}
@@ -158,8 +159,7 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
                       children: [
                         IconButton(
                           tooltip: 'Fermer',
-                          icon: const DonyIcon('x',
-                              color: DonyColors.neutral0),
+                          icon: const DonyIcon('x', color: DonyColors.neutral0),
                           onPressed: () => context.pop(),
                         ),
                         Expanded(
@@ -192,8 +192,11 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const DonyIcon('package',
-                              color: DonyColors.neutral0, size: 13),
+                          const DonyIcon(
+                            'package',
+                            color: DonyColors.neutral0,
+                            size: 13,
+                          ),
                           const SizedBox(width: DonySpacing.xs),
                           Text(
                             widget.packageLabel,
@@ -218,18 +221,25 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
                             ),
                             decoration: BoxDecoration(
                               color: cs.primary.withValues(alpha: 0.75),
-                              borderRadius:
-                                  BorderRadius.circular(DonyRadius.full),
+                              borderRadius: BorderRadius.circular(
+                                DonyRadius.full,
+                              ),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 if (etapeInfo.$3 != null)
-                                  DonyIcon(etapeInfo.$3!,
-                                      color: DonyColors.neutral0, size: 12)
+                                  DonyIcon(
+                                    etapeInfo.$3!,
+                                    color: DonyColors.neutral0,
+                                    size: 12,
+                                  )
                                 else
-                                  DonyIcon(etapeInfo.$2!,
-                                      color: DonyColors.neutral0, size: 12),
+                                  DonyIcon(
+                                    etapeInfo.$2!,
+                                    color: DonyColors.neutral0,
+                                    size: 12,
+                                  ),
                                 const SizedBox(width: DonySpacing.xs),
                                 Text(
                                   'Étape : ${etapeInfo.$1}',
@@ -250,14 +260,18 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
                             decoration: BoxDecoration(
                               color: (_photoRequired ? cs.error : cs.warning)
                                   .withValues(alpha: 0.75),
-                              borderRadius:
-                                  BorderRadius.circular(DonyRadius.full),
+                              borderRadius: BorderRadius.circular(
+                                DonyRadius.full,
+                              ),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const DonyIcon('camera',
-                                    color: DonyColors.neutral0, size: 11),
+                                const DonyIcon(
+                                  'camera',
+                                  color: DonyColors.neutral0,
+                                  size: 11,
+                                ),
                                 const SizedBox(width: 2),
                                 Text(
                                   _photoRequired
@@ -279,9 +293,7 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
             ),
 
             // Guide lignes (centre)
-            Center(
-              child: _PhotoFrame(),
-            ),
+            Center(child: _PhotoFrame()),
 
             // Actions bas
             Positioned(
@@ -325,8 +337,9 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
                               vertical: DonySpacing.base,
                             ),
                             shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(DonyRadius.lg),
+                              borderRadius: BorderRadius.circular(
+                                DonyRadius.lg,
+                              ),
                             ),
                           ),
                         ),
@@ -340,19 +353,20 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
                             style: OutlinedButton.styleFrom(
                               foregroundColor: DonyColors.neutral0,
                               side: BorderSide(
-                                color:
-                                    DonyColors.neutral0.withValues(alpha: 0.4),
+                                color: DonyColors.neutral0.withValues(
+                                  alpha: 0.4,
+                                ),
                               ),
                               padding: const EdgeInsets.symmetric(
                                 vertical: DonySpacing.md,
                               ),
                               shape: RoundedRectangleBorder(
-                                borderRadius:
-                                    BorderRadius.circular(DonyRadius.lg),
+                                borderRadius: BorderRadius.circular(
+                                  DonyRadius.lg,
+                                ),
                               ),
                             ),
-                            child:
-                                const Text('Passer : continuer sans photo'),
+                            child: const Text('Passer : continuer sans photo'),
                           ),
                         ),
                       ],
@@ -409,12 +423,21 @@ class _FramePainter extends CustomPainter {
     const len = 24.0;
     final corners = [
       (Offset.zero, Offset(len, 0), Offset(0, len)),
-      (Offset(size.width, 0), Offset(size.width - len, 0),
-          Offset(size.width, len)),
-      (Offset(0, size.height), Offset(len, size.height),
-          Offset(0, size.height - len)),
-      (Offset(size.width, size.height), Offset(size.width - len, size.height),
-          Offset(size.width, size.height - len)),
+      (
+        Offset(size.width, 0),
+        Offset(size.width - len, 0),
+        Offset(size.width, len),
+      ),
+      (
+        Offset(0, size.height),
+        Offset(len, size.height),
+        Offset(0, size.height - len),
+      ),
+      (
+        Offset(size.width, size.height),
+        Offset(size.width - len, size.height),
+        Offset(size.width, size.height - len),
+      ),
     ];
 
     for (final (origin, h, v) in corners) {

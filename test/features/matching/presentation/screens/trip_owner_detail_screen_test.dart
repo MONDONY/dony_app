@@ -107,10 +107,12 @@ void main() {
     cancelBloc = _MockCancellationBloc();
     analytics = _MockAnalyticsService();
 
-    when(() => analytics.logEvent(any(), properties: any(named: 'properties')))
-        .thenAnswer((_) async {});
-    when(() => analytics.logScreen(any(), properties: any(named: 'properties')))
-        .thenAnswer((_) async {});
+    when(
+      () => analytics.logEvent(any(), properties: any(named: 'properties')),
+    ).thenAnswer((_) async {});
+    when(
+      () => analytics.logScreen(any(), properties: any(named: 'properties')),
+    ).thenAnswer((_) async {});
 
     when(() => bidBloc.state).thenReturn(BidListLoaded(const []));
     whenListen(
@@ -119,8 +121,11 @@ void main() {
       initialState: BidListLoaded(const []),
     );
     when(() => cancelBloc.state).thenReturn(CancellationInitial());
-    whenListen(cancelBloc, const Stream<CancellationState>.empty(),
-        initialState: CancellationInitial());
+    whenListen(
+      cancelBloc,
+      const Stream<CancellationState>.empty(),
+      initialState: CancellationInitial(),
+    );
 
     if (getIt.isRegistered<AnalyticsService>()) {
       getIt.unregister<AnalyticsService>();
@@ -137,11 +142,13 @@ void main() {
     cancelBloc.close();
   });
 
-  testWidgets('affiche l\'AppBar Trajet, le bouton bug et le corridor',
-      (tester) async {
+  testWidgets('affiche l\'AppBar Trajet, le bouton bug et le corridor', (
+    tester,
+  ) async {
     final announcement = _makeAnnouncement();
-    when(() => annBloc.state)
-        .thenReturn(AnnouncementDetailLoaded(announcement));
+    when(
+      () => annBloc.state,
+    ).thenReturn(AnnouncementDetailLoaded(announcement));
     whenListen(
       annBloc,
       Stream<AnnouncementState>.value(AnnouncementDetailLoaded(announcement)),
@@ -149,7 +156,11 @@ void main() {
     );
 
     await _pump(
-        tester, annBloc: annBloc, bidBloc: bidBloc, cancelBloc: cancelBloc);
+      tester,
+      annBloc: annBloc,
+      bidBloc: bidBloc,
+      cancelBloc: cancelBloc,
+    );
     await tester.pumpAndSettle();
 
     expect(find.byType(DonyAppBar), findsOneWidget);
@@ -159,19 +170,25 @@ void main() {
     expect(find.text('Paris → Dakar'), findsOneWidget);
   });
 
-  testWidgets('affiche un loader quand le détail charge sans annonce initiale',
-      (tester) async {
-    when(() => annBloc.state).thenReturn(AnnouncementLoading());
-    whenListen(
-      annBloc,
-      Stream<AnnouncementState>.value(AnnouncementLoading()),
-      initialState: AnnouncementLoading(),
-    );
+  testWidgets(
+    'affiche un loader quand le détail charge sans annonce initiale',
+    (tester) async {
+      when(() => annBloc.state).thenReturn(AnnouncementLoading());
+      whenListen(
+        annBloc,
+        Stream<AnnouncementState>.value(AnnouncementLoading()),
+        initialState: AnnouncementLoading(),
+      );
 
-    await _pump(
-        tester, annBloc: annBloc, bidBloc: bidBloc, cancelBloc: cancelBloc);
-    await tester.pump();
+      await _pump(
+        tester,
+        annBloc: annBloc,
+        bidBloc: bidBloc,
+        cancelBloc: cancelBloc,
+      );
+      await tester.pump();
 
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
-  });
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    },
+  );
 }

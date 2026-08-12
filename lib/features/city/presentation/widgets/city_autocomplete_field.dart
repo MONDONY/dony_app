@@ -368,8 +368,8 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
     // et la décoder à chaque build serait du travail jeté.
     final recents =
         role != null && _focusNode.hasFocus && _controller.text.isEmpty
-            ? getIt<RecentCityStore>().read(role)
-            : const <CityModel>[];
+        ? getIt<RecentCityStore>().read(role)
+        : const <CityModel>[];
     if (recents.isNotEmpty) {
       _notifySuggestions(true);
       return _RecentCityList(cities: recents, onTap: _onCitySelected);
@@ -379,11 +379,13 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
       builder: (ctx, state) {
         final Widget? suggestions = switch (state) {
           CitySearchLoading() => Padding(
-              padding: const EdgeInsets.symmetric(vertical: DonySpacing.sm),
-              child: LinearProgressIndicator(color: cs.primary),
-            ),
-          CitySearchLoaded(:final cities) when cities.isNotEmpty =>
-            _ResultList(cities: cities, onTap: _onCitySelected),
+            padding: const EdgeInsets.symmetric(vertical: DonySpacing.sm),
+            child: LinearProgressIndicator(color: cs.primary),
+          ),
+          CitySearchLoaded(:final cities) when cities.isNotEmpty => _ResultList(
+            cities: cities,
+            onTap: _onCitySelected,
+          ),
           _ => null,
         };
         // Visibilité dérivée du rendu, pas ré-affirmée à chaque branche : une
@@ -413,7 +415,11 @@ class _SuggestionPanel extends StatelessWidget {
         borderRadius: BorderRadius.circular(DonyRadius.md),
         border: Border.all(color: cs.outline),
         boxShadow: [
-          BoxShadow(color: cs.shadow, blurRadius: 8, offset: const Offset(0, 4)),
+          BoxShadow(
+            color: cs.shadow,
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
       child: child,
@@ -494,7 +500,11 @@ class _RecentCityList extends StatelessWidget {
           for (final city in cities)
             _CitySuggestionTile(
               city: city,
-              leading: DonyIcon('history', size: 18, color: cs.onSurfaceVariant),
+              leading: DonyIcon(
+                'history',
+                size: 18,
+                color: cs.onSurfaceVariant,
+              ),
               onTap: () => onTap(city),
             ),
         ],

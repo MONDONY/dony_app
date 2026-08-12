@@ -24,8 +24,8 @@ class DonyStepIndicator extends StatelessWidget {
     super.key,
     required List<String> this.steps,
     required this.current,
-  })  : total = 0,
-        variant = DonyStepVariant.labeled;
+  }) : total = 0,
+       variant = DonyStepVariant.labeled;
 
   final int total;
   final int current;
@@ -35,9 +35,12 @@ class DonyStepIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return switch (variant) {
-      DonyStepVariant.dots   => _DotsIndicator(total: total, current: current),
-      DonyStepVariant.bar    => _BarIndicator(total: total, current: current),
-      DonyStepVariant.labeled => _LabeledIndicator(steps: steps!, current: current),
+      DonyStepVariant.dots => _DotsIndicator(total: total, current: current),
+      DonyStepVariant.bar => _BarIndicator(total: total, current: current),
+      DonyStepVariant.labeled => _LabeledIndicator(
+        steps: steps!,
+        current: current,
+      ),
     };
   }
 }
@@ -118,11 +121,11 @@ class _LabeledIndicator extends StatelessWidget {
 
     return Row(
       children: List.generate(steps.length, (i) {
-        final done   = i < current;
+        final done = i < current;
         final active = i == current;
 
         final circleColor = done || active ? cs.primary : cs.outline;
-        final labelColor  = active ? cs.primary : cs.onSurfaceVariant;
+        final labelColor = active ? cs.primary : cs.onSurfaceVariant;
 
         return Expanded(
           child: Row(
@@ -140,7 +143,9 @@ class _LabeledIndicator extends StatelessWidget {
                       child: Icon(
                         done ? Icons.check_rounded : null,
                         size: 14,
-                        color: (done || active) ? cs.onPrimary : cs.onSurfaceVariant,
+                        color: (done || active)
+                            ? cs.onPrimary
+                            : cs.onSurfaceVariant,
                       ),
                     ),
                     const SizedBox(height: DonySpacing.xs),

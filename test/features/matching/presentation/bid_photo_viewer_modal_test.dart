@@ -10,10 +10,13 @@ void main() {
       BidPhoto(id: '2', url: 'https://x/2.jpg'),
       BidPhoto(id: '3', url: 'https://x/3.jpg'),
     ];
-    await tester.pumpWidget(MaterialApp(
-      home: const Scaffold(
-          body: BidPhotoViewerModal(photos: photos, initialIndex: 1)),
-    ));
+    await tester.pumpWidget(
+      MaterialApp(
+        home: const Scaffold(
+          body: BidPhotoViewerModal(photos: photos, initialIndex: 1),
+        ),
+      ),
+    );
     await tester.pump();
     expect(find.text('Photo 2 / 3'), findsOneWidget);
   });

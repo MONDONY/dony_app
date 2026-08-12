@@ -34,7 +34,8 @@ class AddressDefaultToggle extends StatelessWidget {
         ),
         child: Row(
           children: [
-            DonyIcon('star',
+            DonyIcon(
+              'star',
               color: value ? activeColor : cs.onSurfaceVariant,
               size: 20,
             ),

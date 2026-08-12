@@ -66,17 +66,14 @@ void main() {
       'emits [QrLoading, QrLoaded] on success',
       build: buildBloc,
       setUp: () {
-        when(() => mockRepo.getQrCode('bid-1'))
-            .thenAnswer((_) async => _qrCode);
+        when(
+          () => mockRepo.getQrCode('bid-1'),
+        ).thenAnswer((_) async => _qrCode);
       },
       act: (b) => b.add(TrackingQrCodeRequested('bid-1')),
       expect: () => [
         isA<TrackingQrLoading>(),
-        isA<TrackingQrLoaded>().having(
-          (s) => s.qrCode.bidId,
-          'bidId',
-          'bid-1',
-        ),
+        isA<TrackingQrLoaded>().having((s) => s.qrCode.bidId, 'bidId', 'bid-1'),
       ],
     );
 
@@ -84,14 +81,10 @@ void main() {
       'emits [QrLoading, QrError] on failure',
       build: buildBloc,
       setUp: () {
-        when(() => mockRepo.getQrCode(any()))
-            .thenThrow(Exception('not found'));
+        when(() => mockRepo.getQrCode(any())).thenThrow(Exception('not found'));
       },
       act: (b) => b.add(TrackingQrCodeRequested('bid-x')),
-      expect: () => [
-        isA<TrackingQrLoading>(),
-        isA<TrackingQrError>(),
-      ],
+      expect: () => [isA<TrackingQrLoading>(), isA<TrackingQrError>()],
     );
   });
 
@@ -102,8 +95,9 @@ void main() {
       'emits [SearchLoading, SearchLoaded] on success',
       build: buildBloc,
       setUp: () {
-        when(() => mockRepo.searchByTrackingNumber('DON-ABC123'))
-            .thenAnswer((_) async => _searchResult);
+        when(
+          () => mockRepo.searchByTrackingNumber('DON-ABC123'),
+        ).thenAnswer((_) async => _searchResult);
       },
       act: (b) => b.add(TrackingSearchRequested('DON-ABC123')),
       expect: () => [
@@ -120,14 +114,12 @@ void main() {
       'emits [SearchLoading, SearchError] on failure',
       build: buildBloc,
       setUp: () {
-        when(() => mockRepo.searchByTrackingNumber(any()))
-            .thenThrow(Exception('not found'));
+        when(
+          () => mockRepo.searchByTrackingNumber(any()),
+        ).thenThrow(Exception('not found'));
       },
       act: (b) => b.add(TrackingSearchRequested('DON-XXXX')),
-      expect: () => [
-        isA<TrackingSearchLoading>(),
-        isA<TrackingSearchError>(),
-      ],
+      expect: () => [isA<TrackingSearchLoading>(), isA<TrackingSearchError>()],
     );
   });
 
@@ -138,8 +130,9 @@ void main() {
       'emits [EventsLoading, EventsLoaded] on success',
       build: buildBloc,
       setUp: () {
-        when(() => mockRepo.getEvents('bid-1'))
-            .thenAnswer((_) async => [_event]);
+        when(
+          () => mockRepo.getEvents('bid-1'),
+        ).thenAnswer((_) async => [_event]);
       },
       act: (b) => b.add(TrackingEventsRequested('bid-1')),
       expect: () => [
@@ -156,22 +149,19 @@ void main() {
       'emits [EventsLoading, EventsError] on generic failure',
       build: buildBloc,
       setUp: () {
-        when(() => mockRepo.getEvents(any()))
-            .thenThrow(Exception('server error'));
+        when(
+          () => mockRepo.getEvents(any()),
+        ).thenThrow(Exception('server error'));
       },
       act: (b) => b.add(TrackingEventsRequested('bid-x')),
-      expect: () => [
-        isA<TrackingEventsLoading>(),
-        isA<TrackingEventsError>(),
-      ],
+      expect: () => [isA<TrackingEventsLoading>(), isA<TrackingEventsError>()],
     );
 
     blocTest<TrackingBloc, TrackingState>(
       'emits [EventsLoading, EventsError] on ForbiddenException',
       build: buildBloc,
       setUp: () {
-        when(() => mockRepo.getEvents(any()))
-            .thenThrow(ForbiddenException());
+        when(() => mockRepo.getEvents(any())).thenThrow(ForbiddenException());
       },
       act: (b) => b.add(TrackingEventsRequested('bid-no-access')),
       expect: () => [
@@ -188,8 +178,9 @@ void main() {
       'emits [EventsLoading, EventsError] on UnauthorizedException',
       build: buildBloc,
       setUp: () {
-        when(() => mockRepo.getEvents(any()))
-            .thenThrow(const UnauthorizedException());
+        when(
+          () => mockRepo.getEvents(any()),
+        ).thenThrow(const UnauthorizedException());
       },
       act: (b) => b.add(TrackingEventsRequested('bid-expired')),
       expect: () => [
@@ -205,16 +196,18 @@ void main() {
     blocTest<TrackingBloc, TrackingState>(
       '404 → TrackingEventsError avec NotFoundException',
       build: buildBloc,
-      setUp: () => when(() => mockRepo.getEvents(any()))
-          .thenThrow(DioException(
-            requestOptions: RequestOptions(path: '/bids/bid-1/events'),
-            error: const NotFoundException(),
-          )),
+      setUp: () => when(() => mockRepo.getEvents(any())).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(path: '/bids/bid-1/events'),
+          error: const NotFoundException(),
+        ),
+      ),
       act: (bloc) => bloc.add(TrackingEventsRequested('bid-1')),
       expect: () => [
         isA<TrackingEventsLoading>(),
         predicate<TrackingState>(
-            (s) => s is TrackingEventsError && s.error is NotFoundException),
+          (s) => s is TrackingEventsError && s.error is NotFoundException,
+        ),
       ],
     );
   });
@@ -226,17 +219,14 @@ void main() {
       'emits [ConfirmCodeLoading, ConfirmCodeLoaded] on success',
       build: buildBloc,
       setUp: () {
-        when(() => mockRepo.getConfirmationCode('bid-1'))
-            .thenAnswer((_) async => (code: '472', expiresAt: null));
+        when(
+          () => mockRepo.getConfirmationCode('bid-1'),
+        ).thenAnswer((_) async => (code: '472', expiresAt: null));
       },
       act: (b) => b.add(TrackingConfirmCodeRequested('bid-1')),
       expect: () => [
         isA<TrackingConfirmCodeLoading>(),
-        isA<TrackingConfirmCodeLoaded>().having(
-          (s) => s.code,
-          'code',
-          '472',
-        ),
+        isA<TrackingConfirmCodeLoaded>().having((s) => s.code, 'code', '472'),
       ],
     );
 
@@ -244,8 +234,9 @@ void main() {
       'emits [ConfirmCodeLoading, ConfirmCodeError] on failure',
       build: buildBloc,
       setUp: () {
-        when(() => mockRepo.getConfirmationCode(any()))
-            .thenThrow(Exception('error'));
+        when(
+          () => mockRepo.getConfirmationCode(any()),
+        ).thenThrow(Exception('error'));
       },
       act: (b) => b.add(TrackingConfirmCodeRequested('bid-x')),
       expect: () => [
@@ -262,13 +253,11 @@ void main() {
       'emits [DeliveryConfirmLoading, DeliveryConfirmSuccess] on success',
       build: buildBloc,
       setUp: () {
-        when(() => mockRepo.confirmDelivery(
-              bidId: 'bid-1',
-              code: '4721',
-            )).thenAnswer((_) async => _event);
+        when(
+          () => mockRepo.confirmDelivery(bidId: 'bid-1', code: '4721'),
+        ).thenAnswer((_) async => _event);
       },
-      act: (b) =>
-          b.add(ConfirmDeliveryRequested(bidId: 'bid-1', code: '4721')),
+      act: (b) => b.add(ConfirmDeliveryRequested(bidId: 'bid-1', code: '4721')),
       expect: () => [
         isA<DeliveryConfirmLoading>(),
         isA<DeliveryConfirmSuccess>().having(
@@ -283,13 +272,14 @@ void main() {
       'emits [DeliveryConfirmLoading, DeliveryConfirmError] on failure',
       build: buildBloc,
       setUp: () {
-        when(() => mockRepo.confirmDelivery(
-              bidId: any(named: 'bidId'),
-              code: any(named: 'code'),
-            )).thenThrow(const ValidationException('Code invalide'));
+        when(
+          () => mockRepo.confirmDelivery(
+            bidId: any(named: 'bidId'),
+            code: any(named: 'code'),
+          ),
+        ).thenThrow(const ValidationException('Code invalide'));
       },
-      act: (b) =>
-          b.add(ConfirmDeliveryRequested(bidId: 'bid-1', code: '9999')),
+      act: (b) => b.add(ConfirmDeliveryRequested(bidId: 'bid-1', code: '9999')),
       expect: () => [
         isA<DeliveryConfirmLoading>(),
         isA<DeliveryConfirmError>().having(
@@ -309,14 +299,9 @@ void main() {
     blocTest<TrackingBloc, TrackingState>(
       'emits [QrScanSubmitting, QrScanError] when connectivity platform channel unavailable',
       build: buildBloc,
-      act: (b) => b.add(QrScanSubmitRequested(
-        bidId: 'bid-1',
-        eventType: 'TRANSIT',
-      )),
-      expect: () => [
-        isA<QrScanSubmitting>(),
-        isA<QrScanError>(),
-      ],
+      act: (b) =>
+          b.add(QrScanSubmitRequested(bidId: 'bid-1', eventType: 'TRANSIT')),
+      expect: () => [isA<QrScanSubmitting>(), isA<QrScanError>()],
     );
   });
 
@@ -331,10 +316,7 @@ void main() {
         when(() => mockSync.syncAll()).thenAnswer((_) async {});
       },
       act: (b) => b.add(OfflineSyncRequested()),
-      expect: () => [
-        isA<OfflineSyncInProgress>(),
-        isA<OfflineSyncDone>(),
-      ],
+      expect: () => [isA<OfflineSyncInProgress>(), isA<OfflineSyncDone>()],
       verify: (_) {
         verify(() => mockSync.syncAll()).called(1);
       },

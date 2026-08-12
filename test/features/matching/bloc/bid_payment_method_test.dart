@@ -26,12 +26,15 @@ void main() {
 
     // --- Serialization tests ---
 
-    test('orangeMoney serializes to ORANGE_MONEY via apiValue (not ORANGEMONEY)', () {
-      // Verifies that the JsonValue annotation produces 'ORANGE_MONEY' and
-      // that BidPaymentMethodApi.apiValue delegates to _$BidPaymentMethodEnumMap.
-      expect(BidPaymentMethod.orangeMoney.apiValue, 'ORANGE_MONEY');
-      expect(BidPaymentMethod.orangeMoney.apiValue, isNot('ORANGEMONEY'));
-    });
+    test(
+      'orangeMoney serializes to ORANGE_MONEY via apiValue (not ORANGEMONEY)',
+      () {
+        // Verifies that the JsonValue annotation produces 'ORANGE_MONEY' and
+        // that BidPaymentMethodApi.apiValue delegates to _$BidPaymentMethodEnumMap.
+        expect(BidPaymentMethod.orangeMoney.apiValue, 'ORANGE_MONEY');
+        expect(BidPaymentMethod.orangeMoney.apiValue, isNot('ORANGEMONEY'));
+      },
+    );
 
     test('orangeMoney serializes to ORANGE_MONEY via BidModel.toJson()', () {
       // End-to-end check: a BidModel with paymentMethod=orangeMoney produces

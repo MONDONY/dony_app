@@ -40,7 +40,9 @@ final _kSummary = RatingSummary(
 Widget _buildContent(UserReviewsState state) {
   final cubit = MockUserReviewsCubit();
   when(() => cubit.state).thenReturn(state);
-  when(() => cubit.load(any(), seed: any(named: 'seed'))).thenAnswer((_) async {});
+  when(
+    () => cubit.load(any(), seed: any(named: 'seed')),
+  ).thenAnswer((_) async {});
   when(() => cubit.loadNextPage(any())).thenAnswer((_) async {});
 
   return BlocProvider<UserReviewsCubit>.value(
@@ -129,9 +131,7 @@ void main() {
       expect(find.text('Excellent service !'), findsOneWidget);
     });
 
-    testWidgets('affiche les initiales FM quand pas d\'avatar', (
-      tester,
-    ) async {
+    testWidgets('affiche les initiales FM quand pas d\'avatar', (tester) async {
       await tester.pumpWidget(
         _buildContent(
           UserReviewsLoaded(summary: _kSummary, allRatings: [_kItem]),
@@ -152,9 +152,7 @@ void main() {
         totalPages: 0,
       );
       await tester.pumpWidget(
-        _buildContent(
-          UserReviewsLoaded(summary: emptySummary, allRatings: []),
-        ),
+        _buildContent(UserReviewsLoaded(summary: emptySummary, allRatings: [])),
       );
       await tester.pumpAndSettle();
 
@@ -176,9 +174,7 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        _buildContent(
-          const UserReviewsError(message: 'Serveur indisponible'),
-        ),
+        _buildContent(const UserReviewsError(message: 'Serveur indisponible')),
       );
       await tester.pumpAndSettle();
 
@@ -298,15 +294,14 @@ class _ReviewRowTest extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    final authorName =
-        item.authorName?.isNotEmpty == true ? item.authorName! : 'Utilisateur';
+    final authorName = item.authorName?.isNotEmpty == true
+        ? item.authorName!
+        : 'Utilisateur';
 
     final parts = authorName.trim().split(' ');
     final initials = parts.length >= 2
         ? '${parts.first[0]}${parts.last[0]}'.toUpperCase()
-        : authorName
-            .substring(0, authorName.length.clamp(0, 2))
-            .toUpperCase();
+        : authorName.substring(0, authorName.length.clamp(0, 2)).toUpperCase();
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),

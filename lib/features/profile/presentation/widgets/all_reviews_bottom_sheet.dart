@@ -29,10 +29,8 @@ abstract final class AllReviewsBottomSheet {
     return DonyBottomSheet.show<void>(
       context,
       title: 'Avis',
-      wrapper: (child) => BlocProvider<UserReviewsCubit>.value(
-        value: cubit,
-        child: child,
-      ),
+      wrapper: (child) =>
+          BlocProvider<UserReviewsCubit>.value(value: cubit, child: child),
       child: _AllReviewsSheetBody(
         userId: userId,
         initialSummary: initialSummary,
@@ -44,10 +42,7 @@ abstract final class AllReviewsBottomSheet {
 // ─── Sheet body ───────────────────────────────────────────────────────────────
 
 class _AllReviewsSheetBody extends StatefulWidget {
-  const _AllReviewsSheetBody({
-    required this.userId,
-    this.initialSummary,
-  });
+  const _AllReviewsSheetBody({required this.userId, this.initialSummary});
 
   final String userId;
   final RatingSummary? initialSummary;
@@ -63,9 +58,10 @@ class _AllReviewsSheetBodyState extends State<_AllReviewsSheetBody> {
   void initState() {
     super.initState();
     // Seed with initial data or fetch page 0.
-    context
-        .read<UserReviewsCubit>()
-        .load(widget.userId, seed: widget.initialSummary);
+    context.read<UserReviewsCubit>().load(
+      widget.userId,
+      seed: widget.initialSummary,
+    );
 
     _scrollController.addListener(_onScroll);
   }
@@ -97,17 +93,15 @@ class _AllReviewsSheetBodyState extends State<_AllReviewsSheetBody> {
         if (state is UserReviewsError) {
           return _ErrorBody(
             message: state.message,
-            onRetry: () => context
-                .read<UserReviewsCubit>()
-                .load(widget.userId, seed: widget.initialSummary),
+            onRetry: () => context.read<UserReviewsCubit>().load(
+              widget.userId,
+              seed: widget.initialSummary,
+            ),
           );
         }
 
         if (state is UserReviewsLoaded) {
-          return _LoadedBody(
-            state: state,
-            scrollController: _scrollController,
-          );
+          return _LoadedBody(state: state, scrollController: _scrollController);
         }
 
         // Initial — should not normally render; show nothing.
@@ -149,8 +143,8 @@ class _LoadedBody extends StatelessWidget {
             child: Text(
               'Aucun avis pour le moment.',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
               textAlign: TextAlign.center,
             ),
           )
@@ -188,8 +182,10 @@ class _ReviewRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final dateStr =
-        DateFormat('d MMM yyyy', 'fr_FR').format(item.createdAt.toLocal());
+    final dateStr = DateFormat(
+      'd MMM yyyy',
+      'fr_FR',
+    ).format(item.createdAt.toLocal());
     final authorName = item.authorName?.isNotEmpty == true
         ? item.authorName!
         : 'Utilisateur';
@@ -233,9 +229,7 @@ class _ReviewRow extends StatelessWidget {
                     ),
                     Text(
                       dateStr,
-                      style: tt.bodySmall?.copyWith(
-                        color: cs.onSurfaceVariant,
-                      ),
+                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                     ),
                   ],
                 ),
@@ -302,16 +296,10 @@ class _AuthorAvatar extends StatelessWidget {
           width: size,
           height: size,
           fit: BoxFit.cover,
-          placeholder: (_) => _InitialsCircle(
-            initials: initials,
-            size: size,
-            cs: cs,
-          ),
-          errorWidget: (_) => _InitialsCircle(
-            initials: initials,
-            size: size,
-            cs: cs,
-          ),
+          placeholder: (_) =>
+              _InitialsCircle(initials: initials, size: size, cs: cs),
+          errorWidget: (_) =>
+              _InitialsCircle(initials: initials, size: size, cs: cs),
         ),
       );
     }
@@ -344,9 +332,9 @@ class _InitialsCircle extends StatelessWidget {
       child: Text(
         initials,
         style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: cs.primary,
-              fontWeight: FontWeight.w700,
-            ),
+          color: cs.primary,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }

@@ -17,7 +17,9 @@ class PaymentRemoteDatasource {
   }
 
   Future<String> createOnboardingLink() async {
-    final response = await _client.dio.post('/payments/connect/onboarding-link');
+    final response = await _client.dio.post(
+      '/payments/connect/onboarding-link',
+    );
     return response.data['url'] as String;
   }
 

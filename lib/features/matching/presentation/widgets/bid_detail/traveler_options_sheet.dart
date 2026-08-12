@@ -15,7 +15,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-
 /// Statuses for which the traveler can dismiss/delete the bid record.
 const _dismissableStatuses = {'REJECTED', 'CANCELLED'};
 
@@ -79,8 +78,8 @@ class _TravelerOptionsSheet extends StatelessWidget {
               onTap: () {
                 context.pop();
                 outerContext.read<ConversationOpenBloc>().add(
-                      ConversationOpenRequested(bid.id),
-                    );
+                  ConversationOpenRequested(bid.id),
+                );
               },
             ),
             const SizedBox(height: DonySpacing.sm),
@@ -159,9 +158,9 @@ class _TravelerOptionsSheet extends StatelessWidget {
                 subtitle: 'Retirer définitivement de votre historique',
                 onTap: () {
                   context.pop();
-                  outerContext
-                      .read<BidBloc>()
-                      .add(BidTravelerDismissRequested(bid.id));
+                  outerContext.read<BidBloc>().add(
+                    BidTravelerDismissRequested(bid.id),
+                  );
                 },
               ),
               const SizedBox(height: DonySpacing.sm),
@@ -328,15 +327,12 @@ class _TravelerOptionsSheet extends StatelessWidget {
     if (afterHandover) {
       // Annulation après remise → flux dédié (code de retour + remboursement).
       context.read<CancellationBloc>().add(
-            CancelAfterHandoverRequested(bid.id, actor: 'traveler'),
-          );
+        CancelAfterHandoverRequested(bid.id, actor: 'traveler'),
+      );
     } else {
       context.read<BidBloc>().add(
-            BidCancelRequested(
-              bid.id,
-              reason: reason.isEmpty ? null : reason,
-            ),
-          );
+        BidCancelRequested(bid.id, reason: reason.isEmpty ? null : reason),
+      );
     }
   }
 }
@@ -403,11 +399,7 @@ class _OptionTile extends StatelessWidget {
                 ],
               ),
             ),
-            DonyIcon(
-              'chevron-right',
-              color: cs.onSurfaceVariant,
-              size: 18,
-            ),
+            DonyIcon('chevron-right', color: cs.onSurfaceVariant, size: 18),
           ],
         ),
       ),

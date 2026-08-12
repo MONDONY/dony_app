@@ -45,23 +45,33 @@ void main() {
       final source = entity.readAsStringSync();
       for (final mot in ['GestureDetector(', 'InkWell(']) {
         for (final m in RegExp(RegExp.escape(mot)).allMatches(source)) {
-          final corps =
-              source.substring(m.start, _fermeture(source, m.start + mot.length - 1));
+          final corps = source.substring(
+            m.start,
+            _fermeture(source, m.start + mot.length - 1),
+          );
 
           if (!corps.contains('onTap')) continue;
           // Sans icône, ce n'est pas le motif visé.
-          if (!corps.contains('DonyIcon(') && !corps.contains('Icon(')) continue;
+          if (!corps.contains('DonyIcon(') && !corps.contains('Icon('))
+            continue;
           // Du texte dans le sous-arbre fournit déjà le nom.
-          if (RegExp("Text\\(|Text\\.rich|label:\\s*'").hasMatch(corps)) continue;
+          if (RegExp("Text\\(|Text\\.rich|label:\\s*'").hasMatch(corps))
+            continue;
           // Nom posé à l'intérieur, ou juste au-dessus.
-          if (corps.contains('Semantics(') || corps.contains('tooltip:')) continue;
+          if (corps.contains('Semantics(') || corps.contains('tooltip:'))
+            continue;
           final avant = source.substring(0, m.start).split('\n');
-          final contexte = avant.sublist(avant.length < 10 ? 0 : avant.length - 10);
-          if (contexte.any((l) => l.contains('Semantics(') || l.contains('Tooltip('))) {
+          final contexte = avant.sublist(
+            avant.length < 10 ? 0 : avant.length - 10,
+          );
+          if (contexte.any(
+            (l) => l.contains('Semantics(') || l.contains('Tooltip('),
+          )) {
             continue;
           }
 
-          final ligne = '\n'.allMatches(source.substring(0, m.start)).length + 1;
+          final ligne =
+              '\n'.allMatches(source.substring(0, m.start)).length + 1;
           defauts.add('${entity.path}:$ligne');
         }
       }
@@ -70,7 +80,8 @@ void main() {
     expect(
       defauts,
       isEmpty,
-      reason: 'zones tappables à icône seule, sans nom accessible :\n'
+      reason:
+          'zones tappables à icône seule, sans nom accessible :\n'
           '${defauts.join('\n')}\n\n'
           "Enveloppez d'un Semantics(button: true, label: '...'), ou "
           'déclarez le fichier dans les exemptions de ce test.',

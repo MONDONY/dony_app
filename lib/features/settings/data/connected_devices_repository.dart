@@ -6,7 +6,8 @@ class ConnectedDevicesRepository {
   const ConnectedDevicesRepository(this._datasource);
 
   Future<List<DeviceModel>> fetchDevices() => _datasource.fetchDevices();
-  Future<void> revokeDevice(String deviceId) => _datasource.revokeDevice(deviceId);
+  Future<void> revokeDevice(String deviceId) =>
+      _datasource.revokeDevice(deviceId);
   Future<void> revokeOthers() => _datasource.revokeOthers();
 
   /// Vérifie si l'appareil courant est encore enregistré côté serveur.

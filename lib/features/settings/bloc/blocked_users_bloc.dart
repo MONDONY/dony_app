@@ -23,7 +23,11 @@ class BlockedUsersBloc extends Bloc<BlockedUsersEvent, BlockedUsersState> {
       final users = await _repo.fetchBlockedUsers();
       emit(BlockedUsersLoaded(users));
     } catch (_) {
-      emit(const BlockedUsersError('Impossible de charger les utilisateurs bloqués'));
+      emit(
+        const BlockedUsersError(
+          'Impossible de charger les utilisateurs bloqués',
+        ),
+      );
     }
   }
 
@@ -31,8 +35,9 @@ class BlockedUsersBloc extends Bloc<BlockedUsersEvent, BlockedUsersState> {
     BlockedUserUnblockRequested event,
     Emitter<BlockedUsersState> emit,
   ) async {
-    final current =
-        state is BlockedUsersLoaded ? (state as BlockedUsersLoaded).users : <BlockedUserModel>[];
+    final current = state is BlockedUsersLoaded
+        ? (state as BlockedUsersLoaded).users
+        : <BlockedUserModel>[];
     emit(BlockedUsersUnblocking(userId: event.userId, currentUsers: current));
     try {
       await _repo.unblockUser(event.userId);

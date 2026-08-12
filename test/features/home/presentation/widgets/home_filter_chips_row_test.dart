@@ -89,13 +89,18 @@ void main() {
 // sur la carte, pas seulement enfoui dans la feuille de filtres : c'est le
 // raccourci le plus utile du mode Colis.
 void _matchingMyTripsChipTests() {
-  testWidgets('mode Colis : la pastille « Pour mes trajets » est dans la rangée',
-      (tester) async {
-    await tester.pumpWidget(_wrap(otherModeCount: null));
+  testWidgets(
+    'mode Colis : la pastille « Pour mes trajets » est dans la rangée',
+    (tester) async {
+      await tester.pumpWidget(_wrap(otherModeCount: null));
 
-    expect(find.byKey(const Key('chip-row-matching-my-trips')), findsOneWidget);
-    expect(find.text('Pour mes trajets'), findsOneWidget);
-  });
+      expect(
+        find.byKey(const Key('chip-row-matching-my-trips')),
+        findsOneWidget,
+      );
+      expect(find.text('Pour mes trajets'), findsOneWidget);
+    },
+  );
 
   testWidgets('mode Trajets : la pastille est absente', (tester) async {
     await tester.pumpWidget(
@@ -105,16 +110,19 @@ void _matchingMyTripsChipTests() {
     expect(find.byKey(const Key('chip-row-matching-my-trips')), findsNothing);
   });
 
-  testWidgets('avec des trajets actifs, le tap bascule le filtre',
-      (tester) async {
+  testWidgets('avec des trajets actifs, le tap bascule le filtre', (
+    tester,
+  ) async {
     var bascules = 0;
     var blocages = 0;
-    await tester.pumpWidget(_wrap(
-      otherModeCount: null,
-      activeTrips: 3,
-      onMatchingMyTripsToggle: () => bascules++,
-      onMatchingMyTripsBlocked: () => blocages++,
-    ));
+    await tester.pumpWidget(
+      _wrap(
+        otherModeCount: null,
+        activeTrips: 3,
+        onMatchingMyTripsToggle: () => bascules++,
+        onMatchingMyTripsBlocked: () => blocages++,
+      ),
+    );
 
     await tester.tap(find.byKey(const Key('chip-row-matching-my-trips')));
     await tester.pumpAndSettle();
@@ -123,16 +131,19 @@ void _matchingMyTripsChipTests() {
     expect(blocages, 0);
   });
 
-  testWidgets('sans trajet actif connu, le tap explique au lieu de filtrer',
-      (tester) async {
+  testWidgets('sans trajet actif connu, le tap explique au lieu de filtrer', (
+    tester,
+  ) async {
     var bascules = 0;
     var blocages = 0;
-    await tester.pumpWidget(_wrap(
-      otherModeCount: null,
-      activeTrips: 0,
-      onMatchingMyTripsToggle: () => bascules++,
-      onMatchingMyTripsBlocked: () => blocages++,
-    ));
+    await tester.pumpWidget(
+      _wrap(
+        otherModeCount: null,
+        activeTrips: 0,
+        onMatchingMyTripsToggle: () => bascules++,
+        onMatchingMyTripsBlocked: () => blocages++,
+      ),
+    );
 
     await tester.tap(find.byKey(const Key('chip-row-matching-my-trips')));
     await tester.pumpAndSettle();
@@ -141,16 +152,19 @@ void _matchingMyTripsChipTests() {
     expect(blocages, 1);
   });
 
-  testWidgets('nombre de trajets inconnu : la pastille reste utilisable',
-      (tester) async {
+  testWidgets('nombre de trajets inconnu : la pastille reste utilisable', (
+    tester,
+  ) async {
     // Résumé d'activité en échec : ne pas griser sur une supposition, le
     // serveur tranchera. Même règle que dans la feuille de filtres.
     var bascules = 0;
-    await tester.pumpWidget(_wrap(
-      otherModeCount: null,
-      activeTrips: null,
-      onMatchingMyTripsToggle: () => bascules++,
-    ));
+    await tester.pumpWidget(
+      _wrap(
+        otherModeCount: null,
+        activeTrips: null,
+        onMatchingMyTripsToggle: () => bascules++,
+      ),
+    );
 
     await tester.tap(find.byKey(const Key('chip-row-matching-my-trips')));
     await tester.pumpAndSettle();
@@ -159,13 +173,15 @@ void _matchingMyTripsChipTests() {
   });
 
   testWidgets('le filtre actif se voit sur la pastille', (tester) async {
-    await tester.pumpWidget(_wrap(
-      otherModeCount: null,
-      filters: const HomeSearchFilters(
-        departureCity: 'Paris',
-        matchingMyTrips: true,
+    await tester.pumpWidget(
+      _wrap(
+        otherModeCount: null,
+        filters: const HomeSearchFilters(
+          departureCity: 'Paris',
+          matchingMyTrips: true,
+        ),
       ),
-    ));
+    );
 
     // La clé est portée par la pastille elle-même, pas par un ancêtre.
     final chip = tester.widget<HomeSmallChip>(

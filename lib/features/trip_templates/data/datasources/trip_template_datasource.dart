@@ -19,7 +19,10 @@ class TripTemplateDatasource {
   }
 
   Future<TripTemplate> update(String id, Map<String, dynamic> data) async {
-    final response = await _apiClient.dio.put('/trip-templates/$id', data: data);
+    final response = await _apiClient.dio.put(
+      '/trip-templates/$id',
+      data: data,
+    );
     return TripTemplate.fromJson(response.data as Map<String, dynamic>);
   }
 

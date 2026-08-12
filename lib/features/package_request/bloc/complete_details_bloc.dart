@@ -42,11 +42,11 @@ class CompleteDetailsSubmitted extends CompleteDetailsEvent {
 
   @override
   List<Object?> get props => [
-        requestId,
-        recipientName,
-        recipientPhone,
-        recipientCity,
-      ];
+    requestId,
+    recipientName,
+    recipientPhone,
+    recipientCity,
+  ];
 }
 
 enum CompleteDetailsStatus { initial, loading, success, error }
@@ -81,13 +81,12 @@ class CompleteDetailsState extends Equatable {
     String? errorMessage,
     PackageRequest? request,
     bool? loaded,
-  }) =>
-      CompleteDetailsState(
-        status: status ?? this.status,
-        errorMessage: errorMessage,
-        request: request ?? this.request,
-        loaded: loaded ?? this.loaded,
-      );
+  }) => CompleteDetailsState(
+    status: status ?? this.status,
+    errorMessage: errorMessage,
+    request: request ?? this.request,
+    loaded: loaded ?? this.loaded,
+  );
 
   @override
   List<Object?> get props => [status, errorMessage, request, loaded];
@@ -130,10 +129,12 @@ class CompleteDetailsBloc
       );
       emit(state.copyWith(status: CompleteDetailsStatus.success));
     } catch (err) {
-      emit(state.copyWith(
-        status: CompleteDetailsStatus.error,
-        errorMessage: err.toString(),
-      ));
+      emit(
+        state.copyWith(
+          status: CompleteDetailsStatus.error,
+          errorMessage: err.toString(),
+        ),
+      );
     }
   }
 }

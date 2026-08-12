@@ -13,7 +13,9 @@ import 'package:mocktail/mocktail.dart';
 import '../../../helpers/mock_analytics_backend.dart';
 
 class _MockAnnouncementRepo extends Mock implements AnnouncementRepository {}
+
 class _MockHive extends Mock implements HiveService {}
+
 class _MockBox extends Mock implements Box<dynamic> {}
 
 void main() {
@@ -37,7 +39,9 @@ void main() {
   });
 
   AnnouncementBloc makeBloc({bool enabled = true}) {
-    final a = enabled ? makeEnabledAnalytics(backend) : makeDisabledAnalytics(backend);
+    final a = enabled
+        ? makeEnabledAnalytics(backend)
+        : makeDisabledAnalytics(backend);
     a.onConfigured();
     return AnnouncementBloc(repo, hive, a);
   }
@@ -62,112 +66,128 @@ void main() {
     lng: 2.3522,
   );
 
-  test('announcement_created fires with corridor and metrics on success', () async {
-    when(() => repo.createAnnouncement(
-      departureCity: any(named: 'departureCity'),
-      arrivalCity: any(named: 'arrivalCity'),
-      departureDate: any(named: 'departureDate'),
-      departureTime: any(named: 'departureTime'),
-      arrivalTime: any(named: 'arrivalTime'),
-      pickupAddress: any(named: 'pickupAddress'),
-      deliveryAddress: any(named: 'deliveryAddress'),
-      availableKg: any(named: 'availableKg'),
-      pricePerKg: any(named: 'pricePerKg'),
-      transportMode: any(named: 'transportMode'),
-      description: any(named: 'description'),
-      acceptedContentTypes: any(named: 'acceptedContentTypes'),
-      refusedTypes: any(named: 'refusedTypes'),
-      acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
-      capacityUnit: any(named: 'capacityUnit'),
-      pricingMode: any(named: 'pricingMode'),
-      handoverWindowStart: any(named: 'handoverWindowStart'),
-      handoverWindowEnd: any(named: 'handoverWindowEnd'),
-    )).thenAnswer((_) async => fakeAnnouncement());
+  test(
+    'announcement_created fires with corridor and metrics on success',
+    () async {
+      when(
+        () => repo.createAnnouncement(
+          departureCity: any(named: 'departureCity'),
+          arrivalCity: any(named: 'arrivalCity'),
+          departureDate: any(named: 'departureDate'),
+          departureTime: any(named: 'departureTime'),
+          arrivalTime: any(named: 'arrivalTime'),
+          pickupAddress: any(named: 'pickupAddress'),
+          deliveryAddress: any(named: 'deliveryAddress'),
+          availableKg: any(named: 'availableKg'),
+          pricePerKg: any(named: 'pricePerKg'),
+          transportMode: any(named: 'transportMode'),
+          description: any(named: 'description'),
+          acceptedContentTypes: any(named: 'acceptedContentTypes'),
+          refusedTypes: any(named: 'refusedTypes'),
+          acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
+          capacityUnit: any(named: 'capacityUnit'),
+          pricingMode: any(named: 'pricingMode'),
+          handoverWindowStart: any(named: 'handoverWindowStart'),
+          handoverWindowEnd: any(named: 'handoverWindowEnd'),
+        ),
+      ).thenAnswer((_) async => fakeAnnouncement());
 
-    final bloc = makeBloc();
-    bloc.add(AnnouncementCreateRequested(
-      departureCity: 'Paris',
-      arrivalCity: 'Dakar',
-      departureDate: DateTime(2024, 12, 1),
-      pickupAddress: fakeAddress,
-      deliveryAddress: fakeAddress,
-      availableKg: 10.0,
-      pricePerKg: 15.0,
-      transportMode: TransportMode.plane,
-      handoverWindowStart: DateTime(2026, 6, 14, 16),
-      handoverWindowEnd: DateTime(2026, 6, 14, 18),
-    ));
-    await bloc.stream.firstWhere((s) => s is AnnouncementCreated);
-    await Future<void>.delayed(Duration.zero);
+      final bloc = makeBloc();
+      bloc.add(
+        AnnouncementCreateRequested(
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          departureDate: DateTime(2024, 12, 1),
+          pickupAddress: fakeAddress,
+          deliveryAddress: fakeAddress,
+          availableKg: 10.0,
+          pricePerKg: 15.0,
+          transportMode: TransportMode.plane,
+          handoverWindowStart: DateTime(2026, 6, 14, 16),
+          handoverWindowEnd: DateTime(2026, 6, 14, 18),
+        ),
+      );
+      await bloc.stream.firstWhere((s) => s is AnnouncementCreated);
+      await Future<void>.delayed(Duration.zero);
 
-    verify(() => backend.capture(
-      AnalyticsEvents.announcementCreated,
-      {
-        'corridor': 'Paris→Dakar',
-        'available_kg': 10.0,
-        'price_per_kg': 15.0,
-        'is_draft': false,
-      },
-    )).called(1);
-  });
+      verify(
+        () => backend.capture(AnalyticsEvents.announcementCreated, {
+          'corridor': 'Paris→Dakar',
+          'available_kg': 10.0,
+          'price_per_kg': 15.0,
+          'is_draft': false,
+        }),
+      ).called(1);
+    },
+  );
 
   test('surplus_opened fires with kg/price and no PII on success', () async {
-    when(() => repo.openSurplus(
-          announcementId: any(named: 'announcementId'),
-          surplusKg: any(named: 'surplusKg'),
-          pricePerKg: any(named: 'pricePerKg'),
-        )).thenAnswer((_) async => fakeAnnouncement());
+    when(
+      () => repo.openSurplus(
+        announcementId: any(named: 'announcementId'),
+        surplusKg: any(named: 'surplusKg'),
+        pricePerKg: any(named: 'pricePerKg'),
+      ),
+    ).thenAnswer((_) async => fakeAnnouncement());
 
     final bloc = makeBloc();
-    bloc.add(AnnouncementSurplusOpenRequested(
-      announcementId: 'ann1',
-      surplusKg: 8.0,
-      pricePerKg: 7.0,
-    ));
+    bloc.add(
+      AnnouncementSurplusOpenRequested(
+        announcementId: 'ann1',
+        surplusKg: 8.0,
+        pricePerKg: 7.0,
+      ),
+    );
     await bloc.stream.firstWhere((s) => s is AnnouncementSurplusOpened);
     await Future<void>.delayed(Duration.zero);
 
-    verify(() => backend.capture(
-          AnalyticsEvents.surplusOpened,
-          {'surplus_kg': 8.0, 'price_per_kg': 7.0},
-        )).called(1);
+    verify(
+      () => backend.capture(AnalyticsEvents.surplusOpened, {
+        'surplus_kg': 8.0,
+        'price_per_kg': 7.0,
+      }),
+    ).called(1);
   });
 
   test('no event when analytics disabled', () async {
-    when(() => repo.createAnnouncement(
-      departureCity: any(named: 'departureCity'),
-      arrivalCity: any(named: 'arrivalCity'),
-      departureDate: any(named: 'departureDate'),
-      departureTime: any(named: 'departureTime'),
-      arrivalTime: any(named: 'arrivalTime'),
-      pickupAddress: any(named: 'pickupAddress'),
-      deliveryAddress: any(named: 'deliveryAddress'),
-      availableKg: any(named: 'availableKg'),
-      pricePerKg: any(named: 'pricePerKg'),
-      transportMode: any(named: 'transportMode'),
-      description: any(named: 'description'),
-      acceptedContentTypes: any(named: 'acceptedContentTypes'),
-      refusedTypes: any(named: 'refusedTypes'),
-      acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
-      capacityUnit: any(named: 'capacityUnit'),
-      pricingMode: any(named: 'pricingMode'),
-      handoverWindowStart: any(named: 'handoverWindowStart'),
-      handoverWindowEnd: any(named: 'handoverWindowEnd'),
-    )).thenAnswer((_) async => fakeAnnouncement());
+    when(
+      () => repo.createAnnouncement(
+        departureCity: any(named: 'departureCity'),
+        arrivalCity: any(named: 'arrivalCity'),
+        departureDate: any(named: 'departureDate'),
+        departureTime: any(named: 'departureTime'),
+        arrivalTime: any(named: 'arrivalTime'),
+        pickupAddress: any(named: 'pickupAddress'),
+        deliveryAddress: any(named: 'deliveryAddress'),
+        availableKg: any(named: 'availableKg'),
+        pricePerKg: any(named: 'pricePerKg'),
+        transportMode: any(named: 'transportMode'),
+        description: any(named: 'description'),
+        acceptedContentTypes: any(named: 'acceptedContentTypes'),
+        refusedTypes: any(named: 'refusedTypes'),
+        acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
+        capacityUnit: any(named: 'capacityUnit'),
+        pricingMode: any(named: 'pricingMode'),
+        handoverWindowStart: any(named: 'handoverWindowStart'),
+        handoverWindowEnd: any(named: 'handoverWindowEnd'),
+      ),
+    ).thenAnswer((_) async => fakeAnnouncement());
 
     final bloc = makeBloc(enabled: false);
-    bloc.add(AnnouncementCreateRequested(
-      departureCity: 'Paris',
-      arrivalCity: 'Dakar',
-      departureDate: DateTime(2024, 12, 1),
-      pickupAddress: fakeAddress,
-      deliveryAddress: fakeAddress,
-      availableKg: 10.0,
-      pricePerKg: 15.0,
-      transportMode: TransportMode.plane,
-      handoverWindowStart: DateTime(2026, 6, 14, 16),
-      handoverWindowEnd: DateTime(2026, 6, 14, 18),
-    ));
+    bloc.add(
+      AnnouncementCreateRequested(
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        departureDate: DateTime(2024, 12, 1),
+        pickupAddress: fakeAddress,
+        deliveryAddress: fakeAddress,
+        availableKg: 10.0,
+        pricePerKg: 15.0,
+        transportMode: TransportMode.plane,
+        handoverWindowStart: DateTime(2026, 6, 14, 16),
+        handoverWindowEnd: DateTime(2026, 6, 14, 18),
+      ),
+    );
     await bloc.stream.firstWhere((s) => s is AnnouncementCreated);
     await Future<void>.delayed(Duration.zero);
     verifyNever(() => backend.capture(any(), any()));

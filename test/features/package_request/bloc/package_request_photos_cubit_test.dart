@@ -20,12 +20,15 @@ void main() {
   setUp(() {
     repo = MockPackageRequestRepository();
     cubit = PackageRequestPhotosCubit(
-        repo, makeDisabledAnalytics(MockAnalyticsBackend()));
+      repo,
+      makeDisabledAnalytics(MockAnalyticsBackend()),
+    );
   });
 
   test('add uploads and marks ready with key', () async {
-    when(() => repo.uploadPhotoKey(any()))
-        .thenAnswer((_) async => 'package_requests/s/1.jpg');
+    when(
+      () => repo.uploadPhotoKey(any()),
+    ).thenAnswer((_) async => 'package_requests/s/1.jpg');
     await cubit.add('/tmp/1.jpg');
     expect(cubit.state.single.status, PackageRequestPhotoUploadStatus.ready);
     expect(cubit.readyKeys, ['package_requests/s/1.jpg']);
@@ -40,8 +43,9 @@ void main() {
   });
 
   test('caps at 4 photos', () async {
-    when(() => repo.uploadPhotoKey(any()))
-        .thenAnswer((_) async => 'package_requests/s/x.jpg');
+    when(
+      () => repo.uploadPhotoKey(any()),
+    ).thenAnswer((_) async => 'package_requests/s/x.jpg');
     for (var i = 0; i < 5; i++) {
       await cubit.add('/tmp/$i.jpg');
     }
@@ -50,8 +54,9 @@ void main() {
   });
 
   test('remove drops the entry', () async {
-    when(() => repo.uploadPhotoKey(any()))
-        .thenAnswer((_) async => 'package_requests/s/1.jpg');
+    when(
+      () => repo.uploadPhotoKey(any()),
+    ).thenAnswer((_) async => 'package_requests/s/1.jpg');
     await cubit.add('/tmp/1.jpg');
     cubit.remove(cubit.state.single.localId);
     expect(cubit.state, isEmpty);
@@ -65,21 +70,27 @@ void main() {
     expect(cubit.state.length, 2);
     expect(
       cubit.state.every(
-          (p) => p.status == PackageRequestPhotoUploadStatus.ready),
+        (p) => p.status == PackageRequestPhotoUploadStatus.ready,
+      ),
       isTrue,
     );
     expect(cubit.state.first.remoteUrl, 'https://signed/1');
     expect(cubit.state.first.localPath, isEmpty);
-    expect(cubit.readyKeys,
-        ['package_requests/s/1.jpg', 'package_requests/s/2.jpg']);
+    expect(cubit.readyKeys, [
+      'package_requests/s/1.jpg',
+      'package_requests/s/2.jpg',
+    ]);
     expect(cubit.touched, isTrue);
   });
 
   test('seed est un no-op si l\'état n\'est pas vide', () async {
-    when(() => repo.uploadPhotoKey(any()))
-        .thenAnswer((_) async => 'package_requests/s/new.jpg');
+    when(
+      () => repo.uploadPhotoKey(any()),
+    ).thenAnswer((_) async => 'package_requests/s/new.jpg');
     await cubit.add('/tmp/new.jpg');
-    cubit.seed([(key: 'package_requests/s/old.jpg', url: 'https://signed/old')]);
+    cubit.seed([
+      (key: 'package_requests/s/old.jpg', url: 'https://signed/old'),
+    ]);
     expect(cubit.state.length, 1);
     expect(cubit.readyKeys, ['package_requests/s/new.jpg']);
   });

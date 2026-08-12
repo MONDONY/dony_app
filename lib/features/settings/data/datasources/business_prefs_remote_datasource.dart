@@ -11,9 +11,6 @@ class BusinessPrefsRemoteDatasource {
   }
 
   Future<void> updatePrefs(UserBusinessPrefsDto dto) async {
-    await _api.dio.put(
-      '/users/me/business-preferences',
-      data: dto.toJson(),
-    );
+    await _api.dio.put('/users/me/business-preferences', data: dto.toJson());
   }
 }

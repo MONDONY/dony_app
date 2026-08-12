@@ -37,15 +37,17 @@ Future<void> _pump(
   String? bidId,
   String? stubTarget,
 }) async {
-  await tester.pumpWidget(MaterialApp.router(
-    theme: AppTheme.light(),
-    routerConfig: _buildRouter(
-      amount: amount,
-      travelerName: travelerName,
-      bidId: bidId,
-      stubTarget: stubTarget,
+  await tester.pumpWidget(
+    MaterialApp.router(
+      theme: AppTheme.light(),
+      routerConfig: _buildRouter(
+        amount: amount,
+        travelerName: travelerName,
+        bidId: bidId,
+        stubTarget: stubTarget,
+      ),
     ),
-  ));
+  );
   await tester.pump();
 }
 
@@ -79,12 +81,10 @@ void main() {
       expect(find.textContaining('code à 4 chiffres'), findsOneWidget);
     });
 
-    testWidgets('CTA navigates to bid detail when bidId provided', (tester) async {
-      await _pump(
-        tester,
-        bidId: 'abc123',
-        stubTarget: '/bids/abc123',
-      );
+    testWidgets('CTA navigates to bid detail when bidId provided', (
+      tester,
+    ) async {
+      await _pump(tester, bidId: 'abc123', stubTarget: '/bids/abc123');
       await tester.ensureVisible(find.text('Voir le suivi'));
       await tester.tap(find.text('Voir le suivi'));
       await tester.pumpAndSettle();

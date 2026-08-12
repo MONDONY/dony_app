@@ -18,23 +18,22 @@ BidModel _bid({
   String? tracking,
   DateTime? departureDate,
   DateTime? createdAt,
-}) =>
-    BidModel(
-      id: 'b-${status}_${depart}_$arrivee',
-      announcementId: 'a1',
-      senderId: 's1',
-      status: status,
-      departureCity: depart,
-      arrivalCity: arrivee,
-      recipientName: recipient,
-      travelerName: traveler,
-      trackingNumber: tracking,
-      departureDate: departureDate,
-      createdAt: createdAt ?? DateTime(2026, 5, 1),
-      updatedAt: createdAt ?? DateTime(2026, 5, 1),
-      paymentMethod: BidPaymentMethod.stripe,
-      pricingMode: BidPricingMode.kg,
-    );
+}) => BidModel(
+  id: 'b-${status}_${depart}_$arrivee',
+  announcementId: 'a1',
+  senderId: 's1',
+  status: status,
+  departureCity: depart,
+  arrivalCity: arrivee,
+  recipientName: recipient,
+  travelerName: traveler,
+  trackingNumber: tracking,
+  departureDate: departureDate,
+  createdAt: createdAt ?? DateTime(2026, 5, 1),
+  updatedAt: createdAt ?? DateTime(2026, 5, 1),
+  paymentMethod: BidPaymentMethod.stripe,
+  pricingMode: BidPricingMode.kg,
+);
 
 void main() {
   final now = DateTime(2026, 6, 3, 12);
@@ -47,7 +46,10 @@ void main() {
       expect(shipmentMatchesQuery(_bid(arrivee: 'Dákar'), 'dakar'), isTrue);
     });
     test('match destinataire', () {
-      expect(shipmentMatchesQuery(_bid(recipient: 'Awa Ndiaye'), 'ndiaye'), isTrue);
+      expect(
+        shipmentMatchesQuery(_bid(recipient: 'Awa Ndiaye'), 'ndiaye'),
+        isTrue,
+      );
     });
     test('match voyageur', () {
       expect(shipmentMatchesQuery(_bid(traveler: 'Modou'), 'modou'), isTrue);
@@ -62,16 +64,31 @@ void main() {
 
   group('shipmentDateFor', () {
     test('departure utilise departureDate', () {
-      final b = _bid(departureDate: DateTime(2026, 5, 10), createdAt: DateTime(2026, 4, 1));
-      expect(shipmentDateFor(b, ShipmentPeriodBasis.departure), DateTime(2026, 5, 10));
+      final b = _bid(
+        departureDate: DateTime(2026, 5, 10),
+        createdAt: DateTime(2026, 4, 1),
+      );
+      expect(
+        shipmentDateFor(b, ShipmentPeriodBasis.departure),
+        DateTime(2026, 5, 10),
+      );
     });
     test('departure fallback createdAt si null', () {
       final b = _bid(departureDate: null, createdAt: DateTime(2026, 4, 1));
-      expect(shipmentDateFor(b, ShipmentPeriodBasis.departure), DateTime(2026, 4, 1));
+      expect(
+        shipmentDateFor(b, ShipmentPeriodBasis.departure),
+        DateTime(2026, 4, 1),
+      );
     });
     test('creation utilise createdAt', () {
-      final b = _bid(departureDate: DateTime(2026, 5, 10), createdAt: DateTime(2026, 4, 1));
-      expect(shipmentDateFor(b, ShipmentPeriodBasis.creation), DateTime(2026, 4, 1));
+      final b = _bid(
+        departureDate: DateTime(2026, 5, 10),
+        createdAt: DateTime(2026, 4, 1),
+      );
+      expect(
+        shipmentDateFor(b, ShipmentPeriodBasis.creation),
+        DateTime(2026, 4, 1),
+      );
     });
   });
 
@@ -100,7 +117,10 @@ void main() {
       expect(r.start, DateTime(2026, 1, 1));
     });
     test('custom -> bornes étendues (fin 23:59:59)', () {
-      final custom = DateTimeRange(start: DateTime(2026, 5, 1), end: DateTime(2026, 5, 31));
+      final custom = DateTimeRange(
+        start: DateTime(2026, 5, 1),
+        end: DateTime(2026, 5, 31),
+      );
       final r = rangeForPreset(ShipmentPeriodPreset.custom, custom, now)!;
       expect(r.start, DateTime(2026, 5, 1));
       expect(r.end, DateTime(2026, 5, 31, 23, 59, 59));
@@ -112,33 +132,62 @@ void main() {
 
   group('applyShipmentFilters', () {
     final bids = [
-      _bid(status: 'ACCEPTED', arrivee: 'Dakar', departureDate: DateTime(2026, 6, 2)),
-      _bid(status: 'COMPLETED', arrivee: 'Abidjan', departureDate: DateTime(2026, 5, 2)),
-      _bid(status: 'PENDING', arrivee: 'Bamako', departureDate: DateTime(2026, 6, 1)),
+      _bid(
+        status: 'ACCEPTED',
+        arrivee: 'Dakar',
+        departureDate: DateTime(2026, 6, 2),
+      ),
+      _bid(
+        status: 'COMPLETED',
+        arrivee: 'Abidjan',
+        departureDate: DateTime(2026, 5, 2),
+      ),
+      _bid(
+        status: 'PENDING',
+        arrivee: 'Bamako',
+        departureDate: DateTime(2026, 6, 1),
+      ),
     ];
     test('statuts vides -> tout', () {
-      expect(applyShipmentFilters(bids, const ShipmentFilterState(), now).length, 3);
+      expect(
+        applyShipmentFilters(bids, const ShipmentFilterState(), now).length,
+        3,
+      );
     });
     test('filtre statut', () {
-      final r = applyShipmentFilters(bids, const ShipmentFilterState(statuses: {'COMPLETED'}), now);
+      final r = applyShipmentFilters(
+        bids,
+        const ShipmentFilterState(statuses: {'COMPLETED'}),
+        now,
+      );
       expect(r.single.status, 'COMPLETED');
     });
     test('filtre recherche', () {
-      final r = applyShipmentFilters(bids, const ShipmentFilterState(query: 'bamako'), now);
+      final r = applyShipmentFilters(
+        bids,
+        const ShipmentFilterState(query: 'bamako'),
+        now,
+      );
       expect(r.single.arrivalCity, 'Bamako');
     });
     test('filtre période (ce mois, basé départ) exclut le 2 mai', () {
       final r = applyShipmentFilters(
-          bids, const ShipmentFilterState(periodPreset: ShipmentPeriodPreset.thisMonth), now);
+        bids,
+        const ShipmentFilterState(periodPreset: ShipmentPeriodPreset.thisMonth),
+        now,
+      );
       expect(r.every((b) => b.arrivalCity != 'Abidjan'), isTrue);
       expect(r.length, 2);
     });
     test('combinaison statut + période (ET)', () {
       final r = applyShipmentFilters(
-          bids,
-          const ShipmentFilterState(
-              statuses: {'ACCEPTED'}, periodPreset: ShipmentPeriodPreset.thisMonth),
-          now);
+        bids,
+        const ShipmentFilterState(
+          statuses: {'ACCEPTED'},
+          periodPreset: ShipmentPeriodPreset.thisMonth,
+        ),
+        now,
+      );
       expect(r.single.status, 'ACCEPTED');
     });
     test('tri : statut le plus avancé en tête', () {
@@ -151,8 +200,9 @@ void main() {
     late _MockAnalytics analytics;
     setUp(() {
       analytics = _MockAnalytics();
-      when(() => analytics.logEvent(any(), properties: any(named: 'properties')))
-          .thenAnswer((_) async {});
+      when(
+        () => analytics.logEvent(any(), properties: any(named: 'properties')),
+      ).thenAnswer((_) async {});
     });
 
     blocTest<ShipmentFilterCubit, ShipmentFilterState>(
@@ -161,7 +211,8 @@ void main() {
       act: (c) => c.setQuery('dakar'),
       expect: () => [const ShipmentFilterState(query: 'dakar')],
       verify: (_) => verifyNever(
-          () => analytics.logEvent(any(), properties: any(named: 'properties'))),
+        () => analytics.logEvent(any(), properties: any(named: 'properties')),
+      ),
     );
 
     blocTest<ShipmentFilterCubit, ShipmentFilterState>(
@@ -169,12 +220,19 @@ void main() {
       build: () => ShipmentFilterCubit(analytics),
       act: (c) => c.applyQuickPreset(kEnvoisEnCours),
       expect: () => [const ShipmentFilterState(statuses: kEnvoisEnCours)],
-      verify: (_) => verify(() => analytics.logEvent(
-            AnalyticsEvents.shipmentFilterApplied,
-            properties: any(
-                named: 'properties',
-                that: isA<Map>().having((m) => m.containsKey('query'), 'no query', isFalse)),
-          )).called(1),
+      verify: (_) => verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.shipmentFilterApplied,
+          properties: any(
+            named: 'properties',
+            that: isA<Map>().having(
+              (m) => m.containsKey('query'),
+              'no query',
+              isFalse,
+            ),
+          ),
+        ),
+      ).called(1),
     );
 
     blocTest<ShipmentFilterCubit, ShipmentFilterState>(
@@ -192,10 +250,12 @@ void main() {
       expect: () => [
         const ShipmentFilterState(statuses: {'COMPLETED', 'CANCELLED'}),
       ],
-      verify: (_) => verify(() => analytics.logEvent(
-            AnalyticsEvents.shipmentFilterApplied,
-            properties: any(named: 'properties'),
-          )).called(1),
+      verify: (_) => verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.shipmentFilterApplied,
+          properties: any(named: 'properties'),
+        ),
+      ).called(1),
     );
 
     blocTest<ShipmentFilterCubit, ShipmentFilterState>(
@@ -204,7 +264,9 @@ void main() {
       seed: () => ShipmentFilterState(
         periodPreset: ShipmentPeriodPreset.custom,
         customRange: DateTimeRange(
-            start: DateTime(2026, 5, 1), end: DateTime(2026, 5, 31)),
+          start: DateTime(2026, 5, 1),
+          end: DateTime(2026, 5, 31),
+        ),
       ),
       act: (c) => c.setPeriod(
         basis: ShipmentPeriodBasis.departure,
@@ -217,10 +279,12 @@ void main() {
           // customRange doit être null
         ),
       ],
-      verify: (_) => verify(() => analytics.logEvent(
-            AnalyticsEvents.shipmentFilterApplied,
-            properties: any(named: 'properties'),
-          )).called(1),
+      verify: (_) => verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.shipmentFilterApplied,
+          properties: any(named: 'properties'),
+        ),
+      ).called(1),
     );
 
     blocTest<ShipmentFilterCubit, ShipmentFilterState>(
@@ -228,7 +292,9 @@ void main() {
       build: () => ShipmentFilterCubit(analytics),
       act: (c) {
         final range = DateTimeRange(
-            start: DateTime(2026, 4, 1), end: DateTime(2026, 4, 30));
+          start: DateTime(2026, 4, 1),
+          end: DateTime(2026, 4, 30),
+        );
         c.setPeriod(
           basis: ShipmentPeriodBasis.creation,
           preset: ShipmentPeriodPreset.custom,
@@ -237,14 +303,20 @@ void main() {
       },
       expect: () => [
         isA<ShipmentFilterState>()
-            .having((s) => s.periodPreset, 'preset', ShipmentPeriodPreset.custom)
+            .having(
+              (s) => s.periodPreset,
+              'preset',
+              ShipmentPeriodPreset.custom,
+            )
             .having((s) => s.periodBasis, 'basis', ShipmentPeriodBasis.creation)
             .having((s) => s.customRange, 'customRange', isNotNull),
       ],
-      verify: (_) => verify(() => analytics.logEvent(
-            AnalyticsEvents.shipmentFilterApplied,
-            properties: any(named: 'properties'),
-          )).called(1),
+      verify: (_) => verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.shipmentFilterApplied,
+          properties: any(named: 'properties'),
+        ),
+      ).called(1),
     );
 
     blocTest<ShipmentFilterCubit, ShipmentFilterState>(
@@ -260,17 +332,19 @@ void main() {
           periodPreset: ShipmentPeriodPreset.thisYear,
         ),
       ],
-      verify: (_) => verify(() => analytics.logEvent(
-            AnalyticsEvents.shipmentFilterApplied,
-            properties: any(
-              named: 'properties',
-              that: isA<Map>().having(
-                (m) => m['period_basis'],
-                'period_basis',
-                'creation',
-              ),
+      verify: (_) => verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.shipmentFilterApplied,
+          properties: any(
+            named: 'properties',
+            that: isA<Map>().having(
+              (m) => m['period_basis'],
+              'period_basis',
+              'creation',
             ),
-          )).called(1),
+          ),
+        ),
+      ).called(1),
     );
   });
 

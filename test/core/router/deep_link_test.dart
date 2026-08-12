@@ -10,15 +10,21 @@ void main() {
       return '/${uri.host}${uri.path}';
     }
 
-    test('dony://stripe/onboarding/complete maps to /stripe/onboarding/complete', () {
-      final uri = Uri.parse('dony://stripe/onboarding/complete');
-      expect(deepLinkToPath(uri), equals('/stripe/onboarding/complete'));
-    });
+    test(
+      'dony://stripe/onboarding/complete maps to /stripe/onboarding/complete',
+      () {
+        final uri = Uri.parse('dony://stripe/onboarding/complete');
+        expect(deepLinkToPath(uri), equals('/stripe/onboarding/complete'));
+      },
+    );
 
-    test('dony://stripe/onboarding/refresh maps to /stripe/onboarding/refresh', () {
-      final uri = Uri.parse('dony://stripe/onboarding/refresh');
-      expect(deepLinkToPath(uri), equals('/stripe/onboarding/refresh'));
-    });
+    test(
+      'dony://stripe/onboarding/refresh maps to /stripe/onboarding/refresh',
+      () {
+        final uri = Uri.parse('dony://stripe/onboarding/refresh');
+        expect(deepLinkToPath(uri), equals('/stripe/onboarding/refresh'));
+      },
+    );
 
     testWidgets(
       '/stripe/onboarding/complete redirects to /connect/onboarding/pending',

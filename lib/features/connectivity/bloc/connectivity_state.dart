@@ -20,11 +20,10 @@ class ConnectivityState extends Equatable {
   ConnectivityState copyWith({
     ConnectivityStatus? status,
     bool? justReconnected,
-  }) =>
-      ConnectivityState(
-        status: status ?? this.status,
-        justReconnected: justReconnected ?? this.justReconnected,
-      );
+  }) => ConnectivityState(
+    status: status ?? this.status,
+    justReconnected: justReconnected ?? this.justReconnected,
+  );
 
   @override
   List<Object?> get props => [status, justReconnected];

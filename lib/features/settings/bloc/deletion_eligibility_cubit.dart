@@ -24,7 +24,7 @@ class DeletionEligibilityState {
 
 class DeletionEligibilityCubit extends Cubit<DeletionEligibilityState> {
   DeletionEligibilityCubit(this._repository)
-      : super(const DeletionEligibilityState());
+    : super(const DeletionEligibilityState());
 
   final AccountDeletionRepository _repository;
 
@@ -32,12 +32,14 @@ class DeletionEligibilityCubit extends Cubit<DeletionEligibilityState> {
     try {
       final eligibility = await _repository.checkEligibility();
       if (!isClosed) {
-        emit(DeletionEligibilityState(
-          isLoading: false,
-          blockedReasonMessage: eligibility.canDelete
-              ? null
-              : _messageFor(eligibility.blockedReasonCode),
-        ));
+        emit(
+          DeletionEligibilityState(
+            isLoading: false,
+            blockedReasonMessage: eligibility.canDelete
+                ? null
+                : _messageFor(eligibility.blockedReasonCode),
+          ),
+        );
       }
     } catch (_) {
       // Fail-open : le bouton reste actif, l'erreur réelle (le cas échéant)

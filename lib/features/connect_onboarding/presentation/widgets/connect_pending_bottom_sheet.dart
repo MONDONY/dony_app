@@ -27,9 +27,9 @@ class ConnectPendingBottomSheet extends StatelessWidget {
               isLoading: state is ConnectOnboardingLoading,
               onPressed: state is ConnectOnboardingLoading
                   ? null
-                  : () => ctx
-                      .read<ConnectOnboardingBloc>()
-                      .add(const ConnectOnboardingPollingRequested()),
+                  : () => ctx.read<ConnectOnboardingBloc>().add(
+                      const ConnectOnboardingPollingRequested(),
+                    ),
             ),
           ),
           const SizedBox(height: DonySpacing.sm),

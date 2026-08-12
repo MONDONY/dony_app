@@ -109,9 +109,6 @@ class ActivateCardPaymentsCtaCard extends StatelessWidget {
           ),
         ),
       ),
-    )
-        .animate()
-        .fadeIn(duration: 300.ms)
-        .slideY(begin: 0.04, curve: Curves.easeOutCubic);
+    ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic);
   }
 }

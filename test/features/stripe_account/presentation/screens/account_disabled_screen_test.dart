@@ -3,9 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  Widget buildWidget() => const MaterialApp(
-        home: AccountDisabledScreen(),
-      );
+  Widget buildWidget() => const MaterialApp(home: AccountDisabledScreen());
 
   testWidgets('affiche le titre et le message', (tester) async {
     await tester.pumpWidget(buildWidget());
@@ -13,7 +11,9 @@ void main() {
     expect(find.textContaining('réactivation automatique'), findsOneWidget);
   });
 
-  testWidgets('affiche le bouton Stripe dès le premier affichage', (tester) async {
+  testWidgets('affiche le bouton Stripe dès le premier affichage', (
+    tester,
+  ) async {
     await tester.pumpWidget(buildWidget());
     expect(find.text('Voir mon compte Stripe'), findsOneWidget);
   });
@@ -23,8 +23,9 @@ void main() {
     expect(find.text('Contacter le support Yadony'), findsNothing);
   });
 
-  testWidgets('bouton support apparaît après 2 taps sur le bouton principal',
-      (tester) async {
+  testWidgets('bouton support apparaît après 2 taps sur le bouton principal', (
+    tester,
+  ) async {
     await tester.pumpWidget(buildWidget());
     await tester.tap(find.text('Voir mon compte Stripe'));
     await tester.pump();

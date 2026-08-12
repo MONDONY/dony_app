@@ -27,8 +27,9 @@ void main() {
 
   group('NotificationRepository', () {
     test('getNotifications delegates to datasource', () async {
-      when(() => datasource.fetchNotifications(page: 0))
-          .thenAnswer((_) async => [_notif]);
+      when(
+        () => datasource.fetchNotifications(page: 0),
+      ).thenAnswer((_) async => [_notif]);
 
       final result = await repository.getNotifications();
 
@@ -38,8 +39,9 @@ void main() {
     });
 
     test('getNotifications with page=2 passes page to datasource', () async {
-      when(() => datasource.fetchNotifications(page: 2))
-          .thenAnswer((_) async => []);
+      when(
+        () => datasource.fetchNotifications(page: 2),
+      ).thenAnswer((_) async => []);
 
       await repository.getNotifications(page: 2);
 
@@ -79,8 +81,9 @@ void main() {
     });
 
     test('propagates exception from datasource', () async {
-      when(() => datasource.fetchNotifications(page: 0))
-          .thenThrow(Exception('network error'));
+      when(
+        () => datasource.fetchNotifications(page: 0),
+      ).thenThrow(Exception('network error'));
 
       expect(() async => await repository.getNotifications(), throwsException);
     });

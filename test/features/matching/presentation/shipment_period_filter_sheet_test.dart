@@ -8,29 +8,29 @@ Widget _app({
   ShipmentPeriodPreset preset = ShipmentPeriodPreset.all,
   DateTimeRange? range,
   void Function(ShipmentPeriodResult?)? onResult,
-}) =>
-    MaterialApp(
-      home: Scaffold(
-        body: Builder(
-          builder: (context) => ElevatedButton(
-            onPressed: () async {
-              final r = await ShipmentPeriodFilterSheet.show(
-                context,
-                basis: basis,
-                preset: preset,
-                range: range,
-              );
-              onResult?.call(r);
-            },
-            child: const Text('open'),
-          ),
-        ),
+}) => MaterialApp(
+  home: Scaffold(
+    body: Builder(
+      builder: (context) => ElevatedButton(
+        onPressed: () async {
+          final r = await ShipmentPeriodFilterSheet.show(
+            context,
+            basis: basis,
+            preset: preset,
+            range: range,
+          );
+          onResult?.call(r);
+        },
+        child: const Text('open'),
       ),
-    );
+    ),
+  ),
+);
 
 void main() {
-  testWidgets('choisit un preset + bascule basis -> retourne (basis, preset)',
-      (tester) async {
+  testWidgets('choisit un preset + bascule basis -> retourne (basis, preset)', (
+    tester,
+  ) async {
     ShipmentPeriodResult? result;
     await tester.pumpWidget(_app(onResult: (r) => result = r));
     await tester.tap(find.text('open'));
@@ -48,7 +48,9 @@ void main() {
     expect(result!.basis, ShipmentPeriodBasis.creation);
   });
 
-  testWidgets('sélectionne preset « Cette semaine » et applique', (tester) async {
+  testWidgets('sélectionne preset « Cette semaine » et applique', (
+    tester,
+  ) async {
     ShipmentPeriodResult? result;
     await tester.pumpWidget(_app(onResult: (r) => result = r));
     await tester.tap(find.text('open'));
@@ -64,7 +66,9 @@ void main() {
     expect(result!.range, isNull);
   });
 
-  testWidgets('sélectionne preset « 3 derniers mois » et applique', (tester) async {
+  testWidgets('sélectionne preset « 3 derniers mois » et applique', (
+    tester,
+  ) async {
     ShipmentPeriodResult? result;
     await tester.pumpWidget(_app(onResult: (r) => result = r));
     await tester.tap(find.text('open'));
@@ -95,10 +99,9 @@ void main() {
   testWidgets('sélectionne preset « Tout » et applique', (tester) async {
     ShipmentPeriodResult? result;
     // Start with a different preset to make "Tout" a real change
-    await tester.pumpWidget(_app(
-      preset: ShipmentPeriodPreset.thisMonth,
-      onResult: (r) => result = r,
-    ));
+    await tester.pumpWidget(
+      _app(preset: ShipmentPeriodPreset.thisMonth, onResult: (r) => result = r),
+    );
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
 
@@ -111,7 +114,9 @@ void main() {
     expect(result!.range, isNull);
   });
 
-  testWidgets('bascule basis departure -> creation -> departure', (tester) async {
+  testWidgets('bascule basis departure -> creation -> departure', (
+    tester,
+  ) async {
     ShipmentPeriodResult? result;
     await tester.pumpWidget(_app(onResult: (r) => result = r));
     await tester.tap(find.text('open'));
@@ -146,47 +151,55 @@ void main() {
     expect(find.text('Ce mois-ci'), findsOneWidget);
   });
 
-  testWidgets('sheet ouverte avec preset existant montre la pré-sélection correcte',
-      (tester) async {
-    ShipmentPeriodResult? result;
-    await tester.pumpWidget(_app(
-      preset: ShipmentPeriodPreset.thisYear,
-      basis: ShipmentPeriodBasis.creation,
-      onResult: (r) => result = r,
-    ));
-    await tester.tap(find.text('open'));
-    await tester.pumpAndSettle();
+  testWidgets(
+    'sheet ouverte avec preset existant montre la pré-sélection correcte',
+    (tester) async {
+      ShipmentPeriodResult? result;
+      await tester.pumpWidget(
+        _app(
+          preset: ShipmentPeriodPreset.thisYear,
+          basis: ShipmentPeriodBasis.creation,
+          onResult: (r) => result = r,
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
 
-    // Apply without changing anything — should return the same values
-    await tester.tap(find.text('Appliquer'));
-    await tester.pumpAndSettle();
+      // Apply without changing anything — should return the same values
+      await tester.tap(find.text('Appliquer'));
+      await tester.pumpAndSettle();
 
-    expect(result!.preset, ShipmentPeriodPreset.thisYear);
-    expect(result!.basis, ShipmentPeriodBasis.creation);
-  });
+      expect(result!.preset, ShipmentPeriodPreset.thisYear);
+      expect(result!.basis, ShipmentPeriodBasis.creation);
+    },
+  );
 
-  testWidgets('appuyer sur un preset non-custom efface la plage personnalisée',
-      (tester) async {
-    final existingRange = DateTimeRange(
-      start: DateTime(2026, 4, 1),
-      end: DateTime(2026, 4, 30),
-    );
-    ShipmentPeriodResult? result;
-    await tester.pumpWidget(_app(
-      preset: ShipmentPeriodPreset.custom,
-      range: existingRange,
-      onResult: (r) => result = r,
-    ));
-    await tester.tap(find.text('open'));
-    await tester.pumpAndSettle();
+  testWidgets(
+    'appuyer sur un preset non-custom efface la plage personnalisée',
+    (tester) async {
+      final existingRange = DateTimeRange(
+        start: DateTime(2026, 4, 1),
+        end: DateTime(2026, 4, 30),
+      );
+      ShipmentPeriodResult? result;
+      await tester.pumpWidget(
+        _app(
+          preset: ShipmentPeriodPreset.custom,
+          range: existingRange,
+          onResult: (r) => result = r,
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
 
-    // Tap a non-custom preset
-    await tester.tap(find.text('Ce mois-ci'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Appliquer'));
-    await tester.pumpAndSettle();
+      // Tap a non-custom preset
+      await tester.tap(find.text('Ce mois-ci'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Appliquer'));
+      await tester.pumpAndSettle();
 
-    expect(result!.preset, ShipmentPeriodPreset.thisMonth);
-    expect(result!.range, isNull);
-  });
+      expect(result!.preset, ShipmentPeriodPreset.thisMonth);
+      expect(result!.range, isNull);
+    },
+  );
 }

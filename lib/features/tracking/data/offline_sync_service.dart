@@ -15,8 +15,7 @@ class OfflineSyncService {
 
   void startListening() {
     _sub = Connectivity().onConnectivityChanged.listen((results) {
-      final hasConnection =
-          results.any((r) => r != ConnectivityResult.none);
+      final hasConnection = results.any((r) => r != ConnectivityResult.none);
       if (hasConnection) syncAll();
     });
   }
@@ -67,8 +66,9 @@ class OfflineSyncService {
             gpsLat: (entry['gpsLat'] as num?)?.toDouble(),
             gpsLon: (entry['gpsLon'] as num?)?.toDouble(),
             photoUrl: photoKey,
-            offlineTimestamp:
-                DateTime.parse(entry['offlineTimestamp'] as String),
+            offlineTimestamp: DateTime.parse(
+              entry['offlineTimestamp'] as String,
+            ),
           );
           await _hive.offlineQueue.delete(key);
         } catch (_) {

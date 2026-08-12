@@ -10,7 +10,8 @@ class ConnectedDevicesBloc
     extends Bloc<ConnectedDevicesEvent, ConnectedDevicesState> {
   final ConnectedDevicesRepository _repository;
 
-  ConnectedDevicesBloc(this._repository) : super(const ConnectedDevicesInitial()) {
+  ConnectedDevicesBloc(this._repository)
+    : super(const ConnectedDevicesInitial()) {
     on<DevicesLoadRequested>(_onLoad);
     on<DeviceRevokeRequested>(_onRevoke);
     on<AllOthersRevokeRequested>(_onRevokeOthers);
@@ -40,9 +41,11 @@ class ConnectedDevicesBloc
       final devices = await _repository.fetchDevices();
       emit(ConnectedDevicesLoaded(devices));
     } catch (_) {
-      emit(current is ConnectedDevicesLoaded
-          ? current
-          : const ConnectedDevicesError('Erreur lors de la révocation'));
+      emit(
+        current is ConnectedDevicesLoaded
+            ? current
+            : const ConnectedDevicesError('Erreur lors de la révocation'),
+      );
     }
   }
 
@@ -57,9 +60,11 @@ class ConnectedDevicesBloc
       final devices = await _repository.fetchDevices();
       emit(ConnectedDevicesLoaded(devices));
     } catch (_) {
-      emit(current is ConnectedDevicesLoaded
-          ? current
-          : const ConnectedDevicesError('Erreur lors de la déconnexion'));
+      emit(
+        current is ConnectedDevicesLoaded
+            ? current
+            : const ConnectedDevicesError('Erreur lors de la déconnexion'),
+      );
     }
   }
 }

@@ -78,8 +78,10 @@ abstract final class SearchFilterSheet {
                   // Même libellé dans les deux modes : l'ancienne feuille colis
                   // disait « Appliquer », l'incohérence disparaît.
                   label: 'Rechercher',
-                  onPressed: () => Navigator.of(ctx, rootNavigator: true)
-                      .pop(notifier.value),
+                  onPressed: () => Navigator.of(
+                    ctx,
+                    rootNavigator: true,
+                  ).pop(notifier.value),
                 ),
               ),
             ],
@@ -157,9 +159,9 @@ class _ClearAllButton extends StatelessWidget {
           child: Text(
             'Tout effacer',
             style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: cs.onSurface,
-                  fontWeight: FontWeight.w600,
-                ),
+              color: cs.onSurface,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ),
@@ -254,15 +256,17 @@ class _SearchFilterContentState extends State<_SearchFilterContent> {
           Expanded(
             child: PriceField(
               maxPrice: f.maxPricePerKg,
-              onTap: () => unawaited(showPricePicker(
-                context,
-                maxPrice: _value.maxPricePerKg,
-                onApply: (v) => _update(
-                  v == null
-                      ? _value.copyWith(clearMaxPricePerKg: true)
-                      : _value.copyWith(maxPricePerKg: v),
+              onTap: () => unawaited(
+                showPricePicker(
+                  context,
+                  maxPrice: _value.maxPricePerKg,
+                  onApply: (v) => _update(
+                    v == null
+                        ? _value.copyWith(clearMaxPricePerKg: true)
+                        : _value.copyWith(maxPricePerKg: v),
+                  ),
                 ),
-              )),
+              ),
             ),
           ),
         ],
@@ -273,15 +277,17 @@ class _SearchFilterContentState extends State<_SearchFilterContent> {
           Expanded(
             child: TransportModeField(
               mode: f.transportMode,
-              onTap: () => unawaited(showTransportPicker(
-                context,
-                mode: _value.transportMode,
-                onApply: (v) => _update(
-                  v == null
-                      ? _value.copyWith(clearTransportMode: true)
-                      : _value.copyWith(transportMode: v),
+              onTap: () => unawaited(
+                showTransportPicker(
+                  context,
+                  mode: _value.transportMode,
+                  onApply: (v) => _update(
+                    v == null
+                        ? _value.copyWith(clearTransportMode: true)
+                        : _value.copyWith(transportMode: v),
+                  ),
                 ),
-              )),
+              ),
             ),
           ),
           const Spacer(),
@@ -383,7 +389,9 @@ class _SearchFilterContentState extends State<_SearchFilterContent> {
               iconAsset: 'scale',
               active: f.maxWeight == kg,
               onChanged: (v) => _update(
-                v ? f.copyWith(maxWeight: kg) : f.copyWith(clearMaxWeight: true),
+                v
+                    ? f.copyWith(maxWeight: kg)
+                    : f.copyWith(clearMaxWeight: true),
               ),
             ),
         ],
@@ -440,8 +448,8 @@ class _SearchFilterContentState extends State<_SearchFilterContent> {
         'Astuce, tu peux être prévenu des nouveaux colis compatibles depuis '
         'Réglages, Notifications.',
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
       ).animate().fadeIn(delay: 100.ms),
     ];
   }
@@ -463,16 +471,16 @@ class _SearchFilterContentState extends State<_SearchFilterContent> {
       );
 
   static String _parcelSizeLabel(ParcelSize s) => switch (s) {
-        ParcelSize.small => 'Petit',
-        ParcelSize.medium => 'Moyen',
-        ParcelSize.large => 'Grand',
-      };
+    ParcelSize.small => 'Petit',
+    ParcelSize.medium => 'Moyen',
+    ParcelSize.large => 'Grand',
+  };
 
   static String _parcelSizeEmoji(ParcelSize s) => switch (s) {
-        ParcelSize.small => '📦',
-        ParcelSize.medium => '📫',
-        ParcelSize.large => '🧳',
-      };
+    ParcelSize.small => '📦',
+    ParcelSize.medium => '📫',
+    ParcelSize.large => '🧳',
+  };
 }
 
 /// Explique pourquoi « Pour mes trajets » est indisponible et propose l'action
@@ -497,7 +505,8 @@ Future<void> showNoActiveTripSheet(
   return DonyBottomSheet.show<void>(
     context,
     title: 'Aucun trajet actif',
-    subtitle: 'Ce filtre ne montre que les colis compatibles avec tes '
+    subtitle:
+        'Ce filtre ne montre que les colis compatibles avec tes '
         'trajets à venir. Publie un trajet pour t\'en servir.',
     stickyBottom: DonyButton(
       label: 'Publier un trajet',

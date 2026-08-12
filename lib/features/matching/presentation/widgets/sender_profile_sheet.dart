@@ -25,8 +25,9 @@ void showSenderProfileSheet(BuildContext context, BidModel bid) {
     builder: (_) => MultiBlocProvider(
       providers: [
         BlocProvider(
-          create: (_) => getIt<RatingBloc>()
-            ..add(UserRatingsLoadRequested(userId: bid.senderId)),
+          create: (_) =>
+              getIt<RatingBloc>()
+                ..add(UserRatingsLoadRequested(userId: bid.senderId)),
         ),
         // Le numéro n'est plus dans le bid : la fiche le demande à son ouverture,
         // et seulement si le serveur a marqué l'expéditeur joignable.
@@ -45,10 +46,8 @@ void showSenderProfileSheet(BuildContext context, BidModel bid) {
         minChildSize: 0.5,
         maxChildSize: 0.95,
         expand: false,
-        builder: (_, controller) => _SenderProfileSheet(
-          bid: bid,
-          scrollController: controller,
-        ),
+        builder: (_, controller) =>
+            _SenderProfileSheet(bid: bid, scrollController: controller),
       ),
     ),
   );
@@ -105,10 +104,7 @@ class _SenderProfileSheet extends StatelessWidget {
                 Positioned(
                   right: DonySpacing.sm,
                   child: IconButton(
-                    icon: DonyIcon(
-                      'ellipsis',
-                      color: cs.onSurfaceVariant,
-                    ),
+                    icon: DonyIcon('ellipsis', color: cs.onSurfaceVariant),
                     tooltip: 'Plus d\'options',
                     onPressed: () => showBlockMenu(
                       context,
@@ -127,7 +123,9 @@ class _SenderProfileSheet extends StatelessWidget {
             child: ListView(
               controller: scrollController,
               padding: EdgeInsets.fromLTRB(
-                DonySpacing.lg, 0, DonySpacing.lg,
+                DonySpacing.lg,
+                0,
+                DonySpacing.lg,
                 DonySpacing.xl + MediaQuery.of(context).viewPadding.bottom,
               ),
               children: [
@@ -168,8 +166,9 @@ class _SenderProfileSheet extends StatelessWidget {
                                 const SizedBox(width: DonySpacing.xs),
                                 Text(
                                   phone ?? 'Numéro en cours de récupération…',
-                                  style: tt.bodyMedium
-                                      ?.copyWith(color: cs.onSurfaceVariant),
+                                  style: tt.bodyMedium?.copyWith(
+                                    color: cs.onSurfaceVariant,
+                                  ),
                                 ),
                               ],
                             );
@@ -230,8 +229,7 @@ class _SenderProfileSheet extends StatelessWidget {
                   buildWhen: (p, c) =>
                       c is UserRatingsLoaded || c is RatingInitial,
                   builder: (context, state) {
-                    final loaded =
-                        state is UserRatingsLoaded ? state : null;
+                    final loaded = state is UserRatingsLoaded ? state : null;
                     final noteValue = loaded != null && loaded.ratingCount > 0
                         ? loaded.averageRating.toStringAsFixed(1)
                         : '–';
@@ -284,8 +282,9 @@ class _SenderProfileSheet extends StatelessWidget {
                       if (state.ratingCount == 0) {
                         return Text(
                           'Aucune évaluation pour l\'instant.',
-                          style: tt.bodyMedium
-                              ?.copyWith(color: cs.onSurfaceVariant),
+                          style: tt.bodyMedium?.copyWith(
+                            color: cs.onSurfaceVariant,
+                          ),
                         );
                       }
                       return Column(
@@ -301,13 +300,12 @@ class _SenderProfileSheet extends StatelessWidget {
                           if (state.page < state.totalPages - 1)
                             Center(
                               child: TextButton(
-                                onPressed: () =>
-                                    context.read<RatingBloc>().add(
-                                          UserRatingsLoadRequested(
-                                            userId: bid.senderId,
-                                            page: state.page + 1,
-                                          ),
-                                        ),
+                                onPressed: () => context.read<RatingBloc>().add(
+                                  UserRatingsLoadRequested(
+                                    userId: bid.senderId,
+                                    page: state.page + 1,
+                                  ),
+                                ),
                                 child: const Text('Voir plus'),
                               ),
                             ),
@@ -318,8 +316,8 @@ class _SenderProfileSheet extends StatelessWidget {
                       return Center(
                         child: TextButton.icon(
                           onPressed: () => context.read<RatingBloc>().add(
-                                UserRatingsLoadRequested(userId: bid.senderId),
-                              ),
+                            UserRatingsLoadRequested(userId: bid.senderId),
+                          ),
                           icon: const DonyIcon('refresh-cw'),
                           label: const Text('Réessayer'),
                         ),
@@ -422,10 +420,7 @@ class _SheetStat extends StatelessWidget {
             color: cs.onSurface,
           ),
         ),
-        Text(
-          label,
-          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-        ),
+        Text(label, style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
       ],
     );
   }

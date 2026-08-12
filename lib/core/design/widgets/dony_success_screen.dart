@@ -251,7 +251,9 @@ class _DonySuccessScreenState extends State<DonySuccessScreen>
                               if (!_reducedMotion)
                                 Positioned.fill(
                                   child: IgnorePointer(
-                                    key: const ValueKey('dony-success-confetti'),
+                                    key: const ValueKey(
+                                      'dony-success-confetti',
+                                    ),
                                     child: AnimatedBuilder(
                                       animation: _confettiController,
                                       builder: (context, _) => CustomPaint(
@@ -375,7 +377,8 @@ class _ConfettiPainter extends CustomPainter {
       // Éventail rapide (les 60% premiers du run), puis la gravité domine.
       final fanOut = math.min(progress * 1.6, 1.0);
       final dx = math.cos(particle.angle) * particle.distance * fanOut;
-      final dy = math.sin(particle.angle) * particle.distance * fanOut +
+      final dy =
+          math.sin(particle.angle) * particle.distance * fanOut +
           particle.fallDistance * progress * progress;
 
       // Fade in rapide (10% du run) puis fade out linéaire sur le reste —
@@ -385,8 +388,7 @@ class _ConfettiPainter extends CustomPainter {
           : (1 - (progress - 0.1) / 0.9).clamp(0.0, 1.0);
       if (opacity <= 0) continue;
 
-      final paint = Paint()
-        ..color = particle.color.withValues(alpha: opacity);
+      final paint = Paint()..color = particle.color.withValues(alpha: opacity);
       final position = center + Offset(dx, dy);
 
       canvas.save();

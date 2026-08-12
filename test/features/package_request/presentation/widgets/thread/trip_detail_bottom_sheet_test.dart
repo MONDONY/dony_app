@@ -11,19 +11,18 @@ LinkedTripSummary _trip({
   String? pickupLabel,
   String? deliveryLabel,
   String? description,
-}) =>
-    LinkedTripSummary(
-      announcementId: 'ann-1',
-      departureCity: 'Paris',
-      arrivalCity: 'Dakar',
-      departureDate: date,
-      departureTime: time,
-      transportMode: mode ?? 'PLANE',
-      pickupAddressLabel: pickupLabel,
-      deliveryAddressLabel: deliveryLabel,
-      availableKg: 10,
-      description: description,
-    );
+}) => LinkedTripSummary(
+  announcementId: 'ann-1',
+  departureCity: 'Paris',
+  arrivalCity: 'Dakar',
+  departureDate: date,
+  departureTime: time,
+  transportMode: mode ?? 'PLANE',
+  pickupAddressLabel: pickupLabel,
+  deliveryAddressLabel: deliveryLabel,
+  availableKg: 10,
+  description: description,
+);
 
 Widget _buildApp(LinkedTripSummary trip, {bool isSender = false}) =>
     MaterialApp(
@@ -32,11 +31,8 @@ Widget _buildApp(LinkedTripSummary trip, {bool isSender = false}) =>
         body: Builder(
           builder: (ctx) => ElevatedButton(
             key: const Key('open'),
-            onPressed: () => TripDetailBottomSheet.show(
-              ctx,
-              trip: trip,
-              isSender: isSender,
-            ),
+            onPressed: () =>
+                TripDetailBottomSheet.show(ctx, trip: trip, isSender: isSender),
             child: const Text('Ouvrir'),
           ),
         ),
@@ -152,7 +148,10 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Refuser ce trajet'));
       await tester.pumpAndSettle();
-      expect(find.text('Refuser ce trajet'), findsOneWidget); // confirmation title
+      expect(
+        find.text('Refuser ce trajet'),
+        findsOneWidget,
+      ); // confirmation title
       expect(find.text('Confirmer le refus'), findsOneWidget);
     });
   });

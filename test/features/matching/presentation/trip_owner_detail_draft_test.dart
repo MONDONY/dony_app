@@ -70,21 +70,20 @@ final _owner = UserModel(
 AnnouncementModel _makeAnnouncement({
   String status = 'ACTIVE',
   int? bidsCount = 0,
-}) =>
-    AnnouncementModel(
-      id: 'ann-trip-001',
-      travelerId: _ownerId,
-      departureCity: 'Paris',
-      arrivalCity: 'Dakar',
-      departureDate: DateTime(2027, 7, 1),
-      availableKg: 10,
-      totalKg: 23,
-      pricePerKg: 8,
-      status: status,
-      bidsCount: bidsCount,
-      createdAt: DateTime(2026, 6, 1),
-      updatedAt: DateTime(2026, 6, 1),
-    );
+}) => AnnouncementModel(
+  id: 'ann-trip-001',
+  travelerId: _ownerId,
+  departureCity: 'Paris',
+  arrivalCity: 'Dakar',
+  departureDate: DateTime(2027, 7, 1),
+  availableKg: 10,
+  totalKg: 23,
+  pricePerKg: 8,
+  status: status,
+  bidsCount: bidsCount,
+  createdAt: DateTime(2026, 6, 1),
+  updatedAt: DateTime(2026, 6, 1),
+);
 
 // ── Pump helper ───────────────────────────────────────────────────────────────
 
@@ -130,7 +129,8 @@ Future<void> _pump(
       ),
       GoRoute(
         path: '/profile/upgrade-to-pro',
-        builder: (_, __) => const Scaffold(body: Center(child: Text('Upgrade'))),
+        builder: (_, __) =>
+            const Scaffold(body: Center(child: Text('Upgrade'))),
       ),
     ],
   );
@@ -162,10 +162,12 @@ void main() {
     authBloc = _MockAuthBloc();
     analytics = _MockAnalyticsService();
 
-    when(() => analytics.logEvent(any(), properties: any(named: 'properties')))
-        .thenAnswer((_) async {});
-    when(() => analytics.logScreen(any(), properties: any(named: 'properties')))
-        .thenAnswer((_) async {});
+    when(
+      () => analytics.logEvent(any(), properties: any(named: 'properties')),
+    ).thenAnswer((_) async {});
+    when(
+      () => analytics.logScreen(any(), properties: any(named: 'properties')),
+    ).thenAnswer((_) async {});
 
     when(() => bidBloc.state).thenReturn(BidListLoaded(const []));
     whenListen(
@@ -174,12 +176,18 @@ void main() {
       initialState: BidListLoaded(const []),
     );
     when(() => cancelBloc.state).thenReturn(CancellationInitial());
-    whenListen(cancelBloc, const Stream<CancellationState>.empty(),
-        initialState: CancellationInitial());
+    whenListen(
+      cancelBloc,
+      const Stream<CancellationState>.empty(),
+      initialState: CancellationInitial(),
+    );
 
     when(() => authBloc.state).thenReturn(AuthAuthenticated(_owner));
-    whenListen(authBloc, const Stream<AuthState>.empty(),
-        initialState: AuthAuthenticated(_owner));
+    whenListen(
+      authBloc,
+      const Stream<AuthState>.empty(),
+      initialState: AuthAuthenticated(_owner),
+    );
 
     when(() => annBloc.add(any())).thenReturn(null);
 
@@ -200,67 +208,78 @@ void main() {
   });
 
   testWidgets(
-      'affiche la bannière brouillon et le bouton Publier pour un DRAFT',
-      (tester) async {
-    final announcement = _makeAnnouncement(status: 'DRAFT');
-    when(() => annBloc.state)
-        .thenReturn(AnnouncementDetailLoaded(announcement));
-    whenListen(
-      annBloc,
-      Stream<AnnouncementState>.value(AnnouncementDetailLoaded(announcement)),
-      initialState: AnnouncementDetailLoaded(announcement),
-    );
+    'affiche la bannière brouillon et le bouton Publier pour un DRAFT',
+    (tester) async {
+      final announcement = _makeAnnouncement(status: 'DRAFT');
+      when(
+        () => annBloc.state,
+      ).thenReturn(AnnouncementDetailLoaded(announcement));
+      whenListen(
+        annBloc,
+        Stream<AnnouncementState>.value(AnnouncementDetailLoaded(announcement)),
+        initialState: AnnouncementDetailLoaded(announcement),
+      );
 
-    await _pump(tester,
+      await _pump(
+        tester,
         annBloc: annBloc,
         bidBloc: bidBloc,
         cancelBloc: cancelBloc,
-        authBloc: authBloc);
-    await tester.pumpAndSettle();
+        authBloc: authBloc,
+      );
+      await tester.pumpAndSettle();
 
-    expect(find.textContaining('brouillon'), findsWidgets);
-    expect(find.text('Publier'), findsOneWidget);
-  });
+      expect(find.textContaining('brouillon'), findsWidgets);
+      expect(find.text('Publier'), findsOneWidget);
+    },
+  );
 
-  testWidgets(
-      'pas de bannière ni de bouton Publier pour un trajet ACTIVE',
-      (tester) async {
+  testWidgets('pas de bannière ni de bouton Publier pour un trajet ACTIVE', (
+    tester,
+  ) async {
     final announcement = _makeAnnouncement(status: 'ACTIVE');
-    when(() => annBloc.state)
-        .thenReturn(AnnouncementDetailLoaded(announcement));
+    when(
+      () => annBloc.state,
+    ).thenReturn(AnnouncementDetailLoaded(announcement));
     whenListen(
       annBloc,
       Stream<AnnouncementState>.value(AnnouncementDetailLoaded(announcement)),
       initialState: AnnouncementDetailLoaded(announcement),
     );
 
-    await _pump(tester,
-        annBloc: annBloc,
-        bidBloc: bidBloc,
-        cancelBloc: cancelBloc,
-        authBloc: authBloc);
+    await _pump(
+      tester,
+      annBloc: annBloc,
+      bidBloc: bidBloc,
+      cancelBloc: cancelBloc,
+      authBloc: authBloc,
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Publier'), findsNothing);
     expect(find.textContaining('brouillon'), findsNothing);
   });
 
-  testWidgets('taper Publier dispatch AnnouncementPublishRequested',
-      (tester) async {
+  testWidgets('taper Publier dispatch AnnouncementPublishRequested', (
+    tester,
+  ) async {
     final announcement = _makeAnnouncement(status: 'DRAFT');
-    when(() => annBloc.state)
-        .thenReturn(AnnouncementDetailLoaded(announcement));
+    when(
+      () => annBloc.state,
+    ).thenReturn(AnnouncementDetailLoaded(announcement));
     whenListen(
       annBloc,
       Stream<AnnouncementState>.value(AnnouncementDetailLoaded(announcement)),
       initialState: AnnouncementDetailLoaded(announcement),
     );
 
-    await _pump(tester,
-        annBloc: annBloc,
-        bidBloc: bidBloc,
-        cancelBloc: cancelBloc,
-        authBloc: authBloc);
+    await _pump(
+      tester,
+      annBloc: annBloc,
+      bidBloc: bidBloc,
+      cancelBloc: cancelBloc,
+      authBloc: authBloc,
+    );
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Publier'));
@@ -270,9 +289,7 @@ void main() {
       () => annBloc.add(
         any(
           that: predicate<AnnouncementEvent>(
-            (e) =>
-                e is AnnouncementPublishRequested &&
-                e.id == announcement.id,
+            (e) => e is AnnouncementPublishRequested && e.id == announcement.id,
             'AnnouncementPublishRequested(${announcement.id})',
           ),
         ),
@@ -281,148 +298,165 @@ void main() {
   });
 
   testWidgets(
-      'un DRAFT à 0 demande reste modifiable et supprimable (tuiles actives)',
-      (tester) async {
-    final announcement =
-        _makeAnnouncement(status: 'DRAFT', bidsCount: 0);
-    when(() => annBloc.state)
-        .thenReturn(AnnouncementDetailLoaded(announcement));
-    whenListen(
-      annBloc,
-      Stream<AnnouncementState>.value(AnnouncementDetailLoaded(announcement)),
-      initialState: AnnouncementDetailLoaded(announcement),
-    );
+    'un DRAFT à 0 demande reste modifiable et supprimable (tuiles actives)',
+    (tester) async {
+      final announcement = _makeAnnouncement(status: 'DRAFT', bidsCount: 0);
+      when(
+        () => annBloc.state,
+      ).thenReturn(AnnouncementDetailLoaded(announcement));
+      whenListen(
+        annBloc,
+        Stream<AnnouncementState>.value(AnnouncementDetailLoaded(announcement)),
+        initialState: AnnouncementDetailLoaded(announcement),
+      );
 
-    await _pump(tester,
-        annBloc: annBloc,
-        bidBloc: bidBloc,
-        cancelBloc: cancelBloc,
-        authBloc: authBloc);
-    await tester.pumpAndSettle();
-
-    // Tuile « Modifier » tappable (pas grisée par un Opacity 0.4 wrapper).
-    final modifierTooltip = find.ancestor(
-      of: find.text('Modifier'),
-      matching: find.byType(Tooltip),
-    );
-    expect(modifierTooltip, findsNothing,
-        reason: 'Modifier doit être actif (pas de tooltip disabled) pour un DRAFT à 0 demande');
-
-    // Tuile « Supprimer » présente (le backend autorise la suppression d'un DRAFT).
-    expect(find.text('Supprimer'), findsOneWidget);
-  });
-
-  testWidgets(
-      'l\'écran affiche le badge « Brouillon » dans le détail pour un DRAFT',
-      (tester) async {
-    final announcement = _makeAnnouncement(status: 'DRAFT');
-    when(() => annBloc.state)
-        .thenReturn(AnnouncementDetailLoaded(announcement));
-    whenListen(
-      annBloc,
-      Stream<AnnouncementState>.value(AnnouncementDetailLoaded(announcement)),
-      initialState: AnnouncementDetailLoaded(announcement),
-    );
-
-    await _pump(tester,
-        annBloc: annBloc,
-        bidBloc: bidBloc,
-        cancelBloc: cancelBloc,
-        authBloc: authBloc);
-    await tester.pumpAndSettle();
-
-    expect(find.textContaining('BROUILLON'), findsOneWidget);
-  });
-
-  testWidgets(
-      'après publication (AnnouncementPublished sans reload), la bannière '
-      'brouillon et la tuile Publier disparaissent', (tester) async {
-    final draft = _makeAnnouncement(status: 'DRAFT');
-    final published = _makeAnnouncement(status: 'ACTIVE');
-
-    // État initial : DetailLoaded en DRAFT, ET widget.initial passé en DRAFT
-    // (comme lors d'une navigation depuis la liste avec `extra:`), pour
-    // reproduire le repli sur `widget.initial` figé si le rechargement
-    // déclenché après publication n'aboutit pas.
-    when(() => annBloc.state).thenReturn(AnnouncementDetailLoaded(draft));
-    final controller = StreamController<AnnouncementState>();
-    whenListen(
-      annBloc,
-      controller.stream,
-      initialState: AnnouncementDetailLoaded(draft),
-    );
-    addTearDown(controller.close);
-
-    await _pump(tester,
+      await _pump(
+        tester,
         annBloc: annBloc,
         bidBloc: bidBloc,
         cancelBloc: cancelBloc,
         authBloc: authBloc,
-        initial: draft);
-    await tester.pumpAndSettle();
+      );
+      await tester.pumpAndSettle();
 
-    expect(find.textContaining('brouillon'), findsWidgets);
-    expect(find.text('Publier'), findsOneWidget);
+      // Tuile « Modifier » tappable (pas grisée par un Opacity 0.4 wrapper).
+      final modifierTooltip = find.ancestor(
+        of: find.text('Modifier'),
+        matching: find.byType(Tooltip),
+      );
+      expect(
+        modifierTooltip,
+        findsNothing,
+        reason:
+            'Modifier doit être actif (pas de tooltip disabled) pour un DRAFT à 0 demande',
+      );
 
-    // Le bloc émet l'état intermédiaire AnnouncementPublished (ACTIVE), sans
-    // que le AnnouncementDetailLoaded du reload ne suive (ex. erreur réseau
-    // transitoire sur AnnouncementDetailRequested). Cet état déclenche aussi
-    // la navigation plein écran vers DonySuccessScreen — on laisse
-    // l'animation de route se terminer avant d'inspecter l'écran sous-jacent.
-    controller.add(AnnouncementPublished(published));
-    await tester.pumpAndSettle();
-
-    expect(find.textContaining('brouillon'), findsNothing);
-    expect(find.text('Publier'), findsNothing);
-    expect(find.textContaining('BROUILLON'), findsNothing);
-  });
+      // Tuile « Supprimer » présente (le backend autorise la suppression d'un DRAFT).
+      expect(find.text('Supprimer'), findsOneWidget);
+    },
+  );
 
   testWidgets(
-      'AnnouncementPublished affiche un DonySuccessScreen plein écran ; '
-      'tap sur Continuer revient au détail déjà rafraîchi', (tester) async {
-    final draft = _makeAnnouncement(status: 'DRAFT');
-    final published = _makeAnnouncement(status: 'ACTIVE');
+    'l\'écran affiche le badge « Brouillon » dans le détail pour un DRAFT',
+    (tester) async {
+      final announcement = _makeAnnouncement(status: 'DRAFT');
+      when(
+        () => annBloc.state,
+      ).thenReturn(AnnouncementDetailLoaded(announcement));
+      whenListen(
+        annBloc,
+        Stream<AnnouncementState>.value(AnnouncementDetailLoaded(announcement)),
+        initialState: AnnouncementDetailLoaded(announcement),
+      );
 
-    when(() => annBloc.state).thenReturn(AnnouncementDetailLoaded(draft));
-    final controller = StreamController<AnnouncementState>();
-    whenListen(
-      annBloc,
-      controller.stream,
-      initialState: AnnouncementDetailLoaded(draft),
-    );
-    addTearDown(controller.close);
-
-    await _pump(tester,
+      await _pump(
+        tester,
         annBloc: annBloc,
         bidBloc: bidBloc,
         cancelBloc: cancelBloc,
         authBloc: authBloc,
-        initial: draft);
-    await tester.pumpAndSettle();
+      );
+      await tester.pumpAndSettle();
 
-    controller.add(AnnouncementPublished(published));
-    await tester.pumpAndSettle();
+      expect(find.textContaining('BROUILLON'), findsOneWidget);
+    },
+  );
 
-    expect(find.byType(DonySuccessScreen), findsOneWidget);
-    expect(find.text('Trajet publié !'), findsOneWidget);
+  testWidgets(
+    'après publication (AnnouncementPublished sans reload), la bannière '
+    'brouillon et la tuile Publier disparaissent',
+    (tester) async {
+      final draft = _makeAnnouncement(status: 'DRAFT');
+      final published = _makeAnnouncement(status: 'ACTIVE');
 
-    verify(
-      () => annBloc.add(
-        any(
-          that: predicate<AnnouncementEvent>(
-            (e) =>
-                e is AnnouncementDetailRequested &&
-                e.id == 'ann-trip-001',
-            'AnnouncementDetailRequested(ann-trip-001)',
+      // État initial : DetailLoaded en DRAFT, ET widget.initial passé en DRAFT
+      // (comme lors d'une navigation depuis la liste avec `extra:`), pour
+      // reproduire le repli sur `widget.initial` figé si le rechargement
+      // déclenché après publication n'aboutit pas.
+      when(() => annBloc.state).thenReturn(AnnouncementDetailLoaded(draft));
+      final controller = StreamController<AnnouncementState>();
+      whenListen(
+        annBloc,
+        controller.stream,
+        initialState: AnnouncementDetailLoaded(draft),
+      );
+      addTearDown(controller.close);
+
+      await _pump(
+        tester,
+        annBloc: annBloc,
+        bidBloc: bidBloc,
+        cancelBloc: cancelBloc,
+        authBloc: authBloc,
+        initial: draft,
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('brouillon'), findsWidgets);
+      expect(find.text('Publier'), findsOneWidget);
+
+      // Le bloc émet l'état intermédiaire AnnouncementPublished (ACTIVE), sans
+      // que le AnnouncementDetailLoaded du reload ne suive (ex. erreur réseau
+      // transitoire sur AnnouncementDetailRequested). Cet état déclenche aussi
+      // la navigation plein écran vers DonySuccessScreen — on laisse
+      // l'animation de route se terminer avant d'inspecter l'écran sous-jacent.
+      controller.add(AnnouncementPublished(published));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('brouillon'), findsNothing);
+      expect(find.text('Publier'), findsNothing);
+      expect(find.textContaining('BROUILLON'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'AnnouncementPublished affiche un DonySuccessScreen plein écran ; '
+    'tap sur Continuer revient au détail déjà rafraîchi',
+    (tester) async {
+      final draft = _makeAnnouncement(status: 'DRAFT');
+      final published = _makeAnnouncement(status: 'ACTIVE');
+
+      when(() => annBloc.state).thenReturn(AnnouncementDetailLoaded(draft));
+      final controller = StreamController<AnnouncementState>();
+      whenListen(
+        annBloc,
+        controller.stream,
+        initialState: AnnouncementDetailLoaded(draft),
+      );
+      addTearDown(controller.close);
+
+      await _pump(
+        tester,
+        annBloc: annBloc,
+        bidBloc: bidBloc,
+        cancelBloc: cancelBloc,
+        authBloc: authBloc,
+        initial: draft,
+      );
+      await tester.pumpAndSettle();
+
+      controller.add(AnnouncementPublished(published));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(DonySuccessScreen), findsOneWidget);
+      expect(find.text('Trajet publié !'), findsOneWidget);
+
+      verify(
+        () => annBloc.add(
+          any(
+            that: predicate<AnnouncementEvent>(
+              (e) => e is AnnouncementDetailRequested && e.id == 'ann-trip-001',
+              'AnnouncementDetailRequested(ann-trip-001)',
+            ),
           ),
         ),
-      ),
-    ).called(1);
+      ).called(1);
 
-    await tester.tap(find.text('Continuer'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.text('Continuer'));
+      await tester.pumpAndSettle();
 
-    expect(find.byType(DonySuccessScreen), findsNothing);
-    expect(find.byType(TripOwnerDetailScreen), findsOneWidget);
-  });
+      expect(find.byType(DonySuccessScreen), findsNothing);
+      expect(find.byType(TripOwnerDetailScreen), findsOneWidget);
+    },
+  );
 }

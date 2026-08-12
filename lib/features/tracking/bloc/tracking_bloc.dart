@@ -16,7 +16,8 @@ class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
   final OfflineSyncService _offlineSync;
   final AnalyticsService _analytics;
 
-  TrackingBloc(this._repository, this._offlineSync, this._analytics) : super(TrackingInitial()) {
+  TrackingBloc(this._repository, this._offlineSync, this._analytics)
+    : super(TrackingInitial()) {
     on<TrackingQrCodeRequested>(_onQrCodeRequested);
     on<TrackingSearchRequested>(_onSearchRequested);
     on<TrackingEventsRequested>(_onEventsRequested);
@@ -101,8 +102,7 @@ class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
     emit(QrScanSubmitting());
     try {
       final connectivity = await Connectivity().checkConnectivity();
-      final isOnline =
-          connectivity.any((r) => r != ConnectivityResult.none);
+      final isOnline = connectivity.any((r) => r != ConnectivityResult.none);
 
       if (!isOnline) {
         await _offlineSync.queueScan(
@@ -119,7 +119,9 @@ class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
       String? photoKey;
       if (event.photo != null) {
         photoKey = await _repository.uploadTrackingPhoto(
-            event.bidId, event.photo!.path);
+          event.bidId,
+          event.photo!.path,
+        );
       }
       final result = await _repository.postScan(
         bidId: event.bidId,
@@ -129,10 +131,12 @@ class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
         photoUrl: photoKey,
       );
       emit(QrScanSuccess(result));
-      unawaited(_analytics.logEvent(
-        AnalyticsEvents.qrScanSuccess,
-        properties: {'scan_type': event.eventType, 'bid_id': event.bidId},
-      ));
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.qrScanSuccess,
+          properties: {'scan_type': event.eventType, 'bid_id': event.bidId},
+        ),
+      );
     } catch (e) {
       emit(QrScanError(unwrapDioError(e)));
     }
@@ -145,7 +149,9 @@ class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
     emit(DeliveryConfirmLoading());
     try {
       final result = await _repository.confirmDelivery(
-          bidId: event.bidId, code: event.code);
+        bidId: event.bidId,
+        code: event.code,
+      );
       emit(DeliveryConfirmSuccess(result));
     } catch (e) {
       if (kDebugMode) debugPrint('[TrackingBloc] confirmDelivery error: $e');

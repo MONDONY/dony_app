@@ -26,7 +26,8 @@ class RejectBottomSheet {
       stickyBottom: BlocBuilder<NegotiationBloc, NegotiationState>(
         bloc: bloc,
         builder: (ctx, state) {
-          final loading = state is NegotiationActionInProgress ||
+          final loading =
+              state is NegotiationActionInProgress ||
               state is NegotiationLoading;
           return DonyButton(
             label: loading ? 'Envoi…' : 'Confirmer le rejet',
@@ -70,10 +71,14 @@ class _RejectContentState extends State<_RejectContent> {
   }
 
   void _submit() {
-    widget.bloc.add(NegotiationRejectRequested(
-      threadId: widget.threadId,
-      reason: _reasonCtrl.text.trim().isEmpty ? null : _reasonCtrl.text.trim(),
-    ));
+    widget.bloc.add(
+      NegotiationRejectRequested(
+        threadId: widget.threadId,
+        reason: _reasonCtrl.text.trim().isEmpty
+            ? null
+            : _reasonCtrl.text.trim(),
+      ),
+    );
     Navigator.of(context, rootNavigator: true).pop();
   }
 
@@ -83,9 +88,7 @@ class _RejectContentState extends State<_RejectContent> {
       controller: _reasonCtrl,
       maxLines: 3,
       maxLength: 280,
-      decoration: const InputDecoration(
-        labelText: 'Raison (optionnel)',
-      ),
+      decoration: const InputDecoration(labelText: 'Raison (optionnel)'),
     );
   }
 }

@@ -72,7 +72,10 @@ void main() {
   });
 
   test('ConfirmResponse.fromJson parses accepted false with error', () {
-    final r = ConfirmResponse.fromJson({'accepted': false, 'error': '3DS échoué'});
+    final r = ConfirmResponse.fromJson({
+      'accepted': false,
+      'error': '3DS échoué',
+    });
     expect(r.accepted, isFalse);
     expect(r.error, '3DS échoué');
   });

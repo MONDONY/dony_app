@@ -140,33 +140,35 @@ void main() {
       expect(result, isEmpty);
     });
 
-    test('getPopularCorridors retourne une liste de PopularCorridorModel',
-        () async {
-      when(
-        () => mockDio.get<dynamic>(
-          any(),
-          queryParameters: any(named: 'queryParameters'),
-        ),
-      ).thenAnswer(
-        (_) async => Response<dynamic>(
-          requestOptions: RequestOptions(path: '/cities/corridors/popular'),
-          data: [
-            {
-              'departureCity': 'Paris',
-              'departureCountry': 'France',
-              'arrivalCity': 'Dakar',
-              'arrivalCountry': 'Sénégal',
-            },
-          ],
-          statusCode: 200,
-        ),
-      );
+    test(
+      'getPopularCorridors retourne une liste de PopularCorridorModel',
+      () async {
+        when(
+          () => mockDio.get<dynamic>(
+            any(),
+            queryParameters: any(named: 'queryParameters'),
+          ),
+        ).thenAnswer(
+          (_) async => Response<dynamic>(
+            requestOptions: RequestOptions(path: '/cities/corridors/popular'),
+            data: [
+              {
+                'departureCity': 'Paris',
+                'departureCountry': 'France',
+                'arrivalCity': 'Dakar',
+                'arrivalCountry': 'Sénégal',
+              },
+            ],
+            statusCode: 200,
+          ),
+        );
 
-      final result = await datasource.getPopularCorridors();
-      expect(result.length, 1);
-      expect(result.first.departureCity, 'Paris');
-      expect(result.first.arrivalCity, 'Dakar');
-    });
+        final result = await datasource.getPopularCorridors();
+        expect(result.length, 1);
+        expect(result.first.departureCity, 'Paris');
+        expect(result.first.arrivalCity, 'Dakar');
+      },
+    );
 
     test('getPopularCorridors retourne liste vide si data null', () async {
       when(
@@ -213,35 +215,44 @@ void main() {
       repository = CityRepository(datasource: mockDatasource);
     });
 
-    test('searchCities délègue au datasource et retourne le résultat',
-        () async {
-      when(() => mockDatasource.searchCities('Dak'))
-          .thenAnswer((_) async => [city]);
+    test(
+      'searchCities délègue au datasource et retourne le résultat',
+      () async {
+        when(
+          () => mockDatasource.searchCities('Dak'),
+        ).thenAnswer((_) async => [city]);
 
-      final result = await repository.searchCities('Dak');
-      expect(result.length, 1);
-      expect(result.first.name, 'Dakar');
-      verify(() => mockDatasource.searchCities('Dak')).called(1);
-    });
+        final result = await repository.searchCities('Dak');
+        expect(result.length, 1);
+        expect(result.first.name, 'Dakar');
+        verify(() => mockDatasource.searchCities('Dak')).called(1);
+      },
+    );
 
-    test('getPopularCorridors délègue au datasource et retourne le résultat',
-        () async {
-      when(() => mockDatasource.getPopularCorridors())
-          .thenAnswer((_) async => [corridor]);
+    test(
+      'getPopularCorridors délègue au datasource et retourne le résultat',
+      () async {
+        when(
+          () => mockDatasource.getPopularCorridors(),
+        ).thenAnswer((_) async => [corridor]);
 
-      final result = await repository.getPopularCorridors();
-      expect(result.length, 1);
-      expect(result.first.departureCity, 'Paris');
-      verify(() => mockDatasource.getPopularCorridors()).called(1);
-    });
+        final result = await repository.getPopularCorridors();
+        expect(result.length, 1);
+        expect(result.first.departureCity, 'Paris');
+        verify(() => mockDatasource.getPopularCorridors()).called(1);
+      },
+    );
 
-    test('searchCities retourne liste vide si datasource retourne vide',
-        () async {
-      when(() => mockDatasource.searchCities(any()))
-          .thenAnswer((_) async => []);
+    test(
+      'searchCities retourne liste vide si datasource retourne vide',
+      () async {
+        when(
+          () => mockDatasource.searchCities(any()),
+        ).thenAnswer((_) async => []);
 
-      final result = await repository.searchCities('zzz');
-      expect(result, isEmpty);
-    });
+        final result = await repository.searchCities('zzz');
+        expect(result, isEmpty);
+      },
+    );
   });
 }

@@ -44,19 +44,16 @@ class BlockedUsersScreen extends StatelessWidget {
           if (state is BlockedUsersError) {
             return _ErrorView(
               message: state.message,
-              onRetry: () => context
-                  .read<BlockedUsersBloc>()
-                  .add(const BlockedUsersLoadRequested()),
+              onRetry: () => context.read<BlockedUsersBloc>().add(
+                const BlockedUsersLoadRequested(),
+              ),
             );
           }
           if (state is BlockedUsersLoaded) {
             if (state.users.isEmpty) {
               return const _EmptyView();
             }
-            return _UserList(
-              users: state.users,
-              unlockingId: null,
-            );
+            return _UserList(users: state.users, unlockingId: null);
           }
           if (state is BlockedUsersUnblocking) {
             return _UserList(
@@ -132,7 +129,8 @@ class _UserTile extends StatelessWidget {
     if (diff.inDays == 1) return 'Bloqué hier';
     if (diff.inDays < 7) return 'Bloqué il y a ${diff.inDays} jours';
     if (diff.inDays < 14) return 'Bloqué il y a 1 semaine';
-    if (diff.inDays < 30) return 'Bloqué il y a ${(diff.inDays / 7).floor()} semaines';
+    if (diff.inDays < 30)
+      return 'Bloqué il y a ${(diff.inDays / 7).floor()} semaines';
     return 'Bloqué le ${DateFormat('d MMM yyyy', 'fr').format(date)}';
   }
 
@@ -206,9 +204,9 @@ class _UserTile extends StatelessWidget {
                   ),
                 )
               : GestureDetector(
-                  onTap: () => context
-                      .read<BlockedUsersBloc>()
-                      .add(BlockedUserUnblockRequested(user.userId)),
+                  onTap: () => context.read<BlockedUsersBloc>().add(
+                    BlockedUserUnblockRequested(user.userId),
+                  ),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 14,
@@ -242,32 +240,36 @@ class _EmptyView extends StatelessWidget {
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 40),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('🚫', style: TextStyle(fontSize: 48)),
-            const SizedBox(height: 16),
-            Text(
-              "Tu n'as bloqué personne",
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 17,
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFF0D1B2A),
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Les personnes que tu bloques apparaîtront ici.',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 13,
-                color: const Color(0xFF6B7A8D),
-                height: 1.5,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
+        child:
+            Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('🚫', style: TextStyle(fontSize: 48)),
+                    const SizedBox(height: 16),
+                    Text(
+                      "Tu n'as bloqué personne",
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF0D1B2A),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Les personnes que tu bloques apparaîtront ici.',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 13,
+                        color: const Color(0xFF6B7A8D),
+                        height: 1.5,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                )
+                .animate()
+                .fadeIn(duration: 300.ms)
+                .slideY(begin: 0.04, curve: Curves.easeOutCubic),
       ),
     );
   }

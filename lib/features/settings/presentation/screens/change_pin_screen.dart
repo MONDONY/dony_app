@@ -30,8 +30,9 @@ class _ChangePinScreenState extends State<ChangePinScreen> {
   static const _pinLength = 6;
   static const _maxAttempts = 3;
 
-  late _PinStep _step =
-      widget.isCreation ? _PinStep.enterNew : _PinStep.verifyOld;
+  late _PinStep _step = widget.isCreation
+      ? _PinStep.enterNew
+      : _PinStep.verifyOld;
   String _pin = '';
   String? _newPin;
   bool _hasError = false;
@@ -119,12 +120,14 @@ class _ChangePinScreenState extends State<ChangePinScreen> {
 
   String get _subtitle => switch (_step) {
     _PinStep.verifyOld => 'Saisissez votre code actuel',
-    _PinStep.enterNew => widget.isCreation
-        ? "Choisissez un code à 6 chiffres, il sera demandé à l'ouverture"
-        : 'Créez votre nouveau code',
-    _PinStep.confirmNew => widget.isCreation
-        ? 'Saisissez le même code pour confirmer'
-        : 'Confirmez le nouveau code',
+    _PinStep.enterNew =>
+      widget.isCreation
+          ? "Choisissez un code à 6 chiffres, il sera demandé à l'ouverture"
+          : 'Créez votre nouveau code',
+    _PinStep.confirmNew =>
+      widget.isCreation
+          ? 'Saisissez le même code pour confirmer'
+          : 'Confirmez le nouveau code',
   };
 
   @override

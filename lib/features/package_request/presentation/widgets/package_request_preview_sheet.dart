@@ -80,8 +80,8 @@ class _PreviewBody extends StatelessWidget {
         Text(
           s.negotiable
               ? (s.totalBudgetEur != null
-                  ? 'Budget indicatif : ${CurrencyFormatter.formatOrPlain(s.totalBudgetEur!, currency)}'
-                  : 'Ouvert aux offres')
+                    ? 'Budget indicatif : ${CurrencyFormatter.formatOrPlain(s.totalBudgetEur!, currency)}'
+                    : 'Ouvert aux offres')
               : 'Prix ferme : ${s.totalBudgetEur == null ? '?' : CurrencyFormatter.formatOrPlain(s.totalBudgetEur!, currency)}',
           style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
         ),

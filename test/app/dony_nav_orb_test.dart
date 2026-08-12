@@ -15,9 +15,7 @@ void main() {
 
   group('DonyNavOrb', () {
     testWidgets('affiche l\'icône scanner (scan-line)', (tester) async {
-      await tester.pumpWidget(
-        host(DonyNavOrb(active: false, onTap: () {})),
-      );
+      await tester.pumpWidget(host(DonyNavOrb(active: false, onTap: () {})));
 
       expect(
         find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'scan-line'),
@@ -38,9 +36,7 @@ void main() {
     testWidgets('expose Semantics bouton + Suivi, sélectionné si actif', (
       tester,
     ) async {
-      await tester.pumpWidget(
-        host(DonyNavOrb(active: true, onTap: () {})),
-      );
+      await tester.pumpWidget(host(DonyNavOrb(active: true, onTap: () {})));
 
       final node = tester.getSemantics(find.bySemanticsLabel('Suivi'));
       expect(node.hasFlag(SemanticsFlag.isButton), isTrue);
@@ -48,9 +44,7 @@ void main() {
     });
 
     testWidgets('non sélectionné quand inactif', (tester) async {
-      await tester.pumpWidget(
-        host(DonyNavOrb(active: false, onTap: () {})),
-      );
+      await tester.pumpWidget(host(DonyNavOrb(active: false, onTap: () {})));
 
       final node = tester.getSemantics(find.bySemanticsLabel('Suivi'));
       expect(node.hasFlag(SemanticsFlag.isSelected), isFalse);

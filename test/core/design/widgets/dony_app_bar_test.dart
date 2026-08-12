@@ -66,7 +66,8 @@ Iterable<Container> styledContainers(WidgetTester tester) =>
     tester.widgetList<Container>(find.byType(Container)).where((c) {
       final decoration = c.decoration;
       if (decoration is BoxDecoration) {
-        return decoration.borderRadius == BorderRadius.circular(DonyRadius.iconBtn);
+        return decoration.borderRadius ==
+            BorderRadius.circular(DonyRadius.iconBtn);
       }
       return false;
     });
@@ -79,58 +80,70 @@ void main() {
   group('DonyAppBar', () {
     // ── Container with BorderRadius(10) ───────────────────────────────────────
 
-    testWidgets('renders a Container with BorderRadius(10) when showBackButton',
-        (tester) async {
-      await tester.pumpWidget(
-        wrapAppBar(const DonyAppBar(title: 'Test')),
-      );
-      await tester.pump();
+    testWidgets(
+      'renders a Container with BorderRadius(10) when showBackButton',
+      (tester) async {
+        await tester.pumpWidget(wrapAppBar(const DonyAppBar(title: 'Test')));
+        await tester.pump();
 
-      expect(styledContainers(tester), isNotEmpty,
-          reason: 'Expected a Container with BorderRadius.circular(10)');
-    });
+        expect(
+          styledContainers(tester),
+          isNotEmpty,
+          reason: 'Expected a Container with BorderRadius.circular(10)',
+        );
+      },
+    );
 
     // ── Default icon: chevron_left_rounded ────────────────────────────────────
 
     testWidgets('uses Icons.chevron_left_rounded by default', (tester) async {
-      await tester.pumpWidget(
-        wrapAppBar(const DonyAppBar(title: 'Test')),
-      );
+      await tester.pumpWidget(wrapAppBar(const DonyAppBar(title: 'Test')));
       await tester.pump();
 
       final chevrons = tester
           .widgetList<Icon>(find.byType(Icon))
           .where((i) => i.icon == Icons.chevron_left_rounded);
-      expect(chevrons, isNotEmpty,
-          reason: 'chevron_left_rounded icon not found in DonyAppBar');
+      expect(
+        chevrons,
+        isNotEmpty,
+        reason: 'chevron_left_rounded icon not found in DonyAppBar',
+      );
     });
 
     // ── leadingIcon: Icons.close_rounded ─────────────────────────────────────
 
-    testWidgets('uses Icons.close_rounded when leadingIcon is close_rounded',
-        (tester) async {
+    testWidgets('uses Icons.close_rounded when leadingIcon is close_rounded', (
+      tester,
+    ) async {
       await tester.pumpWidget(
-        wrapAppBar(const DonyAppBar(
-          title: 'Modal',
-          leadingIcon: Icons.close_rounded,
-        )),
+        wrapAppBar(
+          const DonyAppBar(title: 'Modal', leadingIcon: Icons.close_rounded),
+        ),
       );
       await tester.pump();
 
       final closeIcons = tester
           .widgetList<Icon>(find.byType(Icon))
           .where((i) => i.icon == Icons.close_rounded);
-      expect(closeIcons, isNotEmpty,
-          reason: 'close_rounded icon not found in DonyAppBar leading');
+      expect(
+        closeIcons,
+        isNotEmpty,
+        reason: 'close_rounded icon not found in DonyAppBar leading',
+      );
 
       // Styled container still present
-      expect(styledContainers(tester), isNotEmpty,
-          reason: 'Styled container must be present for close icon too');
+      expect(
+        styledContainers(tester),
+        isNotEmpty,
+        reason: 'Styled container must be present for close icon too',
+      );
     });
 
     // ── showBackButton: false ─────────────────────────────────────────────────
 
-    testWidgets('renders no chevron when showBackButton: false', (tester) async {
+    testWidgets('renders no chevron when showBackButton: false', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         wrapAppBar(const DonyAppBar(title: 'NoBack', showBackButton: false)),
       );
@@ -147,25 +160,28 @@ void main() {
     // ── Tooltip logic ─────────────────────────────────────────────────────────
 
     testWidgets("tooltip is 'Retour' by default", (tester) async {
-      await tester.pumpWidget(
-        wrapAppBar(const DonyAppBar(title: 'Test')),
-      );
+      await tester.pumpWidget(wrapAppBar(const DonyAppBar(title: 'Test')));
       await tester.pump();
 
-      final iconButton = tester.widget<IconButton>(find.byType(IconButton).first);
+      final iconButton = tester.widget<IconButton>(
+        find.byType(IconButton).first,
+      );
       expect(iconButton.tooltip, 'Retour');
     });
 
-    testWidgets("tooltip is 'Fermer' when leadingIcon is provided", (tester) async {
+    testWidgets("tooltip is 'Fermer' when leadingIcon is provided", (
+      tester,
+    ) async {
       await tester.pumpWidget(
-        wrapAppBar(const DonyAppBar(
-          title: 'Modal',
-          leadingIcon: Icons.close_rounded,
-        )),
+        wrapAppBar(
+          const DonyAppBar(title: 'Modal', leadingIcon: Icons.close_rounded),
+        ),
       );
       await tester.pump();
 
-      final iconButton = tester.widget<IconButton>(find.byType(IconButton).first);
+      final iconButton = tester.widget<IconButton>(
+        find.byType(IconButton).first,
+      );
       expect(iconButton.tooltip, 'Fermer');
     });
 
@@ -186,13 +202,17 @@ void main() {
   // ─────────────────────────────────────────────────────────────────────────────
 
   group('DonySliverAppBar', () {
-    testWidgets('renders Container with BorderRadius(10) when showBackButton',
-        (tester) async {
+    testWidgets('renders Container with BorderRadius(10) when showBackButton', (
+      tester,
+    ) async {
       await tester.pumpWidget(wrapSliver());
       await tester.pump();
 
-      expect(styledContainers(tester), isNotEmpty,
-          reason: 'DonySliverAppBar should have a Container with radius 10');
+      expect(
+        styledContainers(tester),
+        isNotEmpty,
+        reason: 'DonySliverAppBar should have a Container with radius 10',
+      );
     });
 
     testWidgets('uses chevron_left_rounded icon', (tester) async {
@@ -205,7 +225,9 @@ void main() {
       expect(chevrons, isNotEmpty);
     });
 
-    testWidgets('renders no leading when showBackButton: false', (tester) async {
+    testWidgets('renders no leading when showBackButton: false', (
+      tester,
+    ) async {
       await tester.pumpWidget(wrapSliver(showBack: false));
       await tester.pump();
 

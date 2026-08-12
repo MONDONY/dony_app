@@ -17,13 +17,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-class _MockConvBloc extends MockBloc<ConversationOpenEvent, ConversationOpenState>
+class _MockConvBloc
+    extends MockBloc<ConversationOpenEvent, ConversationOpenState>
     implements ConversationOpenBloc {}
 
 class _MockRevealBloc extends MockBloc<ContactRevealEvent, ContactRevealState>
     implements ContactRevealBloc {}
 
-class _FakeConversationOpenEvent extends Fake implements ConversationOpenEvent {}
+class _FakeConversationOpenEvent extends Fake
+    implements ConversationOpenEvent {}
 
 class _FakeContactRevealEvent extends Fake implements ContactRevealEvent {}
 
@@ -36,20 +38,19 @@ BidModel _bid({
   String senderId = 's1',
   int? senderTotalShipments,
   bool senderKycVerified = true,
-}) =>
-    BidModel(
-      id: 'b1',
-      announcementId: 'a1',
-      senderId: senderId,
-      status: status,
-      weightKg: 5,
-      senderName: senderName,
-      senderPhoneAvailable: senderPhoneAvailable,
-      senderTotalShipments: senderTotalShipments,
-      senderKycVerified: senderKycVerified,
-      createdAt: DateTime(2026, 5),
-      updatedAt: DateTime(2026, 5),
-    );
+}) => BidModel(
+  id: 'b1',
+  announcementId: 'a1',
+  senderId: senderId,
+  status: status,
+  weightKg: 5,
+  senderName: senderName,
+  senderPhoneAvailable: senderPhoneAvailable,
+  senderTotalShipments: senderTotalShipments,
+  senderKycVerified: senderKycVerified,
+  createdAt: DateTime(2026, 5),
+  updatedAt: DateTime(2026, 5),
+);
 
 Future<void> _pump(
   WidgetTester tester,
@@ -94,10 +95,10 @@ void _mockUrlLauncher({required bool canLaunch}) {
   const channel = MethodChannel('plugins.flutter.io/url_launcher');
   TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
       .setMockMethodCallHandler(channel, (call) async {
-    if (call.method == 'canLaunch') return canLaunch;
-    if (call.method == 'launch') return canLaunch;
-    return null;
-  });
+        if (call.method == 'canLaunch') return canLaunch;
+        if (call.method == 'launch') return canLaunch;
+        return null;
+      });
   addTearDown(() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, null);
@@ -131,8 +132,9 @@ void main() {
     },
   );
 
-  testWidgets('affiche le nom + 💬 + 📞 quand l\'expéditeur est joignable',
-      (tester) async {
+  testWidgets('affiche le nom + 💬 + 📞 quand l\'expéditeur est joignable', (
+    tester,
+  ) async {
     await _pump(tester, _bid());
     expect(find.text('EXPÉDITEUR'), findsOneWidget);
     expect(find.text('Mariama D.'), findsOneWidget);
@@ -140,8 +142,9 @@ void main() {
     expect(_phoneIcon, findsOneWidget);
   });
 
-  testWidgets('pas de 📞 si le serveur ne le déclare pas joignable',
-      (tester) async {
+  testWidgets('pas de 📞 si le serveur ne le déclare pas joignable', (
+    tester,
+  ) async {
     await _pump(tester, _bid(senderPhoneAvailable: false));
     expect(_phoneIcon, findsNothing);
     expect(_chatIcon, findsOneWidget);
@@ -177,22 +180,28 @@ void main() {
     expect(find.textContaining('1 envoi'), findsOneWidget);
   });
 
-  testWidgets('senderTotalShipments null → pas de texte envois', (tester) async {
+  testWidgets('senderTotalShipments null → pas de texte envois', (
+    tester,
+  ) async {
     await _pump(tester, _bid());
     expect(find.textContaining('envoi'), findsNothing);
   });
 
-  testWidgets('sans nom → « Expéditeur » (le numéro ne sert plus de repli)',
-      (tester) async {
+  testWidgets('sans nom → « Expéditeur » (le numéro ne sert plus de repli)', (
+    tester,
+  ) async {
     await _pump(tester, _bid(senderName: null));
     expect(find.text('Expéditeur'), findsOneWidget);
   });
 
-  testWidgets('senderId vide → pas de chevron (canOpenProfile=false)',
-      (tester) async {
+  testWidgets('senderId vide → pas de chevron (canOpenProfile=false)', (
+    tester,
+  ) async {
     await _pump(tester, _bid(senderId: ''));
-    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'chevron-right'),
-        findsNothing);
+    expect(
+      find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'chevron-right'),
+      findsNothing,
+    );
   });
 
   testWidgets('tap 💬 → ConversationOpenRequested émis', (tester) async {
@@ -216,13 +225,16 @@ void main() {
     );
     await tester.tap(_chatIcon);
     await tester.pumpAndSettle();
-    verify(() => conv.add(any(that: isA<ConversationOpenRequested>()))).called(1);
+    verify(
+      () => conv.add(any(that: isA<ConversationOpenRequested>())),
+    ).called(1);
   });
 
   // ── Révélation du numéro : le tap demande, il n'appelle pas directement ─────
 
-  testWidgets('tap 📞 → demande le numéro au serveur, sans composer',
-      (tester) async {
+  testWidgets('tap 📞 → demande le numéro au serveur, sans composer', (
+    tester,
+  ) async {
     final reveal = _MockRevealBloc();
     when(() => reveal.state).thenReturn(const ContactRevealInitial());
     await _pump(tester, _bid(), reveal: reveal);
@@ -230,14 +242,20 @@ void main() {
     await tester.tap(_phoneIcon);
     await tester.pump();
 
-    verify(() => reveal.add(any(that: isA<ContactRevealRequested>()))).called(1);
+    verify(
+      () => reveal.add(any(that: isA<ContactRevealRequested>())),
+    ).called(1);
   });
 
-  testWidgets('numéro reçu → composeur ouvert, aucun message d\'erreur',
-      (tester) async {
+  testWidgets('numéro reçu → composeur ouvert, aucun message d\'erreur', (
+    tester,
+  ) async {
     _mockUrlLauncher(canLaunch: true);
-    await _pump(tester, _bid(),
-        reveal: _revealEmitting(const ContactRevealSuccess('+33600000000')));
+    await _pump(
+      tester,
+      _bid(),
+      reveal: _revealEmitting(const ContactRevealSuccess('+33600000000')),
+    );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
 
@@ -246,24 +264,33 @@ void main() {
     expect(find.textContaining('Aucun numéro disponible'), findsNothing);
   });
 
-  testWidgets('pas d\'app téléphone → le numéro est affiché et proposé à la copie',
-      (tester) async {
-    _mockUrlLauncher(canLaunch: false);
-    await _pump(tester, _bid(),
-        reveal: _revealEmitting(const ContactRevealSuccess('+33600000000')));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
+  testWidgets(
+    'pas d\'app téléphone → le numéro est affiché et proposé à la copie',
+    (tester) async {
+      _mockUrlLauncher(canLaunch: false);
+      await _pump(
+        tester,
+        _bid(),
+        reveal: _revealEmitting(const ContactRevealSuccess('+33600000000')),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
 
-    // Le numéro vient d'être obtenu du serveur : le perdre sur une simple erreur
-    // serait dommage (émulateurs et tablettes n'ont pas de composeur).
-    expect(find.textContaining('+33600000000'), findsOneWidget);
-    expect(find.text('Copier'), findsOneWidget);
-  });
+      // Le numéro vient d'être obtenu du serveur : le perdre sur une simple erreur
+      // serait dommage (émulateurs et tablettes n'ont pas de composeur).
+      expect(find.textContaining('+33600000000'), findsOneWidget);
+      expect(find.text('Copier'), findsOneWidget);
+    },
+  );
 
-  testWidgets('compte sans numéro → message dédié, pas de composeur vide',
-      (tester) async {
-    await _pump(tester, _bid(),
-        reveal: _revealEmitting(const ContactRevealSuccess(null)));
+  testWidgets('compte sans numéro → message dédié, pas de composeur vide', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      _bid(),
+      reveal: _revealEmitting(const ContactRevealSuccess(null)),
+    );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
 

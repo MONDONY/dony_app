@@ -9,7 +9,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 class MyReviewsBloc extends Bloc<MyReviewsEvent, MyReviewsState> {
   MyReviewsBloc(this._repository, this._analytics)
-      : super(const MyReviewsInitial()) {
+    : super(const MyReviewsInitial()) {
     on<MyReviewsRequested>(_onRequested);
     on<MyReviewsNextPageRequested>(_onNextPage);
     on<MyReviewsStarFilterToggled>(_onStarFilterToggled);
@@ -45,12 +45,13 @@ class MyReviewsBloc extends Bloc<MyReviewsEvent, MyReviewsState> {
     final current = state;
     if (current is! MyReviewsLoaded) return;
     // Re-tap sur la note active → on retire le filtre.
-    final next =
-        current.selectedStars == event.stars ? null : event.stars;
-    unawaited(_analytics.logEvent(
-      AnalyticsEvents.reviewsFiltered,
-      properties: {'stars': next ?? 'all'},
-    ));
+    final next = current.selectedStars == event.stars ? null : event.stars;
+    unawaited(
+      _analytics.logEvent(
+        AnalyticsEvents.reviewsFiltered,
+        properties: {'stars': next ?? 'all'},
+      ),
+    );
     emit(current.copyWith(selectedStars: next));
   }
 }

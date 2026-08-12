@@ -19,19 +19,18 @@ Widget _host({
   String? label,
   required Future<String?> Function(double, double) geocode,
   required void Function(double, double, int, String?) onChanged,
-}) =>
-    MaterialApp(
-      theme: AppTheme.light(),
-      home: Scaffold(
-        body: ZonePickerField(
-          initialCenter: center ?? const LatLng(48.85, 2.35),
-          initialRadiusKm: radiusKm,
-          initialLabel: label,
-          reverseGeocode: geocode,
-          onChanged: onChanged,
-        ),
-      ),
-    );
+}) => MaterialApp(
+  theme: AppTheme.light(),
+  home: Scaffold(
+    body: ZonePickerField(
+      initialCenter: center ?? const LatLng(48.85, 2.35),
+      initialRadiusKm: radiusKm,
+      initialLabel: label,
+      reverseGeocode: geocode,
+      onChanged: onChanged,
+    ),
+  ),
+);
 
 void main() {
   setUp(() {
@@ -46,10 +45,12 @@ void main() {
   tearDown(() => GetIt.I.reset());
 
   testWidgets('shows the city field and "ma position" button', (tester) async {
-    await tester.pumpWidget(_host(
-      geocode: (lat, lng) async => null,
-      onChanged: (_, __, ___, ____) {},
-    ));
+    await tester.pumpWidget(
+      _host(
+        geocode: (lat, lng) async => null,
+        onChanged: (_, __, ___, ____) {},
+      ),
+    );
     await tester.pump();
 
     expect(find.byKey(const Key('zone-city-field')), findsOneWidget);
@@ -57,15 +58,18 @@ void main() {
     expect(find.text('Utiliser ma position'), findsOneWidget);
   });
 
-  testWidgets('emits initial zone on mount + reverse-geocoded label',
-      (tester) async {
+  testWidgets('emits initial zone on mount + reverse-geocoded label', (
+    tester,
+  ) async {
     final calls = <(double, double, int, String?)>[];
-    await tester.pumpWidget(_host(
-      center: const LatLng(48.85, 2.35),
-      radiusKm: 25,
-      geocode: (lat, lng) async => 'Lyon',
-      onChanged: (lat, lng, r, label) => calls.add((lat, lng, r, label)),
-    ));
+    await tester.pumpWidget(
+      _host(
+        center: const LatLng(48.85, 2.35),
+        radiusKm: 25,
+        geocode: (lat, lng) async => 'Lyon',
+        onChanged: (lat, lng, r, label) => calls.add((lat, lng, r, label)),
+      ),
+    );
     await tester.pump(); // postFrame initial emit
 
     expect(calls, isNotEmpty);
@@ -81,14 +85,18 @@ void main() {
 
   testWidgets('radius slider increases radius via onChanged', (tester) async {
     final radii = <int>[];
-    await tester.pumpWidget(_host(
-      geocode: (lat, lng) async => null,
-      onChanged: (lat, lng, r, label) => radii.add(r),
-    ));
+    await tester.pumpWidget(
+      _host(
+        geocode: (lat, lng) async => null,
+        onChanged: (lat, lng, r, label) => radii.add(r),
+      ),
+    );
     await tester.pump();
 
     await tester.drag(
-        find.byKey(const Key('zone-radius-slider')), const Offset(400, 0));
+      find.byKey(const Key('zone-radius-slider')),
+      const Offset(400, 0),
+    );
     await tester.pump();
 
     expect(radii.last, greaterThan(25));
@@ -96,22 +104,26 @@ void main() {
 
   testWidgets('clamps initialRadiusKm into [5,300]', (tester) async {
     final radii = <int>[];
-    await tester.pumpWidget(_host(
-      radiusKm: 999,
-      geocode: (lat, lng) async => null,
-      onChanged: (lat, lng, r, label) => radii.add(r),
-    ));
+    await tester.pumpWidget(
+      _host(
+        radiusKm: 999,
+        geocode: (lat, lng) async => null,
+        onChanged: (lat, lng, r, label) => radii.add(r),
+      ),
+    );
     await tester.pump();
 
     expect(radii.first, 300);
   });
 
   testWidgets('renders the radius label', (tester) async {
-    await tester.pumpWidget(_host(
-      radiusKm: 40,
-      geocode: (lat, lng) async => null,
-      onChanged: (_, __, ___, ____) {},
-    ));
+    await tester.pumpWidget(
+      _host(
+        radiusKm: 40,
+        geocode: (lat, lng) async => null,
+        onChanged: (_, __, ___, ____) {},
+      ),
+    );
     await tester.pump();
 
     expect(find.byKey(const Key('zone-radius-label')), findsOneWidget);

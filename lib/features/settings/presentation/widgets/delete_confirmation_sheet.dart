@@ -31,15 +31,15 @@ class DeleteConfirmationSheet extends StatefulWidget {
         valueListenable: checkboxNotifier,
         builder: (context, checked, child) =>
             BlocBuilder<AccountDeletionBloc, AccountDeletionState>(
-          builder: (ctx, state) => DonyButton(
-            label: 'Supprimer définitivement',
-            variant: DonyButtonVariant.destructive,
-            isLoading: state is AccountDeletionLoading,
-            onPressed: !checked || state is AccountDeletionLoading
-                ? null
-                : () => submit?.call(),
-          ),
-        ),
+              builder: (ctx, state) => DonyButton(
+                label: 'Supprimer définitivement',
+                variant: DonyButtonVariant.destructive,
+                isLoading: state is AccountDeletionLoading,
+                onPressed: !checked || state is AccountDeletionLoading
+                    ? null
+                    : () => submit?.call(),
+              ),
+            ),
       ),
       child: DeleteConfirmationSheet(
         checkboxNotifier: checkboxNotifier,
@@ -90,18 +90,12 @@ class _DeleteConfirmationSheetState extends State<DeleteConfirmationSheet> {
             decoration: BoxDecoration(
               color: cs.errorLight,
               borderRadius: BorderRadius.circular(DonyRadius.card),
-              border: Border.all(
-                color: cs.error.withValues(alpha: 0.25),
-              ),
+              border: Border.all(color: cs.error.withValues(alpha: 0.25)),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                DonyIcon(
-                  'triangle-alert',
-                  color: cs.error,
-                  size: 18,
-                ),
+                DonyIcon('triangle-alert', color: cs.error, size: 18),
                 const SizedBox(width: DonySpacing.sm),
                 Expanded(
                   child: Text(
@@ -116,8 +110,8 @@ class _DeleteConfirmationSheetState extends State<DeleteConfirmationSheet> {
           ValueListenableBuilder<bool>(
             valueListenable: widget.checkboxNotifier,
             builder: (context, checked, child) => GestureDetector(
-              onTap: () =>
-                  widget.checkboxNotifier.value = !widget.checkboxNotifier.value,
+              onTap: () => widget.checkboxNotifier.value =
+                  !widget.checkboxNotifier.value,
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

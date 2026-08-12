@@ -206,55 +206,44 @@ void main() {
   );
 
   // ── Test 4: COMPLETED + senderHasRated=true → RatingDoneBadge ──────────────
-  testWidgets(
-    '4 · COMPLETED + senderHasRated=true → RatingDoneBadge affiché',
-    (tester) async {
-      sizeView(tester);
-      final bid = _bid(status: 'COMPLETED', senderHasRated: true);
+  testWidgets('4 · COMPLETED + senderHasRated=true → RatingDoneBadge affiché', (
+    tester,
+  ) async {
+    sizeView(tester);
+    final bid = _bid(status: 'COMPLETED', senderHasRated: true);
 
-      await tester.pumpWidget(
-        _host(bid, cancellationBloc, conversationOpenBloc),
-      );
-      await tester.pump(const Duration(seconds: 1));
+    await tester.pumpWidget(_host(bid, cancellationBloc, conversationOpenBloc));
+    await tester.pump(const Duration(seconds: 1));
 
-      expect(find.text('Évaluation envoyée'), findsOneWidget);
-    },
-  );
+    expect(find.text('Évaluation envoyée'), findsOneWidget);
+  });
 
   // ── Test 5: COMPLETED + senderHasRated=false → RatingDoneBadge absent ──────
-  testWidgets(
-    '5 · COMPLETED + senderHasRated=false → RatingDoneBadge absent',
-    (tester) async {
-      sizeView(tester);
-      final bid = _bid(status: 'COMPLETED', senderHasRated: false);
+  testWidgets('5 · COMPLETED + senderHasRated=false → RatingDoneBadge absent', (
+    tester,
+  ) async {
+    sizeView(tester);
+    final bid = _bid(status: 'COMPLETED', senderHasRated: false);
 
-      await tester.pumpWidget(
-        _host(bid, cancellationBloc, conversationOpenBloc),
-      );
-      await tester.pump(const Duration(seconds: 1));
+    await tester.pumpWidget(_host(bid, cancellationBloc, conversationOpenBloc));
+    await tester.pump(const Duration(seconds: 1));
 
-      expect(find.text('Évaluation envoyée'), findsNothing);
-    },
-  );
+    expect(find.text('Évaluation envoyée'), findsNothing);
+  });
 
   // ── Test 6: stagger désactivé après premier build (playEntrance=false) ──────
-  testWidgets(
-    '6 · après la durée du stagger, playEntrance passe à false '
-    'et le second rebuild ne rejoue pas l\'animation',
-    (tester) async {
-      sizeView(tester);
-      final bid = _bid(status: 'ACCEPTED');
+  testWidgets('6 · après la durée du stagger, playEntrance passe à false '
+      'et le second rebuild ne rejoue pas l\'animation', (tester) async {
+    sizeView(tester);
+    final bid = _bid(status: 'ACCEPTED');
 
-      await tester.pumpWidget(
-        _host(bid, cancellationBloc, conversationOpenBloc),
-      );
-      // Attendre plus longtemps que la durée totale du stagger
-      // (60ms × 7 + 300ms + 50ms = 770ms).
-      await tester.pump(const Duration(milliseconds: 900));
+    await tester.pumpWidget(_host(bid, cancellationBloc, conversationOpenBloc));
+    // Attendre plus longtemps que la durée totale du stagger
+    // (60ms × 7 + 300ms + 50ms = 770ms).
+    await tester.pump(const Duration(milliseconds: 900));
 
-      // Le corps doit toujours rendre ses widgets normalement.
-      expect(find.byType(ColisBillet), findsOneWidget);
-      expect(find.byType(SenderHeroCard), findsOneWidget);
-    },
-  );
+    // Le corps doit toujours rendre ses widgets normalement.
+    expect(find.byType(ColisBillet), findsOneWidget);
+    expect(find.byType(SenderHeroCard), findsOneWidget);
+  });
 }

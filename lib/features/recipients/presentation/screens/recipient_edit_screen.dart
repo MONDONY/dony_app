@@ -56,8 +56,9 @@ class _RecipientEditScreenState extends State<RecipientEditScreen> {
   void _validatePhone(String value) {
     final v = value.trim();
     setState(() {
-      _phoneError =
-          v.isEmpty || _phoneRegex.hasMatch(v) ? null : 'Format invalide (+33612345678)';
+      _phoneError = v.isEmpty || _phoneRegex.hasMatch(v)
+          ? null
+          : 'Format invalide (+33612345678)';
     });
   }
 
@@ -84,7 +85,8 @@ class _RecipientEditScreenState extends State<RecipientEditScreen> {
   @override
   void initState() {
     super.initState();
-    if (widget.initialFullName != null) _fullNameCtrl.text = widget.initialFullName!;
+    if (widget.initialFullName != null)
+      _fullNameCtrl.text = widget.initialFullName!;
     if (widget.initialPhoneE164 != null) {
       _phoneCtrl.text = widget.initialPhoneE164!;
       _validatePhone(widget.initialPhoneE164!);
@@ -128,40 +130,42 @@ class _RecipientEditScreenState extends State<RecipientEditScreen> {
     final country = _isEditing ? _country : countryFromPhone(phone);
 
     if (_isEditing) {
-      context.read<RecipientBloc>().add(RecipientUpdated(
-            id: widget.recipientId!,
-            fullName: _fullNameCtrl.text.trim(),
-            relationship: _relationshipCtrl.text.trim().isEmpty
-                ? null
-                : _relationshipCtrl.text.trim(),
-            phoneE164: phone,
-            whatsappE164: whatsapp.isEmpty ? null : whatsapp,
-            street: _streetCtrl.text.trim().isEmpty
-                ? null
-                : _streetCtrl.text.trim(),
-            city: city.isEmpty ? null : city,
-            country: country,
-            notes:
-                _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
-            isDefault: _isDefault,
-          ));
+      context.read<RecipientBloc>().add(
+        RecipientUpdated(
+          id: widget.recipientId!,
+          fullName: _fullNameCtrl.text.trim(),
+          relationship: _relationshipCtrl.text.trim().isEmpty
+              ? null
+              : _relationshipCtrl.text.trim(),
+          phoneE164: phone,
+          whatsappE164: whatsapp.isEmpty ? null : whatsapp,
+          street: _streetCtrl.text.trim().isEmpty
+              ? null
+              : _streetCtrl.text.trim(),
+          city: city.isEmpty ? null : city,
+          country: country,
+          notes: _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
+          isDefault: _isDefault,
+        ),
+      );
     } else {
-      context.read<RecipientBloc>().add(RecipientCreated(
-            fullName: _fullNameCtrl.text.trim(),
-            relationship: _relationshipCtrl.text.trim().isEmpty
-                ? null
-                : _relationshipCtrl.text.trim(),
-            phoneE164: phone,
-            whatsappE164: whatsapp.isEmpty ? null : whatsapp,
-            street: _streetCtrl.text.trim().isEmpty
-                ? null
-                : _streetCtrl.text.trim(),
-            city: city.isEmpty ? null : city,
-            country: country,
-            notes:
-                _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
-            isDefault: _isDefault,
-          ));
+      context.read<RecipientBloc>().add(
+        RecipientCreated(
+          fullName: _fullNameCtrl.text.trim(),
+          relationship: _relationshipCtrl.text.trim().isEmpty
+              ? null
+              : _relationshipCtrl.text.trim(),
+          phoneE164: phone,
+          whatsappE164: whatsapp.isEmpty ? null : whatsapp,
+          street: _streetCtrl.text.trim().isEmpty
+              ? null
+              : _streetCtrl.text.trim(),
+          city: city.isEmpty ? null : city,
+          country: country,
+          notes: _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
+          isDefault: _isDefault,
+        ),
+      );
     }
   }
 
@@ -169,7 +173,9 @@ class _RecipientEditScreenState extends State<RecipientEditScreen> {
   Widget build(BuildContext context) {
     return BlocConsumer<RecipientBloc, RecipientState>(
       listener: (context, state) {
-        if (!_initialized && _isEditing && state.status == RecipientStatus.success) {
+        if (!_initialized &&
+            _isEditing &&
+            state.status == RecipientStatus.success) {
           final found = state.recipients
               .where((r) => r.id == widget.recipientId)
               .firstOrNull;
@@ -201,7 +207,9 @@ class _RecipientEditScreenState extends State<RecipientEditScreen> {
         final cs = Theme.of(context).colorScheme;
 
         return DonyPageScaffold(
-          title: _isEditing ? 'Modifier le destinataire' : 'Nouveau destinataire',
+          title: _isEditing
+              ? 'Modifier le destinataire'
+              : 'Nouveau destinataire',
           stickyBottom: DonyButton(
             label: 'Enregistrer',
             onPressed: isLoading ? null : () => _submit(context),
@@ -218,23 +226,29 @@ class _RecipientEditScreenState extends State<RecipientEditScreen> {
                 const SizedBox(height: DonySpacing.base),
               ],
               DonyTextField(
-                controller: _fullNameCtrl,
-                label: 'Nom complet',
-                hint: 'Mamadou Diallo',
-                onChanged: (_) => setState(() {}),
-              ).animate().fadeIn(delay: 40.ms, duration: 280.ms).slideY(begin: 0.03),
+                    controller: _fullNameCtrl,
+                    label: 'Nom complet',
+                    hint: 'Mamadou Diallo',
+                    onChanged: (_) => setState(() {}),
+                  )
+                  .animate()
+                  .fadeIn(delay: 40.ms, duration: 280.ms)
+                  .slideY(begin: 0.03),
               const SizedBox(height: DonySpacing.base),
               DonyTextField(
-                controller: _phoneCtrl,
-                label: 'Téléphone (E.164)',
-                hint: '+22177123456',
-                keyboardType: TextInputType.phone,
-                onChanged: (v) {
-                  _validatePhone(v);
-                  setState(() {});
-                },
-                errorText: _phoneError,
-              ).animate().fadeIn(delay: 80.ms, duration: 280.ms).slideY(begin: 0.03),
+                    controller: _phoneCtrl,
+                    label: 'Téléphone (E.164)',
+                    hint: '+22177123456',
+                    keyboardType: TextInputType.phone,
+                    onChanged: (v) {
+                      _validatePhone(v);
+                      setState(() {});
+                    },
+                    errorText: _phoneError,
+                  )
+                  .animate()
+                  .fadeIn(delay: 80.ms, duration: 280.ms)
+                  .slideY(begin: 0.03),
               const SizedBox(height: DonySpacing.base),
               SwitchListTile.adaptive(
                 value: _isDefault,
@@ -247,7 +261,9 @@ class _RecipientEditScreenState extends State<RecipientEditScreen> {
                   horizontal: DonySpacing.base,
                 ),
                 title: const Text('Destinataire par défaut'),
-                subtitle: const Text('Présélectionné lors de tes prochains envois'),
+                subtitle: const Text(
+                  'Présélectionné lors de tes prochains envois',
+                ),
               ).animate().fadeIn(delay: 120.ms, duration: 280.ms),
             ],
           ),

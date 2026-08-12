@@ -82,7 +82,10 @@ void main() {
         'createdAt': '2026-06-20T09:00:00',
         // 'active' intentionally absent
       };
-      expect(() => CorridorAlertModel.fromJson(json), throwsA(isA<TypeError>()));
+      expect(
+        () => CorridorAlertModel.fromJson(json),
+        throwsA(isA<TypeError>()),
+      );
     });
 
     test('copyWith overrides active + matchCount', () {
@@ -147,21 +150,28 @@ void main() {
         'active': true,
         'createdAt': '2026-06-20T09:00:00',
       };
-      expect(CorridorAlertModel.fromJson(json).direction,
-          AlertDirection.senderWantsTrips);
+      expect(
+        CorridorAlertModel.fromJson(json).direction,
+        AlertDirection.senderWantsTrips,
+      );
     });
 
-    test('fromJson defaults direction to travelerWantsPackages when absent', () {
-      final json = <String, dynamic>{
-        'id': 'a1',
-        'departureCity': 'Paris',
-        'arrivalCity': 'Bamako',
-        'active': true,
-        'createdAt': '2026-06-20T09:00:00',
-      };
-      expect(CorridorAlertModel.fromJson(json).direction,
-          AlertDirection.travelerWantsPackages);
-    });
+    test(
+      'fromJson defaults direction to travelerWantsPackages when absent',
+      () {
+        final json = <String, dynamic>{
+          'id': 'a1',
+          'departureCity': 'Paris',
+          'arrivalCity': 'Bamako',
+          'active': true,
+          'createdAt': '2026-06-20T09:00:00',
+        };
+        expect(
+          CorridorAlertModel.fromJson(json).direction,
+          AlertDirection.travelerWantsPackages,
+        );
+      },
+    );
 
     test('draft.toJson includes direction wire string', () {
       const draft = CorridorAlertDraft(

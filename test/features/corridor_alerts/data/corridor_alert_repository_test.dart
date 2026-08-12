@@ -62,15 +62,21 @@ void main() {
   };
 
   test('getMyAlerts → GET /me/corridor-alerts', () async {
-    when(() => dio.get<List<dynamic>>('/me/corridor-alerts',
-            queryParameters: any(named: 'queryParameters')))
-        .thenAnswer((_) async => _resp<List<dynamic>>([alertJson]));
+    when(
+      () => dio.get<List<dynamic>>(
+        '/me/corridor-alerts',
+        queryParameters: any(named: 'queryParameters'),
+      ),
+    ).thenAnswer((_) async => _resp<List<dynamic>>([alertJson]));
     final result = await repo.getMyAlerts();
     expect(result, isA<List<CorridorAlertModel>>());
     expect(result.single.id, 'a1');
-    verify(() => dio.get<List<dynamic>>('/me/corridor-alerts',
-            queryParameters: any(named: 'queryParameters')))
-        .called(1);
+    verify(
+      () => dio.get<List<dynamic>>(
+        '/me/corridor-alerts',
+        queryParameters: any(named: 'queryParameters'),
+      ),
+    ).called(1);
   });
 
   test('create → POST /me/corridor-alerts with draft body', () async {
@@ -115,30 +121,33 @@ void main() {
     ).called(1);
   });
 
-  test('update with active:false → PUT body contains "active": false', () async {
-    Map<String, dynamic>? capturedBody;
-    when(
-      () => dio.put<Map<String, dynamic>>(
-        '/me/corridor-alerts/a1',
-        data: any(named: 'data'),
-      ),
-    ).thenAnswer((inv) async {
-      capturedBody = inv.namedArguments[#data] as Map<String, dynamic>;
-      return _resp<Map<String, dynamic>>(alertJson);
-    });
-    const draft = CorridorAlertDraft(
-      departureCity: 'Paris',
-      arrivalCity: 'Bamako',
-    );
-    await repo.update('a1', draft, active: false);
-    expect(capturedBody, containsPair('active', false));
-    verify(
-      () => dio.put<Map<String, dynamic>>(
-        '/me/corridor-alerts/a1',
-        data: any(named: 'data'),
-      ),
-    ).called(1);
-  });
+  test(
+    'update with active:false → PUT body contains "active": false',
+    () async {
+      Map<String, dynamic>? capturedBody;
+      when(
+        () => dio.put<Map<String, dynamic>>(
+          '/me/corridor-alerts/a1',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer((inv) async {
+        capturedBody = inv.namedArguments[#data] as Map<String, dynamic>;
+        return _resp<Map<String, dynamic>>(alertJson);
+      });
+      const draft = CorridorAlertDraft(
+        departureCity: 'Paris',
+        arrivalCity: 'Bamako',
+      );
+      await repo.update('a1', draft, active: false);
+      expect(capturedBody, containsPair('active', false));
+      verify(
+        () => dio.put<Map<String, dynamic>>(
+          '/me/corridor-alerts/a1',
+          data: any(named: 'data'),
+        ),
+      ).called(1);
+    },
+  );
 
   test('update without active → PUT body omits "active"', () async {
     Map<String, dynamic>? capturedBody;
@@ -166,59 +175,86 @@ void main() {
   });
 
   test('delete → DELETE /me/corridor-alerts/{id}', () async {
-    when(() => dio.delete<void>('/me/corridor-alerts/a1'))
-        .thenAnswer((_) async => _resp<void>(null));
+    when(
+      () => dio.delete<void>('/me/corridor-alerts/a1'),
+    ).thenAnswer((_) async => _resp<void>(null));
     await repo.delete('a1');
     verify(() => dio.delete<void>('/me/corridor-alerts/a1')).called(1);
   });
 
   test('getMatches → GET /me/corridor-alerts/{id}/matches (empty)', () async {
-    when(() => dio.get<List<dynamic>>('/me/corridor-alerts/a1/matches'))
-        .thenAnswer((_) async => _resp<List<dynamic>>([]));
-    final result =
-        await repo.getMatches('a1', AlertDirection.travelerWantsPackages);
+    when(
+      () => dio.get<List<dynamic>>('/me/corridor-alerts/a1/matches'),
+    ).thenAnswer((_) async => _resp<List<dynamic>>([]));
+    final result = await repo.getMatches(
+      'a1',
+      AlertDirection.travelerWantsPackages,
+    );
     expect(result.isEmpty, isTrue);
-    verify(() => dio.get<List<dynamic>>('/me/corridor-alerts/a1/matches'))
-        .called(1);
+    verify(
+      () => dio.get<List<dynamic>>('/me/corridor-alerts/a1/matches'),
+    ).called(1);
   });
 
   test('getMyAlerts with direction → adds query param', () async {
-    when(() => dio.get<List<dynamic>>('/me/corridor-alerts',
-            queryParameters: any(named: 'queryParameters')))
-        .thenAnswer((_) async => _resp<List<dynamic>>([alertJson]));
+    when(
+      () => dio.get<List<dynamic>>(
+        '/me/corridor-alerts',
+        queryParameters: any(named: 'queryParameters'),
+      ),
+    ).thenAnswer((_) async => _resp<List<dynamic>>([alertJson]));
     await repo.getMyAlerts(direction: AlertDirection.senderWantsTrips);
-    final captured = verify(() => dio.get<List<dynamic>>('/me/corridor-alerts',
-            queryParameters: captureAny(named: 'queryParameters')))
-        .captured.single as Map<String, dynamic>;
+    final captured =
+        verify(
+              () => dio.get<List<dynamic>>(
+                '/me/corridor-alerts',
+                queryParameters: captureAny(named: 'queryParameters'),
+              ),
+            ).captured.single
+            as Map<String, dynamic>;
     expect(captured['direction'], 'SENDER_WANTS_TRIPS');
   });
 
   test('getMyAlerts without direction → no query param', () async {
-    when(() => dio.get<List<dynamic>>('/me/corridor-alerts',
-            queryParameters: any(named: 'queryParameters')))
-        .thenAnswer((_) async => _resp<List<dynamic>>([alertJson]));
+    when(
+      () => dio.get<List<dynamic>>(
+        '/me/corridor-alerts',
+        queryParameters: any(named: 'queryParameters'),
+      ),
+    ).thenAnswer((_) async => _resp<List<dynamic>>([alertJson]));
     await repo.getMyAlerts();
-    final captured = verify(() => dio.get<List<dynamic>>('/me/corridor-alerts',
-            queryParameters: captureAny(named: 'queryParameters')))
-        .captured.single as Map<String, dynamic>;
+    final captured =
+        verify(
+              () => dio.get<List<dynamic>>(
+                '/me/corridor-alerts',
+                queryParameters: captureAny(named: 'queryParameters'),
+              ),
+            ).captured.single
+            as Map<String, dynamic>;
     expect(captured.containsKey('direction'), isFalse);
   });
 
-  test('getMatches package direction → parses MatchingRequestModel list',
-      () async {
-    when(() => dio.get<List<dynamic>>('/me/corridor-alerts/a1/matches'))
-        .thenAnswer((_) async => _resp<List<dynamic>>([packageMatchJson]));
-    final result =
-        await repo.getMatches('a1', AlertDirection.travelerWantsPackages);
-    expect(result.direction, AlertDirection.travelerWantsPackages);
-    expect(result.packages, hasLength(1));
-    expect(result.trips, isEmpty);
-    expect(result.isEmpty, isFalse);
-  });
+  test(
+    'getMatches package direction → parses MatchingRequestModel list',
+    () async {
+      when(
+        () => dio.get<List<dynamic>>('/me/corridor-alerts/a1/matches'),
+      ).thenAnswer((_) async => _resp<List<dynamic>>([packageMatchJson]));
+      final result = await repo.getMatches(
+        'a1',
+        AlertDirection.travelerWantsPackages,
+      );
+      expect(result.direction, AlertDirection.travelerWantsPackages);
+      expect(result.packages, hasLength(1));
+      expect(result.trips, isEmpty);
+      expect(result.isEmpty, isFalse);
+    },
+  );
 
   test('getMatches trip direction → parses TripMatchModel list', () async {
-    when(() => dio.get<List<dynamic>>('/me/corridor-alerts/a1/matches'))
-        .thenAnswer((_) async => _resp<List<dynamic>>([tripMatchJson]));
+    when(
+      () => dio.get<List<dynamic>>('/me/corridor-alerts/a1/matches'),
+    ).thenAnswer((_) async => _resp<List<dynamic>>([tripMatchJson]));
     final result = await repo.getMatches('a1', AlertDirection.senderWantsTrips);
     expect(result.direction, AlertDirection.senderWantsTrips);
     expect(result.trips, hasLength(1));

@@ -11,23 +11,22 @@ NegotiationThread _thread({
   int roundsRemaining = 3,
   bool canAccept = false,
   bool canCounter = false,
-}) =>
-    NegotiationThread(
-      id: 't1',
-      packageRequestId: 'pr1',
-      travelerId: 'traveler-1',
-      travelerTravelDate: DateTime(2026, 6, 15),
-      travelerAvailableKg: 10,
-      status: status,
-      currentPriceEur: price,
-      roundsCount: rounds,
-      roundsRemaining: roundsRemaining,
-      canAccept: canAccept,
-      canCounter: canCounter,
-      lastActivityAt: DateTime(2026, 5, 11, 10),
-      createdAt: DateTime(2026, 5, 11, 9),
-      messages: const [],
-    );
+}) => NegotiationThread(
+  id: 't1',
+  packageRequestId: 'pr1',
+  travelerId: 'traveler-1',
+  travelerTravelDate: DateTime(2026, 6, 15),
+  travelerAvailableKg: 10,
+  status: status,
+  currentPriceEur: price,
+  roundsCount: rounds,
+  roundsRemaining: roundsRemaining,
+  canAccept: canAccept,
+  canCounter: canCounter,
+  lastActivityAt: DateTime(2026, 5, 11, 10),
+  createdAt: DateTime(2026, 5, 11, 9),
+  messages: const [],
+);
 
 void main() {
   // Épingle le taux de commission : ces tests assertent des montants
@@ -72,83 +71,116 @@ void main() {
 
   group('ThreadHeroCard rendering', () {
     testWidgets(
-        'traveler — affiche prix net "Tu reçois X €" + label "EN COURS" + Round X/5 pour OPEN',
-        (tester) async {
-      await tester.pumpWidget(wrap(ThreadHeroCard(
-        thread: _thread(
-            status: NegotiationThreadStatus.open,
-            price: 42,
-            rounds: 1,
-            roundsRemaining: 3),
-        statusVariant: ThreadStatusVariant.open,
-        isTraveler: true,
-      )));
-      await tester.pumpAndSettle();
-      // Traveler sees net: "Tu reçois 42,00 €"
-      expect(find.text('Tu reçois 42,00 €'), findsOneWidget);
-      expect(find.text('EN COURS'), findsOneWidget);
-      expect(find.text('Round 1/5'), findsOneWidget);
-      expect(find.text('PRIX ACTUEL'), findsOneWidget);
-      // No last-round warning when roundsRemaining > 0
-      expect(
+      'traveler — affiche prix net "Tu reçois X €" + label "EN COURS" + Round X/5 pour OPEN',
+      (tester) async {
+        await tester.pumpWidget(
+          wrap(
+            ThreadHeroCard(
+              thread: _thread(
+                status: NegotiationThreadStatus.open,
+                price: 42,
+                rounds: 1,
+                roundsRemaining: 3,
+              ),
+              statusVariant: ThreadStatusVariant.open,
+              isTraveler: true,
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        // Traveler sees net: "Tu reçois 42,00 €"
+        expect(find.text('Tu reçois 42,00 €'), findsOneWidget);
+        expect(find.text('EN COURS'), findsOneWidget);
+        expect(find.text('Round 1/5'), findsOneWidget);
+        expect(find.text('PRIX ACTUEL'), findsOneWidget);
+        // No last-round warning when roundsRemaining > 0
+        expect(
           find.text('⚠ Dernier round : Accepter ou Refuser uniquement'),
-          findsNothing);
-    });
+          findsNothing,
+        );
+      },
+    );
 
-    testWidgets(
-        'sender — affiche prix gross "Tu paies X €" pour OPEN',
-        (tester) async {
-      await tester.pumpWidget(wrap(ThreadHeroCard(
-        thread: _thread(
-            status: NegotiationThreadStatus.open,
-            price: 42,
-            rounds: 1,
-            roundsRemaining: 3),
-        statusVariant: ThreadStatusVariant.open,
-        isTraveler: false,
-      )));
+    testWidgets('sender — affiche prix gross "Tu paies X €" pour OPEN', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrap(
+          ThreadHeroCard(
+            thread: _thread(
+              status: NegotiationThreadStatus.open,
+              price: 42,
+              rounds: 1,
+              roundsRemaining: 3,
+            ),
+            statusVariant: ThreadStatusVariant.open,
+            isTraveler: false,
+          ),
+        ),
+      );
       await tester.pumpAndSettle();
       // Sender sees gross: 42 * 1.12 = 47.04
-      expect(find.text('Tu paies 47,04 €'), findsOneWidget);
+      expect(find.text('Tu paies 47,04 €'), findsOneWidget);
     });
 
-    testWidgets('affiche alerte dernier round quand roundsRemaining == 0',
-        (tester) async {
-      await tester.pumpWidget(wrap(ThreadHeroCard(
-        thread: _thread(
-            status: NegotiationThreadStatus.open,
-            rounds: 5,
-            roundsRemaining: 0),
-        statusVariant: ThreadStatusVariant.open,
-        isTraveler: true,
-      )));
+    testWidgets('affiche alerte dernier round quand roundsRemaining == 0', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrap(
+          ThreadHeroCard(
+            thread: _thread(
+              status: NegotiationThreadStatus.open,
+              rounds: 5,
+              roundsRemaining: 0,
+            ),
+            statusVariant: ThreadStatusVariant.open,
+            isTraveler: true,
+          ),
+        ),
+      );
       await tester.pumpAndSettle();
       expect(
-          find.text('⚠ Dernier round : Accepter ou Refuser uniquement'),
-          findsOneWidget);
+        find.text('⚠ Dernier round : Accepter ou Refuser uniquement'),
+        findsOneWidget,
+      );
     });
 
-    testWidgets('pas d\'alerte dernier round pour statut non-OPEN',
-        (tester) async {
-      await tester.pumpWidget(wrap(ThreadHeroCard(
-        thread: _thread(
-            status: NegotiationThreadStatus.awaitingTrip, roundsRemaining: 0),
-        statusVariant: ThreadStatusVariant.awaitingTrip,
-        isTraveler: true,
-      )));
+    testWidgets('pas d\'alerte dernier round pour statut non-OPEN', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrap(
+          ThreadHeroCard(
+            thread: _thread(
+              status: NegotiationThreadStatus.awaitingTrip,
+              roundsRemaining: 0,
+            ),
+            statusVariant: ThreadStatusVariant.awaitingTrip,
+            isTraveler: true,
+          ),
+        ),
+      );
       await tester.pumpAndSettle();
       expect(
-          find.text('⚠ Dernier round : Accepter ou Refuser uniquement'),
-          findsNothing);
+        find.text('⚠ Dernier round : Accepter ou Refuser uniquement'),
+        findsNothing,
+      );
     });
 
     testWidgets('label "ATT. TRAJET" pour AWAITING_TRIP', (tester) async {
-      await tester.pumpWidget(wrap(ThreadHeroCard(
-        thread:
-            _thread(status: NegotiationThreadStatus.awaitingTrip, rounds: 3),
-        statusVariant: ThreadStatusVariant.awaitingTrip,
-        isTraveler: true,
-      )));
+      await tester.pumpWidget(
+        wrap(
+          ThreadHeroCard(
+            thread: _thread(
+              status: NegotiationThreadStatus.awaitingTrip,
+              rounds: 3,
+            ),
+            statusVariant: ThreadStatusVariant.awaitingTrip,
+            isTraveler: true,
+          ),
+        ),
+      );
       await tester.pumpAndSettle();
       expect(find.text('ATT. TRAJET'), findsOneWidget);
       expect(find.text('ACCORD TROUVÉ'), findsOneWidget);
@@ -156,33 +188,45 @@ void main() {
     });
 
     testWidgets('label "PAIEMENT" pour AWAITING_PAYMENT', (tester) async {
-      await tester.pumpWidget(wrap(ThreadHeroCard(
-        thread: _thread(status: NegotiationThreadStatus.awaitingPayment),
-        statusVariant: ThreadStatusVariant.awaitingPayment,
-        isTraveler: true,
-      )));
+      await tester.pumpWidget(
+        wrap(
+          ThreadHeroCard(
+            thread: _thread(status: NegotiationThreadStatus.awaitingPayment),
+            statusVariant: ThreadStatusVariant.awaitingPayment,
+            isTraveler: true,
+          ),
+        ),
+      );
       await tester.pumpAndSettle();
       expect(find.text('PAIEMENT'), findsOneWidget);
       expect(find.text('À RÉGLER'), findsOneWidget);
     });
 
     testWidgets('label "ACCEPTÉE" pour ACCEPTED', (tester) async {
-      await tester.pumpWidget(wrap(ThreadHeroCard(
-        thread: _thread(status: NegotiationThreadStatus.accepted),
-        statusVariant: ThreadStatusVariant.accepted,
-        isTraveler: true,
-      )));
+      await tester.pumpWidget(
+        wrap(
+          ThreadHeroCard(
+            thread: _thread(status: NegotiationThreadStatus.accepted),
+            statusVariant: ThreadStatusVariant.accepted,
+            isTraveler: true,
+          ),
+        ),
+      );
       await tester.pumpAndSettle();
       expect(find.text('ACCEPTÉE'), findsOneWidget);
       expect(find.text('DEMANDE ACCEPTÉE'), findsOneWidget);
     });
 
     testWidgets('label "TERMINÉ" pour rejected', (tester) async {
-      await tester.pumpWidget(wrap(ThreadHeroCard(
-        thread: _thread(status: NegotiationThreadStatus.rejected),
-        statusVariant: ThreadStatusVariant.terminal,
-        isTraveler: true,
-      )));
+      await tester.pumpWidget(
+        wrap(
+          ThreadHeroCard(
+            thread: _thread(status: NegotiationThreadStatus.rejected),
+            statusVariant: ThreadStatusVariant.terminal,
+            isTraveler: true,
+          ),
+        ),
+      );
       await tester.pumpAndSettle();
       expect(find.text('TERMINÉ'), findsOneWidget);
       expect(find.text('PRIX FINAL'), findsOneWidget);

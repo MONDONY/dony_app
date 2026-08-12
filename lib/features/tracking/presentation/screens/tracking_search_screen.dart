@@ -331,8 +331,12 @@ class _TrackingResultCard extends StatelessWidget {
                       child: Row(
                         children: [
                           switch (iconAsset) {
-                            'plane-takeoff' => const DonyEmoji.planeTakeoff(size: 22),
-                            'plane-landing' => const DonyEmoji.planeLanding(size: 22),
+                            'plane-takeoff' => const DonyEmoji.planeTakeoff(
+                              size: 22,
+                            ),
+                            'plane-landing' => const DonyEmoji.planeLanding(
+                              size: 22,
+                            ),
                             'package' => const DonyEmoji.parcel(size: 22),
                             _ => DonyIcon(icon!, color: color, size: 22),
                           },

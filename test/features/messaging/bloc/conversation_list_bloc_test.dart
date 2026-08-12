@@ -8,9 +8,11 @@ import 'package:dony/features/messaging/data/models/conversation_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockConversationRepository extends Mock implements ConversationRepository {}
+class MockConversationRepository extends Mock
+    implements ConversationRepository {}
 
-class MockFirestoreChatRepository extends Mock implements FirestoreChatRepository {}
+class MockFirestoreChatRepository extends Mock
+    implements FirestoreChatRepository {}
 
 final _participant = ParticipantModel(id: 'uid-1', name: 'Bob D');
 final _conv = ConversationModel(
@@ -33,10 +35,15 @@ void main() {
     blocTest<ConversationListBloc, ConversationListState>(
       'emits Loading → Loaded when load succeeds',
       build: () {
-        when(() => convRepo.getConversations()).thenAnswer((_) async => [_conv]);
-        when(() => convRepo.getArchivedConversations()).thenAnswer((_) async => []);
-        when(() => firestoreRepo.perConversationUnreadStream(any()))
-            .thenAnswer((_) => const Stream.empty());
+        when(
+          () => convRepo.getConversations(),
+        ).thenAnswer((_) async => [_conv]);
+        when(
+          () => convRepo.getArchivedConversations(),
+        ).thenAnswer((_) async => []);
+        when(
+          () => firestoreRepo.perConversationUnreadStream(any()),
+        ).thenAnswer((_) => const Stream.empty());
         return ConversationListBloc(convRepo, firestoreRepo);
       },
       act: (b) => b.add(const ConversationsLoadRequested()),
@@ -50,8 +57,9 @@ void main() {
       'emits Loading → Error when getConversations throws',
       build: () {
         when(() => convRepo.getConversations()).thenThrow(Exception('network'));
-        when(() => firestoreRepo.perConversationUnreadStream(any()))
-            .thenAnswer((_) => const Stream.empty());
+        when(
+          () => firestoreRepo.perConversationUnreadStream(any()),
+        ).thenAnswer((_) => const Stream.empty());
         return ConversationListBloc(convRepo, firestoreRepo);
       },
       act: (b) => b.add(const ConversationsLoadRequested()),
@@ -64,10 +72,15 @@ void main() {
     blocTest<ConversationListBloc, ConversationListState>(
       'emits updated Loaded state with hasUnread=true when unread count > 0',
       build: () {
-        when(() => convRepo.getConversations()).thenAnswer((_) async => [_conv]);
-        when(() => convRepo.getArchivedConversations()).thenAnswer((_) async => []);
-        when(() => firestoreRepo.perConversationUnreadStream(any()))
-            .thenAnswer((_) => const Stream.empty());
+        when(
+          () => convRepo.getConversations(),
+        ).thenAnswer((_) async => [_conv]);
+        when(
+          () => convRepo.getArchivedConversations(),
+        ).thenAnswer((_) async => []);
+        when(
+          () => firestoreRepo.perConversationUnreadStream(any()),
+        ).thenAnswer((_) => const Stream.empty());
         return ConversationListBloc(convRepo, firestoreRepo);
       },
       act: (b) async {
@@ -89,12 +102,18 @@ void main() {
     blocTest<ConversationListBloc, ConversationListState>(
       'ConversationDeleteRequested removes the conversation locally and calls API',
       build: () {
-        when(() => convRepo.getConversations()).thenAnswer((_) async => [_conv]);
-        when(() => convRepo.getArchivedConversations()).thenAnswer((_) async => []);
-        when(() => firestoreRepo.perConversationUnreadStream(any()))
-            .thenAnswer((_) => const Stream.empty());
-        when(() => firestoreRepo.markConversationRead(any(), any()))
-            .thenAnswer((_) async {});
+        when(
+          () => convRepo.getConversations(),
+        ).thenAnswer((_) async => [_conv]);
+        when(
+          () => convRepo.getArchivedConversations(),
+        ).thenAnswer((_) async => []);
+        when(
+          () => firestoreRepo.perConversationUnreadStream(any()),
+        ).thenAnswer((_) => const Stream.empty());
+        when(
+          () => firestoreRepo.markConversationRead(any(), any()),
+        ).thenAnswer((_) async {});
         when(() => convRepo.deleteConversation(any())).thenAnswer((_) async {});
         return ConversationListBloc(convRepo, firestoreRepo);
       },
@@ -122,9 +141,12 @@ void main() {
       'ConversationsUnreadUpdated does nothing when no conversations loaded',
       build: () {
         when(() => convRepo.getConversations()).thenAnswer((_) async => []);
-        when(() => convRepo.getArchivedConversations()).thenAnswer((_) async => []);
-        when(() => firestoreRepo.perConversationUnreadStream(any()))
-            .thenAnswer((_) => const Stream.empty());
+        when(
+          () => convRepo.getArchivedConversations(),
+        ).thenAnswer((_) async => []);
+        when(
+          () => firestoreRepo.perConversationUnreadStream(any()),
+        ).thenAnswer((_) => const Stream.empty());
         return ConversationListBloc(convRepo, firestoreRepo);
       },
       act: (b) => b.add(const ConversationsUnreadUpdated({'conv_bid-1': 2})),
@@ -134,19 +156,26 @@ void main() {
     blocTest<ConversationListBloc, ConversationListState>(
       'ConversationFilterChanged met à jour filter et searchQuery dans le state',
       build: () {
-        when(() => convRepo.getConversations()).thenAnswer((_) async => [_conv]);
-        when(() => convRepo.getArchivedConversations()).thenAnswer((_) async => []);
-        when(() => firestoreRepo.perConversationUnreadStream(any()))
-            .thenAnswer((_) => const Stream.empty());
+        when(
+          () => convRepo.getConversations(),
+        ).thenAnswer((_) async => [_conv]);
+        when(
+          () => convRepo.getArchivedConversations(),
+        ).thenAnswer((_) async => []);
+        when(
+          () => firestoreRepo.perConversationUnreadStream(any()),
+        ).thenAnswer((_) => const Stream.empty());
         return ConversationListBloc(convRepo, firestoreRepo);
       },
       act: (b) async {
         b.add(const ConversationsLoadRequested());
         await Future<void>.delayed(const Duration(milliseconds: 50));
-        b.add(const ConversationFilterChanged(
-          filter: ConversationFilter.unread,
-          searchQuery: 'test',
-        ));
+        b.add(
+          const ConversationFilterChanged(
+            filter: ConversationFilter.unread,
+            searchQuery: 'test',
+          ),
+        );
       },
       expect: () => [
         isA<ConversationListLoading>(),
@@ -162,11 +191,18 @@ void main() {
     blocTest<ConversationListBloc, ConversationListState>(
       'ConversationArchiveRequested retire la conversation localement et appelle l\'API',
       build: () {
-        when(() => convRepo.getConversations()).thenAnswer((_) async => [_conv]);
-        when(() => convRepo.getArchivedConversations()).thenAnswer((_) async => []);
-        when(() => convRepo.archiveConversation(any())).thenAnswer((_) async {});
-        when(() => firestoreRepo.perConversationUnreadStream(any()))
-            .thenAnswer((_) => const Stream.empty());
+        when(
+          () => convRepo.getConversations(),
+        ).thenAnswer((_) async => [_conv]);
+        when(
+          () => convRepo.getArchivedConversations(),
+        ).thenAnswer((_) async => []);
+        when(
+          () => convRepo.archiveConversation(any()),
+        ).thenAnswer((_) async {});
+        when(
+          () => firestoreRepo.perConversationUnreadStream(any()),
+        ).thenAnswer((_) => const Stream.empty());
         return ConversationListBloc(convRepo, firestoreRepo);
       },
       act: (b) async {
@@ -180,7 +216,11 @@ void main() {
       },
       expect: () => [
         isA<ConversationListLoading>(),
-        isA<ConversationListLoaded>().having((s) => s.conversations.length, 'length', 1),
+        isA<ConversationListLoaded>().having(
+          (s) => s.conversations.length,
+          'length',
+          1,
+        ),
         isA<ConversationListLoaded>()
             .having((s) => s.conversations.length, 'conversations', 0)
             .having((s) => s.archivedConversations.length, 'archived', 1),
@@ -190,37 +230,54 @@ void main() {
     blocTest<ConversationListBloc, ConversationListState>(
       'filter est préservé après ConversationArchiveRequested',
       build: () {
-        when(() => convRepo.getConversations()).thenAnswer((_) async => [_conv]);
-        when(() => convRepo.getArchivedConversations()).thenAnswer((_) async => []);
-        when(() => convRepo.archiveConversation(any())).thenAnswer((_) async {});
-        when(() => firestoreRepo.perConversationUnreadStream(any()))
-            .thenAnswer((_) => const Stream.empty());
+        when(
+          () => convRepo.getConversations(),
+        ).thenAnswer((_) async => [_conv]);
+        when(
+          () => convRepo.getArchivedConversations(),
+        ).thenAnswer((_) async => []);
+        when(
+          () => convRepo.archiveConversation(any()),
+        ).thenAnswer((_) async {});
+        when(
+          () => firestoreRepo.perConversationUnreadStream(any()),
+        ).thenAnswer((_) => const Stream.empty());
         return ConversationListBloc(convRepo, firestoreRepo);
       },
       act: (b) async {
         b.add(const ConversationsLoadRequested());
         await Future<void>.delayed(const Duration(milliseconds: 50));
-        b.add(const ConversationFilterChanged(
-          filter: ConversationFilter.unread,
-          searchQuery: '',
-        ));
+        b.add(
+          const ConversationFilterChanged(
+            filter: ConversationFilter.unread,
+            searchQuery: '',
+          ),
+        );
         await Future<void>.delayed(const Duration(milliseconds: 10));
         b.add(const ConversationArchiveRequested('conv-1'));
       },
       expect: () => [
         isA<ConversationListLoading>(),
         isA<ConversationListLoaded>(),
-        isA<ConversationListLoaded>()
-            .having((s) => s.filter, 'filter', ConversationFilter.unread),
-        isA<ConversationListLoaded>()
-            .having((s) => s.filter, 'filter', ConversationFilter.unread),
+        isA<ConversationListLoaded>().having(
+          (s) => s.filter,
+          'filter',
+          ConversationFilter.unread,
+        ),
+        isA<ConversationListLoaded>().having(
+          (s) => s.filter,
+          'filter',
+          ConversationFilter.unread,
+        ),
       ],
     );
 
     blocTest<ConversationListBloc, ConversationListState>(
       'ConversationFilter.active ne montre que les conversations BID_ACCEPTED',
       build: () {
-        when(() => convRepo.getArchivedConversations()).thenAnswer((_) async => []);
+        when(
+          () => convRepo.getArchivedConversations(),
+        ).thenAnswer((_) async => []);
         final convActive = ConversationModel(
           id: _conv.id,
           bidId: _conv.bidId,
@@ -237,35 +294,47 @@ void main() {
           bidStatus: 'DELIVERY_CONFIRMED',
           hasUnread: false,
         );
-        when(() => convRepo.getConversations())
-            .thenAnswer((_) async => [convActive, convDone]);
-        when(() => firestoreRepo.perConversationUnreadStream(any()))
-            .thenAnswer((_) => const Stream.empty());
+        when(
+          () => convRepo.getConversations(),
+        ).thenAnswer((_) async => [convActive, convDone]);
+        when(
+          () => firestoreRepo.perConversationUnreadStream(any()),
+        ).thenAnswer((_) => const Stream.empty());
         return ConversationListBloc(convRepo, firestoreRepo);
       },
       act: (b) async {
         b.add(const ConversationsLoadRequested());
         await Future<void>.delayed(const Duration(milliseconds: 50));
-        b.add(const ConversationFilterChanged(
-          filter: ConversationFilter.active,
-          searchQuery: '',
-        ));
+        b.add(
+          const ConversationFilterChanged(
+            filter: ConversationFilter.active,
+            searchQuery: '',
+          ),
+        );
       },
       expect: () => [
         isA<ConversationListLoading>(),
-        isA<ConversationListLoaded>()
-            .having((s) => s.displayed.length, 'all', 2),
+        isA<ConversationListLoaded>().having(
+          (s) => s.displayed.length,
+          'all',
+          2,
+        ),
         isA<ConversationListLoaded>()
             .having((s) => s.displayed.length, 'active only', 1)
-            .having((s) => s.displayed.first.bidStatus, 'bidStatus',
-                'BID_ACCEPTED'),
+            .having(
+              (s) => s.displayed.first.bidStatus,
+              'bidStatus',
+              'BID_ACCEPTED',
+            ),
       ],
     );
 
     blocTest<ConversationListBloc, ConversationListState>(
       'ConversationFilter.done ne montre que les conversations DELIVERY_CONFIRMED',
       build: () {
-        when(() => convRepo.getArchivedConversations()).thenAnswer((_) async => []);
+        when(
+          () => convRepo.getArchivedConversations(),
+        ).thenAnswer((_) async => []);
         final convDone = ConversationModel(
           id: _conv.id,
           bidId: _conv.bidId,
@@ -282,40 +351,59 @@ void main() {
           bidStatus: 'BID_ACCEPTED',
           hasUnread: false,
         );
-        when(() => convRepo.getConversations())
-            .thenAnswer((_) async => [convDone, convActive]);
-        when(() => firestoreRepo.perConversationUnreadStream(any()))
-            .thenAnswer((_) => const Stream.empty());
+        when(
+          () => convRepo.getConversations(),
+        ).thenAnswer((_) async => [convDone, convActive]);
+        when(
+          () => firestoreRepo.perConversationUnreadStream(any()),
+        ).thenAnswer((_) => const Stream.empty());
         return ConversationListBloc(convRepo, firestoreRepo);
       },
       act: (b) async {
         b.add(const ConversationsLoadRequested());
         await Future<void>.delayed(const Duration(milliseconds: 50));
-        b.add(const ConversationFilterChanged(
-          filter: ConversationFilter.done,
-          searchQuery: '',
-        ));
+        b.add(
+          const ConversationFilterChanged(
+            filter: ConversationFilter.done,
+            searchQuery: '',
+          ),
+        );
       },
       expect: () => [
         isA<ConversationListLoading>(),
-        isA<ConversationListLoaded>()
-            .having((s) => s.displayed.length, 'all', 2),
+        isA<ConversationListLoaded>().having(
+          (s) => s.displayed.length,
+          'all',
+          2,
+        ),
         isA<ConversationListLoaded>()
             .having((s) => s.displayed.length, 'done only', 1)
-            .having((s) => s.displayed.first.bidStatus, 'bidStatus',
-                'DELIVERY_CONFIRMED'),
+            .having(
+              (s) => s.displayed.first.bidStatus,
+              'bidStatus',
+              'DELIVERY_CONFIRMED',
+            ),
       ],
     );
 
     blocTest<ConversationListBloc, ConversationListState>(
       'ConversationUnarchiveRequested remet la conversation dans la liste et appelle l\'API',
       build: () {
-        when(() => convRepo.getConversations()).thenAnswer((_) async => [_conv]);
-        when(() => convRepo.getArchivedConversations()).thenAnswer((_) async => []);
-        when(() => convRepo.archiveConversation(any())).thenAnswer((_) async {});
-        when(() => convRepo.unarchiveConversation(any())).thenAnswer((_) async {});
-        when(() => firestoreRepo.perConversationUnreadStream(any()))
-            .thenAnswer((_) => const Stream.empty());
+        when(
+          () => convRepo.getConversations(),
+        ).thenAnswer((_) async => [_conv]);
+        when(
+          () => convRepo.getArchivedConversations(),
+        ).thenAnswer((_) async => []);
+        when(
+          () => convRepo.archiveConversation(any()),
+        ).thenAnswer((_) async {});
+        when(
+          () => convRepo.unarchiveConversation(any()),
+        ).thenAnswer((_) async {});
+        when(
+          () => firestoreRepo.perConversationUnreadStream(any()),
+        ).thenAnswer((_) => const Stream.empty());
         return ConversationListBloc(convRepo, firestoreRepo);
       },
       act: (b) async {
@@ -331,8 +419,11 @@ void main() {
       },
       expect: () => [
         isA<ConversationListLoading>(),
-        isA<ConversationListLoaded>()
-            .having((s) => s.conversations.length, 'initial', 1),
+        isA<ConversationListLoaded>().having(
+          (s) => s.conversations.length,
+          'initial',
+          1,
+        ),
         isA<ConversationListLoaded>()
             .having((s) => s.conversations.length, 'après archive', 0)
             .having((s) => s.archivedConversations.length, 'archived', 1),
@@ -345,29 +436,42 @@ void main() {
     blocTest<ConversationListBloc, ConversationListState>(
       'filter est préservé après ConversationsUnreadUpdated',
       build: () {
-        when(() => convRepo.getConversations()).thenAnswer((_) async => [_conv]);
-        when(() => convRepo.getArchivedConversations()).thenAnswer((_) async => []);
-        when(() => firestoreRepo.perConversationUnreadStream(any()))
-            .thenAnswer((_) => const Stream.empty());
+        when(
+          () => convRepo.getConversations(),
+        ).thenAnswer((_) async => [_conv]);
+        when(
+          () => convRepo.getArchivedConversations(),
+        ).thenAnswer((_) async => []);
+        when(
+          () => firestoreRepo.perConversationUnreadStream(any()),
+        ).thenAnswer((_) => const Stream.empty());
         return ConversationListBloc(convRepo, firestoreRepo);
       },
       act: (b) async {
         b.add(const ConversationsLoadRequested());
         await Future<void>.delayed(const Duration(milliseconds: 50));
-        b.add(const ConversationFilterChanged(
-          filter: ConversationFilter.unread,
-          searchQuery: '',
-        ));
+        b.add(
+          const ConversationFilterChanged(
+            filter: ConversationFilter.unread,
+            searchQuery: '',
+          ),
+        );
         await Future<void>.delayed(const Duration(milliseconds: 10));
         b.add(const ConversationsUnreadUpdated({'conv_bid-1': 2}));
       },
       expect: () => [
         isA<ConversationListLoading>(),
         isA<ConversationListLoaded>(),
-        isA<ConversationListLoaded>()
-            .having((s) => s.filter, 'filter', ConversationFilter.unread),
-        isA<ConversationListLoaded>()
-            .having((s) => s.filter, 'filter', ConversationFilter.unread),
+        isA<ConversationListLoaded>().having(
+          (s) => s.filter,
+          'filter',
+          ConversationFilter.unread,
+        ),
+        isA<ConversationListLoaded>().having(
+          (s) => s.filter,
+          'filter',
+          ConversationFilter.unread,
+        ),
       ],
     );
   });

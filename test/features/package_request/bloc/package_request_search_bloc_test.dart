@@ -516,7 +516,8 @@ void main() {
         stubSearch([_fakeRequest('r-1'), _fakeRequest('r-2')]);
         return PackageRequestSearchBloc(repo, analytics);
       },
-      act: (bloc) => bloc.add(const SearchFiltersChanged(matchingMyTrips: true)),
+      act: (bloc) =>
+          bloc.add(const SearchFiltersChanged(matchingMyTrips: true)),
       verify: (_) {
         verify(
           () => analytics.logEvent(
@@ -562,7 +563,8 @@ void main() {
         ).thenThrow(Exception('réseau'));
         return PackageRequestSearchBloc(repo, analytics);
       },
-      act: (bloc) => bloc.add(const SearchFiltersChanged(matchingMyTrips: true)),
+      act: (bloc) =>
+          bloc.add(const SearchFiltersChanged(matchingMyTrips: true)),
       verify: (_) {
         verifyNever(
           () => analytics.logEvent(

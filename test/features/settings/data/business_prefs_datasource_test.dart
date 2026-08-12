@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockApiClient extends Mock implements ApiClient {}
+
 class MockDio extends Mock implements Dio {}
 
 void main() {
@@ -21,9 +22,11 @@ void main() {
   });
 
   group('BusinessPrefsRemoteDatasource', () {
-    test('fetchPrefs appelle GET /users/me/business-preferences et parse le DTO', () async {
-      when(() => mockDio.get('/users/me/business-preferences')).thenAnswer((_) async =>
-          Response(
+    test(
+      'fetchPrefs appelle GET /users/me/business-preferences et parse le DTO',
+      () async {
+        when(() => mockDio.get('/users/me/business-preferences')).thenAnswer(
+          (_) async => Response(
             data: {
               'weightUnit': 'lbs',
               'currencyCode': 'XOF',
@@ -35,34 +38,44 @@ void main() {
             },
             requestOptions: RequestOptions(path: ''),
             statusCode: 200,
-          ));
-      final dto = await datasource.fetchPrefs();
-      expect(dto.weightUnit, 'lbs');
-      expect(dto.currencyCode, 'XOF');
-      expect(dto.pickupRadiusKm, 20);
-      expect(dto.defaultPackageWeightKg, 30);
-      expect(dto.minBidPriceEur, 5);
-      expect(dto.contactMode, 'call');
-      expect(dto.responseDelayHours, 2);
-    });
+          ),
+        );
+        final dto = await datasource.fetchPrefs();
+        expect(dto.weightUnit, 'lbs');
+        expect(dto.currencyCode, 'XOF');
+        expect(dto.pickupRadiusKm, 20);
+        expect(dto.defaultPackageWeightKg, 30);
+        expect(dto.minBidPriceEur, 5);
+        expect(dto.contactMode, 'call');
+        expect(dto.responseDelayHours, 2);
+      },
+    );
 
-    test('updatePrefs appelle PUT /users/me/business-preferences avec le DTO sérialisé', () async {
-      const dto = UserBusinessPrefsDto(
-        weightUnit: 'kg',
-        currencyCode: 'EUR',
-        pickupRadiusKm: 10,
-        defaultPackageWeightKg: 23,
-        minBidPriceEur: 0,
-      );
-      when(() => mockDio.put(
-        '/users/me/business-preferences',
-        data: dto.toJson(),
-      )).thenAnswer((_) async => Response(
+    test(
+      'updatePrefs appelle PUT /users/me/business-preferences avec le DTO sérialisé',
+      () async {
+        const dto = UserBusinessPrefsDto(
+          weightUnit: 'kg',
+          currencyCode: 'EUR',
+          pickupRadiusKm: 10,
+          defaultPackageWeightKg: 23,
+          minBidPriceEur: 0,
+        );
+        when(
+          () =>
+              mockDio.put('/users/me/business-preferences', data: dto.toJson()),
+        ).thenAnswer(
+          (_) async => Response(
             requestOptions: RequestOptions(path: ''),
             statusCode: 200,
-          ));
-      await datasource.updatePrefs(dto);
-      verify(() => mockDio.put('/users/me/business-preferences', data: dto.toJson())).called(1);
-    });
+          ),
+        );
+        await datasource.updatePrefs(dto);
+        verify(
+          () =>
+              mockDio.put('/users/me/business-preferences', data: dto.toJson()),
+        ).called(1);
+      },
+    );
   });
 }

@@ -180,7 +180,9 @@ void main() {
         final now = DateTime.now();
         // Birthday next month means not yet had this year's birthday
         final nextMonth = now.month == 12 ? 1 : now.month + 1;
-        final nextMonthYear = now.month == 12 ? now.year - 30 + 1 : now.year - 30;
+        final nextMonthYear = now.month == 12
+            ? now.year - 30 + 1
+            : now.year - 30;
         final user = UserModel(
           id: 'u1',
           birthDate: DateTime(nextMonthYear, nextMonth, 1),
@@ -210,23 +212,29 @@ void main() {
     );
 
     group('isProfileComplete', () {
-      test('8 champs remplis (photo, identité, contact, ville, à propos) → true', () {
-        final user = fullyComplete.copyWith(birthDate: birthDate);
-        expect(user.isProfileComplete(), isTrue);
-      });
+      test(
+        '8 champs remplis (photo, identité, contact, ville, à propos) → true',
+        () {
+          final user = fullyComplete.copyWith(birthDate: birthDate);
+          expect(user.isProfileComplete(), isTrue);
+        },
+      );
 
-      test('prénom + nom + email seuls → false (photo/téléphone/etc manquants)', () {
-        const user = UserModel(
-          id: 'u1',
-          firstName: 'Amadou',
-          lastName: 'Diallo',
-          email: 'amadou@example.com',
-          roles: [],
-          kycStatus: 'PENDING',
-          status: 'ACTIVE',
-        );
-        expect(user.isProfileComplete(), isFalse);
-      });
+      test(
+        'prénom + nom + email seuls → false (photo/téléphone/etc manquants)',
+        () {
+          const user = UserModel(
+            id: 'u1',
+            firstName: 'Amadou',
+            lastName: 'Diallo',
+            email: 'amadou@example.com',
+            roles: [],
+            kycStatus: 'PENDING',
+            status: 'ACTIVE',
+          );
+          expect(user.isProfileComplete(), isFalse);
+        },
+      );
 
       test('date de naissance manquante → false (requise désormais)', () {
         expect(fullyComplete.birthDate, isNull);
@@ -287,16 +295,10 @@ void main() {
             status: user.status,
           );
           expect(userWithoutPhone.phoneNumber, isNull);
-          expect(
-            userWithoutPhone.isProfileComplete(countPhone: false),
-            isTrue,
-          );
+          expect(userWithoutPhone.isProfileComplete(countPhone: false), isTrue);
           // Le même utilisateur reste incomplet si le flag est actif (le
           // total redevient 8 et le téléphone manque).
-          expect(
-            userWithoutPhone.isProfileComplete(),
-            isFalse,
-          );
+          expect(userWithoutPhone.isProfileComplete(), isFalse);
         });
       });
     });
@@ -348,11 +350,14 @@ void main() {
         expect(user.profileCompletionSteps(), 8);
       });
 
-      test('téléphone rempli mais countPhone: false → il n\'est pas compté', () {
-        final user = fullyComplete.copyWith(birthDate: birthDate);
-        expect(user.phoneNumber, isNotNull);
-        expect(user.profileCompletionSteps(countPhone: false), 7);
-      });
+      test(
+        'téléphone rempli mais countPhone: false → il n\'est pas compté',
+        () {
+          final user = fullyComplete.copyWith(birthDate: birthDate);
+          expect(user.phoneNumber, isNotNull);
+          expect(user.profileCompletionSteps(countPhone: false), 7);
+        },
+      );
     });
 
     // ─── statuts et rôles ─────────────────────────────────────────────────────
@@ -432,10 +437,7 @@ void main() {
       });
 
       test('JSON minimal → valeurs par défaut appliquées', () {
-        final json = {
-          'id': 'user-min',
-          'roles': [],
-        };
+        final json = {'id': 'user-min', 'roles': []};
 
         final user = UserModel.fromJson(json);
 
@@ -504,9 +506,12 @@ void main() {
 
     test('UserModel parse bio/avatarUrl/languages/transportMode', () {
       final u = UserModel.fromJson({
-        'id': 'u1', 'roles': ['SENDER'],
-        'bio': 'Hello', 'avatarUrl': 'https://cdn/a.jpg',
-        'languages': ['FR', 'WO'], 'transportMode': 'AVION',
+        'id': 'u1',
+        'roles': ['SENDER'],
+        'bio': 'Hello',
+        'avatarUrl': 'https://cdn/a.jpg',
+        'languages': ['FR', 'WO'],
+        'transportMode': 'AVION',
       });
       expect(u.bio, 'Hello');
       expect(u.avatarUrl, 'https://cdn/a.jpg');

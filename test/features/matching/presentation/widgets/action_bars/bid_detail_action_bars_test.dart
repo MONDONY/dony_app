@@ -20,15 +20,15 @@ class MockBidAcceptanceBloc
     implements BidAcceptanceBloc {}
 
 BidModel _makeBid(BidPaymentMethod method) => BidModel(
-      id: 'bid-001',
-      announcementId: 'ann-001',
-      senderId: 'sender-001',
-      weightKg: 5,
-      status: 'PAYMENT_ESCROWED',
-      paymentMethod: method,
-      createdAt: DateTime(2026),
-      updatedAt: DateTime(2026),
-    );
+  id: 'bid-001',
+  announcementId: 'ann-001',
+  senderId: 'sender-001',
+  weightKg: 5,
+  status: 'PAYMENT_ESCROWED',
+  paymentMethod: method,
+  createdAt: DateTime(2026),
+  updatedAt: DateTime(2026),
+);
 
 Widget _wrap(BidModel bid, MockBidBloc bidBloc, MockBidAcceptanceBloc accBloc) {
   return MaterialApp.router(
@@ -46,8 +46,10 @@ Widget _wrap(BidModel bid, MockBidBloc bidBloc, MockBidAcceptanceBloc accBloc) {
             // d'un Scaffold plein écran atteint via GoRouter.
             child: Scaffold(
               body: const SizedBox.expand(),
-              bottomNavigationBar:
-                  TravelerPendingBar(bid: bid, isLoading: false),
+              bottomNavigationBar: TravelerPendingBar(
+                bid: bid,
+                isLoading: false,
+              ),
             ),
           ),
         ),
@@ -81,7 +83,8 @@ void main() {
   group('TravelerPendingBar — Refuser (bid carte / PAYMENT_ESCROWED)', () {
     testWidgets('tap Refuser ouvre la feuille de raison', (tester) async {
       await tester.pumpWidget(
-          _wrap(_makeBid(BidPaymentMethod.stripe), bidBloc, accBloc));
+        _wrap(_makeBid(BidPaymentMethod.stripe), bidBloc, accBloc),
+      );
       await tester.pumpAndSettle();
 
       await tester.tap(find.widgetWithText(OutlinedButton, 'Refuser'));
@@ -92,28 +95,34 @@ void main() {
     });
 
     testWidgets(
-        'Confirmer le refus dispatch BidRejectRequested et ferme la feuille',
-        (tester) async {
+      'Confirmer le refus dispatch BidRejectRequested et ferme la feuille',
+      (tester) async {
+        await tester.pumpWidget(
+          _wrap(_makeBid(BidPaymentMethod.stripe), bidBloc, accBloc),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.widgetWithText(OutlinedButton, 'Refuser'));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Confirmer le refus'));
+        await tester.pumpAndSettle();
+
+        // La feuille doit être fermée…
+        expect(find.text('Refuser la demande'), findsNothing);
+        // …et l'événement de refus dispatché.
+        verify(
+          () => bidBloc.add(any(that: isA<BidRejectRequested>())),
+        ).called(1);
+      },
+    );
+
+    testWidgets('Accepter (carte) dispatch BidAcceptRequested sur BidBloc', (
+      tester,
+    ) async {
       await tester.pumpWidget(
-          _wrap(_makeBid(BidPaymentMethod.stripe), bidBloc, accBloc));
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.widgetWithText(OutlinedButton, 'Refuser'));
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('Confirmer le refus'));
-      await tester.pumpAndSettle();
-
-      // La feuille doit être fermée…
-      expect(find.text('Refuser la demande'), findsNothing);
-      // …et l'événement de refus dispatché.
-      verify(() => bidBloc.add(any(that: isA<BidRejectRequested>()))).called(1);
-    });
-
-    testWidgets('Accepter (carte) dispatch BidAcceptRequested sur BidBloc',
-        (tester) async {
-      await tester.pumpWidget(
-          _wrap(_makeBid(BidPaymentMethod.stripe), bidBloc, accBloc));
+        _wrap(_makeBid(BidPaymentMethod.stripe), bidBloc, accBloc),
+      );
       await tester.pumpAndSettle();
 
       await tester.tap(find.widgetWithText(FilledButton, 'Accepter'));

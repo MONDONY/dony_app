@@ -27,11 +27,7 @@ class NotificationService {
   final NotificationRepository _repository;
   final DeviceIdService _deviceIdService;
 
-  NotificationService(
-    this._apiClient,
-    this._repository,
-    this._deviceIdService,
-  );
+  NotificationService(this._apiClient, this._repository, this._deviceIdService);
 
   // late: deferred until initialize() so tests can instantiate this class without Firebase
   late final FirebaseMessaging _fcm = FirebaseMessaging.instance;
@@ -59,12 +55,14 @@ class NotificationService {
       badge: true,
       sound: true,
     );
-    if (kDebugMode) debugPrint('[FCM] Auth status: ${settings.authorizationStatus}');
+    if (kDebugMode)
+      debugPrint('[FCM] Auth status: ${settings.authorizationStatus}');
 
     // Create Android notification channel
     await _localNotifications
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.createNotificationChannel(_androidChannel);
 
     // Init flutter_local_notifications
@@ -112,12 +110,15 @@ class NotificationService {
     try {
       final deviceId = await _deviceIdService.getDeviceId();
       final (deviceName, platform) = await _getDeviceInfo();
-      await _apiClient.dio.put('/auth/me/fcm-token', data: {
-        'fcmToken': token,
-        'deviceId': deviceId,
-        'deviceName': deviceName,
-        'platform': platform,
-      });
+      await _apiClient.dio.put(
+        '/auth/me/fcm-token',
+        data: {
+          'fcmToken': token,
+          'deviceId': deviceId,
+          'deviceName': deviceName,
+          'platform': platform,
+        },
+      );
       if (kDebugMode) debugPrint('[FCM] Token uploaded to backend');
     } catch (e) {
       if (kDebugMode) debugPrint('[FCM] Token upload failed: $e');
@@ -178,10 +179,12 @@ class NotificationService {
   }
 
   @visibleForTesting
-  Future<void> testAckIfCritical(Map<String, dynamic> data) => _ackIfCritical(data);
+  Future<void> testAckIfCritical(Map<String, dynamic> data) =>
+      _ackIfCritical(data);
 
   @visibleForTesting
-  String? testRouteForMessage(Map<String, dynamic> data) => _routeForMessage(data);
+  String? testRouteForMessage(Map<String, dynamic> data) =>
+      _routeForMessage(data);
 
   void _handleForegroundMessage(RemoteMessage message) {
     _ackIfCritical(message.data);

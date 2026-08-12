@@ -121,8 +121,9 @@ void main() {
   blocTest<CurrencyOnboardingCubit, CurrencyOnboardingState>(
     'passer : refuse une devise backend inconnue sans marquer l’onboarding vu',
     setUp: () {
-      when(() => repository.fetchPrefs())
-          .thenAnswer((_) async => _unsupportedPrefs);
+      when(
+        () => repository.fetchPrefs(),
+      ).thenAnswer((_) async => _unsupportedPrefs);
     },
     build: build,
     act: (cubit) => cubit.skip(),
@@ -133,7 +134,9 @@ void main() {
     verify: (_) {
       verifyNever(() => prefs.put(HiveService.kCurrencyCode, any()));
       verifyNever(() => prefs.put(HiveService.kCurrencyOnboardingSeen, true));
-      verifyNever(() => analytics.logEvent(AnalyticsEvents.currencyOnboardingSkipped));
+      verifyNever(
+        () => analytics.logEvent(AnalyticsEvents.currencyOnboardingSkipped),
+      );
     },
   );
 

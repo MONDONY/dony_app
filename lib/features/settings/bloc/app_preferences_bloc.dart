@@ -6,13 +6,14 @@ import 'package:hive_flutter/hive_flutter.dart';
 part 'app_preferences_event.dart';
 part 'app_preferences_state.dart';
 
-class AppPreferencesBloc extends Bloc<AppPreferencesEvent, AppPreferencesState> {
+class AppPreferencesBloc
+    extends Bloc<AppPreferencesEvent, AppPreferencesState> {
   final Box _box;
 
   AppPreferencesBloc(this._box)
-      : super(AppPreferencesState(
-          preferences: UserPreferencesModel.fromHive(_box),
-        )) {
+    : super(
+        AppPreferencesState(preferences: UserPreferencesModel.fromHive(_box)),
+      ) {
     on<ThemeChanged>(_onThemeChanged);
     on<LanguageChanged>(_onLanguageChanged);
     on<DestinationToggled>(_onDestinationToggled);
@@ -20,10 +21,7 @@ class AppPreferencesBloc extends Bloc<AppPreferencesEvent, AppPreferencesState> 
     on<AppLockBiometricToggled>(_onAppLockBiometricToggled);
   }
 
-  void _onThemeChanged(
-    ThemeChanged event,
-    Emitter<AppPreferencesState> emit,
-  ) {
+  void _onThemeChanged(ThemeChanged event, Emitter<AppPreferencesState> emit) {
     final updated = state.preferences.copyWith(themeMode: event.themeMode);
     updated.writeToHive(_box);
     emit(AppPreferencesState(preferences: updated));
@@ -33,8 +31,9 @@ class AppPreferencesBloc extends Bloc<AppPreferencesEvent, AppPreferencesState> 
     LanguageChanged event,
     Emitter<AppPreferencesState> emit,
   ) {
-    final updated =
-        state.preferences.copyWith(languageCode: event.languageCode);
+    final updated = state.preferences.copyWith(
+      languageCode: event.languageCode,
+    );
     updated.writeToHive(_box);
     emit(AppPreferencesState(preferences: updated));
   }

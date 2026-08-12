@@ -28,32 +28,32 @@ enum DonyMascotteType {
   erreurLegere;
 
   String get assetPath => switch (this) {
-        joyeux        => 'assets/mascotte/hello.png',
-        bienvenue     => 'assets/mascotte/welcome.png',
-        confiant      => 'assets/mascotte/travel.png',
-        securise      => 'assets/mascotte/success.png',
-        succes        => 'assets/mascotte/success_celebration.png',
-        enCourse      => 'assets/mascotte/travel.png',
-        assis         => 'assets/mascotte/search.png',
-        aucunResultat => 'assets/mascotte/no_result.png',
-        attente       => 'assets/mascotte/waiting.png',
-        erreur        => 'assets/mascotte/error.png',
-        erreurLegere  => 'assets/mascotte/error_light.png',
-      };
+    joyeux => 'assets/mascotte/hello.png',
+    bienvenue => 'assets/mascotte/welcome.png',
+    confiant => 'assets/mascotte/travel.png',
+    securise => 'assets/mascotte/success.png',
+    succes => 'assets/mascotte/success_celebration.png',
+    enCourse => 'assets/mascotte/travel.png',
+    assis => 'assets/mascotte/search.png',
+    aucunResultat => 'assets/mascotte/no_result.png',
+    attente => 'assets/mascotte/waiting.png',
+    erreur => 'assets/mascotte/error.png',
+    erreurLegere => 'assets/mascotte/error_light.png',
+  };
 
   String get semanticLabel => switch (this) {
-        joyeux        => 'Mascotte qui salue',
-        bienvenue     => 'Mascotte accueillante, bras ouverts',
-        confiant      => 'Mascotte prête à partir en voyage',
-        securise      => 'Mascotte brandissant un badge de validation',
-        succes        => 'Mascotte célébrant une réussite',
-        enCourse      => 'Colis en transit',
-        assis         => 'Mascotte curieuse, une loupe à la main',
-        aucunResultat => 'Mascotte perplexe devant une carte, aucun résultat',
-        attente       => 'Mascotte patientant devant une horloge',
-        erreur        => 'Mascotte inquiète, une erreur est survenue',
-        erreurLegere  => 'Mascotte signalant un souci mineur',
-      };
+    joyeux => 'Mascotte qui salue',
+    bienvenue => 'Mascotte accueillante, bras ouverts',
+    confiant => 'Mascotte prête à partir en voyage',
+    securise => 'Mascotte brandissant un badge de validation',
+    succes => 'Mascotte célébrant une réussite',
+    enCourse => 'Colis en transit',
+    assis => 'Mascotte curieuse, une loupe à la main',
+    aucunResultat => 'Mascotte perplexe devant une carte, aucun résultat',
+    attente => 'Mascotte patientant devant une horloge',
+    erreur => 'Mascotte inquiète, une erreur est survenue',
+    erreurLegere => 'Mascotte signalant un souci mineur',
+  };
 
   /// Vrai pour les types dont l'animation tourne tant que la mascotte est
   /// visible, au lieu de se jouer une fois à l'entrée.
@@ -191,9 +191,7 @@ class DonyMascotteAnimated extends StatelessWidget {
             height: dim * 1.4,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              gradient: RadialGradient(
-                colors: [glowColor, Colors.transparent],
-              ),
+              gradient: RadialGradient(colors: [glowColor, Colors.transparent]),
             ),
           ),
           mascot,
@@ -209,11 +207,10 @@ class DonyMascotteAnimated extends StatelessWidget {
     required int fade,
     required int scale,
     Curve curve = Curves.easeOutBack,
-  }) =>
-      child
-          .animate()
-          .fadeIn(duration: fade.ms)
-          .scaleXY(begin: begin, duration: scale.ms, curve: curve);
+  }) => child
+      .animate()
+      .fadeIn(duration: fade.ms)
+      .scaleXY(begin: begin, duration: scale.ms, curve: curve);
 
   /// Entrée qui glisse — pour les états de progression et les alertes.
   Widget _slideIn(
@@ -225,8 +222,16 @@ class DonyMascotteAnimated extends StatelessWidget {
   }) {
     final animation = child.animate().fadeIn(duration: fade.ms);
     return dx != 0
-        ? animation.slideX(begin: dx, duration: slide.ms, curve: DonyCurve.enter)
-        : animation.slideY(begin: dy, duration: slide.ms, curve: DonyCurve.enter);
+        ? animation.slideX(
+            begin: dx,
+            duration: slide.ms,
+            curve: DonyCurve.enter,
+          )
+        : animation.slideY(
+            begin: dy,
+            duration: slide.ms,
+            curve: DonyCurve.enter,
+          );
   }
 
   /// Respiration continue — pour les états qui durent.
@@ -240,30 +245,70 @@ class DonyMascotteAnimated extends StatelessWidget {
       );
 
   Widget _animate(Widget child) => switch (type) {
-        DonyMascotteType.joyeux =>
-          _scaleIn(child, begin: 0.85, fade: 400, scale: 500),
-        DonyMascotteType.bienvenue =>
-          _scaleIn(child, begin: 0.90, fade: 350, scale: 450),
-        DonyMascotteType.securise =>
-          _scaleIn(child, begin: 0.88, fade: 300, scale: 480),
-        DonyMascotteType.succes =>
-          _scaleIn(child, begin: 0.80, fade: 300, scale: 480),
-        DonyMascotteType.assis => _scaleIn(child,
-            begin: 0.92, fade: 450, scale: 450, curve: DonyCurve.enter),
-        DonyMascotteType.aucunResultat => _scaleIn(child,
-            begin: 0.90, fade: 400, scale: 420, curve: DonyCurve.enter),
-        DonyMascotteType.confiant =>
-          _slideIn(child, fade: 250, slide: 350, dy: 0.06)
-              .animate()
-              .shimmer(duration: 600.ms, delay: 300.ms),
-        DonyMascotteType.erreurLegere =>
-          _slideIn(child, fade: 300, slide: 360, dy: 0.05),
-        DonyMascotteType.enCourse =>
-          _slideIn(child, fade: 250, slide: 400, dx: -0.1),
-        DonyMascotteType.erreur =>
-          _slideIn(child, fade: 300, slide: 320, dx: -0.03),
-        DonyMascotteType.attente => _breathe(child, duration: 1200),
-      };
+    DonyMascotteType.joyeux => _scaleIn(
+      child,
+      begin: 0.85,
+      fade: 400,
+      scale: 500,
+    ),
+    DonyMascotteType.bienvenue => _scaleIn(
+      child,
+      begin: 0.90,
+      fade: 350,
+      scale: 450,
+    ),
+    DonyMascotteType.securise => _scaleIn(
+      child,
+      begin: 0.88,
+      fade: 300,
+      scale: 480,
+    ),
+    DonyMascotteType.succes => _scaleIn(
+      child,
+      begin: 0.80,
+      fade: 300,
+      scale: 480,
+    ),
+    DonyMascotteType.assis => _scaleIn(
+      child,
+      begin: 0.92,
+      fade: 450,
+      scale: 450,
+      curve: DonyCurve.enter,
+    ),
+    DonyMascotteType.aucunResultat => _scaleIn(
+      child,
+      begin: 0.90,
+      fade: 400,
+      scale: 420,
+      curve: DonyCurve.enter,
+    ),
+    DonyMascotteType.confiant => _slideIn(
+      child,
+      fade: 250,
+      slide: 350,
+      dy: 0.06,
+    ).animate().shimmer(duration: 600.ms, delay: 300.ms),
+    DonyMascotteType.erreurLegere => _slideIn(
+      child,
+      fade: 300,
+      slide: 360,
+      dy: 0.05,
+    ),
+    DonyMascotteType.enCourse => _slideIn(
+      child,
+      fade: 250,
+      slide: 400,
+      dx: -0.1,
+    ),
+    DonyMascotteType.erreur => _slideIn(
+      child,
+      fade: 300,
+      slide: 320,
+      dx: -0.03,
+    ),
+    DonyMascotteType.attente => _breathe(child, duration: 1200),
+  };
 }
 
 /// Halo ambient — utilisé indépendamment autour d'un widget quelconque.
@@ -296,9 +341,7 @@ class DonyGlowWrap extends StatelessWidget {
           height: radius * 2,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            gradient: RadialGradient(
-              colors: [glowColor, Colors.transparent],
-            ),
+            gradient: RadialGradient(colors: [glowColor, Colors.transparent]),
           ),
         ),
         child,

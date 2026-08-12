@@ -102,10 +102,12 @@ class _SplashScreenState extends State<SplashScreen> {
     // Toutes les tentatives épuisées — jusque-là totalement silencieux, on
     // n'avait donc aucune donnée pour diagnostiquer ce cas en prod.
     if (lastError != null) {
-      unawaited(Sentry.captureException(
-        lastError,
-        hint: Hint.withMap({'context': 'splash_health_check_exhausted'}),
-      ));
+      unawaited(
+        Sentry.captureException(
+          lastError,
+          hint: Hint.withMap({'context': 'splash_health_check_exhausted'}),
+        ),
+      );
     }
     if (mounted) {
       setState(() => _hasError = true);

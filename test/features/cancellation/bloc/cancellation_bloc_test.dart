@@ -54,15 +54,19 @@ void main() {
       'emits [Loading, Success] when cancelTrip succeeds',
       build: buildBloc,
       setUp: () {
-        when(() => mockRepo.cancelTrip(
-              announcementId: 'ann-1',
-              reason: 'TRAVELER_SICK',
-            )).thenAnswer((_) async => _cancellation);
+        when(
+          () => mockRepo.cancelTrip(
+            announcementId: 'ann-1',
+            reason: 'TRAVELER_SICK',
+          ),
+        ).thenAnswer((_) async => _cancellation);
       },
-      act: (b) => b.add(CancellationTripRequested(
-        announcementId: 'ann-1',
-        reason: 'TRAVELER_SICK',
-      )),
+      act: (b) => b.add(
+        CancellationTripRequested(
+          announcementId: 'ann-1',
+          reason: 'TRAVELER_SICK',
+        ),
+      ),
       expect: () => [
         isA<CancellationLoading>(),
         isA<CancellationSuccess>().having(
@@ -77,10 +81,12 @@ void main() {
       'emits [Loading, Error] when DioException thrown',
       build: buildBloc,
       setUp: () {
-        when(() => mockRepo.cancelTrip(
-              announcementId: any(named: 'announcementId'),
-              reason: any(named: 'reason'),
-            )).thenThrow(
+        when(
+          () => mockRepo.cancelTrip(
+            announcementId: any(named: 'announcementId'),
+            reason: any(named: 'reason'),
+          ),
+        ).thenThrow(
           DioException(
             requestOptions: RequestOptions(),
             error: const NotFoundException(message: 'Announcement not found'),
@@ -92,10 +98,9 @@ void main() {
           ),
         );
       },
-      act: (b) => b.add(CancellationTripRequested(
-        announcementId: 'bad-id',
-        reason: 'OTHER',
-      )),
+      act: (b) => b.add(
+        CancellationTripRequested(announcementId: 'bad-id', reason: 'OTHER'),
+      ),
       expect: () => [
         isA<CancellationLoading>(),
         isA<CancellationError>().having(
@@ -110,19 +115,17 @@ void main() {
       'emits [Loading, Error] when generic exception thrown',
       build: buildBloc,
       setUp: () {
-        when(() => mockRepo.cancelTrip(
-              announcementId: any(named: 'announcementId'),
-              reason: any(named: 'reason'),
-            )).thenThrow(Exception('server down'));
+        when(
+          () => mockRepo.cancelTrip(
+            announcementId: any(named: 'announcementId'),
+            reason: any(named: 'reason'),
+          ),
+        ).thenThrow(Exception('server down'));
       },
-      act: (b) => b.add(CancellationTripRequested(
-        announcementId: 'ann-1',
-        reason: 'OTHER',
-      )),
-      expect: () => [
-        isA<CancellationLoading>(),
-        isA<CancellationError>(),
-      ],
+      act: (b) => b.add(
+        CancellationTripRequested(announcementId: 'ann-1', reason: 'OTHER'),
+      ),
+      expect: () => [isA<CancellationLoading>(), isA<CancellationError>()],
     );
   });
 
@@ -133,8 +136,9 @@ void main() {
       'emits [Loading, RematchSuggestionsLoaded] on success',
       build: buildBloc,
       setUp: () {
-        when(() => mockRepo.getRematchSuggestions('canc-1'))
-            .thenAnswer((_) async => _suggestions);
+        when(
+          () => mockRepo.getRematchSuggestions('canc-1'),
+        ).thenAnswer((_) async => _suggestions);
       },
       act: (b) => b.add(RematchSuggestionsRequested('canc-1')),
       expect: () => [
@@ -151,28 +155,24 @@ void main() {
       'emits [Loading, Error] on DioException',
       build: buildBloc,
       setUp: () {
-        when(() => mockRepo.getRematchSuggestions(any()))
-            .thenThrow(DioException(requestOptions: RequestOptions()));
+        when(
+          () => mockRepo.getRematchSuggestions(any()),
+        ).thenThrow(DioException(requestOptions: RequestOptions()));
       },
       act: (b) => b.add(RematchSuggestionsRequested('canc-x')),
-      expect: () => [
-        isA<CancellationLoading>(),
-        isA<CancellationError>(),
-      ],
+      expect: () => [isA<CancellationLoading>(), isA<CancellationError>()],
     );
 
     blocTest<CancellationBloc, CancellationState>(
       'emits [Loading, Error] on generic exception',
       build: buildBloc,
       setUp: () {
-        when(() => mockRepo.getRematchSuggestions(any()))
-            .thenThrow(Exception('service unavailable'));
+        when(
+          () => mockRepo.getRematchSuggestions(any()),
+        ).thenThrow(Exception('service unavailable'));
       },
       act: (b) => b.add(RematchSuggestionsRequested('canc-x')),
-      expect: () => [
-        isA<CancellationLoading>(),
-        isA<CancellationError>(),
-      ],
+      expect: () => [isA<CancellationLoading>(), isA<CancellationError>()],
     );
   });
 
@@ -183,28 +183,22 @@ void main() {
       'emits [Loading, NoShowReported] on success',
       build: buildBloc,
       setUp: () {
-        when(() => mockRepo.reportNoShow('bid-1'))
-            .thenAnswer((_) async {});
+        when(() => mockRepo.reportNoShow('bid-1')).thenAnswer((_) async {});
       },
       act: (b) => b.add(NoShowReportRequested('bid-1')),
-      expect: () => [
-        isA<CancellationLoading>(),
-        isA<NoShowReported>(),
-      ],
+      expect: () => [isA<CancellationLoading>(), isA<NoShowReported>()],
     );
 
     blocTest<CancellationBloc, CancellationState>(
       'emits [Loading, Error] on exception',
       build: buildBloc,
       setUp: () {
-        when(() => mockRepo.reportNoShow(any()))
-            .thenThrow(Exception('network error'));
+        when(
+          () => mockRepo.reportNoShow(any()),
+        ).thenThrow(Exception('network error'));
       },
       act: (b) => b.add(NoShowReportRequested('bid-x')),
-      expect: () => [
-        isA<CancellationLoading>(),
-        isA<CancellationError>(),
-      ],
+      expect: () => [isA<CancellationLoading>(), isA<CancellationError>()],
     );
   });
 
@@ -215,14 +209,12 @@ void main() {
       'emits [Loading, NoShowReported] and calls reportTravelerNoShow on success',
       build: buildBloc,
       setUp: () {
-        when(() => mockRepo.reportTravelerNoShow('bid-1'))
-            .thenAnswer((_) async {});
+        when(
+          () => mockRepo.reportTravelerNoShow('bid-1'),
+        ).thenAnswer((_) async {});
       },
       act: (b) => b.add(TravelerNoShowReportRequested('bid-1')),
-      expect: () => [
-        isA<CancellationLoading>(),
-        isA<NoShowReported>(),
-      ],
+      expect: () => [isA<CancellationLoading>(), isA<NoShowReported>()],
       verify: (_) {
         verify(() => mockRepo.reportTravelerNoShow('bid-1')).called(1);
       },
@@ -232,28 +224,24 @@ void main() {
       'emits [Loading, Error] on DioException',
       build: buildBloc,
       setUp: () {
-        when(() => mockRepo.reportTravelerNoShow(any()))
-            .thenThrow(DioException(requestOptions: RequestOptions()));
+        when(
+          () => mockRepo.reportTravelerNoShow(any()),
+        ).thenThrow(DioException(requestOptions: RequestOptions()));
       },
       act: (b) => b.add(TravelerNoShowReportRequested('bid-x')),
-      expect: () => [
-        isA<CancellationLoading>(),
-        isA<CancellationError>(),
-      ],
+      expect: () => [isA<CancellationLoading>(), isA<CancellationError>()],
     );
 
     blocTest<CancellationBloc, CancellationState>(
       'emits [Loading, Error] on generic exception',
       build: buildBloc,
       setUp: () {
-        when(() => mockRepo.reportTravelerNoShow(any()))
-            .thenThrow(Exception('network error'));
+        when(
+          () => mockRepo.reportTravelerNoShow(any()),
+        ).thenThrow(Exception('network error'));
       },
       act: (b) => b.add(TravelerNoShowReportRequested('bid-x')),
-      expect: () => [
-        isA<CancellationLoading>(),
-        isA<CancellationError>(),
-      ],
+      expect: () => [isA<CancellationLoading>(), isA<CancellationError>()],
     );
   });
 
@@ -264,28 +252,22 @@ void main() {
       'emits [Loading, NoShowContested] on success',
       build: buildBloc,
       setUp: () {
-        when(() => mockRepo.contestNoShow('bid-2'))
-            .thenAnswer((_) async {});
+        when(() => mockRepo.contestNoShow('bid-2')).thenAnswer((_) async {});
       },
       act: (b) => b.add(NoShowContestRequested('bid-2')),
-      expect: () => [
-        isA<CancellationLoading>(),
-        isA<NoShowContested>(),
-      ],
+      expect: () => [isA<CancellationLoading>(), isA<NoShowContested>()],
     );
 
     blocTest<CancellationBloc, CancellationState>(
       'emits [Loading, Error] on exception',
       build: buildBloc,
       setUp: () {
-        when(() => mockRepo.contestNoShow(any()))
-            .thenThrow(DioException(requestOptions: RequestOptions()));
+        when(
+          () => mockRepo.contestNoShow(any()),
+        ).thenThrow(DioException(requestOptions: RequestOptions()));
       },
       act: (b) => b.add(NoShowContestRequested('bid-x')),
-      expect: () => [
-        isA<CancellationLoading>(),
-        isA<CancellationError>(),
-      ],
+      expect: () => [isA<CancellationLoading>(), isA<CancellationError>()],
     );
   });
 
@@ -296,28 +278,24 @@ void main() {
       'émet Loading puis DeliveryNoShowReported au succès',
       build: buildBloc,
       setUp: () {
-        when(() => mockRepo.reportDeliveryNoShow('bid-1'))
-            .thenAnswer((_) async {});
+        when(
+          () => mockRepo.reportDeliveryNoShow('bid-1'),
+        ).thenAnswer((_) async {});
       },
       act: (b) => b.add(DeliveryNoShowReportRequested('bid-1')),
-      expect: () => [
-        isA<CancellationLoading>(),
-        isA<DeliveryNoShowReported>(),
-      ],
+      expect: () => [isA<CancellationLoading>(), isA<DeliveryNoShowReported>()],
     );
 
     blocTest<CancellationBloc, CancellationState>(
       'émet CancellationError sur DioException',
       build: buildBloc,
       setUp: () {
-        when(() => mockRepo.reportDeliveryNoShow(any()))
-            .thenThrow(DioException(requestOptions: RequestOptions()));
+        when(
+          () => mockRepo.reportDeliveryNoShow(any()),
+        ).thenThrow(DioException(requestOptions: RequestOptions()));
       },
       act: (b) => b.add(DeliveryNoShowReportRequested('bid-x')),
-      expect: () => [
-        isA<CancellationLoading>(),
-        isA<CancellationError>(),
-      ],
+      expect: () => [isA<CancellationLoading>(), isA<CancellationError>()],
     );
   });
 
@@ -328,14 +306,12 @@ void main() {
       'émet Loading puis DeliveryNoShowReported au succès et appelle reportTravelerDeliveryNoShow',
       build: buildBloc,
       setUp: () {
-        when(() => mockRepo.reportTravelerDeliveryNoShow('bid-1'))
-            .thenAnswer((_) async {});
+        when(
+          () => mockRepo.reportTravelerDeliveryNoShow('bid-1'),
+        ).thenAnswer((_) async {});
       },
       act: (b) => b.add(TravelerDeliveryNoShowReportRequested('bid-1')),
-      expect: () => [
-        isA<CancellationLoading>(),
-        isA<DeliveryNoShowReported>(),
-      ],
+      expect: () => [isA<CancellationLoading>(), isA<DeliveryNoShowReported>()],
       verify: (_) {
         verify(() => mockRepo.reportTravelerDeliveryNoShow('bid-1')).called(1);
       },
@@ -345,14 +321,12 @@ void main() {
       'émet CancellationError sur DioException',
       build: buildBloc,
       setUp: () {
-        when(() => mockRepo.reportTravelerDeliveryNoShow(any()))
-            .thenThrow(DioException(requestOptions: RequestOptions()));
+        when(
+          () => mockRepo.reportTravelerDeliveryNoShow(any()),
+        ).thenThrow(DioException(requestOptions: RequestOptions()));
       },
       act: (b) => b.add(TravelerDeliveryNoShowReportRequested('bid-x')),
-      expect: () => [
-        isA<CancellationLoading>(),
-        isA<CancellationError>(),
-      ],
+      expect: () => [isA<CancellationLoading>(), isA<CancellationError>()],
     );
   });
 
@@ -363,8 +337,9 @@ void main() {
       'émet Loading puis DeliveryNoShowContested au succès',
       build: buildBloc,
       setUp: () {
-        when(() => mockRepo.contestDeliveryNoShow('bid-1'))
-            .thenAnswer((_) async {});
+        when(
+          () => mockRepo.contestDeliveryNoShow('bid-1'),
+        ).thenAnswer((_) async {});
       },
       act: (b) => b.add(DeliveryNoShowContestRequested('bid-1')),
       expect: () => [
@@ -377,14 +352,12 @@ void main() {
       'émet CancellationError sur DioException',
       build: buildBloc,
       setUp: () {
-        when(() => mockRepo.contestDeliveryNoShow(any()))
-            .thenThrow(DioException(requestOptions: RequestOptions()));
+        when(
+          () => mockRepo.contestDeliveryNoShow(any()),
+        ).thenThrow(DioException(requestOptions: RequestOptions()));
       },
       act: (b) => b.add(DeliveryNoShowContestRequested('bid-x')),
-      expect: () => [
-        isA<CancellationLoading>(),
-        isA<CancellationError>(),
-      ],
+      expect: () => [isA<CancellationLoading>(), isA<CancellationError>()],
     );
   });
 
@@ -395,28 +368,22 @@ void main() {
       'emits [Loading, NoShowConfirmed] on success',
       build: buildBloc,
       setUp: () {
-        when(() => mockRepo.confirmNoShow('bid-3'))
-            .thenAnswer((_) async {});
+        when(() => mockRepo.confirmNoShow('bid-3')).thenAnswer((_) async {});
       },
       act: (b) => b.add(NoShowConfirmRequested('bid-3')),
-      expect: () => [
-        isA<CancellationLoading>(),
-        isA<NoShowConfirmed>(),
-      ],
+      expect: () => [isA<CancellationLoading>(), isA<NoShowConfirmed>()],
     );
 
     blocTest<CancellationBloc, CancellationState>(
       'emits [Loading, Error] on exception',
       build: buildBloc,
       setUp: () {
-        when(() => mockRepo.confirmNoShow(any()))
-            .thenThrow(DioException(requestOptions: RequestOptions()));
+        when(
+          () => mockRepo.confirmNoShow(any()),
+        ).thenThrow(DioException(requestOptions: RequestOptions()));
       },
       act: (b) => b.add(NoShowConfirmRequested('bid-x')),
-      expect: () => [
-        isA<CancellationLoading>(),
-        isA<CancellationError>(),
-      ],
+      expect: () => [isA<CancellationLoading>(), isA<CancellationError>()],
     );
   });
 
@@ -437,7 +404,7 @@ void main() {
             'departureDate': '2024-03-01T00:00:00Z',
             'availableKg': 10.0,
             'pricePerKg': 8.5,
-          }
+          },
         ],
         'cancelledAt': '2024-01-20T00:00:00Z',
       };
@@ -458,15 +425,13 @@ void main() {
       'emits [Loading, CancelledAfterHandover] on success',
       build: buildBloc,
       setUp: () {
-        when(() => mockRepo.cancelAfterHandover('bid-1'))
-            .thenAnswer((_) async {});
+        when(
+          () => mockRepo.cancelAfterHandover('bid-1'),
+        ).thenAnswer((_) async {});
       },
       act: (b) =>
           b.add(CancelAfterHandoverRequested('bid-1', actor: 'traveler')),
-      expect: () => [
-        isA<CancellationLoading>(),
-        isA<CancelledAfterHandover>(),
-      ],
+      expect: () => [isA<CancellationLoading>(), isA<CancelledAfterHandover>()],
       verify: (_) {
         verify(() => mockRepo.cancelAfterHandover('bid-1')).called(1);
       },
@@ -487,12 +452,8 @@ void main() {
           ),
         );
       },
-      act: (b) =>
-          b.add(CancelAfterHandoverRequested('bid-x', actor: 'sender')),
-      expect: () => [
-        isA<CancellationLoading>(),
-        isA<CancellationError>(),
-      ],
+      act: (b) => b.add(CancelAfterHandoverRequested('bid-x', actor: 'sender')),
+      expect: () => [isA<CancellationLoading>(), isA<CancellationError>()],
     );
   });
 
@@ -504,9 +465,7 @@ void main() {
       build: buildBloc,
       setUp: () {
         when(() => mockRepo.confirmReturn('bid-1', '123456')).thenAnswer(
-          (_) async => ReturnCodeModel(
-            returnedAt: DateTime(2024, 6, 1, 10),
-          ),
+          (_) async => ReturnCodeModel(returnedAt: DateTime(2024, 6, 1, 10)),
         );
       },
       act: (b) => b.add(ReturnConfirmRequested('bid-1', '123456')),
@@ -536,10 +495,7 @@ void main() {
         );
       },
       act: (b) => b.add(ReturnConfirmRequested('bid-x', '000000')),
-      expect: () => [
-        isA<CancellationLoading>(),
-        isA<CancellationError>(),
-      ],
+      expect: () => [isA<CancellationLoading>(), isA<CancellationError>()],
     );
   });
 
@@ -570,14 +526,12 @@ void main() {
       'emits [Loading, Error] on exception',
       build: buildBloc,
       setUp: () {
-        when(() => mockRepo.getReturnCode(any()))
-            .thenThrow(Exception('network error'));
+        when(
+          () => mockRepo.getReturnCode(any()),
+        ).thenThrow(Exception('network error'));
       },
       act: (b) => b.add(ReturnCodeRequested('bid-x')),
-      expect: () => [
-        isA<CancellationLoading>(),
-        isA<CancellationError>(),
-      ],
+      expect: () => [isA<CancellationLoading>(), isA<CancellationError>()],
     );
   });
 

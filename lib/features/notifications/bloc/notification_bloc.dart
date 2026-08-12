@@ -23,7 +23,9 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
     try {
       final notifications = await _repository.getNotifications();
       final unread = await _repository.getUnreadCount();
-      emit(NotificationLoaded(notifications: notifications, unreadCount: unread));
+      emit(
+        NotificationLoaded(notifications: notifications, unreadCount: unread),
+      );
     } catch (e) {
       emit(NotificationError(unwrapDioError(e)));
     }
@@ -68,7 +70,9 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
   ) async {
     final current = state;
     if (current is! NotificationLoaded) return;
-    final optimistic = current.notifications.where((n) => n.id != event.id).toList();
+    final optimistic = current.notifications
+        .where((n) => n.id != event.id)
+        .toList();
     final unread = optimistic.where((n) => !n.read).length;
     emit(current.copyWith(notifications: optimistic, unreadCount: unread));
     try {

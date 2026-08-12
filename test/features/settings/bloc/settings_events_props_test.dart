@@ -20,13 +20,15 @@ void main() {
   });
 
   group('DiagnosticsEvent props', () {
-    test('DiagnosticsLoadRequested == DiagnosticsLoadRequested (calls props)',
-        () {
-      const a = DiagnosticsLoadRequested();
-      const b = DiagnosticsLoadRequested();
-      expect(a, equals(b));
-      expect(a.props, isEmpty);
-    });
+    test(
+      'DiagnosticsLoadRequested == DiagnosticsLoadRequested (calls props)',
+      () {
+        const a = DiagnosticsLoadRequested();
+        const b = DiagnosticsLoadRequested();
+        expect(a, equals(b));
+        expect(a.props, isEmpty);
+      },
+    );
 
     test('ApiPingRequested == ApiPingRequested (calls props)', () {
       const a = ApiPingRequested();
@@ -94,12 +96,14 @@ void main() {
       expect(a.props, equals([true]));
     });
 
-    test('FollowSystemTextScaleToggled with different values are not equal',
-        () {
-      const a = FollowSystemTextScaleToggled(true);
-      const b = FollowSystemTextScaleToggled(false);
-      expect(a, isNot(equals(b)));
-    });
+    test(
+      'FollowSystemTextScaleToggled with different values are not equal',
+      () {
+        const a = FollowSystemTextScaleToggled(true);
+        const b = FollowSystemTextScaleToggled(false);
+        expect(a, isNot(equals(b)));
+      },
+    );
 
     test('TextScaleFactorChanged props are correct', () {
       const a = TextScaleFactorChanged(1.3);
@@ -151,8 +155,7 @@ void main() {
       expect(a.props, equals([true]));
     });
 
-    test(
-        'AccessibilityResetRequested == AccessibilityResetRequested '
+    test('AccessibilityResetRequested == AccessibilityResetRequested '
         '(calls props)', () {
       const a = AccessibilityResetRequested();
       const b = AccessibilityResetRequested();
@@ -220,12 +223,14 @@ void main() {
       expect(a.props, isEmpty);
     });
 
-    test('ConfirmImmediateDeletion == ConfirmImmediateDeletion (calls props)',
-        () {
-      const a = ConfirmImmediateDeletion();
-      const b = ConfirmImmediateDeletion();
-      expect(a, equals(b));
-      expect(a.props, isEmpty);
-    });
+    test(
+      'ConfirmImmediateDeletion == ConfirmImmediateDeletion (calls props)',
+      () {
+        const a = ConfirmImmediateDeletion();
+        const b = ConfirmImmediateDeletion();
+        expect(a, equals(b));
+        expect(a.props, isEmpty);
+      },
+    );
   });
 }

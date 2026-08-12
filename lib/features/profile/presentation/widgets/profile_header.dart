@@ -117,21 +117,21 @@ class ProfileHeader extends StatelessWidget {
                 excludeSemantics: true,
                 label: 'Modifier le profil',
                 child: GestureDetector(
-                onTap: onEditProfile,
-                child: Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: cs.surfaceContainerHighest,
-                    shape: BoxShape.circle,
-                  ),
-                  child: DonyIcon(
-                    'square-pen',
-                    size: 15,
-                    color: cs.onSurfaceVariant,
+                  onTap: onEditProfile,
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: cs.surfaceContainerHighest,
+                      shape: BoxShape.circle,
+                    ),
+                    child: DonyIcon(
+                      'square-pen',
+                      size: 15,
+                      color: cs.onSurfaceVariant,
+                    ),
                   ),
                 ),
-              )
               ),
             ],
           ),

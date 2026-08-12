@@ -88,7 +88,10 @@ void main() {
     tester,
   ) async {
     await _pump(tester, _bid(status: 'HANDED_OVER'), true);
-    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'qr-code'), findsOneWidget);
+    expect(
+      find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'qr-code'),
+      findsOneWidget,
+    );
     expect(find.textContaining('QR du colis'), findsOneWidget);
     // Pas de bouton code de retrait tant que le code n'existe pas.
     expect(find.text('Code de retrait'), findsNothing);
@@ -102,9 +105,15 @@ void main() {
         _bid(status: 'HANDED_OVER', confirmationCode: '4729'),
         true,
       );
-      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'qr-code'), findsOneWidget);
+      expect(
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'qr-code'),
+        findsOneWidget,
+      );
       expect(find.text('Code de retrait'), findsOneWidget);
-      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'key-round'), findsOneWidget);
+      expect(
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'key-round'),
+        findsOneWidget,
+      );
       // La carte du code n'est PAS inline : elle vit dans le bottom sheet.
       expect(find.text('CODE DE RETRAIT'), findsNothing);
     },
@@ -114,7 +123,10 @@ void main() {
     tester,
   ) async {
     await _pump(tester, _bid(status: 'IN_TRANSIT'), true);
-    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'qr-code'), findsOneWidget);
+    expect(
+      find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'qr-code'),
+      findsOneWidget,
+    );
     expect(find.text('Code de retrait'), findsNothing);
   });
 
@@ -126,7 +138,10 @@ void main() {
         _bid(status: 'IN_TRANSIT', confirmationCode: '4729'),
         true,
       );
-      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'qr-code'), findsOneWidget);
+      expect(
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'qr-code'),
+        findsOneWidget,
+      );
       expect(find.text('Code de retrait'), findsOneWidget);
     },
   );
@@ -183,7 +198,10 @@ void main() {
         true,
       );
       expect(find.text('Code de retour'), findsOneWidget);
-      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'key-round'), findsOneWidget);
+      expect(
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'key-round'),
+        findsOneWidget,
+      );
     },
   );
 
@@ -404,29 +422,27 @@ void main() {
     );
     // Accès au scan depuis le détail → redirige vers les étapes du Suivi.
     expect(find.text('Lire les QR des étapes'), findsOneWidget);
-    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'scan-line'), findsOneWidget);
+    expect(
+      find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'scan-line'),
+      findsOneWidget,
+    );
     // La bande de suivi reste.
     expect(find.text('N° DE SUIVI'), findsOneWidget);
   });
 
-  testWidgets(
-    'voyageur + PENDING → résumé de décision avec poids/type',
-    (tester) async {
-      await _pump(
-        tester,
-        _bid(
-          status: 'PENDING',
-          contentCategory: 'Vêtements',
-          weightKg: 3.5,
-        ),
-        false,
-      );
-      expect(find.text('POIDS'), findsOneWidget);
-      expect(find.text('TYPE'), findsOneWidget);
-      expect(find.text('3.5 kg'), findsOneWidget);
-      expect(find.text('Vêtements'), findsOneWidget);
-    },
-  );
+  testWidgets('voyageur + PENDING → résumé de décision avec poids/type', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      _bid(status: 'PENDING', contentCategory: 'Vêtements', weightKg: 3.5),
+      false,
+    );
+    expect(find.text('POIDS'), findsOneWidget);
+    expect(find.text('TYPE'), findsOneWidget);
+    expect(find.text('3.5 kg'), findsOneWidget);
+    expect(find.text('Vêtements'), findsOneWidget);
+  });
 
   testWidgets('voyageur + HANDED_OVER → lien "Scanner les étapes" (Suivi)', (
     tester,
@@ -434,7 +450,10 @@ void main() {
     await _pump(tester, _bid(status: 'HANDED_OVER'), false);
     // Redirige vers les étapes du Suivi (ScanHub).
     expect(find.text('Lire les QR des étapes'), findsOneWidget);
-    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'scan-line'), findsOneWidget);
+    expect(
+      find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'scan-line'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('voyageur + IN_TRANSIT → lien "Scanner les étapes" (Suivi)', (
@@ -471,7 +490,12 @@ void main() {
         false,
       );
       expect(find.text('Confirmer le retour'), findsOneWidget);
-      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'clipboard-check'), findsOneWidget);
+      expect(
+        find.byWidgetPredicate(
+          (w) => w is DonyIcon && w.name == 'clipboard-check',
+        ),
+        findsOneWidget,
+      );
     },
   );
 

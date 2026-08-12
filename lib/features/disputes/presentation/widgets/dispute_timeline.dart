@@ -26,25 +26,30 @@ class DisputeTimeline extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Column(children: [
-              Container(
-                width: 12,
-                height: 12,
-                margin: const EdgeInsets.only(top: 3),
-                decoration: BoxDecoration(
-                  color: hollow ? Colors.transparent : dotColor,
-                  border: hollow ? Border.all(color: cs.outlineVariant, width: 2) : null,
-                  shape: BoxShape.circle,
+            Column(
+              children: [
+                Container(
+                  width: 12,
+                  height: 12,
+                  margin: const EdgeInsets.only(top: 3),
+                  decoration: BoxDecoration(
+                    color: hollow ? Colors.transparent : dotColor,
+                    border: hollow
+                        ? Border.all(color: cs.outlineVariant, width: 2)
+                        : null,
+                    shape: BoxShape.circle,
+                  ),
                 ),
-              ),
-              if (!last)
-                Expanded(
-                  child: Container(
+                if (!last)
+                  Expanded(
+                    child: Container(
                       width: 2,
                       margin: const EdgeInsets.symmetric(vertical: 3),
-                      color: cs.outlineVariant),
-                ),
-            ]),
+                      color: cs.outlineVariant,
+                    ),
+                  ),
+              ],
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Padding(
@@ -52,12 +57,17 @@ class DisputeTimeline extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title,
-                        style: tt.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w700, color: titleColor)),
-                    Text(subtitle,
-                        style: tt.bodySmall
-                            ?.copyWith(color: cs.onSurfaceVariant)),
+                    Text(
+                      title,
+                      style: tt.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: titleColor,
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                    ),
                   ],
                 ),
               ),
@@ -74,33 +84,34 @@ class DisputeTimeline extends StatelessWidget {
         border: Border.all(color: cs.outlineVariant),
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Column(children: [
-        step(
-          dotColor: cs.primary,
-          title: 'Litige ouvert',
-          subtitle:
-              dispute.myRole == 'SENDER'
-                  ? "${df.format(dispute.createdAt)} · vous avez contesté l'absence du voyageur"
-                  : "${df.format(dispute.createdAt)} · l'expéditeur a contesté une absence à la remise",
-        ),
-        step(
-          dotColor: resolved ? cs.primary : cs.warning,
-          title: 'En instruction',
-          subtitle: resolved
-              ? 'examiné par l\'équipe Yadony'
-              : 'en cours d\'examen par l\'équipe Yadony',
-        ),
-        step(
-          dotColor: cs.success,
-          hollow: !resolved,
-          last: true,
-          title: resolved ? 'Décision rendue' : 'Décision',
-          titleColor: resolved ? null : cs.onSurfaceVariant,
-          subtitle: resolved && dispute.resolvedAt != null
-              ? df.format(dispute.resolvedAt!)
-              : 'sous 72 h',
-        ),
-      ]),
+      child: Column(
+        children: [
+          step(
+            dotColor: cs.primary,
+            title: 'Litige ouvert',
+            subtitle: dispute.myRole == 'SENDER'
+                ? "${df.format(dispute.createdAt)} · vous avez contesté l'absence du voyageur"
+                : "${df.format(dispute.createdAt)} · l'expéditeur a contesté une absence à la remise",
+          ),
+          step(
+            dotColor: resolved ? cs.primary : cs.warning,
+            title: 'En instruction',
+            subtitle: resolved
+                ? 'examiné par l\'équipe Yadony'
+                : 'en cours d\'examen par l\'équipe Yadony',
+          ),
+          step(
+            dotColor: cs.success,
+            hollow: !resolved,
+            last: true,
+            title: resolved ? 'Décision rendue' : 'Décision',
+            titleColor: resolved ? null : cs.onSurfaceVariant,
+            subtitle: resolved && dispute.resolvedAt != null
+                ? df.format(dispute.resolvedAt!)
+                : 'sous 72 h',
+          ),
+        ],
+      ),
     );
   }
 }

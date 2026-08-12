@@ -12,7 +12,10 @@ class IncidentReportRemoteDatasource {
     final formData = FormData.fromMap({
       'file': await MultipartFile.fromFile(filePath, filename: 'capture.jpg'),
     });
-    final response = await _apiClient.dio.post('/reports/photos', data: formData);
+    final response = await _apiClient.dio.post(
+      '/reports/photos',
+      data: formData,
+    );
     return (response.data as Map<String, dynamic>)['key'] as String;
   }
 
@@ -24,13 +27,17 @@ class IncidentReportRemoteDatasource {
     String? description,
     required List<String> photoKeys,
   }) async {
-    final response = await _apiClient.dio.post('/reports', data: {
-      'targetType': targetType,
-      'targetId': ?targetId,
-      'reason': reason,
-      if (description != null && description.isNotEmpty) 'description': description,
-      'photoKeys': photoKeys,
-    });
+    final response = await _apiClient.dio.post(
+      '/reports',
+      data: {
+        'targetType': targetType,
+        'targetId': ?targetId,
+        'reason': reason,
+        if (description != null && description.isNotEmpty)
+          'description': description,
+        'photoKeys': photoKeys,
+      },
+    );
     return (response.data as Map<String, dynamic>)['id'] as String;
   }
 }

@@ -16,7 +16,8 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
   final HiveService _hive;
   final AnalyticsService _analytics;
 
-  AnnouncementBloc(this._repository, this._hive, this._analytics) : super(AnnouncementInitial()) {
+  AnnouncementBloc(this._repository, this._hive, this._analytics)
+    : super(AnnouncementInitial()) {
     on<AnnouncementCreateRequested>(_onCreateRequested);
     on<AnnouncementPublishRequested>(_onPublishRequested);
     on<AnnouncementUnpublishRequested>(_onUnpublishRequested);
@@ -65,19 +66,20 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
       // Un brouillon n'est pas une publication : le flag "premier pas voyageur"
       // ne doit être posé que lorsque le trajet est réellement actif/visible.
       if (!event.saveAsDraft) {
-        await _hive.userPrefs
-            .put(HiveService.kHasPublishedAsTraveler, true);
+        await _hive.userPrefs.put(HiveService.kHasPublishedAsTraveler, true);
       }
       emit(AnnouncementCreated(announcement));
-      unawaited(_analytics.logEvent(
-        AnalyticsEvents.announcementCreated,
-        properties: {
-          'corridor': '${event.departureCity}→${event.arrivalCity}',
-          'available_kg': event.availableKg,
-          'price_per_kg': event.pricePerKg,
-          'is_draft': event.saveAsDraft,
-        },
-      ));
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.announcementCreated,
+          properties: {
+            'corridor': '${event.departureCity}→${event.arrivalCity}',
+            'available_kg': event.availableKg,
+            'price_per_kg': event.pricePerKg,
+            'is_draft': event.saveAsDraft,
+          },
+        ),
+      );
     } catch (e) {
       // Le datasource laisse remonter le DioException brut (dont `.error` porte la
       // ForbiddenException posée par l'interceptor). On déballe AVANT de router :
@@ -86,7 +88,8 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
       final error = unwrapDioError(e);
       if (error is ForbiddenException && error.code == 'draft-limit-reached') {
         emit(AnnouncementDraftLimitReached(error.message));
-      } else if (error is ForbiddenException && error.code == 'pro-limit-reached') {
+      } else if (error is ForbiddenException &&
+          error.code == 'pro-limit-reached') {
         emit(AnnouncementProLimitReached(error.message));
       } else {
         emit(AnnouncementError(error));
@@ -109,7 +112,8 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
       final error = unwrapDioError(e);
       if (error is ForbiddenException && error.code == 'kyc-not-verified') {
         emit(AnnouncementKycRequired(error.message));
-      } else if (error is ForbiddenException && error.code == 'pro-limit-reached') {
+      } else if (error is ForbiddenException &&
+          error.code == 'pro-limit-reached') {
         emit(AnnouncementProLimitReached(error.message));
       } else if (error.code == 'departure-date-passed') {
         emit(AnnouncementDepartureDatePassed(error.message));
@@ -148,10 +152,12 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
     emit(AnnouncementLoading());
     try {
       final result = await _repository.getMyAnnouncements();
-      emit(AnnouncementListLoaded(
-        result.announcements,
-        totalElements: result.totalElements,
-      ));
+      emit(
+        AnnouncementListLoaded(
+          result.announcements,
+          totalElements: result.totalElements,
+        ),
+      );
     } catch (e) {
       emit(AnnouncementError(unwrapDioError(e)));
     }
@@ -212,10 +218,14 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
       if (kDebugMode) debugPrint('=== SEARCH ERROR ===');
       if (kDebugMode) debugPrint(e.toString());
       if (kDebugMode) debugPrint(stacktrace.toString());
-      emit(AnnouncementError(
-        unwrapDioError(e),
-        previousResults: current is AnnouncementSearchLoaded ? current.results : null,
-      ));
+      emit(
+        AnnouncementError(
+          unwrapDioError(e),
+          previousResults: current is AnnouncementSearchLoaded
+              ? current.results
+              : null,
+        ),
+      );
     }
   }
 
@@ -253,13 +263,15 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
       emit(AnnouncementSurplusOpened(announcement));
       // PII : aucun id utilisateur, aucune ville exacte — uniquement les
       // valeurs métier de l'ouverture.
-      unawaited(_analytics.logEvent(
-        AnalyticsEvents.surplusOpened,
-        properties: {
-          'surplus_kg': event.surplusKg,
-          'price_per_kg': event.pricePerKg,
-        },
-      ));
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.surplusOpened,
+          properties: {
+            'surplus_kg': event.surplusKg,
+            'price_per_kg': event.pricePerKg,
+          },
+        ),
+      );
     } catch (e) {
       emit(AnnouncementError(unwrapDioError(e)));
     }
@@ -299,12 +311,14 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
       emit(AnnouncementUpdated(announcement));
     } catch (e) {
       if (e is DioException && e.response?.statusCode == 409) {
-        emit(AnnouncementError(
-          const ConflictException(
-            'Modification impossible : des colis sont déjà acceptés pour ce trajet',
-            code: 'announcement-update-blocked',
+        emit(
+          AnnouncementError(
+            const ConflictException(
+              'Modification impossible : des colis sont déjà acceptés pour ce trajet',
+              code: 'announcement-update-blocked',
+            ),
           ),
-        ));
+        );
       } else {
         emit(AnnouncementError(unwrapDioError(e)));
       }

@@ -6,7 +6,7 @@ import 'package:dony/features/matching/data/repositories/mobile_money_repository
 class MobileMoneyPaymentBloc
     extends Bloc<MobileMoneyPaymentEvent, MobileMoneyPaymentState> {
   MobileMoneyPaymentBloc(this._repository)
-      : super(const MobileMoneyPaymentInitial()) {
+    : super(const MobileMoneyPaymentInitial()) {
     on<MobileMoneyStatusPolled>(_onStatusPolled);
     on<MobileMoneyLinkRegenRequested>(_onLinkRegen);
   }
@@ -20,7 +20,8 @@ class MobileMoneyPaymentBloc
     // Emit Loading only on the first call (Initial or Error state).
     // Periodic polls silently refresh to avoid flashing a full-screen spinner
     // over the PENDING content + "Payer maintenant" button.
-    if (state is MobileMoneyPaymentInitial || state is MobileMoneyPaymentError) {
+    if (state is MobileMoneyPaymentInitial ||
+        state is MobileMoneyPaymentError) {
       emit(const MobileMoneyPaymentLoading());
     }
     try {
@@ -31,13 +32,16 @@ class MobileMoneyPaymentBloc
         case 'EXPIRED':
           emit(const MobileMoneyPaymentExpired());
         case 'FAILED':
-          emit(MobileMoneyPaymentError(
-              model.failureReason ?? 'Paiement échoué'));
+          emit(
+            MobileMoneyPaymentError(model.failureReason ?? 'Paiement échoué'),
+          );
         default:
-          emit(MobileMoneyPaymentPending(
-            paymentLink: model.paymentLink ?? '',
-            expiresAt: model.expiresAt,
-          ));
+          emit(
+            MobileMoneyPaymentPending(
+              paymentLink: model.paymentLink ?? '',
+              expiresAt: model.expiresAt,
+            ),
+          );
       }
     } catch (e) {
       emit(MobileMoneyPaymentError(e.toString()));
@@ -51,10 +55,12 @@ class MobileMoneyPaymentBloc
     emit(const MobileMoneyPaymentLoading());
     try {
       final model = await _repository.regenerateLink(event.bidId);
-      emit(MobileMoneyPaymentPending(
-        paymentLink: model.paymentLink ?? '',
-        expiresAt: model.expiresAt,
-      ));
+      emit(
+        MobileMoneyPaymentPending(
+          paymentLink: model.paymentLink ?? '',
+          expiresAt: model.expiresAt,
+        ),
+      );
     } catch (e) {
       emit(MobileMoneyPaymentError(e.toString()));
     }

@@ -9,10 +9,10 @@ class MockApiClient extends Mock implements ApiClient {}
 class MockDio extends Mock implements Dio {}
 
 Response<dynamic> _ok(dynamic data, String path) => Response(
-      data: data,
-      statusCode: 200,
-      requestOptions: RequestOptions(path: path),
-    );
+  data: data,
+  statusCode: 200,
+  requestOptions: RequestOptions(path: path),
+);
 
 void main() {
   late MockApiClient mockClient;
@@ -27,22 +27,25 @@ void main() {
   });
 
   test('setup() POSTs and returns clientSecret', () async {
-    when(() => mockDio.post('/traveler/commission-method/setup'))
-        .thenAnswer((_) async => _ok({'clientSecret': 'seti_x'}, '/traveler/commission-method/setup'));
+    when(() => mockDio.post('/traveler/commission-method/setup')).thenAnswer(
+      (_) async =>
+          _ok({'clientSecret': 'seti_x'}, '/traveler/commission-method/setup'),
+    );
 
     final secret = await ds.setup();
     expect(secret, 'seti_x');
   });
 
   test('get() returns CommissionMethod when found', () async {
-    when(() => mockDio.get('/traveler/commission-method'))
-        .thenAnswer((_) async => _ok({
-              'brand': 'visa',
-              'last4': '4242',
-              'expMonth': 12,
-              'expYear': 2028,
-              'expirationStatus': 'VALID',
-            }, '/traveler/commission-method'));
+    when(() => mockDio.get('/traveler/commission-method')).thenAnswer(
+      (_) async => _ok({
+        'brand': 'visa',
+        'last4': '4242',
+        'expMonth': 12,
+        'expYear': 2028,
+        'expirationStatus': 'VALID',
+      }, '/traveler/commission-method'),
+    );
 
     final result = await ds.get();
     expect(result, isNotNull);
@@ -53,7 +56,10 @@ void main() {
   test('get() returns null on 404', () async {
     when(() => mockDio.get('/traveler/commission-method')).thenThrow(
       DioException(
-        response: Response(statusCode: 404, requestOptions: RequestOptions(path: '/traveler/commission-method')),
+        response: Response(
+          statusCode: 404,
+          requestOptions: RequestOptions(path: '/traveler/commission-method'),
+        ),
         requestOptions: RequestOptions(path: '/traveler/commission-method'),
       ),
     );
@@ -65,7 +71,10 @@ void main() {
   test('get() rethrows non-404 errors', () async {
     when(() => mockDio.get('/traveler/commission-method')).thenThrow(
       DioException(
-        response: Response(statusCode: 500, requestOptions: RequestOptions(path: '/traveler/commission-method')),
+        response: Response(
+          statusCode: 500,
+          requestOptions: RequestOptions(path: '/traveler/commission-method'),
+        ),
         requestOptions: RequestOptions(path: '/traveler/commission-method'),
       ),
     );
@@ -74,8 +83,12 @@ void main() {
   });
 
   test('delete() calls DELETE endpoint without throwing', () async {
-    when(() => mockDio.delete('/traveler/commission-method'))
-        .thenAnswer((_) async => Response(statusCode: 204, requestOptions: RequestOptions(path: '/traveler/commission-method')));
+    when(() => mockDio.delete('/traveler/commission-method')).thenAnswer(
+      (_) async => Response(
+        statusCode: 204,
+        requestOptions: RequestOptions(path: '/traveler/commission-method'),
+      ),
+    );
 
     await ds.delete();
     verify(() => mockDio.delete('/traveler/commission-method')).called(1);

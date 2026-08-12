@@ -32,49 +32,67 @@ AnnouncementModel _trip({
   );
 }
 
-Widget _harness(TripTile tile) =>
-    MaterialApp(theme: AppTheme.light(), home: Scaffold(body: tile));
+Widget _harness(TripTile tile) => MaterialApp(
+  theme: AppTheme.light(),
+  home: Scaffold(body: tile),
+);
 
 void main() {
   setUpAll(() => initializeDateFormatting('fr'));
 
-  testWidgets('affiche le bouton Modifier et la pastille liquide',
-      (tester) async {
-    await tester.pumpWidget(_harness(TripTile(
-      announcement: _trip(),
-      index: 0,
-      isSelected: false,
-      onTap: () {},
-      onModify: () {},
-    )));
+  testWidgets('affiche le bouton Modifier et la pastille liquide', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _harness(
+        TripTile(
+          announcement: _trip(),
+          index: 0,
+          isSelected: false,
+          onTap: () {},
+          onModify: () {},
+        ),
+      ),
+    );
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('trip-tile-modify-button')), findsOneWidget);
     expect(find.text('Modifier le trajet'), findsOneWidget);
     expect(find.text('Liquide désactivé'), findsOneWidget);
   });
 
-  testWidgets('la pastille indique « Liquide activé » quand le cash est accepté',
-      (tester) async {
-    await tester.pumpWidget(_harness(TripTile(
-      announcement:
-          _trip(payments: const {BidPaymentMethod.stripe, BidPaymentMethod.cash}),
-      index: 0,
-      isSelected: false,
-      onTap: () {},
-      onModify: () {},
-    )));
-    await tester.pumpAndSettle();
-    expect(find.text('Liquide activé'), findsOneWidget);
-  });
+  testWidgets(
+    'la pastille indique « Liquide activé » quand le cash est accepté',
+    (tester) async {
+      await tester.pumpWidget(
+        _harness(
+          TripTile(
+            announcement: _trip(
+              payments: const {BidPaymentMethod.stripe, BidPaymentMethod.cash},
+            ),
+            index: 0,
+            isSelected: false,
+            onTap: () {},
+            onModify: () {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Liquide activé'), findsOneWidget);
+    },
+  );
 
   testWidgets('affiche « Kg libre » pour un trajet KG_FREE', (tester) async {
-    await tester.pumpWidget(_harness(TripTile(
-      announcement: _trip(capacityUnit: 'KG_FREE'),
-      index: 0,
-      isSelected: false,
-      onTap: () {},
-      onModify: () {},
-    )));
+    await tester.pumpWidget(
+      _harness(
+        TripTile(
+          announcement: _trip(capacityUnit: 'KG_FREE'),
+          index: 0,
+          isSelected: false,
+          onTap: () {},
+          onModify: () {},
+        ),
+      ),
+    );
     await tester.pumpAndSettle();
     expect(find.textContaining('Kg libre'), findsOneWidget);
     expect(find.textContaining('kg dispo'), findsNothing);
@@ -82,47 +100,62 @@ void main() {
 
   testWidgets('tap sur Modifier déclenche onModify', (tester) async {
     var tapped = false;
-    await tester.pumpWidget(_harness(TripTile(
-      announcement: _trip(),
-      index: 0,
-      isSelected: false,
-      onTap: () {},
-      onModify: () => tapped = true,
-    )));
+    await tester.pumpWidget(
+      _harness(
+        TripTile(
+          announcement: _trip(),
+          index: 0,
+          isSelected: false,
+          onTap: () {},
+          onModify: () => tapped = true,
+        ),
+      ),
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('trip-tile-modify-button')));
     expect(tapped, isTrue);
   });
 
-  testWidgets('tap sur le corps de la carte déclenche onTap, pas onModify',
-      (tester) async {
+  testWidgets('tap sur le corps de la carte déclenche onTap, pas onModify', (
+    tester,
+  ) async {
     var selected = false;
     var modified = false;
-    await tester.pumpWidget(_harness(TripTile(
-      announcement: _trip(),
-      index: 0,
-      isSelected: false,
-      onTap: () => selected = true,
-      onModify: () => modified = true,
-    )));
+    await tester.pumpWidget(
+      _harness(
+        TripTile(
+          announcement: _trip(),
+          index: 0,
+          isSelected: false,
+          onTap: () => selected = true,
+          onModify: () => modified = true,
+        ),
+      ),
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.textContaining('kg dispo'));
     expect(selected, isTrue);
     expect(modified, isFalse);
   });
 
-  testWidgets('le bouton Modifier est désactivé quand onModify est null',
-      (tester) async {
-    await tester.pumpWidget(_harness(TripTile(
-      announcement: _trip(),
-      index: 0,
-      isSelected: false,
-      onTap: () {},
-      onModify: null,
-    )));
+  testWidgets('le bouton Modifier est désactivé quand onModify est null', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _harness(
+        TripTile(
+          announcement: _trip(),
+          index: 0,
+          isSelected: false,
+          onTap: () {},
+          onModify: null,
+        ),
+      ),
+    );
     await tester.pumpAndSettle();
     final inkWell = tester.widget<InkWell>(
-        find.byKey(const Key('trip-tile-modify-button')));
+      find.byKey(const Key('trip-tile-modify-button')),
+    );
     expect(inkWell.onTap, isNull);
   });
 }

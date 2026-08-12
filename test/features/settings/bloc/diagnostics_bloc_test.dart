@@ -119,14 +119,14 @@ void main() {
     blocTest<DiagnosticsBloc, DiagnosticsState>(
       'ApiPingRequested emet apiOk=false si exception generique',
       build: () {
-        when(() => mockDio.get('/actuator/health'))
-            .thenThrow(Exception('network error'));
+        when(
+          () => mockDio.get('/actuator/health'),
+        ).thenThrow(Exception('network error'));
         return DiagnosticsBloc(mockApiClient);
       },
       act: (bloc) => bloc.add(const ApiPingRequested()),
       expect: () => [
-        isA<DiagnosticsState>()
-            .having((s) => s.isPinging, 'isPinging', isTrue),
+        isA<DiagnosticsState>().having((s) => s.isPinging, 'isPinging', isTrue),
         isA<DiagnosticsState>()
             .having((s) => s.isPinging, 'isPinging', isFalse)
             .having((s) => s.apiOk, 'apiOk', isFalse),

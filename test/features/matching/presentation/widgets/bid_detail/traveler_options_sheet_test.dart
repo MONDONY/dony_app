@@ -20,25 +20,26 @@ class _MockConvBloc
     extends MockBloc<ConversationOpenEvent, ConversationOpenState>
     implements ConversationOpenBloc {}
 
-class _FakeConversationOpenEvent extends Fake implements ConversationOpenEvent {}
+class _FakeConversationOpenEvent extends Fake
+    implements ConversationOpenEvent {}
+
 class _FakeBidEvent extends Fake implements BidEvent {}
 
 BidModel _bid({
   String status = 'ACCEPTED',
   String? token = 'tok',
   DateTime? departureAt,
-}) =>
-    BidModel(
-      id: 'b1',
-      announcementId: 'a1',
-      senderId: 's1',
-      status: status,
-      weightKg: 5,
-      trackingToken: token,
-      departureAt: departureAt,
-      createdAt: DateTime(2026, 5),
-      updatedAt: DateTime(2026, 5),
-    );
+}) => BidModel(
+  id: 'b1',
+  announcementId: 'a1',
+  senderId: 's1',
+  status: status,
+  weightKg: 5,
+  trackingToken: token,
+  departureAt: departureAt,
+  createdAt: DateTime(2026, 5),
+  updatedAt: DateTime(2026, 5),
+);
 
 Widget _buildApp({
   required _MockBidBloc bidBloc,
@@ -68,10 +69,7 @@ Widget _buildApp({
       ),
     ],
   );
-  return MaterialApp.router(
-    theme: AppTheme.light(),
-    routerConfig: router,
-  );
+  return MaterialApp.router(theme: AppTheme.light(), routerConfig: router);
 }
 
 Future<void> _open(WidgetTester tester, BidModel bid) async {
@@ -91,16 +89,17 @@ void main() {
   });
 
   testWidgets(
-      'ACCEPTED → contacter / détails / partager / signaler / annuler',
-      (tester) async {
-    await _open(tester, _bid(status: 'ACCEPTED'));
-    expect(find.text("Contacter l'expéditeur"), findsOneWidget);
-    expect(find.text('Détails du colis'), findsOneWidget);
-    expect(find.text('Partager le suivi'), findsOneWidget);
-    expect(find.text("Signaler l'expéditeur"), findsOneWidget);
-    expect(find.text('Annuler ce transport'), findsOneWidget);
-    expect(find.text('Supprimer cette demande'), findsNothing);
-  });
+    'ACCEPTED → contacter / détails / partager / signaler / annuler',
+    (tester) async {
+      await _open(tester, _bid(status: 'ACCEPTED'));
+      expect(find.text("Contacter l'expéditeur"), findsOneWidget);
+      expect(find.text('Détails du colis'), findsOneWidget);
+      expect(find.text('Partager le suivi'), findsOneWidget);
+      expect(find.text("Signaler l'expéditeur"), findsOneWidget);
+      expect(find.text('Annuler ce transport'), findsOneWidget);
+      expect(find.text('Supprimer cette demande'), findsNothing);
+    },
+  );
 
   testWidgets("REJECTED → supprimer, pas d'annuler", (tester) async {
     await _open(tester, _bid(status: 'REJECTED', token: null));
@@ -115,15 +114,17 @@ void main() {
     expect(find.text('Annuler ce transport'), findsNothing);
   });
 
-  testWidgets('IN_TRANSIT → annulation impossible (D3), pas supprimer',
-      (tester) async {
+  testWidgets('IN_TRANSIT → annulation impossible (D3), pas supprimer', (
+    tester,
+  ) async {
     await _open(tester, _bid(status: 'IN_TRANSIT', token: null));
     expect(find.text('Annuler ce transport'), findsNothing);
     expect(find.text('Supprimer cette demande'), findsNothing);
   });
 
-  testWidgets('HANDED_OVER avant départ → annuler présent, pas supprimer',
-      (tester) async {
+  testWidgets('HANDED_OVER avant départ → annuler présent, pas supprimer', (
+    tester,
+  ) async {
     await _open(
       tester,
       _bid(
@@ -136,8 +137,9 @@ void main() {
     expect(find.text('Supprimer cette demande'), findsNothing);
   });
 
-  testWidgets('HANDED_OVER après départ → annulation impossible (D3)',
-      (tester) async {
+  testWidgets('HANDED_OVER après départ → annulation impossible (D3)', (
+    tester,
+  ) async {
     await _open(
       tester,
       _bid(
@@ -161,14 +163,21 @@ void main() {
     when(() => conv.state).thenReturn(const ConversationOpenInitial());
 
     await tester.pumpWidget(
-        _buildApp(bidBloc: bidBloc, conv: conv, bid: _bid(status: 'ACCEPTED')));
+      _buildApp(
+        bidBloc: bidBloc,
+        conv: conv,
+        bid: _bid(status: 'ACCEPTED'),
+      ),
+    );
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text("Contacter l'expéditeur"));
     await tester.pumpAndSettle();
 
-    verify(() => conv.add(any(that: isA<ConversationOpenRequested>()))).called(1);
+    verify(
+      () => conv.add(any(that: isA<ConversationOpenRequested>())),
+    ).called(1);
   });
 
   testWidgets('tap Signaler → sheet signalement apparaît', (tester) async {
@@ -193,9 +202,9 @@ void main() {
     }
   });
 
-  testWidgets(
-      'tap Signaler → sélectionner raison → bouton Envoyer activé',
-      (tester) async {
+  testWidgets('tap Signaler → sélectionner raison → bouton Envoyer activé', (
+    tester,
+  ) async {
     // Suppress RadioListTile-inside-DecoratedBox assertion (known Flutter warning).
     final List<FlutterErrorDetails> suppressedErrors = [];
     final originalOnError = FlutterError.onError;
@@ -213,12 +222,14 @@ void main() {
       await tester.pumpAndSettle();
 
       // The DonyButton renders as an ElevatedButton; when onPressed == null it is disabled.
-      final btns = tester.widgetList<ElevatedButton>(
-        find.ancestor(
-          of: find.text('Envoyer le signalement'),
-          matching: find.byType(ElevatedButton),
-        ),
-      ).toList();
+      final btns = tester
+          .widgetList<ElevatedButton>(
+            find.ancestor(
+              of: find.text('Envoyer le signalement'),
+              matching: find.byType(ElevatedButton),
+            ),
+          )
+          .toList();
       if (btns.isNotEmpty) {
         expect(btns.first.onPressed, isNull);
       }
@@ -227,12 +238,14 @@ void main() {
       await tester.tap(find.text('Comportement inapproprié'));
       await tester.pumpAndSettle();
 
-      final btnsAfter = tester.widgetList<ElevatedButton>(
-        find.ancestor(
-          of: find.text('Envoyer le signalement'),
-          matching: find.byType(ElevatedButton),
-        ),
-      ).toList();
+      final btnsAfter = tester
+          .widgetList<ElevatedButton>(
+            find.ancestor(
+              of: find.text('Envoyer le signalement'),
+              matching: find.byType(ElevatedButton),
+            ),
+          )
+          .toList();
       if (btnsAfter.isNotEmpty) {
         expect(btnsAfter.first.onPressed, isNotNull);
       }
@@ -249,8 +262,9 @@ void main() {
     expect(find.text('Détails du colis'), findsWidgets);
   });
 
-  testWidgets('tap Partager le suivi → shareTrackingLink appelé (sans exception)',
-      (tester) async {
+  testWidgets('tap Partager le suivi → shareTrackingLink appelé (sans exception)', (
+    tester,
+  ) async {
     await _open(tester, _bid(status: 'ACCEPTED', token: 'abc123'));
     // Tap the share button — it calls shareTrackingLink which may do nothing in test env
     await tester.tap(find.text('Partager le suivi'));
@@ -271,26 +285,29 @@ void main() {
     );
   });
 
-  testWidgets('tap Supprimer → BidTravelerDismissRequested émis',
-      (tester) async {
+  testWidgets('tap Supprimer → BidTravelerDismissRequested émis', (
+    tester,
+  ) async {
     final bidBloc = _MockBidBloc();
     final conv = _MockConvBloc();
     when(() => bidBloc.state).thenReturn(BidInitial());
     when(() => conv.state).thenReturn(const ConversationOpenInitial());
 
     await tester.pumpWidget(
-        _buildApp(
-            bidBloc: bidBloc,
-            conv: conv,
-            bid: _bid(status: 'REJECTED', token: null)));
+      _buildApp(
+        bidBloc: bidBloc,
+        conv: conv,
+        bid: _bid(status: 'REJECTED', token: null),
+      ),
+    );
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Supprimer cette demande'));
     await tester.pumpAndSettle();
 
-    verify(() =>
-            bidBloc.add(any(that: isA<BidTravelerDismissRequested>())))
-        .called(1);
+    verify(
+      () => bidBloc.add(any(that: isA<BidTravelerDismissRequested>())),
+    ).called(1);
   });
 }

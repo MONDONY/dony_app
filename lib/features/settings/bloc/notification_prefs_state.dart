@@ -27,15 +27,20 @@ class NotificationPrefsState extends Equatable {
     bool? packageMatchAlert,
     bool? isSyncing,
     String? Function()? errorMessageGetter,
-  }) =>
-      NotificationPrefsState(
-        prefs: prefs ?? this.prefs,
-        packageMatchAlert: packageMatchAlert ?? this.packageMatchAlert,
-        isSyncing: isSyncing ?? this.isSyncing,
-        errorMessage:
-            errorMessageGetter != null ? errorMessageGetter() : errorMessage,
-      );
+  }) => NotificationPrefsState(
+    prefs: prefs ?? this.prefs,
+    packageMatchAlert: packageMatchAlert ?? this.packageMatchAlert,
+    isSyncing: isSyncing ?? this.isSyncing,
+    errorMessage: errorMessageGetter != null
+        ? errorMessageGetter()
+        : errorMessage,
+  );
 
   @override
-  List<Object?> get props => [prefs, packageMatchAlert, isSyncing, errorMessage];
+  List<Object?> get props => [
+    prefs,
+    packageMatchAlert,
+    isSyncing,
+    errorMessage,
+  ];
 }

@@ -23,8 +23,11 @@ void main() {
     },
     act: (b) => b.add(const LoadSubscribeStatus('t1')),
     expect: () => [
-      isA<TravelerSubscribeState>()
-          .having((s) => s.status, 'status', TravelerSubscribeStatus.loading),
+      isA<TravelerSubscribeState>().having(
+        (s) => s.status,
+        'status',
+        TravelerSubscribeStatus.loading,
+      ),
       isA<TravelerSubscribeState>()
           .having((s) => s.status, 'status', TravelerSubscribeStatus.ready)
           .having((s) => s.subscribed, 'subscribed', true)
@@ -41,10 +44,16 @@ void main() {
     },
     act: (b) => b.add(const LoadSubscribeStatus('t1')),
     expect: () => [
-      isA<TravelerSubscribeState>()
-          .having((s) => s.status, 'status', TravelerSubscribeStatus.loading),
-      isA<TravelerSubscribeState>()
-          .having((s) => s.status, 'status', TravelerSubscribeStatus.error),
+      isA<TravelerSubscribeState>().having(
+        (s) => s.status,
+        'status',
+        TravelerSubscribeStatus.loading,
+      ),
+      isA<TravelerSubscribeState>().having(
+        (s) => s.status,
+        'status',
+        TravelerSubscribeStatus.error,
+      ),
     ],
   );
 
@@ -54,13 +63,15 @@ void main() {
       when(() => repo.subscribe('t1')).thenAnswer((_) async {});
       return TravelerSubscribeBloc(repo)..travelerId = 't1';
     },
-    seed: () => const TravelerSubscribeState(
-      status: TravelerSubscribeStatus.ready,
-    ),
+    seed: () =>
+        const TravelerSubscribeState(status: TravelerSubscribeStatus.ready),
     act: (b) => b.add(const SubscribePressed()),
     expect: () => [
-      isA<TravelerSubscribeState>()
-          .having((s) => s.subscribed, 'subscribed', true),
+      isA<TravelerSubscribeState>().having(
+        (s) => s.subscribed,
+        'subscribed',
+        true,
+      ),
     ],
     verify: (_) => verify(() => repo.subscribe('t1')).called(1),
   );
@@ -71,13 +82,15 @@ void main() {
       when(() => repo.subscribe('t1')).thenThrow(Exception('boom'));
       return TravelerSubscribeBloc(repo)..travelerId = 't1';
     },
-    seed: () => const TravelerSubscribeState(
-      status: TravelerSubscribeStatus.ready,
-    ),
+    seed: () =>
+        const TravelerSubscribeState(status: TravelerSubscribeStatus.ready),
     act: (b) => b.add(const SubscribePressed()),
     expect: () => [
-      isA<TravelerSubscribeState>()
-          .having((s) => s.status, 'status', TravelerSubscribeStatus.error),
+      isA<TravelerSubscribeState>().having(
+        (s) => s.status,
+        'status',
+        TravelerSubscribeStatus.error,
+      ),
     ],
   );
 
@@ -116,8 +129,11 @@ void main() {
     ),
     act: (b) => b.add(const TogglePushPressed(true)),
     expect: () => [
-      isA<TravelerSubscribeState>()
-          .having((s) => s.pushEnabled, 'pushEnabled', true),
+      isA<TravelerSubscribeState>().having(
+        (s) => s.pushEnabled,
+        'pushEnabled',
+        true,
+      ),
     ],
     verify: (_) => verify(() => repo.setPush('t1', true)).called(1),
   );
@@ -135,8 +151,11 @@ void main() {
     ),
     act: (b) => b.add(const TogglePushPressed(false)),
     expect: () => [
-      isA<TravelerSubscribeState>()
-          .having((s) => s.status, 'status', TravelerSubscribeStatus.error),
+      isA<TravelerSubscribeState>().having(
+        (s) => s.status,
+        'status',
+        TravelerSubscribeStatus.error,
+      ),
     ],
   );
 }

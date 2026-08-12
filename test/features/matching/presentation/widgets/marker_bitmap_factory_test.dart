@@ -88,89 +88,121 @@ void main() {
       expect(desc, isA<BitmapDescriptor>());
     });
 
-    test('null rating produces different cache slot from a real rating', () async {
-      final novice = await MarkerBitmapFactory.pin(
-        mode: TransportMode.plane,
-        side: MarkerSide.pickup,
-        rating: null,
-      );
-      final rated = await MarkerBitmapFactory.pin(
-        mode: TransportMode.plane,
-        side: MarkerSide.pickup,
-        rating: 5.0,
-      );
-      expect(identical(novice, rated), isFalse);
-    });
+    test(
+      'null rating produces different cache slot from a real rating',
+      () async {
+        final novice = await MarkerBitmapFactory.pin(
+          mode: TransportMode.plane,
+          side: MarkerSide.pickup,
+          rating: null,
+        );
+        final rated = await MarkerBitmapFactory.pin(
+          mode: TransportMode.plane,
+          side: MarkerSide.pickup,
+          rating: 5.0,
+        );
+        expect(identical(novice, rated), isFalse);
+      },
+    );
 
     // ─── Mode/side discrimination + sweep ──────────────────────────────────
 
-    test('produces a BitmapDescriptor for every (mode, side) combination', () async {
-      for (final mode in TransportMode.values) {
-        for (final side in MarkerSide.values) {
-          final desc = await MarkerBitmapFactory.pin(
-            mode: mode,
-            side: side,
-            rating: 4.5,
-          );
-          expect(desc, isA<BitmapDescriptor>(),
-              reason: 'failed for $mode / $side');
+    test(
+      'produces a BitmapDescriptor for every (mode, side) combination',
+      () async {
+        for (final mode in TransportMode.values) {
+          for (final side in MarkerSide.values) {
+            final desc = await MarkerBitmapFactory.pin(
+              mode: mode,
+              side: side,
+              rating: 4.5,
+            );
+            expect(
+              desc,
+              isA<BitmapDescriptor>(),
+              reason: 'failed for $mode / $side',
+            );
+          }
         }
-      }
-    });
+      },
+    );
 
-    test('different modes produce different bitmaps for same side+rating', () async {
-      final plane = await MarkerBitmapFactory.pin(
-        mode: TransportMode.plane,
-        side: MarkerSide.pickup,
-        rating: 4.7,
-      );
-      final car = await MarkerBitmapFactory.pin(
-        mode: TransportMode.car,
-        side: MarkerSide.pickup,
-        rating: 4.7,
-      );
-      expect(identical(plane, car), isFalse);
-    });
+    test(
+      'different modes produce different bitmaps for same side+rating',
+      () async {
+        final plane = await MarkerBitmapFactory.pin(
+          mode: TransportMode.plane,
+          side: MarkerSide.pickup,
+          rating: 4.7,
+        );
+        final car = await MarkerBitmapFactory.pin(
+          mode: TransportMode.car,
+          side: MarkerSide.pickup,
+          rating: 4.7,
+        );
+        expect(identical(plane, car), isFalse);
+      },
+    );
   });
 
   group('MarkerBitmapFactory.pricePill brightness', () {
     test('light vs dark produce different bitmaps', () async {
       final light = await MarkerBitmapFactory.pricePill(
-        pricePerKg: 12, brightness: Brightness.light);
+        pricePerKg: 12,
+        brightness: Brightness.light,
+      );
       final dark = await MarkerBitmapFactory.pricePill(
-        pricePerKg: 12, brightness: Brightness.dark);
+        pricePerKg: 12,
+        brightness: Brightness.dark,
+      );
       expect(identical(light, dark), isFalse);
     });
 
     test('same brightness hits the cache', () async {
       final a = await MarkerBitmapFactory.pricePill(
-        pricePerKg: 12, brightness: Brightness.dark);
+        pricePerKg: 12,
+        brightness: Brightness.dark,
+      );
       final b = await MarkerBitmapFactory.pricePill(
-        pricePerKg: 12, brightness: Brightness.dark);
+        pricePerKg: 12,
+        brightness: Brightness.dark,
+      );
       expect(identical(a, b), isTrue);
     });
 
     test('selected vs not produce different bitmaps', () async {
       final plain = await MarkerBitmapFactory.pricePill(pricePerKg: 12);
       final selected = await MarkerBitmapFactory.pricePill(
-        pricePerKg: 12, isSelected: true);
+        pricePerKg: 12,
+        isSelected: true,
+      );
       expect(identical(plain, selected), isFalse);
     });
 
-    test('different currencies produce different bitmaps, not always EUR',
-        () async {
-      final eur = await MarkerBitmapFactory.pricePill(
-          pricePerKg: 12, currencyCode: 'EUR');
-      final cad = await MarkerBitmapFactory.pricePill(
-          pricePerKg: 12, currencyCode: 'CAD');
-      expect(identical(eur, cad), isFalse);
-    });
+    test(
+      'different currencies produce different bitmaps, not always EUR',
+      () async {
+        final eur = await MarkerBitmapFactory.pricePill(
+          pricePerKg: 12,
+          currencyCode: 'EUR',
+        );
+        final cad = await MarkerBitmapFactory.pricePill(
+          pricePerKg: 12,
+          currencyCode: 'CAD',
+        );
+        expect(identical(eur, cad), isFalse);
+      },
+    );
 
     test('same currency hits the cache', () async {
       final a = await MarkerBitmapFactory.pricePill(
-          pricePerKg: 12, currencyCode: 'CAD');
+        pricePerKg: 12,
+        currencyCode: 'CAD',
+      );
       final b = await MarkerBitmapFactory.pricePill(
-          pricePerKg: 12, currencyCode: 'CAD');
+        pricePerKg: 12,
+        currencyCode: 'CAD',
+      );
       expect(identical(a, b), isTrue);
     });
   });
@@ -178,25 +210,43 @@ void main() {
   group('MarkerBitmapFactory.stackedPricePill brightness', () {
     test('light vs dark produce different stacked bitmaps', () async {
       final light = await MarkerBitmapFactory.stackedPricePill(
-          pricePerKg: 12, count: 3, brightness: Brightness.light);
+        pricePerKg: 12,
+        count: 3,
+        brightness: Brightness.light,
+      );
       final dark = await MarkerBitmapFactory.stackedPricePill(
-          pricePerKg: 12, count: 3, brightness: Brightness.dark);
+        pricePerKg: 12,
+        count: 3,
+        brightness: Brightness.dark,
+      );
       expect(identical(light, dark), isFalse);
     });
 
     test('same brightness hits the stacked cache', () async {
       final a = await MarkerBitmapFactory.stackedPricePill(
-          pricePerKg: 12, count: 3, brightness: Brightness.dark);
+        pricePerKg: 12,
+        count: 3,
+        brightness: Brightness.dark,
+      );
       final b = await MarkerBitmapFactory.stackedPricePill(
-          pricePerKg: 12, count: 3, brightness: Brightness.dark);
+        pricePerKg: 12,
+        count: 3,
+        brightness: Brightness.dark,
+      );
       expect(identical(a, b), isTrue);
     });
 
     test('different currencies produce different stacked bitmaps', () async {
       final eur = await MarkerBitmapFactory.stackedPricePill(
-          pricePerKg: 12, count: 3, currencyCode: 'EUR');
+        pricePerKg: 12,
+        count: 3,
+        currencyCode: 'EUR',
+      );
       final cad = await MarkerBitmapFactory.stackedPricePill(
-          pricePerKg: 12, count: 3, currencyCode: 'CAD');
+        pricePerKg: 12,
+        count: 3,
+        currencyCode: 'CAD',
+      );
       expect(identical(eur, cad), isFalse);
     });
   });

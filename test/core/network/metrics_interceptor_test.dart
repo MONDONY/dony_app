@@ -10,8 +10,14 @@ void main() {
     final collector = NetworkMetricsCollector();
     final interceptor = MetricsInterceptor(collector);
     final opts = RequestOptions(path: '/announcements/search', method: 'GET');
-    try { interceptor.onRequest(opts, RequestInterceptorHandler()); } catch (_) {}
-    final resp = Response(requestOptions: opts, statusCode: 200, data: {'a': 1});
+    try {
+      interceptor.onRequest(opts, RequestInterceptorHandler());
+    } catch (_) {}
+    final resp = Response(
+      requestOptions: opts,
+      statusCode: 200,
+      data: {'a': 1},
+    );
     try {
       interceptor.onResponse(resp, ResponseInterceptorHandler());
     } catch (_) {}
@@ -24,7 +30,9 @@ void main() {
     final collector = NetworkMetricsCollector();
     final interceptor = MetricsInterceptor(collector);
     final opts = RequestOptions(path: '/x', method: 'GET');
-    try { interceptor.onRequest(opts, RequestInterceptorHandler()); } catch (_) {}
+    try {
+      interceptor.onRequest(opts, RequestInterceptorHandler());
+    } catch (_) {}
     final err = DioException(
       requestOptions: opts,
       response: Response(requestOptions: opts, statusCode: 500),
@@ -49,7 +57,9 @@ void main() {
     final collector = NetworkMetricsCollector();
     final interceptor = MetricsInterceptor(collector);
     final opts = RequestOptions(path: '/announcements/search', method: 'GET');
-    try { interceptor.onRequest(opts, RequestInterceptorHandler()); } catch (_) {}
+    try {
+      interceptor.onRequest(opts, RequestInterceptorHandler());
+    } catch (_) {}
     final resp = Response(
       requestOptions: opts,
       statusCode: 200,
@@ -58,7 +68,9 @@ void main() {
         Headers.contentLengthHeader: ['1234'],
       }),
     );
-    try { interceptor.onResponse(resp, ResponseInterceptorHandler()); } catch (_) {}
+    try {
+      interceptor.onResponse(resp, ResponseInterceptorHandler());
+    } catch (_) {}
     // totalBytes = reqBytes(0, GET) + respBytes → doit valoir le Content-Length.
     expect(collector.aggregate().single.totalBytes, 1234);
   });

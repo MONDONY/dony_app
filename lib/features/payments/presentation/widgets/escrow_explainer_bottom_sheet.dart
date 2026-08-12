@@ -26,7 +26,10 @@ class EscrowExplainerBottomSheet extends StatelessWidget {
         label: "J'ai compris",
         onPressed: () => Navigator.of(context).pop(),
       ),
-      child: EscrowExplainerBottomSheet(amount: amount, travelerName: travelerName),
+      child: EscrowExplainerBottomSheet(
+        amount: amount,
+        travelerName: travelerName,
+      ),
     );
   }
 
@@ -56,21 +59,24 @@ class EscrowExplainerBottomSheet extends StatelessWidget {
         const SizedBox(height: DonySpacing.xl),
         _InfoTile(
           iconAsset: 'lock',
-          text: "Votre paiement est bloqué en séquestre jusqu'à confirmation de livraison par le destinataire.",
+          text:
+              "Votre paiement est bloqué en séquestre jusqu'à confirmation de livraison par le destinataire.",
           cs: cs,
           tt: tt,
         ),
         const SizedBox(height: DonySpacing.sm),
         _InfoTile(
           iconAsset: 'clock',
-          text: 'Libération automatique 48h après la date de livraison prévue si aucune confirmation.',
+          text:
+              'Libération automatique 48h après la date de livraison prévue si aucune confirmation.',
           cs: cs,
           tt: tt,
         ),
         const SizedBox(height: DonySpacing.sm),
         _InfoTile(
           iconAsset: 'shield',
-          text: 'En cas de litige, Yadony intervient pour arbitrer et protéger les deux parties.',
+          text:
+              'En cas de litige, Yadony intervient pour arbitrer et protéger les deux parties.',
           cs: cs,
           tt: tt,
         ),
@@ -80,7 +86,13 @@ class EscrowExplainerBottomSheet extends StatelessWidget {
 }
 
 class _InfoTile extends StatelessWidget {
-  const _InfoTile({required this.text, required this.cs, required this.tt, this.icon, this.iconAsset});
+  const _InfoTile({
+    required this.text,
+    required this.cs,
+    required this.tt,
+    this.icon,
+    this.iconAsset,
+  });
 
   final IconData? icon;
   final String? iconAsset;
@@ -103,7 +115,12 @@ class _InfoTile extends StatelessWidget {
               ? DonyIcon(iconAsset!, size: 16, color: cs.primary)
               : Icon(icon, size: 16, color: cs.primary),
           const SizedBox(width: DonySpacing.sm),
-          Expanded(child: Text(text, style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant))),
+          Expanded(
+            child: Text(
+              text,
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
+          ),
         ],
       ),
     );

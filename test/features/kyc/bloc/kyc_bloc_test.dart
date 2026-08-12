@@ -32,17 +32,22 @@ void main() {
       'emits [Loading, SessionCreated] on success',
       build: buildBloc,
       setUp: () {
-        when(() => mockRepo.createSession()).thenAnswer((_) async => {
-              'stripeUrl': 'https://verify.stripe.com/session/test',
-              'sessionId': 'sess_123',
-            });
+        when(() => mockRepo.createSession()).thenAnswer(
+          (_) async => {
+            'stripeUrl': 'https://verify.stripe.com/session/test',
+            'sessionId': 'sess_123',
+          },
+        );
       },
       act: (b) => b.add(const KycSessionRequested()),
       expect: () => [
         const KycLoading(),
         isA<KycSessionCreated>()
-            .having((s) => s.stripeUrl, 'stripeUrl',
-                'https://verify.stripe.com/session/test')
+            .having(
+              (s) => s.stripeUrl,
+              'stripeUrl',
+              'https://verify.stripe.com/session/test',
+            )
             .having((s) => s.sessionId, 'sessionId', 'sess_123'),
       ],
     );
@@ -51,14 +56,12 @@ void main() {
       'emits [Loading, Error] on generic exception',
       build: buildBloc,
       setUp: () {
-        when(() => mockRepo.createSession())
-            .thenThrow(Exception('network error'));
+        when(
+          () => mockRepo.createSession(),
+        ).thenThrow(Exception('network error'));
       },
       act: (b) => b.add(const KycSessionRequested()),
-      expect: () => [
-        const KycLoading(),
-        isA<KycError>(),
-      ],
+      expect: () => [const KycLoading(), isA<KycError>()],
     );
 
     blocTest<KycBloc, KycState>(
@@ -105,11 +108,7 @@ void main() {
       act: (b) => b.add(const KycSessionRequested()),
       expect: () => [
         const KycLoading(),
-        isA<KycError>().having(
-          (s) => s.error,
-          'error',
-          isA<ServerException>(),
-        ),
+        isA<KycError>().having((s) => s.error, 'error', isA<ServerException>()),
       ],
     );
 
@@ -147,17 +146,22 @@ void main() {
       'emits [StatusLoaded] on success',
       build: buildBloc,
       setUp: () {
-        when(() => mockRepo.getStatus()).thenAnswer((_) async => {
-              'kycStatus': 'VERIFIED',
-              'verificationStatus': 'verified',
-            });
+        when(() => mockRepo.getStatus()).thenAnswer(
+          (_) async => {
+            'kycStatus': 'VERIFIED',
+            'verificationStatus': 'verified',
+          },
+        );
       },
       act: (b) => b.add(const KycStatusRefreshed()),
       expect: () => [
         isA<KycStatusLoaded>()
             .having((s) => s.kycStatus, 'kycStatus', 'VERIFIED')
-            .having((s) => s.verificationStatus, 'verificationStatus',
-                'verified'),
+            .having(
+              (s) => s.verificationStatus,
+              'verificationStatus',
+              'verified',
+            ),
       ],
     );
 
@@ -168,17 +172,16 @@ void main() {
         when(() => mockRepo.getStatus()).thenThrow(Exception('timeout'));
       },
       act: (b) => b.add(const KycStatusRefreshed()),
-      expect: () => [
-        isA<KycError>(),
-      ],
+      expect: () => [isA<KycError>()],
     );
 
     blocTest<KycBloc, KycState>(
       'emits [Error] wrapping raw exception containing 503',
       build: buildBloc,
       setUp: () {
-        when(() => mockRepo.getStatus())
-            .thenThrow(Exception('HTTP 503 SERVICE_UNAVAILABLE'));
+        when(
+          () => mockRepo.getStatus(),
+        ).thenThrow(Exception('HTTP 503 SERVICE_UNAVAILABLE'));
       },
       act: (b) => b.add(const KycStatusRefreshed()),
       expect: () => [
@@ -194,8 +197,9 @@ void main() {
       'emits [Error] wrapping raw exception containing CONFLICT',
       build: buildBloc,
       setUp: () {
-        when(() => mockRepo.getStatus())
-            .thenThrow(Exception('409 CONFLICT already exists'));
+        when(
+          () => mockRepo.getStatus(),
+        ).thenThrow(Exception('409 CONFLICT already exists'));
       },
       act: (b) => b.add(const KycStatusRefreshed()),
       expect: () => [

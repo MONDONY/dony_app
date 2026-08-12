@@ -20,9 +20,13 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 import '../../../helpers/mock_analytics_backend.dart';
 
-class MockConversationRepository extends Mock implements ConversationRepository {}
+class MockConversationRepository extends Mock
+    implements ConversationRepository {}
+
 class MockChatBloc extends MockBloc<ChatEvent, ChatState> implements ChatBloc {}
-class MockContactRevealBloc extends MockBloc<ContactRevealEvent, ContactRevealState>
+
+class MockContactRevealBloc
+    extends MockBloc<ContactRevealEvent, ContactRevealState>
     implements ContactRevealBloc {}
 
 final _participant = ParticipantModel(id: 'uid-1', name: 'Modibo Coulibaly');
@@ -80,8 +84,9 @@ void main() {
 
   group('ConversationLoaderScreen', () {
     testWidgets('shows a loading indicator while fetching', (tester) async {
-      when(() => repository.getConversation('conv-1'))
-          .thenAnswer((_) => Completer<ConversationModel>().future);
+      when(
+        () => repository.getConversation('conv-1'),
+      ).thenAnswer((_) => Completer<ConversationModel>().future);
 
       await _pump(tester, 'conv-1');
       await tester.pump();
@@ -89,9 +94,12 @@ void main() {
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
-    testWidgets('opens the chat screen once the conversation is loaded', (tester) async {
-      when(() => repository.getConversation('conv-1'))
-          .thenAnswer((_) async => _conversation);
+    testWidgets('opens the chat screen once the conversation is loaded', (
+      tester,
+    ) async {
+      when(
+        () => repository.getConversation('conv-1'),
+      ).thenAnswer((_) async => _conversation);
 
       await _pump(tester, 'conv-1');
       await tester.pumpAndSettle();
@@ -99,9 +107,12 @@ void main() {
       expect(find.text('Modibo Coulibaly'), findsOneWidget);
     });
 
-    testWidgets('shows a retry error state when the fetch fails', (tester) async {
-      when(() => repository.getConversation('conv-1'))
-          .thenAnswer((_) async => throw Exception('network error'));
+    testWidgets('shows a retry error state when the fetch fails', (
+      tester,
+    ) async {
+      when(
+        () => repository.getConversation('conv-1'),
+      ).thenAnswer((_) async => throw Exception('network error'));
 
       await _pump(tester, 'conv-1');
       await tester.pumpAndSettle();

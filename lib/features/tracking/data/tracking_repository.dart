@@ -16,8 +16,10 @@ class TrackingRepository {
   }
 
   Future<TrackingSearchModel> searchByTrackingNumber(String number) async {
-    final response = await _apiClient.dio
-        .get('/tracking/search', queryParameters: {'number': number});
+    final response = await _apiClient.dio.get(
+      '/tracking/search',
+      queryParameters: {'number': number},
+    );
     return TrackingSearchModel.fromJson(response.data as Map<String, dynamic>);
   }
 
@@ -29,32 +31,40 @@ class TrackingRepository {
     String? photoUrl,
     DateTime? offlineTimestamp,
   }) async {
-    final response = await _apiClient.dio.post('/tracking/events', data: {
-      'bidId': bidId,
-      'eventType': eventType,
-      if (gpsLat != null) 'gpsLat': gpsLat,
-      if (gpsLon != null) 'gpsLon': gpsLon,
-      if (photoUrl != null) 'photoUrl': photoUrl,
-      if (offlineTimestamp != null) 'offlineTimestamp': offlineTimestamp.toUtc().toIso8601String(),
-    });
+    final response = await _apiClient.dio.post(
+      '/tracking/events',
+      data: {
+        'bidId': bidId,
+        'eventType': eventType,
+        if (gpsLat != null) 'gpsLat': gpsLat,
+        if (gpsLon != null) 'gpsLon': gpsLon,
+        if (photoUrl != null) 'photoUrl': photoUrl,
+        if (offlineTimestamp != null)
+          'offlineTimestamp': offlineTimestamp.toUtc().toIso8601String(),
+      },
+    );
     return TrackingEventModel.fromJson(response.data as Map<String, dynamic>);
   }
 
   Future<List<TrackingEventModel>> getEvents(String bidId) async {
     final response = await _apiClient.dio.get('/tracking/$bidId/events');
     final list = response.data as List<dynamic>;
-    return list.map((e) => TrackingEventModel.fromJson(e as Map<String, dynamic>)).toList();
+    return list
+        .map((e) => TrackingEventModel.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   Future<List<TripScanHistoryEntryModel>> getTripScanHistory(
     String announcementId,
   ) async {
-    final response = await _apiClient.dio
-        .get('/tracking/announcements/$announcementId/events');
+    final response = await _apiClient.dio.get(
+      '/tracking/announcements/$announcementId/events',
+    );
     final list = response.data as List<dynamic>;
     return list
-        .map((e) =>
-            TripScanHistoryEntryModel.fromJson(e as Map<String, dynamic>))
+        .map(
+          (e) => TripScanHistoryEntryModel.fromJson(e as Map<String, dynamic>),
+        )
         .toList();
   }
 
@@ -63,12 +73,19 @@ class TrackingRepository {
       'file': await MultipartFile.fromFile(filePath, filename: 'scan.jpg'),
       'bidId': bidId,
     });
-    final response = await _apiClient.dio.post('/storage/upload/tracking', data: formData);
+    final response = await _apiClient.dio.post(
+      '/storage/upload/tracking',
+      data: formData,
+    );
     return (response.data as Map<String, dynamic>)['key'] as String;
   }
 
-  Future<({String? code, DateTime? expiresAt})> getConfirmationCode(String bidId) async {
-    final response = await _apiClient.dio.get('/tracking/$bidId/confirmation-code');
+  Future<({String? code, DateTime? expiresAt})> getConfirmationCode(
+    String bidId,
+  ) async {
+    final response = await _apiClient.dio.get(
+      '/tracking/$bidId/confirmation-code',
+    );
     final data = response.data as Map<String, dynamic>;
     final rawExpiry = data['expiresAt'] as String?;
     return (
@@ -77,7 +94,9 @@ class TrackingRepository {
     );
   }
 
-  Future<({String? code, DateTime? expiresAt})> refreshCode(String bidId) async {
+  Future<({String? code, DateTime? expiresAt})> refreshCode(
+    String bidId,
+  ) async {
     final response = await _apiClient.dio.post('/tracking/$bidId/refresh-code');
     final data = response.data as Map<String, dynamic>;
     final rawExpiry = data['expiresAt'] as String?;

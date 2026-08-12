@@ -52,21 +52,25 @@ void main() {
 
   setUp(() {
     walletRepository = _MockWalletRepository();
-    when(() => walletRepository.topupStripe(amount: any(named: 'amount')))
-        .thenAnswer((_) async => 'pi_test_secret');
+    when(
+      () => walletRepository.topupStripe(amount: any(named: 'amount')),
+    ).thenAnswer((_) async => 'pi_test_secret');
 
     analyticsBackend = MockAnalyticsBackend();
 
     paymentGateway = _MockPaymentGateway();
     // PlatformPayButton (Apple/Google Pay) plante hors iOS/Android réel —
     // on le désactive et paie via le bouton Carte (PaymentSheet native Stripe).
-    when(() => paymentGateway.isPlatformPaySupported())
-        .thenAnswer((_) async => false);
-    when(() => paymentGateway.initPaymentSheet(
-          clientSecret: any(named: 'clientSecret'),
-          customerId: any(named: 'customerId'),
-          customerEphemeralKeySecret: any(named: 'customerEphemeralKeySecret'),
-        )).thenAnswer((_) async {});
+    when(
+      () => paymentGateway.isPlatformPaySupported(),
+    ).thenAnswer((_) async => false);
+    when(
+      () => paymentGateway.initPaymentSheet(
+        clientSecret: any(named: 'clientSecret'),
+        customerId: any(named: 'customerId'),
+        customerEphemeralKeySecret: any(named: 'customerEphemeralKeySecret'),
+      ),
+    ).thenAnswer((_) async {});
     when(() => paymentGateway.presentPaymentSheet()).thenAnswer((_) async {});
 
     paymentRepository = _MockPaymentRepository();
@@ -185,47 +189,52 @@ void main() {
     await tester.tap(find.byKey(const Key('paymentSheetCardButton')));
     await tester.pump(); // PaymentSheetProcessing
     await tester.pump(); // PaymentSheetSuccess (résolution async du gateway)
-    await tester
-        .pump(const Duration(milliseconds: 900)); // déclenchement onSuccess
+    await tester.pump(
+      const Duration(milliseconds: 900),
+    ); // déclenchement onSuccess
     for (var i = 0; i < 6; i++) {
       await tester.pump(const Duration(milliseconds: 60));
     }
   }
 
-  testWidgets(
-      'recharge réussie affiche DonySuccessScreen (plus de SnackBar)',
-      (tester) async {
+  testWidgets('recharge réussie affiche DonySuccessScreen (plus de SnackBar)', (
+    tester,
+  ) async {
     await _driveToPaymentSuccess(tester);
 
     expect(find.byType(SnackBar), findsNothing);
     expect(
-        find.text(
-            'Recharge réussie — votre solde sera crédité dans un instant.'),
-        findsNothing);
+      find.text('Recharge réussie — votre solde sera crédité dans un instant.'),
+      findsNothing,
+    );
 
     expect(find.byType(DonySuccessScreen), findsOneWidget);
     expect(find.text('Recharge réussie !'), findsOneWidget);
     expect(
-        find.text('Ton solde sera crédité dans un instant.'), findsOneWidget);
+      find.text('Ton solde sera crédité dans un instant.'),
+      findsOneWidget,
+    );
     expect(find.text('Voir mon solde'), findsOneWidget);
   });
 
   testWidgets(
-      'CTA de DonySuccessScreen ferme la recharge avec pop(true) — contrat '
-      'bool intact pour wallet_screen', (tester) async {
-    await _driveToPaymentSuccess(tester);
-    expect(find.byType(DonySuccessScreen), findsOneWidget);
+    'CTA de DonySuccessScreen ferme la recharge avec pop(true) — contrat '
+    'bool intact pour wallet_screen',
+    (tester) async {
+      await _driveToPaymentSuccess(tester);
+      expect(find.byType(DonySuccessScreen), findsOneWidget);
 
-    await tester.tap(find.text('Voir mon solde'));
-    for (var i = 0; i < 10; i++) {
-      await tester.pump(const Duration(milliseconds: 100));
-    }
+      await tester.tap(find.text('Voir mon solde'));
+      for (var i = 0; i < 10; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
 
-    // DonySuccessScreen ET l'écran de recharge sont fermés — retour à
-    // l'écran hôte, avec `true` comme résultat du push<bool>.
-    expect(find.byType(DonySuccessScreen), findsNothing);
-    expect(find.byType(WalletTopupAmountScreen), findsNothing);
-    expect(find.text('Ouvrir'), findsOneWidget);
-    expect(topupResult, isTrue);
-  });
+      // DonySuccessScreen ET l'écran de recharge sont fermés — retour à
+      // l'écran hôte, avec `true` comme résultat du push<bool>.
+      expect(find.byType(DonySuccessScreen), findsNothing);
+      expect(find.byType(WalletTopupAmountScreen), findsNothing);
+      expect(find.text('Ouvrir'), findsOneWidget);
+      expect(topupResult, isTrue);
+    },
+  );
 }

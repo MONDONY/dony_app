@@ -53,11 +53,13 @@ Future<void> _bootstrap() async {
   // Edge-to-edge : l'app dessine derrière la barre nav Android.
   // systemNavigationBarColor transparent supprime le scrim noir par défaut.
   await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    systemNavigationBarColor: Colors.transparent,
-    systemNavigationBarDividerColor: Colors.transparent,
-    systemNavigationBarContrastEnforced: false,
-  ));
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarDividerColor: Colors.transparent,
+      systemNavigationBarContrastEnforced: false,
+    ),
+  );
   // Maintient la native splash visible jusqu'à ce que Flutter soit prêt
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   await initializeDateFormatting('fr');
@@ -193,16 +195,13 @@ Future<void> main() async {
     return;
   }
 
-  await SentryFlutter.init(
-    (options) {
-      options.dsn = _sentryDsn;
-      options.tracesSampleRate = 0.1;
-      options.environment = _environment;
-      options.sendDefaultPii = false;
-      // Logs structurés Sentry : alimentés par AppLog (cf. core/services/app_log.dart).
-      // Sans ce flag, tout appel Sentry.logger.* est ignoré côté SDK.
-      options.enableLogs = true;
-    },
-    appRunner: _bootstrap,
-  );
+  await SentryFlutter.init((options) {
+    options.dsn = _sentryDsn;
+    options.tracesSampleRate = 0.1;
+    options.environment = _environment;
+    options.sendDefaultPii = false;
+    // Logs structurés Sentry : alimentés par AppLog (cf. core/services/app_log.dart).
+    // Sans ce flag, tout appel Sentry.logger.* est ignoré côté SDK.
+    options.enableLogs = true;
+  }, appRunner: _bootstrap);
 }

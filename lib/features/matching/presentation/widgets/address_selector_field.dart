@@ -26,8 +26,9 @@ class AddressSelectorField extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final color = _isRemise ? cs.primary : cs.secondary;
-    final containerColor =
-        _isRemise ? cs.primaryContainer : cs.secondaryContainer;
+    final containerColor = _isRemise
+        ? cs.primaryContainer
+        : cs.secondaryContainer;
 
     if (value != null) {
       return _FilledCard(
@@ -110,14 +111,18 @@ class _EmptyCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(label,
-                      style: tt.bodyMedium?.copyWith(
-                          color: cs.onSurfaceVariant,
-                          fontWeight: FontWeight.w500)),
+                  Text(
+                    label,
+                    style: tt.bodyMedium?.copyWith(
+                      color: cs.onSurfaceVariant,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                   const SizedBox(height: 2),
-                  Text(subtitle,
-                      style:
-                          tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
+                  Text(
+                    subtitle,
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                  ),
                 ],
               ),
             ),
@@ -180,8 +185,7 @@ class _FilledCard extends StatelessWidget {
               width: 24,
               height: 24,
               decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-              child: const DonyIcon('check',
-                  color: Colors.white, size: 14),
+              child: const DonyIcon('check', color: Colors.white, size: 14),
             ),
           ],
         ),

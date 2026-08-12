@@ -16,7 +16,11 @@ void main() {
 
   group('AuthPhoneVerified', () {
     test('props contains all fields', () {
-      final e = AuthPhoneVerified(verificationId: 'v1', smsCode: '123', autoVerified: true);
+      final e = AuthPhoneVerified(
+        verificationId: 'v1',
+        smsCode: '123',
+        autoVerified: true,
+      );
       expect(e.props, ['v1', '123', true]);
     });
 
@@ -64,7 +68,16 @@ void main() {
         birthDate: date,
         city: 'Paris',
       );
-      expect(e.props, ['Amadou', 'Diallo', date, 'Paris', null, null, null, null]);
+      expect(e.props, [
+        'Amadou',
+        'Diallo',
+        date,
+        'Paris',
+        null,
+        null,
+        null,
+        null,
+      ]);
     });
 
     test('props with null fields', () {
@@ -78,7 +91,16 @@ void main() {
         languages: ['FR', 'EN'],
         transportMode: 'AVION',
       );
-      expect(e.props, [null, null, null, null, null, 'Voyageur régulier', ['FR', 'EN'], 'AVION']);
+      expect(e.props, [
+        null,
+        null,
+        null,
+        null,
+        null,
+        'Voyageur régulier',
+        ['FR', 'EN'],
+        'AVION',
+      ]);
     });
   });
 

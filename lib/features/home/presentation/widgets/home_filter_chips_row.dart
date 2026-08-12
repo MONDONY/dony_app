@@ -131,8 +131,9 @@ class HomeFilterChipsRow extends StatelessWidget {
       ? '≤ ${filters.maxPricePerKg!.toStringAsFixed(0)} €/kg'
       : 'Prix';
 
-  String get _maxWeightLabel =>
-      filters.maxWeight != null ? '≤ ${filters.maxWeight!.toInt()} kg' : 'Kilos';
+  String get _maxWeightLabel => filters.maxWeight != null
+      ? '≤ ${filters.maxWeight!.toInt()} kg'
+      : 'Kilos';
 
   String get _parcelSizeLabel =>
       filters.parcelSize != null ? filters.parcelSize!.wireName : 'Taille';
@@ -222,8 +223,9 @@ class HomeFilterChipsRow extends StatelessWidget {
               label: _maxWeightLabel,
               isActive: filters.maxWeight != null,
               iconAsset: 'dumbbell',
-              onTap:
-                  filters.maxWeight != null ? onMaxWeightClear : onMaxWeightTap,
+              onTap: filters.maxWeight != null
+                  ? onMaxWeightClear
+                  : onMaxWeightTap,
             ),
             const SizedBox(width: DonySpacing.xs),
             HomeSmallChip(

@@ -117,8 +117,9 @@ class PackageRequestFormState extends Equatable {
     negotiable: negotiable ?? this.negotiable,
     acceptedPaymentMethods:
         acceptedPaymentMethods ?? this.acceptedPaymentMethods,
-    totalBudgetEur:
-        clearTotalBudgetEur ? null : (totalBudgetEur ?? this.totalBudgetEur),
+    totalBudgetEur: clearTotalBudgetEur
+        ? null
+        : (totalBudgetEur ?? this.totalBudgetEur),
     promoCode: clearPromoCode ? null : (promoCode ?? this.promoCode),
     submissionStatus: submissionStatus ?? this.submissionStatus,
     errorMessage: errorMessage ?? this.errorMessage,

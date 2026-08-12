@@ -33,10 +33,7 @@ class ConnectivityRepository {
     try {
       await _dio.get(
         '/actuator/health',
-        options: Options(
-          sendTimeout: pingTimeout,
-          receiveTimeout: pingTimeout,
-        ),
+        options: Options(sendTimeout: pingTimeout, receiveTimeout: pingTimeout),
       );
       return true;
     } catch (_) {

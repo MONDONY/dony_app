@@ -45,7 +45,8 @@ class DonyGlassOnBrand extends StatelessWidget {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
         child: Container(
-          padding: padding ??
+          padding:
+              padding ??
               const EdgeInsets.symmetric(
                 horizontal: DonySpacing.base,
                 vertical: DonySpacing.md,
@@ -87,9 +88,11 @@ class DonyGlassDarkSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final start = gradientStart ??
+    final start =
+        gradientStart ??
         (isDark ? const Color(0xFF1A2744) : const Color(0xFF0A2540));
-    final end = gradientEnd ??
+    final end =
+        gradientEnd ??
         (isDark ? const Color(0xFF0D1B35) : const Color(0xFF1A3A6B));
     final bgAlpha = isDark ? 0.80 : 0.90;
     final borderAlpha = isDark ? 0.10 : 0.18;
@@ -114,7 +117,8 @@ class DonyGlassDarkSheet extends StatelessWidget {
             border: Border.all(
               color: Colors.white.withValues(alpha: borderAlpha),
             ),
-            boxShadow: boxShadow ??
+            boxShadow:
+                boxShadow ??
                 [
                   BoxShadow(
                     color: start.withValues(alpha: isDark ? 0.4 : 0.25),
@@ -146,10 +150,10 @@ class DonyGlassCard extends StatelessWidget {
     this.borderRadius,
     this.opacity = 0.62,
   }) : assert(
-          opacity >= 0.62,
-          'DonyGlassCard.opacity must be >= 0.62 (AA contrast contract). '
-          'Below 0.62, ink-900 text on saturated aurora becomes unreadable.',
-        );
+         opacity >= 0.62,
+         'DonyGlassCard.opacity must be >= 0.62 (AA contrast contract). '
+         'Below 0.62, ink-900 text on saturated aurora becomes unreadable.',
+       );
 
   final Widget child;
   final EdgeInsetsGeometry padding;
@@ -197,9 +201,9 @@ class DonyGlassDarkFloating extends StatelessWidget {
     this.opacity = 0.62,
     this.tint,
   }) : assert(
-          opacity >= 0.62,
-          'DonyGlassDarkFloating.opacity must be >= 0.62 (AA contrast contract).',
-        );
+         opacity >= 0.62,
+         'DonyGlassDarkFloating.opacity must be >= 0.62 (AA contrast contract).',
+       );
 
   final Widget child;
   final EdgeInsetsGeometry padding;
@@ -372,8 +376,7 @@ class DonyGlassButton extends StatelessWidget {
                 boxShadow: isPrimary
                     ? [
                         BoxShadow(
-                          color: DonyColors.primary
-                              .withValues(alpha: 0.25),
+                          color: DonyColors.primary.withValues(alpha: 0.25),
                           blurRadius: 14,
                           offset: const Offset(0, 4),
                         ),

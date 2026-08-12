@@ -5,11 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Future<void> _pump(WidgetTester tester, Widget child) => tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.light(),
-        home: Scaffold(body: child),
-      ),
-    );
+  MaterialApp(
+    theme: AppTheme.light(),
+    home: Scaffold(body: child),
+  ),
+);
 
 void main() {
   group('DonyFieldError', () {
@@ -39,8 +39,9 @@ void main() {
       handle.dispose();
     });
 
-    testWidgets('l\'icône d\'alerte n\'est pas annoncée en double',
-        (tester) async {
+    testWidgets('l\'icône d\'alerte n\'est pas annoncée en double', (
+      tester,
+    ) async {
       // L'icône redit ce que le message dit. Annoncée, elle ajouterait du
       // bruit sans information.
       final handle = tester.ensureSemantics();

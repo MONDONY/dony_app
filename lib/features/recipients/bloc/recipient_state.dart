@@ -17,10 +17,9 @@ class RecipientState {
     RecipientStatus? status,
     List<Recipient>? recipients,
     String? error,
-  }) =>
-      RecipientState(
-        status: status ?? this.status,
-        recipients: recipients ?? this.recipients,
-        error: error,
-      );
+  }) => RecipientState(
+    status: status ?? this.status,
+    recipients: recipients ?? this.recipients,
+    error: error,
+  );
 }

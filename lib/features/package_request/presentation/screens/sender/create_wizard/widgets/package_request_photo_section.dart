@@ -291,19 +291,19 @@ class _PhotoThumb extends StatelessWidget {
                 excludeSemantics: true,
                 label: "Réessayer l'envoi de la photo",
                 child: GestureDetector(
-                onTap: onTapFailed,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: cs.errorContainer.withValues(alpha: 0.6),
-                    borderRadius: BorderRadius.circular(DonyRadius.md),
-                  ),
-                  child: Icon(
-                    Icons.error_outline_rounded,
-                    color: cs.error,
-                    size: 18,
+                  onTap: onTapFailed,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: cs.errorContainer.withValues(alpha: 0.6),
+                      borderRadius: BorderRadius.circular(DonyRadius.md),
+                    ),
+                    child: Icon(
+                      Icons.error_outline_rounded,
+                      color: cs.error,
+                      size: 18,
+                    ),
                   ),
                 ),
-              )
               ),
             ),
           Positioned(
@@ -315,28 +315,28 @@ class _PhotoThumb extends StatelessWidget {
               excludeSemantics: true,
               label: 'Supprimer cette photo',
               child: GestureDetector(
-              onTap: onRemove,
-              behavior: HitTestBehavior.opaque,
-              child: SizedBox(
-                width: 44,
-                height: 44,
-                child: Center(
-                  child: Container(
-                    width: 20,
-                    height: 20,
-                    decoration: BoxDecoration(
-                      color: cs.onSurface,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.close_rounded,
-                      size: 13,
-                      color: cs.surface,
+                onTap: onRemove,
+                behavior: HitTestBehavior.opaque,
+                child: SizedBox(
+                  width: 44,
+                  height: 44,
+                  child: Center(
+                    child: Container(
+                      width: 20,
+                      height: 20,
+                      decoration: BoxDecoration(
+                        color: cs.onSurface,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.close_rounded,
+                        size: 13,
+                        color: cs.surface,
+                      ),
                     ),
                   ),
                 ),
               ),
-            )
             ),
           ),
         ],

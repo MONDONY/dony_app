@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockApiClient extends Mock implements ApiClient {}
+
 class MockDio extends Mock implements Dio {}
 
 void main() {
@@ -21,27 +22,41 @@ void main() {
   });
 
   group('checkEligibility', () {
-    test('canDelete=true, blockedReasonCode=null quand rien ne bloque', () async {
-      when(() => mockDio.get<dynamic>('/auth/me/deletion-eligibility'))
-          .thenAnswer((_) async => Response(
-                requestOptions: RequestOptions(path: '/auth/me/deletion-eligibility'),
-                statusCode: 200,
-                data: {'canDelete': true, 'blockedReasonCode': null},
-              ));
+    test(
+      'canDelete=true, blockedReasonCode=null quand rien ne bloque',
+      () async {
+        when(
+          () => mockDio.get<dynamic>('/auth/me/deletion-eligibility'),
+        ).thenAnswer(
+          (_) async => Response(
+            requestOptions: RequestOptions(
+              path: '/auth/me/deletion-eligibility',
+            ),
+            statusCode: 200,
+            data: {'canDelete': true, 'blockedReasonCode': null},
+          ),
+        );
 
-      final result = await repo.checkEligibility();
+        final result = await repo.checkEligibility();
 
-      expect(result.canDelete, isTrue);
-      expect(result.blockedReasonCode, isNull);
-    });
+        expect(result.canDelete, isTrue);
+        expect(result.blockedReasonCode, isNull);
+      },
+    );
 
     test('canDelete=false avec blockedReasonCode quand bloqué', () async {
-      when(() => mockDio.get<dynamic>('/auth/me/deletion-eligibility'))
-          .thenAnswer((_) async => Response(
-                requestOptions: RequestOptions(path: '/auth/me/deletion-eligibility'),
-                statusCode: 200,
-                data: {'canDelete': false, 'blockedReasonCode': 'active-transactions'},
-              ));
+      when(
+        () => mockDio.get<dynamic>('/auth/me/deletion-eligibility'),
+      ).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(path: '/auth/me/deletion-eligibility'),
+          statusCode: 200,
+          data: {
+            'canDelete': false,
+            'blockedReasonCode': 'active-transactions',
+          },
+        ),
+      );
 
       final result = await repo.checkEligibility();
 
@@ -50,7 +65,9 @@ void main() {
     });
 
     test('throws AppException on network error', () async {
-      when(() => mockDio.get<dynamic>('/auth/me/deletion-eligibility')).thenThrow(
+      when(
+        () => mockDio.get<dynamic>('/auth/me/deletion-eligibility'),
+      ).thenThrow(
         DioException(
           requestOptions: RequestOptions(path: '/auth/me/deletion-eligibility'),
           error: const NetworkException('Network error'),
@@ -58,20 +75,18 @@ void main() {
         ),
       );
 
-      await expectLater(
-        repo.checkEligibility(),
-        throwsA(isA<AppException>()),
-      );
+      await expectLater(repo.checkEligibility(), throwsA(isA<AppException>()));
     });
   });
 
   group('requestDeletion', () {
     test('completes when DELETE /auth/me returns 204', () async {
-      when(() => mockDio.delete<dynamic>('/auth/me'))
-          .thenAnswer((_) async => Response(
-                requestOptions: RequestOptions(path: '/auth/me'),
-                statusCode: 204,
-              ));
+      when(() => mockDio.delete<dynamic>('/auth/me')).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(path: '/auth/me'),
+          statusCode: 204,
+        ),
+      );
 
       await expectLater(repo.requestDeletion(), completes);
     });
@@ -94,17 +109,18 @@ void main() {
 
   group('reactivateAccount', () {
     test('returns UserModel on success', () async {
-      when(() => mockDio.post<dynamic>('/auth/me/reactivate'))
-          .thenAnswer((_) async => Response(
-                requestOptions: RequestOptions(path: '/auth/me/reactivate'),
-                statusCode: 200,
-                data: {
-                  'id': 'u1',
-                  'roles': ['SENDER'],
-                  'kycStatus': 'PENDING',
-                  'status': 'ACTIVE',
-                },
-              ));
+      when(() => mockDio.post<dynamic>('/auth/me/reactivate')).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(path: '/auth/me/reactivate'),
+          statusCode: 200,
+          data: {
+            'id': 'u1',
+            'roles': ['SENDER'],
+            'kycStatus': 'PENDING',
+            'status': 'ACTIVE',
+          },
+        ),
+      );
 
       final user = await repo.reactivateAccount();
       expect(user.id, 'u1');
@@ -120,36 +136,44 @@ void main() {
         ),
       );
 
-      await expectLater(
-        repo.reactivateAccount(),
-        throwsA(isA<AppException>()),
-      );
+      await expectLater(repo.reactivateAccount(), throwsA(isA<AppException>()));
     });
   });
 
   group('deleteImmediately', () {
-    test('appelle POST /auth/me/delete-immediately avec confirmationAcknowledged true', () async {
-      when(() => mockDio.post<dynamic>(
+    test(
+      'appelle POST /auth/me/delete-immediately avec confirmationAcknowledged true',
+      () async {
+        when(
+          () => mockDio.post<dynamic>(
             '/auth/me/delete-immediately',
             data: {'confirmationAcknowledged': true},
-          )).thenAnswer((_) async => Response(
+          ),
+        ).thenAnswer(
+          (_) async => Response(
             requestOptions: RequestOptions(path: '/auth/me/delete-immediately'),
             statusCode: 204,
-          ));
+          ),
+        );
 
-      await expectLater(repo.deleteImmediately(), completes);
+        await expectLater(repo.deleteImmediately(), completes);
 
-      verify(() => mockDio.post<dynamic>(
+        verify(
+          () => mockDio.post<dynamic>(
             '/auth/me/delete-immediately',
             data: {'confirmationAcknowledged': true},
-          )).called(1);
-    });
+          ),
+        ).called(1);
+      },
+    );
 
     test('throws AppException on network error', () async {
-      when(() => mockDio.post<dynamic>(
-            '/auth/me/delete-immediately',
-            data: {'confirmationAcknowledged': true},
-          )).thenThrow(
+      when(
+        () => mockDio.post<dynamic>(
+          '/auth/me/delete-immediately',
+          data: {'confirmationAcknowledged': true},
+        ),
+      ).thenThrow(
         DioException(
           requestOptions: RequestOptions(path: '/auth/me/delete-immediately'),
           error: const NetworkException('Network error'),
@@ -157,10 +181,7 @@ void main() {
         ),
       );
 
-      await expectLater(
-        repo.deleteImmediately(),
-        throwsA(isA<AppException>()),
-      );
+      await expectLater(repo.deleteImmediately(), throwsA(isA<AppException>()));
     });
   });
 }

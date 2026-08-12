@@ -6,10 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   group('SearchParams', () {
     test('constructs with required fields only', () {
-      const params = SearchParams(
-        departureCity: 'Paris',
-        arrivalCity: 'Dakar',
-      );
+      const params = SearchParams(departureCity: 'Paris', arrivalCity: 'Dakar');
 
       expect(params.departureCity, 'Paris');
       expect(params.arrivalCity, 'Dakar');

@@ -23,21 +23,20 @@ void main() {
     String? analyticsContext,
     String? secondaryLabel,
     VoidCallback? onSecondary,
-  }) =>
-      MaterialApp(
-        theme: AppTheme.light(),
-        home: DonySuccessScreen(
-          mascotteType: DonyMascotteType.securise,
-          title: 'Envoi réservé !',
-          subtitle: 'Ton paiement est sécurisé.',
-          ctaLabel: 'Voir mes envois',
-          onCta: onCta,
-          onClose: onClose,
-          analyticsContext: analyticsContext,
-          secondaryLabel: secondaryLabel,
-          onSecondary: onSecondary,
-        ),
-      );
+  }) => MaterialApp(
+    theme: AppTheme.light(),
+    home: DonySuccessScreen(
+      mascotteType: DonyMascotteType.securise,
+      title: 'Envoi réservé !',
+      subtitle: 'Ton paiement est sécurisé.',
+      ctaLabel: 'Voir mes envois',
+      onCta: onCta,
+      onClose: onClose,
+      analyticsContext: analyticsContext,
+      secondaryLabel: secondaryLabel,
+      onSecondary: onSecondary,
+    ),
+  );
 
   /// Harness GoRouter — nécessaire pour tester la navigation par défaut vers
   /// `/home` (le widget appelle `GoRouter.of(context)` quand `onClose` est null).
@@ -186,10 +185,9 @@ void main() {
 
     setUp(() {
       analytics = _MockAnalyticsService();
-      when(() => analytics.logEvent(
-            any(),
-            properties: any(named: 'properties'),
-          )).thenAnswer((_) async {});
+      when(
+        () => analytics.logEvent(any(), properties: any(named: 'properties')),
+      ).thenAnswer((_) async {});
       getIt.registerLazySingleton<AnalyticsService>(() => analytics);
     });
 
@@ -201,10 +199,12 @@ void main() {
       );
       await tester.pump(const Duration(milliseconds: 500));
 
-      verify(() => analytics.logEvent(
-            AnalyticsEvents.successScreenViewed,
-            properties: {'context': 'trip_published'},
-          )).called(1);
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.successScreenViewed,
+          properties: {'context': 'trip_published'},
+        ),
+      ).called(1);
     });
 
     testWidgets('analyticsContext fourni : cta_tapped part au tap CTA', (
@@ -218,10 +218,12 @@ void main() {
       await tester.tap(find.byType(DonyButton));
       await tester.pump();
 
-      verify(() => analytics.logEvent(
-            AnalyticsEvents.successScreenCtaTapped,
-            properties: {'context': 'trip_published'},
-          )).called(1);
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.successScreenCtaTapped,
+          properties: {'context': 'trip_published'},
+        ),
+      ).called(1);
     });
 
     testWidgets('analyticsContext fourni : closed part au tap fermer', (
@@ -235,10 +237,12 @@ void main() {
       await tester.tap(find.byTooltip('Fermer'));
       await tester.pump();
 
-      verify(() => analytics.logEvent(
-            AnalyticsEvents.successScreenClosed,
-            properties: {'context': 'trip_published'},
-          )).called(1);
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.successScreenClosed,
+          properties: {'context': 'trip_published'},
+        ),
+      ).called(1);
     });
 
     testWidgets('sans analyticsContext : aucun event envoyé', (tester) async {
@@ -248,27 +252,26 @@ void main() {
       await tester.tap(find.byType(DonyButton));
       await tester.pump();
 
-      verifyNever(() => analytics.logEvent(any(), properties: any(named: 'properties')));
+      verifyNever(
+        () => analytics.logEvent(any(), properties: any(named: 'properties')),
+      );
     });
   });
 
-  testWidgets(
-    'sans AnalyticsService enregistré dans getIt, aucune exception '
-    '(analytics best-effort)',
-    (tester) async {
-      // Pas d'enregistrement getIt ici — setUp() de haut niveau garantit
-      // qu'AnalyticsService n'est pas déjà présent.
-      await tester.pumpWidget(
-        host(onCta: () {}, analyticsContext: 'trip_published'),
-      );
-      await tester.pump(const Duration(milliseconds: 500));
+  testWidgets('sans AnalyticsService enregistré dans getIt, aucune exception '
+      '(analytics best-effort)', (tester) async {
+    // Pas d'enregistrement getIt ici — setUp() de haut niveau garantit
+    // qu'AnalyticsService n'est pas déjà présent.
+    await tester.pumpWidget(
+      host(onCta: () {}, analyticsContext: 'trip_published'),
+    );
+    await tester.pump(const Duration(milliseconds: 500));
 
-      await tester.tap(find.byType(DonyButton));
-      await tester.pump();
+    await tester.tap(find.byType(DonyButton));
+    await tester.pump();
 
-      expect(tester.takeException(), isNull);
-    },
-  );
+    expect(tester.takeException(), isNull);
+  });
 
   // ── Confetti ─────────────────────────────────────────────────────────────
 
@@ -279,7 +282,10 @@ void main() {
       await tester.pumpWidget(host(onCta: () {}));
       await tester.pump(const Duration(milliseconds: 500));
 
-      expect(find.byKey(const ValueKey('dony-success-confetti')), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('dony-success-confetti')),
+        findsOneWidget,
+      );
 
       // La durée du burst (~1.8s) doit s'écouler sans lever d'exception.
       await tester.pump(const Duration(seconds: 2));
@@ -325,15 +331,14 @@ void main() {
       },
     );
 
-    testWidgets(
-      'sans secondaryLabel/onSecondary : aucun bouton secondaire',
-      (tester) async {
-        await tester.pumpWidget(host(onCta: () {}));
-        await tester.pump(const Duration(milliseconds: 500));
+    testWidgets('sans secondaryLabel/onSecondary : aucun bouton secondaire', (
+      tester,
+    ) async {
+      await tester.pumpWidget(host(onCta: () {}));
+      await tester.pump(const Duration(milliseconds: 500));
 
-        expect(find.byType(DonyButton), findsOneWidget);
-      },
-    );
+      expect(find.byType(DonyButton), findsOneWidget);
+    });
 
     testWidgets(
       'tap sur le bouton secondaire appelle onSecondary exactement une fois',
@@ -359,10 +364,9 @@ void main() {
       'analyticsContext fourni : secondary_tapped part au tap secondaire',
       (tester) async {
         final analytics = _MockAnalyticsService();
-        when(() => analytics.logEvent(
-              any(),
-              properties: any(named: 'properties'),
-            )).thenAnswer((_) async {});
+        when(
+          () => analytics.logEvent(any(), properties: any(named: 'properties')),
+        ).thenAnswer((_) async {});
         getIt.registerLazySingleton<AnalyticsService>(() => analytics);
 
         await tester.pumpWidget(
@@ -378,10 +382,12 @@ void main() {
         await tester.tap(find.text('Partager mon trajet'));
         await tester.pump();
 
-        verify(() => analytics.logEvent(
-              AnalyticsEvents.successScreenSecondaryTapped,
-              properties: {'context': 'trip_published'},
-            )).called(1);
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.successScreenSecondaryTapped,
+            properties: {'context': 'trip_published'},
+          ),
+        ).called(1);
       },
     );
   });

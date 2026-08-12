@@ -79,14 +79,14 @@ class AnnouncementPreviewSheet extends StatelessWidget {
 
     // Le voyageur touche le prix net qu'il fixe ; la commission Yadony est en sus
     // (payée par l'expéditeur). Pas de décote ×0,88 sur ce qu'il reçoit.
-    final netEstimate = (formState.pricePerKg != null &&
-            formState.availableKg != null)
+    final netEstimate =
+        (formState.pricePerKg != null && formState.availableKg != null)
         ? (formState.pricePerKg! * formState.availableKg!)
         : null;
 
     final prixStr = formState.pricePerKg != null
         ? '${CurrencyFormatter.formatOrPlain(formState.pricePerKg!, currency)}/kg'
-            '${netEstimate != null ? ' · estimation ${CurrencyFormatter.formatOrPlain(netEstimate, currency)} net' : ''}'
+              '${netEstimate != null ? ' · estimation ${CurrencyFormatter.formatOrPlain(netEstimate, currency)} net' : ''}'
         : '-';
 
     return Padding(
@@ -100,11 +100,7 @@ class AnnouncementPreviewSheet extends StatelessWidget {
             value:
                 '${formState.departureCity ?? '-'} → ${formState.arrivalCity ?? '-'}',
           ),
-          _PreviewRow(
-            iconAsset: 'calendar',
-            label: 'Date',
-            value: dateStr,
-          ),
+          _PreviewRow(iconAsset: 'calendar', label: 'Date', value: dateStr),
           if (departureTime != null)
             _PreviewRow(
               iconAsset: 'clock',
@@ -128,11 +124,7 @@ class AnnouncementPreviewSheet extends StatelessWidget {
             label: 'Capacité',
             value: formState.capacityUnit.label,
           ),
-          _PreviewRow(
-            iconAsset: 'banknote',
-            label: 'Prix',
-            value: prixStr,
-          ),
+          _PreviewRow(iconAsset: 'banknote', label: 'Prix', value: prixStr),
           _PreviewRow(
             iconAsset: 'banknote',
             label: 'Paiement',
@@ -169,8 +161,7 @@ class AnnouncementPreviewSheet extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  DonyIcon('triangle-alert',
-                      color: cs.warning, size: 16),
+                  DonyIcon('triangle-alert', color: cs.warning, size: 16),
                   const SizedBox(width: DonySpacing.xs),
                   Expanded(
                     child: Text(
@@ -218,9 +209,7 @@ class _PreviewRow extends StatelessWidget {
               style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
             ),
           ),
-          Expanded(
-            child: Text(value, style: tt.bodyMedium),
-          ),
+          Expanded(child: Text(value, style: tt.bodyMedium)),
         ],
       ),
     );

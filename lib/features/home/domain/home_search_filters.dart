@@ -231,18 +231,18 @@ class HomeSearchFilters {
   /// booléens serveur ne partent jamais à `false` explicitement, même
   /// convention que le back : présent ou absent.
   PackageRequestQuery toPackageRequestQuery() => PackageRequestQuery(
-        departure: departureCity,
-        arrival: arrivalCity,
-        dateFrom: dateFrom,
-        dateTo: dateTo,
-        maxWeight: maxWeight,
-        parcelSize: parcelSize,
-        userLat: nearMeActive ? userLat : null,
-        userLng: nearMeActive ? userLng : null,
-        radiusKm: nearMeActive ? nearMeRadiusKm : null,
-        urgent: urgentOnly ? true : null,
-        matchingMyTrips: matchingMyTrips ? true : null,
-      );
+    departure: departureCity,
+    arrival: arrivalCity,
+    dateFrom: dateFrom,
+    dateTo: dateTo,
+    maxWeight: maxWeight,
+    parcelSize: parcelSize,
+    userLat: nearMeActive ? userLat : null,
+    userLng: nearMeActive ? userLng : null,
+    radiusKm: nearMeActive ? nearMeRadiusKm : null,
+    urgent: urgentOnly ? true : null,
+    matchingMyTrips: matchingMyTrips ? true : null,
+  );
 
   /// Payload de recherche de trajets réellement envoyé au serveur, porté par
   /// `AnnouncementSearchRequested`. C'est cette méthode, et non
@@ -341,8 +341,9 @@ class HomeSearchFilters {
   /// paramètres suivent la convention `valeur ?? this.valeur`, incapables
   /// d'écrire un `null` explicite), le second réinjecte les villes croisées —
   /// une ville nulle le reste donc bien.
-  HomeSearchFilters swapCorridor() => copyWith(clearCorridor: true)
-      .copyWith(departureCity: arrivalCity, arrivalCity: departureCity);
+  HomeSearchFilters swapCorridor() => copyWith(
+    clearCorridor: true,
+  ).copyWith(departureCity: arrivalCity, arrivalCity: departureCity);
 
   /// Les drapeaux `clearXxx` permettent de remettre un champ à null, ce qu'un
   /// paramètre optionnel seul ne sait pas exprimer.
@@ -382,28 +383,35 @@ class HomeSearchFilters {
     bool clearNearMe = false,
   }) {
     return HomeSearchFilters(
-      departureCity: clearCorridor ? null : (departureCity ?? this.departureCity),
+      departureCity: clearCorridor
+          ? null
+          : (departureCity ?? this.departureCity),
       arrivalCity: clearCorridor ? null : (arrivalCity ?? this.arrivalCity),
       datePreset: datePreset ?? this.datePreset,
       customDate: clearCustomDate ? null : (customDate ?? this.customDate),
       urgentOnly: urgentOnly ?? this.urgentOnly,
       nearMeActive: clearNearMe ? false : (nearMeActive ?? this.nearMeActive),
-      nearMeRadiusKm: clearNearMe ? null : (nearMeRadiusKm ?? this.nearMeRadiusKm),
+      nearMeRadiusKm: clearNearMe
+          ? null
+          : (nearMeRadiusKm ?? this.nearMeRadiusKm),
       userLat: clearNearMe ? null : (userLat ?? this.userLat),
       userLng: clearNearMe ? null : (userLng ?? this.userLng),
-      maxPricePerKg:
-          clearMaxPricePerKg ? null : (maxPricePerKg ?? this.maxPricePerKg),
+      maxPricePerKg: clearMaxPricePerKg
+          ? null
+          : (maxPricePerKg ?? this.maxPricePerKg),
       weightMin: clearWeight ? null : (weightMin ?? this.weightMin),
       weightMax: clearWeight ? null : (weightMax ?? this.weightMax),
       kiloProOnly: kiloProOnly ?? this.kiloProOnly,
       minRating: clearMinRating ? null : (minRating ?? this.minRating),
       weekendOnly: weekendOnly ?? this.weekendOnly,
-      transportMode:
-          clearTransportMode ? null : (transportMode ?? this.transportMode),
+      transportMode: clearTransportMode
+          ? null
+          : (transportMode ?? this.transportMode),
       kycVerifiedOnly: kycVerifiedOnly ?? this.kycVerifiedOnly,
       contentType: clearContentType ? null : (contentType ?? this.contentType),
-      urgencyFilter:
-          clearUrgencyFilter ? null : (urgencyFilter ?? this.urgencyFilter),
+      urgencyFilter: clearUrgencyFilter
+          ? null
+          : (urgencyFilter ?? this.urgencyFilter),
       maxWeight: clearMaxWeight ? null : (maxWeight ?? this.maxWeight),
       parcelSize: clearParcelSize ? null : (parcelSize ?? this.parcelSize),
       matchingMyTrips: matchingMyTrips ?? this.matchingMyTrips,

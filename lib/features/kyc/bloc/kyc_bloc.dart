@@ -25,14 +25,21 @@ class KycBloc extends Bloc<KycEvent, KycState> {
     emit(const KycLoading());
     try {
       final data = await _repository.createSession();
-      emit(KycSessionCreated(
-        stripeUrl: data['stripeUrl'] as String,
-        sessionId: data['sessionId'] as String,
-      ));
+      emit(
+        KycSessionCreated(
+          stripeUrl: data['stripeUrl'] as String,
+          sessionId: data['sessionId'] as String,
+        ),
+      );
       unawaited(_analytics.logEvent(AnalyticsEvents.kycStarted));
     } catch (e) {
       emit(KycError(unwrapDioError(e)));
-      unawaited(_analytics.logEvent(AnalyticsEvents.kycFailed, properties: {'reason': e.toString()}));
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.kycFailed,
+          properties: {'reason': e.toString()},
+        ),
+      );
     }
   }
 
@@ -42,10 +49,12 @@ class KycBloc extends Bloc<KycEvent, KycState> {
   ) async {
     try {
       final data = await _repository.getStatus();
-      emit(KycStatusLoaded(
-        kycStatus: data['kycStatus'] as String,
-        verificationStatus: data['verificationStatus'] as String,
-      ));
+      emit(
+        KycStatusLoaded(
+          kycStatus: data['kycStatus'] as String,
+          verificationStatus: data['verificationStatus'] as String,
+        ),
+      );
       if ((data['kycStatus'] as String) == 'VERIFIED') {
         unawaited(_analytics.logEvent(AnalyticsEvents.kycCompleted));
       }
@@ -64,5 +73,4 @@ class KycBloc extends Bloc<KycEvent, KycState> {
       // Erreur silencieuse — l'utilisateur part quand même
     }
   }
-
 }

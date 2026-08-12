@@ -14,10 +14,10 @@ class MockPrivacySettingsDatasource extends Mock
     implements PrivacySettingsDatasource {}
 
 Response<dynamic> _response(Map<String, dynamic>? data) => Response(
-      data: data,
-      requestOptions: RequestOptions(path: ''),
-      statusCode: 200,
-    );
+  data: data,
+  requestOptions: RequestOptions(path: ''),
+  statusCode: 200,
+);
 
 void main() {
   late MockApiClient mockApi;
@@ -38,31 +38,37 @@ void main() {
   });
 
   group('PrivacySettingsDatasource', () {
-    test('fetch appelle GET /auth/me/privacy-settings et parse les 2 drapeaux',
-        () async {
-      when(() => mockDio.get('/auth/me/privacy-settings')).thenAnswer(
-        (_) async =>
-            _response({'contactKycOnly': false, 'hidePhoneNumber': true}),
-      );
+    test(
+      'fetch appelle GET /auth/me/privacy-settings et parse les 2 drapeaux',
+      () async {
+        when(() => mockDio.get('/auth/me/privacy-settings')).thenAnswer(
+          (_) async =>
+              _response({'contactKycOnly': false, 'hidePhoneNumber': true}),
+        );
 
-      final settings = await datasource.fetch();
+        final settings = await datasource.fetch();
 
-      expect(settings.contactKycOnly, isFalse);
-      expect(settings.hidePhoneNumber, isTrue);
-    });
+        expect(settings.contactKycOnly, isFalse);
+        expect(settings.hidePhoneNumber, isTrue);
+      },
+    );
 
     test('update envoie les deux préférences dans le PUT', () async {
-      when(() => mockDio.put('/auth/me/privacy-settings',
-              data: any(named: 'data')))
-          .thenAnswer((_) async => _response(null));
+      when(
+        () =>
+            mockDio.put('/auth/me/privacy-settings', data: any(named: 'data')),
+      ).thenAnswer((_) async => _response(null));
 
-      await datasource.update(const PrivacySettingsModel(
-          contactKycOnly: true, hidePhoneNumber: true));
+      await datasource.update(
+        const PrivacySettingsModel(contactKycOnly: true, hidePhoneNumber: true),
+      );
 
-      verify(() => mockDio.put('/auth/me/privacy-settings', data: {
-            'contactKycOnly': true,
-            'hidePhoneNumber': true,
-          })).called(1);
+      verify(
+        () => mockDio.put(
+          '/auth/me/privacy-settings',
+          data: {'contactKycOnly': true, 'hidePhoneNumber': true},
+        ),
+      ).called(1);
     });
   });
 
@@ -70,8 +76,7 @@ void main() {
     /// Un backend antérieur au champ ne renvoie pas `hidePhoneNumber` : le défaut
     /// doit être « numéro visible », comme la colonne côté serveur.
     test('un JSON sans hidePhoneNumber vaut false', () {
-      final settings =
-          PrivacySettingsModel.fromJson({'contactKycOnly': false});
+      final settings = PrivacySettingsModel.fromJson({'contactKycOnly': false});
 
       expect(settings.hidePhoneNumber, isFalse);
       expect(settings.contactKycOnly, isFalse);
@@ -85,12 +90,18 @@ void main() {
     });
 
     test('equality et hashCode couvrent les deux champs', () {
-      const a =
-          PrivacySettingsModel(contactKycOnly: true, hidePhoneNumber: false);
-      const b =
-          PrivacySettingsModel(contactKycOnly: true, hidePhoneNumber: false);
-      const c =
-          PrivacySettingsModel(contactKycOnly: true, hidePhoneNumber: true);
+      const a = PrivacySettingsModel(
+        contactKycOnly: true,
+        hidePhoneNumber: false,
+      );
+      const b = PrivacySettingsModel(
+        contactKycOnly: true,
+        hidePhoneNumber: false,
+      );
+      const c = PrivacySettingsModel(
+        contactKycOnly: true,
+        hidePhoneNumber: true,
+      );
 
       expect(a, equals(b));
       expect(a.hashCode, equals(b.hashCode));
@@ -108,9 +119,12 @@ void main() {
     });
 
     test('fetch délègue au datasource', () async {
-      when(() => mockDatasource.fetch()).thenAnswer((_) async =>
-          const PrivacySettingsModel(
-              contactKycOnly: false, hidePhoneNumber: true));
+      when(() => mockDatasource.fetch()).thenAnswer(
+        (_) async => const PrivacySettingsModel(
+          contactKycOnly: false,
+          hidePhoneNumber: true,
+        ),
+      );
 
       final settings = await repository.fetch();
 
@@ -120,8 +134,10 @@ void main() {
 
     test('update délègue au datasource', () async {
       when(() => mockDatasource.update(any())).thenAnswer((_) async {});
-      const settings =
-          PrivacySettingsModel(contactKycOnly: true, hidePhoneNumber: true);
+      const settings = PrivacySettingsModel(
+        contactKycOnly: true,
+        hidePhoneNumber: true,
+      );
 
       await repository.update(settings);
 

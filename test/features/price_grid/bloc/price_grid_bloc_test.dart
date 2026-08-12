@@ -40,13 +40,18 @@ void main() {
     blocTest<PriceGridBloc, PriceGridState>(
       'PriceGridLoadRequested emits Loading then Loaded',
       build: () {
-        when(() => repository.getItems()).thenAnswer((_) async => [_item1, _item2]);
+        when(
+          () => repository.getItems(),
+        ).thenAnswer((_) async => [_item1, _item2]);
         return PriceGridBloc(repository);
       },
       act: (b) => b.add(const PriceGridLoadRequested()),
       expect: () => [
         isA<PriceGridLoading>(),
-        isA<PriceGridLoaded>().having((s) => s.items, 'items', [_item1, _item2]),
+        isA<PriceGridLoaded>().having((s) => s.items, 'items', [
+          _item1,
+          _item2,
+        ]),
       ],
     );
 
@@ -57,52 +62,69 @@ void main() {
         return PriceGridBloc(repository);
       },
       act: (b) => b.add(const PriceGridLoadRequested()),
-      expect: () => [
-        isA<PriceGridLoading>(),
-        isA<PriceGridError>(),
-      ],
+      expect: () => [isA<PriceGridLoading>(), isA<PriceGridError>()],
     );
 
     blocTest<PriceGridBloc, PriceGridState>(
       'PriceGridItemAddRequested emits Loading then Loaded',
       build: () {
-        when(() => repository.addItem(
-              label: any(named: 'label'),
-              unitPriceNet: any(named: 'unitPriceNet'),
-            )).thenAnswer((_) async => _item1);
-        when(() => repository.getItems()).thenAnswer((_) async => [_item1, _item2]);
+        when(
+          () => repository.addItem(
+            label: any(named: 'label'),
+            unitPriceNet: any(named: 'unitPriceNet'),
+          ),
+        ).thenAnswer((_) async => _item1);
+        when(
+          () => repository.getItems(),
+        ).thenAnswer((_) async => [_item1, _item2]);
         return PriceGridBloc(repository);
       },
-      act: (b) => b.add(const PriceGridItemAddRequested(label: 'Valise cabine', unitPriceNet: 10.0)),
+      act: (b) => b.add(
+        const PriceGridItemAddRequested(
+          label: 'Valise cabine',
+          unitPriceNet: 10.0,
+        ),
+      ),
       expect: () => [
         isA<PriceGridLoading>(),
-        isA<PriceGridLoaded>().having((s) => s.items, 'items', [_item1, _item2]),
+        isA<PriceGridLoaded>().having((s) => s.items, 'items', [
+          _item1,
+          _item2,
+        ]),
       ],
-      verify: (_) => verify(() => repository.addItem(
-            label: 'Valise cabine',
-            unitPriceNet: 10.0,
-          )).called(1),
+      verify: (_) => verify(
+        () => repository.addItem(label: 'Valise cabine', unitPriceNet: 10.0),
+      ).called(1),
     );
 
     blocTest<PriceGridBloc, PriceGridState>(
       'PriceGridItemUpdateRequested emits Loading then Loaded',
       build: () {
-        when(() => repository.updateItem(
-              itemId: any(named: 'itemId'),
-              label: any(named: 'label'),
-              unitPriceNet: any(named: 'unitPriceNet'),
-            )).thenAnswer((_) async => _item1);
-        when(() => repository.getItems()).thenAnswer((_) async => [_item1, _item2]);
+        when(
+          () => repository.updateItem(
+            itemId: any(named: 'itemId'),
+            label: any(named: 'label'),
+            unitPriceNet: any(named: 'unitPriceNet'),
+          ),
+        ).thenAnswer((_) async => _item1);
+        when(
+          () => repository.getItems(),
+        ).thenAnswer((_) async => [_item1, _item2]);
         return PriceGridBloc(repository);
       },
-      act: (b) => b.add(const PriceGridItemUpdateRequested(
-        itemId: 'uuid-1',
-        label: 'Valise 23kg',
-        unitPriceNet: 20.0,
-      )),
+      act: (b) => b.add(
+        const PriceGridItemUpdateRequested(
+          itemId: 'uuid-1',
+          label: 'Valise 23kg',
+          unitPriceNet: 20.0,
+        ),
+      ),
       expect: () => [
         isA<PriceGridLoading>(),
-        isA<PriceGridLoaded>().having((s) => s.items, 'items', [_item1, _item2]),
+        isA<PriceGridLoaded>().having((s) => s.items, 'items', [
+          _item1,
+          _item2,
+        ]),
       ],
     );
 
@@ -123,14 +145,19 @@ void main() {
     blocTest<PriceGridBloc, PriceGridState>(
       'PriceGridItemsReorderRequested emits Loading then Loaded',
       build: () {
-        when(() => repository.reorder(['uuid-2', 'uuid-1']))
-            .thenAnswer((_) async => [_item2, _item1]);
+        when(
+          () => repository.reorder(['uuid-2', 'uuid-1']),
+        ).thenAnswer((_) async => [_item2, _item1]);
         return PriceGridBloc(repository);
       },
-      act: (b) => b.add(const PriceGridItemsReorderRequested(['uuid-2', 'uuid-1'])),
+      act: (b) =>
+          b.add(const PriceGridItemsReorderRequested(['uuid-2', 'uuid-1'])),
       expect: () => [
         isA<PriceGridLoading>(),
-        isA<PriceGridLoaded>().having((s) => s.items, 'items', [_item2, _item1]),
+        isA<PriceGridLoaded>().having((s) => s.items, 'items', [
+          _item2,
+          _item1,
+        ]),
       ],
     );
   });

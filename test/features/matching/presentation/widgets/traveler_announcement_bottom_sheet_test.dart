@@ -58,11 +58,11 @@ class _FakeContentCategoryRepository implements IContentCategoryRepository {
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 UserModel _userWithKyc(String kycStatus) => UserModel(
-      id: 'u1',
-      roles: const [],
-      kycStatus: kycStatus,
-      status: 'ACTIVE',
-    );
+  id: 'u1',
+  roles: const [],
+  kycStatus: kycStatus,
+  status: 'ACTIVE',
+);
 
 AnnouncementModel _buildAnnouncement({
   bool kycVerified = false,
@@ -112,9 +112,9 @@ Widget _harness({
   BidState? bidState,
 }) {
   final authBloc = _MockAuthBloc();
-  when(() => authBloc.state).thenReturn(
-    authState ?? AuthAuthenticated(_userWithKyc('VERIFIED')),
-  );
+  when(
+    () => authBloc.state,
+  ).thenReturn(authState ?? AuthAuthenticated(_userWithKyc('VERIFIED')));
   when(() => authBloc.stream).thenAnswer((_) => const Stream.empty());
 
   // showTravelerAnnouncementSheet lit BidBloc depuis l'arbre (context.read)
@@ -134,8 +134,10 @@ Widget _harness({
         builder: (context, state) => Builder(
           builder: (ctx) => Scaffold(
             body: TextButton(
-              onPressed: () =>
-                  showTravelerAnnouncementSheet(ctx, announcement: announcement),
+              onPressed: () => showTravelerAnnouncementSheet(
+                ctx,
+                announcement: announcement,
+              ),
               child: const Text('Ouvrir'),
             ),
           ),
@@ -143,9 +145,8 @@ Widget _harness({
       ),
       GoRoute(
         path: '/bids/new',
-        builder: (_, state) => CreateBidScreen(
-          announcement: state.extra as AnnouncementModel,
-        ),
+        builder: (_, state) =>
+            CreateBidScreen(announcement: state.extra as AnnouncementModel),
       ),
       GoRoute(
         path: '/bids/:id',
@@ -177,11 +178,11 @@ Widget _harness({
 void main() {
   setUpAll(() => initializeDateFormatting('fr'));
 
-
   // ── Tests existants (comportement inchangé) ────────────────────────────────
 
-  testWidgets('affiche la fenêtre de remise quand elle est définie',
-      (tester) async {
+  testWidgets('affiche la fenêtre de remise quand elle est définie', (
+    tester,
+  ) async {
     final now = DateTime.now();
     final a = _buildAnnouncement(
       kycVerified: true,
@@ -195,8 +196,9 @@ void main() {
     expect(find.textContaining('Remise :'), findsOneWidget);
   });
 
-  testWidgets('masque la fenêtre de remise quand absente (annonce legacy)',
-      (tester) async {
+  testWidgets('masque la fenêtre de remise quand absente (annonce legacy)', (
+    tester,
+  ) async {
     final a = _buildAnnouncement(kycVerified: true);
     await tester.pumpWidget(_harness(announcement: a));
     await tester.tap(find.text('Ouvrir'));
@@ -205,8 +207,9 @@ void main() {
     expect(find.textContaining('Remise :'), findsNothing);
   });
 
-  testWidgets('affiche le prix dans la devise du trajet, pas toujours en EUR',
-      (tester) async {
+  testWidgets('affiche le prix dans la devise du trajet, pas toujours en EUR', (
+    tester,
+  ) async {
     final a = _buildAnnouncement(kycVerified: true, currency: 'CAD');
     await tester.pumpWidget(_harness(announcement: a));
     await tester.tap(find.text('Ouvrir'));
@@ -216,13 +219,10 @@ void main() {
     expect(find.textContaining('€/kg'), findsNothing);
   });
 
-  testWidgets('affiche le titre, le voyageur et le bouton Faire une demande',
-      (tester) async {
-    final a = _buildAnnouncement(
-      kycVerified: true,
-      totalTrips: 5,
-      rating: 4.8,
-    );
+  testWidgets('affiche le titre, le voyageur et le bouton Faire une demande', (
+    tester,
+  ) async {
+    final a = _buildAnnouncement(kycVerified: true, totalTrips: 5, rating: 4.8);
     await tester.pumpWidget(_harness(announcement: a));
     await tester.tap(find.text('Ouvrir'));
     await tester.pumpAndSettle();
@@ -232,8 +232,9 @@ void main() {
     expect(find.text('Faire une demande'), findsOneWidget);
   });
 
-  testWidgets('affiche le badge KYC quand le voyageur est vérifié',
-      (tester) async {
+  testWidgets('affiche le badge KYC quand le voyageur est vérifié', (
+    tester,
+  ) async {
     final a = _buildAnnouncement(kycVerified: true, totalTrips: 3);
     await tester.pumpWidget(_harness(announcement: a));
     await tester.tap(find.text('Ouvrir'));
@@ -242,18 +243,21 @@ void main() {
     expect(find.byKey(const Key('traveler-kyc-badge')), findsOneWidget);
   });
 
-  testWidgets("n'affiche pas le badge KYC quand le voyageur n'est pas vérifié",
-      (tester) async {
-    final a = _buildAnnouncement(kycVerified: false);
-    await tester.pumpWidget(_harness(announcement: a));
-    await tester.tap(find.text('Ouvrir'));
-    await tester.pumpAndSettle();
+  testWidgets(
+    "n'affiche pas le badge KYC quand le voyageur n'est pas vérifié",
+    (tester) async {
+      final a = _buildAnnouncement(kycVerified: false);
+      await tester.pumpWidget(_harness(announcement: a));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('traveler-kyc-badge')), findsNothing);
-  });
+      expect(find.byKey(const Key('traveler-kyc-badge')), findsNothing);
+    },
+  );
 
-  testWidgets('affiche toujours le nombre de trajets, même à 0',
-      (tester) async {
+  testWidgets('affiche toujours le nombre de trajets, même à 0', (
+    tester,
+  ) async {
     final a = _buildAnnouncement(totalTrips: 0);
     await tester.pumpWidget(_harness(announcement: a));
     await tester.tap(find.text('Ouvrir'));
@@ -271,8 +275,9 @@ void main() {
     expect(find.textContaining('7 trajets'), findsOneWidget);
   });
 
-  testWidgets('le bloc voyageur est tappable pour ouvrir son profil',
-      (tester) async {
+  testWidgets('le bloc voyageur est tappable pour ouvrir son profil', (
+    tester,
+  ) async {
     final a = _buildAnnouncement(kycVerified: true, totalTrips: 4);
     await tester.pumpWidget(_harness(announcement: a));
     await tester.tap(find.text('Ouvrir'));
@@ -288,79 +293,100 @@ void main() {
 
   group('colis existant sur le trajet', () {
     BidModel acceptedBidOn(String announcementId) => BidModel(
-          id: 'bid-1',
-          announcementId: announcementId,
-          senderId: 'u1',
-          status: 'ACCEPTED',
-          createdAt: DateTime(2026, 1, 1),
-          updatedAt: DateTime(2026, 1, 1),
-        );
+      id: 'bid-1',
+      announcementId: announcementId,
+      senderId: 'u1',
+      status: 'ACCEPTED',
+      createdAt: DateTime(2026, 1, 1),
+      updatedAt: DateTime(2026, 1, 1),
+    );
 
     BidModel bidOn(String announcementId, String status) => BidModel(
-          id: 'bid-1',
-          announcementId: announcementId,
-          senderId: 'u1',
-          status: status,
-          createdAt: DateTime(2026, 1, 1),
-          updatedAt: DateTime(2026, 1, 1),
-        );
+      id: 'bid-1',
+      announcementId: announcementId,
+      senderId: 'u1',
+      status: status,
+      createdAt: DateTime(2026, 1, 1),
+      updatedAt: DateTime(2026, 1, 1),
+    );
 
-    testWidgets(
-        'colis ACCEPTED sur ce trajet → message + « Voir mon colis », '
+    testWidgets('colis ACCEPTED sur ce trajet → message + « Voir mon colis », '
         'pas de « Faire une demande »', (tester) async {
       final a = _buildAnnouncement(kycVerified: true, totalTrips: 3);
-      await tester.pumpWidget(_harness(
-        announcement: a,
-        bidState: BidListLoaded([acceptedBidOn('a1')]), // a1 = id de l'annonce
-      ));
+      await tester.pumpWidget(
+        _harness(
+          announcement: a,
+          bidState: BidListLoaded([
+            acceptedBidOn('a1'),
+          ]), // a1 = id de l'annonce
+        ),
+      );
       await tester.tap(find.text('Ouvrir'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Vous avez déjà un colis sur ce trajet'), findsOneWidget);
+      expect(
+        find.text('Vous avez déjà un colis sur ce trajet'),
+        findsOneWidget,
+      );
       expect(find.byKey(const Key('see-my-parcel-btn')), findsOneWidget);
       expect(find.text('Voir mon colis'), findsOneWidget);
       expect(find.text('Faire une demande'), findsNothing);
     });
 
     testWidgets(
-        'colis EN ROUTE (IN_TRANSIT) sur ce trajet → grisé + « Voir mon colis »',
-        (tester) async {
-      final a = _buildAnnouncement(kycVerified: true, totalTrips: 3);
-      await tester.pumpWidget(_harness(
-        announcement: a,
-        bidState: BidListLoaded([bidOn('a1', 'IN_TRANSIT')]),
-      ));
-      await tester.tap(find.text('Ouvrir'));
-      await tester.pumpAndSettle();
+      'colis EN ROUTE (IN_TRANSIT) sur ce trajet → grisé + « Voir mon colis »',
+      (tester) async {
+        final a = _buildAnnouncement(kycVerified: true, totalTrips: 3);
+        await tester.pumpWidget(
+          _harness(
+            announcement: a,
+            bidState: BidListLoaded([bidOn('a1', 'IN_TRANSIT')]),
+          ),
+        );
+        await tester.tap(find.text('Ouvrir'));
+        await tester.pumpAndSettle();
 
-      expect(find.text('Vous avez déjà un colis sur ce trajet'), findsOneWidget);
-      expect(find.byKey(const Key('see-my-parcel-btn')), findsOneWidget);
-      expect(find.text('Faire une demande'), findsNothing);
-    });
+        expect(
+          find.text('Vous avez déjà un colis sur ce trajet'),
+          findsOneWidget,
+        );
+        expect(find.byKey(const Key('see-my-parcel-btn')), findsOneWidget);
+        expect(find.text('Faire une demande'), findsNothing);
+      },
+    );
 
     testWidgets(
-        'colis LIVRÉ (COMPLETED) sur ce trajet → grisé + « Voir mon colis »',
-        (tester) async {
-      final a = _buildAnnouncement(kycVerified: true, totalTrips: 3);
-      await tester.pumpWidget(_harness(
-        announcement: a,
-        bidState: BidListLoaded([bidOn('a1', 'COMPLETED')]),
-      ));
-      await tester.tap(find.text('Ouvrir'));
-      await tester.pumpAndSettle();
+      'colis LIVRÉ (COMPLETED) sur ce trajet → grisé + « Voir mon colis »',
+      (tester) async {
+        final a = _buildAnnouncement(kycVerified: true, totalTrips: 3);
+        await tester.pumpWidget(
+          _harness(
+            announcement: a,
+            bidState: BidListLoaded([bidOn('a1', 'COMPLETED')]),
+          ),
+        );
+        await tester.tap(find.text('Ouvrir'));
+        await tester.pumpAndSettle();
 
-      expect(find.text('Vous avez déjà un colis sur ce trajet'), findsOneWidget);
-      expect(find.byKey(const Key('see-my-parcel-btn')), findsOneWidget);
-      expect(find.text('Faire une demande'), findsNothing);
-    });
+        expect(
+          find.text('Vous avez déjà un colis sur ce trajet'),
+          findsOneWidget,
+        );
+        expect(find.byKey(const Key('see-my-parcel-btn')), findsOneWidget);
+        expect(find.text('Faire une demande'), findsNothing);
+      },
+    );
 
-    testWidgets('colis ANNULÉ (CANCELLED) → « Faire une demande » dispo',
-        (tester) async {
+    testWidgets('colis ANNULÉ (CANCELLED) → « Faire une demande » dispo', (
+      tester,
+    ) async {
       final a = _buildAnnouncement(kycVerified: true, totalTrips: 3);
-      await tester.pumpWidget(_harness(
-        announcement: a,
-        bidState: BidListLoaded([bidOn('a1', 'CANCELLED')]),
-      ));
+      await tester.pumpWidget(
+        _harness(
+          announcement: a,
+          bidState: BidListLoaded([bidOn('a1', 'CANCELLED')]),
+        ),
+      );
       await tester.tap(find.text('Ouvrir'));
       await tester.pumpAndSettle();
 
@@ -368,13 +394,13 @@ void main() {
       expect(find.byKey(const Key('see-my-parcel-btn')), findsNothing);
     });
 
-    testWidgets('aucun colis (liste chargée vide) → « Faire une demande »',
-        (tester) async {
+    testWidgets('aucun colis (liste chargée vide) → « Faire une demande »', (
+      tester,
+    ) async {
       final a = _buildAnnouncement(kycVerified: true, totalTrips: 3);
-      await tester.pumpWidget(_harness(
-        announcement: a,
-        bidState: BidListLoaded(const []),
-      ));
+      await tester.pumpWidget(
+        _harness(announcement: a, bidState: BidListLoaded(const [])),
+      );
       await tester.tap(find.text('Ouvrir'));
       await tester.pumpAndSettle();
 
@@ -383,13 +409,16 @@ void main() {
       expect(find.text('Vous avez déjà un colis sur ce trajet'), findsNothing);
     });
 
-    testWidgets('colis sur un AUTRE trajet → « Faire une demande » ici',
-        (tester) async {
+    testWidgets('colis sur un AUTRE trajet → « Faire une demande » ici', (
+      tester,
+    ) async {
       final a = _buildAnnouncement(kycVerified: true, totalTrips: 3);
-      await tester.pumpWidget(_harness(
-        announcement: a,
-        bidState: BidListLoaded([acceptedBidOn('autre-trajet')]),
-      ));
+      await tester.pumpWidget(
+        _harness(
+          announcement: a,
+          bidState: BidListLoaded([acceptedBidOn('autre-trajet')]),
+        ),
+      );
       await tester.tap(find.text('Ouvrir'));
       await tester.pumpAndSettle();
 
@@ -412,28 +441,27 @@ void main() {
       GetIt.I.reset();
 
       mockKycBloc = _MockKycBloc();
-      when(() => mockKycBloc.stream)
-          .thenAnswer((_) => const Stream.empty());
+      when(() => mockKycBloc.stream).thenAnswer((_) => const Stream.empty());
       when(() => mockKycBloc.state).thenReturn(const KycInitial());
 
       mockBidBloc = _MockBidBloc();
-      when(() => mockBidBloc.stream)
-          .thenAnswer((_) => const Stream.empty());
+      when(() => mockBidBloc.stream).thenAnswer((_) => const Stream.empty());
       when(() => mockBidBloc.state).thenReturn(BidInitial());
 
       mockPaymentBloc = _MockPaymentBloc();
-      when(() => mockPaymentBloc.stream)
-          .thenAnswer((_) => const Stream.empty());
+      when(
+        () => mockPaymentBloc.stream,
+      ).thenAnswer((_) => const Stream.empty());
       when(() => mockPaymentBloc.state).thenReturn(const PaymentInitial());
 
       mockWalletBloc = _MockWalletBloc();
-      when(() => mockWalletBloc.stream)
-          .thenAnswer((_) => const Stream.empty());
+      when(() => mockWalletBloc.stream).thenAnswer((_) => const Stream.empty());
       when(() => mockWalletBloc.state).thenReturn(WalletInitial());
 
       mockPhotosCubit = _MockBidPhotosCubit();
-      when(() => mockPhotosCubit.stream)
-          .thenAnswer((_) => const Stream.empty());
+      when(
+        () => mockPhotosCubit.stream,
+      ).thenAnswer((_) => const Stream.empty());
       when(() => mockPhotosCubit.state).thenReturn(const <BidPhotoUpload>[]);
       when(() => mockPhotosCubit.close()).thenAnswer((_) async {});
       when(() => mockPhotosCubit.readyKeys).thenReturn(const <String>[]);
@@ -441,8 +469,9 @@ void main() {
       // Depuis 57ce4308 (PR #130), la RecipientSection de CreateBidScreen
       // résout getIt<RecipientBloc>() dans initState.
       mockRecipientBloc = _MockRecipientBloc();
-      when(() => mockRecipientBloc.stream)
-          .thenAnswer((_) => const Stream.empty());
+      when(
+        () => mockRecipientBloc.stream,
+      ).thenAnswer((_) => const Stream.empty());
       when(() => mockRecipientBloc.state).thenReturn(const RecipientState());
       when(() => mockRecipientBloc.close()).thenAnswer((_) async {});
 
@@ -461,14 +490,15 @@ void main() {
 
     tearDown(() => GetIt.I.reset());
 
-    testWidgets(
-        'expéditeur NOT_STARTED : ouvre KycStatusBottomSheet '
+    testWidgets('expéditeur NOT_STARTED : ouvre KycStatusBottomSheet '
         '(titre "Vérification d\'identité")', (tester) async {
       final a = _buildAnnouncement(kycVerified: true, totalTrips: 3);
-      await tester.pumpWidget(_harness(
-        announcement: a,
-        authState: AuthAuthenticated(_userWithKyc('NOT_STARTED')),
-      ));
+      await tester.pumpWidget(
+        _harness(
+          announcement: a,
+          authState: AuthAuthenticated(_userWithKyc('NOT_STARTED')),
+        ),
+      );
       await tester.tap(find.text('Ouvrir'));
       await tester.pumpAndSettle();
 
@@ -479,14 +509,15 @@ void main() {
       expect(find.text('Publier un colis'), findsNothing);
     });
 
-    testWidgets(
-        'expéditeur PENDING : ouvre KycStatusBottomSheet '
+    testWidgets('expéditeur PENDING : ouvre KycStatusBottomSheet '
         '(titre "Vérification d\'identité")', (tester) async {
       final a = _buildAnnouncement(kycVerified: true, totalTrips: 3);
-      await tester.pumpWidget(_harness(
-        announcement: a,
-        authState: AuthAuthenticated(_userWithKyc('PENDING')),
-      ));
+      await tester.pumpWidget(
+        _harness(
+          announcement: a,
+          authState: AuthAuthenticated(_userWithKyc('PENDING')),
+        ),
+      );
       await tester.tap(find.text('Ouvrir'));
       await tester.pumpAndSettle();
 
@@ -497,14 +528,15 @@ void main() {
       expect(find.text('Publier un colis'), findsNothing);
     });
 
-    testWidgets(
-        'expéditeur REJECTED : ouvre KycStatusBottomSheet '
+    testWidgets('expéditeur REJECTED : ouvre KycStatusBottomSheet '
         '(titre "Vérification d\'identité")', (tester) async {
       final a = _buildAnnouncement(kycVerified: true, totalTrips: 3);
-      await tester.pumpWidget(_harness(
-        announcement: a,
-        authState: AuthAuthenticated(_userWithKyc('REJECTED')),
-      ));
+      await tester.pumpWidget(
+        _harness(
+          announcement: a,
+          authState: AuthAuthenticated(_userWithKyc('REJECTED')),
+        ),
+      );
       await tester.tap(find.text('Ouvrir'));
       await tester.pumpAndSettle();
 
@@ -515,14 +547,15 @@ void main() {
       expect(find.text('Publier un colis'), findsNothing);
     });
 
-    testWidgets(
-        'expéditeur VÉRIFIÉ : ouvre CreateBidBottomSheet '
+    testWidgets('expéditeur VÉRIFIÉ : ouvre CreateBidBottomSheet '
         '(titre "Publier un colis")', (tester) async {
       final a = _buildAnnouncement(kycVerified: true, totalTrips: 3);
-      await tester.pumpWidget(_harness(
-        announcement: a,
-        authState: AuthAuthenticated(_userWithKyc('VERIFIED')),
-      ));
+      await tester.pumpWidget(
+        _harness(
+          announcement: a,
+          authState: AuthAuthenticated(_userWithKyc('VERIFIED')),
+        ),
+      );
       await tester.tap(find.text('Ouvrir'));
       await tester.pumpAndSettle();
 
@@ -533,17 +566,18 @@ void main() {
       expect(find.text("Vérification d'identité"), findsNothing);
     });
 
-    testWidgets(
-        'expéditeur NON vérifié + voyageur ouvert aux non vérifiés : '
+    testWidgets('expéditeur NON vérifié + voyageur ouvert aux non vérifiés : '
         'ouvre le formulaire de demande', (tester) async {
       // Le voyageur a désactivé « profils vérifiés uniquement ». Sans cette
       // exception, son réglage resterait sans effet : le client barrait la route
       // avant même d'appeler le serveur.
       final a = _buildAnnouncement(kycVerified: true, acceptsUnverified: true);
-      await tester.pumpWidget(_harness(
-        announcement: a,
-        authState: AuthAuthenticated(_userWithKyc('PENDING')),
-      ));
+      await tester.pumpWidget(
+        _harness(
+          announcement: a,
+          authState: AuthAuthenticated(_userWithKyc('PENDING')),
+        ),
+      );
       await tester.tap(find.text('Ouvrir'));
       await tester.pumpAndSettle();
 
@@ -555,21 +589,25 @@ void main() {
     });
 
     testWidgets(
-        'expéditeur NON vérifié + voyageur exigeant des profils vérifiés : '
-        "renvoie vers la vérification d'identité", (tester) async {
-      final a = _buildAnnouncement(kycVerified: true);
-      await tester.pumpWidget(_harness(
-        announcement: a,
-        authState: AuthAuthenticated(_userWithKyc('PENDING')),
-      ));
-      await tester.tap(find.text('Ouvrir'));
-      await tester.pumpAndSettle();
+      'expéditeur NON vérifié + voyageur exigeant des profils vérifiés : '
+      "renvoie vers la vérification d'identité",
+      (tester) async {
+        final a = _buildAnnouncement(kycVerified: true);
+        await tester.pumpWidget(
+          _harness(
+            announcement: a,
+            authState: AuthAuthenticated(_userWithKyc('PENDING')),
+          ),
+        );
+        await tester.tap(find.text('Ouvrir'));
+        await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Faire une demande'));
-      await tester.pumpAndSettle();
+        await tester.tap(find.text('Faire une demande'));
+        await tester.pumpAndSettle();
 
-      expect(find.text("Vérification d'identité"), findsOneWidget);
-      expect(find.text('Publier un colis'), findsNothing);
-    });
+        expect(find.text("Vérification d'identité"), findsOneWidget);
+        expect(find.text('Publier un colis'), findsNothing);
+      },
+    );
   });
 }

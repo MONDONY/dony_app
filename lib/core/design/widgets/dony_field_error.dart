@@ -34,8 +34,9 @@ class DonyFieldError extends StatelessWidget {
     if (msg == null) return const SizedBox.shrink();
 
     final cs = Theme.of(context).colorScheme;
-    final style =
-        Theme.of(context).textTheme.bodySmall?.copyWith(color: cs.error);
+    final style = Theme.of(
+      context,
+    ).textTheme.bodySmall?.copyWith(color: cs.error);
     final text = Text(msg, key: textKey, style: style);
 
     // Région live : le message apparaît après coup, en réponse à une

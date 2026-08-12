@@ -11,15 +11,16 @@ part 'accessibility_event.dart';
 part 'accessibility_state.dart';
 
 class AccessibilityBloc extends Bloc<AccessibilityEvent, AccessibilityState> {
-  AccessibilityBloc(this._box, this._analytics)
-      : super(_load(_box)) {
-    on<FollowSystemTextScaleToggled>((e, emit) => _apply(
-          emit,
-          state.copyWith(followSystemTextScale: e.value),
-          HiveService.kA11yFollowSystemTextScale,
-          e.value,
-          'follow_system_text_scale',
-        ));
+  AccessibilityBloc(this._box, this._analytics) : super(_load(_box)) {
+    on<FollowSystemTextScaleToggled>(
+      (e, emit) => _apply(
+        emit,
+        state.copyWith(followSystemTextScale: e.value),
+        HiveService.kA11yFollowSystemTextScale,
+        e.value,
+        'follow_system_text_scale',
+      ),
+    );
 
     on<TextScaleFactorChanged>((e, emit) {
       final clamped = e.value.clamp(kA11yMinTextScale, kA11yMaxTextScale);
@@ -32,69 +33,85 @@ class AccessibilityBloc extends Bloc<AccessibilityEvent, AccessibilityState> {
       );
     });
 
-    on<HighContrastModeChanged>((e, emit) => _apply(
-          emit,
-          state.copyWith(highContrast: e.value),
-          HiveService.kA11yHighContrast,
-          e.value,
-          'high_contrast',
-        ));
+    on<HighContrastModeChanged>(
+      (e, emit) => _apply(
+        emit,
+        state.copyWith(highContrast: e.value),
+        HiveService.kA11yHighContrast,
+        e.value,
+        'high_contrast',
+      ),
+    );
 
-    on<ReduceMotionModeChanged>((e, emit) => _apply(
-          emit,
-          state.copyWith(reduceMotion: e.value),
-          HiveService.kA11yReduceMotion,
-          e.value,
-          'reduce_motion',
-        ));
+    on<ReduceMotionModeChanged>(
+      (e, emit) => _apply(
+        emit,
+        state.copyWith(reduceMotion: e.value),
+        HiveService.kA11yReduceMotion,
+        e.value,
+        'reduce_motion',
+      ),
+    );
 
-    on<BoldTextToggled>((e, emit) => _apply(
-          emit,
-          state.copyWith(boldText: e.value),
-          HiveService.kA11yBoldText,
-          e.value,
-          'bold_text',
-        ));
+    on<BoldTextToggled>(
+      (e, emit) => _apply(
+        emit,
+        state.copyWith(boldText: e.value),
+        HiveService.kA11yBoldText,
+        e.value,
+        'bold_text',
+      ),
+    );
 
-    on<UnderlineLinksToggled>((e, emit) => _apply(
-          emit,
-          state.copyWith(underlineLinks: e.value),
-          HiveService.kA11yUnderlineLinks,
-          e.value,
-          'underline_links',
-        ));
+    on<UnderlineLinksToggled>(
+      (e, emit) => _apply(
+        emit,
+        state.copyWith(underlineLinks: e.value),
+        HiveService.kA11yUnderlineLinks,
+        e.value,
+        'underline_links',
+      ),
+    );
 
-    on<ReinforceLabelsToggled>((e, emit) => _apply(
-          emit,
-          state.copyWith(reinforceLabels: e.value),
-          HiveService.kA11yReinforceLabels,
-          e.value,
-          'reinforce_labels',
-        ));
+    on<ReinforceLabelsToggled>(
+      (e, emit) => _apply(
+        emit,
+        state.copyWith(reinforceLabels: e.value),
+        HiveService.kA11yReinforceLabels,
+        e.value,
+        'reinforce_labels',
+      ),
+    );
 
-    on<PersistentMessagesToggled>((e, emit) => _apply(
-          emit,
-          state.copyWith(persistentMessages: e.value),
-          HiveService.kA11yPersistentMessages,
-          e.value,
-          'persistent_messages',
-        ));
+    on<PersistentMessagesToggled>(
+      (e, emit) => _apply(
+        emit,
+        state.copyWith(persistentMessages: e.value),
+        HiveService.kA11yPersistentMessages,
+        e.value,
+        'persistent_messages',
+      ),
+    );
 
-    on<ConfirmImportantActionsToggled>((e, emit) => _apply(
-          emit,
-          state.copyWith(confirmImportantActions: e.value),
-          HiveService.kA11yConfirmImportant,
-          e.value,
-          'confirm_important_actions',
-        ));
+    on<ConfirmImportantActionsToggled>(
+      (e, emit) => _apply(
+        emit,
+        state.copyWith(confirmImportantActions: e.value),
+        HiveService.kA11yConfirmImportant,
+        e.value,
+        'confirm_important_actions',
+      ),
+    );
 
     on<AccessibilityResetRequested>((e, emit) {
       const fresh = AccessibilityState();
       _persistAll(_box, fresh);
-      unawaited(_analytics.logEvent(
-        AnalyticsEvents.accessibilitySettingChanged,
-        properties: const {'setting': 'reset', 'value': 'all'},
-      ));
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.accessibilitySettingChanged,
+          properties: const {'setting': 'reset', 'value': 'all'},
+        ),
+      );
       emit(fresh);
     });
   }
@@ -110,10 +127,12 @@ class AccessibilityBloc extends Bloc<AccessibilityEvent, AccessibilityState> {
     String settingName,
   ) {
     _box.put(hiveKey, value);
-    unawaited(_analytics.logEvent(
-      AnalyticsEvents.accessibilitySettingChanged,
-      properties: {'setting': settingName, 'value': '$value'},
-    ));
+    unawaited(
+      _analytics.logEvent(
+        AnalyticsEvents.accessibilitySettingChanged,
+        properties: {'setting': settingName, 'value': '$value'},
+      ),
+    );
     emit(next);
   }
 
@@ -134,23 +153,27 @@ class AccessibilityBloc extends Bloc<AccessibilityEvent, AccessibilityState> {
           : AccessibilityMode.system;
     };
     return AccessibilityState(
-      followSystemTextScale: legacy.followSystemTextScale ??
+      followSystemTextScale:
+          legacy.followSystemTextScale ??
           box.get(HiveService.kA11yFollowSystemTextScale, defaultValue: true)
               as bool,
-      textScaleFactor: (legacy.textScaleFactor ??
-              (box.get(HiveService.kA11yTextScaleFactor, defaultValue: 1.0)
-                      as num)
-                  .toDouble())
-          .clamp(kA11yMinTextScale, kA11yMaxTextScale),
+      textScaleFactor:
+          (legacy.textScaleFactor ??
+                  (box.get(HiveService.kA11yTextScaleFactor, defaultValue: 1.0)
+                          as num)
+                      .toDouble())
+              .clamp(kA11yMinTextScale, kA11yMaxTextScale),
       highContrast: mode(HiveService.kA11yHighContrast, legacy.highContrast),
       reduceMotion: mode(HiveService.kA11yReduceMotion, legacy.reduceMotion),
       boldText: box.get(HiveService.kA11yBoldText, defaultValue: false) as bool,
       underlineLinks:
           box.get(HiveService.kA11yUnderlineLinks, defaultValue: false) as bool,
-      reinforceLabels: box.get(HiveService.kA11yReinforceLabels,
-          defaultValue: false) as bool,
-      persistentMessages: box.get(HiveService.kA11yPersistentMessages,
-          defaultValue: false) as bool,
+      reinforceLabels:
+          box.get(HiveService.kA11yReinforceLabels, defaultValue: false)
+              as bool,
+      persistentMessages:
+          box.get(HiveService.kA11yPersistentMessages, defaultValue: false)
+              as bool,
       confirmImportantActions:
           box.get(HiveService.kA11yConfirmImportant, defaultValue: false)
               as bool,
@@ -189,15 +212,17 @@ class AccessibilityBloc extends Bloc<AccessibilityEvent, AccessibilityState> {
     }
 
     if (legacyContrast != null) {
-      highContrast =
-          legacyContrast ? AccessibilityMode.on : AccessibilityMode.system;
+      highContrast = legacyContrast
+          ? AccessibilityMode.on
+          : AccessibilityMode.system;
       box.put(HiveService.kA11yHighContrast, highContrast);
       box.delete(HiveService.kHighContrast);
     }
 
     if (legacyReduce != null) {
-      reduceMotion =
-          legacyReduce ? AccessibilityMode.on : AccessibilityMode.system;
+      reduceMotion = legacyReduce
+          ? AccessibilityMode.on
+          : AccessibilityMode.system;
       box.put(HiveService.kA11yReduceMotion, reduceMotion);
       box.delete(HiveService.kReduceAnimations);
     }

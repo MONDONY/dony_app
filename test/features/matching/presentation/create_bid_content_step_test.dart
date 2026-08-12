@@ -49,24 +49,23 @@ class _FakeContentCategoryRepository implements IContentCategoryRepository {
 AnnouncementModel _announcement({
   List<String>? acceptedContentTypes,
   List<String>? refusedTypes,
-}) =>
-    AnnouncementModel(
-      id: 'ann-content-test',
-      travelerId: 'traveler-1',
-      departureCity: 'Paris',
-      arrivalCity: 'Dakar',
-      departureDate: DateTime(2026, 8),
-      availableKg: 10.0,
-      totalKg: 10.0,
-      pricePerKg: 12.0,
-      capacityUnit: 'SUITCASE_23KG',
-      status: 'OPEN',
-      bidsCount: 0,
-      createdAt: DateTime(2026, 7),
-      updatedAt: DateTime(2026, 7),
-      acceptedContentTypes: acceptedContentTypes,
-      refusedTypes: refusedTypes,
-    );
+}) => AnnouncementModel(
+  id: 'ann-content-test',
+  travelerId: 'traveler-1',
+  departureCity: 'Paris',
+  arrivalCity: 'Dakar',
+  departureDate: DateTime(2026, 8),
+  availableKg: 10.0,
+  totalKg: 10.0,
+  pricePerKg: 12.0,
+  capacityUnit: 'SUITCASE_23KG',
+  status: 'OPEN',
+  bidsCount: 0,
+  createdAt: DateTime(2026, 7),
+  updatedAt: DateTime(2026, 7),
+  acceptedContentTypes: acceptedContentTypes,
+  refusedTypes: refusedTypes,
+);
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
@@ -96,14 +95,26 @@ void main() {
     whenListen(bidBloc, bidStream.stream, initialState: BidInitial());
     // Depuis 57ce4308 (PR #130, recipient quick action), la RecipientSection
     // de CreateBidScreen résout getIt<RecipientBloc>() dans initState.
-    whenListen(recipientBloc, const Stream<RecipientState>.empty(),
-        initialState: const RecipientState());
-    whenListen(paymentBloc, const Stream<PaymentState>.empty(),
-        initialState: const PaymentInitial());
-    whenListen(walletBloc, const Stream<WalletState>.empty(),
-        initialState: WalletInitial());
-    whenListen(photosCubit, const Stream<List<BidPhotoUpload>>.empty(),
-        initialState: const <BidPhotoUpload>[]);
+    whenListen(
+      recipientBloc,
+      const Stream<RecipientState>.empty(),
+      initialState: const RecipientState(),
+    );
+    whenListen(
+      paymentBloc,
+      const Stream<PaymentState>.empty(),
+      initialState: const PaymentInitial(),
+    );
+    whenListen(
+      walletBloc,
+      const Stream<WalletState>.empty(),
+      initialState: WalletInitial(),
+    );
+    whenListen(
+      photosCubit,
+      const Stream<List<BidPhotoUpload>>.empty(),
+      initialState: const <BidPhotoUpload>[],
+    );
 
     void register<T extends Object>(T mock) {
       if (getIt.isRegistered<T>()) getIt.unregister<T>();
@@ -162,9 +173,8 @@ void main() {
         // plein écran — miroir de l'enregistrement réel dans lib/app/router.dart.
         GoRoute(
           path: '/bids/new',
-          builder: (_, state) => CreateBidScreen(
-            announcement: state.extra as AnnouncementModel,
-          ),
+          builder: (_, state) =>
+              CreateBidScreen(announcement: state.extra as AnnouncementModel),
         ),
         GoRoute(path: '/bids/:id', builder: (_, __) => const SizedBox()),
       ],
@@ -186,32 +196,34 @@ void main() {
 
   group('Content step driven by announcement', () {
     testWidgets(
-        'le combobox propose les types acceptés, la section refusé reste visible',
-        (tester) async {
-      await openSheet(
-        tester,
-        _announcement(
-          acceptedContentTypes: ['Vêtements'],
-          refusedTypes: ['Hi-fi'],
-        ),
-      );
+      'le combobox propose les types acceptés, la section refusé reste visible',
+      (tester) async {
+        await openSheet(
+          tester,
+          _announcement(
+            acceptedContentTypes: ['Vêtements'],
+            refusedTypes: ['Hi-fi'],
+          ),
+        );
 
-      // La section « refusé » est affichée sans ouvrir le combobox.
-      expect(find.text('REFUSÉ PAR LE VOYAGEUR'), findsOneWidget);
-      expect(find.text('Hi-fi'), findsOneWidget);
+        // La section « refusé » est affichée sans ouvrir le combobox.
+        expect(find.text('REFUSÉ PAR LE VOYAGEUR'), findsOneWidget);
+        expect(find.text('Hi-fi'), findsOneWidget);
 
-      // Ouvrir le combobox → le type accepté apparaît dans la liste déroulante.
-      await tester.ensureVisible(find.byKey(const Key('bid-content-field')));
-      await tester.tap(find.byKey(const Key('bid-content-field')));
-      await tester.pumpAndSettle();
-      expect(
-        find.byKey(const Key('bid-content-item-Vêtements')),
-        findsOneWidget,
-      );
-    });
+        // Ouvrir le combobox → le type accepté apparaît dans la liste déroulante.
+        await tester.ensureVisible(find.byKey(const Key('bid-content-field')));
+        await tester.tap(find.byKey(const Key('bid-content-field')));
+        await tester.pumpAndSettle();
+        expect(
+          find.byKey(const Key('bid-content-item-Vêtements')),
+          findsOneWidget,
+        );
+      },
+    );
 
-    testWidgets('ajout libre via le combobox ajoute un tag de contenu',
-        (tester) async {
+    testWidgets('ajout libre via le combobox ajoute un tag de contenu', (
+      tester,
+    ) async {
       await openSheet(
         tester,
         _announcement(
@@ -240,33 +252,39 @@ void main() {
     });
 
     testWidgets(
-        "la ligne « Ajouter » reste proposée même quand un item du catalogue "
-        'matche encore (saisie libre)', (tester) async {
-      await openSheet(
-        tester,
-        _announcement(
-          acceptedContentTypes: ['Vêtements'],
-          refusedTypes: ['Hi-fi'],
-        ),
-      );
+      "la ligne « Ajouter » reste proposée même quand un item du catalogue "
+      'matche encore (saisie libre)',
+      (tester) async {
+        await openSheet(
+          tester,
+          _announcement(
+            acceptedContentTypes: ['Vêtements'],
+            refusedTypes: ['Hi-fi'],
+          ),
+        );
 
-      await tester.ensureVisible(find.byKey(const Key('bid-content-field')));
-      await tester.tap(find.byKey(const Key('bid-content-field')));
-      await tester.pumpAndSettle();
-      // « Vêt » matche encore l'item accepté « Vêtements »…
-      await tester.enterText(
-        find.byKey(const Key('bid-content-field')),
-        'Vêt',
-      );
-      await tester.pumpAndSettle();
+        await tester.ensureVisible(find.byKey(const Key('bid-content-field')));
+        await tester.tap(find.byKey(const Key('bid-content-field')));
+        await tester.pumpAndSettle();
+        // « Vêt » matche encore l'item accepté « Vêtements »…
+        await tester.enterText(
+          find.byKey(const Key('bid-content-field')),
+          'Vêt',
+        );
+        await tester.pumpAndSettle();
 
-      // …mais la ligne d'ajout est tout de même proposée (contenu libre).
-      expect(find.byKey(const Key('bid-content-item-Vêtements')), findsOneWidget);
-      expect(find.byKey(const Key('bid-content-item-add')), findsOneWidget);
-    });
+        // …mais la ligne d'ajout est tout de même proposée (contenu libre).
+        expect(
+          find.byKey(const Key('bid-content-item-Vêtements')),
+          findsOneWidget,
+        );
+        expect(find.byKey(const Key('bid-content-item-add')), findsOneWidget);
+      },
+    );
 
-    testWidgets('un type refusé saisi librement est écarté (pas de tag)',
-        (tester) async {
+    testWidgets('un type refusé saisi librement est écarté (pas de tag)', (
+      tester,
+    ) async {
       await openSheet(
         tester,
         _announcement(
@@ -287,10 +305,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Aucun tag « Hi-fi » : le contenu refusé par le voyageur est bloqué.
-      expect(
-        find.byKey(const Key('bid-content-tag-Hi-fi')),
-        findsNothing,
-      );
+      expect(find.byKey(const Key('bid-content-tag-Hi-fi')), findsNothing);
     });
   });
 }

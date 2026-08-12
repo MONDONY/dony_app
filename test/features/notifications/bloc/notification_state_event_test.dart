@@ -51,14 +51,20 @@ void main() {
     });
 
     test('NotificationLoaded copyWith updates notifications', () {
-      final original = NotificationLoaded(notifications: [_notif], unreadCount: 1);
+      final original = NotificationLoaded(
+        notifications: [_notif],
+        unreadCount: 1,
+      );
       final updated = original.copyWith(notifications: []);
       expect(updated.notifications, isEmpty);
       expect(updated.unreadCount, 1);
     });
 
     test('NotificationLoaded copyWith updates unreadCount', () {
-      final original = NotificationLoaded(notifications: [_notif], unreadCount: 1);
+      final original = NotificationLoaded(
+        notifications: [_notif],
+        unreadCount: 1,
+      );
       final updated = original.copyWith(unreadCount: 0);
       expect(updated.unreadCount, 0);
       expect(updated.notifications, [_notif]);

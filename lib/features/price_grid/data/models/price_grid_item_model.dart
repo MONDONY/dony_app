@@ -25,13 +25,19 @@ class PriceGridItemModel extends Equatable {
       );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'label': label,
-        'unitPriceNet': unitPriceNet,
-        'unitPriceDisplay': unitPriceDisplay,
-        'position': position,
-      };
+    'id': id,
+    'label': label,
+    'unitPriceNet': unitPriceNet,
+    'unitPriceDisplay': unitPriceDisplay,
+    'position': position,
+  };
 
   @override
-  List<Object?> get props => [id, label, unitPriceNet, unitPriceDisplay, position];
+  List<Object?> get props => [
+    id,
+    label,
+    unitPriceNet,
+    unitPriceDisplay,
+    position,
+  ];
 }

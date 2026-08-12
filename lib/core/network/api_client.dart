@@ -21,7 +21,10 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 const _tlsCertPem = String.fromEnvironment('TLS_CERT_PEM');
 
 class ApiClient {
-  ApiClient({required String baseUrl, required DeviceIdService deviceIdService}) {
+  ApiClient({
+    required String baseUrl,
+    required DeviceIdService deviceIdService,
+  }) {
     _dio = Dio(
       BaseOptions(
         baseUrl: baseUrl,
@@ -70,7 +73,9 @@ class ApiClient {
     }
 
     if (kProfileMode || kDebugMode) {
-      _dio.interceptors.add(MetricsInterceptor(MetricsInterceptor.globalCollector));
+      _dio.interceptors.add(
+        MetricsInterceptor(MetricsInterceptor.globalCollector),
+      );
     }
 
     // Ajouté en dernier : dans le sens onError (inverse de l'ajout), c'est le
@@ -114,11 +119,7 @@ class ApiClient {
 class _SentryBreadcrumbInterceptor extends Interceptor {
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
-    _crumb(
-      response.requestOptions,
-      response.statusCode,
-      SentryLevel.info,
-    );
+    _crumb(response.requestOptions, response.statusCode, SentryLevel.info);
     handler.next(response);
   }
 
@@ -128,7 +129,9 @@ class _SentryBreadcrumbInterceptor extends Interceptor {
     _crumb(
       err.requestOptions,
       status,
-      (status != null && status < 500) ? SentryLevel.warning : SentryLevel.error,
+      (status != null && status < 500)
+          ? SentryLevel.warning
+          : SentryLevel.error,
     );
     handler.next(err);
   }
@@ -166,7 +169,8 @@ class _AuthInterceptor extends Interceptor {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        final isCritical = options.path.contains('/payments') ||
+        final isCritical =
+            options.path.contains('/payments') ||
             options.path.contains('/kyc') ||
             options.path.contains('/tracking/events') ||
             options.path.contains('/bids/checkout');
@@ -217,7 +221,10 @@ class _AuthInterceptor extends Interceptor {
 
     final AppException appException;
     if (statusCode == 401) {
-      appException = UnauthorizedException(detail ?? 'Session expirée', apiCode);
+      appException = UnauthorizedException(
+        detail ?? 'Session expirée',
+        apiCode,
+      );
     } else if (statusCode == 403) {
       appException = ForbiddenException(detail ?? 'Accès refusé', apiCode);
     } else if (statusCode == 404) {
@@ -232,7 +239,8 @@ class _AuthInterceptor extends Interceptor {
       final rawViolations = data is Map ? data['violations'] : null;
       final Map<String, List<String>>? violations = rawViolations is Map
           ? rawViolations.map(
-              (key, value) => MapEntry(key.toString(), [value.toString()]))
+              (key, value) => MapEntry(key.toString(), [value.toString()]),
+            )
           : null;
       appException = ValidationException(
         detail ?? 'Données invalides',

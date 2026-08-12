@@ -34,7 +34,8 @@ List<MarkerCluster<T>> gridCluster<T>(
   final Map<String, List<T>> grid = {};
   for (final p in points) {
     final loc = locate(p);
-    final key = '${(loc.latitude / cellDeg).floor()}_${(loc.longitude / cellDeg).floor()}';
+    final key =
+        '${(loc.latitude / cellDeg).floor()}_${(loc.longitude / cellDeg).floor()}';
     grid.putIfAbsent(key, () => []).add(p);
   }
   return grid.values.map((pts) {
@@ -50,7 +51,11 @@ List<MarkerCluster<T>> gridCluster<T>(
           (locate(p).longitude - first.longitude).abs() < _kSameSpot,
     );
 
-    return MarkerCluster<T>(pts, LatLng(avgLat, avgLng), isSameSpot: isSameSpot);
+    return MarkerCluster<T>(
+      pts,
+      LatLng(avgLat, avgLng),
+      isSameSpot: isSameSpot,
+    );
   }).toList();
 }
 
@@ -101,11 +106,13 @@ List<MarkerCluster<T>> mergeSameSpotSingletons<T>(
       final allItems = group.expand((c) => c.items).toList();
       final avgLat =
           allItems.fold<double>(0, (s, p) => s + locate(p).latitude) /
-              allItems.length;
+          allItems.length;
       final avgLng =
           allItems.fold<double>(0, (s, p) => s + locate(p).longitude) /
-              allItems.length;
-      merged.add(MarkerCluster<T>(allItems, LatLng(avgLat, avgLng), isSameSpot: true));
+          allItems.length;
+      merged.add(
+        MarkerCluster<T>(allItems, LatLng(avgLat, avgLng), isSameSpot: true),
+      );
     }
   }
 

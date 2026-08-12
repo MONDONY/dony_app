@@ -29,11 +29,11 @@ class GeolocatorLocationService implements LocationService {
       Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.low);
   @override
   Stream<Position> getPositionStream() => Geolocator.getPositionStream(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-          distanceFilter: 10,
-        ),
-      );
+    locationSettings: const LocationSettings(
+      accuracy: LocationAccuracy.high,
+      distanceFilter: 10,
+    ),
+  );
   @override
   Future<bool> openAppSettings() => Geolocator.openAppSettings();
   @override
@@ -114,7 +114,11 @@ class LocationDeniedSheet extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.fromLTRB(
-          DonySpacing.lg, DonySpacing.sm, DonySpacing.lg, DonySpacing.lg),
+        DonySpacing.lg,
+        DonySpacing.sm,
+        DonySpacing.lg,
+        DonySpacing.lg,
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [

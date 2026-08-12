@@ -31,7 +31,9 @@ class _CapacityControlState extends State<CapacityControl> {
     final bloc = context.read<AnnouncementFormBloc>();
     final initialKg = bloc.state.availableKg;
     _customKgController = TextEditingController(
-      text: initialKg != null && initialKg >= 1 ? initialKg.toInt().toString() : '',
+      text: initialKg != null && initialKg >= 1
+          ? initialKg.toInt().toString()
+          : '',
     );
   }
 
@@ -74,9 +76,9 @@ class _CapacityControlState extends State<CapacityControl> {
                 return DonyChip(
                   label: unit.label,
                   selected: state.capacityUnit == unit,
-                  onTap: () => context
-                      .read<AnnouncementFormBloc>()
-                      .add(CapacityUnitChanged(unit)),
+                  onTap: () => context.read<AnnouncementFormBloc>().add(
+                    CapacityUnitChanged(unit),
+                  ),
                 );
               }).toList(),
             ),
@@ -142,15 +144,10 @@ class _SuitcaseStepperCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Vous offrez $totalDisplay kg',
-                      style: tt.titleMedium,
-                    ),
+                    Text('Vous offrez $totalDisplay kg', style: tt.titleMedium),
                     Text(
                       '$quantite $valiseLabel de ${unitKg.toInt()} kg',
-                      style: tt.bodySmall?.copyWith(
-                        color: cs.onSurfaceVariant,
-                      ),
+                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                     ),
                   ],
                 ),
@@ -169,15 +166,13 @@ class _SuitcaseStepperCard extends StatelessWidget {
                 semanticLabel: 'Diminuer la quantité',
                 onPressed: quantite > 1
                     ? () => context.read<AnnouncementFormBloc>().add(
-                          AvailableKgChanged((quantite - 1) * unitKg),
-                        )
+                        AvailableKgChanged((quantite - 1) * unitKg),
+                      )
                     : null,
               ),
               // Affichage quantité
               Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: DonySpacing.xl,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xl),
                 child: Text(
                   '$quantite',
                   style: tt.headlineMedium?.copyWith(color: cs.primary),
@@ -189,8 +184,8 @@ class _SuitcaseStepperCard extends StatelessWidget {
                 enabled: true,
                 semanticLabel: 'Augmenter la quantité',
                 onPressed: () => context.read<AnnouncementFormBloc>().add(
-                      AvailableKgChanged((quantite + 1) * unitKg),
-                    ),
+                  AvailableKgChanged((quantite + 1) * unitKg),
+                ),
               ),
             ],
           ),
@@ -260,11 +255,7 @@ class _KgFreeInfoCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          DonyIcon(
-            'infinity',
-            color: cs.primary,
-            size: DonySpacing.xl,
-          ),
+          DonyIcon('infinity', color: cs.primary, size: DonySpacing.xl),
           const SizedBox(width: DonySpacing.md),
           Expanded(
             child: Column(
@@ -277,9 +268,7 @@ class _KgFreeInfoCard extends StatelessWidget {
                 const SizedBox(height: DonySpacing.xs),
                 Text(
                   'Vendu au kilo · l\'expéditeur choisit son poids',
-                  style: tt.bodySmall?.copyWith(
-                    color: cs.onSurfaceVariant,
-                  ),
+                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
               ],
             ),
@@ -322,9 +311,9 @@ class _CustomKgCard extends StatelessWidget {
             onChanged: (value) {
               final parsed = int.tryParse(value.trim());
               if (parsed != null && parsed >= 1) {
-                context
-                    .read<AnnouncementFormBloc>()
-                    .add(AvailableKgChanged(parsed.toDouble()));
+                context.read<AnnouncementFormBloc>().add(
+                  AvailableKgChanged(parsed.toDouble()),
+                );
               }
             },
           ),
@@ -338,4 +327,3 @@ class _CustomKgCard extends StatelessWidget {
     );
   }
 }
-

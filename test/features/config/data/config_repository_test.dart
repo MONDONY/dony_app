@@ -64,18 +64,21 @@ void main() {
       );
     });
 
-    test('getUrgencyThresholdDays returns threshold from API response', () async {
-      when(() => mockDio.get('/config/urgency-threshold')).thenAnswer(
-        (_) async => Response(
-          data: {'thresholdDays': 3},
-          statusCode: 200,
-          requestOptions: RequestOptions(path: '/config/urgency-threshold'),
-        ),
-      );
+    test(
+      'getUrgencyThresholdDays returns threshold from API response',
+      () async {
+        when(() => mockDio.get('/config/urgency-threshold')).thenAnswer(
+          (_) async => Response(
+            data: {'thresholdDays': 3},
+            statusCode: 200,
+            requestOptions: RequestOptions(path: '/config/urgency-threshold'),
+          ),
+        );
 
-      final days = await datasource.getUrgencyThresholdDays();
-      expect(days, 3);
-    });
+        final days = await datasource.getUrgencyThresholdDays();
+        expect(days, 3);
+      },
+    );
 
     test('getUrgencyThresholdDays throws on network error', () async {
       when(() => mockDio.get('/config/urgency-threshold')).thenThrow(
@@ -91,18 +94,21 @@ void main() {
       );
     });
 
-    test('getReimbursementCap returns maxAmountEur from API response', () async {
-      when(() => mockDio.get('/config/reimbursement-cap')).thenAnswer(
-        (_) async => Response(
-          data: {'maxAmountEur': 50},
-          statusCode: 200,
-          requestOptions: RequestOptions(path: '/config/reimbursement-cap'),
-        ),
-      );
+    test(
+      'getReimbursementCap returns maxAmountEur from API response',
+      () async {
+        when(() => mockDio.get('/config/reimbursement-cap')).thenAnswer(
+          (_) async => Response(
+            data: {'maxAmountEur': 50},
+            statusCode: 200,
+            requestOptions: RequestOptions(path: '/config/reimbursement-cap'),
+          ),
+        );
 
-      final cap = await datasource.getReimbursementCap();
-      expect(cap, 50.0);
-    });
+        final cap = await datasource.getReimbursementCap();
+        expect(cap, 50.0);
+      },
+    );
 
     test('getReimbursementCap throws on network error', () async {
       when(() => mockDio.get('/config/reimbursement-cap')).thenThrow(
@@ -165,10 +171,7 @@ void main() {
         ),
       );
 
-      expect(
-        () => repository.getCommissionRate(),
-        throwsA(isA<Exception>()),
-      );
+      expect(() => repository.getCommissionRate(), throwsA(isA<Exception>()));
     });
 
     test('getUrgencyThresholdDays delegates to datasource', () async {
@@ -219,10 +222,7 @@ void main() {
         ),
       );
 
-      expect(
-        () => repository.getReimbursementCap(),
-        throwsA(isA<Exception>()),
-      );
+      expect(() => repository.getReimbursementCap(), throwsA(isA<Exception>()));
     });
 
     test('getSmsEnabled delegates to datasource', () async {

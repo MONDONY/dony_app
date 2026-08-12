@@ -40,14 +40,16 @@ abstract final class CorridorAlertFormSheet {
         value: cubit,
         child: BlocListener<CorridorAlertFormCubit, CorridorAlertFormState>(
           listener: (ctx, state) {
-            canSubmitNotifier.value = state.isValid &&
+            canSubmitNotifier.value =
+                state.isValid &&
                 state.status != CorridorAlertFormStatus.submitting;
             if (state.status == CorridorAlertFormStatus.success) {
               ctx.pop();
             } else if (state.status == CorridorAlertFormStatus.error) {
               DonySnackbar.show(
                 ctx,
-                message: state.errorMessage ?? 'Impossible d\'enregistrer l\'alerte',
+                message:
+                    state.errorMessage ?? 'Impossible d\'enregistrer l\'alerte',
                 type: DonySnackbarType.error,
               );
             }
@@ -57,21 +59,21 @@ abstract final class CorridorAlertFormSheet {
       ),
       stickyBottom: ValueListenableBuilder<bool>(
         valueListenable: canSubmitNotifier,
-        builder: (ctx, canSubmit, _) => BlocBuilder<CorridorAlertFormCubit,
-            CorridorAlertFormState>(
-          builder: (bCtx, state) {
-            final loading =
-                state.status == CorridorAlertFormStatus.submitting;
-            return DonyButton(
-              key: const Key('corridor-alert-submit'),
-              label: alert == null ? 'Créer l\'alerte' : 'Enregistrer',
-              isLoading: loading,
-              onPressed: (canSubmit && !loading)
-                  ? () => bCtx.read<CorridorAlertFormCubit>().submit()
-                  : null,
-            );
-          },
-        ),
+        builder: (ctx, canSubmit, _) =>
+            BlocBuilder<CorridorAlertFormCubit, CorridorAlertFormState>(
+              builder: (bCtx, state) {
+                final loading =
+                    state.status == CorridorAlertFormStatus.submitting;
+                return DonyButton(
+                  key: const Key('corridor-alert-submit'),
+                  label: alert == null ? 'Créer l\'alerte' : 'Enregistrer',
+                  isLoading: loading,
+                  onPressed: (canSubmit && !loading)
+                      ? () => bCtx.read<CorridorAlertFormCubit>().submit()
+                      : null,
+                );
+              },
+            ),
       ),
       child: _CorridorAlertFormBody(
         bothRoles: bothRoles,
@@ -236,10 +238,7 @@ class _ZoneToggleRow extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Zone de remise sur la carte',
-                style: tt.titleSmall,
-              ),
+              Text('Zone de remise sur la carte', style: tt.titleSmall),
               Text(
                 'Filtre par point de récupération (optionnel)',
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
@@ -404,9 +403,9 @@ class _DateWindowField extends StatelessWidget {
               initialDateRange: initial,
               builder: (ctx, child) => Theme(
                 data: Theme.of(ctx).copyWith(
-                  colorScheme: Theme.of(ctx)
-                      .colorScheme
-                      .copyWith(primary: cs.primary),
+                  colorScheme: Theme.of(
+                    ctx,
+                  ).colorScheme.copyWith(primary: cs.primary),
                 ),
                 child: child!,
               ),
@@ -436,9 +435,7 @@ class _DateWindowField extends StatelessWidget {
                   child: Text(
                     _label,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: hasRange
-                              ? cs.onSurface
-                              : cs.onSurfaceVariant,
+                      color: hasRange ? cs.onSurface : cs.onSurfaceVariant,
                     ),
                   ),
                 ),
@@ -449,18 +446,18 @@ class _DateWindowField extends StatelessWidget {
                     excludeSemantics: true,
                     label: 'Effacer la période',
                     child: GestureDetector(
-                    key: const Key('corridor-alert-date-window-clear'),
-                    onTap: onClear,
-                    behavior: HitTestBehavior.opaque,
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: DonySpacing.xs),
-                      child: Icon(
-                        Icons.close_rounded,
-                        size: 18,
-                        color: cs.onSurfaceVariant,
+                      key: const Key('corridor-alert-date-window-clear'),
+                      onTap: onClear,
+                      behavior: HitTestBehavior.opaque,
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: DonySpacing.xs),
+                        child: Icon(
+                          Icons.close_rounded,
+                          size: 18,
+                          color: cs.onSurfaceVariant,
+                        ),
                       ),
                     ),
-                  )
                   ),
               ],
             ),
@@ -495,8 +492,8 @@ class _MinWeightFieldState extends State<_MinWeightField> {
     _controller = TextEditingController(
       text: widget.initial != null
           ? (widget.initial! % 1 == 0
-              ? widget.initial!.toStringAsFixed(0)
-              : widget.initial.toString())
+                ? widget.initial!.toStringAsFixed(0)
+                : widget.initial.toString())
           : null,
     );
   }
@@ -514,10 +511,7 @@ class _MinWeightFieldState extends State<_MinWeightField> {
       label: 'Poids minimum (optionnel)',
       suffixIcon: const Padding(
         padding: EdgeInsets.only(right: DonySpacing.base),
-        child: Align(
-          widthFactor: 1,
-          child: Text('kg'),
-        ),
+        child: Align(widthFactor: 1, child: Text('kg')),
       ),
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       onChanged: (v) {

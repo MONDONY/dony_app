@@ -87,9 +87,9 @@ class LieuxCapaciteStep extends StatelessWidget {
             onPickupChanged(addr);
             onPickupSaved(addr);
             if (context.mounted) {
-              context
-                  .read<AnnouncementFormBloc>()
-                  .add(PickupAddressChanged(addr));
+              context.read<AnnouncementFormBloc>().add(
+                PickupAddressChanged(addr),
+              );
             }
           },
         ).animate().fadeIn(delay: 80.ms),
@@ -105,9 +105,9 @@ class LieuxCapaciteStep extends StatelessWidget {
             onDeliveryChanged(addr);
             onDeliverySaved(addr);
             if (context.mounted) {
-              context
-                  .read<AnnouncementFormBloc>()
-                  .add(DeliveryAddressChanged(addr));
+              context.read<AnnouncementFormBloc>().add(
+                DeliveryAddressChanged(addr),
+              );
             }
           },
         ).animate().fadeIn(delay: 90.ms),

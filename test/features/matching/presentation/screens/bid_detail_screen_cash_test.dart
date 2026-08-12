@@ -238,7 +238,9 @@ void main() {
   // TravelerGainCard (label 'ESPÈCES'), et non plus via un badge 'CASH' inline.
 
   group('Badge CASH', () {
-    testWidgets('paymentMethod=cash → label ESPÈCES visible (TravelerGainCard)', (tester) async {
+    testWidgets('paymentMethod=cash → label ESPÈCES visible (TravelerGainCard)', (
+      tester,
+    ) async {
       final authBloc = _MockAuthBloc();
       when(
         () => authBloc.state,

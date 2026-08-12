@@ -39,7 +39,8 @@ class _MockNegotiationListBloc
     extends MockBloc<NegotiationListEvent, NegotiationListState>
     implements NegotiationListBloc {}
 
-class _MockNegotiationRepository extends Mock implements NegotiationRepository {}
+class _MockNegotiationRepository extends Mock
+    implements NegotiationRepository {}
 
 class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
     implements AuthBloc {}
@@ -78,16 +79,18 @@ void main() {
     analytics = _MockAnalyticsService();
 
     when(() => packageBloc.state).thenReturn(PackageRequestState());
-    when(() => packageBloc.stream)
-        .thenAnswer((_) => const Stream<PackageRequestState>.empty());
+    when(
+      () => packageBloc.stream,
+    ).thenAnswer((_) => const Stream<PackageRequestState>.empty());
     whenListen<BidState>(
       bidBloc,
       const Stream<BidState>.empty(),
       initialState: BidInitial(),
     );
     when(() => negoListBloc.state).thenReturn(NegotiationListState());
-    when(() => negoListBloc.stream)
-        .thenAnswer((_) => const Stream<NegotiationListState>.empty());
+    when(
+      () => negoListBloc.stream,
+    ).thenAnswer((_) => const Stream<NegotiationListState>.empty());
     whenListen<PaymentState>(
       paymentBloc,
       const Stream<PaymentState>.empty(),
@@ -95,10 +98,12 @@ void main() {
     );
     when(() => negoRepo.findMine()).thenAnswer((_) async => []);
 
-    when(() => analytics.logScreen(any(), properties: any(named: 'properties')))
-        .thenAnswer((_) async {});
-    when(() => analytics.logEvent(any(), properties: any(named: 'properties')))
-        .thenAnswer((_) async {});
+    when(
+      () => analytics.logScreen(any(), properties: any(named: 'properties')),
+    ).thenAnswer((_) async {});
+    when(
+      () => analytics.logEvent(any(), properties: any(named: 'properties')),
+    ).thenAnswer((_) async {});
 
     // Unregister and re-register all needed dependencies
     _unregister<PackageRequestBloc>();
@@ -117,15 +122,22 @@ void main() {
     getIt.registerFactory<NegotiationListBloc>(() => negoListBloc);
     getIt.registerLazySingleton<NegotiationRepository>(() => negoRepo);
     getIt.registerLazySingleton<AnalyticsService>(() => analytics);
-    getIt.registerFactory<ShipmentFilterCubit>(() => ShipmentFilterCubit(analytics));
+    getIt.registerFactory<ShipmentFilterCubit>(
+      () => ShipmentFilterCubit(analytics),
+    );
     getIt.registerFactory<RequestFilterCubit>(() => RequestFilterCubit());
-    getIt.registerFactory<NegotiationFilterCubit>(() => NegotiationFilterCubit());
-    getIt.registerLazySingleton<EnvoisRefreshNotifier>(() => EnvoisRefreshNotifier());
+    getIt.registerFactory<NegotiationFilterCubit>(
+      () => NegotiationFilterCubit(),
+    );
+    getIt.registerLazySingleton<EnvoisRefreshNotifier>(
+      () => EnvoisRefreshNotifier(),
+    );
 
     final formBloc = _MockPackageRequestFormBloc();
     when(() => formBloc.state).thenReturn(const PackageRequestFormState());
-    when(() => formBloc.stream)
-        .thenAnswer((_) => const Stream<PackageRequestFormState>.empty());
+    when(
+      () => formBloc.stream,
+    ).thenAnswer((_) => const Stream<PackageRequestFormState>.empty());
     getIt.registerFactory<PackageRequestFormBloc>(() => formBloc);
   });
 
@@ -153,9 +165,8 @@ void main() {
           GoRoute(path: '/', builder: (_, __) => home),
           GoRoute(
             path: '/package-requests/new',
-            builder: (_, __) => const Scaffold(
-              body: Center(child: Text('wizard-screen')),
-            ),
+            builder: (_, __) =>
+                const Scaffold(body: Center(child: Text('wizard-screen'))),
           ),
         ],
       ),
@@ -174,13 +185,15 @@ void main() {
         ),
       ),
     );
-    when(() => authBloc.stream)
-        .thenAnswer((_) => const Stream<AuthState>.empty());
+    when(
+      () => authBloc.stream,
+    ).thenAnswer((_) => const Stream<AuthState>.empty());
 
     final kycBloc = _MockKycBloc();
     when(() => kycBloc.state).thenReturn(const KycInitial());
-    when(() => kycBloc.stream)
-        .thenAnswer((_) => const Stream<KycState>.empty());
+    when(
+      () => kycBloc.stream,
+    ).thenAnswer((_) => const Stream<KycState>.empty());
 
     return MultiBlocProvider(
       providers: [
@@ -199,8 +212,7 @@ void main() {
       expect(find.text('Envoyer'), findsOneWidget);
     });
 
-    testWidgets('rend une seule liste, sans onglets internes',
-        (tester) async {
+    testWidgets('rend une seule liste, sans onglets internes', (tester) async {
       await tester.pumpWidget(wrap());
       await tester.pump(const Duration(milliseconds: 400));
       // Les demandes d'envoi ont migré vers l'écran Demandes du hub Activités ;
@@ -216,22 +228,23 @@ void main() {
     });
 
     testWidgets(
-        'tap "+Nouveau" affiche le portail KYC si kycStatus=NOT_STARTED',
-        (tester) async {
-      await tester.pumpWidget(wrap(kycStatus: 'NOT_STARTED'));
-      await tester.pump(const Duration(milliseconds: 400));
+      'tap "+Nouveau" affiche le portail KYC si kycStatus=NOT_STARTED',
+      (tester) async {
+        await tester.pumpWidget(wrap(kycStatus: 'NOT_STARTED'));
+        await tester.pump(const Duration(milliseconds: 400));
 
-      await tester.tap(find.text('+ Nouveau'));
-      await tester.pump(const Duration(milliseconds: 400));
+        await tester.tap(find.text('+ Nouveau'));
+        await tester.pump(const Duration(milliseconds: 400));
 
-      expect(find.text('Vérification requise'), findsOneWidget);
-      // Drain any remaining animation timers before widget disposal
-      await tester.pump(const Duration(milliseconds: 600));
-    });
+        expect(find.text('Vérification requise'), findsOneWidget);
+        // Drain any remaining animation timers before widget disposal
+        await tester.pump(const Duration(milliseconds: 600));
+      },
+    );
 
-    testWidgets(
-        'tap "+Nouveau" affiche le portail KYC si kycStatus=REJECTED',
-        (tester) async {
+    testWidgets('tap "+Nouveau" affiche le portail KYC si kycStatus=REJECTED', (
+      tester,
+    ) async {
       await tester.pumpWidget(wrap(kycStatus: 'REJECTED'));
       await tester.pump(const Duration(milliseconds: 400));
 
@@ -242,9 +255,9 @@ void main() {
       await tester.pump(const Duration(milliseconds: 600));
     });
 
-    testWidgets(
-        'tap "+Nouveau" affiche le portail KYC si kycStatus=PENDING',
-        (tester) async {
+    testWidgets('tap "+Nouveau" affiche le portail KYC si kycStatus=PENDING', (
+      tester,
+    ) async {
       await tester.pumpWidget(wrap(kycStatus: 'PENDING'));
       await tester.pump(const Duration(milliseconds: 400));
 
@@ -256,54 +269,57 @@ void main() {
     });
 
     testWidgets(
-        'tap "+Nouveau" ne montre pas le portail KYC si kycStatus=VERIFIED',
-        (tester) async {
-      await tester.pumpWidget(wrap(kycStatus: 'VERIFIED'));
-      await tester.pump(const Duration(milliseconds: 400));
+      'tap "+Nouveau" ne montre pas le portail KYC si kycStatus=VERIFIED',
+      (tester) async {
+        await tester.pumpWidget(wrap(kycStatus: 'VERIFIED'));
+        await tester.pump(const Duration(milliseconds: 400));
 
-      await tester.tap(find.text('+ Nouveau'));
-      await tester.pumpAndSettle();
+        await tester.tap(find.text('+ Nouveau'));
+        await tester.pumpAndSettle();
 
-      expect(find.text('Vérification requise'), findsNothing);
-      // VERIFIED → navigation directe vers le wizard plein écran.
-      expect(find.text('wizard-screen'), findsOneWidget);
-    });
+        expect(find.text('Vérification requise'), findsNothing);
+        // VERIFIED → navigation directe vers le wizard plein écran.
+        expect(find.text('wizard-screen'), findsOneWidget);
+      },
+    );
 
     testWidgets(
-        'tap "+Nouveau" ne montre pas le portail KYC si AuthProfileUpdated VERIFIED',
-        (tester) async {
-      final authBloc = _MockAuthBloc();
-      when(() => authBloc.state).thenReturn(
-        AuthProfileUpdated(
-          UserModel(
-            id: 'u1',
-            roles: const ['SENDER'],
-            kycStatus: 'VERIFIED',
-            status: 'ACTIVE',
+      'tap "+Nouveau" ne montre pas le portail KYC si AuthProfileUpdated VERIFIED',
+      (tester) async {
+        final authBloc = _MockAuthBloc();
+        when(() => authBloc.state).thenReturn(
+          AuthProfileUpdated(
+            UserModel(
+              id: 'u1',
+              roles: const ['SENDER'],
+              kycStatus: 'VERIFIED',
+              status: 'ACTIVE',
+            ),
           ),
-        ),
-      );
-      when(() => authBloc.stream)
-          .thenAnswer((_) => const Stream<AuthState>.empty());
+        );
+        when(
+          () => authBloc.stream,
+        ).thenAnswer((_) => const Stream<AuthState>.empty());
 
-      await tester.pumpWidget(
-        MultiBlocProvider(
-          providers: [
-            BlocProvider<AuthBloc>.value(value: authBloc),
-            BlocProvider<PaymentBloc>.value(value: paymentBloc),
-          ],
-          child: router(home: const EnvoyerHubScreen()),
-        ),
-      );
-      await tester.pump(const Duration(milliseconds: 400));
+        await tester.pumpWidget(
+          MultiBlocProvider(
+            providers: [
+              BlocProvider<AuthBloc>.value(value: authBloc),
+              BlocProvider<PaymentBloc>.value(value: paymentBloc),
+            ],
+            child: router(home: const EnvoyerHubScreen()),
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 400));
 
-      await tester.tap(find.text('+ Nouveau'));
-      await tester.pumpAndSettle();
+        await tester.tap(find.text('+ Nouveau'));
+        await tester.pumpAndSettle();
 
-      expect(find.text('Vérification requise'), findsNothing);
-      // VERIFIED (via AuthProfileUpdated) → navigation directe vers le wizard.
-      expect(find.text('wizard-screen'), findsOneWidget);
-    });
+        expect(find.text('Vérification requise'), findsNothing);
+        // VERIFIED (via AuthProfileUpdated) → navigation directe vers le wizard.
+        expect(find.text('wizard-screen'), findsOneWidget);
+      },
+    );
   });
 }
 

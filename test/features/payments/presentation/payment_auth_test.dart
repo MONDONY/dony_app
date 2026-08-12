@@ -94,19 +94,23 @@ void main() {
 
   group('requirePaymentAuth — toggle ON (biometricEnabled = true)', () {
     setUp(() {
-      when(() => userPrefs.get(
-            HiveService.kBiometricEnabled,
-            defaultValue: any(named: 'defaultValue'),
-          )).thenReturn(true);
+      when(
+        () => userPrefs.get(
+          HiveService.kBiometricEnabled,
+          defaultValue: any(named: 'defaultValue'),
+        ),
+      ).thenReturn(true);
     });
 
     testWidgets(
       'toggle ON + biométrie dispo + biométrie OK → true, PIN jamais appelé',
       (tester) async {
-        when(() => authService.isBiometricAvailable())
-            .thenAnswer((_) async => true);
-        when(() => authService.authenticateWithBiometric())
-            .thenAnswer((_) async => true);
+        when(
+          () => authService.isBiometricAvailable(),
+        ).thenAnswer((_) async => true);
+        when(
+          () => authService.authenticateWithBiometric(),
+        ).thenAnswer((_) async => true);
 
         bool? captured;
 
@@ -128,8 +132,9 @@ void main() {
         verify(() => authService.authenticateWithBiometric()).called(1);
         // /auth/local must NOT have been pushed (no navigation to the PIN route).
         // We assert by confirming we're still on '/'.
-        final router =
-            tester.widget<Router<Object>>(find.byType(Router<Object>));
+        final router = tester.widget<Router<Object>>(
+          find.byType(Router<Object>),
+        );
         final routerDelegate = router.routerDelegate as GoRouterDelegate;
         expect(routerDelegate.currentConfiguration.uri.path, equals('/'));
       },
@@ -138,8 +143,9 @@ void main() {
     testWidgets(
       'toggle ON + biométrie indispo → fallback PIN (route /auth/local poussée)',
       (tester) async {
-        when(() => authService.isBiometricAvailable())
-            .thenAnswer((_) async => false);
+        when(
+          () => authService.isBiometricAvailable(),
+        ).thenAnswer((_) async => false);
 
         bool? captured;
 
@@ -165,10 +171,12 @@ void main() {
     testWidgets(
       'toggle ON + biométrie dispo + biométrie échoue → fallback PIN',
       (tester) async {
-        when(() => authService.isBiometricAvailable())
-            .thenAnswer((_) async => true);
-        when(() => authService.authenticateWithBiometric())
-            .thenAnswer((_) async => false);
+        when(
+          () => authService.isBiometricAvailable(),
+        ).thenAnswer((_) async => true);
+        when(
+          () => authService.authenticateWithBiometric(),
+        ).thenAnswer((_) async => false);
 
         bool? captured;
 
@@ -197,10 +205,12 @@ void main() {
         // authenticateWithBiometric() catch toutes les PlatformException en interne
         // et retourne false. Ce test vérifie que le helper route bien vers le PIN
         // dans ce cas, sans propager d'exception.
-        when(() => authService.isBiometricAvailable())
-            .thenAnswer((_) async => true);
-        when(() => authService.authenticateWithBiometric())
-            .thenAnswer((_) async => false); // simule comportement après catch interne
+        when(
+          () => authService.isBiometricAvailable(),
+        ).thenAnswer((_) async => true);
+        when(() => authService.authenticateWithBiometric()).thenAnswer(
+          (_) async => false,
+        ); // simule comportement après catch interne
 
         bool? captured;
 
@@ -230,10 +240,12 @@ void main() {
       (tester) async {
         // Vérifie que si la biométrie échoue ET l'utilisateur annule le PIN,
         // requirePaymentAuth retourne false (pas d'authentification).
-        when(() => authService.isBiometricAvailable())
-            .thenAnswer((_) async => true);
-        when(() => authService.authenticateWithBiometric())
-            .thenAnswer((_) async => false);
+        when(
+          () => authService.isBiometricAvailable(),
+        ).thenAnswer((_) async => true);
+        when(
+          () => authService.authenticateWithBiometric(),
+        ).thenAnswer((_) async => false);
 
         bool? captured;
 
@@ -258,10 +270,12 @@ void main() {
 
   group('requirePaymentAuth — toggle OFF (biometricEnabled = false)', () {
     setUp(() {
-      when(() => userPrefs.get(
-            HiveService.kBiometricEnabled,
-            defaultValue: any(named: 'defaultValue'),
-          )).thenReturn(false);
+      when(
+        () => userPrefs.get(
+          HiveService.kBiometricEnabled,
+          defaultValue: any(named: 'defaultValue'),
+        ),
+      ).thenReturn(false);
     });
 
     testWidgets(
@@ -324,10 +338,12 @@ void main() {
     testWidgets(
       'biométrie désactivée et pas de PIN → paiement autorisé sans rien demander',
       (tester) async {
-        when(() => userPrefs.get(
-              HiveService.kBiometricEnabled,
-              defaultValue: any(named: 'defaultValue'),
-            )).thenReturn(false);
+        when(
+          () => userPrefs.get(
+            HiveService.kBiometricEnabled,
+            defaultValue: any(named: 'defaultValue'),
+          ),
+        ).thenReturn(false);
 
         bool? captured;
 
@@ -354,14 +370,18 @@ void main() {
     testWidgets(
       'biométrie activée mais échouée, sans PIN → paiement autorisé',
       (tester) async {
-        when(() => userPrefs.get(
-              HiveService.kBiometricEnabled,
-              defaultValue: any(named: 'defaultValue'),
-            )).thenReturn(true);
-        when(() => authService.isBiometricAvailable())
-            .thenAnswer((_) async => true);
-        when(() => authService.authenticateWithBiometric())
-            .thenAnswer((_) async => false);
+        when(
+          () => userPrefs.get(
+            HiveService.kBiometricEnabled,
+            defaultValue: any(named: 'defaultValue'),
+          ),
+        ).thenReturn(true);
+        when(
+          () => authService.isBiometricAvailable(),
+        ).thenAnswer((_) async => true);
+        when(
+          () => authService.authenticateWithBiometric(),
+        ).thenAnswer((_) async => false);
 
         bool? captured;
 

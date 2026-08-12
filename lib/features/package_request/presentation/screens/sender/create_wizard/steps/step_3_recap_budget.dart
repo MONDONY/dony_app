@@ -74,19 +74,23 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
     final code = _promoCtrl.text.trim();
     _quoteLoadingNotifier.value = true;
     try {
-      final quote = await getIt<PackageRequestRepository>()
-          .quote(budget, promoCode: code.isEmpty ? null : code);
+      final quote = await getIt<PackageRequestRepository>().quote(
+        budget,
+        promoCode: code.isEmpty ? null : code,
+      );
       _quoteNotifier.value = quote;
       // Persisté dans l'état du formulaire dès validation réussie — envoyé à
       // la publication, appliqué automatiquement au paiement (jamais resaisi,
       // cf. AcceptOfferBottomSheet).
       if (mounted) {
-        context
-            .read<PackageRequestFormBloc>()
-            .add(PackageRequestPromoCodeChanged(code.isEmpty ? null : code));
+        context.read<PackageRequestFormBloc>().add(
+          PackageRequestPromoCodeChanged(code.isEmpty ? null : code),
+        );
       }
     } catch (e) {
-      _quoteNotifier.value = code.isEmpty ? null : ErrorPresenter.resolve(e).message;
+      _quoteNotifier.value = code.isEmpty
+          ? null
+          : ErrorPresenter.resolve(e).message;
     } finally {
       _quoteLoadingNotifier.value = false;
     }
@@ -223,8 +227,9 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                     listenable: _quoteNotifier,
                     builder: (context, _) {
                       final quoteVal = _quoteNotifier.value;
-                      final quote =
-                          quoteVal is NegotiationQuote ? quoteVal : null;
+                      final quote = quoteVal is NegotiationQuote
+                          ? quoteVal
+                          : null;
                       return _BudgetBreakdown(
                         budgetEur: state.totalBudgetEur!,
                         quote: quote,
@@ -238,14 +243,16 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                   const _FieldLabel('Code promo (optionnel)'),
                   const SizedBox(height: DonySpacing.sm),
                   ListenableBuilder(
-                    listenable: Listenable.merge(
-                      [_quoteNotifier, _quoteLoadingNotifier],
-                    ),
+                    listenable: Listenable.merge([
+                      _quoteNotifier,
+                      _quoteLoadingNotifier,
+                    ]),
                     builder: (context, _) {
                       final loading = _quoteLoadingNotifier.value;
                       final quoteVal = _quoteNotifier.value;
-                      final quote =
-                          quoteVal is NegotiationQuote ? quoteVal : null;
+                      final quote = quoteVal is NegotiationQuote
+                          ? quoteVal
+                          : null;
                       final promoError = quoteVal is String ? quoteVal : null;
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -271,7 +278,8 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                                               width: 20,
                                               height: 20,
                                               child: CircularProgressIndicator(
-                                                  strokeWidth: 2),
+                                                strokeWidth: 2,
+                                              ),
                                             ),
                                           )
                                         : null,
@@ -295,8 +303,11 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                             const SizedBox(height: DonySpacing.xs),
                             Row(
                               children: [
-                                const DonyIcon('circle-check',
-                                    size: 16, color: Color(0xFF16A34A)),
+                                const DonyIcon(
+                                  'circle-check',
+                                  size: 16,
+                                  color: Color(0xFF16A34A),
+                                ),
                                 const SizedBox(width: 6),
                                 Expanded(
                                   child: Text(
@@ -314,14 +325,18 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                             const SizedBox(height: DonySpacing.xs),
                             Row(
                               children: [
-                                const DonyIcon('circle-alert',
-                                    size: 16, color: Color(0xFFE53935)),
+                                const DonyIcon(
+                                  'circle-alert',
+                                  size: 16,
+                                  color: Color(0xFFE53935),
+                                ),
                                 const SizedBox(width: 6),
                                 Expanded(
                                   child: Text(
                                     promoError,
-                                    style: tt.bodySmall
-                                        ?.copyWith(color: const Color(0xFFE53935)),
+                                    style: tt.bodySmall?.copyWith(
+                                      color: const Color(0xFFE53935),
+                                    ),
                                   ),
                                 ),
                               ],
@@ -525,15 +540,28 @@ class _BudgetBreakdown extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _line(tt, cs, 'Budget', CurrencyFormatter.formatOrPlain(budgetEur, currency)),
+          _line(
+            tt,
+            cs,
+            'Budget',
+            CurrencyFormatter.formatOrPlain(budgetEur, currency),
+          ),
           const SizedBox(height: DonySpacing.xs),
-          _line(tt, cs, 'Commission Yadony ($ratePct %)',
-              CurrencyFormatter.formatOrPlain(commissionEur, currency)),
+          _line(
+            tt,
+            cs,
+            'Commission Yadony ($ratePct %)',
+            CurrencyFormatter.formatOrPlain(commissionEur, currency),
+          ),
           if (hasRealBoost) ...[
             const SizedBox(height: DonySpacing.xs),
-            _line(tt, cs, 'Grâce au code promo, le voyageur touche',
-                '+${CurrencyFormatter.formatOrPlain(boost, currency)}',
-                valueColor: cs.success),
+            _line(
+              tt,
+              cs,
+              'Grâce au code promo, le voyageur touche',
+              '+${CurrencyFormatter.formatOrPlain(boost, currency)}',
+              valueColor: cs.success,
+            ),
           ],
           const SizedBox(height: DonySpacing.xs),
           Divider(color: cs.success.withValues(alpha: 0.2)),
@@ -542,8 +570,10 @@ class _BudgetBreakdown extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text('Le voyageur touchera',
-                  style: tt.bodyMedium?.copyWith(fontSize: 13, color: cs.success)),
+              Text(
+                'Le voyageur touchera',
+                style: tt.bodyMedium?.copyWith(fontSize: 13, color: cs.success),
+              ),
               Text(
                 CurrencyFormatter.formatOrPlain(net, currency),
                 style: tt.bodyMedium?.copyWith(
@@ -559,20 +589,27 @@ class _BudgetBreakdown extends StatelessWidget {
     );
   }
 
-  Widget _line(TextTheme tt, ColorScheme cs, String label, String value,
-          {Color? valueColor}) =>
-      Row(
-        children: [
-          Expanded(
-              child: Text(label, style: tt.bodyMedium?.copyWith(color: cs.success))),
-          const SizedBox(width: DonySpacing.sm),
-          Text(value,
-              style: tt.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: valueColor ?? cs.success,
-              )),
-        ],
-      );
+  Widget _line(
+    TextTheme tt,
+    ColorScheme cs,
+    String label,
+    String value, {
+    Color? valueColor,
+  }) => Row(
+    children: [
+      Expanded(
+        child: Text(label, style: tt.bodyMedium?.copyWith(color: cs.success)),
+      ),
+      const SizedBox(width: DonySpacing.sm),
+      Text(
+        value,
+        style: tt.bodyMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+          color: valueColor ?? cs.success,
+        ),
+      ),
+    ],
+  );
 
   /// Libellé pourcentage : entier si rond, sinon 1 décimale virgule FR.
   String _ratePercentLabel(double rate) {
@@ -650,7 +687,9 @@ class _PaymentMethodChips extends StatelessWidget {
                     method.displayLabel,
                     style: tt.bodyMedium?.copyWith(
                       color: isSelected ? cs.primary : cs.onSurface,
-                      fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                      fontWeight: isSelected
+                          ? FontWeight.w800
+                          : FontWeight.w600,
                     ),
                   ),
                   if (isSelected) ...[

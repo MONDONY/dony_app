@@ -15,7 +15,8 @@ class CommissionMethod {
     required this.expirationStatus,
   });
 
-  factory CommissionMethod.fromJson(Map<String, dynamic> json) => CommissionMethod(
+  factory CommissionMethod.fromJson(Map<String, dynamic> json) =>
+      CommissionMethod(
         brand: json['brand'] as String,
         last4: json['last4'] as String,
         expMonth: json['expMonth'] as int,
@@ -24,11 +25,12 @@ class CommissionMethod {
       );
 
   static ExpirationStatus _parseStatus(String s) => switch (s) {
-        'EXPIRES_SOON' => ExpirationStatus.expiresSoon,
-        'EXPIRED' => ExpirationStatus.expired,
-        _ => ExpirationStatus.valid,
-      };
+    'EXPIRES_SOON' => ExpirationStatus.expiresSoon,
+    'EXPIRED' => ExpirationStatus.expired,
+    _ => ExpirationStatus.valid,
+  };
 
-  String get formattedExpiry => '${expMonth.toString().padLeft(2, '0')}/$expYear';
+  String get formattedExpiry =>
+      '${expMonth.toString().padLeft(2, '0')}/$expYear';
   String get maskedNumber => '•••• •••• •••• $last4';
 }

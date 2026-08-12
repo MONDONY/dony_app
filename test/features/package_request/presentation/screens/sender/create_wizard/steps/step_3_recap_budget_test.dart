@@ -120,7 +120,9 @@ void main() {
       expect(find.text('Entre 0 et 500'), findsOneWidget);
     });
 
-    testWidgets('affiche le suffixe et le détail du budget en CAD', (tester) async {
+    testWidgets('affiche le suffixe et le détail du budget en CAD', (
+      tester,
+    ) async {
       final seed = const PackageRequestFormState(totalBudgetEur: 40);
       await tester.pumpWidget(
         wrap(

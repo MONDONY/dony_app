@@ -15,5 +15,7 @@ const kArrivalCityCodes = <String, String>{
 String cityAirportCode(String city, {required bool departure}) {
   final map = departure ? kDepartureCityCodes : kArrivalCityCodes;
   return map[city] ??
-      (city.length >= 3 ? city.substring(0, 3).toUpperCase() : city.toUpperCase());
+      (city.length >= 3
+          ? city.substring(0, 3).toUpperCase()
+          : city.toUpperCase());
 }

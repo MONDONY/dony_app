@@ -99,9 +99,9 @@ void main() {
   // ─── Loading state ────────────────────────────────────────────────────────────
 
   testWidgets('état loading → CircularProgressIndicator', (tester) async {
-    when(() => bloc.state).thenReturn(
-      const SubscriptionsState(status: SubscriptionsStatus.loading),
-    );
+    when(
+      () => bloc.state,
+    ).thenReturn(const SubscriptionsState(status: SubscriptionsStatus.loading));
     await tester.pumpWidget(pump());
     // No pump(600ms) here — we want to catch the loading indicator before items arrive.
     await tester.pump();
@@ -161,8 +161,9 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
 
     // The bell icon button is inside SubscriptionTile (DonyIcon 'bell-off')
-    final bellFinder =
-        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bell-off');
+    final bellFinder = find.byWidgetPredicate(
+      (w) => w is DonyIcon && w.name == 'bell-off',
+    );
     expect(bellFinder, findsOneWidget);
     await tester.tap(bellFinder);
     await tester.pump();
@@ -203,7 +204,8 @@ void main() {
       // "Semantics sur icônes sans label").
       expect(
         find.byWidgetPredicate(
-          (w) => w is Semantics &&
+          (w) =>
+              w is Semantics &&
               w.properties.label == 'Nouveau trajet publié par Ibou',
         ),
         findsOneWidget,

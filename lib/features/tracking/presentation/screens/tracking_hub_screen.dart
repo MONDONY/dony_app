@@ -40,10 +40,7 @@ class _TrackingHubView extends StatelessWidget {
         backgroundColor: cs.surface,
         elevation: 0,
         scrolledUnderElevation: 0,
-        title: Text(
-          'Suivi des colis',
-          style: tt.headlineLarge,
-        ),
+        title: Text('Suivi des colis', style: tt.headlineLarge),
         centerTitle: false,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
@@ -64,10 +61,8 @@ class _TrackingHubView extends StatelessWidget {
             if (offlineItems.isNotEmpty) ...[
               _OfflineBanner(
                 count: offlineItems.length,
-                onTap: () => OfflineQueueBottomSheet.show(
-                  context,
-                  items: offlineItems,
-                ),
+                onTap: () =>
+                    OfflineQueueBottomSheet.show(context, items: offlineItems),
               ),
               const SizedBox(height: DonySpacing.xl),
             ],
@@ -134,11 +129,7 @@ class _OfflineBanner extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            DonyIcon(
-              'wifi-off',
-              color: cs.secondary,
-              size: DonySpacing.iconSm,
-            ),
+            DonyIcon('wifi-off', color: cs.secondary, size: DonySpacing.iconSm),
             const SizedBox(width: DonySpacing.sm),
             Expanded(
               child: Column(
@@ -174,10 +165,7 @@ class _OfflineBanner extends StatelessWidget {
 // ── Section title ─────────────────────────────────────────────────────────────
 
 class _HubSectionTitle extends StatelessWidget {
-  const _HubSectionTitle({
-    required this.iconAsset,
-    required this.label,
-  });
+  const _HubSectionTitle({required this.iconAsset, required this.label});
 
   final String iconAsset;
   final String label;
@@ -253,7 +241,9 @@ class _HubCard extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                    style: tt.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                   const SizedBox(height: DonySpacing.xxs),
                   Text(

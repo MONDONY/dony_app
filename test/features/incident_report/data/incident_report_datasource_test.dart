@@ -11,10 +11,10 @@ class MockApiClient extends Mock implements ApiClient {}
 class MockDio extends Mock implements Dio {}
 
 Response<dynamic> _created(dynamic data, String path) => Response(
-      data: data,
-      statusCode: 201,
-      requestOptions: RequestOptions(path: path),
-    );
+  data: data,
+  statusCode: 201,
+  requestOptions: RequestOptions(path: path),
+);
 
 void main() {
   late MockApiClient mockClient;
@@ -30,8 +30,9 @@ void main() {
 
   group('createReport', () {
     test('poste le payload et renvoie l\'id', () async {
-      when(() => mockDio.post('/reports', data: any(named: 'data')))
-          .thenAnswer((_) async => _created({'id': 'r-42'}, '/reports'));
+      when(
+        () => mockDio.post('/reports', data: any(named: 'data')),
+      ).thenAnswer((_) async => _created({'id': 'r-42'}, '/reports'));
 
       final id = await datasource.createReport(
         targetType: 'APP',
@@ -41,9 +42,11 @@ void main() {
       );
 
       expect(id, 'r-42');
-      final captured = verify(
-        () => mockDio.post('/reports', data: captureAny(named: 'data')),
-      ).captured.single as Map<String, dynamic>;
+      final captured =
+          verify(
+                () => mockDio.post('/reports', data: captureAny(named: 'data')),
+              ).captured.single
+              as Map<String, dynamic>;
       expect(captured['targetType'], 'APP');
       expect(captured.containsKey('targetId'), isFalse);
       expect(captured['reason'], 'Bug de l\'application');
@@ -52,8 +55,9 @@ void main() {
     });
 
     test('omet la description vide et inclut targetId quand fourni', () async {
-      when(() => mockDio.post('/reports', data: any(named: 'data')))
-          .thenAnswer((_) async => _created({'id': 'r-1'}, '/reports'));
+      when(
+        () => mockDio.post('/reports', data: any(named: 'data')),
+      ).thenAnswer((_) async => _created({'id': 'r-1'}, '/reports'));
 
       await datasource.createReport(
         targetType: 'BID',
@@ -63,9 +67,11 @@ void main() {
         photoKeys: const [],
       );
 
-      final captured = verify(
-        () => mockDio.post('/reports', data: captureAny(named: 'data')),
-      ).captured.single as Map<String, dynamic>;
+      final captured =
+          verify(
+                () => mockDio.post('/reports', data: captureAny(named: 'data')),
+              ).captured.single
+              as Map<String, dynamic>;
       expect(captured['targetId'], 'bid-9');
       expect(captured.containsKey('description'), isFalse);
     });
@@ -73,9 +79,12 @@ void main() {
 
   group('uploadPhoto', () {
     test('renvoie la clé S3', () async {
-      when(() => mockDio.post('/reports/photos', data: any(named: 'data')))
-          .thenAnswer((_) async =>
-              _created({'key': 'reports/u/123_capture.jpg'}, '/reports/photos'));
+      when(
+        () => mockDio.post('/reports/photos', data: any(named: 'data')),
+      ).thenAnswer(
+        (_) async =>
+            _created({'key': 'reports/u/123_capture.jpg'}, '/reports/photos'),
+      );
 
       // FormData exige un fichier réel : on passe par un fichier temporaire.
       final tmp = await createTempImage();

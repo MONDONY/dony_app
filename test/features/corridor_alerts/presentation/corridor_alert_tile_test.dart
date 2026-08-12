@@ -7,27 +7,30 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 CorridorAlertModel _alert(AlertDirection d) => CorridorAlertModel(
-      id: 'a1',
-      departureCity: 'Paris',
-      arrivalCity: 'Dakar',
-      direction: d,
-      active: true,
-      createdAt: DateTime(2026, 6, 20),
-    );
+  id: 'a1',
+  departureCity: 'Paris',
+  arrivalCity: 'Dakar',
+  direction: d,
+  active: true,
+  createdAt: DateTime(2026, 6, 20),
+);
 
 Widget _pump(CorridorAlertModel a) => MaterialApp(
-      theme: AppTheme.light(),
-      home: Scaffold(
-        body: CorridorAlertTile(alert: a, onTap: () {}, onToggle: (_) {}),
-      ),
-    );
+  theme: AppTheme.light(),
+  home: Scaffold(
+    body: CorridorAlertTile(alert: a, onTap: () {}, onToggle: (_) {}),
+  ),
+);
 
 void main() {
   setUpAll(() => initializeDateFormatting('fr'));
 
-  testWidgets('renders corridor, summary and toggle (flat, no border)',
-      (tester) async {
-    await tester.pumpWidget(_pump(_alert(AlertDirection.travelerWantsPackages)));
+  testWidgets('renders corridor, summary and toggle (flat, no border)', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _pump(_alert(AlertDirection.travelerWantsPackages)),
+    );
 
     expect(find.text('Paris → Dakar'), findsOneWidget);
     expect(find.byType(Switch), findsOneWidget);
@@ -54,23 +57,24 @@ void main() {
   });
 
   testWidgets(
-      'senderWantsTrips with no date window shows "Toute date" and never "tout poids"',
-      (tester) async {
-    // Alert with senderWantsTrips direction and no dateFrom/dateTo — the
-    // 'Toute date' fallback must appear and the weight fallback must NOT.
-    final alert = CorridorAlertModel(
-      id: 'a2',
-      departureCity: 'Paris',
-      arrivalCity: 'Dakar',
-      direction: AlertDirection.senderWantsTrips,
-      active: true,
-      createdAt: DateTime(2026, 6, 20),
-      // dateFrom and dateTo intentionally omitted (null).
-    );
-    await tester.pumpWidget(_pump(alert));
-    expect(find.textContaining('Toute date'), findsOneWidget);
-    expect(find.textContaining('tout poids'), findsNothing);
-  });
+    'senderWantsTrips with no date window shows "Toute date" and never "tout poids"',
+    (tester) async {
+      // Alert with senderWantsTrips direction and no dateFrom/dateTo — the
+      // 'Toute date' fallback must appear and the weight fallback must NOT.
+      final alert = CorridorAlertModel(
+        id: 'a2',
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        direction: AlertDirection.senderWantsTrips,
+        active: true,
+        createdAt: DateTime(2026, 6, 20),
+        // dateFrom and dateTo intentionally omitted (null).
+      );
+      await tester.pumpWidget(_pump(alert));
+      expect(find.textContaining('Toute date'), findsOneWidget);
+      expect(find.textContaining('tout poids'), findsNothing);
+    },
+  );
 
   testWidgets('zone alert shows the pickup-zone chip', (tester) async {
     final zoneAlert = CorridorAlertModel(
@@ -90,7 +94,9 @@ void main() {
   });
 
   testWidgets('non-zone alert shows no pickup-zone chip', (tester) async {
-    await tester.pumpWidget(_pump(_alert(AlertDirection.travelerWantsPackages)));
+    await tester.pumpWidget(
+      _pump(_alert(AlertDirection.travelerWantsPackages)),
+    );
     expect(find.textContaining('≤'), findsNothing);
   });
 }

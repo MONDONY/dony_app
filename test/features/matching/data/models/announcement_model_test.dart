@@ -208,17 +208,20 @@ void main() {
   });
 
   group('AnnouncementModel surplus capacity', () {
-    test('parses reservedKg / surplusEligible / surplusPublished from JSON', () {
-      final json = baseAnnouncementJson()
-        ..['reservedKg'] = 12.0
-        ..['surplusEligible'] = true
-        ..['surplusPublished'] = true;
-      final model = AnnouncementModel.fromJson(json);
+    test(
+      'parses reservedKg / surplusEligible / surplusPublished from JSON',
+      () {
+        final json = baseAnnouncementJson()
+          ..['reservedKg'] = 12.0
+          ..['surplusEligible'] = true
+          ..['surplusPublished'] = true;
+        final model = AnnouncementModel.fromJson(json);
 
-      expect(model.reservedKg, 12.0);
-      expect(model.surplusEligible, isTrue);
-      expect(model.surplusPublished, isTrue);
-    });
+        expect(model.reservedKg, 12.0);
+        expect(model.surplusEligible, isTrue);
+        expect(model.surplusPublished, isTrue);
+      },
+    );
 
     test('parses integer reservedKg as double', () {
       final json = baseAnnouncementJson()..['reservedKg'] = 8;
@@ -246,17 +249,22 @@ void main() {
 
     test('isDedicated is true when reservedKg > 0', () {
       final dedicated = AnnouncementModel.fromJson(
-          baseAnnouncementJson()..['reservedKg'] = 10.0);
+        baseAnnouncementJson()..['reservedKg'] = 10.0,
+      );
       final normal = AnnouncementModel.fromJson(baseAnnouncementJson());
       expect(dedicated.isDedicated, isTrue);
       expect(normal.isDedicated, isFalse);
     });
 
     test('canOpenSurplus is true only when eligible and not yet published', () {
-      AnnouncementModel build({required bool eligible, required bool published}) =>
-          AnnouncementModel.fromJson(baseAnnouncementJson()
-            ..['surplusEligible'] = eligible
-            ..['surplusPublished'] = published);
+      AnnouncementModel build({
+        required bool eligible,
+        required bool published,
+      }) => AnnouncementModel.fromJson(
+        baseAnnouncementJson()
+          ..['surplusEligible'] = eligible
+          ..['surplusPublished'] = published,
+      );
 
       expect(build(eligible: true, published: false).canOpenSurplus, isTrue);
       expect(build(eligible: true, published: true).canOpenSurplus, isFalse);
@@ -338,7 +346,7 @@ void main() {
             'label': 'Valise cabine',
             'unitPriceNet': 10.0,
             'unitPriceDisplay': 11.2,
-          }
+          },
         ];
 
       final model = AnnouncementModel.fromJson(json);
@@ -396,8 +404,9 @@ void main() {
 
     test('urgent depuis le JSON prime sur le calcul local (false)', () {
       final json = baseAnnouncementJson()
-        ..['departureDate'] =
-            DateTime.now().add(const Duration(days: 1)).toIso8601String()
+        ..['departureDate'] = DateTime.now()
+            .add(const Duration(days: 1))
+            .toIso8601String()
         ..['urgent'] = false;
       final model = AnnouncementModel.fromJson(json);
       expect(model.isUrgent, isFalse);
@@ -405,8 +414,9 @@ void main() {
 
     test('urgent absent → repli sur la date (proche → urgent)', () {
       final json = baseAnnouncementJson()
-        ..['departureDate'] =
-            DateTime.now().add(const Duration(days: 1)).toIso8601String();
+        ..['departureDate'] = DateTime.now()
+            .add(const Duration(days: 1))
+            .toIso8601String();
       final model = AnnouncementModel.fromJson(json);
       expect(model.urgent, isNull);
       expect(model.isUrgent, isTrue);
@@ -423,8 +433,7 @@ void main() {
     });
 
     test('isUrgent match isUrgentDate quand urgent absent', () {
-      final departureDate =
-          DateTime.now().add(const Duration(days: 2));
+      final departureDate = DateTime.now().add(const Duration(days: 2));
       final json = baseAnnouncementJson()
         ..['departureDate'] = departureDate.toIso8601String();
       final model = AnnouncementModel.fromJson(json);

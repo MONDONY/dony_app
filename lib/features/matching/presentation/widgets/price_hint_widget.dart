@@ -98,8 +98,7 @@ class PriceHintWidget extends StatelessWidget {
                     text: TextSpan(
                       style: tt.bodySmall?.copyWith(color: cs.onSurface),
                       children: [
-                        if (leading != null)
-                          TextSpan(text: leading),
+                        if (leading != null) TextSpan(text: leading),
                         TextSpan(
                           text: highlight,
                           style: tt.bodySmall?.copyWith(
@@ -107,8 +106,7 @@ class PriceHintWidget extends StatelessWidget {
                             fontWeight: FontWeight.w700,
                           ),
                         ),
-                        if (message != null)
-                          TextSpan(text: message),
+                        if (message != null) TextSpan(text: message),
                       ],
                     ),
                   )

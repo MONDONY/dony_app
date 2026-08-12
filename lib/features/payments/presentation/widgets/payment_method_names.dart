@@ -17,11 +17,9 @@ class PaymentMethodNames extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _row(context, const ['visa', 'mastercard'], 'Carte'),
-        _row(
-          context,
-          [isIOS ? 'apple-pay' : 'google-pay'],
-          isIOS ? 'Apple Pay' : 'Google Pay',
-        ),
+        _row(context, [
+          isIOS ? 'apple-pay' : 'google-pay',
+        ], isIOS ? 'Apple Pay' : 'Google Pay'),
         _row(context, const ['paypal'], 'PayPal'),
       ],
     );

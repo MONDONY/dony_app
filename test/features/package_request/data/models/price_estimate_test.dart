@@ -4,8 +4,10 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   test('PriceEstimate.fromJson with HIGH confidence and sample', () {
     final pe = PriceEstimate.fromJson({
-      'lowEur': 85.0, 'highEur': 115.0,
-      'confidence': 'HIGH', 'sampleSize': 15,
+      'lowEur': 85.0,
+      'highEur': 115.0,
+      'confidence': 'HIGH',
+      'sampleSize': 15,
     });
     expect(pe.confidence, PriceEstimateConfidence.high);
     expect(pe.lowEur, 85.0);
@@ -14,8 +16,10 @@ void main() {
 
   test('PriceEstimate.fromJson with empty corridor', () {
     final pe = PriceEstimate.fromJson({
-      'lowEur': null, 'highEur': null,
-      'confidence': 'LOW', 'sampleSize': 0,
+      'lowEur': null,
+      'highEur': null,
+      'confidence': 'LOW',
+      'sampleSize': 0,
     });
     expect(pe.confidence, PriceEstimateConfidence.low);
     expect(pe.lowEur, null);

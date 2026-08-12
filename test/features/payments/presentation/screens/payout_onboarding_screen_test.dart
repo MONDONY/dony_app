@@ -26,7 +26,6 @@ class MockStripeAccountBloc
 
 class FakeAuthEvent extends Fake implements AuthEvent {}
 
-
 final _kUser = UserModel(
   id: 'uid-1',
   firstName: 'Ibrahima',
@@ -37,7 +36,11 @@ final _kUser = UserModel(
   stripeAccountStatus: 'NOT_CREATED',
 );
 
-Widget _wrap(PaymentBloc bloc, {MockAuthBloc? authBloc, MockStripeAccountBloc? stripeBloc}) {
+Widget _wrap(
+  PaymentBloc bloc, {
+  MockAuthBloc? authBloc,
+  MockStripeAccountBloc? stripeBloc,
+}) {
   final auth = authBloc ?? MockAuthBloc();
   if (authBloc == null) {
     when(() => auth.state).thenReturn(AuthAuthenticated(_kUser));
@@ -50,19 +53,21 @@ Widget _wrap(PaymentBloc bloc, {MockAuthBloc? authBloc, MockStripeAccountBloc? s
   }
   return MaterialApp.router(
     theme: AppTheme.light(),
-    routerConfig: GoRouter(routes: [
-      GoRoute(
-        path: '/',
-        builder: (_, __) => MultiBlocProvider(
-          providers: [
-            BlocProvider<AuthBloc>.value(value: auth),
-            BlocProvider<PaymentBloc>.value(value: bloc),
-            BlocProvider<StripeAccountBloc>.value(value: stripe),
-          ],
-          child: const PayoutOnboardingScreen(),
+    routerConfig: GoRouter(
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (_, __) => MultiBlocProvider(
+            providers: [
+              BlocProvider<AuthBloc>.value(value: auth),
+              BlocProvider<PaymentBloc>.value(value: bloc),
+              BlocProvider<StripeAccountBloc>.value(value: stripe),
+            ],
+            child: const PayoutOnboardingScreen(),
+          ),
         ),
-      ),
-    ]),
+      ],
+    ),
   );
 }
 
@@ -84,7 +89,9 @@ void main() {
     mockStripeBloc = MockStripeAccountBloc();
     when(() => mockStripeBloc.state).thenReturn(const StripeAccountInitial());
     when(() => mockStripeBloc.stream).thenAnswer((_) => const Stream.empty());
-    when(() => mockStripeBloc.add(const StripeAccountStatusRefreshed())).thenReturn(null);
+    when(
+      () => mockStripeBloc.add(const StripeAccountStatusRefreshed()),
+    ).thenReturn(null);
     // Register in GetIt so the listener in PayoutOnboardingScreen can call
     // getIt<StripeAccountBloc>() when PaymentOnboardingComplete fires.
     if (getIt.isRegistered<StripeAccountBloc>()) {
@@ -143,12 +150,16 @@ void main() {
       expect(find.text('Paiements activés ✓'), findsOneWidget);
     });
 
-    testWidgets('dispatch PaymentConnectAccountRequested au tap', (tester) async {
+    testWidgets('dispatch PaymentConnectAccountRequested au tap', (
+      tester,
+    ) async {
       await tester.pumpWidget(_wrap(mockBloc));
       await tester.pump(const Duration(milliseconds: 500));
       await tester.ensureVisible(find.text('Connecter mon compte bancaire'));
       await tester.tap(find.text('Connecter mon compte bancaire'));
-      verify(() => mockBloc.add(const PaymentConnectAccountRequested())).called(1);
+      verify(
+        () => mockBloc.add(const PaymentConnectAccountRequested()),
+      ).called(1);
     });
   });
 }

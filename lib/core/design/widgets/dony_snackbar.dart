@@ -38,32 +38,28 @@ abstract final class DonySnackbar {
     // navigue au lecteur d'écran (WCAG 2.2.1). Une action de fermeture
     // explicite remplace la disparition automatique.
     final persistent = context.a11y.persistentMessages;
-    final effectiveDuration =
-        persistent ? const Duration(minutes: 10) : duration;
-    final effectiveActionLabel =
-        actionLabel ?? (persistent ? 'Fermer' : null);
+    final effectiveDuration = persistent
+        ? const Duration(minutes: 10)
+        : duration;
+    final effectiveActionLabel = actionLabel ?? (persistent ? 'Fermer' : null);
 
     final (bg, fg, defaultIcon) = switch (type) {
       DonySnackbarType.info => (
-          cs.inverseSurface,
-          cs.onInverseSurface,
-          Icons.info_outline,
-        ),
+        cs.inverseSurface,
+        cs.onInverseSurface,
+        Icons.info_outline,
+      ),
       DonySnackbarType.success => (
-          cs.success,
-          DonyColors.white,
-          Icons.check_circle_outline,
-        ),
+        cs.success,
+        DonyColors.white,
+        Icons.check_circle_outline,
+      ),
       DonySnackbarType.warning => (
-          cs.warning,
-          DonyColors.white,
-          Icons.warning_amber_rounded,
-        ),
-      DonySnackbarType.error => (
-          cs.error,
-          cs.onError,
-          Icons.error_outline,
-        ),
+        cs.warning,
+        DonyColors.white,
+        Icons.warning_amber_rounded,
+      ),
+      DonySnackbarType.error => (cs.error, cs.onError, Icons.error_outline),
     };
 
     final resolvedIcon = icon ?? defaultIcon;
@@ -162,10 +158,12 @@ abstract final class DonySnackbar {
               ? SnackBarAction(
                   label: effectiveActionLabel,
                   textColor: fg,
-                  onPressed: onAction ??
+                  onPressed:
+                      onAction ??
                       (persistent
-                          ? () =>
-                              ScaffoldMessenger.of(context).hideCurrentSnackBar()
+                          ? () => ScaffoldMessenger.of(
+                              context,
+                            ).hideCurrentSnackBar()
                           : () {}),
                 )
               : null,

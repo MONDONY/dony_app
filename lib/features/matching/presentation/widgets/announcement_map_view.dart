@@ -269,8 +269,8 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
         // Show cheapest price and most urgent (earliest) departure.
         // Prix affiché à l'expéditeur (net + commission) — cohérent avec les cartes/sheets.
         final cheapestItem = cluster.items.reduce(
-          (a, b) => a.announcement.senderPricePerKg <
-                  b.announcement.senderPricePerKg
+          (a, b) =>
+              a.announcement.senderPricePerKg < b.announcement.senderPricePerKg
               ? a
               : b,
         );
