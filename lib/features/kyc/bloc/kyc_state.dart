@@ -19,9 +19,14 @@ class KycSessionCreated extends KycState {
 }
 
 class KycStatusLoaded extends KycState {
-  const KycStatusLoaded({required this.kycStatus, required this.verificationStatus});
+  const KycStatusLoaded({
+    required this.kycStatus,
+    required this.verificationStatus,
+    this.rejectionCode,
+  });
   final String kycStatus;
   final String verificationStatus;
+  final String? rejectionCode;
 }
 
 class KycError extends KycState {
