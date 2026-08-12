@@ -1,0 +1,169 @@
+- generic [active] [ref=e1]:
+  - heading "Notifications × Activités" [level=1] [ref=e2]
+  - paragraph [ref=e3]: 3 propositions — onglet nav bar + intégration écran
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]: Option A
+      - generic [ref=e7]: Badge sur l'onglet nav
+      - generic [ref=e9]:
+        - generic [ref=e10]:
+          - generic [ref=e11]: 9:41
+          - generic [ref=e12]: ●●●
+        - generic [ref=e13]:
+          - generic [ref=e14]: Mes activités
+          - img [ref=e17]
+        - generic [ref=e18]: EN ATTENTE
+        - generic [ref=e19]:
+          - generic [ref=e20]: Offre de Mamadou Sy
+          - generic [ref=e22]: Paris → Dakar · 8 kg · 96 €
+          - generic [ref=e23]: À traiter
+        - generic [ref=e24]: RÉCENT
+        - generic [ref=e25]:
+          - generic [ref=e26]: Paiement reçu
+          - generic [ref=e27]: Envoi Dakar confirmé
+          - generic [ref=e28]: Payé · 112 €
+        - generic [ref=e29]:
+          - generic [ref=e30]: Envoi de Fatou Diallo
+          - generic [ref=e31]: Lyon → Abidjan · 5 kg
+          - generic [ref=e32]: En cours
+        - generic [ref=e34]:
+          - generic [ref=e35] [cursor=pointer]:
+            - img [ref=e36]
+            - generic [ref=e39]: Rechercher
+          - generic [ref=e40] [cursor=pointer]:
+            - generic [ref=e41]: "3"
+            - img [ref=e42]
+            - generic [ref=e44]: Activités
+          - generic [ref=e45] [cursor=pointer]:
+            - img [ref=e47]
+            - generic [ref=e51]: .
+          - generic [ref=e52] [cursor=pointer]:
+            - img [ref=e53]
+            - generic [ref=e55]: Messages
+          - generic [ref=e56] [cursor=pointer]:
+            - img [ref=e57]
+            - generic [ref=e60]: Moi
+      - generic [ref=e61]:
+        - text: Badge "3" = 3 notifs non lues
+        - text: Cloche reste sur Accueil
+      - generic [ref=e62]:
+        - text: ✓ 30 min de dev
+        - text: ✓ Pattern identique à Messages
+        - text: ✗ Cloche reste sur mauvais onglet
+        - text: ✗ Notifs pas accessibles depuis Activités
+    - generic [ref=e63]:
+      - generic [ref=e64]: ⭐ RECOMMANDÉ
+      - generic [ref=e65]: Option B
+      - generic [ref=e66]: Cloche dans AppBar + badge nav
+      - generic [ref=e68]:
+        - generic [ref=e69]:
+          - generic [ref=e70]: 9:41
+          - generic [ref=e71]: ●●●
+        - generic [ref=e72]:
+          - generic [ref=e73]: Mes activités
+          - generic [ref=e74]:
+            - img [ref=e76]
+            - generic [ref=e77] [cursor=pointer]:
+              - img [ref=e78]
+              - generic [ref=e81]: "3"
+        - generic [ref=e82]:
+          - generic [ref=e83]: Tout
+          - generic [ref=e84]: En attente
+          - generic [ref=e85]: Trajets
+          - generic [ref=e86]: Envois
+        - generic [ref=e87]: EN ATTENTE
+        - generic [ref=e88]:
+          - generic [ref=e89]: Offre de Mamadou Sy
+          - generic [ref=e91]: Paris → Dakar · 8 kg · 96 €
+          - generic [ref=e92]: À traiter
+        - generic [ref=e93]: RÉCENT
+        - generic [ref=e94]:
+          - generic [ref=e95]: Paiement reçu
+          - generic [ref=e96]: Envoi Dakar confirmé
+          - generic [ref=e97]: Payé · 112 €
+        - generic [ref=e99]:
+          - generic [ref=e100] [cursor=pointer]:
+            - img [ref=e101]
+            - generic [ref=e104]: Rechercher
+          - generic [ref=e105] [cursor=pointer]:
+            - generic [ref=e106]: "3"
+            - img [ref=e107]
+            - generic [ref=e109]: Activités
+          - generic [ref=e110] [cursor=pointer]:
+            - img [ref=e112]
+            - generic [ref=e116]: .
+          - generic [ref=e117] [cursor=pointer]:
+            - img [ref=e118]
+            - generic [ref=e120]: Messages
+          - generic [ref=e121] [cursor=pointer]:
+            - img [ref=e122]
+            - generic [ref=e125]: Moi
+      - generic [ref=e126]:
+        - text: Cloche 🔔 → ouvre liste notifs
+        - text: Badge nav = même unreadCount
+      - generic [ref=e127]:
+        - text: ✓ Notifs accessibles depuis Activités
+        - text: ✓ Accueil plus épuré
+        - text: ✓ ~1 journée de dev
+        - text: ✗ Cloche invisible sur autres onglets
+    - generic [ref=e128]:
+      - generic [ref=e129]: Option C
+      - generic [ref=e130]: Timeline unifiée (feed)
+      - generic [ref=e132]:
+        - generic [ref=e133]:
+          - generic [ref=e134]: 9:41
+          - generic [ref=e135]: ●●●
+        - generic [ref=e136]:
+          - generic [ref=e137]: Activités
+          - img [ref=e140] [cursor=pointer]
+        - generic [ref=e143]: Aujourd'hui
+        - generic [ref=e144]:
+          - generic [ref=e145]: 💸
+          - generic [ref=e146]:
+            - generic [ref=e147]: Paiement débloqué
+            - generic [ref=e148]: 112 € virement déclenché · Envoi Dakar
+            - generic [ref=e149]: Il y a 2h
+        - generic [ref=e150]:
+          - generic [ref=e151]: ✈️
+          - generic [ref=e152]:
+            - generic [ref=e153]: Offre de Mamadou Sy
+            - generic [ref=e154]: Paris → Dakar · 8 kg · 96 €
+            - generic [ref=e155]: À traiter
+        - generic [ref=e156]: Hier
+        - generic [ref=e157]:
+          - generic [ref=e158]: ⏳
+          - generic [ref=e159]:
+            - generic [ref=e160]: Paiement en attente
+            - generic [ref=e161]: Wave Mobile Money · 45 €
+            - generic [ref=e162]: Hier 14:22
+        - generic [ref=e163]:
+          - generic [ref=e164]: ✅
+          - generic [ref=e165]:
+            - generic [ref=e166]: Livraison confirmée
+            - generic [ref=e167]: Fatou a reçu son colis à Abidjan
+            - generic [ref=e168]: Hier 10:05
+        - generic [ref=e170]:
+          - generic [ref=e171] [cursor=pointer]:
+            - img [ref=e172]
+            - generic [ref=e175]: Rechercher
+          - generic [ref=e176] [cursor=pointer]:
+            - generic [ref=e177]: "3"
+            - img [ref=e178]
+            - generic [ref=e180]: Activités
+          - generic [ref=e181] [cursor=pointer]:
+            - img [ref=e183]
+            - generic [ref=e187]: .
+          - generic [ref=e188] [cursor=pointer]:
+            - img [ref=e189]
+            - generic [ref=e191]: Messages
+          - generic [ref=e192] [cursor=pointer]:
+            - img [ref=e193]
+            - generic [ref=e196]: Moi
+      - generic [ref=e197]:
+        - text: Notifs + events métier mélangés
+        - text: Chronologique · Style Instagram
+      - generic [ref=e198]:
+        - text: ✓ UX unifiée et moderne
+        - text: ✓ Tout au même endroit
+        - text: ✗ Refonte totale de MatchingManagementScreen
+        - text: ✗ ~1 semaine de dev

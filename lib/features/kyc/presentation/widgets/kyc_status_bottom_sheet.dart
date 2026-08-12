@@ -10,6 +10,7 @@ import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/bloc/kyc_event.dart';
 import 'package:dony/features/kyc/bloc/kyc_state.dart';
+import 'package:dony/features/kyc/presentation/kyc_rejection_messages.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -285,7 +286,7 @@ class _KycStatusContentState extends State<_KycStatusContent> {
       case 'VERIFIED':
         return _buildVerifiedContent(cs, tt);
       case 'REJECTED':
-        return _buildRejectedContent(context, cs, tt);
+        return _buildRejectedContent(context, cs, tt, state.rejectionCode);
       case 'NOT_STARTED':
         return _buildNotStartedContent(context, cs, tt);
       default:
@@ -458,6 +459,7 @@ class _KycStatusContentState extends State<_KycStatusContent> {
     BuildContext context,
     ColorScheme cs,
     TextTheme tt,
+    String? rejectionCode,
   ) {
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -479,7 +481,7 @@ class _KycStatusContentState extends State<_KycStatusContent> {
         ),
         const SizedBox(height: DonySpacing.md),
         Text(
-          "Nous n'avons pas pu vérifier votre identité. Assurez-vous que votre document est lisible et réessayez.",
+          kycRejectionMessage(rejectionCode),
           style: tt.bodyLarge?.copyWith(
             color: cs.onSurfaceVariant,
             height: 1.5,
