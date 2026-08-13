@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:bloc/bloc.dart';
 import 'package:dony/app/app.dart';
+import 'package:dony/core/config/api_config.dart';
 import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/firebase/firebase_options.dart';
@@ -24,11 +25,6 @@ import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:posthog_flutter/posthog_flutter.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
-
-const _apiBaseUrl = String.fromEnvironment(
-  'API_BASE_URL',
-  defaultValue: 'http://localhost:8080/api/v1',
-);
 
 const _sentryDsn = String.fromEnvironment('SENTRY_DSN');
 
@@ -74,9 +70,9 @@ Future<void> _bootstrap() async {
   // flag compile-time explicite ne peut pas survenir dans un vrai build store.
   const allowHttp = bool.fromEnvironment('E2E_ALLOW_HTTP');
   if (!kDebugMode) {
-    if (!allowHttp && !_apiBaseUrl.startsWith('https://')) {
+    if (!allowHttp && !kApiBaseUrl.startsWith('https://')) {
       throw StateError(
-        'API_BASE_URL must use https in release builds (got "$_apiBaseUrl")',
+        'API_BASE_URL must use https in release builds (got "$kApiBaseUrl")',
       );
     }
     if (!_stripePublishableKey.startsWith('pk_')) {
@@ -96,7 +92,7 @@ Future<void> _bootstrap() async {
   Stripe.urlScheme = 'dony';
   await Stripe.instance.applySettings();
 
-  await setupDependencies(apiBaseUrl: _apiBaseUrl);
+  await setupDependencies(apiBaseUrl: kApiBaseUrl);
   // Hive doit être ouvert avant runApp : AppPreferencesBloc accède à
   // userPrefs dès le premier build() de DonyApp.
   await getIt<HiveService>().init();

@@ -3,11 +3,15 @@ import 'dart:io' show Platform;
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
+import 'package:dony/core/config/api_config.dart';
+import 'package:dony/core/firebase/firebase_options.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/core/services/device_id_service.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/features/notifications/data/notification_repository.dart';
 import 'package:dony/features/notifications/notification_route_resolver.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -16,6 +20,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   if (kDebugMode) debugPrint('[FCM] Background message: ${message.messageId}');
+  await ackCriticalFromBackground(message.data);
 }
 
 const _criticalTypes = {
@@ -23,6 +28,60 @@ const _criticalTypes = {
   'DELIVERY_CONFIRMED',
   'DISPUTE_OPENED',
 };
+
+/// Accuse réception d'une notification critique depuis l'isolate d'arrière-plan.
+///
+/// Sans ça, l'ACK ne partait que si l'application était au premier plan ou si
+/// l'utilisateur tapait la notification. Le backend, lui, envoie un SMS 60 s
+/// après une notification critique sans ACK : téléphone en poche, tout paiement
+/// libéré ou toute livraison confirmée déclenchait donc un SMS, alors que le
+/// push était bien arrivé. L'ACK mesurait l'ouverture, pas la réception.
+///
+/// Cet isolate ne partage rien avec l'app : ni GetIt, ni `ApiClient`, ni
+/// `AuthInterceptor`. Tout est donc reconstruit à la main, et le moindre échec
+/// est avalé — au pire l'utilisateur reçoit le SMS, comme avant.
+@pragma('vm:entry-point')
+@visibleForTesting
+Future<void> ackCriticalFromBackground(
+  Map<String, dynamic> data, {
+  @visibleForTesting Dio? dioOverride,
+  @visibleForTesting Future<String?> Function()? idTokenOverride,
+}) async {
+  final type = data['type'] as String?;
+  final notificationId = data['notificationId'] as String?;
+  if (type == null || notificationId == null) return;
+  if (!_criticalTypes.contains(type)) return;
+
+  try {
+    if (idTokenOverride == null && Firebase.apps.isEmpty) {
+      // L'isolate démarre vierge : Firebase doit y être initialisé avant de
+      // pouvoir lire la session persistée.
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+    }
+
+    final token = idTokenOverride != null
+        ? await idTokenOverride()
+        : await FirebaseAuth.instance.currentUser?.getIdToken();
+    // Session absente (déconnexion, réinstallation) : rien à accuser, le SMS
+    // reste le bon filet.
+    if (token == null || token.isEmpty) return;
+
+    final dio = dioOverride ?? Dio(BaseOptions(baseUrl: kApiBaseUrl));
+    await dio.post<void>(
+      '/notifications/$notificationId/ack',
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+    if (kDebugMode) {
+      debugPrint('[FCM] ACK arrière-plan envoyé pour $type / $notificationId');
+    }
+  } catch (e) {
+    // Aucun report d'erreur ici : Sentry n'est pas initialisé dans cet isolate,
+    // et un ACK manqué dégrade proprement vers le SMS de secours.
+    if (kDebugMode) debugPrint('[FCM] ACK arrière-plan échoué : $e');
+  }
+}
 
 class NotificationService {
   final ApiClient _apiClient;

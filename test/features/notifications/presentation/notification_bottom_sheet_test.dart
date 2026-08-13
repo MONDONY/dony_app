@@ -1,4 +1,5 @@
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_event.dart';
 import 'package:dony/features/notifications/bloc/notification_state.dart';
@@ -19,9 +20,10 @@ NotificationModel _notif({
   String title = 'Colis accepté',
   String body = 'Votre colis part demain',
   bool read = false,
+  String type = 'BID_ACCEPTED',
 }) => NotificationModel(
   id: id,
-  type: 'BID_ACCEPTED',
+  type: type,
   title: title,
   body: body,
   data: const {},
@@ -164,5 +166,53 @@ void main() {
     verify(
       () => bloc.add(any(that: isA<NotificationMarkReadRequested>())),
     ).called(1);
+  });
+
+  group('icône par type', () {
+    /// Monte une notification du [type] donné et rend l'asset de son icône.
+    /// Null quand le type est rendu par un emoji (famille colis) plutôt que
+    /// par un SVG.
+    Future<String?> iconAssetFor(WidgetTester tester, String type) async {
+      // Démontage explicite : sans ça, le pumpWidget suivant met à jour
+      // l'arbre existant au lieu de le remonter, et le BlocBuilder garde la
+      // tuile précédente — chaque cas verrait l'icône du cas d'avant.
+      await tester.pumpWidget(const SizedBox.shrink());
+      stub(
+        NotificationLoaded(notifications: [_notif(type: type)], unreadCount: 1),
+      );
+      await pumpSheet(tester);
+      final icons = tester.widgetList<DonyIcon>(find.byType(DonyIcon)).toList();
+      // La tuile porte aussi un chevron quand le type a une route : on ne
+      // retient que la première icône, celle du carré de gauche.
+      return icons.isEmpty ? null : icons.first.name;
+    }
+
+    testWidgets('les familles ont chacune leur icône', (tester) async {
+      expect(await iconAssetFor(tester, 'BID_ACCEPTED'), 'circle-check');
+      expect(await iconAssetFor(tester, 'PAYMENT_RELEASED'), 'banknote');
+      expect(await iconAssetFor(tester, 'TRIP_CANCELLED'), 'ban');
+      expect(await iconAssetFor(tester, 'DISPUTE_OPENED'), 'triangle-alert');
+      expect(await iconAssetFor(tester, 'MM_PAYMENT_PENDING'), 'credit-card');
+      expect(await iconAssetFor(tester, 'NEW_MESSAGE'), 'message-circle');
+      expect(await iconAssetFor(tester, 'CORRIDOR_ALERT'), 'plane');
+    });
+
+    /// Les trois familles qui tombaient sur la cloche générique avant d'être
+    /// cartographiées — le test garde la régression fermée.
+    testWidgets(
+      'négociations, automatisations et expirations sont distinguées',
+      (tester) async {
+        expect(
+          await iconAssetFor(tester, 'negotiation_counter'),
+          'arrow-left-right',
+        );
+        expect(await iconAssetFor(tester, 'automation_last_minute'), 'zap');
+        expect(await iconAssetFor(tester, 'negotiation_expired'), 'timer-off');
+      },
+    );
+
+    testWidgets('un type inconnu garde la cloche neutre', (tester) async {
+      expect(await iconAssetFor(tester, 'TYPE_INEXISTANT'), 'bell');
+    });
   });
 }

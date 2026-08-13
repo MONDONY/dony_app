@@ -264,13 +264,35 @@ void main() {
       },
     );
 
-    test('HANDOVER_DEFINED routes to bid detail', () {
+    test('automation_capacity_free routes to owner trip detail', () {
+      const uuid = '123e4567-e89b-12d3-a456-426614174000';
       expect(
         service.testRouteForMessage({
-          'type': 'HANDOVER_DEFINED',
+          'type': 'automation_capacity_free',
+          'announcementId': uuid,
+        }),
+        '/announcements/$uuid/trip',
+      );
+    });
+
+    test('automation_last_minute routes to bid detail', () {
+      expect(
+        service.testRouteForMessage({
+          'type': 'automation_last_minute',
           'bidId': bidId,
         }),
         '/bids/$bidId',
+      );
+    });
+
+    test('automation_loyal_sender routes to public trip detail', () {
+      const uuid = '123e4567-e89b-12d3-a456-426614174000';
+      expect(
+        service.testRouteForMessage({
+          'type': 'automation_loyal_sender',
+          'announcementId': uuid,
+        }),
+        '/traveler/$uuid',
       );
     });
 
@@ -487,6 +509,76 @@ void main() {
           'requestId': 'not-a-uuid',
         }),
         isNull,
+      );
+    });
+  });
+
+  // Le handler d'arrière-plan tourne dans un isolate sans GetIt ni ApiClient :
+  // il refait l'appel à la main. Sans cet ACK, le backend envoyait un SMS 60 s
+  // après chaque notification critique non ouverte, alors que le push était
+  // bien arrivé.
+  group('ackCriticalFromBackground', () {
+    late MockDio dio;
+
+    setUp(() {
+      dio = MockDio();
+      when(
+        () => dio.post<void>(any(), options: any(named: 'options')),
+      ).thenAnswer(
+        (invocation) async => Response<void>(
+          requestOptions: RequestOptions(
+            path: invocation.positionalArguments.first as String,
+          ),
+          statusCode: 204,
+        ),
+      );
+    });
+
+    Future<void> run(Map<String, dynamic> data, {String? idToken = 'jwt'}) =>
+        ackCriticalFromBackground(
+          data,
+          dioOverride: dio,
+          idTokenOverride: () async => idToken,
+        );
+
+    test('accuse réception d’une notification critique', () async {
+      await run({'type': 'PAYMENT_RELEASED', 'notificationId': 'notif-90'});
+
+      final captured = verify(
+        () =>
+            dio.post<void>(captureAny(), options: captureAny(named: 'options')),
+      ).captured;
+
+      expect(captured.first, '/notifications/notif-90/ack');
+      expect((captured[1] as Options).headers?['Authorization'], 'Bearer jwt');
+    });
+
+    test('n’accuse pas une notification non critique', () async {
+      await run({'type': 'BID_CREATED', 'notificationId': 'notif-91'});
+      verifyNever(() => dio.post<void>(any(), options: any(named: 'options')));
+    });
+
+    test('ne fait rien sans notificationId', () async {
+      await run({'type': 'DISPUTE_OPENED'});
+      verifyNever(() => dio.post<void>(any(), options: any(named: 'options')));
+    });
+
+    test('ne fait rien sans session Firebase', () async {
+      await run({
+        'type': 'DELIVERY_CONFIRMED',
+        'notificationId': 'notif-92',
+      }, idToken: null);
+      verifyNever(() => dio.post<void>(any(), options: any(named: 'options')));
+    });
+
+    test('avale les erreurs réseau — le SMS reste le filet', () async {
+      when(
+        () => dio.post<void>(any(), options: any(named: 'options')),
+      ).thenThrow(Exception('hors ligne'));
+
+      await expectLater(
+        run({'type': 'DISPUTE_OPENED', 'notificationId': 'notif-93'}),
+        completes,
       );
     });
   });
