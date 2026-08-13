@@ -108,9 +108,12 @@ const double kMaxUnitPriceEur = 500;
 ///
 /// Une limite figée à 500 était juste en euro mais absurde ailleurs : en franc
 /// CFA elle plafonnait la saisie à 0,76 €, si bien qu'aucun tarif réaliste ne
-/// passait le formulaire. La borne suit donc l'ordre de grandeur de la devise.
-/// Elle reste un peu plus stricte que celle du backend, ce qui est le bon sens :
-/// le formulaire ne doit jamais accepter ce que l'API refusera.
+/// passait le formulaire. La borne suit donc le taux de la devise.
+///
+/// Les taux sont les mêmes des deux côtés (`SupportedCurrency.unitsPerEur`,
+/// ici et dans `CurrencyBounds` côté serveur) : le formulaire accepte donc
+/// exactement ce que l'API accepte. Les faire diverger rouvrirait l'écart entre
+/// ce que l'écran promet et ce que le serveur autorise.
 double get maxUnitPriceActive {
   final currency = ActiveCurrency.current ?? SupportedCurrency.eur;
   final scaled = kMaxUnitPriceEur * currency.unitsPerEur;
