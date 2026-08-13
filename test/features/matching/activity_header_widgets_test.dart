@@ -42,7 +42,9 @@ void main() {
 
     expect(find.text('3'), findsOneWidget);
     expect(find.text('19 kg'), findsOneWidget);
-    expect(find.text('152 €'), findsOneWidget);
+    // Le montant est formaté dans la devise active (espace insécable inclus)
+    // au lieu d'un « € » concaténé à la main.
+    expect(find.text('152\u00A0€'), findsOneWidget);
     expect(find.text('Trajets actifs'), findsOneWidget);
   });
 
