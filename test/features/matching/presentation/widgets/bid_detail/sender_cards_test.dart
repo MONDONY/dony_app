@@ -69,39 +69,38 @@ BidModel _bid({
   double? pricePerKg,
   String? departureCity,
   String? arrivalCity,
-}) =>
-    BidModel(
-      id: 'bid-test',
-      announcementId: 'ann-test',
-      senderId: 'sender-test',
-      status: status,
-      createdAt: DateTime(2026, 1, 15),
-      updatedAt: DateTime(2026, 1, 15),
-      travelerName: travelerName,
-      travelerPhoneAvailable: travelerPhoneAvailable,
-      travelerAverageRating: travelerAverageRating,
-      travelerTotalTrips: travelerTotalTrips,
-      travelerKycVerified: travelerKycVerified,
-      travelerKiloPro: travelerKiloPro,
-      weightKg: weightKg,
-      contentCategory: contentCategory,
-      description: description,
-      recipientName: recipientName,
-      recipientPhone: recipientPhone,
-      paymentMethod: paymentMethod,
-      totalAmountEur: totalAmountEur,
-      trackingToken: trackingToken,
-      trackingNumber: trackingNumber,
-      handoverLocation: handoverLocation,
-      handoverWindowStart: handoverWindowStart,
-      handoverWindowEnd: handoverWindowEnd,
-      voyageurConfirmed: voyageurConfirmed,
-      disclaimerSignedAt: disclaimerSignedAt,
-      departureDate: departureDate,
-      pricePerKg: pricePerKg,
-      departureCity: departureCity,
-      arrivalCity: arrivalCity,
-    );
+}) => BidModel(
+  id: 'bid-test',
+  announcementId: 'ann-test',
+  senderId: 'sender-test',
+  status: status,
+  createdAt: DateTime(2026, 1, 15),
+  updatedAt: DateTime(2026, 1, 15),
+  travelerName: travelerName,
+  travelerPhoneAvailable: travelerPhoneAvailable,
+  travelerAverageRating: travelerAverageRating,
+  travelerTotalTrips: travelerTotalTrips,
+  travelerKycVerified: travelerKycVerified,
+  travelerKiloPro: travelerKiloPro,
+  weightKg: weightKg,
+  contentCategory: contentCategory,
+  description: description,
+  recipientName: recipientName,
+  recipientPhone: recipientPhone,
+  paymentMethod: paymentMethod,
+  totalAmountEur: totalAmountEur,
+  trackingToken: trackingToken,
+  trackingNumber: trackingNumber,
+  handoverLocation: handoverLocation,
+  handoverWindowStart: handoverWindowStart,
+  handoverWindowEnd: handoverWindowEnd,
+  voyageurConfirmed: voyageurConfirmed,
+  disclaimerSignedAt: disclaimerSignedAt,
+  departureDate: departureDate,
+  pricePerKg: pricePerKg,
+  departureCity: departureCity,
+  arrivalCity: arrivalCity,
+);
 
 // ── Host widget helpers ───────────────────────────────────────────────────────
 
@@ -121,11 +120,7 @@ Widget _hostVoyageur(
   }
   final router = GoRouter(
     initialLocation: '/',
-    observers: pushedRoutes == null
-        ? null
-        : [
-            _RecordingObserver(pushedRoutes),
-          ],
+    observers: pushedRoutes == null ? null : [_RecordingObserver(pushedRoutes)],
     routes: [
       GoRoute(
         path: '/',
@@ -143,17 +138,12 @@ Widget _hostVoyageur(
         path: '/profile/public',
         builder: (ctx, state) {
           final args = state.extra;
-          return Scaffold(
-            body: Text('profile-public-screen'),
-          );
+          return Scaffold(body: Text('profile-public-screen'));
         },
       ),
     ],
   );
-  return MaterialApp.router(
-    theme: AppTheme.light(),
-    routerConfig: router,
-  );
+  return MaterialApp.router(theme: AppTheme.light(), routerConfig: router);
 }
 
 class _RecordingObserver extends NavigatorObserver {
@@ -169,21 +159,21 @@ class _RecordingObserver extends NavigatorObserver {
 }
 
 Widget _hostColis(BidModel bid) => MaterialApp(
-      theme: AppTheme.light(),
-      home: Scaffold(body: ColisDestinataireCard(bid: bid)),
-    );
+  theme: AppTheme.light(),
+  home: Scaffold(body: ColisDestinataireCard(bid: bid)),
+);
 
 Widget _hostPaiement(BidModel bid) => MaterialApp(
-      theme: AppTheme.light(),
-      home: Scaffold(body: PaiementCard(bid: bid)),
-    );
+  theme: AppTheme.light(),
+  home: Scaffold(body: PaiementCard(bid: bid)),
+);
 
 Widget _hostAccordion(BidModel bid) => MaterialApp(
-      theme: AppTheme.light(),
-      home: Scaffold(
-        body: SingleChildScrollView(child: DetailsAccordion(bid: bid)),
-      ),
-    );
+  theme: AppTheme.light(),
+  home: Scaffold(
+    body: SingleChildScrollView(child: DetailsAccordion(bid: bid)),
+  ),
+);
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
@@ -219,27 +209,37 @@ void main() {
 
       expect(find.text('Oumar Diallo'), findsOneWidget);
       expect(find.text('★ 4.8 · 12 trajets'), findsOneWidget);
-      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'message-circle'), findsOneWidget);
-    });
-
-    testWidgets('shows phone button when phone is present and status is ACCEPTED',
-        (tester) async {
-      final bid = _bid(
-        travelerPhoneAvailable: true,
-        status: 'ACCEPTED',
+      expect(
+        find.byWidgetPredicate(
+          (w) => w is DonyIcon && w.name == 'message-circle',
+        ),
+        findsOneWidget,
       );
-
-      await tester.pumpWidget(_hostVoyageur(bid, bloc));
-
-      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone'), findsOneWidget);
     });
+
+    testWidgets(
+      'shows phone button when phone is present and status is ACCEPTED',
+      (tester) async {
+        final bid = _bid(travelerPhoneAvailable: true, status: 'ACCEPTED');
+
+        await tester.pumpWidget(_hostVoyageur(bid, bloc));
+
+        expect(
+          find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone'),
+          findsOneWidget,
+        );
+      },
+    );
 
     testWidgets('hides phone button when phone is null', (tester) async {
       final bid = _bid(travelerPhoneAvailable: false);
 
       await tester.pumpWidget(_hostVoyageur(bid, bloc));
 
-      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone'), findsNothing);
+      expect(
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone'),
+        findsNothing,
+      );
     });
 
     testWidgets(
@@ -250,41 +250,51 @@ void main() {
 
         await tester.pumpWidget(_hostVoyageur(bid, bloc));
 
-        expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone'), findsNothing);
+        expect(
+          find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone'),
+          findsNothing,
+        );
       },
     );
 
-    testWidgets('hides phone button when status is COMPLETED even with phone',
-        (tester) async {
-      final bid = _bid(
-        travelerPhoneAvailable: true,
-        status: 'COMPLETED',
-      );
+    testWidgets('hides phone button when status is COMPLETED even with phone', (
+      tester,
+    ) async {
+      final bid = _bid(travelerPhoneAvailable: true, status: 'COMPLETED');
 
       await tester.pumpWidget(_hostVoyageur(bid, bloc));
 
-      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone'), findsNothing);
+      expect(
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone'),
+        findsNothing,
+      );
     });
 
-    testWidgets('hides phone button when status is DELIVERED even with phone',
-        (tester) async {
-      final bid = _bid(
-        travelerPhoneAvailable: true,
-        status: 'DELIVERED',
-      );
+    testWidgets('hides phone button when status is DELIVERED even with phone', (
+      tester,
+    ) async {
+      final bid = _bid(travelerPhoneAvailable: true, status: 'DELIVERED');
 
       await tester.pumpWidget(_hostVoyageur(bid, bloc));
 
-      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone'), findsNothing);
+      expect(
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone'),
+        findsNothing,
+      );
     });
 
-    testWidgets('tap chat button fires ConversationOpenRequested once',
-        (tester) async {
+    testWidgets('tap chat button fires ConversationOpenRequested once', (
+      tester,
+    ) async {
       final bid = _bid();
 
       await tester.pumpWidget(_hostVoyageur(bid, bloc));
 
-      await tester.tap(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'message-circle'));
+      await tester.tap(
+        find.byWidgetPredicate(
+          (w) => w is DonyIcon && w.name == 'message-circle',
+        ),
+      );
       await tester.pump();
 
       final captured = verify(() => bloc.add(captureAny())).captured;
@@ -294,36 +304,42 @@ void main() {
     });
 
     testWidgets(
-        'travelerId non-null → chevron visible et tap navigue vers /profile/public',
-        (tester) async {
-      final bidWithId = BidModel(
-        id: 'bid-test',
-        announcementId: 'ann-test',
-        senderId: 'sender-test',
-        status: 'ACCEPTED',
-        createdAt: DateTime(2026, 1, 15),
-        updatedAt: DateTime(2026, 1, 15),
-        travelerName: 'Ibrahima Diallo',
-        travelerId: 'traveler-uuid-001',
-        travelerPhoneAvailable: true,
-        travelerAverageRating: 4.5,
-        travelerTotalTrips: 8,
-        travelerKycVerified: true,
-      );
+      'travelerId non-null → chevron visible et tap navigue vers /profile/public',
+      (tester) async {
+        final bidWithId = BidModel(
+          id: 'bid-test',
+          announcementId: 'ann-test',
+          senderId: 'sender-test',
+          status: 'ACCEPTED',
+          createdAt: DateTime(2026, 1, 15),
+          updatedAt: DateTime(2026, 1, 15),
+          travelerName: 'Ibrahima Diallo',
+          travelerId: 'traveler-uuid-001',
+          travelerPhoneAvailable: true,
+          travelerAverageRating: 4.5,
+          travelerTotalTrips: 8,
+          travelerKycVerified: true,
+        );
 
-      await tester.pumpWidget(_hostVoyageur(bidWithId, bloc));
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(_hostVoyageur(bidWithId, bloc));
+        await tester.pumpAndSettle();
 
-      // Chevron should be visible when travelerId is non-null.
-      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'chevron-right'), findsOneWidget);
+        // Chevron should be visible when travelerId is non-null.
+        expect(
+          find.byWidgetPredicate(
+            (w) => w is DonyIcon && w.name == 'chevron-right',
+          ),
+          findsOneWidget,
+        );
 
-      // Tap the card — should navigate to /profile/public via GoRouter.
-      await tester.tap(find.byType(InkWell).first);
-      await tester.pumpAndSettle();
+        // Tap the card — should navigate to /profile/public via GoRouter.
+        await tester.tap(find.byType(InkWell).first);
+        await tester.pumpAndSettle();
 
-      // The stub /profile/public screen renders this text.
-      expect(find.text('profile-public-screen'), findsOneWidget);
-    });
+        // The stub /profile/public screen renders this text.
+        expect(find.text('profile-public-screen'), findsOneWidget);
+      },
+    );
 
     testWidgets('travelerId null → pas de chevron', (tester) async {
       final bidNoId = BidModel(
@@ -340,36 +356,44 @@ void main() {
       await tester.pumpWidget(_hostVoyageur(bidNoId, bloc));
       await tester.pumpAndSettle();
 
-      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'chevron-right'), findsNothing);
+      expect(
+        find.byWidgetPredicate(
+          (w) => w is DonyIcon && w.name == 'chevron-right',
+        ),
+        findsNothing,
+      );
     });
 
     testWidgets(
-        '_call canLaunchUrl=true et launchUrl=true → aucun snackbar erreur',
-        (tester) async {
-      const channel = MethodChannel('plugins.flutter.io/url_launcher');
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(channel, (call) async {
-        if (call.method == 'canLaunch') return true;
-        if (call.method == 'launch') return true;
-        return null;
-      });
-
-      addTearDown(() {
+      '_call canLaunchUrl=true et launchUrl=true → aucun snackbar erreur',
+      (tester) async {
+        const channel = MethodChannel('plugins.flutter.io/url_launcher');
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-            .setMockMethodCallHandler(channel, null);
-      });
+            .setMockMethodCallHandler(channel, (call) async {
+              if (call.method == 'canLaunch') return true;
+              if (call.method == 'launch') return true;
+              return null;
+            });
 
-      final bid = _bid(travelerPhoneAvailable: true, status: 'ACCEPTED');
-      await tester.pumpWidget(_hostVoyageur(bid, bloc));
-      await tester.pumpAndSettle();
+        addTearDown(() {
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+              .setMockMethodCallHandler(channel, null);
+        });
 
-      await tester.tap(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 100));
+        final bid = _bid(travelerPhoneAvailable: true, status: 'ACCEPTED');
+        await tester.pumpWidget(_hostVoyageur(bid, bloc));
+        await tester.pumpAndSettle();
 
-      // Le tap ne fait que demander le numéro : aucun repli ne s'affiche.
-      expect(find.text('Copier'), findsNothing);
-    });
+        await tester.tap(
+          find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'phone'),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 100));
+
+        // Le tap ne fait que demander le numéro : aucun repli ne s'affiche.
+        expect(find.text('Copier'), findsNothing);
+      },
+    );
   });
 
   // ── ColisDestinataireCard ──────────────────────────────────────────────────
@@ -389,7 +413,6 @@ void main() {
       expect(find.textContaining('Aminata'), findsWidgets);
       expect(find.textContaining('+221700000000'), findsWidgets);
     });
-
   });
 
   // ── PaiementCard ──────────────────────────────────────────────────────────
@@ -447,7 +470,9 @@ void main() {
 
   // ── DetailsAccordion ──────────────────────────────────────────────────────
   group('DetailsAccordion', () {
-    testWidgets('is collapsed by default — content not visible', (tester) async {
+    testWidgets('is collapsed by default — content not visible', (
+      tester,
+    ) async {
       final bid = _bid(
         handoverLocation: 'CDG Terminal 2F',
         trackingToken: 'tok-abc123',
@@ -498,8 +523,9 @@ void main() {
       expect(find.text('Oui ✓'), findsOneWidget);
     });
 
-    testWidgets('ACCEPTED + présence non confirmée → "Non encore"',
-        (tester) async {
+    testWidgets('ACCEPTED + présence non confirmée → "Non encore"', (
+      tester,
+    ) async {
       final bid = _bid(
         status: 'ACCEPTED',
         handoverLocation: 'CDG',
@@ -514,32 +540,37 @@ void main() {
       expect(find.text('Non encore'), findsOneWidget);
     });
 
-    testWidgets('HANDED_OVER → "Colis remis ✓" (pas de "Non encore" trompeur)',
-        (tester) async {
-      final bid = _bid(
-        status: 'HANDED_OVER',
-        handoverLocation: 'CDG',
-        voyageurConfirmed: false,
-      );
-      await tester.pumpWidget(_hostAccordion(bid));
-      await tester.tap(find.textContaining('Plus de détails'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
+    testWidgets(
+      'HANDED_OVER → "Colis remis ✓" (pas de "Non encore" trompeur)',
+      (tester) async {
+        final bid = _bid(
+          status: 'HANDED_OVER',
+          handoverLocation: 'CDG',
+          voyageurConfirmed: false,
+        );
+        await tester.pumpWidget(_hostAccordion(bid));
+        await tester.tap(find.textContaining('Plus de détails'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
 
-      expect(find.text('Colis remis ✓'), findsOneWidget);
-      expect(find.text('Non encore'), findsNothing);
-    });
+        expect(find.text('Colis remis ✓'), findsOneWidget);
+        expect(find.text('Non encore'), findsNothing);
+      },
+    );
   });
 
   // ── trackingPublicUrl ─────────────────────────────────────────────────────
   group('trackingPublicUrl', () {
-    test('returns default base https://track.yadony.com with token appended', () {
-      // TRACKING_PUBLIC_URL env var not set in test → default value used.
-      expect(
-        trackingPublicUrl('abc-token-123'),
-        equals('https://track.yadony.com/abc-token-123'),
-      );
-    });
+    test(
+      'returns default base https://track.yadony.com with token appended',
+      () {
+        // TRACKING_PUBLIC_URL env var not set in test → default value used.
+        expect(
+          trackingPublicUrl('abc-token-123'),
+          equals('https://track.yadony.com/abc-token-123'),
+        );
+      },
+    );
 
     test('token with slashes is preserved as-is', () {
       expect(
@@ -567,29 +598,26 @@ void main() {
         const channel = MethodChannel('plugins.flutter.io/url_launcher');
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
             .setMockMethodCallHandler(channel, (call) async {
-          if (call.method == 'canLaunch') return false;
-          if (call.method == 'launch') return false;
-          return null;
-        });
+              if (call.method == 'canLaunch') return false;
+              if (call.method == 'launch') return false;
+              return null;
+            });
 
         addTearDown(() {
           TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
               .setMockMethodCallHandler(channel, null);
         });
 
-        final bid = _bid(
-          travelerPhoneAvailable: true,
-          status: 'ACCEPTED',
-        );
+        final bid = _bid(travelerPhoneAvailable: true, status: 'ACCEPTED');
 
         // Le tap ne compose plus directement : il demande le numéro. On simule le
         // bloc qui le renvoie, ce qui déclenche l'ouverture du composeur.
         final reveal = _MockContactRevealBloc();
         whenListen(
           reveal,
-          Stream<ContactRevealState>.fromIterable(
-            [const ContactRevealSuccess('+33600000000')],
-          ),
+          Stream<ContactRevealState>.fromIterable([
+            const ContactRevealSuccess('+33600000000'),
+          ]),
           initialState: const ContactRevealInitial(),
         );
 
@@ -613,41 +641,41 @@ void main() {
     });
 
     testWidgets('travelerKycVerified=true → badge KYC visible', (tester) async {
-      final bid = _bid(
-        travelerKycVerified: true,
-        travelerName: 'Ibrahima',
-      );
+      final bid = _bid(travelerKycVerified: true, travelerName: 'Ibrahima');
 
       await tester.pumpWidget(_hostVoyageur(bid, bloc));
 
       expect(find.text('Identité'), findsOneWidget);
     });
 
-    testWidgets('travelerKiloPro=true → badge Kilo Pro visible', (tester) async {
-      final bid = _bid(
-        travelerKiloPro: true,
-        travelerName: 'Oumar',
-      );
+    testWidgets('travelerKiloPro=true → badge Kilo Pro visible', (
+      tester,
+    ) async {
+      final bid = _bid(travelerKiloPro: true, travelerName: 'Oumar');
 
       await tester.pumpWidget(_hostVoyageur(bid, bloc));
 
       expect(find.text('Kilo Pro'), findsOneWidget);
     });
 
-    testWidgets('chat button shows loading spinner when ConversationOpenLoading',
-        (tester) async {
-      final loadingBloc = _MockConversationOpenBloc();
-      when(() => loadingBloc.state)
-          .thenReturn(const ConversationOpenLoading());
-      when(() => loadingBloc.stream)
-          .thenAnswer((_) => Stream<ConversationOpenState>.empty());
+    testWidgets(
+      'chat button shows loading spinner when ConversationOpenLoading',
+      (tester) async {
+        final loadingBloc = _MockConversationOpenBloc();
+        when(
+          () => loadingBloc.state,
+        ).thenReturn(const ConversationOpenLoading());
+        when(
+          () => loadingBloc.stream,
+        ).thenAnswer((_) => Stream<ConversationOpenState>.empty());
 
-      final bid = _bid();
+        final bid = _bid();
 
-      await tester.pumpWidget(_hostVoyageur(bid, loadingBloc));
+        await tester.pumpWidget(_hostVoyageur(bid, loadingBloc));
 
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
-    });
+        expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      },
+    );
 
     testWidgets('travelerAverageRating null → shows "★ -"', (tester) async {
       final bid = _bid(travelerAverageRating: null, travelerTotalTrips: null);
@@ -661,13 +689,13 @@ void main() {
   // ── QuickActionsRow ───────────────────────────────────────────────────────
   group('QuickActionsRow', () {
     Widget _hostQuickActions(BidModel bid) => MaterialApp(
-          theme: AppTheme.light(),
-          home: Scaffold(
-            body: QuickActionsRow(bid: bid),
-          ),
-        );
+      theme: AppTheme.light(),
+      home: Scaffold(body: QuickActionsRow(bid: bid)),
+    );
 
-    testWidgets('trackingToken null → only "Suivi du colis" tile', (tester) async {
+    testWidgets('trackingToken null → only "Suivi du colis" tile', (
+      tester,
+    ) async {
       final bid = _bid(trackingToken: null);
 
       await tester.pumpWidget(_hostQuickActions(bid));
@@ -685,8 +713,9 @@ void main() {
       expect(find.text('Partager le suivi'), findsOneWidget);
     });
 
-    testWidgets('corridor shows "Suivi du colis" when cities are both empty',
-        (tester) async {
+    testWidgets('corridor shows "Suivi du colis" when cities are both empty', (
+      tester,
+    ) async {
       final bid = _bid(
         departureCity: null,
         arrivalCity: null,
@@ -705,8 +734,9 @@ void main() {
         // showTrackingTimelineSheet puisse l'instancier.
         final trackingBloc = _MockTrackingBloc();
         when(() => trackingBloc.state).thenReturn(TrackingInitial());
-        when(() => trackingBloc.stream)
-            .thenAnswer((_) => Stream<TrackingState>.empty());
+        when(
+          () => trackingBloc.stream,
+        ).thenAnswer((_) => Stream<TrackingState>.empty());
 
         if (getIt.isRegistered<TrackingBloc>()) {
           getIt.unregister<TrackingBloc>();

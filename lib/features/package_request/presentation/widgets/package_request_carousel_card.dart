@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
@@ -183,7 +184,7 @@ class _PhotoHero extends StatelessWidget {
                   if (item.targetPriceEur != null) ...[
                     const SizedBox(width: 6),
                     Text(
-                      '${item.targetPriceEur!.toStringAsFixed(0)} €',
+                      formatPriceIn(item.targetPriceEur!, item.currency),
                       style: tt.bodySmall?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.w800,

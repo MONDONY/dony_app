@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:flutter/material.dart';
 
@@ -14,10 +15,10 @@ double? travelerNetAmount(BidModel bid) {
   return null;
 }
 
-/// Montant net formaté à 2 décimales, ou `—`.
+/// Montant net formaté dans la devise du bid, ou `—`.
 String travelerAmountLabel(BidModel bid) {
   final a = travelerNetAmount(bid);
-  return a != null ? a.toStringAsFixed(2) : '-';
+  return a != null ? formatPriceIn(a, bid.currency) : '-';
 }
 
 /// Carte gain voyageur — montant reçu + état séquestre.
@@ -36,14 +37,16 @@ class TravelerGainCard extends StatelessWidget {
     final isCash = bid.paymentMethod != BidPaymentMethod.stripe;
 
     late final String topLabel;
-    late final String amountText;
     late final Color amountColor;
+    // Seul l'encaissement en espèces reformule le montant ; les autres états
+    // ne diffèrent que par le libellé, la couleur et la pastille.
+    var amountText = amount;
     String? note;
     _Pill? pill;
 
     if (isCash) {
       topLabel = 'VOUS ENCAISSEZ';
-      amountText = '$amount € en espèces';
+      amountText = '$amount en espèces';
       amountColor = cs.onSurface;
       note = 'Commission Yadony prélevée séparément.';
       pill = _Pill(
@@ -53,7 +56,6 @@ class TravelerGainCard extends StatelessWidget {
       );
     } else if (_terminal.contains(bid.status)) {
       topLabel = 'VOUS AVEZ REÇU';
-      amountText = '$amount €';
       amountColor = cs.success;
       pill = _Pill(
         label: '● Reçu',
@@ -62,12 +64,10 @@ class TravelerGainCard extends StatelessWidget {
       );
     } else if (_cancelled.contains(bid.status)) {
       topLabel = 'PAIEMENT';
-      amountText = '$amount €';
       amountColor = cs.onSurfaceVariant;
       note = 'Paiement annulé.';
     } else {
       topLabel = 'VOUS RECEVEZ';
-      amountText = '$amount €';
       amountColor = cs.onSurface;
       note = 'Libéré à la livraison.';
       pill = _Pill(
@@ -125,10 +125,7 @@ class TravelerGainCard extends StatelessWidget {
               ],
             ),
           ),
-          if (pill != null) ...[
-            const SizedBox(width: DonySpacing.sm),
-            pill,
-          ],
+          if (pill != null) ...[const SizedBox(width: DonySpacing.sm), pill],
         ],
       ),
     );
@@ -155,10 +152,7 @@ class _Pill extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: tt.labelSmall?.copyWith(
-          color: fg,
-          fontWeight: FontWeight.w700,
-        ),
+        style: tt.labelSmall?.copyWith(color: fg, fontWeight: FontWeight.w700),
       ),
     );
   }

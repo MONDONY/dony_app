@@ -42,9 +42,9 @@ class _ConnectOnboardingPendingScreenState
 
   void _dispatchPoll() {
     if (mounted) {
-      context
-          .read<ConnectOnboardingBloc>()
-          .add(const ConnectOnboardingPollingRequested());
+      context.read<ConnectOnboardingBloc>().add(
+        const ConnectOnboardingPollingRequested(),
+      );
     }
   }
 
@@ -62,70 +62,75 @@ class _ConnectOnboardingPendingScreenState
           title: 'Vérification en cours',
           showBackButton: false,
         ),
-        body: Builder(builder: (context) {
-          final h = DonyLayout.hPadding(context);
-          return SingleChildScrollView(
-            padding:
-                EdgeInsets.fromLTRB(h, DonySpacing.huge, h, DonySpacing.huge),
-            child: DonyLayout.constrained(
-              context,
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const SizedBox(height: DonySpacing.xl),
-                  // Animated icon
-                  _AnimatedPendingIcon()
-                      .animate()
-                      .fadeIn(duration: 300.ms)
-                      .scale(
-                          begin: const Offset(0.85, 0.85),
-                          curve: Curves.easeOutBack),
-                  const SizedBox(height: DonySpacing.xl),
-
-                  // Title
-                  Text(
-                    'Vérification en cours...',
-                    style: Theme.of(context).textTheme.displayLarge,
-                    textAlign: TextAlign.center,
-                  ).animate().fadeIn(delay: 80.ms),
-                  const SizedBox(height: DonySpacing.md),
-
-                  // Subtitle
-                  Text(
-                    'Stripe vérifie ton compte. Cette opération peut prendre quelques instants. Tu seras redirigé automatiquement une fois la vérification terminée.',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurfaceVariant,
-                          height: 1.55,
-                        ),
-                    textAlign: TextAlign.center,
-                  ).animate().fadeIn(delay: 120.ms),
-                  const SizedBox(height: DonySpacing.xxl),
-
-                  // Polling indicator
-                  BlocBuilder<ConnectOnboardingBloc, ConnectOnboardingState>(
-                    builder: (context, state) {
-                      final isPolling = state is ConnectOnboardingLoading;
-                      return _PollingStatusRow(isPolling: isPolling)
-                          .animate()
-                          .fadeIn(delay: 160.ms);
-                    },
-                  ),
-                  const SizedBox(height: DonySpacing.xxl),
-
-                  // Info
-                  const DonyStatusBanner(
-                    type: DonyStatusBannerType.info,
-                    iconAsset: 'info',
-                    message:
-                        'Si tu as déjà terminé l\'inscription Stripe, la vérification se fait automatiquement.',
-                  ).animate().fadeIn(delay: 200.ms),
-                ],
+        body: Builder(
+          builder: (context) {
+            final h = DonyLayout.hPadding(context);
+            return SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(
+                h,
+                DonySpacing.huge,
+                h,
+                DonySpacing.huge,
               ),
-            ),
-          );
-        }),
+              child: DonyLayout.constrained(
+                context,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: DonySpacing.xl),
+                    // Animated icon
+                    _AnimatedPendingIcon()
+                        .animate()
+                        .fadeIn(duration: 300.ms)
+                        .scale(
+                          begin: const Offset(0.85, 0.85),
+                          curve: Curves.easeOutBack,
+                        ),
+                    const SizedBox(height: DonySpacing.xl),
+
+                    // Title
+                    Text(
+                      'Vérification en cours...',
+                      style: Theme.of(context).textTheme.displayLarge,
+                      textAlign: TextAlign.center,
+                    ).animate().fadeIn(delay: 80.ms),
+                    const SizedBox(height: DonySpacing.md),
+
+                    // Subtitle
+                    Text(
+                      'Stripe vérifie ton compte. Cette opération peut prendre quelques instants. Tu seras redirigé automatiquement une fois la vérification terminée.',
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        height: 1.55,
+                      ),
+                      textAlign: TextAlign.center,
+                    ).animate().fadeIn(delay: 120.ms),
+                    const SizedBox(height: DonySpacing.xxl),
+
+                    // Polling indicator
+                    BlocBuilder<ConnectOnboardingBloc, ConnectOnboardingState>(
+                      builder: (context, state) {
+                        final isPolling = state is ConnectOnboardingLoading;
+                        return _PollingStatusRow(
+                          isPolling: isPolling,
+                        ).animate().fadeIn(delay: 160.ms);
+                      },
+                    ),
+                    const SizedBox(height: DonySpacing.xxl),
+
+                    // Info
+                    const DonyStatusBanner(
+                      type: DonyStatusBannerType.info,
+                      iconAsset: 'info',
+                      message:
+                          'Si tu as déjà terminé l\'inscription Stripe, la vérification se fait automatiquement.',
+                    ).animate().fadeIn(delay: 200.ms),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -157,12 +162,8 @@ class _PollingStatusRow extends StatelessWidget {
           width: 16,
           height: 16,
           child: isPolling
-              ? CircularProgressIndicator(
-                  color: cs.primary,
-                  strokeWidth: 2,
-                )
-              : DonyIcon('circle',
-                  size: 16, color: cs.onSurfaceVariant),
+              ? CircularProgressIndicator(color: cs.primary, strokeWidth: 2)
+              : DonyIcon('circle', size: 16, color: cs.onSurfaceVariant),
         ),
         const SizedBox(width: DonySpacing.sm),
         Text(

@@ -37,23 +37,24 @@ AnnouncementModel _makeAnnouncement({
   DateTime? handoverWindowEnd,
   String status = 'ACTIVE',
   int bidsCount = 0,
-}) =>
-    AnnouncementModel(
-      id: 'ann-detail-001',
-      travelerId: 'trav-001',
-      departureCity: 'Paris',
-      arrivalCity: 'Dakar',
-      departureDate: DateTime(2026, 7, 1),
-      availableKg: 10,
-      totalKg: 23,
-      pricePerKg: 8,
-      status: status,
-      bidsCount: bidsCount,
-      createdAt: DateTime(2026, 6, 1),
-      updatedAt: DateTime(2026, 6, 1),
-      handoverWindowStart: handoverWindowStart,
-      handoverWindowEnd: handoverWindowEnd,
-    );
+  String currency = 'EUR',
+}) => AnnouncementModel(
+  id: 'ann-detail-001',
+  travelerId: 'trav-001',
+  departureCity: 'Paris',
+  arrivalCity: 'Dakar',
+  departureDate: DateTime(2026, 7, 1),
+  availableKg: 10,
+  totalKg: 23,
+  pricePerKg: 8,
+  status: status,
+  bidsCount: bidsCount,
+  createdAt: DateTime(2026, 6, 1),
+  updatedAt: DateTime(2026, 6, 1),
+  handoverWindowStart: handoverWindowStart,
+  handoverWindowEnd: handoverWindowEnd,
+  currency: currency,
+);
 
 // ── Pump helper ───────────────────────────────────────────────────────────────
 
@@ -74,8 +75,11 @@ Future<void> _pump(
     initialState: AnnouncementDetailLoaded(announcement),
   );
   when(() => cancelBloc.state).thenReturn(CancellationInitial());
-  whenListen(cancelBloc, const Stream<CancellationState>.empty(),
-      initialState: CancellationInitial());
+  whenListen(
+    cancelBloc,
+    const Stream<CancellationState>.empty(),
+    initialState: CancellationInitial(),
+  );
 
   final router = GoRouter(
     initialLocation: '/',
@@ -131,10 +135,12 @@ void main() {
     cancelBloc = _MockCancellationBloc();
     analytics = _MockAnalyticsService();
 
-    when(() => analytics.logEvent(any(), properties: any(named: 'properties')))
-        .thenAnswer((_) async {});
-    when(() => analytics.logScreen(any(), properties: any(named: 'properties')))
-        .thenAnswer((_) async {});
+    when(
+      () => analytics.logEvent(any(), properties: any(named: 'properties')),
+    ).thenAnswer((_) async {});
+    when(
+      () => analytics.logScreen(any(), properties: any(named: 'properties')),
+    ).thenAnswer((_) async {});
 
     if (getIt.isRegistered<AnalyticsService>()) {
       getIt.unregister<AnalyticsService>();
@@ -165,7 +171,12 @@ void main() {
       handoverWindowEnd: DateTime(2026, 6, 14, 18),
     );
 
-    await _pump(tester, announcement: announcement, annBloc: annBloc, cancelBloc: cancelBloc);
+    await _pump(
+      tester,
+      announcement: announcement,
+      annBloc: annBloc,
+      cancelBloc: cancelBloc,
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Fenêtre de remise'), findsOneWidget);
@@ -176,33 +187,62 @@ void main() {
     );
   });
 
+  testWidgets('affiche le prix dans la devise du trajet, pas toujours en EUR', (
+    tester,
+  ) async {
+    final announcement = _makeAnnouncement(currency: 'CAD');
+
+    await _pump(
+      tester,
+      announcement: announcement,
+      annBloc: annBloc,
+      cancelBloc: cancelBloc,
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('CA\$'), findsOneWidget);
+    expect(find.textContaining('8 €/kg'), findsNothing);
+  });
+
   testWidgets('masque la fenêtre si absente (annonce legacy)', (tester) async {
     final announcement = _makeAnnouncement(
       handoverWindowStart: null,
       handoverWindowEnd: null,
     );
 
-    await _pump(tester, announcement: announcement, annBloc: annBloc, cancelBloc: cancelBloc);
+    await _pump(
+      tester,
+      announcement: announcement,
+      annBloc: annBloc,
+      cancelBloc: cancelBloc,
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Fenêtre de remise'), findsNothing);
   });
 
-  testWidgets('masque la fenêtre si seulement windowStart est présent',
-      (tester) async {
+  testWidgets('masque la fenêtre si seulement windowStart est présent', (
+    tester,
+  ) async {
     final announcement = _makeAnnouncement(
       handoverWindowStart: DateTime(2026, 6, 14, 16),
       handoverWindowEnd: null,
     );
 
-    await _pump(tester, announcement: announcement, annBloc: annBloc, cancelBloc: cancelBloc);
+    await _pump(
+      tester,
+      announcement: announcement,
+      annBloc: annBloc,
+      cancelBloc: cancelBloc,
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Fenêtre de remise'), findsNothing);
   });
 
-  testWidgets('la fenêtre affiche les horaires formatés correctement',
-      (tester) async {
+  testWidgets('la fenêtre affiche les horaires formatés correctement', (
+    tester,
+  ) async {
     final start = DateTime(2026, 6, 14, 16, 0).toUtc();
     final end = DateTime(2026, 6, 14, 18, 0).toUtc();
     final announcement = _makeAnnouncement(
@@ -210,7 +250,12 @@ void main() {
       handoverWindowEnd: end,
     );
 
-    await _pump(tester, announcement: announcement, annBloc: annBloc, cancelBloc: cancelBloc);
+    await _pump(
+      tester,
+      announcement: announcement,
+      annBloc: annBloc,
+      cancelBloc: cancelBloc,
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Fenêtre de remise'), findsOneWidget);

@@ -25,12 +25,14 @@ void showTravelerProfileSheet(BuildContext context, TravelerProfile traveler) {
     builder: (_) => MultiBlocProvider(
       providers: [
         BlocProvider(
-          create: (_) => getIt<RatingBloc>()
-            ..add(UserRatingsLoadRequested(userId: traveler.id)),
+          create: (_) =>
+              getIt<RatingBloc>()
+                ..add(UserRatingsLoadRequested(userId: traveler.id)),
         ),
         BlocProvider(
-          create: (_) => getIt<TravelerSubscribeBloc>()
-            ..add(LoadSubscribeStatus(traveler.id)),
+          create: (_) =>
+              getIt<TravelerSubscribeBloc>()
+                ..add(LoadSubscribeStatus(traveler.id)),
         ),
       ],
       child: DraggableScrollableSheet(
@@ -98,10 +100,7 @@ class _TravelerProfileSheet extends StatelessWidget {
                 Positioned(
                   right: DonySpacing.sm,
                   child: IconButton(
-                    icon: DonyIcon(
-                      'ellipsis',
-                      color: cs.onSurfaceVariant,
-                    ),
+                    icon: DonyIcon('ellipsis', color: cs.onSurfaceVariant),
                     tooltip: 'Plus d\'options',
                     onPressed: () => showBlockMenu(
                       context,
@@ -115,24 +114,24 @@ class _TravelerProfileSheet extends StatelessWidget {
           ),
 
           // ── En-tête tintée ────────────────────────────────────────────────
-          _ProfileHeader(
-            traveler: traveler,
-            abbreviatedName: _abbreviatedName,
-          ),
+          _ProfileHeader(traveler: traveler, abbreviatedName: _abbreviatedName),
 
           Divider(height: 1, thickness: 1, color: cs.outline),
 
           // ── 3 stat cards ──────────────────────────────────────────────────
           BlocBuilder<RatingBloc, RatingState>(
             buildWhen: (p, c) =>
-                c is UserRatingsLoaded || c is RatingInitial || c is RatingLoading || c is RatingError,
+                c is UserRatingsLoaded ||
+                c is RatingInitial ||
+                c is RatingLoading ||
+                c is RatingError,
             builder: (context, state) {
               final loaded = state is UserRatingsLoaded ? state : null;
               final noteValue = traveler.averageRating != null
                   ? traveler.averageRating!.toStringAsFixed(1)
                   : (loaded != null && loaded.ratingCount > 0
-                      ? loaded.averageRating.toStringAsFixed(1)
-                      : '–');
+                        ? loaded.averageRating.toStringAsFixed(1)
+                        : '–');
               final tripsValue = traveler.totalTrips != null
                   ? '${traveler.totalTrips}'
                   : '–';
@@ -181,80 +180,87 @@ class _TravelerProfileSheet extends StatelessWidget {
 
           // ── Évaluations (scrollable) ────────────────────────────────────
           Expanded(
-            child: ListView(
-              controller: scrollController,
-              padding: const EdgeInsets.fromLTRB(
-                DonySpacing.lg,
-                DonySpacing.md,
-                DonySpacing.lg,
-                DonySpacing.xl,
-              ),
-              children: [
-                Text(
-                  'Évaluations',
-                  style: tt.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: cs.onSurface,
-                  ),
-                ),
-                const SizedBox(height: DonySpacing.sm),
-                BlocBuilder<RatingBloc, RatingState>(
-                  builder: (context, state) {
-                    if (state is UserRatingsLoaded) {
-                      if (state.ratingCount == 0) {
-                        return Text(
-                          'Aucune évaluation pour l\'instant.',
-                          style: tt.bodyMedium
-                              ?.copyWith(color: cs.onSurfaceVariant),
-                        );
-                      }
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          RatingSummaryCard(
-                            averageRating: state.averageRating,
-                            ratingCount: state.ratingCount,
-                            distribution: state.distribution,
+            child:
+                ListView(
+                      controller: scrollController,
+                      padding: const EdgeInsets.fromLTRB(
+                        DonySpacing.lg,
+                        DonySpacing.md,
+                        DonySpacing.lg,
+                        DonySpacing.xl,
+                      ),
+                      children: [
+                        Text(
+                          'Évaluations',
+                          style: tt.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: cs.onSurface,
                           ),
-                          const SizedBox(height: DonySpacing.base),
-                          ...state.ratings.map((r) => RatingListItem(item: r)),
-                          if (state.page < state.totalPages - 1)
-                            Center(
-                              child: TextButton(
-                                onPressed: () =>
-                                    context.read<RatingBloc>().add(
-                                          UserRatingsLoadRequested(
-                                            userId: traveler.id,
-                                            page: state.page + 1,
-                                          ),
-                                        ),
-                                child: const Text('Voir plus'),
-                              ),
-                            ),
-                        ],
-                      );
-                    }
-                    if (state is RatingError) {
-                      return Center(
-                        child: TextButton.icon(
-                          onPressed: () =>
-                              context.read<RatingBloc>().add(
-                                    UserRatingsLoadRequested(
-                                        userId: traveler.id),
-                                  ),
-                          icon: const DonyIcon('refresh-cw'),
-                          label: const Text('Réessayer'),
                         ),
-                      );
-                    }
-                    return const Center(child: CircularProgressIndicator());
-                  },
-                ),
-              ],
-            ).animate().fadeIn(duration: 300.ms).slideY(
-                  begin: 0.04,
-                  curve: Curves.easeOutCubic,
-                ),
+                        const SizedBox(height: DonySpacing.sm),
+                        BlocBuilder<RatingBloc, RatingState>(
+                          builder: (context, state) {
+                            if (state is UserRatingsLoaded) {
+                              if (state.ratingCount == 0) {
+                                return Text(
+                                  'Aucune évaluation pour l\'instant.',
+                                  style: tt.bodyMedium?.copyWith(
+                                    color: cs.onSurfaceVariant,
+                                  ),
+                                );
+                              }
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  RatingSummaryCard(
+                                    averageRating: state.averageRating,
+                                    ratingCount: state.ratingCount,
+                                    distribution: state.distribution,
+                                  ),
+                                  const SizedBox(height: DonySpacing.base),
+                                  ...state.ratings.map(
+                                    (r) => RatingListItem(item: r),
+                                  ),
+                                  if (state.page < state.totalPages - 1)
+                                    Center(
+                                      child: TextButton(
+                                        onPressed: () =>
+                                            context.read<RatingBloc>().add(
+                                              UserRatingsLoadRequested(
+                                                userId: traveler.id,
+                                                page: state.page + 1,
+                                              ),
+                                            ),
+                                        child: const Text('Voir plus'),
+                                      ),
+                                    ),
+                                ],
+                              );
+                            }
+                            if (state is RatingError) {
+                              return Center(
+                                child: TextButton.icon(
+                                  onPressed: () =>
+                                      context.read<RatingBloc>().add(
+                                        UserRatingsLoadRequested(
+                                          userId: traveler.id,
+                                        ),
+                                      ),
+                                  icon: const DonyIcon('refresh-cw'),
+                                  label: const Text('Réessayer'),
+                                ),
+                              );
+                            }
+                            return const Center(
+                              child: CircularProgressIndicator(),
+                            );
+                          },
+                        ),
+                      ],
+                    )
+                    .animate()
+                    .fadeIn(duration: 300.ms)
+                    .slideY(begin: 0.04, curve: Curves.easeOutCubic),
           ),
 
           // ── Barre d'abonnement (sticky) ───────────────────────────────
@@ -268,10 +274,7 @@ class _TravelerProfileSheet extends StatelessWidget {
 // ─── Profile header ───────────────────────────────────────────────────────────
 
 class _ProfileHeader extends StatelessWidget {
-  const _ProfileHeader({
-    required this.traveler,
-    required this.abbreviatedName,
-  });
+  const _ProfileHeader({required this.traveler, required this.abbreviatedName});
 
   final TravelerProfile traveler;
   final String abbreviatedName;
@@ -292,10 +295,7 @@ class _ProfileHeader extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [
-            cs.successLight,
-            Theme.of(context).scaffoldBackgroundColor,
-          ],
+          colors: [cs.successLight, Theme.of(context).scaffoldBackgroundColor],
         ),
       ),
       child: Row(
@@ -338,13 +338,13 @@ class _ProfileHeader extends StatelessWidget {
                 if (traveler.phoneNumber != null)
                   Row(
                     children: [
-                      DonyIcon('phone',
-                          size: 12, color: cs.onSurfaceVariant),
+                      DonyIcon('phone', size: 12, color: cs.onSurfaceVariant),
                       const SizedBox(width: DonySpacing.xs),
                       Text(
                         traveler.phoneNumber!,
-                        style: tt.bodySmall
-                            ?.copyWith(color: cs.onSurfaceVariant),
+                        style: tt.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   )
@@ -455,7 +455,10 @@ class _StatCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6), // spec-defined pixel values — no exact DonySpacing token
+      padding: const EdgeInsets.symmetric(
+        vertical: 10,
+        horizontal: 6,
+      ), // spec-defined pixel values — no exact DonySpacing token
       decoration: BoxDecoration(
         color: cs.surface,
         borderRadius: BorderRadius.circular(DonyRadius.card),
@@ -473,7 +476,9 @@ class _StatCard extends StatelessWidget {
               color: cs.onSurface,
             ),
           ),
-          const SizedBox(height: 3), // spec-defined pixel value — no exact DonySpacing token
+          const SizedBox(
+            height: 3,
+          ), // spec-defined pixel value — no exact DonySpacing token
           Text(
             label,
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
@@ -564,13 +569,10 @@ class _SubscribedRow extends StatelessWidget {
           tooltip: pushEnabled
               ? 'Désactiver les notifications'
               : 'Activer les notifications',
-          icon: DonyIcon(
-            pushEnabled ? 'bell' : 'bell-off',
-            color: cs.primary,
+          icon: DonyIcon(pushEnabled ? 'bell' : 'bell-off', color: cs.primary),
+          onPressed: () => context.read<TravelerSubscribeBloc>().add(
+            TogglePushPressed(!pushEnabled),
           ),
-          onPressed: () => context
-              .read<TravelerSubscribeBloc>()
-              .add(TogglePushPressed(!pushEnabled)),
         ),
       ],
     );

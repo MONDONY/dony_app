@@ -55,13 +55,17 @@ class TravelerAnnouncementCard extends StatelessWidget {
                         Expanded(
                           child: Text(
                             announcement.departureCity,
-                            style: tt.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
+                            style: tt.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
                             overflow: TextOverflow.ellipsis,
                             maxLines: 1,
                           ),
                         ),
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: DonySpacing.sm),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: DonySpacing.sm,
+                          ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -98,7 +102,9 @@ class TravelerAnnouncementCard extends StatelessWidget {
                         Expanded(
                           child: Text(
                             announcement.arrivalCity,
-                            style: tt.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
+                            style: tt.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
                             overflow: TextOverflow.ellipsis,
                             maxLines: 1,
                             textAlign: TextAlign.right,
@@ -136,8 +142,10 @@ class TravelerAnnouncementCard extends StatelessWidget {
                                   const SizedBox(width: DonySpacing.xs),
                                   Flexible(
                                     child: Text(
-                                      DateFormat('dd MMM yyyy', 'fr')
-                                          .format(announcement.departureDate),
+                                      DateFormat(
+                                        'dd MMM yyyy',
+                                        'fr',
+                                      ).format(announcement.departureDate),
                                       style: tt.bodySmall?.copyWith(
                                         color: cs.onSurfaceVariant,
                                       ),
@@ -155,7 +163,9 @@ class TravelerAnnouncementCard extends StatelessWidget {
                                   : '${announcement.availableKg.toStringAsFixed(0)} kg dispo',
                               style: tt.bodySmall?.copyWith(
                                 color: isFull ? cs.error : cs.onSurfaceVariant,
-                                fontWeight: isFull ? FontWeight.w700 : FontWeight.w400,
+                                fontWeight: isFull
+                                    ? FontWeight.w700
+                                    : FontWeight.w400,
                               ),
                             ),
                           ],
@@ -174,7 +184,12 @@ class TravelerAnnouncementCard extends StatelessWidget {
                                 children: [
                                   Flexible(
                                     child: Text(
-                                      '${formatKgPrice(netToSenderPrice(announcement.pricePerKg))} €',
+                                      formatPriceIn(
+                                        netToSenderPrice(
+                                          announcement.pricePerKg,
+                                        ),
+                                        announcement.currency,
+                                      ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: tt.titleLarge?.copyWith(
@@ -201,7 +216,9 @@ class TravelerAnnouncementCard extends StatelessWidget {
                                   vertical: DonySpacing.sm,
                                 ),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(DonyRadius.lg),
+                                  borderRadius: BorderRadius.circular(
+                                    DonyRadius.lg,
+                                  ),
                                 ),
                                 minimumSize: const Size(0, 44),
                                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,

@@ -23,9 +23,9 @@ class _MockFavoriteRepository extends Mock implements FavoriteRepository {}
 Widget _wrap(Widget child) => MaterialApp(home: Scaffold(body: child));
 
 Widget _wrapWithTheme(Widget child) => MaterialApp(
-      theme: ThemeData.light(useMaterial3: true),
-      home: Scaffold(body: child),
-    );
+  theme: ThemeData.light(useMaterial3: true),
+  home: Scaffold(body: child),
+);
 
 // ---------------------------------------------------------------------------
 // FavoriteHeartButton — pure widget tests (no cubit)
@@ -35,53 +35,55 @@ void main() {
   setUpAll(() => initializeDateFormatting('fr'));
 
   group('FavoriteHeartButton — état non-favori', () {
-    testWidgets('affiche le cœur vide (favorite_border) quand isFavorite=false',
-        (tester) async {
-      await tester.pumpWidget(_wrap(FavoriteHeartButton(
-        isFavorite: false,
-        onToggle: () {},
-      )));
+    testWidgets(
+      'affiche le cœur vide (favorite_border) quand isFavorite=false',
+      (tester) async {
+        await tester.pumpWidget(
+          _wrap(FavoriteHeartButton(isFavorite: false, onToggle: () {})),
+        );
+        await tester.pump();
+
+        // favorite_border icon should be present
+        final icon = tester.widget<Icon>(find.byType(Icon));
+        expect(icon.icon, Icons.bookmark_border);
+      },
+    );
+
+    testWidgets('couleur icône = onSurfaceVariant quand isFavorite=false', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrapWithTheme(FavoriteHeartButton(isFavorite: false, onToggle: () {})),
+      );
       await tester.pump();
 
-      // favorite_border icon should be present
-      final icon = tester.widget<Icon>(find.byType(Icon));
-      expect(icon.icon, Icons.bookmark_border);
-    });
-
-    testWidgets('couleur icône = onSurfaceVariant quand isFavorite=false',
-        (tester) async {
-      await tester.pumpWidget(_wrapWithTheme(FavoriteHeartButton(
-        isFavorite: false,
-        onToggle: () {},
-      )));
-      await tester.pump();
-
-      final cs =
-          Theme.of(tester.element(find.byType(FavoriteHeartButton))).colorScheme;
+      final cs = Theme.of(
+        tester.element(find.byType(FavoriteHeartButton)),
+      ).colorScheme;
       final icon = tester.widget<Icon>(find.byType(Icon));
       expect(icon.color, cs.onSurfaceVariant);
     });
   });
 
   group('FavoriteHeartButton — état favori', () {
-    testWidgets('affiche le cœur rempli (favorite) quand isFavorite=true',
-        (tester) async {
-      await tester.pumpWidget(_wrap(FavoriteHeartButton(
-        isFavorite: true,
-        onToggle: () {},
-      )));
+    testWidgets('affiche le cœur rempli (favorite) quand isFavorite=true', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(FavoriteHeartButton(isFavorite: true, onToggle: () {})),
+      );
       await tester.pump();
 
       final icon = tester.widget<Icon>(find.byType(Icon));
       expect(icon.icon, Icons.bookmark);
     });
 
-    testWidgets('couleur icône = DonyColors.primary quand isFavorite=true',
-        (tester) async {
-      await tester.pumpWidget(_wrap(FavoriteHeartButton(
-        isFavorite: true,
-        onToggle: () {},
-      )));
+    testWidgets('couleur icône = DonyColors.primary quand isFavorite=true', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(FavoriteHeartButton(isFavorite: true, onToggle: () {})),
+      );
       await tester.pump();
 
       final icon = tester.widget<Icon>(find.byType(Icon));
@@ -92,10 +94,11 @@ void main() {
   group('FavoriteHeartButton — interaction', () {
     testWidgets('tap déclenche onToggle', (tester) async {
       var tapped = false;
-      await tester.pumpWidget(_wrap(FavoriteHeartButton(
-        isFavorite: true,
-        onToggle: () => tapped = true,
-      )));
+      await tester.pumpWidget(
+        _wrap(
+          FavoriteHeartButton(isFavorite: true, onToggle: () => tapped = true),
+        ),
+      );
       await tester.pump();
 
       await tester.tap(find.byType(FavoriteHeartButton));
@@ -103,12 +106,13 @@ void main() {
       expect(tapped, isTrue);
     });
 
-    testWidgets('tap multiple déclenche onToggle à chaque fois', (tester) async {
+    testWidgets('tap multiple déclenche onToggle à chaque fois', (
+      tester,
+    ) async {
       var count = 0;
-      await tester.pumpWidget(_wrap(FavoriteHeartButton(
-        isFavorite: false,
-        onToggle: () => count++,
-      )));
+      await tester.pumpWidget(
+        _wrap(FavoriteHeartButton(isFavorite: false, onToggle: () => count++)),
+      );
       await tester.pump();
 
       await tester.tap(find.byType(FavoriteHeartButton));
@@ -119,24 +123,24 @@ void main() {
   });
 
   group('FavoriteHeartButton — tooltip', () {
-    testWidgets('tooltip "Ajouter aux favoris" quand isFavorite=false',
-        (tester) async {
-      await tester.pumpWidget(_wrap(FavoriteHeartButton(
-        isFavorite: false,
-        onToggle: () {},
-      )));
+    testWidgets('tooltip "Ajouter aux favoris" quand isFavorite=false', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(FavoriteHeartButton(isFavorite: false, onToggle: () {})),
+      );
       await tester.pump();
 
       final iconButton = tester.widget<IconButton>(find.byType(IconButton));
       expect(iconButton.tooltip, 'Ajouter aux favoris');
     });
 
-    testWidgets('tooltip "Retirer des favoris" quand isFavorite=true',
-        (tester) async {
-      await tester.pumpWidget(_wrap(FavoriteHeartButton(
-        isFavorite: true,
-        onToggle: () {},
-      )));
+    testWidgets('tooltip "Retirer des favoris" quand isFavorite=true', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(FavoriteHeartButton(isFavorite: true, onToggle: () {})),
+      );
       await tester.pump();
 
       final iconButton = tester.widget<IconButton>(find.byType(IconButton));
@@ -150,98 +154,108 @@ void main() {
 
   group('TripCard — showFavorite', () {
     AnnouncementModel makeAnnouncement() => AnnouncementModel.fromJson({
-          'id': 'trip-1',
-          'travelerId': 't1',
-          'departureCity': 'Paris',
-          'arrivalCity': 'Dakar',
-          'departureDate':
-              DateTime.now().add(const Duration(days: 5)).toIso8601String(),
-          'totalKg': 20.0,
-          'availableKg': 15.0,
-          'pricePerKg': 8.0,
-          'pricingMode': 'KG',
-          'status': 'ACTIVE',
-          'pendingBidCount': 0,
-          'confirmedParcelCount': 0,
-          'createdAt': '2024-01-01T00:00:00Z',
-          'updatedAt': '2024-01-01T00:00:00Z',
-        });
-
-    testWidgets(
-        'showFavorite=false (défaut) : aucun FavoriteHeartButton affiché',
-        (tester) async {
-      await tester.pumpWidget(_wrap(TripCard(
-        announcement: makeAnnouncement(),
-        onTap: () {},
-        index: 0,
-      )));
-      await tester.pump(const Duration(milliseconds: 600));
-
-      expect(find.byType(FavoriteHeartButton), findsNothing);
+      'id': 'trip-1',
+      'travelerId': 't1',
+      'departureCity': 'Paris',
+      'arrivalCity': 'Dakar',
+      'departureDate': DateTime.now()
+          .add(const Duration(days: 5))
+          .toIso8601String(),
+      'totalKg': 20.0,
+      'availableKg': 15.0,
+      'pricePerKg': 8.0,
+      'pricingMode': 'KG',
+      'status': 'ACTIVE',
+      'pendingBidCount': 0,
+      'confirmedParcelCount': 0,
+      'createdAt': '2024-01-01T00:00:00Z',
+      'updatedAt': '2024-01-01T00:00:00Z',
     });
 
     testWidgets(
-        'showFavorite=true sans cubit dans l\'arbre : dégradation silencieuse (pas de crash)',
-        (tester) async {
-      // No BlocProvider — the card must not crash
-      await tester.pumpWidget(_wrap(TripCard(
-        announcement: makeAnnouncement(),
-        onTap: () {},
-        index: 0,
-        showFavorite: true,
-      )));
-      await tester.pump(const Duration(milliseconds: 600));
+      'showFavorite=false (défaut) : aucun FavoriteHeartButton affiché',
+      (tester) async {
+        await tester.pumpWidget(
+          _wrap(
+            TripCard(announcement: makeAnnouncement(), onTap: () {}, index: 0),
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 600));
 
-      // Defensive read: no heart rendered (SizedBox.shrink), no exception
-      expect(find.byType(FavoriteHeartButton), findsNothing);
-    });
+        expect(find.byType(FavoriteHeartButton), findsNothing);
+      },
+    );
 
     testWidgets(
-        'showFavorite=true avec cubit : FavoriteHeartButton affiché non-favori',
-        (tester) async {
-      final repo = _MockFavoriteRepository();
-      when(() => repo.ids()).thenAnswer((_) async => throw Exception());
+      'showFavorite=true sans cubit dans l\'arbre : dégradation silencieuse (pas de crash)',
+      (tester) async {
+        // No BlocProvider — the card must not crash
+        await tester.pumpWidget(
+          _wrap(
+            TripCard(
+              announcement: makeAnnouncement(),
+              onTap: () {},
+              index: 0,
+              showFavorite: true,
+            ),
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 600));
 
-      final cubit = FavoriteIdsCubit(repo)
-        ..emitSeed(trips: {}, requests: {});
-
-      await tester.pumpWidget(
-        BlocProvider<FavoriteIdsCubit>.value(
-          value: cubit,
-          child: _wrap(TripCard(
-            announcement: makeAnnouncement(),
-            onTap: () {},
-            index: 0,
-            showFavorite: true,
-          )),
-        ),
-      );
-      await tester.pump(const Duration(milliseconds: 600));
-
-      expect(find.byType(FavoriteHeartButton), findsOneWidget);
-      final icon = tester.widget<Icon>(find.byType(Icon).first);
-      // The heart must NOT be filled (trip-1 is not in favorites)
-      expect(icon.icon, Icons.bookmark_border);
-    });
+        // Defensive read: no heart rendered (SizedBox.shrink), no exception
+        expect(find.byType(FavoriteHeartButton), findsNothing);
+      },
+    );
 
     testWidgets(
-        'showFavorite=true avec cubit : tap cœur appelle toggleTrip',
-        (tester) async {
+      'showFavorite=true avec cubit : FavoriteHeartButton affiché non-favori',
+      (tester) async {
+        final repo = _MockFavoriteRepository();
+        when(() => repo.ids()).thenAnswer((_) async => throw Exception());
+
+        final cubit = FavoriteIdsCubit(repo)..emitSeed(trips: {}, requests: {});
+
+        await tester.pumpWidget(
+          BlocProvider<FavoriteIdsCubit>.value(
+            value: cubit,
+            child: _wrap(
+              TripCard(
+                announcement: makeAnnouncement(),
+                onTap: () {},
+                index: 0,
+                showFavorite: true,
+              ),
+            ),
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 600));
+
+        expect(find.byType(FavoriteHeartButton), findsOneWidget);
+        final icon = tester.widget<Icon>(find.byType(Icon).first);
+        // The heart must NOT be filled (trip-1 is not in favorites)
+        expect(icon.icon, Icons.bookmark_border);
+      },
+    );
+
+    testWidgets('showFavorite=true avec cubit : tap cœur appelle toggleTrip', (
+      tester,
+    ) async {
       final repo = _MockFavoriteRepository();
       when(() => repo.add(any(), any())).thenAnswer((_) async {});
 
-      final cubit = FavoriteIdsCubit(repo)
-        ..emitSeed(trips: {}, requests: {});
+      final cubit = FavoriteIdsCubit(repo)..emitSeed(trips: {}, requests: {});
 
       await tester.pumpWidget(
         BlocProvider<FavoriteIdsCubit>.value(
           value: cubit,
-          child: _wrap(TripCard(
-            announcement: makeAnnouncement(),
-            onTap: () {},
-            index: 0,
-            showFavorite: true,
-          )),
+          child: _wrap(
+            TripCard(
+              announcement: makeAnnouncement(),
+              onTap: () {},
+              index: 0,
+              showFavorite: true,
+            ),
+          ),
         ),
       );
       await tester.pump(const Duration(milliseconds: 600));
@@ -256,9 +270,9 @@ void main() {
       verify(() => repo.add('trip', 'trip-1')).called(1);
     });
 
-    testWidgets(
-        'showFavorite=true avec cubit seeded favori : cœur rempli',
-        (tester) async {
+    testWidgets('showFavorite=true avec cubit seeded favori : cœur rempli', (
+      tester,
+    ) async {
       final repo = _MockFavoriteRepository();
 
       final cubit = FavoriteIdsCubit(repo)
@@ -267,12 +281,14 @@ void main() {
       await tester.pumpWidget(
         BlocProvider<FavoriteIdsCubit>.value(
           value: cubit,
-          child: _wrap(TripCard(
-            announcement: makeAnnouncement(),
-            onTap: () {},
-            index: 0,
-            showFavorite: true,
-          )),
+          child: _wrap(
+            TripCard(
+              announcement: makeAnnouncement(),
+              onTap: () {},
+              index: 0,
+              showFavorite: true,
+            ),
+          ),
         ),
       );
       await tester.pump(const Duration(milliseconds: 600));

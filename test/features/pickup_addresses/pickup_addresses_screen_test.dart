@@ -35,26 +35,23 @@ const _addr2 = PickupAddress(
 );
 
 Widget _wrap(PickupAddressBloc bloc) => BlocProvider<PickupAddressBloc>.value(
-      value: bloc,
-      child: MaterialApp.router(
-        routerConfig: GoRouter(
-          routes: [
-            GoRoute(
-              path: '/',
-              builder: (_, __) => const PickupAddressesScreen(),
-            ),
-            GoRoute(
-              path: '/profile/addresses/new',
-              builder: (_, __) => const Scaffold(body: Text('New Address')),
-            ),
-            GoRoute(
-              path: '/profile/addresses/:id',
-              builder: (_, __) => const Scaffold(body: Text('Edit Address')),
-            ),
-          ],
+  value: bloc,
+  child: MaterialApp.router(
+    routerConfig: GoRouter(
+      routes: [
+        GoRoute(path: '/', builder: (_, __) => const PickupAddressesScreen()),
+        GoRoute(
+          path: '/profile/addresses/new',
+          builder: (_, __) => const Scaffold(body: Text('New Address')),
         ),
-      ),
-    );
+        GoRoute(
+          path: '/profile/addresses/:id',
+          builder: (_, __) => const Scaffold(body: Text('Edit Address')),
+        ),
+      ],
+    ),
+  ),
+);
 
 void main() {
   late MockPickupAddressBloc bloc;
@@ -67,18 +64,18 @@ void main() {
   });
 
   testWidgets('shows loading state', (tester) async {
-    when(() => bloc.state).thenReturn(
-      const PickupAddressState(status: PickupAddressStatus.loading),
-    );
+    when(
+      () => bloc.state,
+    ).thenReturn(const PickupAddressState(status: PickupAddressStatus.loading));
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.byType(PickupAddressesScreen), findsOneWidget);
   });
 
   testWidgets('shows empty state when no addresses', (tester) async {
-    when(() => bloc.state).thenReturn(
-      const PickupAddressState(status: PickupAddressStatus.success),
-    );
+    when(
+      () => bloc.state,
+    ).thenReturn(const PickupAddressState(status: PickupAddressStatus.success));
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.textContaining('Aucune adresse'), findsOneWidget);

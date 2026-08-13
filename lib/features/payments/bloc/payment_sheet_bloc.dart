@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/features/payments/data/models/ephemeral_key_model.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/features/payments/data/payment_gateway.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
 import 'package:equatable/equatable.dart';
@@ -15,6 +16,10 @@ class PaymentSheetConfig extends Equatable {
   final String clientSecret;
   final double amountEur;
 
+  /// Devise du PaymentIntent. [amountEur] reste le nom historique du champ
+  /// pour préserver les contrats et les appels existants.
+  final String currencyCode;
+
   /// Types du PaymentIntent renvoyés par le backend (ex. ["card","paypal"]) —
   /// le SDK flutter_stripe ne les expose pas via retrievePaymentIntent.
   final List<String> paymentMethodTypes;
@@ -22,6 +27,7 @@ class PaymentSheetConfig extends Equatable {
   const PaymentSheetConfig({
     required this.clientSecret,
     required this.amountEur,
+    this.currencyCode = 'EUR',
     required this.paymentMethodTypes,
   });
 
@@ -29,7 +35,15 @@ class PaymentSheetConfig extends Equatable {
   String get paymentIntentId => clientSecret.split('_secret').first;
 
   @override
-  List<Object?> get props => [clientSecret, amountEur, paymentMethodTypes];
+  List<Object?> get props => [
+    clientSecret,
+    amountEur,
+    currencyCode,
+    paymentMethodTypes,
+  ];
+
+  SupportedCurrency get currency =>
+      SupportedCurrency.fromCodeOrDefault(currencyCode);
 }
 
 class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
@@ -81,6 +95,7 @@ class PaymentSheetBloc extends Bloc<PaymentSheetEvent, PaymentSheetState> {
     () => _gateway.confirmPlatformPay(
       clientSecret: config.clientSecret,
       amountEur: config.amountEur,
+      currencyCode: config.currencyCode,
     ),
   );
 

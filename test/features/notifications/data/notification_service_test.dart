@@ -7,8 +7,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockApiClient extends Mock implements ApiClient {}
-class MockNotificationRepository extends Mock implements NotificationRepository {}
+
+class MockNotificationRepository extends Mock
+    implements NotificationRepository {}
+
 class MockDeviceIdService extends Mock implements DeviceIdService {}
+
 class MockDio extends Mock implements Dio {}
 
 void main() {
@@ -30,49 +34,46 @@ void main() {
     setUp(() {
       mockDio = MockDio();
       when(() => apiClient.dio).thenReturn(mockDio);
-      when(() => deviceIdService.getDeviceId())
-          .thenAnswer((_) async => 'test-device-id-uuid');
+      when(
+        () => deviceIdService.getDeviceId(),
+      ).thenAnswer((_) async => 'test-device-id-uuid');
     });
 
-    test('sends fcmToken, deviceId, deviceName and platform to the endpoint', () async {
-      when(
-        () => mockDio.put(
-          '/auth/me/fcm-token',
-          data: any(named: 'data'),
-        ),
-      ).thenAnswer((_) async => Response(
+    test(
+      'sends fcmToken, deviceId, deviceName and platform to the endpoint',
+      () async {
+        when(
+          () => mockDio.put('/auth/me/fcm-token', data: any(named: 'data')),
+        ).thenAnswer(
+          (_) async => Response(
             requestOptions: RequestOptions(path: '/auth/me/fcm-token'),
             statusCode: 200,
-          ));
+          ),
+        );
 
-      await service.testUploadToken('test-fcm-token');
+        await service.testUploadToken('test-fcm-token');
 
-      final captured = verify(
-        () => mockDio.put(
-          '/auth/me/fcm-token',
-          data: captureAny(named: 'data'),
-        ),
-      ).captured;
+        final captured = verify(
+          () => mockDio.put(
+            '/auth/me/fcm-token',
+            data: captureAny(named: 'data'),
+          ),
+        ).captured;
 
-      final body = captured.first as Map<String, dynamic>;
-      expect(body['fcmToken'], 'test-fcm-token');
-      expect(body['deviceId'], 'test-device-id-uuid');
-      expect(body.containsKey('deviceName'), isTrue);
-      expect(body['platform'], anyOf('ios', 'android'));
-    });
+        final body = captured.first as Map<String, dynamic>;
+        expect(body['fcmToken'], 'test-fcm-token');
+        expect(body['deviceId'], 'test-device-id-uuid');
+        expect(body.containsKey('deviceName'), isTrue);
+        expect(body['platform'], anyOf('ios', 'android'));
+      },
+    );
 
     test('swallows errors silently when upload fails', () async {
       when(
-        () => mockDio.put(
-          '/auth/me/fcm-token',
-          data: any(named: 'data'),
-        ),
+        () => mockDio.put('/auth/me/fcm-token', data: any(named: 'data')),
       ).thenThrow(Exception('network error'));
 
-      await expectLater(
-        service.testUploadToken('test-fcm-token'),
-        completes,
-      );
+      await expectLater(service.testUploadToken('test-fcm-token'), completes);
     });
   });
 
@@ -159,18 +160,21 @@ void main() {
       );
     });
 
-    test('ne duplique pas le fabricant quand le modèle commence déjà par lui', () {
-      expect(
-        NotificationService.formatAndroidName('Samsung', 'Samsung Galaxy S22'),
-        'Samsung Galaxy S22',
-      );
-    });
+    test(
+      'ne duplique pas le fabricant quand le modèle commence déjà par lui',
+      () {
+        expect(
+          NotificationService.formatAndroidName(
+            'Samsung',
+            'Samsung Galaxy S22',
+          ),
+          'Samsung Galaxy S22',
+        );
+      },
+    );
 
     test('retourne le modèle seul quand le fabricant est vide', () {
-      expect(
-        NotificationService.formatAndroidName('', 'Pixel 7'),
-        'Pixel 7',
-      );
+      expect(NotificationService.formatAndroidName('', 'Pixel 7'), 'Pixel 7');
     });
 
     test('ignore la casse pour la détection de duplication', () {
@@ -198,17 +202,26 @@ void main() {
   group('NotificationService._routeForMessage', () {
     test('BID_CREATED routes to announcement bids page', () {
       expect(
-        service.testRouteForMessage({'type': 'BID_CREATED', 'announcementId': _annId}),
+        service.testRouteForMessage({
+          'type': 'BID_CREATED',
+          'announcementId': _annId,
+        }),
         '/announcements/$_annId/bids',
       );
     });
 
     test('BID_ACCEPTED routes to bid detail', () {
-      expect(service.testRouteForMessage({'type': 'BID_ACCEPTED', 'bidId': _bidId}), '/bids/$_bidId');
+      expect(
+        service.testRouteForMessage({'type': 'BID_ACCEPTED', 'bidId': _bidId}),
+        '/bids/$_bidId',
+      );
     });
 
     test('BID_REJECTED routes to bid detail', () {
-      expect(service.testRouteForMessage({'type': 'BID_REJECTED', 'bidId': _bidId}), '/bids/$_bidId');
+      expect(
+        service.testRouteForMessage({'type': 'BID_REJECTED', 'bidId': _bidId}),
+        '/bids/$_bidId',
+      );
     });
 
     test('BID_REJECTED with valid cancellationId routes to rematch screen', () {
@@ -223,42 +236,72 @@ void main() {
       );
     });
 
-    test('BID_REJECTED with non-UUID cancellationId falls back to bid detail', () {
+    test(
+      'BID_REJECTED with non-UUID cancellationId falls back to bid detail',
+      () {
+        expect(
+          service.testRouteForMessage({
+            'type': 'BID_REJECTED',
+            'bidId': _bidId,
+            'cancellationId': '../../evil',
+          }),
+          '/bids/$_bidId',
+        );
+      },
+    );
+
+    test(
+      'BID_REJECTED with valid cancellationId and no bidId routes to rematch screen',
+      () {
+        const uuid = '123e4567-e89b-12d3-a456-426614174000';
+        expect(
+          service.testRouteForMessage({
+            'type': 'BID_REJECTED',
+            'cancellationId': uuid,
+          }),
+          '/cancellations/$uuid/rematch',
+        );
+      },
+    );
+
+    test('HANDOVER_DEFINED routes to bid detail', () {
       expect(
         service.testRouteForMessage({
-          'type': 'BID_REJECTED',
+          'type': 'HANDOVER_DEFINED',
           'bidId': _bidId,
-          'cancellationId': '../../evil',
         }),
         '/bids/$_bidId',
       );
     });
 
-    test('BID_REJECTED with valid cancellationId and no bidId routes to rematch screen', () {
-      const uuid = '123e4567-e89b-12d3-a456-426614174000';
+    test('DELIVERY_CONFIRMED routes to bid detail', () {
       expect(
         service.testRouteForMessage({
-          'type': 'BID_REJECTED',
-          'cancellationId': uuid,
+          'type': 'DELIVERY_CONFIRMED',
+          'bidId': _bidId,
         }),
-        '/cancellations/$uuid/rematch',
+        '/bids/$_bidId',
       );
     });
 
-    test('HANDOVER_DEFINED routes to bid detail', () {
-      expect(service.testRouteForMessage({'type': 'HANDOVER_DEFINED', 'bidId': _bidId}), '/bids/$_bidId');
-    });
-
-    test('DELIVERY_CONFIRMED routes to bid detail', () {
-      expect(service.testRouteForMessage({'type': 'DELIVERY_CONFIRMED', 'bidId': _bidId}), '/bids/$_bidId');
-    });
-
     test('PAYMENT_RELEASED routes to bid detail', () {
-      expect(service.testRouteForMessage({'type': 'PAYMENT_RELEASED', 'bidId': _bidId}), '/bids/$_bidId');
+      expect(
+        service.testRouteForMessage({
+          'type': 'PAYMENT_RELEASED',
+          'bidId': _bidId,
+        }),
+        '/bids/$_bidId',
+      );
     });
 
     test('DISPUTE_OPENED routes to bid detail', () {
-      expect(service.testRouteForMessage({'type': 'DISPUTE_OPENED', 'bidId': _bidId}), '/bids/$_bidId');
+      expect(
+        service.testRouteForMessage({
+          'type': 'DISPUTE_OPENED',
+          'bidId': _bidId,
+        }),
+        '/bids/$_bidId',
+      );
     });
 
     test('TRIP_CANCELLED without any id falls back to shipments history', () {
@@ -268,30 +311,39 @@ void main() {
       );
     });
 
-    test('TRIP_CANCELLED with valid cancellationId routes to rematch screen', () {
-      const uuid = '123e4567-e89b-12d3-a456-426614174000';
-      expect(
-        service.testRouteForMessage({
-          'type': 'TRIP_CANCELLED',
-          'cancellationId': uuid,
-        }),
-        '/cancellations/$uuid/rematch',
-      );
-    });
+    test(
+      'TRIP_CANCELLED with valid cancellationId routes to rematch screen',
+      () {
+        const uuid = '123e4567-e89b-12d3-a456-426614174000';
+        expect(
+          service.testRouteForMessage({
+            'type': 'TRIP_CANCELLED',
+            'cancellationId': uuid,
+          }),
+          '/cancellations/$uuid/rematch',
+        );
+      },
+    );
 
-    test('TRIP_CANCELLED with non-UUID cancellationId falls back to shipments history', () {
-      expect(
-        service.testRouteForMessage({
-          'type': 'TRIP_CANCELLED',
-          'cancellationId': 'not-a-uuid',
-        }),
-        '/profile/shipments/history',
-      );
-    });
+    test(
+      'TRIP_CANCELLED with non-UUID cancellationId falls back to shipments history',
+      () {
+        expect(
+          service.testRouteForMessage({
+            'type': 'TRIP_CANCELLED',
+            'cancellationId': 'not-a-uuid',
+          }),
+          '/profile/shipments/history',
+        );
+      },
+    );
 
     test('TRIP_CANCELLED with bidId only routes to bid detail', () {
       expect(
-        service.testRouteForMessage({'type': 'TRIP_CANCELLED', 'bidId': _bidId}),
+        service.testRouteForMessage({
+          'type': 'TRIP_CANCELLED',
+          'bidId': _bidId,
+        }),
         '/bids/$_bidId',
       );
     });
@@ -314,67 +366,91 @@ void main() {
 
     test('negotiation_started routes to thread page', () {
       expect(
-        service.testRouteForMessage({'type': 'negotiation_started', 'threadId': _threadId}),
+        service.testRouteForMessage({
+          'type': 'negotiation_started',
+          'threadId': _threadId,
+        }),
         '/negotiations/$_threadId',
       );
     });
 
     test('negotiation_counter routes to thread page', () {
       expect(
-        service.testRouteForMessage({'type': 'negotiation_counter', 'threadId': _threadId}),
+        service.testRouteForMessage({
+          'type': 'negotiation_counter',
+          'threadId': _threadId,
+        }),
         '/negotiations/$_threadId',
       );
     });
 
     test('negotiation_awaiting_trip routes to thread page', () {
       expect(
-        service.testRouteForMessage({'type': 'negotiation_awaiting_trip', 'threadId': _threadId}),
+        service.testRouteForMessage({
+          'type': 'negotiation_awaiting_trip',
+          'threadId': _threadId,
+        }),
         '/negotiations/$_threadId',
       );
     });
 
     test('negotiation_awaiting_payment routes to thread page', () {
       expect(
-        service.testRouteForMessage({'type': 'negotiation_awaiting_payment', 'threadId': _threadId}),
+        service.testRouteForMessage({
+          'type': 'negotiation_awaiting_payment',
+          'threadId': _threadId,
+        }),
         '/negotiations/$_threadId',
       );
     });
 
     test('negotiation_started without threadId returns null', () {
-      expect(service.testRouteForMessage({'type': 'negotiation_started'}), isNull);
+      expect(
+        service.testRouteForMessage({'type': 'negotiation_started'}),
+        isNull,
+      );
     });
 
     test('request_accepted routes to thread page', () {
       expect(
-        service.testRouteForMessage({'type': 'request_accepted', 'threadId': _threadId}),
+        service.testRouteForMessage({
+          'type': 'request_accepted',
+          'threadId': _threadId,
+        }),
         '/negotiations/$_threadId',
       );
     });
 
-    test('TRAVELER_NEW_ANNOUNCEMENT routes to traveler announcement detail', () {
-      const uuid = '123e4567-e89b-12d3-a456-426614174000';
-      expect(
-        service.testRouteForMessage({
-          'type': 'TRAVELER_NEW_ANNOUNCEMENT',
-          'announcementId': uuid,
-        }),
-        '/traveler/$uuid',
-      );
-    });
+    test(
+      'TRAVELER_NEW_ANNOUNCEMENT routes to traveler announcement detail',
+      () {
+        const uuid = '123e4567-e89b-12d3-a456-426614174000';
+        expect(
+          service.testRouteForMessage({
+            'type': 'TRAVELER_NEW_ANNOUNCEMENT',
+            'announcementId': uuid,
+          }),
+          '/traveler/$uuid',
+        );
+      },
+    );
 
-    test('TRAVELER_NEW_ANNOUNCEMENT without valid announcementId returns null', () {
-      expect(
-        service.testRouteForMessage({'type': 'TRAVELER_NEW_ANNOUNCEMENT'}),
-        isNull,
-      );
-      expect(
-        service.testRouteForMessage({
-          'type': 'TRAVELER_NEW_ANNOUNCEMENT',
-          'announcementId': 'not-a-uuid',
-        }),
-        isNull,
-      );
-    });
+    test(
+      'TRAVELER_NEW_ANNOUNCEMENT without valid announcementId returns null',
+      () {
+        expect(
+          service.testRouteForMessage({'type': 'TRAVELER_NEW_ANNOUNCEMENT'}),
+          isNull,
+        );
+        expect(
+          service.testRouteForMessage({
+            'type': 'TRAVELER_NEW_ANNOUNCEMENT',
+            'announcementId': 'not-a-uuid',
+          }),
+          isNull,
+        );
+      },
+    );
 
     test('CORRIDOR_ALERT routes to the matching trip detail', () {
       const uuid = '123e4567-e89b-12d3-a456-426614174000';
@@ -388,10 +464,7 @@ void main() {
     });
 
     test('CORRIDOR_ALERT without valid announcementId returns null', () {
-      expect(
-        service.testRouteForMessage({'type': 'CORRIDOR_ALERT'}),
-        isNull,
-      );
+      expect(service.testRouteForMessage({'type': 'CORRIDOR_ALERT'}), isNull);
       expect(
         service.testRouteForMessage({
           'type': 'CORRIDOR_ALERT',

@@ -46,6 +46,7 @@ class HiveService {
   // ── Préférences métier ───────────────────────────────────────────────────
   static const String kWeightUnit = 'weight_unit'; // 'kg' | 'lbs'
   static const String kCurrencyCode = 'currency_code'; // 'EUR' | 'XOF' | 'XAF'
+  static const String kCurrencyOnboardingSeen = 'currency_onboarding_seen';
   static const String kPickupRadiusKm = 'pickup_radius_km'; // int
   static const String kDefaultPackageWeight = 'default_package_weight'; // int
   static const String kMinBidPrice = 'min_bid_price'; // int

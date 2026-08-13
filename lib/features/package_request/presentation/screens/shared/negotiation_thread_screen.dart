@@ -409,6 +409,7 @@ class _LoadedViewState extends State<_LoadedView> {
                       highlight: shouldHighlight,
                       isTraveler: viewerUserId == thread.travelerId,
                       grossPriceEur: thread.grossPriceEur,
+                      currency: thread.currency,
                     )
                     .animate()
                     .fadeIn(duration: 200.ms, delay: (40 * i).ms)

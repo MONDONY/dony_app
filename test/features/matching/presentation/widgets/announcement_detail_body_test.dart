@@ -12,54 +12,54 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 AnnouncementModel _full() => AnnouncementModel(
-      id: 'ann-1',
-      travelerId: 'trav-1',
-      departureCity: 'Paris',
-      arrivalCity: 'Dakar',
-      departureDate: DateTime(2026, 8, 12),
-      availableKg: 10,
-      totalKg: 10,
-      pricePerKg: 7,
-      status: 'ACTIVE',
-      bidsCount: 5,
-      confirmedParcelCount: 3,
-      createdAt: DateTime(2026, 7),
-      updatedAt: DateTime(2026, 7),
-      pickupAddress: const AddressData(
-        label: '12 rue de Paris, 75001',
-        lat: 48.85,
-        lng: 2.35,
-      ),
-      deliveryAddress: const AddressData(
-        label: 'Marché Sandaga, Dakar',
-        lat: 14.67,
-        lng: -17.43,
-      ),
-      handoverWindowStart: DateTime(2026, 8, 5, 9),
-      handoverWindowEnd: DateTime(2026, 8, 10, 18),
-      acceptedPaymentMethods: const {
-        BidPaymentMethod.cash,
-        BidPaymentMethod.stripe,
-      },
-      acceptedContentTypes: const ['Vêtements', 'Documents'],
-      refusedTypes: const ['Liquides'],
-      description: 'Pas de produits fragiles svp.',
-    );
+  id: 'ann-1',
+  travelerId: 'trav-1',
+  departureCity: 'Paris',
+  arrivalCity: 'Dakar',
+  departureDate: DateTime(2026, 8, 12),
+  availableKg: 10,
+  totalKg: 10,
+  pricePerKg: 7,
+  status: 'ACTIVE',
+  bidsCount: 5,
+  confirmedParcelCount: 3,
+  createdAt: DateTime(2026, 7),
+  updatedAt: DateTime(2026, 7),
+  pickupAddress: const AddressData(
+    label: '12 rue de Paris, 75001',
+    lat: 48.85,
+    lng: 2.35,
+  ),
+  deliveryAddress: const AddressData(
+    label: 'Marché Sandaga, Dakar',
+    lat: 14.67,
+    lng: -17.43,
+  ),
+  handoverWindowStart: DateTime(2026, 8, 5, 9),
+  handoverWindowEnd: DateTime(2026, 8, 10, 18),
+  acceptedPaymentMethods: const {
+    BidPaymentMethod.cash,
+    BidPaymentMethod.stripe,
+  },
+  acceptedContentTypes: const ['Vêtements', 'Documents'],
+  refusedTypes: const ['Liquides'],
+  description: 'Pas de produits fragiles svp.',
+);
 
 AnnouncementModel _minimal() => AnnouncementModel(
-      id: 'ann-2',
-      travelerId: 'trav-1',
-      departureCity: 'Lyon',
-      arrivalCity: 'Bamako',
-      departureDate: DateTime(2026, 9, 2),
-      availableKg: 5,
-      totalKg: 5,
-      pricePerKg: 6,
-      status: 'ACTIVE',
-      createdAt: DateTime(2026, 7),
-      updatedAt: DateTime(2026, 7),
-      acceptedPaymentMethods: const <BidPaymentMethod>{},
-    );
+  id: 'ann-2',
+  travelerId: 'trav-1',
+  departureCity: 'Lyon',
+  arrivalCity: 'Bamako',
+  departureDate: DateTime(2026, 9, 2),
+  availableKg: 5,
+  totalKg: 5,
+  pricePerKg: 6,
+  status: 'ACTIVE',
+  createdAt: DateTime(2026, 7),
+  updatedAt: DateTime(2026, 7),
+  acceptedPaymentMethods: const <BidPaymentMethod>{},
+);
 
 void main() {
   setUpAll(() async {
@@ -67,20 +67,21 @@ void main() {
   });
 
   Widget host(AnnouncementModel a) => MaterialApp(
-        theme: AppTheme.light(),
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        supportedLocales: const [Locale('fr', 'FR'), Locale('en')],
-        home: Scaffold(
-          body: SingleChildScrollView(child: AnnouncementDetailBody(a: a)),
-        ),
-      );
+    theme: AppTheme.light(),
+    localizationsDelegates: const [
+      GlobalMaterialLocalizations.delegate,
+      GlobalWidgetsLocalizations.delegate,
+      GlobalCupertinoLocalizations.delegate,
+    ],
+    supportedLocales: const [Locale('fr', 'FR'), Locale('en')],
+    home: Scaffold(
+      body: SingleChildScrollView(child: AnnouncementDetailBody(a: a)),
+    ),
+  );
 
-  testWidgets('modèle complet ACTIVE → corridor + badge + sections présentes',
-      (tester) async {
+  testWidgets('modèle complet ACTIVE → corridor + badge + sections présentes', (
+    tester,
+  ) async {
     await tester.pumpWidget(host(_full()));
     await tester.pumpAndSettle();
 
@@ -107,22 +108,49 @@ void main() {
     expect(find.text('en attente'), findsOneWidget);
   });
 
-  testWidgets(
-      'modèle minimal → corridor présent, sections optionnelles absentes',
-      (tester) async {
-    await tester.pumpWidget(host(_minimal()));
+  testWidgets('affiche le prix dans la devise du trajet, pas toujours en EUR', (
+    tester,
+  ) async {
+    final announcement = AnnouncementModel(
+      id: 'ann-3',
+      travelerId: 'trav-1',
+      departureCity: 'Toronto',
+      arrivalCity: 'Paris',
+      departureDate: DateTime(2026, 8, 19),
+      availableKg: 15,
+      totalKg: 15,
+      pricePerKg: 8,
+      status: 'ACTIVE',
+      createdAt: DateTime(2026, 7),
+      updatedAt: DateTime(2026, 7),
+      acceptedPaymentMethods: const <BidPaymentMethod>{},
+      currency: 'CAD',
+    );
+
+    await tester.pumpWidget(host(announcement));
     await tester.pumpAndSettle();
 
-    expect(find.text('Lyon → Bamako'), findsOneWidget);
-    expect(find.text('● ACTIF'), findsOneWidget);
-    // Sections optionnelles absentes
-    expect(find.text('LIEUX DE REMISE'), findsNothing);
-    expect(find.text('FENÊTRE DE REMISE'), findsNothing);
-    expect(find.text('PAIEMENTS ACCEPTÉS'), findsNothing);
-    expect(find.text('CE QUE J\'ACCEPTE'), findsNothing);
-    expect(find.text('CE QUE JE REFUSE'), findsNothing);
-    expect(find.text('NOTE AUX EXPÉDITEURS'), findsNothing);
+    expect(find.textContaining('CA\$'), findsOneWidget);
+    expect(find.textContaining('8€/kg'), findsNothing);
   });
+
+  testWidgets(
+    'modèle minimal → corridor présent, sections optionnelles absentes',
+    (tester) async {
+      await tester.pumpWidget(host(_minimal()));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Lyon → Bamako'), findsOneWidget);
+      expect(find.text('● ACTIF'), findsOneWidget);
+      // Sections optionnelles absentes
+      expect(find.text('LIEUX DE REMISE'), findsNothing);
+      expect(find.text('FENÊTRE DE REMISE'), findsNothing);
+      expect(find.text('PAIEMENTS ACCEPTÉS'), findsNothing);
+      expect(find.text('CE QUE J\'ACCEPTE'), findsNothing);
+      expect(find.text('CE QUE JE REFUSE'), findsNothing);
+      expect(find.text('NOTE AUX EXPÉDITEURS'), findsNothing);
+    },
+  );
 
   testWidgets('date de départ proche → badge urgent affiché', (tester) async {
     final urgent = AnnouncementModel(
@@ -145,9 +173,7 @@ void main() {
     expect(find.text('🔥 Urgent'), findsOneWidget);
   });
 
-  testWidgets('date de départ lointaine → badge urgent absent', (
-    tester,
-  ) async {
+  testWidgets('date de départ lointaine → badge urgent absent', (tester) async {
     final notUrgent = AnnouncementModel(
       id: 'ann-not-urgent',
       travelerId: 'trav-1',

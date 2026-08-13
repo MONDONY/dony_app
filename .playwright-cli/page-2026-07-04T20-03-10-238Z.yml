@@ -1,0 +1,630 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - img "dony" [ref=e4]
+      - generic [ref=e5]: dony
+    - generic [ref=e6]:
+      - generic [ref=e7]: Design System
+      - generic [ref=e8]:
+        - text: Charte
+        - text: graphique
+      - generic [ref=e9]: Langage visuel de l'application dony — palette, typographie, composants et règles d'usage pour Flutter (Material 3, iOS HIG).
+      - generic [ref=e10]: « Envoyé avec soin »
+    - generic [ref=e12]: lib/core/design/ — source de vérité
+  - generic [ref=e18]:
+    - generic [ref=e19]:
+      - generic [ref=e20]: 01 — Identité
+      - heading "Logo & couleur de marque" [level=1] [ref=e21]
+    - generic [ref=e22]:
+      - generic [ref=e23]:
+        - img [ref=e24]
+        - paragraph [ref=e25]:
+          - text: Variante onLight — fond clair
+          - text: logo-blue-orange.png
+      - generic [ref=e26]:
+        - img [ref=e27]
+        - paragraph [ref=e28]:
+          - text: Variante onDark — fond sombre/coloré
+          - text: logo-white-orange.png
+    - paragraph [ref=e29]: Le lettrage « dony » est rendu côté serveur en PNG net (1x/2x/3x) — jamais de police système à la volée. Ratio fixe 2:1, hauteur = fontSize dp, largeur calculée automatiquement.
+    - generic [ref=e30]:
+      - generic [ref=e31]: 02 — Palette
+      - heading "Bleu Dony — Primaire" [level=1] [ref=e32]
+      - paragraph [ref=e33]: Confiance, sérieux — couleur des CTA, liens, éléments actifs et focus.
+    - generic [ref=e34]:
+      - generic [ref=e35]:
+        - generic [ref=e36]: blue50
+        - generic [ref=e37]: "#EDF2FF"
+      - generic [ref=e38]:
+        - generic [ref=e39]: blue100
+        - generic [ref=e40]: "#D6E1FF"
+      - generic [ref=e41]:
+        - generic [ref=e42]: blue200
+        - generic [ref=e43]: "#A8BEFF"
+      - generic [ref=e44]:
+        - generic [ref=e45]: blue300
+        - generic [ref=e46]: "#6F92FF"
+      - generic [ref=e47]:
+        - generic [ref=e48]: blue400
+        - generic [ref=e49]: "#3D72FF"
+      - generic [ref=e50]:
+        - generic [ref=e51]: ★
+        - generic [ref=e52]: blue500
+        - generic [ref=e53]: "#0B5FFF"
+      - generic [ref=e54]:
+        - generic [ref=e55]: blue600
+        - generic [ref=e56]: "#0A4DD9"
+      - generic [ref=e57]:
+        - generic [ref=e58]: blue700
+        - generic [ref=e59]: "#083CAB"
+      - generic [ref=e60]:
+        - generic [ref=e61]: blue800
+        - generic [ref=e62]: "#062B7D"
+      - generic [ref=e63]:
+        - generic [ref=e64]: blue900
+        - generic [ref=e65]: "#041D54"
+    - paragraph [ref=e66]: blue500 (#0B5FFF) = DonyColors.primary — CTA, focus, actifs. blue600 = hover. blue700 = pressed/actif.
+    - heading "Terracotta — Accent" [level=1] [ref=e67]
+    - paragraph [ref=e68]: Chaleur africaine — accents, highlights, badges spéciaux, jamais en fond de CTA principal.
+    - generic [ref=e69]:
+      - generic [ref=e70]:
+        - generic [ref=e71]: terra50
+        - generic [ref=e72]: "#FCF0E9"
+      - generic [ref=e73]:
+        - generic [ref=e74]: terra100
+        - generic [ref=e75]: "#F8DBC8"
+      - generic [ref=e76]:
+        - generic [ref=e77]: terra200
+        - generic [ref=e78]: "#F2B898"
+      - generic [ref=e79]:
+        - generic [ref=e80]: terra300
+        - generic [ref=e81]: "#EA9468"
+      - generic [ref=e82]:
+        - generic [ref=e83]: terra400
+        - generic [ref=e84]: "#E27A4D"
+      - generic [ref=e85]:
+        - generic [ref=e86]: ★
+        - generic [ref=e87]: terra500
+        - generic [ref=e88]: "#D96A3A"
+      - generic [ref=e89]:
+        - generic [ref=e90]: terra600
+        - generic [ref=e91]: "#B95524"
+      - generic [ref=e92]:
+        - generic [ref=e93]: terra700
+        - generic [ref=e94]: "#93421B"
+      - generic [ref=e95]:
+        - generic [ref=e96]: terra800
+        - generic [ref=e97]: "#6E3114"
+      - generic [ref=e98]:
+        - generic [ref=e99]: terra900
+        - generic [ref=e100]: "#48200D"
+    - generic [ref=e101]:
+      - generic [ref=e102]: dony — Charte graphique
+      - generic [ref=e103]: 02 — Identité & Palette
+  - generic [ref=e104]:
+    - generic [ref=e105]:
+      - generic [ref=e106]: 02 — Palette (suite)
+      - heading "Neutres, sable, encre & sémantique" [level=1] [ref=e107]
+    - generic [ref=e108]:
+      - heading "Neutral — gris chauds (teinte sable)" [level=3] [ref=e109]
+      - generic [ref=e110]: bg app, bordures
+    - generic [ref=e111]:
+      - generic [ref=e112]:
+        - generic [ref=e113]: 0 blanc
+        - generic [ref=e114]: "#FFFFFF"
+      - generic [ref=e115]:
+        - generic [ref=e116]: ★
+        - generic [ref=e117]: 50 bg app
+        - generic [ref=e118]: "#FAFAF8"
+      - generic [ref=e119]:
+        - generic [ref=e120]: "100"
+        - generic [ref=e121]: "#F2F1ED"
+      - generic [ref=e122]:
+        - generic [ref=e123]: ★
+        - generic [ref=e124]: 200 border
+        - generic [ref=e125]: "#E8E5DF"
+      - generic [ref=e126]:
+        - generic [ref=e127]: "300"
+        - generic [ref=e128]: "#D2CDC2"
+      - generic [ref=e129]:
+        - generic [ref=e130]: "400"
+        - generic [ref=e131]: "#A8A294"
+      - generic [ref=e132]:
+        - generic [ref=e133]: "500"
+        - generic [ref=e134]: "#797367"
+      - generic [ref=e135]:
+        - generic [ref=e136]: "600"
+        - generic [ref=e137]: "#54504A"
+      - generic [ref=e138]:
+        - generic [ref=e139]: "700"
+        - generic [ref=e140]: "#3A3733"
+      - generic [ref=e141]:
+        - generic [ref=e142]: "800"
+        - generic [ref=e143]: "#25231F"
+    - generic [ref=e144]:
+      - heading "Sand — surface communautaire chaude" [level=3] [ref=e145]
+      - generic [ref=e146]: sections spéciales
+    - generic [ref=e147]:
+      - generic [ref=e148]:
+        - generic [ref=e149]: sand50
+        - generic [ref=e150]: "#FBF8F2"
+      - generic [ref=e151]:
+        - generic [ref=e152]: ★
+        - generic [ref=e153]: sand100 warm
+        - generic [ref=e154]: "#F7F3ED"
+      - generic [ref=e155]:
+        - generic [ref=e156]: sand200
+        - generic [ref=e157]: "#EDE6D8"
+      - generic [ref=e158]:
+        - generic [ref=e159]: sand300
+        - generic [ref=e160]: "#DFD3BA"
+      - generic [ref=e161]:
+        - generic [ref=e162]: sand400
+        - generic [ref=e163]: "#C9B894"
+      - generic [ref=e164]:
+        - generic [ref=e165]: sand500
+        - generic [ref=e166]: "#B09A6F"
+    - generic [ref=e167]:
+      - heading "Ink — texte principal" [level=3] [ref=e168]
+      - generic [ref=e169]: textPrimary = ink800
+    - generic [ref=e170]:
+      - generic [ref=e171]:
+        - generic [ref=e172]: ink50
+        - generic [ref=e173]: "#F4F6F9"
+      - generic [ref=e174]:
+        - generic [ref=e175]: ink100
+        - generic [ref=e176]: "#E2E7EF"
+      - generic [ref=e177]:
+        - generic [ref=e178]: ink200
+        - generic [ref=e179]: "#C0C9D8"
+      - generic [ref=e180]:
+        - generic [ref=e181]: ink300
+        - generic [ref=e182]: "#8595AD"
+      - generic [ref=e183]:
+        - generic [ref=e184]: ink400
+        - generic [ref=e185]: "#4A5E7C"
+      - generic [ref=e186]:
+        - generic [ref=e187]: ink500
+        - generic [ref=e188]: "#1F3454"
+      - generic [ref=e189]:
+        - generic [ref=e190]: ink600
+        - generic [ref=e191]: "#142845"
+      - generic [ref=e192]:
+        - generic [ref=e193]: ink700
+        - generic [ref=e194]: "#0E1E36"
+      - generic [ref=e195]:
+        - generic [ref=e196]: ★
+        - generic [ref=e197]: ink800 text
+        - generic [ref=e198]: "#0A2540"
+      - generic [ref=e199]:
+        - generic [ref=e200]: ink900
+        - generic [ref=e201]: "#061833"
+    - generic [ref=e202]:
+      - heading "Sémantique — états" [level=3] [ref=e203]
+      - generic [ref=e204]: success / warning / danger / info
+    - generic [ref=e205]:
+      - generic [ref=e206]:
+        - generic [ref=e207]:
+          - generic [ref=e209]: "50"
+          - generic [ref=e210]:
+            - generic [ref=e211]: ★
+            - generic [ref=e212]: "500"
+          - generic [ref=e214]: "700"
+        - paragraph [ref=e215]: "Success #0E8A5F — validations, confirmations"
+      - generic [ref=e216]:
+        - generic [ref=e217]:
+          - generic [ref=e219]: "50"
+          - generic [ref=e220]:
+            - generic [ref=e221]: ★
+            - generic [ref=e222]: "500"
+          - generic [ref=e224]: "700"
+        - paragraph [ref=e225]: "Warning #E8A23B — avertissements"
+      - generic [ref=e226]:
+        - generic [ref=e227]:
+          - generic [ref=e229]: "50"
+          - generic [ref=e230]:
+            - generic [ref=e231]: ★
+            - generic [ref=e232]: "500"
+          - generic [ref=e234]: "700"
+        - paragraph [ref=e235]: "Danger #D9342B — erreurs"
+    - generic [ref=e237]:
+      - generic [ref=e238]:
+        - generic [ref=e240]: "50"
+        - generic [ref=e241]:
+          - generic [ref=e242]: ★
+          - generic [ref=e243]: "500"
+        - generic [ref=e245]: "700"
+      - paragraph [ref=e246]: "Info #1B7BC2 — notifications neutres"
+    - generic [ref=e247]:
+      - generic [ref=e248]: dony — Charte graphique
+      - generic [ref=e249]: 03 — Neutres & Sémantique
+  - generic [ref=e250]:
+    - generic [ref=e251]:
+      - generic [ref=e252]: 03 — Typographie
+      - heading "Deux familles, un rythme" [level=1] [ref=e253]
+      - paragraph [ref=e254]: "Hanken Grotesk pour le display & les titres — Plus Jakarta Sans pour le corps & les labels. Taille minimale absolue : 12px."
+    - heading "Display & Headlines — Hanken Grotesk" [level=3] [ref=e255]
+    - generic [ref=e256]:
+      - generic [ref=e257]:
+        - generic [ref=e258]: Aa displayLarge
+        - generic [ref=e259]: 32px · w800 · -0.64
+        - generic [ref=e260]: Splash, hero
+      - generic [ref=e261]:
+        - generic [ref=e262]: Aa displayMedium
+        - generic [ref=e263]: 26px · w800 · -0.52
+        - generic [ref=e264]: Grand titre secondaire
+      - generic [ref=e265]:
+        - generic [ref=e266]: Aa displaySmall
+        - generic [ref=e267]: 22px · w700 · -0.44
+        - generic [ref=e268]: Titre onboarding
+      - generic [ref=e269]:
+        - generic [ref=e270]: Aa headlineLarge
+        - generic [ref=e271]: 22px · w700 · -0.22
+        - generic [ref=e272]: Titre section / AppBar
+      - generic [ref=e273]:
+        - generic [ref=e274]: Aa headlineMedium
+        - generic [ref=e275]: 18px · w700 · -0.18
+        - generic [ref=e276]: Sous-titres
+      - generic [ref=e277]:
+        - generic [ref=e278]: Aa headlineSmall
+        - generic [ref=e279]: 16px · w600
+        - generic [ref=e280]: Titre carte compact
+    - heading "Titres intermédiaires — Plus Jakarta Sans" [level=3] [ref=e281]
+    - generic [ref=e282]:
+      - generic [ref=e283]:
+        - generic [ref=e284]: Aa titleLarge
+        - generic [ref=e285]: 15px · w700
+        - generic [ref=e286]: Titre card, nom utilisateur
+      - generic [ref=e287]:
+        - generic [ref=e288]: Aa titleMedium
+        - generic [ref=e289]: 14px · w600
+        - generic [ref=e290]: Métadonnées card
+      - generic [ref=e291]:
+        - generic [ref=e292]: Aa titleSmall
+        - generic [ref=e293]: 13px · w600
+        - generic [ref=e294]: Sous-métadonnées
+    - heading "Corps & labels — Plus Jakarta Sans" [level=3] [ref=e295]
+    - generic [ref=e296]:
+      - generic [ref=e297]:
+        - generic [ref=e298]: Aa bodyLarge
+        - generic [ref=e299]: 16px · w400
+        - generic [ref=e300]: Texte principal
+      - generic [ref=e301]:
+        - generic [ref=e302]: Aa bodyMedium
+        - generic [ref=e303]: 14px · w400
+        - generic [ref=e304]: Descriptions secondaires
+      - generic [ref=e305]:
+        - generic [ref=e306]: Aa bodySmall
+        - generic [ref=e307]: 12px · w400
+        - generic [ref=e308]: Timestamps, notes
+      - generic [ref=e309]:
+        - generic [ref=e310]: Aa labelLarge
+        - generic [ref=e311]: 14px · w700
+        - generic [ref=e312]: Texte bouton
+      - generic [ref=e313]:
+        - generic [ref=e314]: Aa labelMedium
+        - generic [ref=e315]: 11px · w600 · +0.8
+        - generic [ref=e316]: Badges, chips (uppercase)
+      - generic [ref=e317]:
+        - generic [ref=e318]: Aa labelSmall
+        - generic [ref=e319]: 10px · w600 · +0.8
+        - generic [ref=e320]: Bottom nav, mini labels
+      - generic [ref=e321]:
+        - generic [ref=e322]: Envoyé avec soin
+        - generic [ref=e323]: Caveat · accent
+        - generic [ref=e324]: Slogans, textes manuscrits — jamais le corps
+    - generic [ref=e325]:
+      - generic [ref=e326]: dony — Charte graphique
+      - generic [ref=e327]: 04 — Typographie
+  - generic [ref=e328]:
+    - generic [ref=e329]:
+      - generic [ref=e330]: 04 — Fondations
+      - heading "Espacement, rayons, ombres & mouvement" [level=1] [ref=e331]
+    - generic [ref=e332]:
+      - generic [ref=e333]:
+        - heading "Espacements — DonySpacing" [level=3] [ref=e334]
+        - generic [ref=e335]:
+          - generic [ref=e336]: xxs
+          - generic [ref=e338]: "2"
+        - generic [ref=e339]:
+          - generic [ref=e340]: xs
+          - generic [ref=e342]: 4 — gaps icon+texte
+        - generic [ref=e343]:
+          - generic [ref=e344]: sm
+          - generic [ref=e346]: 8 — chip/badge
+        - generic [ref=e347]:
+          - generic [ref=e348]: md
+          - generic [ref=e350]: 12 — input vertical
+        - generic [ref=e351]:
+          - generic [ref=e352]: base ★
+          - generic [ref=e354]: 16 — card, écran H
+        - generic [ref=e355]:
+          - generic [ref=e356]: lg
+          - generic [ref=e358]: 20 — screens H
+        - generic [ref=e359]:
+          - generic [ref=e360]: xl
+          - generic [ref=e362]: 24 — entre sections
+        - generic [ref=e363]:
+          - generic [ref=e364]: xxl
+          - generic [ref=e366]: 32 — grandes sections
+        - generic [ref=e367]:
+          - generic [ref=e368]: huge
+          - generic [ref=e370]: 48 — hero/onboarding
+      - generic [ref=e371]:
+        - heading "Rayons — DonyRadius" [level=3] [ref=e372]
+        - generic [ref=e373]:
+          - generic [ref=e376]: xs · 4
+          - generic [ref=e379]: sm · 8
+          - generic [ref=e382]: md · 12
+          - generic [ref=e385]:
+            - text: lg ★ · 14
+            - text: boutons
+          - generic [ref=e388]:
+            - text: card ★ · 16
+            - text: cards
+          - generic [ref=e391]:
+            - text: xl · 20
+            - text: chips
+          - generic [ref=e394]:
+            - text: sheet ★ · 24
+            - text: bottom sheets
+          - generic [ref=e397]:
+            - text: full · 999
+            - text: badges
+    - heading "Ombres — DonyShadow (base ink800)" [level=3] [ref=e398]
+    - generic [ref=e399]:
+      - generic [ref=e400]: xs
+      - generic [ref=e401]: sm — card ★
+      - generic [ref=e402]: md
+      - generic [ref=e403]: lg — sheet ★
+      - generic [ref=e404]: brand
+      - generic [ref=e405]: accent
+    - heading "Mouvement — DonyDuration / DonyCurve" [level=3] [ref=e406]
+    - table [ref=e407]:
+      - rowgroup [ref=e408]:
+        - row "Token Durée Usage" [ref=e409]:
+          - columnheader "Token" [ref=e410]
+          - columnheader "Durée" [ref=e411]
+          - columnheader "Usage" [ref=e412]
+        - row "micro 150ms Feedback tap, press scale" [ref=e413]:
+          - cell "micro" [ref=e414]
+          - cell "150ms" [ref=e415]
+          - cell "Feedback tap, press scale" [ref=e416]
+        - row "base 220ms Transitions standards, chips" [ref=e417]:
+          - cell "base" [ref=e418]
+          - cell "220ms" [ref=e419]
+          - cell "Transitions standards, chips" [ref=e420]
+        - row "slow 320ms Entrées de contenu" [ref=e421]:
+          - cell "slow" [ref=e422]
+          - cell "320ms" [ref=e423]
+          - cell "Entrées de contenu" [ref=e424]
+        - row "page 480ms Transitions d'écran" [ref=e425]:
+          - cell "page" [ref=e426]
+          - cell "480ms" [ref=e427]
+          - cell "Transitions d'écran" [ref=e428]
+    - paragraph [ref=e429]: "Courbes : enter = easeOutCubic (entrée) · exit = easeInCubic (sortie) · stagger liste = 60ms × index. Entrée 250–320ms, sortie 150–220ms — jamais plus de 500ms."
+    - generic [ref=e430]:
+      - generic [ref=e431]: dony — Charte graphique
+      - generic [ref=e432]: 05 — Fondations
+  - generic [ref=e433]:
+    - generic [ref=e434]:
+      - generic [ref=e435]: 05 — Composants
+      - heading "Bibliothèque de composants" [level=1] [ref=e436]
+      - paragraph [ref=e437]: "Source : lib/core/design/widgets/ — toujours importer depuis design_system.dart, jamais recréer."
+    - generic [ref=e438]:
+      - generic [ref=e439]:
+        - heading "DonyButton — hauteur fixe 52px, radius 14" [level=3] [ref=e440]
+        - generic [ref=e441]: Primary
+        - generic [ref=e442]: Success
+        - generic [ref=e443]: Destructive
+        - generic [ref=e444]: Secondary
+        - generic [ref=e445]: Ghost
+      - generic [ref=e446]:
+        - heading "DonyBadge — pill, uppercase, 11px" [level=3] [ref=e447]
+        - generic [ref=e448]:
+          - generic [ref=e449]: INFO
+          - generic [ref=e450]: SUCCESS
+          - generic [ref=e451]: WARNING
+          - generic [ref=e452]: ERROR
+        - heading "DonyChip — filtre/sélection, pill" [level=3] [ref=e453]
+        - generic [ref=e454]: Paris
+        - generic [ref=e455]: Lyon
+        - generic [ref=e456]: Dakar
+    - heading "DonyCard & élévation Material 3" [level=3] [ref=e457]
+    - generic [ref=e458]:
+      - generic [ref=e459]:
+        - heading "Card standard" [level=3] [ref=e460]
+        - paragraph [ref=e461]: Radius 16 · élévation 0 · bordure neutral200 · padding 16
+      - generic [ref=e462]:
+        - heading "Surface warm" [level=3] [ref=e463]
+        - paragraph [ref=e464]: Sections communautaires — sand100
+      - generic [ref=e465]:
+        - heading "Card sélectionnée" [level=3] [ref=e466]
+        - paragraph [ref=e467]: Bordure primary 1.5px
+    - heading "Mascottes — DonyMascotteAnimated" [level=3] [ref=e468]
+    - table [ref=e469]:
+      - rowgroup [ref=e470]:
+        - row "Type Animation Usage" [ref=e471]:
+          - columnheader "Type" [ref=e472]
+          - columnheader "Animation" [ref=e473]
+          - columnheader "Usage" [ref=e474]
+        - row "joyeux scaleXY easeOutBack Onboarding, auth, accueil" [ref=e475]:
+          - cell "joyeux" [ref=e476]
+          - cell "scaleXY easeOutBack" [ref=e477]
+          - cell "Onboarding, auth, accueil" [ref=e478]
+        - row "confiant slideY + shimmer OTP / vérification" [ref=e479]:
+          - cell "confiant" [ref=e480]
+          - cell "slideY + shimmer" [ref=e481]
+          - cell "OTP / vérification" [ref=e482]
+        - row "sécurisé scaleXY easeOutBack + glow PIN, confirmation, succès KYC" [ref=e483]:
+          - cell "sécurisé" [ref=e484]
+          - cell "scaleXY easeOutBack + glow" [ref=e485]
+          - cell "PIN, confirmation, succès KYC" [ref=e486]
+        - row "tenant le colis slideY Tutoriel envoi" [ref=e487]:
+          - cell "tenant le colis" [ref=e488]
+          - cell "slideY" [ref=e489]
+          - cell "Tutoriel envoi" [ref=e490]
+        - row "donne un colis slideY (haut) Remise du colis" [ref=e491]:
+          - cell "donne un colis" [ref=e492]
+          - cell "slideY (haut)" [ref=e493]
+          - cell "Remise du colis" [ref=e494]
+        - row "en course slideX Tracking en transit" [ref=e495]:
+          - cell "en course" [ref=e496]
+          - cell "slideX" [ref=e497]
+          - cell "Tracking en transit" [ref=e498]
+        - row "assis fadeIn + scaleXY DonyEmptyState (vide)" [ref=e499]:
+          - cell "assis" [ref=e500]
+          - cell "fadeIn + scaleXY" [ref=e501]
+          - cell "DonyEmptyState (vide)" [ref=e502]
+        - row "scan pulse répété QR scanner actif" [ref=e503]:
+          - cell "scan" [ref=e504]
+          - cell "pulse répété" [ref=e505]
+          - cell "QR scanner actif" [ref=e506]
+    - generic [ref=e507]:
+      - generic [ref=e508]: dony — Charte graphique
+      - generic [ref=e509]: 06 — Composants
+  - generic [ref=e510]:
+    - generic [ref=e511]:
+      - generic [ref=e512]: 06 — Mode sombre
+      - heading "Adaptation automatique (ThemeMode.system)" [level=1] [ref=e513]
+      - paragraph [ref=e514]: Palette recalibrée pour contraste WCAG AA — jamais une simple inversion des couleurs claires.
+    - generic [ref=e515]:
+      - generic [ref=e516]:
+        - generic [ref=e517]: LIGHT
+        - paragraph [ref=e523]: "primary #0B5FFF · accent #D96A3A · bg #FAFAF8 · text #0A2540"
+      - generic [ref=e524]:
+        - generic [ref=e525]: DARK
+        - paragraph [ref=e531]: "primary #4D8AFF · accent #E8865B · bg #0A0E14 · text #F5F0E8"
+    - heading "Règle d'or" [level=3] [ref=e532]
+    - paragraph [ref=e533]: Tout widget doit lire ses couleurs via Theme.of(context).colorScheme.X — jamais DonyColors.surface/textPrimary/bgApp/borderDefault directement (light-only).
+    - table [ref=e534]:
+      - rowgroup [ref=e535]:
+        - row "Hardcodé — interdit À utiliser à la place" [ref=e536]:
+          - columnheader "Hardcodé — interdit" [ref=e537]
+          - columnheader "À utiliser à la place" [ref=e538]
+        - row "DonyColors.surface cs.surface" [ref=e539]:
+          - cell "DonyColors.surface" [ref=e540]
+          - cell "cs.surface" [ref=e541]
+        - row "DonyColors.bgApp Theme.of(context).scaffoldBackgroundColor" [ref=e542]:
+          - cell "DonyColors.bgApp" [ref=e543]
+          - cell "Theme.of(context).scaffoldBackgroundColor" [ref=e544]
+        - row "DonyColors.textPrimary cs.onSurface" [ref=e545]:
+          - cell "DonyColors.textPrimary" [ref=e546]
+          - cell "cs.onSurface" [ref=e547]
+        - row "DonyColors.textMuted cs.onSurfaceVariant" [ref=e548]:
+          - cell "DonyColors.textMuted" [ref=e549]
+          - cell "cs.onSurfaceVariant" [ref=e550]
+        - row "DonyColors.borderDefault cs.outline" [ref=e551]:
+          - cell "DonyColors.borderDefault" [ref=e552]
+          - cell "cs.outline" [ref=e553]
+        - row "DonyColors.primary cs.primary" [ref=e554]:
+          - cell "DonyColors.primary" [ref=e555]
+          - cell "cs.primary" [ref=e556]
+        - row "DonyColors.success / successLight cs.success / cs.successLight (extension)" [ref=e557]:
+          - cell "DonyColors.success / successLight" [ref=e558]
+          - cell "cs.success / cs.successLight (extension)" [ref=e559]
+    - paragraph [ref=e560]:
+      - generic [ref=e561]: Palettes primitives (blue500, terra500…) restent autorisées en contexte const ou pour dégradés — non brightness-aware par design.
+    - generic [ref=e562]:
+      - generic [ref=e563]: dony — Charte graphique
+      - generic [ref=e564]: 07 — Mode sombre
+  - generic [ref=e565]:
+    - generic [ref=e566]:
+      - generic [ref=e567]: 07 — Gouvernance
+      - heading "Règles d'usage obligatoires" [level=1] [ref=e568]
+    - list [ref=e569]:
+      - listitem [ref=e570]:
+        - generic [ref=e571]: "1"
+        - text: Jamais de
+        - generic [ref=e572]: Color(0xFF...)
+        - text: hardcodé — toujours
+        - generic [ref=e573]: DonyColors.X
+        - text: ou
+        - generic [ref=e574]: cs.X
+      - listitem [ref=e575]:
+        - generic [ref=e576]: "2"
+        - text: Jamais de
+        - generic [ref=e577]: GoogleFonts.hankenGrotesk/plusJakartaSans(...)
+        - text: direct —
+        - generic [ref=e578]: Theme.of(context).textTheme.X
+      - listitem [ref=e579]:
+        - generic [ref=e580]: "3"
+        - text: Jamais de
+        - generic [ref=e581]: EdgeInsets.all(16)
+        - text: en dur —
+        - generic [ref=e582]: EdgeInsets.all(DonySpacing.base)
+      - listitem [ref=e583]:
+        - generic [ref=e584]: "4"
+        - text: Jamais de
+        - generic [ref=e585]: BorderRadius.circular(16)
+        - text: en dur pour les cards —
+        - generic [ref=e586]: DonyRadius.card
+      - listitem [ref=e587]:
+        - generic [ref=e588]: "5"
+        - text: Jamais de
+        - generic [ref=e589]: BorderRadius.circular(14)
+        - text: en dur pour les boutons —
+        - generic [ref=e590]: DonyRadius.lg
+      - listitem [ref=e591]:
+        - generic [ref=e592]: "6"
+        - text: Jamais de
+        - generic [ref=e593]: BorderRadius.circular(24)
+        - text: en dur pour les sheets —
+        - generic [ref=e594]: DonyRadius.sheet
+      - listitem [ref=e595]:
+        - generic [ref=e596]: "7"
+        - text: Toujours
+        - generic [ref=e597]: Theme.of(context).colorScheme
+        - text: dans
+        - generic [ref=e598]: build()
+        - text: pour les couleurs sémantiques
+      - listitem [ref=e599]:
+        - generic [ref=e600]: "8"
+        - generic [ref=e601]: DonyColors.X
+        - text: uniquement pour contextes
+        - generic [ref=e602]: const
+        - text: ou couleurs primitives non-sémantiques
+      - listitem [ref=e603]:
+        - generic [ref=e604]: "9"
+        - generic [ref=e605]: DonyTypography.caveat()
+        - text: uniquement pour accents cursifs décoratifs — jamais sur le corps du texte
+      - listitem [ref=e606]:
+        - generic [ref=e607]: "10"
+        - text: Jamais
+        - generic [ref=e608]: Image.asset('assets/mascottes/...')
+        - text: direct —
+        - generic [ref=e609]: DonyMascotteAnimated(type:)
+    - heading "Iconographie — restriction produit" [level=3] [ref=e610]
+    - generic [ref=e611]:
+      - paragraph [ref=e612]: Icône camion (Icons.local_shipping*) — INTERDITE
+      - paragraph [ref=e613]: dony = transport par voyageur (bagage en avion), jamais par camion — quel que soit le contexte (mode de transport, envoi, livraison). Préférer inventory_2_rounded (colis), flight_rounded (trajet), outbox_rounded (envoi).
+    - heading "Accessibilité & ergonomie" [level=3] [ref=e614]
+    - table [ref=e615]:
+      - rowgroup [ref=e616]:
+        - row "Critère Règle" [ref=e617]:
+          - columnheader "Critère" [ref=e618]
+          - columnheader "Règle" [ref=e619]
+        - row "Touch target Min 44×44pt pour tout élément interactif" [ref=e620]:
+          - cell "Touch target" [ref=e621]
+          - cell "Min 44×44pt pour tout élément interactif" [ref=e622]
+        - row "Contraste texte ≥ 4.5:1 (WCAG AA)" [ref=e623]:
+          - cell "Contraste texte" [ref=e624]
+          - cell "≥ 4.5:1 (WCAG AA)" [ref=e625]
+        - row "Taille minimale 12px — jamais en dessous" [ref=e626]:
+          - cell "Taille minimale" [ref=e627]
+          - cell "12px — jamais en dessous" [ref=e628]
+        - row "Info par couleur seule Interdit — toujours icône/texte en complément" [ref=e629]:
+          - cell "Info par couleur seule" [ref=e630]
+          - cell "Interdit — toujours icône/texte en complément" [ref=e631]
+        - row "Padding horizontal écran 20pt (DonySpacing.lg)" [ref=e632]:
+          - cell "Padding horizontal écran" [ref=e633]
+          - cell "20pt (DonySpacing.lg)" [ref=e634]
+        - row "Entre sections 24–28pt" [ref=e635]:
+          - cell "Entre sections" [ref=e636]
+          - cell "24–28pt" [ref=e637]
+        - row "Padding interne card 16pt (DonySpacing.base)" [ref=e638]:
+          - cell "Padding interne card" [ref=e639]
+          - cell "16pt (DonySpacing.base)" [ref=e640]
+    - generic [ref=e641]:
+      - generic [ref=e642]: dony — Charte graphique
+      - generic [ref=e643]: 08 — Gouvernance

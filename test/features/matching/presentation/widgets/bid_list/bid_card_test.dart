@@ -16,21 +16,20 @@ BidModel _makeBid({
   BidPaymentMethod paymentMethod = BidPaymentMethod.stripe,
   String? contentCategory = 'Vêtements',
   String? description,
-}) =>
-    BidModel(
-      id: id,
-      announcementId: 'ann-1',
-      senderId: 'sender-1',
-      senderName: senderName,
-      weightKg: 3,
-      pricePerKg: 15,
-      contentCategory: contentCategory,
-      description: description,
-      status: status,
-      paymentMethod: paymentMethod,
-      createdAt: DateTime(2026, 5),
-      updatedAt: DateTime(2026, 5),
-    );
+}) => BidModel(
+  id: id,
+  announcementId: 'ann-1',
+  senderId: 'sender-1',
+  senderName: senderName,
+  weightKg: 3,
+  pricePerKg: 15,
+  contentCategory: contentCategory,
+  description: description,
+  status: status,
+  paymentMethod: paymentMethod,
+  createdAt: DateTime(2026, 5),
+  updatedAt: DateTime(2026, 5),
+);
 
 /// Pump une [BidCard] dans un Scaffold (sans router — pas de tap sur la carte).
 Future<void> _pumpCard(WidgetTester tester, BidCard card) async {
@@ -50,26 +49,30 @@ Future<void> _pumpCard(WidgetTester tester, BidCard card) async {
 
 void main() {
   testWidgets(
-      'PENDING cash avec callbacks → bandeau « Paiement en espèces » + Refuser/Accepter',
-      (tester) async {
-    await _pumpCard(
-      tester,
-      BidCard(
-        bid: _makeBid(status: 'PENDING', paymentMethod: BidPaymentMethod.cash),
-        isProcessing: false,
-        onAccept: () {},
-        onReject: () {},
-      ),
-    );
+    'PENDING cash avec callbacks → bandeau « Paiement en espèces » + Refuser/Accepter',
+    (tester) async {
+      await _pumpCard(
+        tester,
+        BidCard(
+          bid: _makeBid(
+            status: 'PENDING',
+            paymentMethod: BidPaymentMethod.cash,
+          ),
+          isProcessing: false,
+          onAccept: () {},
+          onReject: () {},
+        ),
+      );
 
-    expect(find.textContaining('Paiement en espèces'), findsOneWidget);
-    expect(find.text('Refuser'), findsOneWidget);
-    expect(find.text('Accepter'), findsOneWidget);
-  });
+      expect(find.textContaining('Paiement en espèces'), findsOneWidget);
+      expect(find.text('Refuser'), findsOneWidget);
+      expect(find.text('Accepter'), findsOneWidget);
+    },
+  );
 
-  testWidgets(
-      'PAYMENT_ESCROWED avec callbacks → bandeau « Paiement reçu »',
-      (tester) async {
+  testWidgets('PAYMENT_ESCROWED avec callbacks → bandeau « Paiement reçu »', (
+    tester,
+  ) async {
     await _pumpCard(
       tester,
       BidCard(
@@ -87,25 +90,24 @@ void main() {
   });
 
   testWidgets(
-      'ACCEPTED sans callbacks → pas de bandeau, badge « Accepté », pas d\'actions',
-      (tester) async {
-    await _pumpCard(
-      tester,
-      BidCard(
-        bid: _makeBid(status: 'ACCEPTED'),
-        isProcessing: false,
-      ),
-    );
+    'ACCEPTED sans callbacks → pas de bandeau, badge « Accepté », pas d\'actions',
+    (tester) async {
+      await _pumpCard(
+        tester,
+        BidCard(bid: _makeBid(status: 'ACCEPTED'), isProcessing: false),
+      );
 
-    expect(find.text('Accepté'), findsOneWidget);
-    expect(find.textContaining('Paiement reçu'), findsNothing);
-    expect(find.textContaining('Paiement en espèces'), findsNothing);
-    expect(find.text('Refuser'), findsNothing);
-    expect(find.text('Accepter'), findsNothing);
-  });
+      expect(find.text('Accepté'), findsOneWidget);
+      expect(find.textContaining('Paiement reçu'), findsNothing);
+      expect(find.textContaining('Paiement en espèces'), findsNothing);
+      expect(find.text('Refuser'), findsNothing);
+      expect(find.text('Accepter'), findsNothing);
+    },
+  );
 
-  testWidgets('isProcessing: true → la carte se rend, Accepter en chargement',
-      (tester) async {
+  testWidgets('isProcessing: true → la carte se rend, Accepter en chargement', (
+    tester,
+  ) async {
     await _pumpCard(
       tester,
       BidCard(
@@ -148,9 +150,8 @@ void main() {
         ),
         GoRoute(
           path: '/bids/:id',
-          builder: (_, state) => Scaffold(
-            body: Text('Bid detail ${state.pathParameters['id']}'),
-          ),
+          builder: (_, state) =>
+              Scaffold(body: Text('Bid detail ${state.pathParameters['id']}')),
         ),
       ],
     );
@@ -167,47 +168,50 @@ void main() {
   });
 
   testWidgets(
-      'plusieurs catégories → 1re catégorie + « +N », pas la chaîne complète',
-      (tester) async {
-    await _pumpCard(
-      tester,
-      BidCard(
-        bid: _makeBid(
-          status: 'ACCEPTED',
-          contentCategory:
-              'Vêtements & tissus, Documents & administratif, Alimentaire',
+    'plusieurs catégories → 1re catégorie + « +N », pas la chaîne complète',
+    (tester) async {
+      await _pumpCard(
+        tester,
+        BidCard(
+          bid: _makeBid(
+            status: 'ACCEPTED',
+            contentCategory:
+                'Vêtements & tissus, Documents & administratif, Alimentaire',
+          ),
+          isProcessing: false,
         ),
-        isProcessing: false,
-      ),
-    );
+      );
 
-    // 1re catégorie affichée seule, reste replié dans « +2 ».
-    expect(find.text('Vêtements & tissus'), findsOneWidget);
-    expect(find.text('+2'), findsOneWidget);
-    // La chaîne jointe complète n'est jamais rendue telle quelle.
-    expect(find.textContaining('Documents & administratif'), findsNothing);
-  });
+      // 1re catégorie affichée seule, reste replié dans « +2 ».
+      expect(find.text('Vêtements & tissus'), findsOneWidget);
+      expect(find.text('+2'), findsOneWidget);
+      // La chaîne jointe complète n'est jamais rendue telle quelle.
+      expect(find.textContaining('Documents & administratif'), findsNothing);
+    },
+  );
 
   testWidgets(
-      'sans catégorie mais description → pill description (ellipsis, pas d\'overflow)',
-      (tester) async {
-    await _pumpCard(
-      tester,
-      BidCard(
-        bid: _makeBid(
-          status: 'ACCEPTED',
-          contentCategory: null,
-          description: 'Un très long texte de description du colis à transporter',
+    'sans catégorie mais description → pill description (ellipsis, pas d\'overflow)',
+    (tester) async {
+      await _pumpCard(
+        tester,
+        BidCard(
+          bid: _makeBid(
+            status: 'ACCEPTED',
+            contentCategory: null,
+            description:
+                'Un très long texte de description du colis à transporter',
+          ),
+          isProcessing: false,
         ),
-        isProcessing: false,
-      ),
-    );
+      );
 
-    expect(
-      find.textContaining('Un très long texte de description'),
-      findsOneWidget,
-    );
-    // Aucun overflow rendu (le test échouerait sinon via l'exception Flutter).
-    expect(tester.takeException(), isNull);
-  });
+      expect(
+        find.textContaining('Un très long texte de description'),
+        findsOneWidget,
+      );
+      // Aucun overflow rendu (le test échouerait sinon via l'exception Flutter).
+      expect(tester.takeException(), isNull);
+    },
+  );
 }

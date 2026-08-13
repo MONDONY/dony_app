@@ -70,8 +70,9 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
     if (idx == -1 || idx + 1 >= segments.length) return null;
     final candidate = segments[idx + 1];
     final uuidPattern = RegExp(
-        r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
-        caseSensitive: false);
+      r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
+      caseSensitive: false,
+    );
     return uuidPattern.hasMatch(candidate) ? candidate : null;
   }
 
@@ -129,10 +130,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
           child: Stack(
             children: [
               // Camera feed
-              MobileScanner(
-                controller: _scanner,
-                onDetect: _onDetect,
-              ),
+              MobileScanner(controller: _scanner, onDetect: _onDetect),
 
               // Top bar (dark overlay)
               Positioned(
@@ -149,8 +147,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                     children: [
                       // X close
                       IconButton(
-                        icon: const DonyIcon('x',
-                            color: DonyColors.white),
+                        icon: const DonyIcon('x', color: DonyColors.white),
                         onPressed: () => context.pop(),
                         tooltip: 'Fermer',
                       ),
@@ -167,8 +164,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                       ),
                       // Flash
                       IconButton(
-                        icon: const DonyIcon('zap',
-                            color: DonyColors.white),
+                        icon: const DonyIcon('zap', color: DonyColors.white),
                         onPressed: () => _scanner.toggleTorch(),
                         tooltip: 'Lampe torche',
                       ),
@@ -206,9 +202,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
               ValueListenableBuilder<bool>(
                 valueListenable: _detectedNotifier,
                 builder: (context, detected, _) {
-                  return Center(
-                    child: _ScanFrame(detected: detected),
-                  );
+                  return Center(child: _ScanFrame(detected: detected));
                 },
               ),
 
@@ -239,9 +233,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                       const SizedBox(height: DonySpacing.xs),
                       Text(
                         'Colis confirmé en valise',
-                        style: tt.bodySmall?.copyWith(
-                          color: DonyColors.white,
-                        ),
+                        style: tt.bodySmall?.copyWith(color: DonyColors.white),
                       ),
                       const SizedBox(height: DonySpacing.base),
                       // Action buttons
@@ -251,8 +243,11 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                           Expanded(
                             child: OutlinedButton.icon(
                               onPressed: _showManualEntryDialog,
-                              icon: const DonyIcon('camera',
-                                  color: DonyColors.white, size: 18),
+                              icon: const DonyIcon(
+                                'camera',
+                                color: DonyColors.white,
+                                size: 18,
+                              ),
                               label: Text(
                                 'Photo',
                                 style: tt.labelLarge?.copyWith(
@@ -263,7 +258,9 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                                 foregroundColor: DonyColors.white,
                                 side: const BorderSide(color: DonyColors.white),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(DonyRadius.lg),
+                                  borderRadius: BorderRadius.circular(
+                                    DonyRadius.lg,
+                                  ),
                                 ),
                                 padding: const EdgeInsets.symmetric(
                                   vertical: DonySpacing.md,
@@ -306,7 +303,8 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
           shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(DonyRadius.sheet)),
+            borderRadius: BorderRadius.circular(DonyRadius.sheet),
+          ),
           title: Text('Numéro de suivi', style: tt.headlineMedium),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -322,11 +320,13 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                 textCapitalization: TextCapitalization.characters,
                 decoration: InputDecoration(
                   hintText: 'DON-XXXXXX',
-                  hintStyle: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-                  prefixIcon: DonyIcon('package',
-                      color: cs.primary),
+                  hintStyle: tt.bodyMedium?.copyWith(
+                    color: cs.onSurfaceVariant,
+                  ),
+                  prefixIcon: DonyIcon('package', color: cs.primary),
                   border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(DonyRadius.md)),
+                    borderRadius: BorderRadius.circular(DonyRadius.md),
+                  ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(DonyRadius.md),
                     borderSide: BorderSide(color: cs.outline),
@@ -348,8 +348,10 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                       ctx.pop();
                       _resumeScanning();
                     },
-              child: Text('Annuler',
-                  style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
+              child: Text(
+                'Annuler',
+                style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+              ),
             ),
             FilledButton(
               onPressed: loading
@@ -371,7 +373,8 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                         if (ctx.mounted) {
                           DonySnackbar.show(
                             context,
-                            message: 'Numéro introuvable. Vérifiez et réessayez.',
+                            message:
+                                'Numéro introuvable. Vérifiez et réessayez.',
                             type: DonySnackbarType.error,
                           );
                         }
@@ -382,14 +385,17 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                 foregroundColor: cs.onPrimary,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(DonyRadius.md)),
+                  borderRadius: BorderRadius.circular(DonyRadius.md),
+                ),
               ),
               child: loading
                   ? SizedBox(
                       width: 16,
                       height: 16,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: cs.onPrimary),
+                        strokeWidth: 2,
+                        color: cs.onPrimary,
+                      ),
                     )
                   : Text('Confirmer', style: tt.labelLarge),
             ),
@@ -409,7 +415,8 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(DonyRadius.sheet)),
+          borderRadius: BorderRadius.circular(DonyRadius.sheet),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -419,17 +426,21 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                 color: cs.warning.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
-              child: DonyIcon('wifi-off',
-                  color: cs.warning, size: 40),
+              child: DonyIcon('wifi-off', color: cs.warning, size: 40),
             ),
             const SizedBox(height: DonySpacing.base),
-            Text('Lecture en attente',
-                style: tt.headlineMedium?.copyWith(color: cs.onSurface)),
+            Text(
+              'Lecture en attente',
+              style: tt.headlineMedium?.copyWith(color: cs.onSurface),
+            ),
             const SizedBox(height: DonySpacing.sm),
             Text(
               'Pas de connexion internet. La lecture sera synchronisée automatiquement dès que vous serez en ligne.',
               textAlign: TextAlign.center,
-              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant, height: 1.4),
+              style: tt.bodySmall?.copyWith(
+                color: cs.onSurfaceVariant,
+                height: 1.4,
+              ),
             ),
           ],
         ),
@@ -446,7 +457,8 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                 foregroundColor: DonyColors.white,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(DonyRadius.lg)),
+                  borderRadius: BorderRadius.circular(DonyRadius.lg),
+                ),
               ),
               child: Text('Compris', style: tt.labelLarge),
             ),
@@ -460,8 +472,9 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final isFinal = isFinalDeliveryStep(label);
-    final mascotteType =
-        isFinal ? DonyMascotteType.securise : DonyMascotteType.confiant;
+    final mascotteType = isFinal
+        ? DonyMascotteType.securise
+        : DonyMascotteType.confiant;
     final title = isFinal ? 'Colis livré !' : 'Lecture enregistrée !';
 
     showDialog<void>(
@@ -469,7 +482,8 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(DonyRadius.sheet)),
+          borderRadius: BorderRadius.circular(DonyRadius.sheet),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -479,11 +493,15 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
               withGlow: isFinal,
             ),
             const SizedBox(height: DonySpacing.base),
-            Text(title,
-                style: tt.headlineMedium?.copyWith(color: cs.onSurface)),
+            Text(
+              title,
+              style: tt.headlineMedium?.copyWith(color: cs.onSurface),
+            ),
             const SizedBox(height: DonySpacing.sm),
-            Text(label,
-                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
+            Text(
+              label,
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
           ],
         ),
         actions: [
@@ -499,7 +517,8 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                 foregroundColor: cs.onPrimary,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(DonyRadius.lg)),
+                  borderRadius: BorderRadius.circular(DonyRadius.lg),
+                ),
               ),
               child: Text('Terminé', style: tt.labelLarge),
             ),
@@ -517,9 +536,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
 /// migrer vers un match d'enum.
 bool isFinalDeliveryStep(String label) {
   final l = label.toLowerCase();
-  return l.contains('livr') ||
-      l.contains('remis') ||
-      l.contains('deliver');
+  return l.contains('livr') || l.contains('remis') || l.contains('deliver');
 }
 
 // ── Scan frame overlay ────────────────────────────────────────────────────────
@@ -543,24 +560,28 @@ class _ScanFrame extends StatelessWidget {
             Alignment.bottomLeft,
             Alignment.bottomRight,
           ])
-            Align(alignment: pos, child: _Corner(alignment: pos)),
+            Align(
+              alignment: pos,
+              child: _Corner(alignment: pos),
+            ),
 
           // Success check overlay when detected
           if (detected)
             Center(
-              child: Container(
-                width: 72,
-                height: 72,
-                decoration: BoxDecoration(
-                  color: cs.success,
-                  shape: BoxShape.circle,
-                ),
-                child: const DonyIcon(
-                  'circle-check',
-                  color: DonyColors.white,
-                  size: 44,
-                ),
-              ).animate().scale(
+              child:
+                  Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      color: cs.success,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const DonyIcon(
+                      'circle-check',
+                      color: DonyColors.white,
+                      size: 44,
+                    ),
+                  ).animate().scale(
                     begin: const Offset(0.5, 0.5),
                     end: const Offset(1.0, 1.0),
                     duration: 300.ms,
@@ -669,8 +690,10 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
         if (permission == LocationPermission.always ||
             permission == LocationPermission.whileInUse) {
           pos = await Geolocator.getCurrentPosition(
-              locationSettings:
-                  const LocationSettings(accuracy: LocationAccuracy.high));
+            locationSettings: const LocationSettings(
+              accuracy: LocationAccuracy.high,
+            ),
+          );
         }
       } catch (_) {}
 
@@ -731,15 +754,18 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
       final code = _codeController.text.trim();
       if (code.length != 6) return;
       context.read<TrackingBloc>().add(
-            ConfirmDeliveryRequested(bidId: widget.bidId, code: code));
+        ConfirmDeliveryRequested(bidId: widget.bidId, code: code),
+      );
     } else {
-      context.read<TrackingBloc>().add(QrScanSubmitRequested(
-            bidId: widget.bidId,
-            eventType: _eventType,
-            photo: _photo,
-            gpsLat: _position?.latitude,
-            gpsLon: _position?.longitude,
-          ));
+      context.read<TrackingBloc>().add(
+        QrScanSubmitRequested(
+          bidId: widget.bidId,
+          eventType: _eventType,
+          photo: _photo,
+          gpsLat: _position?.latitude,
+          gpsLon: _position?.longitude,
+        ),
+      );
     }
   }
 
@@ -796,14 +822,11 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
 
               Row(
                 children: [
-                  Expanded(
-                    child: Text('QR lu', style: tt.headlineMedium),
-                  ),
+                  Expanded(child: Text('QR lu', style: tt.headlineMedium)),
                   if (!isSubmitting)
                     IconButton(
                       tooltip: 'Fermer',
-                      icon: DonyIcon('x',
-                          color: cs.onSurfaceVariant),
+                      icon: DonyIcon('x', color: cs.onSurfaceVariant),
                       onPressed: () {
                         context.pop();
                         widget.onClose();
@@ -832,33 +855,36 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                         duration: 200.ms,
                         margin: const EdgeInsets.only(right: DonySpacing.sm),
                         padding: const EdgeInsets.symmetric(
-                            vertical: DonySpacing.md),
+                          vertical: DonySpacing.md,
+                        ),
                         decoration: BoxDecoration(
                           color: isSelected
                               ? cs.primary
                               : cs.surfaceContainerHighest,
                           borderRadius: BorderRadius.circular(DonyRadius.md),
                           border: Border.all(
-                            color: isSelected
-                                ? cs.primary
-                                : cs.outline,
+                            color: isSelected ? cs.primary : cs.outline,
                             width: 1.5,
                           ),
                         ),
                         child: Column(
                           children: [
                             if (type.$4 != null)
-                              DonyIcon(type.$4!,
-                                  color: isSelected
-                                      ? cs.onPrimary
-                                      : cs.onSurfaceVariant,
-                                  size: 20)
+                              DonyIcon(
+                                type.$4!,
+                                color: isSelected
+                                    ? cs.onPrimary
+                                    : cs.onSurfaceVariant,
+                                size: 20,
+                              )
                             else
-                              DonyIcon(type.$3!,
-                                  color: isSelected
-                                      ? cs.onPrimary
-                                      : cs.onSurfaceVariant,
-                                  size: 20),
+                              DonyIcon(
+                                type.$3!,
+                                color: isSelected
+                                    ? cs.onPrimary
+                                    : cs.onSurfaceVariant,
+                                size: 20,
+                              ),
                             const SizedBox(height: DonySpacing.xs),
                             Text(
                               type.$2,
@@ -897,8 +923,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      DonyIcon('info',
-                          color: cs.primary, size: 15),
+                      DonyIcon('info', color: cs.primary, size: 15),
                       const SizedBox(width: DonySpacing.sm),
                       Expanded(
                         child: Text(
@@ -935,11 +960,11 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(DonyRadius.md),
-                      borderSide: BorderSide(
-                          color: cs.primary, width: 2),
+                      borderSide: BorderSide(color: cs.primary, width: 2),
                     ),
-                    contentPadding:
-                        const EdgeInsets.symmetric(vertical: DonySpacing.base),
+                    contentPadding: const EdgeInsets.symmetric(
+                      vertical: DonySpacing.base,
+                    ),
                   ),
                 ),
               ] else ...[
@@ -965,19 +990,24 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                                 width: 20,
                                 height: 20,
                                 child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: cs.primary),
+                                  strokeWidth: 2,
+                                  color: cs.primary,
+                                ),
                               )
                             : Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  DonyIcon('camera',
-                                      color: cs.primary, size: 20),
+                                  DonyIcon(
+                                    'camera',
+                                    color: cs.primary,
+                                    size: 20,
+                                  ),
                                   const SizedBox(width: DonySpacing.sm),
                                   Text(
                                     'Prendre une photo',
-                                    style: tt.titleSmall
-                                        ?.copyWith(color: cs.primary),
+                                    style: tt.titleSmall?.copyWith(
+                                      color: cs.primary,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -998,8 +1028,12 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                             height: 120,
                             color: cs.primaryContainer,
                             child: Center(
-                                child: DonyIcon('image',
-                                    color: cs.primary, size: 32)),
+                              child: DonyIcon(
+                                'image',
+                                color: cs.primary,
+                                size: 32,
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -1013,16 +1047,22 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                             excludeSemantics: true,
                             label: 'Supprimer la photo',
                             child: GestureDetector(
-                            onTap: () => setState(() => _photo = null),
-                            child: Container(
-                              padding: const EdgeInsets.all(DonySpacing.xs),
-                              decoration: BoxDecoration(
-                                  color: DonyColors.ink900.withValues(alpha: 0.54),
-                                  shape: BoxShape.circle),
-                              child: const DonyIcon('x',
-                                  color: DonyColors.white, size: 16),
+                              onTap: () => setState(() => _photo = null),
+                              child: Container(
+                                padding: const EdgeInsets.all(DonySpacing.xs),
+                                decoration: BoxDecoration(
+                                  color: DonyColors.ink900.withValues(
+                                    alpha: 0.54,
+                                  ),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const DonyIcon(
+                                  'x',
+                                  color: DonyColors.white,
+                                  size: 16,
+                                ),
+                              ),
                             ),
-                          )
                           ),
                         ),
                     ],
@@ -1032,12 +1072,13 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                   const SizedBox(height: DonySpacing.sm),
                   Row(
                     children: [
-                      DonyIcon('map-pin',
-                          color: cs.success, size: 14),
+                      DonyIcon('map-pin', color: cs.success, size: 14),
                       const SizedBox(width: DonySpacing.xs),
                       Text(
                         'GPS : ${_position!.latitude.toStringAsFixed(4)}, ${_position!.longitude.toStringAsFixed(4)}',
-                        style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                        style: tt.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ),
@@ -1046,8 +1087,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                   const SizedBox(height: DonySpacing.sm),
                   Row(
                     children: [
-                      DonyIcon('triangle-alert',
-                          color: cs.error, size: 14),
+                      DonyIcon('triangle-alert', color: cs.error, size: 14),
                       const SizedBox(width: DonySpacing.xs),
                       Expanded(
                         child: Text(
@@ -1069,7 +1109,9 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
               DonyButton(
                 label: isSubmitting
                     ? (isArrivee ? 'Confirmation...' : 'Enregistrement...')
-                    : (isArrivee ? 'Confirmer la livraison' : 'Confirmer la lecture'),
+                    : (isArrivee
+                          ? 'Confirmer la livraison'
+                          : 'Confirmer la lecture'),
                 iconAsset: isArrivee ? 'badge-check' : 'check',
                 onPressed: isSubmitting ? null : () => _submit(context),
                 isLoading: isSubmitting,
@@ -1081,8 +1123,8 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                   state is QrScanError
                       ? ErrorPresenter.resolve(state.error).message
                       : ErrorPresenter.resolve(
-                              (state as DeliveryConfirmError).error)
-                          .message,
+                          (state as DeliveryConfirmError).error,
+                        ).message,
                   style: tt.bodySmall?.copyWith(
                     color: cs.error,
                     fontWeight: FontWeight.w500,

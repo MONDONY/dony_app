@@ -1,3 +1,5 @@
+import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
@@ -7,12 +9,14 @@ class PriceHintWidget extends StatelessWidget {
   final double? marketMedianPrice;
   final PriceWarning? warning;
   final String? corridor;
+  final SupportedCurrency? currency;
 
   const PriceHintWidget({
     super.key,
     this.marketMedianPrice,
     this.warning,
     this.corridor,
+    this.currency,
   });
 
   @override
@@ -51,7 +55,8 @@ class PriceHintWidget extends StatelessWidget {
         iconColor: cs.warning,
         bgColor: cs.warningLight,
         leading: 'Marché $corridorStr',
-        highlight: '${marketMedianPrice!.toStringAsFixed(0)}€/kg',
+        highlight:
+            '${CurrencyFormatter.formatOrPlain(marketMedianPrice!, currency)}/kg',
         message: ' · Votre prix est compétitif.',
       );
     }
@@ -93,8 +98,7 @@ class PriceHintWidget extends StatelessWidget {
                     text: TextSpan(
                       style: tt.bodySmall?.copyWith(color: cs.onSurface),
                       children: [
-                        if (leading != null)
-                          TextSpan(text: leading),
+                        if (leading != null) TextSpan(text: leading),
                         TextSpan(
                           text: highlight,
                           style: tt.bodySmall?.copyWith(
@@ -102,8 +106,7 @@ class PriceHintWidget extends StatelessWidget {
                             fontWeight: FontWeight.w700,
                           ),
                         ),
-                        if (message != null)
-                          TextSpan(text: message),
+                        if (message != null) TextSpan(text: message),
                       ],
                     ),
                   )

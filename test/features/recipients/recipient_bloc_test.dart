@@ -33,8 +33,9 @@ void main() {
   setUp(() {
     repository = MockRecipientRepository();
     analytics = MockAnalyticsService();
-    when(() => analytics.logEvent(any(), properties: any(named: 'properties')))
-        .thenAnswer((_) async {});
+    when(
+      () => analytics.logEvent(any(), properties: any(named: 'properties')),
+    ).thenAnswer((_) async {});
   });
 
   group('RecipientBloc', () {
@@ -54,8 +55,11 @@ void main() {
       },
       act: (bloc) => bloc.add(const RecipientLoaded()),
       expect: () => [
-        isA<RecipientState>()
-            .having((s) => s.status, 'status', RecipientStatus.loading),
+        isA<RecipientState>().having(
+          (s) => s.status,
+          'status',
+          RecipientStatus.loading,
+        ),
         isA<RecipientState>()
             .having((s) => s.status, 'status', RecipientStatus.success)
             .having((s) => s.recipients, 'recipients', [_r1, _r2]),
@@ -70,8 +74,11 @@ void main() {
       },
       act: (bloc) => bloc.add(const RecipientLoaded()),
       expect: () => [
-        isA<RecipientState>()
-            .having((s) => s.status, 'status', RecipientStatus.loading),
+        isA<RecipientState>().having(
+          (s) => s.status,
+          'status',
+          RecipientStatus.loading,
+        ),
         isA<RecipientState>()
             .having((s) => s.status, 'status', RecipientStatus.error)
             .having((s) => s.error, 'error', isNotNull),
@@ -95,22 +102,28 @@ void main() {
         status: RecipientStatus.success,
         recipients: [_r1, _r2],
       ),
-      act: (bloc) => bloc.add(const RecipientCreated(
-        fullName: 'Alpha Bah',
-        phoneE164: '+22365432100',
-        city: 'Bamako',
-        country: 'ML',
-      )),
+      act: (bloc) => bloc.add(
+        const RecipientCreated(
+          fullName: 'Alpha Bah',
+          phoneE164: '+22365432100',
+          city: 'Bamako',
+          country: 'ML',
+        ),
+      ),
       expect: () => [
-        isA<RecipientState>()
-            .having((s) => s.status, 'status', RecipientStatus.loading),
+        isA<RecipientState>().having(
+          (s) => s.status,
+          'status',
+          RecipientStatus.loading,
+        ),
         isA<RecipientState>()
             .having((s) => s.status, 'status', RecipientStatus.success)
             .having((s) => s.recipients.length, 'length', 3),
       ],
       verify: (_) {
-        verify(() => analytics.logEvent(any(that: contains('recipient_created'))))
-            .called(1);
+        verify(
+          () => analytics.logEvent(any(that: contains('recipient_created'))),
+        ).called(1);
       },
     );
 
@@ -136,7 +149,9 @@ void main() {
     blocTest<RecipientBloc, RecipientState>(
       'RecipientDeleted → error when repository throws',
       build: () {
-        when(() => repository.delete('r-1')).thenThrow(Exception('Server error'));
+        when(
+          () => repository.delete('r-1'),
+        ).thenThrow(Exception('Server error'));
         return RecipientBloc(repository, analytics);
       },
       seed: () => const RecipientState(
@@ -162,7 +177,9 @@ void main() {
           country: 'SN',
           isDefault: true,
         );
-        when(() => repository.create(any())).thenAnswer((_) async => newDefault);
+        when(
+          () => repository.create(any()),
+        ).thenAnswer((_) async => newDefault);
         return RecipientBloc(repository, analytics);
       },
       seed: () => const RecipientState(
@@ -178,22 +195,32 @@ void main() {
           ),
         ],
       ),
-      act: (bloc) => bloc.add(const RecipientCreated(
-        fullName: 'Awa',
-        phoneE164: '+221771234567',
-        city: 'Dakar',
-        country: 'SN',
-        isDefault: true,
-      )),
+      act: (bloc) => bloc.add(
+        const RecipientCreated(
+          fullName: 'Awa',
+          phoneE164: '+221771234567',
+          city: 'Dakar',
+          country: 'SN',
+          isDefault: true,
+        ),
+      ),
       expect: () => [
-        isA<RecipientState>()
-            .having((s) => s.status, 'status', RecipientStatus.loading),
+        isA<RecipientState>().having(
+          (s) => s.status,
+          'status',
+          RecipientStatus.loading,
+        ),
         isA<RecipientState>()
             .having(
-                (s) => s.recipients.where((r) => r.isDefault).length,
-                'un seul défaut',
-                1)
-            .having((s) => s.recipients.last.isDefault, 'nouveau = défaut', true),
+              (s) => s.recipients.where((r) => r.isDefault).length,
+              'un seul défaut',
+              1,
+            )
+            .having(
+              (s) => s.recipients.last.isDefault,
+              'nouveau = défaut',
+              true,
+            ),
       ],
     );
 
@@ -208,8 +235,9 @@ void main() {
           country: 'CI',
           isDefault: true,
         );
-        when(() => repository.update(any(), any()))
-            .thenAnswer((_) async => updatedAsDefault);
+        when(
+          () => repository.update(any(), any()),
+        ).thenAnswer((_) async => updatedAsDefault);
         return RecipientBloc(repository, analytics);
       },
       seed: () => const RecipientState(
@@ -218,9 +246,9 @@ void main() {
       ),
       act: (bloc) => bloc.add(const RecipientDefaultSet('r-2')),
       verify: (_) {
-        final payload = verify(() => repository.update('r-2', captureAny()))
-            .captured
-            .single as Map<String, dynamic>;
+        final payload =
+            verify(() => repository.update('r-2', captureAny())).captured.single
+                as Map<String, dynamic>;
         expect(payload['isDefault'], true);
         expect(payload['fullName'], _r2.fullName);
       },
@@ -237,8 +265,9 @@ void main() {
           country: 'CI',
           isDefault: true,
         );
-        when(() => repository.update(any(), any()))
-            .thenAnswer((_) async => updatedAsDefault);
+        when(
+          () => repository.update(any(), any()),
+        ).thenAnswer((_) async => updatedAsDefault);
         return RecipientBloc(repository, analytics);
       },
       seed: () => const RecipientState(
@@ -258,14 +287,22 @@ void main() {
       act: (bloc) => bloc.add(const RecipientDefaultSet('r-2')),
       expect: () => [
         isA<RecipientState>()
-            .having((s) => s.recipients.where((r) => r.isDefault).length,
-                'un seul défaut', 1)
-            .having((s) => s.recipients.firstWhere((r) => r.id == 'r-2').isDefault,
-                'r-2 défaut', true),
+            .having(
+              (s) => s.recipients.where((r) => r.isDefault).length,
+              'un seul défaut',
+              1,
+            )
+            .having(
+              (s) => s.recipients.firstWhere((r) => r.id == 'r-2').isDefault,
+              'r-2 défaut',
+              true,
+            ),
       ],
       verify: (_) {
-        verify(() => analytics.logEvent(any(that: contains('recipient_default_set'))))
-            .called(1);
+        verify(
+          () =>
+              analytics.logEvent(any(that: contains('recipient_default_set'))),
+        ).called(1);
       },
     );
 
@@ -280,8 +317,9 @@ void main() {
           country: 'SN',
           isDefault: true,
         );
-        when(() => repository.update(any(), any()))
-            .thenAnswer((_) async => updatedAsDefault);
+        when(
+          () => repository.update(any(), any()),
+        ).thenAnswer((_) async => updatedAsDefault);
         return RecipientBloc(repository, analytics);
       },
       seed: () => const RecipientState(
@@ -298,22 +336,33 @@ void main() {
           ),
         ],
       ),
-      act: (bloc) => bloc.add(const RecipientUpdated(
-        id: 'r-1',
-        fullName: 'Mamadou Diallo',
-        phoneE164: '+221771234567',
-        city: 'Dakar',
-        country: 'SN',
-        isDefault: true,
-      )),
+      act: (bloc) => bloc.add(
+        const RecipientUpdated(
+          id: 'r-1',
+          fullName: 'Mamadou Diallo',
+          phoneE164: '+221771234567',
+          city: 'Dakar',
+          country: 'SN',
+          isDefault: true,
+        ),
+      ),
       expect: () => [
+        isA<RecipientState>().having(
+          (s) => s.status,
+          'status',
+          RecipientStatus.loading,
+        ),
         isA<RecipientState>()
-            .having((s) => s.status, 'status', RecipientStatus.loading),
-        isA<RecipientState>()
-            .having((s) => s.recipients.where((r) => r.isDefault).length,
-                'un seul défaut', 1)
-            .having((s) => s.recipients.firstWhere((r) => r.id == 'r-1').isDefault,
-                'r-1 défaut', true),
+            .having(
+              (s) => s.recipients.where((r) => r.isDefault).length,
+              'un seul défaut',
+              1,
+            )
+            .having(
+              (s) => s.recipients.firstWhere((r) => r.id == 'r-1').isDefault,
+              'r-1 défaut',
+              true,
+            ),
       ],
     );
 
@@ -323,10 +372,12 @@ void main() {
       act: (bloc) => bloc.add(const RecipientPicked('saved')),
       expect: () => <RecipientState>[],
       verify: (_) {
-        verify(() => analytics.logEvent(
-              any(that: contains('recipient_selected')),
-              properties: {'source': 'saved'},
-            )).called(1);
+        verify(
+          () => analytics.logEvent(
+            any(that: contains('recipient_selected')),
+            properties: {'source': 'saved'},
+          ),
+        ).called(1);
       },
     );
   });

@@ -47,7 +47,8 @@ class TravelerHeroCard extends StatelessWidget {
     // ce champ, deliveryNoShowStatus seul ne suffit pas à savoir qui doit
     // voir "Absence signalée" (auteur) vs "Une absence est signalée" (adversaire).
     final deliveryStatus = bid.deliveryNoShowStatus;
-    if (deliveryStatus == 'PENDING_CONFIRMATION' || deliveryStatus == 'CONTESTED') {
+    if (deliveryStatus == 'PENDING_CONFIRMATION' ||
+        deliveryStatus == 'CONTESTED') {
       final iAmReporter = bid.deliveryNoShowReportedByTraveler == true;
       return AnimatedSwitcher(
         duration: const Duration(milliseconds: 250),
@@ -115,7 +116,7 @@ _HeroContent? _buildContent(BuildContext context, BidModel bid) {
       return _HeroContent(
         variant: TravelerHeroVariant.wait,
         title: '📨 Nouvelle demande d\'envoi',
-        subtitle: 'Gain potentiel : $amount €. Acceptez ou refusez la demande.',
+        subtitle: 'Gain potentiel : $amount. Acceptez ou refusez la demande.',
       );
 
     case 'ACCEPTED':
@@ -178,7 +179,8 @@ String _formatWindow(DateTime? start, DateTime? end) {
     final fmt = DateFormat('EEE d MMM HH:mm', 'fr');
     final fmtTime = DateFormat('HH:mm', 'fr');
     if (start != null && end != null) {
-      final sameDay = start.year == end.year &&
+      final sameDay =
+          start.year == end.year &&
           start.month == end.month &&
           start.day == end.day;
       if (sameDay) {
@@ -328,15 +330,9 @@ class _HeroButton extends StatelessWidget {
             ? const SizedBox(
                 width: 20,
                 height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: white,
-                ),
+                child: CircularProgressIndicator(strokeWidth: 2, color: white),
               )
-            : FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(label, maxLines: 1),
-              ),
+            : FittedBox(fit: BoxFit.scaleDown, child: Text(label, maxLines: 1)),
       ),
     );
   }
@@ -351,7 +347,10 @@ class _WindowExpiredHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final window = _formatWindow(bid.handoverWindowStart, bid.handoverWindowEnd);
+    final window = _formatWindow(
+      bid.handoverWindowStart,
+      bid.handoverWindowEnd,
+    );
     final subtitle = window.isNotEmpty
         ? 'La remise était prévue $window. L\'expéditeur ne s\'est pas présenté ?'
         : "L'expéditeur ne s'est pas présenté au point de remise ?";
@@ -398,8 +397,8 @@ class _WindowExpiredHero extends StatelessWidget {
               "L'expéditeur aura 48 h pour contester. "
               'Sans réponse de sa part, l\'envoi sera annulé.',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),
@@ -427,9 +426,9 @@ class _NoShowReportedHero extends StatelessWidget {
       title: contested ? '⚖ Absence contestée' : '⏳ Absence signalée',
       subtitle: contested
           ? "L'expéditeur conteste votre signalement. Notre équipe examine la "
-              'demande et vous tiendra informé.'
+                'demande et vous tiendra informé.'
           : "Signalement envoyé. L'expéditeur a 48 h pour confirmer ou "
-              'contester. Sans réponse, l\'envoi sera annulé automatiquement.',
+                'contester. Sans réponse, l\'envoi sera annulé automatiquement.',
     );
   }
 }
@@ -456,9 +455,9 @@ class _DeliveryNoShowHero extends StatelessWidget {
         title: contested ? '⚖ Absence contestée' : '⏳ Absence signalée',
         subtitle: contested
             ? "L'autre partie conteste votre signalement. Notre équipe examine "
-                'la demande et vous tiendra informé.'
+                  'la demande et vous tiendra informé.'
             : "Signalement envoyé. L'autre partie a 24 h pour contester. "
-                'Notre équipe tranche ensuite.',
+                  'Notre équipe tranche ensuite.',
       );
     }
     return BlocBuilder<CancellationBloc, CancellationState>(
@@ -466,20 +465,22 @@ class _DeliveryNoShowHero extends StatelessWidget {
         final isLoading = state is CancellationLoading;
         return _HeroShell(
           variant: TravelerHeroVariant.alert,
-          title: contested ? '⚖ Contestation envoyée' : '⚠ Une absence est signalée',
+          title: contested
+              ? '⚖ Contestation envoyée'
+              : '⚠ Une absence est signalée',
           subtitle: contested
               ? 'Votre contestation a été transmise. Notre équipe examine '
-                  'la demande et vous tiendra informé.'
+                    'la demande et vous tiendra informé.'
               : 'Une absence à la livraison a été signalée sur cet envoi. '
-                  'Vous pouvez contester si ce signalement est erroné.',
+                    'Vous pouvez contester si ce signalement est erroné.',
           footer: contested
               ? null
               : _HeroButton(
                   label: 'Contester ce signalement',
                   isLoading: isLoading,
-                  onPressed: () => context
-                      .read<CancellationBloc>()
-                      .add(DeliveryNoShowContestRequested(bid.id)),
+                  onPressed: () => context.read<CancellationBloc>().add(
+                    DeliveryNoShowContestRequested(bid.id),
+                  ),
                 ),
         );
       },

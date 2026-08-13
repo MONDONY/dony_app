@@ -14,10 +14,10 @@ class MockApiClient extends Mock implements ApiClient {}
 class MockDio extends Mock implements Dio {}
 
 Response<dynamic> _ok(dynamic data, String path) => Response(
-      data: data,
-      statusCode: 200,
-      requestOptions: RequestOptions(path: path),
-    );
+  data: data,
+  statusCode: 200,
+  requestOptions: RequestOptions(path: path),
+);
 
 final _connectJson = {
   'stripeAccountId': 'acct_123',
@@ -30,6 +30,7 @@ final _paymentJson = {
   'clientSecret': 'pi_secret',
   'amount': 120.0,
   'commissionAmount': 14.4,
+  'currency': 'CAD',
   'status': 'PENDING',
 };
 
@@ -72,6 +73,7 @@ void main() {
       expect(m.clientSecret, 'pi_secret');
       expect(m.amount, 120.0);
       expect(m.commissionAmount, 14.4);
+      expect(m.currency, 'CAD');
       expect(m.status, PaymentStatus.pending);
     });
 
@@ -87,6 +89,11 @@ void main() {
       expect(m.clientSecret, isNull);
     });
 
+    test('fromJson defaults historical payments without currency to EUR', () {
+      final json = Map<String, dynamic>.from(_paymentJson)..remove('currency');
+      expect(PaymentModel.fromJson(json).currency, 'EUR');
+    });
+
     test('toJson round-trips correctly', () {
       final m = PaymentModel.fromJson(_paymentJson);
       final json = m.toJson();
@@ -99,16 +106,19 @@ void main() {
     // "bidId": null. Avant le fix, le cast non-nullable jetait, l'erreur était
     // avalée et l'écran retombait sur le bouton "Payer mon envoi" sur un colis
     // pourtant déjà payé (escrow).
-    test('fromJson parses a negotiation/thread payment with null bidId (ESCROW)', () {
-      final m = PaymentModel.fromJson({
-        ..._paymentJson,
-        'bidId': null,
-        'status': 'ESCROW',
-      });
-      expect(m.bidId, isNull);
-      expect(m.status, PaymentStatus.escrow);
-      expect(m.amount, 120.0);
-    });
+    test(
+      'fromJson parses a negotiation/thread payment with null bidId (ESCROW)',
+      () {
+        final m = PaymentModel.fromJson({
+          ..._paymentJson,
+          'bidId': null,
+          'status': 'ESCROW',
+        });
+        expect(m.bidId, isNull);
+        expect(m.status, PaymentStatus.escrow);
+        expect(m.amount, 120.0);
+      },
+    );
 
     test('fromJson with missing bidId does not throw', () {
       final json = Map<String, dynamic>.from(_paymentJson)..remove('bidId');
@@ -117,7 +127,11 @@ void main() {
     });
 
     test('int amounts coerce to double', () {
-      final m = PaymentModel.fromJson({..._paymentJson, 'amount': 100, 'commissionAmount': 12});
+      final m = PaymentModel.fromJson({
+        ..._paymentJson,
+        'amount': 100,
+        'commissionAmount': 12,
+      });
       expect(m.amount, 100.0);
       expect(m.commissionAmount, 12.0);
     });
@@ -127,8 +141,9 @@ void main() {
 
   group('createConnectAccount', () {
     test('returns ConnectAccountModel on success', () async {
-      when(() => mockDio.post('/payments/connect/account'))
-          .thenAnswer((_) async => _ok(_connectJson, '/payments/connect/account'));
+      when(
+        () => mockDio.post('/payments/connect/account'),
+      ).thenAnswer((_) async => _ok(_connectJson, '/payments/connect/account'));
 
       final result = await datasource.createConnectAccount();
 
@@ -141,10 +156,11 @@ void main() {
 
   group('createOnboardingLink', () {
     test('returns url string', () async {
-      when(() => mockDio.post('/payments/connect/onboarding-link'))
-          .thenAnswer((_) async => _ok(
-              {'url': 'https://connect.stripe.com/setup/e/abc'},
-              '/payments/connect/onboarding-link'));
+      when(() => mockDio.post('/payments/connect/onboarding-link')).thenAnswer(
+        (_) async => _ok({
+          'url': 'https://connect.stripe.com/setup/e/abc',
+        }, '/payments/connect/onboarding-link'),
+      );
 
       final url = await datasource.createOnboardingLink();
 
@@ -155,23 +171,28 @@ void main() {
   // ── refreshConnectAccount ────────────────────────────────────────────────────
 
   group('refreshConnectAccount', () {
-    test('returns ConnectAccountModel reflecting current Stripe state', () async {
-      when(() => mockDio.post('/payments/connect/refresh')).thenAnswer(
-          (_) async => _ok(_connectJson, '/payments/connect/refresh'));
+    test(
+      'returns ConnectAccountModel reflecting current Stripe state',
+      () async {
+        when(() => mockDio.post('/payments/connect/refresh')).thenAnswer(
+          (_) async => _ok(_connectJson, '/payments/connect/refresh'),
+        );
 
-      final result = await datasource.refreshConnectAccount();
+        final result = await datasource.refreshConnectAccount();
 
-      expect(result.stripeAccountId, 'acct_123');
-      expect(result.stripeOnboarded, isTrue);
-    });
+        expect(result.stripeAccountId, 'acct_123');
+        expect(result.stripeOnboarded, isTrue);
+      },
+    );
   });
 
   // ── createPayment ─────────────────────────────────────────────────────────────
 
   group('createPayment', () {
     test('returns PaymentModel on success', () async {
-      when(() => mockDio.post('/payments', data: any(named: 'data')))
-          .thenAnswer((_) async => _ok(_paymentJson, '/payments'));
+      when(
+        () => mockDio.post('/payments', data: any(named: 'data')),
+      ).thenAnswer((_) async => _ok(_paymentJson, '/payments'));
 
       final result = await datasource.createPayment('bid-001');
 
@@ -184,8 +205,9 @@ void main() {
 
   group('getPaymentForBid', () {
     test('returns PaymentModel when found', () async {
-      when(() => mockDio.get('/payments/bid/bid-001'))
-          .thenAnswer((_) async => _ok(_paymentJson, '/payments/bid/bid-001'));
+      when(
+        () => mockDio.get('/payments/bid/bid-001'),
+      ).thenAnswer((_) async => _ok(_paymentJson, '/payments/bid/bid-001'));
 
       final result = await datasource.getPaymentForBid('bid-001');
 
@@ -194,13 +216,15 @@ void main() {
     });
 
     test('returns null on 404', () async {
-      when(() => mockDio.get('/payments/bid/bid-999')).thenThrow(DioException(
-        requestOptions: RequestOptions(path: '/payments/bid/bid-999'),
-        response: Response(
+      when(() => mockDio.get('/payments/bid/bid-999')).thenThrow(
+        DioException(
           requestOptions: RequestOptions(path: '/payments/bid/bid-999'),
-          statusCode: 404,
+          response: Response(
+            requestOptions: RequestOptions(path: '/payments/bid/bid-999'),
+            statusCode: 404,
+          ),
         ),
-      ));
+      );
 
       final result = await datasource.getPaymentForBid('bid-999');
 
@@ -208,13 +232,15 @@ void main() {
     });
 
     test('rethrows DioException when not 404', () async {
-      when(() => mockDio.get('/payments/bid/bid-err')).thenThrow(DioException(
-        requestOptions: RequestOptions(path: '/payments/bid/bid-err'),
-        response: Response(
+      when(() => mockDio.get('/payments/bid/bid-err')).thenThrow(
+        DioException(
           requestOptions: RequestOptions(path: '/payments/bid/bid-err'),
-          statusCode: 500,
+          response: Response(
+            requestOptions: RequestOptions(path: '/payments/bid/bid-err'),
+            statusCode: 500,
+          ),
         ),
-      ));
+      );
 
       expect(
         () => datasource.getPaymentForBid('bid-err'),
@@ -226,25 +252,32 @@ void main() {
   // ── createEphemeralKey ───────────────────────────────────────────────────────
 
   group('createEphemeralKey', () {
-    test('POST avec la version d\'API du SDK natif, parse la réponse', () async {
-      when(() => mockDio.post(
+    test(
+      'POST avec la version d\'API du SDK natif, parse la réponse',
+      () async {
+        when(
+          () => mockDio.post(
             '/payments/me/ephemeral-key',
             data: {'stripeVersion': kStripeEphemeralKeyApiVersion},
-          )).thenAnswer(
-        (_) async => _ok(
-          {'ephemeralKeySecret': 'ek_test_secret', 'customerId': 'cus_123'},
-          '/payments/me/ephemeral-key',
-        ),
-      );
+          ),
+        ).thenAnswer(
+          (_) async => _ok({
+            'ephemeralKeySecret': 'ek_test_secret',
+            'customerId': 'cus_123',
+          }, '/payments/me/ephemeral-key'),
+        );
 
-      final result = await datasource.createEphemeralKey();
+        final result = await datasource.createEphemeralKey();
 
-      expect(result.ephemeralKeySecret, 'ek_test_secret');
-      expect(result.customerId, 'cus_123');
-      verify(() => mockDio.post(
+        expect(result.ephemeralKeySecret, 'ek_test_secret');
+        expect(result.customerId, 'cus_123');
+        verify(
+          () => mockDio.post(
             '/payments/me/ephemeral-key',
             data: {'stripeVersion': kStripeEphemeralKeyApiVersion},
-          )).called(1);
-    });
+          ),
+        ).called(1);
+      },
+    );
   });
 }

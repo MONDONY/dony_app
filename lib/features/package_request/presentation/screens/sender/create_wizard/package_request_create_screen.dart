@@ -1,8 +1,12 @@
 import 'dart:async';
 
+import 'package:dony/core/currency/active_currency.dart';
+import 'package:dony/core/currency/currency_publish_banner.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
@@ -90,6 +94,11 @@ class _PackageRequestCreateScreenState
   final _step1Key = GlobalKey<Step1TrajetColisState>();
   final _step2Key = GlobalKey<Step2DetailsState>();
   final _step3Key = GlobalKey<Step3RecapBudgetState>();
+
+  /// Résolue une fois : la devise active ne peut pas changer pendant qu'un
+  /// formulaire de publication est ouvert, et ce getter était réévalué
+  /// jusque dans un `itemBuilder` (lookup GetIt + lecture Hive par ligne).
+  late final SupportedCurrency? _activeCurrency = ActiveCurrency.current;
 
   /// Vrai quand l'étape courante a tous ses champs obligatoires renseignés.
   ///
@@ -390,6 +399,16 @@ class _PackageRequestCreateScreenState
                         context: TutorialContext.requestPublish,
                       ),
                     ),
+                    if (!state.isEditing)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          DonySpacing.base,
+                          DonySpacing.base,
+                          DonySpacing.base,
+                          0,
+                        ),
+                        child: CurrencyPublishBanner.active(),
+                      ),
                     Expanded(
                       child: Step1TrajetColis(
                         key: _step1Key,
@@ -405,6 +424,7 @@ class _PackageRequestCreateScreenState
                 _ => Step3RecapBudget(
                   key: _step3Key,
                   canContinueNotifier: _canContinueNotifier,
+                  currency: _activeCurrency,
                 ),
               },
             ),
@@ -431,11 +451,13 @@ class _PackageRequestCreateScreenState
         PackageRequestPreviewSheet.show(
           context,
           formState: state,
+          currency: _activeCurrency,
           onConfirm: () {
             Navigator.of(context, rootNavigator: true).pop();
             _step3Key.currentState?.submit();
           },
-          onSaveDraft: widget.initial == null ||
+          onSaveDraft:
+              widget.initial == null ||
                   widget.initial!.status == PackageRequestStatus.draft
               ? () {
                   Navigator.of(context, rootNavigator: true).pop();

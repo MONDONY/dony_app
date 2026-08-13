@@ -37,8 +37,9 @@ void main() {
             stripeOnboarded: false,
           ),
         );
-        when(() => mockRepo.createOnboardingLink())
-            .thenAnswer((_) async => 'https://connect.stripe.com/setup');
+        when(
+          () => mockRepo.createOnboardingLink(),
+        ).thenAnswer((_) async => 'https://connect.stripe.com/setup');
       },
       act: (b) => b.add(const PaymentConnectAccountRequested()),
       expect: () => [
@@ -63,24 +64,19 @@ void main() {
         );
       },
       act: (b) => b.add(const PaymentConnectAccountRequested()),
-      expect: () => [
-        const PaymentLoading(),
-        const PaymentOnboardingComplete(),
-      ],
+      expect: () => [const PaymentLoading(), const PaymentOnboardingComplete()],
     );
 
     blocTest<PaymentBloc, PaymentState>(
       'emits [Loading, PaymentError] when createConnectAccount throws',
       build: buildBloc,
       setUp: () {
-        when(() => mockRepo.createConnectAccount())
-            .thenThrow(Exception('network error'));
+        when(
+          () => mockRepo.createConnectAccount(),
+        ).thenThrow(Exception('network error'));
       },
       act: (b) => b.add(const PaymentConnectAccountRequested()),
-      expect: () => [
-        const PaymentLoading(),
-        isA<PaymentError>(),
-      ],
+      expect: () => [const PaymentLoading(), isA<PaymentError>()],
     );
   });
 
@@ -99,10 +95,7 @@ void main() {
         );
       },
       act: (b) => b.add(const PaymentOnboardingStatusChecked()),
-      expect: () => [
-        const PaymentLoading(),
-        const PaymentOnboardingComplete(),
-      ],
+      expect: () => [const PaymentLoading(), const PaymentOnboardingComplete()],
     );
 
     blocTest<PaymentBloc, PaymentState>(
@@ -117,24 +110,19 @@ void main() {
         );
       },
       act: (b) => b.add(const PaymentOnboardingStatusChecked()),
-      expect: () => [
-        const PaymentLoading(),
-        const PaymentOnboardingPending(),
-      ],
+      expect: () => [const PaymentLoading(), const PaymentOnboardingPending()],
     );
 
     blocTest<PaymentBloc, PaymentState>(
       'emits [Loading, PaymentError] when generic exception thrown',
       build: buildBloc,
       setUp: () {
-        when(() => mockRepo.createConnectAccount())
-            .thenThrow(Exception('network error'));
+        when(
+          () => mockRepo.createConnectAccount(),
+        ).thenThrow(Exception('network error'));
       },
       act: (b) => b.add(const PaymentOnboardingStatusChecked()),
-      expect: () => [
-        const PaymentLoading(),
-        isA<PaymentError>(),
-      ],
+      expect: () => [const PaymentLoading(), isA<PaymentError>()],
     );
   });
 
@@ -153,10 +141,7 @@ void main() {
         );
       },
       act: (b) => b.add(const PaymentOnboardingRefreshRequested()),
-      expect: () => [
-        const PaymentLoading(),
-        const PaymentOnboardingComplete(),
-      ],
+      expect: () => [const PaymentLoading(), const PaymentOnboardingComplete()],
     );
 
     blocTest<PaymentBloc, PaymentState>(
@@ -171,24 +156,19 @@ void main() {
         );
       },
       act: (b) => b.add(const PaymentOnboardingRefreshRequested()),
-      expect: () => [
-        const PaymentLoading(),
-        const PaymentOnboardingPending(),
-      ],
+      expect: () => [const PaymentLoading(), const PaymentOnboardingPending()],
     );
 
     blocTest<PaymentBloc, PaymentState>(
       'emits [Loading, Error] when refresh throws',
       build: buildBloc,
       setUp: () {
-        when(() => mockRepo.refreshConnectAccount())
-            .thenThrow(Exception('Stripe down'));
+        when(
+          () => mockRepo.refreshConnectAccount(),
+        ).thenThrow(Exception('Stripe down'));
       },
       act: (b) => b.add(const PaymentOnboardingRefreshRequested()),
-      expect: () => [
-        const PaymentLoading(),
-        isA<PaymentError>(),
-      ],
+      expect: () => [const PaymentLoading(), isA<PaymentError>()],
     );
   });
 
@@ -235,24 +215,19 @@ void main() {
         );
       },
       act: (b) => b.add(const PaymentInitiated('bid-1')),
-      expect: () => [
-        const PaymentLoading(),
-        isA<PaymentError>(),
-      ],
+      expect: () => [const PaymentLoading(), isA<PaymentError>()],
     );
 
     blocTest<PaymentBloc, PaymentState>(
       'emits [Loading, PaymentError] when createPayment throws',
       build: buildBloc,
       setUp: () {
-        when(() => mockRepo.createPayment(any()))
-            .thenThrow(Exception('Stripe error'));
+        when(
+          () => mockRepo.createPayment(any()),
+        ).thenThrow(Exception('Stripe error'));
       },
       act: (b) => b.add(const PaymentInitiated('bid-x')),
-      expect: () => [
-        const PaymentLoading(),
-        isA<PaymentError>(),
-      ],
+      expect: () => [const PaymentLoading(), isA<PaymentError>()],
     );
   });
 
@@ -290,7 +265,11 @@ void main() {
       build: buildBloc,
       act: (b) => b.add(const PaymentFailed('Card declined')),
       expect: () => [
-        isA<PaymentError>().having((s) => s.error.message, 'message', 'Card declined'),
+        isA<PaymentError>().having(
+          (s) => s.error.message,
+          'message',
+          'Card declined',
+        ),
       ],
     );
   });
@@ -305,7 +284,7 @@ void main() {
         commissionAmount: 6.0,
         paymentId: 'p1',
       );
-      expect(s.props, ['cs', 50.0, 6.0, 'p1', <String>[]]);
+      expect(s.props, ['cs', 50.0, 6.0, 'p1', 'EUR', <String>[]]);
     });
 
     test('PaymentEscrowPending props include amount', () {
@@ -331,12 +310,14 @@ void main() {
     blocTest<PaymentBloc, PaymentState>(
       'emits [PaymentInitial, CheckoutPaymentSheetReady] on first checkout',
       build: buildBloc,
-      act: (b) => b.add(const BidCheckoutPaymentRequested(
-        clientSecret: clientSecret,
-        publishableKey: publishableKey,
-        bidId: bidId,
-        amountEur: amountEur,
-      )),
+      act: (b) => b.add(
+        const BidCheckoutPaymentRequested(
+          clientSecret: clientSecret,
+          publishableKey: publishableKey,
+          bidId: bidId,
+          amountEur: amountEur,
+        ),
+      ),
       expect: () => [
         const PaymentInitial(),
         const CheckoutPaymentSheetReady(
@@ -353,20 +334,24 @@ void main() {
       build: buildBloc,
       act: (b) async {
         // Premier checkout
-        b.add(const BidCheckoutPaymentRequested(
-          clientSecret: clientSecret,
-          publishableKey: publishableKey,
-          bidId: bidId,
-          amountEur: amountEur,
-        ));
+        b.add(
+          const BidCheckoutPaymentRequested(
+            clientSecret: clientSecret,
+            publishableKey: publishableKey,
+            bidId: bidId,
+            amountEur: amountEur,
+          ),
+        );
         await Future<void>.delayed(Duration.zero);
         // Deuxième checkout avec le MÊME clientSecret (idempotency backend)
-        b.add(const BidCheckoutPaymentRequested(
-          clientSecret: clientSecret,
-          publishableKey: publishableKey,
-          bidId: bidId,
-          amountEur: amountEur,
-        ));
+        b.add(
+          const BidCheckoutPaymentRequested(
+            clientSecret: clientSecret,
+            publishableKey: publishableKey,
+            bidId: bidId,
+            amountEur: amountEur,
+          ),
+        );
       },
       expect: () => [
         const PaymentInitial(),

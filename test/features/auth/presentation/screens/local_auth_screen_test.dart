@@ -18,24 +18,28 @@ class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
 class MockLocalAuthBloc extends MockBloc<LocalAuthEvent, LocalAuthState>
     implements LocalAuthBloc {}
 
-GoRouter _buildRouter(AuthBloc authBloc, LocalAuthBloc localAuthBloc,
-        {bool verifyMode = false}) =>
-    GoRouter(routes: [
-      GoRoute(
-        path: '/',
-        builder: (_, __) => MultiBlocProvider(
-          providers: [
-            BlocProvider<AuthBloc>.value(value: authBloc),
-            BlocProvider<LocalAuthBloc>.value(value: localAuthBloc),
-          ],
-          child: LocalAuthScreen(verifyMode: verifyMode),
-        ),
+GoRouter _buildRouter(
+  AuthBloc authBloc,
+  LocalAuthBloc localAuthBloc, {
+  bool verifyMode = false,
+}) => GoRouter(
+  routes: [
+    GoRoute(
+      path: '/',
+      builder: (_, __) => MultiBlocProvider(
+        providers: [
+          BlocProvider<AuthBloc>.value(value: authBloc),
+          BlocProvider<LocalAuthBloc>.value(value: localAuthBloc),
+        ],
+        child: LocalAuthScreen(verifyMode: verifyMode),
       ),
-      GoRoute(
-        path: '/auth/method',
-        builder: (_, __) => const Scaffold(body: Text('Méthode de connexion')),
-      ),
-    ]);
+    ),
+    GoRoute(
+      path: '/auth/method',
+      builder: (_, __) => const Scaffold(body: Text('Méthode de connexion')),
+    ),
+  ],
+);
 
 Future<void> _pump(
   WidgetTester tester,
@@ -43,10 +47,16 @@ Future<void> _pump(
   LocalAuthBloc localAuthBloc, {
   bool verifyMode = false,
 }) async {
-  await tester.pumpWidget(MaterialApp.router(
-    theme: AppTheme.light(),
-    routerConfig: _buildRouter(authBloc, localAuthBloc, verifyMode: verifyMode),
-  ));
+  await tester.pumpWidget(
+    MaterialApp.router(
+      theme: AppTheme.light(),
+      routerConfig: _buildRouter(
+        authBloc,
+        localAuthBloc,
+        verifyMode: verifyMode,
+      ),
+    ),
+  );
   await tester.pump(const Duration(milliseconds: 300));
 }
 
@@ -65,10 +75,12 @@ void main() {
     when(() => mockAuthBloc.state).thenReturn(const AuthInitial());
     when(() => mockAuthBloc.stream).thenAnswer((_) => const Stream.empty());
     // L'écran déverrouillage affiche le clavier PIN quand un PIN est requis.
-    when(() => mockLocalAuthBloc.state)
-        .thenReturn(const LocalAuthPinRequired());
-    when(() => mockLocalAuthBloc.stream)
-        .thenAnswer((_) => const Stream.empty());
+    when(
+      () => mockLocalAuthBloc.state,
+    ).thenReturn(const LocalAuthPinRequired());
+    when(
+      () => mockLocalAuthBloc.stream,
+    ).thenAnswer((_) => const Stream.empty());
   });
 
   tearDown(() async {
@@ -77,20 +89,23 @@ void main() {
   });
 
   group('LocalAuthScreen — bouton "Autre compte"', () {
-    testWidgets('affiche le bouton en mode déverrouillage (verifyMode=false)',
-        (tester) async {
+    testWidgets('affiche le bouton en mode déverrouillage (verifyMode=false)', (
+      tester,
+    ) async {
       await _pump(tester, mockAuthBloc, mockLocalAuthBloc);
       expect(find.text('Autre compte'), findsOneWidget);
     });
 
-    testWidgets('MASQUE le bouton en mode vérification (verifyMode=true)',
-        (tester) async {
+    testWidgets('MASQUE le bouton en mode vérification (verifyMode=true)', (
+      tester,
+    ) async {
       await _pump(tester, mockAuthBloc, mockLocalAuthBloc, verifyMode: true);
       expect(find.text('Autre compte'), findsNothing);
     });
 
-    testWidgets('tap puis "Continuer" → dispatch AuthSwitchAccountRequested',
-        (tester) async {
+    testWidgets('tap puis "Continuer" → dispatch AuthSwitchAccountRequested', (
+      tester,
+    ) async {
       await _pump(tester, mockAuthBloc, mockLocalAuthBloc);
 
       await tester.tap(find.text('Autre compte'));
@@ -102,14 +117,16 @@ void main() {
       await tester.tap(find.text('Continuer'));
       await tester.pumpAndSettle();
 
-      verify(() => mockAuthBloc.add(const AuthSwitchAccountRequested()))
-          .called(1);
+      verify(
+        () => mockAuthBloc.add(const AuthSwitchAccountRequested()),
+      ).called(1);
       // Navigation vers l'écran de choix du mode de connexion.
       expect(find.text('Méthode de connexion'), findsOneWidget);
     });
 
-    testWidgets('tap puis "Annuler" → aucun dispatch, dialogue fermé',
-        (tester) async {
+    testWidgets('tap puis "Annuler" → aucun dispatch, dialogue fermé', (
+      tester,
+    ) async {
       await _pump(tester, mockAuthBloc, mockLocalAuthBloc);
 
       await tester.tap(find.text('Autre compte'));
@@ -119,8 +136,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Changer de compte ?'), findsNothing);
-      verifyNever(
-          () => mockAuthBloc.add(const AuthSwitchAccountRequested()));
+      verifyNever(() => mockAuthBloc.add(const AuthSwitchAccountRequested()));
     });
   });
 }

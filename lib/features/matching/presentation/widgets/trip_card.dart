@@ -1,4 +1,7 @@
+import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
@@ -48,54 +51,53 @@ class TripCard extends StatelessWidget {
   // DRAFT n'est jamais considéré comme « passé » : un brouillon n'a pas
   // encore vécu, il attend d'être publié.
   bool get _isPast =>
-      announcement.status == 'COMPLETED' ||
-      announcement.status == 'CANCELLED';
+      announcement.status == 'COMPLETED' || announcement.status == 'CANCELLED';
 
   /// Returns (bgColor, fgColor, label, shouldPulse) for the status badge.
   ({Color bg, Color fg, String label, bool pulse}) _badge(ColorScheme cs) =>
       switch (announcement.status) {
         'DRAFT' => (
-            bg: DonyColors.neutral100,
-            fg: cs.warning,
-            label: 'Brouillon',
-            pulse: false
-          ),
+          bg: DonyColors.neutral100,
+          fg: cs.warning,
+          label: 'Brouillon',
+          pulse: false,
+        ),
         'ACTIVE' => (
-            bg: cs.successLight,
-            fg: cs.success,
-            label: 'Actif',
-            pulse: true
-          ),
+          bg: cs.successLight,
+          fg: cs.success,
+          label: 'Actif',
+          pulse: true,
+        ),
         'IN_PROGRESS' => (
-            bg: cs.infoLight,
-            fg: cs.info,
-            label: 'En cours',
-            pulse: true
-          ),
+          bg: cs.infoLight,
+          fg: cs.info,
+          label: 'En cours',
+          pulse: true,
+        ),
         'FULL' => (
-            bg: cs.warningLight,
-            fg: cs.warning,
-            label: 'Complet',
-            pulse: false
-          ),
+          bg: cs.warningLight,
+          fg: cs.warning,
+          label: 'Complet',
+          pulse: false,
+        ),
         'COMPLETED' => (
-            bg: DonyColors.neutral100,
-            fg: cs.onSurfaceVariant,
-            label: 'Terminé',
-            pulse: false
-          ),
+          bg: DonyColors.neutral100,
+          fg: cs.onSurfaceVariant,
+          label: 'Terminé',
+          pulse: false,
+        ),
         'CANCELLED' => (
-            bg: cs.errorLight,
-            fg: cs.error,
-            label: 'Annulé',
-            pulse: false
-          ),
+          bg: cs.errorLight,
+          fg: cs.error,
+          label: 'Annulé',
+          pulse: false,
+        ),
         _ => (
-            bg: DonyColors.neutral100,
-            fg: cs.onSurfaceVariant,
-            label: announcement.status,
-            pulse: false
-          ),
+          bg: DonyColors.neutral100,
+          fg: cs.onSurfaceVariant,
+          label: announcement.status,
+          pulse: false,
+        ),
       };
 
   /// Human-readable date label relative to today.
@@ -103,8 +105,10 @@ class TripCard extends StatelessWidget {
     final today = DateUtils.dateOnly(DateTime.now());
     final d = DateUtils.dateOnly(announcement.departureDate);
     final diff = d.difference(today).inDays;
-    final dateStr =
-        DateFormat('d MMM', 'fr').format(announcement.departureDate);
+    final dateStr = DateFormat(
+      'd MMM',
+      'fr',
+    ).format(announcement.departureDate);
     if (diff == 0) {
       return "Aujourd'hui · $dateStr";
     }
@@ -114,18 +118,17 @@ class TripCard extends StatelessWidget {
     if (diff > 1 && diff <= 6) {
       return 'Départ dans $diff jours · $dateStr';
     }
-    return DateFormat('EEE d MMM yyyy', 'fr').format(announcement.departureDate);
+    return DateFormat(
+      'EEE d MMM yyyy',
+      'fr',
+    ).format(announcement.departureDate);
   }
 
   /// Formats a kg value: drops .0 suffix for whole numbers.
   String _kg(double v) =>
       '${v.toStringAsFixed(v.truncateToDouble() == v ? 0 : 1)} kg';
 
-  /// Formats price: drops .00 suffix for whole numbers.
-  String _price(double v) =>
-      v.truncateToDouble() == v
-          ? '${v.toStringAsFixed(0)} €'
-          : '${v.toStringAsFixed(2)} €';
+  String _price(double v) => formatPriceIn(v, announcement.currency);
 
   @override
   Widget build(BuildContext context) {
@@ -496,13 +499,17 @@ class _PastCardContent extends StatelessWidget {
                 Row(
                   children: [
                     Text(
-                      announcement.isKgFree ? 'Kg libre' : '${kg(soldKg)} vendus',
+                      announcement.isKgFree
+                          ? 'Kg libre'
+                          : '${kg(soldKg)} vendus',
                       style: tt.bodySmall?.copyWith(
                         color: cs.onSurfaceVariant,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    if (!announcement.isKgFree && isCompleted && soldKg > 0) ...[
+                    if (!announcement.isKgFree &&
+                        isCompleted &&
+                        soldKg > 0) ...[
                       Text(
                         ' · ',
                         style: tt.bodySmall?.copyWith(
@@ -510,7 +517,7 @@ class _PastCardContent extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        '${earned.toStringAsFixed(0)} € gagnés',
+                        '${price(earned)} gagnés',
                         style: tt.bodySmall?.copyWith(
                           color: cs.onSurfaceVariant,
                           fontWeight: FontWeight.w500,
@@ -539,10 +546,7 @@ class _PastCardContent extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────
 
 class _RouteTitle extends StatelessWidget {
-  const _RouteTitle({
-    required this.departure,
-    required this.arrival,
-  });
+  const _RouteTitle({required this.departure, required this.arrival});
 
   final String departure;
   final String arrival;
@@ -565,11 +569,7 @@ class _RouteTitle extends StatelessWidget {
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xs),
-          child: DonyIcon(
-            'arrow-right',
-            size: 16,
-            color: cs.primary,
-          ),
+          child: DonyIcon('arrow-right', size: 16, color: cs.primary),
         ),
         Flexible(
           child: Text(
@@ -600,10 +600,7 @@ class _StatusBadge extends StatelessWidget {
     Widget dot = Container(
       width: 6,
       height: 6,
-      decoration: BoxDecoration(
-        color: badge.fg,
-        shape: BoxShape.circle,
-      ),
+      decoration: BoxDecoration(color: badge.fg, shape: BoxShape.circle),
     );
 
     if (badge.pulse) {
@@ -697,10 +694,7 @@ class _BidStatChip extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────
 
 class _FlightTimeline extends StatelessWidget {
-  const _FlightTimeline({
-    required this.depFlag,
-    required this.arrFlag,
-  });
+  const _FlightTimeline({required this.depFlag, required this.arrFlag});
 
   final String? depFlag;
   final String? arrFlag;
@@ -724,11 +718,7 @@ class _FlightTimeline extends StatelessWidget {
               // Plane icon rotated to point right (Lucide 'plane' points up-left by default)
               RotatedBox(
                 quarterTurns: 1,
-                child: DonyIcon(
-                  'plane',
-                  size: 16,
-                  color: cs.primary,
-                ),
+                child: DonyIcon('plane', size: 16, color: cs.primary),
               ),
             ],
           ),
@@ -756,10 +746,7 @@ class _FlagEndpoint extends StatelessWidget {
     return Container(
       width: 8,
       height: 8,
-      decoration: BoxDecoration(
-        color: cs.primary,
-        shape: BoxShape.circle,
-      ),
+      decoration: BoxDecoration(color: cs.primary, shape: BoxShape.circle),
     );
   }
 }

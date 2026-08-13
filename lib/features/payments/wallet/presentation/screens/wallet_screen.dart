@@ -1,7 +1,11 @@
+import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
+import 'package:dony/features/payments/wallet/data/models/wallet_currency_balance_model.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_transaction_model.dart';
+import 'package:dony/features/settings/presentation/widgets/currency_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -16,12 +20,6 @@ class WalletScreen extends StatefulWidget {
 }
 
 class _WalletScreenState extends State<WalletScreen> {
-  final _currencyFmt = NumberFormat.currency(
-    locale: 'fr_FR',
-    symbol: '€',
-    decimalDigits: 2,
-  );
-
   @override
   void initState() {
     super.initState();
@@ -37,10 +35,7 @@ class _WalletScreenState extends State<WalletScreen> {
           return switch (state) {
             WalletInitial() || WalletLoading() => const _LoadingView(),
             WalletError(:final message) => _ErrorView(message: message),
-            WalletLoaded(:final wallet) => _LoadedView(
-                wallet: wallet,
-                currencyFmt: _currencyFmt,
-              ),
+            WalletLoaded(:final wallet) => _LoadedView(wallet: wallet),
             _ => const SizedBox.shrink(),
           };
         },
@@ -87,9 +82,9 @@ class _ErrorView extends StatelessWidget {
             Text(
               message,
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: cs.onSurfaceVariant,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
             ),
             const SizedBox(height: DonySpacing.xl),
             DonyButton(
@@ -109,17 +104,19 @@ class _ErrorView extends StatelessWidget {
 // ─── Loaded ───────────────────────────────────────────────────────────────────
 
 class _LoadedView extends StatelessWidget {
-  const _LoadedView({
-    required this.wallet,
-    required this.currencyFmt,
-  });
+  const _LoadedView({required this.wallet});
 
   final dynamic wallet;
-  final NumberFormat currencyFmt;
 
   @override
   Widget build(BuildContext context) {
     final transactions = wallet.transactions as List<WalletTransactionModel>;
+    final activeCurrency = SupportedCurrency.fromCodeOrDefault(
+      wallet.currency as String,
+    );
+    final lockedBalances = (wallet.balances as List<WalletCurrencyBalanceModel>)
+        .where((b) => !b.active)
+        .toList();
 
     return RefreshIndicator(
       color: Theme.of(context).colorScheme.primary,
@@ -128,97 +125,114 @@ class _LoadedView extends StatelessWidget {
         bloc.add(WalletRefreshRequested());
         // Attend la fin du rafraîchissement (succès ou erreur) pour masquer
         // l'indicateur de pull-to-refresh.
-        await bloc.stream
-            .firstWhere((s) => s is WalletLoaded || s is WalletError);
+        await bloc.stream.firstWhere(
+          (s) => s is WalletLoaded || s is WalletError,
+        );
       },
       child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
-        // ── Hero SliverAppBar ──────────────────────────────────────────────
-        SliverAppBar(
-          expandedHeight: 220,
-          pinned: true,
-          surfaceTintColor: Colors.transparent,
-          backgroundColor: DonyColors.blue700,
-          leading: const DonyAppBarBackButton(),
-          title: Text(
-            'Mon portefeuille',
-            style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                  color: DonyColors.neutral0,
-                  fontSize: 17,
-                ),
-          ),
-          flexibleSpace: FlexibleSpaceBar(
-            collapseMode: CollapseMode.pin,
-            background: _HeroHeader(
-              balance: wallet.balance as double,
-              currencyFmt: currencyFmt,
+          // ── Hero SliverAppBar ──────────────────────────────────────────────
+          SliverAppBar(
+            expandedHeight: 220,
+            pinned: true,
+            surfaceTintColor: Colors.transparent,
+            backgroundColor: DonyColors.blue700,
+            leading: const DonyAppBarBackButton(),
+            title: Text(
+              'Mon portefeuille',
+              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                color: DonyColors.neutral0,
+                fontSize: 17,
+              ),
+            ),
+            flexibleSpace: FlexibleSpaceBar(
+              collapseMode: CollapseMode.pin,
+              background: _HeroHeader(
+                balance: wallet.balance as double,
+                currency: activeCurrency,
+              ),
             ),
           ),
-        ),
 
-        // ── Transactions list ──────────────────────────────────────────────
-        if (transactions.isEmpty)
-          SliverFillRemaining(
-            hasScrollBody: false,
-            child: Center(
+          // ── Locked (non-active currency) balances ────────────────────────────
+          if (lockedBalances.isNotEmpty)
+            SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: DonySpacing.lg),
+                padding: const EdgeInsets.fromLTRB(
+                  DonySpacing.lg,
+                  DonySpacing.xl,
+                  DonySpacing.lg,
+                  0,
+                ),
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const DonyMascotteAnimated(
-                      type: DonyMascotteType.assis,
-                      size: DonyMascotteSize.lg,
-                    ),
-                    const SizedBox(height: DonySpacing.base),
-                    Text(
-                      'Aucune transaction pour l\'instant',
-                      style:
-                          Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant,
-                              ),
-                    ),
+                    for (final locked in lockedBalances)
+                      _LockedBalanceTile(balance: locked),
                   ],
                 ),
               ),
             ),
-          )
-        else ...[
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                DonySpacing.lg,
-                DonySpacing.xl,
-                DonySpacing.lg,
-                DonySpacing.sm,
+
+          // ── Transactions list ──────────────────────────────────────────────
+          if (transactions.isEmpty)
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: DonySpacing.lg,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const DonyMascotteAnimated(
+                        type: DonyMascotteType.assis,
+                        size: DonyMascotteSize.lg,
+                      ),
+                      const SizedBox(height: DonySpacing.base),
+                      Text(
+                        'Aucune transaction pour l\'instant',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-              child: Text(
-                'Historique',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color:
-                          Theme.of(context).colorScheme.onSurfaceVariant,
-                      letterSpacing: 0.5,
-                    ),
+            )
+          else ...[
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  DonySpacing.lg,
+                  DonySpacing.xl,
+                  DonySpacing.lg,
+                  DonySpacing.sm,
+                ),
+                child: Text(
+                  'Historique',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    letterSpacing: 0.5,
+                  ),
+                ),
               ),
             ),
-          ),
-          SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (ctx, i) => _TxTile(
-                tx: transactions[i],
-                formatter: currencyFmt,
-                index: i,
+            SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (ctx, i) => _TxTile(
+                  tx: transactions[i],
+                  currency: activeCurrency,
+                  index: i,
+                ),
+                childCount: transactions.length,
               ),
-              childCount: transactions.length,
             ),
-          ),
-          const SliverToBoxAdapter(
-            child: SizedBox(height: DonySpacing.huge),
-          ),
-        ],
+            const SliverToBoxAdapter(child: SizedBox(height: DonySpacing.huge)),
+          ],
         ],
       ),
     );
@@ -228,13 +242,10 @@ class _LoadedView extends StatelessWidget {
 // ─── Hero Header ──────────────────────────────────────────────────────────────
 
 class _HeroHeader extends StatelessWidget {
-  const _HeroHeader({
-    required this.balance,
-    required this.currencyFmt,
-  });
+  const _HeroHeader({required this.balance, required this.currency});
 
   final double balance;
-  final NumberFormat currencyFmt;
+  final SupportedCurrency currency;
 
   @override
   Widget build(BuildContext context) {
@@ -262,20 +273,20 @@ class _HeroHeader extends StatelessWidget {
               Text(
                 'Solde disponible',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: DonyColors.neutral0.withValues(alpha: 0.75),
-                      fontSize: 13,
-                    ),
+                  color: DonyColors.neutral0.withValues(alpha: 0.75),
+                  fontSize: 13,
+                ),
               ),
               const SizedBox(height: DonySpacing.xs),
               Text(
-                currencyFmt.format(balance),
-                style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                    CurrencyFormatter.format(balance, currency),
+                    style: Theme.of(context).textTheme.displayLarge?.copyWith(
                       color: DonyColors.neutral0,
                       fontSize: 36,
                       fontWeight: FontWeight.w800,
                       letterSpacing: -0.5,
                     ),
-              )
+                  )
                   .animate()
                   .fadeIn(duration: 300.ms)
                   .slideY(begin: 0.1, curve: Curves.easeOutCubic),
@@ -289,16 +300,17 @@ class _HeroHeader extends StatelessWidget {
                       // Solde avant la recharge : sert de référence au polling
                       // post-recharge (on s'arrête dès qu'il augmente).
                       final previousBalance = balance;
-                      final ok = await context
-                          .push<bool>('/payments/wallet/topup/method');
+                      final ok = await context.push<bool>(
+                        '/payments/wallet/topup/method',
+                      );
                       if (ok != true || !context.mounted) {
                         return;
                       }
                       // Le crédit Stripe arrive de façon asynchrone via webhook :
                       // on poll le solde jusqu'à ce qu'il dépasse l'ancien.
                       context.read<WalletBloc>().add(
-                            WalletRefreshAfterTopupRequested(previousBalance),
-                          );
+                        WalletRefreshAfterTopupRequested(previousBalance),
+                      );
                     },
                   ),
                   const SizedBox(width: DonySpacing.sm),
@@ -361,9 +373,9 @@ class _HeroAction extends StatelessWidget {
               Text(
                 label,
                 style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: DonyColors.neutral0,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  color: DonyColors.neutral0,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),
@@ -378,22 +390,22 @@ class _HeroAction extends StatelessWidget {
 class _TxTile extends StatelessWidget {
   const _TxTile({
     required this.tx,
-    required this.formatter,
+    required this.currency,
     required this.index,
   });
 
   final WalletTransactionModel tx;
-  final NumberFormat formatter;
+  final SupportedCurrency currency;
   final int index;
 
   String get _label => switch (tx.type) {
-        'TOP_UP' => 'Recharge',
-        'BID_PAYMENT' => 'Paiement colis',
-        'COMMISSION_DEDUCTED' => 'Commission',
-        'REFUND' => 'Remboursement',
-        'REFERRAL_REWARD' => 'Parrainage',
-        _ => tx.type,
-      };
+    'TOP_UP' => 'Recharge',
+    'BID_PAYMENT' => 'Paiement colis',
+    'COMMISSION_DEDUCTED' => 'Commission',
+    'REFUND' => 'Remboursement',
+    'REFERRAL_REWARD' => 'Parrainage',
+    _ => tx.type,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -403,63 +415,158 @@ class _TxTile extends StatelessWidget {
     final amountPrefix = isCredit ? '+' : '';
 
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: DonySpacing.lg,
-        vertical: DonySpacing.xs,
-      ),
-      child: DonyCard(
-        child: Row(
-          children: [
-            // Icon container
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: isCredit ? DonyColors.blue50 : DonyColors.terra50,
-                borderRadius: BorderRadius.circular(DonyRadius.md),
-              ),
-              child: DonyIcon(
-                isCredit ? 'arrow-down' : 'arrow-up',
-                color: isCredit ? cs.primary : DonyColors.terra500,
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: DonySpacing.base),
-            // Label + date
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _label,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontSize: 14,
-                        ),
+          padding: const EdgeInsets.symmetric(
+            horizontal: DonySpacing.lg,
+            vertical: DonySpacing.xs,
+          ),
+          child: DonyCard(
+            child: Row(
+              children: [
+                // Icon container
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: isCredit ? DonyColors.blue50 : DonyColors.terra50,
+                    borderRadius: BorderRadius.circular(DonyRadius.md),
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    DateFormat('dd MMM · HH:mm', 'fr_FR').format(tx.createdAt),
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  child: DonyIcon(
+                    isCredit ? 'arrow-down' : 'arrow-up',
+                    color: isCredit ? cs.primary : DonyColors.terra500,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: DonySpacing.base),
+                // Label + date
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _label,
+                        style: Theme.of(
+                          context,
+                        ).textTheme.titleLarge?.copyWith(fontSize: 14),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        DateFormat(
+                          'dd MMM · HH:mm',
+                          'fr_FR',
+                        ).format(tx.createdAt),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: cs.onSurfaceVariant,
                         ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ),
-            // Amount
-            Text(
-              '$amountPrefix${formatter.format(tx.amount.abs())}',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                ),
+                // Amount
+                Text(
+                  '$amountPrefix${CurrencyFormatter.format(tx.amount.abs(), currency)}',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     color: amountColor,
                     fontWeight: FontWeight.w700,
                   ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
-    )
+          ),
+        )
         .animate(delay: (60 * index).ms)
         .fadeIn(duration: 250.ms)
         .slideX(begin: 0.04, curve: Curves.easeOutCubic);
+  }
+}
+
+// ─── Locked (non-active currency) balance tile ─────────────────────────────────
+
+class _LockedBalanceTile extends StatelessWidget {
+  const _LockedBalanceTile({required this.balance});
+
+  final WalletCurrencyBalanceModel balance;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final currency = SupportedCurrency.fromCodeOrDefault(balance.currency);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: DonySpacing.sm),
+      child: Semantics(
+        button: true,
+        label:
+            'Devise verrouillée ${currency.displayName}, '
+            'appuyez pour basculer et l\'utiliser',
+        child: DonyCard(
+          onTap: () async {
+            final changed = await CurrencyPicker.switchTo(context, currency);
+            if (changed && context.mounted) {
+              context.read<WalletBloc>().add(WalletLoadRequested());
+            }
+          },
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: cs.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(DonyRadius.md),
+                ),
+                child: Icon(
+                  Icons.lock_outline_rounded,
+                  color: cs.onSurfaceVariant,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: DonySpacing.base),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          CurrencyFormatter.format(balance.balance, currency),
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                              ),
+                        ),
+                        const SizedBox(width: DonySpacing.xs),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: DonySpacing.xs,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: cs.surfaceContainerHighest,
+                            borderRadius: BorderRadius.circular(DonyRadius.sm),
+                          ),
+                          child: Text(
+                            'verrouillé',
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(color: cs.onSurfaceVariant),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Appuie pour basculer sur ${currency.displayName} et l\'utiliser.',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

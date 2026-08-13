@@ -5,10 +5,14 @@ import 'package:json_annotation/json_annotation.dart';
 part 'bid_model.g.dart';
 
 enum BidPaymentMethod {
-  @JsonValue('STRIPE') stripe,
-  @JsonValue('CASH') cash,
-  @JsonValue('WAVE') wave,
-  @JsonValue('ORANGE_MONEY') orangeMoney,
+  @JsonValue('STRIPE')
+  stripe,
+  @JsonValue('CASH')
+  cash,
+  @JsonValue('WAVE')
+  wave,
+  @JsonValue('ORANGE_MONEY')
+  orangeMoney,
 }
 
 /// Extension exposing the canonical API string value for each [BidPaymentMethod].
@@ -23,18 +27,27 @@ extension BidPaymentMethodApi on BidPaymentMethod {
 }
 
 enum CommissionStatus {
-  @JsonValue('PENDING') pending,
-  @JsonValue('REQUIRES_3DS') requires3ds,
-  @JsonValue('CHARGED') charged,
-  @JsonValue('FAILED') failed,
-  @JsonValue('REFUNDED') refunded,
-  @JsonValue('REFUND_FAILED') refundFailed,
+  @JsonValue('PENDING')
+  pending,
+  @JsonValue('REQUIRES_3DS')
+  requires3ds,
+  @JsonValue('CHARGED')
+  charged,
+  @JsonValue('FAILED')
+  failed,
+  @JsonValue('REFUNDED')
+  refunded,
+  @JsonValue('REFUND_FAILED')
+  refundFailed,
 }
 
 enum BidPricingMode {
-  @JsonValue('KG') kg,
-  @JsonValue('GRID') grid,
-  @JsonValue('MIXED') mixed,
+  @JsonValue('KG')
+  kg,
+  @JsonValue('GRID')
+  grid,
+  @JsonValue('MIXED')
+  mixed,
 }
 
 @JsonSerializable()
@@ -43,6 +56,7 @@ class BidModel {
   final String announcementId;
   final String senderId;
   final String? senderName;
+
   /// L'expéditeur est joignable : l'UI peut afficher le bouton d'appel. Le numéro
   /// lui-même s'obtient au tap via `GET /bids/{id}/contact` — il ne transite plus
   /// dans les réponses de liste.
@@ -90,6 +104,7 @@ class BidModel {
   final String? confirmationCode;
   final String? travelerId;
   final String? travelerName;
+
   /// Idem [senderPhoneAvailable], côté voyageur.
   final bool travelerPhoneAvailable;
   final bool travelerKycVerified;
@@ -156,6 +171,11 @@ class BidModel {
   /// Photos du colis (présignées, ACTIVE). Vide si aucune ou après passage DELETING serveur.
   @JsonKey(defaultValue: <BidPhoto>[])
   final List<BidPhoto> photos;
+
+  /// Devise du bid, héritée de l'annonce à la création. `EUR` par défaut pour
+  /// les anciens payloads sans ce champ.
+  @JsonKey(defaultValue: 'EUR')
+  final String currency;
 
   const BidModel({
     required this.id,
@@ -224,6 +244,7 @@ class BidModel {
     this.senderAvatarUrl,
     this.travelerAvatarUrl,
     this.photos = const [],
+    this.currency = 'EUR',
   });
 
   factory BidModel.fromJson(Map<String, dynamic> json) =>
@@ -241,20 +262,25 @@ class BidModel {
     final h = int.tryParse(parts[0]) ?? 0;
     final m = int.tryParse(parts[1]) ?? 0;
     return DateTime(
-        departureDate!.year, departureDate!.month, departureDate!.day, h, m);
+      departureDate!.year,
+      departureDate!.month,
+      departureDate!.day,
+      h,
+      m,
+    );
   }
 
   /// Minimal placeholder used when navigating from a deep-link (no BidModel in extra).
   /// The screen fetches the real data immediately via BidDetailRequested.
   factory BidModel.skeleton(String id) => BidModel(
-        id: id,
-        announcementId: '',
-        senderId: '',
-        weightKg: 0,
-        status: '',
-        createdAt: DateTime.fromMillisecondsSinceEpoch(0),
-        updatedAt: DateTime.fromMillisecondsSinceEpoch(0),
-      );
+    id: id,
+    announcementId: '',
+    senderId: '',
+    weightKg: 0,
+    status: '',
+    createdAt: DateTime.fromMillisecondsSinceEpoch(0),
+    updatedAt: DateTime.fromMillisecondsSinceEpoch(0),
+  );
 
   bool get isSkeleton => senderId.isEmpty;
 

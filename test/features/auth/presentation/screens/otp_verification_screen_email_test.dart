@@ -18,7 +18,10 @@ import '../../../../helpers/mock_analytics_backend.dart';
 
 class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
 
-Widget _buildEmail({required AuthBloc bloc, String contact = 'user@example.com'}) {
+Widget _buildEmail({
+  required AuthBloc bloc,
+  String contact = 'user@example.com',
+}) {
   return MaterialApp.router(
     routerConfig: GoRouter(
       routes: [
@@ -26,13 +29,13 @@ Widget _buildEmail({required AuthBloc bloc, String contact = 'user@example.com'}
           path: '/',
           builder: (_, __) => BlocProvider<AuthBloc>.value(
             value: bloc,
-            child: OtpVerificationScreen(
-              mode: OtpMode.email,
-              contact: contact,
-            ),
+            child: OtpVerificationScreen(mode: OtpMode.email, contact: contact),
           ),
         ),
-        GoRoute(path: '/auth/referral-code', builder: (_, __) => const Scaffold(body: Text('Referral Code'))),
+        GoRoute(
+          path: '/auth/currency-selection',
+          builder: (_, __) => const Scaffold(body: Text('Currency selection')),
+        ),
       ],
     ),
   );
@@ -51,8 +54,9 @@ void main() {
       final box = MockBox();
       when(() => hive.userPrefs).thenReturn(box);
       when(() => box.get(any())).thenReturn(null);
-      when(() => box.get(any(), defaultValue: any(named: 'defaultValue')))
-          .thenAnswer((i) => i.namedArguments[const Symbol('defaultValue')]);
+      when(
+        () => box.get(any(), defaultValue: any(named: 'defaultValue')),
+      ).thenAnswer((i) => i.namedArguments[const Symbol('defaultValue')]);
       when(() => box.put(any(), any())).thenAnswer((_) async {});
       getIt.registerSingleton<HiveService>(hive);
     }
@@ -69,7 +73,9 @@ void main() {
     registerFallbackValue(const AuthRegisterWithEmailRequested(email: ''));
   });
 
-  testWidgets('mode email — affiche "Code reçu ?" et l\'adresse', (tester) async {
+  testWidgets('mode email — affiche "Code reçu ?" et l\'adresse', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(1080, 1920);
     tester.view.devicePixelRatio = 3.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -81,84 +87,114 @@ void main() {
     expect(find.textContaining('user@example.com'), findsOneWidget);
   });
 
-  testWidgets('mode email — dispatche AuthEmailOtpVerifyRequested sur vérifier', (tester) async {
+  testWidgets(
+    'mode email — dispatche AuthEmailOtpVerifyRequested sur vérifier',
+    (tester) async {
+      tester.view.physicalSize = const Size(1080, 1920);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(_buildEmail(bloc: mockBloc));
+      await tester.pump();
+
+      final fields = find.byType(TextFormField);
+      for (int i = 0; i < 6; i++) {
+        await tester.enterText(fields.at(i), '$i');
+      }
+      await tester.tap(find.text('Vérifier'));
+
+      verify(
+        () => mockBloc.add(
+          AuthEmailOtpVerifyRequested(
+            email: 'user@example.com',
+            code: '012345',
+          ),
+        ),
+      ).called(1);
+    },
+  );
+
+  testWidgets(
+    'mode email — dispatche AuthRegisterWithEmailRequested quand AuthEmailOtpVerified',
+    (tester) async {
+      tester.view.physicalSize = const Size(1080, 1920);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      whenListen(
+        mockBloc,
+        Stream.fromIterable([
+          const AuthLoading(),
+          AuthEmailOtpVerified('user@example.com'),
+        ]),
+        initialState: AuthEmailOtpSent('user@example.com'),
+      );
+      await tester.pumpWidget(_buildEmail(bloc: mockBloc));
+      await tester.pumpAndSettle();
+
+      verify(
+        () => mockBloc.add(
+          const AuthRegisterWithEmailRequested(email: 'user@example.com'),
+        ),
+      ).called(1);
+    },
+  );
+
+  testWidgets('mode email — affiche le timer du state AuthEmailOtpSent', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(1080, 1920);
     tester.view.devicePixelRatio = 3.0;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    await tester.pumpWidget(_buildEmail(bloc: mockBloc));
-    await tester.pump();
-
-    final fields = find.byType(TextFormField);
-    for (int i = 0; i < 6; i++) {
-      await tester.enterText(fields.at(i), '$i');
-    }
-    await tester.tap(find.text('Vérifier'));
-
-    verify(() => mockBloc.add(
-          AuthEmailOtpVerifyRequested(email: 'user@example.com', code: '012345'),
-        )).called(1);
-  });
-
-  testWidgets('mode email — dispatche AuthRegisterWithEmailRequested quand AuthEmailOtpVerified', (tester) async {
-    tester.view.physicalSize = const Size(1080, 1920);
-    tester.view.devicePixelRatio = 3.0;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-
-    whenListen(
-      mockBloc,
-      Stream.fromIterable([const AuthLoading(), AuthEmailOtpVerified('user@example.com')]),
-      initialState: AuthEmailOtpSent('user@example.com'),
-    );
-    await tester.pumpWidget(_buildEmail(bloc: mockBloc));
-    await tester.pumpAndSettle();
-
-    verify(() => mockBloc.add(
-      const AuthRegisterWithEmailRequested(email: 'user@example.com'),
-    )).called(1);
-  });
-
-  testWidgets('mode email — affiche le timer du state AuthEmailOtpSent', (tester) async {
-    tester.view.physicalSize = const Size(1080, 1920);
-    tester.view.devicePixelRatio = 3.0;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-
-    when(() => mockBloc.state).thenReturn(AuthEmailOtpSent('user@example.com', secondsLeft: 42));
+    when(
+      () => mockBloc.state,
+    ).thenReturn(AuthEmailOtpSent('user@example.com', secondsLeft: 42));
     await tester.pumpWidget(_buildEmail(bloc: mockBloc));
     await tester.pump(const Duration(seconds: 1));
 
     expect(find.textContaining('42'), findsOneWidget);
   });
 
-  testWidgets('mode email — _resend() dispatche AuthEmailOtpSendRequested quand timer = 0', (tester) async {
-    // Use a taller screen to ensure the resend link is not obscured by the pinned button
-    tester.view.physicalSize = const Size(1080, 2400);
-    tester.view.devicePixelRatio = 3.0;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
+  testWidgets(
+    'mode email — _resend() dispatche AuthEmailOtpSendRequested quand timer = 0',
+    (tester) async {
+      // Use a taller screen to ensure the resend link is not obscured by the pinned button
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
 
-    // Timer à 0 → bouton "Renvoyer" actif
-    final stateWithZero = AuthEmailOtpSent('user@example.com', secondsLeft: 0);
-    when(() => mockBloc.state).thenReturn(stateWithZero);
-    when(() => mockBloc.stream).thenAnswer((_) => const Stream.empty());
-    await tester.pumpWidget(_buildEmail(bloc: mockBloc));
-    // Drain all pending animation timers
-    await tester.pumpAndSettle(const Duration(seconds: 1));
+      // Timer à 0 → bouton "Renvoyer" actif
+      final stateWithZero = AuthEmailOtpSent(
+        'user@example.com',
+        secondsLeft: 0,
+      );
+      when(() => mockBloc.state).thenReturn(stateWithZero);
+      when(() => mockBloc.stream).thenAnswer((_) => const Stream.empty());
+      await tester.pumpWidget(_buildEmail(bloc: mockBloc));
+      // Drain all pending animation timers
+      await tester.pumpAndSettle(const Duration(seconds: 1));
 
-    // Le texte "Renvoyer le code" sans compteur est visible et tappable
-    final resendFinder = find.text('Renvoyer le code');
-    expect(resendFinder, findsOneWidget);
+      // Le texte "Renvoyer le code" sans compteur est visible et tappable
+      final resendFinder = find.text('Renvoyer le code');
+      expect(resendFinder, findsOneWidget);
 
-    await tester.tap(resendFinder);
-    await tester.pump();
+      await tester.tap(resendFinder);
+      await tester.pump();
 
-    verify(() => mockBloc.add(const AuthEmailOtpSendRequested('user@example.com'))).called(1);
-  });
+      verify(
+        () => mockBloc.add(const AuthEmailOtpSendRequested('user@example.com')),
+      ).called(1);
+    },
+  );
 
-  testWidgets('mode email — déclenche ErrorPresenter quand AuthError émis', (tester) async {
+  testWidgets('mode email — déclenche ErrorPresenter quand AuthError émis', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(1080, 1920);
     tester.view.devicePixelRatio = 3.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -181,22 +217,33 @@ void main() {
     expect(find.text('Vérifier'), findsOneWidget);
   });
 
-  testWidgets('mode email — poursuit vers le parrainage, aucune étape code PIN quand AuthAuthenticated émis', (tester) async {
-    tester.view.physicalSize = const Size(1080, 1920);
-    tester.view.devicePixelRatio = 3.0;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
+  testWidgets(
+    'mode email — poursuit vers la sélection de devise, aucune étape code PIN quand AuthAuthenticated émis',
+    (tester) async {
+      tester.view.physicalSize = const Size(1080, 1920);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
 
-    whenListen(
-      mockBloc,
-      Stream.fromIterable([const AuthLoading(), AuthAuthenticated(
-        const UserModel(id: 'u1', roles: ['SENDER'], kycStatus: 'NOT_STARTED', status: 'ACTIVE'),
-      )]),
-      initialState: AuthEmailOtpSent('user@example.com'),
-    );
-    await tester.pumpWidget(_buildEmail(bloc: mockBloc));
-    await tester.pumpAndSettle();
+      whenListen(
+        mockBloc,
+        Stream.fromIterable([
+          const AuthLoading(),
+          AuthAuthenticated(
+            const UserModel(
+              id: 'u1',
+              roles: ['SENDER'],
+              kycStatus: 'NOT_STARTED',
+              status: 'ACTIVE',
+            ),
+          ),
+        ]),
+        initialState: AuthEmailOtpSent('user@example.com'),
+      );
+      await tester.pumpWidget(_buildEmail(bloc: mockBloc));
+      await tester.pumpAndSettle();
 
-    expect(find.text('Referral Code'), findsOneWidget);
-  });
+      expect(find.text('Currency selection'), findsOneWidget);
+    },
+  );
 }

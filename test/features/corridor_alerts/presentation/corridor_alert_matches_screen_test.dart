@@ -24,44 +24,43 @@ import 'package:mocktail/mocktail.dart';
 class MockMatchesCubit extends MockCubit<CorridorAlertMatchesState>
     implements CorridorAlertMatchesCubit {}
 
-class MockAuthBloc extends MockBloc<AuthEvent, AuthState>
-    implements AuthBloc {}
+class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
 
 CorridorAlertModel _alert(AlertDirection direction) => CorridorAlertModel(
-      id: 'alert-1',
-      departureCity: 'Paris',
-      arrivalCity: 'Dakar',
-      active: true,
-      matchCount: 1,
-      direction: direction,
-      createdAt: DateTime(2026, 6, 20),
-    );
+  id: 'alert-1',
+  departureCity: 'Paris',
+  arrivalCity: 'Dakar',
+  active: true,
+  matchCount: 1,
+  direction: direction,
+  createdAt: DateTime(2026, 6, 20),
+);
 
 MatchingRequestModel _fakePackage() => MatchingRequestModel(
-      id: 'p-1',
-      senderId: 'sender-1',
-      senderName: 'Jean D.',
-      senderInitials: 'JD',
-      senderRating: 4.5,
-      senderTotalSent: 10,
-      weightKg: 5.0,
-      budgetPerKg: 10.0,
-      matchScore: 85,
-      requestedAt: DateTime(2026, 6, 20),
-    );
+  id: 'p-1',
+  senderId: 'sender-1',
+  senderName: 'Jean D.',
+  senderInitials: 'JD',
+  senderRating: 4.5,
+  senderTotalSent: 10,
+  weightKg: 5.0,
+  budgetPerKg: 10.0,
+  matchScore: 85,
+  requestedAt: DateTime(2026, 6, 20),
+);
 
 TripMatchModel _fakeTrip() => TripMatchModel(
-      announcementId: 'ann-1',
-      departureCity: 'Paris',
-      arrivalCity: 'Dakar',
-      departureDate: DateTime(2026, 7, 10),
-      travelerId: 't-1',
-      travelerName: 'Awa S.',
-      travelerInitials: 'AS',
-      travelerRating: 4.7,
-      availableKg: 12.0,
-      pricePerKg: 9.5,
-    );
+  announcementId: 'ann-1',
+  departureCity: 'Paris',
+  arrivalCity: 'Dakar',
+  departureDate: DateTime(2026, 7, 10),
+  travelerId: 't-1',
+  travelerName: 'Awa S.',
+  travelerInitials: 'AS',
+  travelerRating: 4.7,
+  availableKg: 12.0,
+  pricePerKg: 9.5,
+);
 
 void main() {
   late MockMatchesCubit cubit;
@@ -80,113 +79,117 @@ void main() {
     // Stub load() so the screen's BlocProvider create clause doesn't throw.
     when(() => cubit.load()).thenAnswer((_) async {});
     // GetIt: register the cubit factory param so the screen can build it.
-    GetIt.I.registerFactoryParam<CorridorAlertMatchesCubit, String,
-        AlertDirection>(
-      (_, __) => cubit,
-    );
+    GetIt.I.registerFactoryParam<
+      CorridorAlertMatchesCubit,
+      String,
+      AlertDirection
+    >((_, __) => cubit);
   });
 
   tearDown(() => GetIt.I.reset());
 
   Widget pump(AlertDirection direction) => MultiBlocProvider(
-        providers: [
-          BlocProvider<AuthBloc>.value(value: authBloc),
-        ],
-        child: MaterialApp(
-          theme: AppTheme.light(),
-          home: CorridorAlertMatchesScreen(alert: _alert(direction)),
-        ),
-      );
+    providers: [BlocProvider<AuthBloc>.value(value: authBloc)],
+    child: MaterialApp(
+      theme: AppTheme.light(),
+      home: CorridorAlertMatchesScreen(alert: _alert(direction)),
+    ),
+  );
 
-  testWidgets('package direction loaded → MatchingRequestCard rendered',
-      (tester) async {
-    when(() => cubit.state).thenReturn(CorridorAlertMatchesState(
-      status: CorridorAlertMatchesStatus.loaded,
-      result: CorridorAlertMatches(
-        direction: AlertDirection.travelerWantsPackages,
-        packages: [_fakePackage()],
+  testWidgets('package direction loaded → MatchingRequestCard rendered', (
+    tester,
+  ) async {
+    when(() => cubit.state).thenReturn(
+      CorridorAlertMatchesState(
+        status: CorridorAlertMatchesStatus.loaded,
+        result: CorridorAlertMatches(
+          direction: AlertDirection.travelerWantsPackages,
+          packages: [_fakePackage()],
+        ),
       ),
-    ));
+    );
     await tester.pumpWidget(pump(AlertDirection.travelerWantsPackages));
     await tester.pump(const Duration(milliseconds: 600));
     expect(find.byType(MatchingRequestCard), findsOneWidget);
   });
 
   testWidgets('trip direction loaded → TripMatchCard rendered', (tester) async {
-    when(() => cubit.state).thenReturn(CorridorAlertMatchesState(
-      status: CorridorAlertMatchesStatus.loaded,
-      result: CorridorAlertMatches(
-        direction: AlertDirection.senderWantsTrips,
-        trips: [_fakeTrip()],
+    when(() => cubit.state).thenReturn(
+      CorridorAlertMatchesState(
+        status: CorridorAlertMatchesStatus.loaded,
+        result: CorridorAlertMatches(
+          direction: AlertDirection.senderWantsTrips,
+          trips: [_fakeTrip()],
+        ),
       ),
-    ));
+    );
     await tester.pumpWidget(pump(AlertDirection.senderWantsTrips));
     await tester.pump(const Duration(milliseconds: 600));
     expect(find.byType(TripMatchCard), findsOneWidget);
   });
 
   testWidgets('trip direction empty → Aucun trajet copy', (tester) async {
-    when(() => cubit.state).thenReturn(const CorridorAlertMatchesState(
-      status: CorridorAlertMatchesStatus.empty,
-    ));
+    when(() => cubit.state).thenReturn(
+      const CorridorAlertMatchesState(status: CorridorAlertMatchesStatus.empty),
+    );
     await tester.pumpWidget(pump(AlertDirection.senderWantsTrips));
     await tester.pump(const Duration(milliseconds: 600));
     expect(find.textContaining('Aucun trajet'), findsWidgets);
   });
 
   testWidgets('package direction empty → Aucun colis copy', (tester) async {
-    when(() => cubit.state).thenReturn(const CorridorAlertMatchesState(
-      status: CorridorAlertMatchesStatus.empty,
-    ));
+    when(() => cubit.state).thenReturn(
+      const CorridorAlertMatchesState(status: CorridorAlertMatchesStatus.empty),
+    );
     await tester.pumpWidget(pump(AlertDirection.travelerWantsPackages));
     await tester.pump(const Duration(milliseconds: 600));
     expect(find.textContaining('Aucun colis'), findsWidgets);
   });
 
   testWidgets(
-      'trip direction loaded → tapping TripMatchCard navigates to /traveler/ann-1',
-      (tester) async {
-    when(() => cubit.state).thenReturn(CorridorAlertMatchesState(
-      status: CorridorAlertMatchesStatus.loaded,
-      result: CorridorAlertMatches(
-        direction: AlertDirection.senderWantsTrips,
-        trips: [_fakeTrip()],
-      ),
-    ));
-
-    final router = GoRouter(
-      routes: [
-        GoRoute(
-          path: '/matches',
-          builder: (context, state) => MultiBlocProvider(
-            providers: [
-              BlocProvider<AuthBloc>.value(value: authBloc),
-            ],
-            child: CorridorAlertMatchesScreen(
-                alert: _alert(AlertDirection.senderWantsTrips)),
+    'trip direction loaded → tapping TripMatchCard navigates to /traveler/ann-1',
+    (tester) async {
+      when(() => cubit.state).thenReturn(
+        CorridorAlertMatchesState(
+          status: CorridorAlertMatchesStatus.loaded,
+          result: CorridorAlertMatches(
+            direction: AlertDirection.senderWantsTrips,
+            trips: [_fakeTrip()],
           ),
         ),
-        GoRoute(
-          path: '/traveler/:announcementId',
-          builder: (context, state) => const Scaffold(
-            body: Text('traveler-detail'),
+      );
+
+      final router = GoRouter(
+        routes: [
+          GoRoute(
+            path: '/matches',
+            builder: (context, state) => MultiBlocProvider(
+              providers: [BlocProvider<AuthBloc>.value(value: authBloc)],
+              child: CorridorAlertMatchesScreen(
+                alert: _alert(AlertDirection.senderWantsTrips),
+              ),
+            ),
           ),
-        ),
-      ],
-      initialLocation: '/matches',
-    );
+          GoRoute(
+            path: '/traveler/:announcementId',
+            builder: (context, state) =>
+                const Scaffold(body: Text('traveler-detail')),
+          ),
+        ],
+        initialLocation: '/matches',
+      );
 
-    await tester.pumpWidget(MaterialApp.router(
-      routerConfig: router,
-      theme: AppTheme.light(),
-    ));
-    await tester.pump(const Duration(milliseconds: 600));
+      await tester.pumpWidget(
+        MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
+      );
+      await tester.pump(const Duration(milliseconds: 600));
 
-    expect(find.byType(TripMatchCard), findsOneWidget);
+      expect(find.byType(TripMatchCard), findsOneWidget);
 
-    await tester.tap(find.byType(TripMatchCard));
-    await tester.pumpAndSettle();
+      await tester.tap(find.byType(TripMatchCard));
+      await tester.pumpAndSettle();
 
-    expect(find.text('traveler-detail'), findsOneWidget);
-  });
+      expect(find.text('traveler-detail'), findsOneWidget);
+    },
+  );
 }

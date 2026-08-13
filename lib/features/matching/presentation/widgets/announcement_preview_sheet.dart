@@ -1,3 +1,5 @@
+import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
@@ -9,6 +11,7 @@ class AnnouncementPreviewSheet extends StatelessWidget {
   final VoidCallback onConfirm;
   final bool isSubmitting;
   final TimeOfDay? departureTime;
+  final SupportedCurrency? currency;
 
   const AnnouncementPreviewSheet({
     super.key,
@@ -16,6 +19,7 @@ class AnnouncementPreviewSheet extends StatelessWidget {
     required this.onConfirm,
     this.isSubmitting = false,
     this.departureTime,
+    this.currency,
   });
 
   static Future<void> show(
@@ -25,6 +29,7 @@ class AnnouncementPreviewSheet extends StatelessWidget {
     VoidCallback? onSaveDraft,
     bool isSubmitting = false,
     TimeOfDay? departureTime,
+    SupportedCurrency? currency,
   }) {
     return DonyBottomSheet.show<void>(
       context,
@@ -52,6 +57,7 @@ class AnnouncementPreviewSheet extends StatelessWidget {
         onConfirm: onConfirm,
         isSubmitting: isSubmitting,
         departureTime: departureTime,
+        currency: currency,
       ),
     );
   }
@@ -73,14 +79,14 @@ class AnnouncementPreviewSheet extends StatelessWidget {
 
     // Le voyageur touche le prix net qu'il fixe ; la commission Yadony est en sus
     // (payée par l'expéditeur). Pas de décote ×0,88 sur ce qu'il reçoit.
-    final netEstimate = (formState.pricePerKg != null &&
-            formState.availableKg != null)
+    final netEstimate =
+        (formState.pricePerKg != null && formState.availableKg != null)
         ? (formState.pricePerKg! * formState.availableKg!)
         : null;
 
     final prixStr = formState.pricePerKg != null
-        ? '${formState.pricePerKg!.toStringAsFixed(0)} €/kg'
-            '${netEstimate != null ? ' · estimation ${netEstimate.toStringAsFixed(0)}€ net' : ''}'
+        ? '${CurrencyFormatter.formatOrPlain(formState.pricePerKg!, currency)}/kg'
+              '${netEstimate != null ? ' · estimation ${CurrencyFormatter.formatOrPlain(netEstimate, currency)} net' : ''}'
         : '-';
 
     return Padding(
@@ -94,11 +100,7 @@ class AnnouncementPreviewSheet extends StatelessWidget {
             value:
                 '${formState.departureCity ?? '-'} → ${formState.arrivalCity ?? '-'}',
           ),
-          _PreviewRow(
-            iconAsset: 'calendar',
-            label: 'Date',
-            value: dateStr,
-          ),
+          _PreviewRow(iconAsset: 'calendar', label: 'Date', value: dateStr),
           if (departureTime != null)
             _PreviewRow(
               iconAsset: 'clock',
@@ -122,11 +124,7 @@ class AnnouncementPreviewSheet extends StatelessWidget {
             label: 'Capacité',
             value: formState.capacityUnit.label,
           ),
-          _PreviewRow(
-            iconAsset: 'euro',
-            label: 'Prix',
-            value: prixStr,
-          ),
+          _PreviewRow(iconAsset: 'banknote', label: 'Prix', value: prixStr),
           _PreviewRow(
             iconAsset: 'banknote',
             label: 'Paiement',
@@ -163,8 +161,7 @@ class AnnouncementPreviewSheet extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  DonyIcon('triangle-alert',
-                      color: cs.warning, size: 16),
+                  DonyIcon('triangle-alert', color: cs.warning, size: 16),
                   const SizedBox(width: DonySpacing.xs),
                   Expanded(
                     child: Text(
@@ -212,9 +209,7 @@ class _PreviewRow extends StatelessWidget {
               style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
             ),
           ),
-          Expanded(
-            child: Text(value, style: tt.bodyMedium),
-          ),
+          Expanded(child: Text(value, style: tt.bodyMedium)),
         ],
       ),
     );

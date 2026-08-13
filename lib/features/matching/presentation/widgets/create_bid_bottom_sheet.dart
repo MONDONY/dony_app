@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:dony/features/payments/presentation/widgets/payment_method_names.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/content_categories/presentation/content_category_selector.dart';
@@ -79,8 +81,7 @@ class CreateBidBottomSheet {
   static Future<void> show(
     BuildContext context, {
     required AnnouncementModel announcement,
-  }) =>
-      context.push<void>('/bids/new', extra: announcement);
+  }) => context.push<void>('/bids/new', extra: announcement);
 }
 
 // ── Screen ─────────────────────────────────────────────────────────────────────
@@ -139,21 +140,21 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   /// État saisissable de l'offre. Exclut la mécanique interne (étape courante,
   /// devis calculé, catalogue chargé en asynchrone).
   String get _formSignature => [
-        _descCtrl.text,
-        _recipientNameCtrl.text,
-        _recipientPhoneCtrl.text,
-        _promoCtrl.text,
-        _weightNotifier.value,
-        (_categoriesNotifier.value.toList()..sort()).join(','),
-        _disclaimerNotifier.value,
-        (_gridQuantitiesNotifier.value.entries
-                .map((e) => '${e.key}:${e.value}')
-                .toList()
-              ..sort())
-            .join(','),
-        _methodNotifier.value,
-        _photosCubit.state.length,
-      ].join('|');
+    _descCtrl.text,
+    _recipientNameCtrl.text,
+    _recipientPhoneCtrl.text,
+    _promoCtrl.text,
+    _weightNotifier.value,
+    (_categoriesNotifier.value.toList()..sort()).join(','),
+    _disclaimerNotifier.value,
+    (_gridQuantitiesNotifier.value.entries
+            .map((e) => '${e.key}:${e.value}')
+            .toList()
+          ..sort())
+        .join(','),
+    _methodNotifier.value,
+    _photosCubit.state.length,
+  ].join('|');
 
   // ── Multi-step state ────────────────────────────────────────────────────────
   final _stepNotifier = ValueNotifier<_FormStep>(_FormStep.form);
@@ -192,10 +193,12 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _paymentBloc = getIt<PaymentBloc>();
     _photosCubit = getIt<BidPhotosCubit>();
 
-    _isCashAvailable = widget.announcement.acceptedPaymentMethods
-        .contains(BidPaymentMethod.cash);
-    _isStripeAvailable = widget.announcement.acceptedPaymentMethods
-        .contains(BidPaymentMethod.stripe);
+    _isCashAvailable = widget.announcement.acceptedPaymentMethods.contains(
+      BidPaymentMethod.cash,
+    );
+    _isStripeAvailable = widget.announcement.acceptedPaymentMethods.contains(
+      BidPaymentMethod.stripe,
+    );
     _methodNotifier = ValueNotifier<BidPaymentMethod>(
       _isStripeAvailable ? BidPaymentMethod.stripe : BidPaymentMethod.cash,
     );
@@ -219,8 +222,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _stepNotifier.addListener(_onStepChanged);
     _methodNotifier.addListener(_syncPickerButtonState);
 
-    WidgetsBinding.instance
-        .addPostFrameCallback((_) => _syncFormButtonState());
+    WidgetsBinding.instance.addPostFrameCallback((_) => _syncFormButtonState());
 
     unawaited(_loadCatalog());
     for (final l in _dirtySources) {
@@ -256,16 +258,16 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
 
   /// Tout ce que l'utilisateur peut saisir, pour brancher `_recomputeDirty`.
   List<Listenable> get _dirtySources => [
-        _descCtrl,
-        _recipientNameCtrl,
-        _recipientPhoneCtrl,
-        _promoCtrl,
-        _weightNotifier,
-        _categoriesNotifier,
-        _disclaimerNotifier,
-        _gridQuantitiesNotifier,
-        _methodNotifier,
-      ];
+    _descCtrl,
+    _recipientNameCtrl,
+    _recipientPhoneCtrl,
+    _promoCtrl,
+    _weightNotifier,
+    _categoriesNotifier,
+    _disclaimerNotifier,
+    _gridQuantitiesNotifier,
+    _methodNotifier,
+  ];
 
   /// Les photos vivent dans un `Cubit`, pas un `Listenable` : on suit son flux.
   StreamSubscription<void>? _photosSub;
@@ -285,8 +287,8 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   }
 
   Future<void> _loadCatalog() async {
-    final categories =
-        await getIt<IContentCategoryRepository>().getCategories();
+    final categories = await getIt<IContentCategoryRepository>()
+        .getCategories();
     if (!mounted) return;
     _catalogNotifier.value = categories;
   }
@@ -340,9 +342,9 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     final hasKgPricing = widget.announcement.pricePerKg > 0;
     final hasGridPricing = widget.announcement.priceGridItems.isNotEmpty;
     final weightOk = hasKgPricing && _weightNotifier.value > 0;
-    final gridOk =
-        hasGridPricing && _gridQuantitiesNotifier.value.isNotEmpty;
-    final canSubmit = (weightOk || gridOk) &&
+    final gridOk = hasGridPricing && _gridQuantitiesNotifier.value.isNotEmpty;
+    final canSubmit =
+        (weightOk || gridOk) &&
         _categoriesNotifier.value.isNotEmpty &&
         _disclaimerNotifier.value;
 
@@ -365,7 +367,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     } else {
       final total = _computeStripeTotal();
       label =
-          'Bloquer ${NumberFormat.currency(locale: 'fr_FR', symbol: '€').format(total)} & payer';
+          'Bloquer ${formatPriceIn(total, widget.announcement.currency)} & payer';
       iconAsset = 'lock';
     }
 
@@ -423,12 +425,14 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       return;
     }
     final weight = _weightNotifier.value;
-    _bidBloc.add(BidQuoteRequested(
-      announcementId: widget.announcement.id,
-      weightKg: weight > 0 ? weight : null,
-      promoCode: code,
-      gridItems: _selectedGridItems(),
-    ));
+    _bidBloc.add(
+      BidQuoteRequested(
+        announcementId: widget.announcement.id,
+        weightKg: weight > 0 ? weight : null,
+        promoCode: code,
+        gridItems: _selectedGridItems(),
+      ),
+    );
   }
 
   void _invalidateQuote() {
@@ -487,29 +491,33 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     final method = _methodNotifier.value;
 
     if (method == BidPaymentMethod.cash) {
-      _bidBloc.add(BidCreateRequested(
-        announcementId: widget.announcement.id,
-        weightKg: data.weightKg,
-        description: data.description,
-        contentCategory: data.contentCategory,
-        recipientName: data.recipientName,
-        recipientPhone: data.recipientPhone,
-        paymentMethod: BidPaymentMethod.cash,
-        promoCode: data.promoCode,
-        gridItems: data.gridItems,
-        photoKeys: data.photoKeys,
-      ));
+      _bidBloc.add(
+        BidCreateRequested(
+          announcementId: widget.announcement.id,
+          weightKg: data.weightKg,
+          description: data.description,
+          contentCategory: data.contentCategory,
+          recipientName: data.recipientName,
+          recipientPhone: data.recipientPhone,
+          paymentMethod: BidPaymentMethod.cash,
+          promoCode: data.promoCode,
+          gridItems: data.gridItems,
+          photoKeys: data.photoKeys,
+        ),
+      );
     } else {
-      _bidBloc.add(BidCheckoutRequested(
-        announcementId: widget.announcement.id,
-        weightKg: data.weightKg,
-        description: data.description,
-        contentCategory: data.contentCategory,
-        recipientName: data.recipientName,
-        recipientPhone: data.recipientPhone,
-        gridItems: data.gridItems,
-        photoKeys: data.photoKeys,
-      ));
+      _bidBloc.add(
+        BidCheckoutRequested(
+          announcementId: widget.announcement.id,
+          weightKg: data.weightKg,
+          description: data.description,
+          contentCategory: data.contentCategory,
+          recipientName: data.recipientName,
+          recipientPhone: data.recipientPhone,
+          gridItems: data.gridItems,
+          photoKeys: data.photoKeys,
+        ),
+      );
     }
   }
 
@@ -526,13 +534,16 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         _showOfflinePaymentSuccess(context, state.bid);
       }
     } else if (state is BidCheckoutReady) {
-      context.read<PaymentBloc>().add(BidCheckoutPaymentRequested(
-            clientSecret: state.response.clientSecret,
-            publishableKey: state.response.publishableKey,
-            bidId: state.response.bidId,
-            amountEur: _computeStripeTotal(),
-            paymentMethodTypes: state.response.paymentMethodTypes,
-          ));
+      context.read<PaymentBloc>().add(
+        BidCheckoutPaymentRequested(
+          clientSecret: state.response.clientSecret,
+          publishableKey: state.response.publishableKey,
+          bidId: state.response.bidId,
+          amountEur: _computeStripeTotal(),
+          currencyCode: state.response.currency,
+          paymentMethodTypes: state.response.paymentMethodTypes,
+        ),
+      );
     } else if (state is BidQuoteLoaded) {
       _quoteNotifier.value = state.quote;
     } else if (state is BidPromoError) {
@@ -559,27 +570,26 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       _ => 'Le voyageur va examiner ta demande.',
     };
 
-    Navigator.of(context).push(MaterialPageRoute(
-      // Le contexte de CreateBidScreen vient d'être poppé — au moment
-      // du tap CTA son element est désactivé et GoRouter.of(context)
-      // jetterait « Looking up a deactivated widget's ancestor is
-      // unsafe ». On navigue donc via le contexte de la route succès,
-      // toujours monté sous le Navigator racine.
-      builder: (routeContext) => DonySuccessScreen(
-        mascotteType: DonyMascotteType.succes,
-        title: title,
-        subtitle: subtitle,
-        ctaLabel: 'Voir mon envoi',
-        onCta: () => routeContext.go('/bids/${bid.id}?from=payment'),
-        analyticsContext: 'bid_created_offline_payment',
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        // Le contexte de CreateBidScreen vient d'être poppé — au moment
+        // du tap CTA son element est désactivé et GoRouter.of(context)
+        // jetterait « Looking up a deactivated widget's ancestor is
+        // unsafe ». On navigue donc via le contexte de la route succès,
+        // toujours monté sous le Navigator racine.
+        builder: (routeContext) => DonySuccessScreen(
+          mascotteType: DonyMascotteType.succes,
+          title: title,
+          subtitle: subtitle,
+          ctaLabel: 'Voir mon envoi',
+          onCta: () => routeContext.go('/bids/${bid.id}?from=payment'),
+          analyticsContext: 'bid_created_offline_payment',
+        ),
       ),
-    ));
+    );
   }
 
-  Future<void> _onPaymentState(
-    BuildContext context,
-    PaymentState state,
-  ) async {
+  Future<void> _onPaymentState(BuildContext context, PaymentState state) async {
     if (state is CheckoutPaymentSheetReady) {
       await _presentPaymentSheet(context, state);
     }
@@ -609,93 +619,91 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         builder: (context, _) {
           final step = _stepNotifier.value;
           return PopScope(
-          // À l'étape paiement, le retour revient au formulaire. À l'étape
-          // formulaire il ferme la feuille : on ne l'autorise directement que
-          // si rien n'a été saisi.
-          canPop: step == _FormStep.form && !_isDirtyNotifier.value,
-          onPopInvokedWithResult: (didPop, _) {
-            if (didPop) return;
-            if (step != _FormStep.form) {
-              _stepNotifier.value = _FormStep.form;
-            } else {
-              unawaited(_handleExitRequest());
-            }
-          },
-          child: Scaffold(
-            backgroundColor: cs.surface,
-            appBar: AppBar(
+            // À l'étape paiement, le retour revient au formulaire. À l'étape
+            // formulaire il ferme la feuille : on ne l'autorise directement que
+            // si rien n'a été saisi.
+            canPop: step == _FormStep.form && !_isDirtyNotifier.value,
+            onPopInvokedWithResult: (didPop, _) {
+              if (didPop) return;
+              if (step != _FormStep.form) {
+                _stepNotifier.value = _FormStep.form;
+              } else {
+                unawaited(_handleExitRequest());
+              }
+            },
+            child: Scaffold(
               backgroundColor: cs.surface,
-              surfaceTintColor: Colors.transparent,
-              elevation: 0,
-              scrolledUnderElevation: 0,
-              leading: DonyAppBarBackButton(
-                onBack: () {
-                  if (step == _FormStep.paymentPicker) {
-                    _stepNotifier.value = _FormStep.form;
-                  } else {
-                    unawaited(_handleExitRequest());
-                  }
-                },
-              ),
-              title: Text(
-                step == _FormStep.paymentPicker
-                    ? 'Paiement'
-                    : 'Publier un colis',
-                style: tt.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.3,
+              appBar: AppBar(
+                backgroundColor: cs.surface,
+                surfaceTintColor: Colors.transparent,
+                elevation: 0,
+                scrolledUnderElevation: 0,
+                leading: DonyAppBarBackButton(
+                  onBack: () {
+                    if (step == _FormStep.paymentPicker) {
+                      _stepNotifier.value = _FormStep.form;
+                    } else {
+                      unawaited(_handleExitRequest());
+                    }
+                  },
+                ),
+                title: Text(
+                  step == _FormStep.paymentPicker
+                      ? 'Paiement'
+                      : 'Publier un colis',
+                  style: tt.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                centerTitle: false,
+                bottom: PreferredSize(
+                  preferredSize: const Size.fromHeight(1),
+                  child: Divider(height: 1, color: cs.outlineVariant),
                 ),
               ),
-              centerTitle: false,
-              bottom: PreferredSize(
-                preferredSize: const Size.fromHeight(1),
-                child: Divider(height: 1, color: cs.outlineVariant),
-              ),
-            ),
-            resizeToAvoidBottomInset: true,
-            // La CTA sticky est dans `body` (pas `bottomNavigationBar`) :
-            // Flutter ne remonte pas fiablement `bottomNavigationBar`
-            // au-dessus du clavier, ce qui la cachait derrière sur ce
-            // formulaire (description, destinataire...). Même fix que
-            // phone_auth_screen.dart.
-            body: Column(
-              children: [
-                Expanded(
-                  child: MultiBlocListener(
-                    listeners: [
-                      BlocListener<BidBloc, BidState>(listener: _onBidState),
-                      BlocListener<PaymentBloc, PaymentState>(
-                        listener: _onPaymentState,
-                      ),
-                    ],
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(
-                        DonySpacing.lg,
-                        DonySpacing.xl,
-                        DonySpacing.lg,
-                        DonySpacing.xxl,
-                      ),
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 220),
-                        transitionBuilder: (child, animation) => FadeTransition(
-                          opacity: animation,
-                          child: child,
+              resizeToAvoidBottomInset: true,
+              // La CTA sticky est dans `body` (pas `bottomNavigationBar`) :
+              // Flutter ne remonte pas fiablement `bottomNavigationBar`
+              // au-dessus du clavier, ce qui la cachait derrière sur ce
+              // formulaire (description, destinataire...). Même fix que
+              // phone_auth_screen.dart.
+              body: Column(
+                children: [
+                  Expanded(
+                    child: MultiBlocListener(
+                      listeners: [
+                        BlocListener<BidBloc, BidState>(listener: _onBidState),
+                        BlocListener<PaymentBloc, PaymentState>(
+                          listener: _onPaymentState,
                         ),
-                        child: step == _FormStep.paymentPicker
-                            ? _buildPickerStep(context)
-                            : _buildFormStep(context),
+                      ],
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(
+                          DonySpacing.lg,
+                          DonySpacing.xl,
+                          DonySpacing.lg,
+                          DonySpacing.xxl,
+                        ),
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 220),
+                          transitionBuilder: (child, animation) =>
+                              FadeTransition(opacity: animation, child: child),
+                          child: step == _FormStep.paymentPicker
+                              ? _buildPickerStep(context)
+                              : _buildFormStep(context),
+                        ),
                       ),
                     ),
                   ),
-                ),
-                _StickyBottom(
-                  btnConfigNotifier: _btnConfigNotifier,
-                  bidBloc: _bidBloc,
-                ),
-              ],
+                  _StickyBottom(
+                    btnConfigNotifier: _btnConfigNotifier,
+                    bidBloc: _bidBloc,
+                  ),
+                ],
+              ),
             ),
-          ),
-        );
+          );
         },
       ),
     );
@@ -723,7 +731,8 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
             ? widget.announcement.priceGridItems.fold<double>(
                 0,
                 (sum, item) =>
-                    sum + item.unitPriceDisplay * (gridQuantities[item.id] ?? 0),
+                    sum +
+                    item.unitPriceDisplay * (gridQuantities[item.id] ?? 0),
               )
             : 0.0;
 
@@ -737,15 +746,16 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
               ValueListenableBuilder<Map<String, int>>(
                 valueListenable: _gridQuantitiesNotifier,
                 builder: (context, quantities, _) {
-                  final totalSelected =
-                      quantities.values.fold<int>(0, (s, q) => s + q);
+                  final totalSelected = quantities.values.fold<int>(
+                    0,
+                    (s, q) => s + q,
+                  );
                   final subtotal = widget.announcement.priceGridItems
                       .fold<double>(
                         0.0,
                         (s, item) =>
                             s +
-                            item.unitPriceDisplay *
-                                (quantities[item.id] ?? 0),
+                            item.unitPriceDisplay * (quantities[item.id] ?? 0),
                       );
                   final hasSelection = quantities.isNotEmpty;
                   final cs = Theme.of(context).colorScheme;
@@ -759,6 +769,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                         initialQuantities: quantities,
                         corridor:
                             '${widget.announcement.departureCity} → ${widget.announcement.arrivalCity}',
+                        currency: widget.announcement.currency,
                       );
                       if (result != null) {
                         _gridQuantitiesNotifier.value = result;
@@ -772,14 +783,8 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                         color: cs.surface,
                         borderRadius: BorderRadius.circular(DonyRadius.card),
                         border: hasSelection
-                            ? Border.all(
-                                color: cs.success,
-                                width: 1.5,
-                              )
-                            : Border.all(
-                                color: cs.warning,
-                                width: 1.5,
-                              ),
+                            ? Border.all(color: cs.success, width: 1.5)
+                            : Border.all(color: cs.warning, width: 1.5),
                       ),
                       child: hasSelection
                           ? Row(
@@ -802,7 +807,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                                         ),
                                       ),
                                       Text(
-                                        'Sous-total : ${subtotal.toStringAsFixed(2)} €',
+                                        'Sous-total : ${formatPriceIn(subtotal, widget.announcement.currency)}',
                                         style: tt.bodySmall?.copyWith(
                                           color: cs.success,
                                         ),
@@ -870,8 +875,10 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
 
             // ── Contenu ───────────────────────────────────────────────────
             ListenableBuilder(
-              listenable:
-                  Listenable.merge([_categoriesNotifier, _catalogNotifier]),
+              listenable: Listenable.merge([
+                _categoriesNotifier,
+                _catalogNotifier,
+              ]),
               builder: (_, __) =>
                   _buildContentSection(context, _categoriesNotifier.value),
             ),
@@ -941,10 +948,10 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                 return ValueListenableBuilder<Object?>(
                   valueListenable: _quoteNotifier,
                   builder: (_, quoteVal, __) {
-                    final quote =
-                        quoteVal is BidQuoteResponse ? quoteVal : null;
-                    final promoError =
-                        quoteVal is String ? quoteVal : null;
+                    final quote = quoteVal is BidQuoteResponse
+                        ? quoteVal
+                        : null;
+                    final promoError = quoteVal is String ? quoteVal : null;
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -957,8 +964,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                                     TextCapitalization.characters,
                                 decoration: InputDecoration(
                                   hintText: 'Ex: WELCOME10',
-                                  contentPadding:
-                                      const EdgeInsets.symmetric(
+                                  contentPadding: const EdgeInsets.symmetric(
                                     horizontal: DonySpacing.base,
                                     vertical: DonySpacing.md,
                                   ),
@@ -968,9 +974,9 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                                           child: SizedBox(
                                             width: 20,
                                             height: 20,
-                                            child:
-                                                CircularProgressIndicator(
-                                                    strokeWidth: 2),
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                            ),
                                           ),
                                         )
                                       : null,
@@ -995,15 +1001,16 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                           const SizedBox(height: DonySpacing.xs),
                           Row(
                             children: [
-                              const DonyIcon('circle-check',
-                                  size: 16, color: Color(0xFF16A34A)),
+                              const DonyIcon(
+                                'circle-check',
+                                size: 16,
+                                color: Color(0xFF16A34A),
+                              ),
                               const SizedBox(width: 6),
                               Expanded(
                                 child: Text(
                                   quote.promoLabel ?? 'Code appliqué',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodySmall
+                                  style: Theme.of(context).textTheme.bodySmall
                                       ?.copyWith(
                                         color: const Color(0xFF16A34A),
                                         fontWeight: FontWeight.w600,
@@ -1017,15 +1024,16 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                           const SizedBox(height: DonySpacing.xs),
                           Row(
                             children: [
-                              const DonyIcon('circle-alert',
-                                  size: 16, color: Color(0xFFE53935)),
+                              const DonyIcon(
+                                'circle-alert',
+                                size: 16,
+                                color: Color(0xFFE53935),
+                              ),
                               const SizedBox(width: 6),
                               Expanded(
                                 child: Text(
                                   promoError,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodySmall
+                                  style: Theme.of(context).textTheme.bodySmall
                                       ?.copyWith(
                                         color: const Color(0xFFE53935),
                                       ),
@@ -1046,8 +1054,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
             ValueListenableBuilder<Object?>(
               valueListenable: _quoteNotifier,
               builder: (_, quoteVal, __) {
-                final quote =
-                    quoteVal is BidQuoteResponse ? quoteVal : null;
+                final quote = quoteVal is BidQuoteResponse ? quoteVal : null;
                 final kgDisplayLocal = hasKgPricing
                     ? netToSenderPrice(weightKg * _pricePerKg)
                     : 0.0;
@@ -1057,10 +1064,10 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                 // net) — cohérentes avec leur propre libellé : "2 kg × 8€"
                 // doit valoir 16€, pas le total commission incluse. La
                 // commission apparaît sur sa propre ligne juste après.
-                double kgLine =
-                    hasKgPricing ? weightKg * _pricePerKg : 0.0;
-                double gridLine =
-                    hasGridPricing ? gridTotal / donyCommissionMultiplier : 0.0;
+                double kgLine = hasKgPricing ? weightKg * _pricePerKg : 0.0;
+                double gridLine = hasGridPricing
+                    ? gridTotal / donyCommissionMultiplier
+                    : 0.0;
                 double total = localTotal;
                 double? original;
                 bool promoApplied = false;
@@ -1086,6 +1093,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                   promoApplied: promoApplied,
                   commissionRate: rate,
                   commissionEur: commissionEur,
+                  currency: widget.announcement.currency,
                 );
               },
             ),
@@ -1096,10 +1104,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     );
   }
 
-  Widget _buildContentSection(
-    BuildContext context,
-    Set<String> categories,
-  ) {
+  Widget _buildContentSection(BuildContext context, Set<String> categories) {
     final accepted = _acceptedCategories;
     final refused = _refusedCategories;
     // Catalogue proposé = uniquement ce que CE voyageur accepte (avec emoji).
@@ -1136,7 +1141,8 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         ).animate().fadeIn(delay: 60.ms),
         const SizedBox(height: DonySpacing.sm),
         _ContentHint(
-          text: 'Ces suggestions sont les contenus acceptés par le '
+          text:
+              'Ces suggestions sont les contenus acceptés par le '
               'voyageur. Si le contenu de votre colis n\'y figure pas, '
               'ajoutez-le : ce sera au voyageur de décider s\'il accepte '
               'votre colis ou non.',
@@ -1148,9 +1154,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
           Wrap(
             spacing: DonySpacing.sm,
             runSpacing: DonySpacing.sm,
-            children: [
-              for (final cat in refused) _RefusedChip(label: cat),
-            ],
+            children: [for (final cat in refused) _RefusedChip(label: cat)],
           ),
         ],
       ],
@@ -1208,7 +1212,10 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: DonySpacing.xl),
-                _WalletTile(balance: walletState.wallet.balance),
+                _WalletTile(
+                  balance: walletState.wallet.balance,
+                  currency: widget.announcement.currency,
+                ),
               ],
             );
           },
@@ -1241,6 +1248,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       config: PaymentSheetConfig(
         clientSecret: state.clientSecret,
         amountEur: state.amountEur,
+        currencyCode: state.currencyCode,
         paymentMethodTypes: state.paymentMethodTypes,
       ),
       contextLabel: 'Envoi vers ${widget.announcement.arrivalCity}',
@@ -1249,23 +1257,25 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         context.read<BidBloc>().add(BidConfirmPaymentRequested(state.bidId));
         context.pop();
         if (context.mounted) {
-          Navigator.of(context).push(MaterialPageRoute(
-            // Le contexte de CreateBidScreen vient d'être poppé — au moment
-            // du tap CTA son element est désactivé et GoRouter.of(context)
-            // jetterait « Looking up a deactivated widget's ancestor is
-            // unsafe ». On navigue donc via le contexte de la route succès,
-            // toujours monté sous le Navigator racine.
-            builder: (routeContext) => DonySuccessScreen(
-              mascotteType: DonyMascotteType.securise,
-              title: 'Offre payée !',
-              subtitle:
-                  'Ton paiement est bloqué et sécurisé jusqu\'à la livraison confirmée. Le voyageur est notifié de ta demande.',
-              ctaLabel: 'Voir mon envoi',
-              onCta: () =>
-                  routeContext.go('/bids/${state.bidId}?from=payment'),
-              analyticsContext: 'bid_payment',
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              // Le contexte de CreateBidScreen vient d'être poppé — au moment
+              // du tap CTA son element est désactivé et GoRouter.of(context)
+              // jetterait « Looking up a deactivated widget's ancestor is
+              // unsafe ». On navigue donc via le contexte de la route succès,
+              // toujours monté sous le Navigator racine.
+              builder: (routeContext) => DonySuccessScreen(
+                mascotteType: DonyMascotteType.securise,
+                title: 'Offre payée !',
+                subtitle:
+                    'Ton paiement est bloqué et sécurisé jusqu\'à la livraison confirmée. Le voyageur est notifié de ta demande.',
+                ctaLabel: 'Voir mon envoi',
+                onCta: () =>
+                    routeContext.go('/bids/${state.bidId}?from=payment'),
+                analyticsContext: 'bid_payment',
+              ),
             ),
-          ));
+          );
         }
       },
     );
@@ -1275,10 +1285,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
 // ── Sticky bottom (bottomNavigationBar) ────────────────────────────────────────
 
 class _StickyBottom extends StatelessWidget {
-  const _StickyBottom({
-    required this.btnConfigNotifier,
-    required this.bidBloc,
-  });
+  const _StickyBottom({required this.btnConfigNotifier, required this.bidBloc});
 
   final ValueNotifier<_BtnConfig?> btnConfigNotifier;
   final BidBloc bidBloc;
@@ -1297,8 +1304,7 @@ class _StickyBottom extends StatelessWidget {
           return Container(
             decoration: BoxDecoration(
               color: cs.surface,
-              border:
-                  Border(top: BorderSide(color: cs.outlineVariant)),
+              border: Border(top: BorderSide(color: cs.outlineVariant)),
               boxShadow: [
                 BoxShadow(
                   color: cs.shadow.withValues(alpha: 0.08),
@@ -1338,10 +1344,9 @@ class _SectionLabel extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     return Text(
       label,
-      style: Theme.of(context)
-          .textTheme
-          .labelMedium
-          ?.copyWith(color: cs.onSurfaceVariant),
+      style: Theme.of(
+        context,
+      ).textTheme.labelMedium?.copyWith(color: cs.onSurfaceVariant),
     );
   }
 }
@@ -1407,8 +1412,7 @@ class _WeightSectionState extends State<_WeightSection> {
   void initState() {
     super.initState();
     if (widget.isKgFree) {
-      _kgCtrl =
-          TextEditingController(text: widget.weightKg.toStringAsFixed(0));
+      _kgCtrl = TextEditingController(text: widget.weightKg.toStringAsFixed(0));
       _kgFocus = FocusNode()..addListener(_onFocusChanged);
     }
   }
@@ -1469,9 +1473,7 @@ class _WeightSectionState extends State<_WeightSection> {
 
   @override
   Widget build(BuildContext context) {
-    return widget.isKgFree
-        ? _buildKgFree(context)
-        : _buildSlider(context);
+    return widget.isKgFree ? _buildKgFree(context) : _buildSlider(context);
   }
 
   Widget _buildKgFree(BuildContext context) {
@@ -1484,9 +1486,7 @@ class _WeightSectionState extends State<_WeightSection> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          widget.isMixed
-              ? 'Poids du colis (optionnel)'
-              : 'Poids du colis',
+          widget.isMixed ? 'Poids du colis (optionnel)' : 'Poids du colis',
           style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
         ),
         const SizedBox(height: DonySpacing.xxs),
@@ -1500,8 +1500,7 @@ class _WeightSectionState extends State<_WeightSection> {
             _StepperButton(
               key: const Key('weight-decrement'),
               iconAsset: 'minus',
-              onPressed:
-                  canDecrement ? () => _setWeight(weightKg - 1) : null,
+              onPressed: canDecrement ? () => _setWeight(weightKg - 1) : null,
             ),
             const SizedBox(width: DonySpacing.base),
             Expanded(
@@ -1516,12 +1515,9 @@ class _WeightSectionState extends State<_WeightSection> {
                       focusNode: _kgFocus,
                       onChanged: _onFieldChanged,
                       keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                      ],
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                       textAlign: TextAlign.center,
-                      style: tt.displayLarge
-                          ?.copyWith(color: cs.onSurface),
+                      style: tt.displayLarge?.copyWith(color: cs.onSurface),
                       cursorColor: cs.primary,
                       decoration: const InputDecoration(
                         isDense: true,
@@ -1534,12 +1530,12 @@ class _WeightSectionState extends State<_WeightSection> {
                   ),
                   const SizedBox(width: DonySpacing.xs),
                   Padding(
-                    padding:
-                        const EdgeInsets.only(bottom: DonySpacing.sm),
+                    padding: const EdgeInsets.only(bottom: DonySpacing.sm),
                     child: Text(
                       'kg',
-                      style: tt.headlineMedium
-                          ?.copyWith(color: cs.onSurfaceVariant),
+                      style: tt.headlineMedium?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
                     ),
                   ),
                 ],
@@ -1571,9 +1567,7 @@ class _WeightSectionState extends State<_WeightSection> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            isMixed
-                ? 'Poids du colis (optionnel)'
-                : 'Poids du colis',
+            isMixed ? 'Poids du colis (optionnel)' : 'Poids du colis',
             style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
           ),
           const SizedBox(height: DonySpacing.sm),
@@ -1592,9 +1586,7 @@ class _WeightSectionState extends State<_WeightSection> {
         Row(
           children: [
             Text(
-              isMixed
-                  ? 'Poids du colis (optionnel)'
-                  : 'Poids du colis',
+              isMixed ? 'Poids du colis (optionnel)' : 'Poids du colis',
               style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
             ),
           ],
@@ -1612,8 +1604,7 @@ class _WeightSectionState extends State<_WeightSection> {
               padding: const EdgeInsets.only(bottom: DonySpacing.sm),
               child: Text(
                 'kg',
-                style: tt.headlineMedium
-                    ?.copyWith(color: cs.onSurfaceVariant),
+                style: tt.headlineMedium?.copyWith(color: cs.onSurfaceVariant),
               ),
             ),
             // Expanded+Align plutôt que Spacer + Text non contraint : à
@@ -1714,10 +1705,7 @@ class _StepperButton extends StatelessWidget {
 // ── Disclaimer card ────────────────────────────────────────────────────────────
 
 class _DisclaimerCard extends StatelessWidget {
-  const _DisclaimerCard({
-    required this.accepted,
-    required this.onChanged,
-  });
+  const _DisclaimerCard({required this.accepted, required this.onChanged});
 
   final bool accepted;
   final ValueChanged<bool> onChanged;
@@ -1729,8 +1717,7 @@ class _DisclaimerCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: cs.secondaryContainer,
-        borderRadius:
-            const BorderRadius.all(Radius.circular(DonyRadius.card)),
+        borderRadius: const BorderRadius.all(Radius.circular(DonyRadius.card)),
         border: Border(
           left: BorderSide(color: cs.secondary, width: _kAccentBorder),
         ),
@@ -1750,15 +1737,18 @@ class _DisclaimerCard extends StatelessWidget {
                   children: [
                     Text(
                       'Disclaimer douane.',
-                      style: tt.titleMedium
-                          ?.copyWith(color: cs.onSecondaryContainer),
+                      style: tt.titleMedium?.copyWith(
+                        color: cs.onSecondaryContainer,
+                      ),
                     ),
                     const SizedBox(height: DonySpacing.xxs),
                     Text(
                       'Pas d\'armes, drogues, liquides inflammables ou espèces. '
                       'Le voyageur peut refuser au contrôle douanier.',
                       style: tt.bodySmall?.copyWith(
-                          color: cs.onSecondaryContainer, height: 1.5),
+                        color: cs.onSecondaryContainer,
+                        height: 1.5,
+                      ),
                     ),
                   ],
                 ),
@@ -1932,9 +1922,7 @@ class _MethodTile extends StatelessWidget {
             Text(
               sublabel,
               style: tt.bodySmall?.copyWith(
-                color: selected
-                    ? cs.onPrimaryContainer
-                    : cs.onSurfaceVariant,
+                color: selected ? cs.onPrimaryContainer : cs.onSurfaceVariant,
               ),
             ),
           ],
@@ -1947,15 +1935,15 @@ class _MethodTile extends StatelessWidget {
 // ── Wallet tile ────────────────────────────────────────────────────────────────
 
 class _WalletTile extends StatelessWidget {
-  const _WalletTile({required this.balance});
+  const _WalletTile({required this.balance, required this.currency});
 
   final double balance;
+  final String currency;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final fmt = NumberFormat.currency(locale: 'fr_FR', symbol: '€');
     final hasBalance = balance > 0;
 
     return GestureDetector(
@@ -1994,7 +1982,7 @@ class _WalletTile extends StatelessWidget {
                   ),
                   Text(
                     hasBalance
-                        ? 'Solde disponible : ${fmt.format(balance)}'
+                        ? 'Solde disponible : ${formatPriceIn(balance, currency)}'
                         : 'Solde insuffisant · Recharger',
                     style: tt.bodySmall?.copyWith(
                       color: hasBalance ? cs.primary : cs.onSurfaceVariant,
@@ -2004,11 +1992,7 @@ class _WalletTile extends StatelessWidget {
               ),
             ),
             if (!hasBalance)
-              DonyIcon(
-                'chevron-right',
-                color: cs.onSurfaceVariant,
-                size: 20,
-              ),
+              DonyIcon('chevron-right', color: cs.onSurfaceVariant, size: 20),
           ],
         ),
       ),
@@ -2027,6 +2011,7 @@ class _PriceBreakdown extends StatelessWidget {
     required this.totalPrice,
     required this.commissionRate,
     required this.commissionEur,
+    required this.currency,
     this.originalTotal,
     this.promoApplied = false,
   });
@@ -2038,6 +2023,7 @@ class _PriceBreakdown extends StatelessWidget {
   final double totalPrice;
   final double? originalTotal;
   final bool promoApplied;
+  final String currency;
 
   /// Taux de commission Yadony effectif sur ce devis (ex. 0,05 = 5 %).
   final double commissionRate;
@@ -2049,7 +2035,10 @@ class _PriceBreakdown extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    final fmt = NumberFormat.currency(locale: 'fr_FR', symbol: '€');
+    final resolvedCurrency = SupportedCurrency.fromCodeOrDefault(currency);
+    // Récap comptable : décimales toujours visibles, contrairement au compact
+    // de [formatPriceIn] utilisé pour les prix unitaires de la même sheet.
+    String fmt(num v) => CurrencyFormatter.format(v, resolvedCurrency);
     // L'économie n'est réelle que si le taux promo est strictement inférieur
     // au taux "sans promo" (originalTotal) — un code promo au même taux que
     // le taux global courant (ex. WELCOME05 = 5 % = taux par défaut actuel)
@@ -2061,27 +2050,33 @@ class _PriceBreakdown extends StatelessWidget {
 
     final lines = <Widget>[];
     if (weightKg > 0 && kgDisplay > 0) {
-      lines.add(_line(
-        tt,
-        '${formatKgPrice(weightKg)} kg × ${formatKgPrice(pricePerKg)}€',
-        fmt.format(kgDisplay),
-      ));
+      lines.add(
+        _line(
+          tt,
+          '${formatKgPrice(weightKg)} kg × ${formatPriceIn(pricePerKg, currency)}',
+          fmt(kgDisplay),
+        ),
+      );
     }
     if (gridDisplay > 0) {
-      lines.add(_line(tt, 'Articles', fmt.format(gridDisplay)));
+      lines.add(_line(tt, 'Articles', fmt(gridDisplay)));
     }
-    lines.add(_line(
-      tt,
-      'Commission Yadony (${_ratePercentLabel(commissionRate)} %)',
-      fmt.format(commissionEur),
-    ));
-    if (hasRealSavings) {
-      lines.add(_line(
+    lines.add(
+      _line(
         tt,
-        'Réduction code promo',
-        '−${fmt.format(savings)}',
-        valueColor: const Color(0xFF16A34A),
-      ));
+        'Commission Yadony (${_ratePercentLabel(commissionRate)} %)',
+        fmt(commissionEur),
+      ),
+    );
+    if (hasRealSavings) {
+      lines.add(
+        _line(
+          tt,
+          'Réduction code promo',
+          '−${fmt(savings)}',
+          valueColor: const Color(0xFF16A34A),
+        ),
+      );
     }
 
     return Container(
@@ -2095,10 +2090,7 @@ class _PriceBreakdown extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          for (final l in lines) ...[
-            l,
-            const SizedBox(height: DonySpacing.xs),
-          ],
+          for (final l in lines) ...[l, const SizedBox(height: DonySpacing.xs)],
           if (lines.isNotEmpty) ...[
             Divider(color: cs.outline),
             const SizedBox(height: DonySpacing.xs),
@@ -2130,7 +2122,9 @@ class _PriceBreakdown extends StatelessWidget {
                       const SizedBox(width: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFE8F5EE),
                           borderRadius: BorderRadius.circular(8),
@@ -2152,7 +2146,7 @@ class _PriceBreakdown extends StatelessWidget {
                   children: [
                     if (hasRealSavings) ...[
                       Text(
-                        fmt.format(originalTotal),
+                        fmt(originalTotal!),
                         style: tt.bodySmall?.copyWith(
                           color: cs.onSurfaceVariant,
                           decoration: TextDecoration.lineThrough,
@@ -2161,7 +2155,7 @@ class _PriceBreakdown extends StatelessWidget {
                       const SizedBox(width: 6),
                     ],
                     Text(
-                      fmt.format(totalPrice),
+                      fmt(totalPrice),
                       key: const Key('bid-total-amount'),
                       style: tt.titleLarge?.copyWith(color: cs.primary),
                     ),

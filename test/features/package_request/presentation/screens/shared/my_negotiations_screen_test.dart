@@ -257,8 +257,8 @@ void main() {
         );
         await tester.pumpWidget(wrap());
         await tester.pumpAndSettle();
-        expect(find.text('50,40 €'), findsOneWidget);
-        expect(find.text('45,00 €'), findsNothing);
+        expect(find.text('50,40\u00A0€'), findsOneWidget);
+        expect(find.text('45,00\u00A0€'), findsNothing);
       },
     );
 
@@ -273,7 +273,7 @@ void main() {
       );
       await tester.pumpWidget(wrap());
       await tester.pumpAndSettle();
-      expect(find.text('45,00 €'), findsOneWidget);
+      expect(find.text('45,00\u00A0€'), findsOneWidget);
     });
 
     testWidgets('affiche "R.2/5"', (tester) async {

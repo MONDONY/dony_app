@@ -90,6 +90,7 @@ import 'package:dony/core/services/media_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/currency_onboarding_cubit.dart';
 import 'package:dony/features/auth/bloc/local_auth_bloc.dart';
 import 'package:dony/features/auth/data/datasources/auth_remote_datasource.dart';
 import 'package:dony/features/auth/data/repositories/auth_repository.dart';
@@ -262,6 +263,13 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<AuthRepository>(),
       getIt<LocalAuthService>(),
       analytics: getIt<AnalyticsService>(),
+    ),
+  );
+  getIt.registerFactory<CurrencyOnboardingCubit>(
+    () => CurrencyOnboardingCubit(
+      getIt<BusinessPrefsRepository>(),
+      getIt<HiveService>().userPrefs,
+      getIt<AnalyticsService>(),
     ),
   );
 

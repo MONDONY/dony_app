@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
@@ -488,12 +489,12 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Commission requise : ${state.requiredCommission.toStringAsFixed(2)} €',
+            'Commission requise : ${formatPriceIn(state.requiredCommission, state.currency)}',
             style: tt.bodyMedium?.copyWith(color: cs.onSurface),
           ),
           const SizedBox(height: 4),
           Text(
-            'Solde du portefeuille : ${state.availableBalance.toStringAsFixed(2)} €',
+            'Solde du portefeuille : ${formatPriceIn(state.availableBalance, state.currency)}',
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
           const SizedBox(height: 8),

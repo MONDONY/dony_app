@@ -9,10 +9,10 @@ class MockApiClient extends Mock implements ApiClient {}
 class MockDio extends Mock implements Dio {}
 
 Response<dynamic> _ok(dynamic data, String path) => Response(
-      data: data,
-      statusCode: 200,
-      requestOptions: RequestOptions(path: path),
-    );
+  data: data,
+  statusCode: 200,
+  requestOptions: RequestOptions(path: path),
+);
 
 final _qrJson = {
   'bidId': 'bid-001',
@@ -54,9 +54,9 @@ void main() {
 
   group('getQrCode', () {
     test('returns QrCodeModel on success', () async {
-      when(() => mockDio.get('/tracking/bid-001/qr-code'))
-          .thenAnswer((_) async =>
-              _ok(_qrJson, '/tracking/bid-001/qr-code'));
+      when(
+        () => mockDio.get('/tracking/bid-001/qr-code'),
+      ).thenAnswer((_) async => _ok(_qrJson, '/tracking/bid-001/qr-code'));
 
       final result = await repo.getQrCode('bid-001');
 
@@ -69,9 +69,12 @@ void main() {
 
   group('searchByTrackingNumber', () {
     test('returns TrackingSearchModel', () async {
-      when(() => mockDio.get('/tracking/search',
-              queryParameters: any(named: 'queryParameters')))
-          .thenAnswer((_) async => _ok(_searchJson, '/tracking/search'));
+      when(
+        () => mockDio.get(
+          '/tracking/search',
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenAnswer((_) async => _ok(_searchJson, '/tracking/search'));
 
       final result = await repo.searchByTrackingNumber('DON-ABC123');
 
@@ -84,8 +87,9 @@ void main() {
 
   group('postScan', () {
     test('returns TrackingEventModel on success', () async {
-      when(() => mockDio.post('/tracking/events', data: any(named: 'data')))
-          .thenAnswer((_) async => _ok(_eventJson, '/tracking/events'));
+      when(
+        () => mockDio.post('/tracking/events', data: any(named: 'data')),
+      ).thenAnswer((_) async => _ok(_eventJson, '/tracking/events'));
 
       final result = await repo.postScan(
         bidId: 'bid-001',
@@ -97,8 +101,9 @@ void main() {
     });
 
     test('includes optional gps and photo fields', () async {
-      when(() => mockDio.post('/tracking/events', data: any(named: 'data')))
-          .thenAnswer((_) async => _ok(_eventJson, '/tracking/events'));
+      when(
+        () => mockDio.post('/tracking/events', data: any(named: 'data')),
+      ).thenAnswer((_) async => _ok(_eventJson, '/tracking/events'));
 
       final result = await repo.postScan(
         bidId: 'bid-001',
@@ -117,9 +122,9 @@ void main() {
 
   group('getEvents', () {
     test('returns list of TrackingEventModels', () async {
-      when(() => mockDio.get('/tracking/bid-001/events'))
-          .thenAnswer((_) async =>
-              _ok([_eventJson], '/tracking/bid-001/events'));
+      when(
+        () => mockDio.get('/tracking/bid-001/events'),
+      ).thenAnswer((_) async => _ok([_eventJson], '/tracking/bid-001/events'));
 
       final results = await repo.getEvents('bid-001');
 
@@ -128,9 +133,9 @@ void main() {
     });
 
     test('returns empty list when no events', () async {
-      when(() => mockDio.get('/tracking/bid-001/events'))
-          .thenAnswer((_) async =>
-              _ok([], '/tracking/bid-001/events'));
+      when(
+        () => mockDio.get('/tracking/bid-001/events'),
+      ).thenAnswer((_) async => _ok([], '/tracking/bid-001/events'));
 
       final results = await repo.getEvents('bid-001');
       expect(results, isEmpty);
@@ -141,10 +146,11 @@ void main() {
 
   group('getConfirmationCode', () {
     test('returns code string', () async {
-      when(() => mockDio.get('/tracking/bid-001/confirmation-code'))
-          .thenAnswer((_) async => _ok(
-              {'confirmationCode': '4721'},
-              '/tracking/bid-001/confirmation-code'));
+      when(() => mockDio.get('/tracking/bid-001/confirmation-code')).thenAnswer(
+        (_) async => _ok({
+          'confirmationCode': '4721',
+        }, '/tracking/bid-001/confirmation-code'),
+      );
 
       final result = await repo.getConfirmationCode('bid-001');
 
@@ -153,10 +159,11 @@ void main() {
     });
 
     test('returns null when confirmationCode absent', () async {
-      when(() => mockDio.get('/tracking/bid-001/confirmation-code'))
-          .thenAnswer((_) async => _ok(
-              {'confirmationCode': null},
-              '/tracking/bid-001/confirmation-code'));
+      when(() => mockDio.get('/tracking/bid-001/confirmation-code')).thenAnswer(
+        (_) async => _ok({
+          'confirmationCode': null,
+        }, '/tracking/bid-001/confirmation-code'),
+      );
 
       final result = await repo.getConfirmationCode('bid-001');
 
@@ -169,15 +176,16 @@ void main() {
 
   group('confirmDelivery', () {
     test('returns TrackingEventModel on success', () async {
-      when(() => mockDio.post('/tracking/bid-001/confirm-delivery',
-              data: any(named: 'data')))
-          .thenAnswer((_) async =>
-              _ok(_eventJson, '/tracking/bid-001/confirm-delivery'));
-
-      final result = await repo.confirmDelivery(
-        bidId: 'bid-001',
-        code: '4721',
+      when(
+        () => mockDio.post(
+          '/tracking/bid-001/confirm-delivery',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer(
+        (_) async => _ok(_eventJson, '/tracking/bid-001/confirm-delivery'),
       );
+
+      final result = await repo.confirmDelivery(bidId: 'bid-001', code: '4721');
 
       expect(result.id, 'ev-001');
     });

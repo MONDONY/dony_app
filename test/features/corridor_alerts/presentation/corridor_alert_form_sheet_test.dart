@@ -30,15 +30,14 @@ class _FakeContentCategoryRepository implements IContentCategoryRepository {
 
 CorridorAlertModel _alert({
   AlertDirection direction = AlertDirection.travelerWantsPackages,
-}) =>
-    CorridorAlertModel(
-      id: 'a1',
-      departureCity: 'Paris',
-      arrivalCity: 'Dakar',
-      active: true,
-      createdAt: DateTime(2026, 6, 20),
-      direction: direction,
-    );
+}) => CorridorAlertModel(
+  id: 'a1',
+  departureCity: 'Paris',
+  arrivalCity: 'Dakar',
+  active: true,
+  createdAt: DateTime(2026, 6, 20),
+  direction: direction,
+);
 
 Future<void> _pumpSheet(
   WidgetTester tester, {
@@ -52,41 +51,47 @@ Future<void> _pumpSheet(
   when(() => cubit.isEditing).thenReturn(alert != null);
 
   // Direction based on roles / editing
-  final direction = alert?.direction ??
+  final direction =
+      alert?.direction ??
       (isSender && !isTraveler
           ? AlertDirection.senderWantsTrips
           : AlertDirection.travelerWantsPackages);
 
-  when(() => cubit.state).thenReturn(CorridorAlertFormState(
-    departureCity: alert?.departureCity,
-    arrivalCity: alert?.arrivalCity,
-    direction: direction,
-  ));
-
-  GetIt.I.registerFactoryParam<CorridorAlertFormCubit,
-      ({CorridorAlertModel? editing, AlertDirection direction}), void>(
-    (params, _) => cubit,
+  when(() => cubit.state).thenReturn(
+    CorridorAlertFormState(
+      departureCity: alert?.departureCity,
+      arrivalCity: alert?.arrivalCity,
+      direction: direction,
+    ),
   );
+
+  GetIt.I.registerFactoryParam<
+    CorridorAlertFormCubit,
+    ({CorridorAlertModel? editing, AlertDirection direction}),
+    void
+  >((params, _) => cubit);
   GetIt.I.registerFactory<CitySearchBloc>(() => cityBloc);
 
-  await tester.pumpWidget(MaterialApp(
-    theme: AppTheme.light(),
-    home: Builder(
-      builder: (ctx) => Scaffold(
-        body: Center(
-          child: ElevatedButton(
-            onPressed: () => CorridorAlertFormSheet.show(
-              ctx,
-              alert: alert,
-              isTraveler: isTraveler,
-              isSender: isSender,
+  await tester.pumpWidget(
+    MaterialApp(
+      theme: AppTheme.light(),
+      home: Builder(
+        builder: (ctx) => Scaffold(
+          body: Center(
+            child: ElevatedButton(
+              onPressed: () => CorridorAlertFormSheet.show(
+                ctx,
+                alert: alert,
+                isTraveler: isTraveler,
+                isSender: isSender,
+              ),
+              child: const Text('open'),
             ),
-            child: const Text('open'),
           ),
         ),
       ),
     ),
-  ));
+  );
   await tester.tap(find.text('open'));
   await tester.pumpAndSettle();
 }
@@ -114,35 +119,38 @@ void main() {
   // Existing tests (updated for new show() signature + new DI param type)
   // ---------------------------------------------------------------------------
 
-  testWidgets('submit button is disabled while corridor is invalid',
-      (t) async {
+  testWidgets('submit button is disabled while corridor is invalid', (t) async {
     final cubit = MockFormCubit();
     final cityBloc = MockCitySearchBloc();
     when(() => cityBloc.state).thenReturn(const CitySearchInitial());
     when(() => cubit.isEditing).thenReturn(false);
-    when(() => cubit.state)
-        .thenReturn(const CorridorAlertFormState()); // invalid
+    when(
+      () => cubit.state,
+    ).thenReturn(const CorridorAlertFormState()); // invalid
 
-    GetIt.I.registerFactoryParam<CorridorAlertFormCubit,
-        ({CorridorAlertModel? editing, AlertDirection direction}), void>(
-      (params, _) => cubit,
-    );
+    GetIt.I.registerFactoryParam<
+      CorridorAlertFormCubit,
+      ({CorridorAlertModel? editing, AlertDirection direction}),
+      void
+    >((params, _) => cubit);
     GetIt.I.registerFactory<CitySearchBloc>(() => cityBloc);
 
-    await t.pumpWidget(MaterialApp(
-      theme: AppTheme.light(),
-      home: Builder(
-        builder: (ctx) => Scaffold(
-          body: Center(
-            child: ElevatedButton(
-              onPressed: () =>
-                  CorridorAlertFormSheet.show(ctx, isTraveler: true),
-              child: const Text('open'),
+    await t.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: Builder(
+          builder: (ctx) => Scaffold(
+            body: Center(
+              child: ElevatedButton(
+                onPressed: () =>
+                    CorridorAlertFormSheet.show(ctx, isTraveler: true),
+                child: const Text('open'),
+              ),
             ),
           ),
         ),
       ),
-    ));
+    );
     await t.tap(find.text('open'));
     await t.pumpAndSettle();
 
@@ -155,38 +163,42 @@ void main() {
     verifyNever(() => cubit.submit());
   });
 
-  testWidgets('submit button enabled when valid → calls submit()',
-      (t) async {
+  testWidgets('submit button enabled when valid → calls submit()', (t) async {
     final cubit = MockFormCubit();
     final cityBloc = MockCitySearchBloc();
     when(() => cityBloc.state).thenReturn(const CitySearchInitial());
     when(() => cubit.isEditing).thenReturn(false);
-    when(() => cubit.state).thenReturn(const CorridorAlertFormState(
-      departureCity: 'Paris',
-      arrivalCity: 'Bamako',
-    ));
+    when(() => cubit.state).thenReturn(
+      const CorridorAlertFormState(
+        departureCity: 'Paris',
+        arrivalCity: 'Bamako',
+      ),
+    );
     when(() => cubit.submit()).thenAnswer((_) async {});
 
-    GetIt.I.registerFactoryParam<CorridorAlertFormCubit,
-        ({CorridorAlertModel? editing, AlertDirection direction}), void>(
-      (params, _) => cubit,
-    );
+    GetIt.I.registerFactoryParam<
+      CorridorAlertFormCubit,
+      ({CorridorAlertModel? editing, AlertDirection direction}),
+      void
+    >((params, _) => cubit);
     GetIt.I.registerFactory<CitySearchBloc>(() => cityBloc);
 
-    await t.pumpWidget(MaterialApp(
-      theme: AppTheme.light(),
-      home: Builder(
-        builder: (ctx) => Scaffold(
-          body: Center(
-            child: ElevatedButton(
-              onPressed: () =>
-                  CorridorAlertFormSheet.show(ctx, isTraveler: true),
-              child: const Text('open'),
+    await t.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: Builder(
+          builder: (ctx) => Scaffold(
+            body: Center(
+              child: ElevatedButton(
+                onPressed: () =>
+                    CorridorAlertFormSheet.show(ctx, isTraveler: true),
+                child: const Text('open'),
+              ),
             ),
           ),
         ),
       ),
-    ));
+    );
     await t.tap(find.text('open'));
     await t.pumpAndSettle();
 
@@ -199,34 +211,36 @@ void main() {
   // Fix 1 — date-window field
   // ---------------------------------------------------------------------------
 
-  testWidgets('date-window field renders in form with placeholder',
-      (t) async {
+  testWidgets('date-window field renders in form with placeholder', (t) async {
     final cubit = MockFormCubit();
     final cityBloc = MockCitySearchBloc();
     when(() => cityBloc.state).thenReturn(const CitySearchInitial());
     when(() => cubit.isEditing).thenReturn(false);
     when(() => cubit.state).thenReturn(const CorridorAlertFormState());
 
-    GetIt.I.registerFactoryParam<CorridorAlertFormCubit,
-        ({CorridorAlertModel? editing, AlertDirection direction}), void>(
-      (params, _) => cubit,
-    );
+    GetIt.I.registerFactoryParam<
+      CorridorAlertFormCubit,
+      ({CorridorAlertModel? editing, AlertDirection direction}),
+      void
+    >((params, _) => cubit);
     GetIt.I.registerFactory<CitySearchBloc>(() => cityBloc);
 
-    await t.pumpWidget(MaterialApp(
-      theme: AppTheme.light(),
-      home: Builder(
-        builder: (ctx) => Scaffold(
-          body: Center(
-            child: ElevatedButton(
-              onPressed: () =>
-                  CorridorAlertFormSheet.show(ctx, isTraveler: true),
-              child: const Text('open'),
+    await t.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: Builder(
+          builder: (ctx) => Scaffold(
+            body: Center(
+              child: ElevatedButton(
+                onPressed: () =>
+                    CorridorAlertFormSheet.show(ctx, isTraveler: true),
+                child: const Text('open'),
+              ),
             ),
           ),
         ),
       ),
-    ));
+    );
     await t.tap(find.text('open'));
     await t.pumpAndSettle();
 
@@ -236,7 +250,9 @@ void main() {
     expect(find.text('Toute date'), findsOneWidget);
     // No clear button when no dates are set.
     expect(
-        find.byKey(const Key('corridor-alert-date-window-clear')), findsNothing);
+      find.byKey(const Key('corridor-alert-date-window-clear')),
+      findsNothing,
+    );
   });
 
   testWidgets('edit mode prefills date window from cubit state', (t) async {
@@ -244,41 +260,48 @@ void main() {
     final cityBloc = MockCitySearchBloc();
     when(() => cityBloc.state).thenReturn(const CitySearchInitial());
     when(() => cubit.isEditing).thenReturn(true);
-    when(() => cubit.state).thenReturn(CorridorAlertFormState(
-      departureCity: 'Paris',
-      arrivalCity: 'Dakar',
-      dateFrom: DateTime(2026, 7, 20),
-      dateTo: DateTime(2026, 7, 28),
-    ));
-
-    GetIt.I.registerFactoryParam<CorridorAlertFormCubit,
-        ({CorridorAlertModel? editing, AlertDirection direction}), void>(
-      (params, _) => cubit,
+    when(() => cubit.state).thenReturn(
+      CorridorAlertFormState(
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        dateFrom: DateTime(2026, 7, 20),
+        dateTo: DateTime(2026, 7, 28),
+      ),
     );
+
+    GetIt.I.registerFactoryParam<
+      CorridorAlertFormCubit,
+      ({CorridorAlertModel? editing, AlertDirection direction}),
+      void
+    >((params, _) => cubit);
     GetIt.I.registerFactory<CitySearchBloc>(() => cityBloc);
 
-    await t.pumpWidget(MaterialApp(
-      theme: AppTheme.light(),
-      home: Builder(
-        builder: (ctx) => Scaffold(
-          body: Center(
-            child: ElevatedButton(
-              onPressed: () =>
-                  CorridorAlertFormSheet.show(ctx, isTraveler: true),
-              child: const Text('open'),
+    await t.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: Builder(
+          builder: (ctx) => Scaffold(
+            body: Center(
+              child: ElevatedButton(
+                onPressed: () =>
+                    CorridorAlertFormSheet.show(ctx, isTraveler: true),
+                child: const Text('open'),
+              ),
             ),
           ),
         ),
       ),
-    ));
+    );
     await t.tap(find.text('open'));
     await t.pumpAndSettle();
 
     // Formatted date range should appear (e.g. "20 juil → 30 juil").
     expect(find.textContaining('juil'), findsWidgets);
     // Clear button should be visible.
-    expect(find.byKey(const Key('corridor-alert-date-window-clear')),
-        findsOneWidget);
+    expect(
+      find.byKey(const Key('corridor-alert-date-window-clear')),
+      findsOneWidget,
+    );
     // Placeholder must NOT be present.
     expect(find.text('Toute date'), findsNothing);
   });
@@ -288,34 +311,39 @@ void main() {
     final cityBloc = MockCitySearchBloc();
     when(() => cityBloc.state).thenReturn(const CitySearchInitial());
     when(() => cubit.isEditing).thenReturn(true);
-    when(() => cubit.state).thenReturn(CorridorAlertFormState(
-      departureCity: 'Paris',
-      arrivalCity: 'Dakar',
-      dateFrom: DateTime(2026, 7, 20),
-      dateTo: DateTime(2026, 7, 28),
-    ));
+    when(() => cubit.state).thenReturn(
+      CorridorAlertFormState(
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        dateFrom: DateTime(2026, 7, 20),
+        dateTo: DateTime(2026, 7, 28),
+      ),
+    );
     when(() => cubit.clearDateWindow()).thenReturn(null);
 
-    GetIt.I.registerFactoryParam<CorridorAlertFormCubit,
-        ({CorridorAlertModel? editing, AlertDirection direction}), void>(
-      (params, _) => cubit,
-    );
+    GetIt.I.registerFactoryParam<
+      CorridorAlertFormCubit,
+      ({CorridorAlertModel? editing, AlertDirection direction}),
+      void
+    >((params, _) => cubit);
     GetIt.I.registerFactory<CitySearchBloc>(() => cityBloc);
 
-    await t.pumpWidget(MaterialApp(
-      theme: AppTheme.light(),
-      home: Builder(
-        builder: (ctx) => Scaffold(
-          body: Center(
-            child: ElevatedButton(
-              onPressed: () =>
-                  CorridorAlertFormSheet.show(ctx, isTraveler: true),
-              child: const Text('open'),
+    await t.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: Builder(
+          builder: (ctx) => Scaffold(
+            body: Center(
+              child: ElevatedButton(
+                onPressed: () =>
+                    CorridorAlertFormSheet.show(ctx, isTraveler: true),
+                child: const Text('open'),
+              ),
             ),
           ),
         ),
       ),
-    ));
+    );
     await t.tap(find.text('open'));
     await t.pumpAndSettle();
 
@@ -333,8 +361,9 @@ void main() {
     expect(find.byKey(const Key('alert-direction-segment')), findsOneWidget);
   });
 
-  testWidgets('sender only → no segment, direction forced senderWantsTrips',
-      (tester) async {
+  testWidgets('sender only → no segment, direction forced senderWantsTrips', (
+    tester,
+  ) async {
     await _pumpSheet(tester, isTraveler: false, isSender: true);
     expect(find.byKey(const Key('alert-direction-segment')), findsNothing);
     // trajet direction hides weight + categories
@@ -349,15 +378,19 @@ void main() {
     expect(find.text('Types de contenu (optionnel)'), findsOneWidget);
   });
 
-  testWidgets('edit mode → segment read-only (absent), shows existing direction',
-      (tester) async {
-    await _pumpSheet(tester,
+  testWidgets(
+    'edit mode → segment read-only (absent), shows existing direction',
+    (tester) async {
+      await _pumpSheet(
+        tester,
         isTraveler: true,
         isSender: true,
-        alert: _alert(direction: AlertDirection.senderWantsTrips));
-    expect(find.byKey(const Key('alert-direction-segment')), findsNothing);
-    expect(find.byKey(const Key('corridor-alert-min-weight')), findsNothing);
-  });
+        alert: _alert(direction: AlertDirection.senderWantsTrips),
+      );
+      expect(find.byKey(const Key('alert-direction-segment')), findsNothing);
+      expect(find.byKey(const Key('corridor-alert-min-weight')), findsNothing);
+    },
+  );
 
   // ---------------------------------------------------------------------------
   // Catalogue de types de contenu (Task 7) — catalogue fourni par le
@@ -385,36 +418,44 @@ void main() {
         );
       }
       // Anciennes valeurs figées disparues (migrées par V171).
-      expect(find.byKey(const Key('alert-content-item-Électronique')),
-          findsNothing);
-      expect(find.byKey(const Key('alert-content-item-Nourriture')),
-          findsNothing);
+      expect(
+        find.byKey(const Key('alert-content-item-Électronique')),
+        findsNothing,
+      );
+      expect(
+        find.byKey(const Key('alert-content-item-Nourriture')),
+        findsNothing,
+      );
     },
   );
 
-  testWidgets(
-    'saisie libre transmet la sélection complète au cubit',
-    (tester) async {
-      final cubit = MockFormCubit();
-      final cityBloc = MockCitySearchBloc();
-      when(() => cityBloc.state).thenReturn(const CitySearchInitial());
-      when(() => cubit.isEditing).thenReturn(false);
-      when(() => cubit.state).thenReturn(const CorridorAlertFormState(
+  testWidgets('saisie libre transmet la sélection complète au cubit', (
+    tester,
+  ) async {
+    final cubit = MockFormCubit();
+    final cityBloc = MockCitySearchBloc();
+    when(() => cityBloc.state).thenReturn(const CitySearchInitial());
+    when(() => cubit.isEditing).thenReturn(false);
+    when(() => cubit.state).thenReturn(
+      const CorridorAlertFormState(
         direction: AlertDirection.travelerWantsPackages,
-      ));
-      when(() => cubit.toggleCategory(any())).thenReturn(null);
+      ),
+    );
+    when(() => cubit.toggleCategory(any())).thenReturn(null);
 
-      GetIt.I.registerFactoryParam<CorridorAlertFormCubit,
-          ({CorridorAlertModel? editing, AlertDirection direction}), void>(
-        (params, _) => cubit,
-      );
-      GetIt.I.registerFactory<CitySearchBloc>(() => cityBloc);
+    GetIt.I.registerFactoryParam<
+      CorridorAlertFormCubit,
+      ({CorridorAlertModel? editing, AlertDirection direction}),
+      void
+    >((params, _) => cubit);
+    GetIt.I.registerFactory<CitySearchBloc>(() => cityBloc);
 
-      tester.view.physicalSize = const Size(800, 2400);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.reset);
+    tester.view.physicalSize = const Size(800, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
 
-      await tester.pumpWidget(MaterialApp(
+    await tester.pumpWidget(
+      MaterialApp(
         theme: AppTheme.light(),
         home: Builder(
           builder: (ctx) => Scaffold(
@@ -427,21 +468,21 @@ void main() {
             ),
           ),
         ),
-      ));
-      await tester.tap(find.text('open'));
-      await tester.pumpAndSettle();
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
 
-      // Un type absent du catalogue s'ajoute par la frappe, sans bouton « + ».
-      final champ = find.byKey(const Key('alert-content-field'));
-      await tester.ensureVisible(champ);
-      await tester.tap(champ);
-      await tester.pumpAndSettle();
-      await tester.enterText(champ, 'Poissons');
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('alert-content-item-add')));
-      await tester.pumpAndSettle();
+    // Un type absent du catalogue s'ajoute par la frappe, sans bouton « + ».
+    final champ = find.byKey(const Key('alert-content-field'));
+    await tester.ensureVisible(champ);
+    await tester.tap(champ);
+    await tester.pumpAndSettle();
+    await tester.enterText(champ, 'Poissons');
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('alert-content-item-add')));
+    await tester.pumpAndSettle();
 
-      verify(() => cubit.setCategories(['Poissons'])).called(1);
-    },
-  );
+    verify(() => cubit.setCategories(['Poissons'])).called(1);
+  });
 }

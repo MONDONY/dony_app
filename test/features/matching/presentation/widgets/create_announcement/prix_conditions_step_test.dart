@@ -12,6 +12,8 @@
 // Les animations flutter_animate sont drainées via pump(200 ms).
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/models/connect_account_status.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
@@ -75,6 +77,7 @@ Widget _host({
   StripeAccountState? stripeState,
   CommissionMethodState? commissionState,
   double initialAvailableKg = 10,
+  SupportedCurrency? currency = SupportedCurrency.eur,
 }) {
   final mockStripeBloc = _MockStripeAccountBloc();
   final resolvedStripeState = stripeState ?? _stripeConfiguredState;
@@ -85,8 +88,7 @@ Widget _host({
   final resolvedCommissionState =
       commissionState ?? CommissionMethodNotConfigured();
   when(() => mockCommissionBloc.state).thenReturn(resolvedCommissionState);
-  when(() => mockCommissionBloc.stream)
-      .thenAnswer((_) => const Stream.empty());
+  when(() => mockCommissionBloc.stream).thenAnswer((_) => const Stream.empty());
 
   // Contrôleurs / notifiers (cycle de vie géré par le StatefulWidget parent
   // en production ; ici on les crée dans le host et on les laisse se disposer
@@ -119,6 +121,7 @@ Widget _host({
         ],
         child: SingleChildScrollView(
           child: PrixConditionsStep(
+            currency: currency,
             priceOptionNotifier: priceOptionNotifier,
             customPriceNotifier: customPriceNotifier,
             availableKgNotifier: availableKgNotifier,
@@ -140,8 +143,14 @@ Widget _host({
 }
 
 /// Pompe le widget et draine les animations flutter_animate (delay ≤ 180 ms).
-Future<void> _pump(WidgetTester tester, {StripeAccountState? stripeState, CommissionMethodState? commissionState}) async {
-  await tester.pumpWidget(_host(stripeState: stripeState, commissionState: commissionState));
+Future<void> _pump(
+  WidgetTester tester, {
+  StripeAccountState? stripeState,
+  CommissionMethodState? commissionState,
+}) async {
+  await tester.pumpWidget(
+    _host(stripeState: stripeState, commissionState: commissionState),
+  );
   await tester.pump(const Duration(milliseconds: 200));
   await tester.pump();
 }
@@ -152,8 +161,9 @@ void main() {
   group('PrixConditionsStep', () {
     // ── Construction ──────────────────────────────────────────────────────────
 
-    testWidgets('se construit sans exception avec les providers requis',
-        (tester) async {
+    testWidgets('se construit sans exception avec les providers requis', (
+      tester,
+    ) async {
       await _pump(tester);
       expect(find.byType(PrixConditionsStep), findsOneWidget);
     });
@@ -165,17 +175,25 @@ void main() {
       expect(find.text('Prix par kg'), findsOneWidget);
     });
 
-    testWidgets('les 4 chips de prix prédéfinis sont affichés',
-        (tester) async {
+    testWidgets('les 4 chips de prix prédéfinis sont affichés', (tester) async {
       await _pump(tester);
-      // kPriceOptions = [5.0, 6.0, 7.0, 8.0] → "5€", "6€", "7€", "8€"
+      // kPriceOptions = [5.0, 6.0, 7.0, 8.0], dans la devise active.
       for (final price in kPriceOptions) {
         expect(
-          find.text('${price.toStringAsFixed(0)}€'),
+          find.text(CurrencyFormatter.format(price, SupportedCurrency.eur)),
           findsOneWidget,
-          reason: 'Chip ${price.toStringAsFixed(0)}€ doit être présent',
+          reason: 'Chip ${price.toStringAsFixed(0)} EUR doit être présent',
         );
       }
+    });
+
+    testWidgets('affiche les montants en CAD sans conversion', (tester) async {
+      await tester.pumpWidget(_host(currency: SupportedCurrency.cad));
+      await tester.pump(const Duration(milliseconds: 200));
+
+      expect(find.text(r'CA$5.00'), findsOneWidget);
+      expect(find.text('5€'), findsNothing);
+      expect(find.textContaining(r'CA$50.00'), findsOneWidget);
     });
 
     testWidgets('chip "Autre prix" est affiché', (tester) async {
@@ -183,190 +201,220 @@ void main() {
       expect(find.text('Autre prix'), findsOneWidget);
     });
 
-    testWidgets('ligne « vous touchez / l\'expéditeur paie » est affichée', (tester) async {
+    testWidgets('ligne « vous touchez / l\'expéditeur paie » est affichée', (
+      tester,
+    ) async {
       await _pump(tester);
       // availableKg=10, prix index 0 → 5€/kg : vous touchez 50€ (net entier),
       // l'expéditeur paie 56€ (net × 1,12).
-      expect(
-        find.textContaining('Vous touchez'),
-        findsOneWidget,
-      );
+      expect(find.textContaining('Vous touchez'), findsOneWidget);
     });
 
     // ── Section MODES DE PAIEMENT ─────────────────────────────────────────────
 
-    testWidgets(
-        'label de section Modes de paiement acceptés est affiché',
-        (tester) async {
+    testWidgets('label de section Modes de paiement acceptés est affiché', (
+      tester,
+    ) async {
       await _pump(tester);
       expect(find.text('Modes de paiement acceptés'), findsOneWidget);
     });
 
     testWidgets(
-        'switch Stripe visible et désactivé (toujours ON, non éditable)',
-        (tester) async {
-      await _pump(
-        tester,
-        stripeState: _stripeConfiguredState,
-        commissionState: CommissionMethodNotConfigured(),
-      );
-      final stripeSwitch = find.byKey(const Key('payment-method-stripe'));
-      expect(stripeSwitch, findsOneWidget);
-      final sw = tester.widget<Switch>(
-        find.descendant(of: stripeSwitch, matching: find.byType(Switch)).last,
-      );
-      expect(sw.value, isTrue,
-          reason: 'Stripe est toujours activé (verrouillé)');
-      expect(sw.onChanged, isNull,
-          reason: 'Stripe switch ne doit pas être modifiable');
-    });
+      'switch Stripe visible et désactivé (toujours ON, non éditable)',
+      (tester) async {
+        await _pump(
+          tester,
+          stripeState: _stripeConfiguredState,
+          commissionState: CommissionMethodNotConfigured(),
+        );
+        final stripeSwitch = find.byKey(const Key('payment-method-stripe'));
+        expect(stripeSwitch, findsOneWidget);
+        final sw = tester.widget<Switch>(
+          find.descendant(of: stripeSwitch, matching: find.byType(Switch)).last,
+        );
+        expect(
+          sw.value,
+          isTrue,
+          reason: 'Stripe est toujours activé (verrouillé)',
+        );
+        expect(
+          sw.onChanged,
+          isNull,
+          reason: 'Stripe switch ne doit pas être modifiable',
+        );
+      },
+    );
 
     testWidgets(
-        'switch Espèces activé même sans carte commission (vérif. reportée à l\'acceptation)',
-        (tester) async {
-      await _pump(
-        tester,
-        stripeState: _stripeConfiguredState,
-        commissionState: CommissionMethodNotConfigured(),
-      );
-      final cashSwitch = find.byKey(const Key('payment-method-cash'));
-      expect(cashSwitch, findsOneWidget);
-      final sw = tester.widget<Switch>(
-        find.descendant(of: cashSwitch, matching: find.byType(Switch)).last,
-      );
-      // La carte de commission n'est plus requise à la publication :
-      // la capacité de prélèvement (wallet/carte) est vérifiée à l'acceptation du bid.
-      expect(sw.onChanged, isNotNull,
+      'switch Espèces activé même sans carte commission (vérif. reportée à l\'acceptation)',
+      (tester) async {
+        await _pump(
+          tester,
+          stripeState: _stripeConfiguredState,
+          commissionState: CommissionMethodNotConfigured(),
+        );
+        final cashSwitch = find.byKey(const Key('payment-method-cash'));
+        expect(cashSwitch, findsOneWidget);
+        final sw = tester.widget<Switch>(
+          find.descendant(of: cashSwitch, matching: find.byType(Switch)).last,
+        );
+        // La carte de commission n'est plus requise à la publication :
+        // la capacité de prélèvement (wallet/carte) est vérifiée à l'acceptation du bid.
+        expect(
+          sw.onChanged,
+          isNotNull,
           reason:
-              'CASH switch doit rester activable sans carte commission configurée');
-      // L'ancien lien "Ajouter une carte commission →" ne doit plus exister.
-      expect(find.byKey(const Key('add-commission-card-link')), findsNothing);
-    });
+              'CASH switch doit rester activable sans carte commission configurée',
+        );
+        // L'ancien lien "Ajouter une carte commission →" ne doit plus exister.
+        expect(find.byKey(const Key('add-commission-card-link')), findsNothing);
+      },
+    );
 
     testWidgets(
-        'switch Espèces activé quand carte commission valide disponible',
-        (tester) async {
-      await _pump(
-        tester,
-        stripeState: _stripeConfiguredState,
-        commissionState: CommissionMethodLoaded(_validCard),
-      );
-      final cashSwitch = find.byKey(const Key('payment-method-cash'));
-      expect(cashSwitch, findsOneWidget);
-      final sw = tester.widget<Switch>(
-        find.descendant(of: cashSwitch, matching: find.byType(Switch)).last,
-      );
-      expect(sw.onChanged, isNotNull,
+      'switch Espèces activé quand carte commission valide disponible',
+      (tester) async {
+        await _pump(
+          tester,
+          stripeState: _stripeConfiguredState,
+          commissionState: CommissionMethodLoaded(_validCard),
+        );
+        final cashSwitch = find.byKey(const Key('payment-method-cash'));
+        expect(cashSwitch, findsOneWidget);
+        final sw = tester.widget<Switch>(
+          find.descendant(of: cashSwitch, matching: find.byType(Switch)).last,
+        );
+        expect(
+          sw.onChanged,
+          isNotNull,
           reason:
-              'CASH switch doit être activable avec une carte commission valide');
-    });
+              'CASH switch doit être activable avec une carte commission valide',
+        );
+      },
+    );
 
     testWidgets(
-        'bannière Stripe non configuré visible quand stripeAccountStatus != ONBOARDING_COMPLETE',
-        (tester) async {
-      await _pump(
-        tester,
-        stripeState: _stripeNotConfiguredState,
-      );
-      // La bannière contient "Connectez Stripe"
-      expect(find.textContaining('Connectez Stripe'), findsOneWidget);
-    });
+      'bannière Stripe non configuré visible quand stripeAccountStatus != ONBOARDING_COMPLETE',
+      (tester) async {
+        await _pump(tester, stripeState: _stripeNotConfiguredState);
+        // La bannière contient "Connectez Stripe"
+        expect(find.textContaining('Connectez Stripe'), findsOneWidget);
+      },
+    );
 
     // ── Task 5 — section paiement inversée (cash libre, carte verrouillée) ──
 
     testWidgets(
-        'Stripe non configuré — cash actif et forcé, carte verrouillée avec CTA',
-        (tester) async {
-      await _pump(tester, stripeState: _stripeNotConfiguredState);
+      'Stripe non configuré — cash actif et forcé, carte verrouillée avec CTA',
+      (tester) async {
+        await _pump(tester, stripeState: _stripeNotConfiguredState);
 
-      expect(find.byKey(const Key('payment-method-cash')), findsOneWidget);
-      final cashSwitch = tester.widget<SwitchListTile>(
-          find.byKey(const Key('payment-method-cash')));
-      expect(cashSwitch.value, isTrue, reason: 'CASH forcé ON sans Stripe');
-      expect(cashSwitch.onChanged, isNull,
-          reason: 'CASH non désactivable (≥1 méthode requise)');
+        expect(find.byKey(const Key('payment-method-cash')), findsOneWidget);
+        final cashSwitch = tester.widget<SwitchListTile>(
+          find.byKey(const Key('payment-method-cash')),
+        );
+        expect(cashSwitch.value, isTrue, reason: 'CASH forcé ON sans Stripe');
+        expect(
+          cashSwitch.onChanged,
+          isNull,
+          reason: 'CASH non désactivable (≥1 méthode requise)',
+        );
 
-      final stripeSwitch = tester.widget<SwitchListTile>(
-          find.byKey(const Key('payment-method-stripe')));
-      expect(stripeSwitch.value, isFalse);
-      expect(stripeSwitch.onChanged, isNull,
-          reason: 'Carte verrouillée sans Stripe configuré');
+        final stripeSwitch = tester.widget<SwitchListTile>(
+          find.byKey(const Key('payment-method-stripe')),
+        );
+        expect(stripeSwitch.value, isFalse);
+        expect(
+          stripeSwitch.onChanged,
+          isNull,
+          reason: 'Carte verrouillée sans Stripe configuré',
+        );
 
-      expect(find.text('Activer les paiements par carte'), findsOneWidget);
-    });
+        expect(find.text('Activer les paiements par carte'), findsOneWidget);
+      },
+    );
 
     testWidgets(
-        'CTA "Activer les paiements par carte" pousse /connect/onboarding/intro',
-        (tester) async {
-      final mockStripeBloc = _MockStripeAccountBloc();
-      when(() => mockStripeBloc.state).thenReturn(_stripeNotConfiguredState);
-      when(() => mockStripeBloc.stream)
-          .thenAnswer((_) => const Stream.empty());
-      final mockCommissionBloc = _MockCommissionMethodBloc();
-      when(() => mockCommissionBloc.state)
-          .thenReturn(CommissionMethodNotConfigured());
-      when(() => mockCommissionBloc.stream)
-          .thenAnswer((_) => const Stream.empty());
+      'CTA "Activer les paiements par carte" pousse /connect/onboarding/intro',
+      (tester) async {
+        final mockStripeBloc = _MockStripeAccountBloc();
+        when(() => mockStripeBloc.state).thenReturn(_stripeNotConfiguredState);
+        when(
+          () => mockStripeBloc.stream,
+        ).thenAnswer((_) => const Stream.empty());
+        final mockCommissionBloc = _MockCommissionMethodBloc();
+        when(
+          () => mockCommissionBloc.state,
+        ).thenReturn(CommissionMethodNotConfigured());
+        when(
+          () => mockCommissionBloc.stream,
+        ).thenAnswer((_) => const Stream.empty());
 
-      final router = GoRouter(
-        initialLocation: '/',
-        routes: [
-          GoRoute(
-            path: '/',
-            builder: (context, state) => Scaffold(
-              body: MultiBlocProvider(
-                providers: [
-                  BlocProvider<AnnouncementFormBloc>(
-                    create: (_) => AnnouncementFormBloc(),
-                  ),
-                  BlocProvider<StripeAccountBloc>.value(value: mockStripeBloc),
-                  BlocProvider<CommissionMethodBloc>.value(
-                      value: mockCommissionBloc),
-                ],
-                child: SingleChildScrollView(
-                  child: PrixConditionsStep(
-                    priceOptionNotifier: ValueNotifier<int>(0),
-                    customPriceNotifier: ValueNotifier<double>(0),
-                    availableKgNotifier: ValueNotifier<double>(10),
-                    cashEnabledNotifier: ValueNotifier<bool>(false),
-                    kgPriceEnabledNotifier: ValueNotifier<bool>(true),
-                    selectedContentNotifier: ValueNotifier<Set<String>>({}),
-                    customAcceptedNotifier: ValueNotifier<Set<String>>({}),
-                    refusedTypesNotifier: ValueNotifier<Set<String>>({}),
-                    catalogLabelsNotifier: ValueNotifier<List<String>>(
-                      fallbackCatalog.map((c) => c.label).toList(),
+        final router = GoRouter(
+          initialLocation: '/',
+          routes: [
+            GoRoute(
+              path: '/',
+              builder: (context, state) => Scaffold(
+                body: MultiBlocProvider(
+                  providers: [
+                    BlocProvider<AnnouncementFormBloc>(
+                      create: (_) => AnnouncementFormBloc(),
                     ),
-                    descriptionCtrl: TextEditingController(),
-                    customAcceptedCtrl: TextEditingController(),
-                    refusedCtrl: TextEditingController(),
-                    customPriceCtrl: TextEditingController(),
+                    BlocProvider<StripeAccountBloc>.value(
+                      value: mockStripeBloc,
+                    ),
+                    BlocProvider<CommissionMethodBloc>.value(
+                      value: mockCommissionBloc,
+                    ),
+                  ],
+                  child: SingleChildScrollView(
+                    child: PrixConditionsStep(
+                      currency: SupportedCurrency.eur,
+                      priceOptionNotifier: ValueNotifier<int>(0),
+                      customPriceNotifier: ValueNotifier<double>(0),
+                      availableKgNotifier: ValueNotifier<double>(10),
+                      cashEnabledNotifier: ValueNotifier<bool>(false),
+                      kgPriceEnabledNotifier: ValueNotifier<bool>(true),
+                      selectedContentNotifier: ValueNotifier<Set<String>>({}),
+                      customAcceptedNotifier: ValueNotifier<Set<String>>({}),
+                      refusedTypesNotifier: ValueNotifier<Set<String>>({}),
+                      catalogLabelsNotifier: ValueNotifier<List<String>>(
+                        fallbackCatalog.map((c) => c.label).toList(),
+                      ),
+                      descriptionCtrl: TextEditingController(),
+                      customAcceptedCtrl: TextEditingController(),
+                      refusedCtrl: TextEditingController(),
+                      customPriceCtrl: TextEditingController(),
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-          GoRoute(
-            path: '/connect/onboarding/intro',
-            builder: (context, state) =>
-                const Scaffold(body: Text('stripe-onboarding-intro')),
-          ),
-        ],
-      );
+            GoRoute(
+              path: '/connect/onboarding/intro',
+              builder: (context, state) =>
+                  const Scaffold(body: Text('stripe-onboarding-intro')),
+            ),
+          ],
+        );
 
-      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
-      await tester.pump(const Duration(milliseconds: 200));
-      await tester.pump();
+        await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+        await tester.pump(const Duration(milliseconds: 200));
+        await tester.pump();
 
-      await tester.tap(find.byKey(const Key('activate-card-payments-cta')));
-      await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('activate-card-payments-cta')));
+        await tester.pumpAndSettle();
 
-      expect(find.text('stripe-onboarding-intro'), findsOneWidget);
-    });
+        expect(find.text('stripe-onboarding-intro'), findsOneWidget);
+      },
+    );
 
     // ── Section CE QUE J'ACCEPTE ──────────────────────────────────────────────
 
-    testWidgets("label de section Ce que j'accepte est affiché",
-        (tester) async {
+    testWidgets("label de section Ce que j'accepte est affiché", (
+      tester,
+    ) async {
       await _pump(tester);
       expect(find.text("Ce que j'accepte"), findsOneWidget);
     });
@@ -440,8 +488,9 @@ void main() {
 
     // ── Section CE QUE JE REFUSE ──────────────────────────────────────────────
 
-    testWidgets('label de section Ce que je refuse est affiché',
-        (tester) async {
+    testWidgets('label de section Ce que je refuse est affiché', (
+      tester,
+    ) async {
       await _pump(tester);
       expect(find.text('Ce que je refuse'), findsOneWidget);
     });
@@ -473,22 +522,21 @@ void main() {
 
     // ── Section NOTE AUX EXPÉDITEURS ─────────────────────────────────────────
 
-    testWidgets('label de section Note aux expéditeurs est affiché',
-        (tester) async {
+    testWidgets('label de section Note aux expéditeurs est affiché', (
+      tester,
+    ) async {
       await _pump(tester);
       expect(find.text('Note aux expéditeurs'), findsOneWidget);
     });
 
-    testWidgets('le champ note aux expéditeurs (TextField) est présent',
-        (tester) async {
+    testWidgets('le champ note aux expéditeurs (TextField) est présent', (
+      tester,
+    ) async {
       await _pump(tester);
       // Le TextField de la note a un hintText caractéristique
       expect(
         find.byWidgetPredicate(
-          (w) =>
-              w is TextField &&
-              w.maxLines == 4 &&
-              w.maxLength == 500,
+          (w) => w is TextField && w.maxLines == 4 && w.maxLength == 500,
         ),
         findsOneWidget,
       );
@@ -501,8 +549,9 @@ void main() {
 
     // ── Régression P6 — aucune flèche texte résiduelle ───────────────────────
 
-    testWidgets('aucun texte visible ne contient le caractère flèche →',
-        (tester) async {
+    testWidgets('aucun texte visible ne contient le caractère flèche →', (
+      tester,
+    ) async {
       // Teste à la fois l'état sans Stripe et sans carte commission (cas où
       // les deux liens/boutons incriminés sont rendus).
       await _pump(
@@ -523,31 +572,35 @@ void main() {
     // ── kgFree — estimation illimitée ─────────────────────────────────────────
 
     testWidgets(
-        'kgFree (availableKg=0) → affiche "Capacité illimitée" et non "Estimation"',
-        (tester) async {
-      await tester.pumpWidget(_host(initialAvailableKg: 0));
-      await tester.pump(const Duration(milliseconds: 200));
-      await tester.pump();
+      'kgFree (availableKg=0) → affiche "Capacité illimitée" et non "Estimation"',
+      (tester) async {
+        await tester.pumpWidget(_host(initialAvailableKg: 0));
+        await tester.pump(const Duration(milliseconds: 200));
+        await tester.pump();
 
-      expect(find.textContaining('illimitée'), findsOneWidget);
-      expect(find.textContaining('Estimation'), findsNothing);
-    });
+        expect(find.textContaining('illimitée'), findsOneWidget);
+        expect(find.textContaining('Estimation'), findsNothing);
+      },
+    );
   });
 
   group('Mode MIXED — toggle et aperçu grille', () {
-    testWidgets('tap "Grille + kilo" affiche le SwitchListTile kg-price-toggle',
-        (tester) async {
-      await _pump(tester);
-      await tester.tap(find.text('Grille + kilo'));
-      await tester.pump(const Duration(milliseconds: 200));
-      await tester.pump();
-      expect(find.byKey(const Key('kg-price-toggle')), findsOneWidget);
-      expect(find.text('Tarif au kilo'), findsOneWidget);
-      expect(find.text('Optionnel en mode grille'), findsOneWidget);
-    });
+    testWidgets(
+      'tap "Grille + kilo" affiche le SwitchListTile kg-price-toggle',
+      (tester) async {
+        await _pump(tester);
+        await tester.tap(find.text('Grille + kilo'));
+        await tester.pump(const Duration(milliseconds: 200));
+        await tester.pump();
+        expect(find.byKey(const Key('kg-price-toggle')), findsOneWidget);
+        expect(find.text('Tarif au kilo'), findsOneWidget);
+        expect(find.text('Optionnel en mode grille'), findsOneWidget);
+      },
+    );
 
-    testWidgets('tap "Grille + kilo" puis "Au kilo" masque le toggle kg',
-        (tester) async {
+    testWidgets('tap "Grille + kilo" puis "Au kilo" masque le toggle kg', (
+      tester,
+    ) async {
       await _pump(tester);
       await tester.tap(find.text('Grille + kilo'));
       await tester.pump(const Duration(milliseconds: 200));
@@ -558,8 +611,9 @@ void main() {
       expect(find.byKey(const Key('kg-price-toggle')), findsNothing);
     });
 
-    testWidgets('mode MIXED sans items — affiche "Aucun article configuré"',
-        (tester) async {
+    testWidgets('mode MIXED sans items — affiche "Aucun article configuré"', (
+      tester,
+    ) async {
       await _pump(tester);
       await tester.tap(find.text('Grille + kilo'));
       await tester.pump(const Duration(milliseconds: 200));
@@ -567,15 +621,27 @@ void main() {
       expect(find.text('Aucun article configuré'), findsOneWidget);
     });
 
-    testWidgets('mode MIXED avec items — affiche les labels et prix',
-        (tester) async {
+    testWidgets('mode MIXED avec items — affiche les labels et prix', (
+      tester,
+    ) async {
       // Utilise un MockBloc synchrone pour éviter les problèmes d'async avec runAsync.
       final mockBloc = _MockAnnouncementFormBloc();
       final mixedWithItemsState = const AnnouncementFormState(
         pricingMode: PricingMode.mixed,
         gridPreviewItems: [
-          GridPreviewItem(id: 'a1', label: 'Petit colis', unitPriceDisplay: 5.0),
-          GridPreviewItem(id: 'a2', label: 'Grand colis', unitPriceDisplay: 10.0),
+          // 5.5 (et non 5.0) pour éviter toute collision avec kPriceOptions
+          // ([5, 6, 7, 8] €/kg), affichés en parallèle dans le même écran en
+          // mode MIXED.
+          GridPreviewItem(
+            id: 'a1',
+            label: 'Petit colis',
+            unitPriceDisplay: 5.5,
+          ),
+          GridPreviewItem(
+            id: 'a2',
+            label: 'Grand colis',
+            unitPriceDisplay: 10.0,
+          ),
         ],
       );
       when(() => mockBloc.state).thenReturn(mixedWithItemsState);
@@ -615,6 +681,7 @@ void main() {
               ],
               child: SingleChildScrollView(
                 child: PrixConditionsStep(
+                  currency: SupportedCurrency.eur,
                   priceOptionNotifier: priceOpt,
                   customPriceNotifier: customPrice,
                   availableKgNotifier: availKg,
@@ -639,8 +706,14 @@ void main() {
 
       expect(find.text('Petit colis'), findsOneWidget);
       expect(find.text('Grand colis'), findsOneWidget);
-      expect(find.textContaining('5.00 €'), findsOneWidget);
-      expect(find.textContaining('10.00 €'), findsOneWidget);
+      expect(
+        find.text(CurrencyFormatter.format(5.5, SupportedCurrency.eur)),
+        findsOneWidget,
+      );
+      expect(
+        find.text(CurrencyFormatter.format(10, SupportedCurrency.eur)),
+        findsOneWidget,
+      );
     });
   });
 }

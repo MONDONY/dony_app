@@ -3,16 +3,11 @@ name: Flutter CI
 on:
   push:
     branches: [main, develop]
-    paths:
-      - 'dony_app/**'
-      - '.github/workflows/ci.yml'
   pull_request:
     branches: [main, develop]
-    paths:
-      - 'dony_app/**'
 
 env:
-  FLUTTER_VERSION: 3.24.x
+  FLUTTER_VERSION: 3.44.x
 
 jobs:
   analyze:
@@ -25,19 +20,13 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
 
       - name: Get dependencies
-        run: |
-          cd dony_app
-          flutter pub get
+        run: flutter pub get
 
       - name: Analyze
-        run: |
-          cd dony_app
-          flutter analyze
+        run: flutter analyze
 
       - name: Check formatting
-        run: |
-          cd dony_app
-          dart format --set-exit-if-changed lib/ test/
+        run: dart format --set-exit-if-changed lib/ test/
 
   test:
     name: Tests & Coverage
@@ -49,18 +38,13 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
 
       - name: Get dependencies
-        run: |
-          cd dony_app
-          flutter pub get
+        run: flutter pub get
 
       - name: Run tests
-        run: |
-          cd dony_app
-          flutter test --coverage
+        run: flutter test --coverage
 
       - name: Check coverage (≥ 90%)
         run: |
-          cd dony_app
           COVERAGE=$(lcov --summary coverage/lcov.info 2>/dev/null | grep -oP 'lines\.*: \K[0-9.]+' | head -1)
           echo "Coverage: $COVERAGE%"
           if (( $(echo "$COVERAGE < 90" | bc -l) )); then
@@ -72,7 +56,7 @@ jobs:
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
-          files: ./dony_app/coverage/lcov.info
+          files: ./coverage/lcov.info
           flags: flutter
           fail_ci_if_error: false
 
@@ -87,20 +71,16 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
 
       - name: Get dependencies
-        run: |
-          cd dony_app
-          flutter pub get
+        run: flutter pub get
 
       - name: Build APK (debug)
-        run: |
-          cd dony_app
-          flutter build apk --debug
+        run: flutter build apk --debug
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: dony-app-debug.apk
-          path: dony_app/build/app/outputs/flutter-apk/app-debug.apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
           retention-days: 5
 
   security-scan:
@@ -113,16 +93,10 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
 
       - name: Get dependencies
-        run: |
-          cd dony_app
-          flutter pub get
+        run: flutter pub get
 
       - name: Check for outdated packages
-        run: |
-          cd dony_app
-          flutter pub outdated --no-dev-dependencies || true
+        run: flutter pub outdated --no-dev-dependencies || true
 
       - name: Check for vulnerabilities (pub.dev)
-        run: |
-          cd dony_app
-          flutter pub audit || true
+        run: flutter pub audit || true

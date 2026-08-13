@@ -37,13 +37,15 @@ class _RatingScreenState extends State<RatingScreen> {
     if (_stars == 0) {
       return;
     }
-    context.read<RatingBloc>().add(RatingSubmitRequested(
-          bidId: widget.bidId,
-          stars: _stars,
-          comment: _commentController.text.trim().isEmpty
-              ? null
-              : _commentController.text.trim(),
-        ));
+    context.read<RatingBloc>().add(
+      RatingSubmitRequested(
+        bidId: widget.bidId,
+        stars: _stars,
+        comment: _commentController.text.trim().isEmpty
+            ? null
+            : _commentController.text.trim(),
+      ),
+    );
   }
 
   @override
@@ -70,111 +72,125 @@ class _RatingScreenState extends State<RatingScreen> {
         return Scaffold(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           appBar: const DonyAppBar(title: 'Évaluation'),
-          body: Builder(builder: (context) {
-            final h = DonyLayout.hPadding(context);
-            return SingleChildScrollView(
-              padding: EdgeInsets.fromLTRB(
-                  h, DonySpacing.xs, h, DonySpacing.huge),
-              child: DonyLayout.constrained(
-                context,
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // ── Title ───────────────────────────────────────────
-                    Text(
-                      'Évaluer le voyageur',
-                      style: DonyTypography.caveat(
-                        fontSize: 28,
-                        color: cs.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: DonySpacing.xs),
-                    Text(
-                      'Comment s\'est passée votre expérience avec ${widget.travelerName} ?',
-                      style: tt.bodyMedium
-                          ?.copyWith(color: cs.onSurfaceVariant),
-                    ),
-                    const SizedBox(height: DonySpacing.xl),
-
-                    // ── Star selector ────────────────────────────────────
-                    StarSelector(
-                      selected: _stars,
-                      onSelect: (s) => setState(() => _stars = s),
-                    ),
-                    const SizedBox(height: DonySpacing.base),
-                    if (_stars > 0)
-                      Center(
-                        child: Text(
-                          _starLabel(_stars),
-                          style: tt.labelLarge?.copyWith(
-                            color: cs.primary,
-                            fontWeight: FontWeight.w600,
+          body: Builder(
+            builder: (context) {
+              final h = DonyLayout.hPadding(context);
+              return SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(
+                  h,
+                  DonySpacing.xs,
+                  h,
+                  DonySpacing.huge,
+                ),
+                child: DonyLayout.constrained(
+                  context,
+                  Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // ── Title ───────────────────────────────────────────
+                          Text(
+                            'Évaluer le voyageur',
+                            style: DonyTypography.caveat(
+                              fontSize: 28,
+                              color: cs.onSurface,
+                            ),
                           ),
-                        ),
-                      ).animate().fadeIn(duration: 200.ms),
-                    const SizedBox(height: DonySpacing.xl),
+                          const SizedBox(height: DonySpacing.xs),
+                          Text(
+                            'Comment s\'est passée votre expérience avec ${widget.travelerName} ?',
+                            style: tt.bodyMedium?.copyWith(
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(height: DonySpacing.xl),
 
-                    // ── Comment field ────────────────────────────────────
-                    TextField(
-                      controller: _commentController,
-                      maxLines: 4,
-                      maxLength: 200,
-                      keyboardType: TextInputType.multiline,
-                      textCapitalization: TextCapitalization.sentences,
-                      decoration: InputDecoration(
-                        labelText: 'Commentaire (facultatif)',
-                        hintText: 'Partagez votre expérience…',
-                        hintStyle: tt.bodyMedium
-                            ?.copyWith(color: cs.onSurfaceVariant),
-                        filled: true,
-                        fillColor: cs.surface,
-                        border: OutlineInputBorder(
-                          borderRadius:
-                              BorderRadius.circular(DonyRadius.card),
-                          borderSide:
-                              BorderSide(color: cs.outline),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius:
-                              BorderRadius.circular(DonyRadius.card),
-                          borderSide:
-                              BorderSide(color: cs.outline),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius:
-                              BorderRadius.circular(DonyRadius.card),
-                          borderSide: BorderSide(
-                              color: cs.primary, width: 2),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: DonySpacing.xl),
+                          // ── Star selector ────────────────────────────────────
+                          StarSelector(
+                            selected: _stars,
+                            onSelect: (s) => setState(() => _stars = s),
+                          ),
+                          const SizedBox(height: DonySpacing.base),
+                          if (_stars > 0)
+                            Center(
+                              child: Text(
+                                _starLabel(_stars),
+                                style: tt.labelLarge?.copyWith(
+                                  color: cs.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ).animate().fadeIn(duration: 200.ms),
+                          const SizedBox(height: DonySpacing.xl),
 
-                    // ── CTA ──────────────────────────────────────────────
-                    DonyButton(
-                      label: 'Envoyer l\'évaluation',
-                      iconAsset: 'star',
-                      isLoading: isLoading,
-                      onPressed:
-                          (_stars > 0 && !isLoading) ? () => _submit(context) : null,
-                    ),
-                  ],
-                ).animate().fadeIn(duration: 300.ms).slideY(
-                    begin: 0.04, curve: Curves.easeOutCubic),
-              ),
-            );
-          }),
+                          // ── Comment field ────────────────────────────────────
+                          TextField(
+                            controller: _commentController,
+                            maxLines: 4,
+                            maxLength: 200,
+                            keyboardType: TextInputType.multiline,
+                            textCapitalization: TextCapitalization.sentences,
+                            decoration: InputDecoration(
+                              labelText: 'Commentaire (facultatif)',
+                              hintText: 'Partagez votre expérience…',
+                              hintStyle: tt.bodyMedium?.copyWith(
+                                color: cs.onSurfaceVariant,
+                              ),
+                              filled: true,
+                              fillColor: cs.surface,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(
+                                  DonyRadius.card,
+                                ),
+                                borderSide: BorderSide(color: cs.outline),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(
+                                  DonyRadius.card,
+                                ),
+                                borderSide: BorderSide(color: cs.outline),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(
+                                  DonyRadius.card,
+                                ),
+                                borderSide: BorderSide(
+                                  color: cs.primary,
+                                  width: 2,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: DonySpacing.xl),
+
+                          // ── CTA ──────────────────────────────────────────────
+                          DonyButton(
+                            label: 'Envoyer l\'évaluation',
+                            iconAsset: 'star',
+                            isLoading: isLoading,
+                            onPressed: (_stars > 0 && !isLoading)
+                                ? () => _submit(context)
+                                : null,
+                          ),
+                        ],
+                      )
+                      .animate()
+                      .fadeIn(duration: 300.ms)
+                      .slideY(begin: 0.04, curve: Curves.easeOutCubic),
+                ),
+              );
+            },
+          ),
         );
       },
     );
   }
 
   String _starLabel(int stars) => switch (stars) {
-        1 => 'Très décevant',
-        2 => 'Décevant',
-        3 => 'Correct',
-        4 => 'Bien',
-        5 => 'Excellent !',
-        _ => '',
-      };
+    1 => 'Très décevant',
+    2 => 'Décevant',
+    3 => 'Correct',
+    4 => 'Bien',
+    5 => 'Excellent !',
+    _ => '',
+  };
 }

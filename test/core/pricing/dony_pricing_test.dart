@@ -2,21 +2,23 @@ import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-AnnouncementModel _ann({required double pricePerKg, double? pricePerKgDisplay}) =>
-    AnnouncementModel(
-      id: 'a',
-      travelerId: 't',
-      departureCity: 'Paris',
-      arrivalCity: 'Dakar',
-      departureDate: DateTime(2026, 7, 1),
-      availableKg: 10,
-      totalKg: 10,
-      pricePerKg: pricePerKg,
-      pricePerKgDisplay: pricePerKgDisplay,
-      status: 'OPEN',
-      createdAt: DateTime(2026, 6, 1),
-      updatedAt: DateTime(2026, 6, 1),
-    );
+AnnouncementModel _ann({
+  required double pricePerKg,
+  double? pricePerKgDisplay,
+}) => AnnouncementModel(
+  id: 'a',
+  travelerId: 't',
+  departureCity: 'Paris',
+  arrivalCity: 'Dakar',
+  departureDate: DateTime(2026, 7, 1),
+  availableKg: 10,
+  totalKg: 10,
+  pricePerKg: pricePerKg,
+  pricePerKgDisplay: pricePerKgDisplay,
+  status: 'OPEN',
+  createdAt: DateTime(2026, 6, 1),
+  updatedAt: DateTime(2026, 6, 1),
+);
 
 void main() {
   // Le taux est un état module-level ajustable : on remet le défaut après chaque
@@ -76,6 +78,25 @@ void main() {
       expect(formatKgPrice(5.6), '5.60');
       expect(formatKgPrice(8.96), '8.96');
       expect(formatKgPrice(13.44), '13.44');
+    });
+  });
+
+  group('formatPriceIn', () {
+    test('formate dans la devise donnée, pas toujours en EUR', () {
+      expect(formatPriceIn(8, 'CAD'), 'CA\$8');
+    });
+
+    test('devise EUR : symbole € en suffixe, entier si rond', () {
+      final result = formatPriceIn(8, 'EUR');
+      expect(result, contains('8'));
+      expect(result, contains('€'));
+      expect(result, isNot(contains(',00')));
+    });
+
+    test('devise absente ou inconnue → repli EUR', () {
+      final result = formatPriceIn(8, null);
+      expect(result, contains('8'));
+      expect(result, contains('€'));
     });
   });
 

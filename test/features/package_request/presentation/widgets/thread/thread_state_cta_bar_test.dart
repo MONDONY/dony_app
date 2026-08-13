@@ -13,8 +13,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
-class _MockNegotiationBloc
-    extends MockBloc<NegotiationEvent, NegotiationState>
+class _MockNegotiationBloc extends MockBloc<NegotiationEvent, NegotiationState>
     implements NegotiationBloc {}
 
 const String _viewerSender = 'sender-viewer';
@@ -71,23 +70,24 @@ void main() {
   setUp(() {
     bloc = _MockNegotiationBloc();
     when(() => bloc.state).thenReturn(const NegotiationInitial());
-    when(() => bloc.stream)
-        .thenAnswer((_) => const Stream<NegotiationState>.empty());
+    when(
+      () => bloc.stream,
+    ).thenAnswer((_) => const Stream<NegotiationState>.empty());
   });
 
   Widget wrap(NegotiationThread thread, String viewerUserId) => MaterialApp(
-        theme: AppTheme.light(),
-        home: BlocProvider<NegotiationBloc>.value(
-          value: bloc,
-          child: Scaffold(
-            body: ThreadStateCtaBar(
-              thread: thread,
-              viewerUserId: viewerUserId,
-              actionInProgress: false,
-            ),
-          ),
+    theme: AppTheme.light(),
+    home: BlocProvider<NegotiationBloc>.value(
+      value: bloc,
+      child: Scaffold(
+        body: ThreadStateCtaBar(
+          thread: thread,
+          viewerUserId: viewerUserId,
+          actionInProgress: false,
         ),
-      );
+      ),
+    ),
+  );
 
   // Variante avec GoRouter pour vérifier la navigation vers /bids/:bidId.
   String? lastPushedLocation;
@@ -118,195 +118,235 @@ void main() {
         ),
       ],
     );
-    return MaterialApp.router(
-      theme: AppTheme.light(),
-      routerConfig: router,
-    );
+    return MaterialApp.router(theme: AppTheme.light(), routerConfig: router);
   }
 
   group('ThreadStateCtaBar matrix', () {
     testWidgets(
-        'OPEN · sender · !lastFromMe → 3 boutons (Accepter — Tu paies / Contre / Rejeter)',
-        (tester) async {
-      await tester.pumpWidget(wrap(
-        _thread(
-            status: NegotiationThreadStatus.open,
-            canAccept: true,
-            canCounter: true),
-        _viewerSender,
-      ));
-      // Sender sees gross exact: 38 * 1.12 = 42.56 → "42,56 €"
-      expect(find.text('Accepter : Tu paies 42,56 €'), findsOneWidget);
-      expect(find.text('Contre-offre'), findsOneWidget);
-      expect(find.text('Rejeter'), findsOneWidget);
-    });
+      'OPEN · sender · !lastFromMe → 3 boutons (Accepter — Tu paies / Contre / Rejeter)',
+      (tester) async {
+        await tester.pumpWidget(
+          wrap(
+            _thread(
+              status: NegotiationThreadStatus.open,
+              canAccept: true,
+              canCounter: true,
+            ),
+            _viewerSender,
+          ),
+        );
+        // Sender sees gross exact: 38 * 1.12 = 42.56 → "42,56 €"
+        expect(find.text('Accepter : Tu paies 42,56 €'), findsOneWidget);
+        expect(find.text('Contre-offre'), findsOneWidget);
+        expect(find.text('Rejeter'), findsOneWidget);
+      },
+    );
 
     testWidgets(
-        'OPEN · traveler · !lastFromMe · canAccept=false → Rejeter + Contre uniquement',
-        (tester) async {
-      await tester.pumpWidget(wrap(
-        _thread(
-            status: NegotiationThreadStatus.open,
-            canAccept: false,
-            canCounter: true),
-        _viewerTraveler,
-      ));
-      expect(find.textContaining('Accepter : Tu reçois'), findsNothing);
-      expect(find.text('Contre-offre'), findsOneWidget);
-      expect(find.text('Rejeter'), findsOneWidget);
-    });
+      'OPEN · traveler · !lastFromMe · canAccept=false → Rejeter + Contre uniquement',
+      (tester) async {
+        await tester.pumpWidget(
+          wrap(
+            _thread(
+              status: NegotiationThreadStatus.open,
+              canAccept: false,
+              canCounter: true,
+            ),
+            _viewerTraveler,
+          ),
+        );
+        expect(find.textContaining('Accepter : Tu reçois'), findsNothing);
+        expect(find.text('Contre-offre'), findsOneWidget);
+        expect(find.text('Rejeter'), findsOneWidget);
+      },
+    );
 
     testWidgets(
-        'OPEN · traveler · !lastFromMe · canAccept=true → Accepter + Rejeter + Contre',
-        (tester) async {
-      await tester.pumpWidget(wrap(
-        _thread(
-            status: NegotiationThreadStatus.open,
-            canAccept: true,
-            canCounter: true),
-        _viewerTraveler,
-      ));
-      // Traveler sees net: "Accepter — Tu reçois 38 €"
-      expect(find.text('Accepter : Tu reçois 38 €'), findsOneWidget);
-      expect(find.text('Contre-offre'), findsOneWidget);
-      expect(find.text('Rejeter'), findsOneWidget);
-    });
+      'OPEN · traveler · !lastFromMe · canAccept=true → Accepter + Rejeter + Contre',
+      (tester) async {
+        await tester.pumpWidget(
+          wrap(
+            _thread(
+              status: NegotiationThreadStatus.open,
+              canAccept: true,
+              canCounter: true,
+            ),
+            _viewerTraveler,
+          ),
+        );
+        // Traveler sees net: "Accepter — Tu reçois 38 €"
+        expect(find.textContaining('Accepter : Tu reçois 38'), findsOneWidget);
+        expect(find.text('Contre-offre'), findsOneWidget);
+        expect(find.text('Rejeter'), findsOneWidget);
+      },
+    );
 
     testWidgets(
-        'OPEN · traveler · !lastFromMe · canCounter=false → Rejeter uniquement (dernier round)',
-        (tester) async {
-      await tester.pumpWidget(wrap(
-        _thread(
-            status: NegotiationThreadStatus.open,
-            canAccept: true,
-            canCounter: false),
-        _viewerTraveler,
-      ));
-      expect(find.text('Accepter : Tu reçois 38 €'), findsOneWidget);
-      expect(find.text('Contre-offre'), findsNothing);
-      expect(find.text('Rejeter'), findsOneWidget);
-    });
+      'OPEN · traveler · !lastFromMe · canCounter=false → Rejeter uniquement (dernier round)',
+      (tester) async {
+        await tester.pumpWidget(
+          wrap(
+            _thread(
+              status: NegotiationThreadStatus.open,
+              canAccept: true,
+              canCounter: false,
+            ),
+            _viewerTraveler,
+          ),
+        );
+        expect(find.textContaining('Accepter : Tu reçois 38'), findsOneWidget);
+        expect(find.text('Contre-offre'), findsNothing);
+        expect(find.text('Rejeter'), findsOneWidget);
+      },
+    );
 
-    testWidgets('OPEN · lastFromMe → banner "En attente de la réponse"',
-        (tester) async {
-      await tester.pumpWidget(wrap(
-        _thread(
-          status: NegotiationThreadStatus.open,
-          lastFromViewer: true,
+    testWidgets('OPEN · lastFromMe → banner "En attente de la réponse"', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrap(
+          _thread(status: NegotiationThreadStatus.open, lastFromViewer: true),
+          _viewerSender,
         ),
-        _viewerSender,
-      ));
+      );
       expect(find.byType(ThreadStateBanner), findsOneWidget);
       expect(find.text('En attente de la réponse'), findsOneWidget);
       expect(find.textContaining('Accepter'), findsNothing);
     });
 
     testWidgets(
-        'AWAITING_TRIP · sender → banner "Le voyageur prépare son trajet"',
-        (tester) async {
-      await tester.pumpWidget(wrap(
-        _thread(status: NegotiationThreadStatus.awaitingTrip),
-        _viewerSender,
-      ));
-      expect(find.byType(ThreadStateBanner), findsOneWidget);
-      expect(find.text('Le voyageur prépare son trajet'), findsOneWidget);
-    });
+      'AWAITING_TRIP · sender → banner "Le voyageur prépare son trajet"',
+      (tester) async {
+        await tester.pumpWidget(
+          wrap(
+            _thread(status: NegotiationThreadStatus.awaitingTrip),
+            _viewerSender,
+          ),
+        );
+        expect(find.byType(ThreadStateBanner), findsOneWidget);
+        expect(find.text('Le voyageur prépare son trajet'), findsOneWidget);
+      },
+    );
 
     testWidgets(
-        'AWAITING_TRIP · traveler → boutons "Lier un trajet" + "Créer un trajet dédié"',
-        (tester) async {
-      await tester.pumpWidget(wrap(
-        _thread(status: NegotiationThreadStatus.awaitingTrip),
-        _viewerTraveler,
-      ));
-      expect(find.text('Lier un trajet à cette offre'), findsOneWidget);
-      expect(find.text('Créer un trajet dédié'), findsOneWidget);
-    });
+      'AWAITING_TRIP · traveler → boutons "Lier un trajet" + "Créer un trajet dédié"',
+      (tester) async {
+        await tester.pumpWidget(
+          wrap(
+            _thread(status: NegotiationThreadStatus.awaitingTrip),
+            _viewerTraveler,
+          ),
+        );
+        expect(find.text('Lier un trajet à cette offre'), findsOneWidget);
+        expect(find.text('Créer un trajet dédié'), findsOneWidget);
+      },
+    );
 
     testWidgets(
-        'AWAITING_PAYMENT · sender → bouton "Compléter & payer X €" avec gross',
-        (tester) async {
-      await tester.pumpWidget(wrap(
-        _thread(status: NegotiationThreadStatus.awaitingPayment),
-        _viewerSender,
-      ));
-      // Sender sees gross exact: 38 * 1.12 = 42.56 → "42,56 €"
-      expect(find.text('Compléter & payer 42,56 €'), findsOneWidget);
-    });
+      'AWAITING_PAYMENT · sender → bouton "Compléter & payer X €" avec gross',
+      (tester) async {
+        await tester.pumpWidget(
+          wrap(
+            _thread(status: NegotiationThreadStatus.awaitingPayment),
+            _viewerSender,
+          ),
+        );
+        // Sender sees gross exact: 38 * 1.12 = 42.56 → "42,56 €"
+        expect(find.text('Compléter & payer 42,56 €'), findsOneWidget);
+      },
+    );
 
-    testWidgets('AWAITING_PAYMENT · traveler → banner "En attente du paiement"',
-        (tester) async {
-      await tester.pumpWidget(wrap(
-        _thread(status: NegotiationThreadStatus.awaitingPayment),
-        _viewerTraveler,
-      ));
-      expect(find.byType(ThreadStateBanner), findsOneWidget);
-      expect(
-          find.text('En attente du paiement de l\'expéditeur'), findsOneWidget);
-    });
+    testWidgets(
+      'AWAITING_PAYMENT · traveler → banner "En attente du paiement"',
+      (tester) async {
+        await tester.pumpWidget(
+          wrap(
+            _thread(status: NegotiationThreadStatus.awaitingPayment),
+            _viewerTraveler,
+          ),
+        );
+        expect(find.byType(ThreadStateBanner), findsOneWidget);
+        expect(
+          find.text('En attente du paiement de l\'expéditeur'),
+          findsOneWidget,
+        );
+      },
+    );
 
-    testWidgets('ACCEPTED → banner "Demande acceptée et payée"',
-        (tester) async {
-      await tester.pumpWidget(wrap(
-        _thread(status: NegotiationThreadStatus.accepted),
-        _viewerSender,
-      ));
+    testWidgets('ACCEPTED → banner "Demande acceptée et payée"', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrap(_thread(status: NegotiationThreadStatus.accepted), _viewerSender),
+      );
       expect(find.byType(ThreadStateBanner), findsOneWidget);
       expect(find.text('Demande acceptée et payée'), findsOneWidget);
     });
 
     testWidgets(
-        'ACCEPTED · cash → "Demande acceptée" (pas "payée") + paiement à la remise',
-        (tester) async {
-      await tester.pumpWidget(wrap(
-        _thread(
-          status: NegotiationThreadStatus.accepted,
-          paymentMethod: PaymentMethod.cash,
-        ),
-        _viewerSender,
-      ));
-      expect(find.text('Demande acceptée'), findsOneWidget);
-      expect(find.text('Demande acceptée et payée'), findsNothing);
-      expect(
+      'ACCEPTED · cash → "Demande acceptée" (pas "payée") + paiement à la remise',
+      (tester) async {
+        await tester.pumpWidget(
+          wrap(
+            _thread(
+              status: NegotiationThreadStatus.accepted,
+              paymentMethod: PaymentMethod.cash,
+            ),
+            _viewerSender,
+          ),
+        );
+        expect(find.text('Demande acceptée'), findsOneWidget);
+        expect(find.text('Demande acceptée et payée'), findsNothing);
+        expect(
           find.text('Le paiement se fait en espèces à la remise du colis.'),
-          findsOneWidget);
-    });
+          findsOneWidget,
+        );
+      },
+    );
 
     testWidgets(
-        'ACCEPTED · materializedBidId présent → bouton "Voir mon envoi" visible',
-        (tester) async {
-      await tester.pumpWidget(wrap(
-        _thread(
-          status: NegotiationThreadStatus.accepted,
-          materializedBidId: 'bid-123',
+      'ACCEPTED · materializedBidId présent → bouton "Voir mon envoi" visible',
+      (tester) async {
+        await tester.pumpWidget(
+          wrap(
+            _thread(
+              status: NegotiationThreadStatus.accepted,
+              materializedBidId: 'bid-123',
+            ),
+            _viewerSender,
+          ),
+        );
+        expect(find.byType(ThreadStateBanner), findsOneWidget);
+        expect(find.text('Voir mon envoi'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'ACCEPTED · materializedBidId absent → bouton "Voir mon envoi" caché',
+      (tester) async {
+        await tester.pumpWidget(
+          wrap(
+            _thread(status: NegotiationThreadStatus.accepted),
+            _viewerSender,
+          ),
+        );
+        expect(find.byType(ThreadStateBanner), findsOneWidget);
+        expect(find.text('Voir mon envoi'), findsNothing);
+      },
+    );
+
+    testWidgets('ACCEPTED · tap "Voir mon envoi" → navigue vers /bids/{id}', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrapRouter(
+          _thread(
+            status: NegotiationThreadStatus.accepted,
+            materializedBidId: 'bid-123',
+          ),
+          _viewerSender,
         ),
-        _viewerSender,
-      ));
-      expect(find.byType(ThreadStateBanner), findsOneWidget);
-      expect(find.text('Voir mon envoi'), findsOneWidget);
-    });
-
-    testWidgets(
-        'ACCEPTED · materializedBidId absent → bouton "Voir mon envoi" caché',
-        (tester) async {
-      await tester.pumpWidget(wrap(
-        _thread(status: NegotiationThreadStatus.accepted),
-        _viewerSender,
-      ));
-      expect(find.byType(ThreadStateBanner), findsOneWidget);
-      expect(find.text('Voir mon envoi'), findsNothing);
-    });
-
-    testWidgets(
-        'ACCEPTED · tap "Voir mon envoi" → navigue vers /bids/{id}',
-        (tester) async {
-      await tester.pumpWidget(wrapRouter(
-        _thread(
-          status: NegotiationThreadStatus.accepted,
-          materializedBidId: 'bid-123',
-        ),
-        _viewerSender,
-      ));
+      );
       await tester.tap(find.text('Voir mon envoi'));
       await tester.pumpAndSettle();
       expect(lastPushedLocation, '/bids/bid-123');
@@ -314,10 +354,9 @@ void main() {
     });
 
     testWidgets('REJECTED → rien (SizedBox.shrink)', (tester) async {
-      await tester.pumpWidget(wrap(
-        _thread(status: NegotiationThreadStatus.rejected),
-        _viewerSender,
-      ));
+      await tester.pumpWidget(
+        wrap(_thread(status: NegotiationThreadStatus.rejected), _viewerSender),
+      );
       expect(find.byType(ThreadStateBanner), findsNothing);
       expect(find.textContaining('Accepter'), findsNothing);
       expect(find.text('Contre-offre'), findsNothing);
@@ -326,32 +365,42 @@ void main() {
 
   group('Bouton Relancer (nudge)', () {
     testWidgets('canNudge=false → bouton "Relancer" absent', (tester) async {
-      await tester.pumpWidget(wrap(
-        _thread(status: NegotiationThreadStatus.open, canNudge: false),
-        _viewerSender,
-      ));
+      await tester.pumpWidget(
+        wrap(
+          _thread(status: NegotiationThreadStatus.open, canNudge: false),
+          _viewerSender,
+        ),
+      );
       expect(find.text('Relancer'), findsNothing);
     });
 
     testWidgets('canNudge=true → bouton "Relancer" visible', (tester) async {
-      await tester.pumpWidget(wrap(
-        _thread(status: NegotiationThreadStatus.awaitingTrip, canNudge: true),
-        _viewerSender,
-      ));
+      await tester.pumpWidget(
+        wrap(
+          _thread(status: NegotiationThreadStatus.awaitingTrip, canNudge: true),
+          _viewerSender,
+        ),
+      );
       expect(find.text('Relancer'), findsOneWidget);
     });
 
     testWidgets(
-        'canNudge=true → tap "Relancer" dispatch NegotiationNudgeRequested(thread.id)',
-        (tester) async {
-      await tester.pumpWidget(wrap(
-        _thread(status: NegotiationThreadStatus.awaitingTrip, canNudge: true),
-        _viewerSender,
-      ));
-      await tester.tap(find.text('Relancer'));
-      await tester.pump();
+      'canNudge=true → tap "Relancer" dispatch NegotiationNudgeRequested(thread.id)',
+      (tester) async {
+        await tester.pumpWidget(
+          wrap(
+            _thread(
+              status: NegotiationThreadStatus.awaitingTrip,
+              canNudge: true,
+            ),
+            _viewerSender,
+          ),
+        );
+        await tester.tap(find.text('Relancer'));
+        await tester.pump();
 
-      verify(() => bloc.add(const NegotiationNudgeRequested('t1'))).called(1);
-    });
+        verify(() => bloc.add(const NegotiationNudgeRequested('t1'))).called(1);
+      },
+    );
   });
 }

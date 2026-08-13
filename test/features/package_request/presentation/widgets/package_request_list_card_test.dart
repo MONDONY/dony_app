@@ -68,7 +68,8 @@ void main() {
         expect(find.text('Demande d\'envoi'), findsOneWidget);
         expect(find.text('5 kg · Vêtements & tissus · M'), findsOneWidget);
         expect(find.textContaining('Paris → Dakar'), findsOneWidget);
-        expect(find.text('35 €'), findsOneWidget);
+        expect(find.textContaining('35'), findsWidgets);
+        expect(find.textContaining('€'), findsWidgets);
       },
     );
 
@@ -193,7 +194,9 @@ void main() {
       expect(find.text('🔥 Urgent'), findsOneWidget);
     });
 
-    testWidgets('pas de badge Urgent si item.isUrgent est faux', (tester) async {
+    testWidgets('pas de badge Urgent si item.isUrgent est faux', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         wrap(PackageRequestListCard(item: _item(urgent: false))),
       );

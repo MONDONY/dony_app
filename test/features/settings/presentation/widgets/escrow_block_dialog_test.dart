@@ -4,26 +4,26 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
 Widget _wrap() => MaterialApp.router(
-      routerConfig: GoRouter(
-        routes: [
-          GoRoute(
-            path: '/',
-            builder: (_, __) => Scaffold(
-              body: Builder(
-                builder: (ctx) => TextButton(
-                  onPressed: () => EscrowBlockDialog.show(ctx),
-                  child: const Text('Open'),
-                ),
-              ),
+  routerConfig: GoRouter(
+    routes: [
+      GoRoute(
+        path: '/',
+        builder: (_, __) => Scaffold(
+          body: Builder(
+            builder: (ctx) => TextButton(
+              onPressed: () => EscrowBlockDialog.show(ctx),
+              child: const Text('Open'),
             ),
           ),
-          GoRoute(
-            path: '/announcements',
-            builder: (_, __) => const Scaffold(body: Text('Announcements')),
-          ),
-        ],
+        ),
       ),
-    );
+      GoRoute(
+        path: '/announcements',
+        builder: (_, __) => const Scaffold(body: Text('Announcements')),
+      ),
+    ],
+  ),
+);
 
 void main() {
   testWidgets('shows title and explanation', (tester) async {
@@ -46,7 +46,9 @@ void main() {
     expect(find.text('Suppression impossible pour l\'instant'), findsNothing);
   });
 
-  testWidgets('Voir mes envois button closes dialog and navigates', (tester) async {
+  testWidgets('Voir mes envois button closes dialog and navigates', (
+    tester,
+  ) async {
     await tester.pumpWidget(_wrap());
     await tester.tap(find.text('Open'));
     await tester.pumpAndSettle();

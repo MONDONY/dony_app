@@ -28,19 +28,20 @@ class PayoutOnboardingScreen extends StatelessWidget {
                 context: context,
                 pageBuilder: (ctx, animation, secondaryAnimation) =>
                     _StripeOnboardingWebView(
-                  url: state.url,
-                  onReturn: () {
-                    if (context.mounted) {
-                      context
-                          .read<PaymentBloc>()
-                          .add(const PaymentOnboardingStatusChecked());
-                    }
-                  },
-                ),
+                      url: state.url,
+                      onReturn: () {
+                        if (context.mounted) {
+                          context.read<PaymentBloc>().add(
+                            const PaymentOnboardingStatusChecked(),
+                          );
+                        }
+                      },
+                    ),
               );
             } else if (state is PaymentOnboardingComplete) {
-              getIt<StripeAccountBloc>()
-                  .add(const StripeAccountStatusRefreshed());
+              getIt<StripeAccountBloc>().add(
+                const StripeAccountStatusRefreshed(),
+              );
             }
           },
           builder: (context, state) {
@@ -71,64 +72,71 @@ class _OnboardingView extends StatelessWidget {
 
     return Scaffold(
       appBar: const DonyAppBar(title: 'Recevoir mes paiements'),
-      body: Builder(builder: (context) {
-        final h = DonyLayout.hPadding(context);
-        return SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(h, DonySpacing.xxl, h, DonySpacing.huge),
-          child: DonyLayout.constrained(
-            context,
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const _HeroSection(),
-                const SizedBox(height: DonySpacing.xxl),
-                const _BenefitsSection(),
-                const SizedBox(height: DonySpacing.xxl),
-                if (isPending) ...[
-                  const DonyStatusBanner(
-                    type: DonyStatusBannerType.warning,
-                    iconAsset: 'clock',
-                    message:
-                        'Vérification en cours : Stripe finalise votre compte. Si vous avez déjà terminé l\'inscription, rafraîchissez le statut.',
-                  ),
-                  const SizedBox(height: DonySpacing.md),
-                  DonyButton(
-                    label: 'Rafraîchir le statut',
-                    variant: DonyButtonVariant.secondary,
-                    onPressed: isLoading
-                        ? null
-                        : () => context
-                            .read<PaymentBloc>()
-                            .add(const PaymentOnboardingRefreshRequested()),
-                    iconAsset: 'refresh-cw',
-                  ),
-                  const SizedBox(height: DonySpacing.xl),
-                ],
-                if (error != null) ...[
-                  DonyStatusBanner(
-                    type: DonyStatusBannerType.error,
-                    message: error,
-                  ),
-                  const SizedBox(height: DonySpacing.xl),
-                ],
-                DonyButton(
-                  label: 'Connecter mon compte bancaire',
-                  onPressed: isLoading
-                      ? null
-                      : () => context
-                          .read<PaymentBloc>()
-                          .add(const PaymentConnectAccountRequested()),
-                  isLoading: isLoading,
-                  iconAsset: 'landmark',
-                ),
-              ],
-            )
-                .animate()
-                .fadeIn(duration: 300.ms)
-                .slideY(begin: 0.04, curve: Curves.easeOutCubic),
-          ),
-        );
-      }),
+      body: Builder(
+        builder: (context) {
+          final h = DonyLayout.hPadding(context);
+          return SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(
+              h,
+              DonySpacing.xxl,
+              h,
+              DonySpacing.huge,
+            ),
+            child: DonyLayout.constrained(
+              context,
+              Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const _HeroSection(),
+                      const SizedBox(height: DonySpacing.xxl),
+                      const _BenefitsSection(),
+                      const SizedBox(height: DonySpacing.xxl),
+                      if (isPending) ...[
+                        const DonyStatusBanner(
+                          type: DonyStatusBannerType.warning,
+                          iconAsset: 'clock',
+                          message:
+                              'Vérification en cours : Stripe finalise votre compte. Si vous avez déjà terminé l\'inscription, rafraîchissez le statut.',
+                        ),
+                        const SizedBox(height: DonySpacing.md),
+                        DonyButton(
+                          label: 'Rafraîchir le statut',
+                          variant: DonyButtonVariant.secondary,
+                          onPressed: isLoading
+                              ? null
+                              : () => context.read<PaymentBloc>().add(
+                                  const PaymentOnboardingRefreshRequested(),
+                                ),
+                          iconAsset: 'refresh-cw',
+                        ),
+                        const SizedBox(height: DonySpacing.xl),
+                      ],
+                      if (error != null) ...[
+                        DonyStatusBanner(
+                          type: DonyStatusBannerType.error,
+                          message: error,
+                        ),
+                        const SizedBox(height: DonySpacing.xl),
+                      ],
+                      DonyButton(
+                        label: 'Connecter mon compte bancaire',
+                        onPressed: isLoading
+                            ? null
+                            : () => context.read<PaymentBloc>().add(
+                                const PaymentConnectAccountRequested(),
+                              ),
+                        isLoading: isLoading,
+                        iconAsset: 'landmark',
+                      ),
+                    ],
+                  )
+                  .animate()
+                  .fadeIn(duration: 300.ms)
+                  .slideY(begin: 0.04, curve: Curves.easeOutCubic),
+            ),
+          );
+        },
+      ),
     );
   }
 }
@@ -178,12 +186,21 @@ class _BenefitsSection extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
 
     const items = [
-      ('lock', 'Paiement sécurisé',
-          'L\'argent est bloqué et sécurisé jusqu\'à confirmation de livraison.'),
-      ('zap', 'Virement rapide',
-          'Reçu sur votre compte dans les 24h après confirmation.'),
-      ('shield-check', 'Géré par Stripe',
-          'La vérification d\'identité et la conformité sont gérées par Stripe.'),
+      (
+        'lock',
+        'Paiement sécurisé',
+        'L\'argent est bloqué et sécurisé jusqu\'à confirmation de livraison.',
+      ),
+      (
+        'zap',
+        'Virement rapide',
+        'Reçu sur votre compte dans les 24h après confirmation.',
+      ),
+      (
+        'shield-check',
+        'Géré par Stripe',
+        'La vérification d\'identité et la conformité sont gérées par Stripe.',
+      ),
     ];
 
     return DonyCard(
@@ -212,19 +229,20 @@ class _BenefitsSection extends StatelessWidget {
                         children: [
                           Text(title, style: tt.titleMedium),
                           const SizedBox(height: DonySpacing.xxs),
-                          Text(subtitle,
-                              style: tt.bodySmall?.copyWith(
-                                color: cs.onSurfaceVariant,
-                                height: 1.4,
-                              )),
+                          Text(
+                            subtitle,
+                            style: tt.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                              height: 1.4,
+                            ),
+                          ),
                         ],
                       ),
                     ),
                   ],
                 ),
               ),
-              if (i < items.length - 1)
-                const Divider(height: 1, indent: 70),
+              if (i < items.length - 1) const Divider(height: 1, indent: 70),
             ],
           );
         }).toList(),
@@ -304,10 +322,7 @@ class _ActiveAccountView extends StatelessWidget {
                 ),
               ),
             ],
-          )
-              .animate()
-              .fadeIn(duration: 300.ms)
-              .slideY(begin: 0.04, curve: Curves.easeOutCubic),
+          ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
         ),
       ),
     );
@@ -380,41 +395,43 @@ class _SuccessView extends StatelessWidget {
     return Scaffold(
       appBar: const DonyAppBar(title: 'Recevoir mes paiements'),
       body: Center(
-        child: Builder(builder: (context) {
-          return Padding(
-            padding: EdgeInsets.all(DonyLayout.hPadding(context)),
-            child: DonyLayout.constrained(
-              context,
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const DonyMascotteAnimated(
-                    type: DonyMascotteType.securise,
-                    size: DonyMascotteSize.lg,
-                    withGlow: true,
-                  ),
-                  const SizedBox(height: DonySpacing.xl),
-                  Text(
-                    'Paiements activés ✓',
-                    style: tt.displayLarge,
-                  ),
-                  const SizedBox(height: DonySpacing.md),
-                  Text(
-                    'Votre compte bancaire est connecté. Vous recevrez vos paiements automatiquement après chaque livraison.',
-                    textAlign: TextAlign.center,
-                    style: tt.bodyLarge?.copyWith(
-                      color: cs.onSurfaceVariant,
-                      height: 1.5,
+        child: Builder(
+          builder: (context) {
+            return Padding(
+              padding: EdgeInsets.all(DonyLayout.hPadding(context)),
+              child: DonyLayout.constrained(
+                context,
+                Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const DonyMascotteAnimated(
+                          type: DonyMascotteType.securise,
+                          size: DonyMascotteSize.lg,
+                          withGlow: true,
+                        ),
+                        const SizedBox(height: DonySpacing.xl),
+                        Text('Paiements activés ✓', style: tt.displayLarge),
+                        const SizedBox(height: DonySpacing.md),
+                        Text(
+                          'Votre compte bancaire est connecté. Vous recevrez vos paiements automatiquement après chaque livraison.',
+                          textAlign: TextAlign.center,
+                          style: tt.bodyLarge?.copyWith(
+                            color: cs.onSurfaceVariant,
+                            height: 1.5,
+                          ),
+                        ),
+                      ],
+                    )
+                    .animate()
+                    .fadeIn(duration: 400.ms)
+                    .scale(
+                      begin: const Offset(0.9, 0.9),
+                      curve: Curves.easeOutCubic,
                     ),
-                  ),
-                ],
-              )
-                  .animate()
-                  .fadeIn(duration: 400.ms)
-                  .scale(begin: const Offset(0.9, 0.9), curve: Curves.easeOutCubic),
-            ),
-          );
-        }),
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -426,10 +443,7 @@ class _StripeOnboardingWebView extends StatefulWidget {
   final String url;
   final VoidCallback onReturn;
 
-  const _StripeOnboardingWebView({
-    required this.url,
-    required this.onReturn,
-  });
+  const _StripeOnboardingWebView({required this.url, required this.onReturn});
 
   @override
   State<_StripeOnboardingWebView> createState() =>
@@ -456,32 +470,34 @@ class _StripeOnboardingWebViewState extends State<_StripeOnboardingWebView> {
 
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setNavigationDelegate(NavigationDelegate(
-        onPageStarted: (_) => _isLoading.value = true,
-        onPageFinished: (_) => _isLoading.value = false,
-        onNavigationRequest: (req) {
-          final uri = Uri.tryParse(req.url);
-          // Seul le web chiffré a sa place dans une webview de configuration
-          // des paiements : tout autre schéma (javascript:, intent:, deep link
-          // applicatif) est un vecteur de détournement, jamais une étape de
-          // l'onboarding Stripe.
-          if (uri == null || uri.scheme != 'https') {
-            return NavigationDecision.prevent;
-          }
-          // Return/refresh URL Stripe : matché par le path pour couvrir tous
-          // les hôtes réels (yadony.com, api-staging.yadony.com/api/v1/…,
-          // legacy dony.store/dony.app) — un startsWith sur un seul domaine
-          // ratait l'interception et laissait la webview charger une page morte.
-          final path = uri.path;
-          if (path.endsWith('/payments/onboarding/return') ||
-              path.endsWith('/payments/onboarding/refresh')) {
-            Navigator.of(context).pop();
-            widget.onReturn();
-            return NavigationDecision.prevent;
-          }
-          return NavigationDecision.navigate;
-        },
-      ))
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onPageStarted: (_) => _isLoading.value = true,
+          onPageFinished: (_) => _isLoading.value = false,
+          onNavigationRequest: (req) {
+            final uri = Uri.tryParse(req.url);
+            // Seul le web chiffré a sa place dans une webview de configuration
+            // des paiements : tout autre schéma (javascript:, intent:, deep link
+            // applicatif) est un vecteur de détournement, jamais une étape de
+            // l'onboarding Stripe.
+            if (uri == null || uri.scheme != 'https') {
+              return NavigationDecision.prevent;
+            }
+            // Return/refresh URL Stripe : matché par le path pour couvrir tous
+            // les hôtes réels (yadony.com, api-staging.yadony.com/api/v1/…,
+            // legacy dony.store/dony.app) — un startsWith sur un seul domaine
+            // ratait l'interception et laissait la webview charger une page morte.
+            final path = uri.path;
+            if (path.endsWith('/payments/onboarding/return') ||
+                path.endsWith('/payments/onboarding/refresh')) {
+              Navigator.of(context).pop();
+              widget.onReturn();
+              return NavigationDecision.prevent;
+            }
+            return NavigationDecision.navigate;
+          },
+        ),
+      )
       ..loadRequest(Uri.parse(widget.url));
   }
 

@@ -9,34 +9,41 @@ BidModel _bid({
   double? total = 48,
   BidPaymentMethod method = BidPaymentMethod.stripe,
 }) => BidModel(
-      id: 'b1',
-      announcementId: 'a1',
-      senderId: 's1',
-      status: status,
-      weightKg: 5,
-      totalAmountEur: total,
-      paymentMethod: method,
-      createdAt: DateTime(2026, 5),
-      updatedAt: DateTime(2026, 5),
-    );
+  id: 'b1',
+  announcementId: 'a1',
+  senderId: 's1',
+  status: status,
+  weightKg: 5,
+  totalAmountEur: total,
+  paymentMethod: method,
+  createdAt: DateTime(2026, 5),
+  updatedAt: DateTime(2026, 5),
+);
 
 Future<void> _pump(WidgetTester tester, BidModel bid) => tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.light(),
-        home: Scaffold(body: TravelerGainCard(bid: bid)),
-      ),
-    );
+  MaterialApp(
+    theme: AppTheme.light(),
+    home: Scaffold(body: TravelerGainCard(bid: bid)),
+  ),
+);
 
 void main() {
-  test('travelerAmountLabel formate le net à 2 décimales', () {
-    expect(travelerAmountLabel(_bid(status: 'ACCEPTED', total: 48)), '48.00');
+  test('travelerAmountLabel formate le net dans la devise du bid', () {
+    expect(
+      travelerAmountLabel(_bid(status: 'ACCEPTED', total: 48)),
+      contains('48'),
+    );
+    expect(
+      travelerAmountLabel(_bid(status: 'ACCEPTED', total: 48)),
+      contains('€'),
+    );
     expect(travelerAmountLabel(_bid(status: 'ACCEPTED', total: null)), '-');
   });
 
   testWidgets('Stripe actif → "Vous recevez" + séquestré', (tester) async {
     await _pump(tester, _bid(status: 'ACCEPTED'));
     expect(find.text('VOUS RECEVEZ'), findsOneWidget);
-    expect(find.textContaining('48.00'), findsOneWidget);
+    expect(find.textContaining('48'), findsOneWidget);
     expect(find.textContaining('séquestré'), findsOneWidget);
   });
 

@@ -35,6 +35,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
@@ -225,6 +226,12 @@ class _DonyAppState extends State<DonyApp> {
                 ),
                 BlocProvider<NegotiationListBloc>.value(
                   value: getIt<NegotiationListBloc>(),
+                ),
+                // Préférences métier (dont la devise active) : singleton exposé
+                // une fois ici, pour que toute surface offrant un changement de
+                // devise puisse le lire sans re-déclarer un provider.
+                BlocProvider<BusinessPrefsBloc>.value(
+                  value: getIt<BusinessPrefsBloc>(),
                 ),
                 // Global FavoriteIdsCubit — provides heart buttons across all screens.
                 // load() is triggered after AuthAuthenticated so it only hits the API

@@ -55,54 +55,59 @@ class DonyChip extends StatelessWidget {
       enabled: enabled,
       selected: selected,
       child: GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: enabled ? onTap : null,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: kDonyMinTapTarget),
-        child: Center(
-          widthFactor: 1,
-          heightFactor: 1,
-          child: Opacity(
-        opacity: enabled ? 1.0 : 0.5,
-        child: AnimatedContainer(
-          duration: DonyDuration.micro,
-          curve: DonyCurve.easeOut,
-          padding: const EdgeInsets.symmetric(
-            horizontal: DonySpacing.md,
-            vertical: DonySpacing.xs + 2,
-          ),
-          decoration: BoxDecoration(
-            color: bg,
-            borderRadius: BorderRadius.circular(DonyRadius.full),
-            border: Border.all(color: border, width: selected ? 1.5 : 1.0),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (icon != null) ...[
-                Icon(icon, size: 14, color: fg),
-                const SizedBox(width: DonySpacing.xs),
-              ],
-              // Flexible : un chip proche de la largeur max de son Wrap (ex.
-              // libellé long à 200 %) doit pouvoir passer sur deux lignes au
-              // lieu de déborder. N'a aucun effet quand le libellé tient déjà
-              // sur une ligne (rendu inchangé à 100 %).
-              Flexible(
-                child: Text(
-                  label,
-                  style: tt.labelMedium?.copyWith(
-                    color: fg,
-                    letterSpacing: 0,
-                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+        behavior: HitTestBehavior.opaque,
+        onTap: enabled ? onTap : null,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: kDonyMinTapTarget),
+          child: Center(
+            widthFactor: 1,
+            heightFactor: 1,
+            child: Opacity(
+              opacity: enabled ? 1.0 : 0.5,
+              child: AnimatedContainer(
+                duration: DonyDuration.micro,
+                curve: DonyCurve.easeOut,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: DonySpacing.md,
+                  vertical: DonySpacing.xs + 2,
+                ),
+                decoration: BoxDecoration(
+                  color: bg,
+                  borderRadius: BorderRadius.circular(DonyRadius.full),
+                  border: Border.all(
+                    color: border,
+                    width: selected ? 1.5 : 1.0,
                   ),
                 ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (icon != null) ...[
+                      Icon(icon, size: 14, color: fg),
+                      const SizedBox(width: DonySpacing.xs),
+                    ],
+                    // Flexible : un chip proche de la largeur max de son Wrap (ex.
+                    // libellé long à 200 %) doit pouvoir passer sur deux lignes au
+                    // lieu de déborder. N'a aucun effet quand le libellé tient déjà
+                    // sur une ligne (rendu inchangé à 100 %).
+                    Flexible(
+                      child: Text(
+                        label,
+                        style: tt.labelMedium?.copyWith(
+                          color: fg,
+                          letterSpacing: 0,
+                          fontWeight: selected
+                              ? FontWeight.w700
+                              : FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ],
-          ),
             ),
           ),
         ),
-      ),
       ),
     );
   }

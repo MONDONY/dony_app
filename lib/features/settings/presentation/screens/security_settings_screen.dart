@@ -126,150 +126,159 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
                 ),
                 children: [
                   const SettingsSectionHeader('PAIEMENTS'),
-                  SettingsFlatGroup(children: [
-                    DonyListTile(
-                      iconAsset: 'fingerprint',
-                      iconColor: biometricAvailable
-                          ? cs.primary
-                          : cs.onSurfaceVariant,
-                      iconBgColor: biometricAvailable
-                          ? cs.primaryContainer
-                          : cs.surfaceContainerHighest,
-                      label: 'Biométrie avant paiement',
-                      subtitle: biometricAvailable
-                          ? 'Empreinte digitale ou Face ID'
-                          : 'Non disponible sur cet appareil',
-                      trailing: Switch(
-                        value: biometricEnabled,
-                        activeThumbColor: cs.primary,
-                        onChanged: biometricAvailable
-                            ? (_) => _toggleWithPinGuard(
+                  SettingsFlatGroup(
+                    children: [
+                      DonyListTile(
+                        iconAsset: 'fingerprint',
+                        iconColor: biometricAvailable
+                            ? cs.primary
+                            : cs.onSurfaceVariant,
+                        iconBgColor: biometricAvailable
+                            ? cs.primaryContainer
+                            : cs.surfaceContainerHighest,
+                        label: 'Biométrie avant paiement',
+                        subtitle: biometricAvailable
+                            ? 'Empreinte digitale ou Face ID'
+                            : 'Non disponible sur cet appareil',
+                        trailing: Switch(
+                          value: biometricEnabled,
+                          activeThumbColor: cs.primary,
+                          onChanged: biometricAvailable
+                              ? (_) => _toggleWithPinGuard(
                                   context,
                                   currentlyEnabled:
                                       prefsState.preferences.biometricEnabled,
                                   event: const BiometricToggled(),
                                   pinConfigured: pinConfigured,
                                 )
-                            : null,
-                      ),
-                      showDivider: false,
-                      onTap: biometricAvailable
-                          ? () => _toggleWithPinGuard(
+                              : null,
+                        ),
+                        showDivider: false,
+                        onTap: biometricAvailable
+                            ? () => _toggleWithPinGuard(
                                 context,
                                 currentlyEnabled:
                                     prefsState.preferences.biometricEnabled,
                                 event: const BiometricToggled(),
                                 pinConfigured: pinConfigured,
                               )
-                          : null,
-                    ),
-                  ]),
+                            : null,
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: DonySpacing.lg),
                   const SettingsSectionHeader('APPLICATION'),
-                  SettingsFlatGroup(children: [
-                    DonyListTile(
-                      iconAsset: 'lock',
-                      iconColor: biometricAvailable
-                          ? cs.primary
-                          : cs.onSurfaceVariant,
-                      iconBgColor: biometricAvailable
-                          ? cs.primaryContainer
-                          : cs.surfaceContainerHighest,
-                      label: "Verrouillage de l'app",
-                      // Sans code PIN il n'y a aucun verrouillage à
-                      // l'ouverture : la biométrie ne fait que remplacer la
-                      // saisie du code. Le dire, plutôt que de laisser croire
-                      // que l'app est protégée.
-                      subtitle: !biometricAvailable
-                          ? 'Non disponible sur cet appareil'
-                          : pinConfigured
-                              ? "Biométrie ou Face ID à l'ouverture"
-                              : "Nécessite d'activer le code PIN ci-dessous",
-                      trailing: Switch(
-                        value: biometricAvailable &&
-                            prefsState.preferences.appLockBiometricEnabled,
-                        activeThumbColor: cs.primary,
-                        onChanged: biometricAvailable
-                            ? (_) => _toggleWithPinGuard(
+                  SettingsFlatGroup(
+                    children: [
+                      DonyListTile(
+                        iconAsset: 'lock',
+                        iconColor: biometricAvailable
+                            ? cs.primary
+                            : cs.onSurfaceVariant,
+                        iconBgColor: biometricAvailable
+                            ? cs.primaryContainer
+                            : cs.surfaceContainerHighest,
+                        label: "Verrouillage de l'app",
+                        // Sans code PIN il n'y a aucun verrouillage à
+                        // l'ouverture : la biométrie ne fait que remplacer la
+                        // saisie du code. Le dire, plutôt que de laisser croire
+                        // que l'app est protégée.
+                        subtitle: !biometricAvailable
+                            ? 'Non disponible sur cet appareil'
+                            : pinConfigured
+                            ? "Biométrie ou Face ID à l'ouverture"
+                            : "Nécessite d'activer le code PIN ci-dessous",
+                        trailing: Switch(
+                          value:
+                              biometricAvailable &&
+                              prefsState.preferences.appLockBiometricEnabled,
+                          activeThumbColor: cs.primary,
+                          onChanged: biometricAvailable
+                              ? (_) => _toggleWithPinGuard(
                                   context,
                                   currentlyEnabled: prefsState
-                                      .preferences.appLockBiometricEnabled,
+                                      .preferences
+                                      .appLockBiometricEnabled,
                                   event: const AppLockBiometricToggled(),
                                   pinConfigured: pinConfigured,
                                 )
-                            : null,
-                      ),
-                      showDivider: false,
-                      onTap: biometricAvailable
-                          ? () => _toggleWithPinGuard(
+                              : null,
+                        ),
+                        showDivider: false,
+                        onTap: biometricAvailable
+                            ? () => _toggleWithPinGuard(
                                 context,
                                 currentlyEnabled: prefsState
-                                    .preferences.appLockBiometricEnabled,
+                                    .preferences
+                                    .appLockBiometricEnabled,
                                 event: const AppLockBiometricToggled(),
                                 pinConfigured: pinConfigured,
                               )
-                          : null,
-                    ),
-                  ]),
+                            : null,
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: DonySpacing.lg),
                   const SettingsSectionHeader('AUTHENTIFICATION'),
-                  SettingsFlatGroup(children: [
-                    DonyListTile(
-                      iconAsset: 'key-round',
-                      iconColor: cs.primary,
-                      iconBgColor: cs.primaryContainer,
-                      label: "Code PIN à l'ouverture",
-                      subtitle: pinConfigured
-                          ? 'Demandé à chaque ouverture de Yadony'
-                          : "Désactivé, l'app s'ouvre sans code",
-                      trailing: Switch(
-                        value: pinConfigured,
-                        activeThumbColor: cs.primary,
-                        onChanged: pinState.isBusy
-                            ? null
-                            : (v) => v
-                                ? _enablePin(context)
-                                : _disablePin(context),
-                      ),
-                      showDivider: pinConfigured,
-                      onTap: pinState.isBusy
-                          ? null
-                          : () => pinConfigured
-                              ? _disablePin(context)
-                              : _enablePin(context),
-                    ),
-                    // Rien à modifier tant qu'aucun code n'existe : la création
-                    // passe par l'interrupteur ci-dessus.
-                    if (pinConfigured)
+                  SettingsFlatGroup(
+                    children: [
                       DonyListTile(
-                        iconAsset: 'shield-check',
+                        iconAsset: 'key-round',
                         iconColor: cs.primary,
                         iconBgColor: cs.primaryContainer,
-                        label: 'Modifier le code PIN',
-                        subtitle: 'Code à 6 chiffres',
-                        showDivider: false,
-                        onTap: () async {
-                          await context.push<bool>(
-                            '/settings/security/change-pin',
-                          );
-                        },
+                        label: "Code PIN à l'ouverture",
+                        subtitle: pinConfigured
+                            ? 'Demandé à chaque ouverture de Yadony'
+                            : "Désactivé, l'app s'ouvre sans code",
+                        trailing: Switch(
+                          value: pinConfigured,
+                          activeThumbColor: cs.primary,
+                          onChanged: pinState.isBusy
+                              ? null
+                              : (v) => v
+                                    ? _enablePin(context)
+                                    : _disablePin(context),
+                        ),
+                        showDivider: pinConfigured,
+                        onTap: pinState.isBusy
+                            ? null
+                            : () => pinConfigured
+                                  ? _disablePin(context)
+                                  : _enablePin(context),
                       ),
-                  ]),
+                      // Rien à modifier tant qu'aucun code n'existe : la création
+                      // passe par l'interrupteur ci-dessus.
+                      if (pinConfigured)
+                        DonyListTile(
+                          iconAsset: 'shield-check',
+                          iconColor: cs.primary,
+                          iconBgColor: cs.primaryContainer,
+                          label: 'Modifier le code PIN',
+                          subtitle: 'Code à 6 chiffres',
+                          showDivider: false,
+                          onTap: () async {
+                            await context.push<bool>(
+                              '/settings/security/change-pin',
+                            );
+                          },
+                        ),
+                    ],
+                  ),
                   const SizedBox(height: DonySpacing.lg),
                   const SettingsSectionHeader('SESSION'),
-                  SettingsFlatGroup(children: [
-                    DonyListTile(
-                      iconAsset: 'smartphone',
-                      iconColor: cs.primary,
-                      iconBgColor: cs.primaryContainer,
-                      label: 'Appareils connectés',
-                      subtitle: 'Voir et révoquer les sessions actives',
-                      showDivider: false,
-                      onTap: () => context.push(
-                        '/settings/security/devices',
+                  SettingsFlatGroup(
+                    children: [
+                      DonyListTile(
+                        iconAsset: 'smartphone',
+                        iconColor: cs.primary,
+                        iconBgColor: cs.primaryContainer,
+                        label: 'Appareils connectés',
+                        subtitle: 'Voir et révoquer les sessions actives',
+                        showDivider: false,
+                        onTap: () => context.push('/settings/security/devices'),
                       ),
-                    ),
-                  ]),
+                    ],
+                  ),
                 ],
               );
             },

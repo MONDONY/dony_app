@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
@@ -737,7 +738,8 @@ String _buildDetails(PackageRequest r) {
     '$date ±${r.dateToleranceDays}j',
     '${r.weightKg.toStringAsFixed(0)} kg',
     if (r.categories.isNotEmpty) _shortCat(r.categories.first),
-    if (r.targetPriceEur != null) '≈${r.targetPriceEur!.toStringAsFixed(0)} €',
+    if (r.targetPriceEur != null)
+      '≈${formatPriceIn(r.targetPriceEur!, r.currency)}',
   ];
   return parts.join(' · ');
 }

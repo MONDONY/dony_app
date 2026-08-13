@@ -14,6 +14,7 @@ import 'package:dony/features/payments/data/repositories/payment_repository.dart
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -170,14 +171,14 @@ class _BidDetailViewState extends State<_BidDetailView> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Commission requise : ${state.requiredCommission.toStringAsFixed(2)} €',
+            'Commission requise : ${formatPriceIn(state.requiredCommission, state.currency)}',
             style: Theme.of(
               context,
             ).textTheme.bodyMedium?.copyWith(color: cs.onSurface),
           ),
           const SizedBox(height: 4),
           Text(
-            'Solde du portefeuille : ${state.availableBalance.toStringAsFixed(2)} €',
+            'Solde du portefeuille : ${formatPriceIn(state.availableBalance, state.currency)}',
             style: Theme.of(
               context,
             ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
@@ -278,7 +279,8 @@ class _BidDetailViewState extends State<_BidDetailView> {
           } else if (state is DeliveryNoShowReported) {
             DonySnackbar.show(
               context,
-              message: "Absence signalée. L'autre partie a 24 h pour contester.",
+              message:
+                  "Absence signalée. L'autre partie a 24 h pour contester.",
               type: DonySnackbarType.info,
             );
             context.read<BidBloc>().add(BidDetailRequested(_bid.id));
@@ -450,8 +452,8 @@ class _BidDetailViewState extends State<_BidDetailView> {
                 final currentUser = authState is AuthAuthenticated
                     ? authState.user
                     : authState is AuthProfileUpdated
-                        ? authState.user
-                        : null;
+                    ? authState.user
+                    : null;
                 final isSender =
                     currentUser != null && currentUser.id == _bid.senderId;
 
@@ -474,14 +476,18 @@ class _BidDetailViewState extends State<_BidDetailView> {
                       }
                     },
                     actions: [
-                      DonyFeedbackButton(repaintBoundaryKey: _screenBoundaryKey),
+                      DonyFeedbackButton(
+                        repaintBoundaryKey: _screenBoundaryKey,
+                      ),
                       if (_bid.trackingToken != null)
                         IconButton(
                           icon: DonyIcon('share-2', color: cs.onSurface),
                           tooltip: 'Partager le suivi',
                           onPressed: () => shareTrackingLink(
                             _bid,
-                            sharePositionOrigin: sharePositionOriginFor(context),
+                            sharePositionOrigin: sharePositionOriginFor(
+                              context,
+                            ),
                           ),
                         ),
                       if (isSender)
@@ -496,9 +502,13 @@ class _BidDetailViewState extends State<_BidDetailView> {
                         ),
                       if (!isSender)
                         IconButton(
-                          icon: DonyIcon('ellipsis-vertical', color: cs.onSurface),
+                          icon: DonyIcon(
+                            'ellipsis-vertical',
+                            color: cs.onSurface,
+                          ),
                           tooltip: 'Options',
-                          onPressed: () => showTravelerOptionsSheet(context, _bid),
+                          onPressed: () =>
+                              showTravelerOptionsSheet(context, _bid),
                         ),
                     ],
                   ),

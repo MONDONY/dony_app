@@ -20,37 +20,42 @@ class MockAnnouncementBloc
     implements AnnouncementBloc {}
 
 AnnouncementModel _dedicated() => AnnouncementModel(
-      id: 'ann-1',
-      travelerId: 'trav-1',
-      departureCity: 'Paris',
-      arrivalCity: 'Dakar',
-      departureDate: DateTime(2026, 8),
-      availableKg: 0,
-      totalKg: 12,
-      pricePerKg: 0,
-      status: 'ACTIVE',
-      createdAt: DateTime(2026, 7),
-      updatedAt: DateTime(2026, 7),
-      reservedKg: 12,
-      surplusEligible: true,
-    );
+  id: 'ann-1',
+  travelerId: 'trav-1',
+  departureCity: 'Paris',
+  arrivalCity: 'Dakar',
+  departureDate: DateTime(2026, 8),
+  availableKg: 0,
+  totalKg: 12,
+  pricePerKg: 0,
+  status: 'ACTIVE',
+  createdAt: DateTime(2026, 7),
+  updatedAt: DateTime(2026, 7),
+  reservedKg: 12,
+  surplusEligible: true,
+);
 
 void main() {
   late MockAnnouncementBloc bloc;
 
   setUpAll(() {
-    registerFallbackValue(AnnouncementSurplusOpenRequested(
-      announcementId: 'x',
-      surplusKg: 1,
-      pricePerKg: 1,
-    ));
+    registerFallbackValue(
+      AnnouncementSurplusOpenRequested(
+        announcementId: 'x',
+        surplusKg: 1,
+        pricePerKg: 1,
+      ),
+    );
   });
 
   setUp(() {
     bloc = MockAnnouncementBloc();
     when(() => bloc.state).thenReturn(AnnouncementInitial());
-    whenListen(bloc, const Stream<AnnouncementState>.empty(),
-        initialState: AnnouncementInitial());
+    whenListen(
+      bloc,
+      const Stream<AnnouncementState>.empty(),
+      initialState: AnnouncementInitial(),
+    );
     if (getIt.isRegistered<AnnouncementBloc>()) {
       getIt.unregister<AnnouncementBloc>();
     }
@@ -64,20 +69,20 @@ void main() {
   });
 
   Widget host() => MaterialApp(
-        theme: AppTheme.light(),
-        home: Builder(
-          builder: (ctx) => Scaffold(
-            body: Center(
-              child: ElevatedButton(
-                key: const Key('open-btn'),
-                onPressed: () =>
-                    OpenSurplusBottomSheet.show(ctx, announcement: _dedicated()),
-                child: const Text('Ouvrir'),
-              ),
-            ),
+    theme: AppTheme.light(),
+    home: Builder(
+      builder: (ctx) => Scaffold(
+        body: Center(
+          child: ElevatedButton(
+            key: const Key('open-btn'),
+            onPressed: () =>
+                OpenSurplusBottomSheet.show(ctx, announcement: _dedicated()),
+            child: const Text('Ouvrir'),
           ),
         ),
-      );
+      ),
+    ),
+  );
 
   Future<void> open(WidgetTester tester) async {
     await tester.pumpWidget(host());
@@ -85,8 +90,9 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('affiche le titre, la capacité réservée et les chips de prix',
-      (tester) async {
+  testWidgets('affiche le titre, la capacité réservée et les chips de prix', (
+    tester,
+  ) async {
     await open(tester);
 
     expect(find.text('Ouvrir les kg restants'), findsOneWidget);
@@ -98,8 +104,9 @@ void main() {
     expect(find.text('Publier'), findsOneWidget);
   });
 
-  testWidgets('le bouton Publier est désactivé tant que les kg sont absents',
-      (tester) async {
+  testWidgets('le bouton Publier est désactivé tant que les kg sont absents', (
+    tester,
+  ) async {
     await open(tester);
 
     // Un prix preset est sélectionné par défaut, mais kg vide → invalide.
@@ -109,39 +116,44 @@ void main() {
     expect(button.onPressed, isNull);
   });
 
-  testWidgets('le bouton Publier s\'active quand kg ≥ 1 et un prix est choisi',
-      (tester) async {
-    await open(tester);
+  testWidgets(
+    'le bouton Publier s\'active quand kg ≥ 1 et un prix est choisi',
+    (tester) async {
+      await open(tester);
 
-    await tester.enterText(find.byKey(const Key('surplus-kg-field')), '8');
-    await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(const Key('surplus-kg-field')), '8');
+      await tester.pumpAndSettle();
 
-    final button = tester.widget<DonyButton>(
-      find.widgetWithText(DonyButton, 'Publier'),
-    );
-    expect(button.onPressed, isNotNull);
-  });
+      final button = tester.widget<DonyButton>(
+        find.widgetWithText(DonyButton, 'Publier'),
+      );
+      expect(button.onPressed, isNotNull);
+    },
+  );
 
   testWidgets(
-      'tap Publier dispatche AnnouncementSurplusOpenRequested avec les bons args',
-      (tester) async {
-    await open(tester);
+    'tap Publier dispatche AnnouncementSurplusOpenRequested avec les bons args',
+    (tester) async {
+      await open(tester);
 
-    await tester.enterText(find.byKey(const Key('surplus-kg-field')), '8');
-    await tester.pumpAndSettle();
-    // Sélectionne explicitement le chip 7€ (index 2).
-    await tester.tap(find.byKey(const Key('surplus-price-chip-2')));
-    await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(const Key('surplus-kg-field')), '8');
+      await tester.pumpAndSettle();
+      // Sélectionne explicitement le chip 7€ (index 2).
+      await tester.tap(find.byKey(const Key('surplus-price-chip-2')));
+      await tester.pumpAndSettle();
 
-    await tester.tap(find.widgetWithText(DonyButton, 'Publier'));
-    await tester.pump();
+      await tester.tap(find.widgetWithText(DonyButton, 'Publier'));
+      await tester.pump();
 
-    final captured = verify(() => bloc.add(captureAny())).captured;
-    final event = captured.whereType<AnnouncementSurplusOpenRequested>().single;
-    expect(event.announcementId, 'ann-1');
-    expect(event.surplusKg, 8.0);
-    expect(event.pricePerKg, 7.0);
-  });
+      final captured = verify(() => bloc.add(captureAny())).captured;
+      final event = captured
+          .whereType<AnnouncementSurplusOpenRequested>()
+          .single;
+      expect(event.announcementId, 'ann-1');
+      expect(event.surplusKg, 8.0);
+      expect(event.pricePerKg, 7.0);
+    },
+  );
 
   testWidgets('saisie d\'un prix custom envoie ce prix', (tester) async {
     await open(tester);
@@ -150,26 +162,29 @@ void main() {
     await tester.tap(find.byKey(const Key('surplus-price-chip-custom')));
     await tester.pumpAndSettle();
     await tester.enterText(
-        find.byKey(const Key('surplus-custom-price-field')), '9');
+      find.byKey(const Key('surplus-custom-price-field')),
+      '9',
+    );
     await tester.pumpAndSettle();
 
     await tester.tap(find.widgetWithText(DonyButton, 'Publier'));
     await tester.pump();
 
-    final event = verify(() => bloc.add(captureAny()))
-        .captured
-        .whereType<AnnouncementSurplusOpenRequested>()
-        .single;
+    final event = verify(
+      () => bloc.add(captureAny()),
+    ).captured.whereType<AnnouncementSurplusOpenRequested>().single;
     expect(event.surplusKg, 5.0);
     expect(event.pricePerKg, 9.0);
   });
 
-  testWidgets('le sheet se ferme sur AnnouncementSurplusOpened',
-      (tester) async {
+  testWidgets('le sheet se ferme sur AnnouncementSurplusOpened', (
+    tester,
+  ) async {
     whenListen(
       bloc,
-      Stream<AnnouncementState>.fromIterable(
-          [AnnouncementSurplusOpened(_dedicated())]),
+      Stream<AnnouncementState>.fromIterable([
+        AnnouncementSurplusOpened(_dedicated()),
+      ]),
       initialState: AnnouncementInitial(),
     );
 
@@ -180,11 +195,15 @@ void main() {
     expect(find.text('Ouvrir les kg restants'), findsNothing);
   });
 
-  testWidgets('affiche un état de chargement (Publication…) pendant Loading',
-      (tester) async {
+  testWidgets('affiche un état de chargement (Publication…) pendant Loading', (
+    tester,
+  ) async {
     when(() => bloc.state).thenReturn(AnnouncementLoading());
-    whenListen(bloc, const Stream<AnnouncementState>.empty(),
-        initialState: AnnouncementLoading());
+    whenListen(
+      bloc,
+      const Stream<AnnouncementState>.empty(),
+      initialState: AnnouncementLoading(),
+    );
 
     await tester.pumpWidget(host());
     await tester.tap(find.byKey(const Key('open-btn')));

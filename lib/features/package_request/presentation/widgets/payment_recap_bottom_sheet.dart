@@ -40,8 +40,7 @@ class PaymentRecapBottomSheet {
     dony.PaymentMethod? paymentMethod,
   }) async {
     final double net = thread.currentPriceEur;
-    final double gross =
-        thread.grossPriceEur ?? PriceDisplay.grossFromNet(net);
+    final double gross = thread.grossPriceEur ?? PriceDisplay.grossFromNet(net);
     final double fee = gross - net;
     // Mode finalisé par l'expéditeur (s'il a choisi à l'étape complétion),
     // sinon celui déjà porté par le thread, sinon Stripe par défaut.
@@ -62,19 +61,19 @@ class PaymentRecapBottomSheet {
       wrapper: (child) => BlocProvider.value(value: bloc, child: child),
       stickyBottom: ValueListenableBuilder<bool>(
         valueListenable: processing,
-        builder: (ctx0, busy, _) =>
-            BlocBuilder<NegotiationBloc, NegotiationState>(
+        builder: (ctx0, busy, _) => BlocBuilder<NegotiationBloc, NegotiationState>(
           bloc: bloc,
           builder: (ctx, state) {
-            final isLoading = busy ||
+            final isLoading =
+                busy ||
                 state is NegotiationActionInProgress ||
                 state is NegotiationLoading;
             return DonyButton(
               label: isLoading
                   ? 'Traitement…'
                   : isCash
-                      ? 'Confirmer l\'accord'
-                      : 'Payer ${PriceDisplay.eur(gross)}',
+                  ? 'Confirmer l\'accord'
+                  : 'Payer ${PriceDisplay.money(gross, thread.currency)}',
               isLoading: isLoading,
               onPressed: isLoading
                   ? null
@@ -108,31 +107,37 @@ class PaymentRecapBottomSheet {
                             config: PaymentSheetConfig(
                               clientSecret: init.clientSecret,
                               amountEur: init.amountEur,
+                              currencyCode: init.currencyCode,
                               paymentMethodTypes: init.paymentMethodTypes,
                             ),
                             contextLabel: isCash
                                 ? 'Confirmation de l\'accord'
                                 : 'Paiement sécurisé',
                             onSuccess: () {
-                              bloc.add(NegotiationCheckoutRequested(
-                                threadId: thread.id,
-                                paymentIntentId: init.paymentIntentId,
-                                paymentMethod: method,
-                              ));
+                              bloc.add(
+                                NegotiationCheckoutRequested(
+                                  threadId: thread.id,
+                                  paymentIntentId: init.paymentIntentId,
+                                  paymentMethod: method,
+                                ),
+                              );
                               if (ctx.mounted) {
                                 Navigator.of(ctx, rootNavigator: true).pop();
-                                Navigator.of(context).push(MaterialPageRoute(
-                                  builder: (routeContext) => DonySuccessScreen(
-                                    mascotteType: DonyMascotteType.securise,
-                                    title: 'Offre acceptée et payée !',
-                                    subtitle:
-                                        'Ton argent est bloqué et sécurisé, le voyageur ne le reçoit qu\'après confirmation de la livraison. Suis ton colis depuis le fil.',
-                                    ctaLabel: 'Voir le suivi',
-                                    onCta: () => routeContext
-                                        .go('/negotiations/${thread.id}'),
-                                    analyticsContext: 'negotiation_payment',
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (routeContext) => DonySuccessScreen(
+                                      mascotteType: DonyMascotteType.securise,
+                                      title: 'Offre acceptée et payée !',
+                                      subtitle:
+                                          'Ton argent est bloqué et sécurisé, le voyageur ne le reçoit qu\'après confirmation de la livraison. Suis ton colis depuis le fil.',
+                                      ctaLabel: 'Voir le suivi',
+                                      onCta: () => routeContext.go(
+                                        '/negotiations/${thread.id}',
+                                      ),
+                                      analyticsContext: 'negotiation_payment',
+                                    ),
                                   ),
-                                ));
+                                );
                               }
                             },
                           );
@@ -143,7 +148,8 @@ class PaymentRecapBottomSheet {
                           if (ctx.mounted) {
                             DonySnackbar.show(
                               ctx,
-                              message: 'Une erreur est survenue. Veuillez réessayer.',
+                              message:
+                                  'Une erreur est survenue. Veuillez réessayer.',
                               type: DonySnackbarType.error,
                             );
                           }
@@ -155,25 +161,30 @@ class PaymentRecapBottomSheet {
                         // thread via /checkout (idempotent placeholder), NOT
                         // /accept — the thread is already past OPEN, so calling
                         // accept here returns `thread/already-finalized`.
-                        bloc.add(NegotiationCheckoutRequested(
-                          threadId: thread.id,
-                          paymentIntentId: kCashPaymentSentinel,
-                          paymentMethod: method,
-                        ));
+                        bloc.add(
+                          NegotiationCheckoutRequested(
+                            threadId: thread.id,
+                            paymentIntentId: kCashPaymentSentinel,
+                            paymentMethod: method,
+                          ),
+                        );
                         if (ctx.mounted) {
                           Navigator.of(ctx, rootNavigator: true).pop();
-                          Navigator.of(context).push(MaterialPageRoute(
-                            builder: (routeContext) => DonySuccessScreen(
-                              mascotteType: DonyMascotteType.succes,
-                              title: 'Accord confirmé !',
-                              subtitle:
-                                  'Paiement en espèces : tu remets le montant au voyageur en main propre, à la remise du colis. En cas d\'annulation après la remise, Yadony ne peut pas te rembourser immédiatement mais s\'assurera que le voyageur te restitue ton argent.',
-                              ctaLabel: 'Voir le suivi',
-                              onCta: () => routeContext
-                                  .go('/negotiations/${thread.id}'),
-                              analyticsContext: 'negotiation_cash_agreement',
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (routeContext) => DonySuccessScreen(
+                                mascotteType: DonyMascotteType.succes,
+                                title: 'Accord confirmé !',
+                                subtitle:
+                                    'Paiement en espèces : tu remets le montant au voyageur en main propre, à la remise du colis. En cas d\'annulation après la remise, Yadony ne peut pas te rembourser immédiatement mais s\'assurera que le voyageur te restitue ton argent.',
+                                ctaLabel: 'Voir le suivi',
+                                onCta: () => routeContext.go(
+                                  '/negotiations/${thread.id}',
+                                ),
+                                analyticsContext: 'negotiation_cash_agreement',
+                              ),
                             ),
-                          ));
+                          );
                         }
                       }
                     },
@@ -186,6 +197,7 @@ class PaymentRecapBottomSheet {
         gross: gross,
         fee: fee,
         isCash: isCash,
+        currency: thread.currency,
       ),
     ).whenComplete(processing.dispose);
   }
@@ -202,26 +214,14 @@ class PaymentRecapContent extends StatelessWidget {
     required this.gross,
     required this.fee,
     required this.isCash,
+    this.currency = 'EUR',
   });
-
-  /// Convenience factory used in tests for named clarity.
-  factory PaymentRecapContent.testable({
-    required double net,
-    required double gross,
-    required double fee,
-    required bool isCash,
-  }) =>
-      PaymentRecapContent(
-        net: net,
-        gross: gross,
-        fee: fee,
-        isCash: isCash,
-      );
 
   final double net;
   final double gross;
   final double fee;
   final bool isCash;
+  final String currency;
 
   @override
   Widget build(BuildContext context) {
@@ -247,39 +247,39 @@ class PaymentRecapContent extends StatelessWidget {
                 ? [
                     _FeeRow(
                       label: 'À remettre au voyageur (en espèces)',
-                      amount: PriceDisplay.eur(gross),
+                      amount: PriceDisplay.money(gross, currency),
                       isTotal: false,
                     ),
                     const _Divider(),
                     _FeeRow(
                       label: 'dont frais Yadony (réglés par le voyageur)',
-                      amount: PriceDisplay.eur(fee),
+                      amount: PriceDisplay.money(fee, currency),
                       isTotal: false,
                       isSubNote: true,
                     ),
                     const _Divider(),
                     _FeeRow(
                       label: 'Le voyageur garde net',
-                      amount: PriceDisplay.eur(net),
+                      amount: PriceDisplay.money(net, currency),
                       isTotal: true,
                     ),
                   ]
                 : [
                     _FeeRow(
                       label: 'Le voyageur touche',
-                      amount: PriceDisplay.eur(net),
+                      amount: PriceDisplay.money(net, currency),
                       isTotal: false,
                     ),
                     const _Divider(),
                     _FeeRow(
                       label: 'Frais de service Yadony',
-                      amount: PriceDisplay.eur(fee),
+                      amount: PriceDisplay.money(fee, currency),
                       isTotal: false,
                     ),
                     const _Divider(isTotal: true),
                     _FeeRow(
                       label: 'Total à payer',
-                      amount: PriceDisplay.eur(gross),
+                      amount: PriceDisplay.money(gross, currency),
                       isTotal: true,
                     ),
                   ],
@@ -326,11 +326,7 @@ class _TrustBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          DonyIcon(
-            isCash ? 'banknote' : 'lock',
-            size: 18,
-            color: iconColor,
-          ),
+          DonyIcon(isCash ? 'banknote' : 'lock', size: 18, color: iconColor),
           const SizedBox(width: DonySpacing.sm),
           Expanded(
             child: Text(
@@ -373,13 +369,11 @@ class _FeeRow extends StatelessWidget {
             fontStyle: FontStyle.italic,
           )
         : isTotal
-            ? tt.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: cs.onSurface,
-              )
-            : tt.bodyMedium?.copyWith(
-                color: cs.onSurface,
-              );
+        ? tt.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: cs.onSurface,
+          )
+        : tt.bodyMedium?.copyWith(color: cs.onSurface);
 
     final amountStyle = isTotal
         ? tt.titleMedium?.copyWith(
@@ -400,9 +394,7 @@ class _FeeRow extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Expanded(
-            child: Text(label, style: labelStyle),
-          ),
+          Expanded(child: Text(label, style: labelStyle)),
           const SizedBox(width: DonySpacing.sm),
           Text(amount, style: amountStyle),
         ],

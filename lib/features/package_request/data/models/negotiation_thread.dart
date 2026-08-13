@@ -65,6 +65,7 @@ class NegotiationThread extends Equatable {
     this.availablePaymentMethods,
     this.canNudge = false,
     this.hasUnread = false,
+    this.currency = 'EUR',
   });
 
   final String id;
@@ -123,6 +124,10 @@ class NegotiationThread extends Equatable {
   final bool canNudge;
 
   final bool hasUnread;
+
+  /// Devise du thread, figée à la création. `EUR` par défaut pour les
+  /// anciens payloads sans ce champ.
+  final String currency;
 
   bool get isTravelerKgFree => travelerCapacityUnit == 'KG_FREE';
 
@@ -187,6 +192,7 @@ class NegotiationThread extends Equatable {
         : null,
     canNudge: json['canNudge'] as bool? ?? false,
     hasUnread: json['hasUnread'] as bool? ?? false,
+    currency: json['currency'] as String? ?? 'EUR',
   );
 
   @override
@@ -226,5 +232,6 @@ class NegotiationThread extends Equatable {
     availablePaymentMethods,
     canNudge,
     hasUnread,
+    currency,
   ];
 }

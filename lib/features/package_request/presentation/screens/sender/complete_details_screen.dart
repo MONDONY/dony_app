@@ -109,7 +109,8 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
   /// forcément privilégiée.
   Set<PaymentMethod> _availableMethods(PackageRequest request) {
     final accepted =
-        widget.thread?.availablePaymentMethods ?? request.acceptedPaymentMethods;
+        widget.thread?.availablePaymentMethods ??
+        request.acceptedPaymentMethods;
     final cashRequested = accepted.contains(PaymentMethod.cash);
     final cashOk = widget.thread?.cashCommissionAvailable ?? true;
     if (cashRequested && !cashOk) return const <PaymentMethod>{};
@@ -170,20 +171,21 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
                   ),
                 )
               : (state.request != null &&
-                      _availableMethods(state.request!).isEmpty)
-                  ? DonyEmptyState(
-                      icon: Icons.hourglass_empty_rounded,
-                      type: DonyEmptyStateType.error,
-                      title: 'En attente du voyageur',
-                      description: 'Le paiement en espèces est accepté sur '
-                          'cette demande, mais le voyageur n\'a pas encore les '
-                          'fonds pour régler sa commission. Réessaie un peu '
-                          'plus tard, ou demande-lui de recharger son '
-                          'portefeuille.',
-                      actionLabel: 'Retour',
-                      onAction: () => context.pop(),
-                    )
-                  : Stack(
+                    _availableMethods(state.request!).isEmpty)
+              ? DonyEmptyState(
+                  icon: Icons.hourglass_empty_rounded,
+                  type: DonyEmptyStateType.error,
+                  title: 'En attente du voyageur',
+                  description:
+                      'Le paiement en espèces est accepté sur '
+                      'cette demande, mais le voyageur n\'a pas encore les '
+                      'fonds pour régler sa commission. Réessaie un peu '
+                      'plus tard, ou demande-lui de recharger son '
+                      'portefeuille.',
+                  actionLabel: 'Retour',
+                  onAction: () => context.pop(),
+                )
+              : Stack(
                   children: [
                     SingleChildScrollView(
                       padding: EdgeInsets.fromLTRB(
@@ -264,7 +266,9 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
                                 valueListenable: _selectedMethod,
                                 builder: (context, selected, _) =>
                                     _PaymentMethodChoice(
-                                      methods: _availableMethods(state.request!),
+                                      methods: _availableMethods(
+                                        state.request!,
+                                      ),
                                       selected: selected,
                                       onChanged: (m) =>
                                           _selectedMethod.value = m,
@@ -347,7 +351,8 @@ class _RecapCard extends StatelessWidget {
       ('Taille', _sizeLabel(request.parcelSize)),
       if (request.categories.isNotEmpty)
         ('Contenu', request.categories.join(', ')),
-      if (gross != null) ('Prix à payer', PriceDisplay.eur(gross)),
+      if (gross != null)
+        ('Prix à payer', PriceDisplay.money(gross, request.currency)),
     ];
 
     return Container(

@@ -62,8 +62,9 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
   void initState() {
     super.initState();
     // Pré-remplissage (mode édition ou retour à l'étape) depuis l'état du bloc.
-    final PackageRequestFormState s =
-        context.read<PackageRequestFormBloc>().state;
+    final PackageRequestFormState s = context
+        .read<PackageRequestFormBloc>()
+        .state;
     _departureCity = s.departureCity;
     _arrivalCity = s.arrivalCity;
     _date = s.desiredDate;
@@ -135,15 +136,15 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
       return;
     }
     context.read<PackageRequestFormBloc>().add(
-          FormStep1Submitted(
-            departureCity: _departureCity!,
-            arrivalCity: _arrivalCity!,
-            desiredDate: _date!,
-            dateToleranceDays: _tolerance,
-            transportMode: _transportMode,
-            pickupNeighborhood: _pickupCtrl.text,
-          ),
-        );
+      FormStep1Submitted(
+        departureCity: _departureCity!,
+        arrivalCity: _arrivalCity!,
+        desiredDate: _date!,
+        dateToleranceDays: _tolerance,
+        transportMode: _transportMode,
+        pickupNeighborhood: _pickupCtrl.text,
+      ),
+    );
   }
 
   @override
@@ -225,9 +226,7 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
                           padding: const EdgeInsets.only(top: DonySpacing.xs),
                           child: Text(
                             '🔥 Date proche — cette demande sera signalée urgente',
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall
+                            style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(
                                   color: Theme.of(context).colorScheme.error,
                                 ),
@@ -316,11 +315,7 @@ class _LockedAirplaneBlock extends StatelessWidget {
       ),
       child: Row(
         children: [
-          DonyIcon(
-            'plane',
-            size: 22,
-            color: cs.onSurfaceVariant,
-          ),
+          DonyIcon('plane', size: 22, color: cs.onSurfaceVariant),
           const SizedBox(width: DonySpacing.sm),
           Expanded(
             child: Column(
@@ -335,18 +330,12 @@ class _LockedAirplaneBlock extends StatelessWidget {
                 ),
                 Text(
                   'seul mode disponible',
-                  style: tt.bodySmall?.copyWith(
-                    color: cs.onSurfaceVariant,
-                  ),
+                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
               ],
             ),
           ),
-          DonyIcon(
-            'lock',
-            size: 16,
-            color: cs.onSurfaceVariant,
-          ),
+          DonyIcon('lock', size: 16, color: cs.onSurfaceVariant),
         ],
       ),
     );
@@ -364,10 +353,10 @@ class _FieldLabel extends StatelessWidget {
     return Text(
       text,
       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w700,
-            color: Theme.of(context).colorScheme.onSurface,
-            fontSize: 14,
-          ),
+        fontWeight: FontWeight.w700,
+        color: Theme.of(context).colorScheme.onSurface,
+        fontSize: 14,
+      ),
     );
   }
 }
@@ -393,48 +382,48 @@ class _DatePickerField extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         InkWell(
-      borderRadius: BorderRadius.circular(DonyRadius.md),
-      onTap: () async {
-        final picked = await showDatePicker(
-          context: context,
-          initialDate: date ?? DateTime.now().add(const Duration(days: 7)),
-          firstDate: DateTime.now(),
-          lastDate: DateTime.now().add(const Duration(days: 90)),
-        );
-        if (picked != null) onChanged(picked);
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: DonySpacing.md,
-          vertical: DonySpacing.md + 2,
-        ),
-        decoration: BoxDecoration(
-          color: cs.surface,
           borderRadius: BorderRadius.circular(DonyRadius.md),
-          border: Border.all(
-            color: errorText != null ? cs.error : cs.outline,
-          ),
-        ),
-        child: Row(
-          children: [
-            const Text('📆', style: TextStyle(fontSize: 14)),
-            const SizedBox(width: DonySpacing.xs),
-            Flexible(
-              child: Text(
-                dateText,
-                overflow: TextOverflow.ellipsis,
-                style: tt.bodyMedium?.copyWith(
-                  color: date == null
-                      ? cs.onSurfaceVariant
-                      : cs.onSurface,
-                  fontWeight: date == null ? FontWeight.w500 : FontWeight.w700,
-                ),
+          onTap: () async {
+            final picked = await showDatePicker(
+              context: context,
+              initialDate: date ?? DateTime.now().add(const Duration(days: 7)),
+              firstDate: DateTime.now(),
+              lastDate: DateTime.now().add(const Duration(days: 90)),
+            );
+            if (picked != null) onChanged(picked);
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: DonySpacing.md,
+              vertical: DonySpacing.md + 2,
+            ),
+            decoration: BoxDecoration(
+              color: cs.surface,
+              borderRadius: BorderRadius.circular(DonyRadius.md),
+              border: Border.all(
+                color: errorText != null ? cs.error : cs.outline,
               ),
             ),
-          ],
+            child: Row(
+              children: [
+                const Text('📆', style: TextStyle(fontSize: 14)),
+                const SizedBox(width: DonySpacing.xs),
+                Flexible(
+                  child: Text(
+                    dateText,
+                    overflow: TextOverflow.ellipsis,
+                    style: tt.bodyMedium?.copyWith(
+                      color: date == null ? cs.onSurfaceVariant : cs.onSurface,
+                      fontWeight: date == null
+                          ? FontWeight.w500
+                          : FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
-      ),
-    ),
         DonyFieldError(message: errorText, textKey: const Key('date-error')),
       ],
     );
@@ -485,12 +474,11 @@ class _ToleranceField extends StatelessWidget {
             children: [
               for (final t in [0, 1, 2, 3, 5, 7])
                 ListTile(
-                  title: Text(t == 0
-                      ? 'Date exacte'
-                      : '± $t ${t > 1 ? "jours" : "jour"}'),
+                  title: Text(
+                    t == 0 ? 'Date exacte' : '± $t ${t > 1 ? "jours" : "jour"}',
+                  ),
                   trailing: t == tolerance
-                      ? const DonyIcon('check',
-                          color: DonyColors.primary)
+                      ? const DonyIcon('check', color: DonyColors.primary)
                       : null,
                   onTap: () {
                     onChanged(t);
@@ -540,9 +528,7 @@ class OptionButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: selected ? cs.primary : cs.surface,
           borderRadius: BorderRadius.circular(DonyRadius.lg),
-          border: Border.all(
-            color: selected ? cs.primary : cs.outline,
-          ),
+          border: Border.all(color: selected ? cs.primary : cs.outline),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

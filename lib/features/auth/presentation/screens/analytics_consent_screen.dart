@@ -168,7 +168,7 @@ class _Buttons extends StatelessWidget {
         properties: {'granted': granted},
       ),
     );
-    if (context.mounted) context.go('/auth/referral-code');
+    if (context.mounted) context.go('/auth/currency-selection');
   }
 
   @override

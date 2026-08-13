@@ -11,8 +11,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockCitySearchBloc
-    extends MockBloc<CitySearchEvent, CitySearchState>
+class MockCitySearchBloc extends MockBloc<CitySearchEvent, CitySearchState>
     implements CitySearchBloc {}
 
 void main() {
@@ -60,29 +59,33 @@ void main() {
     await tester.pumpWidget(buildWidget(initialValue: 'Paris'));
     await tester.pump();
     expect(find.text('Paris'), findsOneWidget);
-    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'x'), findsOneWidget);
+    expect(
+      find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'x'),
+      findsOneWidget,
+    );
   });
 
   testWidgets(
-      'changement externe d\'initialValue resynchronise le champ (application d\'un modèle)',
-      (tester) async {
-    await tester.pumpWidget(buildWidget(initialValue: null));
-    await tester.pump();
-    expect(find.text('Paris'), findsNothing);
+    'changement externe d\'initialValue resynchronise le champ (application d\'un modèle)',
+    (tester) async {
+      await tester.pumpWidget(buildWidget(initialValue: null));
+      await tester.pump();
+      expect(find.text('Paris'), findsNothing);
 
-    // Simule l'application d'un modèle : le parent reconstruit le champ
-    // avec un nouvel initialValue (même position → didUpdateWidget).
-    await tester.pumpWidget(buildWidget(initialValue: 'Paris'));
-    await tester.pump();
+      // Simule l'application d'un modèle : le parent reconstruit le champ
+      // avec un nouvel initialValue (même position → didUpdateWidget).
+      await tester.pumpWidget(buildWidget(initialValue: 'Paris'));
+      await tester.pump();
 
-    final tf = tester.widget<TextField>(find.byType(TextField));
-    expect(tf.controller?.text, 'Paris');
-    expect(find.text('Paris'), findsOneWidget);
-  });
+      final tf = tester.widget<TextField>(find.byType(TextField));
+      expect(tf.controller?.text, 'Paris');
+      expect(find.text('Paris'), findsOneWidget);
+    },
+  );
 
-  testWidgets(
-      'saisie en cours non écrasée si initialValue inchangé',
-      (tester) async {
+  testWidgets('saisie en cours non écrasée si initialValue inchangé', (
+    tester,
+  ) async {
     await tester.pumpWidget(buildWidget(initialValue: null));
     await tester.enterText(find.byType(TextField), 'Lyon');
     await tester.pump();
@@ -94,9 +97,11 @@ void main() {
   });
 
   testWidgets('prefixIcon affiché si fourni', (tester) async {
-    await tester.pumpWidget(buildWidget(
-      prefixIcon: const Icon(Icons.flight, key: Key('prefix-icon')),
-    ));
+    await tester.pumpWidget(
+      buildWidget(
+        prefixIcon: const Icon(Icons.flight, key: Key('prefix-icon')),
+      ),
+    );
     await tester.pump();
     expect(find.byKey(const Key('prefix-icon')), findsOneWidget);
   });
@@ -122,18 +127,21 @@ void main() {
     expect(find.text('Sénégal'), findsOneWidget);
   });
 
-  testWidgets('Loaded avec liste vide n\'affiche pas de résultats',
-      (tester) async {
+  testWidgets('Loaded avec liste vide n\'affiche pas de résultats', (
+    tester,
+  ) async {
     when(() => mockBloc.state).thenReturn(const CitySearchLoaded([]));
     await tester.pumpWidget(buildWidget());
     await tester.pump(const Duration(milliseconds: 250));
     expect(find.byType(ListTile), findsNothing);
   });
 
-  testWidgets('état Error n\'affiche pas de liste ni de progressbar',
-      (tester) async {
-    when(() => mockBloc.state)
-        .thenReturn(CitySearchError(NetworkException('network error')));
+  testWidgets('état Error n\'affiche pas de liste ni de progressbar', (
+    tester,
+  ) async {
+    when(
+      () => mockBloc.state,
+    ).thenReturn(CitySearchError(NetworkException('network error')));
     await tester.pumpWidget(buildWidget());
     await tester.pump();
     expect(find.byType(LinearProgressIndicator), findsNothing);
@@ -142,8 +150,9 @@ void main() {
 
   // ── Loading ────────────────────────────────────────────────────────────────
 
-  testWidgets('affiche LinearProgressIndicator quand état est Loading',
-      (tester) async {
+  testWidgets('affiche LinearProgressIndicator quand état est Loading', (
+    tester,
+  ) async {
     when(() => mockBloc.state).thenReturn(const CitySearchLoading());
 
     await tester.pumpWidget(buildWidget());
@@ -153,8 +162,9 @@ void main() {
 
   // ── Sélection d'une ville ──────────────────────────────────────────────────
 
-  testWidgets('appelle onSelected quand on tape sur un résultat',
-      (tester) async {
+  testWidgets('appelle onSelected quand on tape sur un résultat', (
+    tester,
+  ) async {
     CityModel? selected;
     const city = CityModel(
       name: 'Dakar',
@@ -172,8 +182,9 @@ void main() {
     expect(selected?.name, 'Dakar');
   });
 
-  testWidgets('sélection d\'une ville pré-remplit le champ avec son nom',
-      (tester) async {
+  testWidgets('sélection d\'une ville pré-remplit le champ avec son nom', (
+    tester,
+  ) async {
     const city = CityModel(
       name: 'Abidjan',
       countryCode: 'CI',
@@ -193,8 +204,9 @@ void main() {
 
   // ── Frappe / onChanged ────────────────────────────────────────────────────
 
-  testWidgets('frappe dans le champ dispatche CitySearchQueryChanged',
-      (tester) async {
+  testWidgets('frappe dans le champ dispatche CitySearchQueryChanged', (
+    tester,
+  ) async {
     await tester.pumpWidget(buildWidget());
     await tester.tap(find.byType(TextField));
     await tester.pump();
@@ -202,8 +214,7 @@ void main() {
     await tester.enterText(find.byType(TextField), 'Pa');
     await tester.pump();
 
-    final captured =
-        verify(() => mockBloc.add(captureAny())).captured;
+    final captured = verify(() => mockBloc.add(captureAny())).captured;
     expect(
       captured.any((e) => e is CitySearchQueryChanged && e.query == 'Pa'),
       isTrue,
@@ -214,12 +225,15 @@ void main() {
     await tester.pumpWidget(buildWidget());
     await tester.enterText(find.byType(TextField), 'Lyon');
     await tester.pump();
-    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'x'), findsOneWidget);
+    expect(
+      find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'x'),
+      findsOneWidget,
+    );
   });
 
-  testWidgets(
-      'bouton clear efface le texte et dispatche CitySearchCleared',
-      (tester) async {
+  testWidgets('bouton clear efface le texte et dispatche CitySearchCleared', (
+    tester,
+  ) async {
     await tester.pumpWidget(buildWidget());
     await tester.enterText(find.byType(TextField), 'Lyon');
     await tester.pump();
@@ -227,20 +241,25 @@ void main() {
     // Effacer les appels précédents (onChanged a déjà dispatché QueryChanged)
     clearInteractions(mockBloc);
 
-    await tester.tap(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'x'));
+    await tester.tap(
+      find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'x'),
+    );
     await tester.pump();
 
-    final captured =
-        verify(() => mockBloc.add(captureAny())).captured;
+    final captured = verify(() => mockBloc.add(captureAny())).captured;
     expect(captured.any((e) => e is CitySearchCleared), isTrue);
     // Le champ doit être vide (pas d'icône close)
-    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'x'), findsNothing);
+    expect(
+      find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'x'),
+      findsNothing,
+    );
   });
 
   // ── Focus ─────────────────────────────────────────────────────────────────
 
-  testWidgets('focus et unfocus du champ ne provoquent pas d\'erreur',
-      (tester) async {
+  testWidgets('focus et unfocus du champ ne provoquent pas d\'erreur', (
+    tester,
+  ) async {
     await tester.pumpWidget(buildWidget());
     await tester.tap(find.byType(TextField));
     await tester.pump();
@@ -251,37 +270,38 @@ void main() {
   });
 
   testWidgets(
-      'focus dans un Scrollable ancêtre déclenche ensureVisible sans exception',
-      (tester) async {
-    // Construit le widget DANS un SingleChildScrollView pour que
-    // Scrollable.maybeOf() puisse résoudre un ancêtre scrollable,
-    // ce qui valide le chemin focus → delayed callback → ensureVisible.
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: BlocProvider<CitySearchBloc>.value(
-            value: mockBloc,
-            child: SingleChildScrollView(
-              child: CityAutocompleteField(
-                label: 'Ville de départ',
-                onSelected: (_) {},
+    'focus dans un Scrollable ancêtre déclenche ensureVisible sans exception',
+    (tester) async {
+      // Construit le widget DANS un SingleChildScrollView pour que
+      // Scrollable.maybeOf() puisse résoudre un ancêtre scrollable,
+      // ce qui valide le chemin focus → delayed callback → ensureVisible.
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: BlocProvider<CitySearchBloc>.value(
+              value: mockBloc,
+              child: SingleChildScrollView(
+                child: CityAutocompleteField(
+                  label: 'Ville de départ',
+                  onSelected: (_) {},
+                ),
               ),
             ),
           ),
         ),
-      ),
-    );
+      );
 
-    // Acquiert le focus sur le champ
-    await tester.tap(find.byType(TextField));
-    await tester.pump();
+      // Acquiert le focus sur le champ
+      await tester.tap(find.byType(TextField));
+      await tester.pump();
 
-    // Laisse s'écouler le délai du postFrameCallback (300 ms) + marge
-    await tester.pump(const Duration(milliseconds: 350));
+      // Laisse s'écouler le délai du postFrameCallback (300 ms) + marge
+      await tester.pump(const Duration(milliseconds: 350));
 
-    // Aucune exception ne doit avoir été levée
-    expect(tester.takeException(), isNull);
-  });
+      // Aucune exception ne doit avoir été levée
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   // ── Dispose ───────────────────────────────────────────────────────────────
 

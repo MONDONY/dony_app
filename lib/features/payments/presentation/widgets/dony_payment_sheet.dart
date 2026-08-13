@@ -4,6 +4,7 @@ import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
 import 'package:dony/features/payments/data/payment_gateway.dart';
+import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -114,6 +115,7 @@ class _MainView extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final bloc = context.read<PaymentSheetBloc>();
+    final config = bloc.config;
     final state = context.watch<PaymentSheetBloc>().state;
     final ready = switch (state) {
       final PaymentSheetResolved s => s,
@@ -134,6 +136,11 @@ class _MainView extends StatelessWidget {
         Text(
           contextLabel,
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+        ),
+        const SizedBox(height: DonySpacing.xs),
+        Text(
+          CurrencyFormatter.format(config.amountEur, config.currency),
+          style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w800),
         ),
         const SizedBox(height: DonySpacing.lg),
         if (ready.walletAvailable) ...[

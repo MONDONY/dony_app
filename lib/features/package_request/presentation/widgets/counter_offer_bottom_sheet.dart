@@ -1,3 +1,4 @@
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/design/widgets/dony_bottom_sheet.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
@@ -18,6 +19,7 @@ class CounterOfferBottomSheet {
     double? grossPriceEur,
     bool isTraveler = false,
     int roundsCount = 1,
+    String currency = 'EUR',
   }) {
     final submitNotifier = ValueNotifier<VoidCallback?>(null);
 
@@ -27,10 +29,8 @@ class CounterOfferBottomSheet {
       wrapper: (child) => BlocProvider.value(value: bloc, child: child),
       stickyBottom: ValueListenableBuilder<VoidCallback?>(
         valueListenable: submitNotifier,
-        builder: (_, fn, __) => DonyButton(
-          label: 'Envoyer ma contre-offre',
-          onPressed: fn,
-        ),
+        builder: (_, fn, __) =>
+            DonyButton(label: 'Envoyer ma contre-offre', onPressed: fn),
       ),
       child: _CounterOfferContent(
         bloc: bloc,
@@ -39,8 +39,10 @@ class CounterOfferBottomSheet {
         grossPriceEur: grossPriceEur,
         isTraveler: isTraveler,
         roundsCount: roundsCount,
-        onSubmitReady: (fn) => WidgetsBinding.instance
-            .addPostFrameCallback((_) => submitNotifier.value = fn),
+        currency: currency,
+        onSubmitReady: (fn) => WidgetsBinding.instance.addPostFrameCallback(
+          (_) => submitNotifier.value = fn,
+        ),
       ),
     ).whenComplete(submitNotifier.dispose);
   }
@@ -55,6 +57,7 @@ class _CounterOfferContent extends StatefulWidget {
     this.isTraveler = false,
     required this.roundsCount,
     required this.onSubmitReady,
+    this.currency = 'EUR',
   });
 
   final NegotiationBloc bloc;
@@ -64,6 +67,7 @@ class _CounterOfferContent extends StatefulWidget {
   final bool isTraveler;
   final int roundsCount;
   final void Function(VoidCallback?) onSubmitReady;
+  final String currency;
 
   @override
   State<_CounterOfferContent> createState() => _CounterOfferContentState();
@@ -100,12 +104,13 @@ class _CounterOfferContentState extends State<_CounterOfferContent> {
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
-    widget.bloc.add(NegotiationCounterRequested(
-      threadId: widget.threadId,
-      proposedPriceEur:
-          double.parse(_priceCtrl.text.replaceAll(',', '.')),
-      body: _bodyCtrl.text.trim().isEmpty ? null : _bodyCtrl.text.trim(),
-    ));
+    widget.bloc.add(
+      NegotiationCounterRequested(
+        threadId: widget.threadId,
+        proposedPriceEur: double.parse(_priceCtrl.text.replaceAll(',', '.')),
+        body: _bodyCtrl.text.trim().isEmpty ? null : _bodyCtrl.text.trim(),
+      ),
+    );
     Navigator.of(context, rootNavigator: true).pop();
   }
 
@@ -120,7 +125,7 @@ class _CounterOfferContentState extends State<_CounterOfferContent> {
         children: [
           // Sous-titre : prix actuel (rôle-aware) + round
           Text(
-            '${PriceDisplay.threadPriceLabel(widget.currentPriceEur, widget.grossPriceEur, widget.isTraveler)} · Round ${widget.roundsCount}/5',
+            '${PriceDisplay.threadPriceLabel(widget.currentPriceEur, widget.grossPriceEur, widget.isTraveler, widget.currency)} · Round ${widget.roundsCount}/5',
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
           const SizedBox(height: DonySpacing.xl),
@@ -138,10 +143,9 @@ class _CounterOfferContentState extends State<_CounterOfferContent> {
           // Champ prix — grand format comme maquette
           TextFormField(
             controller: _priceCtrl,
-            keyboardType:
-                const TextInputType.numberWithOptions(decimal: true),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
             inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'[\d,.]'))
+              FilteringTextInputFormatter.allow(RegExp(r'[\d,.]')),
             ],
             autofocus: true,
             style: tt.bodyMedium!.copyWith(
@@ -157,7 +161,7 @@ class _CounterOfferContentState extends State<_CounterOfferContent> {
                 fontWeight: FontWeight.w800,
                 color: cs.onSurfaceVariant.withValues(alpha: 0.4),
               ),
-              suffixText: '€',
+              suffixText: SupportedCurrency.symbolOf(widget.currency),
               suffixStyle: tt.bodyMedium!.copyWith(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
@@ -177,20 +181,19 @@ class _CounterOfferContentState extends State<_CounterOfferContent> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(DonyRadius.md),
-                borderSide:
-                    BorderSide(color: cs.primary, width: 2),
+                borderSide: BorderSide(color: cs.primary, width: 2),
               ),
               errorBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(DonyRadius.md),
-                borderSide:
-                    BorderSide(color: DonyColors.danger500),
+                borderSide: BorderSide(color: DonyColors.danger500),
               ),
             ),
             validator: (v) {
-              final d =
-                  double.tryParse((v ?? '').replaceAll(',', '.'));
+              final d = double.tryParse((v ?? '').replaceAll(',', '.'));
               if (d == null || d <= 0) return 'Valeur invalide';
-              if (d > 500) return 'Maximum 500 €';
+              if (d > 500) {
+                return 'Maximum 500 ${SupportedCurrency.symbolOf(widget.currency)}';
+              }
               return null;
             },
           ),
@@ -211,20 +214,23 @@ class _CounterOfferContentState extends State<_CounterOfferContent> {
             controller: _bodyCtrl,
             maxLines: 3,
             maxLength: 280,
-            buildCounter: (_, {required currentLength, required isFocused, maxLength}) =>
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: Text(
-                    '$currentLength/${maxLength ?? 280}',
-                    style: tt.bodySmall
-                        ?.copyWith(color: cs.onSurfaceVariant),
-                  ),
-                ),
+            buildCounter:
+                (_, {required currentLength, required isFocused, maxLength}) =>
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        '$currentLength/${maxLength ?? 280}',
+                        style: tt.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
             style: tt.bodyLarge,
             decoration: InputDecoration(
               hintText: 'Explique ta proposition…',
-              hintStyle: tt.bodyLarge
-                  ?.copyWith(color: cs.onSurfaceVariant.withValues(alpha: 0.6)),
+              hintStyle: tt.bodyLarge?.copyWith(
+                color: cs.onSurfaceVariant.withValues(alpha: 0.6),
+              ),
               contentPadding: const EdgeInsets.all(DonySpacing.base),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(DonyRadius.md),
@@ -236,8 +242,7 @@ class _CounterOfferContentState extends State<_CounterOfferContent> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(DonyRadius.md),
-                borderSide:
-                    BorderSide(color: cs.primary, width: 2),
+                borderSide: BorderSide(color: cs.primary, width: 2),
               ),
             ),
           ),

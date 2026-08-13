@@ -25,13 +25,17 @@ final _announcementJson = {
 };
 
 Response<dynamic> _ok(dynamic data, String path) => Response(
-      data: data,
-      statusCode: 200,
-      requestOptions: RequestOptions(path: path),
-    );
+  data: data,
+  statusCode: 200,
+  requestOptions: RequestOptions(path: path),
+);
 
 const kPickup = AddressData(label: 'CDG Terminal 2', lat: 49.0097, lng: 2.5479);
-const kDelivery = AddressData(label: 'Aéroport LSS', lat: 14.7397, lng: -17.4902);
+const kDelivery = AddressData(
+  label: 'Aéroport LSS',
+  lat: 14.7397,
+  lng: -17.4902,
+);
 
 void main() {
   late MockApiClient mockClient;
@@ -49,8 +53,9 @@ void main() {
 
   group('createAnnouncement', () {
     test('returns AnnouncementModel on success', () async {
-      when(() => mockDio.post('/announcements', data: any(named: 'data')))
-          .thenAnswer((_) async => _ok(_announcementJson, '/announcements'));
+      when(
+        () => mockDio.post('/announcements', data: any(named: 'data')),
+      ).thenAnswer((_) async => _ok(_announcementJson, '/announcements'));
 
       final result = await datasource.createAnnouncement(
         departureCity: 'Paris',
@@ -70,8 +75,9 @@ void main() {
     });
 
     test('includes optional time/address fields when provided', () async {
-      when(() => mockDio.post('/announcements', data: any(named: 'data')))
-          .thenAnswer((_) async => _ok(_announcementJson, '/announcements'));
+      when(
+        () => mockDio.post('/announcements', data: any(named: 'data')),
+      ).thenAnswer((_) async => _ok(_announcementJson, '/announcements'));
 
       final result = await datasource.createAnnouncement(
         departureCity: 'Paris',
@@ -93,10 +99,11 @@ void main() {
 
     test('sends transportMode wire value in payload', () async {
       Map<String, dynamic>? capturedData;
-      when(() => mockDio.post('/announcements', data: any(named: 'data')))
-          .thenAnswer((inv) async {
-        capturedData = inv.namedArguments[const Symbol('data')]
-            as Map<String, dynamic>;
+      when(
+        () => mockDio.post('/announcements', data: any(named: 'data')),
+      ).thenAnswer((inv) async {
+        capturedData =
+            inv.namedArguments[const Symbol('data')] as Map<String, dynamic>;
         return _ok(_announcementJson, '/announcements');
       });
 
@@ -119,10 +126,11 @@ void main() {
 
     test('includes country codes in payload when provided', () async {
       Map<String, dynamic>? capturedData;
-      when(() => mockDio.post('/announcements', data: any(named: 'data')))
-          .thenAnswer((inv) async {
-        capturedData = inv.namedArguments[const Symbol('data')]
-            as Map<String, dynamic>;
+      when(
+        () => mockDio.post('/announcements', data: any(named: 'data')),
+      ).thenAnswer((inv) async {
+        capturedData =
+            inv.namedArguments[const Symbol('data')] as Map<String, dynamic>;
         return _ok(_announcementJson, '/announcements');
       });
 
@@ -148,10 +156,11 @@ void main() {
 
     test('omits country code keys when null', () async {
       Map<String, dynamic>? capturedData;
-      when(() => mockDio.post('/announcements', data: any(named: 'data')))
-          .thenAnswer((inv) async {
-        capturedData = inv.namedArguments[const Symbol('data')]
-            as Map<String, dynamic>;
+      when(
+        () => mockDio.post('/announcements', data: any(named: 'data')),
+      ).thenAnswer((inv) async {
+        capturedData =
+            inv.namedArguments[const Symbol('data')] as Map<String, dynamic>;
         return _ok(_announcementJson, '/announcements');
       });
 
@@ -178,12 +187,17 @@ void main() {
 
   group('getMyAnnouncements', () {
     test('returns list and totalElements', () async {
-      when(() => mockDio.get('/announcements/my',
-              queryParameters: any(named: 'queryParameters')))
-          .thenAnswer((_) async => _ok({
-                'content': [_announcementJson],
-                'totalElements': 1,
-              }, '/announcements/my'));
+      when(
+        () => mockDio.get(
+          '/announcements/my',
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenAnswer(
+        (_) async => _ok({
+          'content': [_announcementJson],
+          'totalElements': 1,
+        }, '/announcements/my'),
+      );
 
       final result = await datasource.getMyAnnouncements();
 
@@ -192,11 +206,16 @@ void main() {
     });
 
     test('falls back to list length when totalElements missing', () async {
-      when(() => mockDio.get('/announcements/my',
-              queryParameters: any(named: 'queryParameters')))
-          .thenAnswer((_) async => _ok({
-                'content': [_announcementJson, _announcementJson],
-              }, '/announcements/my'));
+      when(
+        () => mockDio.get(
+          '/announcements/my',
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenAnswer(
+        (_) async => _ok({
+          'content': [_announcementJson, _announcementJson],
+        }, '/announcements/my'),
+      );
 
       final result = await datasource.getMyAnnouncements();
 
@@ -204,18 +223,28 @@ void main() {
     });
 
     test('charge toutes les pages quand le total dépasse une page', () async {
-      when(() => mockDio.get('/announcements/my',
-              queryParameters: {'page': 0, 'size': 50}))
-          .thenAnswer((_) async => _ok({
-                'content': List.generate(50, (_) => _announcementJson),
-                'totalElements': 75,
-              }, '/announcements/my'));
-      when(() => mockDio.get('/announcements/my',
-              queryParameters: {'page': 1, 'size': 50}))
-          .thenAnswer((_) async => _ok({
-                'content': List.generate(25, (_) => _announcementJson),
-                'totalElements': 75,
-              }, '/announcements/my'));
+      when(
+        () => mockDio.get(
+          '/announcements/my',
+          queryParameters: {'page': 0, 'size': 50},
+        ),
+      ).thenAnswer(
+        (_) async => _ok({
+          'content': List.generate(50, (_) => _announcementJson),
+          'totalElements': 75,
+        }, '/announcements/my'),
+      );
+      when(
+        () => mockDio.get(
+          '/announcements/my',
+          queryParameters: {'page': 1, 'size': 50},
+        ),
+      ).thenAnswer(
+        (_) async => _ok({
+          'content': List.generate(25, (_) => _announcementJson),
+          'totalElements': 75,
+        }, '/announcements/my'),
+      );
 
       final result = await datasource.getMyAnnouncements();
 
@@ -228,8 +257,9 @@ void main() {
 
   group('getAnnouncementDetail', () {
     test('returns AnnouncementModel by id', () async {
-      when(() => mockDio.get('/announcements/ann-001'))
-          .thenAnswer((_) async => _ok(_announcementJson, '/announcements/ann-001'));
+      when(() => mockDio.get('/announcements/ann-001')).thenAnswer(
+        (_) async => _ok(_announcementJson, '/announcements/ann-001'),
+      );
 
       final result = await datasource.getAnnouncementDetail('ann-001');
 
@@ -240,27 +270,38 @@ void main() {
   // ── unpublishAnnouncement ────────────────────────────────────────────────────
 
   group('unpublishAnnouncement', () {
-    test('POSTs to /announcements/{id}/unpublish and returns AnnouncementModel',
-        () async {
-      when(() => mockDio.post('/announcements/ann-001/unpublish')).thenAnswer(
-          (_) async => _ok(_announcementJson, '/announcements/ann-001/unpublish'));
+    test(
+      'POSTs to /announcements/{id}/unpublish and returns AnnouncementModel',
+      () async {
+        when(() => mockDio.post('/announcements/ann-001/unpublish')).thenAnswer(
+          (_) async =>
+              _ok(_announcementJson, '/announcements/ann-001/unpublish'),
+        );
 
-      final result = await datasource.unpublishAnnouncement('ann-001');
+        final result = await datasource.unpublishAnnouncement('ann-001');
 
-      expect(result.id, 'ann-001');
-      verify(() => mockDio.post('/announcements/ann-001/unpublish')).called(1);
-    });
+        expect(result.id, 'ann-001');
+        verify(
+          () => mockDio.post('/announcements/ann-001/unpublish'),
+        ).called(1);
+      },
+    );
   });
 
   // ── searchAnnouncements ──────────────────────────────────────────────────────
 
   group('searchAnnouncements', () {
     test('returns list of announcements', () async {
-      when(() => mockDio.get('/announcements',
-              queryParameters: any(named: 'queryParameters')))
-          .thenAnswer((_) async => _ok({
-                'content': [_announcementJson],
-              }, '/announcements'));
+      when(
+        () => mockDio.get(
+          '/announcements',
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenAnswer(
+        (_) async => _ok({
+          'content': [_announcementJson],
+        }, '/announcements'),
+      );
 
       final results = await datasource.searchAnnouncements(
         departureCity: 'Paris',
@@ -271,9 +312,12 @@ void main() {
     });
 
     test('uses optional date filters when provided', () async {
-      when(() => mockDio.get('/announcements',
-              queryParameters: any(named: 'queryParameters')))
-          .thenAnswer((_) async => _ok({'content': []}, '/announcements'));
+      when(
+        () => mockDio.get(
+          '/announcements',
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenAnswer((_) async => _ok({'content': []}, '/announcements'));
 
       final results = await datasource.searchAnnouncements(
         departureDateFrom: DateTime(2024, 6, 1),
@@ -285,55 +329,78 @@ void main() {
     });
 
     test('sends urgent=true when urgent: true', () async {
-      when(() => mockDio.get('/announcements',
-              queryParameters: any(named: 'queryParameters')))
-          .thenAnswer((_) async => _ok({'content': []}, '/announcements'));
+      when(
+        () => mockDio.get(
+          '/announcements',
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenAnswer((_) async => _ok({'content': []}, '/announcements'));
 
       await datasource.searchAnnouncements(urgent: true);
 
-      final captured = verify(() => mockDio.get('/announcements',
-              queryParameters: captureAny(named: 'queryParameters')))
-          .captured
-          .single as Map<String, dynamic>;
+      final captured =
+          verify(
+                () => mockDio.get(
+                  '/announcements',
+                  queryParameters: captureAny(named: 'queryParameters'),
+                ),
+              ).captured.single
+              as Map<String, dynamic>;
       expect(captured['urgent'], true);
     });
 
-    test('omits urgent param when urgent is false or null (never sends urgent=false)',
-        () async {
-      when(() => mockDio.get('/announcements',
-              queryParameters: any(named: 'queryParameters')))
-          .thenAnswer((_) async => _ok({'content': []}, '/announcements'));
+    test(
+      'omits urgent param when urgent is false or null (never sends urgent=false)',
+      () async {
+        when(
+          () => mockDio.get(
+            '/announcements',
+            queryParameters: any(named: 'queryParameters'),
+          ),
+        ).thenAnswer((_) async => _ok({'content': []}, '/announcements'));
 
-      await datasource.searchAnnouncements(urgent: false);
-      await datasource.searchAnnouncements();
+        await datasource.searchAnnouncements(urgent: false);
+        await datasource.searchAnnouncements();
 
-      final calls = verify(() => mockDio.get('/announcements',
-              queryParameters: captureAny(named: 'queryParameters')))
-          .captured;
-      for (final c in calls) {
-        expect((c as Map<String, dynamic>).containsKey('urgent'), isFalse);
-      }
-    });
+        final calls = verify(
+          () => mockDio.get(
+            '/announcements',
+            queryParameters: captureAny(named: 'queryParameters'),
+          ),
+        ).captured;
+        for (final c in calls) {
+          expect((c as Map<String, dynamic>).containsKey('urgent'), isFalse);
+        }
+      },
+    );
   });
 
   // ── countAnnouncements ───────────────────────────────────────────────────────
 
   group('countAnnouncements', () {
     void stubCount(Map<String, dynamic> body) {
-      when(() => mockDio.get<Map<String, dynamic>>('/announcements',
-              queryParameters: any(named: 'queryParameters')))
-          .thenAnswer((_) async => Response<Map<String, dynamic>>(
-                data: body,
-                statusCode: 200,
-                requestOptions: RequestOptions(path: '/announcements'),
-              ));
+      when(
+        () => mockDio.get<Map<String, dynamic>>(
+          '/announcements',
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenAnswer(
+        (_) async => Response<Map<String, dynamic>>(
+          data: body,
+          statusCode: 200,
+          requestOptions: RequestOptions(path: '/announcements'),
+        ),
+      );
     }
 
     Map<String, dynamic> capturedQuery() =>
-        verify(() => mockDio.get<Map<String, dynamic>>('/announcements',
-                queryParameters: captureAny(named: 'queryParameters')))
-            .captured
-            .single as Map<String, dynamic>;
+        verify(
+              () => mockDio.get<Map<String, dynamic>>(
+                '/announcements',
+                queryParameters: captureAny(named: 'queryParameters'),
+              ),
+            ).captured.single
+            as Map<String, dynamic>;
 
     test('tape GET /announcements avec une page de taille 1', () async {
       stubCount({'content': <dynamic>[], 'totalElements': 42});
@@ -347,7 +414,10 @@ void main() {
     });
 
     test('renvoie totalElements et non la taille du content', () async {
-      stubCount({'content': <dynamic>[_announcementJson], 'totalElements': 42});
+      stubCount({
+        'content': <dynamic>[_announcementJson],
+        'totalElements': 42,
+      });
 
       final total = await datasource.countAnnouncements();
 
@@ -401,52 +471,63 @@ void main() {
 
   group('deleteAnnouncement', () {
     test('calls DELETE and completes', () async {
-      when(() => mockDio.delete('/announcements/ann-001'))
-          .thenAnswer((_) async => _ok(null, '/announcements/ann-001'));
+      when(
+        () => mockDio.delete('/announcements/ann-001'),
+      ).thenAnswer((_) async => _ok(null, '/announcements/ann-001'));
 
-      await expectLater(
-          datasource.deleteAnnouncement('ann-001'), completes);
+      await expectLater(datasource.deleteAnnouncement('ann-001'), completes);
     });
   });
 
   // ── openSurplus ──────────────────────────────────────────────────────────────
 
   group('openSurplus', () {
-    test('POSTs to /negotiations/trip/{id}/open-surplus then reloads detail',
-        () async {
-      when(() => mockDio.post(
-                '/negotiations/trip/ann-001/open-surplus',
-                data: any(named: 'data'),
-              ))
-          .thenAnswer((_) async =>
-              _ok(null, '/negotiations/trip/ann-001/open-surplus'));
-      when(() => mockDio.get('/announcements/ann-001')).thenAnswer(
-          (_) async => _ok(_announcementJson, '/announcements/ann-001'));
-
-      final result = await datasource.openSurplus(
-        announcementId: 'ann-001',
-        surplusKg: 8.0,
-        pricePerKg: 7.0,
-      );
-
-      expect(result.id, 'ann-001');
-      final captured = verify(() => mockDio.post(
+    test(
+      'POSTs to /negotiations/trip/{id}/open-surplus then reloads detail',
+      () async {
+        when(
+          () => mockDio.post(
             '/negotiations/trip/ann-001/open-surplus',
-            data: captureAny(named: 'data'),
-          )).captured.single as Map<String, dynamic>;
-      expect(captured['surplusKg'], 8.0);
-      expect(captured['pricePerKg'], 7.0);
-      verify(() => mockDio.get('/announcements/ann-001')).called(1);
-    });
+            data: any(named: 'data'),
+          ),
+        ).thenAnswer(
+          (_) async => _ok(null, '/negotiations/trip/ann-001/open-surplus'),
+        );
+        when(() => mockDio.get('/announcements/ann-001')).thenAnswer(
+          (_) async => _ok(_announcementJson, '/announcements/ann-001'),
+        );
+
+        final result = await datasource.openSurplus(
+          announcementId: 'ann-001',
+          surplusKg: 8.0,
+          pricePerKg: 7.0,
+        );
+
+        expect(result.id, 'ann-001');
+        final captured =
+            verify(
+                  () => mockDio.post(
+                    '/negotiations/trip/ann-001/open-surplus',
+                    data: captureAny(named: 'data'),
+                  ),
+                ).captured.single
+                as Map<String, dynamic>;
+        expect(captured['surplusKg'], 8.0);
+        expect(captured['pricePerKg'], 7.0);
+        verify(() => mockDio.get('/announcements/ann-001')).called(1);
+      },
+    );
   });
 
   // ── updateAnnouncement ───────────────────────────────────────────────────────
 
   group('updateAnnouncement', () {
     test('returns updated AnnouncementModel', () async {
-      when(() => mockDio.put('/announcements/ann-001',
-              data: any(named: 'data')))
-          .thenAnswer((_) async => _ok(_announcementJson, '/announcements/ann-001'));
+      when(
+        () => mockDio.put('/announcements/ann-001', data: any(named: 'data')),
+      ).thenAnswer(
+        (_) async => _ok(_announcementJson, '/announcements/ann-001'),
+      );
 
       final result = await datasource.updateAnnouncement(
         id: 'ann-001',
@@ -466,9 +547,11 @@ void main() {
     });
 
     test('with optional time and address fields', () async {
-      when(() => mockDio.put('/announcements/ann-001',
-              data: any(named: 'data')))
-          .thenAnswer((_) async => _ok(_announcementJson, '/announcements/ann-001'));
+      when(
+        () => mockDio.put('/announcements/ann-001', data: any(named: 'data')),
+      ).thenAnswer(
+        (_) async => _ok(_announcementJson, '/announcements/ann-001'),
+      );
 
       final result = await datasource.updateAnnouncement(
         id: 'ann-001',
@@ -491,11 +574,11 @@ void main() {
 
     test('sends transportMode wire value in payload', () async {
       Map<String, dynamic>? capturedData;
-      when(() => mockDio.put('/announcements/ann-001',
-              data: any(named: 'data')))
-          .thenAnswer((inv) async {
-        capturedData = inv.namedArguments[const Symbol('data')]
-            as Map<String, dynamic>;
+      when(
+        () => mockDio.put('/announcements/ann-001', data: any(named: 'data')),
+      ).thenAnswer((inv) async {
+        capturedData =
+            inv.namedArguments[const Symbol('data')] as Map<String, dynamic>;
         return _ok(_announcementJson, '/announcements/ann-001');
       });
 
@@ -519,11 +602,11 @@ void main() {
 
     test('includes country codes in payload when provided', () async {
       Map<String, dynamic>? capturedData;
-      when(() => mockDio.put('/announcements/ann-001',
-              data: any(named: 'data')))
-          .thenAnswer((inv) async {
-        capturedData = inv.namedArguments[const Symbol('data')]
-            as Map<String, dynamic>;
+      when(
+        () => mockDio.put('/announcements/ann-001', data: any(named: 'data')),
+      ).thenAnswer((inv) async {
+        capturedData =
+            inv.namedArguments[const Symbol('data')] as Map<String, dynamic>;
         return _ok(_announcementJson, '/announcements/ann-001');
       });
 
@@ -550,11 +633,11 @@ void main() {
 
     test('omits country code keys when null', () async {
       Map<String, dynamic>? capturedData;
-      when(() => mockDio.put('/announcements/ann-001',
-              data: any(named: 'data')))
-          .thenAnswer((inv) async {
-        capturedData = inv.namedArguments[const Symbol('data')]
-            as Map<String, dynamic>;
+      when(
+        () => mockDio.put('/announcements/ann-001', data: any(named: 'data')),
+      ).thenAnswer((inv) async {
+        capturedData =
+            inv.namedArguments[const Symbol('data')] as Map<String, dynamic>;
         return _ok(_announcementJson, '/announcements/ann-001');
       });
 

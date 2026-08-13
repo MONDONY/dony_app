@@ -15,8 +15,7 @@ class EscrowExplainerScreen extends StatelessWidget {
     this.bidId,
   });
 
-  String get _amountStr =>
-      amount.toStringAsFixed(2).replaceAll('.', ',');
+  String get _amountStr => amount.toStringAsFixed(2).replaceAll('.', ',');
 
   @override
   Widget build(BuildContext context) {
@@ -26,54 +25,64 @@ class EscrowExplainerScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: const DonyAppBar(title: 'Garde de confiance'),
-      body: Builder(builder: (context) {
-        final h = DonyLayout.hPadding(context);
-        return SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(h, DonySpacing.xl, h, DonySpacing.huge),
-          child: DonyLayout.constrained(
-            context,
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // ── Amount card ──────────────────────────────────────────
-                _AmountCard(amount: _amountStr, travelerName: travelerName),
-
-                const SizedBox(height: DonySpacing.xl),
-
-                // ── How it works ─────────────────────────────────────────
-                Text(
-                  'COMMENT ÇA MARCHE',
-                  style: tt.labelMedium?.copyWith(
-                    color: cs.onSurfaceVariant,
-                    letterSpacing: 0.8,
-                  ),
-                ),
-                const SizedBox(height: DonySpacing.base),
-                _HowItWorksCard(amount: _amountStr, travelerName: travelerName),
-
-                const SizedBox(height: DonySpacing.xl),
-
-                // ── Insurance card ───────────────────────────────────────
-                const _InsuranceCard(),
-
-                const SizedBox(height: DonySpacing.xxl),
-
-                // ── CTA ──────────────────────────────────────────────────
-                DonyButton(
-                  label: 'Voir le suivi',
-                  onPressed: () {
-                    if (bidId != null) {
-                      context.push('/bids/$bidId');
-                    } else {
-                      context.pop();
-                    }
-                  },
-                ),
-              ],
+      body: Builder(
+        builder: (context) {
+          final h = DonyLayout.hPadding(context);
+          return SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(
+              h,
+              DonySpacing.xl,
+              h,
+              DonySpacing.huge,
             ),
-          ),
-        );
-      }),
+            child: DonyLayout.constrained(
+              context,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ── Amount card ──────────────────────────────────────────
+                  _AmountCard(amount: _amountStr, travelerName: travelerName),
+
+                  const SizedBox(height: DonySpacing.xl),
+
+                  // ── How it works ─────────────────────────────────────────
+                  Text(
+                    'COMMENT ÇA MARCHE',
+                    style: tt.labelMedium?.copyWith(
+                      color: cs.onSurfaceVariant,
+                      letterSpacing: 0.8,
+                    ),
+                  ),
+                  const SizedBox(height: DonySpacing.base),
+                  _HowItWorksCard(
+                    amount: _amountStr,
+                    travelerName: travelerName,
+                  ),
+
+                  const SizedBox(height: DonySpacing.xl),
+
+                  // ── Insurance card ───────────────────────────────────────
+                  const _InsuranceCard(),
+
+                  const SizedBox(height: DonySpacing.xxl),
+
+                  // ── CTA ──────────────────────────────────────────────────
+                  DonyButton(
+                    label: 'Voir le suivi',
+                    onPressed: () {
+                      if (bidId != null) {
+                        context.push('/bids/$bidId');
+                      } else {
+                        context.pop();
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }
@@ -107,9 +116,15 @@ class _AmountCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
-              Text(amount, style: tt.displayLarge?.copyWith(color: cs.onSurface)),
+              Text(
+                amount,
+                style: tt.displayLarge?.copyWith(color: cs.onSurface),
+              ),
               const SizedBox(width: DonySpacing.xs),
-              Text(' €', style: tt.headlineMedium?.copyWith(color: cs.onSurface)),
+              Text(
+                ' €',
+                style: tt.headlineMedium?.copyWith(color: cs.onSurface),
+              ),
             ],
           ),
           const SizedBox(height: DonySpacing.xs),
@@ -143,8 +158,7 @@ class _HowItWorksCard extends StatelessWidget {
       const _Step(
         done: true,
         title: 'Ibrahima livre',
-        description:
-            'Il lit le QR à chaque étape. Vous suivez en direct.',
+        description: 'Il lit le QR à chaque étape. Vous suivez en direct.',
       ),
       const _Step(
         done: true,
@@ -171,7 +185,9 @@ class _HowItWorksCard extends StatelessWidget {
             ),
             if (i < steps.length - 1)
               Padding(
-                padding: const EdgeInsets.only(left: DonySpacing.xl + DonySpacing.xs),
+                padding: const EdgeInsets.only(
+                  left: DonySpacing.xl + DonySpacing.xs,
+                ),
                 child: Builder(
                   builder: (context) => Container(
                     width: 2,
@@ -245,7 +261,10 @@ class _StepRow extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(step.title, style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+              Text(
+                step.title,
+                style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+              ),
               const SizedBox(height: DonySpacing.xxs),
               Text(
                 step.description,
@@ -286,7 +305,9 @@ class _InsuranceCard extends StatelessWidget {
               TextSpan(
                 style: tt.bodySmall?.copyWith(color: cs.onSurface),
                 children: const [
-                  TextSpan(text: "Si le colis n'arrive pas, on vous rembourse "),
+                  TextSpan(
+                    text: "Si le colis n'arrive pas, on vous rembourse ",
+                  ),
                   TextSpan(
                     text: 'jusqu\'à 200 €',
                     style: TextStyle(fontWeight: FontWeight.w700),

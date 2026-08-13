@@ -18,9 +18,7 @@ class ArchivedConversationsScreen extends StatelessWidget {
       body: BlocBuilder<ConversationListBloc, ConversationListState>(
         builder: (context, state) {
           if (state is! ConversationListLoaded) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
+            return const Center(child: CircularProgressIndicator());
           }
 
           final archived = state.archivedConversations;
@@ -61,13 +59,10 @@ class _ArchivedTile extends StatelessWidget {
         children: [
           SlidableAction(
             onPressed: (ctx) {
-              ctx
-                  .read<ConversationListBloc>()
-                  .add(ConversationUnarchiveRequested(conversation.id));
-              DonySnackbar.show(
-                ctx,
-                message: 'Conversation désarchivée',
+              ctx.read<ConversationListBloc>().add(
+                ConversationUnarchiveRequested(conversation.id),
               );
+              DonySnackbar.show(ctx, message: 'Conversation désarchivée');
             },
             backgroundColor: cs.primary,
             foregroundColor: cs.onPrimary,

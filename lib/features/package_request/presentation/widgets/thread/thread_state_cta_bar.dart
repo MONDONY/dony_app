@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
@@ -90,17 +91,18 @@ class ThreadStateCtaBar extends StatelessWidget {
           top: false,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(
-                DonySpacing.lg, DonySpacing.md, DonySpacing.lg, DonySpacing.md),
+              DonySpacing.lg,
+              DonySpacing.md,
+              DonySpacing.lg,
+              DonySpacing.md,
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 _buildContent(context),
                 if (thread.canNudge) ...[
                   const SizedBox(height: DonySpacing.sm),
-                  _NudgeButton(
-                    threadId: thread.id,
-                    disabled: actionInProgress,
-                  ),
+                  _NudgeButton(threadId: thread.id, disabled: actionInProgress),
                 ],
               ],
             ),
@@ -149,9 +151,9 @@ class ThreadStateCtaBar extends StatelessWidget {
               onPressed: actionInProgress
                   ? null
                   : () => context.push(
-                        '/negotiations/${thread.id}/link-trip',
-                        extra: thread,
-                      ),
+                      '/negotiations/${thread.id}/link-trip',
+                      extra: thread,
+                    ),
             ),
             const SizedBox(height: 10),
             DonyButton(
@@ -160,9 +162,9 @@ class ThreadStateCtaBar extends StatelessWidget {
               onPressed: actionInProgress
                   ? null
                   : () => context.push(
-                        '/negotiations/${thread.id}/create-dedicated-trip',
-                        extra: thread,
-                      ),
+                      '/negotiations/${thread.id}/create-dedicated-trip',
+                      extra: thread,
+                    ),
             ),
           ],
         );
@@ -170,7 +172,8 @@ class ThreadStateCtaBar extends StatelessWidget {
       case NegotiationThreadStatus.awaitingPayment:
         return _isSender
             ? DonyButton(
-                label: 'Compléter & payer ${PriceDisplay.eur(thread.grossPriceEur ?? PriceDisplay.grossFromNet(thread.currentPriceEur))}',
+                label:
+                    'Compléter & payer ${PriceDisplay.money(thread.grossPriceEur ?? PriceDisplay.grossFromNet(thread.currentPriceEur), thread.currency)}',
                 onPressed: actionInProgress
                     ? null
                     : () => _completeDetailsThenPay(context, thread),
@@ -185,7 +188,8 @@ class ThreadStateCtaBar extends StatelessWidget {
       case NegotiationThreadStatus.accepted:
         // En cash (et autres modes hors Stripe), le paiement se fait en main
         // propre à la remise : ne pas afficher « payée ».
-        final bool paidOnline = thread.paymentMethod == null ||
+        final bool paidOnline =
+            thread.paymentMethod == null ||
             thread.paymentMethod == PaymentMethod.stripe;
         return Column(
           mainAxisSize: MainAxisSize.min,
@@ -193,13 +197,14 @@ class ThreadStateCtaBar extends StatelessWidget {
             ThreadStateBanner(
               iconAsset: 'circle-check',
               tint: kSuccess,
-              message:
-                  paidOnline ? 'Demande acceptée et payée' : 'Demande acceptée',
+              message: paidOnline
+                  ? 'Demande acceptée et payée'
+                  : 'Demande acceptée',
               subtitle: paidOnline
                   ? 'Tu peux passer aux étapes suivantes du suivi.'
                   : thread.paymentMethod == PaymentMethod.cash
-                      ? 'Le paiement se fait en espèces à la remise du colis.'
-                      : 'Le paiement se fait à la remise du colis.',
+                  ? 'Le paiement se fait en espèces à la remise du colis.'
+                  : 'Le paiement se fait à la remise du colis.',
             ),
             // Entrée vers le détail de l'envoi (boutons no-show, suivi…) une fois
             // le bid matérialisé côté back.
@@ -248,9 +253,9 @@ class _NudgeButton extends StatelessWidget {
       icon: Icons.notifications_active_rounded,
       onPressed: disabled
           ? null
-          : () => context
-              .read<NegotiationBloc>()
-              .add(NegotiationNudgeRequested(threadId)),
+          : () => context.read<NegotiationBloc>().add(
+              NegotiationNudgeRequested(threadId),
+            ),
     );
   }
 }
@@ -270,18 +275,20 @@ class _SenderOpenActions extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         DonyButton(
-          label: 'Accepter : Tu paies ${PriceDisplay.eur(thread.grossPriceEur ?? PriceDisplay.grossFromNet(thread.currentPriceEur))}',
+          label:
+              'Accepter : Tu paies ${PriceDisplay.money(thread.grossPriceEur ?? PriceDisplay.grossFromNet(thread.currentPriceEur), thread.currency)}',
           onPressed: actionInProgress
               ? null
               : () => AcceptOfferBottomSheet.show(
-                    context,
-                    bloc: context.read<NegotiationBloc>(),
-                    threadId: thread.id,
-                    priceEur: thread.currentPriceEur,
-                    grossPriceEur: thread.grossPriceEur,
-                    isTraveler: false,
-                    hasLinkedTrip: thread.travelerAnnouncementId != null,
-                  ),
+                  context,
+                  bloc: context.read<NegotiationBloc>(),
+                  threadId: thread.id,
+                  priceEur: thread.currentPriceEur,
+                  grossPriceEur: thread.grossPriceEur,
+                  isTraveler: false,
+                  hasLinkedTrip: thread.travelerAnnouncementId != null,
+                  currency: thread.currency,
+                ),
         ),
         const SizedBox(height: 10),
         Row(
@@ -294,14 +301,15 @@ class _SenderOpenActions extends StatelessWidget {
                   onPressed: actionInProgress
                       ? null
                       : () => CounterOfferBottomSheet.show(
-                            context,
-                            bloc: context.read<NegotiationBloc>(),
-                            threadId: thread.id,
-                            currentPriceEur: thread.currentPriceEur,
-                            grossPriceEur: thread.grossPriceEur,
-                            isTraveler: false,
-                            roundsCount: thread.roundsCount,
-                          ),
+                          context,
+                          bloc: context.read<NegotiationBloc>(),
+                          threadId: thread.id,
+                          currentPriceEur: thread.currentPriceEur,
+                          grossPriceEur: thread.grossPriceEur,
+                          isTraveler: false,
+                          roundsCount: thread.roundsCount,
+                          currency: thread.currency,
+                        ),
                 ),
               ),
               const SizedBox(width: 10),
@@ -313,10 +321,10 @@ class _SenderOpenActions extends StatelessWidget {
                 onPressed: actionInProgress
                     ? null
                     : () => RejectBottomSheet.show(
-                          context,
-                          bloc: context.read<NegotiationBloc>(),
-                          threadId: thread.id,
-                        ),
+                        context,
+                        bloc: context.read<NegotiationBloc>(),
+                        threadId: thread.id,
+                      ),
               ),
             ),
           ],
@@ -343,18 +351,20 @@ class _TravelerOpenActions extends StatelessWidget {
         // Accept button — visible only when backend says canAccept
         if (thread.canAccept) ...[
           DonyButton(
-            label: 'Accepter : Tu reçois ${thread.currentPriceEur.toStringAsFixed(0)} €',
+            label:
+                'Accepter : Tu reçois ${formatPriceIn(thread.currentPriceEur, thread.currency)}',
             onPressed: actionInProgress
                 ? null
                 : () => AcceptOfferBottomSheet.show(
-                      context,
-                      bloc: context.read<NegotiationBloc>(),
-                      threadId: thread.id,
-                      priceEur: thread.currentPriceEur,
-                      grossPriceEur: thread.grossPriceEur,
-                      isTraveler: true,
-                      hasLinkedTrip: thread.travelerAnnouncementId != null,
-                    ),
+                    context,
+                    bloc: context.read<NegotiationBloc>(),
+                    threadId: thread.id,
+                    priceEur: thread.currentPriceEur,
+                    grossPriceEur: thread.grossPriceEur,
+                    isTraveler: true,
+                    hasLinkedTrip: thread.travelerAnnouncementId != null,
+                    currency: thread.currency,
+                  ),
           ),
           const SizedBox(height: 10),
         ],
@@ -367,10 +377,10 @@ class _TravelerOpenActions extends StatelessWidget {
                 onPressed: actionInProgress
                     ? null
                     : () => RejectBottomSheet.show(
-                          context,
-                          bloc: context.read<NegotiationBloc>(),
-                          threadId: thread.id,
-                        ),
+                        context,
+                        bloc: context.read<NegotiationBloc>(),
+                        threadId: thread.id,
+                      ),
               ),
             ),
             if (thread.canCounter) ...[
@@ -381,14 +391,15 @@ class _TravelerOpenActions extends StatelessWidget {
                   onPressed: actionInProgress
                       ? null
                       : () => CounterOfferBottomSheet.show(
-                            context,
-                            bloc: context.read<NegotiationBloc>(),
-                            threadId: thread.id,
-                            currentPriceEur: thread.currentPriceEur,
-                            grossPriceEur: thread.grossPriceEur,
-                            isTraveler: true,
-                            roundsCount: thread.roundsCount,
-                          ),
+                          context,
+                          bloc: context.read<NegotiationBloc>(),
+                          threadId: thread.id,
+                          currentPriceEur: thread.currentPriceEur,
+                          grossPriceEur: thread.grossPriceEur,
+                          isTraveler: true,
+                          roundsCount: thread.roundsCount,
+                          currency: thread.currency,
+                        ),
                 ),
               ),
             ],

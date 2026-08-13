@@ -76,10 +76,7 @@ Widget _host(
 
   return MaterialApp(
     theme: AppTheme.light(),
-    home: BlocProvider<BidBloc>.value(
-      value: bloc,
-      child: child,
-    ),
+    home: BlocProvider<BidBloc>.value(value: bloc, child: child),
   );
 }
 
@@ -110,7 +107,11 @@ void main() {
     '1. PENDING stripe paymentLoaded=true existingPayment=null → "Payer mon envoi"',
     (tester) async {
       final bloc = _MockBidBloc();
-      whenListen<BidState>(bloc, const Stream.empty(), initialState: BidInitial());
+      whenListen<BidState>(
+        bloc,
+        const Stream.empty(),
+        initialState: BidInitial(),
+      );
 
       await tester.pumpWidget(
         _host(
@@ -126,116 +127,125 @@ void main() {
   );
 
   // Test 2: PENDING cash → pas de 'Payer mon envoi'
-  testWidgets(
-    '2. PENDING cash → pas de "Payer mon envoi"',
-    (tester) async {
-      final bloc = _MockBidBloc();
-      whenListen<BidState>(bloc, const Stream.empty(), initialState: BidInitial());
+  testWidgets('2. PENDING cash → pas de "Payer mon envoi"', (tester) async {
+    final bloc = _MockBidBloc();
+    whenListen<BidState>(
+      bloc,
+      const Stream.empty(),
+      initialState: BidInitial(),
+    );
 
-      await tester.pumpWidget(
-        _host(
-          bloc,
-          _bid(status: 'PENDING', paymentMethod: BidPaymentMethod.cash),
-          paymentLoaded: true,
-        ),
-      );
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(
+      _host(
+        bloc,
+        _bid(status: 'PENDING', paymentMethod: BidPaymentMethod.cash),
+        paymentLoaded: true,
+      ),
+    );
+    await tester.pumpAndSettle();
 
-      expect(find.text('Payer mon envoi'), findsNothing);
-    },
-  );
+    expect(find.text('Payer mon envoi'), findsNothing);
+  });
 
   // Test 3: ACCEPTED cash → 'Afficher le QR de remise'
-  testWidgets(
-    '3. ACCEPTED cash → "Afficher le QR de remise"',
-    (tester) async {
-      final bloc = _MockBidBloc();
-      whenListen<BidState>(bloc, const Stream.empty(), initialState: BidInitial());
+  testWidgets('3. ACCEPTED cash → "Afficher le QR de remise"', (tester) async {
+    final bloc = _MockBidBloc();
+    whenListen<BidState>(
+      bloc,
+      const Stream.empty(),
+      initialState: BidInitial(),
+    );
 
-      await tester.pumpWidget(
-        _host(
-          bloc,
-          _bid(status: 'ACCEPTED', paymentMethod: BidPaymentMethod.cash),
-          paymentLoaded: true,
-        ),
-      );
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(
+      _host(
+        bloc,
+        _bid(status: 'ACCEPTED', paymentMethod: BidPaymentMethod.cash),
+        paymentLoaded: true,
+      ),
+    );
+    await tester.pumpAndSettle();
 
-      expect(find.text('Afficher le QR de remise'), findsOneWidget);
-    },
-  );
+    expect(find.text('Afficher le QR de remise'), findsOneWidget);
+  });
 
   // Test 4: IN_TRANSIT → 'Suivi du colis'
-  testWidgets(
-    '4. IN_TRANSIT → "Suivi du colis"',
-    (tester) async {
-      final bloc = _MockBidBloc();
-      whenListen<BidState>(bloc, const Stream.empty(), initialState: BidInitial());
+  testWidgets('4. IN_TRANSIT → "Suivi du colis"', (tester) async {
+    final bloc = _MockBidBloc();
+    whenListen<BidState>(
+      bloc,
+      const Stream.empty(),
+      initialState: BidInitial(),
+    );
 
-      await tester.pumpWidget(
-        _host(
-          bloc,
-          _bid(status: 'IN_TRANSIT'),
-          paymentLoaded: true,
-        ),
-      );
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(
+      _host(bloc, _bid(status: 'IN_TRANSIT'), paymentLoaded: true),
+    );
+    await tester.pumpAndSettle();
 
-      expect(find.text('Suivi du colis'), findsOneWidget);
-    },
-  );
+    expect(find.text('Suivi du colis'), findsOneWidget);
+  });
 
   // Test 5: COMPLETED non noté → 'Noter le voyageur'
-  testWidgets(
-    '5. COMPLETED senderHasRated=false → "Noter le voyageur"',
-    (tester) async {
-      final bloc = _MockBidBloc();
-      whenListen<BidState>(bloc, const Stream.empty(), initialState: BidInitial());
+  testWidgets('5. COMPLETED senderHasRated=false → "Noter le voyageur"', (
+    tester,
+  ) async {
+    final bloc = _MockBidBloc();
+    whenListen<BidState>(
+      bloc,
+      const Stream.empty(),
+      initialState: BidInitial(),
+    );
 
-      await tester.pumpWidget(
-        _host(
-          bloc,
-          _bid(status: 'COMPLETED', senderHasRated: false),
-          paymentLoaded: true,
-        ),
-      );
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(
+      _host(
+        bloc,
+        _bid(status: 'COMPLETED', senderHasRated: false),
+        paymentLoaded: true,
+      ),
+    );
+    await tester.pumpAndSettle();
 
-      expect(find.text('Noter le voyageur'), findsOneWidget);
-    },
-  );
+    expect(find.text('Noter le voyageur'), findsOneWidget);
+  });
 
   // Test 6: COMPLETED noté → aucun DonyButton
-  testWidgets(
-    '6. COMPLETED senderHasRated=true → aucun bouton visible',
-    (tester) async {
-      final bloc = _MockBidBloc();
-      whenListen<BidState>(bloc, const Stream.empty(), initialState: BidInitial());
+  testWidgets('6. COMPLETED senderHasRated=true → aucun bouton visible', (
+    tester,
+  ) async {
+    final bloc = _MockBidBloc();
+    whenListen<BidState>(
+      bloc,
+      const Stream.empty(),
+      initialState: BidInitial(),
+    );
 
-      await tester.pumpWidget(
-        _host(
-          bloc,
-          _bid(status: 'COMPLETED', senderHasRated: true),
-          paymentLoaded: true,
-        ),
-      );
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(
+      _host(
+        bloc,
+        _bid(status: 'COMPLETED', senderHasRated: true),
+        paymentLoaded: true,
+      ),
+    );
+    await tester.pumpAndSettle();
 
-      // No action button text should be present
-      expect(find.text('Payer mon envoi'), findsNothing);
-      expect(find.text('Afficher le QR de remise'), findsNothing);
-      expect(find.text('Suivi du colis'), findsNothing);
-      expect(find.text('Noter le voyageur'), findsNothing);
-      expect(find.text('Supprimer cette demande'), findsNothing);
-    },
-  );
+    // No action button text should be present
+    expect(find.text('Payer mon envoi'), findsNothing);
+    expect(find.text('Afficher le QR de remise'), findsNothing);
+    expect(find.text('Suivi du colis'), findsNothing);
+    expect(find.text('Noter le voyageur'), findsNothing);
+    expect(find.text('Supprimer cette demande'), findsNothing);
+  });
 
   // Test 8: PENDING stripe paymentLoaded=false → placeholder loading, aucun DonyButton
   testWidgets(
     '8. PENDING stripe paymentLoaded=false → CircularProgressIndicator, aucun DonyButton',
     (tester) async {
       final bloc = _MockBidBloc();
-      whenListen<BidState>(bloc, const Stream.empty(), initialState: BidInitial());
+      whenListen<BidState>(
+        bloc,
+        const Stream.empty(),
+        initialState: BidInitial(),
+      );
 
       await tester.pumpWidget(
         _host(
@@ -265,14 +275,14 @@ void main() {
     '7. CANCELLED → "Supprimer cette demande", tap → dialog → "Supprimer" → BidDeleteRequested dispatched once',
     (tester) async {
       final bloc = _MockBidBloc();
-      whenListen<BidState>(bloc, const Stream.empty(), initialState: BidInitial());
+      whenListen<BidState>(
+        bloc,
+        const Stream.empty(),
+        initialState: BidInitial(),
+      );
 
       await tester.pumpWidget(
-        _host(
-          bloc,
-          _bid(status: 'CANCELLED'),
-          paymentLoaded: true,
-        ),
+        _host(bloc, _bid(status: 'CANCELLED'), paymentLoaded: true),
       );
       await tester.pumpAndSettle();
 
@@ -299,14 +309,21 @@ void main() {
     '9. ACCEPTED stripe paymentLoaded=true existingPayment≠null → EscrowBadge + "Afficher le QR de remise"',
     (tester) async {
       final bloc = _MockBidBloc();
-      whenListen<BidState>(bloc, const Stream.empty(), initialState: BidInitial());
+      whenListen<BidState>(
+        bloc,
+        const Stream.empty(),
+        initialState: BidInitial(),
+      );
 
       await tester.pumpWidget(
         _host(
           bloc,
           _bid(status: 'ACCEPTED', paymentMethod: BidPaymentMethod.stripe),
           paymentLoaded: true,
-          existingPayment: _payment(status: PaymentStatus.escrow, amount: 182.0),
+          existingPayment: _payment(
+            status: PaymentStatus.escrow,
+            amount: 182.0,
+          ),
         ),
       );
       await tester.pumpAndSettle();
@@ -323,14 +340,21 @@ void main() {
     '10. PENDING stripe paymentLoaded=true existingPayment≠null → EscrowBadge présent, aucun DonyButton',
     (tester) async {
       final bloc = _MockBidBloc();
-      whenListen<BidState>(bloc, const Stream.empty(), initialState: BidInitial());
+      whenListen<BidState>(
+        bloc,
+        const Stream.empty(),
+        initialState: BidInitial(),
+      );
 
       await tester.pumpWidget(
         _host(
           bloc,
           _bid(status: 'PENDING', paymentMethod: BidPaymentMethod.stripe),
           paymentLoaded: true,
-          existingPayment: _payment(status: PaymentStatus.escrow, amount: 182.0),
+          existingPayment: _payment(
+            status: PaymentStatus.escrow,
+            amount: 182.0,
+          ),
         ),
       );
       await tester.pumpAndSettle();
@@ -350,16 +374,13 @@ void main() {
   // ── Tests hasAction() static method ──────────────────────────────────────────
 
   group('hasAction() static', () {
-    test(
-      'PENDING_CONFIRMATION → false (hero handles it)',
-      () {
-        final bid = _bid(
-          status: 'ACCEPTED',
-          cancellationNoShowStatus: 'PENDING_CONFIRMATION',
-        );
-        expect(SenderStickyBar.hasAction(bid), isFalse);
-      },
-    );
+    test('PENDING_CONFIRMATION → false (hero handles it)', () {
+      final bid = _bid(
+        status: 'ACCEPTED',
+        cancellationNoShowStatus: 'PENDING_CONFIRMATION',
+      );
+      expect(SenderStickyBar.hasAction(bid), isFalse);
+    });
 
     test('PENDING stripe → true', () {
       final bid = _bid(
@@ -370,10 +391,7 @@ void main() {
     });
 
     test('PENDING cash → false', () {
-      final bid = _bid(
-        status: 'PENDING',
-        paymentMethod: BidPaymentMethod.cash,
-      );
+      final bid = _bid(status: 'PENDING', paymentMethod: BidPaymentMethod.cash);
       expect(SenderStickyBar.hasAction(bid), isFalse);
     });
 
@@ -438,7 +456,10 @@ void main() {
     test('AWAITING_PAYMENT stripe → true', () {
       expect(
         SenderStickyBar.hasAction(
-          _bid(status: 'AWAITING_PAYMENT', paymentMethod: BidPaymentMethod.stripe),
+          _bid(
+            status: 'AWAITING_PAYMENT',
+            paymentMethod: BidPaymentMethod.stripe,
+          ),
         ),
         isTrue,
       );
@@ -447,7 +468,10 @@ void main() {
     test('AWAITING_PAYMENT cash → false', () {
       expect(
         SenderStickyBar.hasAction(
-          _bid(status: 'AWAITING_PAYMENT', paymentMethod: BidPaymentMethod.cash),
+          _bid(
+            status: 'AWAITING_PAYMENT',
+            paymentMethod: BidPaymentMethod.cash,
+          ),
         ),
         isFalse,
       );
@@ -456,72 +480,76 @@ void main() {
 
   // ── PENDING_CONFIRMATION → SizedBox.shrink (no action) ───────────────────────
 
-  testWidgets(
-    '11. PENDING_CONFIRMATION → SizedBox.shrink (bar invisible)',
-    (tester) async {
-      final bloc = _MockBidBloc();
-      whenListen<BidState>(bloc, const Stream.empty(),
-          initialState: BidInitial());
+  testWidgets('11. PENDING_CONFIRMATION → SizedBox.shrink (bar invisible)', (
+    tester,
+  ) async {
+    final bloc = _MockBidBloc();
+    whenListen<BidState>(
+      bloc,
+      const Stream.empty(),
+      initialState: BidInitial(),
+    );
 
-      await tester.pumpWidget(
-        _host(
-          bloc,
-          _bid(
-            status: 'ACCEPTED',
-            cancellationNoShowStatus: 'PENDING_CONFIRMATION',
-          ),
-          paymentLoaded: true,
+    await tester.pumpWidget(
+      _host(
+        bloc,
+        _bid(
+          status: 'ACCEPTED',
+          cancellationNoShowStatus: 'PENDING_CONFIRMATION',
         ),
-      );
-      await tester.pumpAndSettle();
+        paymentLoaded: true,
+      ),
+    );
+    await tester.pumpAndSettle();
 
-      // Bar must render nothing (SizedBox.shrink)
-      expect(find.text('Payer mon envoi'), findsNothing);
-      expect(find.text('Afficher le QR de remise'), findsNothing);
-      expect(find.text('Suivi du colis'), findsNothing);
-      expect(find.text('Supprimer cette demande'), findsNothing);
-    },
-  );
+    // Bar must render nothing (SizedBox.shrink)
+    expect(find.text('Payer mon envoi'), findsNothing);
+    expect(find.text('Afficher le QR de remise'), findsNothing);
+    expect(find.text('Suivi du colis'), findsNothing);
+    expect(find.text('Supprimer cette demande'), findsNothing);
+  });
 
   // ── HANDED_OVER → "Suivi du colis" ────────────────────────────────────────────
 
-  testWidgets(
-    '12. HANDED_OVER → "Suivi du colis"',
-    (tester) async {
-      final bloc = _MockBidBloc();
-      whenListen<BidState>(bloc, const Stream.empty(),
-          initialState: BidInitial());
+  testWidgets('12. HANDED_OVER → "Suivi du colis"', (tester) async {
+    final bloc = _MockBidBloc();
+    whenListen<BidState>(
+      bloc,
+      const Stream.empty(),
+      initialState: BidInitial(),
+    );
 
-      await tester.pumpWidget(
-        _host(bloc, _bid(status: 'HANDED_OVER'), paymentLoaded: true),
-      );
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(
+      _host(bloc, _bid(status: 'HANDED_OVER'), paymentLoaded: true),
+    );
+    await tester.pumpAndSettle();
 
-      expect(find.text('Suivi du colis'), findsOneWidget);
-    },
-  );
+    expect(find.text('Suivi du colis'), findsOneWidget);
+  });
 
   // ── DELIVERED non noté → 'Noter le voyageur' ──────────────────────────────────
 
-  testWidgets(
-    '13. DELIVERED senderHasRated=false → "Noter le voyageur"',
-    (tester) async {
-      final bloc = _MockBidBloc();
-      whenListen<BidState>(bloc, const Stream.empty(),
-          initialState: BidInitial());
+  testWidgets('13. DELIVERED senderHasRated=false → "Noter le voyageur"', (
+    tester,
+  ) async {
+    final bloc = _MockBidBloc();
+    whenListen<BidState>(
+      bloc,
+      const Stream.empty(),
+      initialState: BidInitial(),
+    );
 
-      await tester.pumpWidget(
-        _host(
-          bloc,
-          _bid(status: 'DELIVERED', senderHasRated: false),
-          paymentLoaded: true,
-        ),
-      );
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(
+      _host(
+        bloc,
+        _bid(status: 'DELIVERED', senderHasRated: false),
+        paymentLoaded: true,
+      ),
+    );
+    await tester.pumpAndSettle();
 
-      expect(find.text('Noter le voyageur'), findsOneWidget);
-    },
-  );
+    expect(find.text('Noter le voyageur'), findsOneWidget);
+  });
 
   // ── delete dialog → 'Annuler' → no event dispatched ──────────────────────────
 
@@ -529,8 +557,11 @@ void main() {
     '14. CANCELLED → dialog "Supprimer cette demande ?" → "Annuler" → aucun BidDeleteRequested',
     (tester) async {
       final bloc = _MockBidBloc();
-      whenListen<BidState>(bloc, const Stream.empty(),
-          initialState: BidInitial());
+      whenListen<BidState>(
+        bloc,
+        const Stream.empty(),
+        initialState: BidInitial(),
+      );
 
       await tester.pumpWidget(
         _host(bloc, _bid(status: 'CANCELLED'), paymentLoaded: true),
@@ -554,60 +585,66 @@ void main() {
 
   // ── REJECTED → "Supprimer cette demande" ─────────────────────────────────────
 
-  testWidgets(
-    '15. REJECTED → "Supprimer cette demande"',
-    (tester) async {
-      final bloc = _MockBidBloc();
-      whenListen<BidState>(bloc, const Stream.empty(),
-          initialState: BidInitial());
+  testWidgets('15. REJECTED → "Supprimer cette demande"', (tester) async {
+    final bloc = _MockBidBloc();
+    whenListen<BidState>(
+      bloc,
+      const Stream.empty(),
+      initialState: BidInitial(),
+    );
 
-      await tester.pumpWidget(
-        _host(bloc, _bid(status: 'REJECTED'), paymentLoaded: true),
-      );
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(
+      _host(bloc, _bid(status: 'REJECTED'), paymentLoaded: true),
+    );
+    await tester.pumpAndSettle();
 
-      expect(find.text('Supprimer cette demande'), findsOneWidget);
-    },
-  );
+    expect(find.text('Supprimer cette demande'), findsOneWidget);
+  });
 
   // ── NO_SHOW → "Supprimer cette demande" ──────────────────────────────────────
 
-  testWidgets(
-    '16. NO_SHOW → "Supprimer cette demande"',
-    (tester) async {
-      final bloc = _MockBidBloc();
-      whenListen<BidState>(bloc, const Stream.empty(),
-          initialState: BidInitial());
+  testWidgets('16. NO_SHOW → "Supprimer cette demande"', (tester) async {
+    final bloc = _MockBidBloc();
+    whenListen<BidState>(
+      bloc,
+      const Stream.empty(),
+      initialState: BidInitial(),
+    );
 
-      await tester.pumpWidget(
-        _host(bloc, _bid(status: 'NO_SHOW'), paymentLoaded: true),
-      );
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(
+      _host(bloc, _bid(status: 'NO_SHOW'), paymentLoaded: true),
+    );
+    await tester.pumpAndSettle();
 
-      expect(find.text('Supprimer cette demande'), findsOneWidget);
-    },
-  );
+    expect(find.text('Supprimer cette demande'), findsOneWidget);
+  });
 
   // Test 20: AWAITING_PAYMENT stripe → "Payer mon envoi" (reprise paiement)
-  testWidgets(
-    '20. AWAITING_PAYMENT stripe → "Payer mon envoi"',
-    (tester) async {
-      final bloc = _MockBidBloc();
-      whenListen<BidState>(bloc, const Stream.empty(), initialState: BidInitial());
+  testWidgets('20. AWAITING_PAYMENT stripe → "Payer mon envoi"', (
+    tester,
+  ) async {
+    final bloc = _MockBidBloc();
+    whenListen<BidState>(
+      bloc,
+      const Stream.empty(),
+      initialState: BidInitial(),
+    );
 
-      await tester.pumpWidget(
-        _host(
-          bloc,
-          _bid(status: 'AWAITING_PAYMENT', paymentMethod: BidPaymentMethod.stripe),
-          paymentLoaded: true,
+    await tester.pumpWidget(
+      _host(
+        bloc,
+        _bid(
+          status: 'AWAITING_PAYMENT',
+          paymentMethod: BidPaymentMethod.stripe,
         ),
-      );
-      await tester.pumpAndSettle();
+        paymentLoaded: true,
+      ),
+    );
+    await tester.pumpAndSettle();
 
-      expect(find.text('Payer mon envoi'), findsOneWidget);
-      expect(find.text('Annuler la demande'), findsOneWidget);
-    },
-  );
+    expect(find.text('Payer mon envoi'), findsOneWidget);
+    expect(find.text('Annuler la demande'), findsOneWidget);
+  });
 
   // Test 21: AWAITING_PAYMENT stripe + paiement PENDING obsolète → bouton présent
   // (ne gate pas sur existingPayment ; pas de badge car badge = PENDING/ACCEPTED)
@@ -615,14 +652,24 @@ void main() {
     '21. AWAITING_PAYMENT stripe existingPayment(PENDING) → "Payer mon envoi", pas de badge',
     (tester) async {
       final bloc = _MockBidBloc();
-      whenListen<BidState>(bloc, const Stream.empty(), initialState: BidInitial());
+      whenListen<BidState>(
+        bloc,
+        const Stream.empty(),
+        initialState: BidInitial(),
+      );
 
       await tester.pumpWidget(
         _host(
           bloc,
-          _bid(status: 'AWAITING_PAYMENT', paymentMethod: BidPaymentMethod.stripe),
+          _bid(
+            status: 'AWAITING_PAYMENT',
+            paymentMethod: BidPaymentMethod.stripe,
+          ),
           paymentLoaded: true,
-          existingPayment: _payment(status: PaymentStatus.pending, amount: 182.0),
+          existingPayment: _payment(
+            status: PaymentStatus.pending,
+            amount: 182.0,
+          ),
         ),
       );
       await tester.pumpAndSettle();
@@ -633,24 +680,27 @@ void main() {
   );
 
   // Test 22: AWAITING_PAYMENT cash → pas de "Payer mon envoi" (barre vide)
-  testWidgets(
-    '22. AWAITING_PAYMENT cash → pas de "Payer mon envoi"',
-    (tester) async {
-      final bloc = _MockBidBloc();
-      whenListen<BidState>(bloc, const Stream.empty(), initialState: BidInitial());
+  testWidgets('22. AWAITING_PAYMENT cash → pas de "Payer mon envoi"', (
+    tester,
+  ) async {
+    final bloc = _MockBidBloc();
+    whenListen<BidState>(
+      bloc,
+      const Stream.empty(),
+      initialState: BidInitial(),
+    );
 
-      await tester.pumpWidget(
-        _host(
-          bloc,
-          _bid(status: 'AWAITING_PAYMENT', paymentMethod: BidPaymentMethod.cash),
-          paymentLoaded: true,
-        ),
-      );
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(
+      _host(
+        bloc,
+        _bid(status: 'AWAITING_PAYMENT', paymentMethod: BidPaymentMethod.cash),
+        paymentLoaded: true,
+      ),
+    );
+    await tester.pumpAndSettle();
 
-      expect(find.text('Payer mon envoi'), findsNothing);
-    },
-  );
+    expect(find.text('Payer mon envoi'), findsNothing);
+  });
 
   // Test 23: AWAITING_PAYMENT stripe → tap "Annuler la demande" → dialog →
   // "Oui, annuler" → BidDeleteRequested dispatché une fois
@@ -658,12 +708,19 @@ void main() {
     '23. AWAITING_PAYMENT → "Annuler la demande" → dialog → "Oui, annuler" → BidDeleteRequested',
     (tester) async {
       final bloc = _MockBidBloc();
-      whenListen<BidState>(bloc, const Stream.empty(), initialState: BidInitial());
+      whenListen<BidState>(
+        bloc,
+        const Stream.empty(),
+        initialState: BidInitial(),
+      );
 
       await tester.pumpWidget(
         _host(
           bloc,
-          _bid(status: 'AWAITING_PAYMENT', paymentMethod: BidPaymentMethod.stripe),
+          _bid(
+            status: 'AWAITING_PAYMENT',
+            paymentMethod: BidPaymentMethod.stripe,
+          ),
           paymentLoaded: true,
         ),
       );
@@ -694,10 +751,16 @@ void main() {
     setUp(() {
       mockTrackingBloc = _MockTrackingBloc();
       mockRatingBloc = _MockRatingBloc();
-      whenListen<TrackingState>(mockTrackingBloc, const Stream.empty(),
-          initialState: TrackingInitial());
-      whenListen<RatingState>(mockRatingBloc, const Stream.empty(),
-          initialState: const RatingInitial());
+      whenListen<TrackingState>(
+        mockTrackingBloc,
+        const Stream.empty(),
+        initialState: TrackingInitial(),
+      );
+      whenListen<RatingState>(
+        mockRatingBloc,
+        const Stream.empty(),
+        initialState: const RatingInitial(),
+      );
 
       // Register mocks in GetIt so the sheets can resolve them.
       if (!getIt.isRegistered<TrackingBloc>()) {
@@ -723,8 +786,11 @@ void main() {
       '17. ACCEPTED cash → tap "Afficher le QR de remise" → onPressed executed',
       (tester) async {
         final bloc = _MockBidBloc();
-        whenListen<BidState>(bloc, const Stream.empty(),
-            initialState: BidInitial());
+        whenListen<BidState>(
+          bloc,
+          const Stream.empty(),
+          initialState: BidInitial(),
+        );
 
         await tester.pumpWidget(
           _host(
@@ -743,23 +809,25 @@ void main() {
 
     // ── HANDED_OVER → tap "Suivi du colis" → onPressed called (lines 196-200)
 
-    testWidgets(
-      '18. HANDED_OVER → tap "Suivi du colis" → onPressed executed',
-      (tester) async {
-        final bloc = _MockBidBloc();
-        whenListen<BidState>(bloc, const Stream.empty(),
-            initialState: BidInitial());
+    testWidgets('18. HANDED_OVER → tap "Suivi du colis" → onPressed executed', (
+      tester,
+    ) async {
+      final bloc = _MockBidBloc();
+      whenListen<BidState>(
+        bloc,
+        const Stream.empty(),
+        initialState: BidInitial(),
+      );
 
-        await tester.pumpWidget(
-          _host(bloc, _bid(status: 'HANDED_OVER'), paymentLoaded: true),
-        );
-        await tester.pumpAndSettle();
+      await tester.pumpWidget(
+        _host(bloc, _bid(status: 'HANDED_OVER'), paymentLoaded: true),
+      );
+      await tester.pumpAndSettle();
 
-        expect(find.text('Suivi du colis'), findsOneWidget);
-        await tester.tap(find.text('Suivi du colis'));
-        await tester.pump();
-      },
-    );
+      expect(find.text('Suivi du colis'), findsOneWidget);
+      await tester.tap(find.text('Suivi du colis'));
+      await tester.pump();
+    });
 
     // ── COMPLETED non noté → tap "Noter le voyageur" → onPressed called (lines 214-218)
 
@@ -767,8 +835,11 @@ void main() {
       '19. COMPLETED senderHasRated=false → tap "Noter le voyageur" → onPressed executed',
       (tester) async {
         final bloc = _MockBidBloc();
-        whenListen<BidState>(bloc, const Stream.empty(),
-            initialState: BidInitial());
+        whenListen<BidState>(
+          bloc,
+          const Stream.empty(),
+          initialState: BidInitial(),
+        );
 
         await tester.pumpWidget(
           _host(

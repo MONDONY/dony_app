@@ -1,4 +1,7 @@
+import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
@@ -86,13 +89,17 @@ class AnnouncementDetailBody extends StatelessWidget {
                 runSpacing: DonySpacing.xs,
                 children: [
                   _HeroChip(
-                    label: DateFormat('EEE d MMM yyyy', 'fr').format(a.departureDate),
+                    label: DateFormat(
+                      'EEE d MMM yyyy',
+                      'fr',
+                    ).format(a.departureDate),
                   ),
                   if (a.transportMode != null)
                     _HeroChip(label: a.transportMode!.label),
                   if (a.departureTime != null)
                     _HeroChip(
-                      label: a.departureTime! +
+                      label:
+                          a.departureTime! +
                           (a.arrivalTime != null ? ' → ${a.arrivalTime}' : ''),
                     ),
                 ],
@@ -128,7 +135,7 @@ class AnnouncementDetailBody extends StatelessWidget {
                 child: _InfoPill(
                   value: a.pricingMode == 'MIXED'
                       ? 'Grille'
-                      : '${a.pricePerKg % 1 == 0 ? a.pricePerKg.toStringAsFixed(0) : a.pricePerKg.toStringAsFixed(1)}€/kg',
+                      : '${formatPriceIn(a.pricePerKg, a.currency)}/kg',
                   label: a.pricingMode == 'MIXED' ? 'tarifaire' : 'prix',
                 ),
               ),
@@ -146,7 +153,10 @@ class AnnouncementDetailBody extends StatelessWidget {
 
         // ── Lieux de remise (orange) ─────────────────────────────────────────
         if (a.pickupAddress != null || a.deliveryAddress != null) ...[
-          const _BSectionTitle(label: 'Lieux de remise', color: Color(0xFFEA580C)),
+          const _BSectionTitle(
+            label: 'Lieux de remise',
+            color: Color(0xFFEA580C),
+          ),
           const SizedBox(height: DonySpacing.xs),
           if (a.pickupAddress != null)
             _BSectionRow(
@@ -171,7 +181,10 @@ class AnnouncementDetailBody extends StatelessWidget {
 
         // ── Fenêtre de remise (sky) — dates complètes ────────────────────────
         if (a.handoverWindowStart != null && a.handoverWindowEnd != null) ...[
-          const _BSectionTitle(label: 'Fenêtre de remise', color: Color(0xFF0284C7)),
+          const _BSectionTitle(
+            label: 'Fenêtre de remise',
+            color: Color(0xFF0284C7),
+          ),
           const SizedBox(height: DonySpacing.xs),
           _BSectionRow(
             iconAsset: 'clock',
@@ -188,7 +201,10 @@ class AnnouncementDetailBody extends StatelessWidget {
 
         // ── Paiements (violet) ───────────────────────────────────────────────
         if (a.acceptedPaymentMethods.isNotEmpty) ...[
-          const _BSectionTitle(label: 'Paiements acceptés', color: Color(0xFF7C3AED)),
+          const _BSectionTitle(
+            label: 'Paiements acceptés',
+            color: Color(0xFF7C3AED),
+          ),
           const SizedBox(height: DonySpacing.xs),
           Wrap(
             spacing: DonySpacing.xs,
@@ -217,7 +233,8 @@ class AnnouncementDetailBody extends StatelessWidget {
           DonyStatusBanner(
             type: DonyStatusBannerType.warning,
             iconAsset: 'triangle-alert',
-            message: 'Trajet en espèces uniquement. Beaucoup d\'expéditeurs '
+            message:
+                'Trajet en espèces uniquement. Beaucoup d\'expéditeurs '
                 'préfèrent payer par carte, activez cette option pour '
                 'augmenter vos chances de recevoir des colis.',
             action: TextButton(
@@ -237,7 +254,9 @@ class AnnouncementDetailBody extends StatelessWidget {
             spacing: DonySpacing.xs,
             runSpacing: DonySpacing.xs,
             children: (a.acceptedContentTypes ?? [])
-                .map((t) => _BChip(label: t, bg: cs.successLight, fg: cs.success))
+                .map(
+                  (t) => _BChip(label: t, bg: cs.successLight, fg: cs.success),
+                )
                 .toList(),
           ),
           const SizedBox(height: DonySpacing.md),
@@ -251,7 +270,9 @@ class AnnouncementDetailBody extends StatelessWidget {
             spacing: DonySpacing.xs,
             runSpacing: DonySpacing.xs,
             children: (a.refusedTypes ?? [])
-                .map((t) => _BChip(label: t, bg: cs.errorContainer, fg: cs.error))
+                .map(
+                  (t) => _BChip(label: t, bg: cs.errorContainer, fg: cs.error),
+                )
                 .toList(),
           ),
           const SizedBox(height: DonySpacing.md),
@@ -259,7 +280,10 @@ class AnnouncementDetailBody extends StatelessWidget {
 
         // ── Note expéditeurs ─────────────────────────────────────────────────
         if (a.description != null && a.description!.isNotEmpty) ...[
-          const _BSectionTitle(label: 'Note aux expéditeurs', color: Color(0xFFB45309)),
+          const _BSectionTitle(
+            label: 'Note aux expéditeurs',
+            color: Color(0xFFB45309),
+          ),
           const SizedBox(height: DonySpacing.xs),
           Container(
             padding: const EdgeInsets.all(DonySpacing.base),
@@ -310,11 +334,7 @@ class _StatusBadge extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: TextStyle(
-          color: fg,
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-        ),
+        style: TextStyle(color: fg, fontSize: 11, fontWeight: FontWeight.w700),
       ),
     );
   }
@@ -402,7 +422,10 @@ class _InfoPill extends StatelessWidget {
           const SizedBox(height: 2),
           Text(
             label,
-            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant, fontSize: 11),
+            style: tt.bodySmall?.copyWith(
+              color: cs.onSurfaceVariant,
+              fontSize: 11,
+            ),
           ),
         ],
       ),
@@ -613,10 +636,7 @@ class _BSectionRow extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 2),
-              Text(
-                value,
-                style: tt.bodySmall?.copyWith(color: cs.onSurface),
-              ),
+              Text(value, style: tt.bodySmall?.copyWith(color: cs.onSurface)),
             ],
           ),
         ),
@@ -645,11 +665,7 @@ class _BChip extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: fg,
-        ),
+        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: fg),
       ),
     );
   }

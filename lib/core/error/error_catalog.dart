@@ -180,6 +180,13 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.search_off_rounded,
     ),
+    'currency-mismatch': ErrorPresentation(
+      title: 'Devise différente',
+      message:
+          'Ce trajet n\'est plus disponible dans ta devise. Change de devise dans Réglages pour le voir.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.currency_exchange_rounded,
+    ),
     'deletion-impossible': ErrorPresentation(
       title: 'Suppression impossible',
       message:

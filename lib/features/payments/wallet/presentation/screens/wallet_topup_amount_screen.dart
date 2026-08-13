@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/currency/active_currency.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_keypad.dart';
@@ -36,7 +38,9 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
       if (!mounted) {
         return;
       }
-      unawaited(getIt<AnalyticsService>().logEvent(AnalyticsEvents.walletTopupStarted));
+      unawaited(
+        getIt<AnalyticsService>().logEvent(AnalyticsEvents.walletTopupStarted),
+      );
     });
   }
 
@@ -44,9 +48,12 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
       _rawAmount.isEmpty ? 0.0 : (double.tryParse(_rawAmount) ?? 0.0);
 
   String get _methodLabel => switch (widget.paymentMethod) {
-        'STRIPE' => 'Carte bancaire',
-        _ => widget.paymentMethod,
-      };
+    'STRIPE' => 'Carte bancaire',
+    _ => widget.paymentMethod,
+  };
+
+  SupportedCurrency get _currency =>
+      ActiveCurrency.current ?? SupportedCurrency.eur;
 
   void _onDigit(String d) {
     // Max 6 chiffres, pas de 0 en tête
@@ -63,9 +70,7 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
     if (_rawAmount.isEmpty) {
       return;
     }
-    setState(
-      () => _rawAmount = _rawAmount.substring(0, _rawAmount.length - 1),
-    );
+    setState(() => _rawAmount = _rawAmount.substring(0, _rawAmount.length - 1));
   }
 
   void _setQuickAmount(int amount) {
@@ -92,6 +97,7 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
       config: PaymentSheetConfig(
         clientSecret: clientSecret,
         amountEur: _amount,
+        currencyCode: _currency.code,
         // Le backend ne déclare pas PayPal sur le PaymentIntent de recharge
         // wallet — le bouton PayPal reste donc masqué (dégradation propre).
         paymentMethodTypes: const [],
@@ -99,36 +105,38 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
       contextLabel: 'Recharge de votre solde Yadony',
       onSuccess: () {
         if (!context.mounted) return;
-        Navigator.of(context).push(MaterialPageRoute(
-          builder: (routeContext) => DonySuccessScreen(
-            mascotteType: DonyMascotteType.securise,
-            title: 'Recharge réussie !',
-            subtitle: 'Ton solde sera crédité dans un instant.',
-            ctaLabel: 'Voir mon solde',
-            onCta: () {
-              Navigator.of(routeContext).pop(); // ferme DonySuccessScreen
-              // pop(true) plutôt que go() : préserve la pile de navigation (le
-              // bouton retour du wallet continue de fonctionner) et signale au
-              // wallet qu'il doit recharger son solde (crédité de façon
-              // asynchrone via webhook).
-              context.pop(true);
-            },
-            // Le bouton fermer (X) par défaut navigue directement vers /home
-            // sans repasser par pop(true) — le wallet, strictement dépendant
-            // du bool renvoyé par le push (`ok != true` → pas de refresh),
-            // resterait alors avec un solde périmé. On capture le router
-            // AVANT les pops (routeContext est dépilé par le premier pop, la
-            // classe de bug est la même que le fix bid-payé feb86b71), puis
-            // on préserve le contrat bool avant de quitter vers /home.
-            onClose: () {
-              final router = GoRouter.of(routeContext);
-              Navigator.of(routeContext).pop();
-              context.pop(true);
-              router.go('/home');
-            },
-            analyticsContext: 'wallet_topup',
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (routeContext) => DonySuccessScreen(
+              mascotteType: DonyMascotteType.securise,
+              title: 'Recharge réussie !',
+              subtitle: 'Ton solde sera crédité dans un instant.',
+              ctaLabel: 'Voir mon solde',
+              onCta: () {
+                Navigator.of(routeContext).pop(); // ferme DonySuccessScreen
+                // pop(true) plutôt que go() : préserve la pile de navigation (le
+                // bouton retour du wallet continue de fonctionner) et signale au
+                // wallet qu'il doit recharger son solde (crédité de façon
+                // asynchrone via webhook).
+                context.pop(true);
+              },
+              // Le bouton fermer (X) par défaut navigue directement vers /home
+              // sans repasser par pop(true) — le wallet, strictement dépendant
+              // du bool renvoyé par le push (`ok != true` → pas de refresh),
+              // resterait alors avec un solde périmé. On capture le router
+              // AVANT les pops (routeContext est dépilé par le premier pop, la
+              // classe de bug est la même que le fix bid-payé feb86b71), puis
+              // on préserve le contrat bool avant de quitter vers /home.
+              onClose: () {
+                final router = GoRouter.of(routeContext);
+                Navigator.of(routeContext).pop();
+                context.pop(true);
+                router.go('/home');
+              },
+              analyticsContext: 'wallet_topup',
+            ),
           ),
-        ));
+        );
       },
     );
   }
@@ -186,19 +194,31 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
                 child: Column(
                   children: [
                     // ── Montant affiché ───────────────────────────────────────
-                    _AmountDisplay(displayAmount: _displayAmount)
+                    _AmountDisplay(
+                          displayAmount: _displayAmount,
+                          currency: _currency,
+                        )
                         .animate()
                         .fadeIn(duration: 250.ms)
                         .slideY(begin: -0.05, curve: Curves.easeOutCubic),
 
                     const SizedBox(height: DonySpacing.xl),
 
+                    Text(
+                      'Le solde Yadony sera crédité en ${_currency.code} après confirmation.',
+                      textAlign: TextAlign.center,
+                      style: tt.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+
                     // ── Raccourcis rapides ────────────────────────────────────
                     _QuickAmountRow(
-                      amounts: _quickAmounts,
-                      currentAmount: _amount,
-                      onSelect: _setQuickAmount,
-                    )
+                          amounts: _quickAmounts,
+                          currentAmount: _amount,
+                          currency: _currency,
+                          onSelect: _setQuickAmount,
+                        )
                         .animate(delay: 60.ms)
                         .fadeIn(duration: 250.ms)
                         .slideY(begin: 0.04, curve: Curves.easeOutCubic),
@@ -206,10 +226,7 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
                     const SizedBox(height: DonySpacing.xxl),
 
                     // ── Clavier numérique ─────────────────────────────────────
-                    DonyKeypad(
-                      onDigit: _onDigit,
-                      onDelete: _onDelete,
-                    ),
+                    DonyKeypad(onDigit: _onDigit, onDelete: _onDelete),
                   ],
                 ),
               ),
@@ -220,6 +237,7 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
               amount: _amount,
               methodLabel: _methodLabel,
               paymentMethod: widget.paymentMethod,
+              currency: _currency,
             ),
           ],
         ),
@@ -231,9 +249,10 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
 // ─── Amount display ───────────────────────────────────────────────────────────
 
 class _AmountDisplay extends StatelessWidget {
-  const _AmountDisplay({required this.displayAmount});
+  const _AmountDisplay({required this.displayAmount, required this.currency});
 
   final String displayAmount;
+  final SupportedCurrency currency;
 
   @override
   Widget build(BuildContext context) {
@@ -250,31 +269,33 @@ class _AmountDisplay extends StatelessWidget {
             Text(
               displayAmount,
               style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                    fontSize: 56,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -2,
-                    color: isEmpty ? cs.onSurface.withValues(alpha: 0.3) : cs.onSurface,
-                  ),
+                fontSize: 56,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -2,
+                color: isEmpty
+                    ? cs.onSurface.withValues(alpha: 0.3)
+                    : cs.onSurface,
+              ),
             ),
             const SizedBox(width: DonySpacing.xs),
             Text(
-              '€',
+              currency.symbol,
               style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w600,
-                    color: isEmpty
-                        ? cs.onSurface.withValues(alpha: 0.3)
-                        : cs.primary,
-                  ),
+                fontSize: 28,
+                fontWeight: FontWeight.w600,
+                color: isEmpty
+                    ? cs.onSurface.withValues(alpha: 0.3)
+                    : cs.primary,
+              ),
             ),
           ],
         ),
         const SizedBox(height: DonySpacing.xs),
         Text(
           'Montant à recharger',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: cs.onSurfaceVariant,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
         ),
       ],
     );
@@ -287,11 +308,13 @@ class _QuickAmountRow extends StatelessWidget {
   const _QuickAmountRow({
     required this.amounts,
     required this.currentAmount,
+    required this.currency,
     required this.onSelect,
   });
 
   final List<int> amounts;
   final double currentAmount;
+  final SupportedCurrency currency;
   final void Function(int) onSelect;
 
   @override
@@ -323,11 +346,11 @@ class _QuickAmountRow extends StatelessWidget {
                 vertical: DonySpacing.sm,
               ),
               child: Text(
-                '$a €',
+                '$a ${currency.symbol}',
                 style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: isActive ? cs.primary : cs.onSurfaceVariant,
-                      fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-                    ),
+                  color: isActive ? cs.primary : cs.onSurfaceVariant,
+                  fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                ),
               ),
             ),
           ),
@@ -344,11 +367,13 @@ class _StickyButton extends StatelessWidget {
     required this.amount,
     required this.methodLabel,
     required this.paymentMethod,
+    required this.currency,
   });
 
   final double amount;
   final String methodLabel;
   final String paymentMethod;
+  final SupportedCurrency currency;
 
   @override
   Widget build(BuildContext context) {
@@ -360,8 +385,8 @@ class _StickyButton extends StatelessWidget {
         final label = isLoading
             ? 'Traitement en cours…'
             : amount < 1
-                ? 'Entrez un montant'
-                : 'Recharger ${amount.toInt()} € via $methodLabel';
+            ? 'Entrez un montant'
+            : 'Recharger ${amount.toInt()} ${currency.symbol} via $methodLabel';
 
         return Padding(
           padding: EdgeInsets.fromLTRB(
@@ -375,11 +400,12 @@ class _StickyButton extends StatelessWidget {
             isLoading: isLoading,
             onPressed: canSubmit
                 ? () => context.read<WalletBloc>().add(
-                      WalletTopupRequested(
-                        amount: amount,
-                        paymentMethod: paymentMethod,
-                      ),
-                    )
+                    WalletTopupRequested(
+                      amount: amount,
+                      paymentMethod: paymentMethod,
+                      currencyCode: currency.code,
+                    ),
+                  )
                 : null,
           ),
         );

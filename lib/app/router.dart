@@ -6,6 +6,7 @@ import 'package:dony/features/favorites/presentation/favorites_screen.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/auth/bloc/currency_onboarding_cubit.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/auth/presentation/screens/local_auth_screen.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
@@ -17,6 +18,7 @@ import 'package:dony/features/auth/presentation/screens/otp_verification_screen.
 import 'package:dony/features/auth/presentation/screens/phone_auth_screen.dart';
 import 'package:dony/features/auth/presentation/screens/auth_method_screen.dart';
 import 'package:dony/features/auth/presentation/screens/analytics_consent_screen.dart';
+import 'package:dony/features/auth/presentation/screens/currency_selection_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
@@ -194,6 +196,7 @@ const _publicRoutes = {
   '/auth/email-otp',
   '/auth/referral-code',
   '/auth/analytics-consent',
+  '/auth/currency-selection',
   '/auth/local',
 };
 
@@ -269,6 +272,13 @@ final appRouter = GoRouter(
           contact: (extra['email'] as String?) ?? '',
         );
       },
+    ),
+    GoRoute(
+      path: '/auth/currency-selection',
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<CurrencyOnboardingCubit>(),
+        child: const CurrencySelectionScreen(),
+      ),
     ),
     GoRoute(
       path: '/auth/referral-code',
@@ -584,8 +594,12 @@ final appRouter = GoRouter(
     // ── Wallet (hors shell) ──────────────────────────────────────────────
     GoRoute(
       path: '/payments/wallet',
-      builder: (context, state) => BlocProvider(
-        create: (_) => getIt<WalletBloc>()..add(WalletLoadRequested()),
+      builder: (context, state) => MultiBlocProvider(
+        providers: [
+          BlocProvider(
+            create: (_) => getIt<WalletBloc>()..add(WalletLoadRequested()),
+          ),
+        ],
         child: const WalletScreen(),
       ),
     ),
@@ -782,7 +796,6 @@ final appRouter = GoRouter(
         );
       },
     ),
-
 
     // ── Mes colis — hub expéditeur (hors shell) ───────────────────────
 
@@ -1100,10 +1113,7 @@ final appRouter = GoRouter(
         ),
         GoRoute(
           path: 'preferences',
-          builder: (context, state) => BlocProvider.value(
-            value: getIt<BusinessPrefsBloc>(),
-            child: const BusinessPrefsScreen(),
-          ),
+          builder: (context, state) => const BusinessPrefsScreen(),
         ),
         GoRoute(
           path: 'accessibility',
@@ -1232,7 +1242,8 @@ final appRouter = GoRouter(
                     )..add(const ReferralLoadRequested()),
                   ),
                   BlocProvider(
-                    create: (_) => getIt<WalletBloc>()..add(WalletLoadRequested()),
+                    create: (_) =>
+                        getIt<WalletBloc>()..add(WalletLoadRequested()),
                   ),
                 ],
                 child: const ProfileScreen(),

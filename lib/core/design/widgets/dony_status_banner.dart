@@ -35,9 +35,9 @@ class DonyStatusBanner extends StatelessWidget {
     this.onDismiss,
     this.action,
   }) : assert(
-          message != null || messageSpan != null,
-          'Either message or messageSpan must be provided.',
-        );
+         message != null || messageSpan != null,
+         'Either message or messageSpan must be provided.',
+       );
 
   final DonyStatusBannerType type;
 
@@ -64,31 +64,31 @@ class DonyStatusBanner extends StatelessWidget {
   final Widget? action;
 
   _BannerStyle _resolveStyle(ColorScheme cs) => switch (type) {
-        DonyStatusBannerType.info => _BannerStyle(
-            background: cs.infoLight,
-            border: cs.info,
-            iconColor: cs.info,
-            defaultIcon: Icons.info_outline_rounded,
-          ),
-        DonyStatusBannerType.success => _BannerStyle(
-            background: cs.successLight,
-            border: cs.success,
-            iconColor: cs.success,
-            defaultIcon: Icons.check_circle_outline_rounded,
-          ),
-        DonyStatusBannerType.warning => _BannerStyle(
-            background: cs.warningLight,
-            border: cs.warning,
-            iconColor: cs.warning,
-            defaultIcon: Icons.warning_amber_rounded,
-          ),
-        DonyStatusBannerType.error => _BannerStyle(
-            background: cs.errorLight,
-            border: cs.error,
-            iconColor: cs.error,
-            defaultIcon: Icons.error_outline_rounded,
-          ),
-      };
+    DonyStatusBannerType.info => _BannerStyle(
+      background: cs.infoLight,
+      border: cs.info,
+      iconColor: cs.info,
+      defaultIcon: Icons.info_outline_rounded,
+    ),
+    DonyStatusBannerType.success => _BannerStyle(
+      background: cs.successLight,
+      border: cs.success,
+      iconColor: cs.success,
+      defaultIcon: Icons.check_circle_outline_rounded,
+    ),
+    DonyStatusBannerType.warning => _BannerStyle(
+      background: cs.warningLight,
+      border: cs.warning,
+      iconColor: cs.warning,
+      defaultIcon: Icons.warning_amber_rounded,
+    ),
+    DonyStatusBannerType.error => _BannerStyle(
+      background: cs.errorLight,
+      border: cs.error,
+      iconColor: cs.error,
+      defaultIcon: Icons.error_outline_rounded,
+    ),
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -109,16 +109,14 @@ class DonyStatusBanner extends StatelessWidget {
       );
       messageWidget = Text.rich(mergedSpan);
     } else {
-      messageWidget = Text(
-        message!,
-        style: baseTextStyle,
-      );
+      messageWidget = Text(message!, style: baseTextStyle);
     }
 
     // Le bandeau porte déjà une icône par type. En mode étiquettes renforcées,
     // on garantit en plus qu'un titre textuel est présent, pour ne pas laisser
     // la couleur de fond porter seule la nature du message.
-    final reinforcedTitle = title ??
+    final reinforcedTitle =
+        title ??
         (context.a11y.reinforceLabels
             ? switch (type) {
                 DonyStatusBannerType.info => 'Information',
@@ -135,66 +133,66 @@ class DonyStatusBanner extends StatelessWidget {
     return Semantics(
       liveRegion: true,
       child: Container(
-      padding: const EdgeInsets.all(DonySpacing.md),
-      decoration: BoxDecoration(
-        color: style.background,
-        borderRadius: BorderRadius.circular(DonyRadius.md),
-        border: Border.all(color: style.border),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Icône décorative : elle redit le type que la couleur porte déjà,
-          // et le texte du bandeau l'exprime.
-          ExcludeSemantics(
-            child: iconAsset != null
-                ? DonyIcon(iconAsset!, size: 18, color: style.iconColor)
-                : Icon(effectiveIcon, size: 18, color: style.iconColor),
-          ),
-          const SizedBox(width: DonySpacing.sm),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (reinforcedTitle != null) ...[
-                  Text(
-                    reinforcedTitle,
-                    style: tt.bodySmall?.copyWith(
-                      color: cs.onSurface,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: DonySpacing.xs),
-                ],
-                messageWidget,
-                if (action != null) ...[
-                  const SizedBox(height: DonySpacing.xs),
-                  action!,
-                ],
-              ],
+        padding: const EdgeInsets.all(DonySpacing.md),
+        decoration: BoxDecoration(
+          color: style.background,
+          borderRadius: BorderRadius.circular(DonyRadius.md),
+          border: Border.all(color: style.border),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Icône décorative : elle redit le type que la couleur porte déjà,
+            // et le texte du bandeau l'exprime.
+            ExcludeSemantics(
+              child: iconAsset != null
+                  ? DonyIcon(iconAsset!, size: 18, color: style.iconColor)
+                  : Icon(effectiveIcon, size: 18, color: style.iconColor),
             ),
-          ),
-          if (onDismiss != null) ...[
-            const SizedBox(width: DonySpacing.xs),
-            // Bouton à icône seule : sans nom accessible, il est annoncé
-            // « bouton » et rien d'autre.
-            // `container` crée le nœud, `excludeSemantics` écarte le SVG qui
-            // n'a rien à dire : sans les deux, le libellé ne forme aucun nœud
-            // et le bouton reste anonyme.
-            Semantics(
-              button: true,
-              container: true,
-              excludeSemantics: true,
-              label: 'Fermer le message',
-              child: GestureDetector(
-                onTap: onDismiss,
-                child: DonyIcon('x', size: 16, color: style.iconColor),
+            const SizedBox(width: DonySpacing.sm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (reinforcedTitle != null) ...[
+                    Text(
+                      reinforcedTitle,
+                      style: tt.bodySmall?.copyWith(
+                        color: cs.onSurface,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: DonySpacing.xs),
+                  ],
+                  messageWidget,
+                  if (action != null) ...[
+                    const SizedBox(height: DonySpacing.xs),
+                    action!,
+                  ],
+                ],
               ),
             ),
+            if (onDismiss != null) ...[
+              const SizedBox(width: DonySpacing.xs),
+              // Bouton à icône seule : sans nom accessible, il est annoncé
+              // « bouton » et rien d'autre.
+              // `container` crée le nœud, `excludeSemantics` écarte le SVG qui
+              // n'a rien à dire : sans les deux, le libellé ne forme aucun nœud
+              // et le bouton reste anonyme.
+              Semantics(
+                button: true,
+                container: true,
+                excludeSemantics: true,
+                label: 'Fermer le message',
+                child: GestureDetector(
+                  onTap: onDismiss,
+                  child: DonyIcon('x', size: 16, color: style.iconColor),
+                ),
+              ),
+            ],
           ],
-        ],
-      ),
+        ),
       ),
     );
   }

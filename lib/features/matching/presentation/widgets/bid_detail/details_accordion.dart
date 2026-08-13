@@ -87,7 +87,9 @@ class _DetailsAccordionState extends State<DetailsAccordion> {
           InkWell(
             onTap: _toggle,
             borderRadius: _open
-                ? const BorderRadius.vertical(top: Radius.circular(DonyRadius.card))
+                ? const BorderRadius.vertical(
+                    top: Radius.circular(DonyRadius.card),
+                  )
                 : BorderRadius.circular(DonyRadius.card),
             child: Padding(
               padding: const EdgeInsets.all(DonySpacing.base),
@@ -96,17 +98,16 @@ class _DetailsAccordionState extends State<DetailsAccordion> {
                   Expanded(
                     child: Text(
                       'Plus de détails',
-                      style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                      style: tt.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                   AnimatedRotation(
                     turns: _open ? 0.5 : 0,
                     duration: const Duration(milliseconds: 250),
                     curve: Curves.easeOutCubic,
-                    child: DonyIcon(
-                      'chevron-down',
-                      color: cs.onSurfaceVariant,
-                    ),
+                    child: DonyIcon('chevron-down', color: cs.onSurfaceVariant),
                   ),
                 ],
               ),
@@ -162,7 +163,9 @@ class _DetailsAccordionState extends State<DetailsAccordion> {
                               : 'Présence confirmée',
                           value: _kRemisStatuses.contains(bid.status)
                               ? 'Colis remis ✓'
-                              : (bid.voyageurConfirmed ? 'Oui ✓' : 'Non encore'),
+                              : (bid.voyageurConfirmed
+                                    ? 'Oui ✓'
+                                    : 'Non encore'),
                         ),
                         const SizedBox(height: DonySpacing.md),
                         Divider(color: cs.outline, height: 1),
@@ -180,7 +183,10 @@ class _DetailsAccordionState extends State<DetailsAccordion> {
                           // Tarif BRUT affiché à l'expéditeur (jamais le net).
                           InfoRow(
                             label: 'Tarif par kg',
-                            value: '${formatKgPrice(bid.senderPricePerKg!)} €',
+                            value: formatPriceIn(
+                              bid.senderPricePerKg!,
+                              bid.currency,
+                            ),
                           ),
                         ],
                         // Section 3 — LIEN DE SUIVI (conditionnel)

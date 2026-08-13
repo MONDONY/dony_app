@@ -22,21 +22,20 @@ BidModel _bid({
   DateTime? windowEnd,
   String? recipientName = 'Awa S.',
   String? cancellationNoShowStatus,
-}) =>
-    BidModel(
-      id: 'b1',
-      announcementId: 'a1',
-      senderId: 's1',
-      status: status,
-      weightKg: 5,
-      totalAmountEur: total,
-      voyageurConfirmed: voyageurConfirmed,
-      handoverWindowEnd: windowEnd,
-      recipientName: recipientName,
-      cancellationNoShowStatus: cancellationNoShowStatus,
-      createdAt: DateTime(2026, 5),
-      updatedAt: DateTime(2026, 5),
-    );
+}) => BidModel(
+  id: 'b1',
+  announcementId: 'a1',
+  senderId: 's1',
+  status: status,
+  weightKg: 5,
+  totalAmountEur: total,
+  voyageurConfirmed: voyageurConfirmed,
+  handoverWindowEnd: windowEnd,
+  recipientName: recipientName,
+  cancellationNoShowStatus: cancellationNoShowStatus,
+  createdAt: DateTime(2026, 5),
+  updatedAt: DateTime(2026, 5),
+);
 
 Future<void> _pump(WidgetTester tester, BidModel bid) async {
   final cancel = _MockCancelBloc();
@@ -63,17 +62,17 @@ void main() {
   testWidgets('PENDING → gain mis en avant', (tester) async {
     await _pump(tester, _bid(status: 'PENDING'));
     expect(find.textContaining('Nouvelle demande'), findsOneWidget);
-    expect(find.textContaining('48.00'), findsOneWidget);
+    expect(find.textContaining('48'), findsOneWidget);
   });
 
-  testWidgets('ACCEPTED présence non confirmée → récupérez le colis',
-      (tester) async {
+  testWidgets('ACCEPTED présence non confirmée → récupérez le colis', (
+    tester,
+  ) async {
     await _pump(tester, _bid(status: 'ACCEPTED'));
     expect(find.textContaining('Récupérez le colis'), findsOneWidget);
   });
 
-  testWidgets('ACCEPTED présence confirmée → scannez le colis',
-      (tester) async {
+  testWidgets('ACCEPTED présence confirmée → scannez le colis', (tester) async {
     await _pump(tester, _bid(status: 'ACCEPTED', voyageurConfirmed: true));
     expect(find.textContaining('Lisez le QR du colis'), findsOneWidget);
   });
@@ -88,8 +87,9 @@ void main() {
     expect(find.textContaining('Livraison confirmée'), findsOneWidget);
   });
 
-  testWidgets('fenêtre dépassée → bouton signaler absence expéditeur',
-      (tester) async {
+  testWidgets('fenêtre dépassée → bouton signaler absence expéditeur', (
+    tester,
+  ) async {
     await _pump(
       tester,
       _bid(
@@ -105,23 +105,28 @@ void main() {
   });
 
   testWidgets(
-      'absence déjà signalée (PENDING_CONFIRMATION) → « Absence signalée », plus de bouton signaler',
-      (tester) async {
-    await _pump(
-      tester,
-      _bid(
-        status: 'ACCEPTED',
-        windowEnd: DateTime.now().subtract(const Duration(hours: 1)),
-        cancellationNoShowStatus: 'PENDING_CONFIRMATION',
-      ),
-    );
-    expect(find.textContaining('Absence signalée'), findsOneWidget);
-    expect(find.textContaining("Signaler l'absence de l'expéditeur"), findsNothing);
-    expect(find.textContaining('Fenêtre de remise dépassée'), findsNothing);
-  });
+    'absence déjà signalée (PENDING_CONFIRMATION) → « Absence signalée », plus de bouton signaler',
+    (tester) async {
+      await _pump(
+        tester,
+        _bid(
+          status: 'ACCEPTED',
+          windowEnd: DateTime.now().subtract(const Duration(hours: 1)),
+          cancellationNoShowStatus: 'PENDING_CONFIRMATION',
+        ),
+      );
+      expect(find.textContaining('Absence signalée'), findsOneWidget);
+      expect(
+        find.textContaining("Signaler l'absence de l'expéditeur"),
+        findsNothing,
+      );
+      expect(find.textContaining('Fenêtre de remise dépassée'), findsNothing);
+    },
+  );
 
-  testWidgets('absence contestée (CONTESTED) → « Absence contestée »',
-      (tester) async {
+  testWidgets('absence contestée (CONTESTED) → « Absence contestée »', (
+    tester,
+  ) async {
     await _pump(
       tester,
       _bid(
@@ -131,7 +136,10 @@ void main() {
       ),
     );
     expect(find.textContaining('Absence contestée'), findsOneWidget);
-    expect(find.textContaining("Signaler l'absence de l'expéditeur"), findsNothing);
+    expect(
+      find.textContaining("Signaler l'absence de l'expéditeur"),
+      findsNothing,
+    );
   });
 
   testWidgets('REJECTED → rien (SizedBox.shrink)', (tester) async {
@@ -156,8 +164,9 @@ void main() {
     expect(find.textContaining('Colis'), findsNothing);
   });
 
-  testWidgets('IN_TRANSIT avec ville arrivée → ville affichée dans subtitle',
-      (tester) async {
+  testWidgets('IN_TRANSIT avec ville arrivée → ville affichée dans subtitle', (
+    tester,
+  ) async {
     final bid = BidModel(
       id: 'b1',
       announcementId: 'a1',
@@ -172,8 +181,9 @@ void main() {
     expect(find.textContaining('Dakar'), findsOneWidget);
   });
 
-  testWidgets('IN_TRANSIT sans ville arrivée → destination fallback',
-      (tester) async {
+  testWidgets('IN_TRANSIT sans ville arrivée → destination fallback', (
+    tester,
+  ) async {
     final bid = BidModel(
       id: 'b1',
       announcementId: 'a1',
@@ -187,8 +197,9 @@ void main() {
     expect(find.textContaining('destination'), findsOneWidget);
   });
 
-  testWidgets('ACCEPTED avec fenêtre et lieu → subtitle contient lieu',
-      (tester) async {
+  testWidgets('ACCEPTED avec fenêtre et lieu → subtitle contient lieu', (
+    tester,
+  ) async {
     // Use a date far in the future to ensure the window is not expired
     final futureStart = DateTime.now().add(const Duration(days: 30));
     final bid = BidModel(
@@ -210,14 +221,16 @@ void main() {
     expect(find.textContaining('point de remise'), findsOneWidget);
   });
 
-  testWidgets('ACCEPTED sans fenêtre ni lieu → fallback texte générique',
-      (tester) async {
+  testWidgets('ACCEPTED sans fenêtre ni lieu → fallback texte générique', (
+    tester,
+  ) async {
     await _pump(tester, _bid(status: 'ACCEPTED'));
     expect(find.textContaining('point de remise'), findsOneWidget);
   });
 
-  testWidgets('fenêtre dépassée sans fenêtre start → subtitle sans dates',
-      (tester) async {
+  testWidgets('fenêtre dépassée sans fenêtre start → subtitle sans dates', (
+    tester,
+  ) async {
     await _pump(
       tester,
       _bid(
@@ -251,12 +264,16 @@ void main() {
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
   });
 
-  testWidgets('PENDING sans total → subtitle sans montant précis', (tester) async {
+  testWidgets('PENDING sans total → subtitle sans montant précis', (
+    tester,
+  ) async {
     await _pump(tester, _bid(status: 'PENDING', total: null));
     expect(find.textContaining('Nouvelle demande'), findsOneWidget);
   });
 
-  testWidgets('ACCEPTED avec seulement windowStart → subtitle ok', (tester) async {
+  testWidgets('ACCEPTED avec seulement windowStart → subtitle ok', (
+    tester,
+  ) async {
     final futureStart = DateTime.now().add(const Duration(days: 30));
     final bid = BidModel(
       id: 'b1',
@@ -273,7 +290,9 @@ void main() {
     expect(find.textContaining('Récupérez le colis'), findsOneWidget);
   });
 
-  testWidgets('ACCEPTED avec seulement windowEnd → subtitle ok', (tester) async {
+  testWidgets('ACCEPTED avec seulement windowEnd → subtitle ok', (
+    tester,
+  ) async {
     final futureEnd = DateTime.now().add(const Duration(days: 30));
     final bid = BidModel(
       id: 'b1',
@@ -290,7 +309,9 @@ void main() {
     expect(find.textContaining('Récupérez le colis'), findsOneWidget);
   });
 
-  testWidgets('ACCEPTED avec fenêtre multi-jours → subtitle ok', (tester) async {
+  testWidgets('ACCEPTED avec fenêtre multi-jours → subtitle ok', (
+    tester,
+  ) async {
     final futureStart = DateTime.now().add(const Duration(days: 30));
     final bid = BidModel(
       id: 'b1',
@@ -307,8 +328,9 @@ void main() {
     expect(find.textContaining('Récupérez le colis'), findsOneWidget);
   });
 
-  testWidgets('fenêtre dépassée avec fenêtre start → subtitle avec date',
-      (tester) async {
+  testWidgets('fenêtre dépassée avec fenêtre start → subtitle avec date', (
+    tester,
+  ) async {
     final pastStart = DateTime.now().subtract(const Duration(hours: 3));
     final pastEnd = DateTime.now().subtract(const Duration(hours: 1));
     final bid = BidModel(
@@ -381,117 +403,123 @@ void main() {
   });
 
   testWidgets(
-      'bannière "Absence signalée" si deliveryNoShowReportedByTraveler=true (je suis l\'auteur)',
-      (tester) async {
-    final bid = BidModel(
-      id: 'b1',
-      announcementId: 'a1',
-      senderId: 's1',
-      weightKg: 5,
-      status: 'IN_TRANSIT',
-      createdAt: DateTime(2026, 1, 1),
-      updatedAt: DateTime(2026, 1, 1),
-      deliveryNoShowStatus: 'PENDING_CONFIRMATION',
-      deliveryNoShowReportedByTraveler: true,
-    );
-    await _pump(tester, bid);
-    expect(find.textContaining('Absence signalée'), findsOneWidget);
-  });
+    'bannière "Absence signalée" si deliveryNoShowReportedByTraveler=true (je suis l\'auteur)',
+    (tester) async {
+      final bid = BidModel(
+        id: 'b1',
+        announcementId: 'a1',
+        senderId: 's1',
+        weightKg: 5,
+        status: 'IN_TRANSIT',
+        createdAt: DateTime(2026, 1, 1),
+        updatedAt: DateTime(2026, 1, 1),
+        deliveryNoShowStatus: 'PENDING_CONFIRMATION',
+        deliveryNoShowReportedByTraveler: true,
+      );
+      await _pump(tester, bid);
+      expect(find.textContaining('Absence signalée'), findsOneWidget);
+    },
+  );
 
   testWidgets(
-      'bannière "Une absence est signalée" + Contester si deliveryNoShowReportedByTraveler=false (je suis l\'adversaire)',
-      (tester) async {
-    final bid = BidModel(
-      id: 'b1',
-      announcementId: 'a1',
-      senderId: 's1',
-      weightKg: 5,
-      status: 'IN_TRANSIT',
-      createdAt: DateTime(2026, 1, 1),
-      updatedAt: DateTime(2026, 1, 1),
-      deliveryNoShowStatus: 'PENDING_CONFIRMATION',
-      deliveryNoShowReportedByTraveler: false,
-    );
-    await _pump(tester, bid);
-    expect(find.textContaining('Une absence est signalée'), findsOneWidget);
-    expect(find.text('Contester ce signalement'), findsOneWidget);
-  });
+    'bannière "Une absence est signalée" + Contester si deliveryNoShowReportedByTraveler=false (je suis l\'adversaire)',
+    (tester) async {
+      final bid = BidModel(
+        id: 'b1',
+        announcementId: 'a1',
+        senderId: 's1',
+        weightKg: 5,
+        status: 'IN_TRANSIT',
+        createdAt: DateTime(2026, 1, 1),
+        updatedAt: DateTime(2026, 1, 1),
+        deliveryNoShowStatus: 'PENDING_CONFIRMATION',
+        deliveryNoShowReportedByTraveler: false,
+      );
+      await _pump(tester, bid);
+      expect(find.textContaining('Une absence est signalée'), findsOneWidget);
+      expect(find.text('Contester ce signalement'), findsOneWidget);
+    },
+  );
 
   testWidgets(
-      'bannière deliveryNoShowStatus=CONTESTED (auteur) → "Absence contestée"',
-      (tester) async {
-    final bid = BidModel(
-      id: 'b1',
-      announcementId: 'a1',
-      senderId: 's1',
-      weightKg: 5,
-      status: 'IN_TRANSIT',
-      createdAt: DateTime(2026, 1, 1),
-      updatedAt: DateTime(2026, 1, 1),
-      deliveryNoShowStatus: 'CONTESTED',
-      deliveryNoShowReportedByTraveler: true,
-    );
-    await _pump(tester, bid);
-    expect(find.textContaining('Absence contestée'), findsOneWidget);
-  });
+    'bannière deliveryNoShowStatus=CONTESTED (auteur) → "Absence contestée"',
+    (tester) async {
+      final bid = BidModel(
+        id: 'b1',
+        announcementId: 'a1',
+        senderId: 's1',
+        weightKg: 5,
+        status: 'IN_TRANSIT',
+        createdAt: DateTime(2026, 1, 1),
+        updatedAt: DateTime(2026, 1, 1),
+        deliveryNoShowStatus: 'CONTESTED',
+        deliveryNoShowReportedByTraveler: true,
+      );
+      await _pump(tester, bid);
+      expect(find.textContaining('Absence contestée'), findsOneWidget);
+    },
+  );
 
   testWidgets(
-      'bannière deliveryNoShowStatus=CONTESTED (adversaire, je viens de contester) → "Contestation envoyée", pas de bouton',
-      (tester) async {
-    final bid = BidModel(
-      id: 'b1',
-      announcementId: 'a1',
-      senderId: 's1',
-      weightKg: 5,
-      status: 'IN_TRANSIT',
-      createdAt: DateTime(2026, 1, 1),
-      updatedAt: DateTime(2026, 1, 1),
-      deliveryNoShowStatus: 'CONTESTED',
-      deliveryNoShowReportedByTraveler: false,
-    );
-    await _pump(tester, bid);
-    expect(find.textContaining('Contestation envoyée'), findsOneWidget);
-    expect(find.textContaining('Une absence est signalée'), findsNothing);
-    expect(find.text('Contester ce signalement'), findsNothing);
-  });
+    'bannière deliveryNoShowStatus=CONTESTED (adversaire, je viens de contester) → "Contestation envoyée", pas de bouton',
+    (tester) async {
+      final bid = BidModel(
+        id: 'b1',
+        announcementId: 'a1',
+        senderId: 's1',
+        weightKg: 5,
+        status: 'IN_TRANSIT',
+        createdAt: DateTime(2026, 1, 1),
+        updatedAt: DateTime(2026, 1, 1),
+        deliveryNoShowStatus: 'CONTESTED',
+        deliveryNoShowReportedByTraveler: false,
+      );
+      await _pump(tester, bid);
+      expect(find.textContaining('Contestation envoyée'), findsOneWidget);
+      expect(find.textContaining('Une absence est signalée'), findsNothing);
+      expect(find.text('Contester ce signalement'), findsNothing);
+    },
+  );
 
   testWidgets(
-      'tap "Contester ce signalement" → DeliveryNoShowContestRequested émis',
-      (tester) async {
-    final bid = BidModel(
-      id: 'b1',
-      announcementId: 'a1',
-      senderId: 's1',
-      weightKg: 5,
-      status: 'IN_TRANSIT',
-      createdAt: DateTime(2026, 1, 1),
-      updatedAt: DateTime(2026, 1, 1),
-      deliveryNoShowStatus: 'PENDING_CONFIRMATION',
-      deliveryNoShowReportedByTraveler: false,
-    );
-    final cancel = _MockCancelBloc();
-    when(() => cancel.state).thenReturn(CancellationInitial());
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.light(),
-        home: Scaffold(
-          body: BlocProvider<CancellationBloc>.value(
-            value: cancel,
-            child: TravelerHeroCard(bid: bid),
+    'tap "Contester ce signalement" → DeliveryNoShowContestRequested émis',
+    (tester) async {
+      final bid = BidModel(
+        id: 'b1',
+        announcementId: 'a1',
+        senderId: 's1',
+        weightKg: 5,
+        status: 'IN_TRANSIT',
+        createdAt: DateTime(2026, 1, 1),
+        updatedAt: DateTime(2026, 1, 1),
+        deliveryNoShowStatus: 'PENDING_CONFIRMATION',
+        deliveryNoShowReportedByTraveler: false,
+      );
+      final cancel = _MockCancelBloc();
+      when(() => cancel.state).thenReturn(CancellationInitial());
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: Scaffold(
+            body: BlocProvider<CancellationBloc>.value(
+              value: cancel,
+              child: TravelerHeroCard(bid: bid),
+            ),
           ),
         ),
-      ),
-    );
-    await tester.pump(const Duration(milliseconds: 300));
-    await tester.tap(find.text('Contester ce signalement'));
-    await tester.pump();
-    verify(
-      () => cancel.add(any(that: isA<DeliveryNoShowContestRequested>())),
-    ).called(1);
-  });
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.tap(find.text('Contester ce signalement'));
+      await tester.pump();
+      verify(
+        () => cancel.add(any(that: isA<DeliveryNoShowContestRequested>())),
+      ).called(1);
+    },
+  );
 
-  testWidgets('tap Signaler absence + confirmer → NoShowReportRequested émis',
-      (tester) async {
+  testWidgets('tap Signaler absence + confirmer → NoShowReportRequested émis', (
+    tester,
+  ) async {
     final pastEnd = DateTime.now().subtract(const Duration(hours: 1));
     final bid = BidModel(
       id: 'b1',

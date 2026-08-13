@@ -32,11 +32,11 @@ class AnnouncementGridItemModel {
       );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'label': label,
-        'unitPriceNet': unitPriceNet,
-        'unitPriceDisplay': unitPriceDisplay,
-      };
+    'id': id,
+    'label': label,
+    'unitPriceNet': unitPriceNet,
+    'unitPriceDisplay': unitPriceDisplay,
+  };
 }
 
 @JsonSerializable()
@@ -94,7 +94,8 @@ class TravelerProfile {
   String get resolvedInitials {
     if (displayName != null && displayName!.isNotEmpty) {
       final parts = displayName!.trim().split(' ');
-      if (parts.length >= 2) return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+      if (parts.length >= 2)
+        return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
       return displayName![0].toUpperCase();
     }
     return '?';
@@ -153,12 +154,10 @@ class AnnouncementModel {
   final Set<BidPaymentMethod> acceptedPaymentMethods;
   final String? capacityUnit;
   final String pricingMode;
+
   /// Articles disponibles dans la grille de prix (mode MIXED uniquement).
   /// Vide pour le mode KG.
-  @JsonKey(
-    fromJson: _gridItemsFromJson,
-    toJson: _gridItemsToJson,
-  )
+  @JsonKey(fromJson: _gridItemsFromJson, toJson: _gridItemsToJson)
   final List<AnnouncementGridItemModel> priceGridItems;
 
   /// Capacité réservée à la négociation (trajet dédié). `0` pour un trajet
@@ -185,6 +184,11 @@ class AnnouncementModel {
   /// vérité quand présente ; `null` pour les anciens payloads (repli local
   /// via [isUrgent]).
   final bool? urgent;
+
+  /// Devise du trajet, figée à la création. `EUR` par défaut pour les
+  /// anciens payloads sans ce champ.
+  @JsonKey(defaultValue: 'EUR')
+  final String currency;
 
   const AnnouncementModel({
     required this.id,
@@ -226,6 +230,7 @@ class AnnouncementModel {
     this.handoverWindowEnd,
     this.isFavorite = false,
     this.urgent,
+    this.currency = 'EUR',
   });
 
   factory AnnouncementModel.fromJson(Map<String, dynamic> json) =>
@@ -254,10 +259,11 @@ String? _transportModeToWireOrNull(TransportMode? mode) =>
 
 List<AnnouncementGridItemModel> _gridItemsFromJson(List<dynamic>? json) =>
     (json ?? [])
-        .map((e) =>
-            AnnouncementGridItemModel.fromJson(e as Map<String, dynamic>))
+        .map(
+          (e) => AnnouncementGridItemModel.fromJson(e as Map<String, dynamic>),
+        )
         .toList();
 
 List<Map<String, dynamic>> _gridItemsToJson(
-        List<AnnouncementGridItemModel> items) =>
-    items.map((e) => e.toJson()).toList();
+  List<AnnouncementGridItemModel> items,
+) => items.map((e) => e.toJson()).toList();

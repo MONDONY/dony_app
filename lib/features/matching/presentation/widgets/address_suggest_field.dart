@@ -277,10 +277,15 @@ class _AddressSuggestFieldState extends State<AddressSuggestField> {
                             height: 32,
                             decoration: BoxDecoration(
                               color: ics.primaryContainer,
-                              borderRadius: BorderRadius.circular(DonyRadius.sm),
+                              borderRadius: BorderRadius.circular(
+                                DonyRadius.sm,
+                              ),
                             ),
-                            child: DonyIcon('map-pin',
-                                size: 16, color: ics.primary),
+                            child: DonyIcon(
+                              'map-pin',
+                              size: 16,
+                              color: ics.primary,
+                            ),
                           ),
                           const SizedBox(width: DonySpacing.md),
                           Expanded(
@@ -288,16 +293,21 @@ class _AddressSuggestFieldState extends State<AddressSuggestField> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Text(s.mainText,
-                                    style: tt.titleMedium,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis),
+                                Text(
+                                  s.mainText,
+                                  style: tt.titleMedium,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                                 if (s.secondaryText.isNotEmpty)
-                                  Text(s.secondaryText,
-                                      style: tt.bodySmall?.copyWith(
-                                          color: ics.onSurfaceVariant),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis),
+                                  Text(
+                                    s.secondaryText,
+                                    style: tt.bodySmall?.copyWith(
+                                      color: ics.onSurfaceVariant,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                               ],
                             ),
                           ),
@@ -369,7 +379,8 @@ class _AddressSuggestFieldState extends State<AddressSuggestField> {
                   DonySpacing.base,
                   DonySpacing.md,
                 ),
-                prefixIcon: (widget.prefixIcon == null &&
+                prefixIcon:
+                    (widget.prefixIcon == null &&
                         widget.prefixIconAsset == null)
                     ? null
                     : Padding(
@@ -381,14 +392,16 @@ class _AddressSuggestFieldState extends State<AddressSuggestField> {
                             ? DonyIcon(
                                 widget.prefixIconAsset!,
                                 size: 18,
-                                color:
-                                    isFocused ? cs.primary : neutralIconColor,
+                                color: isFocused
+                                    ? cs.primary
+                                    : neutralIconColor,
                               )
                             : Icon(
                                 widget.prefixIcon,
                                 size: 18,
-                                color:
-                                    isFocused ? cs.primary : neutralIconColor,
+                                color: isFocused
+                                    ? cs.primary
+                                    : neutralIconColor,
                               ),
                       ),
                 prefixIconConstraints: const BoxConstraints(minWidth: 40),

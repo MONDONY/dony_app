@@ -87,14 +87,21 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     try {
       switch (event.paymentMethod) {
         case 'STRIPE':
-          final clientSecret =
-              await _repository.topupStripe(amount: event.amount);
+          final clientSecret = await _repository.topupStripe(
+            amount: event.amount,
+            currencyCode: event.currencyCode,
+          );
           if (clientSecret != null) {
             emit(WalletTopupStripeReady(clientSecret));
-            unawaited(_analytics.logEvent(
-              AnalyticsEvents.walletTopupCompleted,
-              properties: {'amount': event.amount, 'method': event.paymentMethod},
-            ));
+            unawaited(
+              _analytics.logEvent(
+                AnalyticsEvents.walletTopupCompleted,
+                properties: {
+                  'amount': event.amount,
+                  'method': event.paymentMethod,
+                },
+              ),
+            );
           } else {
             emit(WalletError('Réponse vide du serveur'));
           }

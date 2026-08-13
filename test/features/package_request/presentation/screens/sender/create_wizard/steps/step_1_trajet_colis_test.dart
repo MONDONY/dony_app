@@ -115,17 +115,16 @@ void main() {
       },
     );
 
-    testWidgets(
-      'la souplesse est expliquée en dates, pas en jours',
-      (tester) async {
-        await tester.pumpWidget(wrap(const Step1TrajetColis()));
-        await tester.pump();
-        expect(
-          find.textContaining('Plus de souplesse, plus de voyageurs'),
-          findsOneWidget,
-        );
-      },
-    );
+    testWidgets('la souplesse est expliquée en dates, pas en jours', (
+      tester,
+    ) async {
+      await tester.pumpWidget(wrap(const Step1TrajetColis()));
+      await tester.pump();
+      expect(
+        find.textContaining('Plus de souplesse, plus de voyageurs'),
+        findsOneWidget,
+      );
+    });
 
     testWidgets('le lieu de remise est proposé, et optionnel', (tester) async {
       final key = GlobalKey<Step1TrajetColisState>();
@@ -137,7 +136,10 @@ void main() {
       );
       await tester.pump();
 
-      expect(find.byKey(const Key('pickup-neighborhood-field')), findsOneWidget);
+      expect(
+        find.byKey(const Key('pickup-neighborhood-field')),
+        findsOneWidget,
+      );
       // Laissé vide, il ne bloque pas : seuls villes et date comptent.
       expect(find.text('Où remets-tu le colis ? (optionnel)'), findsOneWidget);
     });
@@ -182,95 +184,90 @@ void main() {
     // Task 5 — Feedback informatif « sera signalée urgente » sous la date
     // souhaitée.
     // -------------------------------------------------------------------
-    testWidgets(
-      'date proche (demain) → le hint urgent est affiché',
-      (tester) async {
-        final req = PackageRequest(
-          id: 'r-urgent',
-          senderId: 's-1',
-          departureCity: 'Lyon',
-          arrivalCity: 'Bamako',
-          desiredDate: DateTime.now().add(const Duration(days: 1)),
-          dateToleranceDays: 2,
-          weightKg: 8,
-          parcelSize: ParcelSize.medium,
-          transportMode: TransportMode.plane,
-          categories: const ['Vêtements'],
-          status: PackageRequestStatus.open,
-          createdAt: DateTime.now(),
-        );
-        await tester.pumpWidget(
-          MaterialApp(
-            theme: AppTheme.light(),
-            home: BlocProvider(
-              create: (_) => PackageRequestFormBloc(
-                packageRepo,
-                analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
-                editing: req,
-              ),
-              child: const Scaffold(body: Step1TrajetColis()),
+    testWidgets('date proche (demain) → le hint urgent est affiché', (
+      tester,
+    ) async {
+      final req = PackageRequest(
+        id: 'r-urgent',
+        senderId: 's-1',
+        departureCity: 'Lyon',
+        arrivalCity: 'Bamako',
+        desiredDate: DateTime.now().add(const Duration(days: 1)),
+        dateToleranceDays: 2,
+        weightKg: 8,
+        parcelSize: ParcelSize.medium,
+        transportMode: TransportMode.plane,
+        categories: const ['Vêtements'],
+        status: PackageRequestStatus.open,
+        createdAt: DateTime.now(),
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: BlocProvider(
+            create: (_) => PackageRequestFormBloc(
+              packageRepo,
+              analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+              editing: req,
             ),
+            child: const Scaffold(body: Step1TrajetColis()),
           ),
-        );
-        await tester.pumpAndSettle();
+        ),
+      );
+      await tester.pumpAndSettle();
 
-        expect(
-          find.text('🔥 Date proche — cette demande sera signalée urgente'),
-          findsOneWidget,
-        );
-      },
-    );
+      expect(
+        find.text('🔥 Date proche — cette demande sera signalée urgente'),
+        findsOneWidget,
+      );
+    });
 
-    testWidgets(
-      'date lointaine → le hint urgent reste absent',
-      (tester) async {
-        final req = PackageRequest(
-          id: 'r-far',
-          senderId: 's-1',
-          departureCity: 'Lyon',
-          arrivalCity: 'Bamako',
-          desiredDate: DateTime.now().add(const Duration(days: 60)),
-          dateToleranceDays: 2,
-          weightKg: 8,
-          parcelSize: ParcelSize.medium,
-          transportMode: TransportMode.plane,
-          categories: const ['Vêtements'],
-          status: PackageRequestStatus.open,
-          createdAt: DateTime.now(),
-        );
-        await tester.pumpWidget(
-          MaterialApp(
-            theme: AppTheme.light(),
-            home: BlocProvider(
-              create: (_) => PackageRequestFormBloc(
-                packageRepo,
-                analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
-                editing: req,
-              ),
-              child: const Scaffold(body: Step1TrajetColis()),
+    testWidgets('date lointaine → le hint urgent reste absent', (tester) async {
+      final req = PackageRequest(
+        id: 'r-far',
+        senderId: 's-1',
+        departureCity: 'Lyon',
+        arrivalCity: 'Bamako',
+        desiredDate: DateTime.now().add(const Duration(days: 60)),
+        dateToleranceDays: 2,
+        weightKg: 8,
+        parcelSize: ParcelSize.medium,
+        transportMode: TransportMode.plane,
+        categories: const ['Vêtements'],
+        status: PackageRequestStatus.open,
+        createdAt: DateTime.now(),
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: BlocProvider(
+            create: (_) => PackageRequestFormBloc(
+              packageRepo,
+              analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+              editing: req,
             ),
+            child: const Scaffold(body: Step1TrajetColis()),
           ),
-        );
-        await tester.pumpAndSettle();
+        ),
+      );
+      await tester.pumpAndSettle();
 
-        expect(
-          find.text('🔥 Date proche — cette demande sera signalée urgente'),
-          findsNothing,
-        );
-      },
-    );
+      expect(
+        find.text('🔥 Date proche — cette demande sera signalée urgente'),
+        findsNothing,
+      );
+    });
 
-    testWidgets(
-      'pas de date sélectionnée → le hint urgent est absent',
-      (tester) async {
-        await tester.pumpWidget(wrap(const Step1TrajetColis()));
-        await tester.pumpAndSettle();
+    testWidgets('pas de date sélectionnée → le hint urgent est absent', (
+      tester,
+    ) async {
+      await tester.pumpWidget(wrap(const Step1TrajetColis()));
+      await tester.pumpAndSettle();
 
-        expect(
-          find.text('🔥 Date proche — cette demande sera signalée urgente'),
-          findsNothing,
-        );
-      },
-    );
+      expect(
+        find.text('🔥 Date proche — cette demande sera signalée urgente'),
+        findsNothing,
+      );
+    });
   });
 }

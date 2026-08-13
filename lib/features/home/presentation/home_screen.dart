@@ -923,6 +923,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
         dotColor: DonyColors.terra500,
         brightness: Theme.of(context).brightness,
         prefix: '📦',
+        currencyCode: item.currency,
       );
       markers.add(
         Marker(
@@ -1032,28 +1033,36 @@ class _MapSenderViewState extends State<_MapSenderView> {
                         opacity: (_isMapHidden || _isNearMeActive) ? 0.0 : 1.0,
                         duration: const Duration(milliseconds: 220),
                         curve: Curves.easeInOut,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxHeight: MediaQuery.sizeOf(context).height * 0.45,
+                          ),
+                          child: SingleChildScrollView(
+                            primary: false,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const _FavoritesButton(),
-                                const SizedBox(width: DonySpacing.sm),
-                                Expanded(
-                                  child: _CorridorBar(
-                                    key: const Key('corridor-bar'),
-                                    label: _corridorLabel,
-                                    activeFilterCount: _activeFilterCount,
-                                    onTap: () => _showFilterSheet(context),
-                                  ),
+                                Row(
+                                  children: [
+                                    const _FavoritesButton(),
+                                    const SizedBox(width: DonySpacing.sm),
+                                    Expanded(
+                                      child: _CorridorBar(
+                                        key: const Key('corridor-bar'),
+                                        label: _corridorLabel,
+                                        activeFilterCount: _activeFilterCount,
+                                        onTap: () => _showFilterSheet(context),
+                                      ),
+                                    ),
+                                    const SizedBox(width: DonySpacing.sm),
+                                    const _NotificationBell(),
+                                  ],
                                 ),
-                                const SizedBox(width: DonySpacing.sm),
-                                const _NotificationBell(),
+                                const SizedBox(height: DonySpacing.xs),
+                                _filterChipsRow(),
                               ],
                             ),
-                            const SizedBox(height: DonySpacing.xs),
-                            _filterChipsRow(),
-                          ],
+                          ),
                         ),
                       ),
                     ),
@@ -1094,13 +1103,18 @@ class _MapSenderViewState extends State<_MapSenderView> {
                         // texte, sans rien changer à 100 % (facteur = 1).
                         final textScale =
                             MediaQuery.textScalerOf(sheetCtx).scale(14) / 14;
-                        final peekSize = (0.30 * textScale).clamp(0.30, 0.55);
+                        // À 200 %, la poignée, l'indication et l'en-tête
+                        // dépassent encore 55 % sur les petits écrans. Une
+                        // peek plus haute garde le contenu utilisable sans
+                        // modifier la taille normale à 100 %.
+                        final peekSize = (0.30 * textScale).clamp(0.30, 0.70);
+                        final middleSnap = peekSize >= 0.6 ? 0.8 : 0.6;
                         return DraggableScrollableSheet(
                           controller: _sheetController,
                           initialChildSize: peekSize,
                           minChildSize: peekSize,
                           snap: true,
-                          snapSizes: [peekSize, 0.6, 1.0],
+                          snapSizes: [peekSize, middleSnap, 1.0],
                           builder: (ctx, scrollCtrl) => _buildSheet(
                             ctx,
                             scrollCtrl,

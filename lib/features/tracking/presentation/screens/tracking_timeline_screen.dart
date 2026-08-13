@@ -47,8 +47,26 @@ class _TrackingTimelineScreenState extends State<TrackingTimelineScreen> {
     final dep = parts.isNotEmpty ? parts[0].trim() : 'Paris';
     final arr = parts.length > 1 ? parts[1].trim() : 'Dakar';
 
-    final depCodes = _cityToCodes[dep] ?? (dep.length >= 3 ? dep.substring(0, 3).toUpperCase() : dep.toUpperCase(), dep.length >= 3 ? dep.substring(0, 3).toUpperCase() : dep.toUpperCase());
-    final arrCodes = _cityToCodes[arr] ?? (arr.length >= 3 ? arr.substring(0, 3).toUpperCase() : arr.toUpperCase(), arr.length >= 3 ? arr.substring(0, 3).toUpperCase() : arr.toUpperCase());
+    final depCodes =
+        _cityToCodes[dep] ??
+        (
+          dep.length >= 3
+              ? dep.substring(0, 3).toUpperCase()
+              : dep.toUpperCase(),
+          dep.length >= 3
+              ? dep.substring(0, 3).toUpperCase()
+              : dep.toUpperCase(),
+        );
+    final arrCodes =
+        _cityToCodes[arr] ??
+        (
+          arr.length >= 3
+              ? arr.substring(0, 3).toUpperCase()
+              : arr.toUpperCase(),
+          arr.length >= 3
+              ? arr.substring(0, 3).toUpperCase()
+              : arr.toUpperCase(),
+        );
 
     return (depCodes.$1, depCodes.$2, arrCodes.$1, arrCodes.$2);
   }
@@ -116,15 +134,15 @@ class _TrackingTimelineScreenState extends State<TrackingTimelineScreen> {
                 builder: (context, state) {
                   if (state is TrackingEventsLoading) {
                     return Center(
-                      child: CircularProgressIndicator(
-                          color: cs.primary),
+                      child: CircularProgressIndicator(color: cs.primary),
                     );
                   }
                   if (state is TrackingEventsError) {
                     return _ErrorView(
                       message: ErrorPresenter.resolve(state.error).message,
                       onRetry: () => context.read<TrackingBloc>().add(
-                          TrackingEventsRequested(widget.bidId)),
+                        TrackingEventsRequested(widget.bidId),
+                      ),
                     );
                   }
                   if (state is TrackingEventsLoaded) {
@@ -132,49 +150,63 @@ class _TrackingTimelineScreenState extends State<TrackingTimelineScreen> {
                       color: cs.primary,
                       onRefresh: () async {
                         context.read<TrackingBloc>().add(
-                            TrackingEventsRequested(widget.bidId));
-                      },
-                      child: Builder(builder: (context) {
-                        final h = DonyLayout.hPadding(context);
-                        return SingleChildScrollView(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          padding: EdgeInsets.fromLTRB(h, DonySpacing.md, h, DonySpacing.huge),
-                          child: DonyLayout.constrained(
-                            context,
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // Map card
-                                RouteMapCard(
-                                  departureCode: corridorCodes.$1,
-                                  arrivalCode: corridorCodes.$3,
-                                  departureCity: corridorCodes.$2,
-                                  arrivalCity: corridorCodes.$4,
-                                ),
-                                const SizedBox(height: DonySpacing.base),
-
-                                // Carte tutoriel contextuelle (lecture & suivi)
-                                const ContextualTutorialCard(
-                                  context: TutorialContext.tracking,
-                                ),
-                                const SizedBox(height: DonySpacing.base),
-
-                                // Timeline
-                                _Timeline(events: state.events),
-
-                                const SizedBox(height: DonySpacing.base),
-
-                                // "Pas besoin d'app !" banner
-                                _ApplessBanner(
-                                  travelerName: 'le voyageur',
-                                  bidId: widget.bidId,
-                                ),
-                              ],
-                            ).animate().fadeIn(duration: 300.ms).slideY(
-                                begin: 0.04, curve: Curves.easeOutCubic),
-                          ),
+                          TrackingEventsRequested(widget.bidId),
                         );
-                      }),
+                      },
+                      child: Builder(
+                        builder: (context) {
+                          final h = DonyLayout.hPadding(context);
+                          return SingleChildScrollView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            padding: EdgeInsets.fromLTRB(
+                              h,
+                              DonySpacing.md,
+                              h,
+                              DonySpacing.huge,
+                            ),
+                            child: DonyLayout.constrained(
+                              context,
+                              Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      // Map card
+                                      RouteMapCard(
+                                        departureCode: corridorCodes.$1,
+                                        arrivalCode: corridorCodes.$3,
+                                        departureCity: corridorCodes.$2,
+                                        arrivalCity: corridorCodes.$4,
+                                      ),
+                                      const SizedBox(height: DonySpacing.base),
+
+                                      // Carte tutoriel contextuelle (lecture & suivi)
+                                      const ContextualTutorialCard(
+                                        context: TutorialContext.tracking,
+                                      ),
+                                      const SizedBox(height: DonySpacing.base),
+
+                                      // Timeline
+                                      _Timeline(events: state.events),
+
+                                      const SizedBox(height: DonySpacing.base),
+
+                                      // "Pas besoin d'app !" banner
+                                      _ApplessBanner(
+                                        travelerName: 'le voyageur',
+                                        bidId: widget.bidId,
+                                      ),
+                                    ],
+                                  )
+                                  .animate()
+                                  .fadeIn(duration: 300.ms)
+                                  .slideY(
+                                    begin: 0.04,
+                                    curve: Curves.easeOutCubic,
+                                  ),
+                            ),
+                          );
+                        },
+                      ),
                     );
                   }
                   return const SizedBox.shrink();
@@ -240,8 +272,11 @@ class _TimelineItem extends StatelessWidget {
   final bool isLast;
   final int index;
 
-  const _TimelineItem(
-      {required this.event, required this.isLast, required this.index});
+  const _TimelineItem({
+    required this.event,
+    required this.isLast,
+    required this.index,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -281,7 +316,8 @@ class _TimelineItem extends StatelessWidget {
                       width: 2,
                       color: cs.outlineVariant,
                       margin: const EdgeInsets.symmetric(
-                          vertical: DonySpacing.xs),
+                        vertical: DonySpacing.xs,
+                      ),
                     ),
                   ),
               ],
@@ -292,8 +328,7 @@ class _TimelineItem extends StatelessWidget {
           // Content card
           Expanded(
             child: Container(
-              margin: EdgeInsets.only(
-                  bottom: isLast ? 0 : DonySpacing.base),
+              margin: EdgeInsets.only(bottom: isLast ? 0 : DonySpacing.base),
               padding: const EdgeInsets.all(DonySpacing.md),
               decoration: BoxDecoration(
                 color: cs.surface,
@@ -309,21 +344,26 @@ class _TimelineItem extends StatelessWidget {
                   ),
                   const SizedBox(height: DonySpacing.xs),
                   Text(
-                    DateFormat('dd/MM/yyyy à HH:mm')
-                        .format(event.scannedAt.toLocal()),
+                    DateFormat(
+                      'dd/MM/yyyy à HH:mm',
+                    ).format(event.scannedAt.toLocal()),
                     style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                   ),
                   if (event.gpsLat != null && event.gpsLon != null) ...[
                     const SizedBox(height: DonySpacing.xs),
                     Row(
                       children: [
-                        DonyIcon('map-pin',
-                            size: 12, color: cs.onSurfaceVariant),
+                        DonyIcon(
+                          'map-pin',
+                          size: 12,
+                          color: cs.onSurfaceVariant,
+                        ),
                         const SizedBox(width: DonySpacing.xs),
                         Text(
                           '${event.gpsLat!.toStringAsFixed(4)}, ${event.gpsLon!.toStringAsFixed(4)}',
-                          style: tt.bodySmall
-                              ?.copyWith(color: cs.onSurfaceVariant),
+                          style: tt.bodySmall?.copyWith(
+                            color: cs.onSurfaceVariant,
+                          ),
                         ),
                       ],
                     ),
@@ -331,8 +371,7 @@ class _TimelineItem extends StatelessWidget {
                   if (event.photoUrl != null) ...[
                     const SizedBox(height: DonySpacing.sm),
                     ClipRRect(
-                      borderRadius:
-                          BorderRadius.circular(DonyRadius.sm),
+                      borderRadius: BorderRadius.circular(DonyRadius.sm),
                       child: DonyImage(
                         url: event.photoUrl!,
                         height: 120,
@@ -343,16 +382,20 @@ class _TimelineItem extends StatelessWidget {
                           color: cs.primaryContainer,
                           child: Center(
                             child: CircularProgressIndicator(
-                                color: cs.primary,
-                                strokeWidth: 2),
+                              color: cs.primary,
+                              strokeWidth: 2,
+                            ),
                           ),
                         ),
                         errorWidget: (_) => Container(
                           height: 60,
                           color: cs.surfaceContainerHighest,
                           child: Center(
-                              child: DonyIcon('image-off',
-                                  color: cs.onSurfaceVariant)),
+                            child: DonyIcon(
+                              'image-off',
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -361,8 +404,7 @@ class _TimelineItem extends StatelessWidget {
                     const SizedBox(height: DonySpacing.sm),
                     Row(
                       children: [
-                        DonyIcon('wifi-off',
-                            size: 12, color: cs.warning),
+                        DonyIcon('wifi-off', size: 12, color: cs.warning),
                         const SizedBox(width: DonySpacing.xs),
                         Text(
                           'Lecture hors-ligne synchronisée',
@@ -399,8 +441,7 @@ class _PendingConfirmationBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          DonyIcon('hourglass',
-              color: cs.warning, size: 22),
+          DonyIcon('hourglass', color: cs.warning, size: 22),
           const SizedBox(width: DonySpacing.md),
           Expanded(
             child: Column(
@@ -413,8 +454,10 @@ class _PendingConfirmationBanner extends StatelessWidget {
                 const SizedBox(height: DonySpacing.xxs),
                 Text(
                   'Le destinataire doit confirmer la réception via le code SMS.',
-                  style: tt.bodySmall
-                      ?.copyWith(color: cs.onSurfaceVariant, height: 1.4),
+                  style: tt.bodySmall?.copyWith(
+                    color: cs.onSurfaceVariant,
+                    height: 1.4,
+                  ),
                 ),
               ],
             ),
@@ -445,15 +488,15 @@ class _EmptyTimeline extends StatelessWidget {
             size: DonyMascotteSize.md,
           ),
           const SizedBox(height: DonySpacing.base),
-          Text(
-            'En attente de la lecture au départ',
-            style: tt.titleLarge,
-          ),
+          Text('En attente de la lecture au départ', style: tt.titleLarge),
           const SizedBox(height: DonySpacing.sm),
           Text(
             'Le voyageur lira le QR code lors de la remise du colis.',
             textAlign: TextAlign.center,
-            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant, height: 1.4),
+            style: tt.bodySmall?.copyWith(
+              color: cs.onSurfaceVariant,
+              height: 1.4,
+            ),
           ),
         ],
       ),
@@ -484,8 +527,11 @@ class _ApplessBanner extends StatelessWidget {
         children: [
           Row(
             children: [
-              const DonyIcon('circle-check',
-                  color: DonyColors.terra500, size: 20),
+              const DonyIcon(
+                'circle-check',
+                color: DonyColors.terra500,
+                size: 20,
+              ),
               const SizedBox(width: DonySpacing.sm),
               Text(
                 'Pas besoin d\'app !',
@@ -499,8 +545,10 @@ class _ApplessBanner extends StatelessWidget {
           const SizedBox(height: DonySpacing.sm),
           Text(
             'Quand $travelerName sera devant votre porte, vous confirmerez avec un QR ou un code à 6 chiffres.',
-            style: tt.bodySmall
-                ?.copyWith(color: Theme.of(context).colorScheme.onSurface, height: 1.4),
+            style: tt.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurface,
+              height: 1.4,
+            ),
           ),
           const SizedBox(height: DonySpacing.md),
           DonyButton(
@@ -566,9 +614,9 @@ class _ConfirmationCodeSheetBody extends StatelessWidget {
                 label: 'Réessayer',
                 iconAsset: 'refresh-cw',
                 fullWidth: false,
-                onPressed: () => context
-                    .read<TrackingBloc>()
-                    .add(TrackingConfirmCodeRequested(bidId)),
+                onPressed: () => context.read<TrackingBloc>().add(
+                  TrackingConfirmCodeRequested(bidId),
+                ),
               ),
             ),
           );
@@ -583,9 +631,9 @@ class _ConfirmationCodeSheetBody extends StatelessWidget {
             code: loaded?.code,
             expiresAt: loaded?.expiresAt,
             isRefreshing: isRefreshing,
-            onRefresh: () => context
-                .read<TrackingBloc>()
-                .add(TrackingRefreshCodeRequested(bidId)),
+            onRefresh: () => context.read<TrackingBloc>().add(
+              TrackingRefreshCodeRequested(bidId),
+            ),
           ),
         );
       },
@@ -620,7 +668,11 @@ class _CodeCard extends StatelessWidget {
         Container(
           width: double.infinity,
           padding: const EdgeInsets.fromLTRB(
-              DonySpacing.xl, DonySpacing.xl, DonySpacing.xxl, DonySpacing.lg),
+            DonySpacing.xl,
+            DonySpacing.xl,
+            DonySpacing.xxl,
+            DonySpacing.lg,
+          ),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
@@ -636,9 +688,7 @@ class _CodeCard extends StatelessWidget {
           child: Column(
             children: [
               Text(
-                code != null
-                    ? code!.split('').join('  ')
-                    : '– – – – – –',
+                code != null ? code!.split('').join('  ') : '– – – – – –',
                 style: tt.displayMedium?.copyWith(
                   color: cs.onPrimaryContainer,
                   fontWeight: FontWeight.w800,
@@ -689,38 +739,38 @@ class _GlassRefreshButton extends StatelessWidget {
       enabled: onTap != null,
       label: 'Actualiser',
       child: GestureDetector(
-      onTap: onTap,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(DonyRadius.full),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: cs.onPrimaryContainer.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(DonyRadius.full),
-              border: Border.all(
-                color: cs.onPrimaryContainer.withValues(alpha: 0.2),
-                width: 0.5,
+        onTap: onTap,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(DonyRadius.full),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: cs.onPrimaryContainer.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(DonyRadius.full),
+                border: Border.all(
+                  color: cs.onPrimaryContainer.withValues(alpha: 0.2),
+                  width: 0.5,
+                ),
               ),
-            ),
-            child: isLoading
-                ? Padding(
-                    padding: const EdgeInsets.all(9),
-                    child: CircularProgressIndicator(
-                      strokeWidth: 1.5,
-                      color: cs.onPrimaryContainer,
+              child: isLoading
+                  ? Padding(
+                      padding: const EdgeInsets.all(9),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 1.5,
+                        color: cs.onPrimaryContainer,
+                      ),
+                    )
+                  : DonyIcon(
+                      'refresh-cw',
+                      size: 18,
+                      color: cs.onPrimaryContainer.withValues(alpha: 0.8),
                     ),
-                  )
-                : DonyIcon(
-                    'refresh-cw',
-                    size: 18,
-                    color: cs.onPrimaryContainer.withValues(alpha: 0.8),
-                  ),
+            ),
           ),
         ),
-      ),
       ),
     );
   }

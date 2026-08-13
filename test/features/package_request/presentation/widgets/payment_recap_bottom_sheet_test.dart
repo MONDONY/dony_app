@@ -18,6 +18,8 @@ import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/error_reporting_test_doubles.dart';
+
 /// Widget test for `PaymentRecapBottomSheet.show()` — the static sheet
 /// launcher itself, NOT `PaymentRecapContent` (already covered in depth by
 /// `payment_recap_test.dart`, which pumps the content widget directly).
@@ -27,8 +29,7 @@ import 'package:mocktail/mocktail.dart';
 /// PayPal confirmation → `NegotiationCheckoutRequested` dispatch →
 /// `DonySuccessScreen` → CTA navigation.
 
-class _MockNegotiationBloc
-    extends MockBloc<NegotiationEvent, NegotiationState>
+class _MockNegotiationBloc extends MockBloc<NegotiationEvent, NegotiationState>
     implements NegotiationBloc {}
 
 class _MockLocalAuthService extends Mock implements LocalAuthService {}
@@ -87,10 +88,14 @@ void main() {
   late _MockNegotiationBloc bloc;
 
   setUp(() {
+    // DonyPaymentSheet.show resout ErrorReportingService via GetIt.
+    registerNoopErrorReporting();
+
     bloc = _MockNegotiationBloc();
     when(() => bloc.state).thenReturn(const NegotiationInitial());
-    when(() => bloc.stream)
-        .thenAnswer((_) => const Stream<NegotiationState>.empty());
+    when(
+      () => bloc.stream,
+    ).thenAnswer((_) => const Stream<NegotiationState>.empty());
   });
 
   tearDown(() => bloc.close());
@@ -105,10 +110,12 @@ void main() {
     late _MockNegotiationRepository negotiationRepository;
 
     setUpAll(() {
-      registerFallbackValue(const NegotiationCheckoutRequested(
-        threadId: 'thread-recap-1',
-        paymentIntentId: 'pi_test',
-      ));
+      registerFallbackValue(
+        const NegotiationCheckoutRequested(
+          threadId: 'thread-recap-1',
+          paymentIntentId: 'pi_test',
+        ),
+      );
     });
 
     setUp(() {
@@ -116,29 +123,37 @@ void main() {
       userPrefsBox = _MockBox();
       // Biométrie activée + réussie → requirePaymentAuth ne passe jamais par
       // l'écran PIN '/auth/local' (pas de route stub nécessaire).
-      when(() => userPrefsBox.get(HiveService.kBiometricEnabled,
-          defaultValue: any(named: 'defaultValue'))).thenReturn(true);
-      when(() => authService.isBiometricAvailable())
-          .thenAnswer((_) async => true);
-      when(() => authService.authenticateWithBiometric())
-          .thenAnswer((_) async => true);
+      when(
+        () => userPrefsBox.get(
+          HiveService.kBiometricEnabled,
+          defaultValue: any(named: 'defaultValue'),
+        ),
+      ).thenReturn(true);
+      when(
+        () => authService.isBiometricAvailable(),
+      ).thenAnswer((_) async => true);
+      when(
+        () => authService.authenticateWithBiometric(),
+      ).thenAnswer((_) async => true);
 
       paymentGateway = _MockPaymentGateway();
       // PlatformPayButton (Apple/Google Pay) plante hors iOS/Android réel —
       // on désactive le wallet et paie via PayPal (bouton Flutter classique).
-      when(() => paymentGateway.isPlatformPaySupported())
-          .thenAnswer((_) async => false);
-      when(() => paymentGateway.confirmPayPal(any()))
-          .thenAnswer((_) async {});
+      when(
+        () => paymentGateway.isPlatformPaySupported(),
+      ).thenAnswer((_) async => false);
+      when(() => paymentGateway.confirmPayPal(any())).thenAnswer((_) async {});
 
       paymentRepository = _MockPaymentRepository();
       negotiationRepository = _MockNegotiationRepository();
-      when(() => negotiationRepository.initiatePayment('thread-recap-1'))
-          .thenAnswer(
+      when(
+        () => negotiationRepository.initiatePayment('thread-recap-1'),
+      ).thenAnswer(
         (_) async => (
           clientSecret: 'pi_test_secret',
           paymentIntentId: 'pi_test',
           amountEur: 39.20,
+          currencyCode: 'EUR',
           paymentMethodTypes: ['paypal'],
         ),
       );
@@ -166,8 +181,7 @@ void main() {
       if (getIt.isRegistered<NegotiationRepository>()) {
         getIt.unregister<NegotiationRepository>();
       }
-      getIt.registerFactory<NegotiationRepository>(
-          () => negotiationRepository);
+      getIt.registerFactory<NegotiationRepository>(() => negotiationRepository);
     });
 
     tearDown(() {
@@ -225,10 +239,10 @@ void main() {
       return MaterialApp.router(routerConfig: router, theme: AppTheme.light());
     }
 
-    testWidgets(
-        'onSuccess du paiement Stripe → NegotiationCheckoutRequested + '
-        'DonySuccessScreen puis CTA vers /negotiations/{threadId}',
-        (tester) async {
+    testWidgets('onSuccess du paiement Stripe → NegotiationCheckoutRequested + '
+        'DonySuccessScreen puis CTA vers /negotiations/{threadId}', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildRoutedApp());
       await tester.tap(find.byKey(const Key('open')));
       await tester.pumpAndSettle();
@@ -241,7 +255,7 @@ void main() {
       // jamais. On enchaîne donc des pumps bornés pour vider les gaps async
       // (requirePaymentAuth, initiatePayment, ouverture de la sheet,
       // PaymentSheetStarted).
-      await tester.tap(find.text('Payer 39,20 €'));
+      await tester.tap(find.text('Payer 39,20 €'));
       for (var i = 0; i < 8; i++) {
         await tester.pump(const Duration(milliseconds: 60));
       }
@@ -252,20 +266,24 @@ void main() {
       await tester.tap(find.byKey(const Key('paymentSheetPayPalButton')));
       await tester.pump(); // PaymentSheetProcessing
       await tester.pump(); // PaymentSheetSuccess (résolution async du gateway)
-      await tester
-          .pump(const Duration(milliseconds: 900)); // déclenchement onSuccess
+      await tester.pump(
+        const Duration(milliseconds: 900),
+      ); // déclenchement onSuccess
       // Laisse l'animation de fermeture de la sheet extérieure se terminer —
       // toujours pas de pumpAndSettle, même raison que ci-dessus.
       for (var i = 0; i < 6; i++) {
         await tester.pump(const Duration(milliseconds: 60));
       }
 
-      verify(() => bloc.add(any(
-              that: isA<NegotiationCheckoutRequested>()
-                  .having((e) => e.threadId, 'threadId', 'thread-recap-1')
-                  .having((e) => e.paymentIntentId, 'paymentIntentId',
-                      'pi_test'))))
-          .called(1);
+      verify(
+        () => bloc.add(
+          any(
+            that: isA<NegotiationCheckoutRequested>()
+                .having((e) => e.threadId, 'threadId', 'thread-recap-1')
+                .having((e) => e.paymentIntentId, 'paymentIntentId', 'pi_test'),
+          ),
+        ),
+      ).called(1);
 
       expect(find.byType(DonySuccessScreen), findsOneWidget);
       expect(find.text('Offre acceptée et payée !'), findsOneWidget);
@@ -283,10 +301,12 @@ void main() {
 
   group('Confirmation accord cash', () {
     setUpAll(() {
-      registerFallbackValue(const NegotiationCheckoutRequested(
-        threadId: 'thread-recap-1',
-        paymentIntentId: kCashPaymentSentinel,
-      ));
+      registerFallbackValue(
+        const NegotiationCheckoutRequested(
+          threadId: 'thread-recap-1',
+          paymentIntentId: kCashPaymentSentinel,
+        ),
+      );
     });
 
     Widget buildRoutedApp() {
@@ -327,32 +347,42 @@ void main() {
     }
 
     testWidgets(
-        'confirmation cash → NegotiationCheckoutRequested(kCashPaymentSentinel) '
-        '+ DonySuccessScreen "Accord confirmé !" puis CTA vers /negotiations/{threadId}',
-        (tester) async {
-      await tester.pumpWidget(buildRoutedApp());
-      await tester.tap(find.byKey(const Key('open')));
-      await tester.pumpAndSettle();
+      'confirmation cash → NegotiationCheckoutRequested(kCashPaymentSentinel) '
+      '+ DonySuccessScreen "Accord confirmé !" puis CTA vers /negotiations/{threadId}',
+      (tester) async {
+        await tester.pumpWidget(buildRoutedApp());
+        await tester.tap(find.byKey(const Key('open')));
+        await tester.pumpAndSettle();
 
-      await tester.tap(find.widgetWithText(DonyButton, 'Confirmer l\'accord'));
-      await tester.pumpAndSettle();
+        await tester.tap(
+          find.widgetWithText(DonyButton, 'Confirmer l\'accord'),
+        );
+        await tester.pumpAndSettle();
 
-      verify(() => bloc.add(any(
+        verify(
+          () => bloc.add(
+            any(
               that: isA<NegotiationCheckoutRequested>()
                   .having((e) => e.threadId, 'threadId', 'thread-recap-1')
-                  .having((e) => e.paymentIntentId, 'paymentIntentId',
-                      kCashPaymentSentinel))))
-          .called(1);
+                  .having(
+                    (e) => e.paymentIntentId,
+                    'paymentIntentId',
+                    kCashPaymentSentinel,
+                  ),
+            ),
+          ),
+        ).called(1);
 
-      expect(find.byType(DonySuccessScreen), findsOneWidget);
-      expect(find.text('Accord confirmé !'), findsOneWidget);
+        expect(find.byType(DonySuccessScreen), findsOneWidget);
+        expect(find.text('Accord confirmé !'), findsOneWidget);
 
-      await tester.ensureVisible(find.text('Voir le suivi'));
-      await tester.tap(find.text('Voir le suivi'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
+        await tester.ensureVisible(find.text('Voir le suivi'));
+        await tester.tap(find.text('Voir le suivi'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
 
-      expect(find.text('Fil de négociation thread-recap-1'), findsOneWidget);
-    });
+        expect(find.text('Fil de négociation thread-recap-1'), findsOneWidget);
+      },
+    );
   });
 }

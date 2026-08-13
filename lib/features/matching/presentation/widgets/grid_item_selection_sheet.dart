@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:flutter/material.dart';
@@ -25,6 +26,7 @@ class GridItemSelectionSheet {
     required List<AnnouncementGridItemModel> items,
     required Map<String, int> initialQuantities,
     required String corridor,
+    String currency = 'EUR',
   }) async {
     final quantitiesNotifier = ValueNotifier<Map<String, int>>(
       Map<String, int>.from(initialQuantities),
@@ -38,8 +40,10 @@ class GridItemSelectionSheet {
         valueListenable: quantitiesNotifier,
         builder: (ctx, quantities, _) {
           final hasItems = quantities.values.any((q) => q > 0);
-          final totalSelected =
-              quantities.values.fold<int>(0, (sum, q) => sum + q);
+          final totalSelected = quantities.values.fold<int>(
+            0,
+            (sum, q) => sum + q,
+          );
           return Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -49,8 +53,8 @@ class GridItemSelectionSheet {
                   child: Text(
                     '$totalSelected article${totalSelected > 1 ? 's' : ''} sélectionné${totalSelected > 1 ? 's' : ''}',
                     style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(ctx).colorScheme.onSurfaceVariant,
-                        ),
+                      color: Theme.of(ctx).colorScheme.onSurfaceVariant,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -72,6 +76,7 @@ class GridItemSelectionSheet {
         items: items,
         corridor: corridor,
         quantitiesNotifier: quantitiesNotifier,
+        currency: currency,
       ),
     ).whenComplete(quantitiesNotifier.dispose);
 
@@ -84,11 +89,13 @@ class _GridItemSelectionContent extends StatelessWidget {
     required this.items,
     required this.corridor,
     required this.quantitiesNotifier,
+    this.currency = 'EUR',
   });
 
   final List<AnnouncementGridItemModel> items;
   final String corridor;
   final ValueNotifier<Map<String, int>> quantitiesNotifier;
+  final String currency;
 
   @override
   Widget build(BuildContext context) {
@@ -112,6 +119,7 @@ class _GridItemSelectionContent extends StatelessWidget {
               return _GridItemRow(
                 item: item,
                 quantity: qty,
+                currency: currency,
                 onIncrement: () {
                   quantitiesNotifier.value = {
                     ...quantitiesNotifier.value,
@@ -120,8 +128,9 @@ class _GridItemSelectionContent extends StatelessWidget {
                 },
                 onDecrement: qty > 0
                     ? () {
-                        final updated =
-                            Map<String, int>.from(quantitiesNotifier.value);
+                        final updated = Map<String, int>.from(
+                          quantitiesNotifier.value,
+                        );
                         if (qty <= 1) {
                           updated.remove(item.id);
                         } else {
@@ -146,12 +155,14 @@ class _GridItemRow extends StatelessWidget {
     required this.quantity,
     required this.onIncrement,
     this.onDecrement,
+    this.currency = 'EUR',
   });
 
   final AnnouncementGridItemModel item;
   final int quantity;
   final VoidCallback onIncrement;
   final VoidCallback? onDecrement;
+  final String currency;
 
   @override
   Widget build(BuildContext context) {
@@ -180,7 +191,7 @@ class _GridItemRow extends StatelessWidget {
               children: [
                 Text(item.label, style: tt.titleSmall),
                 Text(
-                  '${item.unitPriceDisplay.toStringAsFixed(2)} € / unité',
+                  '${formatPriceIn(item.unitPriceDisplay, currency)} / unité',
                   style: tt.bodySmall?.copyWith(
                     color: isActive ? cs.success : cs.onSurfaceVariant,
                     fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
@@ -200,9 +211,7 @@ class _GridItemRow extends StatelessWidget {
               ),
               SizedBox(
                 width: 28,
-                child: Center(
-                  child: Text('$quantity', style: tt.titleSmall),
-                ),
+                child: Center(child: Text('$quantity', style: tt.titleSmall)),
               ),
               _StepBtn(
                 key: Key('grid-item-add-${item.id}'),
@@ -248,19 +257,19 @@ class _StepBtn extends StatelessWidget {
       enabled: onTap != null,
       label: semanticLabel,
       child: GestureDetector(
-      onTap: onTap,
-      child: Opacity(
-        opacity: onTap != null ? 1.0 : 0.4,
-        child: Container(
-          width: 28,
-          height: 28,
-          decoration: BoxDecoration(
-            color: bgColor,
-            borderRadius: BorderRadius.circular(DonyRadius.sm),
+        onTap: onTap,
+        child: Opacity(
+          opacity: onTap != null ? 1.0 : 0.4,
+          child: Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: bgColor,
+              borderRadius: BorderRadius.circular(DonyRadius.sm),
+            ),
+            child: DonyIcon(iconAsset, size: 14, color: iconColor),
           ),
-          child: DonyIcon(iconAsset, size: 14, color: iconColor),
         ),
-      ),
       ),
     );
   }

@@ -21,9 +21,13 @@ class NegotiationRepository {
       data: {
         'packageRequestId': packageRequestId,
         'proposedPriceEur': proposedPriceEur,
-        'travelerTravelDate': travelerTravelDate.toIso8601String().substring(0, 10),
+        'travelerTravelDate': travelerTravelDate.toIso8601String().substring(
+          0,
+          10,
+        ),
         'travelerAvailableKg': travelerAvailableKg,
-        if (travelerAnnouncementId != null) 'travelerAnnouncementId': travelerAnnouncementId,
+        if (travelerAnnouncementId != null)
+          'travelerAnnouncementId': travelerAnnouncementId,
         if (body != null) 'body': body,
       },
     );
@@ -31,15 +35,18 @@ class NegotiationRepository {
   }
 
   Future<List<NegotiationThread>> findMine() async {
-    final response = await _apiClient.dio.get<List<dynamic>>('/negotiations/me');
+    final response = await _apiClient.dio.get<List<dynamic>>(
+      '/negotiations/me',
+    );
     return (response.data ?? <dynamic>[])
         .map((e) => NegotiationThread.fromJson(e as Map<String, dynamic>))
         .toList();
   }
 
   Future<NegotiationThread> getById(String id) async {
-    final response =
-        await _apiClient.dio.get<Map<String, dynamic>>('/negotiations/$id');
+    final response = await _apiClient.dio.get<Map<String, dynamic>>(
+      '/negotiations/$id',
+    );
     return NegotiationThread.fromJson(response.data!);
   }
 
@@ -127,7 +134,8 @@ class NegotiationRepository {
         'pickupAddress': pickupAddress,
         'deliveryAddress': deliveryAddress,
         if (description != null) 'description': description,
-        if (acceptedContentTypes != null) 'acceptedContentTypes': acceptedContentTypes,
+        if (acceptedContentTypes != null)
+          'acceptedContentTypes': acceptedContentTypes,
         if (refusedTypes != null) 'refusedTypes': refusedTypes,
         'paymentMethod': paymentMethod.wireName,
         'useCardForCommission': useCardForCommission,
@@ -141,8 +149,16 @@ class NegotiationRepository {
   /// The thread is finalized to ACCEPTED async via webhook. [promoCode] optionnel :
   /// s'il ne s'applique plus (expiré/épuisé entre l'aperçu et le paiement), le
   /// backend retombe silencieusement sur le taux sans promo (jamais bloquant).
-  Future<({String clientSecret, String paymentIntentId, double amountEur, List<String> paymentMethodTypes})>
-      initiatePayment(String id, {String? promoCode}) async {
+  Future<
+    ({
+      String clientSecret,
+      String paymentIntentId,
+      double amountEur,
+      String currencyCode,
+      List<String> paymentMethodTypes,
+    })
+  >
+  initiatePayment(String id, {String? promoCode}) async {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
       '/negotiations/$id/initiate-payment',
       queryParameters: promoCode != null && promoCode.isNotEmpty
@@ -154,7 +170,9 @@ class NegotiationRepository {
       clientSecret: data['clientSecret'] as String,
       paymentIntentId: data['stripePaymentIntentId'] as String,
       amountEur: (data['amount'] as num).toDouble(),
-      paymentMethodTypes: (data['paymentMethodTypes'] as List<dynamic>?)
+      currencyCode: data['currency'] as String? ?? 'EUR',
+      paymentMethodTypes:
+          (data['paymentMethodTypes'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           const [],
@@ -205,8 +223,9 @@ class NegotiationRepository {
   /// Sends a nudge on this thread to prompt the other party to act.
   /// Backend validates whether the current viewer is allowed to nudge.
   Future<NegotiationThread> nudge(String id) async {
-    final response =
-        await _apiClient.dio.post<Map<String, dynamic>>('/negotiations/$id/nudge');
+    final response = await _apiClient.dio.post<Map<String, dynamic>>(
+      '/negotiations/$id/nudge',
+    );
     return NegotiationThread.fromJson(response.data!);
   }
 }

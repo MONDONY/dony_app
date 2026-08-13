@@ -6,7 +6,14 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-enum DonyButtonVariant { primary, secondary, ghost, destructive, success, accent }
+enum DonyButtonVariant {
+  primary,
+  secondary,
+  ghost,
+  destructive,
+  success,
+  accent,
+}
 
 class DonyButton extends StatefulWidget {
   const DonyButton({
@@ -68,8 +75,9 @@ class _DonyButtonState extends State<DonyButton> {
             ),
           )
         : Row(
-            mainAxisSize:
-                widget.fullWidth ? MainAxisSize.max : MainAxisSize.min,
+            mainAxisSize: widget.fullWidth
+                ? MainAxisSize.max
+                : MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               if (widget.icon != null) ...[
@@ -130,76 +138,80 @@ class _DonyButtonState extends State<DonyButton> {
 
     final button = switch (widget.variant) {
       DonyButtonVariant.primary => _GlowButton(
-          colors: hc
-              ? _flat(cs.primary)
-              : isLight
-                  ? [const Color(0xFF1F6BF5), DonyColors.blue500, DonyColors.blue700]
-                  : [const Color(0xFF6699FF), DonyColors.blueDark500, DonyColors.blueDark700],
-          shadows: isLight ? DonyShadow.brand : DonyShadow.brandDark,
-          foreground: onBrand,
-          pressed: _pressed,
-          fullWidth: widget.fullWidth,
-          onPressed: widget.isLoading ? null : widget.onPressed,
-          child: content,
-        ),
+        colors: hc
+            ? _flat(cs.primary)
+            : isLight
+            ? [const Color(0xFF1F6BF5), DonyColors.blue500, DonyColors.blue700]
+            : [
+                const Color(0xFF6699FF),
+                DonyColors.blueDark500,
+                DonyColors.blueDark700,
+              ],
+        shadows: isLight ? DonyShadow.brand : DonyShadow.brandDark,
+        foreground: onBrand,
+        pressed: _pressed,
+        fullWidth: widget.fullWidth,
+        onPressed: widget.isLoading ? null : widget.onPressed,
+        child: content,
+      ),
       DonyButtonVariant.success => _GlowButton(
-          colors: hc
-              ? _flat(isLight ? DonyColors.successHc : DonyColors.successHcDark)
-              : isLight
-                  ? [const Color(0xFF0F8058), DonyColors.success700]
-                  : [DonyColors.successDark500, const Color(0xFF22B882)],
-          shadows: isLight ? DonyShadow.success : DonyShadow.successDark,
-          foreground: onBrand,
-          pressed: _pressed,
-          fullWidth: widget.fullWidth,
-          onPressed: widget.isLoading ? null : widget.onPressed,
-          child: content,
-        ),
+        colors: hc
+            ? _flat(isLight ? DonyColors.successHc : DonyColors.successHcDark)
+            : isLight
+            ? [const Color(0xFF0F8058), DonyColors.success700]
+            : [DonyColors.successDark500, const Color(0xFF22B882)],
+        shadows: isLight ? DonyShadow.success : DonyShadow.successDark,
+        foreground: onBrand,
+        pressed: _pressed,
+        fullWidth: widget.fullWidth,
+        onPressed: widget.isLoading ? null : widget.onPressed,
+        child: content,
+      ),
       DonyButtonVariant.destructive => _GlowButton(
-          colors: hc
-              ? _flat(isLight ? DonyColors.dangerHc : DonyColors.dangerHcDark)
-              : isLight
-                  ? [DonyColors.danger500, DonyColors.danger700]
-                  : [DonyColors.dangerDark500, const Color(0xFFD9453D)],
-          shadows: isLight ? DonyShadow.danger : DonyShadow.dangerDark,
-          foreground: onBrand,
-          pressed: _pressed,
-          fullWidth: widget.fullWidth,
-          onPressed: widget.isLoading ? null : widget.onPressed,
-          child: content,
-        ),
+        colors: hc
+            ? _flat(isLight ? DonyColors.dangerHc : DonyColors.dangerHcDark)
+            : isLight
+            ? [DonyColors.danger500, DonyColors.danger700]
+            : [DonyColors.dangerDark500, const Color(0xFFD9453D)],
+        shadows: isLight ? DonyShadow.danger : DonyShadow.dangerDark,
+        foreground: onBrand,
+        pressed: _pressed,
+        fullWidth: widget.fullWidth,
+        onPressed: widget.isLoading ? null : widget.onPressed,
+        child: content,
+      ),
       DonyButtonVariant.accent => _GlowButton(
-          colors: hc
-              ? _flat(isLight ? DonyColors.accentHc : DonyColors.accentHcDark)
-              : isLight
-                  ? [DonyColors.terra600, DonyColors.terra700]
-                  : [DonyColors.terraDark500, const Color(0xFFD9743F)],
-          shadows: DonyShadow.accent, // pas de variante sombre du glow accent
-          foreground: onBrand,
-          pressed: _pressed,
-          fullWidth: widget.fullWidth,
-          onPressed: widget.isLoading ? null : widget.onPressed,
-          child: content,
-        ),
+        colors: hc
+            ? _flat(isLight ? DonyColors.accentHc : DonyColors.accentHcDark)
+            : isLight
+            ? [DonyColors.terra600, DonyColors.terra700]
+            : [DonyColors.terraDark500, const Color(0xFFD9743F)],
+        shadows: DonyShadow.accent, // pas de variante sombre du glow accent
+        foreground: onBrand,
+        pressed: _pressed,
+        fullWidth: widget.fullWidth,
+        onPressed: widget.isLoading ? null : widget.onPressed,
+        child: content,
+      ),
       DonyButtonVariant.secondary => OutlinedButton(
-          onPressed: widget.isLoading ? null : widget.onPressed,
-          style: OutlinedButton.styleFrom(
-            foregroundColor: cs.primary,
-            minimumSize: minSize,
-            padding: padding,
-            side: BorderSide(color: cs.primary, width: 1.5),
-          ),
-          child: content,
+        onPressed: widget.isLoading ? null : widget.onPressed,
+        style: OutlinedButton.styleFrom(
+          foregroundColor: cs.primary,
+          minimumSize: minSize,
+          padding: padding,
+          side: BorderSide(color: cs.primary, width: 1.5),
         ),
+        child: content,
+      ),
       DonyButtonVariant.ghost => TextButton(
-          onPressed: widget.isLoading ? null : widget.onPressed,
-          style: TextButton.styleFrom(
-            foregroundColor: cs.onSurfaceVariant,
-            minimumSize: minSize,
-            padding: padding,
-          ),
-          child: content,
+        onPressed: widget.isLoading ? null : widget.onPressed,
+        style: TextButton.styleFrom(
+          foregroundColor: cs.onSurfaceVariant,
+          minimumSize: minSize,
+          padding: padding,
         ),
+        child: content,
+      ),
     };
 
     return GestureDetector(
@@ -221,12 +233,12 @@ class _DonyButtonState extends State<DonyButton> {
       isLight: cs.brightness == Brightness.light,
     );
     return switch (widget.variant) {
-      DonyButtonVariant.primary     => onBrand,
-      DonyButtonVariant.success     => onBrand,
+      DonyButtonVariant.primary => onBrand,
+      DonyButtonVariant.success => onBrand,
       DonyButtonVariant.destructive => onBrand,
-      DonyButtonVariant.accent      => onBrand,
-      DonyButtonVariant.secondary   => cs.primary,
-      DonyButtonVariant.ghost       => cs.onSurfaceVariant,
+      DonyButtonVariant.accent => onBrand,
+      DonyButtonVariant.secondary => cs.primary,
+      DonyButtonVariant.ghost => cs.onSurfaceVariant,
     };
   }
 }
@@ -278,10 +290,8 @@ class _GlowButton extends StatelessWidget {
     final gradientColors = isDisabled
         ? colors.map((c) => c.withValues(alpha: 0.5)).toList()
         : pressed
-            ? colors
-                .map((c) => Color.lerp(c, Colors.black, 0.08)!)
-                .toList()
-            : colors;
+        ? colors.map((c) => Color.lerp(c, Colors.black, 0.08)!).toList()
+        : colors;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 120),
@@ -305,12 +315,11 @@ class _GlowButton extends StatelessWidget {
           splashColor: Colors.white.withValues(alpha: 0.12),
           highlightColor: Colors.white.withValues(alpha: 0.06),
           child: Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: DonySpacing.base),
+            padding: const EdgeInsets.symmetric(horizontal: DonySpacing.base),
             child: DefaultTextStyle(
-              style: Theme.of(context).textTheme.labelLarge!.copyWith(
-                    color: foreground,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.labelLarge!.copyWith(color: foreground),
               child: IconTheme(
                 data: IconThemeData(color: foreground, size: 18),
                 child: child,

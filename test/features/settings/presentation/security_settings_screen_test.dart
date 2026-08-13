@@ -126,8 +126,9 @@ void main() {
       );
     });
 
-    testWidgets('biometric switch is disabled when not available',
-        (tester) async {
+    testWidgets('biometric switch is disabled when not available', (
+      tester,
+    ) async {
       final state = AppPreferencesState(
         preferences: const UserPreferencesModel(),
       );
@@ -150,23 +151,19 @@ void main() {
       expect(find.text('Appareils connectés'), findsOneWidget);
     });
 
-    testWidgets(
-      'biometric tile shows unavailable message when not supported',
-      (tester) async {
-        final state = AppPreferencesState(
-          preferences: const UserPreferencesModel(),
-        );
-        await tester.pumpWidget(_wrap(mockBloc: mockBloc, state: state));
-        await tester.pumpAndSettle();
+    testWidgets('biometric tile shows unavailable message when not supported', (
+      tester,
+    ) async {
+      final state = AppPreferencesState(
+        preferences: const UserPreferencesModel(),
+      );
+      await tester.pumpWidget(_wrap(mockBloc: mockBloc, state: state));
+      await tester.pumpAndSettle();
 
-        // biometricAvailable = false → both PAIEMENTS and APPLICATION sections
-        // show 'Non disponible sur cet appareil'.
-        expect(
-          find.text('Non disponible sur cet appareil'),
-          findsNWidgets(2),
-        );
-      },
-    );
+      // biometricAvailable = false → both PAIEMENTS and APPLICATION sections
+      // show 'Non disponible sur cet appareil'.
+      expect(find.text('Non disponible sur cet appareil'), findsNWidgets(2));
+    });
 
     testWidgets("affiche le tile Verrouillage de l'app", (tester) async {
       final state = AppPreferencesState(
@@ -196,21 +193,20 @@ void main() {
       },
     );
 
-    testWidgets(
-      "app lock switch value is false when device unavailable",
-      (tester) async {
-        final state = AppPreferencesState(
-          preferences: const UserPreferencesModel(appLockBiometricEnabled: true),
-        );
-        await tester.pumpWidget(_wrap(mockBloc: mockBloc, state: state));
-        await tester.pumpAndSettle();
+    testWidgets("app lock switch value is false when device unavailable", (
+      tester,
+    ) async {
+      final state = AppPreferencesState(
+        preferences: const UserPreferencesModel(appLockBiometricEnabled: true),
+      );
+      await tester.pumpWidget(_wrap(mockBloc: mockBloc, state: state));
+      await tester.pumpAndSettle();
 
-        // biometricAvailable = false → switch = false regardless of pref value.
-        final switches = tester.widgetList<Switch>(find.byType(Switch)).toList();
-        // Second switch corresponds to APPLICATION tile.
-        expect(switches[1].value, isFalse);
-      },
-    );
+      // biometricAvailable = false → switch = false regardless of pref value.
+      final switches = tester.widgetList<Switch>(find.byType(Switch)).toList();
+      // Second switch corresponds to APPLICATION tile.
+      expect(switches[1].value, isFalse);
+    });
 
     testWidgets(
       'biometric switch value reflects biometricEnabled from bloc (device unavailable)',
@@ -257,11 +253,9 @@ void main() {
         final state = AppPreferencesState(
           preferences: const UserPreferencesModel(biometricEnabled: false),
         );
-        await tester.pumpWidget(_wrap(
-          mockBloc: mockBloc,
-          state: state,
-          biometricAvailable: true,
-        ));
+        await tester.pumpWidget(
+          _wrap(mockBloc: mockBloc, state: state, biometricAvailable: true),
+        );
         await tester.pumpAndSettle();
 
         await tester.tap(find.text('Biométrie avant paiement'));
@@ -277,13 +271,13 @@ void main() {
       (tester) async {
         // appLockBiometricEnabled = false → activation path, no PIN required.
         final state = AppPreferencesState(
-          preferences: const UserPreferencesModel(appLockBiometricEnabled: false),
+          preferences: const UserPreferencesModel(
+            appLockBiometricEnabled: false,
+          ),
         );
-        await tester.pumpWidget(_wrap(
-          mockBloc: mockBloc,
-          state: state,
-          biometricAvailable: true,
-        ));
+        await tester.pumpWidget(
+          _wrap(mockBloc: mockBloc, state: state, biometricAvailable: true),
+        );
         await tester.pumpAndSettle();
 
         await tester.tap(find.text("Verrouillage de l'app"));
@@ -302,11 +296,9 @@ void main() {
         final state = AppPreferencesState(
           preferences: const UserPreferencesModel(biometricEnabled: true),
         );
-        await tester.pumpWidget(_wrap(
-          mockBloc: mockBloc,
-          state: state,
-          biometricAvailable: true,
-        ));
+        await tester.pumpWidget(
+          _wrap(mockBloc: mockBloc, state: state, biometricAvailable: true),
+        );
         await tester.pumpAndSettle();
 
         await tester.tap(find.text('Biométrie avant paiement'));
@@ -329,13 +321,13 @@ void main() {
       (tester) async {
         // appLockBiometricEnabled = true (default) → désactivation, PIN requis.
         final state = AppPreferencesState(
-          preferences: const UserPreferencesModel(appLockBiometricEnabled: true),
+          preferences: const UserPreferencesModel(
+            appLockBiometricEnabled: true,
+          ),
         );
-        await tester.pumpWidget(_wrap(
-          mockBloc: mockBloc,
-          state: state,
-          biometricAvailable: true,
-        ));
+        await tester.pumpWidget(
+          _wrap(mockBloc: mockBloc, state: state, biometricAvailable: true),
+        );
         await tester.pumpAndSettle();
 
         await tester.tap(find.text("Verrouillage de l'app"));
@@ -356,18 +348,21 @@ void main() {
     testWidgets(
       'BiometricToggled is dispatched after PIN confirmed (validatePin returns true)',
       (tester) async {
-        when(() => mockAuthService.validatePin(any()))
-            .thenAnswer((_) async => true);
+        when(
+          () => mockAuthService.validatePin(any()),
+        ).thenAnswer((_) async => true);
 
         final state = AppPreferencesState(
           preferences: const UserPreferencesModel(biometricEnabled: true),
         );
-        await tester.pumpWidget(_wrap(
-          mockBloc: mockBloc,
-          state: state,
-          biometricAvailable: true,
-          authService: mockAuthService,
-        ));
+        await tester.pumpWidget(
+          _wrap(
+            mockBloc: mockBloc,
+            state: state,
+            biometricAvailable: true,
+            authService: mockAuthService,
+          ),
+        );
         await tester.pumpAndSettle();
 
         // Open the PIN sheet.
@@ -388,53 +383,58 @@ void main() {
       },
     );
 
-    testWidgets(
-      'AppLockBiometricToggled is dispatched after PIN confirmed',
-      (tester) async {
-        when(() => mockAuthService.validatePin(any()))
-            .thenAnswer((_) async => true);
+    testWidgets('AppLockBiometricToggled is dispatched after PIN confirmed', (
+      tester,
+    ) async {
+      when(
+        () => mockAuthService.validatePin(any()),
+      ).thenAnswer((_) async => true);
 
-        final state = AppPreferencesState(
-          preferences: const UserPreferencesModel(appLockBiometricEnabled: true),
-        );
-        await tester.pumpWidget(_wrap(
+      final state = AppPreferencesState(
+        preferences: const UserPreferencesModel(appLockBiometricEnabled: true),
+      );
+      await tester.pumpWidget(
+        _wrap(
           mockBloc: mockBloc,
           state: state,
           biometricAvailable: true,
           authService: mockAuthService,
-        ));
-        await tester.pumpAndSettle();
+        ),
+      );
+      await tester.pumpAndSettle();
 
-        await tester.tap(find.text("Verrouillage de l'app"));
-        await tester.pumpAndSettle();
-        expect(find.byType(PinConfirmBottomSheet), findsOneWidget);
+      await tester.tap(find.text("Verrouillage de l'app"));
+      await tester.pumpAndSettle();
+      expect(find.byType(PinConfirmBottomSheet), findsOneWidget);
 
-        for (final digit in ['1', '2', '3', '4', '5', '6']) {
-          await tester.tap(find.text(digit).first);
-          await tester.pump(const Duration(milliseconds: 50));
-        }
-        await tester.pumpAndSettle(const Duration(milliseconds: 500));
+      for (final digit in ['1', '2', '3', '4', '5', '6']) {
+        await tester.tap(find.text(digit).first);
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+      await tester.pumpAndSettle(const Duration(milliseconds: 500));
 
-        verify(() => mockBloc.add(const AppLockBiometricToggled())).called(1);
-      },
-    );
+      verify(() => mockBloc.add(const AppLockBiometricToggled())).called(1);
+    });
 
     testWidgets(
       'BiometricToggled is NOT dispatched when PIN is wrong (validatePin returns false, max attempts)',
       (tester) async {
         // Always fail → after 3 attempts sheet closes with false.
-        when(() => mockAuthService.validatePin(any()))
-            .thenAnswer((_) async => false);
+        when(
+          () => mockAuthService.validatePin(any()),
+        ).thenAnswer((_) async => false);
 
         final state = AppPreferencesState(
           preferences: const UserPreferencesModel(biometricEnabled: true),
         );
-        await tester.pumpWidget(_wrap(
-          mockBloc: mockBloc,
-          state: state,
-          biometricAvailable: true,
-          authService: mockAuthService,
-        ));
+        await tester.pumpWidget(
+          _wrap(
+            mockBloc: mockBloc,
+            state: state,
+            biometricAvailable: true,
+            authService: mockAuthService,
+          ),
+        );
         await tester.pumpAndSettle();
 
         await tester.tap(find.text('Biométrie avant paiement'));
@@ -459,27 +459,34 @@ void main() {
   // ── Code PIN facultatif ───────────────────────────────────────────────────
 
   group('Code PIN à l\'ouverture', () {
-    testWidgets('sans code configuré : interrupteur éteint et pas de « Modifier »',
-        (tester) async {
-      await tester.pumpWidget(_wrap(
-        mockBloc: mockBloc,
-        state: const AppPreferencesState(preferences: UserPreferencesModel()),
-        pinConfigured: false,
-      ));
-      await tester.pumpAndSettle();
+    testWidgets(
+      'sans code configuré : interrupteur éteint et pas de « Modifier »',
+      (tester) async {
+        await tester.pumpWidget(
+          _wrap(
+            mockBloc: mockBloc,
+            state: const AppPreferencesState(
+              preferences: UserPreferencesModel(),
+            ),
+            pinConfigured: false,
+          ),
+        );
+        await tester.pumpAndSettle();
 
-      expect(find.text("Code PIN à l'ouverture"), findsOneWidget);
-      expect(find.text("Désactivé, l'app s'ouvre sans code"), findsOneWidget);
-      // Rien à modifier tant qu'aucun code n'existe.
-      expect(find.text('Modifier le code PIN'), findsNothing);
-    });
+        expect(find.text("Code PIN à l'ouverture"), findsOneWidget);
+        expect(find.text("Désactivé, l'app s'ouvre sans code"), findsOneWidget);
+        // Rien à modifier tant qu'aucun code n'existe.
+        expect(find.text('Modifier le code PIN'), findsNothing);
+      },
+    );
 
-    testWidgets('avec code configuré : « Modifier » apparaît',
-        (tester) async {
-      await tester.pumpWidget(_wrap(
-        mockBloc: mockBloc,
-        state: const AppPreferencesState(preferences: UserPreferencesModel()),
-      ));
+    testWidgets('avec code configuré : « Modifier » apparaît', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          mockBloc: mockBloc,
+          state: const AppPreferencesState(preferences: UserPreferencesModel()),
+        ),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('Demandé à chaque ouverture de Yadony'), findsOneWidget);
@@ -489,14 +496,17 @@ void main() {
     /// Sans code PIN, `LocalAuthBloc` sort avant d'atteindre la biométrie : le
     /// verrouillage à l'ouverture ne s'applique pas. L'écran doit le dire au
     /// lieu de laisser croire l'app protégée.
-    testWidgets("sans code, le verrouillage de l'app renvoie vers le PIN",
-        (tester) async {
-      await tester.pumpWidget(_wrap(
-        mockBloc: mockBloc,
-        state: const AppPreferencesState(preferences: UserPreferencesModel()),
-        biometricAvailable: true,
-        pinConfigured: false,
-      ));
+    testWidgets("sans code, le verrouillage de l'app renvoie vers le PIN", (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(
+          mockBloc: mockBloc,
+          state: const AppPreferencesState(preferences: UserPreferencesModel()),
+          biometricAvailable: true,
+          pinConfigured: false,
+        ),
+      );
       await tester.pumpAndSettle();
 
       expect(
@@ -508,23 +518,26 @@ void main() {
     /// Sans code à comparer, la feuille de confirmation n'a rien à vérifier :
     /// la réclamer enfermerait l'utilisateur dans un réglage indésactivable.
     testWidgets(
-        'sans code, désactiver la biométrie ne demande aucune confirmation',
-        (tester) async {
-      await tester.pumpWidget(_wrap(
-        mockBloc: mockBloc,
-        state: const AppPreferencesState(
-          preferences: UserPreferencesModel(biometricEnabled: true),
-        ),
-        biometricAvailable: true,
-        pinConfigured: false,
-      ));
-      await tester.pumpAndSettle();
+      'sans code, désactiver la biométrie ne demande aucune confirmation',
+      (tester) async {
+        await tester.pumpWidget(
+          _wrap(
+            mockBloc: mockBloc,
+            state: const AppPreferencesState(
+              preferences: UserPreferencesModel(biometricEnabled: true),
+            ),
+            biometricAvailable: true,
+            pinConfigured: false,
+          ),
+        );
+        await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Biométrie avant paiement'));
-      await tester.pumpAndSettle();
+        await tester.tap(find.text('Biométrie avant paiement'));
+        await tester.pumpAndSettle();
 
-      expect(find.byType(PinConfirmBottomSheet), findsNothing);
-      verify(() => mockBloc.add(const BiometricToggled())).called(1);
-    });
+        expect(find.byType(PinConfirmBottomSheet), findsNothing);
+        verify(() => mockBloc.add(const BiometricToggled())).called(1);
+      },
+    );
   });
 }

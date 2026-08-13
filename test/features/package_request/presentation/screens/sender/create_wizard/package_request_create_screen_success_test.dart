@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/data/city_repository.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
@@ -19,6 +20,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../../../../../../helpers/currency_test_doubles.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -428,6 +431,33 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('TutorialStub:request_publish_basics'), findsOneWidget);
+  });
+
+  testWidgets('bandeau devise invalide : ne prétend pas publier en EUR', (
+    tester,
+  ) async {
+    registerCurrencyPreference(42);
+    await tester.pumpWidget(buildHarness());
+    await tester.tap(find.byKey(const Key('open-create')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('currency-publish-banner')), findsOneWidget);
+    expect(find.text('Devise à confirmer'), findsOneWidget);
+    expect(find.text('Publié en Euro (EUR)'), findsNothing);
+    expect(
+      tester.getTopLeft(find.byKey(const Key('currency-publish-banner'))).dy,
+      lessThan(
+        tester.getTopLeft(find.byKey(const Key('step1-departure-city'))).dy,
+      ),
+    );
+  });
+
+  testWidgets('bandeau devise absent en édition de demande', (tester) async {
+    await tester.pumpWidget(buildHarness());
+    await tester.tap(find.byKey(const Key('open-edit')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('currency-publish-banner')), findsNothing);
   });
 
   testWidgets('création réussie affiche DonySuccessScreen (plus de SnackBar)', (

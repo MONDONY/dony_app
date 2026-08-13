@@ -28,6 +28,8 @@ import 'package:hive/hive.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/error_reporting_test_doubles.dart';
+
 /// Integration test of the LIVE bid-payment success flow.
 ///
 /// `lib/app/router.dart` routes `/bids/new` to the `CreateBidScreen` class
@@ -84,18 +86,18 @@ class _FakeContentCategoryRepository implements IContentCategoryRepository {
 // ── Fixtures ───────────────────────────────────────────────────────────────────
 
 AnnouncementModel _announcement() => AnnouncementModel(
-      id: 'ann-1',
-      travelerId: 'trav-1',
-      departureCity: 'Paris',
-      arrivalCity: 'Dakar',
-      departureDate: DateTime(2026, 8, 15),
-      availableKg: 10,
-      totalKg: 10,
-      pricePerKg: 8,
-      status: 'ACTIVE',
-      createdAt: DateTime(2026),
-      updatedAt: DateTime(2026),
-    );
+  id: 'ann-1',
+  travelerId: 'trav-1',
+  departureCity: 'Paris',
+  arrivalCity: 'Dakar',
+  departureDate: DateTime(2026, 8, 15),
+  availableKg: 10,
+  totalKg: 10,
+  pricePerKg: 8,
+  status: 'ACTIVE',
+  createdAt: DateTime(2026),
+  updatedAt: DateTime(2026),
+);
 
 // ── Harness ────────────────────────────────────────────────────────────────────
 
@@ -163,6 +165,8 @@ void main() {
   });
 
   setUp(() {
+    registerNoopErrorReporting();
+
     bidBloc = _MockBidBloc();
     when(() => bidBloc.state).thenReturn(BidInitial());
     when(() => bidBloc.stream).thenAnswer((_) => const Stream.empty());
@@ -193,18 +197,25 @@ void main() {
     userPrefsBox = _MockBox();
     // Biométrie activée + réussie → requirePaymentAuth ne passe jamais par
     // l'écran PIN '/auth/local' (pas de route stub nécessaire).
-    when(() => userPrefsBox.get(HiveService.kBiometricEnabled,
-        defaultValue: any(named: 'defaultValue'))).thenReturn(true);
-    when(() => authService.isBiometricAvailable())
-        .thenAnswer((_) async => true);
-    when(() => authService.authenticateWithBiometric())
-        .thenAnswer((_) async => true);
+    when(
+      () => userPrefsBox.get(
+        HiveService.kBiometricEnabled,
+        defaultValue: any(named: 'defaultValue'),
+      ),
+    ).thenReturn(true);
+    when(
+      () => authService.isBiometricAvailable(),
+    ).thenAnswer((_) async => true);
+    when(
+      () => authService.authenticateWithBiometric(),
+    ).thenAnswer((_) async => true);
 
     paymentGateway = _MockPaymentGateway();
     // PlatformPayButton (Apple/Google Pay) plante hors iOS/Android réel —
     // on désactive le wallet et paie via PayPal (bouton Flutter classique).
-    when(() => paymentGateway.isPlatformPaySupported())
-        .thenAnswer((_) async => false);
+    when(
+      () => paymentGateway.isPlatformPaySupported(),
+    ).thenAnswer((_) async => false);
     when(() => paymentGateway.confirmPayPal(any())).thenAnswer((_) async {});
 
     paymentRepository = _MockPaymentRepository();
@@ -247,60 +258,72 @@ void main() {
   });
 
   testWidgets(
-      'CheckoutPaymentSheetReady + paiement PayPal réussi → écran fermé, '
-      'DonySuccessScreen, navigation seulement après le CTA', (tester) async {
-    final paymentStates = StreamController<PaymentState>.broadcast();
-    addTearDown(paymentStates.close);
-    when(() => paymentBloc.stream).thenAnswer((_) => paymentStates.stream);
+    'CheckoutPaymentSheetReady + paiement PayPal réussi → écran fermé, '
+    'DonySuccessScreen, navigation seulement après le CTA',
+    (tester) async {
+      final paymentStates = StreamController<PaymentState>.broadcast();
+      addTearDown(paymentStates.close);
+      when(() => paymentBloc.stream).thenAnswer((_) => paymentStates.stream);
 
-    tester.view.physicalSize = const Size(800, 1400);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.reset);
-    await tester.pumpWidget(_buildHarness(_announcement()));
-    await tester.tap(find.text('Ouvrir'));
-    await tester.pumpAndSettle();
+      tester.view.physicalSize = const Size(800, 1400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(_buildHarness(_announcement()));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
 
-    // Le vrai CreateBidScreen (widgets/) est affiché.
-    expect(find.text('Publier un colis'), findsOneWidget);
+      // Le vrai CreateBidScreen (widgets/) est affiché.
+      expect(find.text('Publier un colis'), findsOneWidget);
 
-    paymentStates.add(const CheckoutPaymentSheetReady(
-      clientSecret: 'pi_test_secret',
-      publishableKey: 'pk_test',
-      bidId: 'bid-77',
-      amountEur: 56.0,
-      paymentMethodTypes: ['paypal'],
-    ));
-    await tester.pumpAndSettle();
+      paymentStates.add(
+        const CheckoutPaymentSheetReady(
+          clientSecret: 'pi_test_secret',
+          publishableKey: 'pk_test',
+          bidId: 'bid-77',
+          amountEur: 56.0,
+          paymentMethodTypes: ['paypal'],
+        ),
+      );
+      await tester.pumpAndSettle();
 
-    // La DonyPaymentSheet est ouverte (PayPal dispo, aucune carte
-    // enregistrée) → on paie via le bouton PayPal.
-    await tester.tap(find.byKey(const Key('paymentSheetPayPalButton')));
-    await tester.pump(); // PaymentSheetProcessing
-    await tester.pump(); // PaymentSheetSuccess (résolution async du gateway)
-    await tester
-        .pump(const Duration(milliseconds: 900)); // déclenchement onSuccess
-    await tester.pumpAndSettle();
+      // La DonyPaymentSheet est ouverte (PayPal dispo, aucune carte
+      // enregistrée) → on paie via le bouton PayPal.
+      await tester.tap(find.byKey(const Key('paymentSheetPayPalButton')));
+      await tester.pump(); // PaymentSheetProcessing
+      await tester.pump(); // PaymentSheetSuccess (résolution async du gateway)
+      await tester.pump(
+        const Duration(milliseconds: 900),
+      ); // déclenchement onSuccess
+      await tester.pumpAndSettle();
 
-    // 1. Confirmation synchrone du paiement côté backend.
-    verify(() => bidBloc.add(any(
-            that: isA<BidConfirmPaymentRequested>()
-                .having((e) => e.bidId, 'bidId', 'bid-77'))))
-        .called(1);
+      // 1. Confirmation synchrone du paiement côté backend.
+      verify(
+        () => bidBloc.add(
+          any(
+            that: isA<BidConfirmPaymentRequested>().having(
+              (e) => e.bidId,
+              'bidId',
+              'bid-77',
+            ),
+          ),
+        ),
+      ).called(1);
 
-    // 2. L'écran de création est fermé (pop) et DonySuccessScreen affiché —
-    //    SANS navigation vers le détail du bid à ce stade.
-    expect(find.text('Publier un colis'), findsNothing);
-    expect(find.byType(DonySuccessScreen), findsOneWidget);
-    expect(find.text('Offre payée !'), findsOneWidget);
-    expect(find.textContaining('Bid détail'), findsNothing);
+      // 2. L'écran de création est fermé (pop) et DonySuccessScreen affiché —
+      //    SANS navigation vers le détail du bid à ce stade.
+      expect(find.text('Publier un colis'), findsNothing);
+      expect(find.byType(DonySuccessScreen), findsOneWidget);
+      expect(find.text('Offre payée !'), findsOneWidget);
+      expect(find.textContaining('Bid détail'), findsNothing);
 
-    // 3. La navigation vers /bids/{id}?from=payment n'arrive qu'au tap CTA.
-    await tester.tap(find.text('Voir mon envoi'));
-    await tester.pumpAndSettle();
+      // 3. La navigation vers /bids/{id}?from=payment n'arrive qu'au tap CTA.
+      await tester.tap(find.text('Voir mon envoi'));
+      await tester.pumpAndSettle();
 
-    expect(find.textContaining('Bid détail'), findsOneWidget);
-    expect(find.textContaining('from=payment'), findsOneWidget);
-  });
+      expect(find.textContaining('Bid détail'), findsOneWidget);
+      expect(find.textContaining('from=payment'), findsOneWidget);
+    },
+  );
 
   // ── BidCreated — offre hors-QR (cash / mobile money) ────────────────────────
   //
@@ -309,15 +332,15 @@ void main() {
   // expliquer les implications du moyen de paiement choisi.
 
   BidModel bidWithMethod(String id, BidPaymentMethod method) => BidModel(
-        id: id,
-        announcementId: 'ann-1',
-        senderId: 'sender-1',
-        weightKg: 5,
-        status: 'PENDING',
-        createdAt: DateTime(2026),
-        updatedAt: DateTime(2026),
-        paymentMethod: method,
-      );
+    id: id,
+    announcementId: 'ann-1',
+    senderId: 'sender-1',
+    weightKg: 5,
+    status: 'PENDING',
+    createdAt: DateTime(2026),
+    updatedAt: DateTime(2026),
+    paymentMethod: method,
+  );
 
   Future<void> openSheet(WidgetTester tester) async {
     tester.view.physicalSize = const Size(800, 1400);
@@ -330,70 +353,77 @@ void main() {
   }
 
   testWidgets(
-      'BidCreated (CASH) → sheet fermé, DonySuccessScreen « Offre envoyée ! », '
-      'navigation seulement après le CTA', (tester) async {
-    final bidStates = StreamController<BidState>.broadcast();
-    addTearDown(bidStates.close);
-    when(() => bidBloc.stream).thenAnswer((_) => bidStates.stream);
+    'BidCreated (CASH) → sheet fermé, DonySuccessScreen « Offre envoyée ! », '
+    'navigation seulement après le CTA',
+    (tester) async {
+      final bidStates = StreamController<BidState>.broadcast();
+      addTearDown(bidStates.close);
+      when(() => bidBloc.stream).thenAnswer((_) => bidStates.stream);
 
-    await openSheet(tester);
+      await openSheet(tester);
 
-    bidStates.add(BidCreated(bidWithMethod('bid-cash-1', BidPaymentMethod.cash)));
-    await tester.pumpAndSettle();
+      bidStates.add(
+        BidCreated(bidWithMethod('bid-cash-1', BidPaymentMethod.cash)),
+      );
+      await tester.pumpAndSettle();
 
-    // 1. L'écran de création est fermé (pop) et DonySuccessScreen affiché —
-    //    SANS navigation vers le détail du bid à ce stade.
-    expect(find.text('Publier un colis'), findsNothing);
-    expect(find.byType(DonySuccessScreen), findsOneWidget);
-    expect(find.text('Offre envoyée !'), findsOneWidget);
-    expect(
-      find.textContaining('en main propre à la remise du colis'),
-      findsOneWidget,
-    );
-    expect(find.textContaining('Bid détail'), findsNothing);
+      // 1. L'écran de création est fermé (pop) et DonySuccessScreen affiché —
+      //    SANS navigation vers le détail du bid à ce stade.
+      expect(find.text('Publier un colis'), findsNothing);
+      expect(find.byType(DonySuccessScreen), findsOneWidget);
+      expect(find.text('Offre envoyée !'), findsOneWidget);
+      expect(
+        find.textContaining('en main propre à la remise du colis'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('Bid détail'), findsNothing);
 
-    // 2. La navigation vers /bids/{id}?from=payment n'arrive qu'au tap CTA.
-    await tester.tap(find.text('Voir mon envoi'));
-    await tester.pumpAndSettle();
+      // 2. La navigation vers /bids/{id}?from=payment n'arrive qu'au tap CTA.
+      await tester.tap(find.text('Voir mon envoi'));
+      await tester.pumpAndSettle();
 
-    expect(find.textContaining('Bid détail'), findsOneWidget);
-    expect(find.textContaining('from=payment'), findsOneWidget);
-  });
-
-  testWidgets(
-      'BidCreated (WAVE legacy) → subtitle générique (mobile money retiré)',
-      (tester) async {
-    final bidStates = StreamController<BidState>.broadcast();
-    addTearDown(bidStates.close);
-    when(() => bidBloc.stream).thenAnswer((_) => bidStates.stream);
-
-    await openSheet(tester);
-
-    bidStates.add(BidCreated(bidWithMethod('bid-wave-1', BidPaymentMethod.wave)));
-    await tester.pumpAndSettle();
-
-    expect(find.byType(DonySuccessScreen), findsOneWidget);
-    expect(find.text('Offre envoyée !'), findsOneWidget);
-    expect(
-        find.text('Le voyageur va examiner ta demande.'), findsOneWidget);
-  });
+      expect(find.textContaining('Bid détail'), findsOneWidget);
+      expect(find.textContaining('from=payment'), findsOneWidget);
+    },
+  );
 
   testWidgets(
-      'BidCreated (ORANGE_MONEY legacy) → subtitle générique (mobile money retiré)',
-      (tester) async {
-    final bidStates = StreamController<BidState>.broadcast();
-    addTearDown(bidStates.close);
-    when(() => bidBloc.stream).thenAnswer((_) => bidStates.stream);
+    'BidCreated (WAVE legacy) → subtitle générique (mobile money retiré)',
+    (tester) async {
+      final bidStates = StreamController<BidState>.broadcast();
+      addTearDown(bidStates.close);
+      when(() => bidBloc.stream).thenAnswer((_) => bidStates.stream);
 
-    await openSheet(tester);
+      await openSheet(tester);
 
-    bidStates.add(
-        BidCreated(bidWithMethod('bid-om-1', BidPaymentMethod.orangeMoney)));
-    await tester.pumpAndSettle();
+      bidStates.add(
+        BidCreated(bidWithMethod('bid-wave-1', BidPaymentMethod.wave)),
+      );
+      await tester.pumpAndSettle();
 
-    expect(find.byType(DonySuccessScreen), findsOneWidget);
-    expect(find.text('Offre envoyée !'), findsOneWidget);
-    expect(
-        find.text('Le voyageur va examiner ta demande.'), findsOneWidget);
-  });
+      expect(find.byType(DonySuccessScreen), findsOneWidget);
+      expect(find.text('Offre envoyée !'), findsOneWidget);
+      expect(find.text('Le voyageur va examiner ta demande.'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'BidCreated (ORANGE_MONEY legacy) → subtitle générique (mobile money retiré)',
+    (tester) async {
+      final bidStates = StreamController<BidState>.broadcast();
+      addTearDown(bidStates.close);
+      when(() => bidBloc.stream).thenAnswer((_) => bidStates.stream);
+
+      await openSheet(tester);
+
+      bidStates.add(
+        BidCreated(bidWithMethod('bid-om-1', BidPaymentMethod.orangeMoney)),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(DonySuccessScreen), findsOneWidget);
+      expect(find.text('Offre envoyée !'), findsOneWidget);
+      expect(find.text('Le voyageur va examiner ta demande.'), findsOneWidget);
+    },
+  );
 }

@@ -166,9 +166,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       // image a 1920x1920 (qualite 85, JPEG). Une photo de 20 Mo est donc
       // resizee, pas rejetee ; seul un fichier > 50 Mo (garde anti-OOM) leve
       // MediaFileTooLargeException.
-      final xfile = await _mediaService.pick(
-        source: ImageSource.gallery,
-      );
+      final xfile = await _mediaService.pick(source: ImageSource.gallery);
       if (xfile == null || !mounted) {
         return;
       }
@@ -247,348 +245,380 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           // Flutter ne remonte pas fiablement `bottomNavigationBar` au-dessus
           // du clavier, ce qui le cachait derrière avec plusieurs champs texte
           // sur cet écran. Même fix que phone_auth_screen.dart.
-          body: Column(children: [
-          Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(
-              DonySpacing.lg,
-              DonySpacing.xl,
-              DonySpacing.lg,
-              DonySpacing.huge,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // ── Jauge de complétion — masquée une fois à 100% ────────
-                ValueListenableBuilder<bool>(
-                  valueListenable: smsAuthEnabledListenable,
-                  builder: (context, phoneAuthEnabled, _) {
-                    final steps = user.profileCompletionSteps(
-                      countPhone: phoneAuthEnabled,
-                    );
-                    final total = UserModel.profileTotalSteps(
-                      countPhone: phoneAuthEnabled,
-                    );
-                    if (steps >= total) return const SizedBox.shrink();
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _CompletionGauge(
-                          user: user,
-                          countPhone: phoneAuthEnabled,
-                        ),
-                        const SizedBox(height: DonySpacing.xxl),
-                      ],
-                    );
-                  },
-                ),
-
-                // ── Avatar header — toujours actif, hors vue/édition ─────
-                Center(
+          body: Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(
+                    DonySpacing.lg,
+                    DonySpacing.xl,
+                    DonySpacing.lg,
+                    DonySpacing.huge,
+                  ),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Semantics(
-                        button: true,
-                        container: true,
-                        excludeSemantics: true,
-                        enabled: !isLoading,
-                        label: 'Changer la photo de profil',
-                        child: GestureDetector(
-                        key: const ValueKey('avatar_pick_gesture'),
-                        onTap: isLoading ? null : _pickAndUploadAvatar,
-                        child: SizedBox(
-                          // Enforce min 44pt touch target around the 72pt avatar.
-                          width: 88,
-                          height: 88,
-                          child: Center(
-                            child: Stack(
-                              clipBehavior: Clip.none,
-                              children: [
-                                // Avatar (possibly with loading overlay)
-                                Stack(
-                                  children: [
-                                    DonyAvatar(
-                                      name: user.displayName,
-                                      imageUrl: user.avatarUrl,
-                                      size: DonyAvatarSize.xl,
-                                    ),
-                                    if (isLoading && !_saving)
-                                      Positioned.fill(
-                                        child: ClipOval(
-                                          child: ColoredBox(
-                                            color: Colors.black38,
-                                            child: Center(
-                                              child: SizedBox(
-                                                width: 28,
-                                                height: 28,
-                                                child: CircularProgressIndicator(
-                                                  strokeWidth: 2.5,
-                                                  color: Theme.of(context).colorScheme.onPrimary,
+                      // ── Jauge de complétion — masquée une fois à 100% ────────
+                      ValueListenableBuilder<bool>(
+                        valueListenable: smsAuthEnabledListenable,
+                        builder: (context, phoneAuthEnabled, _) {
+                          final steps = user.profileCompletionSteps(
+                            countPhone: phoneAuthEnabled,
+                          );
+                          final total = UserModel.profileTotalSteps(
+                            countPhone: phoneAuthEnabled,
+                          );
+                          if (steps >= total) return const SizedBox.shrink();
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _CompletionGauge(
+                                user: user,
+                                countPhone: phoneAuthEnabled,
+                              ),
+                              const SizedBox(height: DonySpacing.xxl),
+                            ],
+                          );
+                        },
+                      ),
+
+                      // ── Avatar header — toujours actif, hors vue/édition ─────
+                      Center(
+                        child: Column(
+                          children: [
+                            Semantics(
+                              button: true,
+                              container: true,
+                              excludeSemantics: true,
+                              enabled: !isLoading,
+                              label: 'Changer la photo de profil',
+                              child: GestureDetector(
+                                key: const ValueKey('avatar_pick_gesture'),
+                                onTap: isLoading ? null : _pickAndUploadAvatar,
+                                child: SizedBox(
+                                  // Enforce min 44pt touch target around the 72pt avatar.
+                                  width: 88,
+                                  height: 88,
+                                  child: Center(
+                                    child: Stack(
+                                      clipBehavior: Clip.none,
+                                      children: [
+                                        // Avatar (possibly with loading overlay)
+                                        Stack(
+                                          children: [
+                                            DonyAvatar(
+                                              name: user.displayName,
+                                              imageUrl: user.avatarUrl,
+                                              size: DonyAvatarSize.xl,
+                                            ),
+                                            if (isLoading && !_saving)
+                                              Positioned.fill(
+                                                child: ClipOval(
+                                                  child: ColoredBox(
+                                                    color: Colors.black38,
+                                                    child: Center(
+                                                      child: SizedBox(
+                                                        width: 28,
+                                                        height: 28,
+                                                        child: CircularProgressIndicator(
+                                                          strokeWidth: 2.5,
+                                                          color:
+                                                              Theme.of(context)
+                                                                  .colorScheme
+                                                                  .onPrimary,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
                                                 ),
                                               ),
+                                          ],
+                                        ),
+                                        // Camera badge at bottom-right
+                                        Positioned(
+                                          right: -4,
+                                          bottom: -4,
+                                          child: Container(
+                                            width: 26,
+                                            height: 26,
+                                            decoration: BoxDecoration(
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.primary,
+                                              shape: BoxShape.circle,
+                                              border: Border.all(
+                                                color: Theme.of(
+                                                  context,
+                                                ).colorScheme.surface,
+                                                width: 2,
+                                              ),
+                                            ),
+                                            child: DonyIcon(
+                                              'camera',
+                                              size: 14,
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.onPrimary,
                                             ),
                                           ),
                                         ),
-                                      ),
-                                  ],
-                                ),
-                                // Camera badge at bottom-right
-                                Positioned(
-                                  right: -4,
-                                  bottom: -4,
-                                  child: Container(
-                                    width: 26,
-                                    height: 26,
-                                    decoration: BoxDecoration(
-                                      color: Theme.of(context).colorScheme.primary,
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        color: Theme.of(context).colorScheme.surface,
-                                        width: 2,
-                                      ),
-                                    ),
-                                    child: DonyIcon(
-                                      'camera',
-                                      size: 14,
-                                      color: Theme.of(context).colorScheme.onPrimary,
+                                      ],
                                     ),
                                   ),
                                 ),
-                              ],
+                              ),
+                            ),
+                            const SizedBox(height: DonySpacing.sm),
+                            Text(
+                              'Modifier la photo',
+                              style: Theme.of(context).textTheme.labelMedium
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: DonySpacing.xxl),
+
+                      // ── Section Identité ─────────────────────────────────────
+                      const _SectionLabel(label: 'Identité'),
+                      const SizedBox(height: DonySpacing.md),
+                      if (!_editing)
+                        _NameView(user: user)
+                      else ...[
+                        DonyTextField(
+                          textInputAction: TextInputAction.next,
+                          controller: _firstNameCtrl,
+                          label: 'Prénom',
+                          prefixWidget: DonyIcon(
+                            'user',
+                            size: 20,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                          ),
+                          enabled: !isSaving,
+                        ),
+                        const SizedBox(height: DonySpacing.md),
+                        DonyTextField(
+                          textInputAction: TextInputAction.next,
+                          controller: _lastNameCtrl,
+                          label: 'Nom de famille',
+                          prefixWidget: DonyIcon(
+                            'user',
+                            size: 20,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                          ),
+                          enabled: !isSaving,
+                        ),
+                      ],
+                      const SizedBox(height: DonySpacing.xxl),
+
+                      // ── Section À propos ─────────────────────────────────────
+                      const _SectionLabel(label: 'À propos'),
+                      const SizedBox(height: DonySpacing.md),
+                      if (!_editing)
+                        _StaticInfoRow(
+                          label: null,
+                          value: user.bio,
+                          placeholder: 'Aucune présentation',
+                          bodyStyle: true,
+                        )
+                      else
+                        TextFormField(
+                          controller: _bioCtrl,
+                          enabled: !isSaving,
+                          maxLines: 4,
+                          maxLength: 280,
+                          decoration: const InputDecoration(
+                            labelText: 'Présentation',
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: DonySpacing.base,
+                              vertical: DonySpacing.md,
                             ),
                           ),
                         ),
-                      )
-                      ),
-                      const SizedBox(height: DonySpacing.sm),
-                      Text(
-                        'Modifier la photo',
-                        style: Theme.of(context).textTheme.labelMedium
-                            ?.copyWith(color: Theme.of(context).colorScheme.primary),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: DonySpacing.xxl),
+                      const SizedBox(height: DonySpacing.xxl),
 
-                // ── Section Identité ─────────────────────────────────────
-                const _SectionLabel(label: 'Identité'),
-                const SizedBox(height: DonySpacing.md),
-                if (!_editing)
-                  _NameView(user: user)
-                else ...[
-                  DonyTextField(
-                    textInputAction: TextInputAction.next,
-                    controller: _firstNameCtrl,
-                    label: 'Prénom',
-                    prefixWidget: DonyIcon(
-                      'user',
-                      size: 20,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                    enabled: !isSaving,
-                  ),
-                  const SizedBox(height: DonySpacing.md),
-                  DonyTextField(
-                    textInputAction: TextInputAction.next,
-                    controller: _lastNameCtrl,
-                    label: 'Nom de famille',
-                    prefixWidget: DonyIcon(
-                      'user',
-                      size: 20,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                    enabled: !isSaving,
-                  ),
-                ],
-                const SizedBox(height: DonySpacing.xxl),
-
-                // ── Section À propos ─────────────────────────────────────
-                const _SectionLabel(label: 'À propos'),
-                const SizedBox(height: DonySpacing.md),
-                if (!_editing)
-                  _StaticInfoRow(
-                    label: null,
-                    value: user.bio,
-                    placeholder: 'Aucune présentation',
-                    bodyStyle: true,
-                  )
-                else
-                  TextFormField(
-                    controller: _bioCtrl,
-                    enabled: !isSaving,
-                    maxLines: 4,
-                    maxLength: 280,
-                    decoration: const InputDecoration(
-                      labelText: 'Présentation',
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: DonySpacing.base,
-                        vertical: DonySpacing.md,
+                      // ── Section Coordonnées ──────────────────────────────────
+                      // Email et téléphone restent des lignes de lecture même en
+                      // édition : leur modification exige un code OTP, jamais une
+                      // saisie libre — le tap ouvre un écran dédié (preuve de
+                      // possession avant écriture), sans passer par "Enregistrer".
+                      const _SectionLabel(label: 'Coordonnées'),
+                      const SizedBox(height: DonySpacing.md),
+                      ValueListenableBuilder<bool>(
+                        valueListenable: smsAuthEnabledListenable,
+                        builder: (_, phoneEnabled, _) => Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _ContactInfoRow(
+                              iconAsset: 'mail',
+                              label: 'EMAIL',
+                              value: user.email,
+                              editing: _editing,
+                              onTap: () => context.push('/profile/edit/email'),
+                            ),
+                            if (phoneEnabled) ...[
+                              const SizedBox(height: DonySpacing.md),
+                              _ContactInfoRow(
+                                iconAsset: 'phone',
+                                label: 'TÉLÉPHONE',
+                                value: user.phoneNumber,
+                                editing: _editing,
+                                onTap: () =>
+                                    context.push('/profile/edit/phone'),
+                              ),
+                            ],
+                          ],
+                        ),
                       ),
-                    ),
-                  ),
-                const SizedBox(height: DonySpacing.xxl),
+                      const SizedBox(height: DonySpacing.xxl),
 
-                // ── Section Coordonnées ──────────────────────────────────
-                // Email et téléphone restent des lignes de lecture même en
-                // édition : leur modification exige un code OTP, jamais une
-                // saisie libre — le tap ouvre un écran dédié (preuve de
-                // possession avant écriture), sans passer par "Enregistrer".
-                const _SectionLabel(label: 'Coordonnées'),
-                const SizedBox(height: DonySpacing.md),
-                ValueListenableBuilder<bool>(
-                  valueListenable: smsAuthEnabledListenable,
-                  builder: (_, phoneEnabled, _) => Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _ContactInfoRow(
-                        iconAsset: 'mail',
-                        label: 'EMAIL',
-                        value: user.email,
-                        editing: _editing,
-                        onTap: () => context.push('/profile/edit/email'),
-                      ),
-                      if (phoneEnabled) ...[
+                      // ── Section Informations personnelles ────────────────────
+                      const _SectionLabel(label: 'Informations personnelles'),
+                      const SizedBox(height: DonySpacing.md),
+                      if (!_editing) ...[
+                        _StaticInfoRow(
+                          label: 'DATE DE NAISSANCE',
+                          value: _birthDate != null
+                              ? DateFormat('dd/MM/yyyy').format(_birthDate!)
+                              : null,
+                          placeholder: 'Non renseignée',
+                        ),
                         const SizedBox(height: DonySpacing.md),
-                        _ContactInfoRow(
-                          iconAsset: 'phone',
-                          label: 'TÉLÉPHONE',
-                          value: user.phoneNumber,
-                          editing: _editing,
-                          onTap: () => context.push('/profile/edit/phone'),
+                        _StaticInfoRow(
+                          label: 'VILLE',
+                          value: user.city,
+                          placeholder: 'Non renseignée',
+                        ),
+                      ] else ...[
+                        _BirthDatePicker(
+                          birthDate: _birthDate,
+                          isLoading: isSaving,
+                          onTap: _pickBirthDate,
+                        ),
+                        const SizedBox(height: DonySpacing.md),
+                        DonyTextField(
+                          textInputAction: TextInputAction.done,
+                          controller: _cityCtrl,
+                          label: "Ville / lieu d'habitation",
+                          prefixWidget: DonyIcon(
+                            'building-2',
+                            size: 20,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                          ),
+                          enabled: !isSaving,
                         ),
                       ],
+                      const SizedBox(height: DonySpacing.xxl),
+
+                      // ── Section Préférences (voyageurs uniquement) ───────────
+                      if (isTraveler) ...[
+                        const _SectionLabel(label: 'Préférences'),
+                        const SizedBox(height: DonySpacing.md),
+
+                        if (!_editing) ...[
+                          _StaticInfoRow(
+                            label: 'LANGUES PARLÉES',
+                            value: _selectedLanguages.isEmpty
+                                ? null
+                                : _selectedLanguages.join(', '),
+                            placeholder: 'Non renseignées',
+                          ),
+                          const SizedBox(height: DonySpacing.md),
+                          _StaticInfoRow(
+                            label: 'MODE DE TRANSPORT',
+                            value: _selectedTransport != null
+                                ? _kTransportLabels[_selectedTransport]
+                                : null,
+                            placeholder: 'Non renseigné',
+                          ),
+                        ] else ...[
+                          // Langues parlées
+                          Text(
+                            'Langues parlées',
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                          ),
+                          const SizedBox(height: DonySpacing.sm),
+                          Wrap(
+                            spacing: DonySpacing.sm,
+                            runSpacing: DonySpacing.sm,
+                            children: _kAvailableLanguages.map((lang) {
+                              final selected = _selectedLanguages.contains(
+                                lang,
+                              );
+                              return FilterChip(
+                                label: Text(lang),
+                                selected: selected,
+                                onSelected: isSaving
+                                    ? null
+                                    : (_) => _toggleLanguage(lang),
+                              );
+                            }).toList(),
+                          ),
+                          const SizedBox(height: DonySpacing.xl),
+
+                          // Mode de transport
+                          Text(
+                            'Mode de transport',
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                          ),
+                          const SizedBox(height: DonySpacing.sm),
+                          _TransportModeSelector(
+                            modes: _kTransportModes,
+                            labels: _kTransportLabels,
+                            selected: _selectedTransport,
+                            isLoading: isSaving,
+                            onSelect: _selectTransport,
+                          ),
+                        ],
+                        const SizedBox(height: DonySpacing.xxl),
+                      ],
                     ],
+                  ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
+                ),
+              ),
+              SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    DonySpacing.lg,
+                    DonySpacing.sm,
+                    DonySpacing.lg,
+                    DonySpacing.base,
+                  ),
+                  child: DonyButton(
+                    label: _editing ? 'Enregistrer' : 'Modifier',
+                    isLoading: isSaving,
+                    onPressed: isLoading
+                        ? null
+                        : () => _editing
+                              ? _save(isTraveler)
+                              : setState(() => _editing = true),
                   ),
                 ),
-                const SizedBox(height: DonySpacing.xxl),
-
-                // ── Section Informations personnelles ────────────────────
-                const _SectionLabel(label: 'Informations personnelles'),
-                const SizedBox(height: DonySpacing.md),
-                if (!_editing) ...[
-                  _StaticInfoRow(
-                    label: 'DATE DE NAISSANCE',
-                    value: _birthDate != null
-                        ? DateFormat('dd/MM/yyyy').format(_birthDate!)
-                        : null,
-                    placeholder: 'Non renseignée',
-                  ),
-                  const SizedBox(height: DonySpacing.md),
-                  _StaticInfoRow(
-                    label: 'VILLE',
-                    value: user.city,
-                    placeholder: 'Non renseignée',
-                  ),
-                ] else ...[
-                  _BirthDatePicker(
-                    birthDate: _birthDate,
-                    isLoading: isSaving,
-                    onTap: _pickBirthDate,
-                  ),
-                  const SizedBox(height: DonySpacing.md),
-                  DonyTextField(
-                    textInputAction: TextInputAction.done,
-                    controller: _cityCtrl,
-                    label: "Ville / lieu d'habitation",
-                    prefixWidget: DonyIcon(
-                      'building-2',
-                      size: 20,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                    enabled: !isSaving,
-                  ),
-                ],
-                const SizedBox(height: DonySpacing.xxl),
-
-                // ── Section Préférences (voyageurs uniquement) ───────────
-                if (isTraveler) ...[
-                  const _SectionLabel(label: 'Préférences'),
-                  const SizedBox(height: DonySpacing.md),
-
-                  if (!_editing) ...[
-                    _StaticInfoRow(
-                      label: 'LANGUES PARLÉES',
-                      value: _selectedLanguages.isEmpty
-                          ? null
-                          : _selectedLanguages.join(', '),
-                      placeholder: 'Non renseignées',
-                    ),
-                    const SizedBox(height: DonySpacing.md),
-                    _StaticInfoRow(
-                      label: 'MODE DE TRANSPORT',
-                      value: _selectedTransport != null
-                          ? _kTransportLabels[_selectedTransport]
-                          : null,
-                      placeholder: 'Non renseigné',
-                    ),
-                  ] else ...[
-                    // Langues parlées
-                    Text(
-                      'Langues parlées',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: DonySpacing.sm),
-                    Wrap(
-                      spacing: DonySpacing.sm,
-                      runSpacing: DonySpacing.sm,
-                      children: _kAvailableLanguages.map((lang) {
-                        final selected = _selectedLanguages.contains(lang);
-                        return FilterChip(
-                          label: Text(lang),
-                          selected: selected,
-                          onSelected: isSaving ? null : (_) => _toggleLanguage(lang),
-                        );
-                      }).toList(),
-                    ),
-                    const SizedBox(height: DonySpacing.xl),
-
-                    // Mode de transport
-                    Text(
-                      'Mode de transport',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: DonySpacing.sm),
-                    _TransportModeSelector(
-                      modes: _kTransportModes,
-                      labels: _kTransportLabels,
-                      selected: _selectedTransport,
-                      isLoading: isSaving,
-                      onSelect: _selectTransport,
-                    ),
-                  ],
-                  const SizedBox(height: DonySpacing.xxl),
-                ],
-              ],
-            ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
-          ),
-          ),
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                DonySpacing.lg,
-                DonySpacing.sm,
-                DonySpacing.lg,
-                DonySpacing.base,
               ),
-              child: DonyButton(
-                label: _editing ? 'Enregistrer' : 'Modifier',
-                isLoading: isSaving,
-                onPressed: isLoading
-                    ? null
-                    : () => _editing
-                        ? _save(isTraveler)
-                        : setState(() => _editing = true),
-              ),
-            ),
+            ],
           ),
-          ]),
         );
       },
     );
@@ -775,7 +805,11 @@ class _ContactInfoRow extends StatelessWidget {
     final hasValue = value != null && value!.isNotEmpty;
 
     if (!editing) {
-      return _StaticInfoRow(label: label, value: value, placeholder: 'Non ajouté');
+      return _StaticInfoRow(
+        label: label,
+        value: value,
+        placeholder: 'Non ajouté',
+      );
     }
 
     final cs = Theme.of(context).colorScheme;
@@ -822,7 +856,9 @@ class _ContactInfoRow extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: tt.bodyMedium?.copyWith(
                         color: hasValue ? cs.onSurface : cs.onSurfaceVariant,
-                        fontWeight: hasValue ? FontWeight.w600 : FontWeight.w400,
+                        fontWeight: hasValue
+                            ? FontWeight.w600
+                            : FontWeight.w400,
                       ),
                     ),
                   ],
@@ -909,7 +945,9 @@ class _BirthDatePicker extends StatelessWidget {
                     : 'Date de naissance',
                 style: tt.bodyLarge?.copyWith(
                   color: birthDate != null ? cs.onSurface : cs.onSurfaceVariant,
-                  fontWeight: birthDate != null ? FontWeight.w500 : FontWeight.w400,
+                  fontWeight: birthDate != null
+                      ? FontWeight.w500
+                      : FontWeight.w400,
                 ),
               ),
             ),
@@ -967,7 +1005,9 @@ class _TransportModeSelector extends StatelessWidget {
                     labels[mode] ?? mode,
                     style: Theme.of(context).textTheme.labelMedium?.copyWith(
                       color: isSelected ? cs.primary : cs.onSurfaceVariant,
-                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                      fontWeight: isSelected
+                          ? FontWeight.w700
+                          : FontWeight.w500,
                     ),
                   ),
                 ),

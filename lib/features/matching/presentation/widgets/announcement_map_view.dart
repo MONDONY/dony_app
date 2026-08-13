@@ -268,9 +268,13 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
         // Same address: stacked pill with count badge.
         // Show cheapest price and most urgent (earliest) departure.
         // Prix affiché à l'expéditeur (net + commission) — cohérent avec les cartes/sheets.
-        final cheapest = cluster.items
-            .map((it) => it.announcement.senderPricePerKg)
-            .reduce(math.min);
+        final cheapestItem = cluster.items.reduce(
+          (a, b) =>
+              a.announcement.senderPricePerKg < b.announcement.senderPricePerKg
+              ? a
+              : b,
+        );
+        final cheapest = cheapestItem.announcement.senderPricePerKg;
         final earliest = cluster.items
             .map((it) => it.announcement.departureDate)
             .reduce((a, b) => a.isBefore(b) ? a : b);
@@ -288,6 +292,7 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
           isSelected: isSelected,
           brightness: _brightness,
           prefix: '✈️',
+          currencyCode: cheapestItem.announcement.currency,
         );
         return Marker(
           markerId: MarkerId(
@@ -326,6 +331,7 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
       isSelected: isSelected,
       brightness: _brightness,
       prefix: '✈️',
+      currencyCode: item.announcement.currency,
     );
     return Marker(
       markerId: MarkerId('${item.side.name}_${item.announcement.id}'),

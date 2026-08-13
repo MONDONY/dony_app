@@ -169,7 +169,9 @@ void main() {
 
     test('mappe cash-funds-required', () {
       expect(
-        PaymentCapabilityBlock.fromErrorCode('payment-method/cash-funds-required'),
+        PaymentCapabilityBlock.fromErrorCode(
+          'payment-method/cash-funds-required',
+        ),
         PaymentCapabilityBlock.cashFundsRequired,
       );
     });
@@ -189,7 +191,9 @@ void main() {
         isNull,
       );
       expect(
-        PaymentCapabilityBlock.fromErrorCode('payment-method/no-commission-card'),
+        PaymentCapabilityBlock.fromErrorCode(
+          'payment-method/no-commission-card',
+        ),
         isNull,
       );
     });
@@ -206,11 +210,10 @@ void main() {
     testWidgets(
       'avant soumission, affiche les méthodes acceptées par la demande',
       (tester) async {
-        when(
-          () => packageRequestRepo.getById(any()),
-        ).thenAnswer(
-          (_) async =>
-              _packageRequest(methods: {PaymentMethod.stripe, PaymentMethod.cash}),
+        when(() => packageRequestRepo.getById(any())).thenAnswer(
+          (_) async => _packageRequest(
+            methods: {PaymentMethod.stripe, PaymentMethod.cash},
+          ),
         );
         when(
           () => announcementRepo.getMyAnnouncements(),
@@ -233,82 +236,75 @@ void main() {
       },
     );
 
-    testWidgets(
-      'une fois le trajet lié, préfère la SET calculée côté serveur '
-      '(thread.availablePaymentMethods)',
-      (tester) async {
-        when(
-          () => packageRequestRepo.getById(any()),
-        ).thenAnswer(
-          (_) async =>
-              _packageRequest(methods: {PaymentMethod.stripe, PaymentMethod.cash}),
-        );
-        when(
-          () => announcementRepo.getMyAnnouncements(),
-        ).thenAnswer((_) async => _emptyTrips());
+    testWidgets('une fois le trajet lié, préfère la SET calculée côté serveur '
+        '(thread.availablePaymentMethods)', (tester) async {
+      when(() => packageRequestRepo.getById(any())).thenAnswer(
+        (_) async => _packageRequest(
+          methods: {PaymentMethod.stripe, PaymentMethod.cash},
+        ),
+      );
+      when(
+        () => announcementRepo.getMyAnnouncements(),
+      ).thenAnswer((_) async => _emptyTrips());
 
-        await tester.pumpWidget(
-          _harness(_fakeThread(availablePaymentMethods: {PaymentMethod.cash})),
-        );
-        await tester.pumpAndSettle();
+      await tester.pumpWidget(
+        _harness(_fakeThread(availablePaymentMethods: {PaymentMethod.cash})),
+      );
+      await tester.pumpAndSettle();
 
-        expect(
-          find.byKey(const Key('payment-method-preview-cash')),
-          findsOneWidget,
-        );
-        expect(
-          find.byKey(const Key('payment-method-preview-stripe')),
-          findsNothing,
-        );
-      },
-    );
+      expect(
+        find.byKey(const Key('payment-method-preview-cash')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('payment-method-preview-stripe')),
+        findsNothing,
+      );
+    });
   });
 
   // ── Confirmation : paiement décidé par le back-end, pas par le voyageur ──
 
-  testWidgets(
-    'confirmer un trajet dispatch paymentMethod=premier accepté et '
-    'useCardForCommission=false (le back-end ignore paymentMethod)',
-    (tester) async {
-      when(
-        () => packageRequestRepo.getById(any()),
-      ).thenAnswer(
-        (_) async =>
-            _packageRequest(methods: {PaymentMethod.cash, PaymentMethod.stripe}),
-      );
-      when(
-        () => announcementRepo.getMyAnnouncements(),
-      ).thenAnswer((_) async => (announcements: [_trip()], totalElements: 1));
+  testWidgets('confirmer un trajet dispatch paymentMethod=premier accepté et '
+      'useCardForCommission=false (le back-end ignore paymentMethod)', (
+    tester,
+  ) async {
+    when(() => packageRequestRepo.getById(any())).thenAnswer(
+      (_) async =>
+          _packageRequest(methods: {PaymentMethod.cash, PaymentMethod.stripe}),
+    );
+    when(
+      () => announcementRepo.getMyAnnouncements(),
+    ).thenAnswer((_) async => (announcements: [_trip()], totalElements: 1));
 
-      await tester.pumpWidget(_harness(_fakeThread()));
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(_harness(_fakeThread()));
+    await tester.pumpAndSettle();
 
-      expect(find.byKey(const Key('trip-tile-select-inkwell')), findsOneWidget);
-      await tester.tap(find.byKey(const Key('trip-tile-select-inkwell')));
-      await tester.pumpAndSettle();
+    expect(find.byKey(const Key('trip-tile-select-inkwell')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('trip-tile-select-inkwell')));
+    await tester.pumpAndSettle();
 
-      expect(find.text('Confirmer ce trajet'), findsOneWidget);
-      await tester.tap(find.text('Confirmer ce trajet'));
-      await tester.pump();
+    expect(find.text('Confirmer ce trajet'), findsOneWidget);
+    await tester.tap(find.text('Confirmer ce trajet'));
+    await tester.pump();
 
-      verify(
-        () => negotiationBloc.add(
-          any(
-            that: predicate<NegotiationEvent>(
-              (e) =>
-                  e is NegotiationSubmitTripRequested &&
-                  e.threadId == 't-1' &&
-                  e.travelerAnnouncementId == 'ann-1' &&
-                  e.paymentMethod == PaymentMethod.cash &&
-                  e.useCardForCommission == false,
-              'NegotiationSubmitTripRequested(paymentMethod=cash, '
-              'useCardForCommission=false)',
-            ),
+    verify(
+      () => negotiationBloc.add(
+        any(
+          that: predicate<NegotiationEvent>(
+            (e) =>
+                e is NegotiationSubmitTripRequested &&
+                e.threadId == 't-1' &&
+                e.travelerAnnouncementId == 'ann-1' &&
+                e.paymentMethod == PaymentMethod.cash &&
+                e.useCardForCommission == false,
+            'NegotiationSubmitTripRequested(paymentMethod=cash, '
+            'useCardForCommission=false)',
           ),
         ),
-      ).called(1);
-    },
-  );
+      ),
+    ).called(1);
+  });
 
   // ── 422 reason → CTA contextuel ───────────────────────────────────────────
 
@@ -353,7 +349,10 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text('Paiement carte requis'), findsOneWidget);
-        expect(find.byKey(const Key('activate-card-payment-cta')), findsOneWidget);
+        expect(
+          find.byKey(const Key('activate-card-payment-cta')),
+          findsOneWidget,
+        );
         expect(find.text('Activer le paiement carte'), findsOneWidget);
       },
     );
@@ -389,67 +388,68 @@ void main() {
       },
     );
 
-    testWidgets(
-      'none-available → sheet combinée offrant carte ET espèces',
-      (tester) async {
-        final controller = StreamController<NegotiationState>.broadcast();
-        addTearDown(controller.close);
-        whenListen(
-          negotiationBloc,
-          controller.stream,
-          initialState: const NegotiationInitial(),
-        );
+    testWidgets('none-available → sheet combinée offrant carte ET espèces', (
+      tester,
+    ) async {
+      final controller = StreamController<NegotiationState>.broadcast();
+      addTearDown(controller.close);
+      whenListen(
+        negotiationBloc,
+        controller.stream,
+        initialState: const NegotiationInitial(),
+      );
 
-        await pumpWithTripSelected(tester);
-        await tester.tap(find.text('Confirmer ce trajet'));
-        await tester.pump();
+      await pumpWithTripSelected(tester);
+      await tester.tap(find.text('Confirmer ce trajet'));
+      await tester.pump();
 
-        controller.add(
-          const NegotiationError(
-            ValidationException(
-              'No payment method available',
-              code: 'payment-method/none-available',
-            ),
+      controller.add(
+        const NegotiationError(
+          ValidationException(
+            'No payment method available',
+            code: 'payment-method/none-available',
           ),
-        );
-        await tester.pumpAndSettle();
+        ),
+      );
+      await tester.pumpAndSettle();
 
-        expect(find.text('Aucun moyen de paiement disponible'), findsOneWidget);
-        expect(find.byKey(const Key('activate-card-payment-cta')), findsOneWidget);
-        expect(find.byKey(const Key('unlock-cash-payment-cta')), findsOneWidget);
-      },
-    );
+      expect(find.text('Aucun moyen de paiement disponible'), findsOneWidget);
+      expect(
+        find.byKey(const Key('activate-card-payment-cta')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('unlock-cash-payment-cta')), findsOneWidget);
+    });
 
-    testWidgets(
-      'reason inconnue → snackbar générique (pas de sheet)',
-      (tester) async {
-        final controller = StreamController<NegotiationState>.broadcast();
-        addTearDown(controller.close);
-        whenListen(
-          negotiationBloc,
-          controller.stream,
-          initialState: const NegotiationInitial(),
-        );
+    testWidgets('reason inconnue → snackbar générique (pas de sheet)', (
+      tester,
+    ) async {
+      final controller = StreamController<NegotiationState>.broadcast();
+      addTearDown(controller.close);
+      whenListen(
+        negotiationBloc,
+        controller.stream,
+        initialState: const NegotiationInitial(),
+      );
 
-        await pumpWithTripSelected(tester);
-        await tester.tap(find.text('Confirmer ce trajet'));
-        await tester.pump();
+      await pumpWithTripSelected(tester);
+      await tester.tap(find.text('Confirmer ce trajet'));
+      await tester.pump();
 
-        controller.add(
-          const NegotiationError(
-            ValidationException(
-              'Some unrelated business error',
-              code: 'some/other-code',
-            ),
+      controller.add(
+        const NegotiationError(
+          ValidationException(
+            'Some unrelated business error',
+            code: 'some/other-code',
           ),
-        );
-        await tester.pumpAndSettle();
+        ),
+      );
+      await tester.pumpAndSettle();
 
-        expect(find.text('Paiement carte requis'), findsNothing);
-        expect(find.text('Solde insuffisant'), findsNothing);
-        expect(find.text('Aucun moyen de paiement disponible'), findsNothing);
-        expect(find.text('Some unrelated business error'), findsOneWidget);
-      },
-    );
+      expect(find.text('Paiement carte requis'), findsNothing);
+      expect(find.text('Solde insuffisant'), findsNothing);
+      expect(find.text('Aucun moyen de paiement disponible'), findsNothing);
+      expect(find.text('Some unrelated business error'), findsOneWidget);
+    });
   });
 }

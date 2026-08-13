@@ -6,6 +6,8 @@
 // - Ajout d'un type custom "Ce que j'accepte" via CaInlineAddRow
 // - Ajout d'un type refusé via CaInlineAddRow
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/models/connect_account_status.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
@@ -59,6 +61,7 @@ Widget _host({
   bool lockPrice = false,
   double? lockedTotalPriceEur,
   bool showPaymentMethods = true,
+  SupportedCurrency? currency = SupportedCurrency.eur,
 }) {
   final mockStripeBloc = _MockStripeAccountBloc();
   final resolvedStripeState = stripeState ?? _stripeConfiguredState;
@@ -66,7 +69,8 @@ Widget _host({
   when(() => mockStripeBloc.stream).thenAnswer((_) => const Stream.empty());
 
   final mockCommissionBloc = _MockCommissionMethodBloc();
-  final resolvedCommissionState = commissionState ?? CommissionMethodNotConfigured();
+  final resolvedCommissionState =
+      commissionState ?? CommissionMethodNotConfigured();
   when(() => mockCommissionBloc.state).thenReturn(resolvedCommissionState);
   when(() => mockCommissionBloc.stream).thenAnswer((_) => const Stream.empty());
 
@@ -74,12 +78,15 @@ Widget _host({
     home: Scaffold(
       body: MultiBlocProvider(
         providers: [
-          BlocProvider<AnnouncementFormBloc>(create: (_) => AnnouncementFormBloc()),
+          BlocProvider<AnnouncementFormBloc>(
+            create: (_) => AnnouncementFormBloc(),
+          ),
           BlocProvider<StripeAccountBloc>.value(value: mockStripeBloc),
           BlocProvider<CommissionMethodBloc>.value(value: mockCommissionBloc),
         ],
         child: SingleChildScrollView(
           child: PrixConditionsStep(
+            currency: currency,
             priceOptionNotifier: priceOption ?? ValueNotifier<int>(0),
             customPriceNotifier: customPrice ?? ValueNotifier<double>(0),
             availableKgNotifier: availableKg ?? ValueNotifier<double>(10),
@@ -91,7 +98,8 @@ Widget _host({
                 customAccepted ?? ValueNotifier<Set<String>>({}),
             refusedTypesNotifier:
                 refusedTypes ?? ValueNotifier<Set<String>>({}),
-            catalogLabelsNotifier: catalogLabels ??
+            catalogLabelsNotifier:
+                catalogLabels ??
                 ValueNotifier<List<String>>(
                   fallbackCatalog.map((c) => c.label).toList(),
                 ),
@@ -109,7 +117,8 @@ Widget _host({
   );
 }
 
-Future<void> _pump(WidgetTester tester, {
+Future<void> _pump(
+  WidgetTester tester, {
   StripeAccountState? stripeState,
   CommissionMethodState? commissionState,
   ValueNotifier<int>? priceOption,
@@ -124,42 +133,54 @@ Future<void> _pump(WidgetTester tester, {
   TextEditingController? refusedCtrl,
   TextEditingController? customPriceCtrl,
 }) async {
-  await tester.pumpWidget(_host(
-    stripeState: stripeState,
-    commissionState: commissionState,
-    priceOption: priceOption,
-    customPrice: customPrice,
-    availableKg: availableKg,
-    cashEnabled: cashEnabled,
-    selectedContent: selectedContent,
-    customAccepted: customAccepted,
-    refusedTypes: refusedTypes,
-    descriptionCtrl: descriptionCtrl,
-    customAcceptedCtrl: customAcceptedCtrl,
-    refusedCtrl: refusedCtrl,
-    customPriceCtrl: customPriceCtrl,
-  ));
+  await tester.pumpWidget(
+    _host(
+      stripeState: stripeState,
+      commissionState: commissionState,
+      priceOption: priceOption,
+      customPrice: customPrice,
+      availableKg: availableKg,
+      cashEnabled: cashEnabled,
+      selectedContent: selectedContent,
+      customAccepted: customAccepted,
+      refusedTypes: refusedTypes,
+      descriptionCtrl: descriptionCtrl,
+      customAcceptedCtrl: customAcceptedCtrl,
+      refusedCtrl: refusedCtrl,
+      customPriceCtrl: customPriceCtrl,
+    ),
+  );
   await tester.pump(const Duration(milliseconds: 200));
   await tester.pump();
 }
 
 void main() {
   group('PrixConditionsStep — interactions prix', () {
-    testWidgets('tap sur chip 7€ change le notifier priceOption', (tester) async {
+    testWidgets('tap sur chip 7 EUR change le notifier priceOption', (
+      tester,
+    ) async {
       final priceOption = ValueNotifier<int>(0);
       await _pump(tester, priceOption: priceOption);
 
-      // Chip "7€" est le 3ème chip (index 2)
-      await tester.tap(find.text('7€'));
+      // Chip 7 EUR est le 3ème chip (index 2).
+      await tester.tap(
+        find.text(CurrencyFormatter.format(7, SupportedCurrency.eur)),
+      );
       await tester.pump();
 
       expect(priceOption.value, 2);
     });
 
-    testWidgets('tap sur "Autre prix" affiche le champ prix custom', (tester) async {
+    testWidgets('tap sur "Autre prix" affiche le champ prix custom', (
+      tester,
+    ) async {
       final priceOption = ValueNotifier<int>(0);
       final customPriceCtrl = TextEditingController();
-      await _pump(tester, priceOption: priceOption, customPriceCtrl: customPriceCtrl);
+      await _pump(
+        tester,
+        priceOption: priceOption,
+        customPriceCtrl: customPriceCtrl,
+      );
 
       // Avant le tap, le champ custom n'existe pas
       expect(find.text('ex: 12'), findsNothing);
@@ -173,32 +194,37 @@ void main() {
       expect(find.text('ex: 12'), findsOneWidget);
     });
 
-    testWidgets('saisie dans le champ custom prix met à jour customPriceNotifier',
-        (tester) async {
-      final priceOption = ValueNotifier<int>(4); // 4 = kPriceOptions.length = "Autre"
-      final customPrice = ValueNotifier<double>(0.0);
-      final customPriceCtrl = TextEditingController();
+    testWidgets(
+      'saisie dans le champ custom prix met à jour customPriceNotifier',
+      (tester) async {
+        final priceOption = ValueNotifier<int>(
+          4,
+        ); // 4 = kPriceOptions.length = "Autre"
+        final customPrice = ValueNotifier<double>(0.0);
+        final customPriceCtrl = TextEditingController();
 
-      await _pump(
-        tester,
-        priceOption: priceOption,
-        customPrice: customPrice,
-        customPriceCtrl: customPriceCtrl,
-      );
+        await _pump(
+          tester,
+          priceOption: priceOption,
+          customPrice: customPrice,
+          customPriceCtrl: customPriceCtrl,
+        );
 
-      // Le champ custom est visible car priceOption == kPriceOptions.length
-      expect(find.text('ex: 12'), findsOneWidget);
+        // Le champ custom est visible car priceOption == kPriceOptions.length
+        expect(find.text('ex: 12'), findsOneWidget);
 
-      // Taper "12" dans le champ
-      await tester.enterText(
-        find.byWidgetPredicate((w) =>
-          w is TextField && w.decoration?.hintText == 'ex: 12'),
-        '12',
-      );
-      await tester.pump();
+        // Taper "12" dans le champ
+        await tester.enterText(
+          find.byWidgetPredicate(
+            (w) => w is TextField && w.decoration?.hintText == 'ex: 12',
+          ),
+          '12',
+        );
+        await tester.pump();
 
-      expect(customPrice.value, 12.0);
-    });
+        expect(customPrice.value, 12.0);
+      },
+    );
   });
 
   group('PrixConditionsStep — combobox "Ce que j\'accepte"', () {
@@ -349,60 +375,65 @@ void main() {
             'Bijoux',
           );
           await tester.pumpAndSettle();
-          await tester.tap(
-            find.byKey(const Key('accepted-content-item-add')),
-          );
+          await tester.tap(find.byKey(const Key('accepted-content-item-add')));
           await tester.pumpAndSettle();
 
           expect(customAccepted.value.contains('Bijoux'), isTrue);
         },
       );
 
-      testWidgets('suppression d\'un tag customAccepted met à jour le notifier',
-          (tester) async {
-        tester.view.physicalSize = const Size(800, 4000);
-        tester.view.devicePixelRatio = 1.0;
-        addTearDown(tester.view.reset);
+      testWidgets(
+        'suppression d\'un tag customAccepted met à jour le notifier',
+        (tester) async {
+          tester.view.physicalSize = const Size(800, 4000);
+          tester.view.devicePixelRatio = 1.0;
+          addTearDown(tester.view.reset);
 
-        final customAccepted = ValueNotifier<Set<String>>({'Bijoux'});
-        await _pump(tester, customAccepted: customAccepted);
+          final customAccepted = ValueNotifier<Set<String>>({'Bijoux'});
+          await _pump(tester, customAccepted: customAccepted);
 
-        final tag = find.byKey(const Key('accepted-content-tag-Bijoux'));
-        expect(tag, findsOneWidget);
+          final tag = find.byKey(const Key('accepted-content-tag-Bijoux'));
+          expect(tag, findsOneWidget);
 
-        await tester.tap(
-          find.descendant(of: tag, matching: find.byType(GestureDetector)),
-        );
-        await tester.pumpAndSettle();
+          await tester.tap(
+            find.descendant(of: tag, matching: find.byType(GestureDetector)),
+          );
+          await tester.pumpAndSettle();
 
-        expect(customAccepted.value.contains('Bijoux'), isFalse);
-      });
+          expect(customAccepted.value.contains('Bijoux'), isFalse);
+        },
+      );
     },
   );
 
   group('PrixConditionsStep — switch Espèces', () {
-    testWidgets('switch espèces peut être activé quand carte commission valide',
-        (tester) async {
-      final cashEnabled = ValueNotifier<bool>(false);
-      await _pump(
-        tester,
-        commissionState: CommissionMethodLoaded(_validCard),
-        cashEnabled: cashEnabled,
-      );
+    testWidgets(
+      'switch espèces peut être activé quand carte commission valide',
+      (tester) async {
+        final cashEnabled = ValueNotifier<bool>(false);
+        await _pump(
+          tester,
+          commissionState: CommissionMethodLoaded(_validCard),
+          cashEnabled: cashEnabled,
+        );
 
-      // Trouver le switch espèces via la Key
-      final cashSwitchFinder = find.byKey(const Key('payment-method-cash'));
-      expect(cashSwitchFinder, findsOneWidget);
+        // Trouver le switch espèces via la Key
+        final cashSwitchFinder = find.byKey(const Key('payment-method-cash'));
+        expect(cashSwitchFinder, findsOneWidget);
 
-      // Le switch est activable
-      final sw = tester.widget<Switch>(
-        find.descendant(of: cashSwitchFinder, matching: find.byType(Switch)).last,
-      );
-      expect(sw.onChanged, isNotNull);
-    });
+        // Le switch est activable
+        final sw = tester.widget<Switch>(
+          find
+              .descendant(of: cashSwitchFinder, matching: find.byType(Switch))
+              .last,
+        );
+        expect(sw.onChanged, isNotNull);
+      },
+    );
 
-    testWidgets('toggle du switch espèces met à jour cashEnabledNotifier',
-        (tester) async {
+    testWidgets('toggle du switch espèces met à jour cashEnabledNotifier', (
+      tester,
+    ) async {
       final cashEnabled = ValueNotifier<bool>(false);
       await _pump(
         tester,
@@ -412,17 +443,23 @@ void main() {
 
       final cashSwitchFinder = find.byKey(const Key('payment-method-cash'));
       await tester.tap(
-        find.descendant(of: cashSwitchFinder, matching: find.byType(Switch)).last,
+        find
+            .descendant(of: cashSwitchFinder, matching: find.byType(Switch))
+            .last,
       );
       await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300)); // settle notice fadeIn
+      await tester.pump(
+        const Duration(milliseconds: 300),
+      ); // settle notice fadeIn
 
       expect(cashEnabled.value, isTrue);
     });
   });
 
   group('PrixConditionsStep — note aux expéditeurs', () {
-    testWidgets('le compteur de caractères est mis à jour en saisie', (tester) async {
+    testWidgets('le compteur de caractères est mis à jour en saisie', (
+      tester,
+    ) async {
       final descCtrl = TextEditingController();
       await _pump(tester, descriptionCtrl: descCtrl);
 
@@ -444,7 +481,9 @@ void main() {
   });
 
   group('verrouillage du prix (lockPrice)', () {
-    testWidgets('lockPrice masque la section prix et affiche la note', (tester) async {
+    testWidgets('lockPrice masque la section prix et affiche la note', (
+      tester,
+    ) async {
       await tester.pumpWidget(_host(lockPrice: true));
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('locked-price-note')), findsOneWidget);
@@ -452,8 +491,9 @@ void main() {
       expect(find.text('Prix par kg'), findsNothing);
     });
 
-    testWidgets('sans lockPrice, la section prix est visible (pas de note)',
-        (tester) async {
+    testWidgets('sans lockPrice, la section prix est visible (pas de note)', (
+      tester,
+    ) async {
       await tester.pumpWidget(_host());
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('locked-price-note')), findsNothing);
@@ -461,22 +501,29 @@ void main() {
     });
 
     testWidgets(
-        'lockPrice + lockedTotalPriceEur → carte « Prix total convenu » (et pas la note)',
-        (tester) async {
-      await tester.pumpWidget(
-          _host(lockPrice: true, lockedTotalPriceEur: 150));
-      await tester.pumpAndSettle();
-      expect(find.byKey(const Key('locked-agreed-price-card')), findsOneWidget);
-      expect(find.text('Prix total convenu'), findsOneWidget);
-      expect(find.text('150 €'), findsOneWidget);
-      // La note générique n'est PAS affichée quand un montant convenu existe.
-      expect(find.byKey(const Key('locked-price-note')), findsNothing);
-    });
+      'lockPrice + lockedTotalPriceEur → carte « Prix total convenu » (et pas la note)',
+      (tester) async {
+        await tester.pumpWidget(
+          _host(lockPrice: true, lockedTotalPriceEur: 150),
+        );
+        await tester.pumpAndSettle();
+        expect(
+          find.byKey(const Key('locked-agreed-price-card')),
+          findsOneWidget,
+        );
+        expect(find.text('Prix total convenu'), findsOneWidget);
+        expect(find.textContaining('150'), findsOneWidget);
+        expect(find.textContaining('€'), findsWidgets);
+        // La note générique n'est PAS affichée quand un montant convenu existe.
+        expect(find.byKey(const Key('locked-price-note')), findsNothing);
+      },
+    );
   });
 
   group('section paiement (showPaymentMethods)', () {
-    testWidgets('showPaymentMethods=false masque la section paiement',
-        (tester) async {
+    testWidgets('showPaymentMethods=false masque la section paiement', (
+      tester,
+    ) async {
       await tester.pumpWidget(_host(showPaymentMethods: false));
       await tester.pumpAndSettle();
       expect(find.text('Modes de paiement acceptés'), findsNothing);

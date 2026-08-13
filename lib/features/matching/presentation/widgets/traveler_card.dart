@@ -28,6 +28,7 @@ class TravelerCard extends StatelessWidget {
   final int index;
   final bool isOwnAnnouncement;
   final String? distanceBadge;
+
   /// Statut d'un bid actif (PENDING ou ACCEPTED) déjà déposé par l'expéditeur
   /// courant sur cette annonce. Si non null, la carte affiche un chip de
   /// statut + une bordure colorée pour rappeler à l'expéditeur qu'il a déjà
@@ -54,7 +55,9 @@ class TravelerCard extends StatelessWidget {
 
   String get _displayName => announcement.traveler?.resolvedName ?? 'Voyageur';
 
-  ({Color border, Color chipBg, Color chipFg, String label}) _bidStyle(ColorScheme cs) {
+  ({Color border, Color chipBg, Color chipFg, String label}) _bidStyle(
+    ColorScheme cs,
+  ) {
     switch (existingBidStatus) {
       case 'ACCEPTED':
         return (
@@ -97,8 +100,10 @@ class TravelerCard extends StatelessWidget {
     final totalTrips = traveler?.totalTrips;
     final isKiloPro = traveler?.kiloPro ?? false;
     final isProAccount = traveler?.isProAccount ?? false;
-    final dateStr =
-        DateFormat('EEE d MMM', 'fr').format(announcement.departureDate);
+    final dateStr = DateFormat(
+      'EEE d MMM',
+      'fr',
+    ).format(announcement.departureDate);
     final categories = announcement.acceptedContentTypes ?? [];
     final hasExistingBid = existingBidStatus != null;
     final bidStyle = _bidStyle(cs);
@@ -120,184 +125,194 @@ class TravelerCard extends StatelessWidget {
 
     final priceLabel = announcement.pricingMode == 'MIXED'
         ? 'Grille tarifaire'
-        : '${formatKgPrice(announcement.senderPricePerKg)} €/kg';
+        : '${formatPriceIn(announcement.senderPricePerKg, announcement.currency)}/kg';
 
     return _PressableCard(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: cs.surface,
-          borderRadius: BorderRadius.circular(DonyRadius.card),
-          border: Border.all(
-            color: borderColor,
-            width: borderWidth,
-          ),
-          boxShadow: const [
-            BoxShadow(
-              color: DonyColors.shadow,
-              blurRadius: 8,
-              offset: Offset(0, 2),
-            ),
-          ],
-        ),
-        padding: const EdgeInsets.all(DonySpacing.base),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (hasExistingBid) ...[
-              _ExistingBidChip(
-                label: bidStyle.label,
-                bg: bidStyle.chipBg,
-                fg: bidStyle.chipFg,
-              ),
-              const SizedBox(height: DonySpacing.sm),
-            ],
-            if (distanceBadge != null) ...[
-              _DistanceBadge(label: distanceBadge!),
-              const SizedBox(height: DonySpacing.sm),
-            ],
-
-            // ── Zone 1 : trajet (hero) ──
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: _RouteHeader(
-                    departureCity: announcement.departureCity,
-                    arrivalCity: announcement.arrivalCity,
-                    depFlag: depFlag,
-                    arrFlag: arrFlag,
-                    showChevron: isOwnAnnouncement,
-                  ),
-                ),
-                // Pas de SizedBox : le padding interne du bouton (halo autour
-                // de l'icône) suffit à l'écarter du corridor. En ajouter un
-                // creusait un vide visible entre le signet et le trajet.
-                if (showFavorite) _buildFavoriteHeart(context, announcement.id),
-              ],
-            ),
-            const SizedBox(height: DonySpacing.xs),
-            Row(
-              children: [
-                DonyIcon('calendar', size: 13, color: cs.onSurfaceVariant),
-                const SizedBox(width: DonySpacing.xs),
-                Text(
-                  dateStr,
-                  style: tt.bodySmall?.copyWith(
-                    color: cs.onSurfaceVariant,
-                    fontFeatures: const [FontFeature.tabularFigures()],
-                  ),
+          onTap: onTap,
+          child: Container(
+            decoration: BoxDecoration(
+              color: cs.surface,
+              borderRadius: BorderRadius.circular(DonyRadius.card),
+              border: Border.all(color: borderColor, width: borderWidth),
+              boxShadow: const [
+                BoxShadow(
+                  color: DonyColors.shadow,
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
                 ),
               ],
             ),
-
-            const SizedBox(height: DonySpacing.md),
-            Divider(height: 1, thickness: 1, color: cs.outline),
-            const SizedBox(height: DonySpacing.md),
-
-            // ── Zone 2 : voyageur + prix ──
-            Row(
+            padding: const EdgeInsets.all(DonySpacing.base),
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                DonyAvatar(
-                  name: _displayName,
-                  imageUrl: traveler?.avatarUrl,
-                  size: DonyAvatarSize.md,
-                  verified: traveler?.kycVerified ?? false,
-                  pro: isProAccount,
+                if (hasExistingBid) ...[
+                  _ExistingBidChip(
+                    label: bidStyle.label,
+                    bg: bidStyle.chipBg,
+                    fg: bidStyle.chipFg,
+                  ),
+                  const SizedBox(height: DonySpacing.sm),
+                ],
+                if (distanceBadge != null) ...[
+                  _DistanceBadge(label: distanceBadge!),
+                  const SizedBox(height: DonySpacing.sm),
+                ],
+
+                // ── Zone 1 : trajet (hero) ──
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: _RouteHeader(
+                        departureCity: announcement.departureCity,
+                        arrivalCity: announcement.arrivalCity,
+                        depFlag: depFlag,
+                        arrFlag: arrFlag,
+                        showChevron: isOwnAnnouncement,
+                      ),
+                    ),
+                    // Pas de SizedBox : le padding interne du bouton (halo autour
+                    // de l'icône) suffit à l'écarter du corridor. En ajouter un
+                    // creusait un vide visible entre le signet et le trajet.
+                    if (showFavorite)
+                      _buildFavoriteHeart(context, announcement.id),
+                  ],
                 ),
-                const SizedBox(width: DonySpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(_displayName, style: tt.titleLarge, overflow: TextOverflow.ellipsis),
-                      const SizedBox(height: DonySpacing.xxs),
-                      // Note et trajets seuls ici ; les badges sont en dessous,
-                      // pleine largeur (voir plus bas). Wrap et non Row : ne
-                      // déborde jamais si l'espace manque.
-                      Wrap(
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        spacing: DonySpacing.xxs,
+                const SizedBox(height: DonySpacing.xs),
+                Row(
+                  children: [
+                    DonyIcon('calendar', size: 13, color: cs.onSurfaceVariant),
+                    const SizedBox(width: DonySpacing.xs),
+                    Text(
+                      dateStr,
+                      style: tt.bodySmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: DonySpacing.md),
+                Divider(height: 1, thickness: 1, color: cs.outline),
+                const SizedBox(height: DonySpacing.md),
+
+                // ── Zone 2 : voyageur + prix ──
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    DonyAvatar(
+                      name: _displayName,
+                      imageUrl: traveler?.avatarUrl,
+                      size: DonyAvatarSize.md,
+                      verified: traveler?.kycVerified ?? false,
+                      pro: isProAccount,
+                    ),
+                    const SizedBox(width: DonySpacing.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          DonyIcon('star', size: 13, color: cs.warning),
                           Text(
-                            rating != null ? rating.toStringAsFixed(1) : '-',
-                            style: tt.titleSmall?.copyWith(
-                              fontFeatures: const [FontFeature.tabularFigures()],
-                            ),
+                            _displayName,
+                            style: tt.titleLarge,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          if (totalTrips != null)
-                            Text(
-                              '· $totalTrips trajet${totalTrips > 1 ? 's' : ''}',
-                              style: tt.bodySmall
-                                  ?.copyWith(color: cs.onSurfaceVariant),
-                            ),
+                          const SizedBox(height: DonySpacing.xxs),
+                          // Note et trajets seuls ici ; les badges sont en dessous,
+                          // pleine largeur (voir plus bas). Wrap et non Row : ne
+                          // déborde jamais si l'espace manque.
+                          Wrap(
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: DonySpacing.xxs,
+                            children: [
+                              DonyIcon('star', size: 13, color: cs.warning),
+                              Text(
+                                rating != null
+                                    ? rating.toStringAsFixed(1)
+                                    : '-',
+                                style: tt.titleSmall?.copyWith(
+                                  fontFeatures: const [
+                                    FontFeature.tabularFigures(),
+                                  ],
+                                ),
+                              ),
+                              if (totalTrips != null)
+                                Text(
+                                  '· $totalTrips trajet${totalTrips > 1 ? 's' : ''}',
+                                  style: tt.bodySmall?.copyWith(
+                                    color: cs.onSurfaceVariant,
+                                  ),
+                                ),
+                            ],
+                          ),
                         ],
                       ),
+                    ),
+                    const SizedBox(width: DonySpacing.sm),
+                    Text(
+                      priceLabel,
+                      style: tt.titleLarge?.copyWith(
+                        color: cs.success,
+                        fontWeight: FontWeight.w700,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                  ],
+                ),
+                // Badges pleine largeur, hors de la colonne du voyageur : sinon ils
+                // partageaient l'espace avec le prix et débordaient différemment
+                // selon la largeur (liste vs carousel), donnant deux hauteurs. Ici
+                // ils disposent de toute la largeur de la carte et s'alignent de
+                // façon identique dans les deux vues.
+                if (isKiloPro || isProAccount || announcement.isUrgent) ...[
+                  const SizedBox(height: DonySpacing.sm),
+                  Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: DonySpacing.xxs,
+                    runSpacing: DonySpacing.xxs,
+                    children: [
+                      if (isKiloPro) const _KycBadge(),
+                      if (isProAccount) const _ProBadge(),
+                      if (announcement.isUrgent) const DonyUrgentBadge(),
                     ],
                   ),
-                ),
-                const SizedBox(width: DonySpacing.sm),
-                Text(
-                  priceLabel,
-                  style: tt.titleLarge?.copyWith(
-                    color: cs.success,
-                    fontWeight: FontWeight.w700,
-                    fontFeatures: const [FontFeature.tabularFigures()],
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
-                ),
-              ],
-            ),
-            // Badges pleine largeur, hors de la colonne du voyageur : sinon ils
-            // partageaient l'espace avec le prix et débordaient différemment
-            // selon la largeur (liste vs carousel), donnant deux hauteurs. Ici
-            // ils disposent de toute la largeur de la carte et s'alignent de
-            // façon identique dans les deux vues.
-            if (isKiloPro || isProAccount || announcement.isUrgent) ...[
-              const SizedBox(height: DonySpacing.sm),
-              Wrap(
-                crossAxisAlignment: WrapCrossAlignment.center,
-                spacing: DonySpacing.xxs,
-                runSpacing: DonySpacing.xxs,
-                children: [
-                  if (isKiloPro) const _KycBadge(),
-                  if (isProAccount) const _ProBadge(),
-                  if (announcement.isUrgent) const DonyUrgentBadge(),
                 ],
-              ),
-            ],
-            const SizedBox(height: DonySpacing.sm),
-            Row(
-              children: [
-                const DonyEmoji.parcel(size: 13),
-                const SizedBox(width: DonySpacing.xxs),
-                Text(
-                  announcement.capacityUnit == 'KG_FREE'
-                      ? 'Kg libre'
-                      : '${announcement.availableKg.toStringAsFixed(0)} kg dispo',
-                  style: tt.bodySmall?.copyWith(
-                    color: cs.onSurfaceVariant,
-                    fontFeatures: const [FontFeature.tabularFigures()],
-                  ),
+                const SizedBox(height: DonySpacing.sm),
+                Row(
+                  children: [
+                    const DonyEmoji.parcel(size: 13),
+                    const SizedBox(width: DonySpacing.xxs),
+                    Text(
+                      announcement.capacityUnit == 'KG_FREE'
+                          ? 'Kg libre'
+                          : '${announcement.availableKg.toStringAsFixed(0)} kg dispo',
+                      style: tt.bodySmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                    if (isOwnAnnouncement) ...[
+                      const Spacer(),
+                      const _OwnTripPill(),
+                    ],
+                  ],
                 ),
-                if (isOwnAnnouncement) ...[
-                  const Spacer(),
-                  const _OwnTripPill(),
+                if (categories.isNotEmpty) ...[
+                  const SizedBox(height: DonySpacing.sm),
+                  _CategoryChips(
+                    categories: categories,
+                    maxVisible: _maxVisibleChips,
+                  ),
                 ],
               ],
             ),
-            if (categories.isNotEmpty) ...[
-              const SizedBox(height: DonySpacing.sm),
-              _CategoryChips(categories: categories, maxVisible: _maxVisibleChips),
-            ],
-          ],
-        ),
-      ),
-    )
+          ),
+        )
         .animate()
         .fadeIn(delay: Duration(milliseconds: 60 * index))
         .slideY(begin: 0.04, curve: Curves.easeOutCubic);
@@ -501,10 +516,7 @@ class _FlagEndpoint extends StatelessWidget {
     return Container(
       width: 8,
       height: 8,
-      decoration: BoxDecoration(
-        color: cs.primary,
-        shape: BoxShape.circle,
-      ),
+      decoration: BoxDecoration(color: cs.primary, shape: BoxShape.circle),
     );
   }
 }
@@ -622,9 +634,9 @@ class _DistanceBadge extends StatelessWidget {
           Text(
             label,
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: cs.surface,
-                  fontWeight: FontWeight.w600,
-                ),
+              color: cs.surface,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ],
       ),
@@ -641,7 +653,9 @@ class _ProBadge extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(
-          horizontal: DonySpacing.sm, vertical: DonySpacing.xxs),
+        horizontal: DonySpacing.sm,
+        vertical: DonySpacing.xxs,
+      ),
       decoration: BoxDecoration(
         color: cs.warningLight,
         borderRadius: BorderRadius.circular(DonyRadius.full),
@@ -674,7 +688,10 @@ class _KycBadge extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: DonySpacing.sm, vertical: DonySpacing.xxs),
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.sm,
+        vertical: DonySpacing.xxs,
+      ),
       decoration: BoxDecoration(
         color: cs.successLight,
         borderRadius: BorderRadius.circular(DonyRadius.full),
@@ -685,10 +702,19 @@ class _KycBadge extends StatelessWidget {
           Container(
             width: 6,
             height: 6,
-            decoration: BoxDecoration(color: cs.success, shape: BoxShape.circle),
+            decoration: BoxDecoration(
+              color: cs.success,
+              shape: BoxShape.circle,
+            ),
           ),
           const SizedBox(width: DonySpacing.xxs),
-          Text('Identité', style: tt.labelSmall?.copyWith(color: cs.success, fontWeight: FontWeight.w600)),
+          Text(
+            'Identité',
+            style: tt.labelSmall?.copyWith(
+              color: cs.success,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       ),
     );
@@ -724,13 +750,19 @@ class _CategoryChip extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: DonySpacing.sm, vertical: DonySpacing.xxs),
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.sm,
+        vertical: DonySpacing.xxs,
+      ),
       decoration: BoxDecoration(
         color: Theme.of(context).scaffoldBackgroundColor,
         borderRadius: BorderRadius.circular(DonyRadius.xl),
         border: Border.all(color: cs.outline),
       ),
-      child: Text(label, style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant)),
+      child: Text(
+        label,
+        style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
+      ),
     );
   }
 }

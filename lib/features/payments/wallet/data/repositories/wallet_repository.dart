@@ -15,16 +15,19 @@ class WalletRepository {
     }
   }
 
-  Future<String?> topupStripe({required double amount}) async {
+  Future<String?> topupStripe({
+    required double amount,
+    String currencyCode = 'EUR',
+  }) async {
     try {
       final data = await _datasource.topup(
         amount: amount,
         paymentMethod: 'STRIPE',
+        currencyCode: currencyCode,
       );
       return data['clientSecret'] as String?;
     } catch (e) {
       throw unwrapDioError(e);
     }
   }
-
 }

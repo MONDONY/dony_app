@@ -20,24 +20,21 @@ BidModel _bid({
   String? returnCode,
   DateTime? returnDeadline,
   DateTime? returnedAt,
-}) =>
-    BidModel(
-      id: 'bid-1',
-      announcementId: 'a-1',
-      senderId: 's-1',
-      status: status,
-      weightKg: 5,
-      createdAt: DateTime(2026, 5),
-      updatedAt: DateTime(2026, 5),
-      returnCode: returnCode,
-      returnDeadline: returnDeadline,
-      returnedAt: returnedAt,
-    );
+}) => BidModel(
+  id: 'bid-1',
+  announcementId: 'a-1',
+  senderId: 's-1',
+  status: status,
+  weightKg: 5,
+  createdAt: DateTime(2026, 5),
+  updatedAt: DateTime(2026, 5),
+  returnCode: returnCode,
+  returnDeadline: returnDeadline,
+  returnedAt: returnedAt,
+);
 
 /// Hôte avec un bouton qui ouvre le sheet demandé en injectant [bloc].
-Widget _host(
-  void Function(BuildContext) onTap,
-) {
+Widget _host(void Function(BuildContext) onTap) {
   return MaterialApp(
     theme: AppTheme.light(),
     home: Scaffold(
@@ -68,55 +65,73 @@ void main() {
 
   // ── ReturnCodeSheet (expéditeur) ────────────────────────────────────────────
 
-  testWidgets('ReturnCodeSheet affiche le code + dispatch ReturnCodeRequested',
-      (tester) async {
-    await tester.pumpWidget(_host((ctx) => ReturnCodeSheet.show(
-          ctx,
-          bid: _bid(
-            returnCode: '654321',
-            returnDeadline: DateTime(2026, 6, 4),
+  testWidgets(
+    'ReturnCodeSheet affiche le code + dispatch ReturnCodeRequested',
+    (tester) async {
+      await tester.pumpWidget(
+        _host(
+          (ctx) => ReturnCodeSheet.show(
+            ctx,
+            bid: _bid(
+              returnCode: '654321',
+              returnDeadline: DateTime(2026, 6, 4),
+            ),
+            cancellationBloc: bloc,
           ),
-          cancellationBloc: bloc,
-        )));
-    await tester.tap(find.text('Open'));
-    await tester.pumpAndSettle();
+        ),
+      );
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
 
-    expect(find.text('Code de retour'), findsWidgets);
-    expect(find.text('Copier le code'), findsOneWidget);
-    // Les 6 chiffres sont rendus en boxes individuelles.
-    for (final d in '654321'.split('')) {
-      expect(find.text(d), findsOneWidget);
-    }
-    verify(() => bloc.add(any(that: isA<ReturnCodeRequested>()))).called(1);
-  });
+      expect(find.text('Code de retour'), findsWidgets);
+      expect(find.text('Copier le code'), findsOneWidget);
+      // Les 6 chiffres sont rendus en boxes individuelles.
+      for (final d in '654321'.split('')) {
+        expect(find.text(d), findsOneWidget);
+      }
+      verify(() => bloc.add(any(that: isA<ReturnCodeRequested>()))).called(1);
+    },
+  );
 
-  testWidgets('ReturnCodeSheet : tap "Copier le code" → snackbar "Code copié"',
-      (tester) async {
-    await tester.pumpWidget(_host((ctx) => ReturnCodeSheet.show(
-          ctx,
-          bid: _bid(
-            returnCode: '654321',
-            returnDeadline: DateTime(2026, 6, 4),
+  testWidgets(
+    'ReturnCodeSheet : tap "Copier le code" → snackbar "Code copié"',
+    (tester) async {
+      await tester.pumpWidget(
+        _host(
+          (ctx) => ReturnCodeSheet.show(
+            ctx,
+            bid: _bid(
+              returnCode: '654321',
+              returnDeadline: DateTime(2026, 6, 4),
+            ),
+            cancellationBloc: bloc,
           ),
-          cancellationBloc: bloc,
-        )));
-    await tester.tap(find.text('Open'));
-    await tester.pumpAndSettle();
+        ),
+      );
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Copier le code'));
-    await tester.pump();
-    expect(find.text('Code copié'), findsOneWidget);
-  });
+      await tester.tap(find.text('Copier le code'));
+      await tester.pump();
+      expect(find.text('Code copié'), findsOneWidget);
+    },
+  );
 
-  testWidgets('ReturnCodeSheet : colis restitué → confirmation', (tester) async {
-    await tester.pumpWidget(_host((ctx) => ReturnCodeSheet.show(
+  testWidgets('ReturnCodeSheet : colis restitué → confirmation', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _host(
+        (ctx) => ReturnCodeSheet.show(
           ctx,
           bid: _bid(
             returnDeadline: DateTime(2026, 6, 4),
             returnedAt: DateTime(2026, 6, 2),
           ),
           cancellationBloc: bloc,
-        )));
+        ),
+      ),
+    );
     await tester.tap(find.text('Open'));
     await tester.pumpAndSettle();
 
@@ -126,36 +141,47 @@ void main() {
   // ── ReturnEntrySheet (voyageur) ─────────────────────────────────────────────
 
   testWidgets(
-      'ReturnEntrySheet : saisie 6 chiffres → ReturnConfirmRequested dispatché',
-      (tester) async {
-    await tester.pumpWidget(_host((ctx) => ReturnEntrySheet.show(
-          ctx,
-          bid: _bid(returnDeadline: DateTime(2026, 6, 4)),
-          cancellationBloc: bloc,
-        )));
-    await tester.tap(find.text('Open'));
-    // Pas de pumpAndSettle : le curseur clignotant du Pinput (autofocus) ne
-    // « settle » jamais. On laisse l'animation d'ouverture du sheet se jouer.
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 500));
+    'ReturnEntrySheet : saisie 6 chiffres → ReturnConfirmRequested dispatché',
+    (tester) async {
+      await tester.pumpWidget(
+        _host(
+          (ctx) => ReturnEntrySheet.show(
+            ctx,
+            bid: _bid(returnDeadline: DateTime(2026, 6, 4)),
+            cancellationBloc: bloc,
+          ),
+        ),
+      );
+      await tester.tap(find.text('Open'));
+      // Pas de pumpAndSettle : le curseur clignotant du Pinput (autofocus) ne
+      // « settle » jamais. On laisse l'animation d'ouverture du sheet se jouer.
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
 
-    // Bouton désactivé tant que le code n'est pas complet.
-    expect(find.text('Confirmer la restitution'), findsOneWidget);
+      // Bouton désactivé tant que le code n'est pas complet.
+      expect(find.text('Confirmer la restitution'), findsOneWidget);
 
-    await tester.enterText(find.byType(EditableText).first, '123456');
-    await tester.pump();
+      await tester.enterText(find.byType(EditableText).first, '123456');
+      await tester.pump();
 
-    await tester.tap(find.text('Confirmer la restitution'));
-    await tester.pump();
+      await tester.tap(find.text('Confirmer la restitution'));
+      await tester.pump();
 
-    verify(() => bloc.add(any(
-        that: isA<ReturnConfirmRequested>()
-            .having((e) => e.code, 'code', '123456')
-            .having((e) => e.bidId, 'bidId', 'bid-1')))).called(1);
-  });
+      verify(
+        () => bloc.add(
+          any(
+            that: isA<ReturnConfirmRequested>()
+                .having((e) => e.code, 'code', '123456')
+                .having((e) => e.bidId, 'bidId', 'bid-1'),
+          ),
+        ),
+      ).called(1);
+    },
+  );
 
-  testWidgets('ReturnEntrySheet : ReturnConfirmed → ferme le sheet',
-      (tester) async {
+  testWidgets('ReturnEntrySheet : ReturnConfirmed → ferme le sheet', (
+    tester,
+  ) async {
     whenListen(
       bloc,
       Stream<CancellationState>.fromIterable([
@@ -164,11 +190,15 @@ void main() {
       initialState: CancellationInitial(),
     );
 
-    await tester.pumpWidget(_host((ctx) => ReturnEntrySheet.show(
+    await tester.pumpWidget(
+      _host(
+        (ctx) => ReturnEntrySheet.show(
           ctx,
           bid: _bid(returnDeadline: DateTime(2026, 6, 4)),
           cancellationBloc: bloc,
-        )));
+        ),
+      ),
+    );
     await tester.tap(find.text('Open'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
@@ -177,8 +207,9 @@ void main() {
     expect(find.text('Confirmer la restitution'), findsNothing);
   });
 
-  testWidgets('ReturnEntrySheet : CancellationError → sheet reste ouvert',
-      (tester) async {
+  testWidgets('ReturnEntrySheet : CancellationError → sheet reste ouvert', (
+    tester,
+  ) async {
     whenListen(
       bloc,
       Stream<CancellationState>.fromIterable([
@@ -187,11 +218,15 @@ void main() {
       initialState: CancellationInitial(),
     );
 
-    await tester.pumpWidget(_host((ctx) => ReturnEntrySheet.show(
+    await tester.pumpWidget(
+      _host(
+        (ctx) => ReturnEntrySheet.show(
           ctx,
           bid: _bid(returnDeadline: DateTime(2026, 6, 4)),
           cancellationBloc: bloc,
-        )));
+        ),
+      ),
+    );
     await tester.tap(find.text('Open'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));

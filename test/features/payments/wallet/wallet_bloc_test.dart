@@ -23,7 +23,11 @@ void main() {
   tearDown(() => bloc.close());
 
   group('WalletLoadRequested', () {
-    final wallet = WalletModel(balance: 42.50, currency: 'EUR', transactions: []);
+    final wallet = WalletModel(
+      balance: 42.50,
+      currency: 'EUR',
+      transactions: [],
+    );
 
     blocTest<WalletBloc, WalletState>(
       'émet [WalletLoading, WalletLoaded] sur succès',
@@ -50,12 +54,35 @@ void main() {
     blocTest<WalletBloc, WalletState>(
       'émet WalletTopupStripeReady avec le clientSecret',
       build: () {
-        when(() => repo.topupStripe(amount: 50.0))
-            .thenAnswer((_) async => 'pi_secret_test');
+        when(
+          () => repo.topupStripe(amount: 50.0),
+        ).thenAnswer((_) async => 'pi_secret_test');
         return bloc;
       },
-      act: (b) => b.add(WalletTopupRequested(amount: 50.0, paymentMethod: 'STRIPE')),
+      act: (b) =>
+          b.add(WalletTopupRequested(amount: 50.0, paymentMethod: 'STRIPE')),
       expect: () => [isA<WalletLoading>(), isA<WalletTopupStripeReady>()],
+    );
+
+    blocTest<WalletBloc, WalletState>(
+      'transmet la devise locale CAD au top-up Stripe',
+      build: () {
+        when(
+          () => repo.topupStripe(amount: 50.0, currencyCode: 'CAD'),
+        ).thenAnswer((_) async => 'pi_secret_cad');
+        return bloc;
+      },
+      act: (b) => b.add(
+        WalletTopupRequested(
+          amount: 50.0,
+          paymentMethod: 'STRIPE',
+          currencyCode: 'CAD',
+        ),
+      ),
+      expect: () => [isA<WalletLoading>(), isA<WalletTopupStripeReady>()],
+      verify: (_) => verify(
+        () => repo.topupStripe(amount: 50.0, currencyCode: 'CAD'),
+      ).called(1),
     );
   });
 
@@ -63,11 +90,13 @@ void main() {
     blocTest<WalletBloc, WalletState>(
       'émet WalletError si clientSecret null',
       build: () {
-        when(() => repo.topupStripe(amount: 10.0))
-            .thenAnswer((_) async => null);
+        when(
+          () => repo.topupStripe(amount: 10.0),
+        ).thenAnswer((_) async => null);
         return bloc;
       },
-      act: (b) => b.add(WalletTopupRequested(amount: 10.0, paymentMethod: 'STRIPE')),
+      act: (b) =>
+          b.add(WalletTopupRequested(amount: 10.0, paymentMethod: 'STRIPE')),
       expect: () => [isA<WalletLoading>(), isA<WalletError>()],
     );
   });
@@ -100,8 +129,10 @@ void main() {
     blocTest<WalletBloc, WalletState>(
       's\'arrête dès que le solde dépasse le précédent (1 seul fetch)',
       build: () {
-        when(() => repo.getBalance()).thenAnswer((_) async =>
-            WalletModel(balance: 60, currency: 'EUR', transactions: []));
+        when(() => repo.getBalance()).thenAnswer(
+          (_) async =>
+              WalletModel(balance: 60, currency: 'EUR', transactions: []),
+        );
         return bloc;
       },
       act: (b) => b.add(WalletRefreshAfterTopupRequested(50)),

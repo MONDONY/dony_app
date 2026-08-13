@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
@@ -44,7 +45,8 @@ class SenderHeroCard extends StatelessWidget {
     // savoir qui doit voir "Absence signalée" (auteur) vs "Une absence est
     // signalée" (adversaire).
     final deliveryStatus = bid.deliveryNoShowStatus;
-    if (deliveryStatus == 'PENDING_CONFIRMATION' || deliveryStatus == 'CONTESTED') {
+    if (deliveryStatus == 'PENDING_CONFIRMATION' ||
+        deliveryStatus == 'CONTESTED') {
       final iAmReporter = bid.deliveryNoShowReportedByTraveler == false;
       return AnimatedSwitcher(
         duration: const Duration(milliseconds: 250),
@@ -105,6 +107,12 @@ class _HeroContent {
 
 // ── Status mapping ────────────────────────────────────────────────────────────
 
+/// Montant payé par l'expéditeur = net + commission (totalSenderAmountEur).
+String _senderAmountLabel(BidModel bid) {
+  final value = bid.totalSenderAmountEur ?? bid.totalAmountEur;
+  return value != null ? formatPriceIn(value, bid.currency) : '–';
+}
+
 _HeroContent? _buildContent(BuildContext context, BidModel bid) {
   switch (bid.status) {
     case 'PENDING':
@@ -115,23 +123,20 @@ _HeroContent? _buildContent(BuildContext context, BidModel bid) {
       );
 
     case 'AWAITING_PAYMENT':
-      // Montant payé par l'expéditeur = net + commission (totalSenderAmountEur).
-      final amount =
-          (bid.totalSenderAmountEur ?? bid.totalAmountEur)?.toStringAsFixed(2) ?? '–';
+      final amount = _senderAmountLabel(bid);
       return _HeroContent(
         variant: SenderHeroVariant.pay,
         title: "Payez pour confirmer l'envoi",
         subtitle:
-            'Votre paiement de $amount € sera séquestré jusqu\'à la livraison.',
+            'Votre paiement de $amount sera séquestré jusqu\'à la livraison.',
       );
 
     case 'PAYMENT_ESCROWED':
-      final amount =
-          (bid.totalSenderAmountEur ?? bid.totalAmountEur)?.toStringAsFixed(2) ?? '–';
+      final amount = _senderAmountLabel(bid);
       return _HeroContent(
         variant: SenderHeroVariant.wait,
         title: '🔒 Paiement sécurisé',
-        subtitle: '$amount € séquestrés. En attente de remise.',
+        subtitle: '$amount séquestrés. En attente de remise.',
       );
 
     case 'ACCEPTED':
@@ -192,7 +197,8 @@ String _formatWindow(DateTime? start, DateTime? end) {
     final fmtTime = DateFormat('HH:mm', 'fr');
 
     if (start != null && end != null) {
-      final sameDay = start.year == end.year &&
+      final sameDay =
+          start.year == end.year &&
           start.month == end.month &&
           start.day == end.day;
       if (sameDay) {
@@ -383,15 +389,9 @@ class _HeroButton extends StatelessWidget {
             ? const SizedBox(
                 width: 20,
                 height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: white,
-                ),
+                child: CircularProgressIndicator(strokeWidth: 2, color: white),
               )
-            : FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(label, maxLines: 1),
-              ),
+            : FittedBox(fit: BoxFit.scaleDown, child: Text(label, maxLines: 1)),
       ),
     );
   }
@@ -406,7 +406,10 @@ class _WindowExpiredHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final window = _formatWindow(bid.handoverWindowStart, bid.handoverWindowEnd);
+    final window = _formatWindow(
+      bid.handoverWindowStart,
+      bid.handoverWindowEnd,
+    );
     final subtitle =
         "La remise était prévue $window. Le voyageur ne s'est pas présenté ?";
 
@@ -540,7 +543,8 @@ class _ContestationHeroState extends State<_ContestationHero> {
         return _HeroShell(
           variant: SenderHeroVariant.alert,
           title: '⚠ Absence signalée par le voyageur',
-          subtitle: "Il indique que vous n'étiez pas présent au point de remise.",
+          subtitle:
+              "Il indique que vous n'étiez pas présent au point de remise.",
           countdownWidget: countdownWidget,
           footer: Row(
             children: [
@@ -653,9 +657,9 @@ class _DeliveryNoShowHero extends StatelessWidget {
         title: contested ? '⚖ Absence contestée' : '⏳ Absence signalée',
         subtitle: contested
             ? "L'autre partie conteste votre signalement. Notre équipe examine "
-                'la demande et vous tiendra informé.'
+                  'la demande et vous tiendra informé.'
             : "Signalement envoyé. L'autre partie a 24 h pour contester. "
-                'Notre équipe tranche ensuite.',
+                  'Notre équipe tranche ensuite.',
       );
     }
     return BlocBuilder<CancellationBloc, CancellationState>(
@@ -663,20 +667,22 @@ class _DeliveryNoShowHero extends StatelessWidget {
         final isLoading = state is CancellationLoading;
         return _HeroShell(
           variant: SenderHeroVariant.alert,
-          title: contested ? '⚖ Contestation envoyée' : '⚠ Une absence est signalée',
+          title: contested
+              ? '⚖ Contestation envoyée'
+              : '⚠ Une absence est signalée',
           subtitle: contested
               ? 'Votre contestation a été transmise. Notre équipe examine '
-                  'la demande et vous tiendra informé.'
+                    'la demande et vous tiendra informé.'
               : 'Une absence à la livraison a été signalée sur cet envoi. '
-                  'Vous pouvez contester si ce signalement est erroné.',
+                    'Vous pouvez contester si ce signalement est erroné.',
           footer: contested
               ? null
               : _HeroButton(
                   label: 'Contester ce signalement',
                   isLoading: isLoading,
-                  onPressed: () => context
-                      .read<CancellationBloc>()
-                      .add(DeliveryNoShowContestRequested(bid.id)),
+                  onPressed: () => context.read<CancellationBloc>().add(
+                    DeliveryNoShowContestRequested(bid.id),
+                  ),
                 ),
         );
       },

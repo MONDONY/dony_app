@@ -16,8 +16,9 @@ import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
 
-class _MockNegotiationBloc
-    extends MockBloc<NegotiationEvent, NegotiationState>
+import '../../../../helpers/error_reporting_test_doubles.dart';
+
+class _MockNegotiationBloc extends MockBloc<NegotiationEvent, NegotiationState>
     implements NegotiationBloc {}
 
 class _MockLocalAuthService extends Mock implements LocalAuthService {}
@@ -78,24 +79,28 @@ void main() {
   late _MockNegotiationBloc bloc;
 
   setUp(() {
+    // DonyPaymentSheet.show resout ErrorReportingService via GetIt.
+    registerNoopErrorReporting();
+
     bloc = _MockNegotiationBloc();
     when(() => bloc.state).thenReturn(const NegotiationInitial());
-    when(() => bloc.stream)
-        .thenAnswer((_) => const Stream<NegotiationState>.empty());
+    when(
+      () => bloc.stream,
+    ).thenAnswer((_) => const Stream<NegotiationState>.empty());
   });
 
   tearDown(() => bloc.close());
 
-  testWidgets('shows "Accepter l\'offre" title when not checkout',
-      (tester) async {
+  testWidgets('shows "Accepter l\'offre" title when not checkout', (
+    tester,
+  ) async {
     await tester.pumpWidget(_buildApp(bloc: bloc));
     await tester.tap(find.byKey(const Key('open')));
     await tester.pumpAndSettle();
     expect(find.text('Accepter l\'offre'), findsOneWidget);
   });
 
-  testWidgets('shows "Payer en escrow" title when isCheckout',
-      (tester) async {
+  testWidgets('shows "Payer en escrow" title when isCheckout', (tester) async {
     await tester.pumpWidget(_buildApp(bloc: bloc, isCheckout: true));
     await tester.tap(find.byKey(const Key('open')));
     await tester.pumpAndSettle();
@@ -116,8 +121,9 @@ void main() {
     expect(find.text('Total à régler'), findsOneWidget);
   });
 
-  testWidgets('affiche le détail de la commission Yadony (%) à l\'expéditeur',
-      (tester) async {
+  testWidgets('affiche le détail de la commission Yadony (%) à l\'expéditeur', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _buildApp(bloc: bloc, isTraveler: false, grossPriceEur: 39.20),
     );
@@ -127,8 +133,9 @@ void main() {
     expect(find.text('Net voyageur'), findsOneWidget);
   });
 
-  testWidgets('affiche le détail de la commission Yadony (%) au voyageur',
-      (tester) async {
+  testWidgets('affiche le détail de la commission Yadony (%) au voyageur', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _buildApp(bloc: bloc, isTraveler: true, grossPriceEur: 39.20),
     );
@@ -139,30 +146,34 @@ void main() {
   });
 
   testWidgets(
-      'code promo absent pour le voyageur et pour l\'accord de prix (pas encore de paiement)',
-      (tester) async {
-    await tester.pumpWidget(_buildApp(bloc: bloc, isTraveler: true));
-    await tester.tap(find.byKey(const Key('open')));
-    await tester.pumpAndSettle();
-    expect(find.text('CODE PROMO (OPTIONNEL)'), findsNothing);
+    'code promo absent pour le voyageur et pour l\'accord de prix (pas encore de paiement)',
+    (tester) async {
+      await tester.pumpWidget(_buildApp(bloc: bloc, isTraveler: true));
+      await tester.tap(find.byKey(const Key('open')));
+      await tester.pumpAndSettle();
+      expect(find.text('CODE PROMO (OPTIONNEL)'), findsNothing);
 
-    await tester.pumpWidget(
-        _buildApp(bloc: bloc, isTraveler: false, isCheckout: false));
-    await tester.tap(find.byKey(const Key('open')));
-    await tester.pumpAndSettle();
-    expect(find.text('CODE PROMO (OPTIONNEL)'), findsNothing);
-  });
+      await tester.pumpWidget(
+        _buildApp(bloc: bloc, isTraveler: false, isCheckout: false),
+      );
+      await tester.tap(find.byKey(const Key('open')));
+      await tester.pumpAndSettle();
+      expect(find.text('CODE PROMO (OPTIONNEL)'), findsNothing);
+    },
+  );
 
-  testWidgets('confirms button label uses Confirmer when not checkout',
-      (tester) async {
+  testWidgets('confirms button label uses Confirmer when not checkout', (
+    tester,
+  ) async {
     await tester.pumpWidget(_buildApp(bloc: bloc));
     await tester.tap(find.byKey(const Key('open')));
     await tester.pumpAndSettle();
     expect(find.textContaining('Confirmer'), findsOneWidget);
   });
 
-  testWidgets('confirms button label uses Payer (amount) when isCheckout',
-      (tester) async {
+  testWidgets('confirms button label uses Payer (amount) when isCheckout', (
+    tester,
+  ) async {
     await tester.pumpWidget(_buildApp(bloc: bloc, isCheckout: true));
     await tester.tap(find.byKey(const Key('open')));
     await tester.pumpAndSettle();
@@ -170,11 +181,11 @@ void main() {
     expect(find.textContaining('Payer ('), findsOneWidget);
   });
 
-  testWidgets('no error when NegotiationLoading state',
-      (tester) async {
+  testWidgets('no error when NegotiationLoading state', (tester) async {
     when(() => bloc.state).thenReturn(const NegotiationLoading());
-    when(() => bloc.stream).thenAnswer(
-        (_) => Stream.value(const NegotiationLoading()));
+    when(
+      () => bloc.stream,
+    ).thenAnswer((_) => Stream.value(const NegotiationLoading()));
     await tester.pumpWidget(_buildApp(bloc: bloc));
     await tester.tap(find.byKey(const Key('open')));
     await tester.pump(const Duration(milliseconds: 500));
@@ -187,8 +198,9 @@ void main() {
     await tester.tap(find.byKey(const Key('open')));
     await tester.pumpAndSettle();
     expect(
-        find.textContaining('l\'expéditeur effectuera le paiement'),
-        findsOneWidget);
+      find.textContaining('l\'expéditeur effectuera le paiement'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('sender sees escrow info text', (tester) async {
@@ -211,12 +223,18 @@ void main() {
     setUp(() {
       authService = _MockLocalAuthService();
       userPrefsBox = _MockBox();
-      when(() => userPrefsBox.get(HiveService.kBiometricEnabled,
-          defaultValue: any(named: 'defaultValue'))).thenReturn(true);
-      when(() => authService.isBiometricAvailable())
-          .thenAnswer((_) async => true);
-      when(() => authService.authenticateWithBiometric())
-          .thenAnswer((_) async => true);
+      when(
+        () => userPrefsBox.get(
+          HiveService.kBiometricEnabled,
+          defaultValue: any(named: 'defaultValue'),
+        ),
+      ).thenReturn(true);
+      when(
+        () => authService.isBiometricAvailable(),
+      ).thenAnswer((_) async => true);
+      when(
+        () => authService.authenticateWithBiometric(),
+      ).thenAnswer((_) async => true);
 
       if (getIt.isRegistered<LocalAuthService>()) {
         getIt.unregister<LocalAuthService>();
@@ -249,52 +267,83 @@ void main() {
     }
 
     testWidgets(
-        'expéditeur accepte → DonySuccessScreen "Accord confirmé !", copy '
-        'orienté prochaine étape (trajet puis règlement), sans mention espèces, '
-        'et dispatch NegotiationAcceptRequested', (tester) async {
-      await tester.pumpWidget(
-          _buildApp(bloc: bloc, isCheckout: false, isTraveler: false));
-      await accept(tester);
+      'expéditeur accepte → DonySuccessScreen "Accord confirmé !", copy '
+      'orienté prochaine étape (trajet puis règlement), sans mention espèces, '
+      'et dispatch NegotiationAcceptRequested',
+      (tester) async {
+        await tester.pumpWidget(
+          _buildApp(bloc: bloc, isCheckout: false, isTraveler: false),
+        );
+        await accept(tester);
 
-      expect(find.byType(DonySuccessScreen), findsOneWidget);
-      expect(find.text('Accord confirmé !'), findsOneWidget);
-      expect(find.textContaining('Le voyageur va confirmer son trajet'),
-          findsOneWidget);
-      expect(find.textContaining('espèces'), findsNothing);
+        expect(find.byType(DonySuccessScreen), findsOneWidget);
+        expect(find.text('Accord confirmé !'), findsOneWidget);
+        expect(
+          find.textContaining('Le voyageur va confirmer son trajet'),
+          findsOneWidget,
+        );
+        expect(find.textContaining('espèces'), findsNothing);
 
-      verify(() => bloc.add(any(
-              that: isA<NegotiationAcceptRequested>()
-                  .having((e) => e.threadId, 'threadId', 't-1'))))
-          .called(1);
-    });
-
-    testWidgets(
-        'voyageur accepte sans trajet lié → copy orienté "lie un trajet", '
-        'sans mention espèces', (tester) async {
-      await tester.pumpWidget(_buildApp(
-          bloc: bloc, isCheckout: false, isTraveler: true, hasLinkedTrip: false));
-      await accept(tester);
-
-      expect(find.byType(DonySuccessScreen), findsOneWidget);
-      expect(find.text('Accord confirmé !'), findsOneWidget);
-      expect(find.textContaining('lie ou crée un trajet'), findsOneWidget);
-      expect(find.textContaining('espèces'), findsNothing);
-      expect(find.textContaining('tu remets le montant'), findsNothing);
-    });
+        verify(
+          () => bloc.add(
+            any(
+              that: isA<NegotiationAcceptRequested>().having(
+                (e) => e.threadId,
+                'threadId',
+                't-1',
+              ),
+            ),
+          ),
+        ).called(1);
+      },
+    );
 
     testWidgets(
-        'voyageur accepte avec trajet déjà lié → copy "l\'expéditeur va '
-        'finaliser", sans mention espèces', (tester) async {
-      await tester.pumpWidget(_buildApp(
-          bloc: bloc, isCheckout: false, isTraveler: true, hasLinkedTrip: true));
-      await accept(tester);
+      'voyageur accepte sans trajet lié → copy orienté "lie un trajet", '
+      'sans mention espèces',
+      (tester) async {
+        await tester.pumpWidget(
+          _buildApp(
+            bloc: bloc,
+            isCheckout: false,
+            isTraveler: true,
+            hasLinkedTrip: false,
+          ),
+        );
+        await accept(tester);
 
-      expect(find.byType(DonySuccessScreen), findsOneWidget);
-      expect(find.text('Accord confirmé !'), findsOneWidget);
-      expect(find.textContaining('L\'expéditeur va finaliser'), findsOneWidget);
-      expect(find.textContaining('espèces'), findsNothing);
-      expect(find.textContaining('tu remets le montant'), findsNothing);
-    });
+        expect(find.byType(DonySuccessScreen), findsOneWidget);
+        expect(find.text('Accord confirmé !'), findsOneWidget);
+        expect(find.textContaining('lie ou crée un trajet'), findsOneWidget);
+        expect(find.textContaining('espèces'), findsNothing);
+        expect(find.textContaining('tu remets le montant'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'voyageur accepte avec trajet déjà lié → copy "l\'expéditeur va '
+      'finaliser", sans mention espèces',
+      (tester) async {
+        await tester.pumpWidget(
+          _buildApp(
+            bloc: bloc,
+            isCheckout: false,
+            isTraveler: true,
+            hasLinkedTrip: true,
+          ),
+        );
+        await accept(tester);
+
+        expect(find.byType(DonySuccessScreen), findsOneWidget);
+        expect(find.text('Accord confirmé !'), findsOneWidget);
+        expect(
+          find.textContaining('L\'expéditeur va finaliser'),
+          findsOneWidget,
+        );
+        expect(find.textContaining('espèces'), findsNothing);
+        expect(find.textContaining('tu remets le montant'), findsNothing);
+      },
+    );
   });
 
   group('Paiement checkout Stripe réussi', () {
@@ -305,10 +354,12 @@ void main() {
     late _MockNegotiationRepository negotiationRepository;
 
     setUpAll(() {
-      registerFallbackValue(const NegotiationCheckoutRequested(
-        threadId: 't-1',
-        paymentIntentId: 'pi_test',
-      ));
+      registerFallbackValue(
+        const NegotiationCheckoutRequested(
+          threadId: 't-1',
+          paymentIntentId: 'pi_test',
+        ),
+      );
     });
 
     setUp(() {
@@ -316,45 +367,60 @@ void main() {
       userPrefsBox = _MockBox();
       // Biométrie activée + réussie → requirePaymentAuth ne passe jamais par
       // l'écran PIN '/auth/local' (pas de route stub nécessaire).
-      when(() => userPrefsBox.get(HiveService.kBiometricEnabled,
-          defaultValue: any(named: 'defaultValue'))).thenReturn(true);
-      when(() => authService.isBiometricAvailable())
-          .thenAnswer((_) async => true);
-      when(() => authService.authenticateWithBiometric())
-          .thenAnswer((_) async => true);
+      when(
+        () => userPrefsBox.get(
+          HiveService.kBiometricEnabled,
+          defaultValue: any(named: 'defaultValue'),
+        ),
+      ).thenReturn(true);
+      when(
+        () => authService.isBiometricAvailable(),
+      ).thenAnswer((_) async => true);
+      when(
+        () => authService.authenticateWithBiometric(),
+      ).thenAnswer((_) async => true);
 
       paymentGateway = _MockPaymentGateway();
       // PlatformPayButton (Apple/Google Pay) plante hors iOS/Android réel —
       // on désactive le wallet et paie via PayPal (bouton Flutter classique).
-      when(() => paymentGateway.isPlatformPaySupported())
-          .thenAnswer((_) async => false);
-      when(() => paymentGateway.confirmPayPal(any()))
-          .thenAnswer((_) async {});
+      when(
+        () => paymentGateway.isPlatformPaySupported(),
+      ).thenAnswer((_) async => false);
+      when(() => paymentGateway.confirmPayPal(any())).thenAnswer((_) async {});
 
       paymentRepository = _MockPaymentRepository();
       negotiationRepository = _MockNegotiationRepository();
-      when(() => negotiationRepository.initiatePayment('t-1',
-              promoCode: any(named: 'promoCode')))
-          .thenAnswer(
+      when(
+        () => negotiationRepository.initiatePayment(
+          't-1',
+          promoCode: any(named: 'promoCode'),
+        ),
+      ).thenAnswer(
         (_) async => (
           clientSecret: 'pi_test_secret',
           paymentIntentId: 'pi_test',
           amountEur: 35.0,
+          currencyCode: 'EUR',
           paymentMethodTypes: ['paypal'],
         ),
       );
       // Devis initial (sans promo) chargé silencieusement à l'ouverture de la
       // sheet côté expéditeur au checkout — reflète le taux réel résolu
       // serveur (peut différer de l'estimation locale en cas d'override).
-      when(() => negotiationRepository.quote('t-1',
-              promoCode: any(named: 'promoCode')))
-          .thenAnswer((_) async => const NegotiationQuote(
-                netEur: 35.0,
-                rate: 0.05,
-                commissionEur: 1.75,
-                totalEur: 36.75,
-                promoApplied: false,
-              ));
+      when(
+        () => negotiationRepository.quote(
+          't-1',
+          promoCode: any(named: 'promoCode'),
+        ),
+      ).thenAnswer(
+        (_) async => const NegotiationQuote(
+          netEur: 35.0,
+          rate: 0.05,
+          commissionEur: 1.75,
+          totalEur: 36.75,
+          promoApplied: false,
+        ),
+      );
 
       if (getIt.isRegistered<LocalAuthService>()) {
         getIt.unregister<LocalAuthService>();
@@ -379,8 +445,7 @@ void main() {
       if (getIt.isRegistered<NegotiationRepository>()) {
         getIt.unregister<NegotiationRepository>();
       }
-      getIt.registerFactory<NegotiationRepository>(
-          () => negotiationRepository);
+      getIt.registerFactory<NegotiationRepository>(() => negotiationRepository);
     });
 
     tearDown(() {
@@ -440,98 +505,116 @@ void main() {
     }
 
     testWidgets(
-        'onSuccess du paiement checkout → NegotiationCheckoutRequested + '
-        'DonySuccessScreen puis CTA vers /negotiations/{threadId}',
-        (tester) async {
-      await tester.pumpWidget(buildRoutedApp());
-      await tester.tap(find.byKey(const Key('open')));
-      await tester.pumpAndSettle();
+      'onSuccess du paiement checkout → NegotiationCheckoutRequested + '
+      'DonySuccessScreen puis CTA vers /negotiations/{threadId}',
+      (tester) async {
+        await tester.pumpWidget(buildRoutedApp());
+        await tester.tap(find.byKey(const Key('open')));
+        await tester.pumpAndSettle();
 
-      // Confirme le paiement (auth biométrique mockée en succès) → ouvre la
-      // DonyPaymentSheet Stripe. `pumpAndSettle` n'est PAS utilisable ici : le
-      // bouton "Payer" de la sheet extérieure passe en `isLoading: true`
-      // (spinner indéterminé) et reste monté sous la DonyPaymentSheet tant
-      // que celle-ci n'est pas fermée — `pumpAndSettle` ne convergerait
-      // jamais. On enchaîne donc des pumps bornés pour vider les gaps async
-      // (requirePaymentAuth, initiatePayment, ouverture de la sheet,
-      // PaymentSheetStarted).
-      await tester.tap(find.textContaining('Payer ('));
-      for (var i = 0; i < 8; i++) {
-        await tester.pump(const Duration(milliseconds: 60));
-      }
+        // Confirme le paiement (auth biométrique mockée en succès) → ouvre la
+        // DonyPaymentSheet Stripe. `pumpAndSettle` n'est PAS utilisable ici : le
+        // bouton "Payer" de la sheet extérieure passe en `isLoading: true`
+        // (spinner indéterminé) et reste monté sous la DonyPaymentSheet tant
+        // que celle-ci n'est pas fermée — `pumpAndSettle` ne convergerait
+        // jamais. On enchaîne donc des pumps bornés pour vider les gaps async
+        // (requirePaymentAuth, initiatePayment, ouverture de la sheet,
+        // PaymentSheetStarted).
+        await tester.tap(find.textContaining('Payer ('));
+        for (var i = 0; i < 8; i++) {
+          await tester.pump(const Duration(milliseconds: 60));
+        }
 
-      // La DonyPaymentSheet est ouverte (PayPal dispo, aucune carte
-      // enregistrée) → on paie via le bouton PayPal.
-      expect(find.byKey(const Key('paymentSheetPayPalButton')), findsOneWidget);
-      await tester.tap(find.byKey(const Key('paymentSheetPayPalButton')));
-      await tester.pump(); // PaymentSheetProcessing
-      await tester.pump(); // PaymentSheetSuccess (résolution async du gateway)
-      await tester
-          .pump(const Duration(milliseconds: 900)); // déclenchement onSuccess
-      // Laisse l'animation de fermeture de la sheet extérieure se terminer —
-      // toujours pas de pumpAndSettle, même raison que ci-dessus.
-      for (var i = 0; i < 6; i++) {
-        await tester.pump(const Duration(milliseconds: 60));
-      }
+        // La DonyPaymentSheet est ouverte (PayPal dispo, aucune carte
+        // enregistrée) → on paie via le bouton PayPal.
+        expect(
+          find.byKey(const Key('paymentSheetPayPalButton')),
+          findsOneWidget,
+        );
+        await tester.tap(find.byKey(const Key('paymentSheetPayPalButton')));
+        await tester.pump(); // PaymentSheetProcessing
+        await tester
+            .pump(); // PaymentSheetSuccess (résolution async du gateway)
+        await tester.pump(
+          const Duration(milliseconds: 900),
+        ); // déclenchement onSuccess
+        // Laisse l'animation de fermeture de la sheet extérieure se terminer —
+        // toujours pas de pumpAndSettle, même raison que ci-dessus.
+        for (var i = 0; i < 6; i++) {
+          await tester.pump(const Duration(milliseconds: 60));
+        }
 
-      verify(() => bloc.add(any(
+        verify(
+          () => bloc.add(
+            any(
               that: isA<NegotiationCheckoutRequested>()
                   .having((e) => e.threadId, 'threadId', 't-1')
-                  .having((e) => e.paymentIntentId, 'paymentIntentId',
-                      'pi_test'))))
-          .called(1);
+                  .having(
+                    (e) => e.paymentIntentId,
+                    'paymentIntentId',
+                    'pi_test',
+                  ),
+            ),
+          ),
+        ).called(1);
 
-      expect(find.byType(DonySuccessScreen), findsOneWidget);
-      expect(find.text('Offre acceptée et payée !'), findsOneWidget);
+        expect(find.byType(DonySuccessScreen), findsOneWidget);
+        expect(find.text('Offre acceptée et payée !'), findsOneWidget);
 
-      await tester.ensureVisible(find.text('Voir le suivi'));
-      await tester.tap(find.text('Voir le suivi'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
+        await tester.ensureVisible(find.text('Voir le suivi'));
+        await tester.tap(find.text('Voir le suivi'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
 
-      expect(find.text('Fil de négociation t-1'), findsOneWidget);
-    });
-
-    testWidgets(
-        'aucun champ code promo à cette étape — saisi plus tôt à la publication '
-        'de la demande, jamais resaisi au paiement', (tester) async {
-      await tester.pumpWidget(buildRoutedApp());
-      await tester.tap(find.byKey(const Key('open')));
-      await tester.pumpAndSettle();
-
-      expect(find.text('CODE PROMO (OPTIONNEL)'), findsNothing);
-      expect(find.byType(TextFormField), findsNothing);
-    });
+        expect(find.text('Fil de négociation t-1'), findsOneWidget);
+      },
+    );
 
     testWidgets(
-        'promo déjà appliqué côté serveur (auto, saisi à la publication) → '
-        'reflété dans le breakdown et le libellé du bouton, sans action '
-        'expéditeur', (tester) async {
-      when(() => negotiationRepository.quote('t-1'))
-          .thenAnswer((_) async => const NegotiationQuote(
-                netEur: 35.0,
-                rate: 0.05,
-                commissionEur: 1.75,
-                totalEur: 35.50,
-                promoApplied: true,
-                promoLabel: 'Code WELCOME6 : 3 % de réduction',
-              ));
+      'aucun champ code promo à cette étape — saisi plus tôt à la publication '
+      'de la demande, jamais resaisi au paiement',
+      (tester) async {
+        await tester.pumpWidget(buildRoutedApp());
+        await tester.tap(find.byKey(const Key('open')));
+        await tester.pumpAndSettle();
 
-      await tester.pumpWidget(buildRoutedApp());
-      await tester.tap(find.byKey(const Key('open')));
-      await tester.pumpAndSettle();
+        expect(find.text('CODE PROMO (OPTIONNEL)'), findsNothing);
+        expect(find.byType(TextFormField), findsNothing);
+      },
+    );
 
-      expect(find.text('Promo'), findsOneWidget);
-      expect(find.textContaining('Payer (35,50'), findsOneWidget);
+    testWidgets(
+      'promo déjà appliqué côté serveur (auto, saisi à la publication) → '
+      'reflété dans le breakdown et le libellé du bouton, sans action '
+      'expéditeur',
+      (tester) async {
+        when(() => negotiationRepository.quote('t-1')).thenAnswer(
+          (_) async => const NegotiationQuote(
+            netEur: 35.0,
+            rate: 0.05,
+            commissionEur: 1.75,
+            totalEur: 35.50,
+            promoApplied: true,
+            promoLabel: 'Code WELCOME6 : 3 % de réduction',
+          ),
+        );
 
-      await tester.tap(find.textContaining('Payer ('));
-      for (var i = 0; i < 8; i++) {
-        await tester.pump(const Duration(milliseconds: 60));
-      }
+        await tester.pumpWidget(buildRoutedApp());
+        await tester.tap(find.byKey(const Key('open')));
+        await tester.pumpAndSettle();
 
-      // Aucun promoCode transmis explicitement : le backend l'applique seul
-      // depuis le thread (déjà porté depuis la demande).
-      verify(() => negotiationRepository.initiatePayment('t-1')).called(1);
-    });
+        expect(find.text('Promo'), findsOneWidget);
+        expect(find.textContaining('Payer (35,50'), findsOneWidget);
+
+        await tester.tap(find.textContaining('Payer ('));
+        for (var i = 0; i < 8; i++) {
+          await tester.pump(const Duration(milliseconds: 60));
+        }
+
+        // Aucun promoCode transmis explicitement : le backend l'applique seul
+        // depuis le thread (déjà porté depuis la demande).
+        verify(() => negotiationRepository.initiatePayment('t-1')).called(1);
+      },
+    );
   });
 }

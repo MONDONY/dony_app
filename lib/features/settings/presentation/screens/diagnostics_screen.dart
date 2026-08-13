@@ -30,100 +30,101 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
     return Scaffold(
       appBar: const DonyAppBar(title: 'Diagnostics'),
       body: BlocBuilder<DiagnosticsBloc, DiagnosticsState>(
-        builder: (context, state) => ListView(
-          padding: const EdgeInsets.fromLTRB(
-            DonySpacing.lg,
-            DonySpacing.xl,
-            DonySpacing.lg,
-            DonySpacing.huge,
-          ),
-          children: [
-            // APPLICATION
-            const SettingsSectionHeader('APPLICATION'),
-            SettingsFlatGroup(
-              children: [
-                DonyListTile(
-                  iconAsset: 'info',
-                  iconColor: cs.primary,
-                  iconBgColor: cs.primaryContainer,
-                  label: 'Version',
-                  trailing: Text(
-                    state.appVersion != null
-                        ? 'v${state.appVersion} (${state.buildNumber})'
-                        : '-',
-                    style: tt.labelMedium?.copyWith(
-                      color: cs.onSurfaceVariant,
-                    ),
+        builder: (context, state) =>
+            ListView(
+                  padding: const EdgeInsets.fromLTRB(
+                    DonySpacing.lg,
+                    DonySpacing.xl,
+                    DonySpacing.lg,
+                    DonySpacing.huge,
                   ),
-                  showDivider: false,
-                ),
-              ],
-            ),
-            const SizedBox(height: DonySpacing.xl),
-
-            // CONNECTIVITE
-            const SettingsSectionHeader('CONNECTIVITÉ'),
-            SettingsFlatGroup(
-              children: [
-                DonyListTile(
-                  iconAsset: 'wifi',
-                  iconColor: _pingIconColor(state, cs),
-                  iconBgColor: _pingIconBg(state, cs),
-                  label: 'Statut API',
-                  trailing: state.isPinging
-                      ? SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: cs.primary,
+                  children: [
+                    // APPLICATION
+                    const SettingsSectionHeader('APPLICATION'),
+                    SettingsFlatGroup(
+                      children: [
+                        DonyListTile(
+                          iconAsset: 'info',
+                          iconColor: cs.primary,
+                          iconBgColor: cs.primaryContainer,
+                          label: 'Version',
+                          trailing: Text(
+                            state.appVersion != null
+                                ? 'v${state.appVersion} (${state.buildNumber})'
+                                : '-',
+                            style: tt.labelMedium?.copyWith(
+                              color: cs.onSurfaceVariant,
+                            ),
                           ),
-                        )
-                      : Text(
-                          _pingLabel(state),
-                          style: tt.labelMedium?.copyWith(
-                            color: _pingTextColor(state, cs),
-                            fontWeight: FontWeight.w600,
-                          ),
+                          showDivider: false,
                         ),
-                  showDivider: false,
-                  onTap: state.isPinging
-                      ? null
-                      : () => context
-                          .read<DiagnosticsBloc>()
-                          .add(const ApiPingRequested()),
-                ),
-              ],
-            ),
-            const SizedBox(height: DonySpacing.xl),
+                      ],
+                    ),
+                    const SizedBox(height: DonySpacing.xl),
 
-            // SUPPORT
-            const SettingsSectionHeader('SUPPORT'),
-            SettingsFlatGroup(
-              children: [
-                DonyListTile(
-                  iconAsset: 'bug',
-                  iconColor: cs.primary,
-                  iconBgColor: cs.primaryContainer,
-                  label: 'Signaler un bug',
-                  onTap: () => _showBugReportDialog(context),
-                ),
-                DonyListTile(
-                  iconAsset: 'copy',
-                  iconColor: cs.onSurfaceVariant,
-                  iconBgColor: cs.surfaceContainerHighest,
-                  label: 'Copier mon ID utilisateur',
-                  subtitle: 'Utile pour le support',
-                  showDivider: false,
-                  onTap: () => _copyUserId(context),
-                ),
-              ],
-            ),
-          ],
-        )
-            .animate()
-            .fadeIn(duration: 280.ms)
-            .slideY(begin: 0.04, curve: Curves.easeOutCubic),
+                    // CONNECTIVITE
+                    const SettingsSectionHeader('CONNECTIVITÉ'),
+                    SettingsFlatGroup(
+                      children: [
+                        DonyListTile(
+                          iconAsset: 'wifi',
+                          iconColor: _pingIconColor(state, cs),
+                          iconBgColor: _pingIconBg(state, cs),
+                          label: 'Statut API',
+                          trailing: state.isPinging
+                              ? SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: cs.primary,
+                                  ),
+                                )
+                              : Text(
+                                  _pingLabel(state),
+                                  style: tt.labelMedium?.copyWith(
+                                    color: _pingTextColor(state, cs),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                          showDivider: false,
+                          onTap: state.isPinging
+                              ? null
+                              : () => context.read<DiagnosticsBloc>().add(
+                                  const ApiPingRequested(),
+                                ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: DonySpacing.xl),
+
+                    // SUPPORT
+                    const SettingsSectionHeader('SUPPORT'),
+                    SettingsFlatGroup(
+                      children: [
+                        DonyListTile(
+                          iconAsset: 'bug',
+                          iconColor: cs.primary,
+                          iconBgColor: cs.primaryContainer,
+                          label: 'Signaler un bug',
+                          onTap: () => _showBugReportDialog(context),
+                        ),
+                        DonyListTile(
+                          iconAsset: 'copy',
+                          iconColor: cs.onSurfaceVariant,
+                          iconBgColor: cs.surfaceContainerHighest,
+                          label: 'Copier mon ID utilisateur',
+                          subtitle: 'Utile pour le support',
+                          showDivider: false,
+                          onTap: () => _copyUserId(context),
+                        ),
+                      ],
+                    ),
+                  ],
+                )
+                .animate()
+                .fadeIn(duration: 280.ms)
+                .slideY(begin: 0.04, curve: Curves.easeOutCubic),
       ),
     );
   }
@@ -152,10 +153,10 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
       };
 
   String _pingLabel(DiagnosticsState state) => switch (state.apiOk) {
-        true => 'En ligne',
-        false => 'Hors ligne',
-        null => 'Tester',
-      };
+    true => 'En ligne',
+    false => 'Hors ligne',
+    null => 'Tester',
+  };
 
   // Actions
 

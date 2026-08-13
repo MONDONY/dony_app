@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/design/widgets/dony_snackbar.dart';
 import 'package:dony/core/design/widgets/dony_success_screen.dart';
 import 'package:dony/core/di/injection.dart';
@@ -227,7 +228,7 @@ void main() {
         );
         await tester.pump();
 
-        await tester.tap(find.text('Payer 33.60 €'));
+        await tester.tap(find.byType(DonyButton));
         await tester.pumpAndSettle();
 
         verify(() => mockLocalAuth.authenticateWithBiometric()).called(1);
@@ -238,7 +239,7 @@ void main() {
     testWidgets(
       'récap expéditeur : seul le brut (total + tarif/kg), jamais le net ni la commission',
       (tester) async {
-        // bid = 5 kg × 6 €/kg NET. Brut = 30 × 1,12 = 33,60 €. Tarif/kg brut = 6,72.
+        // bid = 5 kg × 6 €/kg NET. Brut = 30 × 1,12 = 33,60 €. Tarif/kg brut = 6,72.
         await tester.pumpWidget(
           _wrap(
             PaymentScreen(
@@ -253,16 +254,57 @@ void main() {
         await tester.pumpAndSettle();
 
         // L'expéditeur voit le total brut + le tarif/kg brut.
-        expect(find.text('Payer 33.60 €'), findsOneWidget);
-        expect(find.text('33.60 €'), findsOneWidget);
-        expect(find.text('6.72 €/kg'), findsOneWidget);
+        expect(
+          tester.widget<DonyButton>(find.byType(DonyButton)).label,
+          contains('33,60'),
+        );
+        expect(find.textContaining('33,60'), findsWidgets);
+        expect(find.textContaining('6,72'), findsOneWidget);
+        expect(find.textContaining('€/kg'), findsOneWidget);
         // Il ne voit JAMAIS le net voyageur (30 €) ni la commission isolée.
-        expect(find.text('30.00 €'), findsNothing);
-        expect(find.text('6.00 €/kg'), findsNothing);
+        expect(find.textContaining('30,00'), findsNothing);
+        expect(find.textContaining('6,00'), findsNothing);
         expect(find.textContaining('Commission'), findsNothing);
-        expect(find.text('+ 3.60 €'), findsNothing);
+        expect(find.textContaining('+ 3,60'), findsNothing);
+        expect(find.textContaining('+3,60'), findsNothing);
       },
     );
+
+    testWidgets('tarif/kg affiché dans la devise du bid, pas toujours en EUR', (
+      tester,
+    ) async {
+      final cadBid = BidModel(
+        id: 'bid-cad-1',
+        announcementId: 'ann-1',
+        senderId: 'sender-1',
+        weightKg: 5.0,
+        pricePerKg: 6.0,
+        description: 'Vêtements',
+        status: 'ACCEPTED',
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        departureDate: DateTime(2025, 6, 1),
+        createdAt: DateTime(2025, 5, 1),
+        updatedAt: DateTime(2025, 5, 1),
+        currency: 'CAD',
+      );
+
+      await tester.pumpWidget(
+        _wrap(
+          PaymentScreen(
+            bid: cadBid,
+            localAuthService: mockLocalAuth,
+            userPrefs: _mockUserPrefs(biometricEnabled: true),
+          ),
+          mockBloc,
+          configBloc: mockConfigBloc,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('CA\$'), findsWidgets);
+      expect(find.textContaining('€'), findsNothing);
+    });
 
     testWidgets('dispatches PaymentInitiated after successful biometric', (
       tester,
@@ -284,7 +326,7 @@ void main() {
       );
       await tester.pump();
 
-      await tester.tap(find.text('Payer 33.60 €'));
+      await tester.tap(find.byType(DonyButton));
       await tester.pumpAndSettle();
 
       verify(() => mockLocalAuth.authenticateWithBiometric()).called(1);
@@ -312,7 +354,7 @@ void main() {
         );
         await tester.pump();
 
-        await tester.tap(find.text('Payer 33.60 €'));
+        await tester.tap(find.byType(DonyButton));
         await tester.pumpAndSettle();
 
         verify(() => mockLocalAuth.authenticateWithBiometric()).called(1);
@@ -341,7 +383,7 @@ void main() {
         );
         await tester.pump();
 
-        await tester.tap(find.text('Payer 33.60 €'));
+        await tester.tap(find.byType(DonyButton));
         await tester.pumpAndSettle();
 
         expect(find.text('Paiement non confirmé, réessayez'), findsOneWidget);
@@ -366,7 +408,7 @@ void main() {
       );
       await tester.pump();
 
-      await tester.tap(find.text('Payer 33.60 €'));
+      await tester.tap(find.byType(DonyButton));
       await tester.pumpAndSettle();
 
       verifyNever(() => mockLocalAuth.isBiometricAvailable());
@@ -393,7 +435,7 @@ void main() {
         );
         await tester.pump();
 
-        await tester.tap(find.text('Payer 33.60 €'));
+        await tester.tap(find.byType(DonyButton));
         await tester.pumpAndSettle();
 
         verifyNever(() => mockLocalAuth.isBiometricAvailable());

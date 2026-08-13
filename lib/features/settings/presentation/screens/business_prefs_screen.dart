@@ -1,15 +1,19 @@
+import 'dart:async';
+
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
+import 'package:dony/features/settings/presentation/widgets/currency_picker.dart';
 import 'package:dony/features/settings/presentation/widgets/settings_flat_group.dart';
 import 'package:dony/features/settings/presentation/widgets/settings_section_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 
 class BusinessPrefsScreen extends StatefulWidget {
   const BusinessPrefsScreen({super.key});
@@ -33,126 +37,121 @@ class _BusinessPrefsScreenState extends State<BusinessPrefsScreen> {
     return Scaffold(
       appBar: const DonyAppBar(title: 'Préférences'),
       body: BlocBuilder<BusinessPrefsBloc, BusinessPrefsState>(
-        builder: (context, state) => ListView(
-          padding: const EdgeInsets.fromLTRB(
-              DonySpacing.lg, DonySpacing.lg, DonySpacing.lg, DonySpacing.huge),
-          children: [
-            if (state.errorMessage != null) ...[
-              _ErrorBanner(message: state.errorMessage!),
-              const SizedBox(height: DonySpacing.lg),
-            ],
-            const SettingsSectionHeader('UNITÉS'),
-            SettingsFlatGroup(children: [
-              DonyListTile(
-                iconAsset: 'scale',
-                iconColor: cs.primary,
-                iconBgColor: cs.primaryContainer,
-                label: 'Unité de poids',
-                trailing: SegmentedButton<String>(
-                  segments: const [
-                    ButtonSegment(value: 'kg', label: Text('kg')),
-                    ButtonSegment(value: 'lbs', label: Text('lbs')),
-                  ],
-                  selected: {state.weightUnit},
-                  onSelectionChanged: (s) => context
-                      .read<BusinessPrefsBloc>()
-                      .add(WeightUnitChanged(s.first)),
-                ),
-              ),
-            ]),
-            const SettingsSectionHeader('DEVISE'),
-            SettingsFlatGroup(children: [
-              DonyListTile(
-                iconAsset: 'euro',
-                iconColor: cs.primary,
-                iconBgColor: cs.primaryContainer,
-                label: 'Devise d\'affichage',
-                trailing: Text(
-                  state.currencyCode,
-                  style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
-                ),
-                onTap: () => _showCurrencyPicker(context, state.currencyCode),
-              ),
-            ]),
-            const SettingsSectionHeader('GÉOLOCALISATION'),
-            SettingsFlatGroup(children: [
-              Padding(
-                padding: const EdgeInsets.all(DonySpacing.base),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+        builder: (context, state) =>
+            ListView(
+                  padding: const EdgeInsets.fromLTRB(
+                    DonySpacing.lg,
+                    DonySpacing.lg,
+                    DonySpacing.lg,
+                    DonySpacing.huge,
+                  ),
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    if (state.errorMessage != null) ...[
+                      _ErrorBanner(message: state.errorMessage!),
+                      const SizedBox(height: DonySpacing.lg),
+                    ],
+                    const SettingsSectionHeader('UNITÉS'),
+                    SettingsFlatGroup(
                       children: [
-                        Text('Rayon de collecte',
-                            style: tt.bodyMedium
-                                ?.copyWith(fontWeight: FontWeight.w600)),
-                        Text('${state.pickupRadiusKm} km',
-                            style: tt.labelMedium?.copyWith(
-                              color: cs.primary,
-                              fontWeight: FontWeight.w700,
-                            )),
+                        DonyListTile(
+                          iconAsset: 'scale',
+                          iconColor: cs.primary,
+                          iconBgColor: cs.primaryContainer,
+                          label: 'Unité de poids',
+                          trailing: SegmentedButton<String>(
+                            segments: const [
+                              ButtonSegment(value: 'kg', label: Text('kg')),
+                              ButtonSegment(value: 'lbs', label: Text('lbs')),
+                            ],
+                            selected: {state.weightUnit},
+                            onSelectionChanged: (s) => context
+                                .read<BusinessPrefsBloc>()
+                                .add(WeightUnitChanged(s.first)),
+                          ),
+                        ),
                       ],
                     ),
-                    Slider(
-                      value: state.pickupRadiusKm.toDouble(),
-                      min: 1,
-                      max: 50,
-                      divisions: 49,
-                      activeColor: cs.primary,
-                      onChanged: (v) => context
-                          .read<BusinessPrefsBloc>()
-                          .add(PickupRadiusChanged(v.round())),
+                    const SettingsSectionHeader('DEVISE'),
+                    SettingsFlatGroup(
+                      children: [
+                        DonyListTile(
+                          iconAsset: 'euro',
+                          iconColor: cs.primary,
+                          iconBgColor: cs.primaryContainer,
+                          label: 'Devise d\'affichage',
+                          trailing: Text(
+                            state.currencyCode,
+                            style: tt.labelMedium?.copyWith(
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
+                          onTap: () => unawaited(CurrencyPicker.show(context)),
+                        ),
+                      ],
+                    ),
+                    const SettingsSectionHeader('GÉOLOCALISATION'),
+                    SettingsFlatGroup(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(DonySpacing.base),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Rayon de collecte',
+                                    style: tt.bodyMedium?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  Text(
+                                    '${state.pickupRadiusKm} km',
+                                    style: tt.labelMedium?.copyWith(
+                                      color: cs.primary,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Slider(
+                                value: state.pickupRadiusKm.toDouble(),
+                                min: 1,
+                                max: 50,
+                                divisions: 49,
+                                activeColor: cs.primary,
+                                onChanged: (v) => context
+                                    .read<BusinessPrefsBloc>()
+                                    .add(PickupRadiusChanged(v.round())),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: DonySpacing.lg),
+                    BlocBuilder<AuthBloc, AuthState>(
+                      builder: (context, authState) {
+                        if (authState is! AuthAuthenticated) {
+                          return const SizedBox.shrink();
+                        }
+                        if (!authState.user.isTraveler) {
+                          return const SizedBox.shrink();
+                        }
+                        return _TravelerSection(state: state);
+                      },
                     ),
                   ],
+                )
+                .animate()
+                .fadeIn(duration: 280.ms, curve: Curves.easeOutCubic)
+                .slideY(
+                  begin: 0.04,
+                  duration: 280.ms,
+                  curve: Curves.easeOutCubic,
                 ),
-              ),
-            ]),
-            const SizedBox(height: DonySpacing.lg),
-            BlocBuilder<AuthBloc, AuthState>(
-              builder: (context, authState) {
-                if (authState is! AuthAuthenticated) {
-                  return const SizedBox.shrink();
-                }
-                if (!authState.user.isTraveler) {
-                  return const SizedBox.shrink();
-                }
-                return _TravelerSection(state: state);
-              },
-            ),
-          ],
-        )
-            .animate()
-            .fadeIn(duration: 280.ms, curve: Curves.easeOutCubic)
-            .slideY(begin: 0.04, duration: 280.ms, curve: Curves.easeOutCubic),
-      ),
-    );
-  }
-
-  void _showCurrencyPicker(BuildContext context, String current) {
-    DonyBottomSheet.show(
-      context,
-      title: 'Devise d\'affichage',
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          for (final (code, label) in [
-            ('EUR', 'Euro (€)'),
-            ('XOF', 'Franc CFA Ouest (XOF)'),
-            ('XAF', 'Franc CFA Centre (XAF)'),
-          ])
-            ListTile(
-              title: Text(label),
-              trailing: current == code
-                  ? DonyIcon('check',
-                      color: Theme.of(context).colorScheme.primary)
-                  : null,
-              onTap: () {
-                context.read<BusinessPrefsBloc>().add(CurrencyChanged(code));
-                context.pop();
-              },
-            ),
-        ],
       ),
     );
   }
@@ -250,7 +249,11 @@ class _TravelerSectionState extends State<_TravelerSection> {
         // Header row with badge
         Padding(
           padding: const EdgeInsets.fromLTRB(
-              DonySpacing.sm, DonySpacing.lg, DonySpacing.sm, DonySpacing.sm),
+            DonySpacing.sm,
+            DonySpacing.lg,
+            DonySpacing.sm,
+            DonySpacing.sm,
+          ),
           child: Row(
             children: [
               Text(
@@ -305,16 +308,20 @@ class _TravelerSectionState extends State<_TravelerSection> {
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(
-                  DonySpacing.base, 0, DonySpacing.base, DonySpacing.sm),
+                DonySpacing.base,
+                0,
+                DonySpacing.base,
+                DonySpacing.sm,
+              ),
               child: Slider(
                 value: state.defaultPackageWeightKg.toDouble(),
                 min: 1,
                 max: 50,
                 divisions: 49,
                 activeColor: cs.primary,
-                onChanged: (v) => context
-                    .read<BusinessPrefsBloc>()
-                    .add(DefaultWeightChanged(v.round())),
+                onChanged: (v) => context.read<BusinessPrefsBloc>().add(
+                  DefaultWeightChanged(v.round()),
+                ),
               ),
             ),
             Divider(height: 1, color: cs.outline),
@@ -325,11 +332,15 @@ class _TravelerSectionState extends State<_TravelerSection> {
               iconColor: cs.primary,
               iconBgColor: cs.primaryContainer,
               label: 'Prix minimum',
-              subtitle: '0 € = aucun filtre',
+              subtitle:
+                  '0 ${SupportedCurrency.symbolOf(state.currencyCode)} = aucun filtre',
               trailing: Text(
                 state.minBidPriceEur == 0
                     ? 'Aucun'
-                    : '${state.minBidPriceEur} €',
+                    : formatPriceIn(
+                        state.minBidPriceEur.toDouble(),
+                        state.currencyCode,
+                      ),
                 style: tt.labelMedium?.copyWith(
                   color: cs.primary,
                   fontWeight: FontWeight.w700,
@@ -339,15 +350,19 @@ class _TravelerSectionState extends State<_TravelerSection> {
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(
-                  DonySpacing.base, 0, DonySpacing.base, DonySpacing.sm),
+                DonySpacing.base,
+                0,
+                DonySpacing.base,
+                DonySpacing.sm,
+              ),
               child: Slider(
                 value: state.minBidPriceEur.toDouble(),
                 max: 50,
                 divisions: 50,
                 activeColor: cs.primary,
-                onChanged: (v) => context
-                    .read<BusinessPrefsBloc>()
-                    .add(MinBidPriceChanged(v.round())),
+                onChanged: (v) => context.read<BusinessPrefsBloc>().add(
+                  MinBidPriceChanged(v.round()),
+                ),
               ),
             ),
             Divider(height: 1, color: cs.outline),
@@ -362,7 +377,11 @@ class _TravelerSectionState extends State<_TravelerSection> {
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(
-                  DonySpacing.base, 0, DonySpacing.base, DonySpacing.base),
+                DonySpacing.base,
+                0,
+                DonySpacing.base,
+                DonySpacing.base,
+              ),
               child: SegmentedButton<String>(
                 emptySelectionAllowed: true,
                 segments: const [
@@ -390,7 +409,11 @@ class _TravelerSectionState extends State<_TravelerSection> {
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(
-                  DonySpacing.base, 0, DonySpacing.base, DonySpacing.base),
+                DonySpacing.base,
+                0,
+                DonySpacing.base,
+                DonySpacing.base,
+              ),
               child: Row(
                 children: [
                   Expanded(
@@ -404,8 +427,8 @@ class _TravelerSectionState extends State<_TravelerSection> {
                             selected: state.responseDelayHours == h,
                             onSelected: (selected) {
                               context.read<BusinessPrefsBloc>().add(
-                                    ResponseDelayChanged(selected ? h : null),
-                                  );
+                                ResponseDelayChanged(selected ? h : null),
+                              );
                               if (selected) {
                                 _delayController.text = '$h';
                               } else {
@@ -422,9 +445,7 @@ class _TravelerSectionState extends State<_TravelerSection> {
                     child: TextField(
                       controller: _delayController,
                       keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                      ],
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                       decoration: InputDecoration(
                         hintText: 'ex. 3',
                         suffixText: 'h',
@@ -438,15 +459,15 @@ class _TravelerSectionState extends State<_TravelerSection> {
                       ),
                       onChanged: (v) {
                         if (v.isEmpty) {
-                          context
-                              .read<BusinessPrefsBloc>()
-                              .add(const ResponseDelayChanged(null));
+                          context.read<BusinessPrefsBloc>().add(
+                            const ResponseDelayChanged(null),
+                          );
                         } else {
                           final parsed = int.tryParse(v);
                           if (parsed != null && parsed >= 1) {
-                            context
-                                .read<BusinessPrefsBloc>()
-                                .add(ResponseDelayChanged(parsed));
+                            context.read<BusinessPrefsBloc>().add(
+                              ResponseDelayChanged(parsed),
+                            );
                           }
                         }
                       },

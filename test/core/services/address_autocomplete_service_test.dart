@@ -16,20 +16,24 @@ void main() {
 
   group('search', () {
     test('search_returnsSuggestions', () async {
-      when(() => mockDio.post<dynamic>(
-        '/addresses/autocomplete',
-        data: any(named: 'data'),
-      )).thenAnswer((_) async => Response(
-        requestOptions: RequestOptions(path: '/addresses/autocomplete'),
-        statusCode: 200,
-        data: [
-          {
-            'placeId': 'ChIJi...',
-            'mainText': '12 rue Victor Hugo',
-            'secondaryText': 'Lyon, France',
-          }
-        ],
-      ));
+      when(
+        () => mockDio.post<dynamic>(
+          '/addresses/autocomplete',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(path: '/addresses/autocomplete'),
+          statusCode: 200,
+          data: [
+            {
+              'placeId': 'ChIJi...',
+              'mainText': '12 rue Victor Hugo',
+              'secondaryText': 'Lyon, France',
+            },
+          ],
+        ),
+      );
 
       final results = await service.search('12 rue Victor', 'tok-123');
 
@@ -40,51 +44,73 @@ void main() {
     });
 
     test('search_usesCache_secondCallNoHttp', () async {
-      when(() => mockDio.post<dynamic>(
-        '/addresses/autocomplete',
-        data: any(named: 'data'),
-      )).thenAnswer((_) async => Response(
-        requestOptions: RequestOptions(path: '/addresses/autocomplete'),
-        statusCode: 200,
-        data: const <dynamic>[],
-      ));
+      when(
+        () => mockDio.post<dynamic>(
+          '/addresses/autocomplete',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(path: '/addresses/autocomplete'),
+          statusCode: 200,
+          data: const <dynamic>[],
+        ),
+      );
 
       await service.search('Lyon', 'tok-1');
-      await service.search('Lyon', 'tok-1'); // same query, same token → cache hit
+      await service.search(
+        'Lyon',
+        'tok-1',
+      ); // same query, same token → cache hit
 
-      verify(() => mockDio.post<dynamic>(
-        '/addresses/autocomplete',
-        data: any(named: 'data'),
-      )).called(1); // only one HTTP call despite two invocations
+      verify(
+        () => mockDio.post<dynamic>(
+          '/addresses/autocomplete',
+          data: any(named: 'data'),
+        ),
+      ).called(1); // only one HTTP call despite two invocations
     });
 
     test('search_differentSessionToken_bypassesCache', () async {
-      when(() => mockDio.post<dynamic>(
-        '/addresses/autocomplete',
-        data: any(named: 'data'),
-      )).thenAnswer((_) async => Response(
-        requestOptions: RequestOptions(path: '/addresses/autocomplete'),
-        statusCode: 200,
-        data: const <dynamic>[],
-      ));
+      when(
+        () => mockDio.post<dynamic>(
+          '/addresses/autocomplete',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(path: '/addresses/autocomplete'),
+          statusCode: 200,
+          data: const <dynamic>[],
+        ),
+      );
 
       await service.search('Lyon', 'tok-1');
-      await service.search('Lyon', 'tok-2'); // same query, different token → no cache hit
+      await service.search(
+        'Lyon',
+        'tok-2',
+      ); // same query, different token → no cache hit
 
-      verify(() => mockDio.post<dynamic>(
-        '/addresses/autocomplete',
-        data: any(named: 'data'),
-      )).called(2); // two HTTP calls because session tokens differ
+      verify(
+        () => mockDio.post<dynamic>(
+          '/addresses/autocomplete',
+          data: any(named: 'data'),
+        ),
+      ).called(2); // two HTTP calls because session tokens differ
     });
 
     test('search_offline_throwsDioException', () async {
-      when(() => mockDio.post<dynamic>(
-        '/addresses/autocomplete',
-        data: any(named: 'data'),
-      )).thenThrow(DioException(
-        requestOptions: RequestOptions(path: '/addresses/autocomplete'),
-        type: DioExceptionType.connectionError,
-      ));
+      when(
+        () => mockDio.post<dynamic>(
+          '/addresses/autocomplete',
+          data: any(named: 'data'),
+        ),
+      ).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(path: '/addresses/autocomplete'),
+          type: DioExceptionType.connectionError,
+        ),
+      );
 
       expect(
         () => service.search('Paris', 'tok-err'),
@@ -95,18 +121,22 @@ void main() {
 
   group('resolvePlace', () {
     test('resolvePlace_returnsAddressData', () async {
-      when(() => mockDio.post<dynamic>(
-        '/addresses/details',
-        data: any(named: 'data'),
-      )).thenAnswer((_) async => Response(
-        requestOptions: RequestOptions(path: '/addresses/details'),
-        statusCode: 200,
-        data: {
-          'label': '12 Rue Victor Hugo, 69002 Lyon, France',
-          'lat': 45.7484,
-          'lng': 4.8467,
-        },
-      ));
+      when(
+        () => mockDio.post<dynamic>(
+          '/addresses/details',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(path: '/addresses/details'),
+          statusCode: 200,
+          data: {
+            'label': '12 Rue Victor Hugo, 69002 Lyon, France',
+            'lat': 45.7484,
+            'lng': 4.8467,
+          },
+        ),
+      );
 
       final result = await service.resolvePlace('ChIJi...', 'tok-abc');
 
@@ -116,22 +146,26 @@ void main() {
     });
 
     test('resolvePlace_propagatesStructuredFields', () async {
-      when(() => mockDio.post<dynamic>(
-        '/addresses/details',
-        data: any(named: 'data'),
-      )).thenAnswer((_) async => Response(
-        requestOptions: RequestOptions(path: '/addresses/details'),
-        statusCode: 200,
-        data: {
-          'label': '12 Rue Victor Hugo, 69002 Lyon, France',
-          'lat': 45.7484,
-          'lng': 4.8467,
-          'street': '12 Rue Victor Hugo',
-          'city': 'Lyon',
-          'postalCode': '69002',
-          'country': 'FR',
-        },
-      ));
+      when(
+        () => mockDio.post<dynamic>(
+          '/addresses/details',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(path: '/addresses/details'),
+          statusCode: 200,
+          data: {
+            'label': '12 Rue Victor Hugo, 69002 Lyon, France',
+            'lat': 45.7484,
+            'lng': 4.8467,
+            'street': '12 Rue Victor Hugo',
+            'city': 'Lyon',
+            'postalCode': '69002',
+            'country': 'FR',
+          },
+        ),
+      );
 
       final r = await service.resolvePlace('ChIJi...', 'tok-abc');
 
@@ -142,14 +176,18 @@ void main() {
     });
 
     test('resolvePlace_missingStructuredFields_nulls', () async {
-      when(() => mockDio.post<dynamic>(
-        '/addresses/details',
-        data: any(named: 'data'),
-      )).thenAnswer((_) async => Response(
-        requestOptions: RequestOptions(path: '/addresses/details'),
-        statusCode: 200,
-        data: {'label': 'Dakar', 'lat': 14.693, 'lng': -17.447},
-      ));
+      when(
+        () => mockDio.post<dynamic>(
+          '/addresses/details',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(path: '/addresses/details'),
+          statusCode: 200,
+          data: {'label': 'Dakar', 'lat': 14.693, 'lng': -17.447},
+        ),
+      );
 
       final r = await service.resolvePlace('ChIJx', 'tok');
 
@@ -160,18 +198,22 @@ void main() {
 
   group('reverseGeocode', () {
     test('reverseGeocode_returnsAddress', () async {
-      when(() => mockDio.post<dynamic>(
-        '/addresses/reverse',
-        data: any(named: 'data'),
-      )).thenAnswer((_) async => Response(
-        requestOptions: RequestOptions(path: '/addresses/reverse'),
-        statusCode: 200,
-        data: {
-          'label': 'Plateau, Dakar, Sénégal',
-          'lat': 14.693,
-          'lng': -17.447,
-        },
-      ));
+      when(
+        () => mockDio.post<dynamic>(
+          '/addresses/reverse',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(path: '/addresses/reverse'),
+          statusCode: 200,
+          data: {
+            'label': 'Plateau, Dakar, Sénégal',
+            'lat': 14.693,
+            'lng': -17.447,
+          },
+        ),
+      );
 
       final result = await service.reverseGeocode(14.693, -17.447);
 
@@ -181,17 +223,21 @@ void main() {
     });
 
     test('reverseGeocode_notFound_returnsNull', () async {
-      when(() => mockDio.post<dynamic>(
-        '/addresses/reverse',
-        data: any(named: 'data'),
-      )).thenThrow(DioException(
-        requestOptions: RequestOptions(path: '/addresses/reverse'),
-        response: Response(
-          requestOptions: RequestOptions(path: '/addresses/reverse'),
-          statusCode: 404,
+      when(
+        () => mockDio.post<dynamic>(
+          '/addresses/reverse',
+          data: any(named: 'data'),
         ),
-        type: DioExceptionType.badResponse,
-      ));
+      ).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(path: '/addresses/reverse'),
+          response: Response(
+            requestOptions: RequestOptions(path: '/addresses/reverse'),
+            statusCode: 404,
+          ),
+          type: DioExceptionType.badResponse,
+        ),
+      );
 
       final result = await service.reverseGeocode(0.0, 0.0);
       expect(result, isNull);

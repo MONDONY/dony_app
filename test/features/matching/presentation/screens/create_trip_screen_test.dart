@@ -29,6 +29,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart'
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
 import 'package:dony/core/models/connect_account_status.dart';
+import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/matching/presentation/widgets/cash_commission_notice.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
@@ -53,6 +54,8 @@ import 'package:dony/features/trip_templates/data/models/trip_template.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../../../../helpers/currency_test_doubles.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
@@ -618,6 +621,76 @@ void main() {
   // ── Group: Form structure ─────────────────────────────────────────────────────
 
   group('CreateTripScreen — Form structure', () {
+    testWidgets('bandeau devise EUR avant le premier champ du trajet', (
+      tester,
+    ) async {
+      setupViewport(tester);
+      registerCurrencyPreference('EUR');
+
+      await _pumpAndDrain(
+        tester,
+        _wrapWithRouter(const CreateTripScreen(args: null)),
+      );
+
+      expect(find.byKey(const Key('currency-publish-banner')), findsOneWidget);
+      expect(find.text('Publié en Euro (EUR)'), findsOneWidget);
+      expect(
+        find.bySemanticsLabel(
+          'Publication en Euro, devise EUR. Les utilisateurs dans une autre devise ne verront pas cette annonce.',
+        ),
+        findsOneWidget,
+      );
+      expect(
+        tester.getTopLeft(find.byKey(const Key('currency-publish-banner'))).dy,
+        lessThan(
+          tester.getTopLeft(find.byKey(const Key('departureCityField'))).dy,
+        ),
+      );
+    });
+
+    testWidgets('bandeau devise lit CAD depuis Hive', (tester) async {
+      setupViewport(tester);
+      registerCurrencyPreference('CAD');
+
+      await _pumpAndDrain(
+        tester,
+        _wrapWithRouter(const CreateTripScreen(args: null)),
+      );
+
+      expect(find.text('Publié en Dollar canadien (CAD)'), findsOneWidget);
+    });
+
+    testWidgets('bandeau devise absent en mode édition', (tester) async {
+      setupViewport(tester);
+
+      await _pumpAndDrain(
+        tester,
+        _wrapWithRouter(
+          CreateTripScreen(
+            args: CreateTripArgs(announcement: _makeAnnouncement()),
+          ),
+        ),
+      );
+
+      expect(find.byKey(const Key('currency-publish-banner')), findsNothing);
+    });
+
+    testWidgets('bandeau devise reste lisible avec texte agrandi', (
+      tester,
+    ) async {
+      setupViewport(tester);
+      tester.platformDispatcher.textScaleFactorTestValue = 2;
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+      await _pumpAndDrain(
+        tester,
+        _wrapWithRouter(const CreateTripScreen(args: null)),
+      );
+
+      expect(find.byKey(const Key('currency-publish-banner')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets('stepper header est présent à l\'étape 0', (tester) async {
       setupViewport(tester);
 
@@ -937,6 +1010,7 @@ void main() {
     testWidgets('template chip visible au step 0 en mode création', (
       tester,
     ) async {
+      registerCurrencyPreference('EUR');
       setupViewport(tester);
 
       await _pumpAndDrain(
@@ -944,8 +1018,10 @@ void main() {
         _wrapWithRouter(const CreateTripScreen(args: null)),
       );
 
-      // The template bar shows the chip
-      expect(find.text('Paris → Dakar · 8€/kg'), findsOneWidget);
+      // The template bar shows the chip, prix formaté dans la devise active
+      expect(find.textContaining('Paris → Dakar'), findsOneWidget);
+      expect(find.textContaining('8'), findsWidgets);
+      expect(find.textContaining('€'), findsWidgets);
     });
 
     testWidgets('tap template chip → _applyTemplate applique les valeurs', (

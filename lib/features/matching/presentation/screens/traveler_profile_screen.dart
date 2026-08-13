@@ -101,39 +101,48 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // ── Corridor ─────────────────────────────────────────────
-                _CorridorBanner(announcement: _a, cs: cs, tt: tt)
-                    .animate()
-                    .fadeIn(duration: 260.ms),
+                _CorridorBanner(
+                  announcement: _a,
+                  cs: cs,
+                  tt: tt,
+                ).animate().fadeIn(duration: 260.ms),
                 const SizedBox(height: DonySpacing.xl),
 
                 // ── Lieux de remise ──────────────────────────────────────
                 _SectionTitle(label: 'Lieux de remise', tt: tt, cs: cs),
                 const SizedBox(height: DonySpacing.sm),
-                _HandoverCard(announcement: _a, cs: cs, tt: tt)
-                    .animate()
-                    .fadeIn(delay: 60.ms),
+                _HandoverCard(
+                  announcement: _a,
+                  cs: cs,
+                  tt: tt,
+                ).animate().fadeIn(delay: 60.ms),
                 const SizedBox(height: DonySpacing.lg),
 
                 // ── Avertissement paiement en espèces (D5) ───────────────
                 if (_a.acceptedPaymentMethods.length == 1 &&
-                    _a.acceptedPaymentMethods
-                        .contains(BidPaymentMethod.cash)) ...[
+                    _a.acceptedPaymentMethods.contains(
+                      BidPaymentMethod.cash,
+                    )) ...[
                   DonyStatusBanner(
                     type: DonyStatusBannerType.warning,
                     iconAsset: 'triangle-alert',
-                    messageSpan: TextSpan(children: [
-                      TextSpan(
-                        text: 'Trajet en espèces uniquement. ',
-                        style:
-                            tt.bodySmall?.copyWith(fontWeight: FontWeight.w700),
-                      ),
-                      const TextSpan(
-                        text: 'Le paiement se fait en main propre au '
-                            'voyageur, Yadony ne séquestre pas votre argent '
-                            'et ne peut pas le rembourser automatiquement '
-                            'en cas de litige.',
-                      ),
-                    ]),
+                    messageSpan: TextSpan(
+                      children: [
+                        TextSpan(
+                          text: 'Trajet en espèces uniquement. ',
+                          style: tt.bodySmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const TextSpan(
+                          text:
+                              'Le paiement se fait en main propre au '
+                              'voyageur, Yadony ne séquestre pas votre argent '
+                              'et ne peut pas le rembourser automatiquement '
+                              'en cas de litige.',
+                        ),
+                      ],
+                    ),
                   ).animate().fadeIn(delay: 70.ms),
                   const SizedBox(height: DonySpacing.lg),
                 ],
@@ -168,9 +177,11 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
                 if (description != null && description.isNotEmpty) ...[
                   _SectionTitle(label: 'Note du voyageur', tt: tt, cs: cs),
                   const SizedBox(height: DonySpacing.sm),
-                  _NoteCard(note: description, cs: cs, tt: tt)
-                      .animate()
-                      .fadeIn(delay: 150.ms),
+                  _NoteCard(
+                    note: description,
+                    cs: cs,
+                    tt: tt,
+                  ).animate().fadeIn(delay: 150.ms),
                   const SizedBox(height: DonySpacing.lg),
                 ],
 
@@ -197,12 +208,12 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
                         rating: _a.traveler!.averageRating,
                         verified: true,
                         onTap: () => context.push(
-                            '/profile/public',
-                            extra: ProfilePublicArgs(
-                              userId: _a.traveler!.id,
-                              showSubscribe: true,
-                            ),
+                          '/profile/public',
+                          extra: ProfilePublicArgs(
+                            userId: _a.traveler!.id,
+                            showSubscribe: true,
                           ),
+                        ),
                       ),
                       if (_a.traveler!.isProAccount) ...[
                         const SizedBox(height: DonySpacing.sm),
@@ -220,23 +231,24 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
               bottom: 0,
               left: 0,
               right: 0,
-              child: Container(
-                padding: EdgeInsets.fromLTRB(
-                  DonyLayout.hPadding(context),
-                  14,
-                  DonyLayout.hPadding(context),
-                  MediaQuery.of(context).padding.bottom + DonySpacing.base,
-                ),
-                decoration: BoxDecoration(
-                  color: cs.surface,
-                  border: Border(top: BorderSide(color: cs.outline)),
-                ),
-                child: DonyButton(
-                  label: 'Publier un colis',
-                  onPressed: () =>
-                      CreateBidBottomSheet.show(context, announcement: _a),
-                ),
-              ).animate().slideY(
+              child:
+                  Container(
+                    padding: EdgeInsets.fromLTRB(
+                      DonyLayout.hPadding(context),
+                      14,
+                      DonyLayout.hPadding(context),
+                      MediaQuery.of(context).padding.bottom + DonySpacing.base,
+                    ),
+                    decoration: BoxDecoration(
+                      color: cs.surface,
+                      border: Border(top: BorderSide(color: cs.outline)),
+                    ),
+                    child: DonyButton(
+                      label: 'Publier un colis',
+                      onPressed: () =>
+                          CreateBidBottomSheet.show(context, announcement: _a),
+                    ),
+                  ).animate().slideY(
                     begin: 0.5,
                     duration: 280.ms,
                     curve: Curves.easeOutCubic,
@@ -263,8 +275,10 @@ class _CorridorBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final date =
-        DateFormat('EEEE d MMMM yyyy', 'fr').format(announcement.departureDate);
+    final date = DateFormat(
+      'EEEE d MMMM yyyy',
+      'fr',
+    ).format(announcement.departureDate);
     final hasTimes =
         announcement.departureTime != null || announcement.arrivalTime != null;
 
@@ -359,12 +373,14 @@ class _CorridorBanner extends StatelessWidget {
                 if (announcement.departureTime != null &&
                     announcement.arrivalTime != null)
                   Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: DonySpacing.sm),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: DonySpacing.sm,
+                    ),
                     child: Text(
                       '→',
-                      style: tt.bodySmall
-                          ?.copyWith(color: cs.onPrimary.withValues(alpha: 0.5)),
+                      style: tt.bodySmall?.copyWith(
+                        color: cs.onPrimary.withValues(alpha: 0.5),
+                      ),
                     ),
                   ),
                 if (announcement.arrivalTime != null) ...[
@@ -399,7 +415,7 @@ class _CorridorBanner extends StatelessWidget {
               _StatPill(
                 iconAsset: 'euro',
                 label:
-                    '${formatKgPrice(announcement.senderPricePerKg)} €/kg',
+                    '${formatPriceIn(announcement.senderPricePerKg, announcement.currency)}/kg',
                 cs: cs,
               ),
             ],
@@ -428,7 +444,9 @@ class _StatPill extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     return Container(
       padding: const EdgeInsets.symmetric(
-          horizontal: DonySpacing.sm, vertical: DonySpacing.xs),
+        horizontal: DonySpacing.sm,
+        vertical: DonySpacing.xs,
+      ),
       decoration: BoxDecoration(
         color: cs.onPrimary.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(DonyRadius.full),
@@ -517,8 +535,7 @@ class _ContentTypesCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: chipColor.withValues(alpha: 0.10),
                   borderRadius: BorderRadius.circular(DonyRadius.full),
-                  border:
-                      Border.all(color: chipColor.withValues(alpha: 0.35)),
+                  border: Border.all(color: chipColor.withValues(alpha: 0.35)),
                 ),
                 child: Text(
                   type,
@@ -538,11 +555,7 @@ class _ContentTypesCard extends StatelessWidget {
 // ─── Note card ────────────────────────────────────────────────────────────────
 
 class _NoteCard extends StatelessWidget {
-  const _NoteCard({
-    required this.note,
-    required this.cs,
-    required this.tt,
-  });
+  const _NoteCard({required this.note, required this.cs, required this.tt});
 
   final String note;
   final ColorScheme cs;
@@ -560,10 +573,7 @@ class _NoteCard extends StatelessWidget {
       ),
       child: Text(
         note,
-        style: tt.bodyMedium?.copyWith(
-          color: cs.onSurface,
-          height: 1.55,
-        ),
+        style: tt.bodyMedium?.copyWith(color: cs.onSurface, height: 1.55),
       ),
     );
   }
@@ -572,8 +582,11 @@ class _NoteCard extends StatelessWidget {
 // ─── Handover card ────────────────────────────────────────────────────────────
 
 class _HandoverCard extends StatelessWidget {
-  const _HandoverCard(
-      {required this.announcement, required this.cs, required this.tt});
+  const _HandoverCard({
+    required this.announcement,
+    required this.cs,
+    required this.tt,
+  });
 
   final AnnouncementModel announcement;
   final ColorScheme cs;
@@ -671,18 +684,18 @@ class _LocationRow extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: tt.labelSmall
-                    ?.copyWith(color: cs.onSurfaceVariant, letterSpacing: 0.3),
+                style: tt.labelSmall?.copyWith(
+                  color: cs.onSurfaceVariant,
+                  letterSpacing: 0.3,
+                ),
               ),
               const SizedBox(height: 3),
               Text(
                 value,
                 style: tt.bodyMedium?.copyWith(
-                  fontWeight:
-                      hasValue ? FontWeight.w600 : FontWeight.w400,
+                  fontWeight: hasValue ? FontWeight.w600 : FontWeight.w400,
                   color: hasValue ? cs.onSurface : cs.outline,
-                  fontStyle:
-                      hasValue ? FontStyle.normal : FontStyle.italic,
+                  fontStyle: hasValue ? FontStyle.normal : FontStyle.italic,
                 ),
               ),
             ],
@@ -714,19 +727,15 @@ class _ProBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          DonyIcon(
-            'badge-check',
-            size: 13,
-            color: cs.warning,
-          ),
+          DonyIcon('badge-check', size: 13, color: cs.warning),
           const SizedBox(width: DonySpacing.xs),
           Text(
             'PRO',
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: DonyColors.amberDark,
-                  letterSpacing: 0.5,
-                ),
+              fontWeight: FontWeight.w700,
+              color: DonyColors.amberDark,
+              letterSpacing: 0.5,
+            ),
           ),
         ],
       ),
@@ -738,14 +747,14 @@ class _ProBadge extends StatelessWidget {
 
 class TravelerProfileLoaderScreen extends StatelessWidget {
   final String announcementId;
-  const TravelerProfileLoaderScreen(
-      {super.key, required this.announcementId});
+  const TravelerProfileLoaderScreen({super.key, required this.announcementId});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => getIt<AnnouncementBloc>()
-        ..add(AnnouncementDetailRequested(announcementId)),
+      create: (_) =>
+          getIt<AnnouncementBloc>()
+            ..add(AnnouncementDetailRequested(announcementId)),
       child: BlocBuilder<AnnouncementBloc, AnnouncementState>(
         builder: (context, state) {
           if (state is AnnouncementInitial || state is AnnouncementLoading) {
@@ -760,9 +769,7 @@ class TravelerProfileLoaderScreen extends StatelessWidget {
           }
 
           if (state is AnnouncementDetailLoaded) {
-            return TravelerProfileScreen(
-              announcement: state.announcement,
-            );
+            return TravelerProfileScreen(announcement: state.announcement);
           }
 
           final description = state is AnnouncementError
@@ -778,8 +785,8 @@ class TravelerProfileLoaderScreen extends StatelessWidget {
               description: description,
               actionLabel: 'Réessayer',
               onAction: () => context.read<AnnouncementBloc>().add(
-                    AnnouncementDetailRequested(announcementId),
-                  ),
+                AnnouncementDetailRequested(announcementId),
+              ),
             ),
           );
         },

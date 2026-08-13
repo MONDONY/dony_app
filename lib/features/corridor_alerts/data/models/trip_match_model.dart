@@ -16,6 +16,7 @@ class TripMatchModel extends Equatable {
     this.pricePerKg,
     this.transportMode,
     this.photoUrl,
+    this.currency = 'EUR',
   });
 
   final String announcementId;
@@ -30,35 +31,38 @@ class TripMatchModel extends Equatable {
   final double? pricePerKg;
   final String? transportMode;
   final String? photoUrl;
+  final String currency;
 
   factory TripMatchModel.fromJson(Map<String, dynamic> json) => TripMatchModel(
-        announcementId: json['announcementId'] as String,
-        departureCity: json['departureCity'] as String,
-        arrivalCity: json['arrivalCity'] as String,
-        departureDate: DateTime.parse(json['departureDate'] as String),
-        travelerId: json['travelerId'] as String,
-        travelerName: json['travelerName'] as String,
-        travelerInitials: json['travelerInitials'] as String,
-        travelerRating: (json['travelerRating'] as num).toDouble(),
-        availableKg: (json['availableKg'] as num).toDouble(),
-        pricePerKg: (json['pricePerKg'] as num?)?.toDouble(),
-        transportMode: json['transportMode'] as String?,
-        photoUrl: json['photoUrl'] as String?,
-      );
+    announcementId: json['announcementId'] as String,
+    departureCity: json['departureCity'] as String,
+    arrivalCity: json['arrivalCity'] as String,
+    departureDate: DateTime.parse(json['departureDate'] as String),
+    travelerId: json['travelerId'] as String,
+    travelerName: json['travelerName'] as String,
+    travelerInitials: json['travelerInitials'] as String,
+    travelerRating: (json['travelerRating'] as num).toDouble(),
+    availableKg: (json['availableKg'] as num).toDouble(),
+    pricePerKg: (json['pricePerKg'] as num?)?.toDouble(),
+    transportMode: json['transportMode'] as String?,
+    photoUrl: json['photoUrl'] as String?,
+    currency: json['currency'] as String? ?? 'EUR',
+  );
 
   @override
   List<Object?> get props => [
-        announcementId,
-        departureCity,
-        arrivalCity,
-        departureDate,
-        travelerId,
-        travelerName,
-        travelerInitials,
-        travelerRating,
-        availableKg,
-        pricePerKg,
-        transportMode,
-        photoUrl,
-      ];
+    announcementId,
+    departureCity,
+    arrivalCity,
+    departureDate,
+    travelerId,
+    travelerName,
+    travelerInitials,
+    travelerRating,
+    availableKg,
+    pricePerKg,
+    transportMode,
+    photoUrl,
+    currency,
+  ];
 }

@@ -56,18 +56,20 @@ class _ChatScreenState extends State<ChatScreen> {
   void initState() {
     super.initState();
     context.read<ChatBloc>().add(
-          ChatSubscribeRequested(
-            widget.conversation.firestoreConversationId,
-            currentUserUid: _myUid,
-            isReadOnly: widget.conversation.readOnly,
-          ),
-        );
+      ChatSubscribeRequested(
+        widget.conversation.firestoreConversationId,
+        currentUserUid: _myUid,
+        isReadOnly: widget.conversation.readOnly,
+      ),
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      unawaited(getIt<AnalyticsService>().logEvent(
-        AnalyticsEvents.conversationOpened,
-        properties: {'context': 'conversation'},
-      ));
+      unawaited(
+        getIt<AnalyticsService>().logEvent(
+          AnalyticsEvents.conversationOpened,
+          properties: {'context': 'conversation'},
+        ),
+      );
     });
   }
 
@@ -103,7 +105,8 @@ class _ChatScreenState extends State<ChatScreen> {
               );
             },
             style: TextButton.styleFrom(
-                foregroundColor: Theme.of(ctx).colorScheme.error),
+              foregroundColor: Theme.of(ctx).colorScheme.error,
+            ),
             child: const Text('Supprimer'),
           ),
         ],
@@ -112,14 +115,16 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _requestCall() {
-    unawaited(getIt<AnalyticsService>().logEvent(
-      AnalyticsEvents.conversationCallInitiated,
-    ));
+    unawaited(
+      getIt<AnalyticsService>().logEvent(
+        AnalyticsEvents.conversationCallInitiated,
+      ),
+    );
     // Le numéro n'est plus dans la conversation : on le demande au serveur, qui
     // vérifie que le deal est actif et journalise la révélation.
-    context
-        .read<ContactRevealBloc>()
-        .add(ContactRevealRequested(widget.conversation.bidId));
+    context.read<ContactRevealBloc>().add(
+      ContactRevealRequested(widget.conversation.bidId),
+    );
   }
 
   Future<void> _sendText() async {
@@ -136,10 +141,12 @@ class _ChatScreenState extends State<ChatScreen> {
           message: result.message,
           type: DonySnackbarType.warning,
         );
-        unawaited(getIt<AnalyticsService>().logEvent(
-          AnalyticsEvents.messageBlocked,
-          properties: {'reason': result.reason},
-        ));
+        unawaited(
+          getIt<AnalyticsService>().logEvent(
+            AnalyticsEvents.messageBlocked,
+            properties: {'reason': result.reason},
+          ),
+        );
       }
       return;
     }
@@ -154,13 +161,13 @@ class _ChatScreenState extends State<ChatScreen> {
     );
 
     context.read<ChatBloc>().add(
-          ChatTextSendRequested(
-            firestoreConversationId: widget.conversation.firestoreConversationId,
-            conversationId: widget.conversation.id,
-            senderFirebaseUid: _myUid,
-            body: text,
-          ),
-        );
+      ChatTextSendRequested(
+        firestoreConversationId: widget.conversation.firestoreConversationId,
+        conversationId: widget.conversation.id,
+        senderFirebaseUid: _myUid,
+        body: text,
+      ),
+    );
     setState(() => _isSending = false);
   }
 
@@ -173,7 +180,8 @@ class _ChatScreenState extends State<ChatScreen> {
     // Le canal SMS OTP coupé n'empêche pas d'appeler (fonctionnalité
     // indépendante), mais tant qu'il l'est le concept même de "numéro" reste
     // masqué partout dans l'app — bouton retiré pour rester cohérent.
-    final canCall = participant.phoneAvailable && smsAuthEnabledListenable.value;
+    final canCall =
+        participant.phoneAvailable && smsAuthEnabledListenable.value;
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
@@ -299,10 +307,7 @@ class _ChatScreenState extends State<ChatScreen> {
             );
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (!context.mounted) return;
-              DonySnackbar.show(
-                context,
-                message: 'Conversation supprimée',
-              );
+              DonySnackbar.show(context, message: 'Conversation supprimée');
               if (context.canPop()) context.pop();
             });
           } else if (state is ChatError) {
@@ -322,98 +327,123 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
               if (isReadOnly) _ReadOnlyBanner(cs: cs, tt: tt),
               if (conversation.bidStatus != null)
-                _BidStatusBanner(status: conversation.bidStatus!, cs: cs, tt: tt),
+                _BidStatusBanner(
+                  status: conversation.bidStatus!,
+                  cs: cs,
+                  tt: tt,
+                ),
 
               Expanded(
-                child: Builder(builder: (context) {
-                  if (state is ChatLoading || state is ChatInitial) {
-                    return Center(
-                        child: CircularProgressIndicator(color: cs.primary));
-                  }
-                  if (state is ChatError) {
-                    return DonyEmptyState(
-                      type: DonyEmptyStateType.error,
-                      mascotte: DonyMascotteType.erreurLegere,
-                      iconAsset: 'wifi-off',
-                      title: 'Connexion interrompue',
-                      description: ErrorPresenter.resolve(state.error).message,
-                      actionLabel: 'Réessayer',
-                      onAction: () => context.read<ChatBloc>().add(
-                            ChatSubscribeRequested(
-                              widget.conversation.firestoreConversationId,
-                            ),
-                          ),
-                    );
-                  }
-
-                  final messages = switch (state) {
-                    ChatLoaded(:final messages) => messages,
-                    ChatReadOnly(:final messages) => messages,
-                    _ => null,
-                  };
-
-                  if (messages != null) {
-                    if (messages.isEmpty) {
+                child: Builder(
+                  builder: (context) {
+                    if (state is ChatLoading || state is ChatInitial) {
                       return Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            DonyIcon(
-                              'message-circle',
-                              size: 48,
-                              color: cs.onSurfaceVariant.withValues(alpha: 0.35),
-                            ),
-                            const SizedBox(height: DonySpacing.md),
-                            Text(
-                              'Démarrez la conversation !',
-                              style: tt.bodyMedium
-                                  ?.copyWith(color: cs.onSurfaceVariant),
-                            ),
-                          ],
+                        child: CircularProgressIndicator(color: cs.primary),
+                      );
+                    }
+                    if (state is ChatError) {
+                      return DonyEmptyState(
+                        type: DonyEmptyStateType.error,
+                        mascotte: DonyMascotteType.erreurLegere,
+                        iconAsset: 'wifi-off',
+                        title: 'Connexion interrompue',
+                        description: ErrorPresenter.resolve(
+                          state.error,
+                        ).message,
+                        actionLabel: 'Réessayer',
+                        onAction: () => context.read<ChatBloc>().add(
+                          ChatSubscribeRequested(
+                            widget.conversation.firestoreConversationId,
+                          ),
                         ),
                       );
                     }
 
-                    return ListView.builder(
-                      controller: _scrollController,
-                      reverse: true,
-                      padding: const EdgeInsets.fromLTRB(
-                        DonySpacing.lg,
-                        DonySpacing.sm,
-                        DonySpacing.lg,
-                        DonySpacing.md,
-                      ),
-                      itemCount: messages.length,
-                      itemBuilder: (context, index) {
-                        final message = messages[index];
-                        final isMe = message.senderId == _myUid;
-                        final showSep = _showDateSeparator(messages, index);
-                        // Dernier d'un groupe (visuellement en bas du groupe) :
-                        // le message plus récent (index-1) a un autre expéditeur,
-                        // ou c'est le plus récent, ou un séparateur les coupe.
-                        final isLastOfGroup = index == 0 ||
-                            messages[index - 1].senderId != message.senderId ||
-                            _showDateSeparator(messages, index - 1);
-                        return Column(
-                          children: [
-                            if (showSep)
-                              _DateSeparator(
-                                  date: message.sentAt, cs: cs, tt: tt),
-                            _MessageBubble(
-                              message: message,
-                              isMe: isMe,
-                              isLastOfGroup: isLastOfGroup,
-                            )
-                                .animate()
-                                .fadeIn(duration: 180.ms, curve: Curves.easeOutCubic)
-                                .slideY(begin: 0.06, end: 0, duration: 180.ms, curve: Curves.easeOutCubic),
-                          ],
+                    final messages = switch (state) {
+                      ChatLoaded(:final messages) => messages,
+                      ChatReadOnly(:final messages) => messages,
+                      _ => null,
+                    };
+
+                    if (messages != null) {
+                      if (messages.isEmpty) {
+                        return Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              DonyIcon(
+                                'message-circle',
+                                size: 48,
+                                color: cs.onSurfaceVariant.withValues(
+                                  alpha: 0.35,
+                                ),
+                              ),
+                              const SizedBox(height: DonySpacing.md),
+                              Text(
+                                'Démarrez la conversation !',
+                                style: tt.bodyMedium?.copyWith(
+                                  color: cs.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
                         );
-                      },
-                    );
-                  }
-                  return const SizedBox.shrink();
-                }),
+                      }
+
+                      return ListView.builder(
+                        controller: _scrollController,
+                        reverse: true,
+                        padding: const EdgeInsets.fromLTRB(
+                          DonySpacing.lg,
+                          DonySpacing.sm,
+                          DonySpacing.lg,
+                          DonySpacing.md,
+                        ),
+                        itemCount: messages.length,
+                        itemBuilder: (context, index) {
+                          final message = messages[index];
+                          final isMe = message.senderId == _myUid;
+                          final showSep = _showDateSeparator(messages, index);
+                          // Dernier d'un groupe (visuellement en bas du groupe) :
+                          // le message plus récent (index-1) a un autre expéditeur,
+                          // ou c'est le plus récent, ou un séparateur les coupe.
+                          final isLastOfGroup =
+                              index == 0 ||
+                              messages[index - 1].senderId !=
+                                  message.senderId ||
+                              _showDateSeparator(messages, index - 1);
+                          return Column(
+                            children: [
+                              if (showSep)
+                                _DateSeparator(
+                                  date: message.sentAt,
+                                  cs: cs,
+                                  tt: tt,
+                                ),
+                              _MessageBubble(
+                                    message: message,
+                                    isMe: isMe,
+                                    isLastOfGroup: isLastOfGroup,
+                                  )
+                                  .animate()
+                                  .fadeIn(
+                                    duration: 180.ms,
+                                    curve: Curves.easeOutCubic,
+                                  )
+                                  .slideY(
+                                    begin: 0.06,
+                                    end: 0,
+                                    duration: 180.ms,
+                                    curve: Curves.easeOutCubic,
+                                  ),
+                            ],
+                          );
+                        },
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
               ),
 
               _InputBar(
@@ -491,14 +521,18 @@ class _TripBanner extends StatelessWidget {
     return Material(
       color: disabled ? cs.surfaceContainerLowest : cs.surface,
       child: InkWell(
-        onTap:
-            disabled ? null : () => context.push('/bids/${conversation.bidId}'),
+        onTap: disabled
+            ? null
+            : () => context.push('/bids/${conversation.bidId}'),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(
-                DonySpacing.lg, 10, DonySpacing.sm, 10,
+                DonySpacing.lg,
+                10,
+                DonySpacing.sm,
+                10,
               ),
               child: Row(
                 children: [
@@ -536,7 +570,11 @@ class _TripBanner extends StatelessWidget {
                       ],
                     ),
                   ),
-                  DonyIcon('chevron-right', size: 18, color: cs.onSurfaceVariant),
+                  DonyIcon(
+                    'chevron-right',
+                    size: 18,
+                    color: cs.onSurfaceVariant,
+                  ),
                 ],
               ),
             ),
@@ -605,7 +643,11 @@ class _DateSeparator extends StatelessWidget {
   final ColorScheme cs;
   final TextTheme tt;
 
-  const _DateSeparator({required this.date, required this.cs, required this.tt});
+  const _DateSeparator({
+    required this.date,
+    required this.cs,
+    required this.tt,
+  });
 
   String _label() {
     final now = DateTime.now();
@@ -685,7 +727,9 @@ class _MessageBubble extends StatelessWidget {
     }
 
     // Coin « queue » uniquement sur le dernier d'un groupe.
-    final tail = Radius.circular(isLastOfGroup ? DonyRadius.xs : DonyRadius.card);
+    final tail = Radius.circular(
+      isLastOfGroup ? DonyRadius.xs : DonyRadius.card,
+    );
     final radius = BorderRadius.only(
       topLeft: const Radius.circular(DonyRadius.card),
       topRight: const Radius.circular(DonyRadius.card),
@@ -696,7 +740,9 @@ class _MessageBubble extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.only(bottom: isLastOfGroup ? DonySpacing.sm : 2),
       child: Row(
-        mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isMe
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Flexible(
@@ -705,8 +751,9 @@ class _MessageBubble extends StatelessWidget {
                 maxWidth: MediaQuery.of(context).size.width * 0.72,
               ),
               child: Column(
-                crossAxisAlignment:
-                    isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                crossAxisAlignment: isMe
+                    ? CrossAxisAlignment.end
+                    : CrossAxisAlignment.start,
                 children: [
                   Container(
                     decoration: BoxDecoration(
@@ -727,21 +774,21 @@ class _MessageBubble extends StatelessWidget {
                     child: message.isDeleted
                         ? _DeletedContent(isMe: isMe, cs: cs, tt: tt)
                         : message.type == MessageType.image
-                            ? _ImageContent(imageUrl: message.imageUrl)
-                            : message.type == MessageType.location
-                                ? _LocationContent(
-                                    latitude: message.latitude ?? 0,
-                                    longitude: message.longitude ?? 0,
-                                    isMe: isMe,
-                                    cs: cs,
-                                    tt: tt,
-                                  )
-                                : _TextContent(
-                                    body: message.body ?? '',
-                                    isMe: isMe,
-                                    cs: cs,
-                                    tt: tt,
-                                  ),
+                        ? _ImageContent(imageUrl: message.imageUrl)
+                        : message.type == MessageType.location
+                        ? _LocationContent(
+                            latitude: message.latitude ?? 0,
+                            longitude: message.longitude ?? 0,
+                            isMe: isMe,
+                            cs: cs,
+                            tt: tt,
+                          )
+                        : _TextContent(
+                            body: message.body ?? '',
+                            isMe: isMe,
+                            cs: cs,
+                            tt: tt,
+                          ),
                   ),
                   // Horodatage + accusé : seulement sur le dernier du groupe.
                   if (isLastOfGroup) ...[
@@ -831,7 +878,9 @@ class _ImageContent extends StatelessWidget {
             width: 220,
             height: 180,
             color: Theme.of(context).colorScheme.surfaceContainerHighest,
-            child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+            child: const Center(
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
           ),
         ),
         errorWidget: (_, __, ___) => Builder(
@@ -909,7 +958,11 @@ class _DeletedContent extends StatelessWidget {
   final bool isMe;
   final ColorScheme cs;
   final TextTheme tt;
-  const _DeletedContent({required this.isMe, required this.cs, required this.tt});
+  const _DeletedContent({
+    required this.isMe,
+    required this.cs,
+    required this.tt,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -924,8 +977,9 @@ class _DeletedContent extends StatelessWidget {
           DonyIcon(
             'ban',
             size: 14,
-            color:
-                isMe ? cs.onPrimary.withValues(alpha: 0.6) : cs.onSurfaceVariant,
+            color: isMe
+                ? cs.onPrimary.withValues(alpha: 0.6)
+                : cs.onSurfaceVariant,
           ),
           const SizedBox(width: DonySpacing.xs),
           Text(
@@ -1028,12 +1082,12 @@ class _InputBar extends StatelessWidget {
                   style: tt.bodyMedium?.copyWith(color: cs.onSurface),
                   decoration: InputDecoration(
                     hintText: 'Votre message…',
-                    hintStyle:
-                        tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                    hintStyle: tt.bodyMedium?.copyWith(
+                      color: cs.onSurfaceVariant,
+                    ),
                     border: InputBorder.none,
                     counterText: '',
-                    contentPadding:
-                        const EdgeInsets.symmetric(vertical: 11),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 11),
                     isDense: true,
                   ),
                 ),
@@ -1068,7 +1122,11 @@ class _InputBar extends StatelessWidget {
                             child: const SizedBox(
                               width: 38,
                               height: 38,
-                              child: DonyIcon('send', color: Colors.white, size: 18),
+                              child: DonyIcon(
+                                'send',
+                                color: Colors.white,
+                                size: 18,
+                              ),
                             ),
                           ),
                         ),

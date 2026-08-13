@@ -54,12 +54,10 @@ class DonyListTile extends StatelessWidget {
     final labelColor = destructive
         ? cs.error
         : enabled
-            ? cs.onSurface
-            : cs.onSurfaceVariant;
+        ? cs.onSurface
+        : cs.onSurfaceVariant;
 
-    final effectiveIconColor = destructive
-        ? cs.error
-        : iconColor ?? cs.primary;
+    final effectiveIconColor = destructive ? cs.error : iconColor ?? cs.primary;
 
     final effectiveIconBg = destructive
         ? cs.errorContainer
@@ -79,57 +77,60 @@ class DonyListTile extends StatelessWidget {
           child: ConstrainedBox(
             constraints: const BoxConstraints(minHeight: kDonyMinTapTarget),
             child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: DonySpacing.xs,
-              vertical: DonySpacing.sm + 2,
-            ),
-            child: Row(
-              children: [
-                if (icon != null || iconAsset != null) ...[
-                  DonyIconContainer(
-                    icon: icon,
-                    iconAsset: iconAsset,
-                    backgroundColor: effectiveIconBg,
-                    iconColor: effectiveIconColor,
-                    borderRadius: DonyRadius.sm,
-                  ),
-                  const SizedBox(width: DonySpacing.md),
-                ],
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        label,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: tt.bodyMedium?.copyWith(
-                          color: labelColor,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      if (subtitle != null) ...[
-                        const SizedBox(height: DonySpacing.xxs),
+              padding: const EdgeInsets.symmetric(
+                horizontal: DonySpacing.xs,
+                vertical: DonySpacing.sm + 2,
+              ),
+              child: Row(
+                children: [
+                  if (icon != null || iconAsset != null) ...[
+                    DonyIconContainer(
+                      icon: icon,
+                      iconAsset: iconAsset,
+                      backgroundColor: effectiveIconBg,
+                      iconColor: effectiveIconColor,
+                      borderRadius: DonyRadius.sm,
+                    ),
+                    const SizedBox(width: DonySpacing.md),
+                  ],
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                         Text(
-                          subtitle!,
-                          maxLines: 2,
+                          label,
+                          maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                          style: tt.bodyMedium?.copyWith(
+                            color: labelColor,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
+                        if (subtitle != null) ...[
+                          const SizedBox(height: DonySpacing.xxs),
+                          Text(
+                            subtitle!,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: tt.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
-                ),
-                const SizedBox(width: DonySpacing.sm),
-                trailing ??
-                    (onTap != null
-                        ? DonyIcon('chevron-right',
-                            size: 18,
-                            color: cs.onSurfaceVariant,
-                          )
-                        : const SizedBox.shrink()),
-              ],
-            ),
+                  const SizedBox(width: DonySpacing.sm),
+                  trailing ??
+                      (onTap != null
+                          ? DonyIcon(
+                              'chevron-right',
+                              size: 18,
+                              color: cs.onSurfaceVariant,
+                            )
+                          : const SizedBox.shrink()),
+                ],
+              ),
             ),
           ),
         ),
@@ -142,11 +143,7 @@ class DonyListTile extends StatelessWidget {
 
 /// Groupe de DonyListTile dans une carte.
 class DonyListSection extends StatelessWidget {
-  const DonyListSection({
-    super.key,
-    required this.tiles,
-    this.title,
-  });
+  const DonyListSection({super.key, required this.tiles, this.title});
 
   final List<DonyListTile> tiles;
   final String? title;

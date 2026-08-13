@@ -26,66 +26,71 @@ void main() {
   Finder fieldFinder({String prefix = 'content-combo'}) =>
       find.byKey(Key('$prefix-field'));
 
-  testWidgets('focus sur le champ ouvre la liste avec les 11 items du catalogue',
-      (tester) async {
-    await tester.pumpWidget(
-      _wrap(
-        ContentCategorySelector(
-          repository: repository,
-          selected: const [],
-          onChanged: (_) {},
+  testWidgets(
+    'focus sur le champ ouvre la liste avec les 11 items du catalogue',
+    (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          ContentCategorySelector(
+            repository: repository,
+            selected: const [],
+            onChanged: (_) {},
+          ),
         ),
-      ),
-    );
-    await tester.pumpAndSettle();
+      );
+      await tester.pumpAndSettle();
 
-    // Avant le focus, la liste n'est pas affichée.
-    expect(find.byKey(const Key('content-combo-dropdown')), findsNothing);
+      // Avant le focus, la liste n'est pas affichée.
+      expect(find.byKey(const Key('content-combo-dropdown')), findsNothing);
 
-    await tester.tap(fieldFinder());
-    await tester.pumpAndSettle();
+      await tester.tap(fieldFinder());
+      await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('content-combo-dropdown')), findsOneWidget);
-    for (final category in fallbackCatalog) {
+      expect(find.byKey(const Key('content-combo-dropdown')), findsOneWidget);
+      for (final category in fallbackCatalog) {
+        expect(
+          find.byKey(Key('content-combo-item-${category.label}')),
+          findsOneWidget,
+          reason: 'Item "${category.label}" doit être présent dans la liste',
+        );
+      }
+    },
+  );
+
+  testWidgets(
+    'taper « ali » filtre la liste — seul « Alimentation sèche » reste',
+    (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          ContentCategorySelector(
+            repository: repository,
+            selected: const [],
+            onChanged: (_) {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(fieldFinder());
+      await tester.pumpAndSettle();
+      await tester.enterText(fieldFinder(), 'ali');
+      await tester.pumpAndSettle();
+
       expect(
-        find.byKey(Key('content-combo-item-${category.label}')),
+        find.byKey(const Key('content-combo-item-Alimentation sèche')),
         findsOneWidget,
-        reason: 'Item "${category.label}" doit être présent dans la liste',
       );
-    }
-  });
-
-  testWidgets('taper « ali » filtre la liste — seul « Alimentation sèche » reste',
-      (tester) async {
-    await tester.pumpWidget(
-      _wrap(
-        ContentCategorySelector(
-          repository: repository,
-          selected: const [],
-          onChanged: (_) {},
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    await tester.tap(fieldFinder());
-    await tester.pumpAndSettle();
-    await tester.enterText(fieldFinder(), 'ali');
-    await tester.pumpAndSettle();
-
-    expect(
-      find.byKey(const Key('content-combo-item-Alimentation sèche')),
-      findsOneWidget,
-    );
-    for (final category in fallbackCatalog) {
-      if (category.label == 'Alimentation sèche') continue;
-      expect(
-        find.byKey(Key('content-combo-item-${category.label}')),
-        findsNothing,
-        reason: '"${category.label}" ne doit plus être visible après filtrage',
-      );
-    }
-  });
+      for (final category in fallbackCatalog) {
+        if (category.label == 'Alimentation sèche') continue;
+        expect(
+          find.byKey(Key('content-combo-item-${category.label}')),
+          findsNothing,
+          reason:
+              '"${category.label}" ne doit plus être visible après filtrage',
+        );
+      }
+    },
+  );
 
   testWidgets(
     'tap sur un item ajoute un tag, coche l\'item et laisse la liste ouverte',
@@ -146,10 +151,10 @@ void main() {
     await tester.tap(fieldFinder());
     await tester.pumpAndSettle();
     await tester.ensureVisible(
-        find.byKey(const Key('content-combo-item-Livres')),
-      );
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('content-combo-item-Livres')));
+      find.byKey(const Key('content-combo-item-Livres')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('content-combo-item-Livres')));
     await tester.pumpAndSettle();
 
     expect(emitted, isEmpty);
@@ -183,7 +188,10 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(emitted, contains('Poissons'));
-      expect(find.byKey(const Key('content-combo-tag-Poissons')), findsOneWidget);
+      expect(
+        find.byKey(const Key('content-combo-tag-Poissons')),
+        findsOneWidget,
+      );
     },
   );
 
@@ -280,10 +288,9 @@ void main() {
         unorderedEquals(['Livres', 'Documents & administratif', 'Poissons']),
       );
       final tagFinder = find.byWidgetPredicate(
-        (w) => w.key is ValueKey<String> &&
-            (w.key! as ValueKey<String>).value.startsWith(
-              'content-combo-tag-',
-            ),
+        (w) =>
+            w.key is ValueKey<String> &&
+            (w.key! as ValueKey<String>).value.startsWith('content-combo-tag-'),
       );
       expect(tagFinder, findsNWidgets(3));
     },

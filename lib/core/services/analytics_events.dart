@@ -4,6 +4,8 @@ abstract final class AnalyticsEvents {
   static const otpSubmitted = 'otp_submitted';
   static const signupCompleted = 'signup_completed';
   static const analyticsConsentAnswered = 'analytics_consent_answered';
+  static const currencyOnboardingSelected = 'currency_onboarding_selected';
+  static const currencyOnboardingSkipped = 'currency_onboarding_skipped';
   static const loginSuccess = 'login_success';
   static const loginFailed = 'login_failed';
 
@@ -183,7 +185,6 @@ abstract final class AnalyticsEvents {
   /// suggestions », efface tous les flags de fermeture manuelle des slides
   /// du carousel de guidance evergreen (Recherche).
   static const settingsGuidanceCardsReset = 'settings_guidance_cards_reset';
-
   // Filtre urgent (chip 🔥 Urgent — Accueil)
   static const urgentFilterToggled = 'urgent_filter_toggled';
 

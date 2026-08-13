@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
@@ -31,8 +32,9 @@ class TripTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final cashOn =
-        announcement.acceptedPaymentMethods.contains(BidPaymentMethod.cash);
+    final cashOn = announcement.acceptedPaymentMethods.contains(
+      BidPaymentMethod.cash,
+    );
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Material(
@@ -59,17 +61,11 @@ class TripTile extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: isSelected
-                              ? cs.primary
-                              : cs.primaryContainer,
+                          color: isSelected ? cs.primary : cs.primaryContainer,
                           shape: BoxShape.circle,
                         ),
                         child: isSelected
-                            ? DonyIcon(
-                                'check',
-                                color: cs.onPrimary,
-                                size: 20,
-                              )
+                            ? DonyIcon('check', color: cs.onPrimary, size: 20)
                             : const DonyEmoji.planeTakeoff(size: 20),
                       ),
                       const SizedBox(width: DonySpacing.md),
@@ -78,11 +74,11 @@ class TripTile extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              DateFormat('EEE d MMM', 'fr')
-                                  .format(announcement.departureDate),
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium!
+                              DateFormat(
+                                'EEE d MMM',
+                                'fr',
+                              ).format(announcement.departureDate),
+                              style: Theme.of(context).textTheme.bodyMedium!
                                   .copyWith(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w700,
@@ -90,11 +86,9 @@ class TripTile extends StatelessWidget {
                             ),
                             Text(
                               announcement.isKgFree
-                                  ? 'Kg libre · ${announcement.pricePerKg.toStringAsFixed(0)} €/kg'
-                                  : '${announcement.availableKg} kg dispo · ${announcement.pricePerKg.toStringAsFixed(0)} €/kg',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium!
+                                  ? 'Kg libre · ${formatPriceIn(announcement.pricePerKg, announcement.currency)}/kg'
+                                  : '${announcement.availableKg} kg dispo · ${formatPriceIn(announcement.pricePerKg, announcement.currency)}/kg',
+                              style: Theme.of(context).textTheme.bodyMedium!
                                   .copyWith(
                                     fontSize: 12,
                                     color: cs.onSurfaceVariant,
@@ -131,10 +125,7 @@ class TripTile extends StatelessWidget {
           ),
         ),
       ),
-    )
-        .animate()
-        .fadeIn(duration: 220.ms, delay: (40 * index).ms)
-        .slideY(begin: 0.04);
+    ).animate().fadeIn(duration: 220.ms, delay: (40 * index).ms).slideY(begin: 0.04);
   }
 }
 
@@ -163,9 +154,11 @@ class _ModifyButton extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              DonyIcon('square-pen',
-                  size: 14,
-                  color: enabled ? cs.primary : cs.onSurfaceVariant),
+              DonyIcon(
+                'square-pen',
+                size: 14,
+                color: enabled ? cs.primary : cs.onSurfaceVariant,
+              ),
               const SizedBox(width: DonySpacing.xs),
               Text(
                 'Modifier le trajet',

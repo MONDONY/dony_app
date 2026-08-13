@@ -17,7 +17,7 @@ class AccountDeletionBloc
   final AnalyticsService _analytics;
 
   AccountDeletionBloc(this._repository, this._analytics)
-      : super(const AccountDeletionInitial()) {
+    : super(const AccountDeletionInitial()) {
     on<RequestDeletion>(_onRequestDeletion);
     on<ReactivateAccount>(_onReactivateAccount);
     on<ConfirmImmediateDeletion>(_onConfirmImmediateDeletion);
@@ -33,13 +33,15 @@ class AccountDeletionBloc
       emit(const AccountDeletionRequested());
       unawaited(_analytics.logEvent(AnalyticsEvents.accountDeletionRequested));
     } on ValidationException catch (e) {
-      emit(AccountDeletionError(
-        error: ValidationException(
-          'Vous avez un paiement en cours. La suppression sera possible une fois la livraison confirmée.',
-          code: e.code ?? 'escrow-blocked',
+      emit(
+        AccountDeletionError(
+          error: ValidationException(
+            'Vous avez un paiement en cours. La suppression sera possible une fois la livraison confirmée.',
+            code: e.code ?? 'escrow-blocked',
+          ),
+          isEscrowBlocked: true,
         ),
-        isEscrowBlocked: true,
-      ));
+      );
     } catch (e) {
       emit(AccountDeletionError(error: unwrapDioError(e)));
     }
@@ -67,13 +69,15 @@ class AccountDeletionBloc
       await _repository.deleteImmediately();
       emit(const AccountDeletionImmediate());
     } on ValidationException catch (e) {
-      emit(AccountDeletionError(
-        error: ValidationException(
-          'Vous avez un paiement en cours. La suppression sera possible une fois la livraison confirmée.',
-          code: e.code ?? 'escrow-blocked',
+      emit(
+        AccountDeletionError(
+          error: ValidationException(
+            'Vous avez un paiement en cours. La suppression sera possible une fois la livraison confirmée.',
+            code: e.code ?? 'escrow-blocked',
+          ),
+          isEscrowBlocked: true,
         ),
-        isEscrowBlocked: true,
-      ));
+      );
     } catch (e) {
       emit(AccountDeletionError(error: unwrapDioError(e)));
     }

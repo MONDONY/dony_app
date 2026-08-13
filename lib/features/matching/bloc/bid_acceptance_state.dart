@@ -17,11 +17,13 @@ class BidWalletInsufficient extends BidAcceptanceState {
   final double requiredCommission;
   final bool hasCard;
   final String bidId;
+  final String? currency;
 
   BidWalletInsufficient({
     required this.availableBalance,
     required this.requiredCommission,
     required this.hasCard,
     required this.bidId,
+    this.currency,
   });
 }

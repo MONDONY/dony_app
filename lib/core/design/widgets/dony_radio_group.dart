@@ -110,51 +110,55 @@ class _DonyRadioTile<T> extends StatelessWidget {
       child: ConstrainedBox(
         constraints: const BoxConstraints(minHeight: kDonyMinTapTarget),
         child: Padding(
-        padding: const EdgeInsets.symmetric(
-          vertical: DonySpacing.sm,
-          horizontal: DonySpacing.xs,
-        ),
-        child: Row(
-          crossAxisAlignment: option.subtitle != null
-              ? CrossAxisAlignment.start
-              : CrossAxisAlignment.center,
-          children: [
-            _RadioDot(selected: _selected, enabled: option.enabled),
-            const SizedBox(width: DonySpacing.xs),
-            if (option.icon != null) ...[
-              Icon(
-                option.icon,
-                size: 18,
-                color: _selected ? cs.primary : cs.onSurfaceVariant,
-              ),
+          padding: const EdgeInsets.symmetric(
+            vertical: DonySpacing.sm,
+            horizontal: DonySpacing.xs,
+          ),
+          child: Row(
+            crossAxisAlignment: option.subtitle != null
+                ? CrossAxisAlignment.start
+                : CrossAxisAlignment.center,
+            children: [
+              _RadioDot(selected: _selected, enabled: option.enabled),
               const SizedBox(width: DonySpacing.xs),
-            ],
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    option.label,
-                    style: tt.bodyMedium?.copyWith(
-                      fontWeight: _selected ? FontWeight.w600 : FontWeight.w400,
-                      color: option.enabled
-                          ? cs.onSurface
-                          : cs.onSurfaceVariant,
-                    ),
-                  ),
-                  if (option.subtitle != null) ...[
-                    const SizedBox(height: DonySpacing.xxs),
+              if (option.icon != null) ...[
+                Icon(
+                  option.icon,
+                  size: 18,
+                  color: _selected ? cs.primary : cs.onSurfaceVariant,
+                ),
+                const SizedBox(width: DonySpacing.xs),
+              ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     Text(
-                      option.subtitle!,
-                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                      option.label,
+                      style: tt.bodyMedium?.copyWith(
+                        fontWeight: _selected
+                            ? FontWeight.w600
+                            : FontWeight.w400,
+                        color: option.enabled
+                            ? cs.onSurface
+                            : cs.onSurfaceVariant,
+                      ),
                     ),
+                    if (option.subtitle != null) ...[
+                      const SizedBox(height: DonySpacing.xxs),
+                      Text(
+                        option.subtitle!,
+                        style: tt.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
       ),
     );
   }
@@ -169,7 +173,7 @@ class _RadioDot extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final borderColor = selected ? cs.primary : cs.onSurfaceVariant;
-    final fillColor   = selected ? cs.primary : Colors.transparent;
+    final fillColor = selected ? cs.primary : Colors.transparent;
 
     return AnimatedContainer(
       duration: DonyDuration.micro,
