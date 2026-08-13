@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/di/pending_search_notifier.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
@@ -2606,7 +2607,9 @@ class _PriceFilterSheetState extends State<_PriceFilterSheet> {
           const SizedBox(height: DonySpacing.xl),
           Center(
             child: Text(
-              isAtMax ? 'Tous les prix' : '≤ ${_maxPrice.toInt()} €/kg',
+              isAtMax
+                  ? 'Tous les prix'
+                  : '≤ ${formatPriceActive(_maxPrice)}/kg',
               style: tt.headlineMedium?.copyWith(
                 fontWeight: FontWeight.w800,
                 color: isAtMax ? cs.onSurfaceVariant : cs.primary,
@@ -2635,11 +2638,11 @@ class _PriceFilterSheetState extends State<_PriceFilterSheet> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '3 €/kg',
+                  '${formatPriceActive(3)}/kg',
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
                 Text(
-                  '25 €/kg',
+                  '${formatPriceActive(25)}/kg',
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
               ],

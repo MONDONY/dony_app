@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/trips_summary_model.dart';
 import 'package:flutter/material.dart';
@@ -165,7 +166,7 @@ class TripsStatsStrip extends StatelessWidget {
         const SizedBox(width: DonySpacing.sm),
         Expanded(
           child: _StatTile(
-            value: '${_compact(summary.revenue)} €',
+            value: formatPriceActive(summary.revenue.roundToDouble()),
             label: 'Revenus',
             valueColor: cs.secondary,
             index: 2,

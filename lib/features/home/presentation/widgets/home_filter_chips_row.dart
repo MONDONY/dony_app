@@ -12,6 +12,7 @@
 // animation et, plus grave, ferait clignoter un état identique.
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
@@ -128,7 +129,7 @@ class HomeFilterChipsRow extends StatelessWidget {
   }
 
   String get _priceLabel => filters.maxPricePerKg != null
-      ? '≤ ${filters.maxPricePerKg!.toStringAsFixed(0)} €/kg'
+      ? '≤ ${formatPriceActive(filters.maxPricePerKg!)}/kg'
       : 'Prix';
 
   String get _maxWeightLabel => filters.maxWeight != null

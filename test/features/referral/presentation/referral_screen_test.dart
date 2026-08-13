@@ -134,7 +134,12 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
 
     // _testInfo has totalEarnedCents = 500 → "5 €"
-    expect(find.textContaining('5 € grâce au parrainage'), findsOneWidget);
+    // La récompense reste libellée en euros (source backend) et garde ses
+    // décimales : c'est un montant crédité, pas un arrondi d'affichage.
+    expect(
+      find.textContaining('5,00\u00A0€ grâce au parrainage'),
+      findsOneWidget,
+    );
   });
 
   // 9. Hero card affiche le texte d'invite

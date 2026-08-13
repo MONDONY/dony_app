@@ -305,7 +305,7 @@ class _PriceGridItemTile extends StatelessWidget {
                 _priceLine(
                   context,
                   label: 'Tu reçois',
-                  value: '${item.unitPriceNet.toStringAsFixed(2)} €',
+                  value: formatPriceActive(item.unitPriceNet),
                   valueColor: cs.success,
                   valueWeight: FontWeight.w700,
                 ),
@@ -313,7 +313,7 @@ class _PriceGridItemTile extends StatelessWidget {
                 _priceLine(
                   context,
                   label: 'Expéditeur paie',
-                  value: '${item.unitPriceDisplay.toStringAsFixed(2)} €',
+                  value: formatPriceActive(item.unitPriceDisplay),
                   valueColor: cs.onSurfaceVariant,
                   valueWeight: FontWeight.w600,
                 ),

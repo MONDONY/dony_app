@@ -695,7 +695,7 @@ class _PeriodChips extends StatelessWidget {
 class _StatsRow extends StatelessWidget {
   const _StatsRow();
 
-  String _money(double v) => '${formatKgPrice(v)} €';
+  String _money(double v) => formatPriceActive(v);
 
   String _weight(double v) => '${v.toStringAsFixed(v % 1 == 0 ? 0 : 1)} kg';
 

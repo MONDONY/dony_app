@@ -88,7 +88,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Résolu en votre faveur'), findsOneWidget);
       expect(find.text('No-show confirmé.'), findsOneWidget);
-      expect(find.textContaining('40,00 €'), findsOneWidget);
+      // Espace insécable avant le symbole : NumberFormat suit CLDR pour le
+      // français, et le montant est formaté dans la devise de l'utilisateur.
+      expect(find.textContaining('40,00\u00A0€'), findsOneWidget);
       expect(find.text('Décision rendue'), findsOneWidget);
     },
   );

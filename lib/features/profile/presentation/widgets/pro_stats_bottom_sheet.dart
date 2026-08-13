@@ -1,5 +1,7 @@
 import 'dart:ui';
 
+import 'package:dony/core/currency/active_currency.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/profile/data/models/pro_stats_model.dart';
@@ -26,10 +28,12 @@ class ProStatsBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    // Le symbole suit la devise active plutôt qu'un euro figé.
+    final currency = ActiveCurrency.current ?? SupportedCurrency.eur;
     final currencyFmt = NumberFormat.currency(
-      locale: 'fr_FR',
-      symbol: '€',
-      decimalDigits: 2,
+      locale: currency.locale,
+      symbol: currency.symbol,
+      decimalDigits: currency.minorUnit,
     );
     final now = DateTime.now();
     final monthLabel = DateFormat('MMMM yyyy', 'fr_FR').format(now);

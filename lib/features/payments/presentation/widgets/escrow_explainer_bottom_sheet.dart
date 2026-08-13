@@ -1,3 +1,5 @@
+import 'package:dony/core/currency/active_currency.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
@@ -37,7 +39,13 @@ class EscrowExplainerBottomSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    final fmt = NumberFormat.currency(locale: 'fr_FR', symbol: '€');
+    // Idem : le symbole suit la devise active plutôt qu'un euro figé.
+    final currency = ActiveCurrency.current ?? SupportedCurrency.eur;
+    final fmt = NumberFormat.currency(
+      locale: currency.locale,
+      symbol: currency.symbol,
+      decimalDigits: currency.minorUnit,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,

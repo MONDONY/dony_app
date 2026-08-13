@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/services/address_autocomplete_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
@@ -146,7 +147,7 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
                             ),
                           ),
                           Text(
-                            '${t.departureCity} → ${t.arrivalCity} · ${t.pricePerKg.toStringAsFixed(0)}€/kg',
+                            '${t.departureCity} → ${t.arrivalCity} · ${formatPriceActive(t.pricePerKg)}/kg',
                             style: tt.bodySmall?.copyWith(
                               color: cs.onSurfaceVariant,
                             ),

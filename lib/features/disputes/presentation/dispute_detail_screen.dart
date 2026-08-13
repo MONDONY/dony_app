@@ -1,9 +1,10 @@
 import 'dart:async';
 
+import 'package:dony/core/currency/active_currency.dart';
 import 'package:dony/core/design/design_system.dart';
-
 // DonyStatusColors extension
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/disputes/data/models/dispute_model.dart';
@@ -35,8 +36,10 @@ class _DisputeDetailScreenState extends State<DisputeDetailScreen> {
     );
   }
 
-  String _euro(int cents) =>
-      '${(cents / 100).toStringAsFixed(2).replaceAll('.', ',')} €';
+  // Montant reçu en unités mineures : le diviseur suit la sous-unité de la
+  // devise, sans quoi 5000 XOF s'afficherait « 50 ».
+  String _money(int minorAmount) =>
+      formatMinorAmount(minorAmount, ActiveCurrency.current?.code);
 
   @override
   Widget build(BuildContext context) {
@@ -226,7 +229,7 @@ class _DisputeDetailScreenState extends State<DisputeDetailScreen> {
                                   style: tt.bodyMedium,
                                 ),
                                 Text(
-                                  _euro(d.guaranteeAmountCents!),
+                                  _money(d.guaranteeAmountCents!),
                                   style: tt.titleSmall?.copyWith(
                                     fontWeight: FontWeight.w800,
                                     color: cs.success,

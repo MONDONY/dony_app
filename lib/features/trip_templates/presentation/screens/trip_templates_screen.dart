@@ -1,5 +1,7 @@
 import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/profile/data/models/help_center_config.dart';
 import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
@@ -173,7 +175,7 @@ class _TripTemplateCard extends StatelessWidget {
                     ),
                     const SizedBox(height: DonySpacing.xs),
                     Text(
-                      '${template.departureCity} → ${template.arrivalCity} · ${_trimPrice(template.pricePerKg)}€/kg',
+                      '${template.departureCity} → ${template.arrivalCity} · ${formatPriceActive(template.pricePerKg)}/kg',
                       style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                     ),
                   ],
@@ -186,9 +188,6 @@ class _TripTemplateCard extends StatelessWidget {
       ),
     );
   }
-
-  String _trimPrice(double p) =>
-      p == p.roundToDouble() ? p.toInt().toString() : p.toString();
 }
 
 enum _TemplateAction { edit, recurrence, delete }

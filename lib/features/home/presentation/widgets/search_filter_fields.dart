@@ -8,6 +8,7 @@
 // implémentation, consommée par les deux feuilles.
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/city/data/city_model.dart';
 import 'package:dony/features/city/presentation/widgets/city_corridor_fields.dart';
@@ -231,7 +232,7 @@ class PriceField extends StatelessWidget {
                 DonyIcon('euro', size: 14, color: cs.primary),
                 const SizedBox(width: DonySpacing.xs),
                 Text(
-                  active ? '≤ ${maxPrice!.toInt()} €/kg' : 'Tous',
+                  active ? '≤ ${formatPriceActive(maxPrice!)}/kg' : 'Tous',
                   style: tt.titleSmall?.copyWith(
                     color: active ? cs.primary : cs.onSurfaceVariant,
                     fontWeight: active ? FontWeight.w700 : FontWeight.w400,
@@ -736,7 +737,9 @@ Future<void> showPricePicker(
           children: [
             Center(
               child: Text(
-                localEnabled ? '≤ ${local.toInt()} €/kg' : 'Tous les prix',
+                localEnabled
+                    ? '≤ ${formatPriceActive(local)}/kg'
+                    : 'Tous les prix',
                 style: tt.headlineMedium?.copyWith(
                   fontWeight: FontWeight.w800,
                   color: localEnabled ? cs.primary : cs.onSurfaceVariant,
@@ -768,11 +771,11 @@ Future<void> showPricePicker(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    '3 €/kg',
+                    '${formatPriceActive(3)}/kg',
                     style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                   ),
                   Text(
-                    '25 €/kg',
+                    '${formatPriceActive(25)}/kg',
                     style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                   ),
                 ],

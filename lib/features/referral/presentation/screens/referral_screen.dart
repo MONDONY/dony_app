@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
@@ -131,7 +132,11 @@ class _LoadedBody extends StatelessWidget {
                 borderRadius: BorderRadius.circular(DonyRadius.card),
               ),
               child: Text(
-                '💰 Tu as gagné ${(info.totalEarnedCents / 100).toStringAsFixed(0)} € grâce au parrainage',
+                // La récompense de parrainage est libellée en euros côté backend
+                // (dony.referral.reward-amount-cents) et créditée sur le
+                // portefeuille EUR : on l'affiche donc en euros, y compris pour un
+                // utilisateur dont la devise active est autre.
+                '💰 Tu as gagné ${formatMinorAmount(info.totalEarnedCents, 'EUR')} grâce au parrainage',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   color: cs.success,

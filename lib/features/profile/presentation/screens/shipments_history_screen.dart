@@ -106,10 +106,15 @@ class _DeliveryCard extends StatelessWidget {
     final weight = (bid.weightKg ?? 0) > 0 ? '${bid.weightKg} kg' : null;
     final description = bid.description;
     // Prix affiché à l'expéditeur = brut (net voyageur + commission Yadony).
+    // La devise est celle figée sur l'offre, pas celle réglée aujourd'hui :
+    // un envoi passé garde le libellé sous lequel il a été payé.
     final price = bid.totalSenderAmountEur != null
-        ? '${bid.totalSenderAmountEur!.toStringAsFixed(0)} €'
+        ? formatPriceIn(bid.totalSenderAmountEur!, bid.currency)
         : bid.pricePerKg != null
-        ? '${netToSenderPrice(bid.pricePerKg! * (bid.weightKg ?? 0)).toStringAsFixed(0)} €'
+        ? formatPriceIn(
+            netToSenderPrice(bid.pricePerKg! * (bid.weightKg ?? 0)),
+            bid.currency,
+          )
         : null;
 
     return GestureDetector(

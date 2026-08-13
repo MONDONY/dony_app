@@ -173,7 +173,7 @@ class _PriceGridItemFormContentState extends State<_PriceGridItemFormContent> {
           // Price field
           DonyTextField(
             controller: _priceController,
-            label: 'Prix net (€)',
+            label: 'Prix net ($activeCurrencySymbol)',
             hint: 'Ex : 10.00',
             prefixWidget: DonyIcon(
               'euro',
@@ -192,8 +192,8 @@ class _PriceGridItemFormContentState extends State<_PriceGridItemFormContent> {
               if (parsed <= 0) {
                 return 'Le prix doit être positif';
               }
-              if (parsed > 500) {
-                return 'Maximum 500 € par article';
+              if (parsed > maxUnitPriceActive) {
+                return 'Maximum ${formatPriceActive(maxUnitPriceActive)} par article';
               }
               return null;
             },
@@ -221,7 +221,7 @@ class _PriceGridItemFormContentState extends State<_PriceGridItemFormContent> {
                         Expanded(
                           child: Text(
                             'L\'expéditeur verra '
-                            '${netToSenderPrice(_parsedPrice!).toStringAsFixed(2)} € '
+                            '${formatPriceActive(netToSenderPrice(_parsedPrice!))} '
                             '(+${(donyCommissionRate * 100).toStringAsFixed(0)} % Yadony)',
                             style: tt.bodySmall?.copyWith(color: cs.primary),
                           ),

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
+import 'package:dony/core/currency/active_currency.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -328,11 +329,19 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
     );
   }
 
-  static String _priceBracket(double eur) {
-    if (eur < 20) return '<20€';
-    if (eur < 50) return '20-50€';
-    if (eur < 100) return '50-100€';
-    return '>100€';
+  /// Tranche de montant pour l'analytics, sans PII et **sans symbole monétaire**.
+  ///
+  /// Les bornes s'entendaient auparavant en euros et portaient le « € » dans leur
+  /// libellé, alors qu'elles s'appliquaient au montant brut quelle que soit la
+  /// devise : une proposition de 5 000 XOF, soit environ 7,60 €, atterrissait
+  /// dans « >100€ » et faussait toute lecture des données. La tranche est donc
+  /// neutre et la devise est envoyée à côté, ce qui permet de segmenter
+  /// correctement sans jamais convertir de montant.
+  static String _amountBracket(double amount) {
+    if (amount < 20) return '<20';
+    if (amount < 50) return '20-50';
+    if (amount < 100) return '50-100';
+    return '>100';
   }
 
   Future<void> _onFetch(
@@ -375,7 +384,8 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
           _analytics.logEvent(
             AnalyticsEvents.negotiationOfferMade,
             properties: {
-              'amount_bracket': _priceBracket(e.proposedPriceEur),
+              'amount_bracket': _amountBracket(e.proposedPriceEur),
+              'currency': ActiveCurrency.current?.code ?? 'unknown',
               'context': 'sender',
             },
           ),
@@ -407,7 +417,8 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
         _analytics.logEvent(
           AnalyticsEvents.negotiationOfferMade,
           properties: {
-            'amount_bracket': _priceBracket(e.proposedPriceEur),
+            'amount_bracket': _amountBracket(e.proposedPriceEur),
+            'currency': ActiveCurrency.current?.code ?? 'unknown',
             'context': 'counter',
           },
         ),
@@ -433,7 +444,10 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
       unawaited(
         _analytics.logEvent(
           AnalyticsEvents.negotiationOfferAccepted,
-          properties: {'amount_bracket': _priceBracket(thread.currentPriceEur)},
+          properties: {
+            'amount_bracket': _amountBracket(thread.currentPriceEur),
+            'currency': thread.currency,
+          },
         ),
       );
     } catch (err) {

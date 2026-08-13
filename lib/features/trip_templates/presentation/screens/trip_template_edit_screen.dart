@@ -381,7 +381,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                '${_priceOptions[i].toStringAsFixed(0)}€',
+                                formatPriceActive(_priceOptions[i]),
                                 style: tt.titleMedium?.copyWith(
                                   color: selected ? cs.success : cs.onSurface,
                                   fontWeight: FontWeight.w700,
@@ -389,7 +389,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                '${formatKgPrice(netToSenderPrice(_priceOptions[i]))}€ exp.',
+                                '${formatPriceActive(netToSenderPrice(_priceOptions[i]))} exp.',
                                 style: tt.labelSmall?.copyWith(
                                   color: selected
                                       ? cs.success
@@ -406,7 +406,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
               ),
               const SizedBox(height: DonySpacing.sm),
               Text(
-                'Vous touchez ${formatKgPrice(_priceOptions[_priceIdx])}€/kg · l\'expéditeur paie ${formatKgPrice(netToSenderPrice(_priceOptions[_priceIdx]))}€/kg (commission Yadony $donyCommissionPercentLabel% incluse)',
+                'Vous touchez ${formatPriceActive(_priceOptions[_priceIdx])}/kg · l\'expéditeur paie ${formatPriceActive(netToSenderPrice(_priceOptions[_priceIdx]))}/kg (commission Yadony $donyCommissionPercentLabel% incluse)',
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
               const SizedBox(height: DonySpacing.xxl),
