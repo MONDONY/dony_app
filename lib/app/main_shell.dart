@@ -20,7 +20,6 @@ import 'package:dony/features/messaging/bloc/conversation_list/conversation_list
 import 'package:dony/features/messaging/data/firestore_chat_repository.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_event.dart';
-import 'package:dony/features/notifications/bloc/notification_state.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
@@ -88,10 +87,10 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     unawaited(getIt<AnalyticsService>().logScreen(_tabScreenNames[index]));
   }
 
-  /// Recharge les compteurs qui allument le point d'attention de l'onglet
+  /// Recharge les deux compteurs qui allument le point d'attention de l'onglet
   /// Activités : demandes reçues (TravelerBidsBloc) + négociations actives
-  /// (NegotiationListBloc). Les notifications non lues, troisième source, sont
-  /// déjà rechargées à côté.
+  /// (NegotiationListBloc). Les notifications non lues n'en font pas partie —
+  /// elles alimentent la cloche de l'Accueil, rechargée de son côté.
   void _loadActivityIndicators() {
     if (!mounted) {
       return;
@@ -333,8 +332,18 @@ class _DonyBottomNav extends StatelessWidget {
                               ),
                             ),
                             // 1 — Activités (point d'attention = demandes reçues
-                            // + négociations actives + notifications non lues,
-                            // même signal que les pastilles des cartes du hub)
+                            // + négociations actives, les deux signaux que les
+                            // cartes du hub portent aussi)
+                            //
+                            // Les notifications non lues sont volontairement
+                            // exclues : la boîte de réception s'ouvre depuis la
+                            // cloche de l'Accueil, pas depuis cet onglet. Les
+                            // compter ici allumait un point qu'aucune action de
+                            // l'onglet ne pouvait éteindre — on traitait toutes
+                            // ses demandes, les pastilles des cartes tombaient,
+                            // et le point restait jusqu'à un « Tout lire » sur
+                            // un autre onglet. La cloche porte déjà son propre
+                            // badge chiffré pour ce compteur.
                             Expanded(
                               child: Builder(
                                 builder: (context) {
@@ -353,17 +362,8 @@ class _DonyBottomNav extends StatelessWidget {
                                       .select<NegotiationListBloc, int>(
                                         (b) => b.state.actionableCount,
                                       );
-                                  final unreadNotifs = context
-                                      .select<NotificationBloc, int>(
-                                        (b) => b.state is NotificationLoaded
-                                            ? (b.state as NotificationLoaded)
-                                                  .unreadCount
-                                            : 0,
-                                      );
                                   final hasNew =
-                                      pendingRequests > 0 ||
-                                      activeNegos > 0 ||
-                                      unreadNotifs > 0;
+                                      pendingRequests > 0 || activeNegos > 0;
                                   return DonyNavItem(
                                     iconAsset: tab1IconAsset,
                                     label: tab1Label,
