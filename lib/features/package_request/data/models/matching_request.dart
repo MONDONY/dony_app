@@ -1,8 +1,7 @@
 import 'package:equatable/equatable.dart';
 
-/// Demande colis scorée renvoyée par le moteur de matching
-/// (`GET /travelers/me/matching-requests`). Mappe `MatchingRequestDto`.
-/// La liste est déjà triée par [matchScore] décroissant côté serveur.
+/// Demande colis scorée renvoyée par les matchs d'une alerte corridor.
+/// Mappe le même contrat de résultat que le backend expose pour les alertes.
 class MatchingRequestModel extends Equatable {
   const MatchingRequestModel({
     required this.id,
