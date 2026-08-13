@@ -14,33 +14,30 @@ class _FakeWebViewPlatform extends WebViewPlatform
   @override
   PlatformWebViewController createPlatformWebViewController(
     PlatformWebViewControllerCreationParams params,
-  ) =>
-      _FakePlatformWebViewController(params);
+  ) => _FakePlatformWebViewController(params);
 
   @override
   PlatformNavigationDelegate createPlatformNavigationDelegate(
     PlatformNavigationDelegateCreationParams params,
-  ) =>
-      _FakePlatformNavigationDelegate(params);
+  ) => _FakePlatformNavigationDelegate(params);
 
   @override
   PlatformWebViewWidget createPlatformWebViewWidget(
     PlatformWebViewWidgetCreationParams params,
-  ) =>
-      _FakePlatformWebViewWidget(params);
+  ) => _FakePlatformWebViewWidget(params);
 }
 
 class _FakePlatformWebViewController extends PlatformWebViewController
     with MockPlatformInterfaceMixin {
-  _FakePlatformWebViewController(super.params)
-      : super.implementation();
+  _FakePlatformWebViewController(super.params) : super.implementation();
 
   @override
   Future<void> setJavaScriptMode(JavaScriptMode javaScriptMode) async {}
 
   @override
   Future<void> setPlatformNavigationDelegate(
-      PlatformNavigationDelegate handler) async {}
+    PlatformNavigationDelegate handler,
+  ) async {}
 
   @override
   Future<void> loadRequest(LoadRequestParams params) async {}
@@ -51,8 +48,7 @@ class _FakePlatformWebViewController extends PlatformWebViewController
 
 class _FakePlatformNavigationDelegate extends PlatformNavigationDelegate
     with MockPlatformInterfaceMixin {
-  _FakePlatformNavigationDelegate(super.params)
-      : super.implementation();
+  _FakePlatformNavigationDelegate(super.params) : super.implementation();
 
   @override
   Future<void> setOnPageStarted(PageEventCallback onPageStarted) async {}
@@ -62,13 +58,13 @@ class _FakePlatformNavigationDelegate extends PlatformNavigationDelegate
 
   @override
   Future<void> setOnWebResourceError(
-      WebResourceErrorCallback onWebResourceError) async {}
+    WebResourceErrorCallback onWebResourceError,
+  ) async {}
 }
 
 class _FakePlatformWebViewWidget extends PlatformWebViewWidget
     with MockPlatformInterfaceMixin {
-  _FakePlatformWebViewWidget(super.params)
-      : super.implementation();
+  _FakePlatformWebViewWidget(super.params) : super.implementation();
 
   @override
   Widget build(BuildContext context) => const SizedBox.shrink();
@@ -83,7 +79,10 @@ void main() {
     WebViewPlatform.instance = _FakeWebViewPlatform();
   });
 
-  Widget wrap({String title = 'CGU', String url = 'https://dony.app/legal/terms'}) {
+  Widget wrap({
+    String title = 'CGU',
+    String url = 'https://dony.app/legal/terms',
+  }) {
     return MaterialApp(
       home: LegalWebViewScreen(title: title, url: url),
     );
@@ -91,20 +90,26 @@ void main() {
 
   group('LegalWebViewScreen', () {
     testWidgets('affiche le titre fourni dans l\'AppBar', (tester) async {
-      await tester.pumpWidget(wrap(title: 'CGU'));
+      await tester.pumpWidget(wrap());
       expect(find.text('CGU'), findsOneWidget);
     });
 
-    testWidgets('affiche le titre "Politique de confidentialité"', (tester) async {
+    testWidgets('affiche le titre "Politique de confidentialité"', (
+      tester,
+    ) async {
       await tester.pumpWidget(wrap(title: 'Politique de confidentialité'));
       expect(find.text('Politique de confidentialité'), findsOneWidget);
     });
 
-    testWidgets('affiche l\'icône d\'ouverture externe dans l\'AppBar', (tester) async {
+    testWidgets('affiche l\'icône d\'ouverture externe dans l\'AppBar', (
+      tester,
+    ) async {
       await tester.pumpWidget(wrap());
       await tester.pump(); // une frame pour construire l'appbar
       expect(
-        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'external-link'),
+        find.byWidgetPredicate(
+          (w) => w is DonyIcon && w.name == 'external-link',
+        ),
         findsOneWidget,
       );
     });

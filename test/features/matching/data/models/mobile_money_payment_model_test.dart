@@ -162,7 +162,6 @@ void main() {
           amount: 50.0,
           currency: 'XOF',
           paymentLink: 'https://wave.test/pay',
-          failureReason: null,
         );
 
         expect(model.props.length, 7);

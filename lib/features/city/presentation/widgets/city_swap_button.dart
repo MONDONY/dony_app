@@ -48,7 +48,11 @@ class _CitySwapButtonState extends State<CitySwapButton> {
               turns: _turns,
               duration: 250.ms,
               curve: Curves.easeOutCubic,
-              child: Icon(DonyIcons.swapVertical, size: 20, color: cs.onSurface),
+              child: Icon(
+                DonyIcons.swapVertical,
+                size: 20,
+                color: cs.onSurface,
+              ),
             ),
           ),
         ),

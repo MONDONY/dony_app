@@ -52,7 +52,7 @@ class DonyImage extends StatelessWidget {
       placeholder: (context, _) =>
           placeholder?.call(context) ??
           ColoredBox(color: cs.surfaceContainerHighest),
-      errorWidget: (context, _, __) =>
+      errorWidget: (context, _, _) =>
           errorWidget?.call(context) ??
           ColoredBox(
             color: cs.surfaceContainerHighest,

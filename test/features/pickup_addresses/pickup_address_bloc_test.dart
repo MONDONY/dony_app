@@ -47,13 +47,18 @@ void main() {
     blocTest<PickupAddressBloc, PickupAddressState>(
       'PickupAddressLoaded → success + list',
       build: () {
-        when(() => repository.getAll()).thenAnswer((_) async => [_addr1, _addr2]);
+        when(
+          () => repository.getAll(),
+        ).thenAnswer((_) async => [_addr1, _addr2]);
         return PickupAddressBloc(repository);
       },
       act: (bloc) => bloc.add(const PickupAddressLoaded()),
       expect: () => [
-        isA<PickupAddressState>()
-            .having((s) => s.status, 'status', PickupAddressStatus.loading),
+        isA<PickupAddressState>().having(
+          (s) => s.status,
+          'status',
+          PickupAddressStatus.loading,
+        ),
         isA<PickupAddressState>()
             .having((s) => s.status, 'status', PickupAddressStatus.success)
             .having((s) => s.addresses, 'addresses', [_addr1, _addr2]),
@@ -68,8 +73,11 @@ void main() {
       },
       act: (bloc) => bloc.add(const PickupAddressLoaded()),
       expect: () => [
-        isA<PickupAddressState>()
-            .having((s) => s.status, 'status', PickupAddressStatus.loading),
+        isA<PickupAddressState>().having(
+          (s) => s.status,
+          'status',
+          PickupAddressStatus.loading,
+        ),
         isA<PickupAddressState>()
             .having((s) => s.status, 'status', PickupAddressStatus.error)
             .having((s) => s.error, 'error', isNotNull),
@@ -89,22 +97,28 @@ void main() {
           isDefault: false,
         );
         when(() => repository.create(any())).thenAnswer((_) async => created);
-        return PickupAddressBloc(repository)
-          ..emit(const PickupAddressState(
+        return PickupAddressBloc(repository)..emit(
+          const PickupAddressState(
             status: PickupAddressStatus.success,
             addresses: [_addr1, _addr2],
-          ));
+          ),
+        );
       },
-      act: (bloc) => bloc.add(const PickupAddressCreated(
-        label: 'Chez un ami',
-        street: '1 rue Test',
-        postalCode: '75002',
-        city: 'Paris',
-        country: 'France',
-      )),
+      act: (bloc) => bloc.add(
+        const PickupAddressCreated(
+          label: 'Chez un ami',
+          street: '1 rue Test',
+          postalCode: '75002',
+          city: 'Paris',
+          country: 'France',
+        ),
+      ),
       expect: () => [
-        isA<PickupAddressState>()
-            .having((s) => s.status, 'status', PickupAddressStatus.loading),
+        isA<PickupAddressState>().having(
+          (s) => s.status,
+          'status',
+          PickupAddressStatus.loading,
+        ),
         isA<PickupAddressState>()
             .having((s) => s.status, 'status', PickupAddressStatus.success)
             .having((s) => s.addresses.length, 'length', 3),
@@ -115,11 +129,12 @@ void main() {
       'PickupAddressDeleted → removes from the list',
       build: () {
         when(() => repository.delete('addr-1')).thenAnswer((_) async {});
-        return PickupAddressBloc(repository)
-          ..emit(const PickupAddressState(
+        return PickupAddressBloc(repository)..emit(
+          const PickupAddressState(
             status: PickupAddressStatus.success,
             addresses: [_addr1, _addr2],
-          ));
+          ),
+        );
       },
       act: (bloc) => bloc.add(const PickupAddressDeleted('addr-1')),
       expect: () => [
@@ -134,13 +149,15 @@ void main() {
       'PickupAddressSetDefault → updates default flag',
       build: () {
         final updated = _addr2.copyWith(isDefault: true);
-        when(() => repository.setDefault('addr-2'))
-            .thenAnswer((_) async => updated);
-        return PickupAddressBloc(repository)
-          ..emit(const PickupAddressState(
+        when(
+          () => repository.setDefault('addr-2'),
+        ).thenAnswer((_) async => updated);
+        return PickupAddressBloc(repository)..emit(
+          const PickupAddressState(
             status: PickupAddressStatus.success,
             addresses: [_addr1, _addr2],
-          ));
+          ),
+        );
       },
       act: (bloc) => bloc.add(const PickupAddressSetDefault('addr-2')),
       expect: () => [

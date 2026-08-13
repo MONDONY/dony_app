@@ -108,7 +108,6 @@ class _ReceptionConfirmScreenState extends State<ReceptionConfirmScreen> {
                   const Center(
                     child: DonyMascotteAnimated(
                       type: DonyMascotteType.confiant,
-                      size: DonyMascotteSize.md,
                     ),
                   ),
                   const SizedBox(height: DonySpacing.base),

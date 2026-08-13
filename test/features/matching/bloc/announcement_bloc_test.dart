@@ -7,7 +7,6 @@ import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
-import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
@@ -202,7 +201,7 @@ void main() {
         ).thenThrow(
           DioException(
             requestOptions: RequestOptions(path: '/announcements'),
-            error: ForbiddenException(
+            error: const ForbiddenException(
               'Vous avez atteint votre limite de 2 annonces ce mois-ci. '
                   'Passez en PRO pour continuer.',
               'pro-limit-reached',
@@ -256,7 +255,7 @@ void main() {
             handoverWindowEnd: any(named: 'handoverWindowEnd'),
           ),
         ).thenThrow(
-          ForbiddenException(
+          const ForbiddenException(
             'Vous avez atteint votre quota mensuel',
             'pro-limit-reached',
           ),
@@ -421,7 +420,7 @@ void main() {
             handoverWindowStart: any(named: 'handoverWindowStart'),
             handoverWindowEnd: any(named: 'handoverWindowEnd'),
           ),
-        ).thenThrow(ForbiddenException('Accès refusé', 'account-banned'));
+        ).thenThrow(const ForbiddenException('Accès refusé', 'account-banned'));
         return buildBloc();
       },
       act: (bloc) => bloc.add(
@@ -528,7 +527,7 @@ void main() {
             saveAsDraft: any(named: 'saveAsDraft'),
           ),
         ).thenThrow(
-          ForbiddenException(
+          const ForbiddenException(
             'Limite de brouillons atteinte',
             'draft-limit-reached',
           ),
@@ -582,7 +581,7 @@ void main() {
         ).thenThrow(
           DioException(
             requestOptions: RequestOptions(path: '/announcements'),
-            error: ForbiddenException(
+            error: const ForbiddenException(
               'Limite de brouillons atteinte',
               'draft-limit-reached',
             ),
@@ -641,7 +640,7 @@ void main() {
       build: () {
         when(
           () => mockRepo.publishAnnouncement('a1'),
-        ).thenThrow(ForbiddenException('KYC requis', 'kyc-not-verified'));
+        ).thenThrow(const ForbiddenException('KYC requis', 'kyc-not-verified'));
         return buildBloc();
       },
       act: (bloc) => bloc.add(AnnouncementPublishRequested('a1')),
@@ -662,7 +661,7 @@ void main() {
         when(() => mockRepo.publishAnnouncement('a1')).thenThrow(
           DioException(
             requestOptions: RequestOptions(path: '/announcements/a1/publish'),
-            error: ForbiddenException('KYC requis', 'kyc-not-verified'),
+            error: const ForbiddenException('KYC requis', 'kyc-not-verified'),
           ),
         );
         return buildBloc();
@@ -700,7 +699,7 @@ void main() {
       build: () {
         when(
           () => mockRepo.publishAnnouncement('a1'),
-        ).thenThrow(ForbiddenException('Limite', 'pro-limit-reached'));
+        ).thenThrow(const ForbiddenException('Limite', 'pro-limit-reached'));
         return buildBloc();
       },
       act: (bloc) => bloc.add(AnnouncementPublishRequested('a1')),
@@ -971,7 +970,6 @@ void main() {
         AnnouncementSearchRequested(
           departureCity: 'Paris',
           arrivalCity: 'Dakar',
-          sortBy: 'date',
         ),
       ),
       expect: () => [
@@ -1017,7 +1015,6 @@ void main() {
         AnnouncementSearchRequested(
           departureCity: 'Paris',
           arrivalCity: 'Dakar',
-          sortBy: 'date',
         ),
       ),
       expect: () => [
@@ -1156,7 +1153,6 @@ void main() {
             radiusKm: any(named: 'radiusKm'),
             sortBy: any(named: 'sortBy'),
             sortDir: any(named: 'sortDir'),
-            urgent: null,
           ),
         ).called(1);
       },
@@ -1334,7 +1330,7 @@ void main() {
     blocTest<AnnouncementBloc, AnnouncementState>(
       'mise à jour réussie → [Loading, AnnouncementUpdated]',
       build: () {
-        final updated = buildAnnouncement(id: 'ann-001');
+        final updated = buildAnnouncement();
         when(
           () => mockRepo.updateAnnouncement(
             id: any(named: 'id'),
@@ -1606,14 +1602,14 @@ void main() {
 
   group('AnnouncementError.previousResults', () {
     test('par défaut previousResults = null', () {
-      final state = AnnouncementError(NetworkException('boom'));
+      final state = AnnouncementError(const NetworkException('boom'));
       expect(state.previousResults, isNull);
     });
 
     test('peut transporter les résultats précédents', () {
       final ann = buildAnnouncement();
       final state = AnnouncementError(
-        NetworkException('boom'),
+        const NetworkException('boom'),
         previousResults: [ann],
       );
       expect(state.previousResults, hasLength(1));

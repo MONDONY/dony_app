@@ -118,7 +118,10 @@ class _DonyBottomSheetContent extends StatelessWidget {
           if (title != null) ...[
             Padding(
               padding: const EdgeInsets.fromLTRB(
-                DonySpacing.lg, DonySpacing.base, DonySpacing.base, 0,
+                DonySpacing.lg,
+                DonySpacing.base,
+                DonySpacing.base,
+                0,
               ),
               child: Row(
                 children: [
@@ -167,7 +170,9 @@ class _DonyBottomSheetContent extends StatelessWidget {
                 DonySpacing.lg,
                 title != null ? 0 : DonySpacing.sm,
                 DonySpacing.lg,
-                stickyBottom != null ? DonySpacing.xl : DonySpacing.xl + bottomInset,
+                stickyBottom != null
+                    ? DonySpacing.xl
+                    : DonySpacing.xl + bottomInset,
               ),
               // Material ancestor so ListTiles in sheet content paint ink above
               // the sheet's colored Container (Flutter 3.44 ListTile assertion).
@@ -179,9 +184,7 @@ class _DonyBottomSheetContent extends StatelessWidget {
               key: const Key('donyBottomSheetFooter'),
               decoration: BoxDecoration(
                 color: bgColor,
-                border: Border(
-                  top: BorderSide(color: cs.outline, width: 1),
-                ),
+                border: Border(top: BorderSide(color: cs.outline)),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.06),
@@ -204,8 +207,10 @@ class _DonyBottomSheetContent extends StatelessWidget {
                 top: false,
                 bottom: false,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: DonySpacing.lg),
-                  child: stickyBottom!,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: DonySpacing.lg,
+                  ),
+                  child: stickyBottom,
                 ),
               ),
             ),

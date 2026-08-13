@@ -6,30 +6,38 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pinput/pinput.dart';
 
-GoRouter _buildRouter({String bidId = 'bid-001', String travelerName = 'Ibrahima'}) {
+GoRouter _buildRouter({
+  String bidId = 'bid-001',
+  String travelerName = 'Ibrahima',
+}) {
   return GoRouter(
     routes: [
       GoRoute(
         path: '/',
-        builder: (_, __) => ReceptionConfirmScreen(
-          bidId: bidId,
-          travelerName: travelerName,
-        ),
+        builder: (_, _) =>
+            ReceptionConfirmScreen(bidId: bidId, travelerName: travelerName),
       ),
       GoRoute(
         path: '/bids/:bidId',
-        builder: (_, __) => const Scaffold(body: Text('bid detail')),
+        builder: (_, _) => const Scaffold(body: Text('bid detail')),
       ),
     ],
   );
 }
 
-Future<void> _pump(WidgetTester tester, {String travelerName = 'Ibrahima'}) async {
-  await tester.pumpWidget(MaterialApp.router(
-    theme: AppTheme.light(),
-    routerConfig: _buildRouter(travelerName: travelerName),
-  ));
-  await tester.pump(const Duration(milliseconds: 900)); // drain mascotte confiant animation
+Future<void> _pump(
+  WidgetTester tester, {
+  String travelerName = 'Ibrahima',
+}) async {
+  await tester.pumpWidget(
+    MaterialApp.router(
+      theme: AppTheme.light(),
+      routerConfig: _buildRouter(travelerName: travelerName),
+    ),
+  );
+  await tester.pump(
+    const Duration(milliseconds: 900),
+  ); // drain mascotte confiant animation
 }
 
 void main() {
@@ -59,7 +67,10 @@ void main() {
     testWidgets('CTA is disabled when code is empty', (tester) async {
       await _pump(tester);
       final filledBtn = tester.widget<InkWell>(
-        find.descendant(of: find.byType(DonyButton), matching: find.byType(InkWell)),
+        find.descendant(
+          of: find.byType(DonyButton),
+          matching: find.byType(InkWell),
+        ),
       );
       expect(filledBtn.onTap, isNull);
     });
@@ -72,19 +83,27 @@ void main() {
       await tester.pump();
 
       final filledBtn = tester.widget<InkWell>(
-        find.descendant(of: find.byType(DonyButton), matching: find.byType(InkWell)),
+        find.descendant(
+          of: find.byType(DonyButton),
+          matching: find.byType(InkWell),
+        ),
       );
       expect(filledBtn.onTap, isNotNull);
     });
 
-    testWidgets('CTA remains disabled with fewer than 6 digits', (tester) async {
+    testWidgets('CTA remains disabled with fewer than 6 digits', (
+      tester,
+    ) async {
       await _pump(tester);
 
       await tester.enterText(find.byType(Pinput), '4721');
       await tester.pump();
 
       final filledBtn = tester.widget<InkWell>(
-        find.descendant(of: find.byType(DonyButton), matching: find.byType(InkWell)),
+        find.descendant(
+          of: find.byType(DonyButton),
+          matching: find.byType(InkWell),
+        ),
       );
       expect(filledBtn.onTap, isNull);
     });
@@ -110,7 +129,7 @@ void main() {
     });
 
     testWidgets('legal note mentions traveler name', (tester) async {
-      await _pump(tester, travelerName: 'Ibrahima');
+      await _pump(tester);
       expect(find.textContaining('Ibrahima'), findsWidgets);
     });
   });

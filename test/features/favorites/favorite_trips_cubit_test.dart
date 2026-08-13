@@ -7,22 +7,23 @@ import 'package:mocktail/mocktail.dart';
 class _MockRepo extends Mock implements FavoriteRepository {}
 
 AnnouncementModel _makeTrip() => AnnouncementModel.fromJson({
-      'id': 'trip-1',
-      'travelerId': 't1',
-      'departureCity': 'Paris',
-      'arrivalCity': 'Dakar',
-      'departureDate':
-          DateTime.now().add(const Duration(days: 5)).toIso8601String(),
-      'totalKg': 20.0,
-      'availableKg': 15.0,
-      'pricePerKg': 8.0,
-      'pricingMode': 'KG',
-      'status': 'ACTIVE',
-      'pendingBidCount': 0,
-      'confirmedParcelCount': 0,
-      'createdAt': '2024-01-01T00:00:00Z',
-      'updatedAt': '2024-01-01T00:00:00Z',
-    });
+  'id': 'trip-1',
+  'travelerId': 't1',
+  'departureCity': 'Paris',
+  'arrivalCity': 'Dakar',
+  'departureDate': DateTime.now()
+      .add(const Duration(days: 5))
+      .toIso8601String(),
+  'totalKg': 20.0,
+  'availableKg': 15.0,
+  'pricePerKg': 8.0,
+  'pricingMode': 'KG',
+  'status': 'ACTIVE',
+  'pendingBidCount': 0,
+  'confirmedParcelCount': 0,
+  'createdAt': '2024-01-01T00:00:00Z',
+  'updatedAt': '2024-01-01T00:00:00Z',
+});
 
 void main() {
   late _MockRepo repo;

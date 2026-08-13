@@ -38,15 +38,15 @@ class AuthRemoteDatasource {
     final response = await _apiClient.dio.patch<Map<String, dynamic>>(
       '/auth/me',
       data: {
-        if (firstName != null) 'firstName': firstName,
-        if (lastName != null) 'lastName': lastName,
+        'firstName': ?firstName,
+        'lastName': ?lastName,
         if (birthDate != null)
           'birthDate': DateFormat('yyyy-MM-dd').format(birthDate),
-        if (city != null) 'city': city,
-        if (phoneNumber != null) 'phoneNumber': phoneNumber,
-        if (bio != null) 'bio': bio,
-        if (languages != null) 'languages': languages,
-        if (transportMode != null) 'transportMode': transportMode,
+        'city': ?city,
+        'phoneNumber': ?phoneNumber,
+        'bio': ?bio,
+        'languages': ?languages,
+        'transportMode': ?transportMode,
       },
     );
     return UserModel.fromJson(response.data!);

@@ -8,10 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class TrackingSearchBottomSheet extends StatefulWidget {
-  const TrackingSearchBottomSheet({
-    super.key,
-    this.onSubmitReady,
-  });
+  const TrackingSearchBottomSheet({super.key, this.onSubmitReady});
 
   final void Function(VoidCallback)? onSubmitReady;
 
@@ -34,14 +31,13 @@ class TrackingSearchBottomSheet extends StatefulWidget {
           );
         },
       ),
-      child: TrackingSearchBottomSheet(
-        onSubmitReady: (fn) => submit = fn,
-      ),
+      child: TrackingSearchBottomSheet(onSubmitReady: (fn) => submit = fn),
     );
   }
 
   @override
-  State<TrackingSearchBottomSheet> createState() => _TrackingSearchBottomSheetState();
+  State<TrackingSearchBottomSheet> createState() =>
+      _TrackingSearchBottomSheetState();
 }
 
 class _TrackingSearchBottomSheetState extends State<TrackingSearchBottomSheet> {

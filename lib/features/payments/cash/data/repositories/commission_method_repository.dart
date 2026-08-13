@@ -7,7 +7,8 @@ class CommissionMethodRepository {
   CommissionMethodRepository(this._ds);
 
   Future<String> startSetup() => _ds.setup();
-  Future<void> savePaymentMethod(String paymentMethodId) => _ds.save(paymentMethodId);
+  Future<void> savePaymentMethod(String paymentMethodId) =>
+      _ds.save(paymentMethodId);
   Future<CommissionMethod?> load() => _ds.get();
   Future<void> remove() => _ds.delete();
 }

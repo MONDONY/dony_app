@@ -337,11 +337,7 @@ class _TalonRetraitCodeViewState extends State<TalonRetraitCodeView> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      DonyIcon(
-                        'info',
-                        size: 14,
-                        color: cs.warning,
-                      ),
+                      DonyIcon('info', size: 14, color: cs.warning),
                       const SizedBox(width: DonySpacing.sm),
                       Expanded(
                         child: Text(

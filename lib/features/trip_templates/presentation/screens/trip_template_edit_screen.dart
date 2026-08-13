@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
-import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/city/presentation/widgets/city_corridor_fields.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
@@ -72,14 +72,18 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
       _labelCtrl.text = t.label;
       _departureCity = t.departureCity;
       _arrivalCity = t.arrivalCity;
-      _transport = transportModeFromWire(t.transportMode) ?? TransportMode.plane;
+      _transport =
+          transportModeFromWire(t.transportMode) ?? TransportMode.plane;
       _capacityUnit = t.capacityUnit;
       _availableKg = t.availableKg.toDouble().clamp(1.0, 23.0);
       _categories = Set<String>.from(t.acceptedCategories);
       _cashAccepted = t.cashAccepted;
       if (t.arrivalTime != null && t.arrivalTime!.contains(':')) {
         final parts = t.arrivalTime!.split(':');
-        _arrivalTime = TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+        _arrivalTime = TimeOfDay(
+          hour: int.parse(parts[0]),
+          minute: int.parse(parts[1]),
+        );
       }
       int closest = 0;
       double minDiff = double.infinity;
@@ -96,8 +100,8 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
   }
 
   Future<void> _loadCatalog() async {
-    final categories =
-        await getIt<IContentCategoryRepository>().getCategories();
+    final categories = await getIt<IContentCategoryRepository>()
+        .getCategories();
     if (!mounted) return;
     setState(() {
       _catalogLabels = categories.map((c) => c.label).toList();
@@ -162,7 +166,11 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
         }
         if (state.status == TripTemplateStatus.error && state.error != null) {
           _submitted = false;
-          DonySnackbar.show(context, message: state.error!, type: DonySnackbarType.error);
+          DonySnackbar.show(
+            context,
+            message: state.error!,
+            type: DonySnackbarType.error,
+          );
         }
       },
       builder: (context, state) {
@@ -178,13 +186,20 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ── NOM DU MODÈLE ───────────────────────────────────────────
-              const _SectionLabel(label: 'NOM DU MODÈLE', iconAsset: 'bookmark'),
+              const _SectionLabel(
+                label: 'NOM DU MODÈLE',
+                iconAsset: 'bookmark',
+              ),
               const SizedBox(height: DonySpacing.sm),
               DonyTextField(
                 controller: _labelCtrl,
                 label: 'Nom',
                 hint: 'Ex : Mon Paris → Dakar',
-                prefixWidget: DonyIcon('tag', size: 20, color: cs.onSurfaceVariant),
+                prefixWidget: DonyIcon(
+                  'tag',
+                  size: 20,
+                  color: cs.onSurfaceVariant,
+                ),
                 onChanged: (_) => setState(() {}),
               ).animate().fadeIn(duration: 280.ms).slideY(begin: 0.03),
               const SizedBox(height: DonySpacing.xxl),
@@ -213,7 +228,10 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
               const SizedBox(height: DonySpacing.xxl),
 
               // ── TYPE DE CAPACITÉ ────────────────────────────────────────
-              const _SectionLabel(label: 'TYPE DE CAPACITÉ', iconAsset: 'luggage'),
+              const _SectionLabel(
+                label: 'TYPE DE CAPACITÉ',
+                iconAsset: 'luggage',
+              ),
               const SizedBox(height: DonySpacing.sm),
               Column(
                 children: _capacityOptions.map((opt) {
@@ -239,13 +257,21 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(opt.$2,
-                                      style: tt.bodyMedium?.copyWith(
-                                          fontWeight: FontWeight.w700,
-                                          color: selected ? cs.primary : cs.onSurface)),
-                                  Text(opt.$3,
-                                      style: tt.bodySmall
-                                          ?.copyWith(color: cs.onSurfaceVariant)),
+                                  Text(
+                                    opt.$2,
+                                    style: tt.bodyMedium?.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                      color: selected
+                                          ? cs.primary
+                                          : cs.onSurface,
+                                    ),
+                                  ),
+                                  Text(
+                                    opt.$3,
+                                    style: tt.bodySmall?.copyWith(
+                                      color: cs.onSurfaceVariant,
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
@@ -264,7 +290,10 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
               const SizedBox(height: DonySpacing.lg),
 
               // ── POIDS DISPONIBLE ────────────────────────────────────────
-              const _SectionLabel(label: 'POIDS DISPONIBLE', iconAsset: 'scale'),
+              const _SectionLabel(
+                label: 'POIDS DISPONIBLE',
+                iconAsset: 'scale',
+              ),
               const SizedBox(height: DonySpacing.base),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -279,7 +308,12 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
                       color: cs.onSurface,
                     ),
                   ),
-                  Text(' kg', style: tt.headlineMedium?.copyWith(color: cs.onSurfaceVariant)),
+                  Text(
+                    ' kg',
+                    style: tt.headlineMedium?.copyWith(
+                      color: cs.onSurfaceVariant,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: DonySpacing.xs),
@@ -302,8 +336,14 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('1 kg', style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
-                  Text('max 23 kg', style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
+                  Text(
+                    '1 kg',
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                  ),
+                  Text(
+                    'max 23 kg',
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                  ),
                 ],
               ),
               const SizedBox(height: DonySpacing.xxl),
@@ -318,13 +358,17 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
                     child: Padding(
                       padding: EdgeInsets.only(
                         left: i == 0 ? 0 : DonySpacing.xs,
-                        right: i == _priceOptions.length - 1 ? 0 : DonySpacing.xs,
+                        right: i == _priceOptions.length - 1
+                            ? 0
+                            : DonySpacing.xs,
                       ),
                       child: GestureDetector(
                         onTap: () => setState(() => _priceIdx = i),
                         child: AnimatedContainer(
                           duration: 180.ms,
-                          padding: const EdgeInsets.symmetric(vertical: DonySpacing.md),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: DonySpacing.md,
+                          ),
                           decoration: BoxDecoration(
                             color: selected ? cs.successLight : cs.surface,
                             borderRadius: BorderRadius.circular(DonyRadius.lg),
@@ -347,7 +391,9 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
                               Text(
                                 '${formatKgPrice(netToSenderPrice(_priceOptions[i]))}€ exp.',
                                 style: tt.labelSmall?.copyWith(
-                                  color: selected ? cs.success : cs.onSurfaceVariant,
+                                  color: selected
+                                      ? cs.success
+                                      : cs.onSurfaceVariant,
                                 ),
                               ),
                             ],
@@ -366,7 +412,10 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
               const SizedBox(height: DonySpacing.xxl),
 
               // ── MODE DE TRANSPORT ───────────────────────────────────────
-              const _SectionLabel(label: 'MODE DE TRANSPORT', iconAsset: 'route'),
+              const _SectionLabel(
+                label: 'MODE DE TRANSPORT',
+                iconAsset: 'route',
+              ),
               const SizedBox(height: DonySpacing.sm),
               Wrap(
                 spacing: DonySpacing.sm,
@@ -385,7 +434,9 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
 
               // ── CE QUE J'ACCEPTE ────────────────────────────────────────
               const _SectionLabel(
-                  label: "CE QUE J'ACCEPTE", iconAsset: 'circle-check'),
+                label: "CE QUE J'ACCEPTE",
+                iconAsset: 'circle-check',
+              ),
               const SizedBox(height: DonySpacing.sm),
               Wrap(
                 spacing: DonySpacing.xs,
@@ -438,19 +489,25 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
               const SizedBox(height: DonySpacing.xxl),
 
               // ── HEURE D'ARRIVÉE ─────────────────────────────────────────
-              const _SectionLabel(label: "HEURE D'ARRIVÉE", iconAsset: 'plane-landing'),
+              const _SectionLabel(
+                label: "HEURE D'ARRIVÉE",
+                iconAsset: 'plane-landing',
+              ),
               const SizedBox(height: DonySpacing.sm),
               GestureDetector(
                 onTap: () async {
                   final picked = await showTimePicker(
                     context: context,
-                    initialTime: _arrivalTime ?? const TimeOfDay(hour: 12, minute: 0),
+                    initialTime:
+                        _arrivalTime ?? const TimeOfDay(hour: 12, minute: 0),
                   );
                   if (picked != null) setState(() => _arrivalTime = picked);
                 },
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: DonySpacing.base, vertical: DonySpacing.md),
+                    horizontal: DonySpacing.base,
+                    vertical: DonySpacing.md,
+                  ),
                   decoration: BoxDecoration(
                     color: cs.surface,
                     border: Border.all(color: cs.outline),
@@ -462,9 +519,13 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
                       const SizedBox(width: DonySpacing.md),
                       Expanded(
                         child: Text(
-                          _arrivalTime == null ? 'Optionnel : choisir une heure' : _arrivalWire!,
+                          _arrivalTime == null
+                              ? 'Optionnel : choisir une heure'
+                              : _arrivalWire!,
                           style: tt.bodyMedium?.copyWith(
-                            color: _arrivalTime == null ? cs.onSurfaceVariant : cs.onSurface,
+                            color: _arrivalTime == null
+                                ? cs.onSurfaceVariant
+                                : cs.onSurface,
                           ),
                         ),
                       ),
@@ -475,9 +536,13 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
                           excludeSemantics: true,
                           label: "Effacer l'heure d'arrivée",
                           child: GestureDetector(
-                          onTap: () => setState(() => _arrivalTime = null),
-                          child: DonyIcon('x', size: 18, color: cs.onSurfaceVariant),
-                        )
+                            onTap: () => setState(() => _arrivalTime = null),
+                            child: DonyIcon(
+                              'x',
+                              size: 18,
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
                         ),
                     ],
                   ),
@@ -493,10 +558,15 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(DonySpacing.base),
                   decoration: BoxDecoration(
-                    color: _cashAccepted ? cs.primary.withValues(alpha: 0.08) : cs.surface,
+                    color: _cashAccepted
+                        ? cs.primary.withValues(alpha: 0.08)
+                        : cs.surface,
                     borderRadius: BorderRadius.circular(DonyRadius.card),
                     border: Border.all(
-                        color: _cashAccepted ? cs.primary.withValues(alpha: 0.4) : cs.outline),
+                      color: _cashAccepted
+                          ? cs.primary.withValues(alpha: 0.4)
+                          : cs.outline,
+                    ),
                   ),
                   child: Row(
                     children: [
@@ -504,14 +574,25 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Accepter le paiement en espèces',
-                                style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
-                            Text('La carte Stripe reste toujours activée',
-                                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
+                            Text(
+                              'Accepter le paiement en espèces',
+                              style: tt.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              'La carte Stripe reste toujours activée',
+                              style: tt.bodySmall?.copyWith(
+                                color: cs.onSurfaceVariant,
+                              ),
+                            ),
                           ],
                         ),
                       ),
-                      Switch(value: _cashAccepted, onChanged: (v) => setState(() => _cashAccepted = v)),
+                      Switch(
+                        value: _cashAccepted,
+                        onChanged: (v) => setState(() => _cashAccepted = v),
+                      ),
                     ],
                   ),
                 ),
@@ -545,7 +626,9 @@ class _AcceptedCategoryChip extends StatelessWidget {
       child: AnimatedContainer(
         duration: 160.ms,
         padding: const EdgeInsets.symmetric(
-            horizontal: DonySpacing.md, vertical: DonySpacing.xs),
+          horizontal: DonySpacing.md,
+          vertical: DonySpacing.xs,
+        ),
         decoration: BoxDecoration(
           color: selected ? cs.success : cs.surface,
           borderRadius: BorderRadius.circular(DonyRadius.full),
@@ -588,10 +671,10 @@ class _SectionLabel extends StatelessWidget {
         Text(
           label,
           style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: cs.onSurfaceVariant,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.5,
-              ),
+            color: cs.onSurfaceVariant,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.5,
+          ),
         ),
       ],
     );

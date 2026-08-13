@@ -112,10 +112,9 @@ class _ProfileHeader extends StatelessWidget {
             return Center(
               child: Text(
                 'Impossible de charger le profil',
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium
-                    ?.copyWith(color: cs.onSurfaceVariant),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
               ),
             );
           }
@@ -273,7 +272,10 @@ class _ProfileBadge extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: DonySpacing.sm, vertical: 3),
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.sm,
+        vertical: 3,
+      ),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(DonyRadius.full),
@@ -489,9 +491,9 @@ class _SubscriptionBar extends StatelessWidget {
                 ? _SubscribedRow(pushEnabled: state.pushEnabled)
                 : DonyButton(
                     label: "S'abonner",
-                    onPressed: () => context
-                        .read<TravelerHubBloc>()
-                        .add(const HubSubscribePressed()),
+                    onPressed: () => context.read<TravelerHubBloc>().add(
+                      const HubSubscribePressed(),
+                    ),
                   ),
           ),
         );
@@ -509,16 +511,13 @@ class _SubscribedRow extends StatelessWidget {
     final confirmed = await DonyDialog.show(
       context,
       title: 'Se désabonner ?',
-      message:
-          'Vous ne recevrez plus les notifications de ce voyageur.',
+      message: 'Vous ne recevrez plus les notifications de ce voyageur.',
       confirmLabel: 'Se désabonner',
       variant: DonyDialogVariant.destructive,
       iconAsset: 'bell-off',
     );
     if ((confirmed ?? false) && context.mounted) {
-      context
-          .read<TravelerHubBloc>()
-          .add(const HubUnsubscribePressed());
+      context.read<TravelerHubBloc>().add(const HubUnsubscribePressed());
     }
   }
 
@@ -543,9 +542,8 @@ class _SubscribedRow extends StatelessWidget {
             pushEnabled ? 'bell' : 'bell-off',
             color: Theme.of(context).colorScheme.primary,
           ),
-          onPressed: () => context
-              .read<TravelerHubBloc>()
-              .add(HubTogglePush(!pushEnabled)),
+          onPressed: () =>
+              context.read<TravelerHubBloc>().add(HubTogglePush(!pushEnabled)),
         ),
       ],
     );
@@ -571,11 +569,12 @@ class _TripsTab extends StatelessWidget {
               mascotte: DonyMascotteType.erreurLegere,
               iconAsset: 'circle-alert',
               title: 'Erreur de chargement',
-              description: 'Impossible de charger les trajets. Réessayez dans un instant.',
+              description:
+                  'Impossible de charger les trajets. Réessayez dans un instant.',
               actionLabel: 'Réessayer',
-              onAction: () => context
-                  .read<TravelerHubBloc>()
-                  .add(LoadTravelerHub(context.read<TravelerHubBloc>().travelerId)),
+              onAction: () => context.read<TravelerHubBloc>().add(
+                LoadTravelerHub(context.read<TravelerHubBloc>().travelerId),
+              ),
             ),
           );
         }
@@ -605,8 +604,7 @@ class _TripsTab extends StatelessWidget {
             final announcement = announcements[index];
             return TravelerAnnouncementCard(
               announcement: announcement,
-              onReserve: () =>
-                  context.push('/traveler/${announcement.id}'),
+              onReserve: () => context.push('/traveler/${announcement.id}'),
             );
           },
         );
@@ -698,9 +696,7 @@ class _ReviewsList extends StatelessWidget {
                   ),
                   Text(
                     '${summary.ratingCount} avis',
-                    style: tt.bodySmall?.copyWith(
-                      color: cs.onSurfaceVariant,
-                    ),
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                   ),
                 ],
               ),
@@ -746,9 +742,7 @@ class _ReviewCard extends StatelessWidget {
                 return DonyIcon(
                   'star',
                   size: 14,
-                  color: i < item.stars
-                      ? cs.warning
-                      : cs.onSurfaceVariant,
+                  color: i < item.stars ? cs.warning : cs.onSurfaceVariant,
                 );
               }),
               const Spacer(),

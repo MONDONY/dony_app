@@ -58,7 +58,7 @@ final _announcement = AnnouncementModel(
   travelerId: 'traveler-1',
   departureCity: 'Paris',
   arrivalCity: 'Dakar',
-  departureDate: DateTime(2026, 8, 1),
+  departureDate: DateTime(2026, 8),
   departureTime: '10:00',
   arrivalTime: '22:00',
   pickupAddress: const AddressData(label: 'CDG', lat: 49.0097, lng: 2.5479),
@@ -68,8 +68,8 @@ final _announcement = AnnouncementModel(
   pricePerKg: 12.0,
   status: 'OPEN',
   bidsCount: 0,
-  createdAt: DateTime(2026, 7, 1),
-  updatedAt: DateTime(2026, 7, 1),
+  createdAt: DateTime(2026, 7),
+  updatedAt: DateTime(2026, 7),
   acceptedPaymentMethods: {BidPaymentMethod.stripe},
 );
 
@@ -116,7 +116,7 @@ void main() {
     whenListen(
       paymentBloc,
       const Stream<PaymentState>.empty(),
-      initialState: PaymentInitial(),
+      initialState: const PaymentInitial(),
     );
     whenListen(
       walletBloc,
@@ -136,16 +136,16 @@ void main() {
     );
 
     // Enregistrement dans getIt
-    void _register<T extends Object>(T mock) {
+    void register<T extends Object>(T mock) {
       if (getIt.isRegistered<T>()) getIt.unregister<T>();
       getIt.registerSingleton<T>(mock);
     }
 
-    _register<BidBloc>(bidBloc);
-    _register<PaymentBloc>(paymentBloc);
-    _register<WalletBloc>(walletBloc);
-    _register<BidPhotosCubit>(photosCubit);
-    _register<RecipientBloc>(recipientBloc);
+    register<BidBloc>(bidBloc);
+    register<PaymentBloc>(paymentBloc);
+    register<WalletBloc>(walletBloc);
+    register<BidPhotosCubit>(photosCubit);
+    register<RecipientBloc>(recipientBloc);
     if (getIt.isRegistered<IContentCategoryRepository>()) {
       getIt.unregister<IContentCategoryRepository>();
     }
@@ -159,8 +159,9 @@ void main() {
     if (getIt.isRegistered<BidBloc>()) getIt.unregister<BidBloc>();
     if (getIt.isRegistered<PaymentBloc>()) getIt.unregister<PaymentBloc>();
     if (getIt.isRegistered<WalletBloc>()) getIt.unregister<WalletBloc>();
-    if (getIt.isRegistered<BidPhotosCubit>())
+    if (getIt.isRegistered<BidPhotosCubit>()) {
       getIt.unregister<BidPhotosCubit>();
+    }
     if (getIt.isRegistered<RecipientBloc>()) getIt.unregister<RecipientBloc>();
     if (getIt.isRegistered<IContentCategoryRepository>()) {
       getIt.unregister<IContentCategoryRepository>();
@@ -171,7 +172,7 @@ void main() {
   /// CreateBidBottomSheet.show() délègue à context.push('/bids/new') vers
   /// l'écran plein CreateBidScreen — la route miroir de lib/app/router.dart
   /// est donc requise ici.
-  Widget _testApp() {
+  Widget testApp() {
     final router = GoRouter(
       routes: [
         GoRoute(
@@ -192,7 +193,7 @@ void main() {
           builder: (_, state) =>
               CreateBidScreen(announcement: state.extra as AnnouncementModel),
         ),
-        GoRoute(path: '/bids/:id', builder: (_, __) => const SizedBox()),
+        GoRoute(path: '/bids/:id', builder: (_, _) => const SizedBox()),
       ],
     );
     return MaterialApp.router(
@@ -207,19 +208,19 @@ void main() {
     );
   }
 
-  Future<void> _openSheet(WidgetTester tester) async {
+  Future<void> openSheet(WidgetTester tester) async {
     // Grand viewport : tout le formulaire est visible sans scroll, ce qui
     // fiabilise les finders (le scroll reste possible via _scrollTo).
     tester.view.physicalSize = const Size(800, 5000);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
-    await tester.pumpWidget(_testApp());
+    await tester.pumpWidget(testApp());
     await tester.tap(find.byKey(const Key('open')));
     await tester.pumpAndSettle();
   }
 
   /// Scroll jusqu'à ce que [finder] soit visible dans l'écran.
-  Future<void> _scrollTo(WidgetTester tester, Finder finder) async {
+  Future<void> scrollTo(WidgetTester tester, Finder finder) async {
     await tester.scrollUntilVisible(
       finder,
       80,
@@ -232,20 +233,20 @@ void main() {
   testWidgets('la section CODE PROMO est présente dans le sheet', (
     tester,
   ) async {
-    await _openSheet(tester);
-    await _scrollTo(tester, find.text('CODE PROMO (OPTIONNEL)'));
+    await openSheet(tester);
+    await scrollTo(tester, find.text('CODE PROMO (OPTIONNEL)'));
     expect(find.text('CODE PROMO (OPTIONNEL)'), findsOneWidget);
   });
 
   testWidgets('le champ promo a le placeholder attendu', (tester) async {
-    await _openSheet(tester);
-    await _scrollTo(tester, find.text('CODE PROMO (OPTIONNEL)'));
+    await openSheet(tester);
+    await scrollTo(tester, find.text('CODE PROMO (OPTIONNEL)'));
     expect(find.text('Ex: WELCOME10'), findsOneWidget);
   });
 
   testWidgets('le bouton Appliquer est présent', (tester) async {
-    await _openSheet(tester);
-    await _scrollTo(tester, find.text('CODE PROMO (OPTIONNEL)'));
+    await openSheet(tester);
+    await scrollTo(tester, find.text('CODE PROMO (OPTIONNEL)'));
     expect(find.widgetWithText(FilledButton, 'Appliquer'), findsOneWidget);
   });
 
@@ -254,8 +255,8 @@ void main() {
   testWidgets('Appliquer dispatche BidQuoteRequested avec le code saisi', (
     tester,
   ) async {
-    await _openSheet(tester);
-    await _scrollTo(tester, find.text('CODE PROMO (OPTIONNEL)'));
+    await openSheet(tester);
+    await scrollTo(tester, find.text('CODE PROMO (OPTIONNEL)'));
 
     // Saisir un code promo
     final promoField = find.ancestor(
@@ -287,8 +288,8 @@ void main() {
   // ── 3. Succès — code promo valide ────────────────────────────────────────
 
   testWidgets('code valide → label vert affiché', (tester) async {
-    await _openSheet(tester);
-    await _scrollTo(tester, find.text('CODE PROMO (OPTIONNEL)'));
+    await openSheet(tester);
+    await scrollTo(tester, find.text('CODE PROMO (OPTIONNEL)'));
 
     final promoField = find.ancestor(
       of: find.text('Ex: WELCOME10'),
@@ -310,8 +311,8 @@ void main() {
   });
 
   testWidgets('code valide → icône check verte visible', (tester) async {
-    await _openSheet(tester);
-    await _scrollTo(tester, find.text('CODE PROMO (OPTIONNEL)'));
+    await openSheet(tester);
+    await scrollTo(tester, find.text('CODE PROMO (OPTIONNEL)'));
 
     final promoField = find.ancestor(
       of: find.text('Ex: WELCOME10'),
@@ -336,8 +337,8 @@ void main() {
   testWidgets('code invalide → message d\'erreur rouge affiché', (
     tester,
   ) async {
-    await _openSheet(tester);
-    await _scrollTo(tester, find.text('CODE PROMO (OPTIONNEL)'));
+    await openSheet(tester);
+    await scrollTo(tester, find.text('CODE PROMO (OPTIONNEL)'));
 
     final promoField = find.ancestor(
       of: find.text('Ex: WELCOME10'),
@@ -366,8 +367,8 @@ void main() {
   testWidgets('indicateur de chargement affiché pendant BidQuoteLoading', (
     tester,
   ) async {
-    await _openSheet(tester);
-    await _scrollTo(tester, find.text('CODE PROMO (OPTIONNEL)'));
+    await openSheet(tester);
+    await scrollTo(tester, find.text('CODE PROMO (OPTIONNEL)'));
 
     final promoField = find.ancestor(
       of: find.text('Ex: WELCOME10'),
@@ -390,8 +391,8 @@ void main() {
   testWidgets('un nouveau code remplace le label promo précédent', (
     tester,
   ) async {
-    await _openSheet(tester);
-    await _scrollTo(tester, find.text('CODE PROMO (OPTIONNEL)'));
+    await openSheet(tester);
+    await scrollTo(tester, find.text('CODE PROMO (OPTIONNEL)'));
 
     final promoField = find.ancestor(
       of: find.text('Ex: WELCOME10'),
@@ -424,8 +425,8 @@ void main() {
   testWidgets('promo appliqué → total remisé affiché (ancien barré + nouveau)', (
     tester,
   ) async {
-    await _openSheet(tester);
-    await _scrollTo(tester, find.text('CODE PROMO (OPTIONNEL)'));
+    await openSheet(tester);
+    await scrollTo(tester, find.text('CODE PROMO (OPTIONNEL)'));
 
     final promoField = find.ancestor(
       of: find.text('Ex: WELCOME10'),
@@ -443,7 +444,6 @@ void main() {
         const BidQuoteResponse(
           netEur: 60.0,
           kgNetEur: 60.0,
-          gridNetEur: 0.0,
           rate: 0.12,
           commissionEur: 7.20,
           totalEur: 63.60,
@@ -455,7 +455,7 @@ void main() {
     await tester.pumpAndSettle();
 
     final totalFinder = find.byKey(const Key('bid-total-amount'));
-    await _scrollTo(tester, totalFinder);
+    await scrollTo(tester, totalFinder);
 
     // Le total à payer affiché reflète la remise (63,60 €), pas le tarif plein.
     expect(tester.widget<Text>(totalFinder).data, contains('63,60'));
@@ -468,8 +468,8 @@ void main() {
   testWidgets(
     'promo à taux réduit → ligne commission ET ligne réduction affichées',
     (tester) async {
-      await _openSheet(tester);
-      await _scrollTo(tester, find.text('CODE PROMO (OPTIONNEL)'));
+      await openSheet(tester);
+      await scrollTo(tester, find.text('CODE PROMO (OPTIONNEL)'));
 
       final promoField = find.ancestor(
         of: find.text('Ex: WELCOME10'),
@@ -499,7 +499,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await _scrollTo(tester, find.text('Commission Yadony (12 %)'));
+      await scrollTo(tester, find.text('Commission Yadony (12 %)'));
       expect(find.text('Commission Yadony (12 %)'), findsOneWidget);
       expect(find.text('Réduction code promo'), findsOneWidget);
       // Espace insécable entre le montant et le symbole (NumberFormat fr_FR) :
@@ -512,8 +512,8 @@ void main() {
     'promo au même taux que le taux courant → aucune ligne de réduction '
     '(pas de fausse économie affichée)',
     (tester) async {
-      await _openSheet(tester);
-      await _scrollTo(tester, find.text('CODE PROMO (OPTIONNEL)'));
+      await openSheet(tester);
+      await scrollTo(tester, find.text('CODE PROMO (OPTIONNEL)'));
 
       final promoField = find.ancestor(
         of: find.text('Ex: WELCOME10'),
@@ -542,7 +542,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await _scrollTo(tester, find.text('Commission Yadony (12 %)'));
+      await scrollTo(tester, find.text('Commission Yadony (12 %)'));
       expect(find.text('Commission Yadony (12 %)'), findsOneWidget);
       expect(find.text('Réduction code promo'), findsNothing);
 
@@ -553,7 +553,7 @@ void main() {
       // Un seul "67,20" doit apparaître sur toute la carte de prix (le total
       // final) — s'il y en avait deux, ce serait le prix barré dupliqué au
       // même montant que le total.
-      await _scrollTo(tester, find.byKey(const Key('bid-total-amount')));
+      await scrollTo(tester, find.byKey(const Key('bid-total-amount')));
       expect(find.textContaining('67,20'), findsOneWidget);
     },
   );
@@ -564,12 +564,12 @@ void main() {
       'incluse) — sinon 5 kg × 12€ affichait 67,20€ au lieu de 60€', (
     tester,
   ) async {
-    await _openSheet(tester);
+    await openSheet(tester);
 
     // Poids par défaut à l'ouverture = 5 kg (prix/kg net voyageur = 12€,
     // fixture du fichier) — pas de promo : calcul 100 % local, 12 % de
     // commission (taux pinné par ce fichier).
-    await _scrollTo(tester, find.textContaining('5 kg × 12'));
+    await scrollTo(tester, find.textContaining('5 kg × 12'));
     expect(find.textContaining('5 kg × 12'), findsOneWidget);
     // La valeur de cette ligne doit être le NET (5×12=60€), pas le total
     // commission incluse (67,20€).
@@ -579,7 +579,7 @@ void main() {
     expect(find.textContaining('7,20'), findsWidgets);
 
     final totalFinder = find.byKey(const Key('bid-total-amount'));
-    await _scrollTo(tester, totalFinder);
+    await scrollTo(tester, totalFinder);
     expect(tester.widget<Text>(totalFinder).data, contains('67,20'));
   });
 }

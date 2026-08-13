@@ -241,7 +241,7 @@ void main() {
   // ── checkoutBid ──────────────────────────────────────────────────────────────
 
   group('checkoutBid', () {
-    final _checkoutJson = {
+    final checkoutJson = {
       'bidId': 'bid-001',
       'clientSecret': 'pi_secret_xxx',
       'publishableKey': 'pk_test_xxx',
@@ -251,7 +251,7 @@ void main() {
     test('returns BidCheckoutResponseModel on success', () async {
       when(
         () => mockDio.post('/bids/checkout', data: any(named: 'data')),
-      ).thenAnswer((_) async => _ok(_checkoutJson, '/bids/checkout'));
+      ).thenAnswer((_) async => _ok(checkoutJson, '/bids/checkout'));
 
       final result = await datasource.checkoutBid(
         announcementId: 'ann-001',
@@ -272,7 +272,7 @@ void main() {
         () => mockDio.post('/bids/checkout', data: any(named: 'data')),
       ).thenAnswer((inv) async {
         capturedBody = inv.namedArguments[const Symbol('data')];
-        return _ok(_checkoutJson, '/bids/checkout');
+        return _ok(checkoutJson, '/bids/checkout');
       });
 
       await datasource.checkoutBid(
@@ -299,7 +299,7 @@ void main() {
           () => mockDio.post('/bids/checkout', data: any(named: 'data')),
         ).thenAnswer((inv) async {
           capturedBody = inv.namedArguments[const Symbol('data')];
-          return _ok(_checkoutJson, '/bids/checkout');
+          return _ok(checkoutJson, '/bids/checkout');
         });
 
         await datasource.checkoutBid(
@@ -321,7 +321,7 @@ void main() {
         () => mockDio.post('/bids/checkout', data: any(named: 'data')),
       ).thenAnswer((inv) async {
         capturedBody = inv.namedArguments[const Symbol('data')];
-        return _ok(_checkoutJson, '/bids/checkout');
+        return _ok(checkoutJson, '/bids/checkout');
       });
 
       await datasource.checkoutBid(
@@ -345,7 +345,7 @@ void main() {
         () => mockDio.post('/bids/checkout', data: any(named: 'data')),
       ).thenAnswer((inv) async {
         capturedBody = inv.namedArguments[const Symbol('data')];
-        return _ok(_checkoutJson, '/bids/checkout');
+        return _ok(checkoutJson, '/bids/checkout');
       });
 
       await datasource.checkoutBid(
@@ -699,7 +699,7 @@ void main() {
   // ── quoteBid ─────────────────────────────────────────────────────────────────
 
   group('quoteBid', () {
-    final _quoteJson = {
+    final quoteJson = {
       'netEur': 65.0,
       'gridNetEur': 65.0,
       'kgNetEur': 0.0,
@@ -716,7 +716,7 @@ void main() {
         () => mockDio.post('/bids/quote', data: any(named: 'data')),
       ).thenAnswer((inv) async {
         capturedBody = inv.namedArguments[const Symbol('data')];
-        return _ok(_quoteJson, '/bids/quote');
+        return _ok(quoteJson, '/bids/quote');
       });
 
       await datasource.quoteBid(announcementId: 'ann-001', weightKg: 5.0);
@@ -732,7 +732,7 @@ void main() {
         () => mockDio.post('/bids/quote', data: any(named: 'data')),
       ).thenAnswer((inv) async {
         capturedBody = inv.namedArguments[const Symbol('data')];
-        return _ok(_quoteJson, '/bids/quote');
+        return _ok(quoteJson, '/bids/quote');
       });
 
       final result = await datasource.quoteBid(
@@ -755,7 +755,7 @@ void main() {
         () => mockDio.post('/bids/quote', data: any(named: 'data')),
       ).thenAnswer((inv) async {
         capturedBody = inv.namedArguments[const Symbol('data')];
-        return _ok(_quoteJson, '/bids/quote');
+        return _ok(quoteJson, '/bids/quote');
       });
 
       await datasource.quoteBid(
@@ -775,7 +775,7 @@ void main() {
         () => mockDio.post('/bids/quote', data: any(named: 'data')),
       ).thenAnswer((inv) async {
         capturedBody = inv.namedArguments[const Symbol('data')];
-        return _ok(_quoteJson, '/bids/quote');
+        return _ok(quoteJson, '/bids/quote');
       });
 
       await datasource.quoteBid(

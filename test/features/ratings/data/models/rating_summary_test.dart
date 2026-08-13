@@ -1,5 +1,5 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:dony/features/ratings/data/models/rating_summary.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('RatingItem', () {

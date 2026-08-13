@@ -235,7 +235,6 @@ class _StepRow extends StatelessWidget {
         if (step.done)
           DonyIconContainer(
             iconAsset: 'check',
-            size: DonyIconContainerSize.md,
             backgroundColor: cs.primary,
             iconColor: cs.surface,
             borderRadius: DonyRadius.full,

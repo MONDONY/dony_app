@@ -5,12 +5,12 @@ enum AlertDirection {
   senderWantsTrips;
 
   String get wire => switch (this) {
-        AlertDirection.travelerWantsPackages => 'TRAVELER_WANTS_PACKAGES',
-        AlertDirection.senderWantsTrips => 'SENDER_WANTS_TRIPS',
-      };
+    AlertDirection.travelerWantsPackages => 'TRAVELER_WANTS_PACKAGES',
+    AlertDirection.senderWantsTrips => 'SENDER_WANTS_TRIPS',
+  };
 
   static AlertDirection fromWire(String? value) => switch (value) {
-        'SENDER_WANTS_TRIPS' => AlertDirection.senderWantsTrips,
-        _ => AlertDirection.travelerWantsPackages,
-      };
+    'SENDER_WANTS_TRIPS' => AlertDirection.senderWantsTrips,
+    _ => AlertDirection.travelerWantsPackages,
+  };
 }

@@ -17,8 +17,20 @@ void main() {
       });
 
       test('returns city for all 7 known ids', () {
-        for (final id in ['paris', 'lyon', 'marseille', 'dakar', 'abidjan', 'bamako', 'douala']) {
-          expect(CityConstants.findById(id), isNotNull, reason: '$id should be found');
+        for (final id in [
+          'paris',
+          'lyon',
+          'marseille',
+          'dakar',
+          'abidjan',
+          'bamako',
+          'douala',
+        ]) {
+          expect(
+            CityConstants.findById(id),
+            isNotNull,
+            reason: '$id should be found',
+          );
         }
       });
     });
@@ -59,7 +71,7 @@ void main() {
       test('respects custom maxDistanceKm', () {
         const pos = LatLng(49.09, 2.35);
         expect(CityConstants.findNearest(pos, maxDistanceKm: 20), isNull);
-        expect(CityConstants.findNearest(pos, maxDistanceKm: 50), isNotNull);
+        expect(CityConstants.findNearest(pos), isNotNull);
       });
     });
   });

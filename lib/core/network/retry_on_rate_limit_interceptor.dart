@@ -16,7 +16,7 @@ import 'package:dio/dio.dart';
 /// retentent au même instant et ne reproduisent la rafale initiale.
 class RetryOnRateLimitInterceptor extends Interceptor {
   RetryOnRateLimitInterceptor(this._dio, {Random? random})
-      : _random = random ?? Random();
+    : _random = random ?? Random();
 
   final Dio _dio;
   final Random _random;
@@ -27,7 +27,10 @@ class RetryOnRateLimitInterceptor extends Interceptor {
   static const _attemptKey = '_retry429Attempt';
 
   @override
-  void onError(DioException err, ErrorInterceptorHandler handler) async {
+  Future<void> onError(
+    DioException err,
+    ErrorInterceptorHandler handler,
+  ) async {
     final statusCode = err.response?.statusCode;
     final attempt = (err.requestOptions.extra[_attemptKey] as int?) ?? 0;
 
@@ -36,12 +39,12 @@ class RetryOnRateLimitInterceptor extends Interceptor {
       return;
     }
 
-    final delay = baseDelay * (attempt + 1) +
+    final delay =
+        baseDelay * (attempt + 1) +
         Duration(milliseconds: _random.nextInt(jitterMax.inMilliseconds));
     await Future<void>.delayed(delay);
 
-    final retryOptions = err.requestOptions
-      ..extra[_attemptKey] = attempt + 1;
+    final retryOptions = err.requestOptions..extra[_attemptKey] = attempt + 1;
     try {
       final response = await _dio.fetch(retryOptions);
       handler.resolve(response);

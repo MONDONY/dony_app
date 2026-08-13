@@ -1,6 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
-import 'package:dony/features/profile/bloc/support_contact_bloc.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
+import 'package:dony/features/profile/bloc/support_contact_bloc.dart';
 import 'package:dony/features/profile/presentation/screens/support_contact_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -17,7 +17,7 @@ Widget _wrap(SupportContactBloc bloc) => BlocProvider<SupportContactBloc>.value(
   child: MaterialApp.router(
     routerConfig: GoRouter(
       routes: [
-        GoRoute(path: '/', builder: (_, __) => const SupportContactScreen()),
+        GoRoute(path: '/', builder: (_, _) => const SupportContactScreen()),
       ],
     ),
   ),

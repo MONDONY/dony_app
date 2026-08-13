@@ -6,10 +6,10 @@ import 'package:flutter/material.dart';
 /// l'utilisateur décide, il a besoin du sens complet ('Suivre le téléphone'
 /// plutôt que 'Automatique' explicite ce que fait réellement ce choix).
 String a11yModeLabel(String mode) => switch (mode) {
-      AccessibilityMode.on => 'Toujours activé',
-      AccessibilityMode.off => 'Toujours désactivé',
-      _ => 'Suivre le téléphone',
-    };
+  AccessibilityMode.on => 'Toujours activé',
+  AccessibilityMode.off => 'Toujours désactivé',
+  _ => 'Suivre le téléphone',
+};
 
 /// Libellé court affiché comme valeur de fin de ligne (avant ouverture de la
 /// sheet) : distinct de [a11yModeLabel] parce qu'une valeur de ligne doit
@@ -17,10 +17,10 @@ String a11yModeLabel(String mode) => switch (mode) {
 /// fusionner forcerait soit une phrase entière en bout de ligne (déborde),
 /// soit un mot unique dans la sheet (perd le sens).
 String a11yModeShortLabel(String mode) => switch (mode) {
-      AccessibilityMode.on => 'Activé',
-      AccessibilityMode.off => 'Désactivé',
-      _ => 'Automatique',
-    };
+  AccessibilityMode.on => 'Activé',
+  AccessibilityMode.off => 'Désactivé',
+  _ => 'Automatique',
+};
 
 /// Largeur maximale du bloc de fin (libellé court de mode + chevron) de
 /// [A11yTristateRow].
@@ -146,7 +146,11 @@ class A11yTristateRow extends StatelessWidget {
               ),
             ),
             const SizedBox(width: DonySpacing.xs),
-            Icon(Icons.chevron_right_rounded, size: 20, color: cs.onSurfaceVariant),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 20,
+              color: cs.onSurfaceVariant,
+            ),
           ],
         ),
       ),

@@ -108,7 +108,7 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
       final payment = await _repository.createPayment(event.bidId);
       if (payment.clientSecret == null) {
         emit(
-          PaymentError(
+          const PaymentError(
             NetworkException(
               'Paiement déjà effectué pour cette demande.',
               code: 'payment-already-done',

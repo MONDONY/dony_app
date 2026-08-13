@@ -1,6 +1,6 @@
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/action_bars/bid_detail_action_bars.dart';
-import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -15,8 +15,8 @@ BidModel _makeBid({
     senderId: 'sender-001',
     weightKg: 5,
     status: status,
-    createdAt: DateTime(2025, 1, 1),
-    updatedAt: DateTime(2025, 1, 1),
+    createdAt: DateTime(2025),
+    updatedAt: DateTime(2025),
     paymentMethod: paymentMethod,
   );
 }
@@ -27,7 +27,7 @@ Widget _wrap(BidModel bid) {
       routes: [
         GoRoute(
           path: '/',
-          builder: (_, __) => Scaffold(
+          builder: (_, _) => Scaffold(
             body: SenderActionBar(
               bid: bid,
               isLoading: false,
@@ -40,7 +40,7 @@ Widget _wrap(BidModel bid) {
         // SenderActionBar pushes here for stripe bids; route must exist.
         GoRoute(
           path: '/payments/pay',
-          builder: (_, __) => const Scaffold(body: Text('pay-screen')),
+          builder: (_, _) => const Scaffold(body: Text('pay-screen')),
         ),
       ],
     ),
@@ -63,7 +63,10 @@ void main() {
 
         expect(find.text('Payer mon envoi'), findsNothing);
         expect(find.text('Paiement en espèces à la remise'), findsOneWidget);
-        expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'banknote'), findsOneWidget);
+        expect(
+          find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'banknote'),
+          findsOneWidget,
+        );
       },
     );
 
@@ -84,20 +87,19 @@ void main() {
       },
     );
 
-    testWidgets(
-      'WAVE → traité comme espèces (pas de "Payer mon envoi")',
-      (tester) async {
-        final bid = _makeBid(
-          status: 'PENDING',
-          paymentMethod: BidPaymentMethod.wave,
-        );
+    testWidgets('WAVE → traité comme espèces (pas de "Payer mon envoi")', (
+      tester,
+    ) async {
+      final bid = _makeBid(
+        status: 'PENDING',
+        paymentMethod: BidPaymentMethod.wave,
+      );
 
-        await tester.pumpWidget(_wrap(bid));
-        await tester.pumpAndSettle();
+      await tester.pumpWidget(_wrap(bid));
+      await tester.pumpAndSettle();
 
-        expect(find.text('Payer mon envoi'), findsNothing);
-        expect(find.text('Paiement en espèces à la remise'), findsOneWidget);
-      },
-    );
+      expect(find.text('Payer mon envoi'), findsNothing);
+      expect(find.text('Paiement en espèces à la remise'), findsOneWidget);
+    });
   });
 }

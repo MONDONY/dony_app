@@ -1,8 +1,7 @@
 import 'package:bloc/bloc.dart';
+import 'package:dony/features/package_request/data/models/package_request.dart';
+import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:equatable/equatable.dart';
-
-import '../data/models/package_request.dart';
-import '../data/package_request_repository.dart';
 
 /// Manages the "Complete delivery details" step for an accepted package
 /// request: loads the request (read-only recap + accepted payment methods) and
@@ -42,11 +41,11 @@ class CompleteDetailsSubmitted extends CompleteDetailsEvent {
 
   @override
   List<Object?> get props => [
-        requestId,
-        recipientName,
-        recipientPhone,
-        recipientCity,
-      ];
+    requestId,
+    recipientName,
+    recipientPhone,
+    recipientCity,
+  ];
 }
 
 enum CompleteDetailsStatus { initial, loading, success, error }
@@ -81,13 +80,12 @@ class CompleteDetailsState extends Equatable {
     String? errorMessage,
     PackageRequest? request,
     bool? loaded,
-  }) =>
-      CompleteDetailsState(
-        status: status ?? this.status,
-        errorMessage: errorMessage,
-        request: request ?? this.request,
-        loaded: loaded ?? this.loaded,
-      );
+  }) => CompleteDetailsState(
+    status: status ?? this.status,
+    errorMessage: errorMessage,
+    request: request ?? this.request,
+    loaded: loaded ?? this.loaded,
+  );
 
   @override
   List<Object?> get props => [status, errorMessage, request, loaded];
@@ -130,10 +128,12 @@ class CompleteDetailsBloc
       );
       emit(state.copyWith(status: CompleteDetailsStatus.success));
     } catch (err) {
-      emit(state.copyWith(
-        status: CompleteDetailsStatus.error,
-        errorMessage: err.toString(),
-      ));
+      emit(
+        state.copyWith(
+          status: CompleteDetailsStatus.error,
+          errorMessage: err.toString(),
+        ),
+      );
     }
   }
 }

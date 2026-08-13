@@ -66,11 +66,13 @@ Widget _wrap(Widget child, MockAuthBloc authBloc) {
           GoRoute(path: '/', builder: (context, _) => child),
           GoRoute(
             path: '/profile/edit/email',
-            builder: (context, _) => const Scaffold(body: Text('EditEmailScreen')),
+            builder: (context, _) =>
+                const Scaffold(body: Text('EditEmailScreen')),
           ),
           GoRoute(
             path: '/profile/edit/phone',
-            builder: (context, _) => const Scaffold(body: Text('EditPhoneScreen')),
+            builder: (context, _) =>
+                const Scaffold(body: Text('EditPhoneScreen')),
           ),
         ],
       ),
@@ -130,7 +132,10 @@ void main() {
 
       // Email en lecture, pas de badge "Modifier"/"Ajouter" hors édition.
       expect(find.text('ibra@test.com'), findsOneWidget);
-      expect(find.text('Modifier'), findsOneWidget); // le seul, sur le bouton sticky
+      expect(
+        find.text('Modifier'),
+        findsOneWidget,
+      ); // le seul, sur le bouton sticky
     });
 
     testWidgets('affiche bio, ville et date de naissance en texte simple', (
@@ -204,58 +209,60 @@ void main() {
   // ── Bascule vue → édition ─────────────────────────────────────────────────
 
   group('bascule vue → édition', () {
-    testWidgets('tap "Modifier" affiche les champs et le bouton "Enregistrer"', (
-      tester,
-    ) async {
-      whenListen<AuthState>(
-        mockAuthBloc,
-        const Stream.empty(),
-        initialState: AuthAuthenticated(_senderUser),
-      );
+    testWidgets(
+      'tap "Modifier" affiche les champs et le bouton "Enregistrer"',
+      (tester) async {
+        whenListen<AuthState>(
+          mockAuthBloc,
+          const Stream.empty(),
+          initialState: AuthAuthenticated(_senderUser),
+        );
 
-      await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
-      await tester.pumpAndSettle();
-      await _enterEditMode(tester);
+        await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
+        await tester.pumpAndSettle();
+        await _enterEditMode(tester);
 
-      expect(find.widgetWithText(DonyButton, 'Enregistrer'), findsOneWidget);
-      expect(find.widgetWithText(DonyButton, 'Modifier'), findsNothing);
-      // Le nom devient deux champs de saisie.
-      expect(find.text('Ibrahima Diallo'), findsNothing);
+        expect(find.widgetWithText(DonyButton, 'Enregistrer'), findsOneWidget);
+        expect(find.widgetWithText(DonyButton, 'Modifier'), findsNothing);
+        // Le nom devient deux champs de saisie.
+        expect(find.text('Ibrahima Diallo'), findsNothing);
 
-      final editableTexts = tester
-          .widgetList<EditableText>(find.byType(EditableText))
-          .map((e) => e.controller.text)
-          .toList();
-      expect(editableTexts, contains('Ibrahima'));
-      expect(editableTexts, contains('Diallo'));
-      expect(editableTexts, contains('Paris'));
-      expect(editableTexts, contains('Expéditeur depuis 2022.'));
-      // L'email n'est JAMAIS un champ de saisie, même en édition.
-      expect(editableTexts, isNot(contains('ibra@test.com')));
-    });
+        final editableTexts = tester
+            .widgetList<EditableText>(find.byType(EditableText))
+            .map((e) => e.controller.text)
+            .toList();
+        expect(editableTexts, contains('Ibrahima'));
+        expect(editableTexts, contains('Diallo'));
+        expect(editableTexts, contains('Paris'));
+        expect(editableTexts, contains('Expéditeur depuis 2022.'));
+        // L'email n'est JAMAIS un champ de saisie, même en édition.
+        expect(editableTexts, isNot(contains('ibra@test.com')));
+      },
+    );
 
-    testWidgets('voyageur voit les chips langues + sélecteur transport en édition', (
-      tester,
-    ) async {
-      whenListen<AuthState>(
-        mockAuthBloc,
-        const Stream.empty(),
-        initialState: const AuthAuthenticated(_travelerUser),
-      );
+    testWidgets(
+      'voyageur voit les chips langues + sélecteur transport en édition',
+      (tester) async {
+        whenListen<AuthState>(
+          mockAuthBloc,
+          const Stream.empty(),
+          initialState: const AuthAuthenticated(_travelerUser),
+        );
 
-      await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
-      await tester.pumpAndSettle();
-      await _enterEditMode(tester);
+        await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
+        await tester.pumpAndSettle();
+        await _enterEditMode(tester);
 
-      expect(find.byType(FilterChip), findsWidgets);
-      final chip = tester.widget<FilterChip>(
-        find.ancestor(
-          of: find.text('Français'),
-          matching: find.byType(FilterChip),
-        ),
-      );
-      expect(chip.selected, isTrue);
-    });
+        expect(find.byType(FilterChip), findsWidgets);
+        final chip = tester.widget<FilterChip>(
+          find.ancestor(
+            of: find.text('Français'),
+            matching: find.byType(FilterChip),
+          ),
+        );
+        expect(chip.selected, isTrue);
+      },
+    );
   });
 
   // ── Email et téléphone : toujours à part, jamais de saisie directe ────────
@@ -275,7 +282,10 @@ void main() {
         await _enterEditMode(tester);
 
         expect(find.text('ibra@test.com'), findsOneWidget);
-        expect(find.text('Modifier'), findsWidgets); // badge email (+ éventuellement autre)
+        expect(
+          find.text('Modifier'),
+          findsWidgets,
+        ); // badge email (+ éventuellement autre)
 
         await tester.ensureVisible(find.text('ibra@test.com'));
         await tester.tap(find.text('ibra@test.com'));
@@ -289,7 +299,9 @@ void main() {
       'ligne TÉLÉPHONE visible en édition seulement si le SMS OTP est actif, pousse vers /profile/edit/phone',
       (tester) async {
         setSmsAuthEnabled(true);
-        final userWithPhone = _senderUser.copyWith(phoneNumber: '+221701234567');
+        final userWithPhone = _senderUser.copyWith(
+          phoneNumber: '+221701234567',
+        );
         whenListen<AuthState>(
           mockAuthBloc,
           const Stream.empty(),
@@ -311,31 +323,30 @@ void main() {
       },
     );
 
-    testWidgets(
-      'badge "Ajouter" (pas "Modifier") quand l\'email est absent',
-      (tester) async {
-        final userNoEmail = UserModel(
-          id: 'u-no-email',
-          firstName: 'Ibrahima',
-          lastName: 'Diallo',
-          roles: const ['SENDER'],
-          kycStatus: 'NOT_STARTED',
-          status: 'ACTIVE',
-        );
-        whenListen<AuthState>(
-          mockAuthBloc,
-          const Stream.empty(),
-          initialState: AuthAuthenticated(userNoEmail),
-        );
+    testWidgets('badge "Ajouter" (pas "Modifier") quand l\'email est absent', (
+      tester,
+    ) async {
+      const userNoEmail = UserModel(
+        id: 'u-no-email',
+        firstName: 'Ibrahima',
+        lastName: 'Diallo',
+        roles: ['SENDER'],
+        kycStatus: 'NOT_STARTED',
+        status: 'ACTIVE',
+      );
+      whenListen<AuthState>(
+        mockAuthBloc,
+        const Stream.empty(),
+        initialState: const AuthAuthenticated(userNoEmail),
+      );
 
-        await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
-        await tester.pumpAndSettle();
-        await _enterEditMode(tester);
+      await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
+      await tester.pumpAndSettle();
+      await _enterEditMode(tester);
 
-        expect(find.text('Non ajouté'), findsOneWidget);
-        expect(find.text('Ajouter'), findsOneWidget);
-      },
-    );
+      expect(find.text('Non ajouté'), findsOneWidget);
+      expect(find.text('Ajouter'), findsOneWidget);
+    });
   });
 
   // ── Test : dispatche AuthUpdateProfileRequested au tap Enregistrer ────────
@@ -365,45 +376,44 @@ void main() {
   //
   // Avatar upload also produces AuthProfileUpdated. The screen must stay open.
 
-  testWidgets(
-    'ne pop PAS sur AuthProfileUpdated sans save (avatar upload)',
-    (tester) async {
-      whenListen<AuthState>(
-        mockAuthBloc,
-        Stream.value(AuthProfileUpdated(_senderUser)),
-        initialState: AuthAuthenticated(_senderUser),
-      );
+  testWidgets('ne pop PAS sur AuthProfileUpdated sans save (avatar upload)', (
+    tester,
+  ) async {
+    whenListen<AuthState>(
+      mockAuthBloc,
+      Stream.value(AuthProfileUpdated(_senderUser)),
+      initialState: AuthAuthenticated(_senderUser),
+    );
 
-      // Navigate to /edit on top of /, so there is something to pop back to.
-      final router = GoRouter(
-        initialLocation: '/',
-        routes: [
-          GoRoute(
-            path: '/',
-            builder: (context, _) => const Scaffold(body: Text('Home')),
+    // Navigate to /edit on top of /, so there is something to pop back to.
+    final router = GoRouter(
+      initialLocation: '/',
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (context, _) => const Scaffold(body: Text('Home')),
+        ),
+        GoRoute(
+          path: '/edit',
+          builder: (context, _) => BlocProvider<AuthBloc>.value(
+            value: mockAuthBloc,
+            child: const EditProfileScreen(),
           ),
-          GoRoute(
-            path: '/edit',
-            builder: (context, _) => BlocProvider<AuthBloc>.value(
-              value: mockAuthBloc,
-              child: const EditProfileScreen(),
-            ),
-          ),
-        ],
-      );
+        ),
+      ],
+    );
 
-      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pumpAndSettle();
 
-      unawaited(router.push('/edit'));
-      await tester.pumpAndSettle();
+    unawaited(router.push('/edit'));
+    await tester.pumpAndSettle();
 
-      // AuthProfileUpdated was received but _saving is false (no save tap) →
-      // the screen must remain open.
-      expect(find.byType(EditProfileScreen), findsOneWidget);
-      expect(find.text('Home'), findsNothing);
-    },
-  );
+    // AuthProfileUpdated was received but _saving is false (no save tap) →
+    // the screen must remain open.
+    expect(find.byType(EditProfileScreen), findsOneWidget);
+    expect(find.text('Home'), findsNothing);
+  });
 
   // ── pop(true) sur AuthProfileUpdated après un save ────────────────────────
 
@@ -460,28 +470,29 @@ void main() {
   // ── AuthLoading hors sauvegarde (upload photo) ────────────────────────────
 
   testWidgets(
-      'pendant un AuthLoading hors save (upload photo), le bouton est désactivé sans spinner',
-      (tester) async {
-    // A bare AuthLoading on this screen = avatar upload in progress (_saving=false).
-    // The save button must NOT spin (the avatar overlay shows the spinner), but it
-    // stays disabled to avoid racing the in-flight upload with a save.
-    whenListen<AuthState>(
-      mockAuthBloc,
-      Stream.value(const AuthLoading()),
-      initialState: AuthAuthenticated(_senderUser),
-    );
+    'pendant un AuthLoading hors save (upload photo), le bouton est désactivé sans spinner',
+    (tester) async {
+      // A bare AuthLoading on this screen = avatar upload in progress (_saving=false).
+      // The save button must NOT spin (the avatar overlay shows the spinner), but it
+      // stays disabled to avoid racing the in-flight upload with a save.
+      whenListen<AuthState>(
+        mockAuthBloc,
+        Stream.value(const AuthLoading()),
+        initialState: AuthAuthenticated(_senderUser),
+      );
 
-    await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
+      await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
 
-    final buttons = tester.widgetList<DonyButton>(find.byType(DonyButton));
-    expect(buttons, isNotEmpty);
-    for (final button in buttons) {
-      expect(button.isLoading, isFalse); // avatar overlay owns the spinner
-      expect(button.onPressed, isNull); // still disabled during the upload
-    }
-  });
+      final buttons = tester.widgetList<DonyButton>(find.byType(DonyButton));
+      expect(buttons, isNotEmpty);
+      for (final button in buttons) {
+        expect(button.isLoading, isFalse); // avatar overlay owns the spinner
+        expect(button.onPressed, isNull); // still disabled during the upload
+      }
+    },
+  );
 
   // ── Tap avatar dispatche AuthAvatarUploadRequested ────────────────────────
 
@@ -495,7 +506,8 @@ void main() {
       );
 
       // Write a small temp file (4 bytes) so XFile.length() succeeds ≤ 10 MB.
-      final tmpPath = '${Directory.systemTemp.path}/dony_test_avatar_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final tmpPath =
+          '${Directory.systemTemp.path}/dony_test_avatar_${DateTime.now().millisecondsSinceEpoch}.jpg';
       File(tmpPath).writeAsBytesSync([0xFF, 0xD8, 0xFF, 0xE0]);
 
       // Use the mediaService seam — inject a DonyMediaService with a mock
@@ -519,40 +531,41 @@ void main() {
       await tester.pumpAndSettle();
 
       // Ensure the avatar is on screen (top of scroll view, should already be).
-      await tester.ensureVisible(find.byKey(const ValueKey('avatar_pick_gesture')));
+      await tester.ensureVisible(
+        find.byKey(const ValueKey('avatar_pick_gesture')),
+      );
       await tester.pump();
 
       // Tap then allow all async work (pick → length() → dispatch) to complete.
       await tester.tap(find.byKey(const ValueKey('avatar_pick_gesture')));
-      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 50)),
+      );
       await tester.pump();
 
       verify(
-        () => mockAuthBloc.add(
-          any(that: isA<AuthAvatarUploadRequested>()),
-        ),
+        () => mockAuthBloc.add(any(that: isA<AuthAvatarUploadRequested>())),
       ).called(1);
     },
   );
 
   // ── Jauge de complétion ───────────────────────────────────────────────────
 
-  testWidgets(
-    'masque la jauge de complétion quand les 8 champs sont remplis',
-    (tester) async {
-      whenListen<AuthState>(
-        mockAuthBloc,
-        const Stream.empty(),
-        initialState: AuthAuthenticated(_senderUser),
-      );
+  testWidgets('masque la jauge de complétion quand les 8 champs sont remplis', (
+    tester,
+  ) async {
+    whenListen<AuthState>(
+      mockAuthBloc,
+      const Stream.empty(),
+      initialState: AuthAuthenticated(_senderUser),
+    );
 
-      await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
+    await tester.pumpAndSettle();
 
-      expect(find.text('Profil complet'), findsNothing);
-      expect(find.byType(LinearProgressIndicator), findsNothing);
-    },
-  );
+    expect(find.text('Profil complet'), findsNothing);
+    expect(find.byType(LinearProgressIndicator), findsNothing);
+  });
 
   testWidgets(
     'affiche la jauge avec le bon pourcentage quand le profil est incomplet',

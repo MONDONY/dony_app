@@ -148,9 +148,9 @@ void main() {
 
   // Valid UUIDs for routing tests — the service validates IDs with _isUuid()
   // before embedding them in route paths.
-  const _annId = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
-  const _bidId = 'b1b2c3d4-e5f6-7890-abcd-ef1234567890';
-  const _threadId = 'c1b2c3d4-e5f6-7890-abcd-ef1234567890';
+  const annId = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
+  const bidId = 'b1b2c3d4-e5f6-7890-abcd-ef1234567890';
+  const threadId = 'c1b2c3d4-e5f6-7890-abcd-ef1234567890';
 
   group('NotificationService.formatAndroidName', () {
     test('préfixe le fabricant quand le modèle ne commence pas par lui', () {
@@ -204,23 +204,23 @@ void main() {
       expect(
         service.testRouteForMessage({
           'type': 'BID_CREATED',
-          'announcementId': _annId,
+          'announcementId': annId,
         }),
-        '/announcements/$_annId/bids',
+        '/announcements/$annId/bids',
       );
     });
 
     test('BID_ACCEPTED routes to bid detail', () {
       expect(
-        service.testRouteForMessage({'type': 'BID_ACCEPTED', 'bidId': _bidId}),
-        '/bids/$_bidId',
+        service.testRouteForMessage({'type': 'BID_ACCEPTED', 'bidId': bidId}),
+        '/bids/$bidId',
       );
     });
 
     test('BID_REJECTED routes to bid detail', () {
       expect(
-        service.testRouteForMessage({'type': 'BID_REJECTED', 'bidId': _bidId}),
-        '/bids/$_bidId',
+        service.testRouteForMessage({'type': 'BID_REJECTED', 'bidId': bidId}),
+        '/bids/$bidId',
       );
     });
 
@@ -229,7 +229,7 @@ void main() {
       expect(
         service.testRouteForMessage({
           'type': 'BID_REJECTED',
-          'bidId': _bidId,
+          'bidId': bidId,
           'cancellationId': uuid,
         }),
         '/cancellations/$uuid/rematch',
@@ -242,10 +242,10 @@ void main() {
         expect(
           service.testRouteForMessage({
             'type': 'BID_REJECTED',
-            'bidId': _bidId,
+            'bidId': bidId,
             'cancellationId': '../../evil',
           }),
-          '/bids/$_bidId',
+          '/bids/$bidId',
         );
       },
     );
@@ -268,9 +268,9 @@ void main() {
       expect(
         service.testRouteForMessage({
           'type': 'HANDOVER_DEFINED',
-          'bidId': _bidId,
+          'bidId': bidId,
         }),
-        '/bids/$_bidId',
+        '/bids/$bidId',
       );
     });
 
@@ -278,9 +278,9 @@ void main() {
       expect(
         service.testRouteForMessage({
           'type': 'DELIVERY_CONFIRMED',
-          'bidId': _bidId,
+          'bidId': bidId,
         }),
-        '/bids/$_bidId',
+        '/bids/$bidId',
       );
     });
 
@@ -288,19 +288,16 @@ void main() {
       expect(
         service.testRouteForMessage({
           'type': 'PAYMENT_RELEASED',
-          'bidId': _bidId,
+          'bidId': bidId,
         }),
-        '/bids/$_bidId',
+        '/bids/$bidId',
       );
     });
 
     test('DISPUTE_OPENED routes to bid detail', () {
       expect(
-        service.testRouteForMessage({
-          'type': 'DISPUTE_OPENED',
-          'bidId': _bidId,
-        }),
-        '/bids/$_bidId',
+        service.testRouteForMessage({'type': 'DISPUTE_OPENED', 'bidId': bidId}),
+        '/bids/$bidId',
       );
     });
 
@@ -340,11 +337,8 @@ void main() {
 
     test('TRIP_CANCELLED with bidId only routes to bid detail', () {
       expect(
-        service.testRouteForMessage({
-          'type': 'TRIP_CANCELLED',
-          'bidId': _bidId,
-        }),
-        '/bids/$_bidId',
+        service.testRouteForMessage({'type': 'TRIP_CANCELLED', 'bidId': bidId}),
+        '/bids/$bidId',
       );
     });
 
@@ -368,9 +362,9 @@ void main() {
       expect(
         service.testRouteForMessage({
           'type': 'negotiation_started',
-          'threadId': _threadId,
+          'threadId': threadId,
         }),
-        '/negotiations/$_threadId',
+        '/negotiations/$threadId',
       );
     });
 
@@ -378,9 +372,9 @@ void main() {
       expect(
         service.testRouteForMessage({
           'type': 'negotiation_counter',
-          'threadId': _threadId,
+          'threadId': threadId,
         }),
-        '/negotiations/$_threadId',
+        '/negotiations/$threadId',
       );
     });
 
@@ -388,9 +382,9 @@ void main() {
       expect(
         service.testRouteForMessage({
           'type': 'negotiation_awaiting_trip',
-          'threadId': _threadId,
+          'threadId': threadId,
         }),
-        '/negotiations/$_threadId',
+        '/negotiations/$threadId',
       );
     });
 
@@ -398,9 +392,9 @@ void main() {
       expect(
         service.testRouteForMessage({
           'type': 'negotiation_awaiting_payment',
-          'threadId': _threadId,
+          'threadId': threadId,
         }),
-        '/negotiations/$_threadId',
+        '/negotiations/$threadId',
       );
     });
 
@@ -415,9 +409,9 @@ void main() {
       expect(
         service.testRouteForMessage({
           'type': 'request_accepted',
-          'threadId': _threadId,
+          'threadId': threadId,
         }),
-        '/negotiations/$_threadId',
+        '/negotiations/$threadId',
       );
     });
 

@@ -1,14 +1,13 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/features/corridor_alerts/data/corridor_alert_repository.dart';
+import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
+import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
 import 'package:equatable/equatable.dart';
-
-import '../../../core/services/analytics_events.dart';
-import '../../../core/services/analytics_service.dart';
-import '../../../core/storage/hive_service.dart';
-import '../data/corridor_alert_repository.dart';
-import '../data/models/alert_direction.dart';
-import '../data/models/corridor_alert_model.dart';
 
 enum CorridorAlertFormStatus { editing, submitting, success, error }
 

@@ -66,23 +66,55 @@ void main() {
     });
 
     test('les aplats de haut contraste tiennent 7:1', () {
-      expectContrast(DonyColors.neutral0, DonyColors.primaryHc, 7,
-          'libellé sur primary, HC clair');
-      expectContrast(DonyColors.neutral0, DonyColors.successHc, 7,
-          'libellé sur success, HC clair');
-      expectContrast(DonyColors.neutral0, DonyColors.dangerHc, 7,
-          'libellé sur danger, HC clair');
-      expectContrast(DonyColors.neutral0, DonyColors.accentHc, 7,
-          'libellé sur accent, HC clair');
+      expectContrast(
+        DonyColors.neutral0,
+        DonyColors.primaryHc,
+        7,
+        'libellé sur primary, HC clair',
+      );
+      expectContrast(
+        DonyColors.neutral0,
+        DonyColors.successHc,
+        7,
+        'libellé sur success, HC clair',
+      );
+      expectContrast(
+        DonyColors.neutral0,
+        DonyColors.dangerHc,
+        7,
+        'libellé sur danger, HC clair',
+      );
+      expectContrast(
+        DonyColors.neutral0,
+        DonyColors.accentHc,
+        7,
+        'libellé sur accent, HC clair',
+      );
 
-      expectContrast(DonyColors.onBrandHcDark, DonyColors.primaryHcDark, 7,
-          'libellé sur primary, HC sombre');
-      expectContrast(DonyColors.onBrandHcDark, DonyColors.successHcDark, 7,
-          'libellé sur success, HC sombre');
-      expectContrast(DonyColors.onBrandHcDark, DonyColors.dangerHcDark, 7,
-          'libellé sur danger, HC sombre');
-      expectContrast(DonyColors.onBrandHcDark, DonyColors.accentHcDark, 7,
-          'libellé sur accent, HC sombre');
+      expectContrast(
+        DonyColors.onBrandHcDark,
+        DonyColors.primaryHcDark,
+        7,
+        'libellé sur primary, HC sombre',
+      );
+      expectContrast(
+        DonyColors.onBrandHcDark,
+        DonyColors.successHcDark,
+        7,
+        'libellé sur success, HC sombre',
+      );
+      expectContrast(
+        DonyColors.onBrandHcDark,
+        DonyColors.dangerHcDark,
+        7,
+        'libellé sur danger, HC sombre',
+      );
+      expectContrast(
+        DonyColors.onBrandHcDark,
+        DonyColors.accentHcDark,
+        7,
+        'libellé sur accent, HC sombre',
+      );
     });
   });
 
@@ -97,16 +129,25 @@ void main() {
 
     testWidgets('le placeholder est du texte lisible', (tester) async {
       final clair = AppTheme.light();
-      expectContrast(hintColor(clair), clair.colorScheme.surface, 4.5,
-          'placeholder, thème clair');
+      expectContrast(
+        hintColor(clair),
+        clair.colorScheme.surface,
+        4.5,
+        'placeholder, thème clair',
+      );
 
       final sombre = AppTheme.dark();
-      expectContrast(hintColor(sombre), sombre.colorScheme.surface, 4.5,
-          'placeholder, thème sombre');
+      expectContrast(
+        hintColor(sombre),
+        sombre.colorScheme.surface,
+        4.5,
+        'placeholder, thème sombre',
+      );
     });
 
-    testWidgets('le contour du champ atteint 3:1 sur son remplissage',
-        (tester) async {
+    testWidgets('le contour du champ atteint 3:1 sur son remplissage', (
+      tester,
+    ) async {
       for (final theme in [AppTheme.light(), AppTheme.dark()]) {
         expectContrast(
           borderColor(theme),
@@ -117,8 +158,9 @@ void main() {
       }
     });
 
-    testWidgets('le contour du champ reste visible sur le fond d\'écran',
-        (tester) async {
+    testWidgets('le contour du champ reste visible sur le fond d\'écran', (
+      tester,
+    ) async {
       // Le champ est posé sur le fond d'app, pas sur sa propre surface : un
       // contour qui ne tient que face au remplissage disparaîtrait au bord.
       for (final theme in [AppTheme.light(), AppTheme.dark()]) {
@@ -137,8 +179,12 @@ void main() {
         AppTheme.dark(a11y: const A11yThemeOptions(highContrast: true)),
       ]) {
         expect(borderColor(theme), theme.colorScheme.outline);
-        expectContrast(borderColor(theme), theme.colorScheme.surface, 3,
-            'contour HC, ${theme.brightness}');
+        expectContrast(
+          borderColor(theme),
+          theme.colorScheme.surface,
+          3,
+          'contour HC, ${theme.brightness}',
+        );
       }
     });
   });
@@ -147,8 +193,7 @@ void main() {
     // Le motif dominant de l'app est « couleur 500 sur son propre fond 50 ».
     // C'est celui qui échouait partout : chaque couleur doit tenir 4.5:1 sur
     // le blanc ET sur sa variante pâle.
-    test('chaque couleur sémantique est lisible sur blanc et sur son fond',
-        () {
+    test('chaque couleur sémantique est lisible sur blanc et sur son fond', () {
       const paires = <String, (Color, Color)>{
         'success': (DonyColors.success500, DonyColors.success50),
         'warning': (DonyColors.warning500, DonyColors.warning50),
@@ -165,9 +210,17 @@ void main() {
       // Un seul et même ratio sert au texte accent sur blanc et au texte blanc
       // sur aplat accent : une seule valeur doit satisfaire les deux usages.
       expectContrast(
-          DonyColors.accent, DonyColors.neutral0, 4.5, 'accent sur blanc');
+        DonyColors.accent,
+        DonyColors.neutral0,
+        4.5,
+        'accent sur blanc',
+      );
       expectContrast(
-          DonyColors.neutral0, DonyColors.accent, 4.5, 'blanc sur accent');
+        DonyColors.neutral0,
+        DonyColors.accent,
+        4.5,
+        'blanc sur accent',
+      );
     });
   });
 
@@ -175,8 +228,9 @@ void main() {
     // `testWidgets` et non `test` : construire un ThemeData déclenche le
     // chargement des polices Google, qui tente un accès réseau hors du binding
     // de test.
-    testWidgets('onPrimary bascule au noir en haut contraste sombre',
-        (tester) async {
+    testWidgets('onPrimary bascule au noir en haut contraste sombre', (
+      tester,
+    ) async {
       final cs = AppTheme.dark(
         a11y: const A11yThemeOptions(highContrast: true),
       ).colorScheme;
@@ -188,8 +242,9 @@ void main() {
       for (final cs in [
         AppTheme.light().colorScheme,
         AppTheme.dark().colorScheme,
-        AppTheme.light(a11y: const A11yThemeOptions(highContrast: true))
-            .colorScheme,
+        AppTheme.light(
+          a11y: const A11yThemeOptions(highContrast: true),
+        ).colorScheme,
       ]) {
         expect(cs.onPrimary, DonyColors.textOnBrand);
       }
@@ -199,9 +254,14 @@ void main() {
   group('DonyButton hors haut contraste', () {
     /// Récupère le dégradé peint par le bouton.
     LinearGradient gradient(WidgetTester tester) =>
-        (tester.widget<AnimatedContainer>(find.byType(AnimatedContainer).first)
-                .decoration! as BoxDecoration)
-            .gradient! as LinearGradient;
+        (tester
+                        .widget<AnimatedContainer>(
+                          find.byType(AnimatedContainer).first,
+                        )
+                        .decoration!
+                    as BoxDecoration)
+                .gradient!
+            as LinearGradient;
 
     Future<void> pumpVariant(
       WidgetTester tester,
@@ -232,8 +292,9 @@ void main() {
       DonyButtonVariant.accent,
     ];
 
-    testWidgets('le libellé est lisible sur chaque point du dégradé',
-        (tester) async {
+    testWidgets('le libellé est lisible sur chaque point du dégradé', (
+      tester,
+    ) async {
       // Le libellé est mesuré contre le stop le moins favorable, pas contre la
       // moyenne : le texte traverse tout le dégradé.
       for (final brightness in Brightness.values) {
@@ -249,8 +310,9 @@ void main() {
       }
     });
 
-    testWidgets('le bouton reste distinct du fond en thème sombre',
-        (tester) async {
+    testWidgets('le bouton reste distinct du fond en thème sombre', (
+      tester,
+    ) async {
       // Contrepartie du test précédent : assombrir l'aplat jusqu'à porter du
       // blanc le ferait disparaître dans le fond sombre. Les deux critères
       // tirent en sens inverse, ce test empêche de sacrifier celui-ci.
@@ -308,8 +370,7 @@ void main() {
     }
 
     testWidgets('garde son dégradé hors haut contraste', (tester) async {
-      await pump(tester,
-          highContrast: false, brightness: Brightness.light);
+      await pump(tester, highContrast: false, brightness: Brightness.light);
       final colors = gradientOf(tester).colors;
       expect(
         colors.toSet().length,
@@ -318,26 +379,37 @@ void main() {
       );
     });
 
-    testWidgets('devient un aplat mesuré en haut contraste clair',
-        (tester) async {
+    testWidgets('devient un aplat mesuré en haut contraste clair', (
+      tester,
+    ) async {
       await pump(tester, highContrast: true, brightness: Brightness.light);
       final colors = gradientOf(tester).colors;
       expect(colors.toSet().length, 1, reason: 'aplat attendu');
-      expectContrast(DonyColors.textOnBrand, colors.first, 7,
-          'libellé sur aplat, HC clair');
+      expectContrast(
+        DonyColors.textOnBrand,
+        colors.first,
+        7,
+        'libellé sur aplat, HC clair',
+      );
     });
 
-    testWidgets('devient un aplat mesuré en haut contraste sombre',
-        (tester) async {
+    testWidgets('devient un aplat mesuré en haut contraste sombre', (
+      tester,
+    ) async {
       await pump(tester, highContrast: true, brightness: Brightness.dark);
       final colors = gradientOf(tester).colors;
       expect(colors.toSet().length, 1, reason: 'aplat attendu');
-      expectContrast(DonyColors.onBrandHcDark, colors.first, 7,
-          'libellé sur aplat, HC sombre');
+      expectContrast(
+        DonyColors.onBrandHcDark,
+        colors.first,
+        7,
+        'libellé sur aplat, HC sombre',
+      );
     });
 
-    testWidgets('chaque variant pleine tient 7:1 en haut contraste',
-        (tester) async {
+    testWidgets('chaque variant pleine tient 7:1 en haut contraste', (
+      tester,
+    ) async {
       const variants = [
         DonyButtonVariant.primary,
         DonyButtonVariant.success,
@@ -356,15 +428,19 @@ void main() {
             variant: variant,
           );
           final colors = gradientOf(tester).colors;
-          expect(colors.toSet().length, 1,
-              reason: '$variant / $brightness : aplat attendu');
+          expect(
+            colors.toSet().length,
+            1,
+            reason: '$variant / $brightness : aplat attendu',
+          );
           expectContrast(fg, colors.first, 7, '$variant / $brightness');
         }
       }
     });
 
-    testWidgets('le libellé passe au noir en haut contraste sombre',
-        (tester) async {
+    testWidgets('le libellé passe au noir en haut contraste sombre', (
+      tester,
+    ) async {
       await pump(tester, highContrast: true, brightness: Brightness.dark);
       final theme = tester.widget<DefaultTextStyle>(
         find
@@ -379,8 +455,9 @@ void main() {
   });
 
   group('DonyAvatar', () {
-    testWidgets('n\'utilise plus terra500 comme fond d\'initiales',
-        (tester) async {
+    testWidgets('n\'utilise plus terra500 comme fond d\'initiales', (
+      tester,
+    ) async {
       // terra500 ne tenait que 3.46:1 avec des initiales blanches. Le test
       // balaie assez d'initiales pour couvrir les six entrées de la palette.
       const noms = [
@@ -405,10 +482,12 @@ void main() {
           ),
         );
         final container = tester.widget<Container>(
-          find.descendant(
-            of: find.byType(DonyAvatar),
-            matching: find.byType(Container),
-          ).first,
+          find
+              .descendant(
+                of: find.byType(DonyAvatar),
+                matching: find.byType(Container),
+              )
+              .first,
         );
         final bg = (container.decoration! as BoxDecoration).color!;
         expect(bg, isNot(DonyColors.terra500), reason: 'fond pour « $nom »');

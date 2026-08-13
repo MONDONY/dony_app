@@ -54,7 +54,8 @@ void main() {
     test('adds entry to queue with required fields', () async {
       await service.queueScan(bidId: 'bid-1', eventType: 'TRANSIT');
       final entry = Map<String, dynamic>.from(
-          _hiveService.offlineQueue.values.first);
+        _hiveService.offlineQueue.values.first,
+      );
       expect(entry['bidId'], 'bid-1');
       expect(entry['eventType'], 'TRANSIT');
       expect(entry['offlineTimestamp'], isNotNull);
@@ -69,7 +70,8 @@ void main() {
         photoPath: '/tmp/photo.jpg',
       );
       final entry = Map<String, dynamic>.from(
-          _hiveService.offlineQueue.values.first);
+        _hiveService.offlineQueue.values.first,
+      );
       expect(entry['gpsLat'], 48.8566);
       expect(entry['gpsLon'], 2.3522);
       expect(entry['photoPath'], '/tmp/photo.jpg');
@@ -78,7 +80,8 @@ void main() {
     test('does not include null fields', () async {
       await service.queueScan(bidId: 'bid-3', eventType: 'DEPART');
       final entry = Map<String, dynamic>.from(
-          _hiveService.offlineQueue.values.first);
+        _hiveService.offlineQueue.values.first,
+      );
       expect(entry.containsKey('gpsLat'), isFalse);
       expect(entry.containsKey('photoPath'), isFalse);
     });
@@ -87,23 +90,28 @@ void main() {
   group('syncAll', () {
     test('does nothing on empty queue', () async {
       await service.syncAll();
-      verifyNever(() => mockRepo.postScan(
-            bidId: any(named: 'bidId'),
-            eventType: any(named: 'eventType'),
-          ));
+      verifyNever(
+        () => mockRepo.postScan(
+          bidId: any(named: 'bidId'),
+          eventType: any(named: 'eventType'),
+        ),
+      );
     });
 
     test('sends queued entries and removes them on success', () async {
-      when(() => mockRepo.postScan(
-            bidId: any(named: 'bidId'),
-            eventType: any(named: 'eventType'),
-            gpsLat: any(named: 'gpsLat'),
-            gpsLon: any(named: 'gpsLon'),
-            photoUrl: any(named: 'photoUrl'),
-            offlineTimestamp: any(named: 'offlineTimestamp'),
-          )).thenAnswer((_) async => _fakeEvent());
-      when(() => mockRepo.uploadTrackingPhoto(any(), any()))
-          .thenAnswer((_) async => 'photo-key');
+      when(
+        () => mockRepo.postScan(
+          bidId: any(named: 'bidId'),
+          eventType: any(named: 'eventType'),
+          gpsLat: any(named: 'gpsLat'),
+          gpsLon: any(named: 'gpsLon'),
+          photoUrl: any(named: 'photoUrl'),
+          offlineTimestamp: any(named: 'offlineTimestamp'),
+        ),
+      ).thenAnswer((_) async => _fakeEvent());
+      when(
+        () => mockRepo.uploadTrackingPhoto(any(), any()),
+      ).thenAnswer((_) async => 'photo-key');
 
       await service.queueScan(bidId: 'bid-1', eventType: 'TRANSIT');
       expect(service.pendingCount, 1);
@@ -111,25 +119,29 @@ void main() {
       await service.syncAll();
 
       expect(service.pendingCount, 0);
-      verify(() => mockRepo.postScan(
-            bidId: 'bid-1',
-            eventType: 'TRANSIT',
-            gpsLat: any(named: 'gpsLat'),
-            gpsLon: any(named: 'gpsLon'),
-            photoUrl: any(named: 'photoUrl'),
-            offlineTimestamp: any(named: 'offlineTimestamp'),
-          )).called(1);
+      verify(
+        () => mockRepo.postScan(
+          bidId: 'bid-1',
+          eventType: 'TRANSIT',
+          gpsLat: any(named: 'gpsLat'),
+          gpsLon: any(named: 'gpsLon'),
+          photoUrl: any(named: 'photoUrl'),
+          offlineTimestamp: any(named: 'offlineTimestamp'),
+        ),
+      ).called(1);
     });
 
     test('keeps entry in queue when postScan fails', () async {
-      when(() => mockRepo.postScan(
-            bidId: any(named: 'bidId'),
-            eventType: any(named: 'eventType'),
-            gpsLat: any(named: 'gpsLat'),
-            gpsLon: any(named: 'gpsLon'),
-            photoUrl: any(named: 'photoUrl'),
-            offlineTimestamp: any(named: 'offlineTimestamp'),
-          )).thenThrow(Exception('network error'));
+      when(
+        () => mockRepo.postScan(
+          bidId: any(named: 'bidId'),
+          eventType: any(named: 'eventType'),
+          gpsLat: any(named: 'gpsLat'),
+          gpsLon: any(named: 'gpsLon'),
+          photoUrl: any(named: 'photoUrl'),
+          offlineTimestamp: any(named: 'offlineTimestamp'),
+        ),
+      ).thenThrow(Exception('network error'));
 
       await service.queueScan(bidId: 'bid-2', eventType: 'DEPART');
       await service.syncAll();
@@ -138,30 +150,35 @@ void main() {
     });
 
     test('syncs multiple entries successfully, empties the queue', () async {
-      when(() => mockRepo.postScan(
-            bidId: any(named: 'bidId'),
-            eventType: any(named: 'eventType'),
-            gpsLat: any(named: 'gpsLat'),
-            gpsLon: any(named: 'gpsLon'),
-            photoUrl: any(named: 'photoUrl'),
-            offlineTimestamp: any(named: 'offlineTimestamp'),
-          )).thenAnswer((_) async => _fakeEvent());
-      when(() => mockRepo.uploadTrackingPhoto(any(), any()))
-          .thenAnswer((_) async => 'photo-key');
+      when(
+        () => mockRepo.postScan(
+          bidId: any(named: 'bidId'),
+          eventType: any(named: 'eventType'),
+          gpsLat: any(named: 'gpsLat'),
+          gpsLon: any(named: 'gpsLon'),
+          photoUrl: any(named: 'photoUrl'),
+          offlineTimestamp: any(named: 'offlineTimestamp'),
+        ),
+      ).thenAnswer((_) async => _fakeEvent());
+      when(
+        () => mockRepo.uploadTrackingPhoto(any(), any()),
+      ).thenAnswer((_) async => 'photo-key');
 
       await service.queueScan(bidId: 'bid-1', eventType: 'TRANSIT');
       await service.queueScan(bidId: 'bid-2', eventType: 'ARRIVEE');
       await service.syncAll();
 
       expect(service.pendingCount, 0);
-      verify(() => mockRepo.postScan(
-            bidId: any(named: 'bidId'),
-            eventType: any(named: 'eventType'),
-            gpsLat: any(named: 'gpsLat'),
-            gpsLon: any(named: 'gpsLon'),
-            photoUrl: any(named: 'photoUrl'),
-            offlineTimestamp: any(named: 'offlineTimestamp'),
-          )).called(2);
+      verify(
+        () => mockRepo.postScan(
+          bidId: any(named: 'bidId'),
+          eventType: any(named: 'eventType'),
+          gpsLat: any(named: 'gpsLat'),
+          gpsLon: any(named: 'gpsLon'),
+          photoUrl: any(named: 'photoUrl'),
+          offlineTimestamp: any(named: 'offlineTimestamp'),
+        ),
+      ).called(2);
     });
   });
 
@@ -174,9 +191,9 @@ void main() {
 }
 
 TrackingEventModel _fakeEvent() => TrackingEventModel(
-      id: 'ev-1',
-      bidId: 'bid-1',
-      eventType: 'TRANSIT',
-      scannedAt: DateTime(2024, 6, 1),
-      createdAt: DateTime(2024, 6, 1),
-    );
+  id: 'ev-1',
+  bidId: 'bid-1',
+  eventType: 'TRANSIT',
+  scannedAt: DateTime(2024, 6),
+  createdAt: DateTime(2024, 6),
+);

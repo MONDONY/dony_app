@@ -57,28 +57,29 @@ void main() {
   // pour la bannière D5 « pas de séquestre » côté expéditeur).
   group('AnnouncementDetailBody — nudge cash-only (vue voyageur)', () {
     testWidgets(
-        'trajet cash-only — nudge affiché avec CTA vers activation carte',
-        (tester) async {
-      final a = _announcement(
-        acceptedPaymentMethods: {BidPaymentMethod.cash},
-      );
+      'trajet cash-only — nudge affiché avec CTA vers activation carte',
+      (tester) async {
+        final a = _announcement(
+          acceptedPaymentMethods: {BidPaymentMethod.cash},
+        );
 
-      await tester.pumpWidget(_wrap(a));
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(_wrap(a));
+        await tester.pumpAndSettle();
 
-      expect(
-        find.textContaining(
-          'Beaucoup d\'expéditeurs préfèrent payer par carte',
-        ),
-        findsOneWidget,
-      );
-      expect(find.text('Activer les paiements par carte'), findsOneWidget);
+        expect(
+          find.textContaining(
+            'Beaucoup d\'expéditeurs préfèrent payer par carte',
+          ),
+          findsOneWidget,
+        );
+        expect(find.text('Activer les paiements par carte'), findsOneWidget);
 
-      await tester.tap(find.byKey(const Key('activate-card-payments-cta')));
-      await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('activate-card-payments-cta')));
+        await tester.pumpAndSettle();
 
-      expect(find.text('stripe-onboarding-intro'), findsOneWidget);
-    });
+        expect(find.text('stripe-onboarding-intro'), findsOneWidget);
+      },
+    );
 
     testWidgets('trajet avec carte acceptée — pas de nudge', (tester) async {
       final a = _announcement(

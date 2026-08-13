@@ -20,12 +20,12 @@ void main() {
   });
 
   Widget wrap() => MaterialApp(
-        theme: AppTheme.light(),
-        home: BlocProvider<AccessibilityBloc>.value(
-          value: bloc,
-          child: const AccessibilitySettingsScreen(),
-        ),
-      );
+    theme: AppTheme.light(),
+    home: BlocProvider<AccessibilityBloc>.value(
+      value: bloc,
+      child: const AccessibilitySettingsScreen(),
+    ),
+  );
 
   group('AccessibilitySettingsScreen — structure', () {
     testWidgets('affiche les quatre sections', (tester) async {
@@ -69,19 +69,21 @@ void main() {
   });
 
   group('AccessibilitySettingsScreen — interactions', () {
-    testWidgets('le curseur est inerte quand le suivi système est actif',
-        (tester) async {
+    testWidgets('le curseur est inerte quand le suivi système est actif', (
+      tester,
+    ) async {
       await tester.pumpWidget(wrap());
       await tester.pumpAndSettle();
       final slider = tester.widget<Slider>(find.byType(Slider));
       expect(slider.onChanged, isNull);
     });
 
-    testWidgets('le curseur est actif quand le suivi système est coupé',
-        (tester) async {
-      when(() => bloc.state).thenReturn(
-        const AccessibilityState(followSystemTextScale: false),
-      );
+    testWidgets('le curseur est actif quand le suivi système est coupé', (
+      tester,
+    ) async {
+      when(
+        () => bloc.state,
+      ).thenReturn(const AccessibilityState(followSystemTextScale: false));
       await tester.pumpWidget(wrap());
       await tester.pumpAndSettle();
       final slider = tester.widget<Slider>(find.byType(Slider));
@@ -93,8 +95,9 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Suivre les réglages du téléphone'));
       await tester.pump();
-      verify(() => bloc.add(const FollowSystemTextScaleToggled(false)))
-          .called(1);
+      verify(
+        () => bloc.add(const FollowSystemTextScaleToggled(false)),
+      ).called(1);
     });
 
     testWidgets('basculer le gras envoie l\'event', (tester) async {
@@ -105,8 +108,7 @@ void main() {
       verify(() => bloc.add(const BoldTextToggled(true))).called(1);
     });
 
-    testWidgets('choisir un mode de contraste envoie l\'event',
-        (tester) async {
+    testWidgets('choisir un mode de contraste envoie l\'event', (tester) async {
       await tester.pumpWidget(wrap());
       await tester.pumpAndSettle();
       // 'Contraste élevé' est sous la ligne de flottaison par défaut de la
@@ -120,18 +122,20 @@ void main() {
       verify(() => bloc.add(const HighContrastModeChanged('on'))).called(1);
     });
 
-    testWidgets('la réinitialisation demande confirmation puis envoie l\'event',
-        (tester) async {
-      await tester.pumpWidget(wrap());
-      await tester.pumpAndSettle();
-      await tester.ensureVisible(find.text('Tout réinitialiser'));
-      await tester.tap(find.text('Tout réinitialiser'));
-      await tester.pumpAndSettle();
-      expect(find.text('Confirmer'), findsOneWidget);
-      await tester.tap(find.text('Confirmer'));
-      await tester.pumpAndSettle();
-      verify(() => bloc.add(const AccessibilityResetRequested())).called(1);
-    });
+    testWidgets(
+      'la réinitialisation demande confirmation puis envoie l\'event',
+      (tester) async {
+        await tester.pumpWidget(wrap());
+        await tester.pumpAndSettle();
+        await tester.ensureVisible(find.text('Tout réinitialiser'));
+        await tester.tap(find.text('Tout réinitialiser'));
+        await tester.pumpAndSettle();
+        expect(find.text('Confirmer'), findsOneWidget);
+        await tester.tap(find.text('Confirmer'));
+        await tester.pumpAndSettle();
+        verify(() => bloc.add(const AccessibilityResetRequested())).called(1);
+      },
+    );
 
     testWidgets('annuler la réinitialisation n\'envoie rien', (tester) async {
       await tester.pumpWidget(wrap());
@@ -156,22 +160,25 @@ void main() {
       handle.dispose();
     });
 
-    testWidgets('tient à 200 % de taille de texte sans débordement',
-        (tester) async {
+    testWidgets('tient à 200 % de taille de texte sans débordement', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 3.0;
       addTearDown(tester.view.reset);
 
-      await tester.pumpWidget(MaterialApp(
-        theme: AppTheme.light(),
-        home: MediaQuery(
-          data: const MediaQueryData(textScaler: TextScaler.linear(2.0)),
-          child: BlocProvider<AccessibilityBloc>.value(
-            value: bloc,
-            child: const AccessibilitySettingsScreen(),
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: MediaQuery(
+            data: const MediaQueryData(textScaler: TextScaler.linear(2.0)),
+            child: BlocProvider<AccessibilityBloc>.value(
+              value: bloc,
+              child: const AccessibilitySettingsScreen(),
+            ),
           ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
     });

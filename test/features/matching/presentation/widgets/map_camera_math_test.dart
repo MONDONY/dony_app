@@ -5,7 +5,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 void main() {
   const paris = LatLng(48.8566, 2.3522);
   const parisNear = LatLng(48.90, 2.40); // ~6 km
-  const lyon = LatLng(45.7640, 4.8357);  // ~392 km
+  const lyon = LatLng(45.7640, 4.8357); // ~392 km
   const dakar = LatLng(14.6928, -17.4467); // ~4200 km
 
   group('distanceKm', () {

@@ -10,6 +10,7 @@ import 'package:mocktail/mocktail.dart';
 import '../../../helpers/mock_analytics_backend.dart';
 
 class _MockBidRepo extends Mock implements BidRepository {}
+
 class _MockStripe extends Mock implements Stripe {}
 
 void main() {
@@ -24,24 +25,30 @@ void main() {
   });
 
   BidAcceptanceBloc makeBloc({bool enabled = true}) {
-    final a = enabled ? makeEnabledAnalytics(backend) : makeDisabledAnalytics(backend);
+    final a = enabled
+        ? makeEnabledAnalytics(backend)
+        : makeDisabledAnalytics(backend);
     a.onConfigured();
     return BidAcceptanceBloc(repo, stripe, a);
   }
 
   test('bid_accepted fires with bid_id on acceptance', () async {
-    when(() => repo.acceptBidWithCommission('bid1'))
-        .thenAnswer((_) async => const AcceptanceResponse(status: AcceptanceStatus.accepted));
+    when(() => repo.acceptBidWithCommission('bid1')).thenAnswer(
+      (_) async => const AcceptanceResponse(status: AcceptanceStatus.accepted),
+    );
     final bloc = makeBloc();
     bloc.add(BidAcceptRequested('bid1'));
     await bloc.stream.firstWhere((s) => s is BidAccepted);
     await Future<void>.delayed(Duration.zero);
-    verify(() => backend.capture(AnalyticsEvents.bidAccepted, {'bid_id': 'bid1'})).called(1);
+    verify(
+      () => backend.capture(AnalyticsEvents.bidAccepted, {'bid_id': 'bid1'}),
+    ).called(1);
   });
 
   test('no event when disabled', () async {
-    when(() => repo.acceptBidWithCommission('bid1'))
-        .thenAnswer((_) async => const AcceptanceResponse(status: AcceptanceStatus.accepted));
+    when(() => repo.acceptBidWithCommission('bid1')).thenAnswer(
+      (_) async => const AcceptanceResponse(status: AcceptanceStatus.accepted),
+    );
     final bloc = makeBloc(enabled: false);
     bloc.add(BidAcceptRequested('bid1'));
     await bloc.stream.firstWhere((s) => s is BidAccepted);

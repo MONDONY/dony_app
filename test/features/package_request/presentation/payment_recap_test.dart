@@ -1,11 +1,11 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_message.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/presentation/widgets/payment_recap_bottom_sheet.dart';
-import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -179,7 +179,7 @@ void main() {
         // the right gross label. The actual button is in stickyBottom (bottom
         // sheet), so here we verify the content rows match what the button label
         // should say.
-        final thread = _makeThread(paymentMethod: PaymentMethod.stripe);
+        final thread = _makeThread();
 
         // The gross we'd display in the CTA
         final gross = thread.grossPriceEur!; // 39.20

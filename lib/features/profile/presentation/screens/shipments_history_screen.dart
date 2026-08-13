@@ -1,9 +1,9 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
-import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -37,10 +37,9 @@ class ShipmentsHistoryScreen extends StatelessWidget {
           if (state is BidListLoaded) {
             // Statut terminal back-end d'une livraison réussie = COMPLETED
             // (le back n'émet jamais DELIVERED).
-            final delivered = state.bids
-                .where((b) => b.status == 'COMPLETED')
-                .toList()
-              ..sort((a, b) => (b.updatedAt).compareTo(a.updatedAt));
+            final delivered =
+                state.bids.where((b) => b.status == 'COMPLETED').toList()
+                  ..sort((a, b) => (b.updatedAt).compareTo(a.updatedAt));
 
             if (delivered.isEmpty) {
               return const DonyEmptyState(
@@ -72,7 +71,7 @@ class _DeliveredList extends StatelessWidget {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: bids.length,
-      separatorBuilder: (_, __) => const SizedBox(height: DonySpacing.sm),
+      separatorBuilder: (_, _) => const SizedBox(height: DonySpacing.sm),
       itemBuilder: (context, i) => _DeliveryCard(bid: bids[i])
           .animate()
           .fadeIn(delay: (i * 60).ms, duration: 280.ms)
@@ -110,8 +109,8 @@ class _DeliveryCard extends StatelessWidget {
     final price = bid.totalSenderAmountEur != null
         ? '${bid.totalSenderAmountEur!.toStringAsFixed(0)} €'
         : bid.pricePerKg != null
-            ? '${netToSenderPrice(bid.pricePerKg! * (bid.weightKg ?? 0)).toStringAsFixed(0)} €'
-            : null;
+        ? '${netToSenderPrice(bid.pricePerKg! * (bid.weightKg ?? 0)).toStringAsFixed(0)} €'
+        : null;
 
     return GestureDetector(
       onTap: () => context.push('/bids/${bid.id}', extra: bid),
@@ -127,7 +126,11 @@ class _DeliveryCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                DonyAvatar(name: travelerName, imageUrl: bid.travelerAvatarUrl, size: DonyAvatarSize.sm),
+                DonyAvatar(
+                  name: travelerName,
+                  imageUrl: bid.travelerAvatarUrl,
+                  size: DonyAvatarSize.sm,
+                ),
                 const SizedBox(width: DonySpacing.sm),
                 Expanded(
                   child: Column(
@@ -142,11 +145,7 @@ class _DeliveryCard extends StatelessWidget {
                       if (bid.travelerAverageRating != null)
                         Row(
                           children: [
-                            DonyIcon(
-                              'star',
-                              size: 14,
-                              color: cs.tertiary,
-                            ),
+                            DonyIcon('star', size: 14, color: cs.tertiary),
                             const SizedBox(width: 2),
                             Text(
                               bid.travelerAverageRating!.toStringAsFixed(1),

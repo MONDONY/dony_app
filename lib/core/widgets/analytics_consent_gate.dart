@@ -125,8 +125,9 @@ class _AnalyticsConsentGateState extends State<AnalyticsConsentGate> {
     try {
       final permission = await Geolocator.checkPermission();
       if (permission != LocationPermission.always &&
-          permission != LocationPermission.whileInUse)
+          permission != LocationPermission.whileInUse) {
         return;
+      }
 
       final position = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(

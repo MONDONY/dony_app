@@ -27,9 +27,9 @@ class ConnectPendingBottomSheet extends StatelessWidget {
               isLoading: state is ConnectOnboardingLoading,
               onPressed: state is ConnectOnboardingLoading
                   ? null
-                  : () => ctx
-                      .read<ConnectOnboardingBloc>()
-                      .add(const ConnectOnboardingPollingRequested()),
+                  : () => ctx.read<ConnectOnboardingBloc>().add(
+                      const ConnectOnboardingPollingRequested(),
+                    ),
             ),
           ),
           const SizedBox(height: DonySpacing.sm),
@@ -72,10 +72,7 @@ class ConnectPendingBottomSheet extends StatelessWidget {
         children: [
           // Header mascotte
           const Center(
-            child: DonyMascotteAnimated(
-              type: DonyMascotteType.attente,
-              size: DonyMascotteSize.md,
-            ),
+            child: DonyMascotteAnimated(type: DonyMascotteType.attente),
           ),
           const SizedBox(height: DonySpacing.xl),
 

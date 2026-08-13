@@ -116,7 +116,6 @@ class _NearMePackageRequestCarouselState
           child: PageView.builder(
             controller: _controller,
             itemCount: widget.items.length,
-            padEnds: true,
             onPageChanged: (i) {
               setState(() => _currentIndex = i);
               widget.onCardChanged?.call(widget.items[i].id);

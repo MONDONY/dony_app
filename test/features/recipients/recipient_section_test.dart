@@ -173,7 +173,10 @@ void main() {
     (tester) async {
       final pickerBloc = MockRecipientBloc();
       when(() => pickerBloc.state).thenReturn(
-        const RecipientState(status: RecipientStatus.success, recipients: [_r1]),
+        const RecipientState(
+          status: RecipientStatus.success,
+          recipients: [_r1],
+        ),
       );
       getIt.registerFactory<RecipientBloc>(() => pickerBloc);
 
@@ -254,11 +257,14 @@ void main() {
   testWidgets(
     'maybeSaveManualEntry uses fallbackCountry over phone-derived country',
     (tester) async {
-      await tester.pumpWidget(buildSut(fallbackCity: 'Dakar', fallbackCountry: 'CI'));
+      await tester.pumpWidget(
+        buildSut(fallbackCity: 'Dakar', fallbackCountry: 'CI'),
+      );
       await tester.pump();
 
       nameCtrl.text = 'Ama Koffi';
-      phoneCtrl.text = '+221771234567'; // -> SN via countryFromPhone (different from CI)
+      phoneCtrl.text =
+          '+221771234567'; // -> SN via countryFromPhone (different from CI)
       await tester.pump();
 
       expect(find.byType(SwitchListTile), findsOneWidget);
@@ -362,13 +368,13 @@ void main() {
         text: TextSpan(text: 'A', style: summaryWidget.style),
         textDirection: TextDirection.ltr,
         textScaler: const TextScaler.linear(testTextScale),
-      )..layout())
-          .height;
+      )..layout()).height;
 
       expect(
         renderedHeight,
         greaterThan(oneLineHeight * 1.3),
-        reason: 'le résumé nom · téléphone · ville doit occuper plusieurs '
+        reason:
+            'le résumé nom · téléphone · ville doit occuper plusieurs '
             'lignes à 200 % avec ce contenu long ; une seule ligne '
             "(hauteur ≈ oneLineHeight) signifierait qu'un maxLines:1 a été "
             'réintroduit et tronque silencieusement la ville',

@@ -162,7 +162,9 @@ class _ActionTile extends StatelessWidget {
                   color: accent.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
-                child: Center(child: DonyIcon(iconAsset, size: 20, color: accent)),
+                child: Center(
+                  child: DonyIcon(iconAsset, size: 20, color: accent),
+                ),
               ),
               const SizedBox(width: DonySpacing.md),
               Expanded(

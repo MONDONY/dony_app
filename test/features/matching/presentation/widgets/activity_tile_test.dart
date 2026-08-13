@@ -25,7 +25,7 @@ ActivityTile _tile({
 void main() {
   group('ActivityTile', () {
     testWidgets('affiche la valeur et le libellé', (tester) async {
-      await tester.pumpWidget(_wrap(_tile(value: 6)));
+      await tester.pumpWidget(_wrap(_tile()));
 
       expect(find.text('6'), findsOneWidget);
       expect(find.text('Trajets actifs'), findsOneWidget);
@@ -44,7 +44,7 @@ void main() {
     testWidgets('en chargement, masque la valeur mais garde le libellé', (
       tester,
     ) async {
-      await tester.pumpWidget(_wrap(_tile(value: 6, isLoading: true)));
+      await tester.pumpWidget(_wrap(_tile(isLoading: true)));
 
       expect(find.text('6'), findsNothing);
       expect(find.text('Trajets actifs'), findsOneWidget);

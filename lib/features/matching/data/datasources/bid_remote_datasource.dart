@@ -66,8 +66,9 @@ class BidRemoteDatasource {
     if (promoCode != null && promoCode.isNotEmpty) {
       body['promoCode'] = promoCode.trim().toUpperCase();
     }
-    if (gridItems != null && gridItems.isNotEmpty)
+    if (gridItems != null && gridItems.isNotEmpty) {
       body['gridItems'] = gridItems;
+    }
     final response = await _apiClient.dio.post('/bids/quote', data: body);
     return BidQuoteResponse.fromJson(response.data as Map<String, dynamic>);
   }

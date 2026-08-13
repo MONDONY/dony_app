@@ -15,7 +15,6 @@
 // immédiatement la rupture de la hauteur constante.
 
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -24,10 +23,7 @@ import 'package:flutter_test/flutter_test.dart';
 /// Ouvre un DonyBottomSheet avec [stickyBottom], attend la fin des animations,
 /// puis retourne la hauteur rendue du Container portant
 /// Key('donyBottomSheetFooter').
-Future<double> _footerHeight(
-  WidgetTester tester,
-  Widget stickyBottom,
-) async {
+Future<double> _footerHeight(WidgetTester tester, Widget stickyBottom) async {
   await tester.pumpWidget(
     MaterialApp(
       theme: AppTheme.light(),
@@ -63,54 +59,54 @@ Future<double> _footerHeight(
 
 /// Étape 0 : un seul bouton « Continuer » pleine largeur.
 Widget get _footerStep0 => DonyButton(
-      label: 'Continuer',
-      iconRight: DonyIcons.arrowRight,
-      onPressed: () {},
-    );
+  label: 'Continuer',
+  iconRight: DonyIcons.arrowRight,
+  onPressed: () {},
+);
 
 /// Étapes 1-2 : deux boutons côte à côte (Retour + Continuer).
 Widget get _footerStep1 => Row(
-      children: [
-        Expanded(
-          child: DonyButton(
-            label: 'Retour',
-            variant: DonyButtonVariant.secondary,
-            icon: DonyIcons.back,
-            onPressed: () {},
-          ),
-        ),
-        const SizedBox(width: DonySpacing.sm),
-        Expanded(
-          child: DonyButton(
-            label: 'Continuer',
-            iconRight: DonyIcons.arrowRight,
-            onPressed: () {},
-          ),
-        ),
-      ],
-    );
+  children: [
+    Expanded(
+      child: DonyButton(
+        label: 'Retour',
+        variant: DonyButtonVariant.secondary,
+        icon: DonyIcons.back,
+        onPressed: () {},
+      ),
+    ),
+    const SizedBox(width: DonySpacing.sm),
+    Expanded(
+      child: DonyButton(
+        label: 'Continuer',
+        iconRight: DonyIcons.arrowRight,
+        onPressed: () {},
+      ),
+    ),
+  ],
+);
 
 /// Étape 3 : deux boutons côte à côte (Retour + Aperçu).
 Widget get _footerStep2 => Row(
-      children: [
-        Expanded(
-          child: DonyButton(
-            label: 'Retour',
-            variant: DonyButtonVariant.secondary,
-            icon: DonyIcons.back,
-            onPressed: () {},
-          ),
-        ),
-        const SizedBox(width: DonySpacing.sm),
-        Expanded(
-          child: DonyButton(
-            label: 'Aperçu',
-            iconRight: DonyIcons.arrowRight,
-            onPressed: () {},
-          ),
-        ),
-      ],
-    );
+  children: [
+    Expanded(
+      child: DonyButton(
+        label: 'Retour',
+        variant: DonyButtonVariant.secondary,
+        icon: DonyIcons.back,
+        onPressed: () {},
+      ),
+    ),
+    const SizedBox(width: DonySpacing.sm),
+    Expanded(
+      child: DonyButton(
+        label: 'Aperçu',
+        iconRight: DonyIcons.arrowRight,
+        onPressed: () {},
+      ),
+    ),
+  ],
+);
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
@@ -168,71 +164,69 @@ void main() {
       },
     );
 
-    testWidgets(
-      'DonyButton primary pleine largeur a une hauteur de 52 px',
-      (tester) async {
-        tester.view.physicalSize = const Size(800, 1600);
-        tester.view.devicePixelRatio = 1.0;
-        addTearDown(tester.view.reset);
+    testWidgets('DonyButton primary pleine largeur a une hauteur de 52 px', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(800, 1600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
 
-        await tester.pumpWidget(
-          MaterialApp(
-            theme: AppTheme.light(),
-            home: Scaffold(
-              body: Padding(
-                padding: const EdgeInsets.all(16),
-                child: DonyButton(
-                  key: const Key('btn-primary'),
-                  label: 'Continuer',
-                  onPressed: () {},
-                ),
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: Scaffold(
+            body: Padding(
+              padding: const EdgeInsets.all(16),
+              child: DonyButton(
+                key: const Key('btn-primary'),
+                label: 'Continuer',
+                onPressed: () {},
               ),
             ),
           ),
-        );
-        await tester.pumpAndSettle();
+        ),
+      );
+      await tester.pumpAndSettle();
 
-        final size = tester.getSize(find.byKey(const Key('btn-primary')));
-        expect(
-          size.height,
-          equals(52),
-          reason: 'DonyButton primary doit avoir exactement 52 px de haut',
-        );
-      },
-    );
+      final size = tester.getSize(find.byKey(const Key('btn-primary')));
+      expect(
+        size.height,
+        equals(52),
+        reason: 'DonyButton primary doit avoir exactement 52 px de haut',
+      );
+    });
 
-    testWidgets(
-      'DonyButton secondary pleine largeur a une hauteur de 52 px',
-      (tester) async {
-        tester.view.physicalSize = const Size(800, 1600);
-        tester.view.devicePixelRatio = 1.0;
-        addTearDown(tester.view.reset);
+    testWidgets('DonyButton secondary pleine largeur a une hauteur de 52 px', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(800, 1600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
 
-        await tester.pumpWidget(
-          MaterialApp(
-            theme: AppTheme.light(),
-            home: Scaffold(
-              body: Padding(
-                padding: const EdgeInsets.all(16),
-                child: DonyButton(
-                  key: const Key('btn-secondary'),
-                  label: 'Retour',
-                  variant: DonyButtonVariant.secondary,
-                  onPressed: () {},
-                ),
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: Scaffold(
+            body: Padding(
+              padding: const EdgeInsets.all(16),
+              child: DonyButton(
+                key: const Key('btn-secondary'),
+                label: 'Retour',
+                variant: DonyButtonVariant.secondary,
+                onPressed: () {},
               ),
             ),
           ),
-        );
-        await tester.pumpAndSettle();
+        ),
+      );
+      await tester.pumpAndSettle();
 
-        final size = tester.getSize(find.byKey(const Key('btn-secondary')));
-        expect(
-          size.height,
-          equals(52),
-          reason: 'DonyButton secondary doit avoir exactement 52 px de haut',
-        );
-      },
-    );
+      final size = tester.getSize(find.byKey(const Key('btn-secondary')));
+      expect(
+        size.height,
+        equals(52),
+        reason: 'DonyButton secondary doit avoir exactement 52 px de haut',
+      );
+    });
   });
 }

@@ -15,7 +15,7 @@ void main() {
 
   const bidId = '550e8400-e29b-41d4-a716-446655440000';
 
-  final _paymentJson = {
+  final paymentJson = {
     'id': 'payment-id-1',
     'status': 'PENDING',
     'amount': 50.0,
@@ -40,7 +40,7 @@ void main() {
               dio.get<Map<String, dynamic>>('/bids/$bidId/mobile-money/status'),
         ).thenAnswer(
           (_) async => Response(
-            data: _paymentJson,
+            data: paymentJson,
             statusCode: 200,
             requestOptions: RequestOptions(
               path: '/bids/$bidId/mobile-money/status',

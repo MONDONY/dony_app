@@ -69,7 +69,7 @@ class ProStatsBottomSheet extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _SectionLabel('PERFORMANCE'),
+                  const _SectionLabel('PERFORMANCE'),
                   const SizedBox(height: DonySpacing.base),
                   _ProgressMetric(
                     label: "Taux d'acceptation",
@@ -101,7 +101,7 @@ class ProStatsBottomSheet extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _SectionLabel('TOP DESTINATIONS'),
+                    const _SectionLabel('TOP DESTINATIONS'),
                     const SizedBox(height: DonySpacing.base),
                     ...stats.topDestinations.asMap().entries.map((entry) {
                       final i = entry.key;
@@ -178,7 +178,6 @@ class _GlassHeroCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(DonyRadius.card),
             border: Border.all(
               color: Colors.white.withValues(alpha: borderAlpha),
-              width: 1,
             ),
             boxShadow: [
               BoxShadow(
@@ -469,10 +468,7 @@ class _DestinationRow extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
         ),
-        DonyBadge(
-          label: '$count trajet${count > 1 ? 's' : ''}',
-          type: DonyBadgeType.info,
-        ),
+        DonyBadge(label: '$count trajet${count > 1 ? 's' : ''}'),
       ],
     );
   }

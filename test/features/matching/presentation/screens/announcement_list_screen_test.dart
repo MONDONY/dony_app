@@ -4,6 +4,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
@@ -16,7 +17,6 @@ import 'package:dony/features/matching/presentation/screens/announcement_list_sc
 import 'package:dony/features/matching/presentation/widgets/activity_header_widgets.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_card.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
-import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -64,8 +64,8 @@ AnnouncementModel _makeAnnouncement({
   pricePerKg: 8.0,
   status: status,
   bidsCount: bidsCount,
-  createdAt: DateTime(2026, 1, 1),
-  updatedAt: DateTime(2026, 1, 1),
+  createdAt: DateTime(2026),
+  updatedAt: DateTime(2026),
 );
 
 /// Builds the widget tree with all required providers.
@@ -84,11 +84,7 @@ Future<void> _pump(
 
   // Stub getTripsSummary to return immediately with zeros
   when(() => mockRepo.getTripsSummary(period: any(named: 'period'))).thenAnswer(
-    (_) async => const TripsSummaryModel(
-      activeTrips: 0,
-      kgSold: 0,
-      revenue: 0,
-    ),
+    (_) async => const TripsSummaryModel(activeTrips: 0, kgSold: 0, revenue: 0),
   );
 
   // Stub analytics calls
@@ -158,7 +154,7 @@ void main() {
     testWidgets(
       'loaded state: no stats strip (moved to Activités), 2 TripCards, chip "Tous · 2"',
       (tester) async {
-        final active = _makeAnnouncement(id: 'a1', status: 'ACTIVE');
+        final active = _makeAnnouncement(id: 'a1');
         final completed = _makeAnnouncement(id: 'a2', status: 'COMPLETED');
 
         when(
@@ -185,7 +181,7 @@ void main() {
     testWidgets('"Terminés" chip filters the list to 1 TripCard', (
       tester,
     ) async {
-      final active = _makeAnnouncement(id: 'a1', status: 'ACTIVE');
+      final active = _makeAnnouncement(id: 'a1');
       final completed = _makeAnnouncement(id: 'a2', status: 'COMPLETED');
 
       when(
@@ -216,7 +212,7 @@ void main() {
         when(() => bloc.state).thenReturn(AnnouncementListLoaded([]));
         when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
 
-        await _pump(tester, bloc, onSendParcel: null);
+        await _pump(tester, bloc);
         await tester.pump(const Duration(milliseconds: 400));
 
         expect(find.byKey(const Key('send-parcel-btn')), findsNothing);
@@ -397,7 +393,7 @@ void main() {
       'AnnouncementError with non-empty prior list shows error WITHOUT re-fetch (no infinite retry loop)',
       (tester) async {
         final controller = StreamController<AnnouncementState>.broadcast();
-        final active = _makeAnnouncement(id: 'a1', status: 'ACTIVE');
+        final active = _makeAnnouncement(id: 'a1');
 
         // Start with a loaded state so _lastList is non-empty.
         when(() => bloc.state).thenReturn(AnnouncementListLoaded([active]));
@@ -515,7 +511,7 @@ void main() {
     testWidgets(
       'filtre "Terminés" avec aucun trajet terminé → "Aucun historique"',
       (tester) async {
-        final active = _makeAnnouncement(id: 'a1', status: 'ACTIVE');
+        final active = _makeAnnouncement(id: 'a1');
         when(() => bloc.state).thenReturn(AnnouncementListLoaded([active]));
         when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
 
@@ -537,18 +533,8 @@ void main() {
     testWidgets(
       'saisir une query filtre la liste (Paris→Dakar reste, Paris→Bamako disparaît)',
       (tester) async {
-        final paris = _makeAnnouncement(
-          id: 'p1',
-          status: 'ACTIVE',
-          departureCity: 'Paris',
-          arrivalCity: 'Dakar',
-        );
-        final lyon = _makeAnnouncement(
-          id: 'l1',
-          status: 'ACTIVE',
-          departureCity: 'Paris',
-          arrivalCity: 'Bamako',
-        );
+        final paris = _makeAnnouncement(id: 'p1');
+        final lyon = _makeAnnouncement(id: 'l1', arrivalCity: 'Bamako');
 
         when(
           () => bloc.state,
@@ -573,7 +559,7 @@ void main() {
     testWidgets('query ne correspondant à rien → "Aucun trajet trouvé"', (
       tester,
     ) async {
-      final paris = _makeAnnouncement(id: 'p1', status: 'ACTIVE');
+      final paris = _makeAnnouncement(id: 'p1');
 
       when(() => bloc.state).thenReturn(AnnouncementListLoaded([paris]));
       when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
@@ -632,12 +618,7 @@ void main() {
 
   group('AnnouncementListScreen — sort priority', () {
     testWidgets('IN_PROGRESS sorts before ACTIVE in the list', (tester) async {
-      final active = _makeAnnouncement(
-        id: 'a1',
-        status: 'ACTIVE',
-        departureCity: 'Paris',
-        arrivalCity: 'Dakar',
-      );
+      final active = _makeAnnouncement(id: 'a1');
       final inProgress = _makeAnnouncement(
         id: 'ip1',
         status: 'IN_PROGRESS',
@@ -663,12 +644,7 @@ void main() {
     });
 
     testWidgets('CANCELLED sorts after COMPLETED in the list', (tester) async {
-      final completed = _makeAnnouncement(
-        id: 'c1',
-        status: 'COMPLETED',
-        departureCity: 'Paris',
-        arrivalCity: 'Dakar',
-      );
+      final completed = _makeAnnouncement(id: 'c1', status: 'COMPLETED');
       final cancelled = _makeAnnouncement(
         id: 'x1',
         status: 'CANCELLED',
@@ -716,7 +692,7 @@ void main() {
       tester,
     ) async {
       // Start with a loaded list so the list is scrollable
-      final active = _makeAnnouncement(id: 'a1', status: 'ACTIVE');
+      final active = _makeAnnouncement(id: 'a1');
       final controller = StreamController<AnnouncementState>.broadcast();
 
       when(() => bloc.state).thenReturn(AnnouncementListLoaded([active]));

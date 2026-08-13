@@ -18,14 +18,14 @@ PackageRequest _req({
   senderId: 'sender-1',
   departureCity: 'Paris',
   arrivalCity: 'Dakar',
-  desiredDate: desiredDate ?? DateTime(2026, 8, 1),
+  desiredDate: desiredDate ?? DateTime(2026, 8),
   dateToleranceDays: 3,
   weightKg: 5,
   parcelSize: ParcelSize.medium,
   transportMode: TransportMode.plane,
   categories: const ['Vêtements'],
   status: status,
-  createdAt: DateTime(2026, 6, 1),
+  createdAt: DateTime(2026, 6),
   negotiable: negotiable,
   targetPriceEur: 35,
   photoUrls: photoUrls,
@@ -209,9 +209,7 @@ void main() {
     expect(find.text('🔥 Urgent'), findsOneWidget);
   });
 
-  testWidgets('date souhaitée lointaine → badge urgent absent', (
-    tester,
-  ) async {
+  testWidgets('date souhaitée lointaine → badge urgent absent', (tester) async {
     await tester.pumpWidget(
       wrap(_req(desiredDate: DateTime.now().add(const Duration(days: 30)))),
     );

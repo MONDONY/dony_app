@@ -179,9 +179,7 @@ void main() {
     });
 
     test('POSTs with no data when reason is null', () async {
-      when(
-        () => mockDio.post<void>('/negotiations/th-1/cancel', data: null),
-      ).thenAnswer(
+      when(() => mockDio.post<void>('/negotiations/th-1/cancel')).thenAnswer(
         (_) async => Response<void>(
           statusCode: 204,
           requestOptions: RequestOptions(path: '/negotiations/th-1/cancel'),
@@ -265,7 +263,7 @@ void main() {
 
         final thread = await repo.createDedicatedTrip(
           'th-1',
-          departureDate: DateTime(2026, 7, 1),
+          departureDate: DateTime(2026, 7),
           pickupAddress: const {'label': 'Paris'},
           deliveryAddress: const {'label': 'Dakar'},
           paymentMethod: PaymentMethod.stripe,
@@ -289,7 +287,7 @@ void main() {
 
       await repo.createDedicatedTrip(
         'th-1',
-        departureDate: DateTime(2026, 7, 1),
+        departureDate: DateTime(2026, 7),
         pickupAddress: const {'label': 'Paris'},
         deliveryAddress: const {'label': 'Dakar'},
         paymentMethod: PaymentMethod.cash,
@@ -314,7 +312,7 @@ void main() {
 
       await repo.createDedicatedTrip(
         'th-1',
-        departureDate: DateTime(2026, 7, 1),
+        departureDate: DateTime(2026, 7),
         pickupAddress: const {'label': 'Paris'},
         deliveryAddress: const {'label': 'Dakar'},
         paymentMethod: PaymentMethod.stripe,
@@ -374,10 +372,7 @@ void main() {
   group('quote', () {
     test('GETs /negotiations/:id/quote and returns NegotiationQuote', () async {
       when(
-        () => mockDio.get<Map<String, dynamic>>(
-          '/negotiations/th-1/quote',
-          queryParameters: null,
-        ),
+        () => mockDio.get<Map<String, dynamic>>('/negotiations/th-1/quote'),
       ).thenAnswer(
         (_) async => _ok({
           'netEur': 40.0,
@@ -503,7 +498,6 @@ void main() {
         when(
           () => mockDio.post<Map<String, dynamic>>(
             '/negotiations/th-1/refuse-trip',
-            data: null,
           ),
         ).thenAnswer(
           (_) async => _ok(_threadJson, '/negotiations/th-1/refuse-trip'),

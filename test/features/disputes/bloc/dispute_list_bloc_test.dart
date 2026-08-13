@@ -11,18 +11,30 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 class _MockRepo extends Mock implements DisputeRepository {}
+
 class _MockAnalytics extends Mock implements AnalyticsService {}
 
 DisputeModel _dispute({String status = 'OPEN'}) => DisputeModel(
-      id: 'd1', bidId: null, type: 'SENDER_NO_SHOW_CONTESTED', status: status,
-      refundFrozen: status == 'OPEN', createdAt: DateTime(2026, 7, 12),
-      myRole: 'SENDER', otherPartyName: 'Awa K.',
-      departureCity: 'Lyon', arrivalCity: 'Abidjan',
-      departureCountryCode: 'FR', arrivalCountryCode: 'CI',
-      tripDate: DateTime(2026, 6, 20), weightKg: 5,
-      resolutionType: null, resolvedAt: null, resolutionNote: null,
-      guaranteeAmountCents: null, isBeneficiary: false,
-    );
+  id: 'd1',
+  bidId: null,
+  type: 'SENDER_NO_SHOW_CONTESTED',
+  status: status,
+  refundFrozen: status == 'OPEN',
+  createdAt: DateTime(2026, 7, 12),
+  myRole: 'SENDER',
+  otherPartyName: 'Awa K.',
+  departureCity: 'Lyon',
+  arrivalCity: 'Abidjan',
+  departureCountryCode: 'FR',
+  arrivalCountryCode: 'CI',
+  tripDate: DateTime(2026, 6, 20),
+  weightKg: 5,
+  resolutionType: null,
+  resolvedAt: null,
+  resolutionNote: null,
+  guaranteeAmountCents: null,
+  isBeneficiary: false,
+);
 
 void main() {
   late _MockRepo repo;
@@ -31,8 +43,9 @@ void main() {
   setUp(() {
     repo = _MockRepo();
     analytics = _MockAnalytics();
-    when(() => analytics.logEvent(any(), properties: any(named: 'properties')))
-        .thenAnswer((_) async {});
+    when(
+      () => analytics.logEvent(any(), properties: any(named: 'properties')),
+    ).thenAnswer((_) async {});
   });
 
   blocTest<DisputeListBloc, DisputeListState>(
@@ -51,8 +64,12 @@ void main() {
       isA<DisputeListLoaded>(),
     ],
     verify: (_) {
-      verify(() => analytics.logEvent(AnalyticsEvents.disputesOpened,
-          properties: {'count': 1})).called(1);
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.disputesOpened,
+          properties: {'count': 1},
+        ),
+      ).called(1);
     },
   );
 
@@ -60,7 +77,8 @@ void main() {
     'erreur réseau → DisputeListError',
     build: () {
       when(() => repo.getMyDisputes()).thenThrow(
-          DioException(requestOptions: RequestOptions(path: '/disputes/me')));
+        DioException(requestOptions: RequestOptions(path: '/disputes/me')),
+      );
       return DisputeListBloc(repo, analytics);
     },
     act: (b) => b.add(const DisputesLoadRequested()),

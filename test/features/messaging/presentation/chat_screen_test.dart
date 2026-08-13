@@ -20,8 +20,8 @@ import '../../../helpers/mock_analytics_backend.dart';
 
 class MockChatBloc extends MockBloc<ChatEvent, ChatState> implements ChatBloc {}
 
-final _participant = ParticipantModel(id: 'uid-1', name: 'Modibo Coulibaly');
-final _conversation = ConversationModel(
+const _participant = ParticipantModel(id: 'uid-1', name: 'Modibo Coulibaly');
+const _conversation = ConversationModel(
   id: 'conv-1',
   bidId: 'bid-1',
   firestoreConversationId: 'conv_bid-1',
@@ -33,14 +33,13 @@ MessageModel _makeMsg({
   required String body,
   String senderId = 'uid-1',
   MessageType type = MessageType.text,
-}) =>
-    MessageModel(
-      id: id,
-      senderId: senderId,
-      body: body,
-      type: type,
-      sentAt: DateTime(2026, 4, 29, 10, 0),
-    );
+}) => MessageModel(
+  id: id,
+  senderId: senderId,
+  body: body,
+  type: type,
+  sentAt: DateTime(2026, 4, 29, 10),
+);
 
 Future<void> _pump(WidgetTester tester, ChatBloc bloc) async {
   await tester.pumpWidget(
@@ -48,7 +47,7 @@ Future<void> _pump(WidgetTester tester, ChatBloc bloc) async {
       theme: AppTheme.light(),
       home: BlocProvider<ChatBloc>.value(
         value: bloc,
-        child: ChatScreen(conversation: _conversation),
+        child: const ChatScreen(conversation: _conversation),
       ),
     ),
   );
@@ -61,7 +60,7 @@ void main() {
   setUpAll(() async {
     await initializeDateFormatting('fr');
     registerFallbackValue(
-      ChatTextSendRequested(
+      const ChatTextSendRequested(
         firestoreConversationId: 'x',
         conversationId: 'x',
         senderFirebaseUid: 'x',
@@ -86,25 +85,29 @@ void main() {
   tearDown(() => bloc.close());
 
   group('ChatScreen', () {
-    testWidgets('shows loading indicator when state is ChatLoading', (tester) async {
+    testWidgets('shows loading indicator when state is ChatLoading', (
+      tester,
+    ) async {
       when(() => bloc.state).thenReturn(const ChatLoading());
       await _pump(tester, bloc);
 
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
-    testWidgets('shows empty prompt when conversation has no messages', (tester) async {
+    testWidgets('shows empty prompt when conversation has no messages', (
+      tester,
+    ) async {
       when(() => bloc.state).thenReturn(const ChatLoaded([]));
       await _pump(tester, bloc);
 
       expect(find.text('Démarrez la conversation !'), findsOneWidget);
     });
 
-    testWidgets('renders message bubbles when messages present', (tester) async {
+    testWidgets('renders message bubbles when messages present', (
+      tester,
+    ) async {
       when(() => bloc.state).thenReturn(
-        ChatLoaded([
-          _makeMsg(id: 'm1', body: 'Bonjour, colis reçu !'),
-        ]),
+        ChatLoaded([_makeMsg(id: 'm1', body: 'Bonjour, colis reçu !')]),
       );
       await _pump(tester, bloc);
 
@@ -119,15 +122,17 @@ void main() {
     });
 
     testWidgets('shows error state with retry', (tester) async {
-      when(() => bloc.state)
-          .thenReturn(ChatError(NetworkException('Erreur de connexion')));
+      when(
+        () => bloc.state,
+      ).thenReturn(const ChatError(NetworkException('Erreur de connexion')));
       await _pump(tester, bloc);
 
       expect(find.text('Connexion interrompue'), findsOneWidget);
     });
 
-    testWidgets('footer texte : envoi présent, plus de bouton image/position',
-        (tester) async {
+    testWidgets('footer texte : envoi présent, plus de bouton image/position', (
+      tester,
+    ) async {
       when(() => bloc.state).thenReturn(const ChatLoaded([]));
       await _pump(tester, bloc);
 
@@ -145,29 +150,36 @@ void main() {
       );
     });
 
-    testWidgets('texte valide → ChatTextSendRequested dispatché', (tester) async {
+    testWidgets('texte valide → ChatTextSendRequested dispatché', (
+      tester,
+    ) async {
       when(() => bloc.state).thenReturn(const ChatLoaded([]));
       await _pump(tester, bloc);
 
       await tester.enterText(find.byType(TextField), 'Bonjour Kadi');
       await tester.pump();
       await tester.tap(
-          find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'send'));
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'send'),
+      );
       await tester.pump();
 
       verify(() => bloc.add(any(that: isA<ChatTextSendRequested>()))).called(1);
     });
 
-    testWidgets('numéro de téléphone → bloqué (aucun envoi + avertissement)',
-        (tester) async {
+    testWidgets('numéro de téléphone → bloqué (aucun envoi + avertissement)', (
+      tester,
+    ) async {
       when(() => bloc.state).thenReturn(const ChatLoaded([]));
       await _pump(tester, bloc);
 
       await tester.enterText(
-          find.byType(TextField), 'appelle moi au 06 12 34 56 78');
+        find.byType(TextField),
+        'appelle moi au 06 12 34 56 78',
+      );
       await tester.pump();
       await tester.tap(
-          find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'send'));
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'send'),
+      );
       await tester.pump(const Duration(milliseconds: 100));
 
       verifyNever(() => bloc.add(any(that: isA<ChatTextSendRequested>())));

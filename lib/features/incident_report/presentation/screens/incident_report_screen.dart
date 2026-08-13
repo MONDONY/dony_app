@@ -18,7 +18,11 @@ const incidentReasons = <String>[
 
 /// Écran « Signaler un problème » : motif + description + captures (max 4).
 class IncidentReportScreen extends StatefulWidget {
-  const IncidentReportScreen({super.key, this.targetType = IncidentTargetType.app, this.targetId});
+  const IncidentReportScreen({
+    super.key,
+    this.targetType = IncidentTargetType.app,
+    this.targetId,
+  });
 
   /// Cible du signalement — APP par défaut (entrée réglages) ; les points
   /// d'entrée contextuels (profil utilisateur, colis…) passent leur cible.
@@ -42,12 +46,12 @@ class _IncidentReportScreenState extends State<IncidentReportScreen> {
   void _submit(BuildContext context) {
     final photos = context.read<IncidentPhotosCubit>();
     context.read<IncidentReportCubit>().submit(
-          targetType: widget.targetType,
-          targetId: widget.targetId,
-          reason: _reason!,
-          description: _descriptionController.text.trim(),
-          photoKeys: photos.readyKeys,
-        );
+      targetType: widget.targetType,
+      targetId: widget.targetId,
+      reason: _reason!,
+      description: _descriptionController.text.trim(),
+      photoKeys: photos.readyKeys,
+    );
   }
 
   @override
@@ -66,7 +70,11 @@ class _IncidentReportScreenState extends State<IncidentReportScreen> {
             navigator.pop();
           }
         } else if (state is IncidentReportError) {
-          DonySnackbar.show(context, message: state.message, type: DonySnackbarType.error);
+          DonySnackbar.show(
+            context,
+            message: state.message,
+            type: DonySnackbarType.error,
+          );
         }
       },
       child: Scaffold(
@@ -99,25 +107,30 @@ class _IncidentReportScreenState extends State<IncidentReportScreen> {
                   maxLines: 5,
                 ),
                 const SizedBox(height: DonySpacing.lg),
-                Text('Captures d\'écran (optionnel)',
-                    style: Theme.of(context).textTheme.titleSmall),
+                Text(
+                  'Captures d\'écran (optionnel)',
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
                 const SizedBox(height: DonySpacing.xs),
                 Text(
                   'Jusqu\'à 4 images pour aider notre équipe à comprendre.',
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodySmall
-                      ?.copyWith(color: cs.onSurfaceVariant),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
                 const SizedBox(height: DonySpacing.sm),
                 const IncidentPhotoSection(),
                 const SizedBox(height: DonySpacing.xl),
                 BlocBuilder<IncidentPhotosCubit, List<IncidentPhotoUpload>>(
                   builder: (context, photos) {
-                    return BlocBuilder<IncidentReportCubit, IncidentReportState>(
+                    return BlocBuilder<
+                      IncidentReportCubit,
+                      IncidentReportState
+                    >(
                       builder: (context, state) {
                         final photosCubit = context.read<IncidentPhotosCubit>();
-                        final canSubmit = _reason != null &&
+                        final canSubmit =
+                            _reason != null &&
                             !photosCubit.hasUploading &&
                             state is! IncidentReportSubmitting;
                         return SizedBox(
@@ -125,7 +138,9 @@ class _IncidentReportScreenState extends State<IncidentReportScreen> {
                           child: DonyButton(
                             label: 'Envoyer le signalement',
                             isLoading: state is IncidentReportSubmitting,
-                            onPressed: canSubmit ? () => _submit(context) : null,
+                            onPressed: canSubmit
+                                ? () => _submit(context)
+                                : null,
                           ),
                         );
                       },

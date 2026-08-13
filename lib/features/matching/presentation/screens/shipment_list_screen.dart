@@ -60,14 +60,16 @@ class _ShipmentListContentState extends State<_ShipmentListContent> {
     // force: refetch silencieux à chaque ouverture de la liste pour refléter
     // un statut changé hors de l'app (ex. trajet annulé par le voyageur), que
     // le TTL d'auto-refresh masquerait sinon jusqu'à 3 min.
-    context.read<BidBloc>().add(const BidMyListAutoRefreshRequested(force: true));
+    context.read<BidBloc>().add(
+      const BidMyListAutoRefreshRequested(force: true),
+    );
   }
 
   void _onTabRefreshRequested() {
     if (mounted) {
-      context
-          .read<BidBloc>()
-          .add(const BidMyListAutoRefreshRequested(force: true));
+      context.read<BidBloc>().add(
+        const BidMyListAutoRefreshRequested(force: true),
+      );
     }
   }
 
@@ -116,9 +118,7 @@ class _ShipmentListContentState extends State<_ShipmentListContent> {
   @override
   Widget build(BuildContext context) {
     return MultiBlocListener(
-      listeners: [
-        BlocListener<BidBloc, BidState>(listener: _onBidState),
-      ],
+      listeners: [BlocListener<BidBloc, BidState>(listener: _onBidState)],
       child: BlocBuilder<ShipmentFilterCubit, ShipmentFilterState>(
         builder: (context, filter) => BlocBuilder<BidBloc, BidState>(
           builder: (context, bidState) {
@@ -500,11 +500,7 @@ class _DeleteBackground extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const DonyIcon(
-            'trash-2',
-            color: DonyColors.white,
-            size: 26,
-          ),
+          const DonyIcon('trash-2', color: DonyColors.white, size: 26),
           const SizedBox(height: DonySpacing.xs),
           Text(
             'Supprimer',
@@ -535,17 +531,18 @@ class _RawEmptyView extends StatelessWidget {
           child: Center(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xxl),
-              child: DonyEmptyState(
-                title: 'Aucun envoi pour l\'instant',
-                description:
-                    'Trouvez un voyageur et envoyez votre colis vers l\'Afrique.',
-                mascotte: DonyMascotteType.assis,
-                actionLabel: 'Rechercher un trajet',
-                onAction: onSearchTrip,
-              )
-                  .animate()
-                  .fadeIn(duration: 300.ms)
-                  .slideY(begin: 0.04, curve: Curves.easeOutCubic),
+              child:
+                  DonyEmptyState(
+                        title: 'Aucun envoi pour l\'instant',
+                        description:
+                            'Trouvez un voyageur et envoyez votre colis vers l\'Afrique.',
+                        mascotte: DonyMascotteType.assis,
+                        actionLabel: 'Rechercher un trajet',
+                        onAction: onSearchTrip,
+                      )
+                      .animate()
+                      .fadeIn(duration: 300.ms)
+                      .slideY(begin: 0.04, curve: Curves.easeOutCubic),
             ),
           ),
         ),

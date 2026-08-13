@@ -85,11 +85,7 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            DonyIcon(
-              'circle-alert',
-              size: 48,
-              color: cs.error,
-            ),
+            DonyIcon('circle-alert', size: 48, color: cs.error),
             const SizedBox(height: DonySpacing.base),
             Text(
               'Une erreur est survenue',
@@ -142,18 +138,12 @@ class _LoadedView extends StatelessWidget {
           decoration: BoxDecoration(
             color: cs.infoLight,
             borderRadius: BorderRadius.circular(DonyRadius.md),
-            border: Border.all(
-              color: cs.info.withValues(alpha: 0.25),
-            ),
+            border: Border.all(color: cs.info.withValues(alpha: 0.25)),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              DonyIcon(
-                'info',
-                size: 18,
-                color: cs.info,
-              ),
+              DonyIcon('info', size: 18, color: cs.info),
               const SizedBox(width: DonySpacing.sm),
               Expanded(
                 child: Text(
@@ -239,11 +229,7 @@ class _EmptyGrid extends StatelessWidget {
                 color: cs.primaryContainer,
                 shape: BoxShape.circle,
               ),
-              child: DonyIcon(
-                'layout-grid',
-                size: 32,
-                color: cs.primary,
-              ),
+              child: DonyIcon('layout-grid', size: 32, color: cs.primary),
             ),
             const SizedBox(height: DonySpacing.base),
             Text(
@@ -388,10 +374,7 @@ class _PriceGridItemTile extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     return Row(
       children: [
-        Text(
-          label,
-          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-        ),
+        Text(label, style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
         const Spacer(),
         Text(
           value,
@@ -435,8 +418,8 @@ class _PriceGridItemTile extends StatelessWidget {
     ).then((confirmed) {
       if (confirmed == true && context.mounted) {
         context.read<PriceGridBloc>().add(
-              PriceGridItemDeleteRequested(item.id),
-            );
+          PriceGridItemDeleteRequested(item.id),
+        );
       }
     });
   }

@@ -1,6 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
-import 'package:dony/features/package_request/presentation/_theme.dart';
 import 'package:flutter/material.dart';
 
 /// Banner d'attente affiché en bas du thread pour les statuts intermédiaires.

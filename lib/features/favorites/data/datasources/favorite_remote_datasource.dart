@@ -34,8 +34,9 @@ class FavoriteRemoteDatasource {
   Future<List<PackageRequestSearchItem>> packageRequests() async {
     final res = await _apiClient.dio.get('/favorites/package-requests');
     return (res.data as List)
-        .map((e) =>
-            PackageRequestSearchItem.fromJson(e as Map<String, dynamic>))
+        .map(
+          (e) => PackageRequestSearchItem.fromJson(e as Map<String, dynamic>),
+        )
         .toList();
   }
 }

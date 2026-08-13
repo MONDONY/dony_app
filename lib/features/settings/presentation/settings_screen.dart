@@ -52,7 +52,10 @@ class SettingsScreen extends StatelessWidget {
                     label: 'Thème',
                     subtitle: 'Prioritaire sur le réglage système',
                     showDivider: false,
-                    trailing: _disclosure(context, _themeLabel(prefs.themeMode)),
+                    trailing: _disclosure(
+                      context,
+                      _themeLabel(prefs.themeMode),
+                    ),
                     onTap: () => _showThemePicker(context, prefs.themeMode),
                   ),
                 ],
@@ -72,7 +75,8 @@ class SettingsScreen extends StatelessWidget {
                       context,
                       prefs.languageCode == 'fr' ? 'Français' : 'English',
                     ),
-                    onTap: () => _showLanguagePicker(context, prefs.languageCode),
+                    onTap: () =>
+                        _showLanguagePicker(context, prefs.languageCode),
                   ),
                 ],
               ),
@@ -161,7 +165,8 @@ class SettingsScreen extends StatelessWidget {
                     iconColor: cs.primary,
                     iconBgColor: cs.primaryContainer,
                     label: 'Réafficher les suggestions',
-                    subtitle: 'Fait revenir les cartes fermées (écran Recherche)',
+                    subtitle:
+                        'Fait revenir les cartes fermées (écran Recherche)',
                     showDivider: false,
                     onTap: () => _resetGuidanceCards(context),
                   ),
@@ -249,23 +254,25 @@ class SettingsScreen extends StatelessWidget {
 
   // ── Helpers thème / destinations ──────────────────────────────────────────
   String _themeIcon(String mode) => switch (mode) {
-        'light' => 'sun',
-        'dark' => 'moon',
-        _ => 'sun-moon',
-      };
+    'light' => 'sun',
+    'dark' => 'moon',
+    _ => 'sun-moon',
+  };
 
   String _themeLabel(String mode) => switch (mode) {
-        'light' => 'Clair',
-        'dark' => 'Sombre',
-        _ => 'Auto',
-      };
+    'light' => 'Clair',
+    'dark' => 'Sombre',
+    _ => 'Auto',
+  };
 
   String _destinationsSummary(List<String> codes) {
     if (codes.isEmpty) {
       return 'Aucune';
     }
-    final names =
-        _destinations.where((d) => codes.contains(d.$1)).map((d) => d.$3).toList();
+    final names = _destinations
+        .where((d) => codes.contains(d.$1))
+        .map((d) => d.$3)
+        .toList();
     if (names.length <= 1) {
       return names.join();
     }
@@ -278,7 +285,10 @@ class SettingsScreen extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(value, style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant)),
+        Text(
+          value,
+          style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
+        ),
         const SizedBox(width: DonySpacing.xs),
         DonyIcon('chevron-right', size: 18, color: cs.onSurfaceVariant),
       ],
@@ -302,8 +312,10 @@ class SettingsScreen extends StatelessWidget {
               ListTile(
                 title: Text(opt.$2),
                 trailing: current == opt.$1
-                    ? DonyIcon('check',
-                        color: Theme.of(sheetCtx).colorScheme.primary)
+                    ? DonyIcon(
+                        'check',
+                        color: Theme.of(sheetCtx).colorScheme.primary,
+                      )
                     : null,
                 onTap: () {
                   bloc.add(ThemeChanged(opt.$1));
@@ -334,8 +346,10 @@ class SettingsScreen extends StatelessWidget {
                     ListTile(
                       title: Text('${dest.$2} ${dest.$3}'),
                       trailing: selected.contains(dest.$1)
-                          ? DonyIcon('check',
-                              color: Theme.of(ctx).colorScheme.primary)
+                          ? DonyIcon(
+                              'check',
+                              color: Theme.of(ctx).colorScheme.primary,
+                            )
                           : null,
                       onTap: () => bloc.add(DestinationToggled(dest.$1)),
                     ),
@@ -359,26 +373,30 @@ class SettingsScreen extends StatelessWidget {
             ListTile(
               title: const Text('Français'),
               trailing: current == 'fr'
-                  ? DonyIcon('check',
-                      color: Theme.of(context).colorScheme.primary)
+                  ? DonyIcon(
+                      'check',
+                      color: Theme.of(context).colorScheme.primary,
+                    )
                   : null,
               onTap: () {
-                context
-                    .read<AppPreferencesBloc>()
-                    .add(const LanguageChanged('fr'));
+                context.read<AppPreferencesBloc>().add(
+                  const LanguageChanged('fr'),
+                );
                 Navigator.pop(context);
               },
             ),
             ListTile(
               title: const Text('English'),
               trailing: current == 'en'
-                  ? DonyIcon('check',
-                      color: Theme.of(context).colorScheme.primary)
+                  ? DonyIcon(
+                      'check',
+                      color: Theme.of(context).colorScheme.primary,
+                    )
                   : null,
               onTap: () {
-                context
-                    .read<AppPreferencesBloc>()
-                    .add(const LanguageChanged('en'));
+                context.read<AppPreferencesBloc>().add(
+                  const LanguageChanged('en'),
+                );
                 Navigator.pop(context);
               },
             ),
@@ -388,4 +406,3 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 }
-

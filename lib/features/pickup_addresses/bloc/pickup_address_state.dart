@@ -17,10 +17,9 @@ class PickupAddressState {
     PickupAddressStatus? status,
     List<PickupAddress>? addresses,
     String? error,
-  }) =>
-      PickupAddressState(
-        status: status ?? this.status,
-        addresses: addresses ?? this.addresses,
-        error: error,
-      );
+  }) => PickupAddressState(
+    status: status ?? this.status,
+    addresses: addresses ?? this.addresses,
+    error: error,
+  );
 }

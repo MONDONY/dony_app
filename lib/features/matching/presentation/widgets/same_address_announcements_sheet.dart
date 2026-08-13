@@ -1,12 +1,12 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_card.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 class SameAddressAnnouncementsSheet extends StatelessWidget {
   const SameAddressAnnouncementsSheet({
@@ -36,8 +36,9 @@ class SameAddressAnnouncementsSheet extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: cs.surface,
-        borderRadius:
-            const BorderRadius.vertical(top: Radius.circular(DonyRadius.sheet)),
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(DonyRadius.sheet),
+        ),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -87,12 +88,12 @@ class SameAddressAnnouncementsSheet extends StatelessWidget {
                 return ListView.separated(
                   shrinkWrap: true,
                   itemCount: announcements.length,
-                  separatorBuilder: (_, __) =>
+                  separatorBuilder: (_, _) =>
                       const SizedBox(height: DonySpacing.md),
                   itemBuilder: (_, i) {
                     final a = announcements[i];
-                    final isOwn = currentUserId != null &&
-                        a.travelerId == currentUserId;
+                    final isOwn =
+                        currentUserId != null && a.travelerId == currentUserId;
                     final existingBid = activeBids[a.id];
                     return TravelerCard(
                       announcement: a,
@@ -103,15 +104,14 @@ class SameAddressAnnouncementsSheet extends StatelessWidget {
                       onTap: isOwn
                           ? null
                           : existingBid != null
-                              ? () {
-                                  Navigator.of(context, rootNavigator: true)
-                                      .pop();
-                                  context.push(
-                                    '/bids/${existingBid.id}',
-                                    extra: existingBid,
-                                  );
-                                }
-                              : () => onTap(a),
+                          ? () {
+                              Navigator.of(context, rootNavigator: true).pop();
+                              context.push(
+                                '/bids/${existingBid.id}',
+                                extra: existingBid,
+                              );
+                            }
+                          : () => onTap(a),
                     );
                   },
                 );

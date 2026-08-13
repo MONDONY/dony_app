@@ -29,14 +29,8 @@ Future<void> _pump(WidgetTester tester, BidModel bid) => tester.pumpWidget(
 
 void main() {
   test('travelerAmountLabel formate le net dans la devise du bid', () {
-    expect(
-      travelerAmountLabel(_bid(status: 'ACCEPTED', total: 48)),
-      contains('48'),
-    );
-    expect(
-      travelerAmountLabel(_bid(status: 'ACCEPTED', total: 48)),
-      contains('€'),
-    );
+    expect(travelerAmountLabel(_bid(status: 'ACCEPTED')), contains('48'));
+    expect(travelerAmountLabel(_bid(status: 'ACCEPTED')), contains('€'));
     expect(travelerAmountLabel(_bid(status: 'ACCEPTED', total: null)), '-');
   });
 

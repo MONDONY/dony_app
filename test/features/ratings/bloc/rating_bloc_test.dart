@@ -31,61 +31,55 @@ void main() {
     blocTest<RatingBloc, RatingState>(
       'emits [RatingLoading, RatingSuccess] when submission succeeds',
       setUp: () {
-        when(() => mockRepo.submitRating(
-              bidId: 'bid-1',
-              stars: 5,
-              comment: 'Super voyageur !',
-            )).thenAnswer((_) async {});
+        when(
+          () => mockRepo.submitRating(
+            bidId: 'bid-1',
+            stars: 5,
+            comment: 'Super voyageur !',
+          ),
+        ).thenAnswer((_) async {});
       },
       build: buildBloc,
-      act: (bloc) => bloc.add(const RatingSubmitRequested(
-        bidId: 'bid-1',
-        stars: 5,
-        comment: 'Super voyageur !',
-      )),
-      expect: () => [
-        isA<RatingLoading>(),
-        isA<RatingSuccess>(),
-      ],
+      act: (bloc) => bloc.add(
+        const RatingSubmitRequested(
+          bidId: 'bid-1',
+          stars: 5,
+          comment: 'Super voyageur !',
+        ),
+      ),
+      expect: () => [isA<RatingLoading>(), isA<RatingSuccess>()],
     );
 
     blocTest<RatingBloc, RatingState>(
       'emits [RatingLoading, RatingSuccess] without comment',
       setUp: () {
-        when(() => mockRepo.submitRating(
-              bidId: 'bid-1',
-              stars: 4,
-              comment: null,
-            )).thenAnswer((_) async {});
+        when(
+          () => mockRepo.submitRating(bidId: 'bid-1', stars: 4),
+        ).thenAnswer((_) async {});
       },
       build: buildBloc,
-      act: (bloc) => bloc.add(const RatingSubmitRequested(
-        bidId: 'bid-1',
-        stars: 4,
-      )),
-      expect: () => [
-        isA<RatingLoading>(),
-        isA<RatingSuccess>(),
-      ],
+      act: (bloc) =>
+          bloc.add(const RatingSubmitRequested(bidId: 'bid-1', stars: 4)),
+      expect: () => [isA<RatingLoading>(), isA<RatingSuccess>()],
     );
 
     blocTest<RatingBloc, RatingState>(
       'emits [RatingLoading, RatingError] with AppException message',
       setUp: () {
-        when(() => mockRepo.submitRating(
-              bidId: 'bid-1',
-              stars: 3,
-              comment: null,
-            )).thenThrow(const ServerException('Bid non trouvé'));
+        when(
+          () => mockRepo.submitRating(bidId: 'bid-1', stars: 3),
+        ).thenThrow(const ServerException('Bid non trouvé'));
       },
       build: buildBloc,
-      act: (bloc) => bloc.add(const RatingSubmitRequested(
-        bidId: 'bid-1',
-        stars: 3,
-      )),
+      act: (bloc) =>
+          bloc.add(const RatingSubmitRequested(bidId: 'bid-1', stars: 3)),
       expect: () => [
         isA<RatingLoading>(),
-        isA<RatingError>().having((e) => e.error.message, 'message', 'Bid non trouvé'),
+        isA<RatingError>().having(
+          (e) => e.error.message,
+          'message',
+          'Bid non trouvé',
+        ),
       ],
     );
 
@@ -96,41 +90,27 @@ void main() {
           requestOptions: RequestOptions(),
           error: Exception('network error'),
         );
-        when(() => mockRepo.submitRating(
-              bidId: 'bid-1',
-              stars: 2,
-              comment: null,
-            )).thenThrow(dioErr);
+        when(
+          () => mockRepo.submitRating(bidId: 'bid-1', stars: 2),
+        ).thenThrow(dioErr);
       },
       build: buildBloc,
-      act: (bloc) => bloc.add(const RatingSubmitRequested(
-        bidId: 'bid-1',
-        stars: 2,
-      )),
-      expect: () => [
-        isA<RatingLoading>(),
-        isA<RatingError>(),
-      ],
+      act: (bloc) =>
+          bloc.add(const RatingSubmitRequested(bidId: 'bid-1', stars: 2)),
+      expect: () => [isA<RatingLoading>(), isA<RatingError>()],
     );
 
     blocTest<RatingBloc, RatingState>(
       'emits [RatingLoading, RatingError] with fallback message on generic error',
       setUp: () {
-        when(() => mockRepo.submitRating(
-              bidId: 'bid-1',
-              stars: 1,
-              comment: null,
-            )).thenThrow(Exception('unknown'));
+        when(
+          () => mockRepo.submitRating(bidId: 'bid-1', stars: 1),
+        ).thenThrow(Exception('unknown'));
       },
       build: buildBloc,
-      act: (bloc) => bloc.add(const RatingSubmitRequested(
-        bidId: 'bid-1',
-        stars: 1,
-      )),
-      expect: () => [
-        isA<RatingLoading>(),
-        isA<RatingError>(),
-      ],
+      act: (bloc) =>
+          bloc.add(const RatingSubmitRequested(bidId: 'bid-1', stars: 1)),
+      expect: () => [isA<RatingLoading>(), isA<RatingError>()],
     );
   });
 
@@ -138,38 +118,43 @@ void main() {
     blocTest<RatingBloc, RatingState>(
       'emits [RatingLoading, RatingSuccess] on success',
       setUp: () {
-        when(() => mockRepo.submitTravelerRating(
-              bidId: 'bid-1',
-              stars: 4,
-              comment: 'Bon expéditeur',
-            )).thenAnswer((_) async {});
+        when(
+          () => mockRepo.submitTravelerRating(
+            bidId: 'bid-1',
+            stars: 4,
+            comment: 'Bon expéditeur',
+          ),
+        ).thenAnswer((_) async {});
       },
       build: buildBloc,
-      act: (bloc) => bloc.add(const TravelerRatingSubmitRequested(
-        bidId: 'bid-1',
-        stars: 4,
-        comment: 'Bon expéditeur',
-      )),
+      act: (bloc) => bloc.add(
+        const TravelerRatingSubmitRequested(
+          bidId: 'bid-1',
+          stars: 4,
+          comment: 'Bon expéditeur',
+        ),
+      ),
       expect: () => [isA<RatingLoading>(), isA<RatingSuccess>()],
     );
 
     blocTest<RatingBloc, RatingState>(
       'emits [RatingLoading, RatingError] on failure',
       setUp: () {
-        when(() => mockRepo.submitTravelerRating(
-              bidId: 'bid-1',
-              stars: 3,
-              comment: null,
-            )).thenThrow(const ServerException('Interdit'));
+        when(
+          () => mockRepo.submitTravelerRating(bidId: 'bid-1', stars: 3),
+        ).thenThrow(const ServerException('Interdit'));
       },
       build: buildBloc,
-      act: (bloc) => bloc.add(const TravelerRatingSubmitRequested(
-        bidId: 'bid-1',
-        stars: 3,
-      )),
+      act: (bloc) => bloc.add(
+        const TravelerRatingSubmitRequested(bidId: 'bid-1', stars: 3),
+      ),
       expect: () => [
         isA<RatingLoading>(),
-        isA<RatingError>().having((e) => e.error.message, 'message', 'Interdit'),
+        isA<RatingError>().having(
+          (e) => e.error.message,
+          'message',
+          'Interdit',
+        ),
       ],
     );
   });
@@ -178,14 +163,15 @@ void main() {
     blocTest<RatingBloc, RatingState>(
       'emits PendingRatingFound when pending exists',
       setUp: () {
-        when(() => mockRepo.getPendingRating()).thenAnswer((_) async =>
-            PendingRating(
-              bidId: 'bid-42',
-              otherPartyName: 'Moussa D.',
-              otherPartyId: 'user-99',
-              deliveredAt: DateTime(2026, 5, 8),
-              isTravelerRating: false,
-            ));
+        when(() => mockRepo.getPendingRating()).thenAnswer(
+          (_) async => PendingRating(
+            bidId: 'bid-42',
+            otherPartyName: 'Moussa D.',
+            otherPartyId: 'user-99',
+            deliveredAt: DateTime(2026, 5, 8),
+            isTravelerRating: false,
+          ),
+        );
       },
       build: buildBloc,
       act: (bloc) => bloc.add(const PendingRatingChecked()),
@@ -221,19 +207,19 @@ void main() {
     blocTest<RatingBloc, RatingState>(
       'emits UserRatingsLoaded on success',
       setUp: () {
-        when(() => mockRepo.getUserRatings('user-1', page: 0)).thenAnswer(
-            (_) async => const RatingSummary(
-                  averageRating: 4.5,
-                  ratingCount: 10,
-                  distribution: {1: 0, 2: 0, 3: 1, 4: 4, 5: 5},
-                  ratings: [],
-                  page: 0,
-                  totalPages: 1,
-                ));
+        when(() => mockRepo.getUserRatings('user-1')).thenAnswer(
+          (_) async => const RatingSummary(
+            averageRating: 4.5,
+            ratingCount: 10,
+            distribution: {1: 0, 2: 0, 3: 1, 4: 4, 5: 5},
+            ratings: [],
+            page: 0,
+            totalPages: 1,
+          ),
+        );
       },
       build: buildBloc,
-      act: (bloc) =>
-          bloc.add(const UserRatingsLoadRequested(userId: 'user-1', page: 0)),
+      act: (bloc) => bloc.add(const UserRatingsLoadRequested(userId: 'user-1')),
       expect: () => [
         isA<UserRatingsLoaded>()
             .having((s) => s.ratingCount, 'ratingCount', 10)
@@ -244,15 +230,18 @@ void main() {
     blocTest<RatingBloc, RatingState>(
       'emits RatingError on failure',
       setUp: () {
-        when(() => mockRepo.getUserRatings('user-1', page: 0))
-            .thenThrow(const ServerException('Utilisateur introuvable'));
+        when(
+          () => mockRepo.getUserRatings('user-1'),
+        ).thenThrow(const ServerException('Utilisateur introuvable'));
       },
       build: buildBloc,
-      act: (bloc) =>
-          bloc.add(const UserRatingsLoadRequested(userId: 'user-1', page: 0)),
+      act: (bloc) => bloc.add(const UserRatingsLoadRequested(userId: 'user-1')),
       expect: () => [
         isA<RatingError>().having(
-            (e) => e.error.message, 'message', 'Utilisateur introuvable'),
+          (e) => e.error.message,
+          'message',
+          'Utilisateur introuvable',
+        ),
       ],
     );
   });

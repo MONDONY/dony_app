@@ -21,7 +21,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 /// Le centre se déplace par tap sur la carte ou par drag du marqueur. Le label
 /// (nom de lieu) est résolu par reverse-geocoding (best-effort, débouncé).
 class ZonePickerField extends StatefulWidget {
-  ZonePickerField({
+  const ZonePickerField({
     super.key,
     this.initialCenter,
     this.initialRadiusKm = 25,
@@ -37,7 +37,7 @@ class ZonePickerField extends StatefulWidget {
 
   /// Appelé à chaque changement de centre / rayon / label.
   final void Function(double lat, double lng, int radiusKm, String? label)
-      onChanged;
+  onChanged;
 
   /// Injectable pour les tests (par défaut : `geocoding`).
   final Future<String?> Function(double lat, double lng) reverseGeocode;
@@ -75,8 +75,10 @@ class _ZonePickerFieldState extends State<ZonePickerField> {
   void initState() {
     super.initState();
     _center = widget.initialCenter ?? ZonePickerField._fallbackCenter;
-    _radiusKm = widget.initialRadiusKm
-        .clamp(ZonePickerField.minRadiusKm, ZonePickerField.maxRadiusKm);
+    _radiusKm = widget.initialRadiusKm.clamp(
+      ZonePickerField.minRadiusKm,
+      ZonePickerField.maxRadiusKm,
+    );
     _label = widget.initialLabel;
     // Émet la zone initiale dès l'ouverture pour que le cubit la connaisse.
     WidgetsBinding.instance.addPostFrameCallback((_) => _emit());
@@ -90,12 +92,8 @@ class _ZonePickerFieldState extends State<ZonePickerField> {
     super.dispose();
   }
 
-  void _emit() => widget.onChanged(
-        _center.latitude,
-        _center.longitude,
-        _radiusKm,
-        _label,
-      );
+  void _emit() =>
+      widget.onChanged(_center.latitude, _center.longitude, _radiusKm, _label);
 
   void _setCenter(LatLng c) {
     setState(() => _center = c);
@@ -124,8 +122,10 @@ class _ZonePickerFieldState extends State<ZonePickerField> {
   void _scheduleGeocode() {
     _geocodeDebounce?.cancel();
     _geocodeDebounce = Timer(const Duration(milliseconds: 500), () async {
-      final label =
-          await widget.reverseGeocode(_center.latitude, _center.longitude);
+      final label = await widget.reverseGeocode(
+        _center.latitude,
+        _center.longitude,
+      );
       if (!mounted || label == null) return;
       setState(() => _label = label);
       _emit();
@@ -137,7 +137,10 @@ class _ZonePickerFieldState extends State<ZonePickerField> {
     if (map == null) return;
     try {
       await map.animateCamera(
-        CameraUpdate.newLatLngBounds(boundsAround(_center, _radiusKm * 1.4), 40),
+        CameraUpdate.newLatLngBounds(
+          boundsAround(_center, _radiusKm * 1.4),
+          40,
+        ),
       );
     } catch (_) {
       // Bounds peut échouer avant le layout — sans gravité (zoom initial gardé).
@@ -259,8 +262,10 @@ class _ZonePickerFieldState extends State<ZonePickerField> {
         ),
         Row(
           children: [
-            Text('Rayon',
-                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
+            Text(
+              'Rayon',
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
             const Spacer(),
             Text(
               '$_radiusKm km',

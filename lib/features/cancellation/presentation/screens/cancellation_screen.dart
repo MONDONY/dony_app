@@ -66,10 +66,12 @@ class _CancellationScreenState extends State<CancellationScreen> {
       iconAsset: 'triangle-alert',
     ).then((confirmed) {
       if (confirmed == true) {
-        bloc.add(CancellationTripRequested(
-          announcementId: widget.announcementId,
-          reason: reason,
-        ));
+        bloc.add(
+          CancellationTripRequested(
+            announcementId: widget.announcementId,
+            reason: reason,
+          ),
+        );
       }
     });
   }
@@ -91,7 +93,7 @@ class _CancellationScreenState extends State<CancellationScreen> {
             context,
             message: n > 0
                 ? 'Trajet annulé · $n expéditeur${n > 1 ? 's' : ''} '
-                    'remboursé${n > 1 ? 's' : ''}'
+                      'remboursé${n > 1 ? 's' : ''}'
                 : 'Trajet annulé',
             type: DonySnackbarType.success,
           );
@@ -107,49 +109,65 @@ class _CancellationScreenState extends State<CancellationScreen> {
         // remonte pas fiablement `bottomNavigationBar` au-dessus du clavier,
         // ce qui le cachait derrière quand le champ "Précisez..." était focus.
         // Même fix que phone_auth_screen.dart / otp_verification_screen.dart.
-        body: Builder(builder: (context) {
-          final h = DonyLayout.hPadding(context);
-          return Column(
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.fromLTRB(h, DonySpacing.xl, h, DonySpacing.xl),
-                  child: DonyLayout.constrained(
-                    context,
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _WarningBanner(cs: cs, tt: tt),
-                        const SizedBox(height: DonySpacing.xl),
-                        Text(
-                          'Raison de l\'annulation',
-                          style: tt.titleMedium?.copyWith(color: cs.onSurface),
-                        ),
-                        const SizedBox(height: DonySpacing.md),
-                        DonyRadioGroup<String>(
-                          value: _selectedReason,
-                          onChanged: (v) => setState(() => _selectedReason = v),
-                          options: _reasons
-                              .map((r) => DonyRadioOption(value: r, label: r))
-                              .toList(),
-                        ),
-                        if (_selectedReason == 'Autre') ...[
-                          const SizedBox(height: DonySpacing.md),
-                          DonyTextField(
-                            controller: _otherCtrl,
-                            label: 'Précisez...',
-                            hint: 'Décrivez votre raison',
-                          ),
-                        ],
-                      ],
-                    ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
+        body: Builder(
+          builder: (context) {
+            final h = DonyLayout.hPadding(context);
+            return Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.fromLTRB(
+                      h,
+                      DonySpacing.xl,
+                      h,
+                      DonySpacing.xl,
+                    ),
+                    child: DonyLayout.constrained(
+                      context,
+                      Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _WarningBanner(cs: cs, tt: tt),
+                              const SizedBox(height: DonySpacing.xl),
+                              Text(
+                                'Raison de l\'annulation',
+                                style: tt.titleMedium?.copyWith(
+                                  color: cs.onSurface,
+                                ),
+                              ),
+                              const SizedBox(height: DonySpacing.md),
+                              DonyRadioGroup<String>(
+                                value: _selectedReason,
+                                onChanged: (v) =>
+                                    setState(() => _selectedReason = v),
+                                options: _reasons
+                                    .map(
+                                      (r) =>
+                                          DonyRadioOption(value: r, label: r),
+                                    )
+                                    .toList(),
+                              ),
+                              if (_selectedReason == 'Autre') ...[
+                                const SizedBox(height: DonySpacing.md),
+                                DonyTextField(
+                                  controller: _otherCtrl,
+                                  label: 'Précisez...',
+                                  hint: 'Décrivez votre raison',
+                                ),
+                              ],
+                            ],
+                          )
+                          .animate()
+                          .fadeIn(duration: 300.ms)
+                          .slideY(begin: 0.04, curve: Curves.easeOutCubic),
+                    ),
                   ),
                 ),
-              ),
-              _BottomBar(onConfirm: () => _confirm(context)),
-            ],
-          );
-        }),
+                _BottomBar(onConfirm: () => _confirm(context)),
+              ],
+            );
+          },
+        ),
       ),
     );
   }

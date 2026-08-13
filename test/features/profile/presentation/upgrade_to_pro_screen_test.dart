@@ -37,7 +37,6 @@ UserModel _nonProUser() => const UserModel(
   roles: ['ROLE_TRAVELER'],
   kycStatus: 'NONE',
   status: 'ACTIVE',
-  isProAccount: false,
 );
 
 UserModel _proUser() => const UserModel(
@@ -61,10 +60,10 @@ Widget _wrap(MockProfileRepository repo, MockAuthBloc authBloc) {
     child: MaterialApp.router(
       routerConfig: GoRouter(
         routes: [
-          GoRoute(path: '/', builder: (_, __) => const UpgradeToProScreen()),
+          GoRoute(path: '/', builder: (_, _) => const UpgradeToProScreen()),
           GoRoute(
             path: '/profile',
-            builder: (_, __) => const Scaffold(body: Text('Profile')),
+            builder: (_, _) => const Scaffold(body: Text('Profile')),
           ),
         ],
       ),
@@ -161,7 +160,7 @@ void main() {
       whenListen<AuthState>(
         mockAuthBloc,
         const Stream.empty(),
-        initialState: AuthInitial(),
+        initialState: const AuthInitial(),
       );
     });
 

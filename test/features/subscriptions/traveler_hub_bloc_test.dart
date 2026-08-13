@@ -12,7 +12,7 @@ TravelerAnnouncement _ann() => TravelerAnnouncement(
   id: 'a1',
   departureCity: 'Paris',
   arrivalCity: 'Dakar',
-  departureDate: DateTime(2026, 6, 1),
+  departureDate: DateTime(2026, 6),
   pricePerKg: 8,
   availableKg: 5,
   status: 'ACTIVE',
@@ -56,10 +56,7 @@ void main() {
       when(() => repo.subscribe('t1')).thenAnswer((_) async {});
       return TravelerHubBloc(repo)..travelerId = 't1';
     },
-    seed: () => const TravelerHubState(
-      status: TravelerHubStatus.success,
-      subscribed: false,
-    ),
+    seed: () => const TravelerHubState(status: TravelerHubStatus.success),
     act: (b) => b.add(const HubSubscribePressed()),
     expect: () => [
       isA<TravelerHubState>().having((s) => s.subscribed, 'subscribed', true),
@@ -78,7 +75,6 @@ void main() {
     seed: () => const TravelerHubState(
       status: TravelerHubStatus.success,
       subscribed: true,
-      pushEnabled: false,
     ),
     act: (b) => b.add(const HubTogglePush(true)),
     expect: () => [
@@ -161,10 +157,7 @@ void main() {
       when(() => repo.subscribe('t1')).thenThrow(Exception('subscribe error'));
       return TravelerHubBloc(repo)..travelerId = 't1';
     },
-    seed: () => const TravelerHubState(
-      status: TravelerHubStatus.success,
-      subscribed: false,
-    ),
+    seed: () => const TravelerHubState(status: TravelerHubStatus.success),
     act: (b) => b.add(const HubSubscribePressed()),
     expect: () => [
       isA<TravelerHubState>()
@@ -202,7 +195,6 @@ void main() {
     seed: () => const TravelerHubState(
       status: TravelerHubStatus.success,
       subscribed: true,
-      pushEnabled: false,
     ),
     act: (b) => b.add(const HubTogglePush(true)),
     expect: () => [

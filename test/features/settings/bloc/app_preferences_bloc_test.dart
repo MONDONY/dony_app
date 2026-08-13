@@ -13,8 +13,9 @@ void main() {
   setUp(() {
     mockBox = MockBox();
     // Par défaut, retourne la valeur defaultValue pour toute clé
-    when(() => mockBox.get(any(), defaultValue: any(named: 'defaultValue')))
-        .thenAnswer((inv) => inv.namedArguments[#defaultValue]);
+    when(
+      () => mockBox.get(any(), defaultValue: any(named: 'defaultValue')),
+    ).thenAnswer((inv) => inv.namedArguments[#defaultValue]);
     when(() => mockBox.put(any(), any())).thenAnswer((_) async {});
   });
 
@@ -57,10 +58,12 @@ void main() {
     blocTest<AppPreferencesBloc, AppPreferencesState>(
       'DestinationToggled retire SN si déjà présent',
       build: () {
-        when(() => mockBox.get(
-              HiveService.kFavDestinations,
-              defaultValue: any(named: 'defaultValue'),
-            )).thenReturn(['SN', 'CI']);
+        when(
+          () => mockBox.get(
+            HiveService.kFavDestinations,
+            defaultValue: any(named: 'defaultValue'),
+          ),
+        ).thenReturn(['SN', 'CI']);
         return AppPreferencesBloc(mockBox);
       },
       act: (bloc) => bloc.add(const DestinationToggled('SN')),
@@ -125,17 +128,20 @@ void main() {
           isTrue,
         ),
       ],
-      verify: (_) =>
-          verify(() => mockBox.put(HiveService.kBiometricEnabled, true)).called(1),
+      verify: (_) => verify(
+        () => mockBox.put(HiveService.kBiometricEnabled, true),
+      ).called(1),
     );
 
     blocTest<AppPreferencesBloc, AppPreferencesState>(
       'BiometricToggled désactive biometricEnabled quand activé',
       build: () {
-        when(() => mockBox.get(
-              HiveService.kBiometricEnabled,
-              defaultValue: any(named: 'defaultValue'),
-            )).thenReturn(true);
+        when(
+          () => mockBox.get(
+            HiveService.kBiometricEnabled,
+            defaultValue: any(named: 'defaultValue'),
+          ),
+        ).thenReturn(true);
         return AppPreferencesBloc(mockBox);
       },
       act: (bloc) => bloc.add(const BiometricToggled()),
@@ -167,10 +173,12 @@ void main() {
         'AppLockBiometricToggled bascule appLockBiometricEnabled de true à false',
         build: () {
           // appLockBiometricEnabled par défaut = true
-          when(() => mockBox.get(
-                HiveService.kAppLockBiometric,
-                defaultValue: any(named: 'defaultValue'),
-              )).thenReturn(true);
+          when(
+            () => mockBox.get(
+              HiveService.kAppLockBiometric,
+              defaultValue: any(named: 'defaultValue'),
+            ),
+          ).thenReturn(true);
           return AppPreferencesBloc(mockBox);
         },
         act: (bloc) => bloc.add(const AppLockBiometricToggled()),
@@ -189,10 +197,12 @@ void main() {
       blocTest<AppPreferencesBloc, AppPreferencesState>(
         'AppLockBiometricToggled bascule appLockBiometricEnabled de false à true',
         build: () {
-          when(() => mockBox.get(
-                HiveService.kAppLockBiometric,
-                defaultValue: any(named: 'defaultValue'),
-              )).thenReturn(false);
+          when(
+            () => mockBox.get(
+              HiveService.kAppLockBiometric,
+              defaultValue: any(named: 'defaultValue'),
+            ),
+          ).thenReturn(false);
           return AppPreferencesBloc(mockBox);
         },
         act: (bloc) => bloc.add(const AppLockBiometricToggled()),

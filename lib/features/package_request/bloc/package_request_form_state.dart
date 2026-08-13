@@ -1,8 +1,8 @@
 import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/package_request/data/models/package_request.dart';
+import 'package:dony/features/package_request/data/models/parcel_size.dart';
+import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:equatable/equatable.dart';
-import '../data/models/package_request.dart';
-import '../data/models/parcel_size.dart';
-import '../data/models/payment_method.dart';
 
 enum FormSubmissionStatus { idle, submitting, success, error }
 
@@ -117,8 +117,9 @@ class PackageRequestFormState extends Equatable {
     negotiable: negotiable ?? this.negotiable,
     acceptedPaymentMethods:
         acceptedPaymentMethods ?? this.acceptedPaymentMethods,
-    totalBudgetEur:
-        clearTotalBudgetEur ? null : (totalBudgetEur ?? this.totalBudgetEur),
+    totalBudgetEur: clearTotalBudgetEur
+        ? null
+        : (totalBudgetEur ?? this.totalBudgetEur),
     promoCode: clearPromoCode ? null : (promoCode ?? this.promoCode),
     submissionStatus: submissionStatus ?? this.submissionStatus,
     errorMessage: errorMessage ?? this.errorMessage,

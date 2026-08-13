@@ -1,10 +1,10 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:dony/features/settings/bloc/deletion_eligibility_cubit.dart';
-import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/features/settings/presentation/widgets/delete_account_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -142,12 +142,12 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.tap(
-      find.textContaining("Trop de notifications"),
+      find.textContaining('Trop de notifications'),
       warnIfMissed: false,
     );
     await tester.pump();
 
-    expect(find.textContaining("Trop de notifications"), findsOneWidget);
+    expect(find.textContaining('Trop de notifications'), findsOneWidget);
   });
 
   testWidgets('tap Annuler ferme la bottom sheet', (tester) async {
@@ -235,8 +235,8 @@ void main() {
 
       // Emit escrow blocked error
       controller.add(
-        AccountDeletionError(
-          error: const ValidationException('test', code: 'escrow'),
+        const AccountDeletionError(
+          error: ValidationException('test', code: 'escrow'),
           isEscrowBlocked: true,
         ),
       );

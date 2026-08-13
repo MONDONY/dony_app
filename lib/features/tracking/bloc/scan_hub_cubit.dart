@@ -82,15 +82,18 @@ class ScanHubCubit extends Cubit<ScanHubState> {
       }
 
       final selectedTripId = trips.first.id;
-      final scanHistory =
-          await _trackingRepo.getTripScanHistory(selectedTripId);
+      final scanHistory = await _trackingRepo.getTripScanHistory(
+        selectedTripId,
+      );
 
-      emit(ScanHubLoaded(
-        trips: trips,
-        selectedTripId: selectedTripId,
-        bidsByTrip: bidsByTrip,
-        scanHistory: scanHistory,
-      ));
+      emit(
+        ScanHubLoaded(
+          trips: trips,
+          selectedTripId: selectedTripId,
+          bidsByTrip: bidsByTrip,
+          scanHistory: scanHistory,
+        ),
+      );
     } catch (e) {
       emit(ScanHubError(e.toString()));
     }
@@ -104,23 +107,27 @@ class ScanHubCubit extends Cubit<ScanHubState> {
     final current = state;
     if (current is! ScanHubLoaded || current.selectedTripId == tripId) return;
 
-    emit(ScanHubLoaded(
-      trips: current.trips,
-      selectedTripId: tripId,
-      bidsByTrip: current.bidsByTrip,
-      scanHistory: const [],
-    ));
+    emit(
+      ScanHubLoaded(
+        trips: current.trips,
+        selectedTripId: tripId,
+        bidsByTrip: current.bidsByTrip,
+        scanHistory: const [],
+      ),
+    );
 
     try {
       final scanHistory = await _trackingRepo.getTripScanHistory(tripId);
       final latest = state;
       if (latest is ScanHubLoaded && latest.selectedTripId == tripId) {
-        emit(ScanHubLoaded(
-          trips: latest.trips,
-          selectedTripId: tripId,
-          bidsByTrip: latest.bidsByTrip,
-          scanHistory: scanHistory,
-        ));
+        emit(
+          ScanHubLoaded(
+            trips: latest.trips,
+            selectedTripId: tripId,
+            bidsByTrip: latest.bidsByTrip,
+            scanHistory: scanHistory,
+          ),
+        );
       }
     } catch (_) {
       // L'historique reste vide pour ce trajet si le fetch échoue — le

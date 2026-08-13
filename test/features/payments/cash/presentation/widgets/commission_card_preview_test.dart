@@ -6,10 +6,10 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   testWidgets('renders masked number and expiry date', (tester) async {
     await tester.pumpWidget(
-      MaterialApp(
+      const MaterialApp(
         home: Scaffold(
           body: CommissionCardPreview(
-            card: const CommissionMethod(
+            card: CommissionMethod(
               brand: 'visa',
               last4: '4242',
               expMonth: 3,
@@ -26,10 +26,10 @@ void main() {
 
   testWidgets('shows brand indicator', (tester) async {
     await tester.pumpWidget(
-      MaterialApp(
+      const MaterialApp(
         home: Scaffold(
           body: CommissionCardPreview(
-            card: const CommissionMethod(
+            card: CommissionMethod(
               brand: 'mastercard',
               last4: '1234',
               expMonth: 12,

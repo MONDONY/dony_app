@@ -1,7 +1,12 @@
 import 'package:test/test.dart';
 import '../../tool/parse_timeline.dart';
 
-Map<String, dynamic> summary({double avg = 5, double worst = 14, int missed = 0, int frames = 100}) => {
+Map<String, dynamic> summary({
+  double avg = 5,
+  double worst = 14,
+  int missed = 0,
+  int frames = 100,
+}) => {
   'average_frame_build_time_millis': avg,
   'worst_frame_build_time_millis': worst,
   'missed_frame_build_budget_count': missed,
@@ -19,7 +24,7 @@ void main() {
     expect(verdictFor(summary(avg: 20)), 'FAIL');
   });
   test('FAIL quand %jank > 5%', () {
-    expect(verdictFor(summary(missed: 10, frames: 100)), 'FAIL');
+    expect(verdictFor(summary(missed: 10)), 'FAIL');
   });
   test('WARN quand avg entre 8 et 12', () {
     expect(verdictFor(summary(avg: 10)), 'WARN');

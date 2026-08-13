@@ -19,7 +19,10 @@ class TripRecurrenceDatasource {
   }
 
   Future<TripRecurrence> update(String id, Map<String, dynamic> data) async {
-    final response = await _apiClient.dio.put('/trip-recurrences/$id', data: data);
+    final response = await _apiClient.dio.put(
+      '/trip-recurrences/$id',
+      data: data,
+    );
     return TripRecurrence.fromJson(response.data as Map<String, dynamic>);
   }
 

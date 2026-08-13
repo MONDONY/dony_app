@@ -9,8 +9,6 @@ import 'package:dony/features/profile/presentation/widgets/activate_card_payment
 import 'package:dony/features/profile/presentation/widgets/add_contact_sheets.dart';
 import 'package:dony/features/profile/presentation/widgets/wallet_balance_card.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
-import 'package:dony/features/referral/bloc/referral_event.dart';
-import 'package:dony/features/referral/bloc/referral_state.dart';
 import 'package:dony/features/referral/presentation/widgets/redeem_code_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -62,7 +60,8 @@ class ProfileAccountSection extends StatelessWidget {
       builder: (_, phoneEnabled, _) {
         final showKyc = user?.kycStatus != 'VERIFIED';
         final hasEmail = user?.email != null && user!.email!.isNotEmpty;
-        final hasPhone = user?.phoneNumber != null && user!.phoneNumber!.isNotEmpty;
+        final hasPhone =
+            user?.phoneNumber != null && user!.phoneNumber!.isNotEmpty;
         final showPhoneRow = phoneEnabled && !hasPhone;
         final showEmailRow = !hasEmail;
 
@@ -172,10 +171,7 @@ class ProfileReputationSection extends StatelessWidget {
               subtitle: 'Ce que voient les autres',
               onTap: () => context.push(
                 '/profile/public',
-                extra: ProfilePublicArgs(
-                  userId: user?.id,
-                  showSubscribe: false,
-                ),
+                extra: ProfilePublicArgs(userId: user?.id),
               ),
             ),
             DonyListTile(
@@ -442,9 +438,7 @@ class _ContactRow extends StatelessWidget {
         InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.vertical(
-            top: isFirst
-                ? const Radius.circular(DonyRadius.card)
-                : Radius.zero,
+            top: isFirst ? const Radius.circular(DonyRadius.card) : Radius.zero,
             bottom: isLast
                 ? const Radius.circular(DonyRadius.card)
                 : Radius.zero,
@@ -666,9 +660,7 @@ class ProfileCompletionBanner extends StatelessWidget {
   Widget _build(BuildContext context, bool phoneAuthEnabled) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final completed = user.profileCompletionSteps(
-      countPhone: phoneAuthEnabled,
-    );
+    final completed = user.profileCompletionSteps(countPhone: phoneAuthEnabled);
     final total = UserModel.profileTotalSteps(countPhone: phoneAuthEnabled);
     final pct = completed / total;
     final tier = profileCompletionTierColor(cs, pct);

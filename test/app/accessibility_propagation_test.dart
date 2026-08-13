@@ -80,7 +80,7 @@ void main() {
       late double scaled;
       await tester.pumpWidget(
         harness(
-          const AccessibilityState(followSystemTextScale: true),
+          const AccessibilityState(),
           child: Builder(
             builder: (ctx) {
               scaled = MediaQuery.textScalerOf(ctx).scale(10);
@@ -224,7 +224,7 @@ void main() {
         'réduction force Animate.defaultDuration à zéro',
         () {
           primeReducedMotionDuration(
-            const AccessibilityState(reduceMotion: AccessibilityMode.system),
+            const AccessibilityState(),
             systemReducesMotion: true,
           );
           expect(Animate.defaultDuration, Duration.zero);
@@ -234,7 +234,7 @@ void main() {
       test('un état reduceMotion: system avec un système qui ne demande pas la '
           'réduction laisse Animate.defaultDuration à sa valeur normale', () {
         primeReducedMotionDuration(
-          const AccessibilityState(reduceMotion: AccessibilityMode.system),
+          const AccessibilityState(),
           systemReducesMotion: false,
         );
         expect(Animate.defaultDuration, const Duration(milliseconds: 300));

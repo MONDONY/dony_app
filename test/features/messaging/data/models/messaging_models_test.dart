@@ -176,7 +176,6 @@ void main() {
         bidId: 'bid-3',
         firestoreConversationId: 'conv_bid3',
         otherParticipant: ParticipantModel(id: 'uid-v', name: 'Eve'),
-        hasUnread: false,
       );
       final updated = c.copyWith(hasUnread: true);
       expect(updated.hasUnread, true);

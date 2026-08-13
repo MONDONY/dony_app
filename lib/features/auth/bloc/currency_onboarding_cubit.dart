@@ -4,7 +4,6 @@ import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
-import 'package:dony/features/settings/data/models/user_business_prefs_dto.dart';
 import 'package:dony/features/settings/data/repositories/business_prefs_repository.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

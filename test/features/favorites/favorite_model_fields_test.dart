@@ -14,22 +14,23 @@ void main() {
   // ---------------------------------------------------------------------------
   group('AnnouncementModel.isFavorite', () {
     Map<String, dynamic> baseAnnouncementJson() => {
-          'id': 'trip-1',
-          'travelerId': 'tv1',
-          'departureCity': 'Paris',
-          'arrivalCity': 'Dakar',
-          'departureDate':
-              DateTime.now().add(const Duration(days: 5)).toIso8601String(),
-          'totalKg': 20.0,
-          'availableKg': 15.0,
-          'pricePerKg': 8.0,
-          'pricingMode': 'KG',
-          'status': 'ACTIVE',
-          'pendingBidCount': 0,
-          'confirmedParcelCount': 0,
-          'createdAt': '2024-01-01T00:00:00Z',
-          'updatedAt': '2024-01-01T00:00:00Z',
-        };
+      'id': 'trip-1',
+      'travelerId': 'tv1',
+      'departureCity': 'Paris',
+      'arrivalCity': 'Dakar',
+      'departureDate': DateTime.now()
+          .add(const Duration(days: 5))
+          .toIso8601String(),
+      'totalKg': 20.0,
+      'availableKg': 15.0,
+      'pricePerKg': 8.0,
+      'pricingMode': 'KG',
+      'status': 'ACTIVE',
+      'pendingBidCount': 0,
+      'confirmedParcelCount': 0,
+      'createdAt': '2024-01-01T00:00:00Z',
+      'updatedAt': '2024-01-01T00:00:00Z',
+    };
 
     test('defaults to false when isFavorite is absent from JSON', () {
       final model = AnnouncementModel.fromJson(baseAnnouncementJson());
@@ -57,21 +58,21 @@ void main() {
   // ---------------------------------------------------------------------------
   group('PackageRequestSearchItem.isFavorite', () {
     Map<String, dynamic> baseRequestJson() => {
-          'id': 'req-1',
-          'departureCity': 'Lyon',
-          'arrivalCity': 'Abidjan',
-          'desiredDate': '2025-07-01',
-          'dateToleranceDays': 3,
-          'weightKg': 4.0,
-          'parcelSize': 'MEDIUM',
-          'sender': {
-            'id': 's1',
-            'displayName': 'Moussa',
-            'averageRating': 4.5,
-            'totalRatings': 8,
-            'kycVerified': true,
-          },
-        };
+      'id': 'req-1',
+      'departureCity': 'Lyon',
+      'arrivalCity': 'Abidjan',
+      'desiredDate': '2025-07-01',
+      'dateToleranceDays': 3,
+      'weightKg': 4.0,
+      'parcelSize': 'MEDIUM',
+      'sender': {
+        'id': 's1',
+        'displayName': 'Moussa',
+        'averageRating': 4.5,
+        'totalRatings': 8,
+        'kycVerified': true,
+      },
+    };
 
     test('defaults to false when isFavorite is absent from JSON', () {
       final item = PackageRequestSearchItem.fromJson(baseRequestJson());
@@ -91,7 +92,7 @@ void main() {
         id: 'req-2',
         departureCity: 'Paris',
         arrivalCity: 'Dakar',
-        desiredDate: DateTime(2025, 8, 1),
+        desiredDate: DateTime(2025, 8),
         dateToleranceDays: 2,
         weightKg: 3.0,
         parcelSize: ParcelSize.small,

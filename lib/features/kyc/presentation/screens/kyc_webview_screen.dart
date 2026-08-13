@@ -113,7 +113,7 @@ class _KycWebViewScreenState extends State<KycWebViewScreen> {
           WebViewWidget(controller: _controller),
           ValueListenableBuilder<bool>(
             valueListenable: _isLoading,
-            builder: (_, loading, __) => loading
+            builder: (_, loading, _) => loading
                 ? Center(child: CircularProgressIndicator(color: cs.primary))
                 : const SizedBox.shrink(),
           ),

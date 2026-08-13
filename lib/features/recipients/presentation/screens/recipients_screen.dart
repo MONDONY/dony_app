@@ -137,7 +137,7 @@ class _RecipientsScreenState extends State<RecipientsScreen> {
                                 bottom: DonySpacing.huge,
                               ),
                               itemCount: filtered.length,
-                              separatorBuilder: (_, __) => Divider(
+                              separatorBuilder: (_, _) => Divider(
                                 height: 1,
                                 thickness: 1,
                                 indent: DonySpacing.lg + 44 + DonySpacing.md,
@@ -246,7 +246,7 @@ class _RecipientTile extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            DonyAvatar(name: recipient.fullName, size: DonyAvatarSize.md),
+            DonyAvatar(name: recipient.fullName),
             const SizedBox(width: DonySpacing.md),
             Expanded(
               child: Column(
@@ -266,7 +266,7 @@ class _RecipientTile extends StatelessWidget {
                       ),
                       if (recipient.isDefault) ...[
                         const SizedBox(width: DonySpacing.xs),
-                        DonyBadge(
+                        const DonyBadge(
                           label: 'Par défaut',
                           type: DonyBadgeType.success,
                         ),
@@ -394,7 +394,6 @@ class _KebabMenu extends StatelessWidget {
               iconAsset: 'trash-2',
               confirmLabel: 'Supprimer',
               variant: DonyDialogVariant.destructive,
-              cancelLabel: 'Annuler',
             );
             if ((confirmed ?? false) && context.mounted) {
               context.read<RecipientBloc>().add(RecipientDeleted(recipient.id));

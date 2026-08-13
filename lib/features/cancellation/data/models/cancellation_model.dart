@@ -19,7 +19,9 @@ class CancellationModel {
       affectedBidsCount: json['affectedBidsCount'] as int,
       reason: json['reason'] as String,
       rematchSuggestions: (json['rematchSuggestions'] as List)
-          .map((s) => RematchSuggestionModel.fromJson(s as Map<String, dynamic>))
+          .map(
+            (s) => RematchSuggestionModel.fromJson(s as Map<String, dynamic>),
+          )
           .toList(),
       cancelledAt: DateTime.parse(json['cancelledAt'] as String),
     );

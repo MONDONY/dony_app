@@ -133,33 +133,32 @@ void main() {
       );
     });
 
-    testWidgets(
-      'une catégorie libre est bien transmise à la soumission',
-      (tester) async {
-        // Le retrait d'une pastille appartient désormais au composant partagé
-        // et est couvert avec lui. Ce qui reste propre à l'étape 2, c'est la
-        // répartition entre libellés du catalogue et saisie libre.
-        tallViewport(tester);
-        final key = GlobalKey<Step2DetailsState>();
-        await tester.pumpWidget(wrap(Step2Details(key: key)));
-        await tester.pumpAndSettle();
+    testWidgets('une catégorie libre est bien transmise à la soumission', (
+      tester,
+    ) async {
+      // Le retrait d'une pastille appartient désormais au composant partagé
+      // et est couvert avec lui. Ce qui reste propre à l'étape 2, c'est la
+      // répartition entre libellés du catalogue et saisie libre.
+      tallViewport(tester);
+      final key = GlobalKey<Step2DetailsState>();
+      await tester.pumpWidget(wrap(Step2Details(key: key)));
+      await tester.pumpAndSettle();
 
-        await tester.enterText(find.byType(TextFormField).first, '4');
-        await tester.tap(find.byKey(kField));
-        await tester.pumpAndSettle();
-        await tester.enterText(find.byKey(kField), 'Textile brodé');
-        await tester.pumpAndSettle();
-        await tester.tap(find.byKey(const Key('package-content-item-add')));
-        await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextFormField).first, '4');
+      await tester.tap(find.byKey(kField));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(kField), 'Textile brodé');
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('package-content-item-add')));
+      await tester.pumpAndSettle();
 
-        key.currentState!.submit();
-        await tester.pumpAndSettle();
+      key.currentState!.submit();
+      await tester.pumpAndSettle();
 
-        expect(
-          find.byKey(const Key('package-content-tag-Textile brodé')),
-          findsOneWidget,
-        );
-      },
-    );
+      expect(
+        find.byKey(const Key('package-content-tag-Textile brodé')),
+        findsOneWidget,
+      );
+    });
   });
 }

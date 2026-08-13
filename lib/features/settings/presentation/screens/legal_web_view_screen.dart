@@ -5,11 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 class LegalWebViewScreen extends StatefulWidget {
-  const LegalWebViewScreen({
-    super.key,
-    required this.title,
-    required this.url,
-  });
+  const LegalWebViewScreen({super.key, required this.title, required this.url});
 
   final String title;
   final String url;
@@ -82,8 +78,7 @@ class _LegalWebViewScreenState extends State<LegalWebViewScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    DonyIcon('wifi-off',
-                        size: 48, color: cs.onSurfaceVariant),
+                    DonyIcon('wifi-off', size: 48, color: cs.onSurfaceVariant),
                     const SizedBox(height: DonySpacing.base),
                     Text(
                       'Impossible de charger la page',
@@ -93,8 +88,7 @@ class _LegalWebViewScreenState extends State<LegalWebViewScreen> {
                     const SizedBox(height: DonySpacing.sm),
                     Text(
                       'Vérifie ta connexion et réessaie.',
-                      style: tt.bodySmall
-                          ?.copyWith(color: cs.onSurfaceVariant),
+                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: DonySpacing.xl),

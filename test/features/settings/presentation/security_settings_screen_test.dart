@@ -91,9 +91,7 @@ void main() {
 
   group('SecuritySettingsScreen — UI', () {
     testWidgets('renders Sécurité title', (tester) async {
-      final state = AppPreferencesState(
-        preferences: const UserPreferencesModel(),
-      );
+      const state = AppPreferencesState(preferences: UserPreferencesModel());
       await tester.pumpWidget(_wrap(mockBloc: mockBloc, state: state));
       await tester.pumpAndSettle();
 
@@ -101,9 +99,7 @@ void main() {
     });
 
     testWidgets('shows PAIEMENTS section with biometric tile', (tester) async {
-      final state = AppPreferencesState(
-        preferences: const UserPreferencesModel(),
-      );
+      const state = AppPreferencesState(preferences: UserPreferencesModel());
       await tester.pumpWidget(_wrap(mockBloc: mockBloc, state: state));
       await tester.pumpAndSettle();
 
@@ -112,9 +108,7 @@ void main() {
     });
 
     testWidgets('shows SESSION section with devices tile', (tester) async {
-      final state = AppPreferencesState(
-        preferences: const UserPreferencesModel(),
-      );
+      const state = AppPreferencesState(preferences: UserPreferencesModel());
       await tester.pumpWidget(_wrap(mockBloc: mockBloc, state: state));
       await tester.pumpAndSettle();
 
@@ -129,9 +123,7 @@ void main() {
     testWidgets('biometric switch is disabled when not available', (
       tester,
     ) async {
-      final state = AppPreferencesState(
-        preferences: const UserPreferencesModel(),
-      );
+      const state = AppPreferencesState(preferences: UserPreferencesModel());
       await tester.pumpWidget(_wrap(mockBloc: mockBloc, state: state));
       await tester.pumpAndSettle();
 
@@ -142,9 +134,7 @@ void main() {
     });
 
     testWidgets('affiche le tile Appareils connectés', (tester) async {
-      final state = AppPreferencesState(
-        preferences: const UserPreferencesModel(),
-      );
+      const state = AppPreferencesState(preferences: UserPreferencesModel());
       await tester.pumpWidget(_wrap(mockBloc: mockBloc, state: state));
       await tester.pumpAndSettle();
 
@@ -154,9 +144,7 @@ void main() {
     testWidgets('biometric tile shows unavailable message when not supported', (
       tester,
     ) async {
-      final state = AppPreferencesState(
-        preferences: const UserPreferencesModel(),
-      );
+      const state = AppPreferencesState(preferences: UserPreferencesModel());
       await tester.pumpWidget(_wrap(mockBloc: mockBloc, state: state));
       await tester.pumpAndSettle();
 
@@ -166,9 +154,7 @@ void main() {
     });
 
     testWidgets("affiche le tile Verrouillage de l'app", (tester) async {
-      final state = AppPreferencesState(
-        preferences: const UserPreferencesModel(),
-      );
+      const state = AppPreferencesState(preferences: UserPreferencesModel());
       await tester.pumpWidget(_wrap(mockBloc: mockBloc, state: state));
       await tester.pumpAndSettle();
 
@@ -179,9 +165,7 @@ void main() {
     testWidgets(
       "tapper le tile Verrouillage de l'app ne dispatche pas quand indisponible",
       (tester) async {
-        final state = AppPreferencesState(
-          preferences: const UserPreferencesModel(),
-        );
+        const state = AppPreferencesState(preferences: UserPreferencesModel());
         // biometricAvailable defaults to false → tile is not tappable.
         await tester.pumpWidget(_wrap(mockBloc: mockBloc, state: state));
         await tester.pumpAndSettle();
@@ -193,12 +177,10 @@ void main() {
       },
     );
 
-    testWidgets("app lock switch value is false when device unavailable", (
+    testWidgets('app lock switch value is false when device unavailable', (
       tester,
     ) async {
-      final state = AppPreferencesState(
-        preferences: const UserPreferencesModel(appLockBiometricEnabled: true),
-      );
+      const state = AppPreferencesState(preferences: UserPreferencesModel());
       await tester.pumpWidget(_wrap(mockBloc: mockBloc, state: state));
       await tester.pumpAndSettle();
 
@@ -211,8 +193,8 @@ void main() {
     testWidgets(
       'biometric switch value reflects biometricEnabled from bloc (device unavailable)',
       (tester) async {
-        final state = AppPreferencesState(
-          preferences: const UserPreferencesModel(biometricEnabled: true),
+        const state = AppPreferencesState(
+          preferences: UserPreferencesModel(biometricEnabled: true),
         );
         await tester.pumpWidget(_wrap(mockBloc: mockBloc, state: state));
         await tester.pumpAndSettle();
@@ -227,9 +209,7 @@ void main() {
     testWidgets(
       'tapping biometric tile when unavailable does not dispatch BiometricToggled',
       (tester) async {
-        final state = AppPreferencesState(
-          preferences: const UserPreferencesModel(),
-        );
+        const state = AppPreferencesState(preferences: UserPreferencesModel());
         await tester.pumpWidget(_wrap(mockBloc: mockBloc, state: state));
         await tester.pumpAndSettle();
 
@@ -250,9 +230,7 @@ void main() {
       'tapping biometric tile when OFF dispatches BiometricToggled immediately (no PIN)',
       (tester) async {
         // biometricEnabled = false → activation path, no PIN required.
-        final state = AppPreferencesState(
-          preferences: const UserPreferencesModel(biometricEnabled: false),
-        );
+        const state = AppPreferencesState(preferences: UserPreferencesModel());
         await tester.pumpWidget(
           _wrap(mockBloc: mockBloc, state: state, biometricAvailable: true),
         );
@@ -267,13 +245,11 @@ void main() {
     );
 
     testWidgets(
-      "tapping app lock tile when OFF dispatches AppLockBiometricToggled immediately (no PIN)",
+      'tapping app lock tile when OFF dispatches AppLockBiometricToggled immediately (no PIN)',
       (tester) async {
         // appLockBiometricEnabled = false → activation path, no PIN required.
-        final state = AppPreferencesState(
-          preferences: const UserPreferencesModel(
-            appLockBiometricEnabled: false,
-          ),
+        const state = AppPreferencesState(
+          preferences: UserPreferencesModel(appLockBiometricEnabled: false),
         );
         await tester.pumpWidget(
           _wrap(mockBloc: mockBloc, state: state, biometricAvailable: true),
@@ -293,8 +269,8 @@ void main() {
       'tapping biometric tile when ON opens PinConfirmBottomSheet and does NOT dispatch if dismissed',
       (tester) async {
         // biometricEnabled = true → désactivation, PIN requis.
-        final state = AppPreferencesState(
-          preferences: const UserPreferencesModel(biometricEnabled: true),
+        const state = AppPreferencesState(
+          preferences: UserPreferencesModel(biometricEnabled: true),
         );
         await tester.pumpWidget(
           _wrap(mockBloc: mockBloc, state: state, biometricAvailable: true),
@@ -317,14 +293,10 @@ void main() {
     );
 
     testWidgets(
-      "tapping app lock tile when ON opens PinConfirmBottomSheet and does NOT dispatch if dismissed",
+      'tapping app lock tile when ON opens PinConfirmBottomSheet and does NOT dispatch if dismissed',
       (tester) async {
         // appLockBiometricEnabled = true (default) → désactivation, PIN requis.
-        final state = AppPreferencesState(
-          preferences: const UserPreferencesModel(
-            appLockBiometricEnabled: true,
-          ),
-        );
+        const state = AppPreferencesState(preferences: UserPreferencesModel());
         await tester.pumpWidget(
           _wrap(mockBloc: mockBloc, state: state, biometricAvailable: true),
         );
@@ -352,8 +324,8 @@ void main() {
           () => mockAuthService.validatePin(any()),
         ).thenAnswer((_) async => true);
 
-        final state = AppPreferencesState(
-          preferences: const UserPreferencesModel(biometricEnabled: true),
+        const state = AppPreferencesState(
+          preferences: UserPreferencesModel(biometricEnabled: true),
         );
         await tester.pumpWidget(
           _wrap(
@@ -390,9 +362,7 @@ void main() {
         () => mockAuthService.validatePin(any()),
       ).thenAnswer((_) async => true);
 
-      final state = AppPreferencesState(
-        preferences: const UserPreferencesModel(appLockBiometricEnabled: true),
-      );
+      const state = AppPreferencesState(preferences: UserPreferencesModel());
       await tester.pumpWidget(
         _wrap(
           mockBloc: mockBloc,
@@ -424,8 +394,8 @@ void main() {
           () => mockAuthService.validatePin(any()),
         ).thenAnswer((_) async => false);
 
-        final state = AppPreferencesState(
-          preferences: const UserPreferencesModel(biometricEnabled: true),
+        const state = AppPreferencesState(
+          preferences: UserPreferencesModel(biometricEnabled: true),
         );
         await tester.pumpWidget(
           _wrap(

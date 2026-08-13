@@ -20,17 +20,17 @@ import 'package:intl/intl.dart';
 /// Ombre douce commune — remplace les bordures dures sur les cartes du hub
 /// (principe « ombres > bordures » : rendu plus fluide, moins chargé).
 List<BoxShadow> _softShadow({double strength = 1}) => [
-      BoxShadow(
-        color: const Color(0xFF0D1B2A).withValues(alpha: 0.05 * strength),
-        blurRadius: 3,
-        offset: const Offset(0, 1),
-      ),
-      BoxShadow(
-        color: const Color(0xFF0D1B2A).withValues(alpha: 0.06 * strength),
-        blurRadius: 14,
-        offset: const Offset(0, 5),
-      ),
-    ];
+  BoxShadow(
+    color: const Color(0xFF0D1B2A).withValues(alpha: 0.05 * strength),
+    blurRadius: 3,
+    offset: const Offset(0, 1),
+  ),
+  BoxShadow(
+    color: const Color(0xFF0D1B2A).withValues(alpha: 0.06 * strength),
+    blurRadius: 14,
+    offset: const Offset(0, 5),
+  ),
+];
 
 class _EtapeInfo {
   final String code;
@@ -135,56 +135,69 @@ class ScanHubView extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   // Entrée en cascade : chaque section apparaît en fondu-glissé,
                   // décalée de 55 ms (joue une fois, structure stable).
-                  children: <Widget>[
-                    if (onTrackParcel != null)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: DonySpacing.lg),
-                        child: SecondaryActivityEntry(
-                          iconAsset: 'package',
-                          label: 'Suivre un colis',
-                          onTap: onTrackParcel!,
-                        ),
-                      ),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: DonySpacing.base),
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 240),
-                        switchInCurve: Curves.easeOutCubic,
-                        switchOutCurve: Curves.easeInCubic,
-                        transitionBuilder: _fadeSlide,
-                        child: _TripHeroCompact(
-                          key: tripKey,
-                          state: state,
-                        ),
-                      ),
-                    ),
-                    _SyncBanner(state: state),
-                    const Padding(
-                      padding: EdgeInsets.only(bottom: DonySpacing.xl),
-                      child: _EtapesSection(),
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.only(bottom: DonySpacing.xl),
-                      child: ContextualTutorialCard(
-                        context: TutorialContext.qrHandover,
-                      ),
-                    ),
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 240),
-                      switchInCurve: Curves.easeOutCubic,
-                      switchOutCurve: Curves.easeInCubic,
-                      transitionBuilder: _fadeSlide,
-                      child: Padding(
-                        key: tripKey,
-                        padding: const EdgeInsets.only(bottom: DonySpacing.xl),
-                        child: _ColisListSection(bids: state.selectedTripBids),
-                      ),
-                    ),
-                    _ScanHistorySection(history: state.scanHistory),
-                  ]
-                      .animate(interval: 55.ms)
-                      .fadeIn(duration: 300.ms, curve: Curves.easeOutCubic)
-                      .slideY(begin: 0.06, end: 0, curve: Curves.easeOutCubic),
+                  children:
+                      <Widget>[
+                            if (onTrackParcel != null)
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                  bottom: DonySpacing.lg,
+                                ),
+                                child: SecondaryActivityEntry(
+                                  iconAsset: 'package',
+                                  label: 'Suivre un colis',
+                                  onTap: onTrackParcel!,
+                                ),
+                              ),
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                bottom: DonySpacing.base,
+                              ),
+                              child: AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 240),
+                                switchInCurve: Curves.easeOutCubic,
+                                switchOutCurve: Curves.easeInCubic,
+                                transitionBuilder: _fadeSlide,
+                                child: _TripHeroCompact(
+                                  key: tripKey,
+                                  state: state,
+                                ),
+                              ),
+                            ),
+                            _SyncBanner(state: state),
+                            const Padding(
+                              padding: EdgeInsets.only(bottom: DonySpacing.xl),
+                              child: _EtapesSection(),
+                            ),
+                            const Padding(
+                              padding: EdgeInsets.only(bottom: DonySpacing.xl),
+                              child: ContextualTutorialCard(
+                                context: TutorialContext.qrHandover,
+                              ),
+                            ),
+                            AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 240),
+                              switchInCurve: Curves.easeOutCubic,
+                              switchOutCurve: Curves.easeInCubic,
+                              transitionBuilder: _fadeSlide,
+                              child: Padding(
+                                key: tripKey,
+                                padding: const EdgeInsets.only(
+                                  bottom: DonySpacing.xl,
+                                ),
+                                child: _ColisListSection(
+                                  bids: state.selectedTripBids,
+                                ),
+                              ),
+                            ),
+                            _ScanHistorySection(history: state.scanHistory),
+                          ]
+                          .animate(interval: 55.ms)
+                          .fadeIn(duration: 300.ms, curve: Curves.easeOutCubic)
+                          .slideY(
+                            begin: 0.06,
+                            end: 0,
+                            curve: Curves.easeOutCubic,
+                          ),
                 ),
               );
           }
@@ -586,7 +599,7 @@ class _EtapeChip extends StatelessWidget {
             switch (etape.iconAsset) {
               'plane-takeoff' => const DonyEmoji.planeTakeoff(size: 24),
               'plane-landing' => const DonyEmoji.planeLanding(size: 24),
-              final String asset => DonyIcon(asset, size: 24, color: cs.onSurface),
+              final String asset => DonyIcon(asset, color: cs.onSurface),
               _ => const SizedBox(width: 24, height: 24),
             },
             const SizedBox(height: DonySpacing.sm),
@@ -801,12 +814,12 @@ class _StepDot extends StatelessWidget {
       // Le segment « fait » se remplit de gauche à droite (effet progression).
       child: done
           ? Container(color: cs.success).animate().scaleX(
-                begin: 0,
-                end: 1,
-                alignment: Alignment.centerLeft,
-                duration: 420.ms,
-                curve: Curves.easeOutCubic,
-              )
+              begin: 0,
+              end: 1,
+              alignment: Alignment.centerLeft,
+              duration: 420.ms,
+              curve: Curves.easeOutCubic,
+            )
           : null,
     );
   }

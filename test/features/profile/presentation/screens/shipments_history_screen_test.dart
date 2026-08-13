@@ -25,19 +25,11 @@ BidModel _bid({
   announcementId: 'ann-1',
   senderId: 'user-1',
   senderKycVerified: true,
-  senderIsProAccount: false,
-  senderKiloPro: false,
   weightKg: 2.0,
   status: status,
-  voyageurConfirmed: false,
-  confirmationCodeRefreshCount: 0,
   createdAt: DateTime(2025, 3, 10),
   updatedAt: DateTime(2025, 3, 12),
   travelerKycVerified: true,
-  travelerIsProAccount: false,
-  travelerKiloPro: false,
-  senderHasRated: false,
-  travelerHasRated: false,
   travelerName: travelerName,
 );
 
@@ -46,10 +38,10 @@ Widget _wrap(BidBloc bloc) => BlocProvider<BidBloc>.value(
   child: MaterialApp.router(
     routerConfig: GoRouter(
       routes: [
-        GoRoute(path: '/', builder: (_, __) => const ShipmentsHistoryScreen()),
+        GoRoute(path: '/', builder: (_, _) => const ShipmentsHistoryScreen()),
         GoRoute(
           path: '/bids/:id/detail',
-          builder: (_, __) => const Scaffold(body: Text('Detail')),
+          builder: (_, _) => const Scaffold(body: Text('Detail')),
         ),
       ],
     ),
@@ -95,10 +87,12 @@ void main() {
   });
 
   testWidgets('shows completed bids list', (tester) async {
-    when(() => bloc.state).thenReturn(BidListLoaded([
-      _bid(id: 'b1', status: 'COMPLETED', travelerName: 'Mamadou Diallo'),
-      _bid(id: 'b2', status: 'PENDING'),
-    ]));
+    when(() => bloc.state).thenReturn(
+      BidListLoaded([
+        _bid(id: 'b1', status: 'COMPLETED', travelerName: 'Mamadou Diallo'),
+        _bid(id: 'b2', status: 'PENDING'),
+      ]),
+    );
 
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
@@ -113,23 +107,17 @@ void main() {
       announcementId: 'ann-1',
       senderId: 'user-1',
       senderKycVerified: true,
-      senderIsProAccount: false,
-      senderKiloPro: false,
       weightKg: 3.5,
       description: 'Médicaments',
       status: 'COMPLETED',
       voyageurConfirmed: true,
-      confirmationCodeRefreshCount: 0,
-      createdAt: DateTime(2025, 3, 1),
+      createdAt: DateTime(2025, 3),
       updatedAt: DateTime.now().subtract(const Duration(days: 2)),
       travelerName: 'Fatoumata Bah',
       travelerId: 'traveler-1',
       travelerAverageRating: 4.8,
       travelerKycVerified: true,
-      travelerIsProAccount: false,
-      travelerKiloPro: false,
       senderHasRated: true,
-      travelerHasRated: false,
       departureCity: 'Paris',
       arrivalCity: 'Dakar',
       pricePerKg: 15.0,
@@ -155,20 +143,13 @@ void main() {
       announcementId: 'ann-1',
       senderId: 'user-1',
       senderKycVerified: true,
-      senderIsProAccount: false,
-      senderKiloPro: false,
       weightKg: 1.0,
       status: 'COMPLETED',
       voyageurConfirmed: true,
-      confirmationCodeRefreshCount: 0,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
       travelerName: 'Alpha Diallo',
       travelerKycVerified: true,
-      travelerIsProAccount: false,
-      travelerKiloPro: false,
-      senderHasRated: false,
-      travelerHasRated: false,
     );
 
     when(() => bloc.state).thenReturn(BidListLoaded([todayBid]));
@@ -180,22 +161,29 @@ void main() {
   });
 
   testWidgets(
-      'régression : un bid DELIVERED (legacy) est exclu, un bid COMPLETED s\'affiche',
-      (tester) async {
-    // Le backend n'émet jamais DELIVERED — le statut terminal d'une livraison
-    // réussie est COMPLETED. Un éventuel bid legacy DELIVERED ne doit pas
-    // apparaître dans l'historique.
-    when(() => bloc.state).thenReturn(BidListLoaded([
-      _bid(id: 'legacy', status: 'DELIVERED', travelerName: 'Legacy Voyageur'),
-      _bid(id: 'done', status: 'COMPLETED', travelerName: 'Awa Ndiaye'),
-    ]));
+    'régression : un bid DELIVERED (legacy) est exclu, un bid COMPLETED s\'affiche',
+    (tester) async {
+      // Le backend n'émet jamais DELIVERED — le statut terminal d'une livraison
+      // réussie est COMPLETED. Un éventuel bid legacy DELIVERED ne doit pas
+      // apparaître dans l'historique.
+      when(() => bloc.state).thenReturn(
+        BidListLoaded([
+          _bid(
+            id: 'legacy',
+            status: 'DELIVERED',
+            travelerName: 'Legacy Voyageur',
+          ),
+          _bid(id: 'done', status: 'COMPLETED', travelerName: 'Awa Ndiaye'),
+        ]),
+      );
 
-    await tester.pumpWidget(_wrap(bloc));
-    await tester.pump(const Duration(milliseconds: 600));
+      await tester.pumpWidget(_wrap(bloc));
+      await tester.pump(const Duration(milliseconds: 600));
 
-    expect(find.text('Awa Ndiaye'), findsOneWidget);
-    expect(find.text('Legacy Voyageur'), findsNothing);
-  });
+      expect(find.text('Awa Ndiaye'), findsOneWidget);
+      expect(find.text('Legacy Voyageur'), findsNothing);
+    },
+  );
 
   testWidgets('shows error state when BidError', (tester) async {
     when(

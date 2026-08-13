@@ -1,8 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
-import 'package:dony/features/referral/bloc/referral_event.dart';
-import 'package:dony/features/referral/bloc/referral_state.dart';
 import 'package:dony/features/referral/data/models/referral_info.dart';
 import 'package:dony/features/referral/presentation/screens/referral_screen.dart';
 import 'package:flutter/material.dart';
@@ -17,18 +15,13 @@ class MockReferralBloc extends MockBloc<ReferralEvent, ReferralState>
 class FakeReferralEvent extends Fake implements ReferralEvent {}
 
 Widget _wrap(ReferralBloc bloc) => BlocProvider<ReferralBloc>.value(
-      value: bloc,
-      child: MaterialApp.router(
-        routerConfig: GoRouter(
-          routes: [
-            GoRoute(
-              path: '/',
-              builder: (_, __) => const ReferralScreen(),
-            ),
-          ],
-        ),
-      ),
-    );
+  value: bloc,
+  child: MaterialApp.router(
+    routerConfig: GoRouter(
+      routes: [GoRoute(path: '/', builder: (_, _) => const ReferralScreen())],
+    ),
+  ),
+);
 
 const _testInfo = ReferralInfo(
   code: 'DONY-XYZ42',
@@ -51,8 +44,9 @@ void main() {
   });
 
   // 1. Affiche CircularProgressIndicator quand ReferralLoading
-  testWidgets('shows CircularProgressIndicator when ReferralLoading',
-      (tester) async {
+  testWidgets('shows CircularProgressIndicator when ReferralLoading', (
+    tester,
+  ) async {
     when(() => bloc.state).thenReturn(const ReferralLoading());
 
     await tester.pumpWidget(_wrap(bloc));
@@ -82,8 +76,9 @@ void main() {
   });
 
   // 4. Affiche le bouton "Partager mon code"
-  testWidgets('shows "Partager mon code" button when ReferralLoaded',
-      (tester) async {
+  testWidgets('shows "Partager mon code" button when ReferralLoaded', (
+    tester,
+  ) async {
     when(() => bloc.state).thenReturn(const ReferralLoaded(_testInfo));
 
     await tester.pumpWidget(_wrap(bloc));
@@ -106,8 +101,9 @@ void main() {
 
   // 6. Affiche "Réessayer" quand ReferralError
   testWidgets('shows Réessayer button when ReferralError', (tester) async {
-    when(() => bloc.state)
-        .thenReturn(const ReferralError(NetworkException('Erreur réseau')));
+    when(
+      () => bloc.state,
+    ).thenReturn(const ReferralError(NetworkException('Erreur réseau')));
 
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
@@ -129,7 +125,9 @@ void main() {
   });
 
   // 8. Affiche le message de gains si totalEarnedCents > 0
-  testWidgets('shows earnings banner when totalEarnedCents > 0', (tester) async {
+  testWidgets('shows earnings banner when totalEarnedCents > 0', (
+    tester,
+  ) async {
     when(() => bloc.state).thenReturn(const ReferralLoaded(_testInfo));
 
     await tester.pumpWidget(_wrap(bloc));
@@ -140,7 +138,9 @@ void main() {
   });
 
   // 9. Hero card affiche le texte d'invite
-  testWidgets('shows hero card invite text when ReferralLoaded', (tester) async {
+  testWidgets('shows hero card invite text when ReferralLoaded', (
+    tester,
+  ) async {
     when(() => bloc.state).thenReturn(const ReferralLoaded(_testInfo));
 
     await tester.pumpWidget(_wrap(bloc));
@@ -151,8 +151,9 @@ void main() {
 
   // 10. Message d'erreur affiché dans l'error view
   testWidgets('shows error message text when ReferralError', (tester) async {
-    when(() => bloc.state)
-        .thenReturn(const ReferralError(NetworkException('Erreur réseau')));
+    when(
+      () => bloc.state,
+    ).thenReturn(const ReferralError(NetworkException('Erreur réseau')));
 
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));

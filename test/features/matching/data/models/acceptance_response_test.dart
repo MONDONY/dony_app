@@ -1,5 +1,5 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:dony/features/matching/data/models/acceptance_response.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('parses ACCEPTED status', () {
@@ -72,7 +72,10 @@ void main() {
   });
 
   test('ConfirmResponse.fromJson parses accepted false with error', () {
-    final r = ConfirmResponse.fromJson({'accepted': false, 'error': '3DS échoué'});
+    final r = ConfirmResponse.fromJson({
+      'accepted': false,
+      'error': '3DS échoué',
+    });
     expect(r.accepted, isFalse);
     expect(r.error, '3DS échoué');
   });

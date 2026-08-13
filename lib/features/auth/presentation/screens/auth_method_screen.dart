@@ -83,7 +83,7 @@ class AuthMethodScreen extends StatelessWidget {
                   const SizedBox(height: DonySpacing.xxl),
                   ValueListenableBuilder<bool>(
                     valueListenable: smsAuthEnabledListenable,
-                    builder: (_, phoneEnabled, __) {
+                    builder: (_, phoneEnabled, _) {
                       if (!phoneEnabled) return const SizedBox.shrink();
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,

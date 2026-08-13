@@ -35,14 +35,14 @@ PackageRequest _firmRequest({double targetPriceEur = 35}) => PackageRequest(
   senderId: 'sender-1',
   departureCity: 'Paris',
   arrivalCity: 'Dakar',
-  desiredDate: DateTime(2026, 8, 1),
+  desiredDate: DateTime(2026, 8),
   dateToleranceDays: 3,
   weightKg: 5,
   parcelSize: ParcelSize.small,
   transportMode: TransportMode.plane,
   categories: const ['Vêtements'],
   status: PackageRequestStatus.open,
-  createdAt: DateTime(2026, 6, 1),
+  createdAt: DateTime(2026, 6),
   negotiable: false,
   targetPriceEur: targetPriceEur,
 );
@@ -52,15 +52,14 @@ PackageRequest _negotiableRequest() => PackageRequest(
   senderId: 'sender-1',
   departureCity: 'Paris',
   arrivalCity: 'Dakar',
-  desiredDate: DateTime(2026, 8, 1),
+  desiredDate: DateTime(2026, 8),
   dateToleranceDays: 3,
   weightKg: 5,
   parcelSize: ParcelSize.small,
   transportMode: TransportMode.plane,
   categories: const ['Vêtements'],
   status: PackageRequestStatus.open,
-  createdAt: DateTime(2026, 6, 1),
-  negotiable: true,
+  createdAt: DateTime(2026, 6),
   targetPriceEur: 35,
 );
 
@@ -70,24 +69,19 @@ PackageRequest _requestWithPayments(Set<PaymentMethod> methods) =>
       senderId: 'sender-1',
       departureCity: 'Paris',
       arrivalCity: 'Dakar',
-      desiredDate: DateTime(2026, 8, 1),
+      desiredDate: DateTime(2026, 8),
       dateToleranceDays: 3,
       weightKg: 5,
       parcelSize: ParcelSize.small,
       transportMode: TransportMode.plane,
       categories: const ['Vêtements'],
       status: PackageRequestStatus.open,
-      createdAt: DateTime(2026, 6, 1),
-      negotiable: true,
+      createdAt: DateTime(2026, 6),
       targetPriceEur: 35,
       acceptedPaymentMethods: methods,
     );
 
-NegotiationThread _thread({
-  bool canCounter = true,
-  bool canAccept = true,
-  String viewer = 'sender-1',
-}) {
+NegotiationThread _thread({bool canCounter = true, bool canAccept = true}) {
   final messages = <NegotiationMessage>[
     NegotiationMessage(
       id: 'm1',
@@ -160,7 +154,7 @@ void main() {
     testWidgets(
       'negotiable=false, targetPriceEur=35 → texte "Prendre à 35,00 €" visible',
       (tester) async {
-        await tester.pumpWidget(wrap(_firmRequest(targetPriceEur: 35)));
+        await tester.pumpWidget(wrap(_firmRequest()));
         await tester.pumpAndSettle();
 
         expect(find.textContaining('Prendre à'), findsOneWidget);
@@ -274,10 +268,7 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        wrapCtaBar(
-          _thread(canCounter: false, canAccept: true, viewer: 'sender-1'),
-          'sender-1',
-        ),
+        wrapCtaBar(_thread(canCounter: false), 'sender-1'),
       );
       await tester.pump();
 
@@ -288,10 +279,7 @@ void main() {
       'sender · canCounter=false → bouton "Accepter" toujours présent',
       (tester) async {
         await tester.pumpWidget(
-          wrapCtaBar(
-            _thread(canCounter: false, canAccept: true, viewer: 'sender-1'),
-            'sender-1',
-          ),
+          wrapCtaBar(_thread(canCounter: false), 'sender-1'),
         );
         await tester.pump();
 
@@ -302,12 +290,7 @@ void main() {
     testWidgets('sender · canCounter=true → "Contre-offre" visible', (
       tester,
     ) async {
-      await tester.pumpWidget(
-        wrapCtaBar(
-          _thread(canCounter: true, canAccept: true, viewer: 'sender-1'),
-          'sender-1',
-        ),
-      );
+      await tester.pumpWidget(wrapCtaBar(_thread(), 'sender-1'));
       await tester.pump();
 
       expect(find.text('Contre-offre'), findsOneWidget);

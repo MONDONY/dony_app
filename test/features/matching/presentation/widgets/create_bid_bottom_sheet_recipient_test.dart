@@ -100,8 +100,8 @@ AnnouncementModel _announcement({bool cashEnabled = false}) {
     totalKg: 10,
     pricePerKg: 8,
     status: 'ACTIVE',
-    createdAt: DateTime(2026, 1, 1),
-    updatedAt: DateTime(2026, 1, 1),
+    createdAt: DateTime(2026),
+    updatedAt: DateTime(2026),
     acceptedPaymentMethods: methods,
   );
 }
@@ -137,7 +137,7 @@ Widget _buildHarness(AnnouncementModel announcement) {
       ),
       GoRoute(
         path: '/bids/:id',
-        builder: (_, __) =>
+        builder: (_, _) =>
             const Scaffold(body: Center(child: Text('Bid détail'))),
       ),
     ],
@@ -289,7 +289,7 @@ void main() {
   group('Sauvegarde destinataire — mode direct (Stripe seul)', () {
     testWidgets('soumission valide → RecipientCreated dispatché avec '
         'fallbackCity/fallbackCountry de l\'annonce', (tester) async {
-      await _openSheet(tester, _announcement(cashEnabled: false));
+      await _openSheet(tester, _announcement());
 
       await _enableSubmitButton(tester);
       await _fillMandatoryFields(tester);

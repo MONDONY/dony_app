@@ -23,30 +23,32 @@ void main() {
       expect(message, contains("Nous n'avons pas pu vérifier votre identité"));
     });
 
-    test('every known code maps to a non-empty, distinct-from-generic message',
-        () {
-      const codes = [
-        'document_expired',
-        'document_type_not_supported',
-        'document_unverified_other',
-        'country_not_supported',
-        'id_number_insufficient_document_data',
-        'id_number_mismatch',
-        'id_number_unverified_other',
-        'selfie_document_missing_photo',
-        'selfie_face_mismatch',
-        'selfie_manipulated',
-        'selfie_unverified_other',
-        'under_supported_age',
-        'consent_declined',
-        'session_canceled',
-      ];
-      final generic = kycRejectionMessage('unknown');
-      for (final code in codes) {
-        final message = kycRejectionMessage(code);
-        expect(message, isNotEmpty, reason: 'code=$code');
-        expect(message, isNot(equals(generic)), reason: 'code=$code');
-      }
-    });
+    test(
+      'every known code maps to a non-empty, distinct-from-generic message',
+      () {
+        const codes = [
+          'document_expired',
+          'document_type_not_supported',
+          'document_unverified_other',
+          'country_not_supported',
+          'id_number_insufficient_document_data',
+          'id_number_mismatch',
+          'id_number_unverified_other',
+          'selfie_document_missing_photo',
+          'selfie_face_mismatch',
+          'selfie_manipulated',
+          'selfie_unverified_other',
+          'under_supported_age',
+          'consent_declined',
+          'session_canceled',
+        ];
+        final generic = kycRejectionMessage('unknown');
+        for (final code in codes) {
+          final message = kycRejectionMessage(code);
+          expect(message, isNotEmpty, reason: 'code=$code');
+          expect(message, isNot(equals(generic)), reason: 'code=$code');
+        }
+      },
+    );
   });
 }

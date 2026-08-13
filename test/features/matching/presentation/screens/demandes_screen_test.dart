@@ -13,8 +13,8 @@ import 'package:dony/features/matching/bloc/traveler_bids_event.dart';
 import 'package:dony/features/matching/bloc/traveler_bids_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/screens/demandes_screen.dart';
-import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
+import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
 import 'package:dony/features/profile/bloc/help_center_bloc.dart';
 import 'package:dony/features/profile/data/datasources/help_center_remote_config_datasource.dart';
 import 'package:dony/features/profile/data/repositories/help_center_repository.dart';
@@ -52,8 +52,8 @@ BidModel _bid(String id, String status) => BidModel(
   senderId: 's1',
   weightKg: 5,
   status: status,
-  createdAt: DateTime(2026, 1, 1),
-  updatedAt: DateTime(2026, 1, 1),
+  createdAt: DateTime(2026),
+  updatedAt: DateTime(2026),
 );
 
 // ContextualTutorialCard (contexte receivedRequests) lit HelpCenterBloc via
@@ -107,7 +107,7 @@ Future<_MockPackageRequestBloc> _pump(
     routes: [
       GoRoute(
         path: '/',
-        builder: (_, __) => MultiBlocProvider(
+        builder: (_, _) => MultiBlocProvider(
           providers: [
             BlocProvider<TravelerBidsBloc>.value(value: travelerBids),
             BlocProvider<BidBloc>.value(value: bidBloc),
@@ -129,7 +129,7 @@ Future<_MockPackageRequestBloc> _pump(
       ),
       GoRoute(
         path: '/trips/create',
-        builder: (_, __) {
+        builder: (_, _) {
           visited.add('/trips/create');
           return const Scaffold(body: Text('Créer trajet'));
         },

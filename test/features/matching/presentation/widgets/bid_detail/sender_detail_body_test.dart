@@ -1,5 +1,4 @@
 import 'package:bloc_test/bloc_test.dart';
-import 'package:mocktail/mocktail.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
@@ -23,6 +22,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:mocktail/mocktail.dart';
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
@@ -61,8 +61,8 @@ BidModel _bid({
   announcementId: 'ann-001',
   senderId: 'sender-001',
   status: status,
-  createdAt: DateTime(2026, 1, 1),
-  updatedAt: DateTime(2026, 1, 1),
+  createdAt: DateTime(2026),
+  updatedAt: DateTime(2026),
   travelerId: 'traveler-001',
   travelerName: travelerName,
   travelerPhoneAvailable: travelerPhoneAvailable,
@@ -149,7 +149,7 @@ void main() {
     'ColisDestinataireCard, PaiementCard, QuickActionsRow, DetailsAccordion',
     (tester) async {
       sizeView(tester);
-      final bid = _bid(status: 'ACCEPTED');
+      final bid = _bid();
 
       await tester.pumpWidget(
         _host(bid, cancellationBloc, conversationOpenBloc),
@@ -206,55 +206,44 @@ void main() {
   );
 
   // ── Test 4: COMPLETED + senderHasRated=true → RatingDoneBadge ──────────────
-  testWidgets(
-    '4 · COMPLETED + senderHasRated=true → RatingDoneBadge affiché',
-    (tester) async {
-      sizeView(tester);
-      final bid = _bid(status: 'COMPLETED', senderHasRated: true);
+  testWidgets('4 · COMPLETED + senderHasRated=true → RatingDoneBadge affiché', (
+    tester,
+  ) async {
+    sizeView(tester);
+    final bid = _bid(status: 'COMPLETED', senderHasRated: true);
 
-      await tester.pumpWidget(
-        _host(bid, cancellationBloc, conversationOpenBloc),
-      );
-      await tester.pump(const Duration(seconds: 1));
+    await tester.pumpWidget(_host(bid, cancellationBloc, conversationOpenBloc));
+    await tester.pump(const Duration(seconds: 1));
 
-      expect(find.text('Évaluation envoyée'), findsOneWidget);
-    },
-  );
+    expect(find.text('Évaluation envoyée'), findsOneWidget);
+  });
 
   // ── Test 5: COMPLETED + senderHasRated=false → RatingDoneBadge absent ──────
-  testWidgets(
-    '5 · COMPLETED + senderHasRated=false → RatingDoneBadge absent',
-    (tester) async {
-      sizeView(tester);
-      final bid = _bid(status: 'COMPLETED', senderHasRated: false);
+  testWidgets('5 · COMPLETED + senderHasRated=false → RatingDoneBadge absent', (
+    tester,
+  ) async {
+    sizeView(tester);
+    final bid = _bid(status: 'COMPLETED');
 
-      await tester.pumpWidget(
-        _host(bid, cancellationBloc, conversationOpenBloc),
-      );
-      await tester.pump(const Duration(seconds: 1));
+    await tester.pumpWidget(_host(bid, cancellationBloc, conversationOpenBloc));
+    await tester.pump(const Duration(seconds: 1));
 
-      expect(find.text('Évaluation envoyée'), findsNothing);
-    },
-  );
+    expect(find.text('Évaluation envoyée'), findsNothing);
+  });
 
   // ── Test 6: stagger désactivé après premier build (playEntrance=false) ──────
-  testWidgets(
-    '6 · après la durée du stagger, playEntrance passe à false '
-    'et le second rebuild ne rejoue pas l\'animation',
-    (tester) async {
-      sizeView(tester);
-      final bid = _bid(status: 'ACCEPTED');
+  testWidgets('6 · après la durée du stagger, playEntrance passe à false '
+      'et le second rebuild ne rejoue pas l\'animation', (tester) async {
+    sizeView(tester);
+    final bid = _bid();
 
-      await tester.pumpWidget(
-        _host(bid, cancellationBloc, conversationOpenBloc),
-      );
-      // Attendre plus longtemps que la durée totale du stagger
-      // (60ms × 7 + 300ms + 50ms = 770ms).
-      await tester.pump(const Duration(milliseconds: 900));
+    await tester.pumpWidget(_host(bid, cancellationBloc, conversationOpenBloc));
+    // Attendre plus longtemps que la durée totale du stagger
+    // (60ms × 7 + 300ms + 50ms = 770ms).
+    await tester.pump(const Duration(milliseconds: 900));
 
-      // Le corps doit toujours rendre ses widgets normalement.
-      expect(find.byType(ColisBillet), findsOneWidget);
-      expect(find.byType(SenderHeroCard), findsOneWidget);
-    },
-  );
+    // Le corps doit toujours rendre ses widgets normalement.
+    expect(find.byType(ColisBillet), findsOneWidget);
+    expect(find.byType(SenderHeroCard), findsOneWidget);
+  });
 }

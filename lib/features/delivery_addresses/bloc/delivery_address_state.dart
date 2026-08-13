@@ -17,10 +17,9 @@ class DeliveryAddressState {
     DeliveryAddressStatus? status,
     List<DeliveryAddress>? addresses,
     String? error,
-  }) =>
-      DeliveryAddressState(
-        status: status ?? this.status,
-        addresses: addresses ?? this.addresses,
-        error: error,
-      );
+  }) => DeliveryAddressState(
+    status: status ?? this.status,
+    addresses: addresses ?? this.addresses,
+    error: error,
+  );
 }

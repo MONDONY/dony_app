@@ -6,7 +6,6 @@ import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
-import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
@@ -42,7 +41,6 @@ abstract final class PackageRequestCreateWizard {
             'modifier annulera toutes les offres en cours. Ils devront vous '
             'reproposer un trajet.',
         confirmLabel: 'Modifier quand même',
-        cancelLabel: 'Annuler',
         variant: DonyDialogVariant.destructive,
         icon: Icons.warning_amber_rounded,
       );
@@ -66,7 +64,6 @@ abstract final class PackageRequestCreateWizard {
             'modifier annulera toutes les offres en cours. Ils devront vous '
             'reproposer un trajet.',
         confirmLabel: 'Modifier quand même',
-        cancelLabel: 'Annuler',
         variant: DonyDialogVariant.destructive,
         icon: Icons.warning_amber_rounded,
       );
@@ -498,11 +495,11 @@ class _StickyCta extends StatelessWidget {
       decoration: BoxDecoration(
         color: cs.surface,
         border: Border(top: BorderSide(color: cs.outline)),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
             color: DonyColors.shadow,
             blurRadius: 16,
-            offset: const Offset(0, -4),
+            offset: Offset(0, -4),
           ),
         ],
       ),

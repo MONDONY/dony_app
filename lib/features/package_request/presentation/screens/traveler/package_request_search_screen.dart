@@ -193,7 +193,7 @@ class _SearchViewState extends State<_SearchView> {
                               (state.status == SearchStatus.loadingMore
                                   ? 1
                                   : 0),
-                          separatorBuilder: (_, __) =>
+                          separatorBuilder: (_, _) =>
                               const SizedBox(height: DonySpacing.md),
                           itemBuilder: (context, i) {
                             if (i >= state.results.length) {

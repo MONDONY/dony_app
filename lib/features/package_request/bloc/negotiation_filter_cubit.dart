@@ -8,9 +8,15 @@ enum NegoQuickFilter { all, active, terminal }
 class NegotiationFilterState extends Equatable {
   final String query;
   final NegoQuickFilter preset;
-  const NegotiationFilterState({this.query = '', this.preset = NegoQuickFilter.all});
+  const NegotiationFilterState({
+    this.query = '',
+    this.preset = NegoQuickFilter.all,
+  });
   NegotiationFilterState copyWith({String? query, NegoQuickFilter? preset}) =>
-      NegotiationFilterState(query: query ?? this.query, preset: preset ?? this.preset);
+      NegotiationFilterState(
+        query: query ?? this.query,
+        preset: preset ?? this.preset,
+      );
   @override
   List<Object?> get props => [query, preset];
 }
@@ -24,21 +30,29 @@ bool negoMatchesQuery(NegotiationThread t, String query) {
   return m(t.travelerName) || m(t.departureCity) || m(t.arrivalCity);
 }
 
-bool negoMatchesPreset(NegotiationThread t, NegoQuickFilter preset) => switch (preset) {
+bool negoMatchesPreset(NegotiationThread t, NegoQuickFilter preset) =>
+    switch (preset) {
       NegoQuickFilter.all => true,
-      NegoQuickFilter.active => t.status == NegotiationThreadStatus.open ||
-          t.status == NegotiationThreadStatus.awaitingTrip ||
-          t.status == NegotiationThreadStatus.awaitingPayment,
-      NegoQuickFilter.terminal => t.status == NegotiationThreadStatus.accepted ||
-          t.status == NegotiationThreadStatus.rejected ||
-          t.status == NegotiationThreadStatus.autoRejected ||
-          t.status == NegotiationThreadStatus.expired ||
-          t.status == NegotiationThreadStatus.cancelled,
+      NegoQuickFilter.active =>
+        t.status == NegotiationThreadStatus.open ||
+            t.status == NegotiationThreadStatus.awaitingTrip ||
+            t.status == NegotiationThreadStatus.awaitingPayment,
+      NegoQuickFilter.terminal =>
+        t.status == NegotiationThreadStatus.accepted ||
+            t.status == NegotiationThreadStatus.rejected ||
+            t.status == NegotiationThreadStatus.autoRejected ||
+            t.status == NegotiationThreadStatus.expired ||
+            t.status == NegotiationThreadStatus.cancelled,
     };
 
 List<NegotiationThread> applyNegotiationFilters(
-        List<NegotiationThread> all, NegotiationFilterState f) =>
-    all.where((t) => negoMatchesPreset(t, f.preset) && negoMatchesQuery(t, f.query)).toList();
+  List<NegotiationThread> all,
+  NegotiationFilterState f,
+) => all
+    .where(
+      (t) => negoMatchesPreset(t, f.preset) && negoMatchesQuery(t, f.query),
+    )
+    .toList();
 
 class NegotiationFilterCubit extends Cubit<NegotiationFilterState> {
   NegotiationFilterCubit() : super(const NegotiationFilterState());

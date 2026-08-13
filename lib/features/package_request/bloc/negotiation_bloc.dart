@@ -4,11 +4,10 @@ import 'package:bloc/bloc.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
+import 'package:dony/features/package_request/data/models/payment_method.dart';
+import 'package:dony/features/package_request/data/negotiation_repository.dart';
 import 'package:equatable/equatable.dart';
-
-import '../data/models/negotiation_thread.dart';
-import '../data/models/payment_method.dart';
-import '../data/negotiation_repository.dart';
 
 sealed class NegotiationEvent extends Equatable {
   const NegotiationEvent();
@@ -49,19 +48,20 @@ class NegotiationStartRequested extends NegotiationEvent {
   final double travelerAvailableKg;
   final String? travelerAnnouncementId;
   final String? body;
+
   /// True when the traveler accepted a firm (non-negotiable) price.
   final bool isFirmPrice;
 
   @override
   List<Object?> get props => [
-        packageRequestId,
-        proposedPriceEur,
-        travelerTravelDate,
-        travelerAvailableKg,
-        travelerAnnouncementId,
-        body,
-        isFirmPrice,
-      ];
+    packageRequestId,
+    proposedPriceEur,
+    travelerTravelDate,
+    travelerAvailableKg,
+    travelerAnnouncementId,
+    body,
+    isFirmPrice,
+  ];
 }
 
 class NegotiationCounterRequested extends NegotiationEvent {
@@ -124,8 +124,12 @@ class NegotiationSubmitTripRequested extends NegotiationEvent {
   final bool useCardForCommission;
 
   @override
-  List<Object?> get props =>
-      [threadId, travelerAnnouncementId, paymentMethod, useCardForCommission];
+  List<Object?> get props => [
+    threadId,
+    travelerAnnouncementId,
+    paymentMethod,
+    useCardForCommission,
+  ];
 }
 
 /// Traveler creates a dedicated trip (no existing announcement matches) and
@@ -162,11 +166,18 @@ class NegotiationCreateDedicatedTripRequested extends NegotiationEvent {
 
   @override
   List<Object?> get props => [
-        threadId, departureDate, departureTime, arrivalTime,
-        pickupAddress, deliveryAddress, description,
-        acceptedContentTypes, refusedTypes, paymentMethod,
-        useCardForCommission,
-      ];
+    threadId,
+    departureDate,
+    departureTime,
+    arrivalTime,
+    pickupAddress,
+    deliveryAddress,
+    description,
+    acceptedContentTypes,
+    refusedTypes,
+    paymentMethod,
+    useCardForCommission,
+  ];
 }
 
 /// Sender confirms payment on an AWAITING_PAYMENT thread → finalize as ACCEPTED.
@@ -269,8 +280,8 @@ class NegotiationNudgeError extends NegotiationState {
 
 class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
   NegotiationBloc(this._repository, {required AnalyticsService analytics})
-      : _analytics = analytics,
-        super(const NegotiationInitial()) {
+    : _analytics = analytics,
+      super(const NegotiationInitial()) {
     on<NegotiationFetchRequested>(_onFetch);
     on<NegotiationStartRequested>(_onStart);
     on<NegotiationCounterRequested>(_onCounter);
@@ -309,10 +320,12 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
     if (method == null) {
       return;
     }
-    unawaited(_analytics.logEvent(
-      AnalyticsEvents.paymentMethodSelected,
-      properties: {'method': method.wireName},
-    ));
+    unawaited(
+      _analytics.logEvent(
+        AnalyticsEvents.paymentMethodSelected,
+        properties: {'method': method.wireName},
+      ),
+    );
   }
 
   static String _priceBracket(double eur) {
@@ -351,15 +364,22 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
       );
       emit(NegotiationLoaded(thread));
       if (e.isFirmPrice) {
-        unawaited(_analytics.logEvent(
-          AnalyticsEvents.firmPriceTaken,
-          properties: {'request_id': e.packageRequestId},
-        ));
+        unawaited(
+          _analytics.logEvent(
+            AnalyticsEvents.firmPriceTaken,
+            properties: {'request_id': e.packageRequestId},
+          ),
+        );
       } else {
-        unawaited(_analytics.logEvent(
-          AnalyticsEvents.negotiationOfferMade,
-          properties: {'amount_bracket': _priceBracket(e.proposedPriceEur), 'context': 'sender'},
-        ));
+        unawaited(
+          _analytics.logEvent(
+            AnalyticsEvents.negotiationOfferMade,
+            properties: {
+              'amount_bracket': _priceBracket(e.proposedPriceEur),
+              'context': 'sender',
+            },
+          ),
+        );
       }
     } catch (err) {
       emit(NegotiationError(unwrapDioError(err)));
@@ -383,10 +403,15 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
         body: e.body,
       );
       emit(NegotiationLoaded(thread));
-      unawaited(_analytics.logEvent(
-        AnalyticsEvents.negotiationOfferMade,
-        properties: {'amount_bracket': _priceBracket(e.proposedPriceEur), 'context': 'counter'},
-      ));
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.negotiationOfferMade,
+          properties: {
+            'amount_bracket': _priceBracket(e.proposedPriceEur),
+            'context': 'counter',
+          },
+        ),
+      );
     } catch (err) {
       emit(NegotiationError(unwrapDioError(err)));
     }
@@ -405,10 +430,12 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
     try {
       final thread = await _repository.accept(e.threadId, body: e.body);
       emit(NegotiationLoaded(thread));
-      unawaited(_analytics.logEvent(
-        AnalyticsEvents.negotiationOfferAccepted,
-        properties: {'amount_bracket': _priceBracket(thread.currentPriceEur)},
-      ));
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.negotiationOfferAccepted,
+          properties: {'amount_bracket': _priceBracket(thread.currentPriceEur)},
+        ),
+      );
     } catch (err) {
       emit(NegotiationError(unwrapDioError(err)));
     }
@@ -473,10 +500,12 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
       final appErr = unwrapDioError(err);
       final blockReason = _paymentBlockReason(appErr);
       if (blockReason != null) {
-        unawaited(_analytics.logEvent(
-          AnalyticsEvents.tripLinkPaymentBlocked,
-          properties: {'reason': blockReason},
-        ));
+        unawaited(
+          _analytics.logEvent(
+            AnalyticsEvents.tripLinkPaymentBlocked,
+            properties: {'reason': blockReason},
+          ),
+        );
       }
       emit(NegotiationError(appErr));
     }
@@ -511,10 +540,12 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
       final appErr = unwrapDioError(err);
       final blockReason = _paymentBlockReason(appErr);
       if (blockReason != null) {
-        unawaited(_analytics.logEvent(
-          AnalyticsEvents.tripLinkPaymentBlocked,
-          properties: {'reason': blockReason},
-        ));
+        unawaited(
+          _analytics.logEvent(
+            AnalyticsEvents.tripLinkPaymentBlocked,
+            properties: {'reason': blockReason},
+          ),
+        );
       }
       emit(NegotiationError(appErr));
     }

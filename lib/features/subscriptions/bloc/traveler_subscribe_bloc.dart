@@ -11,7 +11,7 @@ class TravelerSubscribeBloc
   String travelerId = '';
 
   TravelerSubscribeBloc(this._repository)
-      : super(const TravelerSubscribeState()) {
+    : super(const TravelerSubscribeState()) {
     on<LoadSubscribeStatus>(_onLoad);
     on<SubscribePressed>(_onSubscribe);
     on<UnsubscribePressed>(_onUnsubscribe);
@@ -19,57 +19,91 @@ class TravelerSubscribeBloc
   }
 
   Future<void> _onLoad(
-      LoadSubscribeStatus e, Emitter<TravelerSubscribeState> emit) async {
+    LoadSubscribeStatus e,
+    Emitter<TravelerSubscribeState> emit,
+  ) async {
     travelerId = e.travelerId;
     emit(state.copyWith(status: TravelerSubscribeStatus.loading));
     try {
       final status = await _repository.getStatus(e.travelerId);
-      emit(state.copyWith(
-        status: TravelerSubscribeStatus.ready,
-        subscribed: status.subscribed,
-        pushEnabled: status.pushEnabled,
-      ));
+      emit(
+        state.copyWith(
+          status: TravelerSubscribeStatus.ready,
+          subscribed: status.subscribed,
+          pushEnabled: status.pushEnabled,
+        ),
+      );
     } catch (err) {
-      emit(state.copyWith(
-          status: TravelerSubscribeStatus.error, error: err.toString()));
+      emit(
+        state.copyWith(
+          status: TravelerSubscribeStatus.error,
+          error: err.toString(),
+        ),
+      );
     }
   }
 
   Future<void> _onSubscribe(
-      SubscribePressed e, Emitter<TravelerSubscribeState> emit) async {
+    SubscribePressed e,
+    Emitter<TravelerSubscribeState> emit,
+  ) async {
     try {
       await _repository.subscribe(travelerId);
-      emit(state.copyWith(
-          status: TravelerSubscribeStatus.ready, subscribed: true));
+      emit(
+        state.copyWith(status: TravelerSubscribeStatus.ready, subscribed: true),
+      );
     } catch (err) {
-      emit(state.copyWith(
-          status: TravelerSubscribeStatus.error, error: err.toString()));
+      emit(
+        state.copyWith(
+          status: TravelerSubscribeStatus.error,
+          error: err.toString(),
+        ),
+      );
     }
   }
 
   Future<void> _onUnsubscribe(
-      UnsubscribePressed e, Emitter<TravelerSubscribeState> emit) async {
+    UnsubscribePressed e,
+    Emitter<TravelerSubscribeState> emit,
+  ) async {
     try {
       await _repository.unsubscribe(travelerId);
-      emit(state.copyWith(
+      emit(
+        state.copyWith(
           status: TravelerSubscribeStatus.ready,
           subscribed: false,
-          pushEnabled: false));
+          pushEnabled: false,
+        ),
+      );
     } catch (err) {
-      emit(state.copyWith(
-          status: TravelerSubscribeStatus.error, error: err.toString()));
+      emit(
+        state.copyWith(
+          status: TravelerSubscribeStatus.error,
+          error: err.toString(),
+        ),
+      );
     }
   }
 
   Future<void> _onTogglePush(
-      TogglePushPressed e, Emitter<TravelerSubscribeState> emit) async {
+    TogglePushPressed e,
+    Emitter<TravelerSubscribeState> emit,
+  ) async {
     try {
       final s = await _repository.setPush(travelerId, e.enabled);
-      emit(state.copyWith(
-          status: TravelerSubscribeStatus.ready, pushEnabled: s.pushEnabled));
+      emit(
+        state.copyWith(
+          status: TravelerSubscribeStatus.ready,
+          pushEnabled: s.pushEnabled,
+        ),
+      );
     } catch (err) {
-      emit(state.copyWith(
-          status: TravelerSubscribeStatus.error, error: err.toString()));
+      emit(
+        state.copyWith(
+          status: TravelerSubscribeStatus.error,
+          error: err.toString(),
+        ),
+      );
     }
   }
 }

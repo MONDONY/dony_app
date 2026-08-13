@@ -26,12 +26,12 @@ import 'package:intl/intl.dart';
 ///   3 = IN_TRANSIT  — En vol
 ///   4 = COMPLETED   — Livré
 int? shipmentStepFor(String status) => switch (status) {
-      'ACCEPTED' => 1,
-      'HANDED_OVER' => 2,
-      'IN_TRANSIT' => 3,
-      'COMPLETED' => 4,
-      _ => null,
-    };
+  'ACCEPTED' => 1,
+  'HANDED_OVER' => 2,
+  'IN_TRANSIT' => 3,
+  'COMPLETED' => 4,
+  _ => null,
+};
 
 // ─────────────────────────────────────────────────────────────
 // ShipmentCard
@@ -50,73 +50,55 @@ class ShipmentCard extends StatelessWidget {
   final int index;
 
   /// Returns (bgColor, fgColor, label) for the status badge pill.
-  ({Color bg, Color fg, String label}) _badge(ColorScheme cs) =>
-      switch (bid.status) {
-        'IN_TRANSIT' => (
-            bg: cs.infoLight,
-            fg: cs.info,
-            label: 'EN TRANSIT',
-          ),
-        'HANDED_OVER' => (
-            bg: cs.infoLight,
-            fg: cs.info,
-            label: 'REMIS',
-          ),
-        'ACCEPTED' => (
-            bg: cs.warningLight,
-            fg: cs.warning,
-            label: 'À REMETTRE',
-          ),
-        'PENDING' || 'AWAITING_PAYMENT' || 'PAYMENT_ESCROWED' => (
-            bg: cs.warningLight,
-            fg: cs.warning,
-            label: 'EN ATTENTE',
-          ),
-        'COMPLETED' => (
-            bg: cs.successLight,
-            fg: cs.success,
-            label: 'LIVRÉ',
-          ),
-        'CANCELLED' || 'REJECTED' || 'NO_SHOW' || 'EXPIRED' ||
-        'PARCEL_REFUSED' => (
-            bg: DonyColors.neutral100,
-            fg: cs.onSurfaceVariant,
-            label: 'TERMINÉ',
-          ),
-        _ => (
-            bg: DonyColors.neutral100,
-            fg: cs.onSurfaceVariant,
-            label: bid.status,
-          ),
-      };
+  ({Color bg, Color fg, String label}) _badge(
+    ColorScheme cs,
+  ) => switch (bid.status) {
+    'IN_TRANSIT' => (bg: cs.infoLight, fg: cs.info, label: 'EN TRANSIT'),
+    'HANDED_OVER' => (bg: cs.infoLight, fg: cs.info, label: 'REMIS'),
+    'ACCEPTED' => (bg: cs.warningLight, fg: cs.warning, label: 'À REMETTRE'),
+    'PENDING' || 'AWAITING_PAYMENT' || 'PAYMENT_ESCROWED' => (
+      bg: cs.warningLight,
+      fg: cs.warning,
+      label: 'EN ATTENTE',
+    ),
+    'COMPLETED' => (bg: cs.successLight, fg: cs.success, label: 'LIVRÉ'),
+    'CANCELLED' || 'REJECTED' || 'NO_SHOW' || 'EXPIRED' || 'PARCEL_REFUSED' => (
+      bg: DonyColors.neutral100,
+      fg: cs.onSurfaceVariant,
+      label: 'TERMINÉ',
+    ),
+    _ => (
+      bg: DonyColors.neutral100,
+      fg: cs.onSurfaceVariant,
+      label: bid.status,
+    ),
+  };
 
   /// Label describing the current stepper step.
   String _stepLabel() => switch (bid.status) {
-        'ACCEPTED' => 'Remise au voyageur à venir',
-        'HANDED_OVER' => 'Colis remis au voyageur',
-        'IN_TRANSIT' =>
-          'En vol vers ${bid.arrivalCity ?? 'destination'}',
-        'COMPLETED' => 'Livré à destination',
-        _ => '',
-      };
+    'ACCEPTED' => 'Remise au voyageur à venir',
+    'HANDED_OVER' => 'Colis remis au voyageur',
+    'IN_TRANSIT' => 'En vol vers ${bid.arrivalCity ?? 'destination'}',
+    'COMPLETED' => 'Livré à destination',
+    _ => '',
+  };
 
   /// CTA label for the footer action link.
   String _ctaLabel() => switch (bid.status) {
-        'IN_TRANSIT' || 'HANDED_OVER' => 'Suivre le colis →',
-        'ACCEPTED' => 'Voir le QR →',
-        _ => 'Détails →',
-      };
+    'IN_TRANSIT' || 'HANDED_OVER' => 'Suivre le colis →',
+    'ACCEPTED' => 'Voir le QR →',
+    _ => 'Détails →',
+  };
 
   /// Whether the CTA should be muted (disabled statuses).
   bool get _isDisabled => switch (bid.status) {
-        'REJECTED' ||
-        'CANCELLED' ||
-        'NO_SHOW' ||
-        'EXPIRED' ||
-        'PARCEL_REFUSED' =>
-          true,
-        _ => false,
-      };
+    'REJECTED' ||
+    'CANCELLED' ||
+    'NO_SHOW' ||
+    'EXPIRED' ||
+    'PARCEL_REFUSED' => true,
+    _ => false,
+  };
 
   /// Date de départ du trajet, formatée relativement à aujourd'hui — même
   /// vocabulaire que TripCard. `null` si l'info n'est pas disponible.
@@ -196,9 +178,7 @@ class ShipmentCard extends StatelessWidget {
             Text(
               'Colis ${_weightLabel()}'
               '${bid.recipientName != null ? ' · pour ${bid.recipientName}' : ''}',
-              style: tt.bodySmall?.copyWith(
-                color: cs.onSurfaceVariant,
-              ),
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -283,9 +263,7 @@ class ShipmentCard extends StatelessWidget {
     );
 
     return card
-        .animate(
-          delay: Duration(milliseconds: DonyCurve.staggerMs * index),
-        )
+        .animate(delay: Duration(milliseconds: DonyCurve.staggerMs * index))
         .fadeIn(duration: 300.ms, curve: Curves.easeOutCubic)
         .slideY(begin: 0.04, duration: 300.ms, curve: Curves.easeOutCubic);
   }
@@ -308,18 +286,13 @@ class ShipmentStepper extends StatelessWidget {
   final int currentStep;
 
   static const _iconAssets = <String>[
-    'check',   // step 1 — handover
+    'check', // step 1 — handover
     'package', // step 2 — embarked (colis)
-    'plane',   // step 3 — in transit
-    'house',   // step 4 — delivered
+    'plane', // step 3 — in transit
+    'house', // step 4 — delivered
   ];
 
-  static const _labels = [
-    'Remis',
-    'Embarqué',
-    'En vol',
-    'Livraison',
-  ];
+  static const _labels = ['Remis', 'Embarqué', 'En vol', 'Livraison'];
 
   @override
   Widget build(BuildContext context) {
@@ -349,8 +322,7 @@ class ShipmentStepper extends StatelessWidget {
                     color: (i + 1) < currentStep
                         ? cs.primary
                         : DonyColors.neutral100,
-                    borderRadius:
-                        BorderRadius.circular(DonyRadius.full),
+                    borderRadius: BorderRadius.circular(DonyRadius.full),
                   ),
                 ),
               ),
@@ -401,10 +373,7 @@ class _StepPastille extends StatelessWidget {
       bg = cs.primary;
       iconColor = cs.onPrimary;
       displayAsset = 'check';
-      decoration = BoxDecoration(
-        color: bg,
-        shape: BoxShape.circle,
-      );
+      decoration = BoxDecoration(color: bg, shape: BoxShape.circle);
     } else if (_isCurrent) {
       bg = cs.primary;
       iconColor = cs.onPrimary;
@@ -412,20 +381,14 @@ class _StepPastille extends StatelessWidget {
       decoration = BoxDecoration(
         color: bg,
         shape: BoxShape.circle,
-        border: Border.all(
-          color: DonyColors.blue200,
-          width: 3,
-        ),
+        border: Border.all(color: DonyColors.blue200, width: 3),
       );
     } else {
       // Pending/future step
       bg = DonyColors.neutral100;
       iconColor = cs.onSurfaceVariant;
       displayAsset = iconAsset;
-      decoration = BoxDecoration(
-        color: bg,
-        shape: BoxShape.circle,
-      );
+      decoration = BoxDecoration(color: bg, shape: BoxShape.circle);
     }
 
     return Column(
@@ -443,11 +406,8 @@ class _StepPastille extends StatelessWidget {
         Text(
           label,
           style: tt.labelSmall?.copyWith(
-            color: (_isDone || _isCurrent)
-                ? cs.primary
-                : cs.onSurfaceVariant,
-            fontWeight:
-                _isCurrent ? FontWeight.w700 : FontWeight.w600,
+            color: (_isDone || _isCurrent) ? cs.primary : cs.onSurfaceVariant,
+            fontWeight: _isCurrent ? FontWeight.w700 : FontWeight.w600,
             fontSize: 9,
           ),
         ),
@@ -483,11 +443,7 @@ class _RouteRow extends StatelessWidget {
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xs),
-          child: DonyIcon(
-            'arrow-right',
-            size: 16,
-            color: cs.primary,
-          ),
+          child: DonyIcon('arrow-right', size: 16, color: cs.primary),
         ),
         Flexible(
           child: Text(
@@ -531,10 +487,7 @@ class _BadgePill extends StatelessWidget {
           Container(
             width: 6,
             height: 6,
-            decoration: BoxDecoration(
-              color: badge.fg,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: badge.fg, shape: BoxShape.circle),
           ),
           const SizedBox(width: 5),
           Text(

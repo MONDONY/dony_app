@@ -16,25 +16,25 @@ class _MockRepo extends Mock implements DeliveryAddressRepository {}
 class _MockDio extends Mock implements Dio {}
 
 Widget _wrap(DeliveryAddressBloc bloc, {String? addressId}) => MaterialApp(
-      home: MediaQuery(
-        data: const MediaQueryData(size: Size(390, 844)),
-        child: BlocProvider.value(
-          value: bloc,
-          child: DeliveryAddressEditScreen(addressId: addressId),
-        ),
-      ),
-    );
+  home: MediaQuery(
+    data: const MediaQueryData(size: Size(390, 844)),
+    child: BlocProvider.value(
+      value: bloc,
+      child: DeliveryAddressEditScreen(addressId: addressId),
+    ),
+  ),
+);
 
 DeliveryAddress _makeAddress({bool isDefault = false}) => DeliveryAddress(
-      id: 'del-1',
-      label: 'Famille',
-      street: 'Rue 10, Almadies',
-      city: 'Dakar',
-      country: 'SN',
-      latitude: 14.69,
-      longitude: -17.44,
-      isDefault: isDefault,
-    );
+  id: 'del-1',
+  label: 'Famille',
+  street: 'Rue 10, Almadies',
+  city: 'Dakar',
+  country: 'SN',
+  latitude: 14.69,
+  longitude: -17.44,
+  isDefault: isDefault,
+);
 
 void main() {
   late _MockRepo repo;
@@ -84,8 +84,9 @@ void main() {
 
   // ── Titre selon le mode ─────────────────────────────────────────────────
 
-  testWidgets('title is "Nouvelle adresse de livraison" in create mode',
-      (tester) async {
+  testWidgets('title is "Nouvelle adresse de livraison" in create mode', (
+    tester,
+  ) async {
     await tester.pumpWidget(_wrap(bloc));
     await tester.pumpAndSettle();
     expect(find.text('Nouvelle adresse de livraison'), findsOneWidget);
@@ -106,8 +107,9 @@ void main() {
     await tester.tap(find.text('Boutique'));
     await tester.pump();
 
-    final textFields =
-        tester.widgetList<EditableText>(find.byType(EditableText)).toList();
+    final textFields = tester
+        .widgetList<EditableText>(find.byType(EditableText))
+        .toList();
     final labelField = textFields.firstWhere(
       (tf) => tf.controller.text == 'Boutique',
       orElse: () => throw TestFailure('Champ "Boutique" non trouvé'),
@@ -122,8 +124,9 @@ void main() {
     await tester.tap(find.text('Famille'));
     await tester.pump();
 
-    final textFields =
-        tester.widgetList<EditableText>(find.byType(EditableText)).toList();
+    final textFields = tester
+        .widgetList<EditableText>(find.byType(EditableText))
+        .toList();
     final labelField = textFields.firstWhere(
       (tf) => tf.controller.text == 'Famille',
       orElse: () => throw TestFailure('Champ "Famille" non trouvé'),
@@ -188,8 +191,9 @@ void main() {
 
   // ── _locationState branch coverage ──────────────────────────────────────
 
-  testWidgets('entering street text shows manual location status',
-      (tester) async {
+  testWidgets('entering street text shows manual location status', (
+    tester,
+  ) async {
     await tester.pumpWidget(_wrap(bloc));
     await tester.pumpAndSettle();
 
@@ -208,29 +212,33 @@ void main() {
 
   // ── Pré-remplissage en mode édition ─────────────────────────────────────
 
-  testWidgets('prefills label when editing and address found in state',
-      (tester) async {
+  testWidgets('prefills label when editing and address found in state', (
+    tester,
+  ) async {
     final address = _makeAddress();
     when(() => repo.getAll()).thenAnswer((_) async => [address]);
 
     final editBloc = DeliveryAddressBloc(repo);
     addTearDown(editBloc.close);
 
-    await tester.pumpWidget(MaterialApp(
-      home: MediaQuery(
-        data: const MediaQueryData(size: Size(390, 844)),
-        child: BlocProvider.value(
-          value: editBloc,
-          child: const DeliveryAddressEditScreen(addressId: 'del-1'),
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MediaQuery(
+          data: const MediaQueryData(size: Size(390, 844)),
+          child: BlocProvider.value(
+            value: editBloc,
+            child: const DeliveryAddressEditScreen(addressId: 'del-1'),
+          ),
         ),
       ),
-    ));
+    );
 
     editBloc.add(const DeliveryAddressLoaded());
     await tester.pumpAndSettle();
 
-    final textFields =
-        tester.widgetList<EditableText>(find.byType(EditableText)).toList();
+    final textFields = tester
+        .widgetList<EditableText>(find.byType(EditableText))
+        .toList();
     final labelField = textFields.firstWhere(
       (tf) => tf.controller.text == 'Famille',
       orElse: () => throw TestFailure('Champ "Famille" non trouvé'),
@@ -247,8 +255,9 @@ void main() {
     expect(find.text('Sénégal'), findsOneWidget);
   });
 
-  testWidgets('_countryName returns name for default country SN',
-      (tester) async {
+  testWidgets('_countryName returns name for default country SN', (
+    tester,
+  ) async {
     await tester.pumpWidget(_wrap(bloc));
     await tester.pumpAndSettle();
     expect(find.text('Sénégal'), findsOneWidget);
@@ -256,8 +265,9 @@ void main() {
 
   // ── _submit (création) via form fill + button tap ────────────────────────
 
-  testWidgets('submit calls DeliveryAddressCreated when form is valid',
-      (tester) async {
+  testWidgets('submit calls DeliveryAddressCreated when form is valid', (
+    tester,
+  ) async {
     when(() => repo.create(any())).thenAnswer((_) async => _makeAddress());
 
     await tester.pumpWidget(_wrap(bloc));
@@ -293,9 +303,13 @@ void main() {
     await tester.pump();
 
     // Instructions (dernier EditableText)
-    final fields = tester.widgetList<EditableText>(find.byType(EditableText)).toList();
-    await tester.enterText(find.byType(EditableText).at(fields.length - 1),
-        "Appeler à l'arrivée");
+    final fields = tester
+        .widgetList<EditableText>(find.byType(EditableText))
+        .toList();
+    await tester.enterText(
+      find.byType(EditableText).at(fields.length - 1),
+      "Appeler à l'arrivée",
+    );
     await tester.pump();
 
     await tester.tap(find.text("Enregistrer l'adresse"));
@@ -310,7 +324,9 @@ void main() {
     await tester.pumpWidget(_wrap(bloc));
     await tester.pumpAndSettle();
 
-    final labelField = tester.widget<EditableText>(find.byType(EditableText).first);
+    final labelField = tester.widget<EditableText>(
+      find.byType(EditableText).first,
+    );
     expect(labelField.controller.text, isEmpty);
   });
 
@@ -341,8 +357,12 @@ void main() {
 
   // ── _submit edit path (update) ──────────────────────────────────────────
 
-  testWidgets('submit calls repo.update when editing an address', (tester) async {
-    when(() => repo.update(any(), any())).thenAnswer((_) async => _makeAddress());
+  testWidgets('submit calls repo.update when editing an address', (
+    tester,
+  ) async {
+    when(
+      () => repo.update(any(), any()),
+    ).thenAnswer((_) async => _makeAddress());
 
     // addressId non-null → _isEditing = true → _submit dispatch DeliveryAddressUpdated
     await tester.pumpWidget(_wrap(bloc, addressId: 'del-1'));
@@ -381,8 +401,9 @@ void main() {
 
   // ── _locationState: localized branch (covered via manual entry) ──────────
 
-  testWidgets('location state hidden when street is empty initially',
-      (tester) async {
+  testWidgets('location state hidden when street is empty initially', (
+    tester,
+  ) async {
     await tester.pumpWidget(_wrap(bloc));
     await tester.pumpAndSettle();
 

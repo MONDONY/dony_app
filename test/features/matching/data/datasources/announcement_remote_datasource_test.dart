@@ -2,7 +2,6 @@ import 'package:dio/dio.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/matching/data/datasources/announcement_remote_datasource.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
-import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -60,7 +59,7 @@ void main() {
       final result = await datasource.createAnnouncement(
         departureCity: 'Paris',
         arrivalCity: 'Dakar',
-        departureDate: DateTime(2024, 6, 1),
+        departureDate: DateTime(2024, 6),
         pickupAddress: kPickup,
         deliveryAddress: kDelivery,
         availableKg: 10.0,
@@ -82,7 +81,7 @@ void main() {
       final result = await datasource.createAnnouncement(
         departureCity: 'Paris',
         arrivalCity: 'Dakar',
-        departureDate: DateTime(2024, 6, 1),
+        departureDate: DateTime(2024, 6),
         departureTime: '10:00',
         arrivalTime: '20:00',
         pickupAddress: kPickup,
@@ -110,7 +109,7 @@ void main() {
       await datasource.createAnnouncement(
         departureCity: 'Paris',
         arrivalCity: 'Dakar',
-        departureDate: DateTime(2024, 6, 1),
+        departureDate: DateTime(2024, 6),
         pickupAddress: kPickup,
         deliveryAddress: kDelivery,
         availableKg: 10.0,
@@ -137,7 +136,7 @@ void main() {
       await datasource.createAnnouncement(
         departureCity: 'New York',
         arrivalCity: 'Dakar',
-        departureDate: DateTime(2024, 6, 1),
+        departureDate: DateTime(2024, 6),
         pickupAddress: kPickup,
         deliveryAddress: kDelivery,
         availableKg: 10.0,
@@ -167,7 +166,7 @@ void main() {
       await datasource.createAnnouncement(
         departureCity: 'Paris',
         arrivalCity: 'Dakar',
-        departureDate: DateTime(2024, 6, 1),
+        departureDate: DateTime(2024, 6),
         pickupAddress: kPickup,
         deliveryAddress: kDelivery,
         availableKg: 10.0,
@@ -320,7 +319,7 @@ void main() {
       ).thenAnswer((_) async => _ok({'content': []}, '/announcements'));
 
       final results = await datasource.searchAnnouncements(
-        departureDateFrom: DateTime(2024, 6, 1),
+        departureDateFrom: DateTime(2024, 6),
         departureDateTo: DateTime(2024, 6, 30),
         minAvailableKg: 5.0,
       );
@@ -533,7 +532,7 @@ void main() {
         id: 'ann-001',
         departureCity: 'Paris',
         arrivalCity: 'Dakar',
-        departureDate: DateTime(2024, 6, 1),
+        departureDate: DateTime(2024, 6),
         pickupAddress: kPickup,
         deliveryAddress: kDelivery,
         availableKg: 10.0,
@@ -557,7 +556,7 @@ void main() {
         id: 'ann-001',
         departureCity: 'Paris',
         arrivalCity: 'Dakar',
-        departureDate: DateTime(2024, 6, 1),
+        departureDate: DateTime(2024, 6),
         departureTime: '08:00',
         arrivalTime: '20:00',
         pickupAddress: kPickup,
@@ -586,7 +585,7 @@ void main() {
         id: 'ann-001',
         departureCity: 'Paris',
         arrivalCity: 'Dakar',
-        departureDate: DateTime(2024, 6, 1),
+        departureDate: DateTime(2024, 6),
         pickupAddress: kPickup,
         deliveryAddress: kDelivery,
         availableKg: 10.0,
@@ -614,7 +613,7 @@ void main() {
         id: 'ann-001',
         departureCity: 'New York',
         arrivalCity: 'Dakar',
-        departureDate: DateTime(2024, 6, 1),
+        departureDate: DateTime(2024, 6),
         pickupAddress: kPickup,
         deliveryAddress: kDelivery,
         availableKg: 10.0,
@@ -645,7 +644,7 @@ void main() {
         id: 'ann-001',
         departureCity: 'Paris',
         arrivalCity: 'Dakar',
-        departureDate: DateTime(2024, 6, 1),
+        departureDate: DateTime(2024, 6),
         pickupAddress: kPickup,
         deliveryAddress: kDelivery,
         availableKg: 10.0,

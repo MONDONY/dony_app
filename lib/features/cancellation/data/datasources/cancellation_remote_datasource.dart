@@ -10,15 +10,19 @@ class CancellationRemoteDatasource {
     required String announcementId,
     required String reason,
   }) async {
-    final response = await _apiClient.dio.post('/cancellations', data: {
-      'announcementId': announcementId,
-      'reason': reason,
-    });
+    final response = await _apiClient.dio.post(
+      '/cancellations',
+      data: {'announcementId': announcementId, 'reason': reason},
+    );
     return CancellationModel.fromJson(response.data as Map<String, dynamic>);
   }
 
-  Future<List<RematchSuggestionModel>> getRematchSuggestions(String cancellationId) async {
-    final response = await _apiClient.dio.get('/cancellations/$cancellationId/rematch-suggestions');
+  Future<List<RematchSuggestionModel>> getRematchSuggestions(
+    String cancellationId,
+  ) async {
+    final response = await _apiClient.dio.get(
+      '/cancellations/$cancellationId/rematch-suggestions',
+    );
     return (response.data as List)
         .map((s) => RematchSuggestionModel.fromJson(s as Map<String, dynamic>))
         .toList();
@@ -29,7 +33,9 @@ class CancellationRemoteDatasource {
   }
 
   Future<void> reportTravelerNoShow(String bidId) async {
-    await _apiClient.dio.post('/cancellations/bids/$bidId/report-traveler-noshow');
+    await _apiClient.dio.post(
+      '/cancellations/bids/$bidId/report-traveler-noshow',
+    );
   }
 
   Future<void> contestNoShow(String bidId) async {
@@ -37,15 +43,21 @@ class CancellationRemoteDatasource {
   }
 
   Future<void> reportDeliveryNoShow(String bidId) async {
-    await _apiClient.dio.post('/cancellations/bids/$bidId/report-delivery-noshow');
+    await _apiClient.dio.post(
+      '/cancellations/bids/$bidId/report-delivery-noshow',
+    );
   }
 
   Future<void> reportTravelerDeliveryNoShow(String bidId) async {
-    await _apiClient.dio.post('/cancellations/bids/$bidId/report-traveler-delivery-noshow');
+    await _apiClient.dio.post(
+      '/cancellations/bids/$bidId/report-traveler-delivery-noshow',
+    );
   }
 
   Future<void> contestDeliveryNoShow(String bidId) async {
-    await _apiClient.dio.post('/cancellations/bids/$bidId/contest-delivery-noshow');
+    await _apiClient.dio.post(
+      '/cancellations/bids/$bidId/contest-delivery-noshow',
+    );
   }
 
   /// L'expéditeur confirme lui-même son absence signalée par le voyageur :
@@ -72,8 +84,9 @@ class CancellationRemoteDatasource {
 
   /// L'expéditeur consulte son code de retour + l'état de la restitution (D7).
   Future<ReturnCodeModel> getReturnCode(String bidId) async {
-    final response =
-        await _apiClient.dio.get('/cancellations/bids/$bidId/return-code');
+    final response = await _apiClient.dio.get(
+      '/cancellations/bids/$bidId/return-code',
+    );
     return ReturnCodeModel.fromJson(response.data as Map<String, dynamic>);
   }
 }

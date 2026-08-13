@@ -1,8 +1,8 @@
 import 'package:dony/core/urgency/dony_urgency.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
+import 'package:dony/features/package_request/data/models/parcel_size.dart';
+import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:equatable/equatable.dart';
-import 'parcel_size.dart';
-import 'payment_method.dart';
 
 /// Lightweight item returned by the search endpoint (`GET /package-requests`).
 /// Includes city-level coords (departure/arrival) for map markers and a public

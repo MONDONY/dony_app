@@ -28,10 +28,7 @@ const _travelerFull = TravelerProfile(
   isProAccount: true,
 );
 
-const _travelerMinimal = TravelerProfile(
-  id: 't2',
-  displayName: 'Fatou D.',
-);
+const _travelerMinimal = TravelerProfile(id: 't2', displayName: 'Fatou D.');
 
 const _ratingsEmpty = UserRatingsLoaded(
   averageRating: 0,
@@ -66,8 +63,11 @@ void main() {
   setUp(() {
     ratingBloc = MockRatingBloc();
     subscribeBloc = MockTravelerSubscribeBloc();
-    whenListen(ratingBloc, const Stream<RatingState>.empty(),
-        initialState: _ratingsEmpty);
+    whenListen(
+      ratingBloc,
+      const Stream<RatingState>.empty(),
+      initialState: _ratingsEmpty,
+    );
     whenListen(
       subscribeBloc,
       const Stream<TravelerSubscribeState>.empty(),
@@ -93,20 +93,23 @@ void main() {
       expect(find.text('+33612345678'), findsOneWidget);
     });
 
-    testWidgets('affiche le badge Compte PRO quand isProAccount = true',
-        (tester) async {
+    testWidgets('affiche le badge Compte PRO quand isProAccount = true', (
+      tester,
+    ) async {
       await _openSheet(tester, _travelerFull);
       expect(find.text('Compte PRO'), findsOneWidget);
     });
 
-    testWidgets('affiche le badge Identité vérifiée quand kycVerified = true',
-        (tester) async {
+    testWidgets('affiche le badge Identité vérifiée quand kycVerified = true', (
+      tester,
+    ) async {
       await _openSheet(tester, _travelerFull);
       expect(find.text('Identité vérifiée'), findsOneWidget);
     });
 
-    testWidgets('affiche le texte masqué si phoneNumber est null',
-        (tester) async {
+    testWidgets('affiche le texte masqué si phoneNumber est null', (
+      tester,
+    ) async {
       await _openSheet(tester, _travelerMinimal);
       expect(find.text('Numéro révélé après acceptation'), findsOneWidget);
     });
@@ -130,8 +133,9 @@ void main() {
       expect(find.text('12'), findsOneWidget);
     });
 
-    testWidgets('affiche « – » quand averageRating et totalTrips sont null',
-        (tester) async {
+    testWidgets('affiche « – » quand averageRating et totalTrips sont null', (
+      tester,
+    ) async {
       await _openSheet(tester, _travelerMinimal);
       // note=null → '–', trajets=null → '–', livraison toujours '–' → exactement 3
       expect(find.text('–'), findsNWidgets(3));

@@ -23,18 +23,20 @@ import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
-import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/bloc/stats_period_cubit.dart';
 import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
+import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/trips_summary_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
-import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
-import 'package:dony/features/package_request/data/models/parcel_size.dart';
+import 'package:dony/features/matching/presentation/widgets/near_me_carousel.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_card.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_event.dart';
 import 'package:dony/features/notifications/bloc/notification_state.dart';
-import 'package:dony/features/matching/presentation/widgets/near_me_carousel.dart';
+import 'package:dony/features/package_request/bloc/package_request_search_bloc.dart';
+import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
+import 'package:dony/features/package_request/data/models/parcel_size.dart';
+import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/profile/bloc/help_center_bloc.dart';
 import 'package:dony/features/profile/data/datasources/help_center_remote_config_datasource.dart';
 import 'package:dony/features/profile/data/repositories/help_center_repository.dart';
@@ -42,12 +44,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:go_router/go_router.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geolocator_platform_interface/geolocator_platform_interface.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
-import 'package:dony/features/package_request/bloc/package_request_search_bloc.dart';
-import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
@@ -229,8 +229,8 @@ AnnouncementModel _makeAnn({
   totalKg: 20,
   pricePerKg: 7,
   status: 'ACTIVE',
-  createdAt: DateTime(2026, 5, 1),
-  updatedAt: DateTime(2026, 5, 1),
+  createdAt: DateTime(2026, 5),
+  updatedAt: DateTime(2026, 5),
 );
 
 /// Trois trajets d'un autre voyageur : le feed n'est pas vide, donc l'état vide
@@ -2019,7 +2019,6 @@ void main() {
         verify(() => summary.load()).called(1);
       },
     );
-
   });
 
   group('découverte croisée', () {
@@ -2335,7 +2334,7 @@ void main() {
     });
 
     testWidgets('no badge when favorites count is 0', (tester) async {
-      await tester.pumpWidget(_buildHome(favCubit: _makeFavCubit(count: 0)));
+      await tester.pumpWidget(_buildHome(favCubit: _makeFavCubit()));
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('favorites-badge')), findsNothing);

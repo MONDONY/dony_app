@@ -30,7 +30,7 @@ class AnalyticsConsentScreen extends StatelessWidget {
             child: Column(
               children: [
                 const SizedBox(height: DonySpacing.md),
-                Align(
+                const Align(
                   alignment: Alignment.centerRight,
                   child: DonyStepPill(
                     current: 4,
@@ -78,10 +78,7 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
           children: [
-            DonyMascotteAnimated(
-              type: DonyMascotteType.joyeux,
-              size: DonyMascotteSize.md,
-            ),
+            const DonyMascotteAnimated(type: DonyMascotteType.joyeux),
             const SizedBox(height: DonySpacing.lg),
             Text(
               'Une dernière chose',

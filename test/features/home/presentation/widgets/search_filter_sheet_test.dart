@@ -111,25 +111,27 @@ void main() {
   }) async {
     resultat = null;
     ferme = false;
-    await tester.pumpWidget(MaterialApp(
-      home: Builder(
-        builder: (ctx) => Scaffold(
-          body: ElevatedButton(
-            onPressed: () async {
-              resultat = await SearchFilterSheet.show(
-                ctx,
-                mode: mode,
-                initial: initial,
-                activeTrips: activeTrips,
-                onPublishTrip: onPublishTrip,
-              );
-              ferme = true;
-            },
-            child: const Text('ouvrir'),
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (ctx) => Scaffold(
+            body: ElevatedButton(
+              onPressed: () async {
+                resultat = await SearchFilterSheet.show(
+                  ctx,
+                  mode: mode,
+                  initial: initial,
+                  activeTrips: activeTrips,
+                  onPublishTrip: onPublishTrip,
+                );
+                ferme = true;
+              },
+              child: const Text('ouvrir'),
+            ),
           ),
         ),
       ),
-    ));
+    );
     await tester.tap(find.text('ouvrir'));
     await tester.pumpAndSettle();
   }
@@ -247,10 +249,13 @@ void main() {
     expect(find.text('ARRIVÉE'), findsOneWidget);
   });
 
-  testWidgets('le corridor initial est pré-rempli dans les deux modes',
-      (tester) async {
-    const initial =
-        HomeSearchFilters(departureCity: 'Paris', arrivalCity: 'Dakar');
+  testWidgets('le corridor initial est pré-rempli dans les deux modes', (
+    tester,
+  ) async {
+    const initial = HomeSearchFilters(
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+    );
 
     await ouvrir(tester, mode: SearchMode.parcels, initial: initial);
     expect(find.text('Paris'), findsOneWidget);
@@ -263,8 +268,9 @@ void main() {
     expect(find.text('Dakar'), findsOneWidget);
   });
 
-  testWidgets('le bouton porte le même libellé dans les deux modes',
-      (tester) async {
+  testWidgets('le bouton porte le même libellé dans les deux modes', (
+    tester,
+  ) async {
     await ouvrir(tester, mode: SearchMode.trips);
     expect(find.widgetWithText(DonyButton, 'Rechercher'), findsOneWidget);
     expect(find.text('Appliquer'), findsNothing);
@@ -276,15 +282,17 @@ void main() {
     expect(find.text('Appliquer'), findsNothing);
   });
 
-  testWidgets('« Tout effacer » absent quand aucun filtre actif',
-      (tester) async {
+  testWidgets('« Tout effacer » absent quand aucun filtre actif', (
+    tester,
+  ) async {
     await ouvrir(tester, mode: SearchMode.trips);
 
     expect(find.text('Tout effacer'), findsNothing);
   });
 
-  testWidgets('« Tout effacer » présent dès qu\'un filtre est actif',
-      (tester) async {
+  testWidgets('« Tout effacer » présent dès qu\'un filtre est actif', (
+    tester,
+  ) async {
     await ouvrir(
       tester,
       mode: SearchMode.trips,
@@ -323,30 +331,33 @@ void main() {
 
   // ── Défaut 1 : vider un champ de ville vide bien le filtre ─────────────────
 
-  testWidgets('la croix du champ départ vide le filtre départ, pas l\'arrivée',
-      (tester) async {
-    await ouvrir(
-      tester,
-      mode: SearchMode.trips,
-      initial: const HomeSearchFilters(
-        departureCity: 'Paris',
-        arrivalCity: 'Dakar',
-      ),
-    );
+  testWidgets(
+    'la croix du champ départ vide le filtre départ, pas l\'arrivée',
+    (tester) async {
+      await ouvrir(
+        tester,
+        mode: SearchMode.trips,
+        initial: const HomeSearchFilters(
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+        ),
+      );
 
-    final croix = find.descendant(
-      of: find.byKey(const Key('filter-departure-city')),
-      matching: find.byType(IconButton),
-    );
-    await taper(tester, croix);
+      final croix = find.descendant(
+        of: find.byKey(const Key('filter-departure-city')),
+        matching: find.byType(IconButton),
+      );
+      await taper(tester, croix);
 
-    final valeur = await rechercher(tester);
-    expect(valeur!.departureCity, isNull);
-    expect(valeur.arrivalCity, 'Dakar');
-  });
+      final valeur = await rechercher(tester);
+      expect(valeur!.departureCity, isNull);
+      expect(valeur.arrivalCity, 'Dakar');
+    },
+  );
 
-  testWidgets('effacer le texte du champ arrivée vide le filtre arrivée',
-      (tester) async {
+  testWidgets('effacer le texte du champ arrivée vide le filtre arrivée', (
+    tester,
+  ) async {
     await ouvrir(
       tester,
       mode: SearchMode.parcels,
@@ -367,99 +378,102 @@ void main() {
   // ── Défaut 3 : « Tout effacer » ────────────────────────────────────────────
 
   testWidgets(
-      '« Tout effacer » en mode trajets efface communs + trajets, garde colis',
-      (tester) async {
-    await ouvrir(
-      tester,
-      mode: SearchMode.trips,
-      initial: const HomeSearchFilters(
-        departureCity: 'Paris',
-        arrivalCity: 'Dakar',
-        datePreset: DonyDatePreset.today,
-        urgentOnly: true,
-        nearMeActive: true,
-        nearMeRadiusKm: 10,
-        kiloProOnly: true,
-        minRating: 4.5,
-        weightMin: 12,
-        maxPricePerKg: 8,
-        weekendOnly: true,
-        kycVerifiedOnly: true,
-        transportMode: TransportMode.plane,
-        contentType: 'Chaussures',
-        urgencyFilter: UrgencyFilter.urgent,
-        // Filtres colis : ils doivent survivre.
-        maxWeight: 10,
-        parcelSize: ParcelSize.medium,
-        matchingMyTrips: true,
-      ),
-    );
+    '« Tout effacer » en mode trajets efface communs + trajets, garde colis',
+    (tester) async {
+      await ouvrir(
+        tester,
+        mode: SearchMode.trips,
+        initial: const HomeSearchFilters(
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          datePreset: DonyDatePreset.today,
+          urgentOnly: true,
+          nearMeActive: true,
+          nearMeRadiusKm: 10,
+          kiloProOnly: true,
+          minRating: 4.5,
+          weightMin: 12,
+          maxPricePerKg: 8,
+          weekendOnly: true,
+          kycVerifiedOnly: true,
+          transportMode: TransportMode.plane,
+          contentType: 'Chaussures',
+          urgencyFilter: UrgencyFilter.urgent,
+          // Filtres colis : ils doivent survivre.
+          maxWeight: 10,
+          parcelSize: ParcelSize.medium,
+          matchingMyTrips: true,
+        ),
+      );
 
-    await tester.tap(find.text('Tout effacer'));
-    await tester.pumpAndSettle();
-    final valeur = await rechercher(tester);
+      await tester.tap(find.text('Tout effacer'));
+      await tester.pumpAndSettle();
+      final valeur = await rechercher(tester);
 
-    // Communs effacés.
-    expect(valeur!.departureCity, isNull);
-    expect(valeur.arrivalCity, isNull);
-    expect(valeur.datePreset, DonyDatePreset.none);
-    // urgentOnly / nearMeActive ne sont pas exposés dans la sheet mais sont
-    // comptés par activeCountFor : les épargner laisserait un « Tout effacer »
-    // qui n'efface pas tout et qui reste affiché. Décision documentée dans
-    // `SearchFilterSheet._cleared`.
-    expect(valeur.urgentOnly, isFalse);
-    expect(valeur.nearMeActive, isFalse);
-    // Trajets effacés.
-    expect(valeur.kiloProOnly, isFalse);
-    expect(valeur.minRating, isNull);
-    expect(valeur.weightMin, isNull);
-    expect(valeur.maxPricePerKg, isNull);
-    expect(valeur.weekendOnly, isFalse);
-    expect(valeur.kycVerifiedOnly, isFalse);
-    expect(valeur.transportMode, isNull);
-    expect(valeur.contentType, isNull);
-    expect(valeur.urgencyFilter, isNull);
-    // Colis préservés.
-    expect(valeur.maxWeight, 10);
-    expect(valeur.parcelSize, ParcelSize.medium);
-    expect(valeur.matchingMyTrips, isTrue);
-  });
+      // Communs effacés.
+      expect(valeur!.departureCity, isNull);
+      expect(valeur.arrivalCity, isNull);
+      expect(valeur.datePreset, DonyDatePreset.none);
+      // urgentOnly / nearMeActive ne sont pas exposés dans la sheet mais sont
+      // comptés par activeCountFor : les épargner laisserait un « Tout effacer »
+      // qui n'efface pas tout et qui reste affiché. Décision documentée dans
+      // `SearchFilterSheet._cleared`.
+      expect(valeur.urgentOnly, isFalse);
+      expect(valeur.nearMeActive, isFalse);
+      // Trajets effacés.
+      expect(valeur.kiloProOnly, isFalse);
+      expect(valeur.minRating, isNull);
+      expect(valeur.weightMin, isNull);
+      expect(valeur.maxPricePerKg, isNull);
+      expect(valeur.weekendOnly, isFalse);
+      expect(valeur.kycVerifiedOnly, isFalse);
+      expect(valeur.transportMode, isNull);
+      expect(valeur.contentType, isNull);
+      expect(valeur.urgencyFilter, isNull);
+      // Colis préservés.
+      expect(valeur.maxWeight, 10);
+      expect(valeur.parcelSize, ParcelSize.medium);
+      expect(valeur.matchingMyTrips, isTrue);
+    },
+  );
 
   testWidgets(
-      '« Tout effacer » en mode colis efface communs + colis, garde trajets',
-      (tester) async {
-    await ouvrir(
-      tester,
-      mode: SearchMode.parcels,
-      initial: const HomeSearchFilters(
-        departureCity: 'Paris',
-        datePreset: DonyDatePreset.thisWeek,
-        maxWeight: 10,
-        parcelSize: ParcelSize.large,
-        matchingMyTrips: true,
-        kiloProOnly: true,
-        transportMode: TransportMode.car,
-      ),
-    );
+    '« Tout effacer » en mode colis efface communs + colis, garde trajets',
+    (tester) async {
+      await ouvrir(
+        tester,
+        mode: SearchMode.parcels,
+        initial: const HomeSearchFilters(
+          departureCity: 'Paris',
+          datePreset: DonyDatePreset.thisWeek,
+          maxWeight: 10,
+          parcelSize: ParcelSize.large,
+          matchingMyTrips: true,
+          kiloProOnly: true,
+          transportMode: TransportMode.car,
+        ),
+      );
 
-    await tester.tap(find.text('Tout effacer'));
-    await tester.pumpAndSettle();
-    final valeur = await rechercher(tester);
+      await tester.tap(find.text('Tout effacer'));
+      await tester.pumpAndSettle();
+      final valeur = await rechercher(tester);
 
-    expect(valeur!.departureCity, isNull);
-    expect(valeur.datePreset, DonyDatePreset.none);
-    expect(valeur.maxWeight, isNull);
-    expect(valeur.parcelSize, isNull);
-    expect(valeur.matchingMyTrips, isFalse);
-    // Trajets préservés.
-    expect(valeur.kiloProOnly, isTrue);
-    expect(valeur.transportMode, TransportMode.car);
-  });
+      expect(valeur!.departureCity, isNull);
+      expect(valeur.datePreset, DonyDatePreset.none);
+      expect(valeur.maxWeight, isNull);
+      expect(valeur.parcelSize, isNull);
+      expect(valeur.matchingMyTrips, isFalse);
+      // Trajets préservés.
+      expect(valeur.kiloProOnly, isTrue);
+      expect(valeur.transportMode, TransportMode.car);
+    },
+  );
 
   // ── Bloc commun : date ─────────────────────────────────────────────────────
 
-  testWidgets('les presets de date s\'activent et se désactivent',
-      (tester) async {
+  testWidgets('les presets de date s\'activent et se désactivent', (
+    tester,
+  ) async {
     await ouvrir(tester, mode: SearchMode.parcels);
 
     await taper(tester, find.text('Cette semaine'));
@@ -473,8 +487,9 @@ void main() {
     expect(valeur!.datePreset, DonyDatePreset.today);
   });
 
-  testWidgets('la date précise passe en preset custom puis se vide',
-      (tester) async {
+  testWidgets('la date précise passe en preset custom puis se vide', (
+    tester,
+  ) async {
     await ouvrir(tester, mode: SearchMode.parcels);
 
     await taper(tester, find.text('DATE PRÉCISE'));
@@ -493,8 +508,9 @@ void main() {
 
   // ── Section colis ──────────────────────────────────────────────────────────
 
-  testWidgets('section colis : poids max, taille et « Pour mes trajets »',
-      (tester) async {
+  testWidgets('section colis : poids max, taille et « Pour mes trajets »', (
+    tester,
+  ) async {
     await ouvrir(tester, mode: SearchMode.parcels);
 
     await taper(tester, find.text('≤ 10 kg'));
@@ -508,28 +524,34 @@ void main() {
   });
 
   testWidgets(
-      'section colis : sans trajet actif, la pastille est grisée et n\'active '
-      'rien', (tester) async {
-    await ouvrir(tester, mode: SearchMode.parcels, activeTrips: 0);
+    'section colis : sans trajet actif, la pastille est grisée et n\'active '
+    'rien',
+    (tester) async {
+      await ouvrir(tester, mode: SearchMode.parcels, activeTrips: 0);
 
-    await tester.ensureVisible(find.byKey(const Key('chip-matching-my-trips')));
-    await tester.pumpAndSettle();
+      await tester.ensureVisible(
+        find.byKey(const Key('chip-matching-my-trips')),
+      );
+      await tester.pumpAndSettle();
 
-    final griseee = tester
-        .widgetList<Opacity>(find.ancestor(
-          of: find.byKey(const Key('chip-matching-my-trips')),
-          matching: find.byType(Opacity),
-        ))
-        .any((o) => o.opacity == 0.4);
-    expect(griseee, isTrue);
+      final griseee = tester
+          .widgetList<Opacity>(
+            find.ancestor(
+              of: find.byKey(const Key('chip-matching-my-trips')),
+              matching: find.byType(Opacity),
+            ),
+          )
+          .any((o) => o.opacity == 0.4);
+      expect(griseee, isTrue);
 
-    await tester.tap(find.byKey(const Key('chip-matching-my-trips')));
-    await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('chip-matching-my-trips')));
+      await tester.pumpAndSettle();
 
-    // L'explication remplace l'activation du filtre.
-    expect(find.text('Aucun trajet actif'), findsOneWidget);
-    expect(find.text('Publier un trajet'), findsOneWidget);
-  });
+      // L'explication remplace l'activation du filtre.
+      expect(find.text('Aucun trajet actif'), findsOneWidget);
+      expect(find.text('Publier un trajet'), findsOneWidget);
+    },
+  );
 
   testWidgets('section colis : avec un trajet actif, la pastille n\'est pas '
       'grisée', (tester) async {
@@ -539,72 +561,83 @@ void main() {
     await tester.pumpAndSettle();
 
     final grisee = tester
-        .widgetList<Opacity>(find.ancestor(
-          of: find.byKey(const Key('chip-matching-my-trips')),
-          matching: find.byType(Opacity),
-        ))
+        .widgetList<Opacity>(
+          find.ancestor(
+            of: find.byKey(const Key('chip-matching-my-trips')),
+            matching: find.byType(Opacity),
+          ),
+        )
         .any((o) => o.opacity == 0.4);
     expect(grisee, isFalse);
   });
 
   testWidgets(
-      'section colis : nombre de trajets INCONNU, la pastille reste utilisable',
-      (tester) async {
-    // Résumé d'activité en échec réseau : on ne sait pas combien de trajets
-    // l'utilisateur a. Griser reviendrait à affirmer « aucun », ce qui peut
-    // être faux. La pastille reste donc active et le serveur tranchera.
-    await ouvrir(tester, mode: SearchMode.parcels, activeTrips: null);
+    'section colis : nombre de trajets INCONNU, la pastille reste utilisable',
+    (tester) async {
+      // Résumé d'activité en échec réseau : on ne sait pas combien de trajets
+      // l'utilisateur a. Griser reviendrait à affirmer « aucun », ce qui peut
+      // être faux. La pastille reste donc active et le serveur tranchera.
+      await ouvrir(tester, mode: SearchMode.parcels, activeTrips: null);
 
-    await tester.ensureVisible(find.byKey(const Key('chip-matching-my-trips')));
-    await tester.pumpAndSettle();
+      await tester.ensureVisible(
+        find.byKey(const Key('chip-matching-my-trips')),
+      );
+      await tester.pumpAndSettle();
 
-    final grisee = tester
-        .widgetList<Opacity>(find.ancestor(
-          of: find.byKey(const Key('chip-matching-my-trips')),
-          matching: find.byType(Opacity),
-        ))
-        .any((o) => o.opacity == 0.4);
-    expect(grisee, isFalse);
+      final grisee = tester
+          .widgetList<Opacity>(
+            find.ancestor(
+              of: find.byKey(const Key('chip-matching-my-trips')),
+              matching: find.byType(Opacity),
+            ),
+          )
+          .any((o) => o.opacity == 0.4);
+      expect(grisee, isFalse);
 
-    await tester.tap(find.byKey(const Key('chip-matching-my-trips')));
-    await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('chip-matching-my-trips')));
+      await tester.pumpAndSettle();
 
-    // Pas d'explication mensongère, et le filtre part réellement.
-    expect(find.text('Aucun trajet actif'), findsNothing);
-    final valeur = await rechercher(tester);
-    expect(valeur!.matchingMyTrips, isTrue);
-  });
+      // Pas d'explication mensongère, et le filtre part réellement.
+      expect(find.text('Aucun trajet actif'), findsNothing);
+      final valeur = await rechercher(tester);
+      expect(valeur!.matchingMyTrips, isTrue);
+    },
+  );
 
   testWidgets(
-      'section colis : « Publier un trajet » ferme tout et délègue à l\'appelant',
-      (tester) async {
-    // La feuille ne navigue pas elle-même : elle est fermée à cet instant, et
-    // seul l'appelant survit pour attendre le retour puis recharger le résumé.
-    var appels = 0;
-    await ouvrir(
-      tester,
-      mode: SearchMode.parcels,
-      activeTrips: 0,
-      onPublishTrip: () => appels++,
-    );
+    'section colis : « Publier un trajet » ferme tout et délègue à l\'appelant',
+    (tester) async {
+      // La feuille ne navigue pas elle-même : elle est fermée à cet instant, et
+      // seul l'appelant survit pour attendre le retour puis recharger le résumé.
+      var appels = 0;
+      await ouvrir(
+        tester,
+        mode: SearchMode.parcels,
+        activeTrips: 0,
+        onPublishTrip: () => appels++,
+      );
 
-    await tester.ensureVisible(find.byKey(const Key('chip-matching-my-trips')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('chip-matching-my-trips')));
-    await tester.pumpAndSettle();
+      await tester.ensureVisible(
+        find.byKey(const Key('chip-matching-my-trips')),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('chip-matching-my-trips')));
+      await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Publier un trajet'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.text('Publier un trajet'));
+      await tester.pumpAndSettle();
 
-    expect(appels, 1);
-    // Les deux feuilles ont bien été fermées.
-    expect(find.text('Aucun trajet actif'), findsNothing);
-    expect(find.text('Filtrer les colis'), findsNothing);
-    expect(ferme, isTrue);
-  });
+      expect(appels, 1);
+      // Les deux feuilles ont bien été fermées.
+      expect(find.text('Aucun trajet actif'), findsNothing);
+      expect(find.text('Filtrer les colis'), findsNothing);
+      expect(ferme, isTrue);
+    },
+  );
 
-  testWidgets('section colis : retaper une pastille active la désactive',
-      (tester) async {
+  testWidgets('section colis : retaper une pastille active la désactive', (
+    tester,
+  ) async {
     await ouvrir(
       tester,
       mode: SearchMode.parcels,
@@ -624,8 +657,9 @@ void main() {
 
   // ── Section trajets ────────────────────────────────────────────────────────
 
-  testWidgets('section trajets : les pastilles rapides basculent',
-      (tester) async {
+  testWidgets('section trajets : les pastilles rapides basculent', (
+    tester,
+  ) async {
     await ouvrir(
       tester,
       mode: SearchMode.trips,
@@ -643,50 +677,52 @@ void main() {
   });
 
   testWidgets(
-      'section trajets : type de contenu par suggestion puis désélection',
-      (tester) async {
-    // Les onze pastilles dépliées sont remplacées par l'autocomplétion : on
-    // tape pour faire apparaître la suggestion, au lieu de scanner la liste.
-    vueHaute(tester);
-    await ouvrir(tester, mode: SearchMode.trips);
+    'section trajets : type de contenu par suggestion puis désélection',
+    (tester) async {
+      // Les onze pastilles dépliées sont remplacées par l'autocomplétion : on
+      // tape pour faire apparaître la suggestion, au lieu de scanner la liste.
+      vueHaute(tester);
+      await ouvrir(tester, mode: SearchMode.trips);
 
-    final champ = find.byKey(const Key('filter-content-field'));
-    await tester.ensureVisible(champ);
-    await tester.tap(champ);
-    await tester.pumpAndSettle();
-    await tester.enterText(champ, 'Chauss');
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('filter-content-item-Chaussures')));
-    await tester.pumpAndSettle();
-    // La liste déroulante reste ouverte et recouvre la barre d'action : on la
-    // referme avant de valider, comme le ferait l'utilisateur.
-    primaryFocus?.unfocus();
-    await tester.pumpAndSettle();
-    var valeur = await rechercher(tester);
-    expect(valeur!.contentType, 'Chaussures');
+      final champ = find.byKey(const Key('filter-content-field'));
+      await tester.ensureVisible(champ);
+      await tester.tap(champ);
+      await tester.pumpAndSettle();
+      await tester.enterText(champ, 'Chauss');
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('filter-content-item-Chaussures')));
+      await tester.pumpAndSettle();
+      // La liste déroulante reste ouverte et recouvre la barre d'action : on la
+      // referme avant de valider, comme le ferait l'utilisateur.
+      primaryFocus?.unfocus();
+      await tester.pumpAndSettle();
+      var valeur = await rechercher(tester);
+      expect(valeur!.contentType, 'Chaussures');
 
-    // Retaper la même entrée la désélectionne.
-    await ouvrir(
-      tester,
-      mode: SearchMode.trips,
-      initial: const HomeSearchFilters(contentType: 'Chaussures'),
-    );
-    final champ2 = find.byKey(const Key('filter-content-field'));
-    await tester.ensureVisible(champ2);
-    await tester.tap(champ2);
-    await tester.pumpAndSettle();
-    await tester.enterText(champ2, 'Chauss');
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('filter-content-item-Chaussures')));
-    await tester.pumpAndSettle();
-    primaryFocus?.unfocus();
-    await tester.pumpAndSettle();
-    valeur = await rechercher(tester);
-    expect(valeur!.contentType, isNull);
-  });
+      // Retaper la même entrée la désélectionne.
+      await ouvrir(
+        tester,
+        mode: SearchMode.trips,
+        initial: const HomeSearchFilters(contentType: 'Chaussures'),
+      );
+      final champ2 = find.byKey(const Key('filter-content-field'));
+      await tester.ensureVisible(champ2);
+      await tester.tap(champ2);
+      await tester.pumpAndSettle();
+      await tester.enterText(champ2, 'Chauss');
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('filter-content-item-Chaussures')));
+      await tester.pumpAndSettle();
+      primaryFocus?.unfocus();
+      await tester.pumpAndSettle();
+      valeur = await rechercher(tester);
+      expect(valeur!.contentType, isNull);
+    },
+  );
 
-  testWidgets('section trajets : saisie libre de type de contenu',
-      (tester) async {
+  testWidgets('section trajets : saisie libre de type de contenu', (
+    tester,
+  ) async {
     vueHaute(tester);
     await ouvrir(tester, mode: SearchMode.trips);
 
@@ -733,30 +769,32 @@ void main() {
   // ── Sélecteurs partagés ────────────────────────────────────────────────────
 
   testWidgets(
-      'sélecteur de poids : confirmer une valeur précise pose le filtre exact',
-      (tester) async {
-    // État initial (20 kg) volontairement différent de la valeur attendue
-    // après interaction (15 kg) : l'assertion ne peut être satisfaite sans
-    // que le `Slider` ait réellement été bougé puis confirmé.
-    await ouvrir(
-      tester,
-      mode: SearchMode.trips,
-      initial: const HomeSearchFilters(weightMin: 20),
-    );
+    'sélecteur de poids : confirmer une valeur précise pose le filtre exact',
+    (tester) async {
+      // État initial (20 kg) volontairement différent de la valeur attendue
+      // après interaction (15 kg) : l'assertion ne peut être satisfaite sans
+      // que le `Slider` ait réellement été bougé puis confirmé.
+      await ouvrir(
+        tester,
+        mode: SearchMode.trips,
+        initial: const HomeSearchFilters(weightMin: 20),
+      );
 
-    await taper(tester, find.text('POIDS MIN'));
-    expect(find.text('Poids minimum du trajet'), findsOneWidget);
+      await taper(tester, find.text('POIDS MIN'));
+      expect(find.text('Poids minimum du trajet'), findsOneWidget);
 
-    await ajusterPoids(tester, diminuer: true, pas: 5); // 20 kg → 15 kg
-    await tester.tap(find.widgetWithText(DonyButton, 'Confirmer'));
-    await tester.pumpAndSettle();
+      await ajusterPoids(tester, diminuer: true, pas: 5); // 20 kg → 15 kg
+      await tester.tap(find.widgetWithText(DonyButton, 'Confirmer'));
+      await tester.pumpAndSettle();
 
-    final valeur = await rechercher(tester);
-    expect(valeur!.weightMin, 15.0);
-  });
+      final valeur = await rechercher(tester);
+      expect(valeur!.weightMin, 15.0);
+    },
+  );
 
-  testWidgets('sélecteur de poids : atteindre 6 kg vaut « pas de filtre »',
-      (tester) async {
+  testWidgets('sélecteur de poids : atteindre 6 kg vaut « pas de filtre »', (
+    tester,
+  ) async {
     // État initial (12 kg) différent de null : si le bouton « Confirmer »
     // ne propageait plus la valeur du slider, le filtre resterait à 12 kg
     // au lieu de disparaître.
@@ -775,8 +813,9 @@ void main() {
     expect(valeur!.weightMin, isNull);
   });
 
-  testWidgets('sélecteur de prix : appliquer un prix puis le relâcher',
-      (tester) async {
+  testWidgets('sélecteur de prix : appliquer un prix puis le relâcher', (
+    tester,
+  ) async {
     await ouvrir(tester, mode: SearchMode.trips);
 
     await taper(tester, find.text('PRIX MAX'));
@@ -805,8 +844,9 @@ void main() {
     expect(valeur!.maxPricePerKg, isNull);
   });
 
-  testWidgets('sélecteur de transport : choisir puis désélectionner',
-      (tester) async {
+  testWidgets('sélecteur de transport : choisir puis désélectionner', (
+    tester,
+  ) async {
     await ouvrir(tester, mode: SearchMode.trips);
 
     await taper(tester, find.text('TRANSPORT'));

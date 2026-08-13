@@ -26,9 +26,8 @@ class NegotiationRepository {
           10,
         ),
         'travelerAvailableKg': travelerAvailableKg,
-        if (travelerAnnouncementId != null)
-          'travelerAnnouncementId': travelerAnnouncementId,
-        if (body != null) 'body': body,
+        'travelerAnnouncementId': ?travelerAnnouncementId,
+        'body': ?body,
       },
     );
     return NegotiationThread.fromJson(response.data!);
@@ -57,10 +56,7 @@ class NegotiationRepository {
   }) async {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
       '/negotiations/$id/counter',
-      data: {
-        'proposedPriceEur': proposedPriceEur,
-        if (body != null) 'body': body,
-      },
+      data: {'proposedPriceEur': proposedPriceEur, 'body': ?body},
     );
     return NegotiationThread.fromJson(response.data!);
   }
@@ -68,7 +64,7 @@ class NegotiationRepository {
   Future<NegotiationThread> accept(String id, {String? body}) async {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
       '/negotiations/$id/accept',
-      data: {if (body != null) 'body': body},
+      data: {'body': ?body},
     );
     return NegotiationThread.fromJson(response.data!);
   }
@@ -76,7 +72,7 @@ class NegotiationRepository {
   Future<void> reject(String id, {String? reason}) async {
     await _apiClient.dio.post<void>(
       '/negotiations/$id/reject',
-      data: {if (reason != null) 'reason': reason},
+      data: {'reason': ?reason},
     );
   }
 
@@ -129,14 +125,13 @@ class NegotiationRepository {
       '/negotiations/$threadId/create-dedicated-trip',
       data: {
         'departureDate': departureDate.toIso8601String().substring(0, 10),
-        if (departureTime != null) 'departureTime': departureTime,
-        if (arrivalTime != null) 'arrivalTime': arrivalTime,
+        'departureTime': ?departureTime,
+        'arrivalTime': ?arrivalTime,
         'pickupAddress': pickupAddress,
         'deliveryAddress': deliveryAddress,
-        if (description != null) 'description': description,
-        if (acceptedContentTypes != null)
-          'acceptedContentTypes': acceptedContentTypes,
-        if (refusedTypes != null) 'refusedTypes': refusedTypes,
+        'description': ?description,
+        'acceptedContentTypes': ?acceptedContentTypes,
+        'refusedTypes': ?refusedTypes,
         'paymentMethod': paymentMethod.wireName,
         'useCardForCommission': useCardForCommission,
       },

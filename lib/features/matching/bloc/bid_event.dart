@@ -11,9 +11,11 @@ class BidCheckoutRequested extends BidEvent {
   final String contentCategory;
   final String recipientName;
   final String recipientPhone;
+
   /// Articles de la grille sélectionnés (mode MIXED). Null si aucun article.
   /// Format: [{'announcementGridItemId': String, 'quantity': int}]
   final List<Map<String, dynamic>>? gridItems;
+
   /// Clés S3 des photos déjà uploadées (≤ 4). Null/empty si aucune.
   final List<String>? photoKeys;
 
@@ -37,17 +39,21 @@ class BidCreateRequested extends BidEvent {
   final String recipientName;
   final String recipientPhone;
   final BidPaymentMethod paymentMethod;
+
   /// Numéro de téléphone Mobile Money (requis si WAVE ou ORANGE_MONEY).
   final String? phoneNumber;
+
   /// Code pays ISO 3166-1 alpha-2 (requis si WAVE ou ORANGE_MONEY).
   /// Ex: 'CI', 'SN', 'ML', 'GN', 'BF', 'CM'
   final String? countryCode;
+
   /// Articles de la grille sélectionnés (mode MIXED). Null si aucun article.
   /// Format: [{'announcementGridItemId': String, 'quantity': int}]
   final List<Map<String, dynamic>>? gridItems;
 
   /// Code promo optionnel — stocké sur le bid, validé au paiement.
   final String? promoCode;
+
   /// Clés S3 des photos déjà uploadées (≤ 4). Null/empty si aucune.
   final List<String>? photoKeys;
 

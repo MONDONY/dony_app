@@ -43,14 +43,14 @@ AnnouncementModel _makeAnnouncement({
   travelerId: 'trav-001',
   departureCity: 'Paris',
   arrivalCity: 'Dakar',
-  departureDate: DateTime(2026, 7, 1),
+  departureDate: DateTime(2026, 7),
   availableKg: 10,
   totalKg: 23,
   pricePerKg: 8,
   status: status,
   bidsCount: bidsCount,
-  createdAt: DateTime(2026, 6, 1),
-  updatedAt: DateTime(2026, 6, 1),
+  createdAt: DateTime(2026, 6),
+  updatedAt: DateTime(2026, 6),
   handoverWindowStart: handoverWindowStart,
   handoverWindowEnd: handoverWindowEnd,
   currency: currency,
@@ -96,19 +96,19 @@ Future<void> _pump(
       ),
       GoRoute(
         path: '/announcements',
-        builder: (_, __) => const Scaffold(body: Text('announcements')),
+        builder: (_, _) => const Scaffold(body: Text('announcements')),
       ),
       GoRoute(
         path: '/announcements/:id/bids',
-        builder: (_, __) => const Scaffold(body: Text('bids')),
+        builder: (_, _) => const Scaffold(body: Text('bids')),
       ),
       GoRoute(
         path: '/announcements/:id/edit',
-        builder: (_, __) => const Scaffold(body: Text('edit')),
+        builder: (_, _) => const Scaffold(body: Text('edit')),
       ),
       GoRoute(
         path: '/home',
-        builder: (_, __) => const Scaffold(body: Text('home')),
+        builder: (_, _) => const Scaffold(body: Text('home')),
       ),
     ],
   );
@@ -205,10 +205,7 @@ void main() {
   });
 
   testWidgets('masque la fenêtre si absente (annonce legacy)', (tester) async {
-    final announcement = _makeAnnouncement(
-      handoverWindowStart: null,
-      handoverWindowEnd: null,
-    );
+    final announcement = _makeAnnouncement();
 
     await _pump(
       tester,
@@ -226,7 +223,6 @@ void main() {
   ) async {
     final announcement = _makeAnnouncement(
       handoverWindowStart: DateTime(2026, 6, 14, 16),
-      handoverWindowEnd: null,
     );
 
     await _pump(
@@ -243,8 +239,8 @@ void main() {
   testWidgets('la fenêtre affiche les horaires formatés correctement', (
     tester,
   ) async {
-    final start = DateTime(2026, 6, 14, 16, 0).toUtc();
-    final end = DateTime(2026, 6, 14, 18, 0).toUtc();
+    final start = DateTime(2026, 6, 14, 16).toUtc();
+    final end = DateTime(2026, 6, 14, 18).toUtc();
     final announcement = _makeAnnouncement(
       handoverWindowStart: start,
       handoverWindowEnd: end,

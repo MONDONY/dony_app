@@ -21,13 +21,13 @@ class _MockAnalytics extends Mock implements AnalyticsService {}
 class _MockTrackingRepo extends Mock implements TrackingRepository {}
 
 BidModel _bid(String id, String status) => BidModel(
-      id: id,
-      announcementId: 'a',
-      senderId: 's',
-      status: status,
-      createdAt: DateTime(2026, 1, 1),
-      updatedAt: DateTime(2026, 1, 1),
-    );
+  id: id,
+  announcementId: 'a',
+  senderId: 's',
+  status: status,
+  createdAt: DateTime(2026),
+  updatedAt: DateTime(2026),
+);
 
 AnnouncementModel _trip(String id, String status, [DateTime? date]) =>
     AnnouncementModel(
@@ -40,8 +40,8 @@ AnnouncementModel _trip(String id, String status, [DateTime? date]) =>
       availableKg: 10,
       totalKg: 20,
       pricePerKg: 5,
-      createdAt: DateTime(2026, 1, 1),
-      updatedAt: DateTime(2026, 1, 1),
+      createdAt: DateTime(2026),
+      updatedAt: DateTime(2026),
     );
 
 void main() {
@@ -76,10 +76,12 @@ void main() {
         (_) async =>
             (announcements: [_trip('a', 'IN_PROGRESS')], totalElements: 1),
       );
-      when(() => bidRepo.getBidsForAnnouncement('a'))
-          .thenAnswer((_) async => []);
-      when(() => trackingRepo.getTripScanHistory('a'))
-          .thenAnswer((_) async => []);
+      when(
+        () => bidRepo.getBidsForAnnouncement('a'),
+      ).thenAnswer((_) async => []);
+      when(
+        () => trackingRepo.getTripScanHistory('a'),
+      ).thenAnswer((_) async => []);
       return ScanHubCubit(annRepo, bidRepo, analytics, trackingRepo);
     },
     act: (c) => c.load(),
@@ -97,24 +99,28 @@ void main() {
       when(() => annRepo.getMyAnnouncements()).thenAnswer(
         (_) async => (
           announcements: [
-            _trip('later', 'IN_PROGRESS', DateTime(2026, 7, 1)),
-            _trip('soonest', 'IN_PROGRESS', DateTime(2026, 6, 1)),
+            _trip('later', 'IN_PROGRESS', DateTime(2026, 7)),
+            _trip('soonest', 'IN_PROGRESS', DateTime(2026, 6)),
           ],
           totalElements: 2,
         ),
       );
-      when(() => bidRepo.getBidsForAnnouncement(any()))
-          .thenAnswer((_) async => []);
-      when(() => trackingRepo.getTripScanHistory('soonest'))
-          .thenAnswer((_) async => []);
+      when(
+        () => bidRepo.getBidsForAnnouncement(any()),
+      ).thenAnswer((_) async => []);
+      when(
+        () => trackingRepo.getTripScanHistory('soonest'),
+      ).thenAnswer((_) async => []);
       return ScanHubCubit(annRepo, bidRepo, analytics, trackingRepo);
     },
     act: (c) => c.load(),
     expect: () => [
       isA<ScanHubLoading>(),
       isA<ScanHubLoaded>()
-          .having((s) => s.trips.map((t) => t.id), 'trips',
-              ['soonest', 'later'])
+          .having((s) => s.trips.map((t) => t.id), 'trips', [
+            'soonest',
+            'later',
+          ])
           .having((s) => s.selectedTripId, 'selectedTripId', 'soonest'),
     ],
   );
@@ -122,8 +128,9 @@ void main() {
   blocTest<ScanHubCubit, ScanHubState>(
     'erreur réseau → ScanHubError',
     build: () {
-      when(() => annRepo.getMyAnnouncements())
-          .thenThrow(Exception('Network error'));
+      when(
+        () => annRepo.getMyAnnouncements(),
+      ).thenThrow(Exception('Network error'));
       return ScanHubCubit(annRepo, bidRepo, analytics, trackingRepo);
     },
     act: (c) => c.load(),
@@ -134,13 +141,14 @@ void main() {
     'trajet ACTIVE sans bids → ScanHubLoaded avec compteurs à zéro',
     build: () {
       when(() => annRepo.getMyAnnouncements()).thenAnswer(
-        (_) async =>
-            (announcements: [_trip('b', 'ACTIVE')], totalElements: 1),
+        (_) async => (announcements: [_trip('b', 'ACTIVE')], totalElements: 1),
       );
-      when(() => bidRepo.getBidsForAnnouncement('b'))
-          .thenAnswer((_) async => []);
-      when(() => trackingRepo.getTripScanHistory('b'))
-          .thenAnswer((_) async => []);
+      when(
+        () => bidRepo.getBidsForAnnouncement('b'),
+      ).thenAnswer((_) async => []);
+      when(
+        () => trackingRepo.getTripScanHistory('b'),
+      ).thenAnswer((_) async => []);
       return ScanHubCubit(annRepo, bidRepo, analytics, trackingRepo);
     },
     act: (c) => c.load(),
@@ -161,16 +169,18 @@ void main() {
         when(() => annRepo.getMyAnnouncements()).thenAnswer(
           (_) async => (
             announcements: [
-              _trip('soonest', 'IN_PROGRESS', DateTime(2026, 6, 1)),
-              _trip('later', 'IN_PROGRESS', DateTime(2026, 7, 1)),
+              _trip('soonest', 'IN_PROGRESS', DateTime(2026, 6)),
+              _trip('later', 'IN_PROGRESS', DateTime(2026, 7)),
             ],
             totalElements: 2,
           ),
         );
-        when(() => bidRepo.getBidsForAnnouncement(any()))
-            .thenAnswer((_) async => []);
-        when(() => trackingRepo.getTripScanHistory('soonest'))
-            .thenAnswer((_) async => []);
+        when(
+          () => bidRepo.getBidsForAnnouncement(any()),
+        ).thenAnswer((_) async => []);
+        when(
+          () => trackingRepo.getTripScanHistory('soonest'),
+        ).thenAnswer((_) async => []);
         when(() => trackingRepo.getTripScanHistory('later')).thenAnswer(
           (_) async => [
             TripScanHistoryEntryModel(
@@ -205,10 +215,12 @@ void main() {
           (_) async =>
               (announcements: [_trip('a', 'IN_PROGRESS')], totalElements: 1),
         );
-        when(() => bidRepo.getBidsForAnnouncement('a'))
-            .thenAnswer((_) async => []);
-        when(() => trackingRepo.getTripScanHistory('a'))
-            .thenAnswer((_) async => []);
+        when(
+          () => bidRepo.getBidsForAnnouncement('a'),
+        ).thenAnswer((_) async => []);
+        when(
+          () => trackingRepo.getTripScanHistory('a'),
+        ).thenAnswer((_) async => []);
         return ScanHubCubit(annRepo, bidRepo, analytics, trackingRepo);
       },
       act: (c) async {
@@ -236,14 +248,15 @@ void main() {
         when(() => annRepo.getMyAnnouncements()).thenAnswer(
           (_) async => (
             announcements: [
-              _trip('later', 'IN_PROGRESS', DateTime(2026, 7, 1)),
-              _trip('soonest', 'IN_PROGRESS', DateTime(2026, 6, 1)),
+              _trip('later', 'IN_PROGRESS', DateTime(2026, 7)),
+              _trip('soonest', 'IN_PROGRESS', DateTime(2026, 6)),
             ],
             totalElements: 2,
           ),
         );
-        when(() => bidRepo.getBidsForAnnouncement(any()))
-            .thenAnswer((_) async => []);
+        when(
+          () => bidRepo.getBidsForAnnouncement(any()),
+        ).thenAnswer((_) async => []);
         when(() => trackingRepo.getTripScanHistory('soonest')).thenAnswer(
           (_) async => [
             TripScanHistoryEntryModel(
@@ -254,13 +267,17 @@ void main() {
             ),
           ],
         );
-        when(() => trackingRepo.getTripScanHistory('later'))
-            .thenAnswer((_) => staleCompleter.future);
+        when(
+          () => trackingRepo.getTripScanHistory('later'),
+        ).thenAnswer((_) => staleCompleter.future);
         return ScanHubCubit(annRepo, bidRepo, analytics, trackingRepo);
       },
       act: (c) async {
-        await c.load(); // selectedTripId == 'soonest', scanHistory == [TRK-SOONEST]
-        unawaited(c.selectTrip('later')); // fetch gated on staleCompleter — never resolves yet
+        await c
+            .load(); // selectedTripId == 'soonest', scanHistory == [TRK-SOONEST]
+        unawaited(
+          c.selectTrip('later'),
+        ); // fetch gated on staleCompleter — never resolves yet
         await c.selectTrip('soonest'); // switches back before 'later' responds
         staleCompleter.complete([
           TripScanHistoryEntryModel(
@@ -297,18 +314,21 @@ void main() {
         when(() => annRepo.getMyAnnouncements()).thenAnswer(
           (_) async => (
             announcements: [
-              _trip('soonest', 'IN_PROGRESS', DateTime(2026, 6, 1)),
-              _trip('later', 'IN_PROGRESS', DateTime(2026, 7, 1)),
+              _trip('soonest', 'IN_PROGRESS', DateTime(2026, 6)),
+              _trip('later', 'IN_PROGRESS', DateTime(2026, 7)),
             ],
             totalElements: 2,
           ),
         );
-        when(() => bidRepo.getBidsForAnnouncement(any()))
-            .thenAnswer((_) async => []);
-        when(() => trackingRepo.getTripScanHistory('soonest'))
-            .thenAnswer((_) async => []);
-        when(() => trackingRepo.getTripScanHistory('later'))
-            .thenThrow(Exception('History fetch failed'));
+        when(
+          () => bidRepo.getBidsForAnnouncement(any()),
+        ).thenAnswer((_) async => []);
+        when(
+          () => trackingRepo.getTripScanHistory('soonest'),
+        ).thenAnswer((_) async => []);
+        when(
+          () => trackingRepo.getTripScanHistory('later'),
+        ).thenThrow(Exception('History fetch failed'));
         return ScanHubCubit(annRepo, bidRepo, analytics, trackingRepo);
       },
       act: (c) async {
@@ -339,8 +359,9 @@ void main() {
           _bid('handed-over', 'HANDED_OVER'),
         ],
       );
-      when(() => trackingRepo.getTripScanHistory('a'))
-          .thenAnswer((_) async => []);
+      when(
+        () => trackingRepo.getTripScanHistory('a'),
+      ).thenAnswer((_) async => []);
       return ScanHubCubit(annRepo, bidRepo, analytics, trackingRepo);
     },
     act: (c) => c.load(),
@@ -361,8 +382,9 @@ void main() {
         (_) async =>
             (announcements: [_trip('a', 'IN_PROGRESS')], totalElements: 1),
       );
-      when(() => bidRepo.getBidsForAnnouncement('a'))
-          .thenThrow(Exception('Bid fetch failed'));
+      when(
+        () => bidRepo.getBidsForAnnouncement('a'),
+      ).thenThrow(Exception('Bid fetch failed'));
       return ScanHubCubit(annRepo, bidRepo, analytics, trackingRepo);
     },
     act: (c) => c.load(),

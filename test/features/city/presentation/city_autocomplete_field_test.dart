@@ -68,7 +68,7 @@ void main() {
   testWidgets(
     'changement externe d\'initialValue resynchronise le champ (application d\'un modèle)',
     (tester) async {
-      await tester.pumpWidget(buildWidget(initialValue: null));
+      await tester.pumpWidget(buildWidget());
       await tester.pump();
       expect(find.text('Paris'), findsNothing);
 
@@ -86,11 +86,11 @@ void main() {
   testWidgets('saisie en cours non écrasée si initialValue inchangé', (
     tester,
   ) async {
-    await tester.pumpWidget(buildWidget(initialValue: null));
+    await tester.pumpWidget(buildWidget());
     await tester.enterText(find.byType(TextField), 'Lyon');
     await tester.pump();
     // Rebuild avec le même initialValue (null) — ne doit pas effacer "Lyon".
-    await tester.pumpWidget(buildWidget(initialValue: null));
+    await tester.pumpWidget(buildWidget());
     await tester.pump();
     final tf = tester.widget<TextField>(find.byType(TextField));
     expect(tf.controller?.text, 'Lyon');
@@ -141,7 +141,7 @@ void main() {
   ) async {
     when(
       () => mockBloc.state,
-    ).thenReturn(CitySearchError(NetworkException('network error')));
+    ).thenReturn(const CitySearchError(NetworkException('network error')));
     await tester.pumpWidget(buildWidget());
     await tester.pump();
     expect(find.byType(LinearProgressIndicator), findsNothing);

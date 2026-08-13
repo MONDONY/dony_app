@@ -18,11 +18,12 @@ Widget _wrap(Widget child, {required AuthBloc bloc}) {
       routes: [
         GoRoute(
           path: '/',
-          builder: (_, __) => BlocProvider<AuthBloc>.value(value: bloc, child: child),
+          builder: (_, _) =>
+              BlocProvider<AuthBloc>.value(value: bloc, child: child),
         ),
         GoRoute(
           path: '/auth/email-otp',
-          builder: (_, __) => const Scaffold(body: Text('OTP Screen')),
+          builder: (_, _) => const Scaffold(body: Text('OTP Screen')),
         ),
       ],
     ),
@@ -38,7 +39,9 @@ void main() {
     when(() => mockBloc.stream).thenAnswer((_) => const Stream.empty());
   });
 
-  testWidgets('affiche le champ email et le bouton désactivé à vide', (tester) async {
+  testWidgets('affiche le champ email et le bouton désactivé à vide', (
+    tester,
+  ) async {
     await tester.pumpWidget(_wrap(const EmailAuthScreen(), bloc: mockBloc));
     await tester.pumpAndSettle();
 
@@ -48,7 +51,9 @@ void main() {
     expect(btn.onPressed, isNull);
   });
 
-  testWidgets('active le bouton quand un email valide est saisi', (tester) async {
+  testWidgets('active le bouton quand un email valide est saisi', (
+    tester,
+  ) async {
     await tester.pumpWidget(_wrap(const EmailAuthScreen(), bloc: mockBloc));
     await tester.pumpAndSettle();
 
@@ -67,13 +72,20 @@ void main() {
     await tester.pump();
     await tester.tap(find.text('Envoyer le code'));
 
-    verify(() => mockBloc.add(const AuthEmailOtpSendRequested('user@example.com'))).called(1);
+    verify(
+      () => mockBloc.add(const AuthEmailOtpSendRequested('user@example.com')),
+    ).called(1);
   });
 
-  testWidgets('navigue vers /auth/email-otp quand AuthEmailOtpSent émis', (tester) async {
+  testWidgets('navigue vers /auth/email-otp quand AuthEmailOtpSent émis', (
+    tester,
+  ) async {
     whenListen(
       mockBloc,
-      Stream.fromIterable([const AuthLoading(), AuthEmailOtpSent('user@example.com')]),
+      Stream.fromIterable([
+        const AuthLoading(),
+        const AuthEmailOtpSent('user@example.com'),
+      ]),
       initialState: const AuthInitial(),
     );
 

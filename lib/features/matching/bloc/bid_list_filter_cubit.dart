@@ -15,17 +15,12 @@ const kActiveBidStatuses = <String>{
 };
 
 /// Statuts d'un bid « clôturé » dans l'onglet Acceptées.
-const kClosedBidStatuses = <String>{
-  'NO_SHOW',
-  'PARCEL_REFUSED',
-  'CANCELLED',
-};
+const kClosedBidStatuses = <String>{'NO_SHOW', 'PARCEL_REFUSED', 'CANCELLED'};
 
 /// `true` si le bid est un `CANCELLED` auto-annulé (PENDING jamais traité par
 /// le voyageur — `rejectionReason == TRAVELER_NO_RESPONSE`), jamais accepté.
 bool _isAutoCancelled(BidModel bid) =>
-    bid.status == 'CANCELLED' &&
-    bid.rejectionReason == 'TRAVELER_NO_RESPONSE';
+    bid.status == 'CANCELLED' && bid.rejectionReason == 'TRAVELER_NO_RESPONSE';
 
 /// `true` si le bid doit figurer dans l'onglet « Acceptées ».
 /// Exclut les `CANCELLED` auto-annulés (jamais acceptés).
@@ -70,10 +65,7 @@ class BidListFilterState extends Equatable {
     this.filter = AcceptedStatusFilter.all,
   });
 
-  BidListFilterState copyWith({
-    String? query,
-    AcceptedStatusFilter? filter,
-  }) =>
+  BidListFilterState copyWith({String? query, AcceptedStatusFilter? filter}) =>
       BidListFilterState(
         query: query ?? this.query,
         filter: filter ?? this.filter,

@@ -14,8 +14,8 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_model.dart';
 import 'package:dony/features/profile/presentation/profile_screen.dart';
-import 'package:dony/features/profile/presentation/widgets/wallet_balance_card.dart';
 import 'package:dony/features/profile/presentation/widgets/pending_deletion_banner.dart';
+import 'package:dony/features/profile/presentation/widgets/wallet_balance_card.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:flutter/material.dart';
@@ -133,10 +133,7 @@ Widget _buildTestHarness({
     GoRoute(path: '/profile/reviews', builder: (_, _) => stub('Reviews')),
     GoRoute(path: '/disputes', builder: (_, _) => stub('Disputes')),
     GoRoute(path: '/profile/help/faq', builder: (_, _) => stub('FAQ')),
-    GoRoute(
-      path: '/profile/community',
-      builder: (_, _) => stub('Community'),
-    ),
+    GoRoute(path: '/profile/community', builder: (_, _) => stub('Community')),
     GoRoute(path: '/profile/help/contact', builder: (_, _) => stub('Contact')),
     GoRoute(
       path: '/payments/onboarding',
@@ -268,7 +265,7 @@ void main() {
     whenListen<AccountDeletionState>(
       deletionBloc,
       const Stream.empty(),
-      initialState: AccountDeletionInitial(),
+      initialState: const AccountDeletionInitial(),
     );
 
     await tester.pumpWidget(
@@ -418,9 +415,7 @@ void main() {
       });
     }
 
-    testWidgets('« Solde » (carte portefeuille) ouvre Wallet', (
-      tester,
-    ) async {
+    testWidgets('« Solde » (carte portefeuille) ouvre Wallet', (tester) async {
       await pumpWith(tester, _dualRoleUser);
       await _scrollTo(tester, find.byType(WalletBalanceCard));
 
@@ -535,7 +530,7 @@ void main() {
         Stream.value(
           const AccountDeletionError(error: NetworkException('Erreur test')),
         ),
-        initialState: AccountDeletionInitial(),
+        initialState: const AccountDeletionInitial(),
       );
 
       await tester.pumpWidget(
@@ -592,7 +587,7 @@ void main() {
       whenListen<AccountDeletionState>(
         deletionBloc,
         const Stream.empty(),
-        initialState: AccountDeletionInitial(),
+        initialState: const AccountDeletionInitial(),
       );
 
       await tester.pumpWidget(
@@ -630,7 +625,7 @@ void main() {
       whenListen<AccountDeletionState>(
         deletionBloc,
         const Stream.empty(),
-        initialState: AccountDeletionInitial(),
+        initialState: const AccountDeletionInitial(),
       );
 
       await tester.pumpWidget(

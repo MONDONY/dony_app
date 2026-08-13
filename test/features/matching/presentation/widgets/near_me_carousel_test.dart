@@ -32,7 +32,7 @@ UserModel _makeUser({String id = 'uid-1'}) => UserModel(
   phoneNumber: '+33600000000',
   firstName: 'Test',
   lastName: 'User',
-  roles: ['ROLE_SENDER'],
+  roles: const ['ROLE_SENDER'],
   kycStatus: 'VERIFIED',
   status: 'ACTIVE',
 );
@@ -48,13 +48,9 @@ AnnouncementModel _ann(String id, {String travelerId = 'traveler-1'}) =>
       totalKg: 20,
       pricePerKg: 7,
       status: 'ACTIVE',
-      createdAt: DateTime(2026, 5, 1),
-      updatedAt: DateTime(2026, 5, 1),
-      traveler: TravelerProfile(
-        id: travelerId,
-        displayName: 'Sékou Ba',
-        kiloPro: false,
-      ),
+      createdAt: DateTime(2026, 5),
+      updatedAt: DateTime(2026, 5),
+      traveler: TravelerProfile(id: travelerId, displayName: 'Sékou Ba'),
     );
 
 BidModel _bid({
@@ -68,8 +64,8 @@ BidModel _bid({
   weightKg: 5,
   description: 'Test',
   status: status,
-  createdAt: DateTime(2026, 5, 1),
-  updatedAt: DateTime(2026, 5, 1),
+  createdAt: DateTime(2026, 5),
+  updatedAt: DateTime(2026, 5),
 );
 
 Widget _wrap(
@@ -95,11 +91,11 @@ Widget _wrap(
     routes: [
       GoRoute(
         path: '/',
-        builder: (_, __) => Scaffold(body: SizedBox(height: 312, child: child)),
+        builder: (_, _) => Scaffold(body: SizedBox(height: 312, child: child)),
       ),
       GoRoute(
         path: '/bids/:id',
-        builder: (_, __) => const Scaffold(key: Key('bids-route')),
+        builder: (_, _) => const Scaffold(key: Key('bids-route')),
       ),
     ],
   );
@@ -254,7 +250,7 @@ void main() {
   testWidgets('7 — tap sur une card avec bid PENDING navigue vers /bids/{id}', (
     tester,
   ) async {
-    final bid = _bid(id: 'bid-1', announcementId: 'a1', status: 'PENDING');
+    final bid = _bid(id: 'bid-1', announcementId: 'a1');
 
     await tester.pumpWidget(
       _wrap(

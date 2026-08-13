@@ -107,9 +107,7 @@ Widget _wrap({
       ),
     ).thenReturn(dismissedSlideIds.contains(id));
   }
-  when(
-    () => resolvedBox.put(any(), any()),
-  ).thenAnswer((_) async {});
+  when(() => resolvedBox.put(any(), any())).thenAnswer((_) async {});
   when(
     () => hive.listenUserPrefs(keys: any(named: 'keys')),
   ).thenReturn(ValueNotifier<Box>(resolvedBox));
@@ -119,7 +117,7 @@ Widget _wrap({
     routes: [
       GoRoute(
         path: '/',
-        builder: (context, __) => Scaffold(
+        builder: (context, _) => Scaffold(
           body: MediaQuery(
             data: MediaQuery.of(context).copyWith(
               disableAnimations: disableAnimations,
@@ -134,19 +132,19 @@ Widget _wrap({
       ),
       GoRoute(
         path: '/trips/publish-intro',
-        builder: (_, __) => const Scaffold(body: Text('publish-intro-trip')),
+        builder: (_, _) => const Scaffold(body: Text('publish-intro-trip')),
       ),
       GoRoute(
         path: '/parcels/send-intro',
-        builder: (_, __) => const Scaffold(body: Text('send-intro-parcel')),
+        builder: (_, _) => const Scaffold(body: Text('send-intro-parcel')),
       ),
       GoRoute(
         path: '/corridor-alerts',
-        builder: (_, __) => const Scaffold(body: Text('corridor-alerts')),
+        builder: (_, _) => const Scaffold(body: Text('corridor-alerts')),
       ),
       GoRoute(
         path: '/kyc/verify',
-        builder: (_, __) => const Scaffold(body: Text('kyc-verify')),
+        builder: (_, _) => const Scaffold(body: Text('kyc-verify')),
       ),
     ],
   );
@@ -200,7 +198,7 @@ void main() {
   });
 
   testWidgets('masque la slide KYC si déjà vérifié', (tester) async {
-    await tester.pumpWidget(_wrap(hive: hive, isKycVerified: true));
+    await tester.pumpWidget(_wrap(hive: hive));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('guidance-slide-kyc')), findsNothing);
   });
@@ -229,11 +227,7 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      _wrap(
-        hive: hive,
-        helpConfigJson: _searchHelpConfigJson,
-        tutorialDismissed: true,
-      ),
+      _wrap(hive: hive, helpConfigJson: _searchHelpConfigJson),
     );
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('guidance-slide-tutorial')), findsNothing);
@@ -370,36 +364,34 @@ void main() {
     },
   );
 
-  testWidgets(
-    'masque une slide déjà fermée via sa croix (état persisté)',
-    (tester) async {
-      await tester.pumpWidget(_wrap(hive: hive, dismissedSlideIds: {'trip'}));
-      await tester.pumpAndSettle();
-      expect(find.byKey(const Key('guidance-slide-trip')), findsNothing);
-      // Colis devient la 1re slide visible désormais.
-      expect(find.byKey(const Key('guidance-slide-parcel')), findsOneWidget);
-    },
-  );
+  testWidgets('masque une slide déjà fermée via sa croix (état persisté)', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_wrap(hive: hive, dismissedSlideIds: {'trip'}));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('guidance-slide-trip')), findsNothing);
+    // Colis devient la 1re slide visible désormais.
+    expect(find.byKey(const Key('guidance-slide-parcel')), findsOneWidget);
+  });
 
-  testWidgets(
-    'tap sur la croix trajet écrit le flag Hive et logue l\'event',
-    (tester) async {
-      final box = MockBox();
-      await tester.pumpWidget(_wrap(hive: hive, box: box));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('guidance-slide-dismiss-trip')));
-      await tester.pumpAndSettle();
-      verify(
-        () => box.put('${HiveService.kGuidanceSlideDismissedPrefix}trip', true),
-      ).called(1);
-      verify(
-        () => getIt<AnalyticsService>().logEvent(
-          AnalyticsEvents.homeGuidanceCarouselSlideDismissed,
-          properties: {'slide': 'trip'},
-        ),
-      ).called(1);
-    },
-  );
+  testWidgets('tap sur la croix trajet écrit le flag Hive et logue l\'event', (
+    tester,
+  ) async {
+    final box = MockBox();
+    await tester.pumpWidget(_wrap(hive: hive, box: box));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('guidance-slide-dismiss-trip')));
+    await tester.pumpAndSettle();
+    verify(
+      () => box.put('${HiveService.kGuidanceSlideDismissedPrefix}trip', true),
+    ).called(1);
+    verify(
+      () => getIt<AnalyticsService>().logEvent(
+        AnalyticsEvents.homeGuidanceCarouselSlideDismissed,
+        properties: {'slide': 'trip'},
+      ),
+    ).called(1);
+  });
 
   testWidgets(
     'textScaler 2.0 : pas d\'overflow (régression hauteur PageView)',

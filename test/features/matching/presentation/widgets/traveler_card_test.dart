@@ -1,11 +1,11 @@
 import 'package:dony/core/design/tokens/color_tokens.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/favorites/data/repositories/favorite_repository.dart';
 import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_card.dart';
-import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -38,8 +38,8 @@ AnnouncementModel _makeAnn({
   pricePerKg: 12,
   currency: currency,
   status: 'ACTIVE',
-  createdAt: DateTime(2026, 5, 1),
-  updatedAt: DateTime(2026, 5, 1),
+  createdAt: DateTime(2026, 5),
+  updatedAt: DateTime(2026, 5),
   acceptedContentTypes: acceptedContentTypes,
   traveler: TravelerProfile(
     id: 't1',
@@ -148,7 +148,7 @@ void main() {
       await tester.pumpWidget(
         _wrap(
           TravelerCard(
-            announcement: _makeAnn(isProAccount: false),
+            announcement: _makeAnn(),
             index: 0,
             isOwnAnnouncement: false,
             onTap: () {},
@@ -189,7 +189,7 @@ void main() {
         await tester.pumpWidget(
           _wrap(
             TravelerCard(
-              announcement: _makeAnn(isProAccount: false, kycVerified: true),
+              announcement: _makeAnn(kycVerified: true),
               index: 0,
               isOwnAnnouncement: false,
               onTap: () {},

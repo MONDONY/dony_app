@@ -217,7 +217,6 @@ class _BenefitsSection extends StatelessWidget {
                   children: [
                     DonyIconContainer(
                       iconAsset: iconAsset,
-                      size: DonyIconContainerSize.md,
                       borderRadius: DonyRadius.md,
                       backgroundColor: cs.primaryContainer,
                       iconColor: cs.primary,
@@ -294,7 +293,7 @@ class _ActiveAccountView extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: DonySpacing.xxl),
-              DonyCard(
+              const DonyCard(
                 padding: EdgeInsets.zero,
                 child: Column(
                   children: [
@@ -304,14 +303,14 @@ class _ActiveAccountView extends StatelessWidget {
                       subtitle:
                           "L'argent est retenu jusqu'à confirmation de livraison.",
                     ),
-                    const Divider(height: 1, indent: 70),
+                    Divider(height: 1, indent: 70),
                     _InfoRow(
                       iconAsset: 'zap',
                       title: 'Virement automatique',
                       subtitle:
                           'Aucune action requise, Stripe vire directement sur votre RIB.',
                     ),
-                    const Divider(height: 1, indent: 70),
+                    Divider(height: 1, indent: 70),
                     _InfoRow(
                       iconAsset: 'landmark',
                       title: 'Sur votre compte bancaire',
@@ -335,12 +334,8 @@ class _InfoRow extends StatelessWidget {
   final String title;
   final String subtitle;
 
-  const _InfoRow({
-    required this.title,
-    required this.subtitle,
-    this.icon,
-    this.iconAsset,
-  });
+  const _InfoRow({required this.title, required this.subtitle, this.iconAsset})
+    : icon = null;
 
   @override
   Widget build(BuildContext context) {
@@ -354,7 +349,6 @@ class _InfoRow extends StatelessWidget {
           DonyIconContainer(
             icon: icon,
             iconAsset: iconAsset,
-            size: DonyIconContainerSize.md,
             borderRadius: DonyRadius.md,
             backgroundColor: cs.primaryContainer,
             iconColor: cs.primary,
@@ -561,7 +555,7 @@ class _StripeOnboardingWebViewState extends State<_StripeOnboardingWebView> {
           WebViewWidget(controller: _controller),
           ValueListenableBuilder<bool>(
             valueListenable: _isLoading,
-            builder: (_, loading, __) => loading
+            builder: (_, loading, _) => loading
                 ? Center(child: CircularProgressIndicator(color: cs.primary))
                 : const SizedBox.shrink(),
           ),

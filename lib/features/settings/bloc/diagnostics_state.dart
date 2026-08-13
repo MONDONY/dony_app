@@ -18,13 +18,12 @@ class DiagnosticsState extends Equatable {
     String? buildNumber,
     bool? isPinging,
     bool? apiOk,
-  }) =>
-      DiagnosticsState(
-        appVersion: appVersion ?? this.appVersion,
-        buildNumber: buildNumber ?? this.buildNumber,
-        isPinging: isPinging ?? this.isPinging,
-        apiOk: apiOk,
-      );
+  }) => DiagnosticsState(
+    appVersion: appVersion ?? this.appVersion,
+    buildNumber: buildNumber ?? this.buildNumber,
+    isPinging: isPinging ?? this.isPinging,
+    apiOk: apiOk,
+  );
 
   @override
   List<Object?> get props => [appVersion, buildNumber, isPinging, apiOk];

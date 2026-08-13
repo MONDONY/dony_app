@@ -9,11 +9,7 @@ final _fullJson = {
   'departureDate': '2024-06-01T00:00:00.000Z',
   'departureTime': '10:00',
   'arrivalTime': '20:00',
-  'pickupAddress': {
-    'label': 'CDG Terminal 2',
-    'lat': 49.0097,
-    'lng': 2.5479,
-  },
+  'pickupAddress': {'label': 'CDG Terminal 2', 'lat': 49.0097, 'lng': 2.5479},
   'deliveryAddress': {
     'label': 'Aéroport Léopold Sédar Senghor',
     'lat': 14.7397,
@@ -132,11 +128,7 @@ void main() {
     });
 
     test('toJson round-trips correctly', () {
-      final json = {
-        'id': 'tp-1',
-        'displayName': 'Test User',
-        'kiloPro': true,
-      };
+      final json = {'id': 'tp-1', 'displayName': 'Test User', 'kiloPro': true};
       final p = TravelerProfile.fromJson(json);
       final out = p.toJson();
       expect(out['id'], 'tp-1');

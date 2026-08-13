@@ -52,8 +52,9 @@ void main() {
     blocTest<AccountDeletionBloc, AccountDeletionState>(
       'emits [Loading, AccountDeletionError(isEscrowBlocked: true)] on ValidationException',
       build: () {
-        when(() => mockRepo.requestDeletion())
-            .thenThrow(const ValidationException('active-transactions'));
+        when(
+          () => mockRepo.requestDeletion(),
+        ).thenThrow(const ValidationException('active-transactions'));
         return bloc;
       },
       act: (b) => b.add(const RequestDeletion()),
@@ -70,8 +71,9 @@ void main() {
     blocTest<AccountDeletionBloc, AccountDeletionState>(
       'emits [Loading, AccountDeletionError] on generic AppException',
       build: () {
-        when(() => mockRepo.requestDeletion())
-            .thenThrow(const NetworkException('Erreur réseau'));
+        when(
+          () => mockRepo.requestDeletion(),
+        ).thenThrow(const NetworkException('Erreur réseau'));
         return bloc;
       },
       act: (b) => b.add(const RequestDeletion()),
@@ -103,8 +105,9 @@ void main() {
     blocTest<AccountDeletionBloc, AccountDeletionState>(
       'emits [Loading, AccountReactivated] on success',
       build: () {
-        when(() => mockRepo.reactivateAccount())
-            .thenAnswer((_) async => _activeUser);
+        when(
+          () => mockRepo.reactivateAccount(),
+        ).thenAnswer((_) async => _activeUser);
         return bloc;
       },
       act: (b) => b.add(const ReactivateAccount()),
@@ -122,8 +125,9 @@ void main() {
     blocTest<AccountDeletionBloc, AccountDeletionState>(
       'emits [Loading, AccountDeletionError] on AppException',
       build: () {
-        when(() => mockRepo.reactivateAccount())
-            .thenThrow(const NetworkException('Erreur réseau'));
+        when(
+          () => mockRepo.reactivateAccount(),
+        ).thenThrow(const NetworkException('Erreur réseau'));
         return bloc;
       },
       act: (b) => b.add(const ReactivateAccount()),

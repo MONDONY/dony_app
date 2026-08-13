@@ -8,7 +8,7 @@ Widget _wrap() => MaterialApp.router(
     routes: [
       GoRoute(
         path: '/',
-        builder: (_, __) => Scaffold(
+        builder: (_, _) => Scaffold(
           body: Builder(
             builder: (ctx) => TextButton(
               onPressed: () => EscrowBlockDialog.show(ctx),
@@ -19,7 +19,7 @@ Widget _wrap() => MaterialApp.router(
       ),
       GoRoute(
         path: '/announcements',
-        builder: (_, __) => const Scaffold(body: Text('Announcements')),
+        builder: (_, _) => const Scaffold(body: Text('Announcements')),
       ),
     ],
   ),

@@ -87,7 +87,7 @@ void main() {
         const FormStep2Submitted(
           weightKg: 5.0,
           parcelSize: ParcelSize.small,
-          categories: const ['Vêtements'],
+          categories: ['Vêtements'],
           description: 'test',
         ),
       );
@@ -144,7 +144,7 @@ void main() {
       const FormStep2Submitted(
         weightKg: 5.0,
         parcelSize: ParcelSize.small,
-        categories: const ['Vêtements'],
+        categories: ['Vêtements'],
         description: 'test',
       ),
     );

@@ -21,7 +21,8 @@ class DeliveryAddress {
   final double? longitude;
   final bool isDefault;
 
-  factory DeliveryAddress.fromJson(Map<String, dynamic> json) => DeliveryAddress(
+  factory DeliveryAddress.fromJson(Map<String, dynamic> json) =>
+      DeliveryAddress(
         id: json['id'] as String,
         label: json['label'] as String,
         street: json['street'] as String?,
@@ -34,16 +35,16 @@ class DeliveryAddress {
       );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'label': label,
-        'street': street,
-        'city': city,
-        'country': country,
-        'instructions': instructions,
-        'latitude': latitude,
-        'longitude': longitude,
-        'isDefault': isDefault,
-      };
+    'id': id,
+    'label': label,
+    'street': street,
+    'city': city,
+    'country': country,
+    'instructions': instructions,
+    'latitude': latitude,
+    'longitude': longitude,
+    'isDefault': isDefault,
+  };
 
   DeliveryAddress copyWith({
     String? id,
@@ -55,16 +56,15 @@ class DeliveryAddress {
     double? latitude,
     double? longitude,
     bool? isDefault,
-  }) =>
-      DeliveryAddress(
-        id: id ?? this.id,
-        label: label ?? this.label,
-        street: street ?? this.street,
-        city: city ?? this.city,
-        country: country ?? this.country,
-        instructions: instructions ?? this.instructions,
-        latitude: latitude ?? this.latitude,
-        longitude: longitude ?? this.longitude,
-        isDefault: isDefault ?? this.isDefault,
-      );
+  }) => DeliveryAddress(
+    id: id ?? this.id,
+    label: label ?? this.label,
+    street: street ?? this.street,
+    city: city ?? this.city,
+    country: country ?? this.country,
+    instructions: instructions ?? this.instructions,
+    latitude: latitude ?? this.latitude,
+    longitude: longitude ?? this.longitude,
+    isDefault: isDefault ?? this.isDefault,
+  );
 }

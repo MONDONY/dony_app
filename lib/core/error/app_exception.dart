@@ -52,22 +52,22 @@ class NetworkException extends AppException {
 
 class TimeoutException extends AppException {
   const TimeoutException([super.message = 'Délai dépassé'])
-      : super(code: 'TIMEOUT');
+    : super(code: 'TIMEOUT');
 }
 
 class OfflineException extends AppException {
   const OfflineException([super.message = 'Pas de connexion'])
-      : super(code: 'OFFLINE');
+    : super(code: 'OFFLINE');
 }
 
 class UnauthorizedException extends AppException {
   const UnauthorizedException([super.message = 'Unauthorized', String? apiCode])
-      : super(code: apiCode ?? 'UNAUTHORIZED');
+    : super(code: apiCode ?? 'UNAUTHORIZED');
 }
 
 class ForbiddenException extends AppException {
-  const ForbiddenException([String message = 'Forbidden', String? apiCode])
-      : super(message, code: apiCode ?? 'FORBIDDEN');
+  const ForbiddenException([super.message = 'Forbidden', String? apiCode])
+    : super(code: apiCode ?? 'FORBIDDEN');
 }
 
 class NotFoundException extends AppException {
@@ -98,12 +98,12 @@ class ConflictException extends AppException {
 
 class RateLimitException extends AppException {
   const RateLimitException([super.message = 'Trop de tentatives'])
-      : super(code: 'RATE_LIMITED');
+    : super(code: 'RATE_LIMITED');
 }
 
 class ServerException extends AppException {
   const ServerException([super.message = 'Server error', String? apiCode])
-      : super(code: apiCode ?? 'SERVER_ERROR');
+    : super(code: apiCode ?? 'SERVER_ERROR');
 }
 
 class StorageException extends AppException {

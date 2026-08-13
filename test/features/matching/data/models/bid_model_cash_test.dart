@@ -2,16 +2,16 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Map<String, dynamic> _minimalBid({String pm = 'STRIPE', String? cs}) => {
-      'id': 'bid1',
-      'announcementId': 'ann1',
-      'senderId': 'sender1',
-      'weightKg': 5.0,
-      'status': 'PENDING',
-      'createdAt': '2024-01-01T00:00:00Z',
-      'updatedAt': '2024-01-01T00:00:00Z',
-      if (pm != 'STRIPE') 'paymentMethod': pm,
-      if (cs != null) 'commissionStatus': cs,
-    };
+  'id': 'bid1',
+  'announcementId': 'ann1',
+  'senderId': 'sender1',
+  'weightKg': 5.0,
+  'status': 'PENDING',
+  'createdAt': '2024-01-01T00:00:00Z',
+  'updatedAt': '2024-01-01T00:00:00Z',
+  if (pm != 'STRIPE') 'paymentMethod': pm,
+  'commissionStatus': ?cs,
+};
 
 void main() {
   test('bid defaults to STRIPE payment method', () {

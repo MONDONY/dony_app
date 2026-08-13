@@ -111,8 +111,6 @@ void main() {
     seed: () => PackageRequestSearchState(
       status: SearchStatus.loaded,
       results: [_fakeRequest('r-1'), _fakeRequest('r-2')],
-      page: 0,
-      hasMore: true,
       departure: 'Paris',
       arrival: 'Dakar',
     ),
@@ -240,7 +238,6 @@ void main() {
           dateTo: any(named: 'dateTo'),
           maxWeight: any(named: 'maxWeight'),
           parcelSize: any(named: 'parcelSize'),
-          page: 0,
           urgent: any(named: 'urgent'),
         ),
       ).called(1);
@@ -327,7 +324,6 @@ void main() {
           maxWeight: any(named: 'maxWeight'),
           parcelSize: any(named: 'parcelSize'),
           page: any(named: 'page'),
-          urgent: null,
         ),
       ).called(1);
     },
@@ -516,7 +512,8 @@ void main() {
         stubSearch([_fakeRequest('r-1'), _fakeRequest('r-2')]);
         return PackageRequestSearchBloc(repo, analytics);
       },
-      act: (bloc) => bloc.add(const SearchFiltersChanged(matchingMyTrips: true)),
+      act: (bloc) =>
+          bloc.add(const SearchFiltersChanged(matchingMyTrips: true)),
       verify: (_) {
         verify(
           () => analytics.logEvent(
@@ -562,7 +559,8 @@ void main() {
         ).thenThrow(Exception('réseau'));
         return PackageRequestSearchBloc(repo, analytics);
       },
-      act: (bloc) => bloc.add(const SearchFiltersChanged(matchingMyTrips: true)),
+      act: (bloc) =>
+          bloc.add(const SearchFiltersChanged(matchingMyTrips: true)),
       verify: (_) {
         verifyNever(
           () => analytics.logEvent(

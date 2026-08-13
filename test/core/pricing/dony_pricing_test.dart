@@ -10,14 +10,14 @@ AnnouncementModel _ann({
   travelerId: 't',
   departureCity: 'Paris',
   arrivalCity: 'Dakar',
-  departureDate: DateTime(2026, 7, 1),
+  departureDate: DateTime(2026, 7),
   availableKg: 10,
   totalKg: 10,
   pricePerKg: pricePerKg,
   pricePerKgDisplay: pricePerKgDisplay,
   status: 'OPEN',
-  createdAt: DateTime(2026, 6, 1),
-  updatedAt: DateTime(2026, 6, 1),
+  createdAt: DateTime(2026, 6),
+  updatedAt: DateTime(2026, 6),
 );
 
 void main() {

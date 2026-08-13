@@ -1,9 +1,9 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/complete_details_bloc.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
-import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -29,7 +29,7 @@ PackageRequest _fakeRequest() => PackageRequest(
   transportMode: TransportMode.plane,
   categories: const ['Vêtements'],
   status: PackageRequestStatus.negotiating,
-  createdAt: DateTime(2026, 1, 1),
+  createdAt: DateTime(2026),
 );
 
 void main() {
@@ -63,7 +63,7 @@ void main() {
           transportMode: TransportMode.plane,
           categories: const ['Vêtements'],
           status: PackageRequestStatus.negotiating,
-          createdAt: DateTime(2026, 1, 1),
+          createdAt: DateTime(2026),
         );
         when(
           () => repo.completeDetails(

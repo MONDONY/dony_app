@@ -376,7 +376,6 @@ class _TimelineItem extends StatelessWidget {
                         url: event.photoUrl!,
                         height: 120,
                         width: double.infinity,
-                        fit: BoxFit.cover,
                         placeholder: (_) => Container(
                           height: 120,
                           color: cs.primaryContainer,
@@ -483,10 +482,7 @@ class _EmptyTimeline extends StatelessWidget {
       ),
       child: Column(
         children: [
-          const DonyMascotteAnimated(
-            type: DonyMascotteType.attente,
-            size: DonyMascotteSize.md,
-          ),
+          const DonyMascotteAnimated(type: DonyMascotteType.attente),
           const SizedBox(height: DonySpacing.base),
           Text('En attente de la lecture au départ', style: tt.titleLarge),
           const SizedBox(height: DonySpacing.sm),

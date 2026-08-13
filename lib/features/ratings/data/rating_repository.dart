@@ -12,11 +12,14 @@ class RatingRepository {
     required int stars,
     String? comment,
   }) async {
-    await _apiClient.dio.post('/ratings', data: {
-      'bidId': bidId,
-      'stars': stars,
-      if (comment != null && comment.isNotEmpty) 'comment': comment,
-    });
+    await _apiClient.dio.post(
+      '/ratings',
+      data: {
+        'bidId': bidId,
+        'stars': stars,
+        if (comment != null && comment.isNotEmpty) 'comment': comment,
+      },
+    );
   }
 
   Future<void> submitTravelerRating({
@@ -24,11 +27,14 @@ class RatingRepository {
     required int stars,
     String? comment,
   }) async {
-    await _apiClient.dio.post('/ratings/traveler-to-sender', data: {
-      'bidId': bidId,
-      'stars': stars,
-      if (comment != null && comment.isNotEmpty) 'comment': comment,
-    });
+    await _apiClient.dio.post(
+      '/ratings/traveler-to-sender',
+      data: {
+        'bidId': bidId,
+        'stars': stars,
+        if (comment != null && comment.isNotEmpty) 'comment': comment,
+      },
+    );
   }
 
   Future<RatingSummary> getUserRatings(String userId, {int page = 0}) async {

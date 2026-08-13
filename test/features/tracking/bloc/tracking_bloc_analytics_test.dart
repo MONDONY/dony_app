@@ -25,8 +25,9 @@ void main() {
   });
 
   TrackingBloc makeBloc({bool enabled = true}) {
-    final a =
-        enabled ? makeEnabledAnalytics(backend) : makeDisabledAnalytics(backend);
+    final a = enabled
+        ? makeEnabledAnalytics(backend)
+        : makeDisabledAnalytics(backend);
     a.onConfigured();
     return TrackingBloc(repo, offlineSync, a);
   }
@@ -39,16 +40,21 @@ void main() {
     // full integration test environment. These tests verify the offline/error
     // paths do NOT fire analytics events, which is the correct behaviour.
 
-    test('no qr_scan_success event fired when connectivity unavailable (error path)', () async {
-      final bloc = makeBloc();
-      bloc.add(QrScanSubmitRequested(bidId: 'bid1', eventType: 'PICKUP'));
-      // Wait for QrScanSubmitting + QrScanError
-      await bloc.stream.first; // QrScanSubmitting
-      await Future<void>.delayed(const Duration(milliseconds: 100));
+    test(
+      'no qr_scan_success event fired when connectivity unavailable (error path)',
+      () async {
+        final bloc = makeBloc();
+        bloc.add(QrScanSubmitRequested(bidId: 'bid1', eventType: 'PICKUP'));
+        // Wait for QrScanSubmitting + QrScanError
+        await bloc.stream.first; // QrScanSubmitting
+        await Future<void>.delayed(const Duration(milliseconds: 100));
 
-      // qr_scan_success must NOT have been fired (we never reached the success path)
-      verifyNever(() => backend.capture(AnalyticsEvents.qrScanSuccess, any()));
-    });
+        // qr_scan_success must NOT have been fired (we never reached the success path)
+        verifyNever(
+          () => backend.capture(AnalyticsEvents.qrScanSuccess, any()),
+        );
+      },
+    );
 
     test('no event when analytics disabled', () async {
       final bloc = makeBloc(enabled: false);

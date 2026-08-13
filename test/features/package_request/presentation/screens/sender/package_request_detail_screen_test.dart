@@ -1,6 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -39,7 +38,7 @@ PackageRequest _fakeRequest({
   transportMode: TransportMode.plane,
   categories: const ['Vêtements'],
   status: status,
-  createdAt: DateTime(2026, 1, 1),
+  createdAt: DateTime(2026),
 );
 
 NegotiationThread _terminalThread() => NegotiationThread(
@@ -51,8 +50,8 @@ NegotiationThread _terminalThread() => NegotiationThread(
   status: NegotiationThreadStatus.rejected,
   currentPriceEur: 25,
   roundsCount: 1,
-  lastActivityAt: DateTime(2026, 8, 1),
-  createdAt: DateTime(2026, 8, 1),
+  lastActivityAt: DateTime(2026, 8),
+  createdAt: DateTime(2026, 8),
   messages: const [],
 );
 
@@ -79,7 +78,7 @@ Widget _buildPushableApp({required String requestId}) {
     routes: [
       GoRoute(
         path: '/list',
-        builder: (ctx, __) => Scaffold(
+        builder: (ctx, _) => Scaffold(
           body: Center(
             child: TextButton(
               onPressed: () => ctx.push('/package-requests/$requestId'),
@@ -200,9 +199,7 @@ void main() {
   });
 
   testWidgets('shows Annuler tile when status is open', (tester) async {
-    when(
-      () => repo.getById('pr-1'),
-    ).thenAnswer((_) async => _fakeRequest(status: PackageRequestStatus.open));
+    when(() => repo.getById('pr-1')).thenAnswer((_) async => _fakeRequest());
     when(() => repo.listThreadsForRequest('pr-1')).thenAnswer((_) async => []);
 
     await tester.pumpWidget(_buildApp(requestId: 'pr-1'));
@@ -316,9 +313,7 @@ void main() {
   testWidgets(
     'confirming Annuler tile calls repo.cancel and closes the screen',
     (tester) async {
-      when(() => repo.getById('pr-1')).thenAnswer(
-        (_) async => _fakeRequest(status: PackageRequestStatus.open),
-      );
+      when(() => repo.getById('pr-1')).thenAnswer((_) async => _fakeRequest());
       when(
         () => repo.listThreadsForRequest('pr-1'),
       ).thenAnswer((_) async => []);
@@ -349,9 +344,7 @@ void main() {
     'cancel failure keeps the screen open and shows an error snackbar '
     '(régression : le pop ne doit pas s\'exécuter sur échec)',
     (tester) async {
-      when(() => repo.getById('pr-1')).thenAnswer(
-        (_) async => _fakeRequest(status: PackageRequestStatus.open),
-      );
+      when(() => repo.getById('pr-1')).thenAnswer((_) async => _fakeRequest());
       when(
         () => repo.listThreadsForRequest('pr-1'),
       ).thenAnswer((_) async => []);

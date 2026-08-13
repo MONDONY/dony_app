@@ -64,8 +64,9 @@ class _CommissionMethodScreenState extends State<CommissionMethodScreen>
           }
           if (state is CommissionMethodNotConfigured) {
             return CommissionCardEmptyState(
-              onAdd: () =>
-                  ctx.read<CommissionMethodBloc>().add(CommissionMethodSetupRequested()),
+              onAdd: () => ctx.read<CommissionMethodBloc>().add(
+                CommissionMethodSetupRequested(),
+              ),
             );
           }
           if (state is CommissionMethodError) {
@@ -83,9 +84,9 @@ class _CommissionMethodScreenState extends State<CommissionMethodScreen>
                     const SizedBox(height: DonySpacing.lg),
                     DonyButton(
                       label: 'Réessayer',
-                      onPressed: () => ctx
-                          .read<CommissionMethodBloc>()
-                          .add(CommissionMethodLoadRequested()),
+                      onPressed: () => ctx.read<CommissionMethodBloc>().add(
+                        CommissionMethodLoadRequested(),
+                      ),
                     ),
                   ],
                 ),
@@ -109,9 +110,9 @@ class _CommissionMethodScreenState extends State<CommissionMethodScreen>
                 const SizedBox(height: DonySpacing.xl),
                 DonyButton(
                   label: 'Remplacer la carte',
-                  onPressed: () => ctx
-                      .read<CommissionMethodBloc>()
-                      .add(CommissionMethodSetupRequested()),
+                  onPressed: () => ctx.read<CommissionMethodBloc>().add(
+                    CommissionMethodSetupRequested(),
+                  ),
                 ),
                 const SizedBox(height: DonySpacing.md),
                 DonyButton(
@@ -128,7 +129,10 @@ class _CommissionMethodScreenState extends State<CommissionMethodScreen>
     );
   }
 
-  Future<void> _runPaymentSheet(BuildContext context, String clientSecret) async {
+  Future<void> _runPaymentSheet(
+    BuildContext context,
+    String clientSecret,
+  ) async {
     final authenticated = await requirePaymentAuth(
       context,
       authService: getIt<LocalAuthService>(),
@@ -141,7 +145,9 @@ class _CommissionMethodScreenState extends State<CommissionMethodScreen>
         message: 'Paiement non confirmé, réessayez',
         type: DonySnackbarType.warning,
       );
-      context.read<CommissionMethodBloc>().add(CommissionMethodSetupCancelled());
+      context.read<CommissionMethodBloc>().add(
+        CommissionMethodSetupCancelled(),
+      );
       return;
     }
 
@@ -168,11 +174,15 @@ class _CommissionMethodScreenState extends State<CommissionMethodScreen>
       if (e.error.code != FailureCode.Canceled) {
         DonySnackbar.show(
           context,
-          message: e.error.localizedMessage ?? 'Erreur lors de l\'ajout de la carte.',
+          message:
+              e.error.localizedMessage ??
+              'Erreur lors de l\'ajout de la carte.',
           type: DonySnackbarType.error,
         );
       }
-      context.read<CommissionMethodBloc>().add(CommissionMethodSetupCancelled());
+      context.read<CommissionMethodBloc>().add(
+        CommissionMethodSetupCancelled(),
+      );
     }
   }
 
@@ -194,9 +204,9 @@ class _CommissionMethodScreenState extends State<CommissionMethodScreen>
               label: 'Supprimer',
               variant: DonyButtonVariant.destructive,
               onPressed: () {
-                context
-                    .read<CommissionMethodBloc>()
-                    .add(CommissionMethodDeleteRequested());
+                context.read<CommissionMethodBloc>().add(
+                  CommissionMethodDeleteRequested(),
+                );
                 Navigator.of(context).pop();
               },
             ),

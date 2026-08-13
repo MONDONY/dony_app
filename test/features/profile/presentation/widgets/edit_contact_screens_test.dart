@@ -46,21 +46,25 @@ void main() {
   });
 
   group('EditEmailScreen', () {
-    testWidgets('affiche le titre et le champ email, bouton "Envoyer le code"', (
-      tester,
-    ) async {
-      whenListen<AuthState>(
-        mockAuthBloc,
-        const Stream.empty(),
-        initialState: const AuthAuthenticated(_user),
-      );
+    testWidgets(
+      'affiche le titre et le champ email, bouton "Envoyer le code"',
+      (tester) async {
+        whenListen<AuthState>(
+          mockAuthBloc,
+          const Stream.empty(),
+          initialState: const AuthAuthenticated(_user),
+        );
 
-      await tester.pumpWidget(_wrap(const EditEmailScreen(), mockAuthBloc));
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(_wrap(const EditEmailScreen(), mockAuthBloc));
+        await tester.pumpAndSettle();
 
-      expect(find.text("Modifier l'email"), findsOneWidget);
-      expect(find.widgetWithText(DonyButton, 'Envoyer le code'), findsOneWidget);
-    });
+        expect(find.text("Modifier l'email"), findsOneWidget);
+        expect(
+          find.widgetWithText(DonyButton, 'Envoyer le code'),
+          findsOneWidget,
+        );
+      },
+    );
 
     testWidgets('saisie + envoi dispatche AuthEmailOtpSendRequested', (
       tester,
@@ -79,44 +83,47 @@ void main() {
       await tester.pump();
 
       verify(
-        () => mockAuthBloc.add(
-          any(that: isA<AuthEmailOtpSendRequested>()),
-        ),
+        () => mockAuthBloc.add(any(that: isA<AuthEmailOtpSendRequested>())),
       ).called(1);
     });
 
-    testWidgets('après AuthEmailOtpSent, passe à l\'étape code + bouton "Vérifier"', (
-      tester,
-    ) async {
-      whenListen<AuthState>(
-        mockAuthBloc,
-        Stream.value(const AuthEmailOtpSent('nouvel@email.com')),
-        initialState: const AuthAuthenticated(_user),
-      );
+    testWidgets(
+      'après AuthEmailOtpSent, passe à l\'étape code + bouton "Vérifier"',
+      (tester) async {
+        whenListen<AuthState>(
+          mockAuthBloc,
+          Stream.value(const AuthEmailOtpSent('nouvel@email.com')),
+          initialState: const AuthAuthenticated(_user),
+        );
 
-      await tester.pumpWidget(_wrap(const EditEmailScreen(), mockAuthBloc));
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(_wrap(const EditEmailScreen(), mockAuthBloc));
+        await tester.pumpAndSettle();
 
-      expect(find.widgetWithText(DonyButton, 'Vérifier'), findsOneWidget);
-    });
+        expect(find.widgetWithText(DonyButton, 'Vérifier'), findsOneWidget);
+      },
+    );
   });
 
   group('EditPhoneScreen', () {
-    testWidgets('affiche le titre et le champ numéro, bouton "Envoyer le code"', (
-      tester,
-    ) async {
-      whenListen<AuthState>(
-        mockAuthBloc,
-        const Stream.empty(),
-        initialState: const AuthAuthenticated(_user),
-      );
+    testWidgets(
+      'affiche le titre et le champ numéro, bouton "Envoyer le code"',
+      (tester) async {
+        whenListen<AuthState>(
+          mockAuthBloc,
+          const Stream.empty(),
+          initialState: const AuthAuthenticated(_user),
+        );
 
-      await tester.pumpWidget(_wrap(const EditPhoneScreen(), mockAuthBloc));
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(_wrap(const EditPhoneScreen(), mockAuthBloc));
+        await tester.pumpAndSettle();
 
-      expect(find.text('Modifier le numéro'), findsOneWidget);
-      expect(find.widgetWithText(DonyButton, 'Envoyer le code'), findsOneWidget);
-    });
+        expect(find.text('Modifier le numéro'), findsOneWidget);
+        expect(
+          find.widgetWithText(DonyButton, 'Envoyer le code'),
+          findsOneWidget,
+        );
+      },
+    );
 
     testWidgets('saisie + envoi dispatche AuthSendOtpRequested', (
       tester,
@@ -135,27 +142,29 @@ void main() {
       await tester.pump();
 
       verify(
-        () => mockAuthBloc.add(
-          any(that: isA<AuthSendOtpRequested>()),
-        ),
+        () => mockAuthBloc.add(any(that: isA<AuthSendOtpRequested>())),
       ).called(1);
     });
 
-    testWidgets('après AuthOtpSent, passe à l\'étape code + bouton "Vérifier"', (
-      tester,
-    ) async {
-      whenListen<AuthState>(
-        mockAuthBloc,
-        Stream.value(
-          const AuthOtpSent(verificationId: 'vid', phoneNumber: '+33612345678'),
-        ),
-        initialState: const AuthAuthenticated(_user),
-      );
+    testWidgets(
+      'après AuthOtpSent, passe à l\'étape code + bouton "Vérifier"',
+      (tester) async {
+        whenListen<AuthState>(
+          mockAuthBloc,
+          Stream.value(
+            const AuthOtpSent(
+              verificationId: 'vid',
+              phoneNumber: '+33612345678',
+            ),
+          ),
+          initialState: const AuthAuthenticated(_user),
+        );
 
-      await tester.pumpWidget(_wrap(const EditPhoneScreen(), mockAuthBloc));
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(_wrap(const EditPhoneScreen(), mockAuthBloc));
+        await tester.pumpAndSettle();
 
-      expect(find.widgetWithText(DonyButton, 'Vérifier'), findsOneWidget);
-    });
+        expect(find.widgetWithText(DonyButton, 'Vérifier'), findsOneWidget);
+      },
+    );
   });
 }

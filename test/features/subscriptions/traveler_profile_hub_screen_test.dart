@@ -156,7 +156,10 @@ void main() {
       expect(find.text('Abonné ✓'), findsOneWidget);
 
       // Bell off icon
-      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bell-off'), findsOneWidget);
+      expect(
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bell-off'),
+        findsOneWidget,
+      );
     },
   );
 
@@ -169,9 +172,9 @@ void main() {
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
       when(() => profileBloc.state).thenReturn(const ProfilePublicLoading());
-      when(() => hubBloc.state).thenReturn(
-        const TravelerHubState(status: TravelerHubStatus.success),
-      );
+      when(
+        () => hubBloc.state,
+      ).thenReturn(const TravelerHubState(status: TravelerHubStatus.success));
 
       await tester.pumpWidget(pump());
       // Drain flutter_animate pending timers while still in loading state
@@ -220,9 +223,9 @@ void main() {
         recentRatings: _fakeRatings(),
       ),
     );
-    when(() => hubBloc.state).thenReturn(
-      const TravelerHubState(status: TravelerHubStatus.success),
-    );
+    when(
+      () => hubBloc.state,
+    ).thenReturn(const TravelerHubState(status: TravelerHubStatus.success));
 
     await tester.pumpWidget(pump());
     await tester.pump(const Duration(milliseconds: 600));
@@ -324,7 +327,9 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
 
     // Bell is notifications_off_rounded when pushEnabled=false
-    final bellFinder = find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bell-off');
+    final bellFinder = find.byWidgetPredicate(
+      (w) => w is DonyIcon && w.name == 'bell-off',
+    );
     expect(bellFinder, findsOneWidget);
     await tester.tap(bellFinder);
     await tester.pump();
@@ -394,7 +399,7 @@ void main() {
 
     when(() => profileBloc.state).thenReturn(
       ProfilePublicLoaded(
-        profile: ProfilePublicModel(
+        profile: const ProfilePublicModel(
           userId: 'u1',
           displayName: 'Ibou Pro',
           kycVerified: true,
@@ -404,15 +409,15 @@ void main() {
           averageRating: 4.9,
           ratingCount: 50,
           memberSince: '2023-01',
-          badges: const [],
+          badges: [],
         ),
         recentRatings: _fakeRatings(),
       ),
     );
 
-    when(() => hubBloc.state).thenReturn(
-      const TravelerHubState(status: TravelerHubStatus.success),
-    );
+    when(
+      () => hubBloc.state,
+    ).thenReturn(const TravelerHubState(status: TravelerHubStatus.success));
 
     await tester.pumpWidget(pump());
     await tester.pump(const Duration(milliseconds: 600));
@@ -434,9 +439,9 @@ void main() {
       ),
     );
 
-    when(() => hubBloc.state).thenReturn(
-      const TravelerHubState(status: TravelerHubStatus.success),
-    );
+    when(
+      () => hubBloc.state,
+    ).thenReturn(const TravelerHubState(status: TravelerHubStatus.success));
 
     await tester.pumpWidget(pump());
     await tester.pump(const Duration(milliseconds: 600));
@@ -457,8 +462,6 @@ void main() {
 
     final rating = RatingItem(
       stars: 3,
-      comment:
-          null, // no comment → tests the `if (item.comment != null)` branch
       createdAt: DateTime(2026, 1, 5),
       excluded: false,
     );
@@ -484,8 +487,14 @@ void main() {
     await tester.pumpAndSettle();
 
     // Stars widget renders (both filled and empty stars should exist for 3/5)
-    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'star'), findsWidgets);
-    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'star'), findsWidgets);
+    expect(
+      find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'star'),
+      findsWidgets,
+    );
+    expect(
+      find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'star'),
+      findsWidgets,
+    );
   });
 
   // ─── Test 14: averageRating == 0 → '—' in stat column ───────────────────
@@ -498,7 +507,7 @@ void main() {
 
     when(() => profileBloc.state).thenReturn(
       ProfilePublicLoaded(
-        profile: ProfilePublicModel(
+        profile: const ProfilePublicModel(
           userId: 'u2',
           displayName: 'Nouveau Voyageur',
           kycVerified: false,
@@ -508,15 +517,15 @@ void main() {
           averageRating: 0.0,
           ratingCount: 0,
           memberSince: '2026-01',
-          badges: const [],
+          badges: [],
         ),
         recentRatings: _fakeRatings(),
       ),
     );
 
-    when(() => hubBloc.state).thenReturn(
-      const TravelerHubState(status: TravelerHubStatus.success),
-    );
+    when(
+      () => hubBloc.state,
+    ).thenReturn(const TravelerHubState(status: TravelerHubStatus.success));
 
     await tester.pumpWidget(pump());
     await tester.pump(const Duration(milliseconds: 600));
@@ -538,9 +547,9 @@ void main() {
         recentRatings: _fakeRatings(),
       ),
     );
-    when(() => hubBloc.state).thenReturn(
-      const TravelerHubState(status: TravelerHubStatus.success),
-    );
+    when(
+      () => hubBloc.state,
+    ).thenReturn(const TravelerHubState(status: TravelerHubStatus.success));
 
     await tester.pumpWidget(pump());
     await tester.pump(const Duration(milliseconds: 600));
@@ -563,9 +572,9 @@ void main() {
         recentRatings: _fakeRatings(),
       ),
     );
-    when(() => hubBloc.state).thenReturn(
-      const TravelerHubState(status: TravelerHubStatus.success),
-    );
+    when(
+      () => hubBloc.state,
+    ).thenReturn(const TravelerHubState(status: TravelerHubStatus.success));
 
     await tester.pumpWidget(pump());
     await tester.pump(const Duration(milliseconds: 600));
@@ -589,9 +598,9 @@ void main() {
         recentRatings: _fakeRatings(),
       ),
     );
-    when(() => hubBloc.state).thenReturn(
-      const TravelerHubState(status: TravelerHubStatus.success),
-    );
+    when(
+      () => hubBloc.state,
+    ).thenReturn(const TravelerHubState(status: TravelerHubStatus.success));
 
     await tester.pumpWidget(pump());
     await tester.pump(const Duration(milliseconds: 600));

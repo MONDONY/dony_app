@@ -104,8 +104,8 @@ class _PinConfirmBottomSheetState extends State<PinConfirmBottomSheet> {
                 color: _hasError
                     ? cs.error
                     : filled
-                        ? cs.primary
-                        : cs.outline,
+                    ? cs.primary
+                    : cs.outline,
               ),
             );
           }),

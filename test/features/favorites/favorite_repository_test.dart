@@ -18,39 +18,40 @@ class _MockDatasource extends Mock implements FavoriteRemoteDatasource {}
 // ---------------------------------------------------------------------------
 
 AnnouncementModel _makeTrip() => AnnouncementModel.fromJson({
-      'id': 'trip-1',
-      'travelerId': 'tv1',
-      'departureCity': 'Paris',
-      'arrivalCity': 'Dakar',
-      'departureDate':
-          DateTime.now().add(const Duration(days: 5)).toIso8601String(),
-      'totalKg': 20.0,
-      'availableKg': 15.0,
-      'pricePerKg': 8.0,
-      'pricingMode': 'KG',
-      'status': 'ACTIVE',
-      'pendingBidCount': 0,
-      'confirmedParcelCount': 0,
-      'createdAt': '2024-01-01T00:00:00Z',
-      'updatedAt': '2024-01-01T00:00:00Z',
-    });
+  'id': 'trip-1',
+  'travelerId': 'tv1',
+  'departureCity': 'Paris',
+  'arrivalCity': 'Dakar',
+  'departureDate': DateTime.now()
+      .add(const Duration(days: 5))
+      .toIso8601String(),
+  'totalKg': 20.0,
+  'availableKg': 15.0,
+  'pricePerKg': 8.0,
+  'pricingMode': 'KG',
+  'status': 'ACTIVE',
+  'pendingBidCount': 0,
+  'confirmedParcelCount': 0,
+  'createdAt': '2024-01-01T00:00:00Z',
+  'updatedAt': '2024-01-01T00:00:00Z',
+});
 
 PackageRequestSearchItem _makeRequest() => PackageRequestSearchItem(
-      id: 'req-1',
-      departureCity: 'Lyon',
-      arrivalCity: 'Abidjan',
-      desiredDate: DateTime(2025, 7, 1),
-      dateToleranceDays: 3,
-      weightKg: 4.0,
-      parcelSize: ParcelSize.medium,
-      sender: const SenderPublicProfile(
-        id: 's1',
-        displayName: 'Moussa',
-        averageRating: 4.5,
-        totalRatings: 8,
-        kycVerified: true,
-      ),
-    );
+  id: 'req-1',
+  departureCity: 'Lyon',
+  arrivalCity: 'Abidjan',
+  desiredDate: DateTime(2025, 7),
+  dateToleranceDays: 3,
+  weightKg: 4.0,
+  parcelSize: ParcelSize.medium,
+  sender: const SenderPublicProfile(
+    id: 's1',
+    displayName: 'Moussa',
+    averageRating: 4.5,
+    totalRatings: 8,
+    kycVerified: true,
+  ),
+);
 
 void main() {
   late _MockDatasource ds;
@@ -82,8 +83,9 @@ void main() {
     });
 
     test('propagates error from datasource', () async {
-      when(() => ds.add(any(), any()))
-          .thenAnswer((_) async => throw Exception('network'));
+      when(
+        () => ds.add(any(), any()),
+      ).thenAnswer((_) async => throw Exception('network'));
 
       await expectLater(repo.add('trip', 't1'), throwsException);
     });
@@ -102,8 +104,9 @@ void main() {
     });
 
     test('propagates error from datasource', () async {
-      when(() => ds.remove(any(), any()))
-          .thenAnswer((_) async => throw Exception('network'));
+      when(
+        () => ds.remove(any(), any()),
+      ).thenAnswer((_) async => throw Exception('network'));
 
       await expectLater(repo.remove('trip', 't1'), throwsException);
     });
@@ -128,8 +131,7 @@ void main() {
     });
 
     test('propagates error from datasource', () async {
-      when(() => ds.ids())
-          .thenAnswer((_) async => throw Exception('network'));
+      when(() => ds.ids()).thenAnswer((_) async => throw Exception('network'));
 
       await expectLater(repo.ids(), throwsException);
     });
@@ -158,8 +160,9 @@ void main() {
     });
 
     test('propagates error from datasource', () async {
-      when(() => ds.trips())
-          .thenAnswer((_) async => throw Exception('network'));
+      when(
+        () => ds.trips(),
+      ).thenAnswer((_) async => throw Exception('network'));
 
       await expectLater(repo.trips(), throwsException);
     });
@@ -169,16 +172,20 @@ void main() {
   // packageRequests() — pass-through
   // ---------------------------------------------------------------------------
   group('packageRequests()', () {
-    test('delegates to datasource.packageRequests() and returns list', () async {
-      when(() => ds.packageRequests())
-          .thenAnswer((_) async => [_makeRequest()]);
+    test(
+      'delegates to datasource.packageRequests() and returns list',
+      () async {
+        when(
+          () => ds.packageRequests(),
+        ).thenAnswer((_) async => [_makeRequest()]);
 
-      final result = await repo.packageRequests();
+        final result = await repo.packageRequests();
 
-      expect(result, hasLength(1));
-      expect(result.first.id, 'req-1');
-      verify(() => ds.packageRequests()).called(1);
-    });
+        expect(result, hasLength(1));
+        expect(result.first.id, 'req-1');
+        verify(() => ds.packageRequests()).called(1);
+      },
+    );
 
     test('returns empty list when datasource returns empty', () async {
       when(() => ds.packageRequests()).thenAnswer((_) async => []);
@@ -189,8 +196,9 @@ void main() {
     });
 
     test('propagates error from datasource', () async {
-      when(() => ds.packageRequests())
-          .thenAnswer((_) async => throw Exception('network'));
+      when(
+        () => ds.packageRequests(),
+      ).thenAnswer((_) async => throw Exception('network'));
 
       await expectLater(repo.packageRequests(), throwsException);
     });

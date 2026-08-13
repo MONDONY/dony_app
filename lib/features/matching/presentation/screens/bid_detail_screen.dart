@@ -1,40 +1,40 @@
 import 'dart:async';
 
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/utils/share_position.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
+import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_event.dart' as ace;
 import 'package:dony/features/matching/bloc/bid_acceptance_state.dart' as acs;
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
-import 'package:dony/features/matching/data/models/bid_model.dart';
-import 'package:dony/features/payments/data/models/payment_model.dart';
-import 'package:dony/features/payments/data/repositories/payment_repository.dart';
-import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
-import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/error/error_presenter.dart';
-import 'package:dony/core/pricing/dony_pricing.dart';
-import 'package:dony/core/widgets/dony_icon.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
-import 'package:dony/features/auth/bloc/auth_bloc.dart';
-import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
-import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
-import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
-import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
-import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
+import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/widgets/action_bars/bid_detail_action_bars.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_detail_body.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_sticky_bar.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_detail_body.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_options_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_sticky_bar.dart';
+import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
+import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
+import 'package:dony/features/payments/data/models/payment_model.dart';
+import 'package:dony/features/payments/data/repositories/payment_repository.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_state.dart';
-import 'package:dony/features/matching/presentation/widgets/action_bars/bid_detail_action_bars.dart';
+import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 class BidDetailScreen extends StatelessWidget {
   final BidModel bid;
@@ -273,7 +273,6 @@ class _BidDetailViewState extends State<_BidDetailView> {
             DonySnackbar.show(
               context,
               message: "Absence signalée. L'expéditeur a 48 h pour contester.",
-              type: DonySnackbarType.info,
             );
             context.read<BidBloc>().add(BidDetailRequested(_bid.id));
           } else if (state is DeliveryNoShowReported) {
@@ -281,7 +280,6 @@ class _BidDetailViewState extends State<_BidDetailView> {
               context,
               message:
                   "Absence signalée. L'autre partie a 24 h pour contester.",
-              type: DonySnackbarType.info,
             );
             context.read<BidBloc>().add(BidDetailRequested(_bid.id));
           } else if (state is DeliveryNoShowContested) {
@@ -305,7 +303,6 @@ class _BidDetailViewState extends State<_BidDetailView> {
               context,
               message:
                   'Absence confirmée. L\'envoi a été annulé, vous ne serez pas débité.',
-              type: DonySnackbarType.info,
             );
             context.read<BidBloc>().add(BidDetailRequested(_bid.id));
           } else if (state is CancelledAfterHandover) {
@@ -313,7 +310,6 @@ class _BidDetailViewState extends State<_BidDetailView> {
               context,
               message:
                   'Trajet annulé. Restituez le colis sous 3 jours avec le code de retour.',
-              type: DonySnackbarType.info,
             );
             context.read<BidBloc>().add(BidDetailRequested(_bid.id));
           } else if (state is ReturnConfirmed) {
@@ -356,10 +352,11 @@ class _BidDetailViewState extends State<_BidDetailView> {
                 } else if (state is BidRejected) {
                   _bid = state.bid;
                   DonySnackbar.show(context, message: 'Demande refusée.');
-                  if (context.canPop())
+                  if (context.canPop()) {
                     context.pop();
-                  else
+                  } else {
                     context.go('/home');
+                  }
                 } else if (state is BidPresenceConfirmed) {
                   _bid = state.bid;
                   DonySnackbar.show(
@@ -373,18 +370,19 @@ class _BidDetailViewState extends State<_BidDetailView> {
                   DonySnackbar.show(
                     context,
                     message: 'Demande annulée. L\'expéditeur sera remboursé.',
-                    type: DonySnackbarType.info,
                   );
-                  if (context.canPop())
+                  if (context.canPop()) {
                     context.pop();
-                  else
+                  } else {
                     context.go('/home');
+                  }
                 } else if (state is BidDeleted) {
                   DonySnackbar.show(context, message: 'Demande supprimée.');
-                  if (context.canPop())
+                  if (context.canPop()) {
                     context.pop();
-                  else
+                  } else {
                     context.go('/home');
+                  }
                 } else if (state is BidNotFound) {
                   _refreshTimer?.cancel();
                   DonySnackbar.show(
@@ -418,10 +416,11 @@ class _BidDetailViewState extends State<_BidDetailView> {
                     _refreshTimer = Timer.periodic(
                       const Duration(seconds: 10),
                       (_) {
-                        if (mounted)
+                        if (mounted) {
                           context.read<BidBloc>().add(
                             BidDetailRequested(_bid.id),
                           );
+                        }
                       },
                     );
                   } else if (state.bid.status != 'ACCEPTED' &&
@@ -433,10 +432,11 @@ class _BidDetailViewState extends State<_BidDetailView> {
                 } else if (state is BidError) {
                   if (_skeletonLoading) {
                     _skeletonLoading = false;
-                    if (context.canPop())
+                    if (context.canPop()) {
                       context.pop();
-                    else
+                    } else {
                       context.go('/home');
+                    }
                   }
                   ErrorPresenter.show(context, state.error);
                 }

@@ -77,7 +77,9 @@ Widget _wrap({
         child: child!,
       ),
       routerConfig: GoRouter(
-        routes: [GoRoute(path: '/', builder: (_, _) => const CommunityScreen())],
+        routes: [
+          GoRoute(path: '/', builder: (_, _) => const CommunityScreen()),
+        ],
       ),
     ),
   );

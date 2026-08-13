@@ -137,7 +137,7 @@ void main() {
       routes: [
         GoRoute(
           path: '/negotiations/:id',
-          builder: (_, __) => NegotiationThreadScreen(
+          builder: (_, _) => NegotiationThreadScreen(
             threadId: 't-1',
             viewerUserId: viewerUserId,
           ),
@@ -184,9 +184,7 @@ void main() {
     testWidgets('affiche le nom du voyageur dans l\'AppBar une fois chargé', (
       tester,
     ) async {
-      when(
-        () => bloc.state,
-      ).thenReturn(NegotiationLoaded(_thread(travelerName: 'Fatou Ndiaye')));
+      when(() => bloc.state).thenReturn(NegotiationLoaded(_thread()));
       await tester.pumpWidget(wrap());
       await tester.pumpAndSettle();
       expect(find.text('Fatou Ndiaye'), findsOneWidget);
@@ -195,15 +193,7 @@ void main() {
     testWidgets('affiche la note et les trajets si disponibles', (
       tester,
     ) async {
-      when(() => bloc.state).thenReturn(
-        NegotiationLoaded(
-          _thread(
-            travelerName: 'Fatou Ndiaye',
-            travelerRating: 4.9,
-            travelerTripsCount: 24,
-          ),
-        ),
-      );
+      when(() => bloc.state).thenReturn(NegotiationLoaded(_thread()));
       await tester.pumpWidget(wrap());
       await tester.pumpAndSettle();
       expect(find.textContaining('★4.9'), findsOneWidget);
@@ -251,12 +241,12 @@ void main() {
           routes: [
             GoRoute(
               path: '/negotiations',
-              builder: (_, __) =>
+              builder: (_, _) =>
                   const Scaffold(body: Text('LISTE_NEGOCIATIONS')),
             ),
             GoRoute(
               path: '/negotiations/:id',
-              builder: (_, __) => const NegotiationThreadScreen(
+              builder: (_, _) => const NegotiationThreadScreen(
                 threadId: 't-1',
                 viewerUserId: 'sender-1',
               ),
@@ -371,12 +361,12 @@ void main() {
           routes: [
             GoRoute(
               path: '/negotiations',
-              builder: (_, __) =>
+              builder: (_, _) =>
                   const Scaffold(body: Text('LISTE_NEGOCIATIONS')),
             ),
             GoRoute(
               path: '/negotiations/:id',
-              builder: (_, __) => const NegotiationThreadScreen(
+              builder: (_, _) => const NegotiationThreadScreen(
                 threadId: 't-1',
                 viewerUserId: 'sender-1',
               ),

@@ -238,10 +238,12 @@ void main() {
       setUp(() {
         dismissedValue = false;
         box = _MockBox();
-        when(() => box.get(
-              '${HiveService.kContextualTutorialDismissedPrefix}negotiation_basics',
-              defaultValue: any<Object?>(named: 'defaultValue'),
-            )).thenAnswer((_) => dismissedValue);
+        when(
+          () => box.get(
+            '${HiveService.kContextualTutorialDismissedPrefix}negotiation_basics',
+            defaultValue: any<Object?>(named: 'defaultValue'),
+          ),
+        ).thenAnswer((_) => dismissedValue);
         when(() => box.put(any<String>(), any<bool>())).thenAnswer((
           invocation,
         ) async {

@@ -26,7 +26,7 @@ GoRouter _buildRouter(
   routes: [
     GoRoute(
       path: '/',
-      builder: (_, __) => MultiBlocProvider(
+      builder: (_, _) => MultiBlocProvider(
         providers: [
           BlocProvider<AuthBloc>.value(value: authBloc),
           BlocProvider<LocalAuthBloc>.value(value: localAuthBloc),
@@ -36,7 +36,7 @@ GoRouter _buildRouter(
     ),
     GoRoute(
       path: '/auth/method',
-      builder: (_, __) => const Scaffold(body: Text('Méthode de connexion')),
+      builder: (_, _) => const Scaffold(body: Text('Méthode de connexion')),
     ),
   ],
 );

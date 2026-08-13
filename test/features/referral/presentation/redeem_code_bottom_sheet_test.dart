@@ -53,30 +53,32 @@ void main() {
     }
   });
 
-  Widget _testApp() => MaterialApp(
-        home: Builder(
-          builder: (ctx) => Scaffold(
-            body: Center(
-              child: ElevatedButton(
-                key: const Key('open'),
-                onPressed: () => RedeemCodeBottomSheet.show(ctx),
-                child: const Text('Open'),
-              ),
-            ),
+  Widget testApp() => MaterialApp(
+    home: Builder(
+      builder: (ctx) => Scaffold(
+        body: Center(
+          child: ElevatedButton(
+            key: const Key('open'),
+            onPressed: () => RedeemCodeBottomSheet.show(ctx),
+            child: const Text('Open'),
           ),
         ),
-      );
+      ),
+    ),
+  );
 
-  Future<void> _openSheet(WidgetTester tester) async {
-    await tester.pumpWidget(_testApp());
+  Future<void> openSheet(WidgetTester tester) async {
+    await tester.pumpWidget(testApp());
     await tester.tap(find.byKey(const Key('open')));
     await tester.pumpAndSettle();
   }
 
   // ── 1. Affichage ─────────────────────────────────────────────────────────────
 
-  testWidgets('affiche titre et champ de saisie à l\'ouverture', (tester) async {
-    await _openSheet(tester);
+  testWidgets('affiche titre et champ de saisie à l\'ouverture', (
+    tester,
+  ) async {
+    await openSheet(tester);
 
     expect(find.text('Entrer un code parrain'), findsOneWidget);
     expect(find.text('Code parrain'), findsOneWidget);
@@ -84,19 +86,17 @@ void main() {
   });
 
   testWidgets('affiche le texte d\'aide parrain', (tester) async {
-    await _openSheet(tester);
+    await openSheet(tester);
 
-    expect(
-      find.textContaining('invité par un ami'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('invité par un ami'), findsOneWidget);
   });
 
   // ── 2. Validation du bouton ───────────────────────────────────────────────────
 
-  testWidgets('bouton désactivé quand le champ est vide — aucun appel repo',
-      (tester) async {
-    await _openSheet(tester);
+  testWidgets('bouton désactivé quand le champ est vide — aucun appel repo', (
+    tester,
+  ) async {
+    await openSheet(tester);
 
     // Tapper "Appliquer" sans rien saisir ne doit pas déclencher redeemCode
     await tester.tap(find.text('Appliquer'));
@@ -108,7 +108,7 @@ void main() {
   });
 
   testWidgets('bouton activé après saisie d\'un code', (tester) async {
-    await _openSheet(tester);
+    await openSheet(tester);
 
     await tester.enterText(find.byType(TextField), 'JEAN1234');
     await tester.pump();
@@ -123,11 +123,12 @@ void main() {
 
   // ── 3. Conversion en majuscules ──────────────────────────────────────────────
 
-  testWidgets('le code est envoyé en majuscules même si saisi en minuscules',
-      (tester) async {
+  testWidgets('le code est envoyé en majuscules même si saisi en minuscules', (
+    tester,
+  ) async {
     when(() => mockRepo.redeemCode(any())).thenAnswer((_) async {});
 
-    await _openSheet(tester);
+    await openSheet(tester);
     await tester.enterText(find.byType(TextField), 'jean1234');
     await tester.pump();
     await tester.tap(find.text('Appliquer'));
@@ -138,11 +139,12 @@ void main() {
 
   // ── 4. Succès ────────────────────────────────────────────────────────────────
 
-  testWidgets('succès : la sheet se ferme quand redeemCode réussit',
-      (tester) async {
+  testWidgets('succès : la sheet se ferme quand redeemCode réussit', (
+    tester,
+  ) async {
     when(() => mockRepo.redeemCode(any())).thenAnswer((_) async {});
 
-    await _openSheet(tester);
+    await openSheet(tester);
     await tester.enterText(find.byType(TextField), 'VALID42');
     await tester.pump();
     await tester.tap(find.text('Appliquer'));
@@ -156,12 +158,14 @@ void main() {
 
   // ── 5. Erreur ────────────────────────────────────────────────────────────────
 
-  testWidgets('erreur : la sheet reste ouverte si redeemCode échoue',
-      (tester) async {
-    when(() => mockRepo.redeemCode(any()))
-        .thenThrow(Exception('already-referred'));
+  testWidgets('erreur : la sheet reste ouverte si redeemCode échoue', (
+    tester,
+  ) async {
+    when(
+      () => mockRepo.redeemCode(any()),
+    ).thenThrow(Exception('already-referred'));
 
-    await _openSheet(tester);
+    await openSheet(tester);
     await tester.enterText(find.byType(TextField), 'USEDCODE');
     await tester.pump();
     await tester.tap(find.text('Appliquer'));
@@ -172,11 +176,14 @@ void main() {
     verify(() => mockRepo.redeemCode('USEDCODE')).called(1);
   });
 
-  testWidgets('erreur : redeemCode appelé une seule fois par tap', (tester) async {
-    when(() => mockRepo.redeemCode(any()))
-        .thenThrow(Exception('network error'));
+  testWidgets('erreur : redeemCode appelé une seule fois par tap', (
+    tester,
+  ) async {
+    when(
+      () => mockRepo.redeemCode(any()),
+    ).thenThrow(Exception('network error'));
 
-    await _openSheet(tester);
+    await openSheet(tester);
     await tester.enterText(find.byType(TextField), 'CODE99');
     await tester.pump();
 
@@ -190,7 +197,7 @@ void main() {
   // ── 6. Champ vide après effacement ───────────────────────────────────────────
 
   testWidgets('effacer le champ redésactive le bouton', (tester) async {
-    await _openSheet(tester);
+    await openSheet(tester);
 
     await tester.enterText(find.byType(TextField), 'JEAN1234');
     await tester.pump();

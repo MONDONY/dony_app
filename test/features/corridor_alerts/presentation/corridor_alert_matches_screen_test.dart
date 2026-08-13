@@ -83,7 +83,7 @@ void main() {
       CorridorAlertMatchesCubit,
       String,
       AlertDirection
-    >((_, __) => cubit);
+    >((_, _) => cubit);
   });
 
   tearDown(() => GetIt.I.reset());

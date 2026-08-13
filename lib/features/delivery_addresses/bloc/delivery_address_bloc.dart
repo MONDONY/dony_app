@@ -3,7 +3,8 @@ import 'package:dony/features/delivery_addresses/bloc/delivery_address_state.dar
 import 'package:dony/features/delivery_addresses/data/repositories/delivery_address_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class DeliveryAddressBloc extends Bloc<DeliveryAddressEvent, DeliveryAddressState> {
+class DeliveryAddressBloc
+    extends Bloc<DeliveryAddressEvent, DeliveryAddressState> {
   DeliveryAddressBloc(this._repository) : super(const DeliveryAddressState()) {
     on<DeliveryAddressLoaded>(_onLoaded);
     on<DeliveryAddressCreated>(_onCreated);
@@ -15,18 +16,32 @@ class DeliveryAddressBloc extends Bloc<DeliveryAddressEvent, DeliveryAddressStat
   final DeliveryAddressRepository _repository;
 
   Future<void> _onLoaded(
-      DeliveryAddressLoaded event, Emitter<DeliveryAddressState> emit) async {
+    DeliveryAddressLoaded event,
+    Emitter<DeliveryAddressState> emit,
+  ) async {
     emit(state.copyWith(status: DeliveryAddressStatus.loading));
     try {
       final addresses = await _repository.getAll();
-      emit(state.copyWith(status: DeliveryAddressStatus.success, addresses: addresses));
+      emit(
+        state.copyWith(
+          status: DeliveryAddressStatus.success,
+          addresses: addresses,
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(status: DeliveryAddressStatus.error, error: e.toString()));
+      emit(
+        state.copyWith(
+          status: DeliveryAddressStatus.error,
+          error: e.toString(),
+        ),
+      );
     }
   }
 
   Future<void> _onCreated(
-      DeliveryAddressCreated event, Emitter<DeliveryAddressState> emit) async {
+    DeliveryAddressCreated event,
+    Emitter<DeliveryAddressState> emit,
+  ) async {
     emit(state.copyWith(status: DeliveryAddressStatus.loading));
     try {
       final created = await _repository.create({
@@ -40,16 +55,31 @@ class DeliveryAddressBloc extends Bloc<DeliveryAddressEvent, DeliveryAddressStat
         'isDefault': event.isDefault,
       });
       final updated = event.isDefault
-          ? [created, ...state.addresses.map((a) => a.copyWith(isDefault: false))]
+          ? [
+              created,
+              ...state.addresses.map((a) => a.copyWith(isDefault: false)),
+            ]
           : [created, ...state.addresses];
-      emit(state.copyWith(status: DeliveryAddressStatus.success, addresses: updated));
+      emit(
+        state.copyWith(
+          status: DeliveryAddressStatus.success,
+          addresses: updated,
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(status: DeliveryAddressStatus.error, error: e.toString()));
+      emit(
+        state.copyWith(
+          status: DeliveryAddressStatus.error,
+          error: e.toString(),
+        ),
+      );
     }
   }
 
   Future<void> _onUpdated(
-      DeliveryAddressUpdated event, Emitter<DeliveryAddressState> emit) async {
+    DeliveryAddressUpdated event,
+    Emitter<DeliveryAddressState> emit,
+  ) async {
     emit(state.copyWith(status: DeliveryAddressStatus.loading));
     try {
       final updated = await _repository.update(event.id, {
@@ -68,14 +98,26 @@ class DeliveryAddressBloc extends Bloc<DeliveryAddressEvent, DeliveryAddressStat
         }
         return event.isDefault ? a.copyWith(isDefault: false) : a;
       }).toList();
-      emit(state.copyWith(status: DeliveryAddressStatus.success, addresses: addresses));
+      emit(
+        state.copyWith(
+          status: DeliveryAddressStatus.success,
+          addresses: addresses,
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(status: DeliveryAddressStatus.error, error: e.toString()));
+      emit(
+        state.copyWith(
+          status: DeliveryAddressStatus.error,
+          error: e.toString(),
+        ),
+      );
     }
   }
 
   Future<void> _onSetDefault(
-      DeliveryAddressSetDefault event, Emitter<DeliveryAddressState> emit) async {
+    DeliveryAddressSetDefault event,
+    Emitter<DeliveryAddressState> emit,
+  ) async {
     try {
       final updated = await _repository.setDefault(event.id);
       final addresses = state.addresses.map((a) {
@@ -84,20 +126,42 @@ class DeliveryAddressBloc extends Bloc<DeliveryAddressEvent, DeliveryAddressStat
         }
         return a.copyWith(isDefault: false);
       }).toList();
-      emit(state.copyWith(status: DeliveryAddressStatus.success, addresses: addresses));
+      emit(
+        state.copyWith(
+          status: DeliveryAddressStatus.success,
+          addresses: addresses,
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(status: DeliveryAddressStatus.error, error: e.toString()));
+      emit(
+        state.copyWith(
+          status: DeliveryAddressStatus.error,
+          error: e.toString(),
+        ),
+      );
     }
   }
 
   Future<void> _onDeleted(
-      DeliveryAddressDeleted event, Emitter<DeliveryAddressState> emit) async {
+    DeliveryAddressDeleted event,
+    Emitter<DeliveryAddressState> emit,
+  ) async {
     try {
       await _repository.delete(event.id);
       final addresses = state.addresses.where((a) => a.id != event.id).toList();
-      emit(state.copyWith(status: DeliveryAddressStatus.success, addresses: addresses));
+      emit(
+        state.copyWith(
+          status: DeliveryAddressStatus.success,
+          addresses: addresses,
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(status: DeliveryAddressStatus.error, error: e.toString()));
+      emit(
+        state.copyWith(
+          status: DeliveryAddressStatus.error,
+          error: e.toString(),
+        ),
+      );
     }
   }
 }

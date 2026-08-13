@@ -1,7 +1,7 @@
 import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/package_request/data/models/parcel_size.dart';
+import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:equatable/equatable.dart';
-import '../data/models/parcel_size.dart';
-import '../data/models/payment_method.dart';
 
 sealed class PackageRequestFormEvent extends Equatable {
   const PackageRequestFormEvent();

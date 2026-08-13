@@ -75,7 +75,6 @@ CorridorAlertModel _alertWithFilters(String id) => CorridorAlertModel(
   departureCity: 'Paris',
   arrivalCity: 'Dakar',
   active: true,
-  matchCount: 0,
   createdAt: DateTime(2026, 6, 20),
   dateFrom: DateTime(2026, 6, 20),
   dateTo: DateTime(2026, 6, 30),
@@ -126,10 +125,7 @@ void main() {
 
   testWidgets('empty → CTA créer une alerte', (t) async {
     when(() => bloc.state).thenReturn(
-      const CorridorAlertListState(
-        status: CorridorAlertListStatus.loaded,
-        alerts: [],
-      ),
+      const CorridorAlertListState(status: CorridorAlertListStatus.loaded),
     );
     await t.pumpWidget(pump());
     await t.pump(const Duration(milliseconds: 600));
@@ -140,7 +136,7 @@ void main() {
     when(() => bloc.state).thenReturn(
       CorridorAlertListState(
         status: CorridorAlertListStatus.loaded,
-        alerts: [_alert('a1', active: true)],
+        alerts: [_alert('a1')],
       ),
     );
     await t.pumpWidget(pump());
@@ -218,7 +214,7 @@ void main() {
         CorridorAlertListState(
           status: CorridorAlertListStatus.loaded,
           alerts: [
-            _alert('a1', direction: AlertDirection.travelerWantsPackages),
+            _alert('a1'),
             _alert('a2', direction: AlertDirection.senderWantsTrips),
           ],
         ),
@@ -239,7 +235,7 @@ void main() {
         CorridorAlertListState(
           status: CorridorAlertListStatus.loaded,
           alerts: [
-            _alert('a1', direction: AlertDirection.travelerWantsPackages),
+            _alert('a1'),
             _alert('a2', direction: AlertDirection.senderWantsTrips),
           ],
         ),

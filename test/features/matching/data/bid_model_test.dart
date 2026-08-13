@@ -344,10 +344,9 @@ void main() {
         senderId: 's1',
         weightKg: 5,
         status: 'IN_TRANSIT',
-        createdAt: DateTime(2026, 1, 1),
-        updatedAt: DateTime(2026, 1, 1),
+        createdAt: DateTime(2026),
+        updatedAt: DateTime(2026),
         departureAt: DateTime.now().subtract(const Duration(days: 1)),
-        deliveryNoShowStatus: null,
       );
       expect(bid.canReportDeliveryNoShow, isTrue);
     });
@@ -359,8 +358,8 @@ void main() {
         senderId: 's1',
         weightKg: 5,
         status: 'IN_TRANSIT',
-        createdAt: DateTime(2026, 1, 1),
-        updatedAt: DateTime(2026, 1, 1),
+        createdAt: DateTime(2026),
+        updatedAt: DateTime(2026),
         departureAt: DateTime.now().subtract(const Duration(days: 1)),
         deliveryNoShowStatus: 'PENDING_CONFIRMATION',
       );
@@ -374,8 +373,8 @@ void main() {
         senderId: 's1',
         weightKg: 5,
         status: 'IN_TRANSIT',
-        createdAt: DateTime(2026, 1, 1),
-        updatedAt: DateTime(2026, 1, 1),
+        createdAt: DateTime(2026),
+        updatedAt: DateTime(2026),
         departureAt: DateTime.now().add(const Duration(days: 1)),
       );
       expect(bid.canReportDeliveryNoShow, isFalse);

@@ -95,15 +95,11 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
                   if (!widget.fromProfile)
                     Padding(
                       padding: EdgeInsets.fromLTRB(h, DonySpacing.md, h, 0),
-                      child: Row(
+                      child: const Row(
                         children: [
-                          const DonyAppBarBackButton(),
-                          const Spacer(),
-                          const DonyStepPill(
-                            current: 1,
-                            total: 3,
-                            label: 'Email',
-                          ),
+                          DonyAppBarBackButton(),
+                          Spacer(),
+                          DonyStepPill(current: 1, total: 3, label: 'Email'),
                         ],
                       ),
                     ),
@@ -123,7 +119,7 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Center(
+                            const Center(
                               child: DonyHeroAvatar(emoji: '✉️', size: 72),
                             ),
                             const SizedBox(height: DonySpacing.xl),
@@ -179,7 +175,9 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
                                   errorBorder: InputBorder.none,
                                   focusedErrorBorder: InputBorder.none,
                                   prefixIcon: Padding(
-                                    padding: const EdgeInsets.all(DonySpacing.md),
+                                    padding: const EdgeInsets.all(
+                                      DonySpacing.md,
+                                    ),
                                     child: DonyIcon(
                                       'mail',
                                       color: _isValid
@@ -191,7 +189,8 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
                                   suffixIcon: _isValid
                                       ? Padding(
                                           padding: const EdgeInsets.all(
-                                              DonySpacing.md),
+                                            DonySpacing.md,
+                                          ),
                                           child: DonyIcon(
                                             'circle-check',
                                             color: cs.primary,

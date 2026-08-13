@@ -22,7 +22,7 @@ void main() {
   late _MockPriceEstimationRepository priceRepo;
 
   setUpAll(() async {
-    await initializeDateFormatting('fr', null);
+    await initializeDateFormatting('fr');
     registerFallbackValue(
       NegotiationStartRequested(
         packageRequestId: 'x',
@@ -95,7 +95,7 @@ void main() {
         ),
         GoRoute(
           path: '/negotiations/:id',
-          builder: (_, __) => const Scaffold(body: Text('Négociation')),
+          builder: (_, _) => const Scaffold(body: Text('Négociation')),
         ),
       ],
     ),

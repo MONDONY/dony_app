@@ -1,4 +1,8 @@
 // Theme
+// Accessibility
+export 'package:dony/core/design/accessibility_scope.dart';
+// Icons
+export 'package:dony/core/design/dony_icons.dart';
 export 'package:dony/core/design/theme/a11y_theme_options.dart';
 export 'package:dony/core/design/theme/app_theme.dart';
 // Tokens
@@ -9,54 +13,50 @@ export 'package:dony/core/design/tokens/spacing_tokens.dart';
 export 'package:dony/core/design/tokens/typography_tokens.dart';
 // Utils
 export 'package:dony/core/design/utils/dony_layout.dart';
-// Accessibility
-export 'package:dony/core/design/accessibility_scope.dart';
 // Navigation & layout
 export 'package:dony/core/design/widgets/dony_app_bar.dart';
-// Onboarding shared
-export 'package:dony/core/design/widgets/dony_hero_avatar.dart';
-export 'package:dony/core/design/widgets/dony_step_pill.dart';
-export 'package:dony/core/design/widgets/dony_back_circle.dart';
-export 'package:dony/core/design/widgets/dony_urgent_badge.dart';
-// Foundation components
-export 'package:dony/core/design/widgets/dony_logo.dart';
+// Glassmorphism
+export 'package:dony/core/design/widgets/dony_aurora_background.dart';
 export 'package:dony/core/design/widgets/dony_avatar.dart';
+export 'package:dony/core/design/widgets/dony_back_circle.dart';
 export 'package:dony/core/design/widgets/dony_badge.dart';
 export 'package:dony/core/design/widgets/dony_bottom_sheet.dart';
 export 'package:dony/core/design/widgets/dony_button.dart';
 export 'package:dony/core/design/widgets/dony_card.dart';
-export 'package:dony/core/design/widgets/dony_image.dart';
-export 'package:dony/core/design/widgets/dony_pressable.dart';
-// Form controls
-export 'package:dony/core/design/widgets/required_label.dart';
 export 'package:dony/core/design/widgets/dony_checkbox.dart';
 export 'package:dony/core/design/widgets/dony_chip.dart';
-// Glassmorphism
-export 'package:dony/core/design/widgets/dony_aurora_background.dart';
-export 'package:dony/core/design/widgets/dony_glass.dart';
 // Overlays
 export 'package:dony/core/design/widgets/dony_dialog.dart';
-export 'package:dony/core/design/widgets/dony_field_error.dart';
 export 'package:dony/core/design/widgets/dony_empty_state.dart';
-export 'package:dony/core/design/widgets/dony_icon_container.dart';
-export 'package:dony/core/design/widgets/dony_info_row.dart';
-export 'package:dony/core/design/widgets/dony_list_tile.dart';
-export 'package:dony/core/design/widgets/dony_mascotte.dart';
-export 'package:dony/core/design/widgets/dony_page_scaffold.dart';
-export 'package:dony/core/design/widgets/dony_radio_group.dart';
-export 'package:dony/core/design/widgets/dony_search_field.dart';
-export 'package:dony/core/design/widgets/dony_select_bar.dart';
-// Structural
-export 'package:dony/core/design/widgets/dony_section_header.dart';
-export 'package:dony/core/design/widgets/dony_snackbar.dart';
-export 'package:dony/core/design/widgets/dony_success_screen.dart';
-export 'package:dony/core/design/widgets/dony_status_banner.dart';
-export 'package:dony/core/design/widgets/dony_step_indicator.dart';
-export 'package:dony/core/design/widgets/dony_text_field.dart';
 // Feedback
 export 'package:dony/core/design/widgets/dony_feedback_button.dart';
+export 'package:dony/core/design/widgets/dony_field_error.dart';
+export 'package:dony/core/design/widgets/dony_glass.dart';
+// Onboarding shared
+export 'package:dony/core/design/widgets/dony_hero_avatar.dart';
+export 'package:dony/core/design/widgets/dony_icon_container.dart';
+export 'package:dony/core/design/widgets/dony_image.dart';
+export 'package:dony/core/design/widgets/dony_info_row.dart';
+export 'package:dony/core/design/widgets/dony_list_tile.dart';
+// Foundation components
+export 'package:dony/core/design/widgets/dony_logo.dart';
+export 'package:dony/core/design/widgets/dony_mascotte.dart';
+export 'package:dony/core/design/widgets/dony_page_scaffold.dart';
+export 'package:dony/core/design/widgets/dony_pressable.dart';
+export 'package:dony/core/design/widgets/dony_radio_group.dart';
+export 'package:dony/core/design/widgets/dony_search_field.dart';
+// Structural
+export 'package:dony/core/design/widgets/dony_section_header.dart';
+export 'package:dony/core/design/widgets/dony_select_bar.dart';
+export 'package:dony/core/design/widgets/dony_snackbar.dart';
+export 'package:dony/core/design/widgets/dony_status_banner.dart';
+export 'package:dony/core/design/widgets/dony_step_indicator.dart';
+export 'package:dony/core/design/widgets/dony_step_pill.dart';
+export 'package:dony/core/design/widgets/dony_success_screen.dart';
+export 'package:dony/core/design/widgets/dony_text_field.dart';
 // Domain cards
 export 'package:dony/core/design/widgets/dony_trip_card.dart';
+export 'package:dony/core/design/widgets/dony_urgent_badge.dart';
 export 'package:dony/core/design/widgets/dony_user_card.dart';
-// Icons
-export 'package:dony/core/design/dony_icons.dart';
+// Form controls
+export 'package:dony/core/design/widgets/required_label.dart';

@@ -55,7 +55,11 @@ class ProfilePublicModel {
       contactMode: json['contactMode'] as String?,
       responseDelayHours: json['responseDelayHours'] as int?,
       bio: json['bio'] as String?,
-      languages: (json['languages'] as List<dynamic>?)?.map((e) => e as String).toList() ?? const [],
+      languages:
+          (json['languages'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const [],
       transportMode: json['transportMode'] as String?,
     );
   }

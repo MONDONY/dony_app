@@ -34,12 +34,11 @@ class PrivacySettingsLoaded extends PrivacySettingsState {
     bool? contactKycOnly,
     bool? hidePhoneNumber,
     bool? saveFailed,
-  }) =>
-      PrivacySettingsLoaded(
-        contactKycOnly: contactKycOnly ?? this.contactKycOnly,
-        hidePhoneNumber: hidePhoneNumber ?? this.hidePhoneNumber,
-        saveFailed: saveFailed ?? this.saveFailed,
-      );
+  }) => PrivacySettingsLoaded(
+    contactKycOnly: contactKycOnly ?? this.contactKycOnly,
+    hidePhoneNumber: hidePhoneNumber ?? this.hidePhoneNumber,
+    saveFailed: saveFailed ?? this.saveFailed,
+  );
 
   @override
   bool operator ==(Object other) =>

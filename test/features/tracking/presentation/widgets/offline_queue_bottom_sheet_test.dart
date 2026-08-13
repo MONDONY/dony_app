@@ -36,17 +36,19 @@ void main() {
       ),
     ];
 
-    await tester.pumpWidget(MaterialApp(
-      home: BlocProvider<TrackingBloc>.value(
-        value: bloc,
-        child: Builder(
-          builder: (ctx) => TextButton(
-            onPressed: () => OfflineQueueBottomSheet.show(ctx, items: items),
-            child: const Text('Ouvrir'),
+    await tester.pumpWidget(
+      MaterialApp(
+        home: BlocProvider<TrackingBloc>.value(
+          value: bloc,
+          child: Builder(
+            builder: (ctx) => TextButton(
+              onPressed: () => OfflineQueueBottomSheet.show(ctx, items: items),
+              child: const Text('Ouvrir'),
+            ),
           ),
         ),
       ),
-    ));
+    );
 
     await tester.tap(find.text('Ouvrir'));
     await tester.pumpAndSettle();
@@ -65,17 +67,19 @@ void main() {
       ),
     ];
 
-    await tester.pumpWidget(MaterialApp(
-      home: BlocProvider<TrackingBloc>.value(
-        value: bloc,
-        child: Builder(
-          builder: (ctx) => TextButton(
-            onPressed: () => OfflineQueueBottomSheet.show(ctx, items: items),
-            child: const Text('Ouvrir'),
+    await tester.pumpWidget(
+      MaterialApp(
+        home: BlocProvider<TrackingBloc>.value(
+          value: bloc,
+          child: Builder(
+            builder: (ctx) => TextButton(
+              onPressed: () => OfflineQueueBottomSheet.show(ctx, items: items),
+              child: const Text('Ouvrir'),
+            ),
           ),
         ),
       ),
-    ));
+    );
 
     await tester.tap(find.text('Ouvrir'));
     await tester.pumpAndSettle();
@@ -84,7 +88,9 @@ void main() {
     expect(find.text('En attente de synchronisation'), findsOneWidget);
   });
 
-  testWidgets('affiche le pluriel correct pour plusieurs scans', (tester) async {
+  testWidgets('affiche le pluriel correct pour plusieurs scans', (
+    tester,
+  ) async {
     final items = [
       OfflineScanItem(
         donNumber: 'DON-0001',
@@ -98,17 +104,19 @@ void main() {
       ),
     ];
 
-    await tester.pumpWidget(MaterialApp(
-      home: BlocProvider<TrackingBloc>.value(
-        value: bloc,
-        child: Builder(
-          builder: (ctx) => TextButton(
-            onPressed: () => OfflineQueueBottomSheet.show(ctx, items: items),
-            child: const Text('Ouvrir'),
+    await tester.pumpWidget(
+      MaterialApp(
+        home: BlocProvider<TrackingBloc>.value(
+          value: bloc,
+          child: Builder(
+            builder: (ctx) => TextButton(
+              onPressed: () => OfflineQueueBottomSheet.show(ctx, items: items),
+              child: const Text('Ouvrir'),
+            ),
           ),
         ),
       ),
-    ));
+    );
 
     await tester.tap(find.text('Ouvrir'));
     await tester.pumpAndSettle();

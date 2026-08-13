@@ -15,7 +15,7 @@ abstract final class AnalyticsConsentSheet {
       title: 'Aide-nous à améliorer Yadony',
       subtitle:
           "Avec ton accord, on mesure de façon anonyme comment l'app est "
-          "utilisée, pour corriger les bugs et simplifier ton expérience.",
+          'utilisée, pour corriger les bugs et simplifier ton expérience.',
       stickyBottom: Builder(
         builder: (ctx) => Column(
           mainAxisSize: MainAxisSize.min,

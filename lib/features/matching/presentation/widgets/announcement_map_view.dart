@@ -300,7 +300,6 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
           ),
           position: cluster.centroid,
           icon: icon,
-          anchor: const Offset(0.5, 1.0),
           onTap: () => _onClusterTapped(cluster),
         );
       }
@@ -337,7 +336,6 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
       markerId: MarkerId('${item.side.name}_${item.announcement.id}'),
       position: item.location,
       icon: icon,
-      anchor: const Offset(0.5, 1.0),
       onTap: () => _onMarkerTapped(item.announcement),
     );
   }
@@ -425,7 +423,6 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
           myLocationButtonEnabled: false,
           zoomControlsEnabled: false,
           mapToolbarEnabled: false,
-          compassEnabled: true,
         ),
         if (widget.onNearMeToggle != null)
           Positioned(

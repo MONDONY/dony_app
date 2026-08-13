@@ -41,7 +41,9 @@ void main() {
       expect(find.text('Vérification requise'), findsOneWidget);
     });
 
-    testWidgets('affiche le message par défaut pour NOT_STARTED', (tester) async {
+    testWidgets('affiche le message par défaut pour NOT_STARTED', (
+      tester,
+    ) async {
       await tester.pumpWidget(_wrap('NOT_STARTED'));
       await tester.tap(find.text('Open'));
       await tester.pumpAndSettle();
@@ -65,10 +67,7 @@ void main() {
       await tester.pumpWidget(_wrap('PENDING'));
       await tester.tap(find.text('Open'));
       await tester.pumpAndSettle();
-      expect(
-        find.textContaining('en cours'),
-        findsOneWidget,
-      );
+      expect(find.textContaining('en cours'), findsOneWidget);
     });
 
     testWidgets('affiche les deux boutons d\'action', (tester) async {

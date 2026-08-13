@@ -28,21 +28,20 @@ BidModel _makeBid({
   String? trackingNumber,
   String? rejectionReason,
   DateTime? updatedAt,
-}) =>
-    BidModel(
-      id: id,
-      announcementId: 'ann-1',
-      senderId: 'sender-1',
-      senderName: senderName,
-      weightKg: 3,
-      pricePerKg: 15,
-      contentCategory: 'Vêtements',
-      trackingNumber: trackingNumber,
-      rejectionReason: rejectionReason,
-      status: status,
-      createdAt: DateTime(2026, 5),
-      updatedAt: updatedAt ?? DateTime(2026, 5),
-    );
+}) => BidModel(
+  id: id,
+  announcementId: 'ann-1',
+  senderId: 'sender-1',
+  senderName: senderName,
+  weightKg: 3,
+  pricePerKg: 15,
+  contentCategory: 'Vêtements',
+  trackingNumber: trackingNumber,
+  rejectionReason: rejectionReason,
+  status: status,
+  createdAt: DateTime(2026, 5),
+  updatedAt: updatedAt ?? DateTime(2026, 5),
+);
 
 Future<void> _pump(
   WidgetTester tester,
@@ -103,10 +102,7 @@ Future<void> _pump(
 
 /// Helper: pump with a [BidListScreenTesting] opened at '/screen' from a
 /// non-poppable root — so that context.canPop() == false.
-Future<GoRouter> _pumpFromRoot(
-  WidgetTester tester,
-  MockBidBloc bidBloc,
-) async {
+Future<GoRouter> _pumpFromRoot(WidgetTester tester, MockBidBloc bidBloc) async {
   await initializeDateFormatting('fr_FR');
   tester.view.physicalSize = const Size(800, 2200);
   tester.view.devicePixelRatio = 1.0;
@@ -128,9 +124,8 @@ Future<GoRouter> _pumpFromRoot(
       ),
       GoRoute(
         path: '/bids/:id',
-        builder: (_, state) => Scaffold(
-          body: Text('Bid detail ${state.pathParameters['id']}'),
-        ),
+        builder: (_, state) =>
+            Scaffold(body: Text('Bid detail ${state.pathParameters['id']}')),
       ),
       GoRoute(
         path: '/tracking/scan',
@@ -148,7 +143,9 @@ Future<GoRouter> _pumpFromRoot(
 
 /// Branche un stream de states sur le bloc mocké et renvoie le controller.
 StreamController<BidState> _wireStates(
-    MockBidBloc bidBloc, WidgetTester tester) {
+  MockBidBloc bidBloc,
+  WidgetTester tester,
+) {
   final ctrl = StreamController<BidState>.broadcast();
   whenListen(bidBloc, ctrl.stream, initialState: BidInitial());
   return ctrl;
@@ -198,48 +195,58 @@ void main() {
   // ── Bouton « À traiter » ────────────────────────────────────────────────────
 
   testWidgets(
-      'bouton « À traiter » visible avec badge quand ≥ 1 demande en attente',
-      (tester) async {
+    'bouton « À traiter » visible avec badge quand ≥ 1 demande en attente',
+    (tester) async {
+      final ctrl = _wireStates(bidBloc, tester);
+      addTearDown(ctrl.close);
+
+      await _pump(tester, bidBloc);
+      ctrl.add(
+        BidListLoaded([
+          _makeBid(status: 'PAYMENT_ESCROWED', id: 'p1'),
+          _makeBid(status: 'ACCEPTED', id: 'a1'),
+          _makeBid(status: 'IN_TRANSIT', id: 'a2'),
+        ]),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('À traiter'), findsOneWidget);
+      // Badge compteur = 1 demande en attente.
+      expect(find.text('1'), findsOneWidget);
+    },
+  );
+
+  testWidgets('bouton « À traiter » absent quand 0 demande en attente', (
+    tester,
+  ) async {
     final ctrl = _wireStates(bidBloc, tester);
     addTearDown(ctrl.close);
 
     await _pump(tester, bidBloc);
-    ctrl.add(BidListLoaded([
-      _makeBid(status: 'PAYMENT_ESCROWED', id: 'p1'),
-      _makeBid(status: 'ACCEPTED', id: 'a1'),
-      _makeBid(status: 'IN_TRANSIT', id: 'a2'),
-    ]));
-    await tester.pumpAndSettle();
-
-    expect(find.text('À traiter'), findsOneWidget);
-    // Badge compteur = 1 demande en attente.
-    expect(find.text('1'), findsOneWidget);
-  });
-
-  testWidgets('bouton « À traiter » absent quand 0 demande en attente',
-      (tester) async {
-    final ctrl = _wireStates(bidBloc, tester);
-    addTearDown(ctrl.close);
-
-    await _pump(tester, bidBloc);
-    ctrl.add(BidListLoaded([
-      _makeBid(status: 'ACCEPTED', id: 'a1'),
-      _makeBid(status: 'IN_TRANSIT', id: 'a2'),
-    ]));
+    ctrl.add(
+      BidListLoaded([
+        _makeBid(status: 'ACCEPTED', id: 'a1'),
+        _makeBid(status: 'IN_TRANSIT', id: 'a2'),
+      ]),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('À traiter'), findsNothing);
   });
 
-  testWidgets('tap « À traiter » navigue vers l\'écran pending', (tester) async {
+  testWidgets('tap « À traiter » navigue vers l\'écran pending', (
+    tester,
+  ) async {
     final ctrl = _wireStates(bidBloc, tester);
     addTearDown(ctrl.close);
 
     await _pump(tester, bidBloc);
-    ctrl.add(BidListLoaded([
-      _makeBid(status: 'PENDING', id: 'p1'),
-      _makeBid(status: 'ACCEPTED', id: 'a1'),
-    ]));
+    ctrl.add(
+      BidListLoaded([
+        _makeBid(status: 'PENDING', id: 'p1'),
+        _makeBid(status: 'ACCEPTED', id: 'a1'),
+      ]),
+    );
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('À traiter'));
@@ -250,46 +257,54 @@ void main() {
 
   // ── Liste « Acceptées » — statuts ───────────────────────────────────────────
 
-  testWidgets('les 7 statuts post-acceptation s\'affichent avec le bon libellé',
-      (tester) async {
+  testWidgets(
+    'les 7 statuts post-acceptation s\'affichent avec le bon libellé',
+    (tester) async {
+      final ctrl = _wireStates(bidBloc, tester);
+      addTearDown(ctrl.close);
+
+      await _pump(tester, bidBloc);
+      ctrl.add(
+        BidListLoaded([
+          _makeBid(status: 'ACCEPTED', id: 'b1'),
+          _makeBid(status: 'HANDED_OVER', id: 'b2'),
+          _makeBid(status: 'IN_TRANSIT', id: 'b3'),
+          _makeBid(status: 'COMPLETED', id: 'b4'),
+          _makeBid(status: 'NO_SHOW', id: 'b5'),
+          _makeBid(status: 'PARCEL_REFUSED', id: 'b6'),
+          _makeBid(status: 'CANCELLED', id: 'b7'),
+        ]),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Tous (7)'), findsOneWidget);
+      expect(find.text('Accepté'), findsOneWidget);
+      expect(find.text('En route'), findsOneWidget);
+      expect(find.text('En transit'), findsOneWidget);
+      expect(find.text('Livré'), findsOneWidget);
+      expect(find.text('Absent'), findsOneWidget);
+      expect(find.text('Colis refusé'), findsOneWidget);
+      expect(find.text('Annulé'), findsOneWidget);
+    },
+  );
+
+  testWidgets('CANCELLED auto (TRAVELER_NO_RESPONSE) est exclu de la liste', (
+    tester,
+  ) async {
     final ctrl = _wireStates(bidBloc, tester);
     addTearDown(ctrl.close);
 
     await _pump(tester, bidBloc);
-    ctrl.add(BidListLoaded([
-      _makeBid(status: 'ACCEPTED', id: 'b1'),
-      _makeBid(status: 'HANDED_OVER', id: 'b2'),
-      _makeBid(status: 'IN_TRANSIT', id: 'b3'),
-      _makeBid(status: 'COMPLETED', id: 'b4'),
-      _makeBid(status: 'NO_SHOW', id: 'b5'),
-      _makeBid(status: 'PARCEL_REFUSED', id: 'b6'),
-      _makeBid(status: 'CANCELLED', id: 'b7'),
-    ]));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Tous (7)'), findsOneWidget);
-    expect(find.text('Accepté'), findsOneWidget);
-    expect(find.text('En route'), findsOneWidget);
-    expect(find.text('En transit'), findsOneWidget);
-    expect(find.text('Livré'), findsOneWidget);
-    expect(find.text('Absent'), findsOneWidget);
-    expect(find.text('Colis refusé'), findsOneWidget);
-    expect(find.text('Annulé'), findsOneWidget);
-  });
-
-  testWidgets('CANCELLED auto (TRAVELER_NO_RESPONSE) est exclu de la liste',
-      (tester) async {
-    final ctrl = _wireStates(bidBloc, tester);
-    addTearDown(ctrl.close);
-
-    await _pump(tester, bidBloc);
-    ctrl.add(BidListLoaded([
-      _makeBid(status: 'ACCEPTED', id: 'b1'),
-      _makeBid(
+    ctrl.add(
+      BidListLoaded([
+        _makeBid(status: 'ACCEPTED', id: 'b1'),
+        _makeBid(
           status: 'CANCELLED',
           id: 'b2',
-          rejectionReason: 'TRAVELER_NO_RESPONSE'),
-    ]));
+          rejectionReason: 'TRAVELER_NO_RESPONSE',
+        ),
+      ]),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Tous (1)'), findsOneWidget);
@@ -304,10 +319,12 @@ void main() {
     addTearDown(ctrl.close);
 
     await _pump(tester, bidBloc);
-    ctrl.add(BidListLoaded([
-      _makeBid(status: 'ACCEPTED', id: 'b1'),
-      _makeBid(status: 'IN_TRANSIT', id: 'b2', senderName: 'Awa Diop'),
-    ]));
+    ctrl.add(
+      BidListLoaded([
+        _makeBid(status: 'ACCEPTED', id: 'b1'),
+        _makeBid(status: 'IN_TRANSIT', id: 'b2', senderName: 'Awa Diop'),
+      ]),
+    );
     await tester.pumpAndSettle();
 
     expect(find.byType(DonyAvatar), findsNWidgets(2));
@@ -320,23 +337,24 @@ void main() {
     expect(find.text('Accepté'), findsNothing);
   });
 
-  testWidgets('la recherche par numéro de suivi filtre la liste',
-      (tester) async {
+  testWidgets('la recherche par numéro de suivi filtre la liste', (
+    tester,
+  ) async {
     final ctrl = _wireStates(bidBloc, tester);
     addTearDown(ctrl.close);
 
     await _pump(tester, bidBloc);
-    ctrl.add(BidListLoaded([
-      _makeBid(
-          status: 'ACCEPTED',
-          id: 'b1',
-          trackingNumber: 'DNY-4815'),
-      _makeBid(
+    ctrl.add(
+      BidListLoaded([
+        _makeBid(status: 'ACCEPTED', id: 'b1', trackingNumber: 'DNY-4815'),
+        _makeBid(
           status: 'IN_TRANSIT',
           id: 'b2',
           senderName: 'Awa Diop',
-          trackingNumber: 'DNY-9999'),
-    ]));
+          trackingNumber: 'DNY-9999',
+        ),
+      ]),
+    );
     await tester.pumpAndSettle();
 
     await tester.enterText(find.byType(TextField), 'DNY-48');
@@ -347,15 +365,14 @@ void main() {
     expect(find.text('En transit'), findsNothing);
   });
 
-  testWidgets('recherche infructueuse → état vide « Aucun résultat »',
-      (tester) async {
+  testWidgets('recherche infructueuse → état vide « Aucun résultat »', (
+    tester,
+  ) async {
     final ctrl = _wireStates(bidBloc, tester);
     addTearDown(ctrl.close);
 
     await _pump(tester, bidBloc);
-    ctrl.add(BidListLoaded([
-      _makeBid(status: 'ACCEPTED', id: 'b1'),
-    ]));
+    ctrl.add(BidListLoaded([_makeBid(status: 'ACCEPTED', id: 'b1')]));
     await tester.pumpAndSettle();
 
     await tester.enterText(find.byType(TextField), 'zzz');
@@ -368,18 +385,21 @@ void main() {
 
   // ── Filtre statut ───────────────────────────────────────────────────────────
 
-  testWidgets('le filtre « Clôturés » n\'affiche que les bids clôturés',
-      (tester) async {
+  testWidgets('le filtre « Clôturés » n\'affiche que les bids clôturés', (
+    tester,
+  ) async {
     final ctrl = _wireStates(bidBloc, tester);
     addTearDown(ctrl.close);
 
     await _pump(tester, bidBloc);
-    ctrl.add(BidListLoaded([
-      _makeBid(status: 'ACCEPTED', id: 'b1'),
-      _makeBid(status: 'IN_TRANSIT', id: 'b2'),
-      _makeBid(status: 'NO_SHOW', id: 'b3'),
-      _makeBid(status: 'CANCELLED', id: 'b4'),
-    ]));
+    ctrl.add(
+      BidListLoaded([
+        _makeBid(status: 'ACCEPTED', id: 'b1'),
+        _makeBid(status: 'IN_TRANSIT', id: 'b2'),
+        _makeBid(status: 'NO_SHOW', id: 'b3'),
+        _makeBid(status: 'CANCELLED', id: 'b4'),
+      ]),
+    );
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Clôturés (2)'));
@@ -392,17 +412,20 @@ void main() {
     expect(find.text('En transit'), findsNothing);
   });
 
-  testWidgets('le filtre « Actifs » n\'affiche que les bids actifs',
-      (tester) async {
+  testWidgets('le filtre « Actifs » n\'affiche que les bids actifs', (
+    tester,
+  ) async {
     final ctrl = _wireStates(bidBloc, tester);
     addTearDown(ctrl.close);
 
     await _pump(tester, bidBloc);
-    ctrl.add(BidListLoaded([
-      _makeBid(status: 'ACCEPTED', id: 'b1'),
-      _makeBid(status: 'NO_SHOW', id: 'b2'),
-      _makeBid(status: 'CANCELLED', id: 'b3'),
-    ]));
+    ctrl.add(
+      BidListLoaded([
+        _makeBid(status: 'ACCEPTED', id: 'b1'),
+        _makeBid(status: 'NO_SHOW', id: 'b2'),
+        _makeBid(status: 'CANCELLED', id: 'b3'),
+      ]),
+    );
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Actifs (1)'));
@@ -418,11 +441,13 @@ void main() {
     addTearDown(ctrl.close);
 
     await _pump(tester, bidBloc);
-    ctrl.add(BidListLoaded([
-      _makeBid(status: 'ACCEPTED', id: 'b1'),
-      _makeBid(status: 'CANCELLED', id: 'b2', senderName: 'Moussa Diop'),
-      _makeBid(status: 'CANCELLED', id: 'b3', senderName: 'Awa Sow'),
-    ]));
+    ctrl.add(
+      BidListLoaded([
+        _makeBid(status: 'ACCEPTED', id: 'b1'),
+        _makeBid(status: 'CANCELLED', id: 'b2', senderName: 'Moussa Diop'),
+        _makeBid(status: 'CANCELLED', id: 'b3', senderName: 'Awa Sow'),
+      ]),
+    );
     await tester.pumpAndSettle();
 
     await tester.enterText(find.byType(TextField), 'moussa');
@@ -434,17 +459,20 @@ void main() {
     expect(find.text('Annulé'), findsOneWidget);
   });
 
-  testWidgets('les compteurs des chips sont recalculés sur la recherche',
-      (tester) async {
+  testWidgets('les compteurs des chips sont recalculés sur la recherche', (
+    tester,
+  ) async {
     final ctrl = _wireStates(bidBloc, tester);
     addTearDown(ctrl.close);
 
     await _pump(tester, bidBloc);
-    ctrl.add(BidListLoaded([
-      _makeBid(status: 'ACCEPTED', id: 'b1'),
-      _makeBid(status: 'ACCEPTED', id: 'b2', senderName: 'Moussa Diop'),
-      _makeBid(status: 'NO_SHOW', id: 'b3', senderName: 'Awa Sow'),
-    ]));
+    ctrl.add(
+      BidListLoaded([
+        _makeBid(status: 'ACCEPTED', id: 'b1'),
+        _makeBid(status: 'ACCEPTED', id: 'b2', senderName: 'Moussa Diop'),
+        _makeBid(status: 'NO_SHOW', id: 'b3', senderName: 'Awa Sow'),
+      ]),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Tous (3)'), findsOneWidget);
@@ -461,8 +489,11 @@ void main() {
 
   testWidgets('BidLoading affiche un spinner centré', (tester) async {
     when(() => bidBloc.state).thenReturn(BidLoading());
-    whenListen(bidBloc, Stream<BidState>.fromIterable([BidLoading()]),
-        initialState: BidLoading());
+    whenListen(
+      bidBloc,
+      Stream<BidState>.fromIterable([BidLoading()]),
+      initialState: BidLoading(),
+    );
 
     await _pump(tester, bidBloc);
     await tester.pump();
@@ -472,12 +503,16 @@ void main() {
 
   // ── État BidError dans le body ──────────────────────────────────────────────
 
-  testWidgets('BidError dans body affiche message et bouton Réessayer',
-      (tester) async {
+  testWidgets('BidError dans body affiche message et bouton Réessayer', (
+    tester,
+  ) async {
     const error = NetworkException('Erreur réseau');
     when(() => bidBloc.state).thenReturn(BidError(error));
-    whenListen(bidBloc, Stream<BidState>.fromIterable([BidError(error)]),
-        initialState: BidError(error));
+    whenListen(
+      bidBloc,
+      Stream<BidState>.fromIterable([BidError(error)]),
+      initialState: BidError(error),
+    );
 
     await _pump(tester, bidBloc);
     await tester.pump();
@@ -485,22 +520,24 @@ void main() {
     expect(find.text('Réessayer'), findsOneWidget);
   });
 
-  testWidgets('bouton Réessayer dans BidListErrorView redispatche BidListRequested',
-      (tester) async {
-    const error = NetworkException('Erreur réseau');
-    when(() => bidBloc.state).thenReturn(BidError(error));
-    final bidCtrl = StreamController<BidState>.broadcast();
-    whenListen(bidBloc, bidCtrl.stream, initialState: BidError(error));
-    addTearDown(bidCtrl.close);
+  testWidgets(
+    'bouton Réessayer dans BidListErrorView redispatche BidListRequested',
+    (tester) async {
+      const error = NetworkException('Erreur réseau');
+      when(() => bidBloc.state).thenReturn(BidError(error));
+      final bidCtrl = StreamController<BidState>.broadcast();
+      whenListen(bidBloc, bidCtrl.stream, initialState: BidError(error));
+      addTearDown(bidCtrl.close);
 
-    await _pump(tester, bidBloc);
-    await tester.pump();
+      await _pump(tester, bidBloc);
+      await tester.pump();
 
-    await tester.tap(find.text('Réessayer'));
-    await tester.pump();
+      await tester.tap(find.text('Réessayer'));
+      await tester.pump();
 
-    verify(() => bidBloc.add(any(that: isA<BidListRequested>()))).called(1);
-  });
+      verify(() => bidBloc.add(any(that: isA<BidListRequested>()))).called(1);
+    },
+  );
 
   // ── Subtitle ────────────────────────────────────────────────────────────────
 
@@ -540,8 +577,9 @@ void main() {
 
   // ── Empty state liste acceptées ─────────────────────────────────────────────
 
-  testWidgets('liste acceptées vide → « Aucune demande acceptée »',
-      (tester) async {
+  testWidgets('liste acceptées vide → « Aucune demande acceptée »', (
+    tester,
+  ) async {
     // État chargé fourni dès le 1er frame (comme initialState) : l'empty state
     // (mascotte animée) se rend une fois et un seul pump(durée) draine
     // l'animation flutter_animate sans laisser de timer en vol après dispose.
@@ -557,8 +595,9 @@ void main() {
 
   // ── BidNotFound ─────────────────────────────────────────────────────────────
 
-  testWidgets('BidNotFound → navigue vers /home quand non poppable',
-      (tester) async {
+  testWidgets('BidNotFound → navigue vers /home quand non poppable', (
+    tester,
+  ) async {
     final bidCtrl = StreamController<BidState>.broadcast();
     when(() => bidBloc.state).thenReturn(BidInitial());
     whenListen(bidBloc, bidCtrl.stream, initialState: BidInitial());
@@ -603,7 +642,8 @@ void main() {
     );
 
     await tester.pumpWidget(
-        MaterialApp.router(routerConfig: router, theme: AppTheme.light()));
+      MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
+    );
     await tester.pump();
 
     router.go('/parent/screen');
@@ -683,7 +723,8 @@ void main() {
     );
 
     await tester.pumpWidget(
-        MaterialApp.router(routerConfig: router, theme: AppTheme.light()));
+      MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
+    );
     await tester.pump();
 
     router.go('/parent/screen');

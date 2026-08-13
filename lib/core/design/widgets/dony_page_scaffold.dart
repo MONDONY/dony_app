@@ -44,17 +44,17 @@ class DonyPageScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final h = DonyLayout.hPadding(context);
-    final effectivePadding = padding ??
-        EdgeInsets.fromLTRB(h, DonySpacing.xl, h, DonySpacing.lg);
+    final effectivePadding =
+        padding ?? EdgeInsets.fromLTRB(h, DonySpacing.xl, h, DonySpacing.lg);
 
-    Widget content = scrollable
+    final Widget content = scrollable
         ? SingleChildScrollView(
             physics: const ClampingScrollPhysics(),
             keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             padding: effectivePadding.copyWith(
               // Ajouter l'inset clavier en bas pour que l'input reste visible
-              bottom: effectivePadding.bottom +
-                  DonyLayout.keyboardPadding(context),
+              bottom:
+                  effectivePadding.bottom + DonyLayout.keyboardPadding(context),
             ),
             child: DonyLayout.constrained(context, body),
           )
@@ -63,7 +63,7 @@ class DonyPageScaffold extends StatelessWidget {
             child: DonyLayout.constrained(context, body),
           );
 
-    Widget scaffold = Scaffold(
+    final Widget scaffold = Scaffold(
       resizeToAvoidBottomInset: resizeToAvoidBottomInset,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: DonyAppBar(

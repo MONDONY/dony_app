@@ -83,7 +83,9 @@ class Step2DetailsState extends State<Step2Details> {
     _customCats
       ..clear()
       ..addAll(labels.where((l) => !catalogLabels.contains(l)));
-    _catError = _allCategories.isEmpty ? 'Choisis au moins une catégorie' : null;
+    _catError = _allCategories.isEmpty
+        ? 'Choisis au moins une catégorie'
+        : null;
     _sync(markTouched: true);
     // « Autre » seul ne dit rien au voyageur : on propose tout de suite une
     // précision libre, sans l'imposer (bottom sheet annulable).
@@ -160,8 +162,8 @@ class Step2DetailsState extends State<Step2Details> {
   void _onWeightChanged() => _sync();
 
   Future<void> _loadCatalog() async {
-    final categories =
-        await getIt<IContentCategoryRepository>().getCategories();
+    final categories = await getIt<IContentCategoryRepository>()
+        .getCategories();
     if (!mounted) return;
     setState(() => _predefined = categories);
   }
@@ -248,7 +250,7 @@ class Step2DetailsState extends State<Step2Details> {
             const SizedBox(height: DonySpacing.base),
 
             // ── Poids ──────────────────────────────────────────────────────
-            _FieldLabel('Poids approximatif'),
+            const _FieldLabel('Poids approximatif'),
             const SizedBox(height: DonySpacing.xs),
             _WeightInput(controller: _weightCtrl),
             const SizedBox(height: DonySpacing.base),
@@ -258,7 +260,7 @@ class Step2DetailsState extends State<Step2Details> {
             // occupaient ~900 px et repoussaient la description hors écran.
             // Même composant que la création de trajet. « Autre » fait partie
             // du catalogue : sa sélection déclenche une précision libre.
-            _FieldLabel('Contenu'),
+            const _FieldLabel('Contenu'),
             const SizedBox(height: DonySpacing.xs),
             Text(
               'Tape pour chercher, ou écris ta propre catégorie.',
@@ -278,7 +280,7 @@ class Step2DetailsState extends State<Step2Details> {
             const SizedBox(height: DonySpacing.base),
 
             // ── Description (optionnel) ────────────────────────────────────
-            _FieldLabel('Description (optionnel)'),
+            const _FieldLabel('Description (optionnel)'),
             const SizedBox(height: DonySpacing.xs),
             _DescriptionInput(controller: _descriptionCtrl),
           ],
@@ -437,4 +439,3 @@ class _WeightInput extends StatelessWidget {
     );
   }
 }
-

@@ -1,8 +1,8 @@
 import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
-import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
@@ -427,12 +427,8 @@ class _CorridorBanner extends StatelessWidget {
 }
 
 class _StatPill extends StatelessWidget {
-  const _StatPill({
-    required this.label,
-    required this.cs,
-    this.icon,
-    this.iconAsset,
-  });
+  const _StatPill({required this.label, required this.cs, this.iconAsset})
+    : icon = null;
 
   final IconData? icon;
   final String? iconAsset;
@@ -647,9 +643,8 @@ class _LocationRow extends StatelessWidget {
     required this.iconColor,
     required this.cs,
     required this.tt,
-    this.icon,
     this.iconAsset,
-  });
+  }) : icon = null;
 
   final String label;
   final String value;

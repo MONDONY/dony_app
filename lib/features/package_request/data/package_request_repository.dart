@@ -137,15 +137,13 @@ class PackageRequestRepository {
         'acceptedPaymentMethods': acceptedPaymentMethods
             .map((m) => m.wireName)
             .toList(),
-        if (totalBudgetEur != null) 'totalBudgetEur': totalBudgetEur,
-        if (description != null) 'description': description,
-        if (photoUrl != null) 'photoUrl': photoUrl,
-        if (pickupNeighborhood != null)
-          'pickupNeighborhood': pickupNeighborhood,
-        if (deliveryNeighborhood != null)
-          'deliveryNeighborhood': deliveryNeighborhood,
+        'totalBudgetEur': ?totalBudgetEur,
+        'description': ?description,
+        'photoUrl': ?photoUrl,
+        'pickupNeighborhood': ?pickupNeighborhood,
+        'deliveryNeighborhood': ?deliveryNeighborhood,
         if (photoKeys != null && photoKeys.isNotEmpty) 'photoKeys': photoKeys,
-        if (promoCode != null) 'promoCode': promoCode,
+        'promoCode': ?promoCode,
         'saveAsDraft': saveAsDraft,
       },
     );
@@ -189,15 +187,13 @@ class PackageRequestRepository {
         'acceptedPaymentMethods': acceptedPaymentMethods
             .map((m) => m.wireName)
             .toList(),
-        if (totalBudgetEur != null) 'totalBudgetEur': totalBudgetEur,
-        if (description != null) 'description': description,
-        if (photoUrl != null) 'photoUrl': photoUrl,
-        if (pickupNeighborhood != null)
-          'pickupNeighborhood': pickupNeighborhood,
-        if (deliveryNeighborhood != null)
-          'deliveryNeighborhood': deliveryNeighborhood,
+        'totalBudgetEur': ?totalBudgetEur,
+        'description': ?description,
+        'photoUrl': ?photoUrl,
+        'pickupNeighborhood': ?pickupNeighborhood,
+        'deliveryNeighborhood': ?deliveryNeighborhood,
         if (photoKeys != null && photoKeys.isNotEmpty) 'photoKeys': photoKeys,
-        if (promoCode != null) 'promoCode': promoCode,
+        'promoCode': ?promoCode,
       },
     );
     return PackageRequest.fromJson(response.data!);
@@ -347,16 +343,16 @@ class PackageRequestRepository {
     final query = <String, dynamic>{
       'page': page,
       'size': size,
-      if (departure != null) 'departure': departure,
-      if (arrival != null) 'arrival': arrival,
+      'departure': ?departure,
+      'arrival': ?arrival,
       if (dateFrom != null)
         'dateFrom': dateFrom.toIso8601String().substring(0, 10),
       if (dateTo != null) 'dateTo': dateTo.toIso8601String().substring(0, 10),
-      if (maxWeight != null) 'maxWeight': maxWeight,
+      'maxWeight': ?maxWeight,
       if (parcelSize != null) 'parcelSize': parcelSize.wireName,
-      if (lat != null) 'lat': lat,
-      if (lng != null) 'lng': lng,
-      if (radiusKm != null) 'radiusKm': radiusKm,
+      'lat': ?lat,
+      'lng': ?lng,
+      'radiusKm': ?radiusKm,
       // Filtre serveur « demandes urgentes » — jamais envoyer urgent=false,
       // seulement présent quand le chip est actif (cf. PR back #112).
       if (urgent == true) 'urgent': true,

@@ -8,10 +8,10 @@ import 'package:dony/features/settings/presentation/screens/business_prefs_scree
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import '../../../helpers/currency_test_doubles.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../../helpers/currency_test_doubles.dart';
 
 class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
 
@@ -42,7 +42,7 @@ void main() {
       routes: [
         GoRoute(
           path: '/',
-          builder: (_, __) => MultiBlocProvider(
+          builder: (_, _) => MultiBlocProvider(
             providers: [
               BlocProvider<BusinessPrefsBloc>.value(value: mockPrefsBloc),
               BlocProvider<AuthBloc>.value(value: mockAuthBloc),
@@ -57,9 +57,7 @@ void main() {
   testWidgets('section MES TRAJETS masquée si rôle SENDER uniquement', (
     tester,
   ) async {
-    when(
-      () => mockAuthBloc.state,
-    ).thenReturn(AuthAuthenticated(_makeUser(roles: const ['SENDER'])));
+    when(() => mockAuthBloc.state).thenReturn(AuthAuthenticated(_makeUser()));
     await tester.pumpWidget(buildScreen());
     await tester.pumpAndSettle();
 

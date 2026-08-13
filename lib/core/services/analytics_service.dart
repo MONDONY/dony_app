@@ -94,8 +94,8 @@ class AnalyticsService {
     this._hive, {
     AnalyticsBackend backend = const PosthogBackend(),
     AnalyticsConsentRemote remote = const NoopAnalyticsConsentRemote(),
-  })  : _backend = backend,
-        _remote = remote;
+  }) : _backend = backend,
+       _remote = remote;
 
   final HiveService _hive;
   final AnalyticsBackend _backend;
@@ -177,8 +177,10 @@ class AnalyticsService {
       final backendGranted = await _remote.fetch();
       if (backendGranted != null) {
         if (consent != backendGranted) {
-          await _hive.userPrefs
-              .put(HiveService.kAnalyticsConsent, backendGranted);
+          await _hive.userPrefs.put(
+            HiveService.kAnalyticsConsent,
+            backendGranted,
+          );
         }
         if (_configured) await _applyConsent();
       } else if (hasAnswered) {
@@ -205,8 +207,10 @@ class AnalyticsService {
 
   /// Lie les events à l'utilisateur connecté. On utilise l'UID backend comme
   /// `distinctId` — jamais l'email ou le téléphone (PII).
-  Future<void> identify(String userId,
-      {Map<String, Object>? properties}) async {
+  Future<void> identify(
+    String userId, {
+    Map<String, Object>? properties,
+  }) async {
     if (!isEnabled) return;
     await _backend.identify(userId, properties);
   }

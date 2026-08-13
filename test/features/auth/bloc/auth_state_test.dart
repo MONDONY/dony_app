@@ -40,7 +40,6 @@ void main() {
       final state = AuthOtpSent(
         verificationId: 'v1',
         phoneNumber: '+33612345678',
-        secondsLeft: 60,
       );
       final updated = state.copyWith(secondsLeft: 30);
       expect(updated.secondsLeft, 30);

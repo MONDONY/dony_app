@@ -102,8 +102,9 @@ class RatingSummaryCard extends StatelessWidget {
                               borderRadius: BorderRadius.circular(4),
                               child: LinearProgressIndicator(
                                 value: ratio,
-                                backgroundColor:
-                                    cs.outline.withValues(alpha: 0.2),
+                                backgroundColor: cs.outline.withValues(
+                                  alpha: 0.2,
+                                ),
                                 color: cs.primary,
                                 minHeight: 6,
                               ),

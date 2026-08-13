@@ -39,14 +39,14 @@ Widget _wrap(PickupAddressBloc bloc) => BlocProvider<PickupAddressBloc>.value(
   child: MaterialApp.router(
     routerConfig: GoRouter(
       routes: [
-        GoRoute(path: '/', builder: (_, __) => const PickupAddressesScreen()),
+        GoRoute(path: '/', builder: (_, _) => const PickupAddressesScreen()),
         GoRoute(
           path: '/profile/addresses/new',
-          builder: (_, __) => const Scaffold(body: Text('New Address')),
+          builder: (_, _) => const Scaffold(body: Text('New Address')),
         ),
         GoRoute(
           path: '/profile/addresses/:id',
-          builder: (_, __) => const Scaffold(body: Text('Edit Address')),
+          builder: (_, _) => const Scaffold(body: Text('Edit Address')),
         ),
       ],
     ),

@@ -1,6 +1,6 @@
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:dony/core/widgets/dony_icon.dart';
 
 class DonyKeypad extends StatelessWidget {
   const DonyKeypad({
@@ -49,7 +49,7 @@ class DonyKeypad extends StatelessWidget {
             _KeypadKey(
               onTap: onDelete,
               enabled: enabled,
-              child: const DonyIcon('delete', size: 24),
+              child: const DonyIcon('delete'),
             ),
           ],
         ),

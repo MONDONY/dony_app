@@ -648,13 +648,13 @@ void main() {
       'annulation sans motif → [Loading, BidCancelled]',
       build: () {
         when(
-          () => mockRepo.cancelBid('bid-001', reason: null),
+          () => mockRepo.cancelBid('bid-001'),
         ).thenAnswer((_) async => buildBid(status: 'CANCELLED'));
         return buildBloc();
       },
       act: (bloc) => bloc.add(BidCancelRequested('bid-001')),
       verify: (_) {
-        verify(() => mockRepo.cancelBid('bid-001', reason: null)).called(1);
+        verify(() => mockRepo.cancelBid('bid-001')).called(1);
       },
       expect: () => [
         isA<BidLoading>(),
@@ -890,7 +890,7 @@ void main() {
       build: () {
         when(
           () => mockRepo.confirmPayment('bid-001'),
-        ).thenAnswer((_) async => buildBid(status: 'PENDING'));
+        ).thenAnswer((_) async => buildBid());
         return buildBloc();
       },
       act: (bloc) => bloc.add(BidConfirmPaymentRequested('bid-001')),
@@ -994,8 +994,7 @@ void main() {
         when(() => mockRepo.getMyBids()).thenAnswer((_) async => [buildBid()]);
         return buildBloc();
       },
-      act: (bloc) =>
-          bloc.add(const BidMyListAutoRefreshRequested(force: false)),
+      act: (bloc) => bloc.add(const BidMyListAutoRefreshRequested()),
       expect: () => [isA<BidLoading>(), isA<BidListLoaded>()],
     );
 
@@ -1005,8 +1004,7 @@ void main() {
       seed: () => BidListLoaded([
         buildBid(),
       ], fetchedAt: DateTime.now().subtract(const Duration(minutes: 1))),
-      act: (bloc) =>
-          bloc.add(const BidMyListAutoRefreshRequested(force: false)),
+      act: (bloc) => bloc.add(const BidMyListAutoRefreshRequested()),
       expect: () => [],
     );
 
@@ -1021,8 +1019,7 @@ void main() {
       seed: () => BidListLoaded([
         buildBid(),
       ], fetchedAt: DateTime.now().subtract(const Duration(minutes: 5))),
-      act: (bloc) =>
-          bloc.add(const BidMyListAutoRefreshRequested(force: false)),
+      act: (bloc) => bloc.add(const BidMyListAutoRefreshRequested()),
       expect: () => [
         predicate<BidState>((s) => s is BidListLoaded && s.isRefreshing),
         predicate<BidState>(
@@ -1068,8 +1065,7 @@ void main() {
       seed: () => BidListLoaded([
         buildBid(id: 'old'),
       ], fetchedAt: DateTime.now().subtract(const Duration(minutes: 5))),
-      act: (bloc) =>
-          bloc.add(const BidMyListAutoRefreshRequested(force: false)),
+      act: (bloc) => bloc.add(const BidMyListAutoRefreshRequested()),
       expect: () => [
         predicate<BidState>((s) => s is BidListLoaded && s.isRefreshing),
         predicate<BidState>(
@@ -1094,8 +1090,7 @@ void main() {
         );
         return buildBloc();
       },
-      act: (bloc) =>
-          bloc.add(const BidMyListAutoRefreshRequested(force: false)),
+      act: (bloc) => bloc.add(const BidMyListAutoRefreshRequested()),
       expect: () => [isA<BidLoading>(), isA<BidError>()],
     );
 
@@ -1108,8 +1103,7 @@ void main() {
       seed: () => BidListLoaded([
         buildBid(id: 'old'),
       ], fetchedAt: DateTime.now().subtract(const Duration(minutes: 5))),
-      act: (bloc) =>
-          bloc.add(const BidMyListAutoRefreshRequested(force: false)),
+      act: (bloc) => bloc.add(const BidMyListAutoRefreshRequested()),
       expect: () => [
         predicate<BidState>((s) => s is BidListLoaded && s.isRefreshing),
         predicate<BidState>(
@@ -1124,8 +1118,7 @@ void main() {
         when(() => mockRepo.getMyBids()).thenThrow(Exception('timeout'));
         return buildBloc();
       },
-      act: (bloc) =>
-          bloc.add(const BidMyListAutoRefreshRequested(force: false)),
+      act: (bloc) => bloc.add(const BidMyListAutoRefreshRequested()),
       expect: () => [isA<BidLoading>(), isA<BidError>()],
     );
   });
@@ -1223,7 +1216,7 @@ void main() {
   // ─── BidQuoteRequested ───────────────────────────────────────────────────────
 
   group('BidQuoteRequested', () {
-    final quote = BidQuoteResponse(
+    const quote = BidQuoteResponse(
       netEur: 100.0,
       rate: 0.06,
       commissionEur: 6.0,
@@ -1305,7 +1298,7 @@ void main() {
             promoCode: any(named: 'promoCode'),
           ),
         ).thenAnswer(
-          (_) async => BidQuoteResponse(
+          (_) async => const BidQuoteResponse(
             netEur: 100.0,
             rate: 0.12,
             commissionEur: 12.0,
@@ -1334,7 +1327,6 @@ void main() {
           (_) async => const BidQuoteResponse(
             netEur: 65.0,
             gridNetEur: 65.0,
-            kgNetEur: 0.0,
             rate: 0.06,
             commissionEur: 3.90,
             totalEur: 68.90,

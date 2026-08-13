@@ -10,7 +10,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../helpers/mock_analytics_backend.dart';
@@ -34,38 +33,38 @@ Widget _wrap({UserPreferencesModel? prefs}) {
     routes: [
       GoRoute(
         path: '/',
-        builder: (_, __) => BlocProvider<AppPreferencesBloc>.value(
+        builder: (_, _) => BlocProvider<AppPreferencesBloc>.value(
           value: mockBloc,
           child: const SettingsScreen(),
         ),
       ),
       // Stub routes used by SettingsScreen navigation items
-      GoRoute(path: '/settings/security', builder: (_, __) => const Scaffold()),
-      GoRoute(path: '/settings/privacy', builder: (_, __) => const Scaffold()),
-      GoRoute(path: '/settings/data', builder: (_, __) => const Scaffold()),
+      GoRoute(path: '/settings/security', builder: (_, _) => const Scaffold()),
+      GoRoute(path: '/settings/privacy', builder: (_, _) => const Scaffold()),
+      GoRoute(path: '/settings/data', builder: (_, _) => const Scaffold()),
       GoRoute(
         path: '/settings/notifications',
-        builder: (_, __) => const Scaffold(),
+        builder: (_, _) => const Scaffold(),
       ),
       GoRoute(
         path: '/settings/preferences',
-        builder: (_, __) => const Scaffold(),
+        builder: (_, _) => const Scaffold(),
       ),
       GoRoute(
         path: '/settings/accessibility',
-        builder: (_, __) => const Scaffold(),
+        builder: (_, _) => const Scaffold(),
       ),
       GoRoute(
         path: '/settings/legal/terms',
-        builder: (_, __) => const Scaffold(),
+        builder: (_, _) => const Scaffold(),
       ),
       GoRoute(
         path: '/settings/legal/privacy',
-        builder: (_, __) => const Scaffold(),
+        builder: (_, _) => const Scaffold(),
       ),
       GoRoute(
         path: '/settings/diagnostics',
-        builder: (_, __) => const Scaffold(),
+        builder: (_, _) => const Scaffold(),
       ),
     ],
   );
@@ -247,9 +246,7 @@ void main() {
     testWidgets('ligne Thème affiche Auto quand themeMode system', (
       tester,
     ) async {
-      await tester.pumpWidget(
-        _wrap(prefs: const UserPreferencesModel(themeMode: 'system')),
-      );
+      await tester.pumpWidget(_wrap(prefs: const UserPreferencesModel()));
       await tester.pumpAndSettle();
       expect(find.text('Auto'), findsOneWidget);
     });
@@ -257,9 +254,7 @@ void main() {
     testWidgets('language shows Français when languageCode is fr', (
       tester,
     ) async {
-      await tester.pumpWidget(
-        _wrap(prefs: const UserPreferencesModel(languageCode: 'fr')),
-      );
+      await tester.pumpWidget(_wrap(prefs: const UserPreferencesModel()));
       await tester.pumpAndSettle();
 
       expect(find.text('Français'), findsOneWidget);
@@ -280,9 +275,7 @@ void main() {
       'tap ligne Thème → picker → Sombre dispatch ThemeChanged(dark)',
       (tester) async {
         final mockBloc = MockAppPreferencesBloc();
-        final state = AppPreferencesState(
-          preferences: const UserPreferencesModel(themeMode: 'system'),
-        );
+        const state = AppPreferencesState(preferences: UserPreferencesModel());
         when(() => mockBloc.state).thenReturn(state);
         whenListen<AppPreferencesState>(
           mockBloc,
@@ -298,7 +291,7 @@ void main() {
         await tester.tap(find.text('Sombre').last);
         await tester.pump();
 
-        verify(() => mockBloc.add(ThemeChanged('dark'))).called(1);
+        verify(() => mockBloc.add(const ThemeChanged('dark'))).called(1);
       },
     );
 
@@ -306,8 +299,8 @@ void main() {
       'tap ligne Thème → picker → Clair dispatch ThemeChanged(light)',
       (tester) async {
         final mockBloc = MockAppPreferencesBloc();
-        final state = AppPreferencesState(
-          preferences: const UserPreferencesModel(themeMode: 'dark'),
+        const state = AppPreferencesState(
+          preferences: UserPreferencesModel(themeMode: 'dark'),
         );
         when(() => mockBloc.state).thenReturn(state);
         whenListen<AppPreferencesState>(
@@ -324,7 +317,7 @@ void main() {
         await tester.tap(find.text('Clair').last);
         await tester.pump();
 
-        verify(() => mockBloc.add(ThemeChanged('light'))).called(1);
+        verify(() => mockBloc.add(const ThemeChanged('light'))).called(1);
       },
     );
 
@@ -345,9 +338,7 @@ void main() {
       'tap ligne Destinations → picker → Dakar dispatch DestinationToggled',
       (tester) async {
         final mockBloc = MockAppPreferencesBloc();
-        final state = AppPreferencesState(
-          preferences: const UserPreferencesModel(),
-        );
+        const state = AppPreferencesState(preferences: UserPreferencesModel());
         when(() => mockBloc.state).thenReturn(state);
         whenListen<AppPreferencesState>(
           mockBloc,
@@ -539,8 +530,8 @@ void main() {
       'language picker — tap Français dispatches LanguageChanged(fr)',
       (tester) async {
         final mockBloc = MockAppPreferencesBloc();
-        final state = AppPreferencesState(
-          preferences: const UserPreferencesModel(languageCode: 'en'),
+        const state = AppPreferencesState(
+          preferences: UserPreferencesModel(languageCode: 'en'),
         );
         when(() => mockBloc.state).thenReturn(state);
         whenListen<AppPreferencesState>(
@@ -568,9 +559,7 @@ void main() {
       'language picker — tap English dispatches LanguageChanged(en)',
       (tester) async {
         final mockBloc = MockAppPreferencesBloc();
-        final state = AppPreferencesState(
-          preferences: const UserPreferencesModel(languageCode: 'fr'),
-        );
+        const state = AppPreferencesState(preferences: UserPreferencesModel());
         when(() => mockBloc.state).thenReturn(state);
         whenListen<AppPreferencesState>(
           mockBloc,
@@ -600,37 +589,37 @@ Widget _wrapWithBloc(MockAppPreferencesBloc mockBloc) {
     routes: [
       GoRoute(
         path: '/',
-        builder: (_, __) => BlocProvider<AppPreferencesBloc>.value(
+        builder: (_, _) => BlocProvider<AppPreferencesBloc>.value(
           value: mockBloc,
           child: const SettingsScreen(),
         ),
       ),
-      GoRoute(path: '/settings/security', builder: (_, __) => const Scaffold()),
-      GoRoute(path: '/settings/privacy', builder: (_, __) => const Scaffold()),
-      GoRoute(path: '/settings/data', builder: (_, __) => const Scaffold()),
+      GoRoute(path: '/settings/security', builder: (_, _) => const Scaffold()),
+      GoRoute(path: '/settings/privacy', builder: (_, _) => const Scaffold()),
+      GoRoute(path: '/settings/data', builder: (_, _) => const Scaffold()),
       GoRoute(
         path: '/settings/notifications',
-        builder: (_, __) => const Scaffold(),
+        builder: (_, _) => const Scaffold(),
       ),
       GoRoute(
         path: '/settings/preferences',
-        builder: (_, __) => const Scaffold(),
+        builder: (_, _) => const Scaffold(),
       ),
       GoRoute(
         path: '/settings/accessibility',
-        builder: (_, __) => const Scaffold(),
+        builder: (_, _) => const Scaffold(),
       ),
       GoRoute(
         path: '/settings/legal/terms',
-        builder: (_, __) => const Scaffold(),
+        builder: (_, _) => const Scaffold(),
       ),
       GoRoute(
         path: '/settings/legal/privacy',
-        builder: (_, __) => const Scaffold(),
+        builder: (_, _) => const Scaffold(),
       ),
       GoRoute(
         path: '/settings/diagnostics',
-        builder: (_, __) => const Scaffold(),
+        builder: (_, _) => const Scaffold(),
       ),
     ],
   );

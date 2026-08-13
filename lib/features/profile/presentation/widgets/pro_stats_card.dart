@@ -98,7 +98,6 @@ class _CardShell extends StatelessWidget {
               borderRadius: BorderRadius.circular(DonyRadius.card),
               border: Border.all(
                 color: Colors.white.withValues(alpha: borderAlpha),
-                width: 1,
               ),
               boxShadow: [
                 BoxShadow(

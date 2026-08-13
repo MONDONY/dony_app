@@ -8,7 +8,7 @@ class AccountDisabledBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialBanner(
-      backgroundColor: const Color(0xFFF59E0B).withOpacity(0.12),
+      backgroundColor: const Color(0xFFF59E0B).withValues(alpha: 0.12),
       leading: const DonyIcon('triangle-alert', color: Color(0xFFF59E0B)),
       content: const Text(
         'Votre compte Stripe est temporairement désactivé',

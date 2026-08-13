@@ -4,7 +4,8 @@ import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:equatable/equatable.dart';
 
 // Re-export PricingMode so callers only need to import this file
-export 'package:dony/features/matching/bloc/announcement_form_state.dart' show PricingMode;
+export 'package:dony/features/matching/bloc/announcement_form_state.dart'
+    show PricingMode;
 
 abstract class AnnouncementFormEvent extends Equatable {
   const AnnouncementFormEvent();

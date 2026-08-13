@@ -7,13 +7,14 @@ import 'package:dony/features/messaging/data/models/conversation_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockConversationRepository extends Mock implements ConversationRepository {}
+class MockConversationRepository extends Mock
+    implements ConversationRepository {}
 
 void main() {
   late MockConversationRepository repo;
 
-  final participant = ParticipantModel(id: 'uid-1', name: 'Mamadou D');
-  final conv = ConversationModel(
+  const participant = ParticipantModel(id: 'uid-1', name: 'Mamadou D');
+  const conv = ConversationModel(
     id: 'conv-1',
     bidId: 'bid-abc',
     firestoreConversationId: 'conv_bid-abc',
@@ -34,8 +35,11 @@ void main() {
       act: (b) => b.add(const ConversationOpenRequested('bid-abc')),
       expect: () => [
         const ConversationOpenLoading(),
-        isA<ConversationOpenSuccess>()
-            .having((s) => s.conversation.id, 'conv id', 'conv-1'),
+        isA<ConversationOpenSuccess>().having(
+          (s) => s.conversation.id,
+          'conv id',
+          'conv-1',
+        ),
       ],
       verify: (_) => verify(() => repo.getByBidId('bid-abc')).called(1),
     );

@@ -159,7 +159,7 @@ void main() {
   testWidgets('auteur anonyme : repli « Utilisateur » sans planter', (
     tester,
   ) async {
-    final items = [_item(authorName: null)];
+    final items = [_item()];
     stubState(
       UserReviewsLoaded(
         summary: _summary(ratings: items),

@@ -15,6 +15,6 @@ class BlockedUserModel {
         displayName: json['displayName'] as String? ?? 'Utilisateur',
         blockedAt:
             DateTime.tryParse(json['blockedAt'] as String? ?? '') ??
-                DateTime.now(),
+            DateTime.now(),
       );
 }

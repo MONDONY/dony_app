@@ -37,9 +37,9 @@ class TrackingEventModel {
       );
 
   String get stepLabel => switch (eventType) {
-        'DEPART' => 'Départ confirmé',
-        'TRANSIT' => 'En transit',
-        'ARRIVEE' => 'Arrivée confirmée',
-        _ => eventType,
-      };
+    'DEPART' => 'Départ confirmé',
+    'TRANSIT' => 'En transit',
+    'ARRIVEE' => 'Arrivée confirmée',
+    _ => eventType,
+  };
 }

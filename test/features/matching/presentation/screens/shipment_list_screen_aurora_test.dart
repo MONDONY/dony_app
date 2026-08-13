@@ -1,13 +1,11 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
-import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
-import 'package:intl/date_symbol_data_local.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_service.dart';
-import 'package:dony/features/matching/bloc/shipment_filter_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -15,6 +13,7 @@ import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
+import 'package:dony/features/matching/bloc/shipment_filter_cubit.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/screens/shipment_list_screen.dart';
 import 'package:dony/features/matching/presentation/widgets/shipment_card.dart';
@@ -23,6 +22,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
@@ -44,7 +44,6 @@ const _testUser = UserModel(
   roles: ['SENDER'],
   kycStatus: 'VERIFIED',
   status: 'ACTIVE',
-  stripeAccountStatus: 'NOT_CREATED',
 );
 
 BidModel _makeBid({String id = 'bid-00000001', String status = 'PENDING'}) =>
@@ -55,8 +54,8 @@ BidModel _makeBid({String id = 'bid-00000001', String status = 'PENDING'}) =>
       weightKg: 5,
       description: 'Vêtements pour la famille',
       status: status,
-      createdAt: DateTime(2026, 1, 1),
-      updatedAt: DateTime(2026, 1, 1),
+      createdAt: DateTime(2026),
+      updatedAt: DateTime(2026),
       departureCity: 'Paris',
       arrivalCity: 'Dakar',
     );
@@ -88,7 +87,7 @@ Widget _buildScreen({
       ),
       GoRoute(
         path: '/bids/:id',
-        builder: (_, __) => Scaffold(
+        builder: (_, _) => Scaffold(
           appBar: AppBar(),
           body: const Center(child: Text('Bid detail')),
         ),
@@ -242,8 +241,9 @@ void main() {
     '4 puces de filtre visibles : Tous, En cours, En attente, Livrés',
     (tester) async {
       // Need bids so filter bar is shown (rawEmpty = false).
-      when(() => bidBloc.state)
-          .thenReturn(BidListLoaded([_makeBid(status: 'ACCEPTED')]));
+      when(
+        () => bidBloc.state,
+      ).thenReturn(BidListLoaded([_makeBid(status: 'ACCEPTED')]));
       await _pump(
         tester,
         bidBloc: bidBloc,
@@ -309,8 +309,9 @@ void main() {
 
   // ── Vues vides ────────────────────────────────────────────────────────────
 
-  testWidgets('liste vide → état global "Aucun envoi pour l\'instant"',
-      (tester) async {
+  testWidgets('liste vide → état global "Aucun envoi pour l\'instant"', (
+    tester,
+  ) async {
     when(() => bidBloc.state).thenReturn(BidListLoaded(const []));
     await _pump(
       tester,
@@ -335,9 +336,10 @@ void main() {
 
   // ── Stepper ───────────────────────────────────────────────────────────────
 
-  testWidgets('card PENDING : pas de stepper (badge EN ATTENTE uniquement)',
-      (tester) async {
-    final bid = _makeBid(status: 'PENDING');
+  testWidgets('card PENDING : pas de stepper (badge EN ATTENTE uniquement)', (
+    tester,
+  ) async {
+    final bid = _makeBid();
     final ctrl = StreamController<BidState>.broadcast();
     addTearDown(ctrl.close);
     whenListen(bidBloc, ctrl.stream, initialState: BidInitial());
@@ -452,10 +454,7 @@ void main() {
   // ── Filtrage par puce rapide ──────────────────────────────────────────────
 
   testWidgets('puce "En cours" n\'affiche que les ACCEPTED', (tester) async {
-    final bids = [
-      _makeBid(id: 'bid-00000001', status: 'ACCEPTED'),
-      _makeBid(id: 'bid-00000002', status: 'PENDING'),
-    ];
+    final bids = [_makeBid(status: 'ACCEPTED'), _makeBid(id: 'bid-00000002')];
     when(() => bidBloc.state).thenReturn(BidListLoaded(bids));
     await _pump(
       tester,
@@ -514,7 +513,7 @@ void main() {
   // ── Labels de statut sur les cards ────────────────────────────────────────
 
   testWidgets('card PENDING : affiche badge "EN ATTENTE"', (tester) async {
-    final bid = _makeBid(status: 'PENDING');
+    final bid = _makeBid();
     final ctrl = StreamController<BidState>.broadcast();
     addTearDown(ctrl.close);
     whenListen(bidBloc, ctrl.stream, initialState: BidInitial());
@@ -576,8 +575,9 @@ void main() {
     expect(find.text('LIVRÉ'), findsOneWidget);
   });
 
-  testWidgets('card REJECTED : affiche badge "TERMINÉ" (visible sous Tous)',
-      (tester) async {
+  testWidgets('card REJECTED : affiche badge "TERMINÉ" (visible sous Tous)', (
+    tester,
+  ) async {
     final bid = _makeBid(status: 'REJECTED');
     final ctrl = StreamController<BidState>.broadcast();
     addTearDown(ctrl.close);
@@ -597,8 +597,9 @@ void main() {
     expect(find.text('TERMINÉ'), findsOneWidget);
   });
 
-  testWidgets('card CANCELLED : affiche badge "TERMINÉ" (visible sous Tous)',
-      (tester) async {
+  testWidgets('card CANCELLED : affiche badge "TERMINÉ" (visible sous Tous)', (
+    tester,
+  ) async {
     final bid = _makeBid(status: 'CANCELLED');
     final ctrl = StreamController<BidState>.broadcast();
     addTearDown(ctrl.close);
@@ -692,14 +693,16 @@ void main() {
 
   // ── Mode embedded ─────────────────────────────────────
 
-  testWidgets('Mode embedded : rendu sans GoRouter, filter chips visibles',
-      (tester) async {
+  testWidgets('Mode embedded : rendu sans GoRouter, filter chips visibles', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(800, 1400);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
 
-    when(() => bidBloc.state)
-        .thenReturn(BidListLoaded([_makeBid(status: 'ACCEPTED')]));
+    when(
+      () => bidBloc.state,
+    ).thenReturn(BidListLoaded([_makeBid(status: 'ACCEPTED')]));
 
     await tester.pumpWidget(
       MaterialApp(
@@ -721,36 +724,33 @@ void main() {
     expect(find.text('Livrés'), findsOneWidget);
   });
 
-  testWidgets(
-    'Mode embedded : pas de header "Colis en route" en mode embedded',
-    (tester) async {
-      tester.view.physicalSize = const Size(800, 1400);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.reset);
-
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: AppTheme.light(),
-          home: MultiBlocProvider(
-            providers: [
-              BlocProvider<BidBloc>.value(value: bidBloc),
-              BlocProvider<PaymentBloc>.value(value: paymentBloc),
-              BlocProvider<AuthBloc>.value(value: authBloc),
-            ],
-            child: const Scaffold(body: ShipmentListScreen(embedded: true)),
-          ),
-        ),
-      );
-      await tester.pump(_kSettle);
-
-      // En mode embedded le header sombre (titre "Colis en route") n'est pas rendu.
-      expect(find.text('Colis en route'), findsNothing);
-    },
-  );
-
-  testWidgets('Mode embedded : changement de puce fonctionne', (
+  testWidgets('Mode embedded : pas de header "Colis en route" en mode embedded', (
     tester,
   ) async {
+    tester.view.physicalSize = const Size(800, 1400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: MultiBlocProvider(
+          providers: [
+            BlocProvider<BidBloc>.value(value: bidBloc),
+            BlocProvider<PaymentBloc>.value(value: paymentBloc),
+            BlocProvider<AuthBloc>.value(value: authBloc),
+          ],
+          child: const Scaffold(body: ShipmentListScreen(embedded: true)),
+        ),
+      ),
+    );
+    await tester.pump(_kSettle);
+
+    // En mode embedded le header sombre (titre "Colis en route") n'est pas rendu.
+    expect(find.text('Colis en route'), findsNothing);
+  });
+
+  testWidgets('Mode embedded : changement de puce fonctionne', (tester) async {
     tester.view.physicalSize = const Size(800, 1400);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
@@ -784,8 +784,9 @@ void main() {
 
   // ── Statuts supplémentaires ───────────────────────────────────────────────
 
-  testWidgets('card NO_SHOW : affiche badge "TERMINÉ" (visible sous Tous)',
-      (tester) async {
+  testWidgets('card NO_SHOW : affiche badge "TERMINÉ" (visible sous Tous)', (
+    tester,
+  ) async {
     final bid = _makeBid(status: 'NO_SHOW');
     final ctrl = StreamController<BidState>.broadcast();
     addTearDown(ctrl.close);
@@ -805,8 +806,9 @@ void main() {
     expect(find.text('TERMINÉ'), findsOneWidget);
   });
 
-  testWidgets('card EXPIRED : affiche badge "TERMINÉ" (visible sous Tous)',
-      (tester) async {
+  testWidgets('card EXPIRED : affiche badge "TERMINÉ" (visible sous Tous)', (
+    tester,
+  ) async {
     final bid = _makeBid(status: 'EXPIRED');
     final ctrl = StreamController<BidState>.broadcast();
     addTearDown(ctrl.close);
@@ -826,36 +828,35 @@ void main() {
     expect(find.text('TERMINÉ'), findsOneWidget);
   });
 
-  testWidgets('card PARCEL_REFUSED : affiche badge "TERMINÉ" (visible sous Tous)',
-      (tester) async {
-    final bid = _makeBid(status: 'PARCEL_REFUSED');
-    final ctrl = StreamController<BidState>.broadcast();
-    addTearDown(ctrl.close);
-    whenListen(bidBloc, ctrl.stream, initialState: BidInitial());
+  testWidgets(
+    'card PARCEL_REFUSED : affiche badge "TERMINÉ" (visible sous Tous)',
+    (tester) async {
+      final bid = _makeBid(status: 'PARCEL_REFUSED');
+      final ctrl = StreamController<BidState>.broadcast();
+      addTearDown(ctrl.close);
+      whenListen(bidBloc, ctrl.stream, initialState: BidInitial());
 
-    await _pump(
-      tester,
-      bidBloc: bidBloc,
-      paymentBloc: paymentBloc,
-      authBloc: authBloc,
-    );
-    ctrl.add(BidListLoaded([bid]));
-    await tester.pump();
-    await tester.pump(_kSettle);
+      await _pump(
+        tester,
+        bidBloc: bidBloc,
+        paymentBloc: paymentBloc,
+        authBloc: authBloc,
+      );
+      ctrl.add(BidListLoaded([bid]));
+      await tester.pump();
+      await tester.pump(_kSettle);
 
-    // PARCEL_REFUSED shows under default "Tous"
-    expect(find.text('TERMINÉ'), findsAtLeastNWidgets(1));
-  });
+      // PARCEL_REFUSED shows under default "Tous"
+      expect(find.text('TERMINÉ'), findsAtLeastNWidgets(1));
+    },
+  );
 
   // ── Bascule entre puces rapides ───────────────────────────────────────────
 
   testWidgets('puce "En cours" sélectionnable depuis "En attente"', (
     tester,
   ) async {
-    final bids = [
-      _makeBid(id: 'bid-00000001', status: 'ACCEPTED'),
-      _makeBid(id: 'bid-00000002', status: 'PENDING'),
-    ];
+    final bids = [_makeBid(status: 'ACCEPTED'), _makeBid(id: 'bid-00000002')];
     when(() => bidBloc.state).thenReturn(BidListLoaded(bids));
     await _pump(
       tester,
@@ -984,31 +985,33 @@ void main() {
 
   // ── Swipe & suppression (puce Livrés) ─────────────────────────────────────
 
-  testWidgets('swipe gauche sur card COMPLETED affiche le fond de suppression',
-      (tester) async {
-    final bid = _makeBid(status: 'COMPLETED');
-    final ctrl = StreamController<BidState>.broadcast();
-    addTearDown(ctrl.close);
-    whenListen(bidBloc, ctrl.stream, initialState: BidInitial());
+  testWidgets(
+    'swipe gauche sur card COMPLETED affiche le fond de suppression',
+    (tester) async {
+      final bid = _makeBid(status: 'COMPLETED');
+      final ctrl = StreamController<BidState>.broadcast();
+      addTearDown(ctrl.close);
+      whenListen(bidBloc, ctrl.stream, initialState: BidInitial());
 
-    await _pump(
-      tester,
-      bidBloc: bidBloc,
-      paymentBloc: paymentBloc,
-      authBloc: authBloc,
-    );
-    ctrl.add(BidListLoaded([bid]));
-    await tester.pump();
-    await tester.pump(_kSettle);
+      await _pump(
+        tester,
+        bidBloc: bidBloc,
+        paymentBloc: paymentBloc,
+        authBloc: authBloc,
+      );
+      ctrl.add(BidListLoaded([bid]));
+      await tester.pump();
+      await tester.pump(_kSettle);
 
-    await tester.tap(find.text('Livrés'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.text('Livrés'));
+      await tester.pumpAndSettle();
 
-    await tester.drag(find.text('Dakar'), const Offset(-300, 0));
-    await tester.pump();
+      await tester.drag(find.text('Dakar'), const Offset(-300, 0));
+      await tester.pump();
 
-    expect(find.text('Supprimer'), findsOneWidget);
-  });
+      expect(find.text('Supprimer'), findsOneWidget);
+    },
+  );
 
   testWidgets('dialog suppression apparaît après swipe complet', (
     tester,
@@ -1042,10 +1045,11 @@ void main() {
 
   // ── Séparateur (2+ items) ─────────────────────────────────────────────────
 
-  testWidgets('liste "Tous" avec 2 items : LIVRÉ et TERMINÉ visibles',
-      (tester) async {
+  testWidgets('liste "Tous" avec 2 items : LIVRÉ et TERMINÉ visibles', (
+    tester,
+  ) async {
     final bids = [
-      _makeBid(id: 'bid-00000001', status: 'COMPLETED'),
+      _makeBid(status: 'COMPLETED'),
       _makeBid(id: 'bid-00000002', status: 'REJECTED'),
     ];
     final ctrl = StreamController<BidState>.broadcast();
@@ -1108,8 +1112,9 @@ void main() {
 
   // ── Confirmation suppression (onDismissed + onDelete) ────────────────────
 
-  testWidgets('confirmer suppression : onDismissed dispatch BidDeleteRequested',
-      (tester) async {
+  testWidgets('confirmer suppression : onDismissed dispatch BidDeleteRequested', (
+    tester,
+  ) async {
     final bid = _makeBid(status: 'COMPLETED');
     final ctrl = StreamController<BidState>.broadcast();
     addTearDown(ctrl.close);
@@ -1167,10 +1172,11 @@ void main() {
     },
   );
 
-  testWidgets('tri : PAYMENT_ESCROWED avant AWAITING_PAYMENT dans En attente',
-      (tester) async {
+  testWidgets('tri : PAYMENT_ESCROWED avant AWAITING_PAYMENT dans En attente', (
+    tester,
+  ) async {
     final bids = [
-      _makeBid(id: 'bid-00000001', status: 'AWAITING_PAYMENT'),
+      _makeBid(status: 'AWAITING_PAYMENT'),
       _makeBid(id: 'bid-00000002', status: 'PAYMENT_ESCROWED'),
     ];
     final ctrl = StreamController<BidState>.broadcast();

@@ -75,7 +75,6 @@ class _ConnectOnboardingPendingScreenState
               child: DonyLayout.constrained(
                 context,
                 Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     const SizedBox(height: DonySpacing.xl),
                     // Animated icon

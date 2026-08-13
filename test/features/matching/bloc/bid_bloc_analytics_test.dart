@@ -67,10 +67,7 @@ void main() {
           countryCode: any(named: 'countryCode'),
           gridItems: any(named: 'gridItems'),
         ),
-      ).thenAnswer(
-        (_) async =>
-            _buildBid(announcementId: 'ann1', weightKg: 5.0, pricePerKg: 12.0),
-      );
+      ).thenAnswer((_) async => _buildBid());
 
       final bloc = makeBloc();
       bloc.add(
@@ -97,9 +94,7 @@ void main() {
   );
 
   test('bid_accepted fires on BidAcceptRequested', () async {
-    when(
-      () => repo.acceptBid('bid1'),
-    ).thenAnswer((_) async => _buildBid(id: 'bid1'));
+    when(() => repo.acceptBid('bid1')).thenAnswer((_) async => _buildBid());
 
     final bloc = makeBloc();
     bloc.add(BidAcceptRequested('bid1'));
@@ -114,7 +109,7 @@ void main() {
   test('bid_rejected fires on BidRejectRequested', () async {
     when(
       () => repo.rejectBid('bid1', reason: any(named: 'reason')),
-    ).thenAnswer((_) async => _buildBid(id: 'bid1'));
+    ).thenAnswer((_) async => _buildBid());
 
     final bloc = makeBloc();
     bloc.add(BidRejectRequested('bid1'));
@@ -140,10 +135,7 @@ void main() {
         countryCode: any(named: 'countryCode'),
         gridItems: any(named: 'gridItems'),
       ),
-    ).thenAnswer(
-      (_) async =>
-          _buildBid(announcementId: 'ann1', weightKg: 5.0, pricePerKg: 12.0),
-    );
+    ).thenAnswer((_) async => _buildBid());
     final bloc = makeBloc(enabled: false);
     bloc.add(
       BidCreateRequested(

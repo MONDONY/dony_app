@@ -52,22 +52,21 @@ class _FakeContentCategoryRepository implements IContentCategoryRepository {
 AnnouncementModel _announcement({
   required String capacityUnit,
   double availableKg = 10.0,
-}) =>
-    AnnouncementModel(
-      id: 'ann-weight-test',
-      travelerId: 'traveler-1',
-      departureCity: 'Paris',
-      arrivalCity: 'Dakar',
-      departureDate: DateTime(2026, 8),
-      availableKg: availableKg,
-      totalKg: availableKg,
-      pricePerKg: 12.0,
-      capacityUnit: capacityUnit,
-      status: 'OPEN',
-      bidsCount: 0,
-      createdAt: DateTime(2026, 7),
-      updatedAt: DateTime(2026, 7),
-    );
+}) => AnnouncementModel(
+  id: 'ann-weight-test',
+  travelerId: 'traveler-1',
+  departureCity: 'Paris',
+  arrivalCity: 'Dakar',
+  departureDate: DateTime(2026, 8),
+  availableKg: availableKg,
+  totalKg: availableKg,
+  pricePerKg: 12.0,
+  capacityUnit: capacityUnit,
+  status: 'OPEN',
+  bidsCount: 0,
+  createdAt: DateTime(2026, 7),
+  updatedAt: DateTime(2026, 7),
+);
 
 // ── Tests ────────────────────────────────────────────────────────────────────
 
@@ -96,15 +95,27 @@ void main() {
     recipientBloc = _MockRecipientBloc();
 
     whenListen(bidBloc, bidStream.stream, initialState: BidInitial());
-    whenListen(paymentBloc, const Stream<PaymentState>.empty(),
-        initialState: const PaymentInitial());
-    whenListen(walletBloc, const Stream<WalletState>.empty(),
-        initialState: WalletInitial());
-    whenListen(photosCubit, const Stream<List<BidPhotoUpload>>.empty(),
-        initialState: const <BidPhotoUpload>[]);
+    whenListen(
+      paymentBloc,
+      const Stream<PaymentState>.empty(),
+      initialState: const PaymentInitial(),
+    );
+    whenListen(
+      walletBloc,
+      const Stream<WalletState>.empty(),
+      initialState: WalletInitial(),
+    );
+    whenListen(
+      photosCubit,
+      const Stream<List<BidPhotoUpload>>.empty(),
+      initialState: const <BidPhotoUpload>[],
+    );
     when(() => photosCubit.readyKeys).thenReturn(const <String>[]);
-    whenListen(recipientBloc, const Stream<RecipientState>.empty(),
-        initialState: const RecipientState());
+    whenListen(
+      recipientBloc,
+      const Stream<RecipientState>.empty(),
+      initialState: const RecipientState(),
+    );
 
     void register<T extends Object>(T mock) {
       if (getIt.isRegistered<T>()) getIt.unregister<T>();
@@ -124,7 +135,9 @@ void main() {
     if (getIt.isRegistered<BidBloc>()) getIt.unregister<BidBloc>();
     if (getIt.isRegistered<PaymentBloc>()) getIt.unregister<PaymentBloc>();
     if (getIt.isRegistered<WalletBloc>()) getIt.unregister<WalletBloc>();
-    if (getIt.isRegistered<BidPhotosCubit>()) getIt.unregister<BidPhotosCubit>();
+    if (getIt.isRegistered<BidPhotosCubit>()) {
+      getIt.unregister<BidPhotosCubit>();
+    }
     if (getIt.isRegistered<RecipientBloc>()) getIt.unregister<RecipientBloc>();
     if (getIt.isRegistered<IContentCategoryRepository>()) {
       getIt.unregister<IContentCategoryRepository>();
@@ -152,9 +165,8 @@ void main() {
         // GoRouter plein écran — miroir de lib/app/router.dart.
         GoRoute(
           path: '/bids/new',
-          builder: (_, state) => CreateBidScreen(
-            announcement: state.extra! as AnnouncementModel,
-          ),
+          builder: (_, state) =>
+              CreateBidScreen(announcement: state.extra! as AnnouncementModel),
         ),
         GoRoute(path: '/bids/:id', builder: (_, _) => const SizedBox()),
       ],
@@ -185,7 +197,9 @@ void main() {
 
   /// Lit le poids affiché dans le gros chiffre du `_WeightSection` (kilo libre).
   String displayedWeight(WidgetTester tester) {
-    final field = tester.widget<TextField>(find.byKey(const Key('weight-field')));
+    final field = tester.widget<TextField>(
+      find.byKey(const Key('weight-field')),
+    );
     return field.controller?.text ?? '';
   }
 
@@ -193,10 +207,7 @@ void main() {
 
   group('Trajet borné (SUITCASE)', () {
     testWidgets('affiche toujours un Slider', (tester) async {
-      await openSheet(
-        tester,
-        _announcement(capacityUnit: 'SUITCASE_23KG'),
-      );
+      await openSheet(tester, _announcement(capacityUnit: 'SUITCASE_23KG'));
 
       expect(find.byType(Slider), findsOneWidget);
       // Pas de steppers en mode borné.
@@ -205,19 +216,13 @@ void main() {
     });
 
     testWidgets('affiche le repère "max 10 kg"', (tester) async {
-      await openSheet(
-        tester,
-        _announcement(capacityUnit: 'SUITCASE_23KG'),
-      );
+      await openSheet(tester, _announcement(capacityUnit: 'SUITCASE_23KG'));
 
       expect(find.text('max 10 kg'), findsOneWidget);
     });
 
     testWidgets('le drag du slider ne crashe pas', (tester) async {
-      await openSheet(
-        tester,
-        _announcement(capacityUnit: 'SUITCASE_23KG'),
-      );
+      await openSheet(tester, _announcement(capacityUnit: 'SUITCASE_23KG'));
 
       await tester.drag(find.byType(Slider), const Offset(100, 0));
       await tester.pump();
@@ -241,8 +246,9 @@ void main() {
       expect(find.text('Kilo libre : choisissez votre poids'), findsOneWidget);
     });
 
-    testWidgets('poids initial = 5 (pas 1, malgré availableKg = 1)',
-        (tester) async {
+    testWidgets('poids initial = 5 (pas 1, malgré availableKg = 1)', (
+      tester,
+    ) async {
       await openSheet(
         tester,
         _announcement(capacityUnit: 'KG_FREE', availableKg: 1),
@@ -251,8 +257,9 @@ void main() {
       expect(displayedWeight(tester), '5');
     });
 
-    testWidgets('le « + » dépasse 10 kg → aucun plafond 30/availableKg',
-        (tester) async {
+    testWidgets('le « + » dépasse 10 kg → aucun plafond 30/availableKg', (
+      tester,
+    ) async {
       await openSheet(
         tester,
         _announcement(capacityUnit: 'KG_FREE', availableKg: 1),
@@ -280,8 +287,7 @@ void main() {
       expect(displayedWeight(tester), '42');
     });
 
-    testWidgets(
-        'vider le champ puis saisir "99" → reste à 99 (pas de snap-back, '
+    testWidgets('vider le champ puis saisir "99" → reste à 99 (pas de snap-back, '
         'pas de plafond)', (tester) async {
       await openSheet(
         tester,
@@ -302,9 +308,9 @@ void main() {
       expect(displayedWeight(tester), '99');
     });
 
-    testWidgets(
-        'champ vidé puis perte de focus → retombe au minimum (1 kg)',
-        (tester) async {
+    testWidgets('champ vidé puis perte de focus → retombe au minimum (1 kg)', (
+      tester,
+    ) async {
       await openSheet(
         tester,
         _announcement(capacityUnit: 'KG_FREE', availableKg: 1),
@@ -323,27 +329,28 @@ void main() {
     });
 
     testWidgets(
-        'le « + » incrémente de 1 et le prix parent (_weightNotifier) suit',
-        (tester) async {
-      await openSheet(
-        tester,
-        _announcement(capacityUnit: 'KG_FREE', availableKg: 1),
-      );
+      'le « + » incrémente de 1 et le prix parent (_weightNotifier) suit',
+      (tester) async {
+        await openSheet(
+          tester,
+          _announcement(capacityUnit: 'KG_FREE', availableKg: 1),
+        );
 
-      // Le récap de prix reflète le poids porté par le _weightNotifier parent
-      // (pricePerKg = 12 → ligne « N kg × 12€ »). À l'ouverture : 5 kg.
-      expect(displayedWeight(tester), '5');
-      expect(find.textContaining('5 kg ×'), findsOneWidget);
+        // Le récap de prix reflète le poids porté par le _weightNotifier parent
+        // (pricePerKg = 12 → ligne « N kg × 12€ »). À l'ouverture : 5 kg.
+        expect(displayedWeight(tester), '5');
+        expect(find.textContaining('5 kg ×'), findsOneWidget);
 
-      await tester.tap(find.byKey(const Key('weight-increment')));
-      await tester.pump();
+        await tester.tap(find.byKey(const Key('weight-increment')));
+        await tester.pump();
 
-      // Affichage incrémenté de 1…
-      expect(displayedWeight(tester), '6');
-      // …et le parent (_weightNotifier) a bien reçu 6 → récap mis à jour.
-      expect(find.textContaining('6 kg ×'), findsOneWidget);
-      expect(find.textContaining('5 kg ×'), findsNothing);
-    });
+        // Affichage incrémenté de 1…
+        expect(displayedWeight(tester), '6');
+        // …et le parent (_weightNotifier) a bien reçu 6 → récap mis à jour.
+        expect(find.textContaining('6 kg ×'), findsOneWidget);
+        expect(find.textContaining('5 kg ×'), findsNothing);
+      },
+    );
 
     testWidgets('le « − » se bloque au minimum (1 kg)', (tester) async {
       await openSheet(

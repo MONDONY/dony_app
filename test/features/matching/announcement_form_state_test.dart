@@ -5,12 +5,12 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   group('AnnouncementFormState.isStep3Valid', () {
     test('mode KG — null pricePerKg → false', () {
-      const s = AnnouncementFormState(pricingMode: PricingMode.kg);
+      const s = AnnouncementFormState();
       expect(s.isStep3Valid, isFalse);
     });
 
     test('mode KG — pricePerKg > 0 → true', () {
-      const s = AnnouncementFormState(pricingMode: PricingMode.kg, pricePerKg: 8.0);
+      const s = AnnouncementFormState(pricePerKg: 8.0);
       expect(s.isStep3Valid, isTrue);
     });
 
@@ -20,7 +20,7 @@ void main() {
     });
 
     test('mode MIXED — pricePerKg null, gridPreviewItems non vide → true', () {
-      final s = AnnouncementFormState(
+      const s = AnnouncementFormState(
         pricingMode: PricingMode.mixed,
         gridPreviewItems: [
           GridPreviewItem(id: 'i1', label: 'Téléphone', unitPriceDisplay: 11.2),
@@ -39,29 +39,38 @@ void main() {
   });
 
   group('AnnouncementFormState.isFormValid', () {
-    test('délègue à isStep3Valid — mode MIXED avec grille → formulaire valide', () {
-      final s = AnnouncementFormState(
-        departureCity: 'Paris',
-        arrivalCity: 'Dakar',
-        departureDate: DateTime.now().add(const Duration(days: 5)),
-        availableKg: 10.0,
-        pricingMode: PricingMode.mixed,
-        gridPreviewItems: [
-          GridPreviewItem(id: 'i1', label: 'Valise cabine', unitPriceDisplay: 22.4),
-        ],
-      );
-      expect(s.isFormValid, isTrue);
-    });
+    test(
+      'délègue à isStep3Valid — mode MIXED avec grille → formulaire valide',
+      () {
+        final s = AnnouncementFormState(
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          departureDate: DateTime.now().add(const Duration(days: 5)),
+          availableKg: 10.0,
+          pricingMode: PricingMode.mixed,
+          gridPreviewItems: const [
+            GridPreviewItem(
+              id: 'i1',
+              label: 'Valise cabine',
+              unitPriceDisplay: 22.4,
+            ),
+          ],
+        );
+        expect(s.isFormValid, isTrue);
+      },
+    );
 
-    test('délègue à isStep3Valid — mode KG sans pricePerKg → formulaire invalide', () {
-      final s = AnnouncementFormState(
-        departureCity: 'Paris',
-        arrivalCity: 'Dakar',
-        departureDate: DateTime.now().add(const Duration(days: 5)),
-        availableKg: 10.0,
-        pricingMode: PricingMode.kg,
-      );
-      expect(s.isFormValid, isFalse);
-    });
+    test(
+      'délègue à isStep3Valid — mode KG sans pricePerKg → formulaire invalide',
+      () {
+        final s = AnnouncementFormState(
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          departureDate: DateTime.now().add(const Duration(days: 5)),
+          availableKg: 10.0,
+        );
+        expect(s.isFormValid, isFalse);
+      },
+    );
   });
 }

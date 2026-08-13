@@ -1,6 +1,4 @@
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/design/widgets/dony_bottom_sheet.dart';
-import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:flutter/material.dart';
 
 class NearMeRadiusSheet {
@@ -21,9 +19,10 @@ class NearMeRadiusSheet {
       title: 'Près de moi',
       stickyBottom: ValueListenableBuilder<double>(
         valueListenable: radiusNotifier,
-        builder: (_, radius, __) => DonyButton(
+        builder: (_, radius, _) => DonyButton(
           label: confirmLabel,
-          onPressed: () => Navigator.of(context, rootNavigator: true).pop(radius),
+          onPressed: () =>
+              Navigator.of(context, rootNavigator: true).pop(radius),
         ),
       ),
       child: _NearMeRadiusContent(radiusNotifier: radiusNotifier),

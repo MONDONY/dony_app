@@ -68,8 +68,9 @@ class DonyFeedbackButton extends StatelessWidget {
       return null;
     }
     try {
-      final boundary = repaintBoundaryKey!.currentContext
-          ?.findRenderObject() as RenderRepaintBoundary?;
+      final boundary =
+          repaintBoundaryKey!.currentContext?.findRenderObject()
+              as RenderRepaintBoundary?;
       if (boundary == null) {
         return null;
       }
@@ -94,11 +95,13 @@ class DonyFeedbackButton extends StatelessWidget {
       'screen_feedback: $route',
       withScope: (scope) async {
         if (bytes != null) {
-          scope.addAttachment(SentryAttachment.fromUint8List(
-            bytes,
-            'screenshot.png',
-            contentType: 'image/png',
-          ));
+          scope.addAttachment(
+            SentryAttachment.fromUint8List(
+              bytes,
+              'screenshot.png',
+              contentType: 'image/png',
+            ),
+          );
         }
         await scope.setTag('feedback_route', route);
       },
@@ -112,10 +115,12 @@ class DonyFeedbackButton extends StatelessWidget {
     try {
       final analytics = _analyticsResolver?.call();
       if (analytics != null) {
-        unawaited(analytics.logEvent(
-          AnalyticsEvents.screenFeedbackSubmitted,
-          properties: {'route': route},
-        ));
+        unawaited(
+          analytics.logEvent(
+            AnalyticsEvents.screenFeedbackSubmitted,
+            properties: {'route': route},
+          ),
+        );
       }
     } catch (_) {}
   }
@@ -181,10 +186,7 @@ class _FeedbackFormState {
 }
 
 class _FeedbackFormInherited extends InheritedWidget {
-  const _FeedbackFormInherited({
-    required this.state,
-    required super.child,
-  });
+  const _FeedbackFormInherited({required this.state, required super.child});
 
   final _FeedbackFormState state;
 

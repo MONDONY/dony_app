@@ -1,20 +1,21 @@
 import 'dart:async';
 
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dony/features/referral/bloc/referral_event.dart';
 import 'package:dony/features/referral/bloc/referral_state.dart';
 import 'package:dony/features/referral/data/referral_repository.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:dony/core/error/app_exception.dart';
 
 export 'referral_event.dart';
 export 'referral_state.dart';
 
 class ReferralBloc extends Bloc<ReferralEvent, ReferralState> {
-  ReferralBloc(this._repository, this._analytics) : super(const ReferralInitial()) {
+  ReferralBloc(this._repository, this._analytics)
+    : super(const ReferralInitial()) {
     on<ReferralLoadRequested>(_onLoadRequested);
     on<ReferralCodeCopied>(_onCodeCopied);
     on<ReferralShared>(_onShared);
@@ -58,10 +59,12 @@ class ReferralBloc extends Bloc<ReferralEvent, ReferralState> {
       await Share.share(
         'Salut ! Utilise mon code Yadony : ${current.info.code} et reçois ton 1er envoi avec 5€ de réduction. ${current.info.shareUrl}',
       );
-      unawaited(_analytics.logEvent(
-        AnalyticsEvents.referralShared,
-        properties: {'channel': 'share_sheet'},
-      ));
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.referralShared,
+          properties: {'channel': 'share_sheet'},
+        ),
+      );
     }
   }
 

@@ -24,7 +24,7 @@ void main() {
     test('maps the response list to TripScanHistoryEntryModel', () async {
       when(() => dio.get('/tracking/announcements/trip-1/events')).thenAnswer(
         (_) async => Response(
-          requestOptions: RequestOptions(path: ''),
+          requestOptions: RequestOptions(),
           data: [
             {
               'donNumber': 'TRK000001',

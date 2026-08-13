@@ -20,18 +20,18 @@ GoRouter _buildRouter(AuthBloc authBloc) => GoRouter(
   routes: [
     GoRoute(
       path: '/',
-      builder: (_, __) => BlocProvider<AuthBloc>.value(
+      builder: (_, _) => BlocProvider<AuthBloc>.value(
         value: authBloc,
         child: const PhoneAuthScreen(),
       ),
     ),
     GoRoute(
       path: '/auth/otp',
-      builder: (_, __) => const Scaffold(body: Text('OTP Screen')),
+      builder: (_, _) => const Scaffold(body: Text('OTP Screen')),
     ),
     GoRoute(
       path: '/auth/email',
-      builder: (_, __) => const Scaffold(body: Text('Email Screen')),
+      builder: (_, _) => const Scaffold(body: Text('Email Screen')),
     ),
   ],
 );
@@ -65,7 +65,7 @@ void main() {
     when(() => mockAuthBloc.state).thenReturn(const AuthInitial());
     when(() => mockAuthBloc.stream).thenAnswer((_) => const Stream.empty());
 
-    registerFallbackValue(AuthSendOtpRequested(''));
+    registerFallbackValue(const AuthSendOtpRequested(''));
   });
 
   tearDown(() async {
@@ -131,7 +131,6 @@ void main() {
         const AuthOtpSent(
           verificationId: 'ver-123',
           phoneNumber: '+33612345678',
-          secondsLeft: 60,
         ),
       ]);
       when(() => mockAuthBloc.stream).thenAnswer((_) => stateStream);

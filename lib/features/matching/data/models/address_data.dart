@@ -29,7 +29,15 @@ class AddressData extends Equatable {
   Map<String, dynamic> toJson() => _$AddressDataToJson(this);
 
   @override
-  List<Object?> get props => [label, lat, lng, street, city, postalCode, country];
+  List<Object?> get props => [
+    label,
+    lat,
+    lng,
+    street,
+    city,
+    postalCode,
+    country,
+  ];
 
   @override
   String toString() => 'AddressData($label, $lat, $lng, $city)';
