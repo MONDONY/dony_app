@@ -328,14 +328,53 @@ class _NotificationIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
+    // Une famille = une couleur, pour que la liste se lise en diagonale sans
+    // rien lire : vert ce qui a abouti, rouge ce qui est perdu, ambre ce qui
+    // réclame une action, bleu ce qui informe, gris ce qui s'est éteint tout
+    // seul. Seuls les types réellement émis par le backend figurent ici ;
+    // le reste tombe sur la cloche neutre.
     final (Color color, String iconAsset) = switch (type) {
-      'BID_CREATED' => (cs.primary, 'package'),
+      // Abouti
       'BID_ACCEPTED' => (cs.success, 'circle-check'),
-      'BID_REJECTED' => (cs.error, 'circle-x'),
-      'TRIP_CANCELLED' => (cs.error, 'ban'),
+      'request_accepted' => (cs.success, 'circle-check'),
+      'negotiation_awaiting_trip' => (cs.success, 'circle-check'),
       'PAYMENT_RELEASED' => (cs.success, 'banknote'),
       'DELIVERY_CONFIRMED' => (cs.success, 'package'),
+
+      // Perdu
+      'BID_REJECTED' => (cs.error, 'circle-x'),
+      'PARCEL_REFUSED' => (cs.error, 'circle-x'),
+      'TRIP_CANCELLED' => (cs.error, 'ban'),
+      'ACCOUNT_SUSPENDED' => (cs.error, 'shield'),
+
+      // Réclame une action
+      'negotiation_awaiting_payment' => (cs.warning, 'credit-card'),
+      'MM_PAYMENT_PENDING' => (cs.warning, 'credit-card'),
+      'CARD_EXPIRING' => (cs.warning, 'credit-card'),
       'DISPUTE_OPENED' => (cs.warning, 'triangle-alert'),
+      'DELIVERY_NOSHOW_REPORTED' => (cs.warning, 'user-x'),
+      'CONFIRMATION_CODE_READY' => (cs.warning, 'qr-code'),
+
+      // Informe / met en relation
+      'BID_CREATED' => (cs.primary, 'package'),
+      'PACKAGE_MATCH' => (cs.primary, 'package'),
+      'NEW_MESSAGE' => (cs.primary, 'message-circle'),
+      'TRIP_IN_PROGRESS' => (cs.primary, 'plane-takeoff'),
+      'negotiation_started' => (cs.info, 'arrow-left-right'),
+      'negotiation_counter' => (cs.info, 'arrow-left-right'),
+      'negotiation' => (cs.info, 'arrow-left-right'),
+      'TRAVELER_INVITE' => (cs.info, 'handshake'),
+      'CORRIDOR_ALERT' => (cs.info, 'plane'),
+      'TRAVELER_NEW_ANNOUNCEMENT' => (cs.info, 'plane'),
+      'automation_capacity_free' => (cs.info, 'zap'),
+      'automation_last_minute' => (cs.info, 'zap'),
+      'automation_loyal_sender' => (cs.info, 'zap'),
+
+      // Éteint tout seul, sans action possible
+      'BID_EXPIRED' => (cs.onSurfaceVariant, 'timer-off'),
+      'request_expired' => (cs.onSurfaceVariant, 'timer-off'),
+      'negotiation_expired' => (cs.onSurfaceVariant, 'timer-off'),
+
       _ => (cs.onSurfaceVariant, 'bell'),
     };
 
