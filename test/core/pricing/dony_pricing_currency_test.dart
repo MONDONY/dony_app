@@ -29,8 +29,14 @@ void main() {
     });
 
     test('une devise inconnue retombe sur l\'euro', () {
-      expect(formatMinorAmount(100, 'ZZZ'), equals(formatMinorAmount(100, 'EUR')));
-      expect(formatMinorAmount(100, null), equals(formatMinorAmount(100, 'EUR')));
+      expect(
+        formatMinorAmount(100, 'ZZZ'),
+        equals(formatMinorAmount(100, 'EUR')),
+      );
+      expect(
+        formatMinorAmount(100, null),
+        equals(formatMinorAmount(100, 'EUR')),
+      );
     });
   });
 

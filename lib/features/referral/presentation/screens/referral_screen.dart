@@ -97,7 +97,7 @@ class _LoadedBody extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Hero gradient card
-          const _HeroCard().animate().fadeIn(duration: 300.ms),
+          _HeroCard(info: info).animate().fadeIn(duration: 300.ms),
 
           const SizedBox(height: DonySpacing.xl),
 
@@ -132,11 +132,10 @@ class _LoadedBody extends StatelessWidget {
                 borderRadius: BorderRadius.circular(DonyRadius.card),
               ),
               child: Text(
-                // La récompense de parrainage est libellée en euros côté backend
-                // (dony.referral.reward-amount-cents) et créditée sur le
-                // portefeuille EUR : on l'affiche donc en euros, y compris pour un
-                // utilisateur dont la devise active est autre.
-                '💰 Tu as gagné ${formatMinorAmount(info.totalEarnedCents, 'EUR')} grâce au parrainage',
+                // La récompense est versée dans la devise active du parrain au
+                // moment du versement : on affiche donc la devise renvoyée par le
+                // serveur, qui n'additionne que les crédits de celle-ci.
+                '💰 Tu as gagné ${formatMinorAmount(info.totalEarnedCents, info.currency)} grâce au parrainage',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   color: cs.success,
@@ -154,7 +153,11 @@ class _LoadedBody extends StatelessWidget {
 // ─── Hero card ───────────────────────────────────────────────────────────────
 
 class _HeroCard extends StatelessWidget {
-  const _HeroCard();
+  const _HeroCard({required this.info});
+
+  /// Le montant promis suit la devise du parrain : il ne peut donc plus être
+  /// écrit en dur dans la carte.
+  final ReferralInfo info;
 
   @override
   Widget build(BuildContext context) {
@@ -174,7 +177,7 @@ class _HeroCard extends StatelessWidget {
           const DonyIcon('gift', size: 48, color: Colors.white),
           const SizedBox(height: DonySpacing.md),
           Text(
-            'Invite et gagne 5 €',
+            'Invite et gagne ${formatMinorAmount(info.rewardAmountCents, info.currency)}',
             style: Theme.of(context).textTheme.headlineLarge?.copyWith(
               color: Colors.white,
               fontWeight: FontWeight.w800,
@@ -183,7 +186,7 @@ class _HeroCard extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.sm),
           Text(
-            'Tu reçois 5 € de crédit dès la première livraison de ton invité.',
+            'Tu reçois ${formatMinorAmount(info.rewardAmountCents, info.currency)} de crédit dès la première livraison de ton invité.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: Colors.white.withValues(alpha: 0.85),
             ),
@@ -349,7 +352,7 @@ class _ShareButton extends StatelessWidget {
             ),
           ),
           onPressed: () => Share.share(
-            'Salut ! Utilise mon code Yadony : ${info.code} et reçois ton 1er envoi avec 5€ de réduction. ${info.shareUrl}',
+            'Salut ! Utilise mon code Yadony : ${info.code} et reçois ton 1er envoi avec ${formatMinorAmount(info.rewardAmountCents, info.currency)} de réduction. ${info.shareUrl}',
             sharePositionOrigin: sharePositionOriginFor(context),
           ),
         ),

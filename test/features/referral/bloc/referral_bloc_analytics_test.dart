@@ -17,6 +17,8 @@ ReferralInfo _fakeReferralInfo() => const ReferralInfo(
   rewarded: 0,
   totalEarnedCents: 0,
   hasBeenReferred: false,
+  currency: 'EUR',
+  rewardAmountCents: 500,
 );
 
 void main() {

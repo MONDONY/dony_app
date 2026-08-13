@@ -35,6 +35,8 @@ void main() {
     rewarded: 2,
     totalEarnedCents: 1000,
     hasBeenReferred: false,
+    currency: 'EUR',
+    rewardAmountCents: 500,
   );
 
   // 1. État initial = ReferralInitial

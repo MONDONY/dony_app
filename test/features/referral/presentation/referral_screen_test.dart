@@ -31,6 +31,8 @@ const _testInfo = ReferralInfo(
   rewarded: 1,
   totalEarnedCents: 500,
   hasBeenReferred: false,
+  currency: 'EUR',
+  rewardAmountCents: 500,
 );
 
 void main() {
@@ -133,13 +135,38 @@ void main() {
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
 
-    // _testInfo has totalEarnedCents = 500 → "5 €"
-    // La récompense reste libellée en euros (source backend) et garde ses
-    // décimales : c'est un montant crédité, pas un arrondi d'affichage.
+    // totalEarnedCents = 500 avec currency EUR → « 5,00 € ». Le montant garde
+    // ses décimales : c'est une somme créditée, pas un arrondi d'affichage.
     expect(
       find.textContaining('5,00\u00A0€ grâce au parrainage'),
       findsOneWidget,
     );
+  });
+
+  testWidgets('le gain suit la devise renvoyée par le serveur', (tester) async {
+    // La récompense est versée dans la devise active du parrain au moment du
+    // versement : afficher « € » en dur aurait annoncé un montant faux à un
+    // parrain travaillant en dollar.
+    const infoUsd = ReferralInfo(
+      code: 'DONY-XYZ42',
+      shareUrl: 'https://dony.app/invite/DONY-XYZ42',
+      totalInvited: 4,
+      signedUp: 2,
+      rewarded: 1,
+      totalEarnedCents: 500,
+      hasBeenReferred: false,
+      currency: 'USD',
+      rewardAmountCents: 500,
+    );
+    when(() => bloc.state).thenReturn(const ReferralLoaded(infoUsd));
+
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    // Le montant apparaît sur la carte, dans le sous-titre et dans le message
+    // de partage : ce qui compte est qu'aucun euro ne subsiste.
+    expect(find.textContaining(r'$5.00'), findsWidgets);
+    expect(find.textContaining('€'), findsNothing);
   });
 
   // 9. Hero card affiche le texte d'invite
@@ -151,7 +178,9 @@ void main() {
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
 
-    expect(find.text('Invite et gagne 5 €'), findsOneWidget);
+    // Le montant promis vient du serveur (rewardAmountCents) et suit la devise
+    // du parrain : il n'est plus écrit en dur dans l'écran.
+    expect(find.text('Invite et gagne 5,00\u00A0€'), findsOneWidget);
   });
 
   // 10. Message d'erreur affiché dans l'error view

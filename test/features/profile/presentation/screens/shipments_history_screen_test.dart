@@ -130,10 +130,11 @@ void main() {
 
     expect(find.text('Fatoumata Bah'), findsOneWidget);
     expect(find.text('Paris → Dakar'), findsOneWidget);
-    expect(
-      find.textContaining('59'),
-      findsOneWidget,
-    ); // brut = 52,5 net × 1,12 = 58,8 → « 59 € » (jamais le net)
+    // Brut = 52,5 net × 1,12 = 58,8, affiché dans la devise de l'offre et non
+    // plus arrondi à l'entier : une somme payée garde ses centimes. Le net seul
+    // (52,50) ne doit jamais apparaître.
+    expect(find.textContaining('58,80'), findsOneWidget);
+    expect(find.textContaining('52,50'), findsNothing);
     expect(find.textContaining('Médicaments'), findsOneWidget);
   });
 
