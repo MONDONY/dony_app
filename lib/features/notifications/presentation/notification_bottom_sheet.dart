@@ -332,7 +332,6 @@ class _NotificationIcon extends StatelessWidget {
       'BID_CREATED' => (cs.primary, 'package'),
       'BID_ACCEPTED' => (cs.success, 'circle-check'),
       'BID_REJECTED' => (cs.error, 'circle-x'),
-      'HANDOVER_DEFINED' => (cs.secondary, 'map-pin'),
       'TRIP_CANCELLED' => (cs.error, 'ban'),
       'PAYMENT_RELEASED' => (cs.success, 'banknote'),
       'DELIVERY_CONFIRMED' => (cs.success, 'package'),

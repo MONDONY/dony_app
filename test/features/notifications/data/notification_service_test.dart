@@ -264,13 +264,35 @@ void main() {
       },
     );
 
-    test('HANDOVER_DEFINED routes to bid detail', () {
+    test('automation_capacity_free routes to owner trip detail', () {
+      const uuid = '123e4567-e89b-12d3-a456-426614174000';
       expect(
         service.testRouteForMessage({
-          'type': 'HANDOVER_DEFINED',
+          'type': 'automation_capacity_free',
+          'announcementId': uuid,
+        }),
+        '/announcements/$uuid/trip',
+      );
+    });
+
+    test('automation_last_minute routes to bid detail', () {
+      expect(
+        service.testRouteForMessage({
+          'type': 'automation_last_minute',
           'bidId': bidId,
         }),
         '/bids/$bidId',
+      );
+    });
+
+    test('automation_loyal_sender routes to public trip detail', () {
+      const uuid = '123e4567-e89b-12d3-a456-426614174000';
+      expect(
+        service.testRouteForMessage({
+          'type': 'automation_loyal_sender',
+          'announcementId': uuid,
+        }),
+        '/traveler/$uuid',
       );
     });
 

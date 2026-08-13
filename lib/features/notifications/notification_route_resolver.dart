@@ -43,7 +43,6 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
       '/announcements/$announcementId/bids',
 
     'BID_ACCEPTED' when _isUuid(bidId) => '/bids/$bidId',
-    'HANDOVER_DEFINED' when _isUuid(bidId) => '/bids/$bidId',
     'DELIVERY_CONFIRMED' when _isUuid(bidId) => '/bids/$bidId',
     'PAYMENT_RELEASED' when _isUuid(bidId) => '/bids/$bidId',
     'DISPUTE_OPENED' when _isUuid(bidId) => '/bids/$bidId',
@@ -102,6 +101,17 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
     'NEW_MESSAGE' when _isUuid(conversationId) =>
       '/conversations/$conversationId',
     'NEW_MESSAGE' => '/messages',
+
+    // Automatisations voyageur — même cible que la notif métier équivalente :
+    // une alerte de capacité parle d'un trajet à moi, une offre de dernière
+    // minute d'une offre reçue. Sans ces trois lignes, le tap ne menait nulle
+    // part et la notification restait un cul-de-sac dans la boîte de réception.
+    'automation_capacity_free' when _isUuid(announcementId) =>
+      '/announcements/$announcementId/trip',
+    'automation_last_minute' when _isUuid(bidId) => '/bids/$bidId',
+    // Expéditeur fidèle → détail du trajet publié, comme CORRIDOR_ALERT
+    'automation_loyal_sender' when _isUuid(announcementId) =>
+      '/traveler/$announcementId',
 
     'ACCOUNT_SUSPENDED' => '/account/disabled',
     'CARD_EXPIRING' => '/payments/commission-method',
