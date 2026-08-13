@@ -178,15 +178,10 @@ void main() {
       // tuile précédente — chaque cas verrait l'icône du cas d'avant.
       await tester.pumpWidget(const SizedBox.shrink());
       stub(
-        NotificationLoaded(
-          notifications: [_notif(type: type)],
-          unreadCount: 1,
-        ),
+        NotificationLoaded(notifications: [_notif(type: type)], unreadCount: 1),
       );
       await pumpSheet(tester);
-      final icons = tester
-          .widgetList<DonyIcon>(find.byType(DonyIcon))
-          .toList();
+      final icons = tester.widgetList<DonyIcon>(find.byType(DonyIcon)).toList();
       // La tuile porte aussi un chevron quand le type a une route : on ne
       // retient que la première icône, celle du carré de gauche.
       return icons.isEmpty ? null : icons.first.name;
@@ -204,16 +199,17 @@ void main() {
 
     /// Les trois familles qui tombaient sur la cloche générique avant d'être
     /// cartographiées — le test garde la régression fermée.
-    testWidgets('négociations, automatisations et expirations sont distinguées', (
-      tester,
-    ) async {
-      expect(
-        await iconAssetFor(tester, 'negotiation_counter'),
-        'arrow-left-right',
-      );
-      expect(await iconAssetFor(tester, 'automation_last_minute'), 'zap');
-      expect(await iconAssetFor(tester, 'negotiation_expired'), 'timer-off');
-    });
+    testWidgets(
+      'négociations, automatisations et expirations sont distinguées',
+      (tester) async {
+        expect(
+          await iconAssetFor(tester, 'negotiation_counter'),
+          'arrow-left-right',
+        );
+        expect(await iconAssetFor(tester, 'automation_last_minute'), 'zap');
+        expect(await iconAssetFor(tester, 'negotiation_expired'), 'timer-off');
+      },
+    );
 
     testWidgets('un type inconnu garde la cloche neutre', (tester) async {
       expect(await iconAssetFor(tester, 'TYPE_INEXISTANT'), 'bell');

@@ -545,17 +545,12 @@ void main() {
       await run({'type': 'PAYMENT_RELEASED', 'notificationId': 'notif-90'});
 
       final captured = verify(
-        () => dio.post<void>(
-          captureAny(),
-          options: captureAny(named: 'options'),
-        ),
+        () =>
+            dio.post<void>(captureAny(), options: captureAny(named: 'options')),
       ).captured;
 
       expect(captured.first, '/notifications/notif-90/ack');
-      expect(
-        (captured[1] as Options).headers?['Authorization'],
-        'Bearer jwt',
-      );
+      expect((captured[1] as Options).headers?['Authorization'], 'Bearer jwt');
     });
 
     test('n’accuse pas une notification non critique', () async {
