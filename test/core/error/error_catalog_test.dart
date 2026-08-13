@@ -167,4 +167,66 @@ void main() {
       expect(p.title, isNot('Erreur réseau'));
     });
   });
+
+  group('ErrorCatalog — parcours de connexion par email', () {
+    // Tout code que peut renvoyer EmailOtpController doit avoir son entrée.
+    // Deux manquaient et retombaient sur « Quelque chose s'est mal passé de
+    // notre côté », qui ne dit ni ce qui a échoué ni quoi faire ensuite.
+    const codesEmisParLeBackend = <String>[
+      'rate-limit',
+      'otp-invalid',
+      'otp-expired',
+      'otp-attempts-exceeded',
+      'email-service-error',
+      'firebase-error',
+      'email-already-exists',
+      'email-already-set',
+    ];
+
+    for (final code in codesEmisParLeBackend) {
+      test('$code est traduit', () {
+        final error = ServerException('peu importe', code);
+
+        expect(
+          ErrorCatalog.isKnown(error),
+          isTrue,
+          reason:
+              'le backend émet "$code" : sans entrée, l\'utilisateur voit '
+              'un message générique au lieu de la cause réelle',
+        );
+      });
+    }
+
+    test(
+      'les codes demandés et les codes mal saisis ne portent pas le même titre',
+      () {
+        // Un titre commun laissait croire à une erreur de saisie alors que
+        // l'utilisateur avait seulement trop cliqué sur « Renvoyer le code ».
+        final tropDeCodes = ErrorCatalog.lookup(
+          const ServerException('peu importe', 'rate-limit'),
+        );
+        final tropDEssais = ErrorCatalog.lookup(
+          const ServerException('peu importe', 'otp-attempts-exceeded'),
+        );
+
+        expect(tropDeCodes.title, isNot(tropDEssais.title));
+      },
+    );
+
+    test(
+      'essais épuisés : le texte n\'invite pas à demander un nouveau code',
+      () {
+        // Le budget est compté par adresse, pas par code : un renvoi ne le remet
+        // pas à zéro et l'utilisateur resterait bloqué en suivant ce conseil.
+        final p = ErrorCatalog.lookup(
+          const ServerException('peu importe', 'otp-attempts-exceeded'),
+        );
+
+        expect(
+          p.message.toLowerCase(),
+          isNot(contains('demande un nouveau code')),
+        );
+      },
+    );
+  });
 }

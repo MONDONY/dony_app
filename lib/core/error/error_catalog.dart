@@ -429,10 +429,13 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.timer_off_rounded,
     ),
+    // Le budget d'essais est compté par adresse, pas par code : demander un
+    // nouveau code ne le remet donc pas à zéro. L'ancien texte invitait pourtant
+    // à le faire, envoyant l'utilisateur vers une action qui ne débloquait rien.
     'otp-attempts-exceeded': ErrorPresentation(
       title: 'Trop de tentatives',
       message:
-          'Trop d\'essais incorrects. Reviens en arrière et demande un nouveau code.',
+          'Trop d\'essais incorrects. Patiente quelques minutes, un nouveau code ne débloquera pas la saisie.',
       severity: ErrorSeverity.warning,
       icon: Icons.hourglass_top_rounded,
     ),
@@ -442,12 +445,42 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.email_outlined,
     ),
-    'rate-limit': ErrorPresentation(
-      title: 'Trop de tentatives',
+    // 409 au rattachement : l'adresse identifie le compte Firebase, elle
+    // s'ajoute mais ne se remplace pas. À distinguer de « email-already-exists »,
+    // qui vise une adresse prise par quelqu'un d'autre.
+    'email-already-set': ErrorPresentation(
+      title: 'Adresse déjà définie',
       message:
-          'Tu as demandé trop de codes. Attends 5 minutes avant de réessayer.',
+          'Une adresse est déjà associée à ce compte et ne peut pas être remplacée.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.email_outlined,
+    ),
+    // Titre distinct de « Trop de tentatives » : ce cas vise les codes demandés,
+    // l'autre les codes mal saisis. Un titre commun laissait croire à l'utilisateur
+    // qu'il s'était trompé alors qu'il avait seulement trop cliqué sur « Renvoyer ».
+    'rate-limit': ErrorPresentation(
+      title: 'Trop de codes demandés',
+      message:
+          'Tu as demandé plusieurs codes coup sur coup. Attends quelques minutes avant d\'en redemander un.',
       severity: ErrorSeverity.warning,
       icon: Icons.speed_rounded,
+    ),
+    // Renvoyé quand l'envoi de l'email échoue chez le prestataire (503). Sans
+    // cette entrée, l'écran affichait « Quelque chose s'est mal passé de notre
+    // côté », qui ne dit pas que réessayer suffit souvent.
+    'email-service-error': ErrorPresentation(
+      title: 'Envoi impossible',
+      message:
+          'L\'email n\'a pas pu être envoyé. Vérifie l\'adresse saisie et réessaie.',
+      severity: ErrorSeverity.error,
+      icon: Icons.mark_email_unread_outlined,
+    ),
+    // Échec de création du jeton d'authentification côté serveur (500).
+    'firebase-error': ErrorPresentation(
+      title: 'Connexion impossible',
+      message: 'La connexion n\'a pas pu aboutir. Réessaie dans un instant.',
+      severity: ErrorSeverity.error,
+      icon: Icons.lock_reset_rounded,
     ),
 
     // ─── Codes promo ─────────────────────────────────────────────────
