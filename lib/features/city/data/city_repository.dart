@@ -1,10 +1,10 @@
-import 'city_datasource.dart';
-import 'city_model.dart';
-import 'popular_corridor_model.dart';
+import 'package:dony/features/city/data/city_datasource.dart';
+import 'package:dony/features/city/data/city_model.dart';
+import 'package:dony/features/city/data/popular_corridor_model.dart';
 
 class CityRepository {
   const CityRepository({required CityDatasource datasource})
-      : _datasource = datasource;
+    : _datasource = datasource;
 
   final CityDatasource _datasource;
 

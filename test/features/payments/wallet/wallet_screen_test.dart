@@ -8,11 +8,11 @@ import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import '../../../helpers/currency_test_doubles.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../../helpers/currency_test_doubles.dart';
 
 class MockWalletBloc extends MockBloc<WalletEvent, WalletState>
     implements WalletBloc {}
@@ -23,7 +23,7 @@ Widget buildSubject(WalletBloc bloc, BusinessPrefsBloc prefsBloc) =>
         routes: [
           GoRoute(
             path: '/',
-            builder: (_, __) => MultiBlocProvider(
+            builder: (_, _) => MultiBlocProvider(
               providers: [
                 BlocProvider<WalletBloc>.value(value: bloc),
                 BlocProvider<BusinessPrefsBloc>.value(value: prefsBloc),
@@ -51,7 +51,7 @@ void main() {
   });
 
   testWidgets('affiche le solde quand WalletLoaded', (tester) async {
-    final wallet = WalletModel(
+    const wallet = WalletModel(
       balance: 47.50,
       currency: 'EUR',
       transactions: [],
@@ -83,7 +83,7 @@ void main() {
   });
 
   testWidgets('le bouton Recharger est présent', (tester) async {
-    final wallet = WalletModel(balance: 0, currency: 'EUR', transactions: []);
+    const wallet = WalletModel(balance: 0, currency: 'EUR', transactions: []);
     whenListen(
       bloc,
       Stream.value(WalletLoaded(wallet)),
@@ -166,11 +166,11 @@ void main() {
   testWidgets('affiche le solde dans la devise active, pas toujours en EUR', (
     tester,
   ) async {
-    final wallet = WalletModel(
+    const wallet = WalletModel(
       balance: 15.00,
       currency: 'CAD',
       transactions: [],
-      balances: const [
+      balances: [
         WalletCurrencyBalanceModel(
           currency: 'CAD',
           balance: 15.00,
@@ -193,11 +193,11 @@ void main() {
   testWidgets('affiche les soldes verrouillés des devises non actives', (
     tester,
   ) async {
-    final wallet = WalletModel(
+    const wallet = WalletModel(
       balance: 47.50,
       currency: 'EUR',
       transactions: [],
-      balances: const [
+      balances: [
         WalletCurrencyBalanceModel(
           currency: 'EUR',
           balance: 47.50,
@@ -226,11 +226,11 @@ void main() {
   testWidgets(
     'ne montre aucune section verrouillée si une seule devise possédée',
     (tester) async {
-      final wallet = WalletModel(
+      const wallet = WalletModel(
         balance: 47.50,
         currency: 'EUR',
         transactions: [],
-        balances: const [
+        balances: [
           WalletCurrencyBalanceModel(
             currency: 'EUR',
             balance: 47.50,
@@ -254,11 +254,11 @@ void main() {
   testWidgets(
     'tap sur un solde verrouillé propose de basculer vers cette devise',
     (tester) async {
-      final wallet = WalletModel(
+      const wallet = WalletModel(
         balance: 47.50,
         currency: 'EUR',
         transactions: [],
-        balances: const [
+        balances: [
           WalletCurrencyBalanceModel(
             currency: 'EUR',
             balance: 47.50,
@@ -293,11 +293,11 @@ void main() {
     'confirmer la bascule d\'un solde verrouillé envoie CurrencyChanged '
     'et recharge le wallet',
     (tester) async {
-      final wallet = WalletModel(
+      const wallet = WalletModel(
         balance: 47.50,
         currency: 'EUR',
         transactions: [],
-        balances: const [
+        balances: [
           WalletCurrencyBalanceModel(
             currency: 'EUR',
             balance: 47.50,
@@ -333,7 +333,7 @@ void main() {
   testWidgets('affiche message vide quand liste transactions vide', (
     tester,
   ) async {
-    final wallet = WalletModel(balance: 0, currency: 'EUR', transactions: []);
+    const wallet = WalletModel(balance: 0, currency: 'EUR', transactions: []);
     whenListen(
       bloc,
       Stream.value(WalletLoaded(wallet)),

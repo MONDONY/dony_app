@@ -30,7 +30,8 @@ class KycOnboardingBottomSheet extends StatelessWidget {
                 isLoading: isLoading,
                 onPressed: isLoading
                     ? null
-                    : () => ctx.read<KycBloc>().add(const KycSessionRequested()),
+                    : () =>
+                          ctx.read<KycBloc>().add(const KycSessionRequested()),
               );
             },
           ),
@@ -67,11 +68,7 @@ class KycOnboardingBottomSheet extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            DonyIcon(
-              'id-card',
-              size: 48,
-              color: cs.primary,
-            ),
+            DonyIcon('id-card', size: 48, color: cs.primary),
             const SizedBox(height: DonySpacing.base),
             Text(
               'Vérifiez votre identité',
@@ -81,9 +78,7 @@ class KycOnboardingBottomSheet extends StatelessWidget {
             const SizedBox(height: DonySpacing.xs),
             Text(
               'Requis pour publier des annonces sur Yadony',
-              style: tt.bodyMedium?.copyWith(
-                color: cs.onSurfaceVariant,
-              ),
+              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: DonySpacing.xl),
@@ -132,18 +127,12 @@ class _InfoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        DonyIcon(
-          iconAsset,
-          size: 16,
-          color: cs.primary,
-        ),
+        DonyIcon(iconAsset, size: 16, color: cs.primary),
         const SizedBox(width: DonySpacing.sm),
         Expanded(
           child: Text(
             text,
-            style: tt.bodySmall?.copyWith(
-              color: cs.onSurfaceVariant,
-            ),
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
         ),
       ],

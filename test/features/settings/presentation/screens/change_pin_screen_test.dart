@@ -13,11 +13,11 @@ GoRouter _router(MockLocalAuthService svc) => GoRouter(
   routes: [
     GoRoute(
       path: '/',
-      builder: (_, __) => const Scaffold(body: Text('Parent')),
+      builder: (_, _) => const Scaffold(body: Text('Parent')),
       routes: [
         GoRoute(
           path: 'change-pin',
-          builder: (_, __) => ChangePinScreen(authService: svc),
+          builder: (_, _) => ChangePinScreen(authService: svc),
         ),
       ],
     ),

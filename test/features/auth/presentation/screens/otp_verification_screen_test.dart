@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
@@ -65,7 +66,6 @@ void main() {
       initialState: const AuthOtpSent(
         verificationId: 'vid',
         phoneNumber: '+33600000000',
-        secondsLeft: 60,
       ),
     );
 
@@ -74,14 +74,14 @@ void main() {
       routes: [
         GoRoute(
           path: '/auth/otp',
-          builder: (_, __) => BlocProvider<AuthBloc>.value(
+          builder: (_, _) => BlocProvider<AuthBloc>.value(
             value: mockBloc,
             child: const OtpVerificationScreen(),
           ),
         ),
         GoRoute(
           path: '/auth/currency-selection',
-          builder: (_, __) => const Scaffold(body: Text('currency-selection')),
+          builder: (_, _) => const Scaffold(body: Text('currency-selection')),
         ),
       ],
     );
@@ -127,11 +127,7 @@ void main() {
   Widget buildPhoneScreenNoStream({AuthState? initialState}) {
     when(() => mockBloc.state).thenReturn(
       initialState ??
-          const AuthOtpSent(
-            verificationId: 'vid',
-            phoneNumber: '+33600000000',
-            secondsLeft: 60,
-          ),
+          const AuthOtpSent(verificationId: 'vid', phoneNumber: '+33600000000'),
     );
     when(() => mockBloc.stream).thenAnswer((_) => const Stream.empty());
 
@@ -141,18 +137,18 @@ void main() {
         routes: [
           GoRoute(
             path: '/auth/otp',
-            builder: (_, __) => BlocProvider<AuthBloc>.value(
+            builder: (_, _) => BlocProvider<AuthBloc>.value(
               value: mockBloc,
               child: const OtpVerificationScreen(),
             ),
           ),
           GoRoute(
             path: '/auth/local',
-            builder: (_, __) => const Scaffold(body: Text('local-auth')),
+            builder: (_, _) => const Scaffold(body: Text('local-auth')),
           ),
           GoRoute(
             path: '/auth/phone',
-            builder: (_, __) => const Scaffold(body: Text('phone-auth')),
+            builder: (_, _) => const Scaffold(body: Text('phone-auth')),
           ),
         ],
       ),
@@ -276,12 +272,13 @@ void main() {
         mockBloc,
         Stream.fromIterable([
           const AuthLoading(),
-          AuthError(NetworkException('Code invalide', code: 'invalid-code')),
+          const AuthError(
+            NetworkException('Code invalide', code: 'invalid-code'),
+          ),
         ]),
         initialState: const AuthOtpSent(
           verificationId: 'vid',
           phoneNumber: '+33600000000',
-          secondsLeft: 60,
         ),
       );
 
@@ -292,7 +289,7 @@ void main() {
             routes: [
               GoRoute(
                 path: '/auth/otp',
-                builder: (_, __) => BlocProvider<AuthBloc>.value(
+                builder: (_, _) => BlocProvider<AuthBloc>.value(
                   value: mockBloc,
                   child: const OtpVerificationScreen(),
                 ),
@@ -317,11 +314,7 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
 
     when(() => mockBloc.state).thenReturn(
-      const AuthOtpSent(
-        verificationId: 'vid',
-        phoneNumber: '+33600000000',
-        secondsLeft: 60,
-      ),
+      const AuthOtpSent(verificationId: 'vid', phoneNumber: '+33600000000'),
     );
     when(() => mockBloc.stream).thenAnswer((_) => const Stream.empty());
 
@@ -331,11 +324,11 @@ void main() {
       routes: [
         GoRoute(
           path: '/prev',
-          builder: (_, __) => const Scaffold(body: Text('previous-screen')),
+          builder: (_, _) => const Scaffold(body: Text('previous-screen')),
         ),
         GoRoute(
           path: '/auth/otp',
-          builder: (_, __) => BlocProvider<AuthBloc>.value(
+          builder: (_, _) => BlocProvider<AuthBloc>.value(
             value: mockBloc,
             child: const OtpVerificationScreen(),
           ),
@@ -347,7 +340,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Navigate to OTP screen
-    router.push('/auth/otp');
+    unawaited(router.push('/auth/otp'));
     await tester.pumpAndSettle(const Duration(seconds: 1));
 
     // The back button should be visible (DonyAppBarBackButton — carré bleu + chevron)

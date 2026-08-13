@@ -11,22 +11,23 @@ void main() {
 
   setUp(() {
     analytics = _MockAnalyticsService();
-    when(() => analytics.logEvent(any(), properties: any(named: 'properties')))
-        .thenAnswer((_) async {});
+    when(
+      () => analytics.logEvent(any(), properties: any(named: 'properties')),
+    ).thenAnswer((_) async {});
   });
 
   blocTest<TripFilterCubit, TripFilterState>(
     'setFilter émet le filtre et log trip_filter_applied',
     build: () => TripFilterCubit(analytics),
     act: (c) => c.setFilter(TripStatusFilter.completed),
-    expect: () => [
-      const TripFilterState(filter: TripStatusFilter.completed),
-    ],
+    expect: () => [const TripFilterState(filter: TripStatusFilter.completed)],
     verify: (_) {
-      verify(() => analytics.logEvent(
-            'trip_filter_applied',
-            properties: {'status': 'completed'},
-          )).called(1);
+      verify(
+        () => analytics.logEvent(
+          'trip_filter_applied',
+          properties: {'status': 'completed'},
+        ),
+      ).called(1);
     },
   );
 
@@ -35,13 +36,16 @@ void main() {
     build: () => TripFilterCubit(analytics),
     act: (c) => c.setQuery('dakar'),
     expect: () => [const TripFilterState(query: 'dakar')],
-    verify: (_) => verifyNever(() =>
-        analytics.logEvent(any(), properties: any(named: 'properties'))),
+    verify: (_) => verifyNever(
+      () => analytics.logEvent(any(), properties: any(named: 'properties')),
+    ),
   );
 
   test('matches applique filtre statut et recherche ville', () {
     const state = TripFilterState(
-        filter: TripStatusFilter.active, query: 'dak');
+      filter: TripStatusFilter.active,
+      query: 'dak',
+    );
     expect(state.matchesStatus('ACTIVE'), isTrue);
     expect(state.matchesStatus('IN_PROGRESS'), isTrue);
     expect(state.matchesStatus('COMPLETED'), isFalse);

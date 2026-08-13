@@ -36,8 +36,9 @@ class DonySectionHeader extends StatelessWidget {
     return Padding(
       padding: padding ?? EdgeInsets.zero,
       child: Row(
-        crossAxisAlignment:
-            subtitle != null ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+        crossAxisAlignment: subtitle != null
+            ? CrossAxisAlignment.start
+            : CrossAxisAlignment.center,
         children: [
           Expanded(
             child: Column(

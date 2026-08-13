@@ -1,13 +1,12 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
-import 'package:dony/features/referral/bloc/referral_event.dart';
-import 'package:dony/features/referral/bloc/referral_state.dart';
 import 'package:dony/features/referral/data/models/referral_info.dart';
 import 'package:dony/features/referral/data/referral_repository.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+
 import '../../../helpers/mock_analytics_backend.dart';
 
 class MockReferralRepository extends Mock implements ReferralRepository {}
@@ -36,6 +35,8 @@ void main() {
     rewarded: 2,
     totalEarnedCents: 1000,
     hasBeenReferred: false,
+    currency: 'EUR',
+    rewardAmountCents: 500,
   );
 
   // 1. État initial = ReferralInitial
@@ -53,25 +54,20 @@ void main() {
     },
     build: buildBloc,
     act: (bloc) => bloc.add(const ReferralLoadRequested()),
-    expect: () => [
-      isA<ReferralLoading>(),
-      isA<ReferralLoaded>(),
-    ],
+    expect: () => [isA<ReferralLoading>(), isA<ReferralLoaded>()],
   );
 
   // 3. ReferralLoadRequested → [ReferralLoading, ReferralError] en cas d'exception
   blocTest<ReferralBloc, ReferralState>(
     'emits [ReferralLoading, ReferralError] when load throws',
     setUp: () {
-      when(() => mockRepo.getMyReferral())
-          .thenThrow(Exception('Erreur réseau'));
+      when(
+        () => mockRepo.getMyReferral(),
+      ).thenThrow(Exception('Erreur réseau'));
     },
     build: buildBloc,
     act: (bloc) => bloc.add(const ReferralLoadRequested()),
-    expect: () => [
-      isA<ReferralLoading>(),
-      isA<ReferralError>(),
-    ],
+    expect: () => [isA<ReferralLoading>(), isA<ReferralError>()],
   );
 
   // 4. ReferralLoaded contient le bon code
@@ -114,8 +110,9 @@ void main() {
   blocTest<ReferralBloc, ReferralState>(
     'ReferralError has non-empty message when exception is thrown',
     setUp: () {
-      when(() => mockRepo.getMyReferral())
-          .thenThrow(Exception('Service indisponible'));
+      when(
+        () => mockRepo.getMyReferral(),
+      ).thenThrow(Exception('Service indisponible'));
     },
     build: buildBloc,
     act: (bloc) => bloc.add(const ReferralLoadRequested()),
@@ -137,10 +134,7 @@ void main() {
     },
     build: buildBloc,
     act: (bloc) => bloc.add(const ReferralRedeemRequested('AISSA0012')),
-    expect: () => [
-      isA<ReferralRedeemLoading>(),
-      isA<ReferralRedeemed>(),
-    ],
+    expect: () => [isA<ReferralRedeemLoading>(), isA<ReferralRedeemed>()],
   );
 
   // 9. referral-code-not-found → [ReferralRedeemLoading, ReferralRedeemError]

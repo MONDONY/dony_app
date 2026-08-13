@@ -15,8 +15,11 @@ import '../../../helpers/mock_analytics_backend.dart';
 class _FakeDateTime extends Fake implements DateTime {}
 
 class _MockAuthRepo extends Mock implements AuthRepository {}
+
 class _MockLocalAuth extends Mock implements LocalAuthService {}
+
 class _MockFirebaseAuth extends Mock implements FirebaseAuth {}
+
 class _MockFirebaseUser extends Mock implements User {}
 
 void main() {
@@ -26,7 +29,7 @@ void main() {
   late MockAnalyticsBackend backend;
   late _MockFirebaseUser firebaseUser;
 
-  final fakeUser = UserModel(
+  const fakeUser = UserModel(
     id: 'u1',
     phoneNumber: '+33600000000',
     roles: ['SENDER'],
@@ -69,10 +72,10 @@ void main() {
       bloc.add(const AuthCheckRequested());
       await bloc.stream.firstWhere((s) => s is AuthAuthenticated);
       await Future<void>.delayed(Duration.zero);
-      verify(() => backend.capture(
-        AnalyticsEvents.loginSuccess,
-        {'method': 'check'},
-      )).called(1);
+      verify(
+        () =>
+            backend.capture(AnalyticsEvents.loginSuccess, {'method': 'check'}),
+      ).called(1);
     });
   });
 
@@ -80,11 +83,8 @@ void main() {
     test('fires on AuthCheckRequested when server error', () async {
       when(() => repo.getProfile()).thenThrow(
         DioException(
-          requestOptions: RequestOptions(path: ''),
-          response: Response(
-            requestOptions: RequestOptions(path: ''),
-            statusCode: 500,
-          ),
+          requestOptions: RequestOptions(),
+          response: Response(requestOptions: RequestOptions(), statusCode: 500),
           type: DioExceptionType.badResponse,
         ),
       );
@@ -92,10 +92,9 @@ void main() {
       bloc.add(const AuthCheckRequested());
       await bloc.stream.firstWhere((s) => s is AuthError);
       await Future<void>.delayed(Duration.zero);
-      verify(() => backend.capture(
-        AnalyticsEvents.loginFailed,
-        any(),
-      )).called(1);
+      verify(
+        () => backend.capture(AnalyticsEvents.loginFailed, any()),
+      ).called(1);
     });
   });
 
@@ -112,9 +111,7 @@ void main() {
 
   group('profile_photo_updated', () {
     test('fires after successful avatar upload', () async {
-      when(
-        () => repo.uploadAvatar(any()),
-      ).thenAnswer((_) async => fakeUser);
+      when(() => repo.uploadAvatar(any())).thenAnswer((_) async => fakeUser);
 
       final bloc = makeBloc();
       bloc.add(const AuthAvatarUploadRequested('/tmp/photo.jpg'));
@@ -127,9 +124,7 @@ void main() {
     });
 
     test('does NOT fire when upload fails', () async {
-      when(
-        () => repo.uploadAvatar(any()),
-      ).thenThrow(Exception('upload error'));
+      when(() => repo.uploadAvatar(any())).thenThrow(Exception('upload error'));
 
       final bloc = makeBloc();
       bloc.add(const AuthAvatarUploadRequested('/tmp/photo.jpg'));
@@ -184,7 +179,7 @@ void main() {
       ).thenAnswer((_) async => fakeUser);
 
       final bloc = makeBloc();
-      bloc.add(const AuthUpdateProfileRequested(firstName: 'Amadou', bio: null));
+      bloc.add(const AuthUpdateProfileRequested(firstName: 'Amadou'));
       await bloc.stream.firstWhere((s) => s is AuthProfileUpdated);
       await Future<void>.delayed(Duration.zero);
 

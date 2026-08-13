@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
-import 'city_model.dart';
-import 'popular_corridor_model.dart';
+import 'package:dony/features/city/data/city_model.dart';
+import 'package:dony/features/city/data/popular_corridor_model.dart';
 
 class CityDatasource {
   const CityDatasource({required Dio dio}) : _dio = dio;

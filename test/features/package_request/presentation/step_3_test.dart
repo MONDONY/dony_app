@@ -2,9 +2,9 @@
 //
 // Placed in test/features/package_request/presentation/
 // per the task specification.
-import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
@@ -15,6 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+
 import '../../../helpers/mock_analytics_backend.dart';
 
 class _MockPackageRepo extends Mock implements PackageRequestRepository {}
@@ -88,7 +89,7 @@ void main() {
         await tester.pumpAndSettle();
 
         // Net = 39.20 / 1.12 ≈ 35.00
-        final net = 39.20 / 1.12;
+        const net = 39.20 / 1.12;
         final netLabel = CurrencyFormatter.format(net, SupportedCurrency.eur);
         expect(find.textContaining(netLabel), findsOneWidget);
       });
@@ -208,15 +209,10 @@ void main() {
 /// Helper: a bloc that starts with a custom state by applying a side-effect.
 /// We create it and immediately add an event to set totalBudgetEur.
 class _BlocWithState extends PackageRequestFormBloc {
-  _BlocWithState(
-    PackageRequestRepository repository,
-    PackageRequestFormState targetState,
-  ) : super(
-        repository,
-        analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
-      ) {
+  _BlocWithState(super.repository, PackageRequestFormState targetState)
+    : super(analytics: makeDisabledAnalytics(MockAnalyticsBackend())) {
     if (targetState.totalBudgetEur != null) {
-      add(PackageRequestTotalBudgetChanged(targetState.totalBudgetEur!));
+      add(PackageRequestTotalBudgetChanged(targetState.totalBudgetEur));
     }
   }
 }

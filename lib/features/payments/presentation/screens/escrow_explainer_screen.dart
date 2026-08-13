@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -122,7 +123,7 @@ class _AmountCard extends StatelessWidget {
               ),
               const SizedBox(width: DonySpacing.xs),
               Text(
-                ' €',
+                ' $activeCurrencySymbol',
                 style: tt.headlineMedium?.copyWith(color: cs.onSurface),
               ),
             ],
@@ -153,7 +154,7 @@ class _HowItWorksCard extends StatelessWidget {
         done: true,
         title: 'Vous payez',
         description:
-            'Vos $amount € sont bloqués chez Stripe Connect, pas chez $travelerName.',
+            'Vos $amount $activeCurrencySymbol sont bloqués chez Stripe Connect, pas chez $travelerName.',
       ),
       const _Step(
         done: true,
@@ -170,7 +171,8 @@ class _HowItWorksCard extends StatelessWidget {
         done: false,
         stepNumber: 4,
         title: 'Ibrahima est payé',
-        description: 'Les $amount € sont libérés. Sous 24h sur son IBAN.',
+        description:
+            'Les $amount $activeCurrencySymbol sont libérés. Sous 24h sur son IBAN.',
       ),
     ];
 
@@ -235,7 +237,6 @@ class _StepRow extends StatelessWidget {
         if (step.done)
           DonyIconContainer(
             iconAsset: 'check',
-            size: DonyIconContainerSize.md,
             backgroundColor: cs.primary,
             iconColor: cs.surface,
             borderRadius: DonyRadius.full,

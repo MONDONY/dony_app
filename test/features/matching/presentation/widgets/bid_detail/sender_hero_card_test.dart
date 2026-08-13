@@ -42,8 +42,8 @@ BidModel _bid({
   announcementId: 'ann-001',
   senderId: 'sender-001',
   status: status,
-  createdAt: DateTime(2026, 1, 1),
-  updatedAt: DateTime(2026, 1, 1),
+  createdAt: DateTime(2026),
+  updatedAt: DateTime(2026),
   cancellationNoShowStatus: cancellationNoShowStatus,
   contestationDeadline: contestationDeadline,
   handoverWindowStart: handoverWindowStart,
@@ -100,7 +100,7 @@ void main() {
   testWidgets('1 · PENDING → "En attente du voyageur" + "notifié"', (
     tester,
   ) async {
-    final bid = _bid(status: 'PENDING');
+    final bid = _bid();
     await tester.pumpWidget(_host(bid, cancellationBloc));
     await tester.pump();
 
@@ -300,8 +300,8 @@ void main() {
     await tester.pumpWidget(_host(bid, cancellationBloc));
     await tester.pump();
 
-    expect(find.textContaining("Payez pour confirmer"), findsOneWidget);
-    expect(find.textContaining("120,50"), findsOneWidget);
+    expect(find.textContaining('Payez pour confirmer'), findsOneWidget);
+    expect(find.textContaining('120,50'), findsOneWidget);
   });
 
   // ── Test 12: IN_TRANSIT sans confirmationCode ─────────────────────────────────
@@ -313,7 +313,6 @@ void main() {
       status: 'IN_TRANSIT',
       arrivalCity: 'Dakar',
       arrivalTime: '',
-      confirmationCode: null,
     );
     await tester.pumpWidget(_host(bid, cancellationBloc));
     await tester.pump();
@@ -327,11 +326,7 @@ void main() {
   testWidgets('13 · HANDED_OVER departureDate=null → "Colis remis."', (
     tester,
   ) async {
-    final bid = _bid(
-      status: 'HANDED_OVER',
-      travelerName: 'Amadou',
-      departureDate: null,
-    );
+    final bid = _bid(status: 'HANDED_OVER', travelerName: 'Amadou');
     await tester.pumpWidget(_host(bid, cancellationBloc));
     await tester.pump();
 
@@ -412,7 +407,6 @@ void main() {
       final bid = _bid(
         status: 'ACCEPTED',
         cancellationNoShowStatus: 'PENDING_CONFIRMATION',
-        contestationDeadline: null,
       );
       await tester.pumpWidget(_host(bid, cancellationBloc));
       await tester.pump();

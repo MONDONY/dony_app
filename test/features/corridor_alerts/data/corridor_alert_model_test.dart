@@ -25,7 +25,7 @@ void main() {
       expect(m.arrivalCity, 'Bamako');
       expect(m.departureCountryCode, 'FR');
       expect(m.arrivalCountryCode, 'ML');
-      expect(m.dateFrom, DateTime(2026, 7, 1));
+      expect(m.dateFrom, DateTime(2026, 7));
       expect(m.dateTo, DateTime(2026, 7, 31));
       expect(m.minWeightKg, 3.5);
       expect(m.contentCategories, ['Vêtements', 'Documents']);
@@ -53,7 +53,7 @@ void main() {
     });
 
     test('active round-trips true correctly', () {
-      final m = CorridorAlertModel.fromJson(<String, dynamic>{
+      final m = CorridorAlertModel.fromJson(const <String, dynamic>{
         'id': 'rt-true',
         'departureCity': 'Paris',
         'arrivalCity': 'Abidjan',
@@ -64,7 +64,7 @@ void main() {
     });
 
     test('active round-trips false correctly', () {
-      final m = CorridorAlertModel.fromJson(<String, dynamic>{
+      final m = CorridorAlertModel.fromJson(const <String, dynamic>{
         'id': 'rt-false',
         'departureCity': 'Marseille',
         'arrivalCity': 'Douala',
@@ -82,11 +82,14 @@ void main() {
         'createdAt': '2026-06-20T09:00:00',
         // 'active' intentionally absent
       };
-      expect(() => CorridorAlertModel.fromJson(json), throwsA(isA<TypeError>()));
+      expect(
+        () => CorridorAlertModel.fromJson(json),
+        throwsA(isA<TypeError>()),
+      );
     });
 
     test('copyWith overrides active + matchCount', () {
-      final m = CorridorAlertModel.fromJson(<String, dynamic>{
+      final m = CorridorAlertModel.fromJson(const <String, dynamic>{
         'id': 'a3',
         'departureCity': 'Paris',
         'arrivalCity': 'Douala',
@@ -125,10 +128,9 @@ void main() {
       final draft = CorridorAlertDraft(
         departureCity: 'Paris',
         arrivalCity: 'Bamako',
-        dateFrom: DateTime(2026, 7, 1),
+        dateFrom: DateTime(2026, 7),
         dateTo: DateTime(2026, 7, 31),
         minWeightKg: 2.0,
-        direction: AlertDirection.travelerWantsPackages,
       );
       final json = draft.toJson();
       expect(json['dateFrom'], '2026-07-01');
@@ -147,21 +149,28 @@ void main() {
         'active': true,
         'createdAt': '2026-06-20T09:00:00',
       };
-      expect(CorridorAlertModel.fromJson(json).direction,
-          AlertDirection.senderWantsTrips);
+      expect(
+        CorridorAlertModel.fromJson(json).direction,
+        AlertDirection.senderWantsTrips,
+      );
     });
 
-    test('fromJson defaults direction to travelerWantsPackages when absent', () {
-      final json = <String, dynamic>{
-        'id': 'a1',
-        'departureCity': 'Paris',
-        'arrivalCity': 'Bamako',
-        'active': true,
-        'createdAt': '2026-06-20T09:00:00',
-      };
-      expect(CorridorAlertModel.fromJson(json).direction,
-          AlertDirection.travelerWantsPackages);
-    });
+    test(
+      'fromJson defaults direction to travelerWantsPackages when absent',
+      () {
+        final json = <String, dynamic>{
+          'id': 'a1',
+          'departureCity': 'Paris',
+          'arrivalCity': 'Bamako',
+          'active': true,
+          'createdAt': '2026-06-20T09:00:00',
+        };
+        expect(
+          CorridorAlertModel.fromJson(json).direction,
+          AlertDirection.travelerWantsPackages,
+        );
+      },
+    );
 
     test('draft.toJson includes direction wire string', () {
       const draft = CorridorAlertDraft(
@@ -175,7 +184,7 @@ void main() {
 
   group('CorridorAlertModel / Draft — zone de remise', () {
     test('fromJson parses zone fields + hasPickupZone', () {
-      final m = CorridorAlertModel.fromJson(<String, dynamic>{
+      final m = CorridorAlertModel.fromJson(const <String, dynamic>{
         'id': 'z1',
         'departureCity': 'Paris',
         'arrivalCity': 'Abidjan',
@@ -195,7 +204,7 @@ void main() {
     });
 
     test('hasPickupZone false when zone absent', () {
-      final m = CorridorAlertModel.fromJson(<String, dynamic>{
+      final m = CorridorAlertModel.fromJson(const <String, dynamic>{
         'id': 'z2',
         'departureCity': 'Lyon',
         'arrivalCity': 'Dakar',
@@ -207,7 +216,7 @@ void main() {
     });
 
     test('copyWith preserves zone fields', () {
-      final m = CorridorAlertModel.fromJson(<String, dynamic>{
+      final m = CorridorAlertModel.fromJson(const <String, dynamic>{
         'id': 'z3',
         'departureCity': 'Paris',
         'arrivalCity': 'Abidjan',

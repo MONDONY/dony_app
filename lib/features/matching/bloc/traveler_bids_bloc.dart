@@ -15,8 +15,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// appel — là où `/bids/me` ne renvoie que les bids créés en tant
 /// qu'expéditeur.
 class TravelerBidsBloc extends Bloc<TravelerBidsEvent, TravelerBidsState> {
-  static const _pageSize = 20;
-
   /// Garde-fou : au-delà (200 demandes), on s'arrête et `hasMore` reprend la
   /// main via le scroll infini.
   static const _maxInitialPages = 10;
@@ -57,10 +55,7 @@ class TravelerBidsBloc extends Bloc<TravelerBidsEvent, TravelerBidsState> {
       var page = 0;
       var isLast = false;
       while (!isLast && page < _maxInitialPages) {
-        final result = await _repository.getTravelerBids(
-          page: page,
-          size: _pageSize,
-        );
+        final result = await _repository.getTravelerBids(page: page);
         bids.addAll(result.content);
         isLast = result.isLast;
         // Compteur local, jamais `result.page` : un serveur qui renverrait
@@ -99,10 +94,7 @@ class TravelerBidsBloc extends Bloc<TravelerBidsEvent, TravelerBidsState> {
 
     emit(current.copyWith(isLoadingMore: true));
     try {
-      final result = await _repository.getTravelerBids(
-        page: current.page + 1,
-        size: _pageSize,
-      );
+      final result = await _repository.getTravelerBids(page: current.page + 1);
       emit(
         current.copyWith(
           bids: [...current.bids, ...result.content],

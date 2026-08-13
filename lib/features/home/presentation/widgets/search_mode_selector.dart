@@ -130,8 +130,10 @@ class _Segment extends StatelessWidget {
                   // (l'inactif) peut l'afficher à la fois. Vérifier son absence
                   // vérifie bien l'absence du compteur, pas celle du sélecteur.
                   key: const Key('mode-other-count'),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 5,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: cs.primary.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(DonyRadius.full),

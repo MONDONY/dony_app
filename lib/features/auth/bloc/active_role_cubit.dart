@@ -5,8 +5,8 @@ enum ActiveRole { sender, traveler }
 
 class ActiveRoleCubit extends Cubit<ActiveRole> {
   ActiveRoleCubit({required HiveService hiveService})
-      : _hive = hiveService,
-        super(_load(hiveService));
+    : _hive = hiveService,
+      super(_load(hiveService));
 
   final HiveService _hive;
   static const _key = 'active_role';

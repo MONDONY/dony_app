@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
@@ -12,13 +12,12 @@ import 'package:dony/features/matching/bloc/bid_photo_upload.dart';
 import 'package:dony/features/matching/bloc/bid_photos_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
-import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/matching/data/models/bid_checkout_response_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/reimbursement_info_banner.dart';
-import 'package:dony/features/payments/presentation/widgets/payment_method_names.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
+import 'package:dony/features/payments/presentation/widgets/payment_method_names.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:flutter/material.dart';
@@ -79,8 +78,8 @@ AnnouncementModel _announcement({bool cashEnabled = false}) {
     totalKg: 10,
     pricePerKg: 8,
     status: 'ACTIVE',
-    createdAt: DateTime(2026, 1, 1),
-    updatedAt: DateTime(2026, 1, 1),
+    createdAt: DateTime(2026),
+    updatedAt: DateTime(2026),
     acceptedPaymentMethods: methods,
   );
 }
@@ -99,8 +98,8 @@ AnnouncementModel _cashOnlyAnnouncement() {
     totalKg: 10,
     pricePerKg: 8,
     status: 'ACTIVE',
-    createdAt: DateTime(2026, 1, 1),
-    updatedAt: DateTime(2026, 1, 1),
+    createdAt: DateTime(2026),
+    updatedAt: DateTime(2026),
     acceptedPaymentMethods: const {BidPaymentMethod.cash},
   );
 }
@@ -118,9 +117,8 @@ AnnouncementModel _kgFreeAnnouncement() {
     pricePerKg: 8,
     status: 'ACTIVE',
     capacityUnit: 'KG_FREE',
-    createdAt: DateTime(2026, 1, 1),
-    updatedAt: DateTime(2026, 1, 1),
-    acceptedPaymentMethods: const {BidPaymentMethod.stripe},
+    createdAt: DateTime(2026),
+    updatedAt: DateTime(2026),
   );
 }
 
@@ -144,9 +142,8 @@ AnnouncementModel _mixedGridOnlyAnnouncement() {
         unitPriceDisplay: 22.4,
       ),
     ],
-    createdAt: DateTime(2026, 1, 1),
-    updatedAt: DateTime(2026, 1, 1),
-    acceptedPaymentMethods: const {BidPaymentMethod.stripe},
+    createdAt: DateTime(2026),
+    updatedAt: DateTime(2026),
   );
 }
 
@@ -170,9 +167,8 @@ AnnouncementModel _mixedAnnouncement() {
         unitPriceDisplay: 11.20,
       ),
     ],
-    createdAt: DateTime(2026, 1, 1),
-    updatedAt: DateTime(2026, 1, 1),
-    acceptedPaymentMethods: const {BidPaymentMethod.stripe},
+    createdAt: DateTime(2026),
+    updatedAt: DateTime(2026),
   );
 }
 
@@ -208,7 +204,7 @@ Widget _buildHarness(AnnouncementModel announcement) {
       ),
       GoRoute(
         path: '/bids/:id',
-        builder: (_, __) =>
+        builder: (_, _) =>
             const Scaffold(body: Center(child: Text('Bid détail'))),
       ),
     ],
@@ -386,7 +382,7 @@ void main() {
 
   group('Visibilité du sélecteur de paiement', () {
     testWidgets('annonce Stripe-only → sélecteur non affiché', (tester) async {
-      await _openSheet(tester, _announcement(cashEnabled: false));
+      await _openSheet(tester, _announcement());
 
       expect(find.text('Comment veux-tu payer ?'), findsNothing);
       expect(find.byKey(const Key('payment-method-cash')), findsNothing);
@@ -895,9 +891,8 @@ void main() {
           totalKg: 10,
           pricePerKg: 8,
           status: 'ACTIVE',
-          createdAt: DateTime(2026, 1, 1),
-          updatedAt: DateTime(2026, 1, 1),
-          acceptedPaymentMethods: const {BidPaymentMethod.stripe},
+          createdAt: DateTime(2026),
+          updatedAt: DateTime(2026),
         );
         await _openSheet(tester, noCapAnnouncement);
         expect(find.text('Aucune capacité disponible'), findsOneWidget);
@@ -918,9 +913,8 @@ void main() {
         totalKg: 10,
         pricePerKg: 8,
         status: 'ACTIVE',
-        createdAt: DateTime(2026, 1, 1),
-        updatedAt: DateTime(2026, 1, 1),
-        acceptedPaymentMethods: const {BidPaymentMethod.stripe},
+        createdAt: DateTime(2026),
+        updatedAt: DateTime(2026),
       );
       await _openSheet(tester, smallKgAnnouncement);
       expect(find.text('Publier un colis'), findsOneWidget);

@@ -92,7 +92,6 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
       DonySnackbar.show(
         context,
         message: "Code PIN retiré, l'app s'ouvrira sans code",
-        type: DonySnackbarType.info,
       );
     }
   }

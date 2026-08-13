@@ -14,10 +14,7 @@ class SecondaryActivityEntry extends StatelessWidget {
     required this.onTap,
     this.icon,
     this.iconAsset,
-  }) : assert(
-          icon != null || iconAsset != null,
-          'Fournir icon ou iconAsset.',
-        );
+  }) : assert(icon != null || iconAsset != null, 'Fournir icon ou iconAsset.');
 
   final IconData? icon;
   final String label;
@@ -38,11 +35,11 @@ class SecondaryActivityEntry extends StatelessWidget {
         color: cs.surface,
         borderRadius: radius,
         border: Border.all(color: cs.outline),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
             color: DonyColors.shadow,
             blurRadius: 8,
-            offset: const Offset(0, 2),
+            offset: Offset(0, 2),
           ),
         ],
       ),
@@ -79,11 +76,7 @@ class SecondaryActivityEntry extends StatelessWidget {
                     ),
                   ),
                 ),
-                DonyIcon(
-                  'chevron-right',
-                  size: 20,
-                  color: cs.onSurfaceVariant,
-                ),
+                DonyIcon('chevron-right', size: 20, color: cs.onSurfaceVariant),
               ],
             ),
           ),

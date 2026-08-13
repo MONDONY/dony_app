@@ -2,13 +2,15 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
-import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/core/di/pending_search_notifier.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
 import 'package:dony/features/home/presentation/widgets/evergreen_guidance_carousel.dart';
@@ -24,7 +26,6 @@ import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/search_params.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
-import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_map_view.dart';
 import 'package:dony/features/matching/presentation/widgets/location_permission.dart';
 import 'package:dony/features/matching/presentation/widgets/marker_bitmap_factory.dart';
@@ -32,13 +33,13 @@ import 'package:dony/features/matching/presentation/widgets/near_me_carousel.dar
 import 'package:dony/features/matching/presentation/widgets/near_me_radius_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_card.dart';
-import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_state.dart';
 import 'package:dony/features/notifications/presentation/notification_bottom_sheet.dart';
 import 'package:dony/features/package_request/bloc/package_request_search_bloc.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
+import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/package_request/presentation/widgets/near_me_package_request_carousel.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_list_card.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_preview_bottom_sheet.dart';
@@ -422,7 +423,6 @@ class _MapSenderViewState extends State<_MapSenderView> {
           radiusKm: q.radiusKm,
           urgent: q.urgent,
           matchingMyTrips: q.matchingMyTrips,
-          page: 0,
           size: 1,
         );
         total = page.totalElements;
@@ -585,8 +585,8 @@ class _MapSenderViewState extends State<_MapSenderView> {
   bool get _isTraveler {
     final s = context.read<AuthBloc>().state;
     return switch (s) {
-      AuthAuthenticated a => a.user.isTraveler,
-      AuthProfileUpdated a => a.user.isTraveler,
+      final AuthAuthenticated a => a.user.isTraveler,
+      final AuthProfileUpdated a => a.user.isTraveler,
       _ => false,
     };
   }
@@ -630,11 +630,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
     final access = await requestLocationAccess(locationService);
     if (!mounted) return;
     if (access != LocationAccess.granted) {
-      await LocationDeniedSheet.show(
-        context,
-        access: access,
-        service: locationService,
-      );
+      await LocationDeniedSheet.show(context, access: access);
       return;
     }
 
@@ -1412,7 +1408,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
           'active': active,
           // Nombre inconnu : propriété absente plutôt que remplie d'un zéro
           // que rien ne prouve.
-          if (trips != null) 'active_trips': trips,
+          'active_trips': ?trips,
         },
       ),
     );
@@ -1647,7 +1643,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                             ),
                             sliver: SliverList.separated(
                               itemCount: visibleResults.length,
-                              separatorBuilder: (_, __) =>
+                              separatorBuilder: (_, _) =>
                                   const SizedBox(height: DonySpacing.md),
                               itemBuilder: (_, i) {
                                 final pr = visibleResults[i];
@@ -2611,7 +2607,9 @@ class _PriceFilterSheetState extends State<_PriceFilterSheet> {
           const SizedBox(height: DonySpacing.xl),
           Center(
             child: Text(
-              isAtMax ? 'Tous les prix' : '≤ ${_maxPrice.toInt()} €/kg',
+              isAtMax
+                  ? 'Tous les prix'
+                  : '≤ ${formatPriceActive(_maxPrice)}/kg',
               style: tt.headlineMedium?.copyWith(
                 fontWeight: FontWeight.w800,
                 color: isAtMax ? cs.onSurfaceVariant : cs.primary,
@@ -2640,11 +2638,11 @@ class _PriceFilterSheetState extends State<_PriceFilterSheet> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '3 €/kg',
+                  '${formatPriceActive(3)}/kg',
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
                 Text(
-                  '25 €/kg',
+                  '${formatPriceActive(25)}/kg',
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
               ],

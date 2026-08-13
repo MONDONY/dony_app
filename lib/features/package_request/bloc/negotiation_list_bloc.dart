@@ -1,8 +1,7 @@
 import 'package:bloc/bloc.dart';
+import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
+import 'package:dony/features/package_request/data/negotiation_repository.dart';
 import 'package:equatable/equatable.dart';
-
-import '../data/models/negotiation_thread.dart';
-import '../data/negotiation_repository.dart';
 
 /// BLoC managing the viewer's list of negotiation threads.
 ///

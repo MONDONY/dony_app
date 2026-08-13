@@ -492,9 +492,7 @@ void main() {
           DioException(
             requestOptions: RequestOptions(path: '/auth/sms-otp/verify'),
             response: Response(
-              requestOptions: RequestOptions(
-                path: '/auth/sms-otp/verify',
-              ),
+              requestOptions: RequestOptions(path: '/auth/sms-otp/verify'),
               statusCode: 400,
               data: {'code': 'phone-otp-invalid', 'detail': 'Code invalide'},
             ),
@@ -580,8 +578,8 @@ void main() {
 
   group('AuthAuthenticated props', () {
     test('deux états avec le même user sont égaux', () {
-      final s1 = AuthAuthenticated(testUser);
-      final s2 = AuthAuthenticated(testUser);
+      const s1 = AuthAuthenticated(testUser);
+      const s2 = AuthAuthenticated(testUser);
       expect(s1, equals(s2));
     });
   });
@@ -621,7 +619,7 @@ void main() {
     blocTest<AuthBloc, AuthState>(
       'preserves dial code when emitted from error state',
       build: buildBloc,
-      seed: () => AuthError(NetworkException('Erreur réseau')),
+      seed: () => const AuthError(NetworkException('Erreur réseau')),
       act: (bloc) =>
           bloc.add(const AuthDialCodeChanged(code: '+237', flag: '🇨🇲')),
       expect: () => [const AuthInitial(dialCode: '+237', dialFlag: '🇨🇲')],
@@ -637,7 +635,6 @@ void main() {
       seed: () => const AuthOtpSent(
         verificationId: 'ver-123',
         phoneNumber: '+33612345678',
-        secondsLeft: 60,
       ),
       act: (bloc) => bloc.add(const AuthOtpTimerTicked()),
       expect: () => [
@@ -701,7 +698,7 @@ void main() {
         when(() => mockRepo.getProfile()).thenAnswer((_) async => testUser);
       },
       act: (b) => b.add(const AuthGoogleSignInRequested()),
-      expect: () => [const AuthLoading(), AuthAuthenticated(testUser)],
+      expect: () => [const AuthLoading(), const AuthAuthenticated(testUser)],
     );
 
     blocTest<AuthBloc, AuthState>(
@@ -726,10 +723,10 @@ void main() {
         when(() => mockFirebaseAuth.currentUser).thenReturn(mockFirebaseUser);
         when(() => mockRepo.getProfile()).thenThrow(
           DioException(
-            requestOptions: RequestOptions(path: ''),
+            requestOptions: RequestOptions(),
             response: Response(
               statusCode: 404,
-              requestOptions: RequestOptions(path: ''),
+              requestOptions: RequestOptions(),
             ),
           ),
         );
@@ -775,10 +772,10 @@ void main() {
         ).thenAnswer((_) async => MockUserCredential());
         when(() => mockRepo.getProfile()).thenThrow(
           DioException(
-            requestOptions: RequestOptions(path: ''),
+            requestOptions: RequestOptions(),
             response: Response(
               statusCode: 500,
-              requestOptions: RequestOptions(path: ''),
+              requestOptions: RequestOptions(),
             ),
           ),
         );
@@ -806,7 +803,7 @@ void main() {
         when(() => mockRepo.getProfile()).thenAnswer((_) async => testUser);
       },
       act: (b) => b.add(const AuthAppleSignInRequested()),
-      expect: () => [const AuthLoading(), AuthAuthenticated(testUser)],
+      expect: () => [const AuthLoading(), const AuthAuthenticated(testUser)],
     );
 
     blocTest<AuthBloc, AuthState>(
@@ -820,10 +817,10 @@ void main() {
         when(() => mockFirebaseAuth.currentUser).thenReturn(mockFirebaseUser);
         when(() => mockRepo.getProfile()).thenThrow(
           DioException(
-            requestOptions: RequestOptions(path: ''),
+            requestOptions: RequestOptions(),
             response: Response(
               statusCode: 404,
-              requestOptions: RequestOptions(path: ''),
+              requestOptions: RequestOptions(),
             ),
           ),
         );
@@ -859,10 +856,10 @@ void main() {
         ).thenAnswer((_) async => MockUserCredential());
         when(() => mockRepo.getProfile()).thenThrow(
           DioException(
-            requestOptions: RequestOptions(path: ''),
+            requestOptions: RequestOptions(),
             response: Response(
               statusCode: 500,
-              requestOptions: RequestOptions(path: ''),
+              requestOptions: RequestOptions(),
             ),
           ),
         );
@@ -1140,15 +1137,17 @@ void main() {
     blocTest<AuthBloc, AuthState>(
       'decrements secondsLeft in AuthEmailOtpSent',
       build: buildBloc,
-      seed: () => AuthEmailOtpSent('user@example.com', secondsLeft: 30),
+      seed: () => const AuthEmailOtpSent('user@example.com', secondsLeft: 30),
       act: (bloc) => bloc.add(const AuthOtpTimerTicked()),
-      expect: () => [AuthEmailOtpSent('user@example.com', secondsLeft: 29)],
+      expect: () => [
+        const AuthEmailOtpSent('user@example.com', secondsLeft: 29),
+      ],
     );
 
     blocTest<AuthBloc, AuthState>(
       'does not emit when AuthEmailOtpSent secondsLeft is already 0',
       build: buildBloc,
-      seed: () => AuthEmailOtpSent('user@example.com', secondsLeft: 0),
+      seed: () => const AuthEmailOtpSent('user@example.com', secondsLeft: 0),
       act: (bloc) => bloc.add(const AuthOtpTimerTicked()),
       expect: () => [],
     );
@@ -1261,7 +1260,7 @@ void main() {
         );
       },
       act: (b) => b.add(const AuthGoogleSignInRequested()),
-      expect: () => [const AuthLoading(), AuthAuthenticated(testUser)],
+      expect: () => [const AuthLoading(), const AuthAuthenticated(testUser)],
     );
   });
 
@@ -1284,7 +1283,7 @@ void main() {
         );
       },
       act: (b) => b.add(const AuthAppleSignInRequested()),
-      expect: () => [const AuthLoading(), AuthAuthenticated(testUser)],
+      expect: () => [const AuthLoading(), const AuthAuthenticated(testUser)],
     );
   });
 
@@ -1393,10 +1392,10 @@ void main() {
         ).thenAnswer((_) async => MockUserCredential());
         when(() => mockRepo.getProfile()).thenThrow(
           DioException(
-            requestOptions: RequestOptions(path: ''),
+            requestOptions: RequestOptions(),
             response: Response(
               statusCode: 500,
-              requestOptions: RequestOptions(path: ''),
+              requestOptions: RequestOptions(),
             ),
           ),
         );
@@ -1576,15 +1575,17 @@ void main() {
     blocTest<AuthBloc, AuthState>(
       'decrements secondsLeft in AuthEmailOtpSent',
       build: buildBloc,
-      seed: () => AuthEmailOtpSent('user@example.com', secondsLeft: 30),
+      seed: () => const AuthEmailOtpSent('user@example.com', secondsLeft: 30),
       act: (bloc) => bloc.add(const AuthOtpTimerTicked()),
-      expect: () => [AuthEmailOtpSent('user@example.com', secondsLeft: 29)],
+      expect: () => [
+        const AuthEmailOtpSent('user@example.com', secondsLeft: 29),
+      ],
     );
 
     blocTest<AuthBloc, AuthState>(
       'does not emit when AuthEmailOtpSent secondsLeft is already 0',
       build: buildBloc,
-      seed: () => AuthEmailOtpSent('user@example.com', secondsLeft: 0),
+      seed: () => const AuthEmailOtpSent('user@example.com', secondsLeft: 0),
       act: (bloc) => bloc.add(const AuthOtpTimerTicked()),
       expect: () => [],
     );
@@ -1697,7 +1698,7 @@ void main() {
         );
       },
       act: (b) => b.add(const AuthGoogleSignInRequested()),
-      expect: () => [const AuthLoading(), AuthAuthenticated(testUser)],
+      expect: () => [const AuthLoading(), const AuthAuthenticated(testUser)],
     );
   });
 
@@ -1720,7 +1721,7 @@ void main() {
         );
       },
       act: (b) => b.add(const AuthAppleSignInRequested()),
-      expect: () => [const AuthLoading(), AuthAuthenticated(testUser)],
+      expect: () => [const AuthLoading(), const AuthAuthenticated(testUser)],
     );
   });
 
@@ -1832,11 +1833,6 @@ void main() {
             bio: 'X',
             languages: ['FR'],
             transportMode: 'AVION',
-            firstName: null,
-            lastName: null,
-            birthDate: null,
-            city: null,
-            phoneNumber: null,
           ),
         ).called(1);
       },

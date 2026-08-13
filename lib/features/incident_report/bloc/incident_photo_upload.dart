@@ -14,11 +14,13 @@ class IncidentPhotoUpload {
     this.remoteKey,
   });
 
-  IncidentPhotoUpload copyWith({IncidentPhotoUploadStatus? status, String? remoteKey}) =>
-      IncidentPhotoUpload(
-        localId: localId,
-        localPath: localPath,
-        status: status ?? this.status,
-        remoteKey: remoteKey ?? this.remoteKey,
-      );
+  IncidentPhotoUpload copyWith({
+    IncidentPhotoUploadStatus? status,
+    String? remoteKey,
+  }) => IncidentPhotoUpload(
+    localId: localId,
+    localPath: localPath,
+    status: status ?? this.status,
+    remoteKey: remoteKey ?? this.remoteKey,
+  );
 }

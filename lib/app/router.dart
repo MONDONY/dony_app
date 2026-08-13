@@ -1,54 +1,93 @@
 import 'package:dony/app/main_shell.dart';
 import 'package:dony/core/di/injection.dart';
-import 'package:dony/features/favorites/bloc/favorite_requests_cubit.dart';
-import 'package:dony/features/favorites/bloc/favorite_trips_cubit.dart';
-import 'package:dony/features/favorites/presentation/favorites_screen.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/bloc/currency_onboarding_cubit.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
-import 'package:dony/features/auth/presentation/screens/local_auth_screen.dart';
-import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
-import 'package:dony/features/messaging/data/models/conversation_model.dart';
-import 'package:dony/features/messaging/presentation/chat_screen.dart';
+import 'package:dony/features/auth/presentation/screens/analytics_consent_screen.dart';
+import 'package:dony/features/auth/presentation/screens/auth_method_screen.dart';
+import 'package:dony/features/auth/presentation/screens/currency_selection_screen.dart';
 import 'package:dony/features/auth/presentation/screens/email_auth_screen.dart';
+import 'package:dony/features/auth/presentation/screens/local_auth_screen.dart';
 import 'package:dony/features/auth/presentation/screens/onboarding_screen.dart';
 import 'package:dony/features/auth/presentation/screens/otp_verification_screen.dart';
 import 'package:dony/features/auth/presentation/screens/phone_auth_screen.dart';
-import 'package:dony/features/auth/presentation/screens/auth_method_screen.dart';
-import 'package:dony/features/auth/presentation/screens/analytics_consent_screen.dart';
-import 'package:dony/features/auth/presentation/screens/currency_selection_screen.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:dony/features/auth/presentation/screens/referral_code_screen.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
 import 'package:dony/features/cancellation/presentation/screens/rematch_search_screen.dart';
+import 'package:dony/features/config/bloc/config_bloc.dart';
+import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.dart';
+import 'package:dony/features/connect_onboarding/presentation/screens/connect_onboarding_intro_screen.dart';
+import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
+import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
+import 'package:dony/features/corridor_alerts/presentation/corridor_alert_list_screen.dart';
+import 'package:dony/features/corridor_alerts/presentation/corridor_alert_matches_screen.dart';
+import 'package:dony/features/delivery_addresses/bloc/delivery_address_bloc.dart';
+import 'package:dony/features/delivery_addresses/bloc/delivery_address_event.dart';
+import 'package:dony/features/delivery_addresses/presentation/screens/delivery_address_edit_screen.dart';
+import 'package:dony/features/disputes/bloc/dispute_list_bloc.dart';
+import 'package:dony/features/disputes/bloc/dispute_list_event.dart';
+import 'package:dony/features/disputes/data/models/dispute_model.dart';
+import 'package:dony/features/disputes/presentation/dispute_detail_screen.dart';
+import 'package:dony/features/disputes/presentation/dispute_list_screen.dart';
+import 'package:dony/features/favorites/bloc/favorite_requests_cubit.dart';
+import 'package:dony/features/favorites/bloc/favorite_trips_cubit.dart';
+import 'package:dony/features/favorites/presentation/favorites_screen.dart';
 import 'package:dony/features/home/presentation/home_screen.dart';
+import 'package:dony/features/incident_report/bloc/incident_photos_cubit.dart';
+import 'package:dony/features/incident_report/bloc/incident_report_cubit.dart';
+import 'package:dony/features/incident_report/data/repositories/incident_report_repository.dart';
+import 'package:dony/features/incident_report/presentation/screens/incident_report_screen.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/presentation/screens/kyc_status_screen.dart';
 import 'package:dony/features/kyc/presentation/screens/kyc_webview_screen.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
+import 'package:dony/features/matching/bloc/bid_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_event.dart';
+import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
+import 'package:dony/features/matching/bloc/mobile_money_payment_bloc.dart';
 import 'package:dony/features/matching/bloc/trip_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
-import 'package:dony/features/matching/presentation/screens/announcement_list_screen.dart';
-import 'package:dony/features/package_request/presentation/screens/sender/envoyer_hub_screen.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/screens/activites_hub_screen.dart';
+import 'package:dony/features/matching/presentation/screens/announcement_list_screen.dart';
 import 'package:dony/features/matching/presentation/screens/bid_detail_screen.dart';
 import 'package:dony/features/matching/presentation/screens/bid_list_screen.dart';
-import 'package:dony/features/matching/presentation/screens/pending_bids_screen.dart';
-import 'package:dony/features/matching/presentation/screens/trip_owner_detail_screen.dart';
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
-import 'package:dony/features/matching/presentation/screens/publish_intro_screen.dart';
-import 'package:dony/features/matching/presentation/screens/activites_hub_screen.dart';
 import 'package:dony/features/matching/presentation/screens/demandes_screen.dart';
+import 'package:dony/features/matching/presentation/screens/mobile_money_awaiting_screen.dart';
+import 'package:dony/features/matching/presentation/screens/pending_bids_screen.dart';
+import 'package:dony/features/matching/presentation/screens/publish_intro_screen.dart';
 import 'package:dony/features/matching/presentation/screens/shipment_list_screen.dart';
 import 'package:dony/features/matching/presentation/screens/traveler_profile_screen.dart';
+import 'package:dony/features/matching/presentation/screens/trip_owner_detail_screen.dart';
+import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
+import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
+import 'package:dony/features/messaging/data/models/conversation_model.dart';
 import 'package:dony/features/messaging/presentation/archived_conversations_screen.dart';
+import 'package:dony/features/messaging/presentation/chat_screen.dart';
 import 'package:dony/features/messaging/presentation/conversation_loader_screen.dart';
 import 'package:dony/features/notifications/presentation/inbox_screen.dart';
+import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
+import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
+import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
+import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
+import 'package:dony/features/package_request/data/models/package_request.dart';
+import 'package:dony/features/package_request/presentation/screens/sender/complete_details_screen.dart';
+import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/package_request_create_screen.dart';
+import 'package:dony/features/package_request/presentation/screens/sender/envoyer_hub_screen.dart';
+import 'package:dony/features/package_request/presentation/screens/sender/my_package_requests_screen.dart';
+import 'package:dony/features/package_request/presentation/screens/sender/package_request_detail_screen.dart';
+import 'package:dony/features/package_request/presentation/screens/shared/my_negotiations_screen.dart';
+import 'package:dony/features/package_request/presentation/screens/shared/negotiation_thread_screen.dart';
+import 'package:dony/features/package_request/presentation/screens/traveler/link_trip_screen.dart';
+import 'package:dony/features/package_request/presentation/screens/traveler/package_request_public_detail_screen.dart';
+import 'package:dony/features/package_request/presentation/screens/traveler/package_request_search_screen.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
@@ -59,128 +98,88 @@ import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
 import 'package:dony/features/payments/wallet/presentation/screens/wallet_screen.dart';
 import 'package:dony/features/payments/wallet/presentation/screens/wallet_topup_amount_screen.dart';
 import 'package:dony/features/payments/wallet/presentation/screens/wallet_topup_method_screen.dart';
-import 'package:dony/features/config/bloc/config_bloc.dart';
-import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.dart';
-import 'package:dony/features/connect_onboarding/presentation/screens/connect_onboarding_intro_screen.dart';
+import 'package:dony/features/pickup_addresses/bloc/pickup_address_bloc.dart';
+import 'package:dony/features/pickup_addresses/presentation/screens/pickup_address_edit_screen.dart';
+import 'package:dony/features/pickup_addresses/presentation/screens/pickup_addresses_screen.dart';
+import 'package:dony/features/price_grid/bloc/price_grid_bloc.dart';
+import 'package:dony/features/price_grid/bloc/price_grid_event.dart';
+import 'package:dony/features/price_grid/presentation/price_grid_screen.dart';
+import 'package:dony/features/profile/bloc/faq_bloc.dart';
+import 'package:dony/features/profile/bloc/profile_public_bloc.dart';
+import 'package:dony/features/profile/bloc/profile_public_event.dart';
+import 'package:dony/features/profile/bloc/support_contact_bloc.dart';
+import 'package:dony/features/profile/presentation/profile_screen.dart';
+import 'package:dony/features/profile/presentation/screens/community_screen.dart';
+import 'package:dony/features/profile/presentation/screens/edit_profile_screen.dart';
+import 'package:dony/features/profile/presentation/screens/faq_screen.dart';
+import 'package:dony/features/profile/presentation/screens/help_tutorial_screen.dart';
+import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
+import 'package:dony/features/profile/presentation/screens/shipments_history_screen.dart';
+import 'package:dony/features/profile/presentation/screens/support_contact_screen.dart';
+import 'package:dony/features/profile/presentation/screens/upgrade_to_pro_screen.dart';
+import 'package:dony/features/profile/presentation/widgets/add_contact_sheets.dart';
+import 'package:dony/features/ratings/bloc/my_reviews_bloc.dart';
+import 'package:dony/features/ratings/bloc/rating_bloc.dart';
+import 'package:dony/features/ratings/presentation/screens/my_reviews_screen.dart';
+import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
+import 'package:dony/features/recipients/presentation/screens/recipient_edit_screen.dart';
+import 'package:dony/features/recipients/presentation/screens/recipients_screen.dart';
+import 'package:dony/features/referral/bloc/referral_bloc.dart';
+import 'package:dony/features/referral/data/referral_repository.dart';
+import 'package:dony/features/referral/presentation/screens/referral_screen.dart';
+import 'package:dony/features/settings/bloc/accessibility_bloc.dart';
+import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
+import 'package:dony/features/settings/bloc/app_preferences_bloc.dart';
+import 'package:dony/features/settings/bloc/blocked_users_bloc.dart';
+import 'package:dony/features/settings/bloc/connected_devices_bloc.dart';
+import 'package:dony/features/settings/bloc/data_export_bloc.dart';
+import 'package:dony/features/settings/bloc/diagnostics_bloc.dart';
+import 'package:dony/features/settings/bloc/notification_prefs_bloc.dart';
+import 'package:dony/features/settings/bloc/pin_status_cubit.dart';
+import 'package:dony/features/settings/bloc/privacy_settings_bloc.dart';
+import 'package:dony/features/settings/presentation/screens/accessibility_settings_screen.dart';
+import 'package:dony/features/settings/presentation/screens/blocked_users_screen.dart';
+import 'package:dony/features/settings/presentation/screens/business_prefs_screen.dart';
+import 'package:dony/features/settings/presentation/screens/change_pin_screen.dart';
+import 'package:dony/features/settings/presentation/screens/connected_devices_screen.dart';
+import 'package:dony/features/settings/presentation/screens/data_settings_screen.dart';
+import 'package:dony/features/settings/presentation/screens/diagnostics_screen.dart';
+import 'package:dony/features/settings/presentation/screens/legal_web_view_screen.dart';
+import 'package:dony/features/settings/presentation/screens/notification_settings_screen.dart';
+import 'package:dony/features/settings/presentation/screens/privacy_settings_screen.dart';
+import 'package:dony/features/settings/presentation/screens/security_settings_screen.dart';
+import 'package:dony/features/settings/presentation/settings_screen.dart';
+import 'package:dony/features/splash/presentation/splash_screen.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/stripe_account/presentation/screens/account_disabled_screen.dart';
 import 'package:dony/features/stripe_account/presentation/screens/account_rejected_screen.dart';
-import 'package:dony/features/package_request/presentation/screens/sender/complete_details_screen.dart';
-import 'package:dony/features/package_request/presentation/screens/sender/my_package_requests_screen.dart';
-import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/package_request_create_screen.dart';
-import 'package:dony/features/package_request/presentation/screens/sender/package_request_detail_screen.dart';
-import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
-import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
-import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
-import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
-import 'package:dony/features/package_request/data/models/package_request.dart';
-import 'package:dony/features/package_request/presentation/screens/shared/my_negotiations_screen.dart';
-import 'package:dony/features/package_request/presentation/screens/shared/negotiation_thread_screen.dart';
-import 'package:dony/features/package_request/presentation/screens/traveler/link_trip_screen.dart';
-import 'package:dony/features/package_request/presentation/screens/traveler/package_request_public_detail_screen.dart';
-import 'package:dony/features/disputes/bloc/dispute_list_bloc.dart';
-import 'package:dony/features/disputes/bloc/dispute_list_event.dart';
-import 'package:dony/features/disputes/data/models/dispute_model.dart';
-import 'package:dony/features/disputes/presentation/dispute_detail_screen.dart';
-import 'package:dony/features/disputes/presentation/dispute_list_screen.dart';
-import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
-import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
-import 'package:dony/features/corridor_alerts/presentation/corridor_alert_list_screen.dart';
-import 'package:dony/features/corridor_alerts/presentation/corridor_alert_matches_screen.dart';
-import 'package:dony/features/package_request/presentation/screens/traveler/package_request_search_screen.dart';
-import 'package:dony/features/matching/bloc/bid_bloc.dart';
-import 'package:dony/features/matching/bloc/bid_event.dart';
-import 'package:dony/features/matching/bloc/mobile_money_payment_bloc.dart';
-import 'package:dony/features/matching/presentation/screens/mobile_money_awaiting_screen.dart';
-import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
 import 'package:dony/features/subscriptions/bloc/subscriptions_bloc.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_hub_bloc.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_hub_event.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_subscribe_bloc.dart';
 import 'package:dony/features/subscriptions/presentation/mes_abonnements_screen.dart';
 import 'package:dony/features/subscriptions/presentation/traveler_profile_hub_screen.dart';
-import 'package:dony/features/pickup_addresses/bloc/pickup_address_bloc.dart';
-import 'package:dony/features/pickup_addresses/presentation/screens/pickup_address_edit_screen.dart';
-import 'package:dony/features/pickup_addresses/presentation/screens/pickup_addresses_screen.dart';
-import 'package:dony/features/delivery_addresses/bloc/delivery_address_bloc.dart';
-import 'package:dony/features/delivery_addresses/bloc/delivery_address_event.dart';
-import 'package:dony/features/delivery_addresses/presentation/screens/delivery_address_edit_screen.dart';
-import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
-import 'package:dony/features/trip_templates/bloc/trip_template_event.dart';
-import 'package:dony/features/trip_templates/bloc/trip_recurrence_bloc.dart';
-import 'package:dony/features/trip_templates/data/models/trip_template.dart';
-import 'package:dony/features/trip_templates/presentation/screens/trip_template_edit_screen.dart';
-import 'package:dony/features/trip_templates/presentation/screens/trip_templates_screen.dart';
-import 'package:dony/features/trip_templates/presentation/screens/trip_recurrence_edit_screen.dart';
-import 'package:dony/features/profile/bloc/profile_public_bloc.dart';
-import 'package:dony/features/profile/bloc/profile_public_event.dart';
-import 'package:dony/features/profile/bloc/faq_bloc.dart';
-import 'package:dony/features/profile/bloc/support_contact_bloc.dart';
-import 'package:dony/features/profile/presentation/profile_screen.dart';
-import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
-import 'package:dony/features/ratings/bloc/my_reviews_bloc.dart';
-import 'package:dony/features/ratings/presentation/screens/my_reviews_screen.dart';
-import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
-import 'package:dony/features/recipients/presentation/screens/recipient_edit_screen.dart';
-import 'package:dony/features/recipients/presentation/screens/recipients_screen.dart';
-import 'package:dony/features/profile/presentation/screens/community_screen.dart';
-import 'package:dony/features/profile/presentation/screens/faq_screen.dart';
-import 'package:dony/features/profile/presentation/screens/help_tutorial_screen.dart';
-import 'package:dony/features/profile/presentation/screens/shipments_history_screen.dart';
-import 'package:dony/features/profile/presentation/screens/support_contact_screen.dart';
-import 'package:dony/features/price_grid/bloc/price_grid_bloc.dart';
-import 'package:dony/features/price_grid/bloc/price_grid_event.dart';
-import 'package:dony/features/price_grid/presentation/price_grid_screen.dart';
-import 'package:dony/features/profile/presentation/screens/edit_profile_screen.dart';
-import 'package:dony/features/profile/presentation/screens/upgrade_to_pro_screen.dart';
-import 'package:dony/features/profile/presentation/widgets/add_contact_sheets.dart';
-import 'package:dony/features/splash/presentation/splash_screen.dart';
-import 'package:dony/features/settings/bloc/accessibility_bloc.dart';
-import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
-import 'package:dony/features/settings/bloc/app_preferences_bloc.dart';
-import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
-import 'package:dony/features/settings/bloc/pin_status_cubit.dart';
-import 'package:dony/features/settings/bloc/data_export_bloc.dart';
-import 'package:dony/features/settings/bloc/diagnostics_bloc.dart';
-import 'package:dony/features/settings/bloc/notification_prefs_bloc.dart';
-import 'package:dony/features/settings/bloc/privacy_settings_bloc.dart';
-import 'package:dony/features/settings/presentation/settings_screen.dart';
-import 'package:dony/features/settings/presentation/screens/accessibility_settings_screen.dart';
-import 'package:dony/features/settings/presentation/screens/business_prefs_screen.dart';
-import 'package:dony/features/settings/presentation/screens/data_settings_screen.dart';
-import 'package:dony/features/settings/presentation/screens/diagnostics_screen.dart';
-import 'package:dony/features/incident_report/bloc/incident_photos_cubit.dart';
-import 'package:dony/features/incident_report/bloc/incident_report_cubit.dart';
-import 'package:dony/features/incident_report/presentation/screens/incident_report_screen.dart';
-import 'package:dony/features/incident_report/data/repositories/incident_report_repository.dart';
-import 'package:dony/features/settings/presentation/screens/change_pin_screen.dart';
-import 'package:dony/features/settings/presentation/screens/legal_web_view_screen.dart';
-import 'package:dony/features/settings/presentation/screens/notification_settings_screen.dart';
-import 'package:dony/features/settings/presentation/screens/privacy_settings_screen.dart';
-import 'package:dony/features/settings/presentation/screens/security_settings_screen.dart';
-import 'package:dony/features/settings/bloc/blocked_users_bloc.dart';
-import 'package:dony/features/settings/bloc/connected_devices_bloc.dart';
-import 'package:dony/features/settings/presentation/screens/blocked_users_screen.dart';
-import 'package:dony/features/settings/presentation/screens/connected_devices_screen.dart';
-import 'package:dony/features/ratings/bloc/rating_bloc.dart';
-import 'package:dony/features/referral/bloc/referral_bloc.dart';
-import 'package:dony/features/referral/presentation/screens/referral_screen.dart';
-import 'package:dony/features/auth/presentation/screens/referral_code_screen.dart';
-import 'package:dony/features/referral/data/referral_repository.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/presentation/screens/offline_scan_queue_screen.dart';
+import 'package:dony/features/tracking/presentation/screens/qr_picker_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/qr_scanner_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/reception_confirm_screen.dart';
+import 'package:dony/features/tracking/presentation/screens/scan_confirm_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/scan_hub_screen.dart';
-import 'package:dony/features/tracking/presentation/screens/suivi_screen.dart';
-import 'package:dony/features/tracking/presentation/screens/qr_picker_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/scan_identify_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/scan_photo_screen.dart';
-import 'package:dony/features/tracking/presentation/screens/scan_confirm_screen.dart';
+import 'package:dony/features/tracking/presentation/screens/suivi_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/tracking_search_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/tracking_timeline_screen.dart';
+import 'package:dony/features/trip_templates/bloc/trip_recurrence_bloc.dart';
+import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
+import 'package:dony/features/trip_templates/bloc/trip_template_event.dart';
+import 'package:dony/features/trip_templates/data/models/trip_template.dart';
+import 'package:dony/features/trip_templates/presentation/screens/trip_recurrence_edit_screen.dart';
+import 'package:dony/features/trip_templates/presentation/screens/trip_template_edit_screen.dart';
+import 'package:dony/features/trip_templates/presentation/screens/trip_templates_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:posthog_flutter/posthog_flutter.dart';
@@ -249,7 +248,6 @@ final appRouter = GoRouter(
       builder: (context, state) {
         final extra = state.extra as Map? ?? {};
         return OtpVerificationScreen(
-          mode: OtpMode.phone,
           fromProfile: extra['fromProfile'] == true,
           contact: (extra['contact'] as String?) ?? '',
         );
@@ -486,7 +484,6 @@ final appRouter = GoRouter(
           // le $screen. Sans lui (page custom), cet écran n'était pas tracké.
           name: '/trips/create',
           child: CreateTripScreen(args: args),
-          transitionDuration: const Duration(milliseconds: 300),
           reverseTransitionDuration: const Duration(milliseconds: 250),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return SlideTransition(
@@ -804,12 +801,12 @@ final appRouter = GoRouter(
     // lui-même son chargement — pas d'event à ajouter ici.
     GoRoute(
       path: '/envois',
-      builder: (_, __) => BlocProvider(
+      builder: (_, _) => BlocProvider(
         create: (_) => getIt<BidBloc>(),
         child: const ShipmentListScreen(),
       ),
     ),
-    GoRoute(path: '/demandes', builder: (_, __) => const DemandesScreen()),
+    GoRoute(path: '/demandes', builder: (_, _) => const DemandesScreen()),
 
     // ── Profile — quick wins (hors shell) ────────────────────────────
     GoRoute(
@@ -1261,14 +1258,14 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/package-requests/me',
-      builder: (_, __) => BlocProvider.value(
+      builder: (_, _) => BlocProvider.value(
         value: getIt<PackageRequestBloc>(),
         child: const MyPackageRequestsScreen(),
       ),
     ),
     GoRoute(
       path: '/package-requests/search',
-      builder: (_, __) => const PackageRequestSearchScreen(),
+      builder: (_, _) => const PackageRequestSearchScreen(),
     ),
     GoRoute(
       path: '/package-requests/:id',
@@ -1290,7 +1287,7 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/negotiations',
-      builder: (_, __) => const MyNegotiationsScreen(),
+      builder: (_, _) => const MyNegotiationsScreen(),
     ),
     GoRoute(
       path: '/negotiations/:id',

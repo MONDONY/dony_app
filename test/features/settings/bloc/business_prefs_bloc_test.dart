@@ -170,7 +170,7 @@ void main() {
         when(() => mockRepo.updatePrefs(any())).thenThrow(Exception('server'));
       },
       build: build,
-      seed: () => const BusinessPrefsState(defaultPackageWeightKg: 23),
+      seed: () => const BusinessPrefsState(),
       act: (bloc) => bloc.add(const DefaultWeightChanged(30)),
       expect: () => [
         isA<BusinessPrefsState>().having(

@@ -332,12 +332,8 @@ class _HeroHeader extends StatelessWidget {
 // ─── Hero action button ────────────────────────────────────────────────────────
 
 class _HeroAction extends StatelessWidget {
-  const _HeroAction({
-    required this.label,
-    required this.onTap,
-    this.icon,
-    this.iconAsset,
-  });
+  const _HeroAction({required this.label, required this.onTap, this.iconAsset})
+    : icon = null;
 
   final IconData? icon;
   final String? iconAsset;

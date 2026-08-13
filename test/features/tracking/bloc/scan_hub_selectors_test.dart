@@ -14,31 +14,34 @@ AnnouncementModel _trip(String id, String status, DateTime date) =>
       availableKg: 10,
       totalKg: 20,
       pricePerKg: 5,
-      createdAt: DateTime(2026, 1, 1),
-      updatedAt: DateTime(2026, 1, 1),
+      createdAt: DateTime(2026),
+      updatedAt: DateTime(2026),
     );
 
 BidModel _bid(String status) => BidModel(
-      id: 'b-$status',
-      announcementId: 'a',
-      senderId: 's',
-      status: status,
-      createdAt: DateTime(2026, 1, 1),
-      updatedAt: DateTime(2026, 1, 1),
-    );
+  id: 'b-$status',
+  announcementId: 'a',
+  senderId: 's',
+  status: status,
+  createdAt: DateTime(2026),
+  updatedAt: DateTime(2026),
+);
 
 void main() {
   group('selectScannableTrips', () {
-    test('IN_PROGRESS triés par date, avant les ACTIVE/FULL triés par date', () {
-      final trips = [
-        _trip('1', 'ACTIVE', DateTime(2026, 7, 1)),
-        _trip('2', 'IN_PROGRESS', DateTime(2026, 6, 20)),
-        _trip('3', 'IN_PROGRESS', DateTime(2026, 6, 10)),
-        _trip('4', 'FULL', DateTime(2026, 6, 28)),
-      ];
-      final result = selectScannableTrips(trips);
-      expect(result.map((t) => t.id), ['3', '2', '4', '1']);
-    });
+    test(
+      'IN_PROGRESS triés par date, avant les ACTIVE/FULL triés par date',
+      () {
+        final trips = [
+          _trip('1', 'ACTIVE', DateTime(2026, 7)),
+          _trip('2', 'IN_PROGRESS', DateTime(2026, 6, 20)),
+          _trip('3', 'IN_PROGRESS', DateTime(2026, 6, 10)),
+          _trip('4', 'FULL', DateTime(2026, 6, 28)),
+        ];
+        final result = selectScannableTrips(trips);
+        expect(result.map((t) => t.id), ['3', '2', '4', '1']);
+      },
+    );
 
     test('un seul trajet scannable → liste à un élément', () {
       final trips = [_trip('1', 'IN_PROGRESS', DateTime(2026, 6, 20))];
@@ -47,7 +50,7 @@ void main() {
 
     test('aucun trajet scannable → liste vide', () {
       expect(
-        selectScannableTrips([_trip('1', 'CANCELLED', DateTime(2026, 1, 1))]),
+        selectScannableTrips([_trip('1', 'CANCELLED', DateTime(2026))]),
         isEmpty,
       );
       expect(selectScannableTrips(const []), isEmpty);

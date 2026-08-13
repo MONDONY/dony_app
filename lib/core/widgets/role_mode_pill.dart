@@ -17,8 +17,8 @@ class RoleModePill extends StatelessWidget {
           curr is AuthAuthenticated || curr is AuthProfileUpdated,
       builder: (context, authState) {
         final isTraveler = switch (authState) {
-          AuthAuthenticated s => s.user.isTraveler,
-          AuthProfileUpdated s => s.user.isTraveler,
+          final AuthAuthenticated s => s.user.isTraveler,
+          final AuthProfileUpdated s => s.user.isTraveler,
           _ => false,
         };
 
@@ -96,9 +96,7 @@ class _PillTab extends StatelessWidget {
           color: isActive ? cs.primary : Colors.transparent,
           borderRadius: BorderRadius.circular(22),
         ),
-        child: Center(
-          child: Text(emoji, style: const TextStyle(fontSize: 20)),
-        ),
+        child: Center(child: Text(emoji, style: const TextStyle(fontSize: 20))),
       ),
     );
   }

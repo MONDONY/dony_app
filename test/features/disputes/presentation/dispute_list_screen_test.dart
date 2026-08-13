@@ -43,7 +43,7 @@ const _disputeHelpConfigJson = '''
 }
 ''';
 
-class _MockBloc extends MockBloc<DisputeListEvent, DisputeListState>
+class MockDisputeListBloc extends MockBloc<DisputeListEvent, DisputeListState>
     implements DisputeListBloc {}
 
 class _StaticHelpCenterSource implements HelpCenterConfigSource {
@@ -84,13 +84,13 @@ DisputeModel _dispute({
   isBeneficiary: isBeneficiary,
 );
 
-late _MockBloc bloc;
+late MockDisputeListBloc bloc;
 
 Widget _harness({
   DisputeListState? state,
   String helpConfigJson = _emptyHelpConfigJson,
 }) {
-  bloc = _MockBloc();
+  bloc = MockDisputeListBloc();
   whenListen(
     bloc,
     const Stream<DisputeListState>.empty(),
@@ -101,7 +101,7 @@ Widget _harness({
     routes: [
       GoRoute(
         path: '/disputes',
-        builder: (_, __) => MultiBlocProvider(
+        builder: (_, _) => MultiBlocProvider(
           providers: [
             BlocProvider<DisputeListBloc>.value(value: bloc),
             BlocProvider<HelpCenterBloc>(
@@ -119,11 +119,11 @@ Widget _harness({
       ),
       GoRoute(
         path: '/disputes/detail',
-        builder: (_, __) => const Scaffold(body: Text('DetailStub')),
+        builder: (_, _) => const Scaffold(body: Text('DetailStub')),
       ),
       GoRoute(
         path: '/profile/help/contact',
-        builder: (_, __) => const Scaffold(body: Text('SupportStub')),
+        builder: (_, _) => const Scaffold(body: Text('SupportStub')),
       ),
       GoRoute(
         path: '/profile/help/tutorial/:tutorialId',
@@ -217,7 +217,7 @@ void main() {
   testWidgets('erreur → Réessayer redispatch', (tester) async {
     await tester.pumpWidget(
       _harness(
-        state: DisputeListError(
+        state: const DisputeListError(
           NetworkException('Erreur', code: 'network-error'),
         ),
       ),

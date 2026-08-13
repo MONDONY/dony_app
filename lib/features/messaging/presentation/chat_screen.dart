@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/design_system.dart';
@@ -6,8 +7,12 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/utils/phone_dialer.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
+import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_event.dart';
+import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_state.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_event.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_state.dart';
@@ -19,10 +24,6 @@ import 'package:dony/features/messaging/data/models/message_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:dony/core/utils/phone_dialer.dart';
-import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
-import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_event.dart';
-import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -764,10 +765,10 @@ class _MessageBubble extends StatelessWidget {
                       boxShadow: isMe
                           ? null
                           : [
-                              BoxShadow(
+                              const BoxShadow(
                                 color: DonyColors.shadow,
                                 blurRadius: 6,
-                                offset: const Offset(0, 2),
+                                offset: Offset(0, 2),
                               ),
                             ],
                     ),
@@ -873,7 +874,7 @@ class _ImageContent extends StatelessWidget {
         width: 220,
         height: 180,
         fit: BoxFit.cover,
-        placeholder: (_, __) => Builder(
+        placeholder: (_, _) => Builder(
           builder: (context) => Container(
             width: 220,
             height: 180,
@@ -883,7 +884,7 @@ class _ImageContent extends StatelessWidget {
             ),
           ),
         ),
-        errorWidget: (_, __, ___) => Builder(
+        errorWidget: (_, _, _) => Builder(
           builder: (context) {
             final cs = Theme.of(context).colorScheme;
             return Container(

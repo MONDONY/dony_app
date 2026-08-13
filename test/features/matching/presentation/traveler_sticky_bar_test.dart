@@ -4,13 +4,13 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   BidModel bidWith(String status) => BidModel(
-        id: 'b1',
-        announcementId: 'a1',
-        senderId: 's1',
-        status: status,
-        createdAt: DateTime(2026),
-        updatedAt: DateTime(2026),
-      );
+    id: 'b1',
+    announcementId: 'a1',
+    senderId: 's1',
+    status: status,
+    createdAt: DateTime(2026),
+    updatedAt: DateTime(2026),
+  );
 
   group('TravelerStickyBar.hasAction', () {
     test('true pour PENDING (cash / Mobile Money) — décision', () {

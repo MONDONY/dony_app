@@ -1,7 +1,5 @@
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/design/widgets/dony_bottom_sheet.dart';
-import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:flutter/material.dart';
@@ -29,7 +27,7 @@ class CounterOfferBottomSheet {
       wrapper: (child) => BlocProvider.value(value: bloc, child: child),
       stickyBottom: ValueListenableBuilder<VoidCallback?>(
         valueListenable: submitNotifier,
-        builder: (_, fn, __) =>
+        builder: (_, fn, _) =>
             DonyButton(label: 'Envoyer ma contre-offre', onPressed: fn),
       ),
       child: _CounterOfferContent(
@@ -185,7 +183,7 @@ class _CounterOfferContentState extends State<_CounterOfferContent> {
               ),
               errorBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(DonyRadius.md),
-                borderSide: BorderSide(color: DonyColors.danger500),
+                borderSide: const BorderSide(color: DonyColors.danger500),
               ),
             ),
             validator: (v) {

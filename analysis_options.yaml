@@ -15,8 +15,13 @@ analyzer:
 linter:
   rules:
     - always_declare_return_types
-    - always_put_control_body_on_new_line
+    # always_put_control_body_on_new_line est volontairement absent : il exige
+    # « if (x)\n  return; » alors que `dart format` (style Dart 3.12) ramène ces
+    # corps sur une seule ligne. Les deux outils se contredisaient, et la règle
+    # comptait 604 violations — elle n'a jamais été appliquée. Les accolades
+    # restent imposées par curly_braces_in_flow_control_structures.
     - always_use_package_imports
+    - curly_braces_in_flow_control_structures
     - annotate_overrides
     - avoid_empty_else
     - avoid_print

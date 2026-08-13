@@ -207,7 +207,6 @@ void main() {
           (_) async => const PaymentModel(
             id: 'pay-1',
             bidId: 'bid-1',
-            clientSecret: null,
             amount: 120.0,
             commissionAmount: 14.4,
             status: PaymentStatus.pending,
@@ -293,8 +292,8 @@ void main() {
     });
 
     test('PaymentError props include error', () {
-      final ex = NetworkException('oops');
-      final s = PaymentError(ex);
+      const ex = NetworkException('oops');
+      const s = PaymentError(ex);
       expect(s.props, [ex]);
     });
   });

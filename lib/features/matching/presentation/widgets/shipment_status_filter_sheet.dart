@@ -18,9 +18,7 @@ const _groups = <String, List<_StatusOption>>{
     _StatusOption('AWAITING_PAYMENT', 'À payer'),
     _StatusOption('PAYMENT_ESCROWED', 'Payé'),
   ],
-  'Terminés': [
-    _StatusOption('COMPLETED', 'Livré'),
-  ],
+  'Terminés': [_StatusOption('COMPLETED', 'Livré')],
   'Clôturés': [
     _StatusOption('CANCELLED', 'Annulé'),
     _StatusOption('REJECTED', 'Refusé'),
@@ -41,7 +39,8 @@ class ShipmentStatusFilterSheet {
         valueListenable: selected,
         builder: (context, value, _) => DonyButton(
           label: value.isEmpty ? 'Appliquer' : 'Appliquer (${value.length})',
-          onPressed: () => Navigator.of(context, rootNavigator: true).pop(value),
+          onPressed: () =>
+              Navigator.of(context, rootNavigator: true).pop(value),
         ),
       ),
       child: ValueListenableBuilder<Set<String>>(
@@ -52,14 +51,18 @@ class ShipmentStatusFilterSheet {
             for (final entry in _groups.entries) ...[
               Padding(
                 padding: const EdgeInsets.fromLTRB(
-                    0, DonySpacing.sm, 0, DonySpacing.xxs),
+                  0,
+                  DonySpacing.sm,
+                  0,
+                  DonySpacing.xxs,
+                ),
                 child: Text(
                   entry.key.toUpperCase(),
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.6,
-                      ),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.6,
+                  ),
                 ),
               ),
               for (final opt in entry.value)

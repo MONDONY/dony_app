@@ -48,10 +48,9 @@ void main() {
 
     test('request_expired routes to the sender package request', () {
       expect(
-        resolveNotificationRoute(
-          'request_expired',
-          {'packageRequestId': packageRequestId},
-        ),
+        resolveNotificationRoute('request_expired', {
+          'packageRequestId': packageRequestId,
+        }),
         '/package-requests/$packageRequestId',
       );
     });
@@ -64,17 +63,19 @@ void main() {
   group('resolveNotificationRoute — TRAVELER_INVITE', () {
     test('routes to the public package request screen', () {
       expect(
-        resolveNotificationRoute(
-          'TRAVELER_INVITE',
-          {'announcementId': announcementId, 'requestId': requestId},
-        ),
+        resolveNotificationRoute('TRAVELER_INVITE', {
+          'announcementId': announcementId,
+          'requestId': requestId,
+        }),
         '/package-requests/$requestId/public',
       );
     });
 
     test('without valid requestId returns null', () {
       expect(
-        resolveNotificationRoute('TRAVELER_INVITE', {'announcementId': announcementId}),
+        resolveNotificationRoute('TRAVELER_INVITE', {
+          'announcementId': announcementId,
+        }),
         isNull,
       );
     });
@@ -83,7 +84,9 @@ void main() {
   group('resolveNotificationRoute — TRIP_IN_PROGRESS', () {
     test('routes to the traveler\'s own trip detail', () {
       expect(
-        resolveNotificationRoute('TRIP_IN_PROGRESS', {'announcementId': announcementId}),
+        resolveNotificationRoute('TRIP_IN_PROGRESS', {
+          'announcementId': announcementId,
+        }),
         '/announcements/$announcementId/trip',
       );
     });
@@ -94,29 +97,41 @@ void main() {
   });
 
   group('resolveNotificationRoute — NEW_MESSAGE', () {
-    test('with a valid conversationId deep-links to the exact conversation', () {
-      expect(
-        resolveNotificationRoute('NEW_MESSAGE', {'conversationId': conversationId}),
-        '/conversations/$conversationId',
-      );
-    });
+    test(
+      'with a valid conversationId deep-links to the exact conversation',
+      () {
+        expect(
+          resolveNotificationRoute('NEW_MESSAGE', {
+            'conversationId': conversationId,
+          }),
+          '/conversations/$conversationId',
+        );
+      },
+    );
 
     test('without conversationId falls back to the conversation list', () {
       expect(resolveNotificationRoute('NEW_MESSAGE', {}), '/messages');
     });
 
-    test('with a non-UUID conversationId falls back to the conversation list', () {
-      expect(
-        resolveNotificationRoute('NEW_MESSAGE', {'conversationId': '../../evil'}),
-        '/messages',
-      );
-    });
+    test(
+      'with a non-UUID conversationId falls back to the conversation list',
+      () {
+        expect(
+          resolveNotificationRoute('NEW_MESSAGE', {
+            'conversationId': '../../evil',
+          }),
+          '/messages',
+        );
+      },
+    );
   });
 
   group('resolveNotificationRoute — TRIP_CANCELLED', () {
     test('with a valid cancellationId routes to rematch screen', () {
       expect(
-        resolveNotificationRoute('TRIP_CANCELLED', {'cancellationId': cancellationId}),
+        resolveNotificationRoute('TRIP_CANCELLED', {
+          'cancellationId': cancellationId,
+        }),
         '/cancellations/$cancellationId/rematch',
       );
     });
@@ -166,7 +181,13 @@ void main() {
 
   group('isShellTabRoute', () {
     test('shell tabs use go()', () {
-      for (final tab in ['/home', '/announcements', '/tracking', '/messages', '/profile']) {
+      for (final tab in [
+        '/home',
+        '/announcements',
+        '/tracking',
+        '/messages',
+        '/profile',
+      ]) {
         expect(isShellTabRoute(tab), isTrue, reason: tab);
       }
     });

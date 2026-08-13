@@ -19,17 +19,19 @@ void main() {
   });
 
   Widget buildWidget(Widget child) => MaterialApp(
-        home: BlocProvider<StripeAccountBloc>.value(
-          value: mockBloc,
-          child: Scaffold(body: child),
-        ),
-      );
+    home: BlocProvider<StripeAccountBloc>.value(
+      value: mockBloc,
+      child: Scaffold(body: child),
+    ),
+  );
 
   group('AccountDisabledBanner', () {
     testWidgets('renders warning icon and message', (tester) async {
       await tester.pumpWidget(buildWidget(const AccountDisabledBanner()));
       expect(
-        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'triangle-alert'),
+        find.byWidgetPredicate(
+          (w) => w is DonyIcon && w.name == 'triangle-alert',
+        ),
         findsOneWidget,
       );
       expect(find.textContaining('temporairement désactivé'), findsOneWidget);
@@ -45,7 +47,9 @@ void main() {
     testWidgets('renders error icon and message', (tester) async {
       await tester.pumpWidget(buildWidget(const AccountRejectedBanner()));
       expect(
-        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'circle-alert'),
+        find.byWidgetPredicate(
+          (w) => w is DonyIcon && w.name == 'circle-alert',
+        ),
         findsOneWidget,
       );
       expect(find.textContaining('rejeté'), findsOneWidget);

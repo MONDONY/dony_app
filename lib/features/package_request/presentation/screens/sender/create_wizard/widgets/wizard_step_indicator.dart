@@ -21,7 +21,10 @@ class WizardStepIndicator extends StatelessWidget
     final cs = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.fromLTRB(
-        DonySpacing.lg, DonySpacing.sm, DonySpacing.lg, DonySpacing.md,
+        DonySpacing.lg,
+        DonySpacing.sm,
+        DonySpacing.lg,
+        DonySpacing.md,
       ),
       child: Row(
         children: [
@@ -32,9 +35,7 @@ class WizardStepIndicator extends StatelessWidget
                 curve: Curves.easeOutCubic,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: i <= currentStep
-                      ? DonyColors.primary
-                      : cs.outline,
+                  color: i <= currentStep ? DonyColors.primary : cs.outline,
                   borderRadius: BorderRadius.circular(DonyRadius.full),
                 ),
               ),

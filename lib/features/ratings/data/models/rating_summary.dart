@@ -20,15 +20,15 @@ class RatingItem {
   final String? arrivalCity;
 
   factory RatingItem.fromJson(Map<String, dynamic> json) => RatingItem(
-        stars: json['stars'] as int,
-        comment: json['comment'] as String?,
-        createdAt: DateTime.parse(json['createdAt'] as String),
-        excluded: json['excluded'] as bool? ?? false,
-        authorName: json['authorName'] as String?,
-        authorAvatarUrl: json['authorAvatarUrl'] as String?,
-        departureCity: json['departureCity'] as String?,
-        arrivalCity: json['arrivalCity'] as String?,
-      );
+    stars: json['stars'] as int,
+    comment: json['comment'] as String?,
+    createdAt: DateTime.parse(json['createdAt'] as String),
+    excluded: json['excluded'] as bool? ?? false,
+    authorName: json['authorName'] as String?,
+    authorAvatarUrl: json['authorAvatarUrl'] as String?,
+    departureCity: json['departureCity'] as String?,
+    arrivalCity: json['arrivalCity'] as String?,
+  );
 }
 
 class RatingSummary {

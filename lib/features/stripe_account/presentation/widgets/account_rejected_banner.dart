@@ -8,7 +8,7 @@ class AccountRejectedBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialBanner(
-      backgroundColor: const Color(0xFFE53935).withOpacity(0.12),
+      backgroundColor: const Color(0xFFE53935).withValues(alpha: 0.12),
       leading: const DonyIcon('circle-alert', color: Color(0xFFE53935)),
       content: const Text(
         'Votre compte Stripe a été rejeté',

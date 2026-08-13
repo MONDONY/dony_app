@@ -11,9 +11,15 @@
 // that no network requests are issued. Color, shape, and spacing fidelity is
 // preserved — only the typeface differs.
 
+// Ces tests sont tagués `golden` et exclus de la CI : les images de référence
+// sont produites sous macOS et le rendu de Roboto (hinting, anticrénelage)
+// diffère sous Linux, ce qui produit ~0,03 % de pixels d'écart sans qu'aucun
+// code n'ait changé. Ils restent pleinement valables en local :
+//   flutter test test/core/design/widgets/golden/
+@Tags(['golden'])
+library;
+
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/design/tokens/color_tokens.dart';
-import 'package:dony/core/design/tokens/spacing_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';

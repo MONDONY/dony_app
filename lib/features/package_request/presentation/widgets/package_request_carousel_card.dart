@@ -135,7 +135,6 @@ class _PhotoHero extends StatelessWidget {
           if (item.photoUrl != null)
             DonyImage(
               url: item.photoUrl!,
-              fit: BoxFit.cover,
               placeholder: (_) => _PhotoPlaceholder(
                 emoji: emojiForLabel(item.primaryCategory),
                 cs: cs,

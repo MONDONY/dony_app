@@ -10,9 +10,9 @@ const _presignedUrl =
 const _stableKey = 'https://s3.dony.store/bucket/tracking/abc/123_photo.jpg';
 
 Widget _wrap(Widget child) => MaterialApp(
-      theme: AppTheme.light(),
-      home: Scaffold(body: Center(child: child)),
-    );
+  theme: AppTheme.light(),
+  home: Scaffold(body: Center(child: child)),
+);
 
 void main() {
   group('DonyImage.stableCacheKey', () {
@@ -25,7 +25,8 @@ void main() {
     });
 
     test('two presigned urls of same object share the same key', () {
-      const other = '$_stableKey?X-Amz-Signature=cafebabe&X-Amz-Date=20260717T000000Z';
+      const other =
+          '$_stableKey?X-Amz-Signature=cafebabe&X-Amz-Date=20260717T000000Z';
       expect(
         DonyImage.stableCacheKey(_presignedUrl),
         DonyImage.stableCacheKey(other),
@@ -34,31 +35,47 @@ void main() {
   });
 
   group('DonyImage', () {
-    testWidgets('renders CachedNetworkImage with stable cacheKey', (tester) async {
+    testWidgets('renders CachedNetworkImage with stable cacheKey', (
+      tester,
+    ) async {
       await tester.pumpWidget(_wrap(const DonyImage(url: _presignedUrl)));
-      final img = tester.widget<CachedNetworkImage>(find.byType(CachedNetworkImage));
+      final img = tester.widget<CachedNetworkImage>(
+        find.byType(CachedNetworkImage),
+      );
       expect(img.imageUrl, _presignedUrl);
       expect(img.cacheKey, _stableKey);
     });
 
     testWidgets('applies fit, width and height', (tester) async {
-      await tester.pumpWidget(_wrap(const DonyImage(
-        url: _presignedUrl,
-        width: 44,
-        height: 44,
-        fit: BoxFit.contain,
-      )));
-      final img = tester.widget<CachedNetworkImage>(find.byType(CachedNetworkImage));
+      await tester.pumpWidget(
+        _wrap(
+          const DonyImage(
+            url: _presignedUrl,
+            width: 44,
+            height: 44,
+            fit: BoxFit.contain,
+          ),
+        ),
+      );
+      final img = tester.widget<CachedNetworkImage>(
+        find.byType(CachedNetworkImage),
+      );
       expect(img.width, 44);
       expect(img.height, 44);
       expect(img.fit, BoxFit.contain);
     });
 
-    testWidgets('wraps in ClipRRect when borderRadius provided', (tester) async {
-      await tester.pumpWidget(_wrap(DonyImage(
-        url: _presignedUrl,
-        borderRadius: BorderRadius.circular(DonyRadius.md),
-      )));
+    testWidgets('wraps in ClipRRect when borderRadius provided', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(
+          DonyImage(
+            url: _presignedUrl,
+            borderRadius: BorderRadius.circular(DonyRadius.md),
+          ),
+        ),
+      );
       expect(find.byType(ClipRRect), findsOneWidget);
     });
 
@@ -69,15 +86,21 @@ void main() {
 
     testWidgets('uses soft fade-in shorter than 500ms', (tester) async {
       await tester.pumpWidget(_wrap(const DonyImage(url: _presignedUrl)));
-      final img = tester.widget<CachedNetworkImage>(find.byType(CachedNetworkImage));
+      final img = tester.widget<CachedNetworkImage>(
+        find.byType(CachedNetworkImage),
+      );
       expect(img.fadeInDuration.inMilliseconds, lessThanOrEqualTo(500));
     });
 
     testWidgets('custom placeholder is used while loading', (tester) async {
-      await tester.pumpWidget(_wrap(DonyImage(
-        url: _presignedUrl,
-        placeholder: (_) => const Text('chargement'),
-      )));
+      await tester.pumpWidget(
+        _wrap(
+          DonyImage(
+            url: _presignedUrl,
+            placeholder: (_) => const Text('chargement'),
+          ),
+        ),
+      );
       await tester.pump();
       expect(find.text('chargement'), findsOneWidget);
     });
@@ -85,20 +108,24 @@ void main() {
 
   group('DonyAvatar cache', () {
     testWidgets('uses CachedNetworkImage with stable cacheKey', (tester) async {
-      await tester.pumpWidget(_wrap(const DonyAvatar(
-        name: 'Ibrahima Diallo',
-        imageUrl: _presignedUrl,
-      )));
-      final img = tester.widget<CachedNetworkImage>(find.byType(CachedNetworkImage));
+      await tester.pumpWidget(
+        _wrap(
+          const DonyAvatar(name: 'Ibrahima Diallo', imageUrl: _presignedUrl),
+        ),
+      );
+      final img = tester.widget<CachedNetworkImage>(
+        find.byType(CachedNetworkImage),
+      );
       expect(img.imageUrl, _presignedUrl);
       expect(img.cacheKey, _stableKey);
     });
 
     testWidgets('shows initials as placeholder while loading', (tester) async {
-      await tester.pumpWidget(_wrap(const DonyAvatar(
-        name: 'Ibrahima Diallo',
-        imageUrl: _presignedUrl,
-      )));
+      await tester.pumpWidget(
+        _wrap(
+          const DonyAvatar(name: 'Ibrahima Diallo', imageUrl: _presignedUrl),
+        ),
+      );
       await tester.pump();
       expect(find.text('ID'), findsOneWidget);
     });

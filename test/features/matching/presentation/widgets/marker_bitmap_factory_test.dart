@@ -94,7 +94,6 @@ void main() {
         final novice = await MarkerBitmapFactory.pin(
           mode: TransportMode.plane,
           side: MarkerSide.pickup,
-          rating: null,
         );
         final rated = await MarkerBitmapFactory.pin(
           mode: TransportMode.plane,
@@ -147,10 +146,7 @@ void main() {
 
   group('MarkerBitmapFactory.pricePill brightness', () {
     test('light vs dark produce different bitmaps', () async {
-      final light = await MarkerBitmapFactory.pricePill(
-        pricePerKg: 12,
-        brightness: Brightness.light,
-      );
+      final light = await MarkerBitmapFactory.pricePill(pricePerKg: 12);
       final dark = await MarkerBitmapFactory.pricePill(
         pricePerKg: 12,
         brightness: Brightness.dark,
@@ -212,7 +208,6 @@ void main() {
       final light = await MarkerBitmapFactory.stackedPricePill(
         pricePerKg: 12,
         count: 3,
-        brightness: Brightness.light,
       );
       final dark = await MarkerBitmapFactory.stackedPricePill(
         pricePerKg: 12,

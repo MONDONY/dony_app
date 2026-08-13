@@ -99,8 +99,8 @@ AnnouncementModel _trip(String id, {String status = 'IN_PROGRESS'}) =>
       availableKg: 10,
       totalKg: 20,
       pricePerKg: 5,
-      createdAt: DateTime(2026, 1, 1),
-      updatedAt: DateTime(2026, 1, 1),
+      createdAt: DateTime(2026),
+      updatedAt: DateTime(2026),
     );
 
 BidModel _bid(String id, String status, {String? recipientName}) => BidModel(
@@ -109,8 +109,8 @@ BidModel _bid(String id, String status, {String? recipientName}) => BidModel(
   senderId: 's',
   status: status,
   recipientName: recipientName,
-  createdAt: DateTime(2026, 1, 1),
-  updatedAt: DateTime(2026, 1, 1),
+  createdAt: DateTime(2026),
+  updatedAt: DateTime(2026),
 );
 
 GoRouter _router(
@@ -120,7 +120,7 @@ GoRouter _router(
   routes: [
     GoRoute(
       path: '/',
-      builder: (_, __) => MultiBlocProvider(
+      builder: (_, _) => MultiBlocProvider(
         providers: [
           BlocProvider<ScanHubCubit>.value(value: cubit),
           BlocProvider<HelpCenterBloc>(
@@ -138,15 +138,15 @@ GoRouter _router(
     ),
     GoRoute(
       path: '/tracking/scan/identify',
-      builder: (_, __) => const Scaffold(body: Text('identify')),
+      builder: (_, _) => const Scaffold(body: Text('identify')),
     ),
     GoRoute(
       path: '/tracking/offline-queue',
-      builder: (_, __) => const Scaffold(body: Text('offline-queue')),
+      builder: (_, _) => const Scaffold(body: Text('offline-queue')),
     ),
     GoRoute(
       path: '/announcements/trips',
-      builder: (_, __) => const Scaffold(body: Text('mes-trajets')),
+      builder: (_, _) => const Scaffold(body: Text('mes-trajets')),
     ),
     GoRoute(
       path: '/bids/:id',

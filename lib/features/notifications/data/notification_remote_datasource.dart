@@ -6,7 +6,10 @@ class NotificationRemoteDatasource {
 
   NotificationRemoteDatasource(this._apiClient);
 
-  Future<List<NotificationModel>> fetchNotifications({int page = 0, int size = 30}) async {
+  Future<List<NotificationModel>> fetchNotifications({
+    int page = 0,
+    int size = 30,
+  }) async {
     final response = await _apiClient.dio.get(
       '/notifications',
       queryParameters: {'page': page, 'size': size},

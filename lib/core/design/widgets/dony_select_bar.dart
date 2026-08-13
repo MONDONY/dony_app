@@ -70,33 +70,34 @@ class DonySelectBar extends StatelessWidget {
         if (hasSelection)
           Padding(
             padding: const EdgeInsets.only(bottom: DonySpacing.xs),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    selectedSummary!,
-                    style: tt.bodySmall?.copyWith(
-                      color: cs.onSurfaceVariant,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                if (selectedCount != null) ...[
-                  const SizedBox(width: DonySpacing.xs),
-                  Text(
-                    '✓ $selectedCount',
-                    style: tt.bodySmall?.copyWith(
-                      color: cs.success,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ],
-            )
-                .animate()
-                .fadeIn(duration: 200.ms)
-                .slideY(begin: -0.3, duration: 200.ms),
+            child:
+                Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            selectedSummary!,
+                            style: tt.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (selectedCount != null) ...[
+                          const SizedBox(width: DonySpacing.xs),
+                          Text(
+                            '✓ $selectedCount',
+                            style: tt.bodySmall?.copyWith(
+                              color: cs.success,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ],
+                    )
+                    .animate()
+                    .fadeIn(duration: 200.ms)
+                    .slideY(begin: -0.3, duration: 200.ms),
           ),
 
         // ── Bouton principal ────────────────────────────────────────────────

@@ -97,7 +97,6 @@ class DonyNavItem extends StatelessWidget {
         onTap: onTap,
         behavior: HitTestBehavior.opaque,
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
           children: [
             const SizedBox(height: pillTopInset),
             Stack(

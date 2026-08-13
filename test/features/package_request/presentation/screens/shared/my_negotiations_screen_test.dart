@@ -73,7 +73,6 @@ UserModel _user(String id) => UserModel(
   roles: const ['SENDER'],
   kycStatus: 'VERIFIED',
   status: 'ACTIVE',
-  stripeAccountStatus: 'NOT_CREATED',
 );
 
 NegotiationThread _thread({
@@ -123,7 +122,7 @@ void main() {
   late _MockAuthBloc authBloc;
 
   setUpAll(() async {
-    await initializeDateFormatting('fr', null);
+    await initializeDateFormatting('fr');
     registerFallbackValue(const NegotiationListFetchRequested());
   });
 
@@ -169,21 +168,18 @@ void main() {
     testWidgets('affiche CircularProgressIndicator en état loading', (
       tester,
     ) async {
-      when(() => bloc.state).thenReturn(
-        NegotiationListState(
-          status: NegotiationListStatus.loading,
-          threads: [],
-        ),
-      );
+      when(
+        () => bloc.state,
+      ).thenReturn(NegotiationListState(status: NegotiationListStatus.loading));
       await tester.pumpWidget(wrap());
       await tester.pump();
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
     testWidgets('affiche _EmptyState quand la liste est vide', (tester) async {
-      when(() => bloc.state).thenReturn(
-        NegotiationListState(status: NegotiationListStatus.loaded, threads: []),
-      );
+      when(
+        () => bloc.state,
+      ).thenReturn(NegotiationListState(status: NegotiationListStatus.loaded));
       await tester.pumpWidget(wrap());
       await tester.pumpAndSettle();
       expect(find.text('Aucune négociation'), findsOneWidget);
@@ -294,7 +290,7 @@ void main() {
         when(() => bloc.state).thenReturn(
           NegotiationListState(
             status: NegotiationListStatus.loaded,
-            threads: [_thread(status: NegotiationThreadStatus.open)],
+            threads: [_thread()],
           ),
         );
         await tester.pumpWidget(wrap());
@@ -331,7 +327,7 @@ void main() {
   });
 
   group('Recherche et filtres', () {
-    NegotiationThread _t2({
+    NegotiationThread t2({
       required String arrivalCity,
       required NegotiationThreadStatus status,
       String? travelerName,
@@ -352,12 +348,12 @@ void main() {
       arrivalCity: arrivalCity,
     );
 
-    final dakarThread = _t2(
+    final dakarThread = t2(
       arrivalCity: 'Dakar',
       status: NegotiationThreadStatus.open,
       travelerName: 'Modou Fall',
     );
-    final abidjanThread = _t2(
+    final abidjanThread = t2(
       arrivalCity: 'Abidjan',
       status: NegotiationThreadStatus.rejected,
       travelerName: 'Kouassi Bamba',
@@ -568,7 +564,7 @@ void main() {
   });
 
   group('_FilterEmptyState — présets', () {
-    NegotiationThread _t3({required NegotiationThreadStatus status}) =>
+    NegotiationThread t3({required NegotiationThreadStatus status}) =>
         NegotiationThread(
           id: 't-${status.name}',
           packageRequestId: 'pr-1',
@@ -591,7 +587,7 @@ void main() {
         when(() => bloc.state).thenReturn(
           NegotiationListState(
             status: NegotiationListStatus.loaded,
-            threads: [_t3(status: NegotiationThreadStatus.open)],
+            threads: [t3(status: NegotiationThreadStatus.open)],
           ),
         );
         await tester.pumpWidget(wrap());
@@ -610,7 +606,7 @@ void main() {
         when(() => bloc.state).thenReturn(
           NegotiationListState(
             status: NegotiationListStatus.loaded,
-            threads: [_t3(status: NegotiationThreadStatus.rejected)],
+            threads: [t3(status: NegotiationThreadStatus.rejected)],
           ),
         );
         await tester.pumpWidget(wrap());

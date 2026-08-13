@@ -140,6 +140,10 @@ class AcceptOfferBottomSheet {
                           // transmettre ici.
                           final init = await getIt<NegotiationRepository>()
                               .initiatePayment(threadId);
+                          // La feuille peut avoir été fermée pendant l'appel
+                          // réseau : ouvrir la PaymentSheet sur un contexte
+                          // démonté lèverait une exception au lieu d'annuler.
+                          if (!ctx.mounted) return;
                           await DonyPaymentSheet.show(
                             ctx,
                             config: PaymentSheetConfig(
@@ -201,17 +205,19 @@ class AcceptOfferBottomSheet {
                           }
                           if (ctx.mounted) {
                             Navigator.of(ctx, rootNavigator: true).pop();
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (routeContext) => DonySuccessScreen(
-                                  mascotteType: DonyMascotteType.succes,
-                                  title: 'Accord confirmé !',
-                                  subtitle: subtitle,
-                                  ctaLabel: 'Voir le suivi',
-                                  onCta: () => routeContext.go(
-                                    '/negotiations/$threadId',
+                            unawaited(
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (routeContext) => DonySuccessScreen(
+                                    mascotteType: DonyMascotteType.succes,
+                                    title: 'Accord confirmé !',
+                                    subtitle: subtitle,
+                                    ctaLabel: 'Voir le suivi',
+                                    onCta: () => routeContext.go(
+                                      '/negotiations/$threadId',
+                                    ),
+                                    analyticsContext: 'negotiation_agreement',
                                   ),
-                                  analyticsContext: 'negotiation_agreement',
                                 ),
                               ),
                             );

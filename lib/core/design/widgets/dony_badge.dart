@@ -25,10 +25,10 @@ class DonyBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final (bg, fg) = switch (type) {
-      DonyBadgeType.info    => (cs.infoLight,    cs.info),
+      DonyBadgeType.info => (cs.infoLight, cs.info),
       DonyBadgeType.success => (cs.successLight, cs.success),
       DonyBadgeType.warning => (cs.warningLight, cs.warning),
-      DonyBadgeType.error   => (cs.errorLight,   cs.error),
+      DonyBadgeType.error => (cs.errorLight, cs.error),
     };
 
     // En mode étiquettes renforcées, un badge sans icône en reçoit une, tirée
@@ -40,7 +40,8 @@ class DonyBadge extends StatelessWidget {
       DonyBadgeType.warning => Icons.warning_amber_rounded,
       DonyBadgeType.error => Icons.error_outline,
     };
-    final effectiveIcon = icon ??
+    final effectiveIcon =
+        icon ??
         (context.a11y.reinforceLabels && iconAsset == null
             ? fallbackIcon
             : null);
@@ -70,10 +71,9 @@ class DonyBadge extends StatelessWidget {
               label.toUpperCase(),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: fg,
-                letterSpacing: 0.8,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.labelSmall?.copyWith(color: fg, letterSpacing: 0.8),
             ),
           ),
         ],

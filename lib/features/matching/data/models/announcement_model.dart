@@ -1,9 +1,8 @@
+import 'package:dony/core/urgency/dony_urgency.dart';
+import 'package:dony/features/matching/data/models/address_data.dart';
+import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:json_annotation/json_annotation.dart';
-
-import '../../../../core/urgency/dony_urgency.dart';
-import 'address_data.dart';
-import 'bid_model.dart';
-import 'transport_mode.dart';
 
 part 'announcement_model.g.dart';
 
@@ -94,8 +93,9 @@ class TravelerProfile {
   String get resolvedInitials {
     if (displayName != null && displayName!.isNotEmpty) {
       final parts = displayName!.trim().split(' ');
-      if (parts.length >= 2)
+      if (parts.length >= 2) {
         return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+      }
       return displayName![0].toUpperCase();
     }
     return '?';

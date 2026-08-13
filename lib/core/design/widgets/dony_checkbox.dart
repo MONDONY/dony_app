@@ -38,7 +38,13 @@ class DonyCheckbox extends StatelessWidget {
       onTap: enabled
           ? () {
               if (tristate) {
-                onChanged(value == null ? true : value! ? false : null);
+                onChanged(
+                  value == null
+                      ? true
+                      : value!
+                      ? false
+                      : null,
+                );
               } else {
                 onChanged(!(value ?? false));
               }
@@ -51,8 +57,9 @@ class DonyCheckbox extends StatelessWidget {
           horizontal: DonySpacing.xs,
         ),
         child: Row(
-          crossAxisAlignment:
-              subtitle != null ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+          crossAxisAlignment: subtitle != null
+              ? CrossAxisAlignment.start
+              : CrossAxisAlignment.center,
           children: [
             Opacity(
               opacity: enabled ? 1.0 : 0.4,

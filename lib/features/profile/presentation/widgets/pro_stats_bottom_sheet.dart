@@ -1,5 +1,7 @@
 import 'dart:ui';
 
+import 'package:dony/core/currency/active_currency.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/profile/data/models/pro_stats_model.dart';
@@ -26,10 +28,12 @@ class ProStatsBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    // Le symbole suit la devise active plutôt qu'un euro figé.
+    final currency = ActiveCurrency.current ?? SupportedCurrency.eur;
     final currencyFmt = NumberFormat.currency(
-      locale: 'fr_FR',
-      symbol: '€',
-      decimalDigits: 2,
+      locale: currency.locale,
+      symbol: currency.symbol,
+      decimalDigits: currency.minorUnit,
     );
     final now = DateTime.now();
     final monthLabel = DateFormat('MMMM yyyy', 'fr_FR').format(now);
@@ -69,7 +73,7 @@ class ProStatsBottomSheet extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _SectionLabel('PERFORMANCE'),
+                  const _SectionLabel('PERFORMANCE'),
                   const SizedBox(height: DonySpacing.base),
                   _ProgressMetric(
                     label: "Taux d'acceptation",
@@ -101,7 +105,7 @@ class ProStatsBottomSheet extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _SectionLabel('TOP DESTINATIONS'),
+                    const _SectionLabel('TOP DESTINATIONS'),
                     const SizedBox(height: DonySpacing.base),
                     ...stats.topDestinations.asMap().entries.map((entry) {
                       final i = entry.key;
@@ -178,7 +182,6 @@ class _GlassHeroCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(DonyRadius.card),
             border: Border.all(
               color: Colors.white.withValues(alpha: borderAlpha),
-              width: 1,
             ),
             boxShadow: [
               BoxShadow(
@@ -469,10 +472,7 @@ class _DestinationRow extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
         ),
-        DonyBadge(
-          label: '$count trajet${count > 1 ? 's' : ''}',
-          type: DonyBadgeType.info,
-        ),
+        DonyBadge(label: '$count trajet${count > 1 ? 's' : ''}'),
       ],
     );
   }

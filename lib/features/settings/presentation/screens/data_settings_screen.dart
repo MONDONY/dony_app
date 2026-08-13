@@ -66,9 +66,9 @@ class DataSettingsScreen extends StatelessWidget {
                           : null,
                       onTap: isLoading
                           ? null
-                          : () => context
-                              .read<DataExportBloc>()
-                              .add(const DataExportRequested()),
+                          : () => context.read<DataExportBloc>().add(
+                              const DataExportRequested(),
+                            ),
                     );
                   },
                 ),

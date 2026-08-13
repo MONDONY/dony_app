@@ -5,16 +5,17 @@ import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
+import 'package:dony/features/package_request/bloc/package_request_photos_cubit.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/steps/step_3_recap_budget.dart';
-import 'package:dony/features/package_request/bloc/package_request_photos_cubit.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/widgets/wizard_summary_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
+
 import '../../../../../../../helpers/mock_analytics_backend.dart';
 
 class _MockRepo extends Mock implements PackageRequestRepository {}
@@ -28,7 +29,7 @@ void main() {
   late _MockFormBloc mockBloc;
 
   setUpAll(() async {
-    await initializeDateFormatting('fr_FR', null);
+    await initializeDateFormatting('fr_FR');
   });
 
   setUp(() {
@@ -123,7 +124,7 @@ void main() {
     testWidgets('affiche le suffixe et le détail du budget en CAD', (
       tester,
     ) async {
-      final seed = const PackageRequestFormState(totalBudgetEur: 40);
+      const seed = PackageRequestFormState(totalBudgetEur: 40);
       await tester.pumpWidget(
         wrap(
           const Step3RecapBudget(currency: SupportedCurrency.cad),

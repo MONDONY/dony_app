@@ -175,7 +175,7 @@ class PrixConditionsStep extends StatelessWidget {
                           key: const Key('kg-price-toggle'),
                           value: kgEnabled,
                           onChanged: (v) => kgPriceEnabledNotifier.value = v,
-                          activeColor: cs.primary,
+                          activeThumbColor: cs.primary,
                           contentPadding: EdgeInsets.zero,
                           title: Text(
                             'Tarif au kilo',

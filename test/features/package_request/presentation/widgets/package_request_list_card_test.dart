@@ -49,7 +49,7 @@ PackageRequestSearchItem _item({
 
 void main() {
   setUpAll(() async {
-    await initializeDateFormatting('fr', null);
+    await initializeDateFormatting('fr');
   });
 
   Widget wrap(Widget child) => MaterialApp(

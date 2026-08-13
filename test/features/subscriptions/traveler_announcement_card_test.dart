@@ -13,9 +13,9 @@ void main() {
 
   setUpAll(() => initializeDateFormatting('fr'));
 
-  Widget _wrap(Widget child) => MaterialApp(home: Scaffold(body: child));
+  Widget wrap(Widget child) => MaterialApp(home: Scaffold(body: child));
 
-  TravelerAnnouncement _announcement({
+  TravelerAnnouncement announcement({
     String departureCity = 'Paris',
     String arrivalCity = 'Dakar',
     double pricePerKg = 8,
@@ -27,7 +27,7 @@ void main() {
     id: 'a1',
     departureCity: departureCity,
     arrivalCity: arrivalCity,
-    departureDate: departureDate ?? DateTime(2026, 6, 1),
+    departureDate: departureDate ?? DateTime(2026, 6),
     pricePerKg: pricePerKg,
     availableKg: availableKg,
     status: status,
@@ -36,9 +36,9 @@ void main() {
 
   testWidgets('affiche les villes départ et arrivée', (tester) async {
     await tester.pumpWidget(
-      _wrap(
+      wrap(
         TravelerAnnouncementCard(
-          announcement: _announcement(),
+          announcement: announcement(),
           onReserve: () {},
         ),
       ),
@@ -49,9 +49,9 @@ void main() {
 
   testWidgets('affiche l\'emoji avion', (tester) async {
     await tester.pumpWidget(
-      _wrap(
+      wrap(
         TravelerAnnouncementCard(
-          announcement: _announcement(),
+          announcement: announcement(),
           onReserve: () {},
         ),
       ),
@@ -62,9 +62,9 @@ void main() {
 
   testWidgets('affiche la date formatée en français', (tester) async {
     await tester.pumpWidget(
-      _wrap(
+      wrap(
         TravelerAnnouncementCard(
-          announcement: _announcement(departureDate: DateTime(2026, 6, 1)),
+          announcement: announcement(departureDate: DateTime(2026, 6)),
           onReserve: () {},
         ),
       ),
@@ -74,9 +74,9 @@ void main() {
 
   testWidgets('affiche le poids disponible', (tester) async {
     await tester.pumpWidget(
-      _wrap(
+      wrap(
         TravelerAnnouncementCard(
-          announcement: _announcement(availableKg: 7),
+          announcement: announcement(availableKg: 7),
           onReserve: () {},
         ),
       ),
@@ -86,9 +86,9 @@ void main() {
 
   testWidgets('affiche le prix et l\'unité /kg', (tester) async {
     await tester.pumpWidget(
-      _wrap(
+      wrap(
         TravelerAnnouncementCard(
-          announcement: _announcement(pricePerKg: 8),
+          announcement: announcement(),
           onReserve: () {},
         ),
       ),
@@ -103,9 +103,9 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      _wrap(
+      wrap(
         TravelerAnnouncementCard(
-          announcement: _announcement(pricePerKg: 8, currency: 'CAD'),
+          announcement: announcement(currency: 'CAD'),
           onReserve: () {},
         ),
       ),
@@ -117,9 +117,9 @@ void main() {
   testWidgets('le bouton Réserver déclenche onReserve', (tester) async {
     var tapped = false;
     await tester.pumpWidget(
-      _wrap(
+      wrap(
         TravelerAnnouncementCard(
-          announcement: _announcement(),
+          announcement: announcement(),
           onReserve: () => tapped = true,
         ),
       ),
@@ -133,9 +133,9 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      _wrap(
+      wrap(
         TravelerAnnouncementCard(
-          announcement: _announcement(availableKg: 0),
+          announcement: announcement(availableKg: 0),
           onReserve: () {},
         ),
       ),
@@ -147,9 +147,9 @@ void main() {
   testWidgets('availableKg=0 → bouton Réserver désactivé', (tester) async {
     var tapped = false;
     await tester.pumpWidget(
-      _wrap(
+      wrap(
         TravelerAnnouncementCard(
-          announcement: _announcement(availableKg: 0),
+          announcement: announcement(availableKg: 0),
           onReserve: () => tapped = true,
         ),
       ),
@@ -170,12 +170,9 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
 
     await tester.pumpWidget(
-      _wrap(
+      wrap(
         TravelerAnnouncementCard(
-          announcement: _announcement(
-            departureCity: 'Paris',
-            arrivalCity: 'Ouagadougou',
-          ),
+          announcement: announcement(arrivalCity: 'Ouagadougou'),
           onReserve: () {},
         ),
       ),

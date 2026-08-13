@@ -1,7 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dio/dio.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/settings/bloc/diagnostics_bloc.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -41,7 +41,6 @@ void main() {
       const state = DiagnosticsState(
         appVersion: '1.0.0',
         buildNumber: '42',
-        isPinging: false,
         apiOk: true,
       );
       final copy = state.copyWith(isPinging: true);
@@ -119,14 +118,14 @@ void main() {
     blocTest<DiagnosticsBloc, DiagnosticsState>(
       'ApiPingRequested emet apiOk=false si exception generique',
       build: () {
-        when(() => mockDio.get('/actuator/health'))
-            .thenThrow(Exception('network error'));
+        when(
+          () => mockDio.get('/actuator/health'),
+        ).thenThrow(Exception('network error'));
         return DiagnosticsBloc(mockApiClient);
       },
       act: (bloc) => bloc.add(const ApiPingRequested()),
       expect: () => [
-        isA<DiagnosticsState>()
-            .having((s) => s.isPinging, 'isPinging', isTrue),
+        isA<DiagnosticsState>().having((s) => s.isPinging, 'isPinging', isTrue),
         isA<DiagnosticsState>()
             .having((s) => s.isPinging, 'isPinging', isFalse)
             .having((s) => s.apiOk, 'apiOk', isFalse),

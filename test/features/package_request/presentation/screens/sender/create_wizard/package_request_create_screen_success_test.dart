@@ -2,7 +2,6 @@ import 'package:dio/dio.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
-import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/data/city_repository.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
@@ -20,11 +19,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import '../../../../../../helpers/currency_test_doubles.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../../../helpers/currency_test_doubles.dart';
 import '../../../../../../helpers/mock_analytics_backend.dart';
 import '../../../../../../helpers/mock_recent_city_store.dart';
 

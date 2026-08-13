@@ -42,8 +42,9 @@ void main() {
     });
 
     test('returns phone null when contact has no phone numbers', () async {
-      when(() => native.selectContact())
-          .thenAnswer((_) async => Contact(fullName: 'Sans Numéro'));
+      when(
+        () => native.selectContact(),
+      ).thenAnswer((_) async => Contact(fullName: 'Sans Numéro'));
 
       final picked = await service.pick();
 
@@ -59,8 +60,7 @@ void main() {
     });
 
     test('returns null on platform exception', () async {
-      when(() => native.selectContact())
-          .thenThrow(Exception('platform error'));
+      when(() => native.selectContact()).thenThrow(Exception('platform error'));
 
       expect(await service.pick(), isNull);
     });

@@ -25,8 +25,8 @@ AnnouncementModel _announcement({
     'travelerId': 't1',
     'departureCity': departureCity,
     'arrivalCity': arrivalCity,
-    if (departureFlag != null) 'departureFlag': departureFlag,
-    if (arrivalFlag != null) 'arrivalFlag': arrivalFlag,
+    'departureFlag': ?departureFlag,
+    'arrivalFlag': ?arrivalFlag,
     'departureDate': DateTime.now()
         .add(const Duration(days: 3))
         .toIso8601String(),
@@ -34,10 +34,10 @@ AnnouncementModel _announcement({
     'availableKg': availableKg,
     'pricePerKg': pricePerKg,
     'pricingMode': pricingMode,
-    if (priceGridItems != null) 'priceGridItems': priceGridItems,
+    'priceGridItems': ?priceGridItems,
     'currency': currency,
     'status': status,
-    if (capacityUnit != null) 'capacityUnit': capacityUnit,
+    'capacityUnit': ?capacityUnit,
     'pendingBidCount': pendingBidCount,
     'confirmedParcelCount': confirmedParcelCount,
     'createdAt': '2024-01-01T00:00:00Z',
@@ -170,11 +170,7 @@ void main() {
     await tester.pumpWidget(
       _wrap(
         TripCard(
-          announcement: _announcement(
-            departureCity: 'Paris',
-            arrivalCity: 'Dakar',
-            departureFlag: '🇺🇸',
-          ),
+          announcement: _announcement(departureFlag: '🇺🇸'),
           onTap: () {},
           index: 0,
         ),

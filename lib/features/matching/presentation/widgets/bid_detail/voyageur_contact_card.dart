@@ -3,9 +3,9 @@ import 'dart:async';
 import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/get_it_safe.dart';
-import 'package:dony/core/utils/phone_dialer.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/utils/phone_dialer.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_event.dart';
@@ -13,12 +13,12 @@ import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_state.
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/profil_card_widgets.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
-import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
-import 'package:go_router/go_router.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
+import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 /// Carte profil voyageur (vue expéditeur) — bouton 📞 conditionnel + 💬 chat.
 ///

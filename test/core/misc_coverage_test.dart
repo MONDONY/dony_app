@@ -14,8 +14,8 @@ void main() {
         id: 'ev-1',
         bidId: 'bid-1',
         eventType: 'TRANSIT',
-        scannedAt: DateTime(2024, 1, 1),
-        createdAt: DateTime(2024, 1, 1),
+        scannedAt: DateTime(2024),
+        createdAt: DateTime(2024),
       );
       final state = QrScanSuccess(event);
       expect(state.event.id, 'ev-1');
@@ -31,10 +31,7 @@ void main() {
 
   group('QrScanSubmitRequested', () {
     test('holds required fields', () {
-      final e = QrScanSubmitRequested(
-        bidId: 'bid-1',
-        eventType: 'TRANSIT',
-      );
+      final e = QrScanSubmitRequested(bidId: 'bid-1', eventType: 'TRANSIT');
       expect(e.bidId, 'bid-1');
       expect(e.eventType, 'TRANSIT');
       expect(e.photo, isNull);

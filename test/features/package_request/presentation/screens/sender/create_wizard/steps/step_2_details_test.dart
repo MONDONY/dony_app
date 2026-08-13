@@ -3,6 +3,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
+import 'package:dony/features/content_categories/presentation/content_category_selector.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
@@ -11,11 +12,11 @@ import 'package:dony/features/package_request/bloc/package_request_photos_cubit.
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/steps/step_2_details.dart';
-import 'package:dony/features/content_categories/presentation/content_category_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+
 import '../../../../../../../helpers/mock_analytics_backend.dart';
 
 class _MockRepo extends Mock implements PackageRequestRepository {}

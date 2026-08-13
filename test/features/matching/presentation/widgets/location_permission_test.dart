@@ -126,10 +126,10 @@ void main() {
       'renders serviceDisabled title and key when access=serviceDisabled',
       (tester) async {
         await tester.pumpWidget(
-          MaterialApp(
+          const MaterialApp(
             home: Scaffold(
               body: LocationDeniedSheet(
-                key: const Key('permission-denied-sheet'),
+                key: Key('permission-denied-sheet'),
                 access: LocationAccess.serviceDisabled,
               ),
             ),
@@ -150,7 +150,7 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: LocationDeniedSheet(access: LocationAccess.deniedForever),
           ),
@@ -163,7 +163,7 @@ void main() {
 
     testWidgets('renders denied title when access=denied', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: LocationDeniedSheet(access: LocationAccess.denied),
           ),

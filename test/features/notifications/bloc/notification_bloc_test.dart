@@ -7,9 +7,10 @@ import 'package:dony/features/notifications/data/notification_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockNotificationRepository extends Mock implements NotificationRepository {}
+class MockNotificationRepository extends Mock
+    implements NotificationRepository {}
 
-final _now = DateTime(2026, 4, 26, 12, 0);
+final _now = DateTime(2026, 4, 26, 12);
 
 NotificationModel _makeNotif({required String id, bool read = false}) =>
     NotificationModel(
@@ -58,10 +59,7 @@ void main() {
         return NotificationBloc(repository);
       },
       act: (bloc) => bloc.add(const NotificationsLoadRequested()),
-      expect: () => [
-        const NotificationLoading(),
-        isA<NotificationError>(),
-      ],
+      expect: () => [const NotificationLoading(), isA<NotificationError>()],
     );
 
     // ── NotificationMarkReadRequested ───────────────────────────────────────
@@ -74,8 +72,8 @@ void main() {
       },
       seed: () => NotificationLoaded(
         notifications: [
-          _makeNotif(id: '1', read: false),
-          _makeNotif(id: '2', read: false),
+          _makeNotif(id: '1'),
+          _makeNotif(id: '2'),
         ],
         unreadCount: 2,
       ),
@@ -98,15 +96,19 @@ void main() {
       },
       seed: () => NotificationLoaded(
         notifications: [
-          _makeNotif(id: '1', read: false),
-          _makeNotif(id: '2', read: false),
+          _makeNotif(id: '1'),
+          _makeNotif(id: '2'),
         ],
         unreadCount: 2,
       ),
       act: (bloc) => bloc.add(const NotificationsMarkAllReadRequested()),
       expect: () => [
         isA<NotificationLoaded>()
-            .having((s) => s.notifications.every((n) => n.read), 'all read', true)
+            .having(
+              (s) => s.notifications.every((n) => n.read),
+              'all read',
+              true,
+            )
             .having((s) => s.unreadCount, 'unread', 0),
       ],
     );
@@ -121,7 +123,7 @@ void main() {
       },
       seed: () => NotificationLoaded(
         notifications: [
-          _makeNotif(id: '1', read: false),
+          _makeNotif(id: '1'),
           _makeNotif(id: '2', read: true),
         ],
         unreadCount: 1,
@@ -138,20 +140,27 @@ void main() {
     blocTest<NotificationBloc, NotificationState>(
       'restores previous state when delete API call fails',
       build: () {
-        when(() => repository.deleteNotification('1'))
-            .thenThrow(Exception('network error'));
+        when(
+          () => repository.deleteNotification('1'),
+        ).thenThrow(Exception('network error'));
         return NotificationBloc(repository);
       },
       seed: () => NotificationLoaded(
-        notifications: [_makeNotif(id: '1', read: false)],
+        notifications: [_makeNotif(id: '1')],
         unreadCount: 1,
       ),
       act: (bloc) => bloc.add(const NotificationDeleteRequested('1')),
       expect: () => [
-        isA<NotificationLoaded>()
-            .having((s) => s.notifications.isEmpty, 'optimistic empty', true),
-        isA<NotificationLoaded>()
-            .having((s) => s.notifications.length, 'restored', 1),
+        isA<NotificationLoaded>().having(
+          (s) => s.notifications.isEmpty,
+          'optimistic empty',
+          true,
+        ),
+        isA<NotificationLoaded>().having(
+          (s) => s.notifications.length,
+          'restored',
+          1,
+        ),
       ],
     );
   });

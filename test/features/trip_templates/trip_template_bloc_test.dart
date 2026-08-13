@@ -7,9 +7,11 @@ import 'package:dony/features/trip_templates/data/repositories/trip_template_rep
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockTripTemplateRepository extends Mock implements TripTemplateRepository {}
+class MockTripTemplateRepository extends Mock
+    implements TripTemplateRepository {}
 
-TripTemplate _tpl({String id = 't1', String label = 'Mon Paris-Dakar'}) => TripTemplate(
+TripTemplate _tpl({String id = 't1', String label = 'Mon Paris-Dakar'}) =>
+    TripTemplate(
       id: id,
       label: label,
       emoji: '🇸🇳',
@@ -31,16 +33,26 @@ void main() {
     expect(TripTemplateBloc(repo).state.status, TripTemplateStatus.initial);
   });
 
-  test('TripTemplate.fromJson parses cashAccepted and truncates arrivalTime', () {
-    final t = TripTemplate.fromJson({
-      'id': 't1', 'label': 'L', 'departureCity': 'Paris', 'arrivalCity': 'Dakar',
-      'transportMode': 'PLANE', 'capacityUnit': 'SUITCASE_23KG', 'availableKg': 23,
-      'pricePerKg': 8, 'acceptedCategories': ['Vêtements'],
-      'cashAccepted': true, 'arrivalTime': '18:30:00',
-    });
-    expect(t.cashAccepted, isTrue);
-    expect(t.arrivalTime, '18:30');
-  });
+  test(
+    'TripTemplate.fromJson parses cashAccepted and truncates arrivalTime',
+    () {
+      final t = TripTemplate.fromJson({
+        'id': 't1',
+        'label': 'L',
+        'departureCity': 'Paris',
+        'arrivalCity': 'Dakar',
+        'transportMode': 'PLANE',
+        'capacityUnit': 'SUITCASE_23KG',
+        'availableKg': 23,
+        'pricePerKg': 8,
+        'acceptedCategories': ['Vêtements'],
+        'cashAccepted': true,
+        'arrivalTime': '18:30:00',
+      });
+      expect(t.cashAccepted, isTrue);
+      expect(t.arrivalTime, '18:30');
+    },
+  );
 
   blocTest<TripTemplateBloc, TripTemplateState>(
     'TripTemplateLoaded emits loading then success with templates',
@@ -48,7 +60,11 @@ void main() {
     build: () => TripTemplateBloc(repo),
     act: (b) => b.add(const TripTemplateLoaded()),
     expect: () => [
-      isA<TripTemplateState>().having((s) => s.status, 'status', TripTemplateStatus.loading),
+      isA<TripTemplateState>().having(
+        (s) => s.status,
+        'status',
+        TripTemplateStatus.loading,
+      ),
       isA<TripTemplateState>()
           .having((s) => s.status, 'status', TripTemplateStatus.success)
           .having((s) => s.templates.length, 'count', 1),
@@ -61,19 +77,32 @@ void main() {
     build: () => TripTemplateBloc(repo),
     act: (b) => b.add(const TripTemplateLoaded()),
     expect: () => [
-      isA<TripTemplateState>().having((s) => s.status, 'status', TripTemplateStatus.loading),
-      isA<TripTemplateState>().having((s) => s.status, 'status', TripTemplateStatus.error),
+      isA<TripTemplateState>().having(
+        (s) => s.status,
+        'status',
+        TripTemplateStatus.loading,
+      ),
+      isA<TripTemplateState>().having(
+        (s) => s.status,
+        'status',
+        TripTemplateStatus.error,
+      ),
     ],
   );
 
   blocTest<TripTemplateBloc, TripTemplateState>(
     'TripTemplateCreated prepends the created template',
-    setUp: () =>
-        when(() => repo.create(any())).thenAnswer((_) async => _tpl(id: 'new', label: 'Lyon')),
+    setUp: () => when(
+      () => repo.create(any()),
+    ).thenAnswer((_) async => _tpl(id: 'new', label: 'Lyon')),
     build: () => TripTemplateBloc(repo),
     act: (b) => b.add(const TripTemplateCreated({'label': 'Lyon'})),
     expect: () => [
-      isA<TripTemplateState>().having((s) => s.status, 'status', TripTemplateStatus.loading),
+      isA<TripTemplateState>().having(
+        (s) => s.status,
+        'status',
+        TripTemplateStatus.loading,
+      ),
       isA<TripTemplateState>()
           .having((s) => s.status, 'status', TripTemplateStatus.success)
           .having((s) => s.templates.first.id, 'first id', 'new'),
@@ -82,13 +111,21 @@ void main() {
 
   blocTest<TripTemplateBloc, TripTemplateState>(
     'TripTemplateUpdated replaces the matching template',
-    setUp: () => when(() => repo.update('t1', any()))
-        .thenAnswer((_) async => _tpl(id: 't1', label: 'Modifié')),
+    setUp: () => when(
+      () => repo.update('t1', any()),
+    ).thenAnswer((_) async => _tpl(label: 'Modifié')),
     build: () => TripTemplateBloc(repo),
-    seed: () => TripTemplateState(status: TripTemplateStatus.success, templates: [_tpl()]),
+    seed: () => TripTemplateState(
+      status: TripTemplateStatus.success,
+      templates: [_tpl()],
+    ),
     act: (b) => b.add(const TripTemplateUpdated('t1', {'label': 'Modifié'})),
     expect: () => [
-      isA<TripTemplateState>().having((s) => s.status, 'status', TripTemplateStatus.loading),
+      isA<TripTemplateState>().having(
+        (s) => s.status,
+        'status',
+        TripTemplateStatus.loading,
+      ),
       isA<TripTemplateState>()
           .having((s) => s.status, 'status', TripTemplateStatus.success)
           .having((s) => s.templates.first.label, 'label', 'Modifié'),
@@ -99,7 +136,10 @@ void main() {
     'TripTemplateDeleted removes the template',
     setUp: () => when(() => repo.delete('t1')).thenAnswer((_) async {}),
     build: () => TripTemplateBloc(repo),
-    seed: () => TripTemplateState(status: TripTemplateStatus.success, templates: [_tpl()]),
+    seed: () => TripTemplateState(
+      status: TripTemplateStatus.success,
+      templates: [_tpl()],
+    ),
     act: (b) => b.add(const TripTemplateDeleted('t1')),
     expect: () => [
       isA<TripTemplateState>()

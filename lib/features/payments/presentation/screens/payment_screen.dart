@@ -1,10 +1,11 @@
 import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
-import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/config/bloc/config_bloc.dart';
@@ -15,7 +16,6 @@ import 'package:dony/features/payments/presentation/payment_auth.dart';
 import 'package:dony/features/payments/presentation/widgets/dony_payment_sheet.dart';
 import 'package:dony/features/profile/data/models/help_center_config.dart';
 import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -271,7 +271,7 @@ class _SummaryCard extends StatelessWidget {
                         : '-',
                   ),
                 ] else if (bid.pricingMode == BidPricingMode.grid) ...[
-                  DonyInfoRow(label: 'Type', value: 'Forfait articles'),
+                  const DonyInfoRow(label: 'Type', value: 'Forfait articles'),
                 ],
               ],
             ),

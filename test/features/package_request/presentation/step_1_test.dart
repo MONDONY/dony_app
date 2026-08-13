@@ -3,17 +3,18 @@
 // Le poids du colis a été retiré de l'étape 1 : il est saisi à l'étape 2
 // (FormStep2Submitted). L'étape 1 ne traite que le trajet + le mode (avion).
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/data/city_repository.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/steps/step_1_trajet_colis.dart';
-import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:mocktail/mocktail.dart';
+
 import '../../../helpers/mock_analytics_backend.dart';
 import '../../../helpers/mock_recent_city_store.dart';
 
@@ -45,15 +46,15 @@ void main() {
   });
 
   Widget wrap(Widget child) => MaterialApp(
-        theme: AppTheme.light(),
-        home: BlocProvider(
-          create: (_) => PackageRequestFormBloc(
-            packageRepo,
-            analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
-          ),
-          child: Scaffold(body: child),
-        ),
-      );
+    theme: AppTheme.light(),
+    home: BlocProvider(
+      create: (_) => PackageRequestFormBloc(
+        packageRepo,
+        analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+      ),
+      child: Scaffold(body: child),
+    ),
+  );
 
   group('Step1TrajetColis — avion lock + trajet (poids retiré)', () {
     // 1. Weight input field is NO LONGER in step 1 (moved to step 2)
@@ -77,8 +78,9 @@ void main() {
     });
 
     // 4. No S/M/L size selector (no interactive size chip labelled 'M')
-    testWidgets('no S/M/L size selector — M is not a visible chip',
-        (tester) async {
+    testWidgets('no S/M/L size selector — M is not a visible chip', (
+      tester,
+    ) async {
       await tester.pumpWidget(wrap(const Step1TrajetColis()));
       expect(find.text('M'), findsNothing);
       expect(find.text('S'), findsNothing);
@@ -88,7 +90,10 @@ void main() {
     // 5. Airplane lock indicator is visible
     testWidgets('airplane lock indicator is visible', (tester) async {
       await tester.pumpWidget(wrap(const Step1TrajetColis()));
-      expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'plane'), findsOneWidget);
+      expect(
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'plane'),
+        findsOneWidget,
+      );
       expect(find.text('Avion'), findsOneWidget);
     });
 

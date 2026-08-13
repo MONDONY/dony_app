@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+import 'package:dony/core/currency/active_currency.dart';
 import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
@@ -68,6 +70,54 @@ String formatPriceIn(double value, String? currencyCode) {
     SupportedCurrency.fromCodeOrDefault(currencyCode),
     compact: true,
   );
+}
+
+/// Formate un prix dans la **devise active de l'utilisateur**, pour les montants
+/// qui ne se rattachent à aucun objet portant sa propre devise : soldes, revenus,
+/// bornes de filtres, champs de saisie.
+///
+/// Ne jamais écrire `'${formatKgPrice(v)} €'` à la place : le symbole serait faux
+/// dès qu'un utilisateur passe en XOF ou en CAD. Quand un objet porte une devise
+/// (annonce, offre, fil de négociation), utiliser [formatPriceIn] avec la devise
+/// de cet objet, car elle est figée à la création et ne suit pas les réglages.
+String formatPriceActive(double value) =>
+    formatPriceIn(value, ActiveCurrency.current?.code);
+
+/// Symbole de la devise active, pour les rares surfaces qui affichent l'unité
+/// séparément du montant (suffixe de champ, en-tête de colonne).
+String get activeCurrencySymbol =>
+    (ActiveCurrency.current ?? SupportedCurrency.eur).symbol;
+
+/// Formate un montant reçu en **unités mineures** (ce que renvoie Stripe et ce
+/// que stockent les montants en centimes côté backend).
+///
+/// Diviser par 100 en dur serait faux : le franc CFA n'a pas de sous-unité, si
+/// bien qu'un montant de 5000 XOF y deviendrait « 50 ». Le diviseur suit donc la
+/// sous-unité déclarée par la devise (100 pour l'euro, 1 pour le XOF).
+String formatMinorAmount(int minorAmount, String? currencyCode) {
+  final currency = SupportedCurrency.fromCodeOrDefault(currencyCode);
+  final divisor = math.pow(10, currency.minorUnit);
+  return CurrencyFormatter.format(minorAmount / divisor, currency);
+}
+
+/// Plafond de référence, en euros, d'un prix unitaire ou au kilo. Aligné sur
+/// `CurrencyBounds.MAX_PRICE_PER_KG_EUR` côté backend.
+const double kMaxUnitPriceEur = 500;
+
+/// Plafond d'un prix unitaire dans la devise active.
+///
+/// Une limite figée à 500 était juste en euro mais absurde ailleurs : en franc
+/// CFA elle plafonnait la saisie à 0,76 €, si bien qu'aucun tarif réaliste ne
+/// passait le formulaire. La borne suit donc le taux de la devise.
+///
+/// Les taux sont les mêmes des deux côtés (`SupportedCurrency.unitsPerEur`,
+/// ici et dans `CurrencyBounds` côté serveur) : le formulaire accepte donc
+/// exactement ce que l'API accepte. Les faire diverger rouvrirait l'écart entre
+/// ce que l'écran promet et ce que le serveur autorise.
+double get maxUnitPriceActive {
+  final currency = ActiveCurrency.current ?? SupportedCurrency.eur;
+  final scaled = kMaxUnitPriceEur * currency.unitsPerEur;
+  return currency.minorUnit == 0 ? scaled.floorToDouble() : scaled;
 }
 
 /// Plafond de remboursement Yadony en cas de perte de colis (€), source unique

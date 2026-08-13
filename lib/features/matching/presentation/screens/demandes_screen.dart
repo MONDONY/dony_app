@@ -20,9 +20,8 @@ import 'package:dony/features/matching/bloc/traveler_bids_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_list/bid_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_list/bid_list_chrome.dart';
-import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
-import 'package:dony/features/package_request/data/models/package_request.dart';
+import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/my_package_requests_screen.dart';
 import 'package:dony/features/profile/data/models/help_center_config.dart';
 import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
@@ -451,7 +450,6 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
     BuildContext context,
     acs.BidAcceptanceState state,
   ) {
-    final cs = Theme.of(context).colorScheme;
     if (state is acs.BidAccepted) {
       setState(_processingBidIds.clear);
       DonySnackbar.show(
@@ -632,7 +630,7 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
                       DonySpacing.huge,
                     ),
                     itemCount: visible.length + (state.isLoadingMore ? 1 : 0),
-                    separatorBuilder: (_, __) =>
+                    separatorBuilder: (_, _) =>
                         const SizedBox(height: DonySpacing.md),
                     itemBuilder: (context, i) {
                       if (i >= visible.length) {

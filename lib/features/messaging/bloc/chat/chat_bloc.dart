@@ -22,7 +22,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   StreamSubscription<bool>? _deletedSub;
 
   ChatBloc(this._firestoreRepo, this._conversationRepo, this._analytics)
-      : super(const ChatInitial()) {
+    : super(const ChatInitial()) {
     on<ChatSubscribeRequested>(_onSubscribe);
     on<ChatTextSendRequested>(_onSendText);
     on<ChatImageSendRequested>(_onSendImage);
@@ -63,23 +63,25 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       _deletedSub = _firestoreRepo
           .conversationDeletedStream(event.firestoreConversationId)
           .listen(
-        (deleted) {
-          if (deleted && !isClosed) add(const _DeletedByOtherParty());
-        },
-        onError: (_) {
-          // Session invalidée entre-temps (ex: signOut concurrent) — pas d'état d'erreur bloquant.
-        },
-      );
+            (deleted) {
+              if (deleted && !isClosed) add(const _DeletedByOtherParty());
+            },
+            onError: (_) {
+              // Session invalidée entre-temps (ex: signOut concurrent) — pas d'état d'erreur bloquant.
+            },
+          );
     }
 
     await emit.forEach<List<MessageModel>>(
       _firestoreRepo.messagesStream(event.firestoreConversationId),
       onData: (messages) =>
           event.isReadOnly ? ChatReadOnly(messages) : ChatLoaded(messages),
-      onError: (e, st) => ChatError(NetworkException(
-        'Erreur de connexion à la messagerie',
-        code: 'chat-stream-error',
-      )),
+      onError: (e, st) => const ChatError(
+        NetworkException(
+          'Erreur de connexion à la messagerie',
+          code: 'chat-stream-error',
+        ),
+      ),
     );
   }
 
@@ -150,7 +152,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
         if (uid.isNotEmpty) {
           await _firestoreRepo.markConversationRead(
-              event.firestoreConversationId, uid);
+            event.firestoreConversationId,
+            uid,
+          );
         }
       } catch (_) {
         // Non-fatal — proceed with the API deletion.
@@ -171,7 +175,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   ) {
     // The other party deleted — transition to read-only (keep showing messages)
     final current = state;
-    final messages = current is ChatLoaded ? current.messages : <MessageModel>[];
+    final messages = current is ChatLoaded
+        ? current.messages
+        : <MessageModel>[];
     emit(ChatReadOnly(messages));
   }
 

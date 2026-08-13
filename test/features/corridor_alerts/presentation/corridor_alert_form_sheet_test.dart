@@ -364,7 +364,7 @@ void main() {
   testWidgets('sender only → no segment, direction forced senderWantsTrips', (
     tester,
   ) async {
-    await _pumpSheet(tester, isTraveler: false, isSender: true);
+    await _pumpSheet(tester, isSender: true);
     expect(find.byKey(const Key('alert-direction-segment')), findsNothing);
     // trajet direction hides weight + categories
     expect(find.byKey(const Key('corridor-alert-min-weight')), findsNothing);
@@ -372,7 +372,7 @@ void main() {
   });
 
   testWidgets('traveler only → no segment, colis fields shown', (tester) async {
-    await _pumpSheet(tester, isTraveler: true, isSender: false);
+    await _pumpSheet(tester, isTraveler: true);
     expect(find.byKey(const Key('alert-direction-segment')), findsNothing);
     expect(find.byKey(const Key('corridor-alert-min-weight')), findsOneWidget);
     expect(find.text('Types de contenu (optionnel)'), findsOneWidget);
@@ -436,11 +436,7 @@ void main() {
     final cityBloc = MockCitySearchBloc();
     when(() => cityBloc.state).thenReturn(const CitySearchInitial());
     when(() => cubit.isEditing).thenReturn(false);
-    when(() => cubit.state).thenReturn(
-      const CorridorAlertFormState(
-        direction: AlertDirection.travelerWantsPackages,
-      ),
-    );
+    when(() => cubit.state).thenReturn(const CorridorAlertFormState());
     when(() => cubit.toggleCategory(any())).thenReturn(null);
 
     GetIt.I.registerFactoryParam<

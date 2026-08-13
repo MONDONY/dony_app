@@ -8,6 +8,7 @@
 // implémentation, consommée par les deux feuilles.
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/city/data/city_model.dart';
 import 'package:dony/features/city/presentation/widgets/city_corridor_fields.dart';
@@ -44,10 +45,12 @@ class CommonFilterBlock extends StatelessWidget {
 
   void _togglePreset(DonyDatePreset preset) {
     final active = value.datePreset == preset;
-    onChanged(value.copyWith(
-      datePreset: active ? DonyDatePreset.none : preset,
-      clearCustomDate: true,
-    ));
+    onChanged(
+      value.copyWith(
+        datePreset: active ? DonyDatePreset.none : preset,
+        clearCustomDate: true,
+      ),
+    );
   }
 
   /// Vider un champ de ville DOIT vider le filtre correspondant : sans ça le
@@ -56,37 +59,36 @@ class CommonFilterBlock extends StatelessWidget {
   /// corridor (`clearCorridor`), qui efface les deux villes d'un coup : on
   /// l'applique puis on réinjecte celle qu'on garde.
   void _clearDeparture() => onChanged(
-        value.copyWith(clearCorridor: true).copyWith(
-              arrivalCity: value.arrivalCity,
-            ),
-      );
+    value
+        .copyWith(clearCorridor: true)
+        .copyWith(arrivalCity: value.arrivalCity),
+  );
 
   void _clearArrival() => onChanged(
-        value.copyWith(clearCorridor: true).copyWith(
-              departureCity: value.departureCity,
-            ),
-      );
+    value
+        .copyWith(clearCorridor: true)
+        .copyWith(departureCity: value.departureCity),
+  );
 
   void _onCustomDate(DateTime? date) {
     if (date == null) {
-      onChanged(value.copyWith(
-        datePreset: DonyDatePreset.none,
-        clearCustomDate: true,
-      ));
+      onChanged(
+        value.copyWith(datePreset: DonyDatePreset.none, clearCustomDate: true),
+      );
       return;
     }
-    onChanged(value.copyWith(
-      datePreset: DonyDatePreset.custom,
-      customDate: date,
-    ));
+    onChanged(
+      value.copyWith(datePreset: DonyDatePreset.custom, customDate: date),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    final customDate =
-        value.datePreset == DonyDatePreset.custom ? value.customDate : null;
+    final customDate = value.datePreset == DonyDatePreset.custom
+        ? value.customDate
+        : null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -156,10 +158,15 @@ class SimpleSheet extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: cs.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(DonyRadius.sheet)),
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(DonyRadius.sheet),
+        ),
       ),
       padding: EdgeInsets.fromLTRB(
-        DonySpacing.lg, 0, DonySpacing.lg, bottomPad + DonySpacing.base,
+        DonySpacing.lg,
+        0,
+        DonySpacing.lg,
+        bottomPad + DonySpacing.base,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -176,7 +183,10 @@ class SimpleSheet extends StatelessWidget {
               ),
             ),
           ),
-          Text(title, style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
+          Text(
+            title,
+            style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+          ),
           const SizedBox(height: DonySpacing.base),
           child,
         ],
@@ -200,7 +210,10 @@ class PriceField extends StatelessWidget {
       onTap: onTap,
       child: Container(
         constraints: const BoxConstraints(minHeight: 44),
-        padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md, vertical: DonySpacing.md),
+        padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.md,
+          vertical: DonySpacing.md,
+        ),
         decoration: BoxDecoration(
           color: active ? cs.primaryContainer : cs.surface,
           borderRadius: BorderRadius.circular(DonyRadius.md),
@@ -209,15 +222,17 @@ class PriceField extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('PRIX MAX', style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant)),
+            Text(
+              'PRIX MAX',
+              style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
             const SizedBox(height: DonySpacing.xs),
             Row(
               children: [
-                DonyIcon('euro',
-                    size: 14, color: cs.primary),
+                DonyIcon('euro', size: 14, color: cs.primary),
                 const SizedBox(width: DonySpacing.xs),
                 Text(
-                  active ? '≤ ${maxPrice!.toInt()} €/kg' : 'Tous',
+                  active ? '≤ ${formatPriceActive(maxPrice!)}/kg' : 'Tous',
                   style: tt.titleSmall?.copyWith(
                     color: active ? cs.primary : cs.onSurfaceVariant,
                     fontWeight: active ? FontWeight.w700 : FontWeight.w400,
@@ -233,7 +248,11 @@ class PriceField extends StatelessWidget {
 }
 
 class TransportModeField extends StatelessWidget {
-  const TransportModeField({super.key, required this.mode, required this.onTap});
+  const TransportModeField({
+    super.key,
+    required this.mode,
+    required this.onTap,
+  });
 
   final TransportMode? mode;
   final VoidCallback onTap;
@@ -247,7 +266,10 @@ class TransportModeField extends StatelessWidget {
       onTap: onTap,
       child: Container(
         constraints: const BoxConstraints(minHeight: 44),
-        padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md, vertical: DonySpacing.md),
+        padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.md,
+          vertical: DonySpacing.md,
+        ),
         decoration: BoxDecoration(
           color: active ? cs.primaryContainer : cs.surface,
           borderRadius: BorderRadius.circular(DonyRadius.md),
@@ -256,21 +278,16 @@ class TransportModeField extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('TRANSPORT', style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant)),
+            Text(
+              'TRANSPORT',
+              style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
             const SizedBox(height: DonySpacing.xs),
             Row(
               children: [
                 active
-                    ? Icon(
-                        mode!.icon,
-                        size: 14,
-                        color: cs.primary,
-                      )
-                    : DonyIcon(
-                        'route',
-                        size: 14,
-                        color: cs.onSurfaceVariant,
-                      ),
+                    ? Icon(mode!.icon, size: 14, color: cs.primary)
+                    : DonyIcon('route', size: 14, color: cs.onSurfaceVariant),
                 const SizedBox(width: DonySpacing.xs),
                 Expanded(
                   child: Text(
@@ -282,8 +299,7 @@ class TransportModeField extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                DonyIcon('chevron-right',
-                    size: 16, color: cs.onSurfaceVariant),
+                DonyIcon('chevron-right', size: 16, color: cs.onSurfaceVariant),
               ],
             ),
           ],
@@ -316,13 +332,16 @@ class ContentTypeChip extends StatelessWidget {
       child: AnimatedContainer(
         duration: 180.ms,
         constraints: const BoxConstraints(minHeight: 44),
-        padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md, vertical: DonySpacing.sm),
+        padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.md,
+          vertical: DonySpacing.sm,
+        ),
         decoration: BoxDecoration(
-          color: selected ? cs.primaryContainer : Theme.of(context).scaffoldBackgroundColor,
+          color: selected
+              ? cs.primaryContainer
+              : Theme.of(context).scaffoldBackgroundColor,
           borderRadius: BorderRadius.circular(DonyRadius.full),
-          border: Border.all(
-            color: selected ? cs.primary : cs.outline,
-          ),
+          border: Border.all(color: selected ? cs.primary : cs.outline),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -373,16 +392,17 @@ class QuickChip extends StatelessWidget {
         decoration: BoxDecoration(
           color: active ? cs.primaryContainer : cs.surface,
           borderRadius: BorderRadius.circular(DonyRadius.full),
-          border: Border.all(
-            color: active ? cs.primary : cs.outline,
-          ),
+          border: Border.all(color: active ? cs.primary : cs.outline),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             if (iconAsset != null) ...[
-              DonyIcon(iconAsset!,
-                  size: 14, color: active ? cs.primary : cs.onSurfaceVariant),
+              DonyIcon(
+                iconAsset!,
+                size: 14,
+                color: active ? cs.primary : cs.onSurfaceVariant,
+              ),
               const SizedBox(width: DonySpacing.xs),
             ],
             Text(
@@ -448,7 +468,12 @@ class UrgencyFilterChips extends StatelessWidget {
                     color: f.color,
                     shape: BoxShape.circle,
                     boxShadow: isSelected
-                        ? [BoxShadow(color: f.color.withValues(alpha: 0.45), blurRadius: 4)]
+                        ? [
+                            BoxShadow(
+                              color: f.color.withValues(alpha: 0.45),
+                              blurRadius: 4,
+                            ),
+                          ]
                         : null,
                   ),
                 ),
@@ -498,9 +523,9 @@ class DateField extends StatelessWidget {
           firstDate: DateTime.now(),
           lastDate: DateTime.now().add(const Duration(days: 365)),
           builder: (c, child) => Theme(
-            data: Theme.of(c).copyWith(
-              colorScheme: ColorScheme.light(primary: cs.primary),
-            ),
+            data: Theme.of(
+              c,
+            ).copyWith(colorScheme: ColorScheme.light(primary: cs.primary)),
             child: child!,
           ),
         );
@@ -508,7 +533,10 @@ class DateField extends StatelessWidget {
       },
       child: Container(
         constraints: const BoxConstraints(minHeight: 44),
-        padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md, vertical: DonySpacing.md),
+        padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.md,
+          vertical: DonySpacing.md,
+        ),
         decoration: BoxDecoration(
           color: date != null ? cs.primaryContainer : cs.surface,
           borderRadius: BorderRadius.circular(DonyRadius.md),
@@ -517,18 +545,24 @@ class DateField extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant)),
+            Text(
+              label,
+              style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
             const SizedBox(height: DonySpacing.xs),
             Row(
               children: [
-                DonyIcon('calendar',
-                    size: 14, color: cs.primary),
+                DonyIcon('calendar', size: 14, color: cs.primary),
                 const SizedBox(width: DonySpacing.xs),
                 Text(
-                  date != null ? DateFormat('d MMM', 'fr').format(date!) : 'Choisir',
+                  date != null
+                      ? DateFormat('d MMM', 'fr').format(date!)
+                      : 'Choisir',
                   style: tt.titleSmall?.copyWith(
                     color: date != null ? cs.primary : cs.onSurfaceVariant,
-                    fontWeight: date != null ? FontWeight.w700 : FontWeight.w400,
+                    fontWeight: date != null
+                        ? FontWeight.w700
+                        : FontWeight.w400,
                   ),
                 ),
               ],
@@ -561,7 +595,10 @@ class WeightField extends StatelessWidget {
       onTap: () => _showWeightPicker(context),
       child: Container(
         constraints: const BoxConstraints(minHeight: 44),
-        padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md, vertical: DonySpacing.md),
+        padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.md,
+          vertical: DonySpacing.md,
+        ),
         decoration: BoxDecoration(
           color: active ? cs.primaryContainer : cs.surface,
           borderRadius: BorderRadius.circular(DonyRadius.md),
@@ -570,13 +607,14 @@ class WeightField extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('POIDS MIN',
-                style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant)),
+            Text(
+              'POIDS MIN',
+              style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
             const SizedBox(height: DonySpacing.xs),
             Row(
               children: [
-                DonyIcon('scale',
-                    size: 14, color: cs.primary),
+                DonyIcon('scale', size: 14, color: cs.primary),
                 const SizedBox(width: DonySpacing.xs),
                 Text(
                   '${weightKg.toStringAsFixed(0)} kg',
@@ -618,8 +656,12 @@ class WeightField extends StatelessWidget {
                     const SizedBox(width: DonySpacing.sm),
                     Padding(
                       padding: const EdgeInsets.only(top: DonySpacing.md),
-                      child: Text('kg',
-                          style: tt.headlineMedium?.copyWith(color: cs.onSurfaceVariant)),
+                      child: Text(
+                        'kg',
+                        style: tt.headlineMedium?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -695,7 +737,9 @@ Future<void> showPricePicker(
           children: [
             Center(
               child: Text(
-                localEnabled ? '≤ ${local.toInt()} €/kg' : 'Tous les prix',
+                localEnabled
+                    ? '≤ ${formatPriceActive(local)}/kg'
+                    : 'Tous les prix',
                 style: tt.headlineMedium?.copyWith(
                   fontWeight: FontWeight.w800,
                   color: localEnabled ? cs.primary : cs.onSurfaceVariant,
@@ -726,10 +770,14 @@ Future<void> showPricePicker(
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('3 €/kg',
-                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
-                  Text('25 €/kg',
-                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
+                  Text(
+                    '${formatPriceActive(3)}/kg',
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                  ),
+                  Text(
+                    '${formatPriceActive(25)}/kg',
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                  ),
                 ],
               ),
             ),
@@ -793,17 +841,20 @@ Future<void> showTransportPicker(
                     ),
                     child: Row(
                       children: [
-                        Icon(m.icon,
-                            size: 18,
-                            color: selected ? cs.primary : cs.onSurfaceVariant),
+                        Icon(
+                          m.icon,
+                          size: 18,
+                          color: selected ? cs.primary : cs.onSurfaceVariant,
+                        ),
                         const SizedBox(width: DonySpacing.md),
                         Expanded(
                           child: Text(
                             m.label,
                             style: tt.bodyMedium?.copyWith(
                               color: selected ? cs.primary : cs.onSurface,
-                              fontWeight:
-                                  selected ? FontWeight.w600 : FontWeight.w400,
+                              fontWeight: selected
+                                  ? FontWeight.w600
+                                  : FontWeight.w400,
                             ),
                           ),
                         ),

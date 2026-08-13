@@ -21,8 +21,9 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted)
+      if (mounted) {
         context.read<MyReviewsBloc>().add(const MyReviewsRequested());
+      }
     });
   }
 
@@ -403,13 +404,8 @@ class _ReviewItem extends StatelessWidget {
             children: [
               // En-tête : avatar + nom/corridor + étoiles
               Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  DonyAvatar(
-                    name: name,
-                    imageUrl: item.authorAvatarUrl,
-                    size: DonyAvatarSize.md,
-                  ),
+                  DonyAvatar(name: name, imageUrl: item.authorAvatarUrl),
                   const SizedBox(width: DonySpacing.md),
                   Expanded(
                     child: Column(

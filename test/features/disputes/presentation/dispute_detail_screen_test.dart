@@ -44,11 +44,11 @@ Widget _harness(DisputeModel dispute) {
     routes: [
       GoRoute(
         path: '/detail',
-        builder: (_, __) => DisputeDetailScreen(dispute: dispute),
+        builder: (_, _) => DisputeDetailScreen(dispute: dispute),
       ),
       GoRoute(
         path: '/profile/help/contact',
-        builder: (_, __) => const Scaffold(body: Text('SupportStub')),
+        builder: (_, _) => const Scaffold(body: Text('SupportStub')),
       ),
     ],
   );
@@ -63,10 +63,7 @@ void main() {
   setUp(() {
     mockAnalytics = _MockAnalyticsService();
     when(
-      () => mockAnalytics.logEvent(
-        any(),
-        properties: any(named: 'properties'),
-      ),
+      () => mockAnalytics.logEvent(any(), properties: any(named: 'properties')),
     ).thenAnswer((_) async {});
 
     if (getIt.isRegistered<AnalyticsService>()) {
@@ -91,7 +88,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Résolu en votre faveur'), findsOneWidget);
       expect(find.text('No-show confirmé.'), findsOneWidget);
-      expect(find.textContaining('40,00 €'), findsOneWidget);
+      // Espace insécable avant le symbole : NumberFormat suit CLDR pour le
+      // français, et le montant est formaté dans la devise de l'utilisateur.
+      expect(find.textContaining('40,00\u00A0€'), findsOneWidget);
       expect(find.text('Décision rendue'), findsOneWidget);
     },
   );
@@ -99,9 +98,7 @@ void main() {
   testWidgets(
     'détail résolu non bénéficiaire : pas de montant, verdict neutre',
     (tester) async {
-      await tester.pumpWidget(
-        _harness(_dispute(status: 'RESOLVED', isBeneficiary: false)),
-      );
+      await tester.pumpWidget(_harness(_dispute(status: 'RESOLVED')));
       await tester.pump();
       await tester.pumpAndSettle();
       expect(find.text('Litige résolu'), findsOneWidget);
@@ -135,19 +132,18 @@ void main() {
     },
   );
 
-  testWidgets(
-    "timeline voyageur : « l'expéditeur a contesté une absence »",
-    (tester) async {
-      await tester.pumpWidget(_harness(_dispute(myRole: 'TRAVELER')));
-      await tester.pump();
-      await tester.pumpAndSettle();
-      expect(
-        find.textContaining("l'expéditeur a contesté une absence à la remise"),
-        findsOneWidget,
-      );
-      expect(find.textContaining('vous avez contesté'), findsNothing);
-    },
-  );
+  testWidgets("timeline voyageur : « l'expéditeur a contesté une absence »", (
+    tester,
+  ) async {
+    await tester.pumpWidget(_harness(_dispute(myRole: 'TRAVELER')));
+    await tester.pump();
+    await tester.pumpAndSettle();
+    expect(
+      find.textContaining("l'expéditeur a contesté une absence à la remise"),
+      findsOneWidget,
+    );
+    expect(find.textContaining('vous avez contesté'), findsNothing);
+  });
 
   testWidgets('CTA Contacter le support → route contact', (tester) async {
     await tester.pumpWidget(_harness(_dispute()));
@@ -167,7 +163,7 @@ void main() {
         routes: [
           GoRoute(
             path: '/disputes',
-            builder: (_, __) => const Scaffold(body: Text('ListeStub')),
+            builder: (_, _) => const Scaffold(body: Text('ListeStub')),
           ),
           GoRoute(
             path: '/disputes/detail',

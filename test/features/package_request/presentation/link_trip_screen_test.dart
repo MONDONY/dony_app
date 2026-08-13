@@ -21,13 +21,13 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
-class _MockNegotiationBloc extends MockBloc<NegotiationEvent, NegotiationState>
+class MockNegotiationBloc extends MockBloc<NegotiationEvent, NegotiationState>
     implements NegotiationBloc {}
 
-class _MockPackageRequestRepository extends Mock
+class MockPackageRequestRepository extends Mock
     implements PackageRequestRepository {}
 
-class _MockAnnouncementRepository extends Mock
+class MockAnnouncementRepository extends Mock
     implements AnnouncementRepository {}
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -46,7 +46,7 @@ PackageRequest _packageRequest({
   transportMode: TransportMode.plane,
   categories: const ['Autre'],
   status: PackageRequestStatus.negotiating,
-  createdAt: DateTime(2026, 1, 1),
+  createdAt: DateTime(2026),
   acceptedPaymentMethods: methods,
 );
 
@@ -79,8 +79,8 @@ AnnouncementModel _trip({String id = 'ann-1'}) => AnnouncementModel(
   pricePerKg: 7,
   status: 'ACTIVE',
   transportMode: TransportMode.plane,
-  createdAt: DateTime(2026, 1, 1),
-  updatedAt: DateTime(2026, 1, 1),
+  createdAt: DateTime(2026),
+  updatedAt: DateTime(2026),
   acceptedPaymentMethods: const {
     BidPaymentMethod.stripe,
     BidPaymentMethod.cash,
@@ -95,9 +95,9 @@ typedef _MyTripsResult = ({
 _MyTripsResult _emptyTrips() =>
     (announcements: const <AnnouncementModel>[], totalElements: 0);
 
-late _MockNegotiationBloc negotiationBloc;
-late _MockPackageRequestRepository packageRequestRepo;
-late _MockAnnouncementRepository announcementRepo;
+late MockNegotiationBloc negotiationBloc;
+late MockPackageRequestRepository packageRequestRepo;
+late MockAnnouncementRepository announcementRepo;
 
 Widget _harness(NegotiationThread thread) {
   final router = GoRouter(
@@ -128,13 +128,13 @@ void main() {
   });
 
   setUp(() {
-    negotiationBloc = _MockNegotiationBloc();
+    negotiationBloc = MockNegotiationBloc();
     when(() => negotiationBloc.state).thenReturn(const NegotiationInitial());
     when(() => negotiationBloc.stream).thenAnswer((_) => const Stream.empty());
     when(() => negotiationBloc.add(any())).thenReturn(null);
 
-    packageRequestRepo = _MockPackageRequestRepository();
-    announcementRepo = _MockAnnouncementRepository();
+    packageRequestRepo = MockPackageRequestRepository();
+    announcementRepo = MockAnnouncementRepository();
 
     if (getIt.isRegistered<PackageRequestRepository>()) {
       getIt.unregister<PackageRequestRepository>();

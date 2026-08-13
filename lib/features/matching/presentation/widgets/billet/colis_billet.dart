@@ -152,11 +152,7 @@ class _BilletCorridor extends StatelessWidget {
               children: [
                 _DashedLine(color: cs.outline),
                 const SizedBox(width: DonySpacing.xs),
-                DonyIcon(
-                  'plane',
-                  size: 20,
-                  color: cs.onSurfaceVariant,
-                ),
+                DonyIcon('plane', size: 20, color: cs.onSurfaceVariant),
                 const SizedBox(width: DonySpacing.xs),
                 _DashedLine(color: cs.outline),
               ],

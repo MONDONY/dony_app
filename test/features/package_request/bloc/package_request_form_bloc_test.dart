@@ -14,9 +14,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import '../../../helpers/mock_analytics_backend.dart';
 
-class _MockRepo extends Mock implements PackageRequestRepository {}
+class MockRepo extends Mock implements PackageRequestRepository {}
 
-PackageRequestFormBloc makeBloc(_MockRepo repo) => PackageRequestFormBloc(
+PackageRequestFormBloc makeBloc(MockRepo repo) => PackageRequestFormBloc(
   repo,
   analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
 );
@@ -27,14 +27,14 @@ void main() {
   setUpAll(() => setDonyCommissionRate(0.12));
   tearDownAll(() => setDonyCommissionRate(kDonyCommissionRateDefault));
 
-  late _MockRepo repo;
+  late MockRepo repo;
 
   setUpAll(() {
     registerFallbackValue(ParcelSize.small);
     registerFallbackValue(TransportMode.plane);
   });
 
-  setUp(() => repo = _MockRepo());
+  setUp(() => repo = MockRepo());
 
   final fakeRequest = PackageRequest(
     id: 'r-1',
@@ -83,7 +83,7 @@ void main() {
         const FormStep2Submitted(
           weightKg: 5,
           parcelSize: ParcelSize.small,
-          categories: const ['Vêtements'],
+          categories: ['Vêtements'],
         ),
       ),
     expect: () => [
@@ -138,7 +138,7 @@ void main() {
         const FormStep2Submitted(
           weightKg: 5,
           parcelSize: ParcelSize.small,
-          categories: const ['Vêtements'],
+          categories: ['Vêtements'],
         ),
       )
       ..add(const FormStep3Submitted(targetPriceEur: 25)),
@@ -174,10 +174,6 @@ void main() {
           negotiable: true,
           acceptedPaymentMethods: {PaymentMethod.stripe},
           totalBudgetEur: 25,
-          description: null,
-          photoKeys: null,
-          pickupNeighborhood: null,
-          deliveryNeighborhood: null,
         ),
       ).called(1);
     },
@@ -786,7 +782,7 @@ void main() {
         const FormStep2Submitted(
           weightKg: 5,
           parcelSize: ParcelSize.small,
-          categories: const ['Vêtements'],
+          categories: ['Vêtements'],
         ),
       )
       ..add(const PackageRequestTotalBudgetChanged(25))
@@ -861,9 +857,7 @@ void main() {
   blocTest<PackageRequestFormBloc, PackageRequestFormState>(
     'toggle STRIPE when it is the only method keeps STRIPE (cannot empty) — no emission',
     build: () => makeBloc(repo),
-    seed: () => const PackageRequestFormState(
-      acceptedPaymentMethods: {PaymentMethod.stripe},
-    ),
+    seed: () => const PackageRequestFormState(),
     act: (b) =>
         b.add(const PackageRequestPaymentMethodToggled(PaymentMethod.stripe)),
     // BLoC does not emit when the resulting set equals the current state.

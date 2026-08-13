@@ -26,7 +26,10 @@ class _SenderPublicProfileContent extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(
-        DonySpacing.lg, DonySpacing.md, DonySpacing.lg, DonySpacing.xl,
+        DonySpacing.lg,
+        DonySpacing.md,
+        DonySpacing.lg,
+        DonySpacing.xl,
       ),
       child: Column(
         children: [
@@ -94,11 +97,7 @@ class _SenderPublicProfileContent extends StatelessWidget {
                 : Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      DonyIcon(
-                        'user',
-                        color: cs.onSurfaceVariant,
-                        size: 18,
-                      ),
+                      DonyIcon('user', color: cs.onSurfaceVariant, size: 18),
                       const SizedBox(width: DonySpacing.xs),
                       Text(
                         'Nouveau membre',

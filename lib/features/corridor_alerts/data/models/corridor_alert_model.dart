@@ -1,6 +1,5 @@
+import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
 import 'package:equatable/equatable.dart';
-
-import 'alert_direction.dart';
 
 /// Alerte corridor du voyageur (saved search). Mappe `CorridorAlertResponse`
 /// du backend (`GET /me/corridor-alerts`).
@@ -65,9 +64,9 @@ class CorridorAlertModel extends Equatable {
         minWeightKg: (json['minWeightKg'] as num?)?.toDouble(),
         contentCategories:
             (json['contentCategories'] as List<dynamic>?)
-                    ?.map((e) => e as String)
-                    .toList() ??
-                const [],
+                ?.map((e) => e as String)
+                .toList() ??
+            const [],
         active: json['active'] as bool,
         matchCount: (json['matchCount'] as num?)?.toInt() ?? 0,
         createdAt: DateTime.parse(json['createdAt'] as String),
@@ -82,26 +81,25 @@ class CorridorAlertModel extends Equatable {
     bool? active,
     int? matchCount,
     AlertDirection? direction,
-  }) =>
-      CorridorAlertModel(
-        id: id,
-        departureCity: departureCity,
-        arrivalCity: arrivalCity,
-        departureCountryCode: departureCountryCode,
-        arrivalCountryCode: arrivalCountryCode,
-        dateFrom: dateFrom,
-        dateTo: dateTo,
-        minWeightKg: minWeightKg,
-        contentCategories: contentCategories,
-        active: active ?? this.active,
-        matchCount: matchCount ?? this.matchCount,
-        createdAt: createdAt,
-        direction: direction ?? this.direction,
-        centerLat: centerLat,
-        centerLng: centerLng,
-        radiusKm: radiusKm,
-        centerLabel: centerLabel,
-      );
+  }) => CorridorAlertModel(
+    id: id,
+    departureCity: departureCity,
+    arrivalCity: arrivalCity,
+    departureCountryCode: departureCountryCode,
+    arrivalCountryCode: arrivalCountryCode,
+    dateFrom: dateFrom,
+    dateTo: dateTo,
+    minWeightKg: minWeightKg,
+    contentCategories: contentCategories,
+    active: active ?? this.active,
+    matchCount: matchCount ?? this.matchCount,
+    createdAt: createdAt,
+    direction: direction ?? this.direction,
+    centerLat: centerLat,
+    centerLng: centerLng,
+    radiusKm: radiusKm,
+    centerLabel: centerLabel,
+  );
 
   @override
   List<Object?> get props => [

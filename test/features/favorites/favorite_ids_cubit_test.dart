@@ -18,10 +18,8 @@ void main() {
   group('load()', () {
     test('emits loaded state from repo.ids()', () async {
       when(() => repo.ids()).thenAnswer(
-        (_) async => const FavoriteIds(
-          trips: {'t1', 't2'},
-          packageRequests: {'r1'},
-        ),
+        (_) async =>
+            const FavoriteIds(trips: {'t1', 't2'}, packageRequests: {'r1'}),
       );
       final cubit = FavoriteIdsCubit(repo);
       await cubit.load();
@@ -45,8 +43,7 @@ void main() {
   group('toggleTrip — add', () {
     test('ajoute en optimiste puis appelle add', () async {
       when(() => repo.add(any(), any())).thenAnswer((_) async {});
-      final cubit = FavoriteIdsCubit(repo)
-        ..emitSeed(trips: {}, requests: {});
+      final cubit = FavoriteIdsCubit(repo)..emitSeed(trips: {}, requests: {});
       await cubit.toggleTrip('t1');
       expect(cubit.isTripFav('t1'), isTrue);
       verify(() => repo.add('trip', 't1')).called(1);
@@ -54,20 +51,15 @@ void main() {
 
     test('rollback si add échoue', () async {
       when(() => repo.add(any(), any())).thenThrow(Exception('net'));
-      final cubit = FavoriteIdsCubit(repo)
-        ..emitSeed(trips: {}, requests: {});
+      final cubit = FavoriteIdsCubit(repo)..emitSeed(trips: {}, requests: {});
       // toggleTrip rethrows — catch it so test does not fail on the throw
-      await expectLater(
-        cubit.toggleTrip('t1'),
-        throwsException,
-      );
+      await expectLater(cubit.toggleTrip('t1'), throwsException);
       expect(cubit.isTripFav('t1'), isFalse); // revenu à l'état initial
     });
 
     test('count augmente de 1 après ajout', () async {
       when(() => repo.add(any(), any())).thenAnswer((_) async {});
-      final cubit = FavoriteIdsCubit(repo)
-        ..emitSeed(trips: {}, requests: {});
+      final cubit = FavoriteIdsCubit(repo)..emitSeed(trips: {}, requests: {});
       expect(cubit.count, 0);
       await cubit.toggleTrip('t1');
       expect(cubit.count, 1);
@@ -91,10 +83,7 @@ void main() {
       when(() => repo.remove(any(), any())).thenThrow(Exception('net'));
       final cubit = FavoriteIdsCubit(repo)
         ..emitSeed(trips: {'t1'}, requests: {});
-      await expectLater(
-        cubit.toggleTrip('t1'),
-        throwsException,
-      );
+      await expectLater(cubit.toggleTrip('t1'), throwsException);
       expect(cubit.isTripFav('t1'), isTrue); // revenu à l'état initial
     });
   });
@@ -105,8 +94,7 @@ void main() {
   group('toggleRequest — add', () {
     test('ajoute en optimiste puis appelle add(package-request, id)', () async {
       when(() => repo.add(any(), any())).thenAnswer((_) async {});
-      final cubit = FavoriteIdsCubit(repo)
-        ..emitSeed(trips: {}, requests: {});
+      final cubit = FavoriteIdsCubit(repo)..emitSeed(trips: {}, requests: {});
       await cubit.toggleRequest('r1');
       expect(cubit.isRequestFav('r1'), isTrue);
       verify(() => repo.add('package-request', 'r1')).called(1);
@@ -114,12 +102,8 @@ void main() {
 
     test('rollback si add échoue', () async {
       when(() => repo.add(any(), any())).thenThrow(Exception('net'));
-      final cubit = FavoriteIdsCubit(repo)
-        ..emitSeed(trips: {}, requests: {});
-      await expectLater(
-        cubit.toggleRequest('r1'),
-        throwsException,
-      );
+      final cubit = FavoriteIdsCubit(repo)..emitSeed(trips: {}, requests: {});
+      await expectLater(cubit.toggleRequest('r1'), throwsException);
       expect(cubit.isRequestFav('r1'), isFalse);
     });
   });
@@ -128,24 +112,23 @@ void main() {
   // toggleRequest — remove path
   // ---------------------------------------------------------------------------
   group('toggleRequest — remove', () {
-    test('retire un favori existant et appelle remove(package-request, id)',
-        () async {
-      when(() => repo.remove(any(), any())).thenAnswer((_) async {});
-      final cubit = FavoriteIdsCubit(repo)
-        ..emitSeed(trips: {}, requests: {'r1'});
-      await cubit.toggleRequest('r1');
-      expect(cubit.isRequestFav('r1'), isFalse);
-      verify(() => repo.remove('package-request', 'r1')).called(1);
-    });
+    test(
+      'retire un favori existant et appelle remove(package-request, id)',
+      () async {
+        when(() => repo.remove(any(), any())).thenAnswer((_) async {});
+        final cubit = FavoriteIdsCubit(repo)
+          ..emitSeed(trips: {}, requests: {'r1'});
+        await cubit.toggleRequest('r1');
+        expect(cubit.isRequestFav('r1'), isFalse);
+        verify(() => repo.remove('package-request', 'r1')).called(1);
+      },
+    );
 
     test('rollback si remove échoue', () async {
       when(() => repo.remove(any(), any())).thenThrow(Exception('net'));
       final cubit = FavoriteIdsCubit(repo)
         ..emitSeed(trips: {}, requests: {'r1'});
-      await expectLater(
-        cubit.toggleRequest('r1'),
-        throwsException,
-      );
+      await expectLater(cubit.toggleRequest('r1'), throwsException);
       expect(cubit.isRequestFav('r1'), isTrue);
     });
   });

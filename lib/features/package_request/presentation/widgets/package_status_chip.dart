@@ -8,20 +8,31 @@ Widget packageStatusChip(BuildContext context, PackageRequestStatus status) {
   final cs = Theme.of(context).colorScheme;
   final tt = Theme.of(context).textTheme;
   final (String label, Color bg, Color fg) = switch (status) {
-    PackageRequestStatus.draft =>
-      ('Brouillon', cs.surfaceContainerHighest, cs.onSurfaceVariant),
+    PackageRequestStatus.draft => (
+      'Brouillon',
+      cs.surfaceContainerHighest,
+      cs.onSurfaceVariant,
+    ),
     PackageRequestStatus.open => ('Ouverte', cs.successLight, cs.success),
-    PackageRequestStatus.negotiating =>
-      ('En négociation', cs.warningLight, cs.warning),
+    PackageRequestStatus.negotiating => (
+      'En négociation',
+      cs.warningLight,
+      cs.warning,
+    ),
     PackageRequestStatus.accepted => ('Acceptée', cs.infoLight, cs.info),
-    PackageRequestStatus.expired =>
-      ('Expirée', cs.surfaceContainerHighest, cs.onSurfaceVariant),
+    PackageRequestStatus.expired => (
+      'Expirée',
+      cs.surfaceContainerHighest,
+      cs.onSurfaceVariant,
+    ),
     PackageRequestStatus.cancelled => ('Annulée', cs.errorLight, cs.error),
     PackageRequestStatus.completed => ('Livrée', cs.successLight, cs.success),
   };
   return Container(
     padding: const EdgeInsets.symmetric(
-        horizontal: DonySpacing.sm, vertical: DonySpacing.xxs),
+      horizontal: DonySpacing.sm,
+      vertical: DonySpacing.xxs,
+    ),
     decoration: BoxDecoration(
       color: bg,
       borderRadius: BorderRadius.circular(DonyRadius.sm),

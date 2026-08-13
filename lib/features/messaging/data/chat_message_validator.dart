@@ -55,8 +55,10 @@ abstract final class ChatMessageRules {
   // 8+ chiffres séparés par espace/point/parenthèses uniquement (pas `/`
   // ni `-` → évite les faux positifs sur les dates type 22/06/2026).
   static final RegExp _phone = RegExp(r'\d(?:[\s.()]*\d){7,}');
-  static final RegExp _email =
-      RegExp(r'[\w.+-]+@[\w-]+\.[\w.-]+', caseSensitive: false);
+  static final RegExp _email = RegExp(
+    r'[\w.+-]+@[\w-]+\.[\w.-]+',
+    caseSensitive: false,
+  );
   static final RegExp _apps = RegExp(
     r'(whats?app|wa\.me|t\.me|telegram|signal|snap(chat)?|insta(gram)?|viber|messenger|imo\b)',
     caseSensitive: false,
@@ -65,8 +67,10 @@ abstract final class ChatMessageRules {
     r'(https?://|www\.|\b[\w-]+\.(com|fr|net|org|io|me|app|co|ci|sn|ml|cm))',
     caseSensitive: false,
   );
-  static final RegExp _iban =
-      RegExp(r'\b[A-Z]{2}\d{2}[A-Z0-9]{10,30}\b', caseSensitive: false);
+  static final RegExp _iban = RegExp(
+    r'\b[A-Z]{2}\d{2}[A-Z0-9]{10,30}\b',
+    caseSensitive: false,
+  );
 
   /// Liste FR minimale (évite les faux positifs ; bornée par limites de mot).
   static final RegExp _profanity = RegExp(
@@ -129,7 +133,10 @@ class ChatMessageValidator {
     if (ChatMessageRules._phone.hasMatch(text) ||
         ChatMessageRules._email.hasMatch(text) ||
         ChatMessageRules._apps.hasMatch(text)) {
-      return const ChatValidationBlocked('contact', ChatMessageRules.contactMsg);
+      return const ChatValidationBlocked(
+        'contact',
+        ChatMessageRules.contactMsg,
+      );
     }
     // 4. Contenu interdit
     if (ChatMessageRules._url.hasMatch(text)) {

@@ -87,8 +87,9 @@ void main() {
   }
 
   group('rendu de la carte', () {
-    testWidgets('les deux rangées et le bouton d\'interversion sont présents',
-        (tester) async {
+    testWidgets('les deux rangées et le bouton d\'interversion sont présents', (
+      tester,
+    ) async {
       await tester.pumpWidget(build());
       await tester.pump(const Duration(milliseconds: 300));
 
@@ -99,8 +100,9 @@ void main() {
       expect(find.byType(CitySwapButton), findsOneWidget);
     });
 
-    testWidgets('requiredLabels ajoute l\'astérisque aux deux labels',
-        (tester) async {
+    testWidgets('requiredLabels ajoute l\'astérisque aux deux labels', (
+      tester,
+    ) async {
       await tester.pumpWidget(build(requiredLabels: true));
       await tester.pump(const Duration(milliseconds: 300));
 
@@ -109,8 +111,9 @@ void main() {
       expect(find.textContaining('ARRIVÉE'), findsOneWidget);
     });
 
-    testWidgets('chaque ville connue affiche le drapeau de son pays',
-        (tester) async {
+    testWidgets('chaque ville connue affiche le drapeau de son pays', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         build(departureValue: 'Paris', arrivalValue: 'Abidjan'),
       );
@@ -120,8 +123,9 @@ void main() {
       expect(find.text('🇨🇮'), findsOneWidget);
     });
 
-    testWidgets('une ville inconnue de cityFlag ne rend aucun drapeau',
-        (tester) async {
+    testWidgets('une ville inconnue de cityFlag ne rend aucun drapeau', (
+      tester,
+    ) async {
       await tester.pumpWidget(build(departureValue: 'Vladivostok'));
       await tester.pump(const Duration(milliseconds: 300));
 
@@ -144,26 +148,31 @@ void main() {
     // Rendus sous la carte, jamais dans la rangée fautive : sinon celle-ci
     // devient plus haute que l'autre et le bouton quitte la couture.
     testWidgets('les deux erreurs s\'affichent ensemble', (tester) async {
-      await tester.pumpWidget(build(
-        departureError: 'Ville de départ obligatoire',
-        arrivalError: "Ville d'arrivée obligatoire",
-      ));
+      await tester.pumpWidget(
+        build(
+          departureError: 'Ville de départ obligatoire',
+          arrivalError: "Ville d'arrivée obligatoire",
+        ),
+      );
       await tester.pump(const Duration(milliseconds: 300));
 
       expect(find.text('Ville de départ obligatoire'), findsOneWidget);
       expect(find.text("Ville d'arrivée obligatoire"), findsOneWidget);
     });
 
-    testWidgets('une erreur sur un seul champ ne décale pas le bouton',
-        (tester) async {
+    testWidgets('une erreur sur un seul champ ne décale pas le bouton', (
+      tester,
+    ) async {
       await tester.pumpWidget(build(departureValue: 'Paris'));
       await tester.pump(const Duration(milliseconds: 300));
       final sansErreur = tester.getCenter(find.byType(CitySwapButton));
 
-      await tester.pumpWidget(build(
-        departureValue: 'Paris',
-        arrivalError: "Ville d'arrivée obligatoire",
-      ));
+      await tester.pumpWidget(
+        build(
+          departureValue: 'Paris',
+          arrivalError: "Ville d'arrivée obligatoire",
+        ),
+      );
       await tester.pump(const Duration(milliseconds: 300));
       final avecErreur = tester.getCenter(find.byType(CitySwapButton));
 
@@ -184,8 +193,9 @@ void main() {
       (tester) async {
         // Garde-fou d'un incident réel : superposé à la liste, le bouton
         // interceptait le tap destiné à une suggestion.
-        when(() => departureBloc.state)
-            .thenReturn(const CitySearchLoaded([_dakar]));
+        when(
+          () => departureBloc.state,
+        ).thenReturn(const CitySearchLoaded([_dakar]));
         await tester.pumpWidget(build());
         await tester.pump(const Duration(milliseconds: 300));
 
@@ -194,39 +204,36 @@ void main() {
       },
     );
 
-    testWidgets(
-      'des résultats sur le champ arrivée retirent aussi le bouton',
-      (tester) async {
-        when(() => arrivalBloc.state)
-            .thenReturn(const CitySearchLoaded([_dakar]));
-        await tester.pumpWidget(build());
-        await tester.pump(const Duration(milliseconds: 300));
+    testWidgets('des résultats sur le champ arrivée retirent aussi le bouton', (
+      tester,
+    ) async {
+      when(
+        () => arrivalBloc.state,
+      ).thenReturn(const CitySearchLoaded([_dakar]));
+      await tester.pumpWidget(build());
+      await tester.pump(const Duration(milliseconds: 300));
 
-        expect(find.byType(CitySwapButton), findsNothing);
-      },
-    );
+      expect(find.byType(CitySwapButton), findsNothing);
+    });
 
-    testWidgets(
-      'la liste refermée fait revenir le bouton',
-      (tester) async {
-        // `whenListen` et non `when(...state)` : un MockBloc dont on change
-        // l'état ne pousse rien sur son flux, donc le BlocBuilder du champ ne
-        // se reconstruirait jamais et le test passerait pour de mauvaises
-        // raisons.
-        whenListen(
-          departureBloc,
-          Stream<CitySearchState>.fromIterable([const CitySearchInitial()]),
-          initialState: const CitySearchLoaded([_dakar]),
-        );
-        await tester.pumpWidget(build());
-        // `pumpAndSettle` : la visibilité fait deux sauts de frame (le champ
-        // notifie en post-frame, puis le ValueNotifier du parent déclenche un
-        // second rebuild). Deux `pump` s'arrêteraient avant le retour.
-        await tester.pumpAndSettle();
+    testWidgets('la liste refermée fait revenir le bouton', (tester) async {
+      // `whenListen` et non `when(...state)` : un MockBloc dont on change
+      // l'état ne pousse rien sur son flux, donc le BlocBuilder du champ ne
+      // se reconstruirait jamais et le test passerait pour de mauvaises
+      // raisons.
+      whenListen(
+        departureBloc,
+        Stream<CitySearchState>.fromIterable([const CitySearchInitial()]),
+        initialState: const CitySearchLoaded([_dakar]),
+      );
+      await tester.pumpWidget(build());
+      // `pumpAndSettle` : la visibilité fait deux sauts de frame (le champ
+      // notifie en post-frame, puis le ValueNotifier du parent déclenche un
+      // second rebuild). Deux `pump` s'arrêteraient avant le retour.
+      await tester.pumpAndSettle();
 
-        expect(find.byType(CitySwapButton), findsOneWidget);
-        expect(find.text('Dakar'), findsNothing);
-      },
-    );
+      expect(find.byType(CitySwapButton), findsOneWidget);
+      expect(find.text('Dakar'), findsNothing);
+    });
   });
 }

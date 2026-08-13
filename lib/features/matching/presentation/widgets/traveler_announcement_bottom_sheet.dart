@@ -1,7 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/design/widgets/dony_bottom_sheet.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
-import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -278,7 +276,7 @@ class _TravelerAnnouncementContent extends StatelessWidget {
                     height: 1.5,
                     color: cs.primary.withValues(alpha: 0.3),
                   ),
-                  const DonyEmoji.planeTakeoff(size: 16),
+                  const DonyEmoji.planeTakeoff(),
                   Container(
                     width: 28,
                     height: 1.5,

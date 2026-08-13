@@ -128,6 +128,9 @@ dependencies:
   flutter_skill: ^0.9.36
   firebase_remote_config: ^6.5.0
   url_launcher_platform_interface: ^2.3.2
+  # Importé directement par le code (Bloc/Emitter/Transition) et pas seulement
+  # via flutter_bloc : depend_on_referenced_packages exige la déclaration.
+  bloc: ^8.1.4
 
 dev_dependencies:
   flutter_test:
@@ -144,6 +147,16 @@ dev_dependencies:
   fake_cloud_firestore: ^4.2.0
   flutter_launcher_icons: ^0.14.0
   path_provider_platform_interface: ^2.1.2
+  # Paquets importés directement par les tests (faux doubles de plateforme,
+  # matchers). Ils arrivaient jusqu'ici en dépendance transitive, ce que
+  # depend_on_referenced_packages signale à juste titre : une montée de version
+  # d'un plugin pouvait les faire disparaître et casser la suite sans prévenir.
+  test: ^1.31.0
+  path: ^1.9.1
+  plugin_platform_interface: ^2.1.8
+  geolocator_platform_interface: ^4.2.6
+  connectivity_plus_platform_interface: ^2.1.0
+  webview_flutter_platform_interface: ^2.15.1
 
 # flutter_stripe 12.6 est requis pour le fix iOS (stripe_ios 12.6 contient la
 # résolution de fenêtre via UIScene `connectedScenes` → la PaymentSheet s'ouvre

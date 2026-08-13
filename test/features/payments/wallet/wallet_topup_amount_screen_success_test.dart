@@ -138,14 +138,14 @@ void main() {
         ),
         GoRoute(
           path: '/topup',
-          builder: (_, __) => BlocProvider<WalletBloc>.value(
+          builder: (_, _) => BlocProvider<WalletBloc>.value(
             value: walletBloc,
             child: const WalletTopupAmountScreen(paymentMethod: 'STRIPE'),
           ),
         ),
         GoRoute(
           path: '/home',
-          builder: (_, __) => const Scaffold(body: Text('Accueil')),
+          builder: (_, _) => const Scaffold(body: Text('Accueil')),
         ),
       ],
     );
@@ -168,7 +168,7 @@ void main() {
   /// cours de traitement monté sous la sheet) — on enchaîne donc des pumps
   /// bornés pour vider les gaps async, comme dans les autres migrations
   /// DonySuccessScreen de cette branche.
-  Future<void> _driveToPaymentSuccess(WidgetTester tester) async {
+  Future<void> driveToPaymentSuccess(WidgetTester tester) async {
     final walletBloc = WalletBloc(
       walletRepository,
       makeEnabledAnalytics(analyticsBackend),
@@ -204,7 +204,7 @@ void main() {
   testWidgets('recharge réussie affiche DonySuccessScreen (plus de SnackBar)', (
     tester,
   ) async {
-    await _driveToPaymentSuccess(tester);
+    await driveToPaymentSuccess(tester);
 
     expect(find.byType(SnackBar), findsNothing);
     expect(
@@ -225,7 +225,7 @@ void main() {
     'CTA de DonySuccessScreen ferme la recharge avec pop(true) — contrat '
     'bool intact pour wallet_screen',
     (tester) async {
-      await _driveToPaymentSuccess(tester);
+      await driveToPaymentSuccess(tester);
       expect(find.byType(DonySuccessScreen), findsOneWidget);
 
       await tester.tap(find.text('Voir mon solde'));

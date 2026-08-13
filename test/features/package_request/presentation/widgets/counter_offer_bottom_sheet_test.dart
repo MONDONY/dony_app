@@ -71,7 +71,7 @@ void main() {
     testWidgets('affiche le prix actuel (format role-aware) et le round', (
       tester,
     ) async {
-      await openSheet(tester, currentPriceEur: 50, roundsCount: 2);
+      await openSheet(tester);
       // isTraveler defaults to false → sender sees gross: 50 * 1.12 = 56 → "Tu paies 56,00 €"
       expect(find.textContaining('56'), findsWidgets);
       expect(find.textContaining('Round 2/5'), findsOneWidget);

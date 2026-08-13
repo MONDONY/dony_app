@@ -1,7 +1,7 @@
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/profile/data/profile_repository.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 part 'upgrade_to_pro_event.dart';
 part 'upgrade_to_pro_state.dart';

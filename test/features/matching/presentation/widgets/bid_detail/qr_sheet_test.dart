@@ -182,7 +182,9 @@ void main() {
 
   // ── Test 5: Initial/unknown state → fallback spinner ─────────────────────────
 
-  testWidgets('état TrackingInitial → fallback spinner visible', (tester) async {
+  testWidgets('état TrackingInitial → fallback spinner visible', (
+    tester,
+  ) async {
     final bloc = _MockTrackingBloc();
     whenListen<TrackingState>(
       bloc,
@@ -338,10 +340,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
 
       // dismissed path: no error snackbar
-      expect(
-        find.textContaining('Impossible de partager'),
-        findsNothing,
-      );
+      expect(find.textContaining('Impossible de partager'), findsNothing);
     },
   );
 
@@ -393,10 +392,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
 
       // success path: no error snackbar
-      expect(
-        find.textContaining('Impossible de partager'),
-        findsNothing,
-      );
+      expect(find.textContaining('Impossible de partager'), findsNothing);
     },
   );
 

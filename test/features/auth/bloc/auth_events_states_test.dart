@@ -26,7 +26,7 @@ void main() {
 
   group('AuthEmailOtpSent', () {
     test('copyWith met à jour secondsLeft', () {
-      const s = AuthEmailOtpSent('a@b.com', secondsLeft: 60);
+      const s = AuthEmailOtpSent('a@b.com');
       expect(s.copyWith(secondsLeft: 30).secondsLeft, 30);
       expect(s.copyWith(secondsLeft: 30).email, 'a@b.com');
     });

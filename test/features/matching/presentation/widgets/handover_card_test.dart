@@ -46,7 +46,7 @@ void main() {
   });
 
   testWidgets('lieu absent → "-" affiché', (tester) async {
-    await _pump(tester, _bid(handoverLocation: null));
+    await _pump(tester, _bid());
     expect(find.text('-'), findsOneWidget);
   });
 
@@ -54,8 +54,8 @@ void main() {
     await _pump(
       tester,
       _bid(
-        handoverWindowStart: DateTime(2026, 6, 15, 9, 0),
-        handoverWindowEnd: DateTime(2026, 6, 15, 12, 0),
+        handoverWindowStart: DateTime(2026, 6, 15, 9),
+        handoverWindowEnd: DateTime(2026, 6, 15, 12),
       ),
     );
     expect(find.text('Début'), findsOneWidget);
@@ -75,7 +75,7 @@ void main() {
   });
 
   testWidgets('voyageurConfirmed=false → "Non encore"', (tester) async {
-    await _pump(tester, _bid(voyageurConfirmed: false));
+    await _pump(tester, _bid());
     expect(find.text('Non encore'), findsOneWidget);
   });
 }

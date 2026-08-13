@@ -1,5 +1,5 @@
-import 'package:dony/features/referral/data/models/referral_info.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/features/referral/data/models/referral_info.dart';
 
 abstract class ReferralState {
   const ReferralState();

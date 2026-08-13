@@ -113,13 +113,7 @@ void main() {
         initialState: BidInitial(),
       );
 
-      await tester.pumpWidget(
-        _host(
-          bloc,
-          _bid(status: 'PENDING', paymentMethod: BidPaymentMethod.stripe),
-          paymentLoaded: true,
-        ),
-      );
+      await tester.pumpWidget(_host(bloc, _bid(), paymentLoaded: true));
       await tester.pumpAndSettle();
 
       expect(find.text('Payer mon envoi'), findsOneWidget);
@@ -138,7 +132,7 @@ void main() {
     await tester.pumpWidget(
       _host(
         bloc,
-        _bid(status: 'PENDING', paymentMethod: BidPaymentMethod.cash),
+        _bid(paymentMethod: BidPaymentMethod.cash),
         paymentLoaded: true,
       ),
     );
@@ -197,11 +191,7 @@ void main() {
     );
 
     await tester.pumpWidget(
-      _host(
-        bloc,
-        _bid(status: 'COMPLETED', senderHasRated: false),
-        paymentLoaded: true,
-      ),
+      _host(bloc, _bid(status: 'COMPLETED'), paymentLoaded: true),
     );
     await tester.pumpAndSettle();
 
@@ -247,13 +237,7 @@ void main() {
         initialState: BidInitial(),
       );
 
-      await tester.pumpWidget(
-        _host(
-          bloc,
-          _bid(status: 'PENDING', paymentMethod: BidPaymentMethod.stripe),
-          paymentLoaded: false,
-        ),
-      );
+      await tester.pumpWidget(_host(bloc, _bid()));
       // Use pump() instead of pumpAndSettle() — CircularProgressIndicator
       // animates indefinitely and would cause pumpAndSettle to time out.
       await tester.pump();
@@ -318,12 +302,9 @@ void main() {
       await tester.pumpWidget(
         _host(
           bloc,
-          _bid(status: 'ACCEPTED', paymentMethod: BidPaymentMethod.stripe),
+          _bid(status: 'ACCEPTED'),
           paymentLoaded: true,
-          existingPayment: _payment(
-            status: PaymentStatus.escrow,
-            amount: 182.0,
-          ),
+          existingPayment: _payment(),
         ),
       );
       await tester.pumpAndSettle();
@@ -347,15 +328,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        _host(
-          bloc,
-          _bid(status: 'PENDING', paymentMethod: BidPaymentMethod.stripe),
-          paymentLoaded: true,
-          existingPayment: _payment(
-            status: PaymentStatus.escrow,
-            amount: 182.0,
-          ),
-        ),
+        _host(bloc, _bid(), paymentLoaded: true, existingPayment: _payment()),
       );
       await tester.pumpAndSettle();
 
@@ -383,15 +356,12 @@ void main() {
     });
 
     test('PENDING stripe → true', () {
-      final bid = _bid(
-        status: 'PENDING',
-        paymentMethod: BidPaymentMethod.stripe,
-      );
+      final bid = _bid();
       expect(SenderStickyBar.hasAction(bid), isTrue);
     });
 
     test('PENDING cash → false', () {
-      final bid = _bid(status: 'PENDING', paymentMethod: BidPaymentMethod.cash);
+      final bid = _bid(paymentMethod: BidPaymentMethod.cash);
       expect(SenderStickyBar.hasAction(bid), isFalse);
     });
 
@@ -408,12 +378,7 @@ void main() {
     });
 
     test('COMPLETED senderHasRated=false → true', () {
-      expect(
-        SenderStickyBar.hasAction(
-          _bid(status: 'COMPLETED', senderHasRated: false),
-        ),
-        isTrue,
-      );
+      expect(SenderStickyBar.hasAction(_bid(status: 'COMPLETED')), isTrue);
     });
 
     test('COMPLETED senderHasRated=true → false', () {
@@ -426,12 +391,7 @@ void main() {
     });
 
     test('DELIVERED senderHasRated=false → true', () {
-      expect(
-        SenderStickyBar.hasAction(
-          _bid(status: 'DELIVERED', senderHasRated: false),
-        ),
-        isTrue,
-      );
+      expect(SenderStickyBar.hasAction(_bid(status: 'DELIVERED')), isTrue);
     });
 
     test('REJECTED → true (kEnvoisPasses)', () {
@@ -455,12 +415,7 @@ void main() {
 
     test('AWAITING_PAYMENT stripe → true', () {
       expect(
-        SenderStickyBar.hasAction(
-          _bid(
-            status: 'AWAITING_PAYMENT',
-            paymentMethod: BidPaymentMethod.stripe,
-          ),
-        ),
+        SenderStickyBar.hasAction(_bid(status: 'AWAITING_PAYMENT')),
         isTrue,
       );
     });
@@ -540,11 +495,7 @@ void main() {
     );
 
     await tester.pumpWidget(
-      _host(
-        bloc,
-        _bid(status: 'DELIVERED', senderHasRated: false),
-        paymentLoaded: true,
-      ),
+      _host(bloc, _bid(status: 'DELIVERED'), paymentLoaded: true),
     );
     await tester.pumpAndSettle();
 
@@ -631,14 +582,7 @@ void main() {
     );
 
     await tester.pumpWidget(
-      _host(
-        bloc,
-        _bid(
-          status: 'AWAITING_PAYMENT',
-          paymentMethod: BidPaymentMethod.stripe,
-        ),
-        paymentLoaded: true,
-      ),
+      _host(bloc, _bid(status: 'AWAITING_PAYMENT'), paymentLoaded: true),
     );
     await tester.pumpAndSettle();
 
@@ -661,15 +605,9 @@ void main() {
       await tester.pumpWidget(
         _host(
           bloc,
-          _bid(
-            status: 'AWAITING_PAYMENT',
-            paymentMethod: BidPaymentMethod.stripe,
-          ),
+          _bid(status: 'AWAITING_PAYMENT'),
           paymentLoaded: true,
-          existingPayment: _payment(
-            status: PaymentStatus.pending,
-            amount: 182.0,
-          ),
+          existingPayment: _payment(status: PaymentStatus.pending),
         ),
       );
       await tester.pumpAndSettle();
@@ -715,14 +653,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        _host(
-          bloc,
-          _bid(
-            status: 'AWAITING_PAYMENT',
-            paymentMethod: BidPaymentMethod.stripe,
-          ),
-          paymentLoaded: true,
-        ),
+        _host(bloc, _bid(status: 'AWAITING_PAYMENT'), paymentLoaded: true),
       );
       await tester.pumpAndSettle();
 
@@ -844,7 +775,7 @@ void main() {
         await tester.pumpWidget(
           _host(
             bloc,
-            _bid(status: 'COMPLETED', senderHasRated: false),
+            _bid(status: 'COMPLETED'),
             paymentLoaded: true,
             // Provide RatingBloc in the widget tree so RatingBottomSheet.show
             // can resolve it via context.read<RatingBloc>().

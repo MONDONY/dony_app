@@ -74,7 +74,7 @@ Widget _wrap(
     routes: [
       GoRoute(
         path: '/',
-        builder: (_, __) => MultiBlocProvider(
+        builder: (_, _) => MultiBlocProvider(
           providers: [
             BlocProvider<TrackingBloc>.value(value: bloc),
             BlocProvider<HelpCenterBloc>(
@@ -129,7 +129,7 @@ void main() {
   ) async {
     when(
       () => bloc.state,
-    ).thenReturn(TrackingEventsError(NetworkException('Erreur réseau')));
+    ).thenReturn(TrackingEventsError(const NetworkException('Erreur réseau')));
     await tester.pumpWidget(_wrap(bloc));
     await tester.pumpAndSettle();
     expect(find.text('Réessayer'), findsOneWidget);

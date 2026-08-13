@@ -10,7 +10,7 @@ void main() {
       routes: [
         GoRoute(
           path: '/a',
-          builder: (_, __) => Scaffold(body: child),
+          builder: (_, _) => Scaffold(body: child),
         ),
       ],
     ),

@@ -66,7 +66,7 @@ void main() {
   testWidgets('affiche le message d\'erreur en état Error', (tester) async {
     when(
       () => bloc.state,
-    ).thenReturn(ProStatsError(NetworkException('Erreur réseau')));
+    ).thenReturn(ProStatsError(const NetworkException('Erreur réseau')));
 
     await tester.pumpWidget(_buildCard(bloc));
 
@@ -77,7 +77,7 @@ void main() {
   testWidgets('envoie ProStatsLoadRequested au tap Réessayer', (tester) async {
     when(
       () => bloc.state,
-    ).thenReturn(ProStatsError(NetworkException('Erreur')));
+    ).thenReturn(ProStatsError(const NetworkException('Erreur')));
 
     await tester.pumpWidget(_buildCard(bloc));
     await tester.tap(find.text('Réessayer'));

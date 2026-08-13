@@ -27,7 +27,9 @@ class ConnectivityBanner extends StatelessWidget {
             child: child,
           ),
           child: config == null
-              ? const SizedBox.shrink(key: ValueKey('connectivity-banner-hidden'))
+              ? const SizedBox.shrink(
+                  key: ValueKey('connectivity-banner-hidden'),
+                )
               : _ConnectivityBar(
                   key: ValueKey('connectivity-banner-${config.testId}'),
                   config: config,

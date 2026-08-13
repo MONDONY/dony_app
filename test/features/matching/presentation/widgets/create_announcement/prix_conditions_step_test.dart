@@ -50,8 +50,8 @@ class _MockAnnouncementFormBloc
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 
 /// StripeAccountState quand Stripe est configuré (onboarding complet).
-final _stripeConfiguredState = StripeAccountReady(
-  const ConnectAccountStatus(status: 'ONBOARDING_COMPLETE'),
+const _stripeConfiguredState = StripeAccountReady(
+  ConnectAccountStatus(status: 'ONBOARDING_COMPLETE'),
 );
 
 /// StripeAccountState quand Stripe n'est pas encore configuré.
@@ -626,7 +626,7 @@ void main() {
     ) async {
       // Utilise un MockBloc synchrone pour éviter les problèmes d'async avec runAsync.
       final mockBloc = _MockAnnouncementFormBloc();
-      final mixedWithItemsState = const AnnouncementFormState(
+      const mixedWithItemsState = AnnouncementFormState(
         pricingMode: PricingMode.mixed,
         gridPreviewItems: [
           // 5.5 (et non 5.0) pour éviter toute collision avec kPriceOptions

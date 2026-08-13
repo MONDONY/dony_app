@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/storage/hive_service.dart';
@@ -9,7 +10,6 @@ import 'package:dony/features/package_request/data/models/payment_method.dart'
     as dony;
 import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/data/negotiation_repository.dart';
-import 'package:dony/features/package_request/presentation/_theme.dart';
 import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
 import 'package:dony/features/payments/presentation/payment_auth.dart';
 import 'package:dony/features/payments/presentation/widgets/dony_payment_sheet.dart';
@@ -170,18 +170,21 @@ class PaymentRecapBottomSheet {
                         );
                         if (ctx.mounted) {
                           Navigator.of(ctx, rootNavigator: true).pop();
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (routeContext) => DonySuccessScreen(
-                                mascotteType: DonyMascotteType.succes,
-                                title: 'Accord confirmé !',
-                                subtitle:
-                                    'Paiement en espèces : tu remets le montant au voyageur en main propre, à la remise du colis. En cas d\'annulation après la remise, Yadony ne peut pas te rembourser immédiatement mais s\'assurera que le voyageur te restitue ton argent.',
-                                ctaLabel: 'Voir le suivi',
-                                onCta: () => routeContext.go(
-                                  '/negotiations/${thread.id}',
+                          unawaited(
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (routeContext) => DonySuccessScreen(
+                                  mascotteType: DonyMascotteType.succes,
+                                  title: 'Accord confirmé !',
+                                  subtitle:
+                                      'Paiement en espèces : tu remets le montant au voyageur en main propre, à la remise du colis. En cas d\'annulation après la remise, Yadony ne peut pas te rembourser immédiatement mais s\'assurera que le voyageur te restitue ton argent.',
+                                  ctaLabel: 'Voir le suivi',
+                                  onCta: () => routeContext.go(
+                                    '/negotiations/${thread.id}',
+                                  ),
+                                  analyticsContext:
+                                      'negotiation_cash_agreement',
                                 ),
-                                analyticsContext: 'negotiation_cash_agreement',
                               ),
                             ),
                           );

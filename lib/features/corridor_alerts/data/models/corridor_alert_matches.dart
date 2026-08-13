@@ -1,8 +1,7 @@
+import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
+import 'package:dony/features/corridor_alerts/data/models/trip_match_model.dart';
 import 'package:dony/features/package_request/data/models/matching_request.dart';
 import 'package:equatable/equatable.dart';
-
-import 'alert_direction.dart';
-import 'trip_match_model.dart';
 
 /// Résultat typé des matchs d'une alerte. Selon [direction], soit [packages]
 /// (colis) soit [trips] (trajets) est rempli — l'autre reste vide.

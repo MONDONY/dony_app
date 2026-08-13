@@ -49,7 +49,7 @@ void main() {
         'lastSeenAt': '2026-05-21T08:00:00Z',
         'isCurrent': false,
       });
-      expect(m.lastSeenAt, DateTime.utc(2026, 5, 21, 8, 0, 0));
+      expect(m.lastSeenAt, DateTime.utc(2026, 5, 21, 8));
       expect(m.isCurrent, false);
     });
   });

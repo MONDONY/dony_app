@@ -18,7 +18,7 @@ import 'package:dio/dio.dart';
 /// ne sont jamais retentées ici).
 class RetryOnTransientErrorInterceptor extends Interceptor {
   RetryOnTransientErrorInterceptor(this._dio, {Random? random})
-      : _random = random ?? Random();
+    : _random = random ?? Random();
 
   final Dio _dio;
   final Random _random;
@@ -29,7 +29,10 @@ class RetryOnTransientErrorInterceptor extends Interceptor {
   static const _attemptKey = '_retryTransientAttempt';
 
   @override
-  void onError(DioException err, ErrorInterceptorHandler handler) async {
+  Future<void> onError(
+    DioException err,
+    ErrorInterceptorHandler handler,
+  ) async {
     final method = err.requestOptions.method.toUpperCase();
     final statusCode = err.response?.statusCode;
     final isTransient =

@@ -2,6 +2,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_event.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_state.dart';
@@ -17,7 +18,6 @@ import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
-import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -136,10 +136,8 @@ Widget _hostVoyageur(
       ),
       GoRoute(
         path: '/profile/public',
-        builder: (ctx, state) {
-          final args = state.extra;
-          return Scaffold(body: Text('profile-public-screen'));
-        },
+        builder: (ctx, state) =>
+            const Scaffold(body: Text('profile-public-screen')),
       ),
     ],
   );
@@ -220,7 +218,7 @@ void main() {
     testWidgets(
       'shows phone button when phone is present and status is ACCEPTED',
       (tester) async {
-        final bid = _bid(travelerPhoneAvailable: true, status: 'ACCEPTED');
+        final bid = _bid(travelerPhoneAvailable: true);
 
         await tester.pumpWidget(_hostVoyageur(bid, bloc));
 
@@ -232,7 +230,7 @@ void main() {
     );
 
     testWidgets('hides phone button when phone is null', (tester) async {
-      final bid = _bid(travelerPhoneAvailable: false);
+      final bid = _bid();
 
       await tester.pumpWidget(_hostVoyageur(bid, bloc));
 
@@ -246,7 +244,7 @@ void main() {
       'hides phone button tant que le SMS OTP backend n\'est pas confirmé, même joignable',
       (tester) async {
         setSmsAuthEnabled(false);
-        final bid = _bid(travelerPhoneAvailable: true, status: 'ACCEPTED');
+        final bid = _bid(travelerPhoneAvailable: true);
 
         await tester.pumpWidget(_hostVoyageur(bid, bloc));
 
@@ -380,7 +378,7 @@ void main() {
               .setMockMethodCallHandler(channel, null);
         });
 
-        final bid = _bid(travelerPhoneAvailable: true, status: 'ACCEPTED');
+        final bid = _bid(travelerPhoneAvailable: true);
         await tester.pumpWidget(_hostVoyageur(bid, bloc));
         await tester.pumpAndSettle();
 
@@ -418,11 +416,7 @@ void main() {
   // ── PaiementCard ──────────────────────────────────────────────────────────
   group('PaiementCard', () {
     testWidgets('stripe active → shows séquestré and amount', (tester) async {
-      final bid = _bid(
-        paymentMethod: BidPaymentMethod.stripe,
-        totalAmountEur: 56.0,
-        status: 'ACCEPTED',
-      );
+      final bid = _bid(totalAmountEur: 56.0);
 
       await tester.pumpWidget(_hostPaiement(bid));
 
@@ -431,11 +425,7 @@ void main() {
     });
 
     testWidgets('stripe COMPLETED → shows libéré', (tester) async {
-      final bid = _bid(
-        paymentMethod: BidPaymentMethod.stripe,
-        totalAmountEur: 56.0,
-        status: 'COMPLETED',
-      );
+      final bid = _bid(totalAmountEur: 56.0, status: 'COMPLETED');
 
       await tester.pumpWidget(_hostPaiement(bid));
 
@@ -443,11 +433,7 @@ void main() {
     });
 
     testWidgets('stripe CANCELLED → shows remboursé', (tester) async {
-      final bid = _bid(
-        paymentMethod: BidPaymentMethod.stripe,
-        totalAmountEur: 56.0,
-        status: 'CANCELLED',
-      );
+      final bid = _bid(totalAmountEur: 56.0, status: 'CANCELLED');
 
       await tester.pumpWidget(_hostPaiement(bid));
 
@@ -458,7 +444,6 @@ void main() {
       final bid = _bid(
         paymentMethod: BidPaymentMethod.cash,
         totalAmountEur: 40.0,
-        status: 'ACCEPTED',
       );
 
       await tester.pumpWidget(_hostPaiement(bid));
@@ -490,13 +475,13 @@ void main() {
       final bid = _bid(
         handoverLocation: 'Aéroport Roissy',
         handoverWindowStart: DateTime(2026, 3, 10, 14, 30),
-        handoverWindowEnd: DateTime(2026, 3, 10, 16, 0),
+        handoverWindowEnd: DateTime(2026, 3, 10, 16),
         voyageurConfirmed: true,
         trackingToken: 'tok-xyz789',
         trackingNumber: 'DNY-2026-001',
         departureDate: DateTime(2026, 3, 10),
         pricePerKg: 5.0,
-        disclaimerSignedAt: DateTime(2026, 1, 15, 9, 0),
+        disclaimerSignedAt: DateTime(2026, 1, 15, 9),
       );
 
       await tester.pumpWidget(_hostAccordion(bid));
@@ -526,11 +511,7 @@ void main() {
     testWidgets('ACCEPTED + présence non confirmée → "Non encore"', (
       tester,
     ) async {
-      final bid = _bid(
-        status: 'ACCEPTED',
-        handoverLocation: 'CDG',
-        voyageurConfirmed: false,
-      );
+      final bid = _bid(handoverLocation: 'CDG');
       await tester.pumpWidget(_hostAccordion(bid));
       await tester.tap(find.textContaining('Plus de détails'));
       await tester.pump();
@@ -543,11 +524,7 @@ void main() {
     testWidgets(
       'HANDED_OVER → "Colis remis ✓" (pas de "Non encore" trompeur)',
       (tester) async {
-        final bid = _bid(
-          status: 'HANDED_OVER',
-          handoverLocation: 'CDG',
-          voyageurConfirmed: false,
-        );
+        final bid = _bid(status: 'HANDED_OVER', handoverLocation: 'CDG');
         await tester.pumpWidget(_hostAccordion(bid));
         await tester.tap(find.textContaining('Plus de détails'));
         await tester.pump();
@@ -608,7 +585,7 @@ void main() {
               .setMockMethodCallHandler(channel, null);
         });
 
-        final bid = _bid(travelerPhoneAvailable: true, status: 'ACCEPTED');
+        final bid = _bid(travelerPhoneAvailable: true);
 
         // Le tap ne compose plus directement : il demande le numéro. On simule le
         // bloc qui le renvoie, ce qui déclenche l'ouverture du composeur.
@@ -667,7 +644,7 @@ void main() {
         ).thenReturn(const ConversationOpenLoading());
         when(
           () => loadingBloc.stream,
-        ).thenAnswer((_) => Stream<ConversationOpenState>.empty());
+        ).thenAnswer((_) => const Stream<ConversationOpenState>.empty());
 
         final bid = _bid();
 
@@ -678,7 +655,7 @@ void main() {
     );
 
     testWidgets('travelerAverageRating null → shows "★ -"', (tester) async {
-      final bid = _bid(travelerAverageRating: null, travelerTotalTrips: null);
+      final bid = _bid();
 
       await tester.pumpWidget(_hostVoyageur(bid, bloc));
 
@@ -688,7 +665,7 @@ void main() {
 
   // ── QuickActionsRow ───────────────────────────────────────────────────────
   group('QuickActionsRow', () {
-    Widget _hostQuickActions(BidModel bid) => MaterialApp(
+    Widget hostQuickActions(BidModel bid) => MaterialApp(
       theme: AppTheme.light(),
       home: Scaffold(body: QuickActionsRow(bid: bid)),
     );
@@ -696,9 +673,9 @@ void main() {
     testWidgets('trackingToken null → only "Suivi du colis" tile', (
       tester,
     ) async {
-      final bid = _bid(trackingToken: null);
+      final bid = _bid();
 
-      await tester.pumpWidget(_hostQuickActions(bid));
+      await tester.pumpWidget(hostQuickActions(bid));
 
       expect(find.text('Suivi du colis'), findsOneWidget);
       expect(find.text('Partager le suivi'), findsNothing);
@@ -707,7 +684,7 @@ void main() {
     testWidgets('trackingToken present → both tiles visible', (tester) async {
       final bid = _bid(trackingToken: 'tok-abc123');
 
-      await tester.pumpWidget(_hostQuickActions(bid));
+      await tester.pumpWidget(hostQuickActions(bid));
 
       expect(find.text('Suivi du colis'), findsOneWidget);
       expect(find.text('Partager le suivi'), findsOneWidget);
@@ -716,13 +693,9 @@ void main() {
     testWidgets('corridor shows "Suivi du colis" when cities are both empty', (
       tester,
     ) async {
-      final bid = _bid(
-        departureCity: null,
-        arrivalCity: null,
-        trackingToken: 'tok-xyz',
-      );
+      final bid = _bid(trackingToken: 'tok-xyz');
 
-      await tester.pumpWidget(_hostQuickActions(bid));
+      await tester.pumpWidget(hostQuickActions(bid));
 
       expect(find.text('Suivi du colis'), findsWidgets);
     });
@@ -736,7 +709,7 @@ void main() {
         when(() => trackingBloc.state).thenReturn(TrackingInitial());
         when(
           () => trackingBloc.stream,
-        ).thenAnswer((_) => Stream<TrackingState>.empty());
+        ).thenAnswer((_) => const Stream<TrackingState>.empty());
 
         if (getIt.isRegistered<TrackingBloc>()) {
           getIt.unregister<TrackingBloc>();
@@ -754,7 +727,7 @@ void main() {
           trackingToken: 'tok-abc',
         );
 
-        await tester.pumpWidget(_hostQuickActions(bid));
+        await tester.pumpWidget(hostQuickActions(bid));
 
         // Tap the "Suivi du colis" tile — triggers _corridor getter + sheet.
         await tester.tap(find.text('Suivi du colis'));
@@ -784,7 +757,7 @@ void main() {
           arrivalCity: 'Abidjan',
         );
 
-        await tester.pumpWidget(_hostQuickActions(bid));
+        await tester.pumpWidget(hostQuickActions(bid));
 
         // Tap the "Partager le suivi" tile — appelle shareTrackingLink(bid).
         await tester.tap(find.text('Partager le suivi'));
@@ -801,7 +774,7 @@ void main() {
     test('trackingToken null → no-op, returns without calling Share', () async {
       // shareTrackingLink doit retourner immédiatement si trackingToken est null.
       // On vérifie qu'aucune exception n'est levée (Share.share non appelé).
-      final bid = _bid(trackingToken: null);
+      final bid = _bid();
       // Ne doit pas lancer d'exception.
       await expectLater(shareTrackingLink(bid), completes);
     });

@@ -1,12 +1,8 @@
 import 'dart:async';
 
-import 'package:dony/features/payments/presentation/widgets/payment_method_names.dart';
+import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/currency/currency_formatter.dart';
-import 'package:dony/features/content_categories/data/content_category_model.dart';
-import 'package:dony/features/content_categories/data/content_category_repository.dart';
-import 'package:dony/features/content_categories/presentation/content_category_selector.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
@@ -14,6 +10,9 @@ import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
+import 'package:dony/features/content_categories/data/content_category_model.dart';
+import 'package:dony/features/content_categories/data/content_category_repository.dart';
+import 'package:dony/features/content_categories/presentation/content_category_selector.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_photos_cubit.dart';
@@ -28,6 +27,7 @@ import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
 import 'package:dony/features/payments/presentation/payment_auth.dart';
 import 'package:dony/features/payments/presentation/widgets/dony_payment_sheet.dart';
+import 'package:dony/features/payments/presentation/widgets/payment_method_names.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
 import 'package:dony/features/recipients/presentation/widgets/recipient_section.dart';
 import 'package:flutter/material.dart';
@@ -35,7 +35,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 const _kAccentBorder = 3.0;
 
@@ -879,7 +878,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                 _categoriesNotifier,
                 _catalogNotifier,
               ]),
-              builder: (_, __) =>
+              builder: (_, _) =>
                   _buildContentSection(context, _categoriesNotifier.value),
             ),
             const SizedBox(height: DonySpacing.xxl),
@@ -947,7 +946,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                 final isQuoteLoading = bidState is BidQuoteLoading;
                 return ValueListenableBuilder<Object?>(
                   valueListenable: _quoteNotifier,
-                  builder: (_, quoteVal, __) {
+                  builder: (_, quoteVal, _) {
                     final quote = quoteVal is BidQuoteResponse
                         ? quoteVal
                         : null;
@@ -1053,7 +1052,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
             // ── Prix live ─────────────────────────────────────────────────
             ValueListenableBuilder<Object?>(
               valueListenable: _quoteNotifier,
-              builder: (_, quoteVal, __) {
+              builder: (_, quoteVal, _) {
                 final quote = quoteVal is BidQuoteResponse ? quoteVal : null;
                 final kgDisplayLocal = hasKgPricing
                     ? netToSenderPrice(weightKg * _pricePerKg)
@@ -1140,7 +1139,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
           alwaysAllowCustom: true,
         ).animate().fadeIn(delay: 60.ms),
         const SizedBox(height: DonySpacing.sm),
-        _ContentHint(
+        const _ContentHint(
           text:
               'Ces suggestions sont les contenus acceptés par le '
               'voyageur. Si le contenu de votre colis n\'y figure pas, '
@@ -1632,7 +1631,7 @@ class _WeightSectionState extends State<_WeightSection> {
             thumbColor: cs.primary,
             overlayColor: cs.primary.withValues(alpha: 0.1),
             trackHeight: 4,
-            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
+            thumbShape: const RoundSliderThumbShape(),
           ),
           child: Slider(
             value: weightKg,

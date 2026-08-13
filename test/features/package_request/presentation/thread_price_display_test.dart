@@ -43,18 +43,21 @@ void main() {
       );
     });
 
-    test('sender with null gross falls back to net*1.12 rounded to 2 decimals', () {
-      // net = 100 → gross = 112.00
-      expect(
-        PriceDisplay.threadPriceLabel(100, null, false),
-        'Tu paies 112,00\u00A0€',
-      );
-    });
+    test(
+      'sender with null gross falls back to net*1.12 rounded to 2 decimals',
+      () {
+        // net = 100 → gross = 112.00
+        expect(
+          PriceDisplay.threadPriceLabel(100, null, false),
+          'Tu paies 112,00\u00A0€',
+        );
+      },
+    );
   });
 
   // ─── Widget tests for ThreadMessageBubble ──────────────────────────────────
 
-  NegotiationMessage _makeMessage({double? proposedPriceEur}) =>
+  NegotiationMessage makeMessage({double? proposedPriceEur}) =>
       NegotiationMessage(
         id: 'msg-1',
         threadId: 'thread-1',
@@ -64,17 +67,15 @@ void main() {
         createdAt: DateTime(2026, 6, 1, 10, 30),
       );
 
-  Widget _wrap(Widget child) => MaterialApp(
-        home: Scaffold(body: child),
-      );
+  Widget wrap(Widget child) => MaterialApp(home: Scaffold(body: child));
 
   testWidgets(
     'ThreadMessageBubble — traveler with proposedPriceEur=35 shows "Tu reçois 35,00 €"',
     (tester) async {
       await tester.pumpWidget(
-        _wrap(
+        wrap(
           ThreadMessageBubble(
-            message: _makeMessage(proposedPriceEur: 35),
+            message: makeMessage(proposedPriceEur: 35),
             mine: true,
             isTraveler: true,
           ),
@@ -89,9 +90,9 @@ void main() {
     'ThreadMessageBubble — sender with proposedPriceEur=35, grossPriceEur=39.20 shows "Tu paies 39,20 €"',
     (tester) async {
       await tester.pumpWidget(
-        _wrap(
+        wrap(
           ThreadMessageBubble(
-            message: _makeMessage(proposedPriceEur: 35),
+            message: makeMessage(proposedPriceEur: 35),
             mine: false,
             isTraveler: false,
             grossPriceEur: 39.20,
@@ -107,9 +108,9 @@ void main() {
     'ThreadMessageBubble — sender with grossPriceEur=null computes gross from net (35 → 39,20 €)',
     (tester) async {
       await tester.pumpWidget(
-        _wrap(
+        wrap(
           ThreadMessageBubble(
-            message: _makeMessage(proposedPriceEur: 35),
+            message: makeMessage(proposedPriceEur: 35),
             mine: false,
             isTraveler: false,
             // grossPriceEur intentionally omitted (null)
@@ -126,9 +127,9 @@ void main() {
     'ThreadMessageBubble — no price displayed when proposedPriceEur is null',
     (tester) async {
       await tester.pumpWidget(
-        _wrap(
+        wrap(
           ThreadMessageBubble(
-            message: _makeMessage(),
+            message: makeMessage(),
             mine: false,
             isTraveler: false,
           ),

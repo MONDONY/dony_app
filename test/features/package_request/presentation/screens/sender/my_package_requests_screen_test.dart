@@ -1,13 +1,13 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
 import 'package:dony/features/package_request/bloc/request_filter_cubit.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/my_package_requests_screen.dart';
-import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -44,7 +44,7 @@ void main() {
   late _MockPackageRequestBloc bloc;
 
   setUpAll(() async {
-    await initializeDateFormatting('fr', null);
+    await initializeDateFormatting('fr');
     registerFallbackValue(const FetchMyRequests());
   });
 
@@ -88,10 +88,7 @@ void main() {
 
     testWidgets('affiche _EmptyView quand la liste est vide', (tester) async {
       when(() => bloc.state).thenReturn(
-        PackageRequestState(
-          status: PackageRequestListStatus.loaded,
-          requests: [],
-        ),
+        PackageRequestState(status: PackageRequestListStatus.loaded),
       );
       await tester.pumpWidget(wrap());
       await tester.pumpAndSettle();
@@ -159,7 +156,7 @@ void main() {
       when(() => bloc.state).thenReturn(
         PackageRequestState(
           status: PackageRequestListStatus.loaded,
-          requests: [_request(status: PackageRequestStatus.open)],
+          requests: [_request()],
         ),
       );
       await tester.pumpWidget(wrapCard(_request()));
@@ -215,7 +212,7 @@ void main() {
       when(() => bloc.state).thenReturn(
         PackageRequestState(
           status: PackageRequestListStatus.loaded,
-          requests: [_request(status: PackageRequestStatus.open)],
+          requests: [_request()],
         ),
       );
       await tester.pumpWidget(wrapCard(_request()));
@@ -239,10 +236,7 @@ void main() {
   });
 
   group('Recherche et filtres', () {
-    final dakarRequest = _request(
-      arrivalCity: 'Dakar',
-      status: PackageRequestStatus.open,
-    );
+    final dakarRequest = _request();
     final abidjanRequest = _request(
       arrivalCity: 'Abidjan',
       status: PackageRequestStatus.cancelled,
@@ -487,10 +481,7 @@ void main() {
       tester,
     ) async {
       when(() => bloc.state).thenReturn(
-        PackageRequestState(
-          status: PackageRequestListStatus.loaded,
-          requests: [],
-        ),
+        PackageRequestState(status: PackageRequestListStatus.loaded),
       );
       await tester.pumpWidget(wrap());
       await tester.pumpAndSettle();
@@ -524,7 +515,7 @@ void main() {
         when(() => bloc.state).thenReturn(
           PackageRequestState(
             status: PackageRequestListStatus.loaded,
-            requests: [_request(status: PackageRequestStatus.open)],
+            requests: [_request()],
           ),
         );
         await tester.pumpWidget(wrap());
@@ -544,9 +535,7 @@ void main() {
         when(() => bloc.state).thenReturn(
           PackageRequestState(
             status: PackageRequestListStatus.loaded,
-            requests: [
-              _request(arrivalCity: 'Dakar', status: PackageRequestStatus.open),
-            ],
+            requests: [_request()],
           ),
         );
         await tester.pumpWidget(wrap());
@@ -619,7 +608,7 @@ void main() {
     testWidgets(
       '« Modifier → » expose la clé d\'édition (open) et plus de placeholder',
       (tester) async {
-        final req = _request(status: PackageRequestStatus.open);
+        final req = _request();
         when(() => bloc.state).thenReturn(
           PackageRequestState(
             status: PackageRequestListStatus.loaded,
@@ -641,7 +630,7 @@ void main() {
       tester,
     ) async {
       final requests = [
-        _request(arrivalCity: 'Dakar', status: PackageRequestStatus.open),
+        _request(),
         _request(
           arrivalCity: 'Abidjan',
           status: PackageRequestStatus.cancelled,

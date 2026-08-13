@@ -1,7 +1,8 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
-import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/services/address_autocomplete_service.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/presentation/widgets/address_picker_field.dart';
 import 'package:dony/features/trip_templates/bloc/trip_recurrence_bloc.dart';
@@ -21,7 +22,8 @@ class TripRecurrenceEditScreen extends StatefulWidget {
   final TripTemplate template;
 
   @override
-  State<TripRecurrenceEditScreen> createState() => _TripRecurrenceEditScreenState();
+  State<TripRecurrenceEditScreen> createState() =>
+      _TripRecurrenceEditScreenState();
 }
 
 class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
@@ -62,8 +64,16 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
       'availableKg': t.availableKg,
       'pricePerKg': t.pricePerKg,
       'acceptedCategories': t.acceptedCategories,
-      'pickupAddress': {'label': _pickup!.label, 'lat': _pickup!.lat, 'lng': _pickup!.lng},
-      'deliveryAddress': {'label': _delivery!.label, 'lat': _delivery!.lat, 'lng': _delivery!.lng},
+      'pickupAddress': {
+        'label': _pickup!.label,
+        'lat': _pickup!.lat,
+        'lng': _pickup!.lng,
+      },
+      'deliveryAddress': {
+        'label': _delivery!.label,
+        'lat': _delivery!.lat,
+        'lng': _delivery!.lng,
+      },
       'departureTime': _timeWire,
       'arrivalTime': t.arrivalTime,
       'cashAccepted': t.cashAccepted,
@@ -83,14 +93,21 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
     return BlocConsumer<TripRecurrenceBloc, TripRecurrenceState>(
       listener: (context, state) {
         if (_submitted && state.status == TripRecurrenceStatus.success) {
-          DonySnackbar.show(context,
-              message: 'Récurrence activée. Tes trajets seront publiés automatiquement.',
-              type: DonySnackbarType.success);
+          DonySnackbar.show(
+            context,
+            message:
+                'Récurrence activée. Tes trajets seront publiés automatiquement.',
+            type: DonySnackbarType.success,
+          );
           context.pop(true);
         }
         if (state.status == TripRecurrenceStatus.error && state.error != null) {
           _submitted = false;
-          DonySnackbar.show(context, message: state.error!, type: DonySnackbarType.error);
+          DonySnackbar.show(
+            context,
+            message: state.error!,
+            type: DonySnackbarType.error,
+          );
         }
       },
       builder: (context, state) {
@@ -123,9 +140,18 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(t.label, style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w700)),
-                          Text('${t.departureCity} → ${t.arrivalCity} · ${t.pricePerKg.toStringAsFixed(0)}€/kg',
-                              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
+                          Text(
+                            t.label,
+                            style: tt.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          Text(
+                            '${t.departureCity} → ${t.arrivalCity} · ${formatPriceActive(t.pricePerKg)}/kg',
+                            style: tt.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -134,7 +160,10 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
               ).animate().fadeIn(duration: 280.ms),
               const SizedBox(height: DonySpacing.xxl),
 
-              const _SectionLabel(label: 'JOURS DE RÉPÉTITION', iconAsset: 'calendar-sync'),
+              const _SectionLabel(
+                label: 'JOURS DE RÉPÉTITION',
+                iconAsset: 'calendar-sync',
+              ),
               const SizedBox(height: DonySpacing.sm),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -149,7 +178,9 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
                       decoration: BoxDecoration(
                         color: selected ? cs.primary : cs.surface,
                         shape: BoxShape.circle,
-                        border: Border.all(color: selected ? cs.primary : cs.outline),
+                        border: Border.all(
+                          color: selected ? cs.primary : cs.outline,
+                        ),
                       ),
                       child: Text(
                         _weekdayLabels[i],
@@ -164,13 +195,15 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
               ).animate().fadeIn(delay: 40.ms, duration: 280.ms),
               const SizedBox(height: DonySpacing.xxl),
 
-              const _SectionLabel(label: "HEURE DE DÉPART", iconAsset: 'clock'),
+              const _SectionLabel(label: 'HEURE DE DÉPART', iconAsset: 'clock'),
               const SizedBox(height: DonySpacing.sm),
               GestureDetector(
                 onTap: _pickTime,
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: DonySpacing.base, vertical: DonySpacing.md),
+                    horizontal: DonySpacing.base,
+                    vertical: DonySpacing.md,
+                  ),
                   decoration: BoxDecoration(
                     color: cs.surface,
                     border: Border.all(color: cs.outline),
@@ -182,9 +215,13 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
                       const SizedBox(width: DonySpacing.md),
                       Expanded(
                         child: Text(
-                          _departureTime == null ? 'Optionnel : choisir une heure' : _timeWire!,
+                          _departureTime == null
+                              ? 'Optionnel : choisir une heure'
+                              : _timeWire!,
                           style: tt.bodyMedium?.copyWith(
-                            color: _departureTime == null ? cs.onSurfaceVariant : cs.onSurface,
+                            color: _departureTime == null
+                                ? cs.onSurfaceVariant
+                                : cs.onSurface,
                           ),
                         ),
                       ),
@@ -195,9 +232,13 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
                           excludeSemantics: true,
                           label: "Effacer l'heure de départ",
                           child: GestureDetector(
-                          onTap: () => setState(() => _departureTime = null),
-                          child: DonyIcon('x', size: 18, color: cs.onSurfaceVariant),
-                        )
+                            onTap: () => setState(() => _departureTime = null),
+                            child: DonyIcon(
+                              'x',
+                              size: 18,
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
                         ),
                     ],
                   ),
@@ -205,7 +246,10 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
               ).animate().fadeIn(delay: 80.ms, duration: 280.ms),
               const SizedBox(height: DonySpacing.xxl),
 
-              const _SectionLabel(label: 'LIEUX', iconAsset: 'arrow-left-right'),
+              const _SectionLabel(
+                label: 'LIEUX',
+                iconAsset: 'arrow-left-right',
+              ),
               const SizedBox(height: DonySpacing.sm),
               AddressPickerField(
                 fieldLabel: 'Lieu de remise du colis *',
@@ -226,27 +270,47 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(DonySpacing.base),
                   decoration: BoxDecoration(
-                    color: _active ? cs.primary.withValues(alpha: 0.08) : cs.surface,
+                    color: _active
+                        ? cs.primary.withValues(alpha: 0.08)
+                        : cs.surface,
                     borderRadius: BorderRadius.circular(DonyRadius.card),
-                    border: Border.all(color: _active ? cs.primary.withValues(alpha: 0.4) : cs.outline),
+                    border: Border.all(
+                      color: _active
+                          ? cs.primary.withValues(alpha: 0.4)
+                          : cs.outline,
+                    ),
                   ),
                   child: Row(
                     children: [
-                      DonyIcon('circle-play',
-                          color: _active ? cs.primary : cs.onSurfaceVariant, size: 20),
+                      DonyIcon(
+                        'circle-play',
+                        color: _active ? cs.primary : cs.onSurfaceVariant,
+                        size: 20,
+                      ),
                       const SizedBox(width: DonySpacing.md),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Récurrence active',
-                                style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
-                            Text('Publie automatiquement les trajets à venir',
-                                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
+                            Text(
+                              'Récurrence active',
+                              style: tt.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              'Publie automatiquement les trajets à venir',
+                              style: tt.bodySmall?.copyWith(
+                                color: cs.onSurfaceVariant,
+                              ),
+                            ),
                           ],
                         ),
                       ),
-                      Switch(value: _active, onChanged: (v) => setState(() => _active = v)),
+                      Switch(
+                        value: _active,
+                        onChanged: (v) => setState(() => _active = v),
+                      ),
                     ],
                   ),
                 ),
@@ -275,10 +339,10 @@ class _SectionLabel extends StatelessWidget {
         Text(
           label,
           style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: cs.onSurfaceVariant,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.5,
-              ),
+            color: cs.onSurfaceVariant,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.5,
+          ),
         ),
       ],
     );

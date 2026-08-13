@@ -1,10 +1,9 @@
 // E2E DIAGNOSTIC : création demande d'envoi — logue les textes visibles à
 // chaque étape pour caler les finders. Assertions souples (sauf succès final).
-import 'package:flutter/foundation.dart';
+import 'package:dony/app/router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:dony/app/router.dart';
 
 import '../helpers/app_driver.dart';
 

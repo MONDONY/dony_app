@@ -1,5 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
-import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -16,7 +16,6 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/trips_summary_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/matching/presentation/screens/activites_hub_screen.dart';
-import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
@@ -108,8 +107,8 @@ BidModel _bid(String id, String status) => BidModel(
   senderId: 's1',
   weightKg: 5,
   status: status,
-  createdAt: DateTime(2026, 1, 1),
-  updatedAt: DateTime(2026, 1, 1),
+  createdAt: DateTime(2026),
+  updatedAt: DateTime(2026),
 );
 
 /// Routes atteintes pendant le test, dans l'ordre.
@@ -177,7 +176,7 @@ Future<void> _pump(
 
   GoRoute route(String path, String label) => GoRoute(
     path: path,
-    builder: (_, __) {
+    builder: (_, _) {
       visited.add(path);
       return stub(label);
     },
@@ -188,7 +187,7 @@ Future<void> _pump(
     routes: [
       GoRoute(
         path: '/',
-        builder: (_, __) => MultiBlocProvider(
+        builder: (_, _) => MultiBlocProvider(
           providers: [
             BlocProvider<TripsSummaryCubit>.value(value: summaryCubit),
             BlocProvider<TravelerBidsBloc>.value(value: travelerBids),
@@ -291,7 +290,7 @@ void main() {
       'demande envoyée en négo allume la pastille de « Demandes reçues » '
       '(même sans demande reçue)',
       (tester) async {
-        final negoReq = PackageRequest.fromJson({
+        final negoReq = PackageRequest.fromJson(const {
           'id': 'pr-1',
           'senderId': 's1',
           'departureCity': 'Paris',

@@ -1,8 +1,8 @@
 import 'package:dony/core/services/gdpr_helper.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
 import 'package:hive/hive.dart';
+import 'package:mocktail/mocktail.dart';
 
 class MockBox extends Mock implements Box<dynamic> {}
 

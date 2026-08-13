@@ -25,7 +25,7 @@ void main() {
     });
 
     test('missing structured fields default to null', () {
-      final a = AddressData.fromJson({
+      final a = AddressData.fromJson(const {
         'label': 'Dakar, Sénégal',
         'lat': 14.693,
         'lng': -17.447,

@@ -23,15 +23,18 @@ String trackingPublicUrl(String token) {
 /// Partage le lien de suivi du colis via le système natif.
 ///
 /// No-op si [bid.trackingToken] est null.
-Future<void> shareTrackingLink(BidModel bid, {Rect? sharePositionOrigin}) async {
+Future<void> shareTrackingLink(
+  BidModel bid, {
+  Rect? sharePositionOrigin,
+}) async {
   final token = bid.trackingToken;
   if (token == null) {
     return;
   }
 
-  unawaited(getItSafe<AnalyticsService>()?.logEvent(
-    AnalyticsEvents.trackingLinkShared,
-  ));
+  unawaited(
+    getItSafe<AnalyticsService>()?.logEvent(AnalyticsEvents.trackingLinkShared),
+  );
 
   final url = trackingPublicUrl(token);
   await Share.share(

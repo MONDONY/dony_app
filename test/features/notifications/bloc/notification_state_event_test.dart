@@ -6,7 +6,7 @@ import 'package:dony/features/notifications/data/notification_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  final _notif = NotificationModel(
+  final notif = NotificationModel(
     id: 'n1',
     type: 'BID_ACCEPTED',
     title: 'Titre',
@@ -51,17 +51,23 @@ void main() {
     });
 
     test('NotificationLoaded copyWith updates notifications', () {
-      final original = NotificationLoaded(notifications: [_notif], unreadCount: 1);
+      final original = NotificationLoaded(
+        notifications: [notif],
+        unreadCount: 1,
+      );
       final updated = original.copyWith(notifications: []);
       expect(updated.notifications, isEmpty);
       expect(updated.unreadCount, 1);
     });
 
     test('NotificationLoaded copyWith updates unreadCount', () {
-      final original = NotificationLoaded(notifications: [_notif], unreadCount: 1);
+      final original = NotificationLoaded(
+        notifications: [notif],
+        unreadCount: 1,
+      );
       final updated = original.copyWith(unreadCount: 0);
       expect(updated.unreadCount, 0);
-      expect(updated.notifications, [_notif]);
+      expect(updated.notifications, [notif]);
     });
   });
 }

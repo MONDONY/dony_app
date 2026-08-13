@@ -1,5 +1,5 @@
-import 'package:dony/core/error/app_exception.dart';
 import 'package:dio/dio.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 /// Small abstraction used to test error reporting without booting Sentry.
@@ -59,7 +59,7 @@ class ErrorReportingService {
     final safeContext = <String, Object>{
       'operation': operation,
       'error_type': error.runtimeType.toString(),
-      if (effectiveStatusCode != null) 'status_code': effectiveStatusCode,
+      'status_code': ?effectiveStatusCode,
       ..._safeContext(context),
     };
 

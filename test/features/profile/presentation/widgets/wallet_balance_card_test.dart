@@ -6,10 +6,10 @@ import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import '../../../../helpers/currency_test_doubles.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../../../helpers/currency_test_doubles.dart';
 
 class MockWalletBloc extends MockBloc<WalletEvent, WalletState>
     implements WalletBloc {}

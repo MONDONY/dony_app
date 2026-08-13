@@ -53,7 +53,9 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
     if (_streetCtrl.text.trim().isEmpty) {
       return AddressLocationState.hidden;
     }
-    return _lat != null ? AddressLocationState.localized : AddressLocationState.manual;
+    return _lat != null
+        ? AddressLocationState.localized
+        : AddressLocationState.manual;
   }
 
   @override
@@ -101,40 +103,44 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
     }
     setState(() => _hasSubmitted = true);
     if (_isEditing) {
-      context.read<PickupAddressBloc>().add(PickupAddressUpdated(
-            id: widget.addressId!,
-            label: _labelCtrl.text.trim(),
-            street: _streetCtrl.text.trim(),
-            postalCode: _postalCtrl.text.trim(),
-            city: _cityCtrl.text.trim(),
-            country: _countryCtrl.text.trim(),
-            floorApartment: _floorCtrl.text.trim().isEmpty
-                ? null
-                : _floorCtrl.text.trim(),
-            instructions: _instructionsCtrl.text.trim().isEmpty
-                ? null
-                : _instructionsCtrl.text.trim(),
-            latitude: _lat,
-            longitude: _lng,
-            isDefault: _isDefault,
-          ));
+      context.read<PickupAddressBloc>().add(
+        PickupAddressUpdated(
+          id: widget.addressId!,
+          label: _labelCtrl.text.trim(),
+          street: _streetCtrl.text.trim(),
+          postalCode: _postalCtrl.text.trim(),
+          city: _cityCtrl.text.trim(),
+          country: _countryCtrl.text.trim(),
+          floorApartment: _floorCtrl.text.trim().isEmpty
+              ? null
+              : _floorCtrl.text.trim(),
+          instructions: _instructionsCtrl.text.trim().isEmpty
+              ? null
+              : _instructionsCtrl.text.trim(),
+          latitude: _lat,
+          longitude: _lng,
+          isDefault: _isDefault,
+        ),
+      );
     } else {
-      context.read<PickupAddressBloc>().add(PickupAddressCreated(
-            label: _labelCtrl.text.trim(),
-            street: _streetCtrl.text.trim(),
-            postalCode: _postalCtrl.text.trim(),
-            city: _cityCtrl.text.trim(),
-            country: _countryCtrl.text.trim(),
-            floorApartment: _floorCtrl.text.trim().isEmpty
-                ? null
-                : _floorCtrl.text.trim(),
-            instructions: _instructionsCtrl.text.trim().isEmpty
-                ? null
-                : _instructionsCtrl.text.trim(),
-            latitude: _lat,
-            longitude: _lng,
-            isDefault: _isDefault,
-          ));
+      context.read<PickupAddressBloc>().add(
+        PickupAddressCreated(
+          label: _labelCtrl.text.trim(),
+          street: _streetCtrl.text.trim(),
+          postalCode: _postalCtrl.text.trim(),
+          city: _cityCtrl.text.trim(),
+          country: _countryCtrl.text.trim(),
+          floorApartment: _floorCtrl.text.trim().isEmpty
+              ? null
+              : _floorCtrl.text.trim(),
+          instructions: _instructionsCtrl.text.trim().isEmpty
+              ? null
+              : _instructionsCtrl.text.trim(),
+          latitude: _lat,
+          longitude: _lng,
+          isDefault: _isDefault,
+        ),
+      );
     }
   }
 
@@ -146,8 +152,9 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
         if (!_initialized &&
             _isEditing &&
             state.status == PickupAddressStatus.success) {
-          final found =
-              state.addresses.where((a) => a.id == widget.addressId).firstOrNull;
+          final found = state.addresses
+              .where((a) => a.id == widget.addressId)
+              .firstOrNull;
           if (found != null) {
             _prefill(found);
             _initialized = true;
@@ -189,123 +196,139 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
           ),
           body: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ── Étiquette ──────────────────────────────────────
-              const AddressSectionLabel('Étiquette'),
-              DonyTextField(
-                textInputAction: TextInputAction.next,
-                controller: _labelCtrl,
-                label: "Nom de l'adresse",
-                hint: 'Ex : Maison, Bureau…',
-                prefixWidget: DonyIcon('tag', size: 20, color: cs.primary),
-                onChanged: (_) => setState(() {}),
-              ),
-              const SizedBox(height: DonySpacing.sm),
-              AddressLabelChips(
-                controller: _labelCtrl,
-                chips: _kLabelChips,
-                accentColor: cs.primary,
-                onSelected: () => setState(() {}),
-              ),
-              const SizedBox(height: DonySpacing.xl),
+            children:
+                [
+                      // ── Étiquette ──────────────────────────────────────
+                      const AddressSectionLabel('Étiquette'),
+                      DonyTextField(
+                        textInputAction: TextInputAction.next,
+                        controller: _labelCtrl,
+                        label: "Nom de l'adresse",
+                        hint: 'Ex : Maison, Bureau…',
+                        prefixWidget: DonyIcon(
+                          'tag',
+                          size: 20,
+                          color: cs.primary,
+                        ),
+                        onChanged: (_) => setState(() {}),
+                      ),
+                      const SizedBox(height: DonySpacing.sm),
+                      AddressLabelChips(
+                        controller: _labelCtrl,
+                        chips: _kLabelChips,
+                        accentColor: cs.primary,
+                        onSelected: () => setState(() {}),
+                      ),
+                      const SizedBox(height: DonySpacing.xl),
 
-              // ── Adresse ────────────────────────────────────────
-              const AddressSectionLabel('Adresse'),
-              AddressSuggestField(
-                controller: _streetCtrl,
-                service: getIt<AddressAutocompleteService>(),
-                label: 'Rue et numéro',
-                hint: '12 rue de la Paix',
-                prefixIcon: Icons.search_rounded,
-                prefixIconColor: cs.primary,
-                onChanged: (_) => setState(() {}),
-                onResolved: _onResolved,
-                onCoordinatesCleared: () => setState(() {
-                  _lat = null;
-                  _lng = null;
-                }),
-              ),
-              AddressLocationStatus(state: _locationState),
-              const SizedBox(height: DonySpacing.base),
-              Row(
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: DonyTextField(
-                      textInputAction: TextInputAction.next,
-                      controller: _postalCtrl,
-                      label: 'Code postal',
-                      hint: '75001',
-                      keyboardType: TextInputType.number,
-                      onChanged: (_) => setState(() {}),
-                    ),
-                  ),
-                  const SizedBox(width: DonySpacing.sm),
-                  Expanded(
-                    flex: 3,
-                    child: DonyTextField(
-                      textInputAction: TextInputAction.next,
-                      controller: _cityCtrl,
-                      label: 'Ville',
-                      hint: 'Paris',
-                      prefixWidget:
-                          DonyIcon('building-2', size: 20, color: cs.primary),
-                      onChanged: (_) => setState(() {}),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: DonySpacing.xl),
+                      // ── Adresse ────────────────────────────────────────
+                      const AddressSectionLabel('Adresse'),
+                      AddressSuggestField(
+                        controller: _streetCtrl,
+                        service: getIt<AddressAutocompleteService>(),
+                        label: 'Rue et numéro',
+                        hint: '12 rue de la Paix',
+                        prefixIcon: Icons.search_rounded,
+                        prefixIconColor: cs.primary,
+                        onChanged: (_) => setState(() {}),
+                        onResolved: _onResolved,
+                        onCoordinatesCleared: () => setState(() {
+                          _lat = null;
+                          _lng = null;
+                        }),
+                      ),
+                      AddressLocationStatus(state: _locationState),
+                      const SizedBox(height: DonySpacing.base),
+                      Row(
+                        children: [
+                          Expanded(
+                            flex: 2,
+                            child: DonyTextField(
+                              textInputAction: TextInputAction.next,
+                              controller: _postalCtrl,
+                              label: 'Code postal',
+                              hint: '75001',
+                              keyboardType: TextInputType.number,
+                              onChanged: (_) => setState(() {}),
+                            ),
+                          ),
+                          const SizedBox(width: DonySpacing.sm),
+                          Expanded(
+                            flex: 3,
+                            child: DonyTextField(
+                              textInputAction: TextInputAction.next,
+                              controller: _cityCtrl,
+                              label: 'Ville',
+                              hint: 'Paris',
+                              prefixWidget: DonyIcon(
+                                'building-2',
+                                size: 20,
+                                color: cs.primary,
+                              ),
+                              onChanged: (_) => setState(() {}),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: DonySpacing.xl),
 
-              // ── Étage ──────────────────────────────────────────
-              const AddressSectionLabel('Étage / Appartement'),
-              DonyTextField(
-                textInputAction: TextInputAction.done,
-                controller: _floorCtrl,
-                label: 'Étage / Appartement',
-                hint: 'Optionnel (Ex : Bât. B, 3ème étage)',
-                prefixWidget:
-                    DonyIcon('door-open', size: 20, color: cs.primary),
-                onChanged: (_) => setState(() {}),
-              ),
-              const SizedBox(height: DonySpacing.xl),
+                      // ── Étage ──────────────────────────────────────────
+                      const AddressSectionLabel('Étage / Appartement'),
+                      DonyTextField(
+                        textInputAction: TextInputAction.done,
+                        controller: _floorCtrl,
+                        label: 'Étage / Appartement',
+                        hint: 'Optionnel (Ex : Bât. B, 3ème étage)',
+                        prefixWidget: DonyIcon(
+                          'door-open',
+                          size: 20,
+                          color: cs.primary,
+                        ),
+                        onChanged: (_) => setState(() {}),
+                      ),
+                      const SizedBox(height: DonySpacing.xl),
 
-              // ── Instructions ───────────────────────────────────
-              const AddressSectionLabel('Instructions'),
-              TextFormField(
-                controller: _instructionsCtrl,
-                maxLines: 3,
-                onChanged: (_) => setState(() {}),
-                decoration: InputDecoration(
-                  hintText: 'Optionnel : digicode, horaires…',
-                  prefixIcon: Padding(
-                    padding: const EdgeInsets.only(
-                      left: DonySpacing.md,
-                      right: DonySpacing.xs,
-                    ),
-                    child: DonyIcon('message-circle',
-                        size: 18, color: cs.onSurfaceVariant),
-                  ),
-                  prefixIconConstraints: const BoxConstraints(minWidth: 40),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: DonySpacing.base,
-                    vertical: DonySpacing.md,
-                  ),
-                ),
-              ),
-              const SizedBox(height: DonySpacing.xl),
+                      // ── Instructions ───────────────────────────────────
+                      const AddressSectionLabel('Instructions'),
+                      TextFormField(
+                        controller: _instructionsCtrl,
+                        maxLines: 3,
+                        onChanged: (_) => setState(() {}),
+                        decoration: InputDecoration(
+                          hintText: 'Optionnel : digicode, horaires…',
+                          prefixIcon: Padding(
+                            padding: const EdgeInsets.only(
+                              left: DonySpacing.md,
+                              right: DonySpacing.xs,
+                            ),
+                            child: DonyIcon(
+                              'message-circle',
+                              size: 18,
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
+                          prefixIconConstraints: const BoxConstraints(
+                            minWidth: 40,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: DonySpacing.base,
+                            vertical: DonySpacing.md,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: DonySpacing.xl),
 
-              // ── Par défaut ─────────────────────────────────────
-              AddressDefaultToggle(
-                value: _isDefault,
-                onChanged: (v) => setState(() => _isDefault = v),
-                activeColor: cs.primary,
-                subtitle: 'Pré-remplie lors de tes prochaines demandes',
-              ),
-            ]
-                .animate(interval: 40.ms)
-                .fadeIn(duration: 280.ms)
-                .slideY(begin: 0.03, curve: Curves.easeOutCubic),
+                      // ── Par défaut ─────────────────────────────────────
+                      AddressDefaultToggle(
+                        value: _isDefault,
+                        onChanged: (v) => setState(() => _isDefault = v),
+                        activeColor: cs.primary,
+                        subtitle: 'Pré-remplie lors de tes prochaines demandes',
+                      ),
+                    ]
+                    .animate(interval: 40.ms)
+                    .fadeIn(duration: 280.ms)
+                    .slideY(begin: 0.03, curve: Curves.easeOutCubic),
           ),
         );
       },

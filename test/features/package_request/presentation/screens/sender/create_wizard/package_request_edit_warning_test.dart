@@ -11,14 +11,14 @@ PackageRequest _req(PackageRequestStatus status) => PackageRequest(
   senderId: 's1',
   departureCity: 'Paris',
   arrivalCity: 'Dakar',
-  desiredDate: DateTime(2026, 8, 1),
+  desiredDate: DateTime(2026, 8),
   dateToleranceDays: 3,
   weightKg: 5,
   parcelSize: ParcelSize.medium,
   transportMode: TransportMode.plane,
   categories: const ['Vêtements'],
   status: status,
-  createdAt: DateTime(2026, 6, 1),
+  createdAt: DateTime(2026, 6),
 );
 
 void main() {

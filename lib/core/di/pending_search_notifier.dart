@@ -1,6 +1,5 @@
-import 'package:flutter/foundation.dart';
-
 import 'package:dony/features/matching/data/models/search_params.dart';
+import 'package:flutter/foundation.dart';
 
 /// Transporte des [SearchParams] entre écrans qui ne partagent pas de BLoC
 /// (par ex. depuis le bouton "Publier un colis" de l'écran Envoyer vers

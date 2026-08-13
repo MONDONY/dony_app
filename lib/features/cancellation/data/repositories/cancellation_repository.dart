@@ -9,20 +9,18 @@ class CancellationRepository {
   Future<CancellationModel> cancelTrip({
     required String announcementId,
     required String reason,
-  }) =>
-      _datasource.cancelTrip(announcementId: announcementId, reason: reason);
+  }) => _datasource.cancelTrip(announcementId: announcementId, reason: reason);
 
-  Future<List<RematchSuggestionModel>> getRematchSuggestions(String cancellationId) =>
-      _datasource.getRematchSuggestions(cancellationId);
+  Future<List<RematchSuggestionModel>> getRematchSuggestions(
+    String cancellationId,
+  ) => _datasource.getRematchSuggestions(cancellationId);
 
-  Future<void> reportNoShow(String bidId) =>
-      _datasource.reportNoShow(bidId);
+  Future<void> reportNoShow(String bidId) => _datasource.reportNoShow(bidId);
 
   Future<void> reportTravelerNoShow(String bidId) =>
       _datasource.reportTravelerNoShow(bidId);
 
-  Future<void> contestNoShow(String bidId) =>
-      _datasource.contestNoShow(bidId);
+  Future<void> contestNoShow(String bidId) => _datasource.contestNoShow(bidId);
 
   Future<void> reportDeliveryNoShow(String bidId) =>
       _datasource.reportDeliveryNoShow(bidId);
@@ -33,8 +31,7 @@ class CancellationRepository {
   Future<void> contestDeliveryNoShow(String bidId) =>
       _datasource.contestDeliveryNoShow(bidId);
 
-  Future<void> confirmNoShow(String bidId) =>
-      _datasource.confirmNoShow(bidId);
+  Future<void> confirmNoShow(String bidId) => _datasource.confirmNoShow(bidId);
 
   Future<void> cancelAfterHandover(String bidId) =>
       _datasource.cancelAfterHandover(bidId);

@@ -151,7 +151,7 @@ class _PackageRequestDetailScreenState
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: DonyAppBar(title: 'Ma demande'),
+      appBar: const DonyAppBar(title: 'Ma demande'),
       body: _loading
           ? Center(child: CircularProgressIndicator(color: cs.primary))
           : _error != null
@@ -163,7 +163,7 @@ class _PackageRequestDetailScreenState
               child: BlocListener<NegotiationBloc, NegotiationState>(
                 listenWhen: (prev, curr) =>
                     curr is NegotiationLoaded && prev is! NegotiationLoaded,
-                listener: (_, __) => _load(),
+                listener: (_, _) => _load(),
                 child: SingleChildScrollView(
                   padding: EdgeInsets.fromLTRB(
                     DonySpacing.lg,

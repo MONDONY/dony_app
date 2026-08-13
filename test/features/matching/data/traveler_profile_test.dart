@@ -4,11 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   group('TravelerProfile.resolvedName', () {
     test('returns displayName when set', () {
-      const p = TravelerProfile(
-        id: 't1',
-        displayName: 'Ibrahima Diallo',
-        kiloPro: false,
-      );
+      const p = TravelerProfile(id: 't1', displayName: 'Ibrahima Diallo');
       expect(p.resolvedName, 'Ibrahima Diallo');
     });
 
@@ -16,11 +12,7 @@ void main() {
     // serveur, et l'afficher comme nom contredisait « Masquer mon numéro ». Depuis la
     // migration V183 le serveur renvoie toujours un displayName (username à défaut de prénom).
     test('ignore le numéro quand displayName est null', () {
-      const p = TravelerProfile(
-        id: 't2',
-        phoneNumber: '+33612345678',
-        kiloPro: false,
-      );
+      const p = TravelerProfile(id: 't2', phoneNumber: '+33612345678');
       expect(p.resolvedName, 'Voyageur');
     });
 
@@ -29,94 +21,69 @@ void main() {
         id: 't3',
         displayName: '',
         phoneNumber: '+33699999999',
-        kiloPro: false,
       );
       expect(p.resolvedName, 'Voyageur');
     });
 
     test('affiche le username renvoyé comme displayName', () {
-      const p = TravelerProfile(
-        id: 't6',
-        displayName: 'user1785153600',
-        kiloPro: false,
-      );
+      const p = TravelerProfile(id: 't6', displayName: 'user1785153600');
       expect(p.resolvedName, 'user1785153600');
     });
 
-    test('returns "Voyageur" when both displayName and phoneNumber are null', () {
-      const p = TravelerProfile(id: 't4', kiloPro: false);
-      expect(p.resolvedName, 'Voyageur');
-    });
+    test(
+      'returns "Voyageur" when both displayName and phoneNumber are null',
+      () {
+        const p = TravelerProfile(id: 't4');
+        expect(p.resolvedName, 'Voyageur');
+      },
+    );
 
     test('returns "Voyageur" when both are empty strings', () {
-      const p = TravelerProfile(
-        id: 't5',
-        displayName: '',
-        phoneNumber: '',
-        kiloPro: false,
-      );
+      const p = TravelerProfile(id: 't5', displayName: '', phoneNumber: '');
       expect(p.resolvedName, 'Voyageur');
     });
   });
 
   group('TravelerProfile.resolvedInitials', () {
     test('returns two-letter initials for full name', () {
-      const p = TravelerProfile(
-        id: 't1',
-        displayName: 'Ibrahima Diallo',
-        kiloPro: false,
-      );
+      const p = TravelerProfile(id: 't1', displayName: 'Ibrahima Diallo');
       expect(p.resolvedInitials, 'ID');
     });
 
     test('returns single letter for single-word displayName', () {
-      const p = TravelerProfile(
-        id: 't2',
-        displayName: 'Ibrahima',
-        kiloPro: false,
-      );
+      const p = TravelerProfile(id: 't2', displayName: 'Ibrahima');
       expect(p.resolvedInitials, 'I');
     });
 
     test('ignore le numéro quand displayName est null', () {
-      const p = TravelerProfile(
-        id: 't3',
-        phoneNumber: '+33612345678',
-        kiloPro: false,
-      );
+      const p = TravelerProfile(id: 't3', phoneNumber: '+33612345678');
       expect(p.resolvedInitials, '?');
     });
 
     test('returns "?" when both are null', () {
-      const p = TravelerProfile(id: 't4', kiloPro: false);
+      const p = TravelerProfile(id: 't4');
       expect(p.resolvedInitials, '?');
     });
 
-    test('returns "?" when displayName empty and phoneNumber has no digits', () {
-      const p = TravelerProfile(
-        id: 't5',
-        displayName: '',
-        phoneNumber: '+++',
-        kiloPro: false,
-      );
-      expect(p.resolvedInitials, '?');
-    });
+    test(
+      'returns "?" when displayName empty and phoneNumber has no digits',
+      () {
+        const p = TravelerProfile(
+          id: 't5',
+          displayName: '',
+          phoneNumber: '+++',
+        );
+        expect(p.resolvedInitials, '?');
+      },
+    );
 
     test('initiale du username quand il tient lieu de displayName', () {
-      const p = TravelerProfile(
-        id: 't7',
-        displayName: 'user1785153600',
-        kiloPro: false,
-      );
+      const p = TravelerProfile(id: 't7', displayName: 'user1785153600');
       expect(p.resolvedInitials, 'U');
     });
 
     test('initials are uppercase', () {
-      const p = TravelerProfile(
-        id: 't6',
-        displayName: 'amina barry',
-        kiloPro: false,
-      );
+      const p = TravelerProfile(id: 't6', displayName: 'amina barry');
       expect(p.resolvedInitials, 'AB');
     });
   });
@@ -172,7 +139,10 @@ void main() {
         'avatarUrl': 'https://cdn.dony.app/avatars/tp-102.jpg',
       };
       final p = TravelerProfile.fromJson(json);
-      expect(p.toJson()['avatarUrl'], 'https://cdn.dony.app/avatars/tp-102.jpg');
+      expect(
+        p.toJson()['avatarUrl'],
+        'https://cdn.dony.app/avatars/tp-102.jpg',
+      );
     });
   });
 }

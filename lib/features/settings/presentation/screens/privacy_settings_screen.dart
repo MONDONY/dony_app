@@ -63,7 +63,7 @@ class PrivacySettingsScreen extends StatelessWidget {
           if (state is PrivacySettingsLoaded && state.saveFailed) {
             DonySnackbar.show(
               context,
-              message: "Réglage non enregistré, vérifie ta connexion.",
+              message: 'Réglage non enregistré, vérifie ta connexion.',
               type: DonySnackbarType.error,
             );
           }
@@ -147,7 +147,7 @@ class PrivacySettingsScreen extends StatelessWidget {
                 Text(
                   'Pour télécharger tes données ou supprimer ton compte, va dans Paramètres › Données.',
                   style: tt.bodySmall?.copyWith(
-                    color: cs.onSurfaceVariant.withOpacity(0.6),
+                    color: cs.onSurfaceVariant.withValues(alpha: 0.6),
                     fontSize: 11,
                   ),
                   textAlign: TextAlign.center,
@@ -214,7 +214,7 @@ class _ProtectedNumberBanner extends StatelessWidget {
                             "acceptée. Une fois l'accord conclu, toi et ton "
                             'partenaire échangez vos numéros pour organiser la remise.',
                   style: tt.bodySmall?.copyWith(
-                    color: Colors.white.withOpacity(0.85),
+                    color: Colors.white.withValues(alpha: 0.85),
                     fontSize: 12,
                     height: 1.4,
                   ),
@@ -339,7 +339,11 @@ class _SettingsToggleRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: DonySpacing.sm),
-          Switch(value: value, activeColor: activeColor, onChanged: onChanged),
+          Switch(
+            value: value,
+            activeThumbColor: activeColor,
+            onChanged: onChanged,
+          ),
         ],
       ),
     );

@@ -1,10 +1,9 @@
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_map_view.dart';
-import 'package:dony/features/matching/presentation/widgets/location_permission.dart';
 import 'package:dony/features/matching/presentation/widgets/marker_bitmap_factory.dart';
-import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -37,11 +36,11 @@ AnnouncementModel _ann(
   totalKg: 8,
   pricePerKg: 12,
   status: 'ACTIVE',
-  createdAt: DateTime(2026, 5, 1),
-  updatedAt: DateTime(2026, 5, 1),
+  createdAt: DateTime(2026, 5),
+  updatedAt: DateTime(2026, 5),
   pickupAddress: pickup,
   deliveryAddress: delivery,
-  traveler: TravelerProfile(id: 't1', displayName: 'Sékou Ba', kiloPro: false),
+  traveler: const TravelerProfile(id: 't1', displayName: 'Sékou Ba'),
 );
 
 Widget _wrap(Widget child) {
@@ -50,9 +49,9 @@ Widget _wrap(Widget child) {
     routes: [
       GoRoute(
         path: '/',
-        builder: (_, __) => Scaffold(body: child),
+        builder: (_, _) => Scaffold(body: child),
       ),
-      GoRoute(path: '/announcements/:id', builder: (_, __) => const Scaffold()),
+      GoRoute(path: '/announcements/:id', builder: (_, _) => const Scaffold()),
     ],
   );
   return MaterialApp.router(routerConfig: router);

@@ -1,5 +1,7 @@
 import 'dart:ui';
 
+import 'package:dony/core/currency/active_currency.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -98,7 +100,6 @@ class _CardShell extends StatelessWidget {
               borderRadius: BorderRadius.circular(DonyRadius.card),
               border: Border.all(
                 color: Colors.white.withValues(alpha: borderAlpha),
-                width: 1,
               ),
               boxShadow: [
                 BoxShadow(
@@ -126,10 +127,13 @@ class _LoadedContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    // Le symbole suit la devise active : figer « € » affichait un montant faux
+    // dès qu'un utilisateur passait en XOF ou en CAD.
+    final currency = ActiveCurrency.current ?? SupportedCurrency.eur;
     final currencyFmt = NumberFormat.currency(
-      locale: 'fr_FR',
-      symbol: '€',
-      decimalDigits: 2,
+      locale: currency.locale,
+      symbol: currency.symbol,
+      decimalDigits: currency.minorUnit,
     );
     final now = DateTime.now();
     final monthLabel = DateFormat('MMMM', 'fr_FR').format(now);

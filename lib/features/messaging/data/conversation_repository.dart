@@ -25,7 +25,10 @@ class ConversationRepository {
   }
 
   Future<void> updateLastMessage(String id, String preview) async {
-    await _api.dio.post('/conversations/$id/last-message', data: {'preview': preview});
+    await _api.dio.post(
+      '/conversations/$id/last-message',
+      data: {'preview': preview},
+    );
   }
 
   Future<void> deleteConversation(String id) async {
@@ -54,7 +57,10 @@ class ConversationRepository {
   }
 
   Future<Map<String, String>> uploadImage(
-      String conversationId, List<int> bytes, String filename) async {
+    String conversationId,
+    List<int> bytes,
+    String filename,
+  ) async {
     final formData = FormData.fromMap({
       'file': MultipartFile.fromBytes(
         bytes,

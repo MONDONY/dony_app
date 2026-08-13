@@ -89,10 +89,7 @@ class _CancellationDialogState extends State<CancellationDialog> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // ── Titre ──────────────────────────────────────────────
-            Text(
-              'Annuler cette demande ?',
-              style: tt.headlineSmall,
-            ),
+            Text('Annuler cette demande ?', style: tt.headlineSmall),
             const SizedBox(height: DonySpacing.sm),
 
             // ── Sous-titre (cas accepted) ──────────────────────────
@@ -111,18 +108,12 @@ class _CancellationDialogState extends State<CancellationDialog> {
                 decoration: BoxDecoration(
                   color: cs.error.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(DonyRadius.md),
-                  border: Border.all(
-                    color: cs.error.withValues(alpha: 0.35),
-                  ),
+                  border: Border.all(color: cs.error.withValues(alpha: 0.35)),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    DonyIcon(
-                      'triangle-alert',
-                      color: cs.error,
-                      size: 18,
-                    ),
+                    DonyIcon('triangle-alert', color: cs.error, size: 18),
                     const SizedBox(width: DonySpacing.sm),
                     Expanded(
                       child: Column(
@@ -166,9 +157,7 @@ class _CancellationDialogState extends State<CancellationDialog> {
                 hintText: widget._isAfterHandover
                     ? 'Motif de l\'annulation *'
                     : 'Motif (optionnel)',
-                hintStyle: tt.bodySmall?.copyWith(
-                  color: cs.onSurfaceVariant,
-                ),
+                hintStyle: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(DonyRadius.md),
                   borderSide: BorderSide(color: cs.outline),
@@ -176,17 +165,13 @@ class _CancellationDialogState extends State<CancellationDialog> {
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(DonyRadius.md),
                   borderSide: BorderSide(
-                    color: _showReasonError
-                        ? cs.error
-                        : cs.outline,
+                    color: _showReasonError ? cs.error : cs.outline,
                   ),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(DonyRadius.md),
                   borderSide: BorderSide(
-                    color: _showReasonError
-                        ? cs.error
-                        : cs.primary,
+                    color: _showReasonError ? cs.error : cs.primary,
                     width: 1.5,
                   ),
                 ),
@@ -215,15 +200,13 @@ class _CancellationDialogState extends State<CancellationDialog> {
                       foregroundColor: cs.onSurface,
                       side: BorderSide(color: cs.outline),
                       padding: const EdgeInsets.symmetric(
-                          vertical: DonySpacing.md),
+                        vertical: DonySpacing.md,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(DonyRadius.lg),
                       ),
                     ),
-                    child: Text(
-                      'Garder',
-                      style: tt.labelLarge,
-                    ),
+                    child: Text('Garder', style: tt.labelLarge),
                   ),
                 ),
                 const SizedBox(width: DonySpacing.sm),
@@ -236,16 +219,15 @@ class _CancellationDialogState extends State<CancellationDialog> {
                       foregroundColor: cs.onError,
                       elevation: 0,
                       padding: const EdgeInsets.symmetric(
-                          vertical: DonySpacing.md),
+                        vertical: DonySpacing.md,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(DonyRadius.lg),
                       ),
                     ),
                     child: Text(
                       'Annuler la demande',
-                      style: tt.labelLarge?.copyWith(
-                        color: cs.onError,
-                      ),
+                      style: tt.labelLarge?.copyWith(color: cs.onError),
                     ),
                   ),
                 ),

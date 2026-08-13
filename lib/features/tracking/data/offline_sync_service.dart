@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
-import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
+import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 
 class OfflineSyncService {
@@ -37,9 +37,9 @@ class OfflineSyncService {
     final entry = <String, dynamic>{
       'bidId': bidId,
       'eventType': eventType,
-      if (gpsLat != null) 'gpsLat': gpsLat,
-      if (gpsLon != null) 'gpsLon': gpsLon,
-      if (photoPath != null) 'photoPath': photoPath,
+      'gpsLat': ?gpsLat,
+      'gpsLon': ?gpsLon,
+      'photoPath': ?photoPath,
       'offlineTimestamp': DateTime.now().toUtc().toIso8601String(),
     };
     await _hive.offlineQueue.add(entry);

@@ -70,7 +70,6 @@ void main() {
     test('calls DELETE and completes', () async {
       when(() => mockDio.delete<void>('/auth/me')).thenAnswer(
         (_) async => Response(
-          data: null,
           statusCode: 204,
           requestOptions: RequestOptions(path: '/auth/me'),
         ),
@@ -171,7 +170,6 @@ void main() {
         ),
       ).thenAnswer(
         (_) async => Response(
-          data: null,
           statusCode: 204,
           requestOptions: RequestOptions(path: '/auth/email-otp/send'),
         ),
@@ -223,7 +221,6 @@ void main() {
             mockDio.post<void>('/auth/sms-otp/send', data: any(named: 'data')),
       ).thenAnswer(
         (_) async => Response(
-          data: null,
           statusCode: 204,
           requestOptions: RequestOptions(path: '/auth/sms-otp/send'),
         ),

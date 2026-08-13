@@ -10,7 +10,7 @@ void main() {
   late MockDatasource datasource;
   late NotificationRepository repository;
 
-  final _notif = NotificationModel(
+  final notif = NotificationModel(
     id: 'n1',
     type: 'BID_ACCEPTED',
     title: 'Demande acceptée !',
@@ -27,19 +27,21 @@ void main() {
 
   group('NotificationRepository', () {
     test('getNotifications delegates to datasource', () async {
-      when(() => datasource.fetchNotifications(page: 0))
-          .thenAnswer((_) async => [_notif]);
+      when(
+        () => datasource.fetchNotifications(),
+      ).thenAnswer((_) async => [notif]);
 
       final result = await repository.getNotifications();
 
       expect(result.length, 1);
       expect(result.first.id, 'n1');
-      verify(() => datasource.fetchNotifications(page: 0)).called(1);
+      verify(() => datasource.fetchNotifications()).called(1);
     });
 
     test('getNotifications with page=2 passes page to datasource', () async {
-      when(() => datasource.fetchNotifications(page: 2))
-          .thenAnswer((_) async => []);
+      when(
+        () => datasource.fetchNotifications(page: 2),
+      ).thenAnswer((_) async => []);
 
       await repository.getNotifications(page: 2);
 
@@ -79,8 +81,9 @@ void main() {
     });
 
     test('propagates exception from datasource', () async {
-      when(() => datasource.fetchNotifications(page: 0))
-          .thenThrow(Exception('network error'));
+      when(
+        () => datasource.fetchNotifications(),
+      ).thenThrow(Exception('network error'));
 
       expect(() async => await repository.getNotifications(), throwsException);
     });

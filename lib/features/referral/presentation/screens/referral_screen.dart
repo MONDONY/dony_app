@@ -1,9 +1,8 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
-import 'package:dony/features/referral/bloc/referral_event.dart';
-import 'package:dony/features/referral/bloc/referral_state.dart';
 import 'package:dony/features/referral/data/models/referral_info.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -23,7 +22,9 @@ class _ReferralScreenState extends State<ReferralScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) context.read<ReferralBloc>().add(const ReferralLoadRequested());
+      if (mounted) {
+        context.read<ReferralBloc>().add(const ReferralLoadRequested());
+      }
     });
   }
 
@@ -86,7 +87,7 @@ class _LoadedBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return SingleChildScrollView(
-      padding: EdgeInsets.fromLTRB(
+      padding: const EdgeInsets.fromLTRB(
         DonySpacing.lg,
         DonySpacing.xl,
         DonySpacing.lg,
@@ -96,34 +97,25 @@ class _LoadedBody extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Hero gradient card
-          _HeroCard().animate().fadeIn(duration: 300.ms),
+          _HeroCard(info: info).animate().fadeIn(duration: 300.ms),
 
           const SizedBox(height: DonySpacing.xl),
 
           // Code box
-          _CodeBox(code: info.code)
-              .animate()
-              .fadeIn(delay: 100.ms, duration: 300.ms),
+          _CodeBox(
+            code: info.code,
+          ).animate().fadeIn(delay: 100.ms, duration: 300.ms),
 
           const SizedBox(height: DonySpacing.xl),
 
           // Stats row
           Row(
             children: [
-              _StatBox(
-                label: 'Invités',
-                value: info.totalInvited.toString(),
-              ),
+              _StatBox(label: 'Invités', value: info.totalInvited.toString()),
               const SizedBox(width: DonySpacing.sm),
-              _StatBox(
-                label: 'Inscrits',
-                value: info.signedUp.toString(),
-              ),
+              _StatBox(label: 'Inscrits', value: info.signedUp.toString()),
               const SizedBox(width: DonySpacing.sm),
-              _StatBox(
-                label: 'Récompensés',
-                value: info.rewarded.toString(),
-              ),
+              _StatBox(label: 'Récompensés', value: info.rewarded.toString()),
             ],
           ).animate().fadeIn(delay: 200.ms, duration: 300.ms),
 
@@ -140,12 +132,15 @@ class _LoadedBody extends StatelessWidget {
                 borderRadius: BorderRadius.circular(DonyRadius.card),
               ),
               child: Text(
-                '💰 Tu as gagné ${(info.totalEarnedCents / 100).toStringAsFixed(0)} € grâce au parrainage',
+                // La récompense est versée dans la devise active du parrain au
+                // moment du versement : on affiche donc la devise renvoyée par le
+                // serveur, qui n'additionne que les crédits de celle-ci.
+                '💰 Tu as gagné ${formatMinorAmount(info.totalEarnedCents, info.currency)} grâce au parrainage',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: cs.success,
-                      fontWeight: FontWeight.w700,
-                    ),
+                  color: cs.success,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ).animate().fadeIn(delay: 300.ms, duration: 300.ms),
           ],
@@ -158,7 +153,11 @@ class _LoadedBody extends StatelessWidget {
 // ─── Hero card ───────────────────────────────────────────────────────────────
 
 class _HeroCard extends StatelessWidget {
-  const _HeroCard();
+  const _HeroCard({required this.info});
+
+  /// Le montant promis suit la devise du parrain : il ne peut donc plus être
+  /// écrit en dur dans la carte.
+  final ReferralInfo info;
 
   @override
   Widget build(BuildContext context) {
@@ -175,26 +174,22 @@ class _HeroCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          const DonyIcon(
-            'gift',
-            size: 48,
-            color: Colors.white,
-          ),
+          const DonyIcon('gift', size: 48, color: Colors.white),
           const SizedBox(height: DonySpacing.md),
           Text(
-            'Invite et gagne 5 €',
+            'Invite et gagne ${formatMinorAmount(info.rewardAmountCents, info.currency)}',
             style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w800,
-                ),
+              color: Colors.white,
+              fontWeight: FontWeight.w800,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: DonySpacing.sm),
           Text(
-            'Tu reçois 5 € de crédit dès la première livraison de ton invité.',
+            'Tu reçois ${formatMinorAmount(info.rewardAmountCents, info.currency)} de crédit dès la première livraison de ton invité.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.white.withValues(alpha: 0.85),
-                ),
+              color: Colors.white.withValues(alpha: 0.85),
+            ),
             textAlign: TextAlign.center,
           ),
         ],
@@ -228,8 +223,8 @@ class _CodeBox extends StatelessWidget {
           Text(
             'Ton code de parrainage',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: DonySpacing.sm),
           Row(
@@ -238,10 +233,10 @@ class _CodeBox extends StatelessWidget {
               Text(
                 code,
                 style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                      color: greenDark,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 3,
-                    ),
+                  color: greenDark,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 3,
+                ),
               ),
               const SizedBox(width: DonySpacing.md),
               Semantics(
@@ -250,30 +245,32 @@ class _CodeBox extends StatelessWidget {
                 excludeSemantics: true,
                 label: 'Copier le code de parrainage',
                 child: GestureDetector(
-                onTap: () async {
-                  await Clipboard.setData(ClipboardData(text: code));
-                  if (context.mounted) {
-                    DonySnackbar.show(
-                      context,
-                      message: 'Code copié !',
-                      type: DonySnackbarType.success,
-                    );
-                  }
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(DonySpacing.sm),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(DonyRadius.sm),
-                    border: Border.all(color: greenAccent.withValues(alpha: 0.4)),
-                  ),
-                  child: const DonyIcon(
-                    'copy',
-                    color: greenPrimary,
-                    size: 20,
+                  onTap: () async {
+                    await Clipboard.setData(ClipboardData(text: code));
+                    if (context.mounted) {
+                      DonySnackbar.show(
+                        context,
+                        message: 'Code copié !',
+                        type: DonySnackbarType.success,
+                      );
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(DonySpacing.sm),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(DonyRadius.sm),
+                      border: Border.all(
+                        color: greenAccent.withValues(alpha: 0.4),
+                      ),
+                    ),
+                    child: const DonyIcon(
+                      'copy',
+                      color: greenPrimary,
+                      size: 20,
+                    ),
                   ),
                 ),
-              )
               ),
             ],
           ),
@@ -309,16 +306,16 @@ class _StatBox extends StatelessWidget {
             Text(
               value,
               style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                    color: cs.onSurface,
-                    fontWeight: FontWeight.w700,
-                  ),
+                color: cs.onSurface,
+                fontWeight: FontWeight.w700,
+              ),
             ),
             const SizedBox(height: DonySpacing.xs),
             Text(
               label,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: cs.onSurfaceVariant,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               textAlign: TextAlign.center,
             ),
           ],
@@ -355,7 +352,7 @@ class _ShareButton extends StatelessWidget {
             ),
           ),
           onPressed: () => Share.share(
-            'Salut ! Utilise mon code Yadony : ${info.code} et reçois ton 1er envoi avec 5€ de réduction. ${info.shareUrl}',
+            'Salut ! Utilise mon code Yadony : ${info.code} et reçois ton 1er envoi avec ${formatMinorAmount(info.rewardAmountCents, info.currency)} de réduction. ${info.shareUrl}',
             sharePositionOrigin: sharePositionOriginFor(context),
           ),
         ),
@@ -401,9 +398,9 @@ class _ErrorView extends StatelessWidget {
               style: FilledButton.styleFrom(
                 backgroundColor: DonyColors.referralGreen,
               ),
-              onPressed: () => context
-                  .read<ReferralBloc>()
-                  .add(const ReferralLoadRequested()),
+              onPressed: () => context.read<ReferralBloc>().add(
+                const ReferralLoadRequested(),
+              ),
             ),
           ],
         ),

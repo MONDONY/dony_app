@@ -51,11 +51,15 @@ class EditPhoneScreen extends StatelessWidget {
               ),
               child: ValueListenableBuilder<_ContactStep>(
                 valueListenable: stepNotifier,
-                builder: (_, step, __) => BlocBuilder<AuthBloc, AuthState>(
+                builder: (_, step, _) => BlocBuilder<AuthBloc, AuthState>(
                   builder: (ctx, state) => DonyButton(
-                    label: step == _ContactStep.input ? 'Envoyer le code' : 'Vérifier',
+                    label: step == _ContactStep.input
+                        ? 'Envoyer le code'
+                        : 'Vérifier',
                     isLoading: state is AuthLoading,
-                    onPressed: state is AuthLoading ? null : () => submit?.call(),
+                    onPressed: state is AuthLoading
+                        ? null
+                        : () => submit?.call(),
                   ),
                 ),
               ),
@@ -95,11 +99,15 @@ class EditEmailScreen extends StatelessWidget {
               ),
               child: ValueListenableBuilder<_ContactStep>(
                 valueListenable: stepNotifier,
-                builder: (_, step, __) => BlocBuilder<AuthBloc, AuthState>(
+                builder: (_, step, _) => BlocBuilder<AuthBloc, AuthState>(
                   builder: (ctx, state) => DonyButton(
-                    label: step == _ContactStep.input ? 'Envoyer le code' : 'Vérifier',
+                    label: step == _ContactStep.input
+                        ? 'Envoyer le code'
+                        : 'Vérifier',
                     isLoading: state is AuthLoading,
-                    onPressed: state is AuthLoading ? null : () => submit?.call(),
+                    onPressed: state is AuthLoading
+                        ? null
+                        : () => submit?.call(),
                   ),
                 ),
               ),
@@ -140,7 +148,7 @@ abstract final class AddPhoneSheet {
       wrapper: (child) => BlocProvider.value(value: authBloc, child: child),
       stickyBottom: ValueListenableBuilder<_ContactStep>(
         valueListenable: stepNotifier,
-        builder: (_, step, __) => BlocBuilder<AuthBloc, AuthState>(
+        builder: (_, step, _) => BlocBuilder<AuthBloc, AuthState>(
           builder: (ctx, state) => DonyButton(
             label: step == _ContactStep.input ? 'Envoyer le code' : 'Vérifier',
             isLoading: state is AuthLoading,
@@ -191,8 +199,12 @@ class _AddPhoneContentState extends State<_AddPhoneContent> {
   @override
   void dispose() {
     _phoneCtrl.dispose();
-    for (final c in _otpCtrl) c.dispose();
-    for (final f in _otpFocus) f.dispose();
+    for (final c in _otpCtrl) {
+      c.dispose();
+    }
+    for (final f in _otpFocus) {
+      f.dispose();
+    }
     super.dispose();
   }
 
@@ -242,7 +254,7 @@ class _AddPhoneContentState extends State<_AddPhoneContent> {
       },
       child: ValueListenableBuilder<_ContactStep>(
         valueListenable: widget.stepNotifier,
-        builder: (_, step, __) {
+        builder: (_, step, _) {
           if (step == _ContactStep.input) {
             return _PhoneInputStep(
               controller: _phoneCtrl,
@@ -426,7 +438,7 @@ abstract final class AddEmailSheet {
       wrapper: (child) => BlocProvider.value(value: authBloc, child: child),
       stickyBottom: ValueListenableBuilder<_ContactStep>(
         valueListenable: stepNotifier,
-        builder: (_, step, __) => BlocBuilder<AuthBloc, AuthState>(
+        builder: (_, step, _) => BlocBuilder<AuthBloc, AuthState>(
           builder: (ctx, state) => DonyButton(
             label: step == _ContactStep.input ? 'Envoyer le code' : 'Vérifier',
             isLoading: state is AuthLoading,
@@ -475,8 +487,12 @@ class _AddEmailContentState extends State<_AddEmailContent> {
   @override
   void dispose() {
     _emailCtrl.dispose();
-    for (final c in _otpCtrl) c.dispose();
-    for (final f in _otpFocus) f.dispose();
+    for (final c in _otpCtrl) {
+      c.dispose();
+    }
+    for (final f in _otpFocus) {
+      f.dispose();
+    }
     super.dispose();
   }
 
@@ -526,7 +542,7 @@ class _AddEmailContentState extends State<_AddEmailContent> {
       },
       child: ValueListenableBuilder<_ContactStep>(
         valueListenable: widget.stepNotifier,
-        builder: (_, step, __) {
+        builder: (_, step, _) {
           if (step == _ContactStep.input) {
             return _EmailInputStep(controller: _emailCtrl, tt: tt, cs: cs);
           }

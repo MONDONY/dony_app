@@ -14,18 +14,15 @@ class TripFilterState extends Equatable {
   final TripStatusFilter filter;
   final String query;
 
-  const TripFilterState({
-    this.filter = TripStatusFilter.all,
-    this.query = '',
-  });
+  const TripFilterState({this.filter = TripStatusFilter.all, this.query = ''});
 
   bool matchesStatus(String status) => switch (filter) {
-        TripStatusFilter.all => true,
-        TripStatusFilter.draft => status == 'DRAFT',
-        TripStatusFilter.active => _activeStatuses.contains(status),
-        TripStatusFilter.completed => status == 'COMPLETED',
-        TripStatusFilter.cancelled => status == 'CANCELLED',
-      };
+    TripStatusFilter.all => true,
+    TripStatusFilter.draft => status == 'DRAFT',
+    TripStatusFilter.active => _activeStatuses.contains(status),
+    TripStatusFilter.completed => status == 'COMPLETED',
+    TripStatusFilter.cancelled => status == 'CANCELLED',
+  };
 
   bool matchesQuery(String departureCity, String arrivalCity) {
     final q = query.trim().toLowerCase();
@@ -53,10 +50,12 @@ class TripFilterCubit extends Cubit<TripFilterState> {
 
   void setFilter(TripStatusFilter filter) {
     emit(state.copyWith(filter: filter));
-    unawaited(_analytics.logEvent(
-      AnalyticsEvents.tripFilterApplied,
-      properties: {'status': filter.name},
-    ));
+    unawaited(
+      _analytics.logEvent(
+        AnalyticsEvents.tripFilterApplied,
+        properties: {'status': filter.name},
+      ),
+    );
   }
 
   void setQuery(String query) => emit(state.copyWith(query: query));

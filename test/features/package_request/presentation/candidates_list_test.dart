@@ -31,14 +31,14 @@ PackageRequest _firmRequest() => PackageRequest(
   senderId: 'sender-1',
   departureCity: 'Paris',
   arrivalCity: 'Dakar',
-  desiredDate: DateTime(2026, 8, 1),
+  desiredDate: DateTime(2026, 8),
   dateToleranceDays: 2,
   weightKg: 5,
   parcelSize: ParcelSize.small,
   transportMode: TransportMode.plane,
   categories: const ['Vêtements'],
   status: PackageRequestStatus.negotiating,
-  createdAt: DateTime(2026, 6, 1),
+  createdAt: DateTime(2026, 6),
   negotiable: false,
   targetPriceEur: 35,
 );
@@ -58,7 +58,7 @@ NegotiationThread _thread({
   grossPriceEur: 39.20,
   roundsCount: 1,
   lastActivityAt: DateTime(2026, 6, 2),
-  createdAt: DateTime(2026, 6, 1),
+  createdAt: DateTime(2026, 6),
   messages: const [],
   travelerName: travelerName,
   travelerRating: 4.8,
@@ -76,7 +76,7 @@ void main() {
   late _MockNegotiationBloc bloc;
 
   setUpAll(() async {
-    await initializeDateFormatting('fr', null);
+    await initializeDateFormatting('fr');
     registerFallbackValue(const NegotiationAcceptRequested(threadId: 't-1'));
   });
 
@@ -114,7 +114,7 @@ void main() {
       routes: [
         GoRoute(
           path: '/',
-          builder: (_, __) => Scaffold(
+          builder: (_, _) => Scaffold(
             body: SingleChildScrollView(
               child: CandidatesSection(request: request, threads: threads),
             ),
@@ -214,15 +214,14 @@ void main() {
         senderId: 'sender-1',
         departureCity: 'Paris',
         arrivalCity: 'Dakar',
-        desiredDate: DateTime(2026, 8, 1),
+        desiredDate: DateTime(2026, 8),
         dateToleranceDays: 2,
         weightKg: 5,
         parcelSize: ParcelSize.small,
         transportMode: TransportMode.plane,
         categories: const ['Vêtements'],
         status: PackageRequestStatus.negotiating,
-        createdAt: DateTime(2026, 6, 1),
-        negotiable: true,
+        createdAt: DateTime(2026, 6),
         targetPriceEur: 35,
       );
 
@@ -252,7 +251,7 @@ void main() {
           currentPriceEur: 35.0,
           roundsCount: 1,
           lastActivityAt: DateTime(2026, 6, 2),
-          createdAt: DateTime(2026, 6, 1),
+          createdAt: DateTime(2026, 6),
           messages: const [],
         ),
       ];
@@ -283,7 +282,7 @@ void main() {
             grossPriceEur: 39.20,
             roundsCount: 1,
             lastActivityAt: DateTime(2026, 6, 2),
-            createdAt: DateTime(2026, 6, 1),
+            createdAt: DateTime(2026, 6),
             messages: const [],
             travelerName: 'Diane Camara',
           ),

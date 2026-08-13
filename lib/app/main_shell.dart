@@ -338,29 +338,30 @@ class _DonyBottomNav extends StatelessWidget {
                             Expanded(
                               child: Builder(
                                 builder: (context) {
-                                  final pendingRequests =
-                                      context.select<TravelerBidsBloc, int>(
-                                    (b) => b.state is TravelerBidsLoaded
-                                        ? (b.state as TravelerBidsLoaded)
-                                            .pendingCount
-                                        : 0,
-                                  );
+                                  final pendingRequests = context
+                                      .select<TravelerBidsBloc, int>(
+                                        (b) => b.state is TravelerBidsLoaded
+                                            ? (b.state as TravelerBidsLoaded)
+                                                  .pendingCount
+                                            : 0,
+                                      );
                                   // Onglet : seulement quand c'est à
                                   // l'utilisateur de répondre (pas quand on
                                   // attend la partie adverse). La carte, elle,
                                   // reste allumée via activeCount.
-                                  final activeNegos =
-                                      context.select<NegotiationListBloc, int>(
-                                    (b) => b.state.actionableCount,
-                                  );
-                                  final unreadNotifs =
-                                      context.select<NotificationBloc, int>(
-                                    (b) => b.state is NotificationLoaded
-                                        ? (b.state as NotificationLoaded)
-                                            .unreadCount
-                                        : 0,
-                                  );
-                                  final hasNew = pendingRequests > 0 ||
+                                  final activeNegos = context
+                                      .select<NegotiationListBloc, int>(
+                                        (b) => b.state.actionableCount,
+                                      );
+                                  final unreadNotifs = context
+                                      .select<NotificationBloc, int>(
+                                        (b) => b.state is NotificationLoaded
+                                            ? (b.state as NotificationLoaded)
+                                                  .unreadCount
+                                            : 0,
+                                      );
+                                  final hasNew =
+                                      pendingRequests > 0 ||
                                       activeNegos > 0 ||
                                       unreadNotifs > 0;
                                   return DonyNavItem(

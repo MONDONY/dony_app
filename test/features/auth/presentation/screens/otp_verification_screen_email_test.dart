@@ -27,14 +27,14 @@ Widget _buildEmail({
       routes: [
         GoRoute(
           path: '/',
-          builder: (_, __) => BlocProvider<AuthBloc>.value(
+          builder: (_, _) => BlocProvider<AuthBloc>.value(
             value: bloc,
             child: OtpVerificationScreen(mode: OtpMode.email, contact: contact),
           ),
         ),
         GoRoute(
           path: '/auth/currency-selection',
-          builder: (_, __) => const Scaffold(body: Text('Currency selection')),
+          builder: (_, _) => const Scaffold(body: Text('Currency selection')),
         ),
       ],
     ),
@@ -68,7 +68,9 @@ void main() {
 
   setUp(() {
     mockBloc = MockAuthBloc();
-    when(() => mockBloc.state).thenReturn(AuthEmailOtpSent('user@example.com'));
+    when(
+      () => mockBloc.state,
+    ).thenReturn(const AuthEmailOtpSent('user@example.com'));
     when(() => mockBloc.stream).thenAnswer((_) => const Stream.empty());
     registerFallbackValue(const AuthRegisterWithEmailRequested(email: ''));
   });
@@ -106,7 +108,7 @@ void main() {
 
       verify(
         () => mockBloc.add(
-          AuthEmailOtpVerifyRequested(
+          const AuthEmailOtpVerifyRequested(
             email: 'user@example.com',
             code: '012345',
           ),
@@ -127,9 +129,9 @@ void main() {
         mockBloc,
         Stream.fromIterable([
           const AuthLoading(),
-          AuthEmailOtpVerified('user@example.com'),
+          const AuthEmailOtpVerified('user@example.com'),
         ]),
-        initialState: AuthEmailOtpSent('user@example.com'),
+        initialState: const AuthEmailOtpSent('user@example.com'),
       );
       await tester.pumpWidget(_buildEmail(bloc: mockBloc));
       await tester.pumpAndSettle();
@@ -152,7 +154,7 @@ void main() {
 
     when(
       () => mockBloc.state,
-    ).thenReturn(AuthEmailOtpSent('user@example.com', secondsLeft: 42));
+    ).thenReturn(const AuthEmailOtpSent('user@example.com', secondsLeft: 42));
     await tester.pumpWidget(_buildEmail(bloc: mockBloc));
     await tester.pump(const Duration(seconds: 1));
 
@@ -169,7 +171,7 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
 
       // Timer à 0 → bouton "Renvoyer" actif
-      final stateWithZero = AuthEmailOtpSent(
+      const stateWithZero = AuthEmailOtpSent(
         'user@example.com',
         secondsLeft: 0,
       );
@@ -204,9 +206,11 @@ void main() {
       mockBloc,
       Stream.fromIterable([
         const AuthLoading(),
-        AuthError(NetworkException('Code invalide', code: 'invalid-code')),
+        const AuthError(
+          NetworkException('Code invalide', code: 'invalid-code'),
+        ),
       ]),
-      initialState: AuthEmailOtpSent('user@example.com'),
+      initialState: const AuthEmailOtpSent('user@example.com'),
     );
 
     await tester.pumpWidget(_buildEmail(bloc: mockBloc));
@@ -229,8 +233,8 @@ void main() {
         mockBloc,
         Stream.fromIterable([
           const AuthLoading(),
-          AuthAuthenticated(
-            const UserModel(
+          const AuthAuthenticated(
+            UserModel(
               id: 'u1',
               roles: ['SENDER'],
               kycStatus: 'NOT_STARTED',
@@ -238,7 +242,7 @@ void main() {
             ),
           ),
         ]),
-        initialState: AuthEmailOtpSent('user@example.com'),
+        initialState: const AuthEmailOtpSent('user@example.com'),
       );
       await tester.pumpWidget(_buildEmail(bloc: mockBloc));
       await tester.pumpAndSettle();

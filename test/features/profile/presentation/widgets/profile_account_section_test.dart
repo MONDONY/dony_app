@@ -22,8 +22,9 @@ const _userWithNothing = UserModel(
   status: 'ACTIVE',
 );
 
-Widget _app(UserModel user) =>
-    MaterialApp(home: Scaffold(body: ProfileAccountSection(user: user)));
+Widget _app(UserModel user) => MaterialApp(
+  home: Scaffold(body: ProfileAccountSection(user: user)),
+);
 
 void main() {
   setUp(() => setSmsAuthEnabled(kSmsAuthEnabledDefault));
@@ -85,14 +86,15 @@ void main() {
     expect(find.text('amadou@example.com'), findsNothing);
   });
 
-  testWidgets('affiche « Documents d\'identité » tant que le KYC n\'est pas VERIFIED', (
-    tester,
-  ) async {
-    await tester.pumpWidget(_app(_userWithNothing));
-    await tester.pump();
+  testWidgets(
+    'affiche « Documents d\'identité » tant que le KYC n\'est pas VERIFIED',
+    (tester) async {
+      await tester.pumpWidget(_app(_userWithNothing));
+      await tester.pump();
 
-    expect(find.text('Documents d\'identité'), findsOneWidget);
-  });
+      expect(find.text('Documents d\'identité'), findsOneWidget);
+    },
+  );
 
   testWidgets('masque « Documents d\'identité » une fois le KYC VERIFIED', (
     tester,

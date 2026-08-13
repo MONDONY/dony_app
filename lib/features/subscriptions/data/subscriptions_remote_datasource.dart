@@ -8,7 +8,9 @@ class SubscriptionsRemoteDatasource implements SubscriptionsRepository {
   @override
   Future<List<SubscriptionItem>> getMySubscriptions() async {
     final r = await _apiClient.dio.get('/me/subscriptions');
-    return (r.data as List).map((j) => SubscriptionItem.fromJson(j as Map<String, dynamic>)).toList();
+    return (r.data as List)
+        .map((j) => SubscriptionItem.fromJson(j as Map<String, dynamic>))
+        .toList();
   }
 
   @override
@@ -23,7 +25,10 @@ class SubscriptionsRemoteDatasource implements SubscriptionsRepository {
 
   @override
   Future<SubscriptionStatus> setPush(String travelerId, bool enabled) async {
-    final r = await _apiClient.dio.put('/travelers/$travelerId/subscribe/push', data: {'enabled': enabled});
+    final r = await _apiClient.dio.put(
+      '/travelers/$travelerId/subscribe/push',
+      data: {'enabled': enabled},
+    );
     return SubscriptionStatus.fromJson(r.data as Map<String, dynamic>);
   }
 
@@ -39,8 +44,12 @@ class SubscriptionsRemoteDatasource implements SubscriptionsRepository {
   }
 
   @override
-  Future<List<TravelerAnnouncement>> getTravelerAnnouncements(String travelerId) async {
+  Future<List<TravelerAnnouncement>> getTravelerAnnouncements(
+    String travelerId,
+  ) async {
     final r = await _apiClient.dio.get('/travelers/$travelerId/announcements');
-    return (r.data as List).map((j) => TravelerAnnouncement.fromJson(j as Map<String, dynamic>)).toList();
+    return (r.data as List)
+        .map((j) => TravelerAnnouncement.fromJson(j as Map<String, dynamic>))
+        .toList();
   }
 }

@@ -15,27 +15,27 @@ class _MockAutocompleteService extends Mock
     implements AddressAutocompleteService {}
 
 Widget _wrap(PickupAddressBloc bloc, {String? addressId}) => MaterialApp(
-      home: MediaQuery(
-        data: const MediaQueryData(size: Size(390, 844)),
-        child: BlocProvider.value(
-          value: bloc,
-          child: PickupAddressEditScreen(addressId: addressId),
-        ),
-      ),
-    );
+  home: MediaQuery(
+    data: const MediaQueryData(size: Size(390, 844)),
+    child: BlocProvider.value(
+      value: bloc,
+      child: PickupAddressEditScreen(addressId: addressId),
+    ),
+  ),
+);
 
 // Helper: a valid PickupAddress fixture for editing tests.
 PickupAddress _makeAddress({bool isDefault = false}) => PickupAddress(
-      id: 'addr-1',
-      label: 'Maison',
-      street: '12 rue Victor Hugo',
-      postalCode: '75001',
-      city: 'Paris',
-      country: 'FR',
-      latitude: 48.86,
-      longitude: 2.35,
-      isDefault: isDefault,
-    );
+  id: 'addr-1',
+  label: 'Maison',
+  street: '12 rue Victor Hugo',
+  postalCode: '75001',
+  city: 'Paris',
+  country: 'FR',
+  latitude: 48.86,
+  longitude: 2.35,
+  isDefault: isDefault,
+);
 
 void main() {
   late _MockRepo repo;
@@ -77,8 +77,9 @@ void main() {
     await tester.pump();
 
     // Le champ étiquette doit contenir 'Bureau'
-    final textFields =
-        tester.widgetList<EditableText>(find.byType(EditableText)).toList();
+    final textFields = tester
+        .widgetList<EditableText>(find.byType(EditableText))
+        .toList();
     final labelField = textFields.firstWhere(
       (tf) => tf.controller.text == 'Bureau',
       orElse: () => throw TestFailure('Aucun champ texte avec "Bureau"'),
@@ -95,8 +96,9 @@ void main() {
 
   // ── Titre selon le mode ─────────────────────────────────────────────────
 
-  testWidgets('title is "Nouvelle adresse de remise" in create mode',
-      (tester) async {
+  testWidgets('title is "Nouvelle adresse de remise" in create mode', (
+    tester,
+  ) async {
     await tester.pumpWidget(_wrap(bloc));
     await tester.pumpAndSettle();
     expect(find.text('Nouvelle adresse de remise'), findsOneWidget);
@@ -117,8 +119,9 @@ void main() {
     await tester.tap(find.text('Atelier'));
     await tester.pump();
 
-    final textFields =
-        tester.widgetList<EditableText>(find.byType(EditableText)).toList();
+    final textFields = tester
+        .widgetList<EditableText>(find.byType(EditableText))
+        .toList();
     final labelField = textFields.firstWhere(
       (tf) => tf.controller.text == 'Atelier',
       orElse: () => throw TestFailure('Champ "Atelier" non trouvé'),
@@ -128,31 +131,35 @@ void main() {
 
   // ── Pré-remplissage en mode édition ─────────────────────────────────────
 
-  testWidgets('prefills fields when editing and address found in state',
-      (tester) async {
+  testWidgets('prefills fields when editing and address found in state', (
+    tester,
+  ) async {
     final address = _makeAddress();
     when(() => repo.getAll()).thenAnswer((_) async => [address]);
 
     final editBloc = PickupAddressBloc(repo);
     addTearDown(editBloc.close);
 
-    await tester.pumpWidget(MaterialApp(
-      home: MediaQuery(
-        data: const MediaQueryData(size: Size(390, 844)),
-        child: BlocProvider.value(
-          value: editBloc,
-          child: const PickupAddressEditScreen(addressId: 'addr-1'),
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MediaQuery(
+          data: const MediaQueryData(size: Size(390, 844)),
+          child: BlocProvider.value(
+            value: editBloc,
+            child: const PickupAddressEditScreen(addressId: 'addr-1'),
+          ),
         ),
       ),
-    ));
+    );
 
     // Déclenche le chargement
     editBloc.add(const PickupAddressLoaded());
     await tester.pumpAndSettle();
 
     // Le champ étiquette doit être pré-rempli avec "Maison"
-    final textFields =
-        tester.widgetList<EditableText>(find.byType(EditableText)).toList();
+    final textFields = tester
+        .widgetList<EditableText>(find.byType(EditableText))
+        .toList();
     final labelField = textFields.firstWhere(
       (tf) => tf.controller.text == 'Maison',
       orElse: () => throw TestFailure('Champ "Maison" non trouvé'),
@@ -203,8 +210,9 @@ void main() {
     expect(find.text("Enregistrer l'adresse"), findsOneWidget);
 
     // Les champs texte sont initialement vides (sauf country='FR' qui est caché)
-    final textFields =
-        tester.widgetList<EditableText>(find.byType(EditableText)).toList();
+    final textFields = tester
+        .widgetList<EditableText>(find.byType(EditableText))
+        .toList();
     final labelField = textFields.first;
     expect(labelField.controller.text, isEmpty);
   });
@@ -223,8 +231,9 @@ void main() {
 
   // ── _locationState branch coverage ───────────────────────────────────────
 
-  testWidgets('entering street text changes location status visibility',
-      (tester) async {
+  testWidgets('entering street text changes location status visibility', (
+    tester,
+  ) async {
     await tester.pumpWidget(_wrap(bloc));
     await tester.pumpAndSettle();
 
@@ -257,8 +266,9 @@ void main() {
 
   // ── _submit (création) via form fill + button tap ────────────────────────
 
-  testWidgets('submit calls PickupAddressCreated when form is valid',
-      (tester) async {
+  testWidgets('submit calls PickupAddressCreated when form is valid', (
+    tester,
+  ) async {
     when(() => repo.create(any())).thenAnswer((_) async => _makeAddress());
 
     await tester.pumpWidget(_wrap(bloc));
@@ -282,8 +292,9 @@ void main() {
     verify(() => repo.create(any())).called(1);
   });
 
-  testWidgets('submit with street and instructions fills optional fields',
-      (tester) async {
+  testWidgets('submit with street and instructions fills optional fields', (
+    tester,
+  ) async {
     when(() => repo.create(any())).thenAnswer((_) async => _makeAddress());
 
     await tester.pumpWidget(_wrap(bloc));
@@ -328,30 +339,38 @@ void main() {
     // On ne remplit pas l'étiquette ni la ville → bouton désactivé
     // Note: DonyButton with onPressed=null ne dispatche rien
     // Vérifie juste que le champ label est vide
-    final labelField = tester.widget<EditableText>(find.byType(EditableText).first);
+    final labelField = tester.widget<EditableText>(
+      find.byType(EditableText).first,
+    );
     expect(labelField.controller.text, isEmpty);
   });
 
   // ── _locationState transitions ────────────────────────────────────────────
 
-  testWidgets('location status changes from hidden to manual when street entered',
-      (tester) async {
-    await tester.pumpWidget(_wrap(bloc));
-    await tester.pumpAndSettle();
+  testWidgets(
+    'location status changes from hidden to manual when street entered',
+    (tester) async {
+      await tester.pumpWidget(_wrap(bloc));
+      await tester.pumpAndSettle();
 
-    // Statut caché initialement
-    expect(find.textContaining('non localisée'), findsNothing);
+      // Statut caché initialement
+      expect(find.textContaining('non localisée'), findsNothing);
 
-    await tester.enterText(find.byType(EditableText).at(1), 'Rue de la Paix');
-    await tester.pump();
+      await tester.enterText(find.byType(EditableText).at(1), 'Rue de la Paix');
+      await tester.pump();
 
-    expect(find.textContaining('non localisée'), findsOneWidget);
-  });
+      expect(find.textContaining('non localisée'), findsOneWidget);
+    },
+  );
 
   // ── _submit edit path (update) ──────────────────────────────────────────
 
-  testWidgets('submit calls repo.update when editing an address', (tester) async {
-    when(() => repo.update(any(), any())).thenAnswer((_) async => _makeAddress());
+  testWidgets('submit calls repo.update when editing an address', (
+    tester,
+  ) async {
+    when(
+      () => repo.update(any(), any()),
+    ).thenAnswer((_) async => _makeAddress());
 
     // addressId non-null → _isEditing = true → _submit dispatch PickupAddressUpdated
     await tester.pumpWidget(_wrap(bloc, addressId: 'addr-1'));

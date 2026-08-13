@@ -76,7 +76,7 @@ void main() {
         bidId: 'bid-round',
         clientSecret: 'pi_round_secret',
         publishableKey: 'pk_round',
-        expiresAt: DateTime(2031, 1, 1),
+        expiresAt: DateTime(2031),
       );
 
       final json = original.toJson();

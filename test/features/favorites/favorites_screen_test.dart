@@ -27,18 +27,19 @@ class _MockFavoriteRequestsCubit extends MockCubit<FavoriteRequestsState>
 class _MockFavoriteIdsCubit extends MockCubit<FavoriteIdsState>
     implements FavoriteIdsCubit {}
 
-class _MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
+class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
+    implements AuthBloc {}
 
 // ---------------------------------------------------------------------------
 // Fixture helpers
 // ---------------------------------------------------------------------------
 
 UserModel _makeUser({required bool isTraveler}) => UserModel(
-      id: 'user-1',
-      roles: isTraveler ? ['TRAVELER', 'SENDER'] : ['SENDER'],
-      kycStatus: 'VERIFIED',
-      status: 'ACTIVE',
-    );
+  id: 'user-1',
+  roles: isTraveler ? ['TRAVELER', 'SENDER'] : ['SENDER'],
+  kycStatus: 'VERIFIED',
+  status: 'ACTIVE',
+);
 
 // ---------------------------------------------------------------------------
 // Helper to build the widget
@@ -50,8 +51,7 @@ Widget _buildScreen({
   required FavoriteRequestsState requestsState,
 }) {
   final favoriteIdsCubit = _MockFavoriteIdsCubit();
-  when(() => favoriteIdsCubit.state)
-      .thenReturn(const FavoriteIdsState({}, {}));
+  when(() => favoriteIdsCubit.state).thenReturn(const FavoriteIdsState({}, {}));
   when(() => favoriteIdsCubit.load()).thenAnswer((_) async {});
 
   final tripsCubit = _MockFavoriteTripsCubit();
@@ -65,8 +65,9 @@ Widget _buildScreen({
   when(() => requestsCubit.refresh()).thenAnswer((_) async {});
 
   final authBloc = _MockAuthBloc();
-  when(() => authBloc.state)
-      .thenReturn(AuthAuthenticated(_makeUser(isTraveler: isTraveler)));
+  when(
+    () => authBloc.state,
+  ).thenReturn(AuthAuthenticated(_makeUser(isTraveler: isTraveler)));
 
   return MaterialApp(
     home: MultiBlocProvider(
@@ -83,7 +84,10 @@ Widget _buildScreen({
 
 class _FakeAnalyticsService extends Fake implements AnalyticsService {
   @override
-  Future<void> logEvent(String name, {Map<String, Object?>? properties}) async {}
+  Future<void> logEvent(
+    String name, {
+    Map<String, Object?>? properties,
+  }) async {}
 }
 
 // ---------------------------------------------------------------------------
@@ -132,17 +136,19 @@ void main() {
       );
       await tester.pump();
 
-      final controller =
-          DefaultTabController.maybeOf(tester.element(find.byType(TabBar)));
+      final controller = DefaultTabController.maybeOf(
+        tester.element(find.byType(TabBar)),
+      );
       expect(controller, isNotNull);
       expect(controller!.length, 2);
     });
 
     // Key regression test: traveler capability gates the tab, not active role.
     // A user with TRAVELER role must see both tabs regardless of ActiveRoleCubit.
-    testWidgets(
-        'voyageur avec capacité isTraveler=true voit les 2 onglets '
-        'indépendamment du rôle actif (ActiveRoleCubit ignoré)', (tester) async {
+    testWidgets('voyageur avec capacité isTraveler=true voit les 2 onglets '
+        'indépendamment du rôle actif (ActiveRoleCubit ignoré)', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _buildScreen(
           isTraveler: true,
@@ -194,7 +200,9 @@ void main() {
   // Empty state
   // ---------------------------------------------------------------------------
   group('FavoritesScreen — état vide', () {
-    testWidgets('affiche l\'état vide quand FavoriteTripsEmpty', (tester) async {
+    testWidgets('affiche l\'état vide quand FavoriteTripsEmpty', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _buildScreen(
           isTraveler: false,
@@ -207,8 +215,9 @@ void main() {
       expect(find.text('Aucun favori pour l\'instant'), findsOneWidget);
     });
 
-    testWidgets('affiche l\'état vide pour les demandes (voyageur)',
-        (tester) async {
+    testWidgets('affiche l\'état vide pour les demandes (voyageur)', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _buildScreen(
           isTraveler: true,

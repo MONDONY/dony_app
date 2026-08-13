@@ -120,20 +120,27 @@ void main() {
       expect(findings.first, contains('300ms'));
     });
 
-    test('détecte une séquence avec léger chevauchement (< tolérance 15ms)', () {
-      // /b démarre 8ms avant la fin de /a, /c 7ms avant la fin de /b : des
-      // overlaps sous la tolérance de 15ms → toujours considérés séquentiels
-      // (les timers réels ne sont pas précis à la milliseconde).
-      final samples = [
-        {'path': '/a', 'startTsMs': 0, 'durationMs': 100}, // fin 100
-        {'path': '/b', 'startTsMs': 92, 'durationMs': 100}, // overlap 8ms, fin 192
-        {'path': '/c', 'startTsMs': 185, 'durationMs': 50}, // overlap 7ms
-      ];
+    test(
+      'détecte une séquence avec léger chevauchement (< tolérance 15ms)',
+      () {
+        // /b démarre 8ms avant la fin de /a, /c 7ms avant la fin de /b : des
+        // overlaps sous la tolérance de 15ms → toujours considérés séquentiels
+        // (les timers réels ne sont pas précis à la milliseconde).
+        final samples = [
+          {'path': '/a', 'startTsMs': 0, 'durationMs': 100}, // fin 100
+          {
+            'path': '/b',
+            'startTsMs': 92,
+            'durationMs': 100,
+          }, // overlap 8ms, fin 192
+          {'path': '/c', 'startTsMs': 185, 'durationMs': 50}, // overlap 7ms
+        ];
 
-      final findings = detectWaterfalls(samples);
+        final findings = detectWaterfalls(samples);
 
-      expect(findings, isNotEmpty);
-      expect(findings.first, contains('3 sequential requests'));
-    });
+        expect(findings, isNotEmpty);
+        expect(findings.first, contains('3 sequential requests'));
+      },
+    );
   });
 }

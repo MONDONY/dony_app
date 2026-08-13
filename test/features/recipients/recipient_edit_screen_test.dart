@@ -43,7 +43,7 @@ Widget _wrap(
       routes: [
         GoRoute(
           path: '/',
-          builder: (_, __) => RecipientEditScreen(
+          builder: (_, _) => RecipientEditScreen(
             recipientId: recipientId,
             initialFullName: initialFullName,
             initialPhoneE164: initialPhoneE164,
@@ -65,11 +65,11 @@ Widget _wrapEditing(RecipientBloc bloc, {required String recipientId}) =>
           routes: [
             GoRoute(
               path: '/',
-              builder: (_, __) => const Scaffold(body: Text('Recipients')),
+              builder: (_, _) => const Scaffold(body: Text('Recipients')),
               routes: [
                 GoRoute(
                   path: 'edit',
-                  builder: (_, __) =>
+                  builder: (_, _) =>
                       RecipientEditScreen(recipientId: recipientId),
                 ),
               ],
@@ -93,7 +93,7 @@ Widget _wrapCreate(RecipientBloc bloc, {ValueChanged<bool?>? onPopped}) =>
           routes: [
             GoRoute(
               path: '/parent',
-              builder: (context, __) => Scaffold(
+              builder: (context, _) => Scaffold(
                 body: Center(
                   child: TextButton(
                     onPressed: () async {
@@ -107,7 +107,7 @@ Widget _wrapCreate(RecipientBloc bloc, {ValueChanged<bool?>? onPopped}) =>
               routes: [
                 GoRoute(
                   path: 'new',
-                  builder: (_, __) => const RecipientEditScreen(),
+                  builder: (_, _) => const RecipientEditScreen(),
                 ),
               ],
             ),
@@ -440,10 +440,8 @@ void main() {
         () => bloc.state,
       ).thenReturn(const RecipientState(status: RecipientStatus.success));
       when(() => contactPicker.pick()).thenAnswer(
-        (_) async => const PickedContact(
-          fullName: 'Awa Ndiaye',
-          phone: '+221701234567',
-        ),
+        (_) async =>
+            const PickedContact(fullName: 'Awa Ndiaye', phone: '+221701234567'),
       );
       await tester.pumpWidget(_wrap(bloc));
       await tester.pump(const Duration(milliseconds: 300));

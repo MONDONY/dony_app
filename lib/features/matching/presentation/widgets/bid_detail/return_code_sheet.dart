@@ -120,8 +120,9 @@ class _ReturnCodeContent extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: digits.map((d) {
                   return Container(
-                    margin:
-                        const EdgeInsets.symmetric(horizontal: DonySpacing.xs),
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: DonySpacing.xs,
+                    ),
                     width: boxWidth,
                     height: boxHeight,
                     alignment: Alignment.center,
@@ -165,8 +166,10 @@ class _ReturnCodeContent extends StatelessWidget {
                     children: [
                       DonyIcon('copy', size: 16, color: cs.primary),
                       const SizedBox(width: DonySpacing.sm),
-                      Text('Copier le code',
-                          style: tt.titleSmall?.copyWith(color: cs.primary)),
+                      Text(
+                        'Copier le code',
+                        style: tt.titleSmall?.copyWith(color: cs.primary),
+                      ),
                     ],
                   ),
                 ),
@@ -190,8 +193,10 @@ class _ReturnCodeContent extends StatelessWidget {
                     deadline != null
                         ? 'Le voyageur doit vous restituer le colis avant le ${_fmtDate(deadline!)}. Donnez-lui ce code uniquement en récupérant votre colis.'
                         : 'Donnez ce code au voyageur uniquement en récupérant votre colis.',
-                    style: tt.bodySmall
-                        ?.copyWith(color: cs.onSurfaceVariant, height: 1.4),
+                    style: tt.bodySmall?.copyWith(
+                      color: cs.onSurfaceVariant,
+                      height: 1.4,
+                    ),
                   ),
                 ),
               ],
@@ -265,14 +270,14 @@ abstract final class ReturnEntrySheet {
         valueListenable: codeNotifier,
         builder: (context, code, _) =>
             BlocBuilder<CancellationBloc, CancellationState>(
-          builder: (ctx, state) => DonyButton(
-            label: 'Confirmer la restitution',
-            isLoading: state is CancellationLoading,
-            onPressed: code.length < 6 || state is CancellationLoading
-                ? null
-                : () => submit?.call(),
-          ),
-        ),
+              builder: (ctx, state) => DonyButton(
+                label: 'Confirmer la restitution',
+                isLoading: state is CancellationLoading,
+                onPressed: code.length < 6 || state is CancellationLoading
+                    ? null
+                    : () => submit?.call(),
+              ),
+            ),
       ),
       child: _ReturnEntryBody(
         bid: bid,
@@ -309,8 +314,8 @@ class _ReturnEntryBodyState extends State<_ReturnEntryBody> {
 
   void _confirm() {
     context.read<CancellationBloc>().add(
-          ReturnConfirmRequested(widget.bid.id, _controller.text),
-        );
+      ReturnConfirmRequested(widget.bid.id, _controller.text),
+    );
   }
 
   @override
@@ -353,7 +358,6 @@ class _ReturnEntryBodyState extends State<_ReturnEntryBody> {
             controller: _controller,
             length: 6,
             autofocus: true,
-            keyboardType: TextInputType.number,
             onChanged: (v) => widget.codeNotifier.value = v,
             defaultPinTheme: defaultPinTheme,
             focusedPinTheme: focusedPinTheme,

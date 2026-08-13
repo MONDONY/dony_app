@@ -27,9 +27,7 @@ void main() {
       setUp: () => when(service.isPinSet).thenAnswer((_) async => true),
       build: () => PinStatusCubit(service),
       act: (cubit) => cubit.refresh(),
-      expect: () => [
-        const PinStatusState(configured: true),
-      ],
+      expect: () => [const PinStatusState(configured: true)],
     );
 
     blocTest<PinStatusCubit, PinStatusState>(
@@ -37,9 +35,7 @@ void main() {
       setUp: () => when(service.isPinSet).thenAnswer((_) async => false),
       build: () => PinStatusCubit(service),
       act: (cubit) => cubit.refresh(),
-      expect: () => [
-        const PinStatusState(configured: false),
-      ],
+      expect: () => [const PinStatusState(configured: false)],
     );
 
     blocTest<PinStatusCubit, PinStatusState>(
@@ -56,14 +52,22 @@ void main() {
     );
 
     test('égalité de PinStatusState porte sur les deux champs', () {
-      expect(const PinStatusState(configured: true),
-          equals(const PinStatusState(configured: true)));
-      expect(const PinStatusState(configured: true),
-          isNot(equals(const PinStatusState(configured: false))));
-      expect(const PinStatusState(configured: true),
-          isNot(equals(const PinStatusState(configured: true, isBusy: true))));
-      expect(const PinStatusState(configured: true).hashCode,
-          equals(const PinStatusState(configured: true).hashCode));
+      expect(
+        const PinStatusState(configured: true),
+        equals(const PinStatusState(configured: true)),
+      );
+      expect(
+        const PinStatusState(configured: true),
+        isNot(equals(const PinStatusState(configured: false))),
+      );
+      expect(
+        const PinStatusState(configured: true),
+        isNot(equals(const PinStatusState(configured: true, isBusy: true))),
+      );
+      expect(
+        const PinStatusState(configured: true).hashCode,
+        equals(const PinStatusState(configured: true).hashCode),
+      );
     });
   });
 }

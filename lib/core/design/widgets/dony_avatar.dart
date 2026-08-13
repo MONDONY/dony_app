@@ -95,10 +95,7 @@ class DonyAvatar extends StatelessWidget {
         Container(
           width: dim,
           height: dim,
-          decoration: BoxDecoration(
-            color: _bgColor,
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: _bgColor, shape: BoxShape.circle),
           child: imageUrl != null
               ? ClipOval(
                   child: CachedNetworkImage(
@@ -111,8 +108,8 @@ class DonyAvatar extends StatelessWidget {
                     fadeInCurve: DonyCurve.enter,
                     fadeOutDuration: DonyDuration.micro,
                     fadeOutCurve: DonyCurve.exit,
-                    placeholder: (_, __) => initials,
-                    errorWidget: (_, __, ___) => initials,
+                    placeholder: (_, _) => initials,
+                    errorWidget: (_, _, _) => initials,
                   ),
                 )
               : initials,
@@ -158,13 +155,13 @@ class _InitialsText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Center(
-        child: Text(
-          initials,
-          style: Theme.of(context).textTheme.titleLarge!.copyWith(
-            color: DonyColors.white,
-            fontSize: fontSize,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      );
+    child: Text(
+      initials,
+      style: Theme.of(context).textTheme.titleLarge!.copyWith(
+        color: DonyColors.white,
+        fontSize: fontSize,
+        fontWeight: FontWeight.w700,
+      ),
+    ),
+  );
 }

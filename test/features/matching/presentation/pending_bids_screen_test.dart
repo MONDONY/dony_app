@@ -38,20 +38,19 @@ BidModel _makeBid({
   String senderName = 'Moussa Traoré',
   BidPaymentMethod paymentMethod = BidPaymentMethod.stripe,
   DateTime? updatedAt,
-}) =>
-    BidModel(
-      id: id,
-      announcementId: 'ann-1',
-      senderId: 'sender-1',
-      senderName: senderName,
-      weightKg: 3,
-      pricePerKg: 15,
-      contentCategory: 'Vêtements',
-      status: status,
-      paymentMethod: paymentMethod,
-      createdAt: DateTime(2026, 5),
-      updatedAt: updatedAt ?? DateTime(2026, 5),
-    );
+}) => BidModel(
+  id: id,
+  announcementId: 'ann-1',
+  senderId: 'sender-1',
+  senderName: senderName,
+  weightKg: 3,
+  pricePerKg: 15,
+  contentCategory: 'Vêtements',
+  status: status,
+  paymentMethod: paymentMethod,
+  createdAt: DateTime(2026, 5),
+  updatedAt: updatedAt ?? DateTime(2026, 5),
+);
 
 Future<void> _pump(
   WidgetTester tester,
@@ -158,8 +157,9 @@ void main() {
 
     when(() => bidBloc.state).thenReturn(BidInitial());
     when(() => acceptanceBloc.state).thenReturn(acs.BidAcceptanceInitial());
-    when(() => analytics.logEvent(any(), properties: any(named: 'properties')))
-        .thenAnswer((_) async {});
+    when(
+      () => analytics.logEvent(any(), properties: any(named: 'properties')),
+    ).thenAnswer((_) async {});
 
     if (getIt.isRegistered<AnalyticsService>()) {
       getIt.unregister<AnalyticsService>();
@@ -177,16 +177,19 @@ void main() {
 
   // ── Titre ───────────────────────────────────────────────────────────────────
 
-  testWidgets('titre affiche « À traiter (2) » avec 2 demandes en attente',
-      (tester) async {
+  testWidgets('titre affiche « À traiter (2) » avec 2 demandes en attente', (
+    tester,
+  ) async {
     final ctrl = _wireStates(bidBloc);
     addTearDown(ctrl.close);
 
     await _pump(tester, bidBloc, acceptanceBloc);
-    ctrl.add(BidListLoaded([
-      _makeBid(status: 'PAYMENT_ESCROWED', id: 'p1'),
-      _makeBid(status: 'PENDING', id: 'p2'),
-    ]));
+    ctrl.add(
+      BidListLoaded([
+        _makeBid(status: 'PAYMENT_ESCROWED', id: 'p1'),
+        _makeBid(status: 'PENDING', id: 'p2'),
+      ]),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('À traiter (2)'), findsOneWidget);
@@ -195,30 +198,33 @@ void main() {
   // ── Cartes en attente ───────────────────────────────────────────────────────
 
   testWidgets(
-      'carte PAYMENT_ESCROWED → bandeau « Paiement reçu » + Refuser + Accepter',
-      (tester) async {
+    'carte PAYMENT_ESCROWED → bandeau « Paiement reçu » + Refuser + Accepter',
+    (tester) async {
+      final ctrl = _wireStates(bidBloc);
+      addTearDown(ctrl.close);
+
+      await _pump(tester, bidBloc, acceptanceBloc);
+      ctrl.add(BidListLoaded([_makeBid(status: 'PAYMENT_ESCROWED')]));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Paiement reçu'), findsOneWidget);
+      expect(find.text('Refuser'), findsOneWidget);
+      expect(find.text('Accepter'), findsOneWidget);
+    },
+  );
+
+  testWidgets('carte PENDING (cash) → bandeau « Paiement en espèces »', (
+    tester,
+  ) async {
     final ctrl = _wireStates(bidBloc);
     addTearDown(ctrl.close);
 
     await _pump(tester, bidBloc, acceptanceBloc);
-    ctrl.add(BidListLoaded([_makeBid(status: 'PAYMENT_ESCROWED')]));
-    await tester.pumpAndSettle();
-
-    expect(find.textContaining('Paiement reçu'), findsOneWidget);
-    expect(find.text('Refuser'), findsOneWidget);
-    expect(find.text('Accepter'), findsOneWidget);
-  });
-
-  testWidgets(
-      'carte PENDING (cash) → bandeau « Paiement en espèces »',
-      (tester) async {
-    final ctrl = _wireStates(bidBloc);
-    addTearDown(ctrl.close);
-
-    await _pump(tester, bidBloc, acceptanceBloc);
-    ctrl.add(BidListLoaded([
-      _makeBid(status: 'PENDING', paymentMethod: BidPaymentMethod.cash),
-    ]));
+    ctrl.add(
+      BidListLoaded([
+        _makeBid(status: 'PENDING', paymentMethod: BidPaymentMethod.cash),
+      ]),
+    );
     await tester.pumpAndSettle();
 
     expect(find.textContaining('Paiement en espèces'), findsOneWidget);
@@ -228,42 +234,43 @@ void main() {
   // ── Accepter — dispatch selon mode de paiement ──────────────────────────────
 
   testWidgets(
-      'tap Accepter sur bid CASH → BidAcceptanceBloc.add(BidAcceptRequested)',
-      (tester) async {
+    'tap Accepter sur bid CASH → BidAcceptanceBloc.add(BidAcceptRequested)',
+    (tester) async {
+      final ctrl = _wireStates(bidBloc);
+      addTearDown(ctrl.close);
+
+      await _pump(tester, bidBloc, acceptanceBloc);
+      ctrl.add(
+        BidListLoaded([
+          _makeBid(
+            status: 'PAYMENT_ESCROWED',
+            id: 'cash-1',
+            paymentMethod: BidPaymentMethod.cash,
+          ),
+        ]),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Accepter'));
+      await tester.pump();
+
+      verify(
+        () => acceptanceBloc.add(any(that: isA<ace.BidAcceptRequested>())),
+      ).called(1);
+      verifyNever(() => bidBloc.add(any(that: isA<BidAcceptRequested>())));
+    },
+  );
+
+  testWidgets('tap Accepter sur bid STRIPE → BidBloc.add(BidAcceptRequested)', (
+    tester,
+  ) async {
     final ctrl = _wireStates(bidBloc);
     addTearDown(ctrl.close);
 
     await _pump(tester, bidBloc, acceptanceBloc);
-    ctrl.add(BidListLoaded([
-      _makeBid(
-        status: 'PAYMENT_ESCROWED',
-        id: 'cash-1',
-        paymentMethod: BidPaymentMethod.cash,
-      ),
-    ]));
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Accepter'));
-    await tester.pump();
-
-    verify(() => acceptanceBloc.add(any(that: isA<ace.BidAcceptRequested>())))
-        .called(1);
-    verifyNever(() => bidBloc.add(any(that: isA<BidAcceptRequested>())));
-  });
-
-  testWidgets(
-      'tap Accepter sur bid STRIPE → BidBloc.add(BidAcceptRequested)',
-      (tester) async {
-    final ctrl = _wireStates(bidBloc);
-    addTearDown(ctrl.close);
-
-    await _pump(tester, bidBloc, acceptanceBloc);
-    ctrl.add(BidListLoaded([
-      _makeBid(
-        status: 'PAYMENT_ESCROWED',
-        id: 'stripe-1',
-      ),
-    ]));
+    ctrl.add(
+      BidListLoaded([_makeBid(status: 'PAYMENT_ESCROWED', id: 'stripe-1')]),
+    );
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Accepter'));
@@ -271,77 +278,81 @@ void main() {
 
     verify(() => bidBloc.add(any(that: isA<BidAcceptRequested>()))).called(1);
     verifyNever(
-        () => acceptanceBloc.add(any(that: isA<ace.BidAcceptRequested>())));
+      () => acceptanceBloc.add(any(that: isA<ace.BidAcceptRequested>())),
+    );
   });
 
   // ── Refuser → dialog → confirmer ────────────────────────────────────────────
 
   testWidgets(
-      'tap Refuser → confirme le dialog → BidBloc.add(BidRejectRequested)',
-      (tester) async {
-    final ctrl = _wireStates(bidBloc);
-    addTearDown(ctrl.close);
+    'tap Refuser → confirme le dialog → BidBloc.add(BidRejectRequested)',
+    (tester) async {
+      final ctrl = _wireStates(bidBloc);
+      addTearDown(ctrl.close);
 
-    await _pump(tester, bidBloc, acceptanceBloc);
-    ctrl.add(BidListLoaded([_makeBid(status: 'PENDING', id: 'bid-r1')]));
-    await tester.pumpAndSettle();
+      await _pump(tester, bidBloc, acceptanceBloc);
+      ctrl.add(BidListLoaded([_makeBid(status: 'PENDING', id: 'bid-r1')]));
+      await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Refuser'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.text('Refuser'));
+      await tester.pumpAndSettle();
 
-    // Dialog de confirmation ouvert.
-    expect(find.textContaining('Refuser cette demande'), findsOneWidget);
+      // Dialog de confirmation ouvert.
+      expect(find.textContaining('Refuser cette demande'), findsOneWidget);
 
-    // Bouton de confirmation = dernier « Refuser » (celui du dialog).
-    await tester.tap(find.text('Refuser').last);
-    await tester.pumpAndSettle();
+      // Bouton de confirmation = dernier « Refuser » (celui du dialog).
+      await tester.tap(find.text('Refuser').last);
+      await tester.pumpAndSettle();
 
-    verify(() => bidBloc.add(any(that: isA<BidRejectRequested>()))).called(1);
-  });
+      verify(() => bidBloc.add(any(that: isA<BidRejectRequested>()))).called(1);
+    },
+  );
 
   // ── Rafraîchissement après action ───────────────────────────────────────────
 
   testWidgets(
-      'après BidRejected puis BidAccepted, recharge la liste (BidListRequested)',
-      (tester) async {
-    final ctrl = _wireStates(bidBloc);
-    addTearDown(ctrl.close);
+    'après BidRejected puis BidAccepted, recharge la liste (BidListRequested)',
+    (tester) async {
+      final ctrl = _wireStates(bidBloc);
+      addTearDown(ctrl.close);
 
-    await _pump(tester, bidBloc, acceptanceBloc);
-    ctrl.add(BidListLoaded([_makeBid(status: 'PAYMENT_ESCROWED', id: 'b1')]));
-    await tester.pumpAndSettle();
+      await _pump(tester, bidBloc, acceptanceBloc);
+      ctrl.add(BidListLoaded([_makeBid(status: 'PAYMENT_ESCROWED', id: 'b1')]));
+      await tester.pumpAndSettle();
 
-    // Refus réussi (réponse serveur) → la liste doit se recharger.
-    ctrl.add(BidRejected(_makeBid(status: 'REJECTED', id: 'b1')));
-    await tester.pumpAndSettle();
-    verify(() => bidBloc.add(any(that: isA<BidListRequested>()))).called(1);
+      // Refus réussi (réponse serveur) → la liste doit se recharger.
+      ctrl.add(BidRejected(_makeBid(status: 'REJECTED', id: 'b1')));
+      await tester.pumpAndSettle();
+      verify(() => bidBloc.add(any(that: isA<BidListRequested>()))).called(1);
 
-    // Acceptation réussie → idem.
-    ctrl.add(BidAccepted(_makeBid(status: 'ACCEPTED', id: 'b1')));
-    await tester.pumpAndSettle();
-    verify(() => bidBloc.add(any(that: isA<BidListRequested>()))).called(1);
-  });
+      // Acceptation réussie → idem.
+      ctrl.add(BidAccepted(_makeBid(status: 'ACCEPTED', id: 'b1')));
+      await tester.pumpAndSettle();
+      verify(() => bidBloc.add(any(that: isA<BidListRequested>()))).called(1);
+    },
+  );
 
   testWidgets(
-      'tap carte → détail → retour recharge la liste (refresh après navigation)',
-      (tester) async {
-    final ctrl = _wireStates(bidBloc);
-    addTearDown(ctrl.close);
+    'tap carte → détail → retour recharge la liste (refresh après navigation)',
+    (tester) async {
+      final ctrl = _wireStates(bidBloc);
+      addTearDown(ctrl.close);
 
-    await _pump(tester, bidBloc, acceptanceBloc);
-    ctrl.add(BidListLoaded([_makeBid(status: 'PAYMENT_ESCROWED', id: 'b1')]));
-    await tester.pumpAndSettle();
+      await _pump(tester, bidBloc, acceptanceBloc);
+      ctrl.add(BidListLoaded([_makeBid(status: 'PAYMENT_ESCROWED', id: 'b1')]));
+      await tester.pumpAndSettle();
 
-    // Tap le corps de la carte (nom expéditeur) → ouvre le détail.
-    await tester.tap(find.text('Moussa Traoré'));
-    await tester.pumpAndSettle();
-    expect(find.text('Bid detail b1'), findsOneWidget);
+      // Tap le corps de la carte (nom expéditeur) → ouvre le détail.
+      await tester.tap(find.text('Moussa Traoré'));
+      await tester.pumpAndSettle();
+      expect(find.text('Bid detail b1'), findsOneWidget);
 
-    // Retour depuis le détail → la liste doit se recharger seule.
-    await tester.pageBack();
-    await tester.pumpAndSettle();
-    verify(() => bidBloc.add(any(that: isA<BidListRequested>()))).called(1);
-  });
+      // Retour depuis le détail → la liste doit se recharger seule.
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+      verify(() => bidBloc.add(any(that: isA<BidListRequested>()))).called(1);
+    },
+  );
 
   // ── Empty state ─────────────────────────────────────────────────────────────
 
@@ -362,8 +373,9 @@ void main() {
 
   // ── Bouton retour ───────────────────────────────────────────────────────────
 
-  testWidgets('bouton retour → navigue /home quand non poppable',
-      (tester) async {
+  testWidgets('bouton retour → navigue /home quand non poppable', (
+    tester,
+  ) async {
     final ctrl = _wireStates(bidBloc);
     addTearDown(ctrl.close);
 

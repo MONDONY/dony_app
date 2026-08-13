@@ -98,7 +98,7 @@ void main() {
       routes: [
         GoRoute(
           path: '/',
-          builder: (_, __) => BlocProvider<NegotiationBloc>.value(
+          builder: (_, _) => BlocProvider<NegotiationBloc>.value(
             value: bloc,
             child: Scaffold(
               body: ThreadStateCtaBar(
@@ -127,11 +127,7 @@ void main() {
       (tester) async {
         await tester.pumpWidget(
           wrap(
-            _thread(
-              status: NegotiationThreadStatus.open,
-              canAccept: true,
-              canCounter: true,
-            ),
+            _thread(status: NegotiationThreadStatus.open, canAccept: true),
             _viewerSender,
           ),
         );
@@ -146,14 +142,7 @@ void main() {
       'OPEN · traveler · !lastFromMe · canAccept=false → Rejeter + Contre uniquement',
       (tester) async {
         await tester.pumpWidget(
-          wrap(
-            _thread(
-              status: NegotiationThreadStatus.open,
-              canAccept: false,
-              canCounter: true,
-            ),
-            _viewerTraveler,
-          ),
+          wrap(_thread(status: NegotiationThreadStatus.open), _viewerTraveler),
         );
         expect(find.textContaining('Accepter : Tu reçois'), findsNothing);
         expect(find.text('Contre-offre'), findsOneWidget);
@@ -166,11 +155,7 @@ void main() {
       (tester) async {
         await tester.pumpWidget(
           wrap(
-            _thread(
-              status: NegotiationThreadStatus.open,
-              canAccept: true,
-              canCounter: true,
-            ),
+            _thread(status: NegotiationThreadStatus.open, canAccept: true),
             _viewerTraveler,
           ),
         );
@@ -366,10 +351,7 @@ void main() {
   group('Bouton Relancer (nudge)', () {
     testWidgets('canNudge=false → bouton "Relancer" absent', (tester) async {
       await tester.pumpWidget(
-        wrap(
-          _thread(status: NegotiationThreadStatus.open, canNudge: false),
-          _viewerSender,
-        ),
+        wrap(_thread(status: NegotiationThreadStatus.open), _viewerSender),
       );
       expect(find.text('Relancer'), findsNothing);
     });

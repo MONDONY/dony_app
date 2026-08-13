@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
@@ -400,7 +401,7 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Demande acceptée à ${widget.thread.currentPriceEur.toStringAsFixed(0)} €',
+                          'Demande acceptée à ${formatPriceIn(widget.thread.currentPriceEur, widget.thread.currency)}',
                           style: Theme.of(context).textTheme.bodyMedium!
                               .copyWith(
                                 fontSize: 14,

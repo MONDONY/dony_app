@@ -81,9 +81,9 @@ final _testBid = BidModel(
   status: 'ACCEPTED',
   departureCity: 'Paris',
   arrivalCity: 'Dakar',
-  departureDate: DateTime(2025, 6, 1),
-  createdAt: DateTime(2025, 5, 1),
-  updatedAt: DateTime(2025, 5, 1),
+  departureDate: DateTime(2025, 6),
+  createdAt: DateTime(2025, 5),
+  updatedAt: DateTime(2025, 5),
 );
 
 /// Wraps the widget under test with a GoRouter that includes /auth/local
@@ -101,7 +101,7 @@ Widget _wrap(
       routes: [
         GoRoute(
           path: '/',
-          builder: (_, __) => MultiBlocProvider(
+          builder: (_, _) => MultiBlocProvider(
             providers: [
               BlocProvider<PaymentBloc>.value(value: bloc),
               if (configBloc != null)
@@ -122,7 +122,7 @@ Widget _wrap(
         // Stub for PIN screen — pops immediately with [pinResult].
         GoRoute(
           path: '/auth/local',
-          builder: (context, __) {
+          builder: (context, _) {
             // Use a post-frame callback so we can pop after the frame is built.
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (context.mounted) {
@@ -283,9 +283,9 @@ void main() {
         status: 'ACCEPTED',
         departureCity: 'Paris',
         arrivalCity: 'Dakar',
-        departureDate: DateTime(2025, 6, 1),
-        createdAt: DateTime(2025, 5, 1),
-        updatedAt: DateTime(2025, 5, 1),
+        departureDate: DateTime(2025, 6),
+        createdAt: DateTime(2025, 5),
+        updatedAt: DateTime(2025, 5),
         currency: 'CAD',
       );
 
@@ -330,7 +330,7 @@ void main() {
       await tester.pumpAndSettle();
 
       verify(() => mockLocalAuth.authenticateWithBiometric()).called(1);
-      verify(() => mockBloc.add(PaymentInitiated('bid-1'))).called(1);
+      verify(() => mockBloc.add(const PaymentInitiated('bid-1'))).called(1);
     });
 
     testWidgets(
@@ -358,7 +358,7 @@ void main() {
         await tester.pumpAndSettle();
 
         verify(() => mockLocalAuth.authenticateWithBiometric()).called(1);
-        verify(() => mockBloc.add(PaymentInitiated('bid-1'))).called(1);
+        verify(() => mockBloc.add(const PaymentInitiated('bid-1'))).called(1);
       },
     );
 
@@ -440,7 +440,7 @@ void main() {
 
         verifyNever(() => mockLocalAuth.isBiometricAvailable());
         verifyNever(() => mockLocalAuth.authenticateWithBiometric());
-        verify(() => mockBloc.add(PaymentInitiated('bid-1'))).called(1);
+        verify(() => mockBloc.add(const PaymentInitiated('bid-1'))).called(1);
       },
     );
   });

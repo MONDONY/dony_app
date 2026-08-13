@@ -13,7 +13,8 @@ abstract final class EscrowBlockDialog {
     final goToShipments = await DonyDialog.show(
       context,
       title: 'Suppression impossible pour l\'instant',
-      message: 'Un de vos envois est en cours de livraison et ses fonds '
+      message:
+          'Un de vos envois est en cours de livraison et ses fonds '
           'sont bloqués en séquestre. Vous pourrez supprimer votre compte '
           'dès que la livraison aura été confirmée.',
       confirmLabel: 'Voir mes envois',

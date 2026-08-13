@@ -39,13 +39,11 @@ class AnnouncementRemoteDatasource {
       data: {
         'departureCity': departureCity,
         'arrivalCity': arrivalCity,
-        if (departureCountryCode != null)
-          'departureCountryCode': departureCountryCode,
-        if (arrivalCountryCode != null)
-          'arrivalCountryCode': arrivalCountryCode,
+        'departureCountryCode': ?departureCountryCode,
+        'arrivalCountryCode': ?arrivalCountryCode,
         'departureDate': DateFormat('yyyy-MM-dd').format(departureDate),
-        if (departureTime != null) 'departureTime': departureTime,
-        if (arrivalTime != null) 'arrivalTime': arrivalTime,
+        'departureTime': ?departureTime,
+        'arrivalTime': ?arrivalTime,
         'pickupAddress': pickupAddress.toJson(),
         'deliveryAddress': deliveryAddress.toJson(),
         'availableKg': availableKg,
@@ -56,7 +54,7 @@ class AnnouncementRemoteDatasource {
         'acceptedContentTypes': acceptedContentTypes,
         'refusedTypes': refusedTypes,
         'acceptedPaymentMethods': acceptedPaymentMethods,
-        if (capacityUnit != null) 'capacityUnit': capacityUnit,
+        'capacityUnit': ?capacityUnit,
         'pricingMode': pricingMode,
         'handoverWindowStart': handoverWindowStart.toUtc().toIso8601String(),
         'handoverWindowEnd': handoverWindowEnd.toUtc().toIso8601String(),
@@ -266,31 +264,29 @@ class AnnouncementRemoteDatasource {
     double? radiusKm,
     bool? urgent,
   }) => <String, dynamic>{
-        if (departureCity != null) 'departureCity': departureCity,
-        if (arrivalCity != null) 'arrivalCity': arrivalCity,
-        if (departureDateFrom != null)
-          'departureDateFrom': DateFormat(
-            'yyyy-MM-dd',
-          ).format(departureDateFrom),
-        if (departureDateTo != null)
-          'departureDateTo': DateFormat('yyyy-MM-dd').format(departureDateTo),
-        if (minAvailableKg != null) 'minAvailableKg': minAvailableKg,
-        if (maxAvailableKg != null) 'maxAvailableKg': maxAvailableKg,
-        if (maxPricePerKg != null) 'maxPricePerKg': maxPricePerKg,
-        if (kiloProOnly == true) 'kiloProOnly': true,
-        if (minRating != null) 'minRating': minRating,
-        if (weekendOnly == true) 'weekendOnly': true,
-        if (transportMode != null)
-          'transportMode': transportModeToWire(transportMode),
-        if (kycVerifiedOnly == true) 'kycVerifiedOnly': true,
-        if (contentType != null) 'contentType': contentType,
-        if (userLat != null) 'userLat': userLat,
-        if (userLng != null) 'userLng': userLng,
-        if (radiusKm != null) 'radiusKm': radiusKm,
-        // Filtre serveur « annonces urgentes » — jamais envoyer urgent=false,
-        // seulement présent quand le chip est actif (cf. PR back #112).
-        if (urgent == true) 'urgent': true,
-      };
+    'departureCity': ?departureCity,
+    'arrivalCity': ?arrivalCity,
+    if (departureDateFrom != null)
+      'departureDateFrom': DateFormat('yyyy-MM-dd').format(departureDateFrom),
+    if (departureDateTo != null)
+      'departureDateTo': DateFormat('yyyy-MM-dd').format(departureDateTo),
+    'minAvailableKg': ?minAvailableKg,
+    'maxAvailableKg': ?maxAvailableKg,
+    'maxPricePerKg': ?maxPricePerKg,
+    if (kiloProOnly == true) 'kiloProOnly': true,
+    'minRating': ?minRating,
+    if (weekendOnly == true) 'weekendOnly': true,
+    if (transportMode != null)
+      'transportMode': transportModeToWire(transportMode),
+    if (kycVerifiedOnly == true) 'kycVerifiedOnly': true,
+    'contentType': ?contentType,
+    'userLat': ?userLat,
+    'userLng': ?userLng,
+    'radiusKm': ?radiusKm,
+    // Filtre serveur « annonces urgentes » — jamais envoyer urgent=false,
+    // seulement présent quand le chip est actif (cf. PR back #112).
+    if (urgent == true) 'urgent': true,
+  };
 
   Future<void> deleteAnnouncement(String id) async {
     await _apiClient.dio.delete('/announcements/$id');
@@ -341,13 +337,11 @@ class AnnouncementRemoteDatasource {
       data: {
         'departureCity': departureCity,
         'arrivalCity': arrivalCity,
-        if (departureCountryCode != null)
-          'departureCountryCode': departureCountryCode,
-        if (arrivalCountryCode != null)
-          'arrivalCountryCode': arrivalCountryCode,
+        'departureCountryCode': ?departureCountryCode,
+        'arrivalCountryCode': ?arrivalCountryCode,
         'departureDate': DateFormat('yyyy-MM-dd').format(departureDate),
-        if (departureTime != null) 'departureTime': departureTime,
-        if (arrivalTime != null) 'arrivalTime': arrivalTime,
+        'departureTime': ?departureTime,
+        'arrivalTime': ?arrivalTime,
         'pickupAddress': pickupAddress.toJson(),
         'deliveryAddress': deliveryAddress.toJson(),
         'availableKg': availableKg,
@@ -358,7 +352,7 @@ class AnnouncementRemoteDatasource {
         'acceptedContentTypes': acceptedContentTypes,
         'refusedTypes': refusedTypes,
         'acceptedPaymentMethods': acceptedPaymentMethods,
-        if (capacityUnit != null) 'capacityUnit': capacityUnit,
+        'capacityUnit': ?capacityUnit,
         'pricingMode': pricingMode,
         'handoverWindowStart': handoverWindowStart.toUtc().toIso8601String(),
         'handoverWindowEnd': handoverWindowEnd.toUtc().toIso8601String(),

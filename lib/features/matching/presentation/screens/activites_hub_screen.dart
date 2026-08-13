@@ -164,8 +164,12 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
     context.read<TravelerBidsBloc>().add(
       const TravelerBidsRequested(force: true),
     );
-    context.read<BidBloc>().add(BidMyListAutoRefreshRequested(force: true));
-    context.read<NegotiationListBloc>().add(NegotiationListFetchRequested());
+    context.read<BidBloc>().add(
+      const BidMyListAutoRefreshRequested(force: true),
+    );
+    context.read<NegotiationListBloc>().add(
+      const NegotiationListFetchRequested(),
+    );
     context.read<PackageRequestBloc>().add(const FetchMyRequests());
   }
 
@@ -691,7 +695,7 @@ class _PeriodChips extends StatelessWidget {
 class _StatsRow extends StatelessWidget {
   const _StatsRow();
 
-  String _money(double v) => '${formatKgPrice(v)} €';
+  String _money(double v) => formatPriceActive(v);
 
   String _weight(double v) => '${v.toStringAsFixed(v % 1 == 0 ? 0 : 1)} kg';
 
@@ -748,7 +752,7 @@ class _StatsRow extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: DonySpacing.lg),
             itemCount: tiles.length,
-            separatorBuilder: (_, __) => const SizedBox(width: DonySpacing.md),
+            separatorBuilder: (_, _) => const SizedBox(width: DonySpacing.md),
             itemBuilder: (_, i) => tiles[i],
           ),
         );

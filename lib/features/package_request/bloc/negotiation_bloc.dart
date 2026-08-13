@@ -1,14 +1,14 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
+import 'package:dony/core/currency/active_currency.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
+import 'package:dony/features/package_request/data/models/payment_method.dart';
+import 'package:dony/features/package_request/data/negotiation_repository.dart';
 import 'package:equatable/equatable.dart';
-
-import '../data/models/negotiation_thread.dart';
-import '../data/models/payment_method.dart';
-import '../data/negotiation_repository.dart';
 
 sealed class NegotiationEvent extends Equatable {
   const NegotiationEvent();
@@ -49,19 +49,20 @@ class NegotiationStartRequested extends NegotiationEvent {
   final double travelerAvailableKg;
   final String? travelerAnnouncementId;
   final String? body;
+
   /// True when the traveler accepted a firm (non-negotiable) price.
   final bool isFirmPrice;
 
   @override
   List<Object?> get props => [
-        packageRequestId,
-        proposedPriceEur,
-        travelerTravelDate,
-        travelerAvailableKg,
-        travelerAnnouncementId,
-        body,
-        isFirmPrice,
-      ];
+    packageRequestId,
+    proposedPriceEur,
+    travelerTravelDate,
+    travelerAvailableKg,
+    travelerAnnouncementId,
+    body,
+    isFirmPrice,
+  ];
 }
 
 class NegotiationCounterRequested extends NegotiationEvent {
@@ -124,8 +125,12 @@ class NegotiationSubmitTripRequested extends NegotiationEvent {
   final bool useCardForCommission;
 
   @override
-  List<Object?> get props =>
-      [threadId, travelerAnnouncementId, paymentMethod, useCardForCommission];
+  List<Object?> get props => [
+    threadId,
+    travelerAnnouncementId,
+    paymentMethod,
+    useCardForCommission,
+  ];
 }
 
 /// Traveler creates a dedicated trip (no existing announcement matches) and
@@ -162,11 +167,18 @@ class NegotiationCreateDedicatedTripRequested extends NegotiationEvent {
 
   @override
   List<Object?> get props => [
-        threadId, departureDate, departureTime, arrivalTime,
-        pickupAddress, deliveryAddress, description,
-        acceptedContentTypes, refusedTypes, paymentMethod,
-        useCardForCommission,
-      ];
+    threadId,
+    departureDate,
+    departureTime,
+    arrivalTime,
+    pickupAddress,
+    deliveryAddress,
+    description,
+    acceptedContentTypes,
+    refusedTypes,
+    paymentMethod,
+    useCardForCommission,
+  ];
 }
 
 /// Sender confirms payment on an AWAITING_PAYMENT thread → finalize as ACCEPTED.
@@ -269,8 +281,8 @@ class NegotiationNudgeError extends NegotiationState {
 
 class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
   NegotiationBloc(this._repository, {required AnalyticsService analytics})
-      : _analytics = analytics,
-        super(const NegotiationInitial()) {
+    : _analytics = analytics,
+      super(const NegotiationInitial()) {
     on<NegotiationFetchRequested>(_onFetch);
     on<NegotiationStartRequested>(_onStart);
     on<NegotiationCounterRequested>(_onCounter);
@@ -309,17 +321,27 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
     if (method == null) {
       return;
     }
-    unawaited(_analytics.logEvent(
-      AnalyticsEvents.paymentMethodSelected,
-      properties: {'method': method.wireName},
-    ));
+    unawaited(
+      _analytics.logEvent(
+        AnalyticsEvents.paymentMethodSelected,
+        properties: {'method': method.wireName},
+      ),
+    );
   }
 
-  static String _priceBracket(double eur) {
-    if (eur < 20) return '<20€';
-    if (eur < 50) return '20-50€';
-    if (eur < 100) return '50-100€';
-    return '>100€';
+  /// Tranche de montant pour l'analytics, sans PII et **sans symbole monétaire**.
+  ///
+  /// Les bornes s'entendaient auparavant en euros et portaient le « € » dans leur
+  /// libellé, alors qu'elles s'appliquaient au montant brut quelle que soit la
+  /// devise : une proposition de 5 000 XOF, soit environ 7,60 €, atterrissait
+  /// dans « >100€ » et faussait toute lecture des données. La tranche est donc
+  /// neutre et la devise est envoyée à côté, ce qui permet de segmenter
+  /// correctement sans jamais convertir de montant.
+  static String _amountBracket(double amount) {
+    if (amount < 20) return '<20';
+    if (amount < 50) return '20-50';
+    if (amount < 100) return '50-100';
+    return '>100';
   }
 
   Future<void> _onFetch(
@@ -351,15 +373,23 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
       );
       emit(NegotiationLoaded(thread));
       if (e.isFirmPrice) {
-        unawaited(_analytics.logEvent(
-          AnalyticsEvents.firmPriceTaken,
-          properties: {'request_id': e.packageRequestId},
-        ));
+        unawaited(
+          _analytics.logEvent(
+            AnalyticsEvents.firmPriceTaken,
+            properties: {'request_id': e.packageRequestId},
+          ),
+        );
       } else {
-        unawaited(_analytics.logEvent(
-          AnalyticsEvents.negotiationOfferMade,
-          properties: {'amount_bracket': _priceBracket(e.proposedPriceEur), 'context': 'sender'},
-        ));
+        unawaited(
+          _analytics.logEvent(
+            AnalyticsEvents.negotiationOfferMade,
+            properties: {
+              'amount_bracket': _amountBracket(e.proposedPriceEur),
+              'currency': ActiveCurrency.current?.code ?? 'unknown',
+              'context': 'sender',
+            },
+          ),
+        );
       }
     } catch (err) {
       emit(NegotiationError(unwrapDioError(err)));
@@ -383,10 +413,16 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
         body: e.body,
       );
       emit(NegotiationLoaded(thread));
-      unawaited(_analytics.logEvent(
-        AnalyticsEvents.negotiationOfferMade,
-        properties: {'amount_bracket': _priceBracket(e.proposedPriceEur), 'context': 'counter'},
-      ));
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.negotiationOfferMade,
+          properties: {
+            'amount_bracket': _amountBracket(e.proposedPriceEur),
+            'currency': ActiveCurrency.current?.code ?? 'unknown',
+            'context': 'counter',
+          },
+        ),
+      );
     } catch (err) {
       emit(NegotiationError(unwrapDioError(err)));
     }
@@ -405,10 +441,15 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
     try {
       final thread = await _repository.accept(e.threadId, body: e.body);
       emit(NegotiationLoaded(thread));
-      unawaited(_analytics.logEvent(
-        AnalyticsEvents.negotiationOfferAccepted,
-        properties: {'amount_bracket': _priceBracket(thread.currentPriceEur)},
-      ));
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.negotiationOfferAccepted,
+          properties: {
+            'amount_bracket': _amountBracket(thread.currentPriceEur),
+            'currency': thread.currency,
+          },
+        ),
+      );
     } catch (err) {
       emit(NegotiationError(unwrapDioError(err)));
     }
@@ -473,10 +514,12 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
       final appErr = unwrapDioError(err);
       final blockReason = _paymentBlockReason(appErr);
       if (blockReason != null) {
-        unawaited(_analytics.logEvent(
-          AnalyticsEvents.tripLinkPaymentBlocked,
-          properties: {'reason': blockReason},
-        ));
+        unawaited(
+          _analytics.logEvent(
+            AnalyticsEvents.tripLinkPaymentBlocked,
+            properties: {'reason': blockReason},
+          ),
+        );
       }
       emit(NegotiationError(appErr));
     }
@@ -511,10 +554,12 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
       final appErr = unwrapDioError(err);
       final blockReason = _paymentBlockReason(appErr);
       if (blockReason != null) {
-        unawaited(_analytics.logEvent(
-          AnalyticsEvents.tripLinkPaymentBlocked,
-          properties: {'reason': blockReason},
-        ));
+        unawaited(
+          _analytics.logEvent(
+            AnalyticsEvents.tripLinkPaymentBlocked,
+            properties: {'reason': blockReason},
+          ),
+        );
       }
       emit(NegotiationError(appErr));
     }

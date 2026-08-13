@@ -55,7 +55,7 @@ void main() {
     testWidgets('does NOT show VÉRIFIÉ badge when isKycVerified false', (
       tester,
     ) async {
-      await tester.pumpWidget(_buildHeader(isKycVerified: false));
+      await tester.pumpWidget(_buildHeader());
       await tester.pump();
       expect(find.text('VÉRIFIÉ'), findsNothing);
     });
@@ -133,7 +133,7 @@ void main() {
     testWidgets('does NOT show KYC chip when isKycVerified false', (
       tester,
     ) async {
-      await tester.pumpWidget(_buildHeader(isKycVerified: false));
+      await tester.pumpWidget(_buildHeader());
       await tester.pump();
       expect(find.text('Identité ✓'), findsNothing);
     });
@@ -142,7 +142,7 @@ void main() {
     testWidgets(
       'does NOT show role pill switcher for dual-role user (additive model)',
       (tester) async {
-        await tester.pumpWidget(_buildHeader(isTraveler: true, isSender: true));
+        await tester.pumpWidget(_buildHeader(isTraveler: true));
         await tester.pump();
         // The _RolePill was deleted: neither "Voyageur" nor "Expéditeur" pill appears.
         expect(find.text('Voyageur'), findsNothing);
@@ -153,7 +153,7 @@ void main() {
     testWidgets('does NOT show pill switcher when user has only sender role', (
       tester,
     ) async {
-      await tester.pumpWidget(_buildHeader(isTraveler: false, isSender: true));
+      await tester.pumpWidget(_buildHeader());
       await tester.pump();
       expect(find.text('Voyageur'), findsNothing);
     });

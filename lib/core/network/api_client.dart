@@ -115,7 +115,7 @@ class ApiClient {
   void _configureCertificatePinning() {
     if (kIsWeb || kDebugMode || _tlsCertPem.isEmpty) return;
     (_dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
-      final context = SecurityContext(withTrustedRoots: false)
+      final context = SecurityContext()
         ..setTrustedCertificatesBytes(const Utf8Encoder().convert(_tlsCertPem));
       return HttpClient(context: context);
     };
@@ -191,7 +191,7 @@ class _SentryBreadcrumbInterceptor extends Interceptor {
         data: {
           'method': options.method,
           'path': options.uri.path,
-          if (status != null) 'status_code': status,
+          'status_code': ?status,
         },
       ),
     );
@@ -236,18 +236,13 @@ class _AuthInterceptor extends Interceptor {
         DioException(
           requestOptions: options,
           error: 'Authentication failed: ${e.message}',
-          type: DioExceptionType.unknown,
         ),
       );
       return;
     } catch (e) {
       // Unexpected error — reject instead of silently proceeding.
       handler.reject(
-        DioException(
-          requestOptions: options,
-          error: 'Unexpected auth error',
-          type: DioExceptionType.unknown,
-        ),
+        DioException(requestOptions: options, error: 'Unexpected auth error'),
       );
       return;
     }

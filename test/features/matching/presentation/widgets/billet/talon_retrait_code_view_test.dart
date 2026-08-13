@@ -101,7 +101,7 @@ void main() {
         () => t.stream,
       ).thenAnswer((_) => Stream.value(TrackingRefreshCodeLoading()));
       when(() => b.state).thenReturn(BidInitial());
-      when(() => b.stream).thenAnswer((_) => Stream<BidState>.empty());
+      when(() => b.stream).thenAnswer((_) => const Stream<BidState>.empty());
       await _pump(tester, t, b);
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
       expect(find.text('Régénération…'), findsOneWidget);
@@ -119,7 +119,7 @@ void main() {
       () => t.stream,
     ).thenAnswer((_) => Stream.value(TrackingConfirmCodeLoaded('9999')));
     when(() => b.state).thenReturn(BidInitial());
-    when(() => b.stream).thenAnswer((_) => Stream<BidState>.empty());
+    when(() => b.stream).thenAnswer((_) => const Stream<BidState>.empty());
     await _pump(tester, t, b, initialCode: '1111');
     // The displayed code should be the new one from state, not initialCode
     for (final d in '9999'.split('')) {

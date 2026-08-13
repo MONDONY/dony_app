@@ -1,13 +1,14 @@
 import 'dart:async';
-import 'package:dony/features/auth/bloc/auth_bloc.dart';
-import 'package:dony/features/auth/bloc/auth_event.dart';
-import 'package:dony/features/auth/bloc/auth_state.dart';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_event.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -144,11 +145,11 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                   if (!widget.fromProfile)
                     Padding(
                       padding: EdgeInsets.fromLTRB(h, DonySpacing.md, h, 0),
-                      child: Row(
+                      child: const Row(
                         children: [
-                          const DonyAppBarBackButton(),
-                          const Spacer(),
-                          const DonyStepPill(
+                          DonyAppBarBackButton(),
+                          Spacer(),
+                          DonyStepPill(
                             current: 1,
                             total: 3,
                             label: 'Téléphone',
@@ -172,7 +173,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Center(
+                            const Center(
                               child: DonyHeroAvatar(emoji: '📱', size: 72),
                             ),
                             const SizedBox(height: DonySpacing.xl),

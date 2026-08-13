@@ -1,7 +1,7 @@
 import 'package:dony/core/design/tokens/spacing_tokens.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:dony/core/widgets/dony_icon.dart';
 
 class DonyBackCircle extends StatelessWidget {
   const DonyBackCircle({super.key, this.onTap, this.tooltip = 'Retour'});
@@ -25,10 +25,7 @@ class DonyBackCircle extends StatelessWidget {
             color: cs.surface,
             border: Border.all(color: cs.outline),
           ),
-          child: DonyIcon('arrow-left',
-            size: 20,
-            color: cs.onSurface,
-          ),
+          child: DonyIcon('arrow-left', size: 20, color: cs.onSurface),
         ),
       ),
     );

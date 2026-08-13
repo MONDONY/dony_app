@@ -235,8 +235,8 @@ void main() {
       whenListen<AccountDeletionState>(
         mockBloc,
         Stream.fromIterable([
-          AccountDeletionError(
-            error: const NetworkException('Erreur réseau', code: 'network'),
+          const AccountDeletionError(
+            error: NetworkException('Erreur réseau', code: 'network'),
           ),
         ]),
         initialState: const AccountDeletionInitial(),
@@ -262,8 +262,8 @@ void main() {
         whenListen<AccountDeletionState>(
           mockBloc,
           Stream.fromIterable([
-            AccountDeletionError(
-              error: const ValidationException('test', code: 'escrow'),
+            const AccountDeletionError(
+              error: ValidationException('test', code: 'escrow'),
               isEscrowBlocked: true,
             ),
           ]),

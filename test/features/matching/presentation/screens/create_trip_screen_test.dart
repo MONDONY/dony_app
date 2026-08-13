@@ -2,10 +2,9 @@ import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/error/app_exception.dart';
-import 'package:intl/date_symbol_data_local.dart';
-import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/models/connect_account_status.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
@@ -26,10 +25,7 @@ import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart'
     show BidPaymentMethod;
-import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
-import 'package:dony/core/models/connect_account_status.dart';
-import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/matching/presentation/widgets/cash_commission_notice.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
@@ -38,9 +34,7 @@ import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_state.dart';
-import 'package:dony/features/payments/cash/data/models/commission_method.dart';
 import 'package:dony/features/payments/cash/data/repositories/commission_method_repository.dart';
-import 'package:dony/features/payments/wallet/data/models/wallet_model.dart';
 import 'package:dony/features/payments/wallet/data/repositories/wallet_repository.dart';
 import 'package:dony/features/price_grid/data/repositories/price_grid_repository.dart';
 import 'package:dony/features/profile/bloc/help_center_bloc.dart';
@@ -54,12 +48,12 @@ import 'package:dony/features/trip_templates/data/models/trip_template.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import '../../../../helpers/currency_test_doubles.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/currency_test_doubles.dart';
 import '../../../../helpers/mock_analytics_backend.dart';
 import '../../../../helpers/mock_recent_city_store.dart';
 
@@ -124,11 +118,6 @@ class _MockStripeAccountBloc
 
 class _MockNegotiationBloc extends MockBloc<NegotiationEvent, NegotiationState>
     implements NegotiationBloc {}
-
-class _MockWalletRepository extends Mock implements WalletRepository {}
-
-class _MockCommissionMethodRepository extends Mock
-    implements CommissionMethodRepository {}
 
 class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
     implements AuthBloc {}
@@ -206,7 +195,7 @@ Widget _wrapWithRouter(
     routes: [
       GoRoute(
         path: '/trips/create',
-        builder: (_, __) => MultiBlocProvider(
+        builder: (_, _) => MultiBlocProvider(
           providers: [
             BlocProvider<StripeAccountBloc>.value(value: _makeStripeBloc()),
             BlocProvider<AuthBloc>.value(value: _makeAuthBloc(authState)),
@@ -233,18 +222,18 @@ Widget _wrapWithRouter(
       // Extra route so GoRouter can navigate back on context.pop()
       GoRoute(
         path: '/',
-        builder: (_, __) => const Scaffold(body: SizedBox()),
+        builder: (_, _) => const Scaffold(body: SizedBox()),
       ),
       // Destination of the "Activer les paiements par carte" CTA.
       GoRoute(
         path: '/connect/onboarding/intro',
-        builder: (_, __) =>
+        builder: (_, _) =>
             const Scaffold(body: Text('stripe-onboarding-intro')),
       ),
       // Destinations of the cash-funds-required sheet's CTAs (Finding #1).
       GoRoute(
         path: '/payments/commission-method',
-        builder: (context, __) => Scaffold(
+        builder: (context, _) => Scaffold(
           body: Center(
             child: ElevatedButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -255,7 +244,7 @@ Widget _wrapWithRouter(
       ),
       GoRoute(
         path: '/payments/wallet/topup/method',
-        builder: (context, __) => Scaffold(
+        builder: (context, _) => Scaffold(
           body: Center(
             child: ElevatedButton(
               onPressed: () => Navigator.of(context).pop(true),
@@ -276,14 +265,14 @@ AnnouncementModel _makeAnnouncement() => AnnouncementModel(
   travelerId: 'trav-1',
   departureCity: 'Paris',
   arrivalCity: 'Dakar',
-  departureDate: DateTime(2026, 8, 1),
+  departureDate: DateTime(2026, 8),
   availableKg: 10.0,
   totalKg: 23.0,
   pricePerKg: 8.0,
   status: 'ACTIVE',
   bidsCount: 0,
-  createdAt: DateTime(2026, 1, 1),
-  updatedAt: DateTime(2026, 1, 1),
+  createdAt: DateTime(2026),
+  updatedAt: DateTime(2026),
 );
 
 /// Returns a complete `AnnouncementModel` that passes ALL step-0 validation:
@@ -297,7 +286,7 @@ AnnouncementModel _makeFullAnnouncement() => AnnouncementModel(
   travelerId: 'trav-1',
   departureCity: 'Paris',
   arrivalCity: 'Dakar',
-  departureDate: DateTime(2026, 8, 1),
+  departureDate: DateTime(2026, 8),
   // 22:00 departure → handoverEnd 18:00 is safely before departure
   departureTime: '22:00',
   arrivalTime: '10:30',
@@ -306,10 +295,10 @@ AnnouncementModel _makeFullAnnouncement() => AnnouncementModel(
   pricePerKg: 8.0,
   status: 'ACTIVE',
   bidsCount: 0,
-  createdAt: DateTime(2026, 1, 1),
-  updatedAt: DateTime(2026, 1, 1),
-  handoverWindowStart: DateTime(2026, 8, 1, 16, 0),
-  handoverWindowEnd: DateTime(2026, 8, 1, 18, 0),
+  createdAt: DateTime(2026),
+  updatedAt: DateTime(2026),
+  handoverWindowStart: DateTime(2026, 8, 1, 16),
+  handoverWindowEnd: DateTime(2026, 8, 1, 18),
   pickupAddress: const AddressData(
     label: 'Tour Eiffel',
     lat: 48.858,
@@ -332,12 +321,11 @@ LockedTripContext _makeLockContext() => LockedTripContext(
   packageRequestId: 'req-1',
   departureCity: 'Lyon',
   arrivalCity: 'Abidjan',
-  desiredDate: DateTime(2026, 9, 1),
+  desiredDate: DateTime(2026, 9),
   dateToleranceDays: 5,
   weightKg: 5.0,
   transportMode: TransportMode.plane,
   agreedPriceEur: 50.0,
-  paymentMethod: PaymentMethod.stripe,
 );
 
 /// Creates a pre-configured `NegotiationBloc` mock.
@@ -368,7 +356,7 @@ void main() {
     registerFallbackValue(
       NegotiationCreateDedicatedTripRequested(
         threadId: 'fallback-thread',
-        departureDate: DateTime(2026, 1, 1),
+        departureDate: DateTime(2026),
         pickupAddress: const {},
         deliveryAddress: const {},
         paymentMethod: PaymentMethod.stripe,
@@ -474,7 +462,7 @@ void main() {
   /// [tester.pump()] fires the first frame; the subsequent
   /// [pump(600ms)] advances fake time past all animation delays
   /// (max delay 180ms + max duration 300ms in this screen).
-  Future<void> _pumpAndDrain(WidgetTester tester, Widget widget) async {
+  Future<void> pumpAndDrain(WidgetTester tester, Widget widget) async {
     await tester.pumpWidget(widget);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
@@ -488,10 +476,7 @@ void main() {
     ) async {
       setupViewport(tester);
 
-      await _pumpAndDrain(
-        tester,
-        _wrapWithRouter(const CreateTripScreen(args: null)),
-      );
+      await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
 
       expect(find.text('Publier un trajet'), findsOneWidget);
     });
@@ -502,7 +487,7 @@ void main() {
         setupViewport(tester);
 
         final args = CreateTripArgs(announcement: _makeAnnouncement());
-        await _pumpAndDrain(
+        await pumpAndDrain(
           tester,
           _wrapWithRouter(CreateTripScreen(args: args)),
         );
@@ -520,10 +505,7 @@ void main() {
         lockContext: _makeLockContext(),
         negotiationBloc: _makeNegotiationBloc(),
       );
-      await _pumpAndDrain(
-        tester,
-        _wrapWithRouter(CreateTripScreen(args: args)),
-      );
+      await pumpAndDrain(tester, _wrapWithRouter(CreateTripScreen(args: args)));
 
       expect(find.text('Créer le trajet pour cette demande'), findsOneWidget);
     });
@@ -535,10 +517,7 @@ void main() {
     testWidgets('bouton "Continuer" présent à l\'étape 0', (tester) async {
       setupViewport(tester);
 
-      await _pumpAndDrain(
-        tester,
-        _wrapWithRouter(const CreateTripScreen(args: null)),
-      );
+      await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
 
       expect(find.text('Continuer'), findsOneWidget);
     });
@@ -546,10 +525,7 @@ void main() {
     testWidgets('bouton retour (DonyAppBarBackButton) présent', (tester) async {
       setupViewport(tester);
 
-      await _pumpAndDrain(
-        tester,
-        _wrapWithRouter(const CreateTripScreen(args: null)),
-      );
+      await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
 
       expect(find.byType(DonyAppBarBackButton), findsOneWidget);
     });
@@ -560,10 +536,7 @@ void main() {
         setupViewport(tester);
 
         // Creation mode: _canContinueNotifier starts false (no pre-filled fields)
-        await _pumpAndDrain(
-          tester,
-          _wrapWithRouter(const CreateTripScreen(args: null)),
-        );
+        await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
 
         // DonyButton with label 'Continuer' should have onPressed == null
         final donyButton = tester.widget<DonyButton>(
@@ -586,7 +559,7 @@ void main() {
         // departureCity, arrivalCity, departureDate, handoverWindowStart and
         // handoverWindowEnd are all set, and handoverEnd (18:00) < departure (22:00).
         final args = CreateTripArgs(announcement: _makeFullAnnouncement());
-        await _pumpAndDrain(
+        await pumpAndDrain(
           tester,
           _wrapWithRouter(CreateTripScreen(args: args)),
         );
@@ -608,10 +581,7 @@ void main() {
     ) async {
       setupViewport(tester);
 
-      await _pumpAndDrain(
-        tester,
-        _wrapWithRouter(const CreateTripScreen(args: null)),
-      );
+      await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
 
       // At step 0, "Retour" should not be rendered
       expect(find.text('Retour'), findsNothing);
@@ -627,10 +597,7 @@ void main() {
       setupViewport(tester);
       registerCurrencyPreference('EUR');
 
-      await _pumpAndDrain(
-        tester,
-        _wrapWithRouter(const CreateTripScreen(args: null)),
-      );
+      await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
 
       expect(find.byKey(const Key('currency-publish-banner')), findsOneWidget);
       expect(find.text('Publié en Euro (EUR)'), findsOneWidget);
@@ -652,10 +619,7 @@ void main() {
       setupViewport(tester);
       registerCurrencyPreference('CAD');
 
-      await _pumpAndDrain(
-        tester,
-        _wrapWithRouter(const CreateTripScreen(args: null)),
-      );
+      await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
 
       expect(find.text('Publié en Dollar canadien (CAD)'), findsOneWidget);
     });
@@ -663,7 +627,7 @@ void main() {
     testWidgets('bandeau devise absent en mode édition', (tester) async {
       setupViewport(tester);
 
-      await _pumpAndDrain(
+      await pumpAndDrain(
         tester,
         _wrapWithRouter(
           CreateTripScreen(
@@ -682,10 +646,7 @@ void main() {
       tester.platformDispatcher.textScaleFactorTestValue = 2;
       addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
 
-      await _pumpAndDrain(
-        tester,
-        _wrapWithRouter(const CreateTripScreen(args: null)),
-      );
+      await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
 
       expect(find.byKey(const Key('currency-publish-banner')), findsOneWidget);
       expect(tester.takeException(), isNull);
@@ -694,10 +655,7 @@ void main() {
     testWidgets('stepper header est présent à l\'étape 0', (tester) async {
       setupViewport(tester);
 
-      await _pumpAndDrain(
-        tester,
-        _wrapWithRouter(const CreateTripScreen(args: null)),
-      );
+      await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
 
       expect(find.byType(CaStepperHeader), findsOneWidget);
     });
@@ -708,10 +666,10 @@ void main() {
       (tester) async {
         setupViewport(tester);
 
-        await _pumpAndDrain(
+        await pumpAndDrain(
           tester,
           _wrapWithRouter(
-            const CreateTripScreen(args: null),
+            const CreateTripScreen(),
             helpConfigJson: _tripPublishHelpConfigJson,
           ),
         );
@@ -735,10 +693,7 @@ void main() {
     ) async {
       setupViewport(tester);
 
-      await _pumpAndDrain(
-        tester,
-        _wrapWithRouter(const CreateTripScreen(args: null)),
-      );
+      await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
 
       // Step 0 contains the handover window section with these list tiles
       expect(find.text('Début de remise'), findsOneWidget);
@@ -754,10 +709,7 @@ void main() {
         lockContext: _makeLockContext(),
         negotiationBloc: _makeNegotiationBloc(),
       );
-      await _pumpAndDrain(
-        tester,
-        _wrapWithRouter(CreateTripScreen(args: args)),
-      );
+      await pumpAndDrain(tester, _wrapWithRouter(CreateTripScreen(args: args)));
 
       expect(find.text('Trajet dédié à la demande'), findsOneWidget);
     });
@@ -772,7 +724,7 @@ void main() {
         setupViewport(tester);
 
         final args = CreateTripArgs(announcement: _makeFullAnnouncement());
-        await _pumpAndDrain(
+        await pumpAndDrain(
           tester,
           _wrapWithRouter(CreateTripScreen(args: args)),
         );
@@ -800,10 +752,7 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
 
       final args = CreateTripArgs(announcement: _makeFullAnnouncement());
-      await _pumpAndDrain(
-        tester,
-        _wrapWithRouter(CreateTripScreen(args: args)),
-      );
+      await pumpAndDrain(tester, _wrapWithRouter(CreateTripScreen(args: args)));
 
       // Advance to step 1
       await tester.tap(find.text('Continuer'));
@@ -831,7 +780,7 @@ void main() {
         travelerId: 'trav-1',
         departureCity: 'Paris',
         arrivalCity: 'Dakar',
-        departureDate: DateTime(2026, 8, 1),
+        departureDate: DateTime(2026, 8),
         departureTime: '22:00',
         arrivalTime: '10:30',
         availableKg: 10.0,
@@ -839,10 +788,10 @@ void main() {
         pricePerKg: 9.5, // NOT in preset list
         status: 'ACTIVE',
         bidsCount: 0,
-        createdAt: DateTime(2026, 1, 1),
-        updatedAt: DateTime(2026, 1, 1),
-        handoverWindowStart: DateTime(2026, 8, 1, 16, 0),
-        handoverWindowEnd: DateTime(2026, 8, 1, 18, 0),
+        createdAt: DateTime(2026),
+        updatedAt: DateTime(2026),
+        handoverWindowStart: DateTime(2026, 8, 1, 16),
+        handoverWindowEnd: DateTime(2026, 8, 1, 18),
         pickupAddress: const AddressData(
           label: 'Tour Eiffel',
           lat: 48.858,
@@ -860,10 +809,7 @@ void main() {
       );
 
       final args = CreateTripArgs(announcement: ann);
-      await _pumpAndDrain(
-        tester,
-        _wrapWithRouter(CreateTripScreen(args: args)),
-      );
+      await pumpAndDrain(tester, _wrapWithRouter(CreateTripScreen(args: args)));
 
       // Screen renders in edit mode — verify the title confirms edit mode.
       expect(find.text('Modifier le trajet'), findsOneWidget);
@@ -880,17 +826,17 @@ void main() {
           travelerId: 'trav-1',
           departureCity: 'Paris',
           arrivalCity: 'Dakar',
-          departureDate: DateTime(2026, 8, 1),
+          departureDate: DateTime(2026, 8),
           departureTime: '22:00',
           availableKg: 10.0,
           totalKg: 23.0,
           pricePerKg: 8.0,
           status: 'ACTIVE',
           bidsCount: 0,
-          createdAt: DateTime(2026, 1, 1),
-          updatedAt: DateTime(2026, 1, 1),
-          handoverWindowStart: DateTime(2026, 8, 1, 16, 0),
-          handoverWindowEnd: DateTime(2026, 8, 1, 18, 0),
+          createdAt: DateTime(2026),
+          updatedAt: DateTime(2026),
+          handoverWindowStart: DateTime(2026, 8, 1, 16),
+          handoverWindowEnd: DateTime(2026, 8, 1, 18),
           transportMode: TransportMode.plane,
           acceptedPaymentMethods: {BidPaymentMethod.stripe},
           acceptedContentTypes: const ['Vêtements'],
@@ -899,7 +845,7 @@ void main() {
         );
 
         final args = CreateTripArgs(announcement: ann);
-        await _pumpAndDrain(
+        await pumpAndDrain(
           tester,
           _wrapWithRouter(CreateTripScreen(args: args)),
         );
@@ -916,10 +862,7 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
 
       final args = CreateTripArgs(announcement: _makeFullAnnouncement());
-      await _pumpAndDrain(
-        tester,
-        _wrapWithRouter(CreateTripScreen(args: args)),
-      );
+      await pumpAndDrain(tester, _wrapWithRouter(CreateTripScreen(args: args)));
 
       // Advance to step 2
       await tester.tap(find.text('Continuer'));
@@ -942,10 +885,7 @@ void main() {
       setupViewport(tester);
 
       final args = CreateTripArgs(announcement: _makeFullAnnouncement());
-      await _pumpAndDrain(
-        tester,
-        _wrapWithRouter(CreateTripScreen(args: args)),
-      );
+      await pumpAndDrain(tester, _wrapWithRouter(CreateTripScreen(args: args)));
 
       // Advance to step 1
       await tester.tap(find.text('Continuer'));
@@ -965,7 +905,7 @@ void main() {
   // ── Group: Template suggestion bar + _applyTemplate ──────────────────────────
 
   group('CreateTripScreen — Template suggestion bar', () {
-    const _mockTemplate = TripTemplate(
+    const mockTemplate = TripTemplate(
       id: 'tmpl-1',
       label: 'Paris → Dakar',
       departureCity: 'Paris',
@@ -987,7 +927,7 @@ void main() {
         when(() => b.state).thenReturn(
           const TripTemplateState(
             status: TripTemplateStatus.success,
-            templates: [_mockTemplate],
+            templates: [mockTemplate],
           ),
         );
         when(() => b.stream).thenAnswer((_) => const Stream.empty());
@@ -1013,10 +953,7 @@ void main() {
       registerCurrencyPreference('EUR');
       setupViewport(tester);
 
-      await _pumpAndDrain(
-        tester,
-        _wrapWithRouter(const CreateTripScreen(args: null)),
-      );
+      await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
 
       // The template bar shows the chip, prix formaté dans la devise active
       expect(find.textContaining('Paris → Dakar'), findsOneWidget);
@@ -1029,10 +966,7 @@ void main() {
     ) async {
       setupViewport(tester);
 
-      await _pumpAndDrain(
-        tester,
-        _wrapWithRouter(const CreateTripScreen(args: null)),
-      );
+      await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
 
       expect(find.byType(ActionChip), findsOneWidget);
 
@@ -1068,23 +1002,17 @@ void main() {
           travelerId: 'trav-1',
           departureCity: 'Paris',
           arrivalCity: 'Dakar',
-          departureDate: DateTime(2026, 8, 1),
+          departureDate: DateTime(2026, 8),
           departureTime: '22:00',
           availableKg: 10.0,
           totalKg: 23.0,
           pricePerKg: 8.0,
           status: 'ACTIVE',
           bidsCount: 0,
-          createdAt: DateTime(2026, 1, 1),
-          updatedAt: DateTime(2026, 1, 1),
-          handoverWindowStart: DateTime(2026, 8, 1, 20, 0),
-          handoverWindowEnd: DateTime(
-            2026,
-            8,
-            1,
-            23,
-            0,
-          ), // after 22:00 departure
+          createdAt: DateTime(2026),
+          updatedAt: DateTime(2026),
+          handoverWindowStart: DateTime(2026, 8, 1, 20),
+          handoverWindowEnd: DateTime(2026, 8, 1, 23), // after 22:00 departure
           transportMode: TransportMode.plane,
           acceptedPaymentMethods: {BidPaymentMethod.stripe},
           acceptedContentTypes: const ['Vêtements'],
@@ -1092,7 +1020,7 @@ void main() {
         );
 
         final args = CreateTripArgs(announcement: ann);
-        await _pumpAndDrain(
+        await pumpAndDrain(
           tester,
           _wrapWithRouter(CreateTripScreen(args: args)),
         );
@@ -1115,10 +1043,7 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
 
       final args = CreateTripArgs(announcement: _makeFullAnnouncement());
-      await _pumpAndDrain(
-        tester,
-        _wrapWithRouter(CreateTripScreen(args: args)),
-      );
+      await pumpAndDrain(tester, _wrapWithRouter(CreateTripScreen(args: args)));
 
       // Navigate to step 2
       await tester.tap(find.text('Continuer'));
@@ -1182,7 +1107,7 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
 
       final args = CreateTripArgs(announcement: _makeFullAnnouncement());
-      await _pumpAndDrain(
+      await pumpAndDrain(
         tester,
         _wrapWithRouter(CreateTripScreen(args: args), authState: authState),
       );
@@ -1279,7 +1204,7 @@ void main() {
         addTearDown(tester.view.resetPhysicalSize);
 
         final args = CreateTripArgs(announcement: _makeFullAnnouncement());
-        await _pumpAndDrain(
+        await pumpAndDrain(
           tester,
           _wrapWithRouter(CreateTripScreen(args: args)),
         );
@@ -1382,7 +1307,7 @@ void main() {
           routes: [
             GoRoute(
               path: '/',
-              builder: (_, __) => Scaffold(
+              builder: (_, _) => Scaffold(
                 body: Builder(
                   builder: (ctx) => ElevatedButton(
                     onPressed: () => ctx.push('/trips/create'),
@@ -1393,7 +1318,7 @@ void main() {
             ),
             GoRoute(
               path: '/trips/create',
-              builder: (_, __) => MultiBlocProvider(
+              builder: (_, _) => MultiBlocProvider(
                 providers: [
                   BlocProvider<StripeAccountBloc>.value(
                     value: _makeStripeBloc(),
@@ -1408,7 +1333,7 @@ void main() {
                     )..add(const HelpCenterLoadRequested()),
                   ),
                 ],
-                child: const CreateTripScreen(args: null),
+                child: const CreateTripScreen(),
               ),
             ),
           ],
@@ -1451,7 +1376,7 @@ void main() {
           routes: [
             GoRoute(
               path: '/',
-              builder: (_, __) => Scaffold(
+              builder: (_, _) => Scaffold(
                 body: Builder(
                   builder: (ctx) => ElevatedButton(
                     onPressed: () => ctx.push('/trips/create'),
@@ -1462,7 +1387,7 @@ void main() {
             ),
             GoRoute(
               path: '/trips/create',
-              builder: (_, __) => MultiBlocProvider(
+              builder: (_, _) => MultiBlocProvider(
                 providers: [
                   BlocProvider<StripeAccountBloc>.value(
                     value: _makeStripeBloc(),
@@ -1520,7 +1445,7 @@ void main() {
           routes: [
             GoRoute(
               path: '/',
-              builder: (_, __) => Scaffold(
+              builder: (_, _) => Scaffold(
                 body: Builder(
                   builder: (ctx) => ElevatedButton(
                     onPressed: () async {
@@ -1538,7 +1463,7 @@ void main() {
             ),
             GoRoute(
               path: '/trips/create',
-              builder: (_, __) => MultiBlocProvider(
+              builder: (_, _) => MultiBlocProvider(
                 providers: [
                   BlocProvider<StripeAccountBloc>.value(
                     value: _makeStripeBloc(),
@@ -1553,7 +1478,7 @@ void main() {
                     )..add(const HelpCenterLoadRequested()),
                   ),
                 ],
-                child: const CreateTripScreen(args: null),
+                child: const CreateTripScreen(),
               ),
             ),
             // Route de destination du CTA — vérifie qu'on atterrit bien sur
@@ -1602,13 +1527,12 @@ void main() {
     ) async {
       setupViewport(tester);
 
-      await _pumpAndDrain(
-        tester,
-        _wrapWithRouter(const CreateTripScreen(args: null)),
-      );
+      await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
 
       // Emit AnnouncementError — listener calls ErrorPresenter.show
-      annStreamCtrl.add(AnnouncementError(NetworkException('Erreur réseau')));
+      annStreamCtrl.add(
+        AnnouncementError(const NetworkException('Erreur réseau')),
+      );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 600));
 
@@ -1631,7 +1555,7 @@ void main() {
         routes: [
           GoRoute(
             path: '/',
-            builder: (_, __) => Scaffold(
+            builder: (_, _) => Scaffold(
               body: Builder(
                 builder: (ctx) => ElevatedButton(
                   onPressed: () => ctx.push('/trips/create'),
@@ -1642,7 +1566,7 @@ void main() {
           ),
           GoRoute(
             path: '/trips/create',
-            builder: (_, __) => MultiBlocProvider(
+            builder: (_, _) => MultiBlocProvider(
               providers: [
                 BlocProvider<StripeAccountBloc>.value(value: _makeStripeBloc()),
                 BlocProvider<HelpCenterBloc>(
@@ -1655,7 +1579,7 @@ void main() {
                   )..add(const HelpCenterLoadRequested()),
                 ),
               ],
-              child: const CreateTripScreen(args: null),
+              child: const CreateTripScreen(),
             ),
           ),
         ],
@@ -1695,10 +1619,7 @@ void main() {
     ) async {
       setupViewport(tester);
 
-      await _pumpAndDrain(
-        tester,
-        _wrapWithRouter(const CreateTripScreen(args: null)),
-      );
+      await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
 
       expect(find.byKey(const Key('sheet-handover-start-row')), findsOneWidget);
       expect(find.byKey(const Key('sheet-handover-end-row')), findsOneWidget);
@@ -1709,10 +1630,7 @@ void main() {
       (tester) async {
         setupViewport(tester);
 
-        await _pumpAndDrain(
-          tester,
-          _wrapWithRouter(const CreateTripScreen(args: null)),
-        );
+        await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
 
         expect(find.text('Choisir'), findsNWidgets(2));
       },
@@ -1725,7 +1643,7 @@ void main() {
 
         // _makeFullAnnouncement() porte une fenêtre 16:00 → 18:00.
         final args = CreateTripArgs(announcement: _makeFullAnnouncement());
-        await _pumpAndDrain(
+        await pumpAndDrain(
           tester,
           _wrapWithRouter(CreateTripScreen(args: args)),
         );
@@ -1753,18 +1671,18 @@ void main() {
           pricePerKg: 8.0,
           status: 'ACTIVE',
           bidsCount: 0,
-          createdAt: DateTime(2026, 1, 1),
-          updatedAt: DateTime(2026, 1, 1),
+          createdAt: DateTime(2026),
+          updatedAt: DateTime(2026),
           // Fin AVANT début → fenêtre invalide.
-          handoverWindowStart: DateTime(2026, 8, 20, 18, 0),
-          handoverWindowEnd: DateTime(2026, 8, 20, 16, 0),
+          handoverWindowStart: DateTime(2026, 8, 20, 18),
+          handoverWindowEnd: DateTime(2026, 8, 20, 16),
           transportMode: TransportMode.plane,
           acceptedPaymentMethods: {BidPaymentMethod.stripe},
           acceptedContentTypes: const ['Vêtements'],
           refusedTypes: const [],
         );
 
-        await _pumpAndDrain(
+        await pumpAndDrain(
           tester,
           _wrapWithRouter(
             CreateTripScreen(args: CreateTripArgs(announcement: ann)),
@@ -1785,10 +1703,7 @@ void main() {
       setupViewport(tester);
 
       final args = CreateTripArgs(announcement: _makeFullAnnouncement());
-      await _pumpAndDrain(
-        tester,
-        _wrapWithRouter(CreateTripScreen(args: args)),
-      );
+      await pumpAndDrain(tester, _wrapWithRouter(CreateTripScreen(args: args)));
 
       expect(find.byKey(const Key('sheet-handover-error')), findsNothing);
     });
@@ -1835,7 +1750,7 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
 
-      await _pumpAndDrain(
+      await pumpAndDrain(
         tester,
         _wrapWithRouter(
           CreateTripScreen(args: CreateTripArgs(announcement: ann)),
@@ -1860,7 +1775,7 @@ void main() {
           travelerId: 'trav-1',
           departureCity: 'Paris',
           arrivalCity: 'Dakar',
-          departureDate: DateTime(2026, 8, 1),
+          departureDate: DateTime(2026, 8),
           departureTime: '22:00',
           arrivalTime: '10:30',
           availableKg: 10.0,
@@ -1868,8 +1783,8 @@ void main() {
           pricePerKg: 8.0,
           status: 'ACTIVE',
           bidsCount: 0,
-          createdAt: DateTime(2026, 1, 1),
-          updatedAt: DateTime(2026, 1, 1),
+          createdAt: DateTime(2026),
+          updatedAt: DateTime(2026),
           pickupAddress: const AddressData(
             label: 'Tour Eiffel',
             lat: 48.858,
@@ -1890,7 +1805,7 @@ void main() {
         tester.view.devicePixelRatio = 1.0;
         addTearDown(tester.view.resetPhysicalSize);
 
-        await _pumpAndDrain(
+        await pumpAndDrain(
           tester,
           _wrapWithRouter(
             CreateTripScreen(args: CreateTripArgs(announcement: ann)),
@@ -1989,10 +1904,7 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
 
       final args = CreateTripArgs(announcement: _makeFullAnnouncement());
-      await _pumpAndDrain(
-        tester,
-        _wrapWithRouter(CreateTripScreen(args: args)),
-      );
+      await pumpAndDrain(tester, _wrapWithRouter(CreateTripScreen(args: args)));
       await tester.tap(find.text('Continuer'));
       await tester.pump(const Duration(milliseconds: 600));
       await tester.tap(find.text('Continuer'));
@@ -2084,7 +1996,7 @@ void main() {
       travelerId: 'trav-1',
       departureCity: 'Paris',
       arrivalCity: 'Dakar',
-      departureDate: DateTime(2026, 8, 1),
+      departureDate: DateTime(2026, 8),
       departureTime: departureTime,
       arrivalTime: arrivalTime == null
           ? null
@@ -2094,10 +2006,10 @@ void main() {
       pricePerKg: 8.0,
       status: 'ACTIVE',
       bidsCount: 0,
-      createdAt: DateTime(2026, 1, 1),
-      updatedAt: DateTime(2026, 1, 1),
-      handoverWindowStart: DateTime(2026, 8, 1, 16, 0),
-      handoverWindowEnd: DateTime(2026, 8, 1, 18, 0),
+      createdAt: DateTime(2026),
+      updatedAt: DateTime(2026),
+      handoverWindowStart: DateTime(2026, 8, 1, 16),
+      handoverWindowEnd: DateTime(2026, 8, 1, 18),
       pickupAddress: pickupAddress,
       deliveryAddress: deliveryAddress,
       transportMode: TransportMode.plane,
@@ -2111,7 +2023,7 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
 
-      await _pumpAndDrain(
+      await pumpAndDrain(
         tester,
         _wrapWithRouter(
           CreateTripScreen(
@@ -2369,10 +2281,7 @@ void main() {
         announcement: _makeFullAnnouncement(),
         negotiationBloc: negotiationBloc,
       );
-      await _pumpAndDrain(
-        tester,
-        _wrapWithRouter(CreateTripScreen(args: args)),
-      );
+      await pumpAndDrain(tester, _wrapWithRouter(CreateTripScreen(args: args)));
 
       await tester.tap(find.text('Continuer'));
       await tester.pump(const Duration(milliseconds: 600));
@@ -2494,7 +2403,7 @@ void main() {
         // Same form data as the original submit — not a fresh/empty request.
         expect(resubmit.pickupAddress['label'], 'Tour Eiffel');
         expect(resubmit.deliveryAddress['label'], 'Dakar Centre');
-        expect(resubmit.departureDate, DateTime(2026, 8, 1));
+        expect(resubmit.departureDate, DateTime(2026, 8));
       },
     );
 

@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 Widget _wrap(Widget child) => MaterialApp(home: Scaffold(body: child));
 
 void main() {
-  final deletionDate = DateTime(2026, 5, 6, 10, 0, 0);
+  final deletionDate = DateTime(2026, 5, 6, 10);
 
   testWidgets('shows deletion date (J+30)', (tester) async {
     await tester.pumpWidget(

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/core/widgets/dony_keypad.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -7,7 +8,6 @@ import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/local_auth_bloc.dart';
 import 'package:dony/features/auth/bloc/local_auth_event.dart';
 import 'package:dony/features/auth/bloc/local_auth_state.dart';
-import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

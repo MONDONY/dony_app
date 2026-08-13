@@ -1,13 +1,12 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/features/corridor_alerts/data/corridor_alert_repository.dart';
+import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
 import 'package:equatable/equatable.dart';
-
-import '../../../core/services/analytics_events.dart';
-import '../../../core/services/analytics_service.dart';
-import '../../../core/storage/hive_service.dart';
-import '../data/corridor_alert_repository.dart';
-import '../data/models/corridor_alert_model.dart';
 
 sealed class CorridorAlertListEvent extends Equatable {
   const CorridorAlertListEvent();
@@ -49,12 +48,11 @@ class CorridorAlertListState extends Equatable {
     CorridorAlertListStatus? status,
     List<CorridorAlertModel>? alerts,
     String? errorMessage,
-  }) =>
-      CorridorAlertListState(
-        status: status ?? this.status,
-        alerts: alerts ?? this.alerts,
-        errorMessage: errorMessage ?? this.errorMessage,
-      );
+  }) => CorridorAlertListState(
+    status: status ?? this.status,
+    alerts: alerts ?? this.alerts,
+    errorMessage: errorMessage ?? this.errorMessage,
+  );
 
   @override
   List<Object?> get props => [status, alerts, errorMessage];
@@ -62,9 +60,12 @@ class CorridorAlertListState extends Equatable {
 
 class CorridorAlertListBloc
     extends Bloc<CorridorAlertListEvent, CorridorAlertListState> {
-  CorridorAlertListBloc(this._repository, this._analytics, {HiveService? hiveService})
-      : _hiveService = hiveService,
-        super(const CorridorAlertListState()) {
+  CorridorAlertListBloc(
+    this._repository,
+    this._analytics, {
+    HiveService? hiveService,
+  }) : _hiveService = hiveService,
+       super(const CorridorAlertListState()) {
     on<CorridorAlertListRequested>(_onLoad);
     on<CorridorAlertActiveToggled>(_onToggle);
     on<CorridorAlertDeleted>(_onDelete);
@@ -75,15 +76,15 @@ class CorridorAlertListBloc
   final HiveService? _hiveService;
 
   Future<void> _onLoad(
-      CorridorAlertListRequested e,
-      Emitter<CorridorAlertListState> emit) async {
+    CorridorAlertListRequested e,
+    Emitter<CorridorAlertListState> emit,
+  ) async {
     emit(state.copyWith(status: CorridorAlertListStatus.loading));
     try {
       final alerts = await _repository.getMyAlerts();
-      emit(state.copyWith(
-        status: CorridorAlertListStatus.loaded,
-        alerts: alerts,
-      ));
+      emit(
+        state.copyWith(status: CorridorAlertListStatus.loaded, alerts: alerts),
+      );
       // Rattrapage pour les utilisateurs ayant des alertes actives créées
       // avant ce flag (kHasActiveCorridorAlert n'était posé qu'à la
       // création/édition réussie via CorridorAlertFormCubit.submit()) :
@@ -97,24 +98,29 @@ class CorridorAlertListBloc
         );
       }
     } catch (err) {
-      emit(state.copyWith(
-        status: CorridorAlertListStatus.error,
-        errorMessage: err.toString(),
-      ));
+      emit(
+        state.copyWith(
+          status: CorridorAlertListStatus.error,
+          errorMessage: err.toString(),
+        ),
+      );
     }
   }
 
   Future<void> _onToggle(
-      CorridorAlertActiveToggled e,
-      Emitter<CorridorAlertListState> emit) async {
+    CorridorAlertActiveToggled e,
+    Emitter<CorridorAlertListState> emit,
+  ) async {
     final previous = state.alerts;
     final target = previous.firstWhere((a) => a.id == e.id);
     // Optimistic: flip active immediately.
-    emit(state.copyWith(
-      alerts: previous
-          .map((a) => a.id == e.id ? a.copyWith(active: e.active) : a)
-          .toList(),
-    ));
+    emit(
+      state.copyWith(
+        alerts: previous
+            .map((a) => a.id == e.id ? a.copyWith(active: e.active) : a)
+            .toList(),
+      ),
+    );
     try {
       final updated = await _repository.update(
         e.id,
@@ -133,46 +139,57 @@ class CorridorAlertListBloc
       // Reconcile with server truth only when matchCount changed.
       final currentTarget = state.alerts.firstWhere((a) => a.id == e.id);
       if (currentTarget.matchCount != updated.matchCount) {
-        emit(state.copyWith(
-          alerts: state.alerts
-              .map((a) => a.id == e.id
-                  ? a.copyWith(
-                      active: updated.active, matchCount: updated.matchCount)
-                  : a)
-              .toList(),
-        ));
+        emit(
+          state.copyWith(
+            alerts: state.alerts
+                .map(
+                  (a) => a.id == e.id
+                      ? a.copyWith(
+                          active: updated.active,
+                          matchCount: updated.matchCount,
+                        )
+                      : a,
+                )
+                .toList(),
+          ),
+        );
       }
-      unawaited(_analytics.logEvent(
-        AnalyticsEvents.corridorAlertToggled,
-        properties: {'active': e.active},
-      ));
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.corridorAlertToggled,
+          properties: {'active': e.active},
+        ),
+      );
     } catch (err) {
       // Rollback to previous list.
-      emit(state.copyWith(
-        status: CorridorAlertListStatus.error,
-        alerts: previous,
-        errorMessage: err.toString(),
-      ));
+      emit(
+        state.copyWith(
+          status: CorridorAlertListStatus.error,
+          alerts: previous,
+          errorMessage: err.toString(),
+        ),
+      );
     }
   }
 
   Future<void> _onDelete(
-      CorridorAlertDeleted e,
-      Emitter<CorridorAlertListState> emit) async {
+    CorridorAlertDeleted e,
+    Emitter<CorridorAlertListState> emit,
+  ) async {
     final previous = state.alerts;
     // Optimistic: remove immediately.
-    emit(state.copyWith(
-      alerts: previous.where((a) => a.id != e.id).toList(),
-    ));
+    emit(state.copyWith(alerts: previous.where((a) => a.id != e.id).toList()));
     try {
       await _repository.delete(e.id);
       unawaited(_analytics.logEvent(AnalyticsEvents.corridorAlertDeleted));
     } catch (err) {
-      emit(state.copyWith(
-        status: CorridorAlertListStatus.error,
-        alerts: previous,
-        errorMessage: err.toString(),
-      ));
+      emit(
+        state.copyWith(
+          status: CorridorAlertListStatus.error,
+          alerts: previous,
+          errorMessage: err.toString(),
+        ),
+      );
     }
   }
 }

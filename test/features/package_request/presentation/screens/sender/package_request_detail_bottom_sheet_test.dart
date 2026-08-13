@@ -6,7 +6,6 @@
 // grille (Publier/Dépublier/Annuler), pas seulement leur présence.
 
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -39,7 +38,7 @@ PackageRequest _fakeRequest({
   transportMode: TransportMode.plane,
   categories: const ['Vêtements'],
   status: status,
-  createdAt: DateTime(2026, 1, 1),
+  createdAt: DateTime(2026),
 );
 
 Widget _buildApp() {
@@ -91,7 +90,7 @@ void main() {
     }
   });
 
-  Future<void> _openSheet(WidgetTester tester) async {
+  Future<void> openSheet(WidgetTester tester) async {
     await tester.pumpWidget(_buildApp());
     await tester.tap(find.text('open sheet'));
     await tester.pumpAndSettle();
@@ -101,7 +100,7 @@ void main() {
     when(() => repo.getById('pr-1')).thenAnswer((_) async => _fakeRequest());
     when(() => repo.listThreadsForRequest('pr-1')).thenAnswer((_) async => []);
 
-    await _openSheet(tester);
+    await openSheet(tester);
 
     expect(find.text('Ma demande'), findsOneWidget);
     expect(find.textContaining('Paris'), findsWidgets);
@@ -120,7 +119,7 @@ void main() {
       return _fakeRequest(status: status);
     });
 
-    await _openSheet(tester);
+    await openSheet(tester);
 
     expect(find.text('Publier'), findsOneWidget);
 
@@ -150,7 +149,7 @@ void main() {
       return _fakeRequest(status: status);
     });
 
-    await _openSheet(tester);
+    await openSheet(tester);
 
     expect(find.text('Dépublier'), findsOneWidget);
 
@@ -167,15 +166,13 @@ void main() {
   testWidgets(
     'confirming Annuler tile calls repo.cancel and closes the sheet',
     (tester) async {
-      when(() => repo.getById('pr-1')).thenAnswer(
-        (_) async => _fakeRequest(status: PackageRequestStatus.open),
-      );
+      when(() => repo.getById('pr-1')).thenAnswer((_) async => _fakeRequest());
       when(
         () => repo.listThreadsForRequest('pr-1'),
       ).thenAnswer((_) async => []);
       when(() => repo.cancel('pr-1')).thenAnswer((_) async {});
 
-      await _openSheet(tester);
+      await openSheet(tester);
       expect(find.text('Ma demande'), findsOneWidget);
 
       await tester.tap(find.text('Annuler'));
@@ -196,13 +193,11 @@ void main() {
       '(régression : le pop ne doit pas s\'exécuter sur échec)', (
     tester,
   ) async {
-    when(
-      () => repo.getById('pr-1'),
-    ).thenAnswer((_) async => _fakeRequest(status: PackageRequestStatus.open));
+    when(() => repo.getById('pr-1')).thenAnswer((_) async => _fakeRequest());
     when(() => repo.listThreadsForRequest('pr-1')).thenAnswer((_) async => []);
     when(() => repo.cancel('pr-1')).thenThrow(Exception('boom'));
 
-    await _openSheet(tester);
+    await openSheet(tester);
 
     await tester.tap(find.text('Annuler'));
     await tester.pumpAndSettle();

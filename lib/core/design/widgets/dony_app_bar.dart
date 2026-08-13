@@ -31,6 +31,7 @@ class DonyAppBar extends StatelessWidget implements PreferredSizeWidget {
   final DonyAppBarVariant variant;
   final VoidCallback? onBack;
   final bool showBackButton;
+
   /// Override l'icône du bouton retour (ex: Icons.close_rounded pour les modals).
   final IconData? leadingIcon;
 
@@ -41,9 +42,8 @@ class DonyAppBar extends StatelessWidget implements PreferredSizeWidget {
   final PreferredSizeWidget? bottom;
 
   @override
-  Size get preferredSize => Size.fromHeight(
-        56 + (bottom?.preferredSize.height ?? 0),
-      );
+  Size get preferredSize =>
+      Size.fromHeight(56 + (bottom?.preferredSize.height ?? 0));
 
   @override
   Widget build(BuildContext context) {
@@ -67,7 +67,8 @@ class DonyAppBar extends StatelessWidget implements PreferredSizeWidget {
           : null,
       automaticallyImplyLeading: showBackButton,
       actions: actions,
-      bottom: bottom ??
+      bottom:
+          bottom ??
           const PreferredSize(
             preferredSize: Size.fromHeight(1),
             child: Divider(height: 1),
@@ -157,14 +158,16 @@ class DonySliverAppBar extends StatelessWidget {
       leading: showBackButton
           ? IconButton(
               tooltip: 'Retour',
-              onPressed: onBack ?? () {
-                HapticFeedback.lightImpact();
-                if (context.canPop()) {
-                  context.pop();
-                } else {
-                  context.go('/home');
-                }
-              },
+              onPressed:
+                  onBack ??
+                  () {
+                    HapticFeedback.lightImpact();
+                    if (context.canPop()) {
+                      context.pop();
+                    } else {
+                      context.go('/home');
+                    }
+                  },
               icon: Container(
                 width: 36,
                 height: 36,
@@ -184,7 +187,10 @@ class DonySliverAppBar extends StatelessWidget {
       actions: actions,
       flexibleSpace: FlexibleSpaceBar(
         titlePadding: const EdgeInsets.fromLTRB(
-          DonySpacing.lg, 0, DonySpacing.lg, DonySpacing.base,
+          DonySpacing.lg,
+          0,
+          DonySpacing.lg,
+          DonySpacing.base,
         ),
         title: Text(
           title,
@@ -194,10 +200,14 @@ class DonySliverAppBar extends StatelessWidget {
         ),
         collapseMode: CollapseMode.pin,
       ),
-      bottom: bottom ??
+      bottom:
+          bottom ??
           PreferredSize(
             preferredSize: const Size.fromHeight(1),
-            child: Container(color: Theme.of(context).colorScheme.outline, height: 1),
+            child: Container(
+              color: Theme.of(context).colorScheme.outline,
+              height: 1,
+            ),
           ),
     );
   }

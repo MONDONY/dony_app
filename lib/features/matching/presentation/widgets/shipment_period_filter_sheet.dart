@@ -33,8 +33,10 @@ class ShipmentPeriodFilterSheet {
       title: 'Filtrer par période',
       stickyBottom: DonyButton(
         label: 'Appliquer',
-        onPressed: () => Navigator.of(context, rootNavigator: true)
-            .pop(ShipmentPeriodResult(basisN.value, presetN.value, rangeN.value)),
+        onPressed: () => Navigator.of(
+          context,
+          rootNavigator: true,
+        ).pop(ShipmentPeriodResult(basisN.value, presetN.value, rangeN.value)),
       ),
       child: AnimatedBuilder(
         animation: Listenable.merge([basisN, presetN, rangeN]),
@@ -81,10 +83,12 @@ class ShipmentPeriodFilterSheet {
                       },
                     ),
                   ChoiceChip(
-                    label: Text(rangeN.value != null &&
-                            presetN.value == ShipmentPeriodPreset.custom
-                        ? 'Personnalisé ✓'
-                        : 'Personnalisé'),
+                    label: Text(
+                      rangeN.value != null &&
+                              presetN.value == ShipmentPeriodPreset.custom
+                          ? 'Personnalisé ✓'
+                          : 'Personnalisé',
+                    ),
                     selected: presetN.value == ShipmentPeriodPreset.custom,
                     onSelected: (_) async {
                       final picked = await showDateRangePicker(
@@ -94,9 +98,9 @@ class ShipmentPeriodFilterSheet {
                         initialDateRange: rangeN.value,
                         builder: (ctx, child) => Theme(
                           data: Theme.of(ctx).copyWith(
-                            colorScheme: Theme.of(ctx)
-                                .colorScheme
-                                .copyWith(primary: cs.primary),
+                            colorScheme: Theme.of(
+                              ctx,
+                            ).colorScheme.copyWith(primary: cs.primary),
                           ),
                           child: child!,
                         ),
@@ -122,7 +126,11 @@ class ShipmentPeriodFilterSheet {
 }
 
 class _BasisTab extends StatelessWidget {
-  const _BasisTab({required this.label, required this.active, required this.onTap});
+  const _BasisTab({
+    required this.label,
+    required this.active,
+    required this.onTap,
+  });
   final String label;
   final bool active;
   final VoidCallback onTap;
@@ -140,7 +148,12 @@ class _BasisTab extends StatelessWidget {
             color: active ? cs.surface : Colors.transparent,
             borderRadius: BorderRadius.circular(DonyRadius.sm),
             boxShadow: active
-                ? [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 3)]
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.08),
+                      blurRadius: 3,
+                    ),
+                  ]
                 : null,
           ),
           child: Center(

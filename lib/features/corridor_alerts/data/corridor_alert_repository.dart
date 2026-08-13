@@ -15,9 +15,7 @@ class CorridorAlertRepository {
   }) async {
     final response = await _apiClient.dio.get<List<dynamic>>(
       '/me/corridor-alerts',
-      queryParameters: {
-        if (direction != null) 'direction': direction.wire,
-      },
+      queryParameters: {if (direction != null) 'direction': direction.wire},
     );
     return (response.data ?? <dynamic>[])
         .map((e) => CorridorAlertModel.fromJson(e as Map<String, dynamic>))
@@ -59,8 +57,9 @@ class CorridorAlertRepository {
     String id,
     AlertDirection direction,
   ) async {
-    final response = await _apiClient.dio
-        .get<List<dynamic>>('/me/corridor-alerts/$id/matches');
+    final response = await _apiClient.dio.get<List<dynamic>>(
+      '/me/corridor-alerts/$id/matches',
+    );
     final raw = response.data ?? <dynamic>[];
     if (direction == AlertDirection.senderWantsTrips) {
       return CorridorAlertMatches(

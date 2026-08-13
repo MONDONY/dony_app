@@ -246,7 +246,7 @@ void main() {
   testWidgets(
     "n'affiche pas le badge KYC quand le voyageur n'est pas vérifié",
     (tester) async {
-      final a = _buildAnnouncement(kycVerified: false);
+      final a = _buildAnnouncement();
       await tester.pumpWidget(_harness(announcement: a));
       await tester.tap(find.text('Ouvrir'));
       await tester.pumpAndSettle();
@@ -297,8 +297,8 @@ void main() {
       announcementId: announcementId,
       senderId: 'u1',
       status: 'ACCEPTED',
-      createdAt: DateTime(2026, 1, 1),
-      updatedAt: DateTime(2026, 1, 1),
+      createdAt: DateTime(2026),
+      updatedAt: DateTime(2026),
     );
 
     BidModel bidOn(String announcementId, String status) => BidModel(
@@ -306,8 +306,8 @@ void main() {
       announcementId: announcementId,
       senderId: 'u1',
       status: status,
-      createdAt: DateTime(2026, 1, 1),
-      updatedAt: DateTime(2026, 1, 1),
+      createdAt: DateTime(2026),
+      updatedAt: DateTime(2026),
     );
 
     testWidgets('colis ACCEPTED sur ce trajet → message + « Voir mon colis », '

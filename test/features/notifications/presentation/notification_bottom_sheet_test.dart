@@ -72,7 +72,7 @@ void main() {
   }
 
   testWidgets('ouverture : la liste est demandée au bloc', (tester) async {
-    stub(NotificationInitial());
+    stub(const NotificationInitial());
 
     await pumpSheet(tester, settle: false);
 
@@ -83,7 +83,7 @@ void main() {
   });
 
   testWidgets('erreur : état d’erreur avec action de réessai', (tester) async {
-    stub(NotificationError(const NetworkException('Hors ligne')));
+    stub(const NotificationError(NetworkException('Hors ligne')));
 
     await pumpSheet(tester);
 
@@ -99,7 +99,7 @@ void main() {
   });
 
   testWidgets('aucune notification : état vide dédié', (tester) async {
-    stub(NotificationLoaded(notifications: const [], unreadCount: 0));
+    stub(const NotificationLoaded(notifications: [], unreadCount: 0));
 
     await pumpSheet(tester);
 

@@ -101,7 +101,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 // « Modifier le profil » — la hauteur de repli n'a donc plus
                 // jamais à compter avec sa section (toujours absente ici).
                 final fallbackHeight =
-                    topPad + 56.0 + _kContentHeight - _kProgressBarSectionHeight;
+                    topPad +
+                    56.0 +
+                    _kContentHeight -
+                    _kProgressBarSectionHeight;
                 // La hauteur mesurée inclut topPad (ProfileHeader le pose
                 // en padding). Or SliverAppBar ré-ajoute topPad par-dessus
                 // expandedHeight → l'extent vaudrait header+topPad et

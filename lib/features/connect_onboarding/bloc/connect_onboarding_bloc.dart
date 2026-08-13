@@ -10,7 +10,7 @@ class ConnectOnboardingBloc
   final IConnectOnboardingRepository _repository;
 
   ConnectOnboardingBloc(this._repository)
-      : super(const ConnectOnboardingInitial()) {
+    : super(const ConnectOnboardingInitial()) {
     on<ConnectOnboardingStatusRequested>(_onStatusRequested);
     on<ConnectOnboardingLinkRequested>(_onLinkRequested);
     on<ConnectOnboardingPollingRequested>(_onPollingRequested);
@@ -77,6 +77,10 @@ class ConnectOnboardingBloc
     ConnectOnboardingLaunchFailed event,
     Emitter<ConnectOnboardingState> emit,
   ) async {
-    emit(ConnectOnboardingError(NetworkException(event.message, code: 'launch-failed')));
+    emit(
+      ConnectOnboardingError(
+        NetworkException(event.message, code: 'launch-failed'),
+      ),
+    );
   }
 }

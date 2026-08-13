@@ -13,7 +13,7 @@ void main() {
 
   const bidId = '550e8400-e29b-41d4-a716-446655440000';
 
-  const _pendingModel = MobileMoneyPaymentModel(
+  const pendingModel = MobileMoneyPaymentModel(
     id: 'payment-id-1',
     status: 'PENDING',
     amount: 50.0,
@@ -21,7 +21,7 @@ void main() {
     paymentLink: 'https://wave.test/pay?ref=abc',
   );
 
-  const _completedModel = MobileMoneyPaymentModel(
+  const completedModel = MobileMoneyPaymentModel(
     id: 'payment-id-2',
     status: 'COMPLETED',
     amount: 50.0,
@@ -36,19 +36,21 @@ void main() {
   group('MobileMoneyRepository', () {
     group('getStatus', () {
       test('delegates to datasource.getStatus and returns model', () async {
-        when(() => datasource.getStatus(bidId))
-            .thenAnswer((_) async => _pendingModel);
+        when(
+          () => datasource.getStatus(bidId),
+        ).thenAnswer((_) async => pendingModel);
 
         final result = await repository.getStatus(bidId);
 
         verify(() => datasource.getStatus(bidId)).called(1);
-        expect(result, equals(_pendingModel));
+        expect(result, equals(pendingModel));
         expect(result.status, 'PENDING');
       });
 
       test('propagates exception from datasource', () async {
-        when(() => datasource.getStatus(bidId))
-            .thenAnswer((_) => Future.error(Exception('Network error')));
+        when(
+          () => datasource.getStatus(bidId),
+        ).thenAnswer((_) => Future.error(Exception('Network error')));
 
         await expectLater(
           repository.getStatus(bidId),
@@ -58,21 +60,25 @@ void main() {
     });
 
     group('regenerateLink', () {
-      test('delegates to datasource.regenerateLink and returns model',
-          () async {
-        when(() => datasource.regenerateLink(bidId))
-            .thenAnswer((_) async => _completedModel);
+      test(
+        'delegates to datasource.regenerateLink and returns model',
+        () async {
+          when(
+            () => datasource.regenerateLink(bidId),
+          ).thenAnswer((_) async => completedModel);
 
-        final result = await repository.regenerateLink(bidId);
+          final result = await repository.regenerateLink(bidId);
 
-        verify(() => datasource.regenerateLink(bidId)).called(1);
-        expect(result, equals(_completedModel));
-        expect(result.status, 'COMPLETED');
-      });
+          verify(() => datasource.regenerateLink(bidId)).called(1);
+          expect(result, equals(completedModel));
+          expect(result.status, 'COMPLETED');
+        },
+      );
 
       test('propagates exception from datasource', () async {
-        when(() => datasource.regenerateLink(bidId))
-            .thenAnswer((_) => Future.error(Exception('403 Forbidden')));
+        when(
+          () => datasource.regenerateLink(bidId),
+        ).thenAnswer((_) => Future.error(Exception('403 Forbidden')));
 
         await expectLater(
           repository.regenerateLink(bidId),

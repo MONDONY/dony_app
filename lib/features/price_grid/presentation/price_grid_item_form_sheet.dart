@@ -12,10 +12,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// Règle CLAUDE.md : le [DonyButton] est toujours dans [stickyBottom],
 /// jamais dans le [child] scrollable.
 abstract final class PriceGridItemFormSheet {
-  static Future<void> show(
-    BuildContext context, {
-    PriceGridItemModel? item,
-  }) {
+  static Future<void> show(BuildContext context, {PriceGridItemModel? item}) {
     final bloc = context.read<PriceGridBloc>();
     final isValid = ValueNotifier<bool>(false);
     VoidCallback? submitFn;
@@ -60,8 +57,7 @@ class _PriceGridItemFormContent extends StatefulWidget {
       _PriceGridItemFormContentState();
 }
 
-class _PriceGridItemFormContentState
-    extends State<_PriceGridItemFormContent> {
+class _PriceGridItemFormContentState extends State<_PriceGridItemFormContent> {
   late final TextEditingController _labelController;
   late final TextEditingController _priceController;
   final _formKey = GlobalKey<FormState>();
@@ -72,8 +68,7 @@ class _PriceGridItemFormContentState
   @override
   void initState() {
     super.initState();
-    _labelController =
-        TextEditingController(text: widget.item?.label ?? '');
+    _labelController = TextEditingController(text: widget.item?.label ?? '');
     _priceController = TextEditingController(
       text: widget.item != null
           ? widget.item!.unitPriceNet.toStringAsFixed(2)
@@ -133,11 +128,13 @@ class _PriceGridItemFormContentState
     if (widget.item == null) {
       bloc.add(PriceGridItemAddRequested(label: label, unitPriceNet: price));
     } else {
-      bloc.add(PriceGridItemUpdateRequested(
-        itemId: widget.item!.id,
-        label: label,
-        unitPriceNet: price,
-      ));
+      bloc.add(
+        PriceGridItemUpdateRequested(
+          itemId: widget.item!.id,
+          label: label,
+          unitPriceNet: price,
+        ),
+      );
     }
 
     Navigator.of(context, rootNavigator: true).pop();
@@ -176,9 +173,13 @@ class _PriceGridItemFormContentState
           // Price field
           DonyTextField(
             controller: _priceController,
-            label: 'Prix net (€)',
+            label: 'Prix net ($activeCurrencySymbol)',
             hint: 'Ex : 10.00',
-            prefixWidget: DonyIcon('euro', size: 20, color: cs.onSurfaceVariant),
+            prefixWidget: DonyIcon(
+              'euro',
+              size: 20,
+              color: cs.onSurfaceVariant,
+            ),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             validator: (v) {
               if (v == null || v.trim().isEmpty) {
@@ -191,8 +192,8 @@ class _PriceGridItemFormContentState
               if (parsed <= 0) {
                 return 'Le prix doit être positif';
               }
-              if (parsed > 500) {
-                return 'Maximum 500 € par article';
+              if (parsed > maxUnitPriceActive) {
+                return 'Maximum ${formatPriceActive(maxUnitPriceActive)} par article';
               }
               return null;
             },
@@ -215,16 +216,12 @@ class _PriceGridItemFormContentState
                     ),
                     child: Row(
                       children: [
-                        DonyIcon(
-                          'eye',
-                          size: 16,
-                          color: cs.primary,
-                        ),
+                        DonyIcon('eye', size: 16, color: cs.primary),
                         const SizedBox(width: DonySpacing.xs),
                         Expanded(
                           child: Text(
                             'L\'expéditeur verra '
-                            '${netToSenderPrice(_parsedPrice!).toStringAsFixed(2)} € '
+                            '${formatPriceActive(netToSenderPrice(_parsedPrice!))} '
                             '(+${(donyCommissionRate * 100).toStringAsFixed(0)} % Yadony)',
                             style: tt.bodySmall?.copyWith(color: cs.primary),
                           ),

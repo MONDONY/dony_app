@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
 
 class DonyHeroAvatar extends StatelessWidget {
-  const DonyHeroAvatar({
-    super.key,
-    required this.emoji,
-    this.size = 88,
-  });
+  const DonyHeroAvatar({super.key, required this.emoji, this.size = 88});
 
   final String emoji;
   final double size;

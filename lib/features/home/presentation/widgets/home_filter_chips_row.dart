@@ -12,6 +12,7 @@
 // animation et, plus grave, ferait clignoter un état identique.
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
@@ -128,11 +129,12 @@ class HomeFilterChipsRow extends StatelessWidget {
   }
 
   String get _priceLabel => filters.maxPricePerKg != null
-      ? '≤ ${filters.maxPricePerKg!.toStringAsFixed(0)} €/kg'
+      ? '≤ ${formatPriceActive(filters.maxPricePerKg!)}/kg'
       : 'Prix';
 
-  String get _maxWeightLabel =>
-      filters.maxWeight != null ? '≤ ${filters.maxWeight!.toInt()} kg' : 'Kilos';
+  String get _maxWeightLabel => filters.maxWeight != null
+      ? '≤ ${filters.maxWeight!.toInt()} kg'
+      : 'Kilos';
 
   String get _parcelSizeLabel =>
       filters.parcelSize != null ? filters.parcelSize!.wireName : 'Taille';
@@ -222,8 +224,9 @@ class HomeFilterChipsRow extends StatelessWidget {
               label: _maxWeightLabel,
               isActive: filters.maxWeight != null,
               iconAsset: 'dumbbell',
-              onTap:
-                  filters.maxWeight != null ? onMaxWeightClear : onMaxWeightTap,
+              onTap: filters.maxWeight != null
+                  ? onMaxWeightClear
+                  : onMaxWeightTap,
             ),
             const SizedBox(width: DonySpacing.xs),
             HomeSmallChip(

@@ -1,7 +1,7 @@
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/request_filter_cubit.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
-import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 PackageRequest _req({
@@ -21,7 +21,7 @@ PackageRequest _req({
   transportMode: TransportMode.plane,
   categories: [catLabel],
   status: status,
-  createdAt: DateTime(2026, 5, 1),
+  createdAt: DateTime(2026, 5),
 );
 
 void main() {
@@ -44,7 +44,7 @@ void main() {
 
   group('isSearchRequest', () {
     test('open / negotiating / expired / cancelled = en recherche', () {
-      expect(isSearchRequest(_req(status: PackageRequestStatus.open)), isTrue);
+      expect(isSearchRequest(_req()), isTrue);
       expect(
         isSearchRequest(_req(status: PackageRequestStatus.negotiating)),
         isTrue,
@@ -75,7 +75,7 @@ void main() {
 
   group('applyRequestFilters', () {
     final all = [
-      _req(arrivee: 'Dakar', status: PackageRequestStatus.open),
+      _req(),
       _req(arrivee: 'Lyon', status: PackageRequestStatus.negotiating),
       _req(arrivee: 'Abidjan', status: PackageRequestStatus.accepted),
       _req(arrivee: 'Douala', status: PackageRequestStatus.cancelled),
@@ -109,7 +109,7 @@ void main() {
     test('recherche + preset (ET)', () {
       final r = applyRequestFilters(
         all,
-        const RequestFilterState(preset: RequestQuickFilter.all, query: 'lyon'),
+        const RequestFilterState(query: 'lyon'),
       );
       expect(r.single.arrivalCity, 'Lyon');
     });

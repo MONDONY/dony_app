@@ -1,5 +1,4 @@
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -44,8 +43,9 @@ void main() {
     );
   });
 
-  testWidgets('la pastille du DonyChip garde sa taille visuelle',
-      (tester) async {
+  testWidgets('la pastille du DonyChip garde sa taille visuelle', (
+    tester,
+  ) async {
     // La correction agrandit la zone tappable, pas le dessin. Si la pastille
     // grossissait, tous les filtres de recherche doubleraient de hauteur.
     await tester.pumpWidget(
@@ -67,8 +67,9 @@ void main() {
     );
   });
 
-  testWidgets('DonyChip reste cliquable dans sa marge transparente',
-      (tester) async {
+  testWidgets('DonyChip reste cliquable dans sa marge transparente', (
+    tester,
+  ) async {
     // `HitTestBehavior.opaque` est le cœur de la correction : sans lui, la
     // marge ajoutée serait visuellement là mais ne recevrait aucun tap.
     var taps = 0;
@@ -103,8 +104,9 @@ void main() {
     );
   });
 
-  testWidgets('une option de DonyRadioGroup est visable au pouce',
-      (tester) async {
+  testWidgets('une option de DonyRadioGroup est visable au pouce', (
+    tester,
+  ) async {
     await expectTapTarget(
       tester,
       'DonyRadioGroup',
@@ -123,8 +125,7 @@ void main() {
     );
   });
 
-  testWidgets('une ligne de DonyListTile est visable au pouce',
-      (tester) async {
+  testWidgets('une ligne de DonyListTile est visable au pouce', (tester) async {
     await expectTapTarget(
       tester,
       'DonyListTile',

@@ -19,8 +19,8 @@ BidModel _bid(String id, String status) => BidModel(
   senderId: 's1',
   weightKg: 5,
   status: status,
-  createdAt: DateTime(2026, 1, 1),
-  updatedAt: DateTime(2026, 1, 1),
+  createdAt: DateTime(2026),
+  updatedAt: DateTime(2026),
 );
 
 TravelerBidsPage _page(
@@ -85,7 +85,7 @@ void main() {
       build: () {
         stubPages({
           0: _page([_bid('b1', 'PENDING')], isLast: false),
-          1: _page([_bid('b2', 'ACCEPTED')], page: 1, isLast: true),
+          1: _page([_bid('b2', 'ACCEPTED')], page: 1),
         });
         return bloc();
       },

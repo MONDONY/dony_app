@@ -34,31 +34,33 @@ void main() {
   });
 
   Widget wrap() => MaterialApp(
-        home: MediaQuery(
-          data: const MediaQueryData(size: Size(390, 844)),
-          child: MultiBlocProvider(
-            providers: [
-              BlocProvider.value(value: reportCubit),
-              BlocProvider.value(value: photosCubit),
-            ],
-            child: const IncidentReportScreen(),
-          ),
-        ),
-      );
+    home: MediaQuery(
+      data: const MediaQueryData(size: Size(390, 844)),
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider.value(value: reportCubit),
+          BlocProvider.value(value: photosCubit),
+        ],
+        child: const IncidentReportScreen(),
+      ),
+    ),
+  );
 
-  testWidgets('affiche motifs, description, photos et bouton désactivé sans motif',
-      (tester) async {
-    await tester.pumpWidget(wrap());
+  testWidgets(
+    'affiche motifs, description, photos et bouton désactivé sans motif',
+    (tester) async {
+      await tester.pumpWidget(wrap());
 
-    expect(find.text('Signaler un problème'), findsOneWidget);
-    for (final reason in incidentReasons) {
-      expect(find.text(reason), findsOneWidget);
-    }
-    expect(find.text('Description'), findsOneWidget);
+      expect(find.text('Signaler un problème'), findsOneWidget);
+      for (final reason in incidentReasons) {
+        expect(find.text(reason), findsOneWidget);
+      }
+      expect(find.text('Description'), findsOneWidget);
 
-    final button = tester.widget<DonyButton>(find.byType(DonyButton));
-    expect(button.onPressed, isNull);
-  });
+      final button = tester.widget<DonyButton>(find.byType(DonyButton));
+      expect(button.onPressed, isNull);
+    },
+  );
 
   testWidgets('sélection d\'un motif active le bouton', (tester) async {
     await tester.pumpWidget(wrap());
@@ -70,15 +72,18 @@ void main() {
     expect(button.onPressed, isNotNull);
   });
 
-  testWidgets('submit envoie motif + description et affiche le succès',
-      (tester) async {
-    when(() => repo.submit(
-          targetType: any(named: 'targetType'),
-          targetId: any(named: 'targetId'),
-          reason: any(named: 'reason'),
-          description: any(named: 'description'),
-          photoKeys: any(named: 'photoKeys'),
-        )).thenAnswer((_) async => 'r-9');
+  testWidgets('submit envoie motif + description et affiche le succès', (
+    tester,
+  ) async {
+    when(
+      () => repo.submit(
+        targetType: any(named: 'targetType'),
+        targetId: any(named: 'targetId'),
+        reason: any(named: 'reason'),
+        description: any(named: 'description'),
+        photoKeys: any(named: 'photoKeys'),
+      ),
+    ).thenAnswer((_) async => 'r-9');
 
     await tester.pumpWidget(wrap());
     await tester.tap(find.text('Problème de paiement'));
@@ -88,23 +93,25 @@ void main() {
     await tester.tap(find.text('Envoyer le signalement'));
     await tester.pumpAndSettle();
 
-    verify(() => repo.submit(
-          targetType: IncidentTargetType.app,
-          targetId: null,
-          reason: 'Problème de paiement',
-          description: 'Double débit',
-          photoKeys: const [],
-        )).called(1);
+    verify(
+      () => repo.submit(
+        targetType: IncidentTargetType.app,
+        reason: 'Problème de paiement',
+        description: 'Double débit',
+      ),
+    ).called(1);
   });
 
   testWidgets('erreur du cubit affichée en snackbar', (tester) async {
-    when(() => repo.submit(
-          targetType: any(named: 'targetType'),
-          targetId: any(named: 'targetId'),
-          reason: any(named: 'reason'),
-          description: any(named: 'description'),
-          photoKeys: any(named: 'photoKeys'),
-        )).thenThrow(Exception('boom'));
+    when(
+      () => repo.submit(
+        targetType: any(named: 'targetType'),
+        targetId: any(named: 'targetId'),
+        reason: any(named: 'reason'),
+        description: any(named: 'description'),
+        photoKeys: any(named: 'photoKeys'),
+      ),
+    ).thenThrow(Exception('boom'));
 
     await tester.pumpWidget(wrap());
     await tester.tap(find.text('Autre'));

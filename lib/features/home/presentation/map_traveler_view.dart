@@ -72,11 +72,7 @@ class _MapTravelerViewContentState extends State<_MapTravelerViewContent> {
     final access = await requestLocationAccess(locationService);
     if (!mounted) return;
     if (access != LocationAccess.granted) {
-      await LocationDeniedSheet.show(
-        context,
-        access: access,
-        service: locationService,
-      );
+      await LocationDeniedSheet.show(context, access: access);
       return;
     }
     final selectedRadius = await NearMeRadiusSheet.show(context);
@@ -285,7 +281,7 @@ class _TravelerSheet extends StatelessWidget {
               ),
               sliver: SliverList.separated(
                 itemCount: state.results.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 16),
+                separatorBuilder: (_, _) => const SizedBox(height: 16),
                 itemBuilder: (_, i) {
                   final item = state.results[i];
                   final authState = context.read<AuthBloc>().state;

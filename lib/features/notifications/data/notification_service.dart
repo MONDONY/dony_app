@@ -58,13 +58,10 @@ class NotificationService {
 
   Future<void> initialize() async {
     // iOS / Android 13+ permission request
-    final settings = await _fcm.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
-    if (kDebugMode)
+    final settings = await _fcm.requestPermission();
+    if (kDebugMode) {
       debugPrint('[FCM] Auth status: ${settings.authorizationStatus}');
+    }
 
     // Create Android notification channel
     await _localNotifications

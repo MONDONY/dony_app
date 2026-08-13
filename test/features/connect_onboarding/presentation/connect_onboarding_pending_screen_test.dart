@@ -22,14 +22,14 @@ Widget _wrap(ConnectOnboardingBloc bloc) {
       routes: [
         GoRoute(
           path: '/',
-          builder: (_, __) => BlocProvider<ConnectOnboardingBloc>.value(
+          builder: (_, _) => BlocProvider<ConnectOnboardingBloc>.value(
             value: bloc,
             child: const ConnectOnboardingPendingScreen(),
           ),
         ),
         GoRoute(
           path: '/home',
-          builder: (_, __) => const Scaffold(body: Text('Home')),
+          builder: (_, _) => const Scaffold(body: Text('Home')),
         ),
       ],
     ),
@@ -61,54 +61,59 @@ void main() {
       expect(find.text('Vérification en cours...'), findsOneWidget);
     });
 
-    testWidgets('shows loading indicator when state is ConnectOnboardingLoading',
-        (tester) async {
-      whenListen<ConnectOnboardingState>(
-        mockBloc,
-        Stream.value(const ConnectOnboardingLoading()),
-        initialState: const ConnectOnboardingLoading(),
-      );
+    testWidgets(
+      'shows loading indicator when state is ConnectOnboardingLoading',
+      (tester) async {
+        whenListen<ConnectOnboardingState>(
+          mockBloc,
+          Stream.value(const ConnectOnboardingLoading()),
+          initialState: const ConnectOnboardingLoading(),
+        );
 
-      await tester.pumpWidget(_wrap(mockBloc));
-      await tester.pump(_kSettle);
+        await tester.pumpWidget(_wrap(mockBloc));
+        await tester.pump(_kSettle);
 
-      expect(find.byType(CircularProgressIndicator), findsWidgets);
-    });
+        expect(find.byType(CircularProgressIndicator), findsWidgets);
+      },
+    );
 
     testWidgets(
-        'navigates to /home when BloC emits ConnectOnboardingComplete',
-        (tester) async {
-      final controller = StreamController<ConnectOnboardingState>();
+      'navigates to /home when BloC emits ConnectOnboardingComplete',
+      (tester) async {
+        final controller = StreamController<ConnectOnboardingState>();
 
-      whenListen<ConnectOnboardingState>(
-        mockBloc,
-        controller.stream,
-        initialState: const ConnectOnboardingPending(),
-      );
+        whenListen<ConnectOnboardingState>(
+          mockBloc,
+          controller.stream,
+          initialState: const ConnectOnboardingPending(),
+        );
 
+        await tester.pumpWidget(_wrap(mockBloc));
+        await tester.pump(_kSettle);
+
+        // Verify we're on the pending screen
+        expect(find.text('Vérification en cours...'), findsOneWidget);
+
+        // Emit complete state
+        controller.add(const ConnectOnboardingComplete());
+        await tester.pumpAndSettle();
+
+        // Should have navigated to home
+        expect(find.text('Home'), findsOneWidget);
+
+        await controller.close();
+      },
+    );
+
+    testWidgets('dispatches ConnectOnboardingPollingRequested on init', (
+      tester,
+    ) async {
       await tester.pumpWidget(_wrap(mockBloc));
       await tester.pump(_kSettle);
 
-      // Verify we're on the pending screen
-      expect(find.text('Vérification en cours...'), findsOneWidget);
-
-      // Emit complete state
-      controller.add(const ConnectOnboardingComplete());
-      await tester.pumpAndSettle();
-
-      // Should have navigated to home
-      expect(find.text('Home'), findsOneWidget);
-
-      await controller.close();
-    });
-
-    testWidgets('dispatches ConnectOnboardingPollingRequested on init',
-        (tester) async {
-      await tester.pumpWidget(_wrap(mockBloc));
-      await tester.pump(_kSettle);
-
-      verify(() => mockBloc.add(const ConnectOnboardingPollingRequested()))
-          .called(greaterThanOrEqualTo(1));
+      verify(
+        () => mockBloc.add(const ConnectOnboardingPollingRequested()),
+      ).called(greaterThanOrEqualTo(1));
     });
   });
 }

@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
-import 'package:dony/features/matching/presentation/widgets/billet/colis_billet.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
@@ -19,6 +18,7 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/screens/bid_detail_screen.dart';
+import 'package:dony/features/matching/presentation/widgets/billet/colis_billet.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
@@ -79,8 +79,8 @@ BidModel _makeBid({
   senderId: _kSenderId,
   weightKg: 3,
   status: status,
-  createdAt: DateTime(2026, 5, 1),
-  updatedAt: DateTime(2026, 5, 1),
+  createdAt: DateTime(2026, 5),
+  updatedAt: DateTime(2026, 5),
   paymentMethod: paymentMethod,
   handoverWindowEnd: handoverWindowEnd,
   cancellationNoShowStatus: cancellationNoShowStatus,
@@ -91,7 +91,6 @@ UserModel _user(String id) => UserModel(
   roles: const ['SENDER'],
   kycStatus: 'VERIFIED',
   status: 'ACTIVE',
-  stripeAccountStatus: 'NOT_CREATED',
 );
 
 // ── Harness ───────────────────────────────────────────────────────────────────
@@ -118,11 +117,11 @@ Future<void> _pump(
       ),
       GoRoute(
         path: '/home',
-        builder: (_, __) => const Scaffold(body: Text('Home')),
+        builder: (_, _) => const Scaffold(body: Text('Home')),
       ),
       GoRoute(
         path: '/conversations/:id',
-        builder: (_, __) => const Scaffold(body: Text('Conversation')),
+        builder: (_, _) => const Scaffold(body: Text('Conversation')),
       ),
     ],
   );
@@ -163,29 +162,31 @@ void main() {
     paymentRepository = _MockPaymentRepository();
 
     when(() => bidBloc.state).thenReturn(BidInitial());
-    when(() => bidBloc.stream).thenAnswer((_) => Stream<BidState>.empty());
+    when(
+      () => bidBloc.stream,
+    ).thenAnswer((_) => const Stream<BidState>.empty());
     when(() => cancellationBloc.state).thenReturn(CancellationInitial());
     when(
       () => cancellationBloc.stream,
-    ).thenAnswer((_) => Stream<CancellationState>.empty());
+    ).thenAnswer((_) => const Stream<CancellationState>.empty());
     when(() => trackingBloc.state).thenReturn(TrackingInitial());
     when(
       () => trackingBloc.stream,
-    ).thenAnswer((_) => Stream<TrackingState>.empty());
+    ).thenAnswer((_) => const Stream<TrackingState>.empty());
     when(
       () => conversationOpenBloc.state,
     ).thenReturn(const ConversationOpenInitial());
     when(
       () => conversationOpenBloc.stream,
-    ).thenAnswer((_) => Stream<ConversationOpenState>.empty());
+    ).thenAnswer((_) => const Stream<ConversationOpenState>.empty());
     when(() => ratingBloc.state).thenReturn(const RatingInitial());
     when(
       () => ratingBloc.stream,
-    ).thenAnswer((_) => Stream<RatingState>.empty());
+    ).thenAnswer((_) => const Stream<RatingState>.empty());
     when(() => acceptanceBloc.state).thenReturn(acs.BidAcceptanceInitial());
     when(
       () => acceptanceBloc.stream,
-    ).thenAnswer((_) => Stream<acs.BidAcceptanceState>.empty());
+    ).thenAnswer((_) => const Stream<acs.BidAcceptanceState>.empty());
     when(
       () => paymentRepository.getPaymentForBid(any()),
     ).thenAnswer((_) async => null);
@@ -238,12 +239,16 @@ void main() {
   // TravelerGainCard (label 'ESPÈCES'), et non plus via un badge 'CASH' inline.
 
   group('Badge CASH', () {
-    testWidgets('paymentMethod=cash → label ESPÈCES visible (TravelerGainCard)', (tester) async {
+    testWidgets('paymentMethod=cash → label ESPÈCES visible (TravelerGainCard)', (
+      tester,
+    ) async {
       final authBloc = _MockAuthBloc();
       when(
         () => authBloc.state,
       ).thenReturn(AuthAuthenticated(_user(_kTravelerId)));
-      when(() => authBloc.stream).thenAnswer((_) => Stream<AuthState>.empty());
+      when(
+        () => authBloc.stream,
+      ).thenAnswer((_) => const Stream<AuthState>.empty());
 
       await _pump(
         tester,
@@ -260,7 +265,9 @@ void main() {
       when(
         () => authBloc.state,
       ).thenReturn(AuthAuthenticated(_user(_kTravelerId)));
-      when(() => authBloc.stream).thenAnswer((_) => Stream<AuthState>.empty());
+      when(
+        () => authBloc.stream,
+      ).thenAnswer((_) => const Stream<AuthState>.empty());
 
       await _pump(
         tester,
@@ -289,7 +296,7 @@ void main() {
         ).thenReturn(AuthAuthenticated(_user(_kTravelerId)));
         when(
           () => authBloc.stream,
-        ).thenAnswer((_) => Stream<AuthState>.empty());
+        ).thenAnswer((_) => const Stream<AuthState>.empty());
 
         await _pump(
           tester,
@@ -318,7 +325,7 @@ void main() {
         ).thenReturn(AuthAuthenticated(_user(_kTravelerId)));
         when(
           () => authBloc.stream,
-        ).thenAnswer((_) => Stream<AuthState>.empty());
+        ).thenAnswer((_) => const Stream<AuthState>.empty());
 
         await _pump(
           tester,
@@ -346,7 +353,7 @@ void main() {
         ).thenReturn(AuthAuthenticated(_user(_kTravelerId)));
         when(
           () => authBloc.stream,
-        ).thenAnswer((_) => Stream<AuthState>.empty());
+        ).thenAnswer((_) => const Stream<AuthState>.empty());
 
         await _pump(
           tester,
@@ -381,7 +388,7 @@ void main() {
         ).thenReturn(AuthAuthenticated(_user(_kSenderId)));
         when(
           () => authBloc.stream,
-        ).thenAnswer((_) => Stream<AuthState>.empty());
+        ).thenAnswer((_) => const Stream<AuthState>.empty());
 
         await _pump(
           tester,
@@ -413,7 +420,7 @@ void main() {
         ).thenReturn(AuthAuthenticated(_user(_kSenderId)));
         when(
           () => authBloc.stream,
-        ).thenAnswer((_) => Stream<AuthState>.empty());
+        ).thenAnswer((_) => const Stream<AuthState>.empty());
 
         await _pump(
           tester,
@@ -442,7 +449,7 @@ void main() {
         ).thenReturn(AuthAuthenticated(_user(_kSenderId)));
         when(
           () => authBloc.stream,
-        ).thenAnswer((_) => Stream<AuthState>.empty());
+        ).thenAnswer((_) => const Stream<AuthState>.empty());
 
         await _pump(
           tester,
@@ -474,7 +481,7 @@ void main() {
           ).thenReturn(AuthAuthenticated(_user(_kSenderId)));
           when(
             () => authBloc.stream,
-          ).thenAnswer((_) => Stream<AuthState>.empty());
+          ).thenAnswer((_) => const Stream<AuthState>.empty());
 
           await _pump(
             tester,
@@ -503,7 +510,7 @@ void main() {
         ).thenReturn(AuthAuthenticated(_user(_kTravelerId)));
         when(
           () => authBloc.stream,
-        ).thenAnswer((_) => Stream<AuthState>.empty());
+        ).thenAnswer((_) => const Stream<AuthState>.empty());
 
         await _pump(
           tester,
@@ -529,7 +536,7 @@ void main() {
           ).thenReturn(AuthAuthenticated(_user(_kSenderId)));
           when(
             () => authBloc.stream,
-          ).thenAnswer((_) => Stream<AuthState>.empty());
+          ).thenAnswer((_) => const Stream<AuthState>.empty());
 
           await _pump(
             tester,
@@ -554,7 +561,9 @@ void main() {
       when(
         () => authBloc.state,
       ).thenReturn(AuthAuthenticated(_user(_kTravelerId)));
-      when(() => authBloc.stream).thenAnswer((_) => Stream<AuthState>.empty());
+      when(
+        () => authBloc.stream,
+      ).thenAnswer((_) => const Stream<AuthState>.empty());
       await _pump(
         tester,
         bid: _makeBid(status: 'PENDING'),
@@ -573,12 +582,10 @@ void main() {
       when(
         () => authBloc.state,
       ).thenReturn(AuthAuthenticated(_user(_kSenderId)));
-      when(() => authBloc.stream).thenAnswer((_) => Stream<AuthState>.empty());
-      await _pump(
-        tester,
-        bid: _makeBid(status: 'ACCEPTED'),
-        authBloc: authBloc,
-      );
+      when(
+        () => authBloc.stream,
+      ).thenAnswer((_) => const Stream<AuthState>.empty());
+      await _pump(tester, bid: _makeBid(), authBloc: authBloc);
       expect(find.byType(ColisBillet), findsOneWidget);
     });
   });
@@ -595,7 +602,7 @@ void main() {
         ).thenReturn(AuthAuthenticated(_user(_kTravelerId)));
         when(
           () => authBloc.stream,
-        ).thenAnswer((_) => Stream<AuthState>.empty());
+        ).thenAnswer((_) => const Stream<AuthState>.empty());
 
         // Fenêtre qui commence dans 1 h (< 4 h → condition satisfaite) et
         // se termine dans 2 h (dans le futur → DateTime.now().isBefore()).
@@ -608,7 +615,6 @@ void main() {
           status: 'ACCEPTED',
           createdAt: now,
           updatedAt: now,
-          paymentMethod: BidPaymentMethod.stripe,
           handoverWindowStart: now.add(const Duration(hours: 1)),
           handoverWindowEnd: now.add(const Duration(hours: 2)),
         );
@@ -631,7 +637,7 @@ void main() {
         ).thenReturn(AuthAuthenticated(_user(_kTravelerId)));
         when(
           () => authBloc.stream,
-        ).thenAnswer((_) => Stream<AuthState>.empty());
+        ).thenAnswer((_) => const Stream<AuthState>.empty());
 
         await _pump(
           tester,
@@ -665,7 +671,7 @@ void main() {
         ).thenReturn(AuthAuthenticated(_user(_kSenderId)));
         when(
           () => authBloc.stream,
-        ).thenAnswer((_) => Stream<AuthState>.empty());
+        ).thenAnswer((_) => const Stream<AuthState>.empty());
 
         whenListen(
           cancellationBloc,
@@ -673,11 +679,7 @@ void main() {
           initialState: CancellationInitial(),
         );
 
-        await _pump(
-          tester,
-          bid: _makeBid(status: 'ACCEPTED'),
-          authBloc: authBloc,
-        );
+        await _pump(tester, bid: _makeBid(), authBloc: authBloc);
         await tester.pumpAndSettle();
 
         expect(
@@ -702,7 +704,7 @@ void main() {
         ).thenReturn(AuthAuthenticated(_user(_kTravelerId)));
         when(
           () => authBloc.stream,
-        ).thenAnswer((_) => Stream<AuthState>.empty());
+        ).thenAnswer((_) => const Stream<AuthState>.empty());
 
         whenListen(
           cancellationBloc,
@@ -710,11 +712,7 @@ void main() {
           initialState: CancellationInitial(),
         );
 
-        await _pump(
-          tester,
-          bid: _makeBid(status: 'ACCEPTED'),
-          authBloc: authBloc,
-        );
+        await _pump(tester, bid: _makeBid(), authBloc: authBloc);
         await tester.pumpAndSettle();
 
         expect(
@@ -744,13 +742,9 @@ void main() {
         ).thenReturn(AuthProfileUpdated(_user(_kSenderId)));
         when(
           () => authBloc.stream,
-        ).thenAnswer((_) => Stream<AuthState>.empty());
+        ).thenAnswer((_) => const Stream<AuthState>.empty());
 
-        await _pump(
-          tester,
-          bid: _makeBid(status: 'ACCEPTED'),
-          authBloc: authBloc,
-        );
+        await _pump(tester, bid: _makeBid(), authBloc: authBloc);
 
         expect(find.text('VOYAGEUR'), findsOneWidget);
         expect(find.text('EXPÉDITEUR'), findsNothing);

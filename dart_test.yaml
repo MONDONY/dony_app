@@ -1,0 +1,6 @@
+tags:
+  golden:
+    description: >-
+      Comparaisons pixel à pixel. Les images de référence dépendent de la
+      plateforme qui les a générées (macOS ici), donc ces tests sont exclus de
+      la CI Linux et se vérifient en local.

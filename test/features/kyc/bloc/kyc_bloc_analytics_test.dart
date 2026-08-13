@@ -19,16 +19,17 @@ void main() {
   });
 
   KycBloc makeBloc({bool enabled = true}) {
-    final a = enabled ? makeEnabledAnalytics(backend) : makeDisabledAnalytics(backend);
+    final a = enabled
+        ? makeEnabledAnalytics(backend)
+        : makeDisabledAnalytics(backend);
     a.onConfigured();
     return KycBloc(repo, a);
   }
 
   test('kyc_started fires on KycSessionRequested success', () async {
-    when(() => repo.createSession()).thenAnswer((_) async => {
-      'stripeUrl': 'https://stripe.com',
-      'sessionId': 'sess_1',
-    });
+    when(() => repo.createSession()).thenAnswer(
+      (_) async => {'stripeUrl': 'https://stripe.com', 'sessionId': 'sess_1'},
+    );
     final bloc = makeBloc();
     bloc.add(const KycSessionRequested());
     await bloc.stream.firstWhere((s) => s is KycSessionCreated);
@@ -45,23 +46,29 @@ void main() {
     verify(() => backend.capture(AnalyticsEvents.kycFailed, any())).called(1);
   });
 
-  test('kyc_completed fires on KycStatusRefreshed when kycStatus=VERIFIED', () async {
-    when(() => repo.getStatus()).thenAnswer((_) async => {
-      'kycStatus': 'VERIFIED',
-      'verificationStatus': 'verified',
-    });
-    final bloc = makeBloc();
-    bloc.add(const KycStatusRefreshed());
-    await bloc.stream.firstWhere((s) => s is KycStatusLoaded);
-    await Future<void>.delayed(Duration.zero);
-    verify(() => backend.capture(AnalyticsEvents.kycCompleted, any())).called(1);
-  });
+  test(
+    'kyc_completed fires on KycStatusRefreshed when kycStatus=VERIFIED',
+    () async {
+      when(() => repo.getStatus()).thenAnswer(
+        (_) async => {
+          'kycStatus': 'VERIFIED',
+          'verificationStatus': 'verified',
+        },
+      );
+      final bloc = makeBloc();
+      bloc.add(const KycStatusRefreshed());
+      await bloc.stream.firstWhere((s) => s is KycStatusLoaded);
+      await Future<void>.delayed(Duration.zero);
+      verify(
+        () => backend.capture(AnalyticsEvents.kycCompleted, any()),
+      ).called(1);
+    },
+  );
 
   test('no event when analytics disabled', () async {
-    when(() => repo.createSession()).thenAnswer((_) async => {
-      'stripeUrl': 'https://stripe.com',
-      'sessionId': 'sess_1',
-    });
+    when(() => repo.createSession()).thenAnswer(
+      (_) async => {'stripeUrl': 'https://stripe.com', 'sessionId': 'sess_1'},
+    );
     final bloc = makeBloc(enabled: false);
     bloc.add(const KycSessionRequested());
     await bloc.stream.firstWhere((s) => s is KycSessionCreated);

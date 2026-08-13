@@ -18,13 +18,13 @@ class LinkedTripSummary extends Equatable {
   final String announcementId;
   final String departureCity;
   final String arrivalCity;
-  final String? departureDate;    // "2026-06-12"
-  final String? departureTime;    // "14:30"
-  final String? transportMode;    // "PLANE" | "TRAIN" | "CAR"
+  final String? departureDate; // "2026-06-12"
+  final String? departureTime; // "14:30"
+  final String? transportMode; // "PLANE" | "TRAIN" | "CAR"
   final String? pickupAddressLabel;
   final String? deliveryAddressLabel;
   final int availableKg;
-  final String? capacityUnit;    // "SUITCASE_23KG" | "KG_FREE" | ...
+  final String? capacityUnit; // "SUITCASE_23KG" | "KG_FREE" | ...
   final String? description;
 
   bool get isKgFree => capacityUnit == 'KG_FREE';
@@ -46,9 +46,16 @@ class LinkedTripSummary extends Equatable {
 
   @override
   List<Object?> get props => [
-        announcementId, departureCity, arrivalCity,
-        departureDate, departureTime, transportMode,
-        pickupAddressLabel, deliveryAddressLabel,
-        availableKg, capacityUnit, description,
-      ];
+    announcementId,
+    departureCity,
+    arrivalCity,
+    departureDate,
+    departureTime,
+    transportMode,
+    pickupAddressLabel,
+    deliveryAddressLabel,
+    availableKg,
+    capacityUnit,
+    description,
+  ];
 }

@@ -28,8 +28,9 @@ class _MyPackageRequestsScreenState extends State<MyPackageRequestsScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted)
+      if (mounted) {
         context.read<PackageRequestBloc>().add(const FetchMyRequests());
+      }
     });
   }
 
@@ -222,7 +223,7 @@ class _ListContentState extends State<_ListContent> {
                               MediaQuery.of(context).padding.bottom + 100,
                             ),
                             itemCount: filtered.length,
-                            separatorBuilder: (_, __) =>
+                            separatorBuilder: (_, _) =>
                                 const SizedBox(height: DonySpacing.sm),
                             itemBuilder: (context, i) {
                               return _RequestCard(request: filtered[i])
@@ -257,7 +258,7 @@ class _ListContentState extends State<_ListContent> {
               await PackageRequestCreateWizard.show(context);
             },
             backgroundColor: Theme.of(context).colorScheme.primary,
-            icon: const DonyIcon('plus', size: 24, color: Colors.white),
+            icon: const DonyIcon('plus', color: Colors.white),
             label: Text(
               'Nouvelle demande',
               style: Theme.of(context).textTheme.bodyMedium!.copyWith(

@@ -18,18 +18,20 @@ void main() {
   setUp(() {
     repo = _MockRepo();
     cubit = PackageRequestPhotosCubit(
-        repo, makeDisabledAnalytics(MockAnalyticsBackend()));
+      repo,
+      makeDisabledAnalytics(MockAnalyticsBackend()),
+    );
   });
 
   Widget wrap() => MaterialApp(
-        theme: AppTheme.light(),
-        home: Scaffold(
-          body: BlocProvider.value(
-            value: cubit,
-            child: const PackageRequestPhotoSection(),
-          ),
-        ),
-      );
+    theme: AppTheme.light(),
+    home: Scaffold(
+      body: BlocProvider.value(
+        value: cubit,
+        child: const PackageRequestPhotoSection(),
+      ),
+    ),
+  );
 
   testWidgets('rend le header + compteur 0/4 + bouton ajouter', (tester) async {
     await tester.pumpWidget(wrap());

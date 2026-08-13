@@ -1,8 +1,9 @@
+import 'dart:ui' show Tristate;
+
 import 'package:dony/app/widgets/dony_nav_item.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -10,8 +11,6 @@ void main() {
   // tout en garantissant cs.primary == DonyColors.primary pour les assertions.
   const scheme = ColorScheme.light(
     primary: DonyColors.primary,
-    onPrimary: Colors.white,
-    surface: DonyColors.surface,
     onSurfaceVariant: DonyColors.textSubtle,
   );
 
@@ -49,14 +48,14 @@ void main() {
   // Se distingue du badge chiffré (rectangle arrondi + Text) et de l'étoile PRO
   // (couleur warning).
   Finder attentionDot() => find.byWidgetPredicate((w) {
-        if (w is! Container || w.child != null) {
-          return false;
-        }
-        final deco = w.decoration;
-        return deco is BoxDecoration &&
-            deco.shape == BoxShape.circle &&
-            deco.color == DonyColors.error;
-      });
+    if (w is! Container || w.child != null) {
+      return false;
+    }
+    final deco = w.decoration;
+    return deco is BoxDecoration &&
+        deco.shape == BoxShape.circle &&
+        deco.color == DonyColors.error;
+  });
 
   // Décoration de l'anneau (AnimatedContainer ancêtre du DonyAvatar).
   BoxDecoration ringDecoration(WidgetTester tester) {
@@ -218,7 +217,9 @@ void main() {
 
     testWidgets('le badge chiffré a priorité sur le point', (tester) async {
       await tester.pumpWidget(
-        host(buildItem(index: 1, currentIndex: 0, showDot: true, badgeCount: 2)),
+        host(
+          buildItem(index: 1, currentIndex: 0, showDot: true, badgeCount: 2),
+        ),
       );
 
       // Un décompte précis existe : on montre le nombre, pas le point nu.
@@ -246,20 +247,21 @@ void main() {
       expect(text.style?.fontWeight, FontWeight.w600);
     });
 
-    testWidgets('libellé exclu de l\'arbre sémantique (pas de double annonce)', (
-      tester,
-    ) async {
-      await tester.pumpWidget(host(buildItem(index: 4, currentIndex: 4)));
-      await tester.pumpAndSettle();
+    testWidgets(
+      'libellé exclu de l\'arbre sémantique (pas de double annonce)',
+      (tester) async {
+        await tester.pumpWidget(host(buildItem(index: 4, currentIndex: 4)));
+        await tester.pumpAndSettle();
 
-      expect(
-        find.ancestor(
-          of: find.text('Moi'),
-          matching: find.byType(ExcludeSemantics),
-        ),
-        findsOneWidget,
-      );
-    });
+        expect(
+          find.ancestor(
+            of: find.text('Moi'),
+            matching: find.byType(ExcludeSemantics),
+          ),
+          findsOneWidget,
+        );
+      },
+    );
   });
 
   group('DonyNavItem — accessibilité & interaction', () {
@@ -269,8 +271,8 @@ void main() {
       await tester.pumpWidget(host(buildItem(index: 4, currentIndex: 4)));
 
       final node = tester.getSemantics(find.bySemanticsLabel('Moi'));
-      expect(node.hasFlag(SemanticsFlag.isButton), isTrue);
-      expect(node.hasFlag(SemanticsFlag.isSelected), isTrue);
+      expect(node.flagsCollection.isButton, isTrue);
+      expect(node.flagsCollection.isSelected, Tristate.isTrue);
     });
 
     testWidgets('onTap déclenché au tap', (tester) async {

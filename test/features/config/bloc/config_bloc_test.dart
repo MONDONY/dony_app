@@ -25,8 +25,9 @@ void main() {
         'emits [ConfigLoading, ConfigLoaded] on success',
         build: buildBloc,
         setUp: () {
-          when(() => mockRepo.getCommissionRate())
-              .thenAnswer((_) async => 0.12);
+          when(
+            () => mockRepo.getCommissionRate(),
+          ).thenAnswer((_) async => 0.12);
         },
         act: (bloc) => bloc.add(const ConfigCommissionRateRequested()),
         expect: () => [
@@ -43,8 +44,9 @@ void main() {
         'emits [ConfigLoading, ConfigLoaded] with custom rate',
         build: buildBloc,
         setUp: () {
-          when(() => mockRepo.getCommissionRate())
-              .thenAnswer((_) async => 0.10);
+          when(
+            () => mockRepo.getCommissionRate(),
+          ).thenAnswer((_) async => 0.10);
         },
         act: (bloc) => bloc.add(const ConfigCommissionRateRequested()),
         expect: () => [
@@ -61,22 +63,21 @@ void main() {
         'emits [ConfigLoading, ConfigError] on failure',
         build: buildBloc,
         setUp: () {
-          when(() => mockRepo.getCommissionRate())
-              .thenThrow(Exception('Network error'));
+          when(
+            () => mockRepo.getCommissionRate(),
+          ).thenThrow(Exception('Network error'));
         },
         act: (bloc) => bloc.add(const ConfigCommissionRateRequested()),
-        expect: () => [
-          isA<ConfigLoading>(),
-          isA<ConfigError>(),
-        ],
+        expect: () => [isA<ConfigLoading>(), isA<ConfigError>()],
       );
 
       blocTest<ConfigBloc, ConfigState>(
         'ConfigError contains error message',
         build: buildBloc,
         setUp: () {
-          when(() => mockRepo.getCommissionRate())
-              .thenThrow(Exception('Server down'));
+          when(
+            () => mockRepo.getCommissionRate(),
+          ).thenThrow(Exception('Server down'));
         },
         act: (bloc) => bloc.add(const ConfigCommissionRateRequested()),
         expect: () => [

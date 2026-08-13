@@ -106,8 +106,9 @@ class AnnouncementFormState extends Equatable {
       arrivalCity != null &&
       arrivalCity!.isNotEmpty &&
       departureDate != null &&
-      departureDate!
-          .isAfter(DateTime.now().subtract(const Duration(days: 1))) &&
+      departureDate!.isAfter(
+        DateTime.now().subtract(const Duration(days: 1)),
+      ) &&
       availableKg != null &&
       availableKg! >= 1 &&
       isStep3Valid;
@@ -119,8 +120,7 @@ class AnnouncementFormState extends Equatable {
       arrivalCity!.isNotEmpty &&
       departureDate != null;
 
-  bool get isStep2Valid =>
-      pickupAddress != null && deliveryAddress != null;
+  bool get isStep2Valid => pickupAddress != null && deliveryAddress != null;
 
   bool get isStep3Valid {
     switch (pricingMode) {
@@ -157,25 +157,30 @@ class AnnouncementFormState extends Equatable {
     return AnnouncementFormState(
       departureCity: departureCity ?? this.departureCity,
       arrivalCity: arrivalCity ?? this.arrivalCity,
-      departureCountryCode:
-          departureCountryCode ?? this.departureCountryCode,
+      departureCountryCode: departureCountryCode ?? this.departureCountryCode,
       arrivalCountryCode: arrivalCountryCode ?? this.arrivalCountryCode,
       departureDate: departureDate ?? this.departureDate,
       pricePerKg: pricePerKgGetter != null
           ? pricePerKgGetter()
           : (pricePerKg ?? this.pricePerKg),
-      availableKg: availableKgGetter != null ? availableKgGetter() : this.availableKg,
+      availableKg: availableKgGetter != null
+          ? availableKgGetter()
+          : availableKg,
       capacityUnit: capacityUnit ?? this.capacityUnit,
       description: description ?? this.description,
-      priceWarning:
-          priceWarningGetter != null ? priceWarningGetter() : this.priceWarning,
+      priceWarning: priceWarningGetter != null
+          ? priceWarningGetter()
+          : priceWarning,
       isSubmitting: isSubmitting ?? this.isSubmitting,
-      transportMode:
-          transportModeGetter != null ? transportModeGetter() : this.transportMode,
-      pickupAddress:
-          pickupAddressGetter != null ? pickupAddressGetter() : this.pickupAddress,
-      deliveryAddress:
-          deliveryAddressGetter != null ? deliveryAddressGetter() : this.deliveryAddress,
+      transportMode: transportModeGetter != null
+          ? transportModeGetter()
+          : transportMode,
+      pickupAddress: pickupAddressGetter != null
+          ? pickupAddressGetter()
+          : pickupAddress,
+      deliveryAddress: deliveryAddressGetter != null
+          ? deliveryAddressGetter()
+          : deliveryAddress,
       cashAccepted: cashAccepted ?? this.cashAccepted,
       acceptedTypes: acceptedTypes ?? this.acceptedTypes,
       rejectedTypes: rejectedTypes ?? this.rejectedTypes,
@@ -186,24 +191,24 @@ class AnnouncementFormState extends Equatable {
 
   @override
   List<Object?> get props => [
-        departureCity,
-        arrivalCity,
-        departureCountryCode,
-        arrivalCountryCode,
-        departureDate,
-        pricePerKg,
-        availableKg,
-        capacityUnit,
-        description,
-        priceWarning,
-        isSubmitting,
-        transportMode,
-        pickupAddress,
-        deliveryAddress,
-        cashAccepted,
-        acceptedTypes,
-        rejectedTypes,
-        pricingMode,
-        gridPreviewItems,
-      ];
+    departureCity,
+    arrivalCity,
+    departureCountryCode,
+    arrivalCountryCode,
+    departureDate,
+    pricePerKg,
+    availableKg,
+    capacityUnit,
+    description,
+    priceWarning,
+    isSubmitting,
+    transportMode,
+    pickupAddress,
+    deliveryAddress,
+    cashAccepted,
+    acceptedTypes,
+    rejectedTypes,
+    pricingMode,
+    gridPreviewItems,
+  ];
 }

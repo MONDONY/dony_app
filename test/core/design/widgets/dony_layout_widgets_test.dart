@@ -1,5 +1,4 @@
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -202,7 +201,7 @@ void main() {
   // ── DonyDialog ────────────────────────────────────────────────────────────
   group('DonyDialog', () {
     // Helper: builds a screen with a button that triggers DonyDialog.show()
-    Widget _dialogTrigger({
+    Widget dialogTrigger({
       required String title,
       String? message,
       Widget? content,
@@ -236,7 +235,7 @@ void main() {
     }
 
     testWidgets('shows dialog title when opened', (tester) async {
-      await tester.pumpWidget(_dialogTrigger(title: 'Supprimer ce trajet ?'));
+      await tester.pumpWidget(dialogTrigger(title: 'Supprimer ce trajet ?'));
       await tester.tap(find.text('Open'));
       await tester.pumpAndSettle();
       expect(find.text('Supprimer ce trajet ?'), findsOneWidget);
@@ -244,7 +243,7 @@ void main() {
 
     testWidgets('shows message when provided', (tester) async {
       await tester.pumpWidget(
-        _dialogTrigger(
+        dialogTrigger(
           title: 'Titre',
           message: 'Cette action est irréversible.',
         ),
@@ -255,7 +254,7 @@ void main() {
     });
 
     testWidgets('does not show message when null', (tester) async {
-      await tester.pumpWidget(_dialogTrigger(title: 'Titre'));
+      await tester.pumpWidget(dialogTrigger(title: 'Titre'));
       await tester.tap(find.text('Open'));
       await tester.pumpAndSettle();
       // Only title text, no extra body text
@@ -264,7 +263,7 @@ void main() {
 
     testWidgets('shows custom confirmLabel and cancelLabel', (tester) async {
       await tester.pumpWidget(
-        _dialogTrigger(
+        dialogTrigger(
           title: 'Titre',
           confirmLabel: 'Supprimer',
           cancelLabel: 'Non',
@@ -279,9 +278,7 @@ void main() {
     testWidgets('info variant renders OutlinedButton and FilledButton', (
       tester,
     ) async {
-      await tester.pumpWidget(
-        _dialogTrigger(title: 'Info Dialog', variant: DonyDialogVariant.info),
-      );
+      await tester.pumpWidget(dialogTrigger(title: 'Info Dialog'));
       await tester.tap(find.text('Open'));
       await tester.pumpAndSettle();
       expect(find.byType(OutlinedButton), findsOneWidget);
@@ -292,10 +289,7 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        _dialogTrigger(
-          title: 'Delete?',
-          variant: DonyDialogVariant.destructive,
-        ),
+        dialogTrigger(title: 'Delete?', variant: DonyDialogVariant.destructive),
       );
       await tester.tap(find.text('Open'));
       await tester.pumpAndSettle();
@@ -304,7 +298,7 @@ void main() {
 
     testWidgets('icon is displayed when provided', (tester) async {
       await tester.pumpWidget(
-        _dialogTrigger(title: 'Alert', icon: Icons.warning_rounded),
+        dialogTrigger(title: 'Alert', icon: Icons.warning_rounded),
       );
       await tester.tap(find.text('Open'));
       await tester.pumpAndSettle();
@@ -312,7 +306,7 @@ void main() {
     });
 
     testWidgets('no icon widget rendered when icon is null', (tester) async {
-      await tester.pumpWidget(_dialogTrigger(title: 'No icon'));
+      await tester.pumpWidget(dialogTrigger(title: 'No icon'));
       await tester.tap(find.text('Open'));
       await tester.pumpAndSettle();
       // Icon container only appears when icon != null
@@ -321,7 +315,7 @@ void main() {
 
     testWidgets('custom content widget is displayed', (tester) async {
       await tester.pumpWidget(
-        _dialogTrigger(
+        dialogTrigger(
           title: 'Custom',
           content: const Text('Custom content widget'),
         ),
@@ -332,7 +326,7 @@ void main() {
     });
 
     testWidgets('cancel button pops dialog', (tester) async {
-      await tester.pumpWidget(_dialogTrigger(title: 'Confirm'));
+      await tester.pumpWidget(dialogTrigger(title: 'Confirm'));
       await tester.tap(find.text('Open'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Annuler'));
@@ -342,7 +336,7 @@ void main() {
     });
 
     testWidgets('confirm button pops dialog', (tester) async {
-      await tester.pumpWidget(_dialogTrigger(title: 'Confirm'));
+      await tester.pumpWidget(dialogTrigger(title: 'Confirm'));
       await tester.tap(find.text('Open'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Confirmer'));
@@ -352,7 +346,7 @@ void main() {
 
     testWidgets('icon with destructive variant shows icon', (tester) async {
       await tester.pumpWidget(
-        _dialogTrigger(
+        dialogTrigger(
           title: 'Danger',
           variant: DonyDialogVariant.destructive,
           icon: Icons.delete_rounded,
@@ -368,7 +362,7 @@ void main() {
 
   // ── DonyBottomSheet ───────────────────────────────────────────────────────
   group('DonyBottomSheet', () {
-    Widget _sheetTrigger({
+    Widget sheetTrigger({
       required Widget child,
       String? title,
       String? subtitle,
@@ -400,18 +394,14 @@ void main() {
     }
 
     testWidgets('shows child content in bottom sheet', (tester) async {
-      await tester.pumpWidget(
-        _sheetTrigger(child: const Text('Sheet content')),
-      );
+      await tester.pumpWidget(sheetTrigger(child: const Text('Sheet content')));
       await tester.tap(find.text('Open Sheet'));
       await tester.pumpAndSettle();
       expect(find.text('Sheet content'), findsOneWidget);
     });
 
     testWidgets('shows handle when showHandle is true', (tester) async {
-      await tester.pumpWidget(
-        _sheetTrigger(child: const Text('Content'), showHandle: true),
-      );
+      await tester.pumpWidget(sheetTrigger(child: const Text('Content')));
       await tester.tap(find.text('Open Sheet'));
       await tester.pumpAndSettle();
       // Handle is a Container — sheet should be visible
@@ -420,7 +410,7 @@ void main() {
 
     testWidgets('hides handle when showHandle is false', (tester) async {
       await tester.pumpWidget(
-        _sheetTrigger(child: const Text('No handle'), showHandle: false),
+        sheetTrigger(child: const Text('No handle'), showHandle: false),
       );
       await tester.tap(find.text('Open Sheet'));
       await tester.pumpAndSettle();
@@ -429,7 +419,7 @@ void main() {
 
     testWidgets('shows title when provided', (tester) async {
       await tester.pumpWidget(
-        _sheetTrigger(child: const Text('Body'), title: 'Trier par'),
+        sheetTrigger(child: const Text('Body'), title: 'Trier par'),
       );
       await tester.tap(find.text('Open Sheet'));
       await tester.pumpAndSettle();
@@ -440,7 +430,7 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        _sheetTrigger(
+        sheetTrigger(
           child: const Text('Body'),
           title: 'Filtrer',
           subtitle: 'Choisissez vos critères',
@@ -456,7 +446,7 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        _sheetTrigger(child: const Text('Body'), title: 'Avec titre'),
+        sheetTrigger(child: const Text('Body'), title: 'Avec titre'),
       );
       await tester.tap(find.text('Open Sheet'));
       await tester.pumpAndSettle();
@@ -468,7 +458,7 @@ void main() {
 
     testWidgets('close button dismisses the sheet', (tester) async {
       await tester.pumpWidget(
-        _sheetTrigger(child: const Text('Body'), title: 'Closeable'),
+        sheetTrigger(child: const Text('Body'), title: 'Closeable'),
       );
       await tester.tap(find.text('Open Sheet'));
       await tester.pumpAndSettle();
@@ -483,7 +473,7 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        _sheetTrigger(child: const Text('No title sheet'), title: null),
+        sheetTrigger(child: const Text('No title sheet')),
       );
       await tester.tap(find.text('Open Sheet'));
       await tester.pumpAndSettle();
@@ -496,11 +486,7 @@ void main() {
 
     testWidgets('no subtitle — subtitle branch not rendered', (tester) async {
       await tester.pumpWidget(
-        _sheetTrigger(
-          child: const Text('Body'),
-          title: 'Title only',
-          subtitle: null,
-        ),
+        sheetTrigger(child: const Text('Body'), title: 'Title only'),
       );
       await tester.tap(find.text('Open Sheet'));
       await tester.pumpAndSettle();
@@ -575,7 +561,7 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        _sheetTrigger(child: const Text('Contenu sans footer')),
+        sheetTrigger(child: const Text('Contenu sans footer')),
       );
       await tester.tap(find.text('Open Sheet'));
       await tester.pumpAndSettle();
@@ -756,10 +742,10 @@ void main() {
     testWidgets('appBarBottom is rendered in the app bar', (tester) async {
       await tester.pumpWidget(
         _wrapWithRouter(
-          (_) => DonyPageScaffold(
+          (_) => const DonyPageScaffold(
             title: 'With bottom',
-            body: const Text('Body'),
-            appBarBottom: const PreferredSize(
+            body: Text('Body'),
+            appBarBottom: PreferredSize(
               preferredSize: Size.fromHeight(40),
               child: Text('Bottom bar'),
             ),
@@ -1133,15 +1119,15 @@ void main() {
     testWidgets('renders custom bottom widget when provided', (tester) async {
       await tester.pumpWidget(
         _wrapWithRouter(
-          (_) => Scaffold(
+          (_) => const Scaffold(
             appBar: DonyAppBar(
               title: 'Custom bottom',
-              bottom: const PreferredSize(
+              bottom: PreferredSize(
                 preferredSize: Size.fromHeight(48),
                 child: Text('Custom bottom bar'),
               ),
             ),
-            body: const SizedBox.shrink(),
+            body: SizedBox.shrink(),
           ),
         ),
       );
@@ -1183,7 +1169,7 @@ void main() {
 
   // ── DonySliverAppBar ──────────────────────────────────────────────────────
   group('DonySliverAppBar', () {
-    Widget _sliverWrap({
+    Widget sliverWrap({
       required String title,
       VoidCallback? onBack,
       bool showBackButton = false,
@@ -1212,13 +1198,13 @@ void main() {
     }
 
     testWidgets('renders title text', (tester) async {
-      await tester.pumpWidget(_sliverWrap(title: 'Accueil'));
+      await tester.pumpWidget(sliverWrap(title: 'Accueil'));
       await tester.pump(const Duration(milliseconds: 600));
       expect(find.text('Accueil'), findsOneWidget);
     });
 
     testWidgets('does not show back button by default', (tester) async {
-      await tester.pumpWidget(_sliverWrap(title: 'No back'));
+      await tester.pumpWidget(sliverWrap(title: 'No back'));
       await tester.pump(const Duration(milliseconds: 600));
       expect(find.byIcon(Icons.chevron_left_rounded), findsNothing);
     });
@@ -1230,18 +1216,18 @@ void main() {
         routes: [
           GoRoute(
             path: '/',
-            builder: (_, __) => const Scaffold(body: Text('root')),
+            builder: (_, _) => const Scaffold(body: Text('root')),
             routes: [
               GoRoute(
                 path: 'child',
-                builder: (_, __) => Scaffold(
+                builder: (_, _) => const Scaffold(
                   body: CustomScrollView(
                     slivers: [
-                      const DonySliverAppBar(
+                      DonySliverAppBar(
                         title: 'With back',
                         showBackButton: true,
                       ),
-                      const SliverToBoxAdapter(child: SizedBox(height: 500)),
+                      SliverToBoxAdapter(child: SizedBox(height: 500)),
                     ],
                   ),
                 ),
@@ -1259,7 +1245,7 @@ void main() {
 
     testWidgets('renders actions when provided', (tester) async {
       await tester.pumpWidget(
-        _sliverWrap(
+        sliverWrap(
           title: 'Title',
           actions: [
             IconButton(icon: const Icon(Icons.filter_list), onPressed: () {}),
@@ -1271,7 +1257,7 @@ void main() {
     });
 
     testWidgets('uses custom expandedHeight', (tester) async {
-      await tester.pumpWidget(_sliverWrap(title: 'Title', expandedHeight: 200));
+      await tester.pumpWidget(sliverWrap(title: 'Title', expandedHeight: 200));
       await tester.pump(const Duration(milliseconds: 600));
       final bar = tester.widget<SliverAppBar>(find.byType(SliverAppBar));
       expect(bar.expandedHeight, 200.0);
@@ -1279,7 +1265,7 @@ void main() {
 
     testWidgets('renders custom bottom when provided', (tester) async {
       await tester.pumpWidget(
-        _sliverWrap(
+        sliverWrap(
           title: 'Title',
           bottom: const PreferredSize(
             preferredSize: Size.fromHeight(40),
@@ -1294,7 +1280,7 @@ void main() {
     testWidgets('renders default border container bottom when bottom is null', (
       tester,
     ) async {
-      await tester.pumpWidget(_sliverWrap(title: 'Default bottom'));
+      await tester.pumpWidget(sliverWrap(title: 'Default bottom'));
       await tester.pump(const Duration(milliseconds: 600));
       // Default bottom uses a PreferredSize with a Container
       expect(find.byType(SliverAppBar), findsOneWidget);
@@ -1307,11 +1293,11 @@ void main() {
         routes: [
           GoRoute(
             path: '/',
-            builder: (_, __) => const Scaffold(body: Text('root')),
+            builder: (_, _) => const Scaffold(body: Text('root')),
             routes: [
               GoRoute(
                 path: 'child',
-                builder: (_, __) => Scaffold(
+                builder: (_, _) => Scaffold(
                   body: CustomScrollView(
                     slivers: [
                       DonySliverAppBar(
@@ -1345,18 +1331,15 @@ void main() {
         routes: [
           GoRoute(
             path: '/',
-            builder: (_, __) => const Scaffold(body: Text('root')),
+            builder: (_, _) => const Scaffold(body: Text('root')),
             routes: [
               GoRoute(
                 path: 'child',
-                builder: (_, __) => Scaffold(
+                builder: (_, _) => const Scaffold(
                   body: CustomScrollView(
                     slivers: [
-                      const DonySliverAppBar(
-                        title: 'Auto pop',
-                        showBackButton: true,
-                      ),
-                      const SliverToBoxAdapter(child: SizedBox(height: 500)),
+                      DonySliverAppBar(title: 'Auto pop', showBackButton: true),
+                      SliverToBoxAdapter(child: SizedBox(height: 500)),
                     ],
                   ),
                 ),
@@ -1382,18 +1365,18 @@ void main() {
         routes: [
           GoRoute(
             path: '/',
-            builder: (_, __) => Scaffold(
+            builder: (_, _) => const Scaffold(
               body: CustomScrollView(
                 slivers: [
-                  const DonySliverAppBar(title: 'Root', showBackButton: true),
-                  const SliverToBoxAdapter(child: SizedBox(height: 500)),
+                  DonySliverAppBar(title: 'Root', showBackButton: true),
+                  SliverToBoxAdapter(child: SizedBox(height: 500)),
                 ],
               ),
             ),
           ),
           GoRoute(
             path: '/home',
-            builder: (_, __) => const Scaffold(body: Text('Home sliver')),
+            builder: (_, _) => const Scaffold(body: Text('Home sliver')),
           ),
         ],
       );
@@ -1417,14 +1400,14 @@ void main() {
         routes: [
           GoRoute(
             path: '/',
-            builder: (_, __) => const Scaffold(
+            builder: (_, _) => const Scaffold(
               appBar: DonyAppBar(title: 'Root page'),
               body: SizedBox.shrink(),
             ),
           ),
           GoRoute(
             path: '/home',
-            builder: (_, __) => const Scaffold(body: Text('Home fallback')),
+            builder: (_, _) => const Scaffold(body: Text('Home fallback')),
           ),
         ],
       );

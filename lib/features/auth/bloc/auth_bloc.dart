@@ -133,13 +133,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     _pendingPhoneNumber = event.phoneNumber;
     try {
       await _authRepository.sendPhoneOtp(event.phoneNumber);
-      emit(
-        AuthOtpSent(
-          verificationId: '',
-          phoneNumber: event.phoneNumber,
-          secondsLeft: 60,
-        ),
-      );
+      emit(AuthOtpSent(verificationId: '', phoneNumber: event.phoneNumber));
       _otpTimer?.cancel();
       _otpTimer = Timer.periodic(const Duration(seconds: 1), (_) {
         if (!isClosed) add(const AuthOtpTimerTicked());
@@ -350,7 +344,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(const AuthLoading());
     try {
       await _authRepository.sendEmailOtp(event.email);
-      emit(AuthEmailOtpSent(event.email, secondsLeft: 60));
+      emit(AuthEmailOtpSent(event.email));
       _otpTimer?.cancel();
       _otpTimer = Timer.periodic(const Duration(seconds: 1), (_) {
         if (!isClosed) add(const AuthOtpTimerTicked());

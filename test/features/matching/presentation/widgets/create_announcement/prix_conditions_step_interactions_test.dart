@@ -30,8 +30,8 @@ class _MockCommissionMethodBloc
     extends MockBloc<CommissionMethodEvent, CommissionMethodState>
     implements CommissionMethodBloc {}
 
-final _stripeConfiguredState = StripeAccountReady(
-  const ConnectAccountStatus(status: 'ONBOARDING_COMPLETE'),
+const _stripeConfiguredState = StripeAccountReady(
+  ConnectAccountStatus(status: 'ONBOARDING_COMPLETE'),
 );
 
 const _validCard = CommissionMethod(

@@ -30,10 +30,10 @@ class DonyUrgentBadge extends StatelessWidget {
         // labelMedium résout à 11px, aucun token DonyTypography à 12px/w500+
         // n'existe (bodySmall est 12px mais w400).
         style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              fontSize: 12,
-              color: cs.error,
-              fontWeight: FontWeight.w700,
-            ),
+          fontSize: 12,
+          color: cs.error,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }

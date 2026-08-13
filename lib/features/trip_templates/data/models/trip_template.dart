@@ -47,7 +47,8 @@ class TripTemplate {
     return _fromJson(json, arrival);
   }
 
-  static TripTemplate _fromJson(Map<String, dynamic> json, String? arrival) => TripTemplate(
+  static TripTemplate _fromJson(Map<String, dynamic> json, String? arrival) =>
+      TripTemplate(
         id: json['id'] as String,
         label: json['label'] as String,
         emoji: json['emoji'] as String?,
@@ -62,27 +63,29 @@ class TripTemplate {
         availableKg: (json['availableKg'] as num).toInt(),
         pricePerKg: (json['pricePerKg'] as num).toDouble(),
         acceptedCategories:
-            (json['acceptedCategories'] as List?)?.map((e) => e as String).toList() ??
-                const [],
+            (json['acceptedCategories'] as List?)
+                ?.map((e) => e as String)
+                .toList() ??
+            const [],
         cashAccepted: json['cashAccepted'] as bool? ?? false,
         arrivalTime: arrival,
       );
 
   Map<String, dynamic> toJson() => {
-        'label': label,
-        'emoji': emoji,
-        'departureCity': departureCity,
-        'departureLat': departureLat,
-        'departureLng': departureLng,
-        'arrivalCity': arrivalCity,
-        'arrivalLat': arrivalLat,
-        'arrivalLng': arrivalLng,
-        'transportMode': transportMode,
-        'capacityUnit': capacityUnit,
-        'availableKg': availableKg,
-        'pricePerKg': pricePerKg,
-        'acceptedCategories': acceptedCategories,
-        'cashAccepted': cashAccepted,
-        'arrivalTime': arrivalTime,
-      };
+    'label': label,
+    'emoji': emoji,
+    'departureCity': departureCity,
+    'departureLat': departureLat,
+    'departureLng': departureLng,
+    'arrivalCity': arrivalCity,
+    'arrivalLat': arrivalLat,
+    'arrivalLng': arrivalLng,
+    'transportMode': transportMode,
+    'capacityUnit': capacityUnit,
+    'availableKg': availableKg,
+    'pricePerKg': pricePerKg,
+    'acceptedCategories': acceptedCategories,
+    'cashAccepted': cashAccepted,
+    'arrivalTime': arrivalTime,
+  };
 }

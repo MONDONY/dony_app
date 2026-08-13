@@ -129,7 +129,7 @@ class _IntroView extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Hero mascotte
-                  DonyMascotteAnimated(
+                  const DonyMascotteAnimated(
                     type: DonyMascotteType.securise,
                     size: DonyMascotteSize.lg,
                   ),
@@ -237,7 +237,6 @@ class _BenefitsList extends StatelessWidget {
                   children: [
                     DonyIconContainer(
                       iconAsset: iconAsset,
-                      size: DonyIconContainerSize.md,
                       borderRadius: DonyRadius.md,
                       backgroundColor: cs.primaryContainer,
                       iconColor: cs.primary,

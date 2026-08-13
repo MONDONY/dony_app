@@ -351,7 +351,6 @@ class _OfferTile extends StatelessWidget {
             DonyAvatar(
               name: name,
               imageUrl: thread.travelerPhotoUrl,
-              size: DonyAvatarSize.md,
               verified: (thread.travelerTripsCount ?? 0) > 0,
             ),
             const SizedBox(width: DonySpacing.sm + 4),
@@ -606,7 +605,6 @@ class _CandidateCard extends StatelessWidget {
             DonyAvatar(
               name: name,
               imageUrl: thread.travelerPhotoUrl,
-              size: DonyAvatarSize.md,
               verified: (thread.travelerTripsCount ?? 0) > 0,
             ),
             const SizedBox(width: DonySpacing.sm + 4),
@@ -679,7 +677,6 @@ class _CandidateCard extends StatelessWidget {
                   elevation: 0,
                   padding: const EdgeInsets.symmetric(
                     horizontal: DonySpacing.base,
-                    vertical: 0,
                   ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(DonyRadius.md),

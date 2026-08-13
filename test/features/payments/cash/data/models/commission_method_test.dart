@@ -1,5 +1,5 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:dony/features/payments/cash/data/models/commission_method.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('parses from JSON', () {
@@ -19,7 +19,7 @@ void main() {
   });
 
   test('formats expiry as MM/YYYY', () {
-    final m = CommissionMethod(
+    const m = CommissionMethod(
       brand: 'visa',
       last4: '4242',
       expMonth: 3,
@@ -30,7 +30,7 @@ void main() {
   });
 
   test('maskedNumber uses bullet characters', () {
-    final m = CommissionMethod(
+    const m = CommissionMethod(
       brand: 'mastercard',
       last4: '1234',
       expMonth: 1,

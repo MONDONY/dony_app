@@ -56,7 +56,7 @@ void main() {
     });
 
     test('fromJson parses capacityUnit and isKgFree is true for KG_FREE', () {
-      final model = LinkedTripSummary.fromJson({
+      final model = LinkedTripSummary.fromJson(const {
         'announcementId': 'ann-kgfree',
         'departureCity': 'Paris',
         'arrivalCity': 'Dakar',
@@ -68,7 +68,7 @@ void main() {
     });
 
     test('isKgFree is false when capacityUnit is SUITCASE_23KG', () {
-      final model = LinkedTripSummary.fromJson({
+      final model = LinkedTripSummary.fromJson(const {
         'announcementId': 'ann-suitcase',
         'departureCity': 'Paris',
         'arrivalCity': 'Dakar',
@@ -80,7 +80,7 @@ void main() {
     });
 
     test('isKgFree is false when capacityUnit is absent (null)', () {
-      final model = LinkedTripSummary.fromJson({
+      final model = LinkedTripSummary.fromJson(const {
         'announcementId': 'ann-null',
         'departureCity': 'Paris',
         'arrivalCity': 'Dakar',
@@ -91,13 +91,13 @@ void main() {
     });
 
     test('Equatable: equal when all props match', () {
-      final a = LinkedTripSummary.fromJson({
+      final a = LinkedTripSummary.fromJson(const {
         'announcementId': 'ann-1',
         'departureCity': 'Paris',
         'arrivalCity': 'Dakar',
         'availableKg': 10,
       });
-      final b = LinkedTripSummary.fromJson({
+      final b = LinkedTripSummary.fromJson(const {
         'announcementId': 'ann-1',
         'departureCity': 'Paris',
         'arrivalCity': 'Dakar',
@@ -107,13 +107,13 @@ void main() {
     });
 
     test('Equatable: not equal when announcementId differs', () {
-      final a = LinkedTripSummary.fromJson({
+      final a = LinkedTripSummary.fromJson(const {
         'announcementId': 'ann-1',
         'departureCity': 'Paris',
         'arrivalCity': 'Dakar',
         'availableKg': 10,
       });
-      final b = LinkedTripSummary.fromJson({
+      final b = LinkedTripSummary.fromJson(const {
         'announcementId': 'ann-2',
         'departureCity': 'Paris',
         'arrivalCity': 'Dakar',

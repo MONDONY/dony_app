@@ -19,9 +19,9 @@ class PinStatusState {
   final bool isBusy;
 
   PinStatusState copyWith({bool? configured, bool? isBusy}) => PinStatusState(
-        configured: configured ?? this.configured,
-        isBusy: isBusy ?? this.isBusy,
-      );
+    configured: configured ?? this.configured,
+    isBusy: isBusy ?? this.isBusy,
+  );
 
   @override
   bool operator ==(Object other) =>

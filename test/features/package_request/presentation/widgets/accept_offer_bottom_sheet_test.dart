@@ -115,7 +115,7 @@ void main() {
   });
 
   testWidgets('shows "Total à régler" label for sender', (tester) async {
-    await tester.pumpWidget(_buildApp(bloc: bloc, isTraveler: false));
+    await tester.pumpWidget(_buildApp(bloc: bloc));
     await tester.tap(find.byKey(const Key('open')));
     await tester.pumpAndSettle();
     expect(find.text('Total à régler'), findsOneWidget);
@@ -124,9 +124,7 @@ void main() {
   testWidgets('affiche le détail de la commission Yadony (%) à l\'expéditeur', (
     tester,
   ) async {
-    await tester.pumpWidget(
-      _buildApp(bloc: bloc, isTraveler: false, grossPriceEur: 39.20),
-    );
+    await tester.pumpWidget(_buildApp(bloc: bloc, grossPriceEur: 39.20));
     await tester.tap(find.byKey(const Key('open')));
     await tester.pumpAndSettle();
     expect(find.textContaining('Commission Yadony'), findsOneWidget);
@@ -153,9 +151,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('CODE PROMO (OPTIONNEL)'), findsNothing);
 
-      await tester.pumpWidget(
-        _buildApp(bloc: bloc, isTraveler: false, isCheckout: false),
-      );
+      await tester.pumpWidget(_buildApp(bloc: bloc));
       await tester.tap(find.byKey(const Key('open')));
       await tester.pumpAndSettle();
       expect(find.text('CODE PROMO (OPTIONNEL)'), findsNothing);
@@ -204,7 +200,7 @@ void main() {
   });
 
   testWidgets('sender sees escrow info text', (tester) async {
-    await tester.pumpWidget(_buildApp(bloc: bloc, isTraveler: false));
+    await tester.pumpWidget(_buildApp(bloc: bloc));
     await tester.tap(find.byKey(const Key('open')));
     await tester.pumpAndSettle();
     expect(find.textContaining('bloqué et sécurisé'), findsOneWidget);
@@ -271,9 +267,7 @@ void main() {
       'orienté prochaine étape (trajet puis règlement), sans mention espèces, '
       'et dispatch NegotiationAcceptRequested',
       (tester) async {
-        await tester.pumpWidget(
-          _buildApp(bloc: bloc, isCheckout: false, isTraveler: false),
-        );
+        await tester.pumpWidget(_buildApp(bloc: bloc));
         await accept(tester);
 
         expect(find.byType(DonySuccessScreen), findsOneWidget);
@@ -302,14 +296,7 @@ void main() {
       'voyageur accepte sans trajet lié → copy orienté "lie un trajet", '
       'sans mention espèces',
       (tester) async {
-        await tester.pumpWidget(
-          _buildApp(
-            bloc: bloc,
-            isCheckout: false,
-            isTraveler: true,
-            hasLinkedTrip: false,
-          ),
-        );
+        await tester.pumpWidget(_buildApp(bloc: bloc, isTraveler: true));
         await accept(tester);
 
         expect(find.byType(DonySuccessScreen), findsOneWidget);
@@ -325,12 +312,7 @@ void main() {
       'finaliser", sans mention espèces',
       (tester) async {
         await tester.pumpWidget(
-          _buildApp(
-            bloc: bloc,
-            isCheckout: false,
-            isTraveler: true,
-            hasLinkedTrip: true,
-          ),
+          _buildApp(bloc: bloc, isTraveler: true, hasLinkedTrip: true),
         );
         await accept(tester);
 

@@ -10,8 +10,8 @@ BidModel _bid() => BidModel(
   senderId: 's-1',
   weightKg: 5,
   status: 'COMPLETED',
-  createdAt: DateTime(2026, 5, 1),
-  updatedAt: DateTime(2026, 5, 1),
+  createdAt: DateTime(2026, 5),
+  updatedAt: DateTime(2026, 5),
   departureCity: 'Paris',
   arrivalCity: 'Abidjan',
 );

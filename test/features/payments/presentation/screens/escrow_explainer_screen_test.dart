@@ -15,7 +15,7 @@ GoRouter _buildRouter({
     routes: [
       GoRoute(
         path: '/',
-        builder: (_, __) => EscrowExplainerScreen(
+        builder: (_, _) => EscrowExplainerScreen(
           amount: amount,
           travelerName: travelerName,
           bidId: bidId,
@@ -24,7 +24,7 @@ GoRouter _buildRouter({
       if (stubTarget != null)
         GoRoute(
           path: stubTarget,
-          builder: (_, __) => const Scaffold(body: Text('target')),
+          builder: (_, _) => const Scaffold(body: Text('target')),
         ),
     ],
   );
@@ -37,22 +37,24 @@ Future<void> _pump(
   String? bidId,
   String? stubTarget,
 }) async {
-  await tester.pumpWidget(MaterialApp.router(
-    theme: AppTheme.light(),
-    routerConfig: _buildRouter(
-      amount: amount,
-      travelerName: travelerName,
-      bidId: bidId,
-      stubTarget: stubTarget,
+  await tester.pumpWidget(
+    MaterialApp.router(
+      theme: AppTheme.light(),
+      routerConfig: _buildRouter(
+        amount: amount,
+        travelerName: travelerName,
+        bidId: bidId,
+        stubTarget: stubTarget,
+      ),
     ),
-  ));
+  );
   await tester.pump();
 }
 
 void main() {
   group('EscrowExplainerScreen', () {
     testWidgets('shows formatted amount in amount card', (tester) async {
-      await _pump(tester, amount: 120.50);
+      await _pump(tester);
       expect(find.text('120,50'), findsOneWidget);
     });
 
@@ -79,12 +81,10 @@ void main() {
       expect(find.textContaining('code à 4 chiffres'), findsOneWidget);
     });
 
-    testWidgets('CTA navigates to bid detail when bidId provided', (tester) async {
-      await _pump(
-        tester,
-        bidId: 'abc123',
-        stubTarget: '/bids/abc123',
-      );
+    testWidgets('CTA navigates to bid detail when bidId provided', (
+      tester,
+    ) async {
+      await _pump(tester, bidId: 'abc123', stubTarget: '/bids/abc123');
       await tester.ensureVisible(find.text('Voir le suivi'));
       await tester.tap(find.text('Voir le suivi'));
       await tester.pumpAndSettle();

@@ -23,7 +23,7 @@ void main() {
   tearDown(() => bloc.close());
 
   group('WalletLoadRequested', () {
-    final wallet = WalletModel(
+    const wallet = WalletModel(
       balance: 42.50,
       currency: 'EUR',
       transactions: [],
@@ -102,7 +102,7 @@ void main() {
   });
 
   group('WalletRefreshRequested — pull-to-refresh', () {
-    final wallet = WalletModel(balance: 75, currency: 'EUR', transactions: []);
+    const wallet = WalletModel(balance: 75, currency: 'EUR', transactions: []);
 
     blocTest<WalletBloc, WalletState>(
       'émet WalletLoaded SANS WalletLoading (pas de flicker)',
@@ -131,7 +131,7 @@ void main() {
       build: () {
         when(() => repo.getBalance()).thenAnswer(
           (_) async =>
-              WalletModel(balance: 60, currency: 'EUR', transactions: []),
+              const WalletModel(balance: 60, currency: 'EUR', transactions: []),
         );
         return bloc;
       },

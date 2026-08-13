@@ -2,8 +2,6 @@ import 'dart:async';
 
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/design/widgets/dony_bottom_sheet.dart';
-import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
@@ -12,7 +10,6 @@ import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/data/models/price_estimate.dart';
 import 'package:dony/features/package_request/data/price_estimation_repository.dart';
-import 'package:dony/features/package_request/presentation/_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -370,7 +367,6 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
                   label: 'DATE DE VOYAGE',
                   iconAsset: 'calendar',
                   iconBgKey: _TileColor.amber,
-                  suffix: null,
                   child: InkWell(
                     onTap: () async {
                       final picked = await showDatePicker(
@@ -427,7 +423,6 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
                 label: 'MESSAGE',
                 iconAsset: 'message-circle',
                 iconBgKey: _TileColor.violet,
-                suffix: null,
                 sublabel: 'optionnel',
                 alignIconTop: true,
                 child: TextFormField(

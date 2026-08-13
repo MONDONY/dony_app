@@ -97,7 +97,6 @@ class _UpgradeToProViewState extends State<_UpgradeToProView> {
       message:
           'Votre badge PRO et vos avantages seront supprimés. Cette action est irréversible.',
       confirmLabel: 'Désactiver',
-      cancelLabel: 'Annuler',
       variant: DonyDialogVariant.destructive,
     );
     if (confirmed == true && context.mounted) {
@@ -503,7 +502,7 @@ class _UpgradeFormScreen extends StatelessWidget {
               if (errorMessage != null) ...[
                 DonyStatusBanner(
                   type: DonyStatusBannerType.error,
-                  message: errorMessage!,
+                  message: errorMessage,
                 ).animate().fadeIn(),
                 const SizedBox(height: DonySpacing.lg),
               ],

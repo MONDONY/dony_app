@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Widget wrap(AccessibilityState state) => MaterialApp(
-      theme: AppTheme.light(),
-      home: Scaffold(body: A11yPreviewCard(state: state)),
-    );
+  theme: AppTheme.light(),
+  home: Scaffold(body: A11yPreviewCard(state: state)),
+);
 
 void main() {
   testWidgets('affiche un exemple de trajet', (tester) async {
@@ -17,37 +17,42 @@ void main() {
     expect(find.text('Aperçu'), findsOneWidget);
   });
 
-  testWidgets('le facteur de taille agrandit le texte de l\'aperçu',
-      (tester) async {
+  testWidgets('le facteur de taille agrandit le texte de l\'aperçu', (
+    tester,
+  ) async {
     Size sizeOf(WidgetTester t) => t.getSize(find.text('Paris'));
 
-    await tester.pumpWidget(wrap(const AccessibilityState(
-      followSystemTextScale: false,
-      textScaleFactor: 1.0,
-    )));
+    await tester.pumpWidget(
+      wrap(const AccessibilityState(followSystemTextScale: false)),
+    );
     final small = sizeOf(tester);
 
-    await tester.pumpWidget(wrap(const AccessibilityState(
-      followSystemTextScale: false,
-      textScaleFactor: 2.0,
-    )));
+    await tester.pumpWidget(
+      wrap(
+        const AccessibilityState(
+          followSystemTextScale: false,
+          textScaleFactor: 2.0,
+        ),
+      ),
+    );
     await tester.pump();
     final big = sizeOf(tester);
 
     expect(big.height, greaterThan(small.height));
   });
 
-  testWidgets('le contraste élevé change la couleur du texte de l\'aperçu',
-      (tester) async {
+  testWidgets('le contraste élevé change la couleur du texte de l\'aperçu', (
+    tester,
+  ) async {
     Color colorOf(WidgetTester t) =>
         t.widget<Text>(find.text('Paris')).style?.color ?? Colors.transparent;
 
     await tester.pumpWidget(wrap(const AccessibilityState()));
     final normal = colorOf(tester);
 
-    await tester.pumpWidget(wrap(
-      const AccessibilityState(highContrast: AccessibilityMode.on),
-    ));
+    await tester.pumpWidget(
+      wrap(const AccessibilityState(highContrast: AccessibilityMode.on)),
+    );
     await tester.pump();
     expect(colorOf(tester), isNot(normal));
   });

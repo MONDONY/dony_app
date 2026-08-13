@@ -67,7 +67,7 @@ PackageRequest _sampleRequest() => PackageRequest(
   transportMode: TransportMode.plane,
   categories: const ['Vêtements'],
   status: PackageRequestStatus.open,
-  createdAt: DateTime(2026, 6, 1),
+  createdAt: DateTime(2026, 6),
 );
 
 void main() {
@@ -78,7 +78,7 @@ void main() {
   late _MockAnalyticsService analytics;
 
   setUpAll(() async {
-    await initializeDateFormatting('fr', null);
+    await initializeDateFormatting('fr');
     registerFallbackValue(const FetchMyRequests());
     registerFallbackValue(const RefreshMyRequests());
     registerFallbackValue(const BidMyListAutoRefreshRequested());
@@ -209,16 +209,15 @@ void main() {
       },
     );
 
-    testWidgets(
-      'le segment « Demandes » a disparu de l\'écran Envoyer',
-      (tester) async {
-        await tester.pumpWidget(wrap());
-        await tester.pump(const Duration(milliseconds: 400));
+    testWidgets('le segment « Demandes » a disparu de l\'écran Envoyer', (
+      tester,
+    ) async {
+      await tester.pumpWidget(wrap());
+      await tester.pump(const Duration(milliseconds: 400));
 
-        expect(find.text('Demandes'), findsNothing);
-        expect(find.byType(TabBarView), findsNothing);
-      },
-    );
+      expect(find.text('Demandes'), findsNothing);
+      expect(find.byType(TabBarView), findsNothing);
+    });
 
     testWidgets('le bouton "+ Nouveau" est présent (HeaderPill)', (
       tester,
@@ -228,7 +227,6 @@ void main() {
 
       expect(find.text('+ Nouveau'), findsOneWidget);
     });
-
   });
 
   // ── Back button regression tests ─────────────────────────────────────────────

@@ -20,7 +20,9 @@ class BidPhotosCubit extends Cubit<List<BidPhotoUpload>> {
 
   /// Clés S3 des photos uploadées avec succès, à envoyer à la création du bid.
   List<String> get readyKeys => state
-      .where((p) => p.status == BidPhotoUploadStatus.ready && p.remoteKey != null)
+      .where(
+        (p) => p.status == BidPhotoUploadStatus.ready && p.remoteKey != null,
+      )
       .map((p) => p.remoteKey!)
       .toList();
 
@@ -41,7 +43,10 @@ class BidPhotosCubit extends Cubit<List<BidPhotoUpload>> {
     } catch (_) {
       emit([
         for (final p in state)
-          if (p.localId == id) p.copyWith(status: BidPhotoUploadStatus.failed) else p,
+          if (p.localId == id)
+            p.copyWith(status: BidPhotoUploadStatus.failed)
+          else
+            p,
       ]);
     }
   }

@@ -75,7 +75,7 @@ void main() {
     },
     seed: () => SubscriptionsState(
       status: SubscriptionsStatus.success,
-      items: [_item('t1', push: false)],
+      items: [_item('t1')],
     ),
     act: (b) => b.add(const ToggleSubscriptionPush('t1', true)),
     expect: () => [
@@ -136,7 +136,7 @@ void main() {
     },
     seed: () => SubscriptionsState(
       status: SubscriptionsStatus.success,
-      items: [_item('t1', push: false)],
+      items: [_item('t1')],
     ),
     act: (b) => b.add(const ToggleSubscriptionPush('t1', true)),
     expect: () => [

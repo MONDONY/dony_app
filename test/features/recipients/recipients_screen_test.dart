@@ -88,14 +88,14 @@ Widget _wrap(RecipientBloc bloc) => BlocProvider<HelpCenterBloc>(
     child: MaterialApp.router(
       routerConfig: GoRouter(
         routes: [
-          GoRoute(path: '/', builder: (_, __) => const RecipientsScreen()),
+          GoRoute(path: '/', builder: (_, _) => const RecipientsScreen()),
           GoRoute(
             path: '/profile/recipients/new',
-            builder: (_, __) => const Scaffold(body: Text('New Recipient')),
+            builder: (_, _) => const Scaffold(body: Text('New Recipient')),
           ),
           GoRoute(
             path: '/profile/recipients/:id',
-            builder: (_, __) => const Scaffold(body: Text('Edit Recipient')),
+            builder: (_, _) => const Scaffold(body: Text('Edit Recipient')),
           ),
         ],
       ),

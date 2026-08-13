@@ -22,13 +22,15 @@ void main() {
 
     tearDown(() => bloc.close());
 
-    test('état initial: formulaire invalide, prix null, capacité SUITCASE_23KG',
-        () {
-      expect(bloc.state.isFormValid, isFalse);
-      expect(bloc.state.capacityUnit, CapacityUnit.suitcase23kg);
-      expect(bloc.state.pricePerKg, isNull);
-      expect(bloc.state.priceWarning, isNull);
-    });
+    test(
+      'état initial: formulaire invalide, prix null, capacité SUITCASE_23KG',
+      () {
+        expect(bloc.state.isFormValid, isFalse);
+        expect(bloc.state.capacityUnit, CapacityUnit.suitcase23kg);
+        expect(bloc.state.pricePerKg, isNull);
+        expect(bloc.state.priceWarning, isNull);
+      },
+    );
 
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(
       'PriceChanged avec 3.0 → warning prix trop bas',
@@ -48,8 +50,7 @@ void main() {
       act: (b) => b.add(const PriceChanged(20.0)),
       expect: () => [
         predicate<AnnouncementFormState>(
-          (s) =>
-              s.pricePerKg == 20.0 && s.priceWarning == PriceWarning.tooHigh,
+          (s) => s.pricePerKg == 20.0 && s.priceWarning == PriceWarning.tooHigh,
           'state has pricePerKg=20.0 and warning=tooHigh',
         ),
       ],
@@ -221,7 +222,8 @@ void main() {
         b.add(const DepartureCityChanged('Paris'));
         b.add(const ArrivalCityChanged('Dakar'));
         b.add(
-            DepartureDateChanged(DateTime.now().add(const Duration(days: 7))));
+          DepartureDateChanged(DateTime.now().add(const Duration(days: 7))),
+        );
         b.add(const PriceChanged(10.0));
         b.add(const AvailableKgChanged(23.0));
       },
@@ -298,17 +300,25 @@ void main() {
       act: (b) {
         b.add(const DepartureCityChanged('Paris'));
         b.add(const ArrivalCityChanged('Dakar'));
-        b.add(DepartureDateChanged(DateTime.now().add(const Duration(days: 7))));
+        b.add(
+          DepartureDateChanged(DateTime.now().add(const Duration(days: 7))),
+        );
         b.add(const PriceChanged(10.0));
         // Sélectionner kgFree → doit fixer availableKg=1.0 automatiquement
         b.add(const CapacityUnitChanged(CapacityUnit.kgFree));
         // Pas de AvailableKgChanged ici — l'utilisateur ne saisit rien
       },
       verify: (b) {
-        expect(b.state.availableKg, 1.0,
-            reason: 'kgFree must auto-set sentinel 1.0');
-        expect(b.state.isFormValid, isTrue,
-            reason: 'form must be valid without manual kg input for kgFree');
+        expect(
+          b.state.availableKg,
+          1.0,
+          reason: 'kgFree must auto-set sentinel 1.0',
+        );
+        expect(
+          b.state.isFormValid,
+          isTrue,
+          reason: 'form must be valid without manual kg input for kgFree',
+        );
       },
     );
 
@@ -368,9 +378,11 @@ void main() {
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(
       'PickupAddressChanged met à jour pickupAddress',
       build: () => AnnouncementFormBloc(),
-      act: (b) => b.add(const PickupAddressChanged(
-        AddressData(label: '12 rue de la Paix, Paris', lat: 48.87, lng: 2.33),
-      )),
+      act: (b) => b.add(
+        const PickupAddressChanged(
+          AddressData(label: '12 rue de la Paix, Paris', lat: 48.87, lng: 2.33),
+        ),
+      ),
       expect: () => [
         predicate<AnnouncementFormState>(
           (s) => s.pickupAddress?.label == '12 rue de la Paix, Paris',
@@ -397,9 +409,11 @@ void main() {
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(
       'DeliveryAddressChanged met à jour deliveryAddress',
       build: () => AnnouncementFormBloc(),
-      act: (b) => b.add(const DeliveryAddressChanged(
-        AddressData(label: 'Plateau, Abidjan', lat: 5.32, lng: -4.01),
-      )),
+      act: (b) => b.add(
+        const DeliveryAddressChanged(
+          AddressData(label: 'Plateau, Abidjan', lat: 5.32, lng: -4.01),
+        ),
+      ),
       expect: () => [
         predicate<AnnouncementFormState>(
           (s) => s.deliveryAddress?.label == 'Plateau, Abidjan',
@@ -460,7 +474,8 @@ void main() {
         b.add(const DepartureCityChanged('Paris'));
         b.add(const ArrivalCityChanged('Dakar'));
         b.add(
-            DepartureDateChanged(DateTime.now().add(const Duration(days: 3))));
+          DepartureDateChanged(DateTime.now().add(const Duration(days: 3))),
+        );
       },
       verify: (b) => expect(b.state.isStep1Valid, isTrue),
     );
@@ -473,12 +488,16 @@ void main() {
       'isStep2Valid: vrai avec pickup + delivery',
       build: () => AnnouncementFormBloc(),
       act: (b) {
-        b.add(const PickupAddressChanged(
-          AddressData(label: 'CDG, Paris', lat: 49.0, lng: 2.55),
-        ));
-        b.add(const DeliveryAddressChanged(
-          AddressData(label: 'Almadies, Dakar', lat: 14.74, lng: -17.49),
-        ));
+        b.add(
+          const PickupAddressChanged(
+            AddressData(label: 'CDG, Paris', lat: 49.0, lng: 2.55),
+          ),
+        );
+        b.add(
+          const DeliveryAddressChanged(
+            AddressData(label: 'Almadies, Dakar', lat: 14.74, lng: -17.49),
+          ),
+        );
       },
       verify: (b) => expect(b.state.isStep2Valid, isTrue),
     );
@@ -511,11 +530,14 @@ void main() {
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(
       'AnnouncementPricingModeSetRequested.kg → pricingMode = kg',
       build: () => AnnouncementFormBloc(),
-      act: (b) => b.add(
-          const AnnouncementPricingModeSetRequested(PricingMode.kg)),
+      act: (b) =>
+          b.add(const AnnouncementPricingModeSetRequested(PricingMode.kg)),
       expect: () => [
-        isA<AnnouncementFormState>()
-            .having((s) => s.pricingMode, 'mode', PricingMode.kg),
+        isA<AnnouncementFormState>().having(
+          (s) => s.pricingMode,
+          'mode',
+          PricingMode.kg,
+        ),
       ],
     );
 
@@ -536,11 +558,14 @@ void main() {
         );
         return AnnouncementFormBloc(priceGridRepository: mockRepo);
       },
-      act: (b) => b.add(
-          const AnnouncementPricingModeSetRequested(PricingMode.mixed)),
+      act: (b) =>
+          b.add(const AnnouncementPricingModeSetRequested(PricingMode.mixed)),
       expect: () => [
-        isA<AnnouncementFormState>()
-            .having((s) => s.pricingMode, 'mode', PricingMode.mixed),
+        isA<AnnouncementFormState>().having(
+          (s) => s.pricingMode,
+          'mode',
+          PricingMode.mixed,
+        ),
         isA<AnnouncementFormState>()
             .having((s) => s.pricingMode, 'mode', PricingMode.mixed)
             .having((s) => s.gridPreviewItems.length, 'items', 1),
@@ -613,8 +638,8 @@ void main() {
         );
         return AnnouncementFormBloc(priceGridRepository: mockRepo);
       },
-      act: (b) => b.add(
-          const AnnouncementPricingModeSetRequested(PricingMode.mixed)),
+      act: (b) =>
+          b.add(const AnnouncementPricingModeSetRequested(PricingMode.mixed)),
       verify: (b) {
         final items = b.state.gridPreviewItems;
         expect(items.length, 1);
@@ -645,11 +670,7 @@ void main() {
     });
 
     test('PickupAddressChanged props contains address', () {
-      const address = AddressData(
-        label: 'Paris',
-        lat: 48.8566,
-        lng: 2.3522,
-      );
+      const address = AddressData(label: 'Paris', lat: 48.8566, lng: 2.3522);
       const e1 = PickupAddressChanged(address);
       const e2 = PickupAddressChanged(address);
       expect(e1.props, [address]);
@@ -661,11 +682,7 @@ void main() {
     });
 
     test('DeliveryAddressChanged props contains address', () {
-      const address = AddressData(
-        label: 'Lyon',
-        lat: 45.7640,
-        lng: 4.8357,
-      );
+      const address = AddressData(label: 'Lyon', lat: 45.7640, lng: 4.8357);
       const e1 = DeliveryAddressChanged(address);
       const e2 = DeliveryAddressChanged(address);
       expect(e1.props, [address]);

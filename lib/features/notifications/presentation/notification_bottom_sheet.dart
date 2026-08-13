@@ -25,10 +25,8 @@ void showNotificationBottomSheet(BuildContext context) {
     useRootNavigator: true,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (_) => BlocProvider.value(
-      value: bloc,
-      child: const NotificationBottomSheet(),
-    ),
+    builder: (_) =>
+        BlocProvider.value(value: bloc, child: const NotificationBottomSheet()),
   );
 }
 
@@ -89,9 +87,9 @@ class _NotificationBottomSheetState extends State<NotificationBottomSheet> {
                   builder: (context, state) {
                     if (state is NotificationLoaded && state.unreadCount > 0) {
                       return TextButton(
-                        onPressed: () => context
-                            .read<NotificationBloc>()
-                            .add(const NotificationsMarkAllReadRequested()),
+                        onPressed: () => context.read<NotificationBloc>().add(
+                          const NotificationsMarkAllReadRequested(),
+                        ),
                         child: Text(
                           'Tout lire',
                           style: tt.labelLarge?.copyWith(color: cs.primary),
@@ -131,9 +129,9 @@ class _NotificationList extends StatelessWidget {
             title: 'Erreur de chargement',
             description: 'Impossible de charger vos notifications.',
             actionLabel: 'Réessayer',
-            onAction: () => context
-                .read<NotificationBloc>()
-                .add(const NotificationsLoadRequested()),
+            onAction: () => context.read<NotificationBloc>().add(
+              const NotificationsLoadRequested(),
+            ),
           );
         }
 
@@ -148,16 +146,17 @@ class _NotificationList extends StatelessWidget {
 
           return RefreshIndicator(
             color: cs.primary,
-            onRefresh: () async => context
-                .read<NotificationBloc>()
-                .add(const NotificationsLoadRequested()),
+            onRefresh: () async => context.read<NotificationBloc>().add(
+              const NotificationsLoadRequested(),
+            ),
             child: ListView.separated(
               padding: EdgeInsets.only(
                 top: DonySpacing.sm,
-                bottom: DonySpacing.sm + MediaQuery.of(context).viewPadding.bottom,
+                bottom:
+                    DonySpacing.sm + MediaQuery.of(context).viewPadding.bottom,
               ),
               itemCount: state.notifications.length,
-              separatorBuilder: (_, __) => Divider(
+              separatorBuilder: (_, _) => Divider(
                 height: 1,
                 color: cs.outline,
                 indent: DonySpacing.lg,
@@ -165,23 +164,24 @@ class _NotificationList extends StatelessWidget {
               ),
               itemBuilder: (context, index) {
                 final notif = state.notifications[index];
-                final tile = _NotificationTile(
-                  notification: notif,
-                  onTap: () {
-                    context
-                        .read<NotificationBloc>()
-                        .add(NotificationMarkReadRequested(notif.id));
-                    final route = routeForNotification(notif);
-                    if (route != null) {
-                      Navigator.of(context, rootNavigator: true).pop();
-                      if (isShellTabRoute(route)) {
-                        context.go(route);
-                      } else {
-                        context.push(route);
-                      }
-                    }
-                  },
-                ).animate().fadeIn(
+                final tile =
+                    _NotificationTile(
+                      notification: notif,
+                      onTap: () {
+                        context.read<NotificationBloc>().add(
+                          NotificationMarkReadRequested(notif.id),
+                        );
+                        final route = routeForNotification(notif);
+                        if (route != null) {
+                          Navigator.of(context, rootNavigator: true).pop();
+                          if (isShellTabRoute(route)) {
+                            context.go(route);
+                          } else {
+                            context.push(route);
+                          }
+                        }
+                      },
+                    ).animate().fadeIn(
                       delay: Duration(milliseconds: 40 * index),
                       duration: 280.ms,
                     );
@@ -196,12 +196,12 @@ class _NotificationList extends StatelessWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        DonyIcon('trash-2',
-                            color: cs.onError, size: 26),
+                        DonyIcon('trash-2', color: cs.onError, size: 26),
                         const SizedBox(height: DonySpacing.xs),
                         Text(
                           'Supprimer',
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(
                                 color: cs.onError,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -209,9 +209,9 @@ class _NotificationList extends StatelessWidget {
                       ],
                     ),
                   ),
-                  onDismissed: (_) => context
-                      .read<NotificationBloc>()
-                      .add(NotificationDeleteRequested(notif.id)),
+                  onDismissed: (_) => context.read<NotificationBloc>().add(
+                    NotificationDeleteRequested(notif.id),
+                  ),
                   child: tile,
                 );
               },
@@ -273,8 +273,7 @@ class _NotificationTile extends StatelessWidget {
                         Container(
                           width: 8,
                           height: 8,
-                          margin:
-                              const EdgeInsets.only(left: DonySpacing.xs),
+                          margin: const EdgeInsets.only(left: DonySpacing.xs),
                           decoration: BoxDecoration(
                             color: cs.primary,
                             shape: BoxShape.circle,
@@ -285,8 +284,7 @@ class _NotificationTile extends StatelessWidget {
                   const SizedBox(height: DonySpacing.xs),
                   Text(
                     notification.body,
-                    style:
-                        tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -303,8 +301,7 @@ class _NotificationTile extends StatelessWidget {
             ),
             if (hasRoute) ...[
               const SizedBox(width: DonySpacing.sm),
-              DonyIcon('chevron-right',
-                  size: 18, color: cs.onSurfaceVariant),
+              DonyIcon('chevron-right', size: 18, color: cs.onSurfaceVariant),
             ],
           ],
         ),
@@ -332,15 +329,15 @@ class _NotificationIcon extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
 
     final (Color color, String iconAsset) = switch (type) {
-      'BID_CREATED'        => (cs.primary,          'package'),
-      'BID_ACCEPTED'       => (cs.success,          'circle-check'),
-      'BID_REJECTED'       => (cs.error,            'circle-x'),
-      'HANDOVER_DEFINED'   => (cs.secondary,        'map-pin'),
-      'TRIP_CANCELLED'     => (cs.error,            'ban'),
-      'PAYMENT_RELEASED'   => (cs.success,          'banknote'),
-      'DELIVERY_CONFIRMED' => (cs.success,          'package'),
-      'DISPUTE_OPENED'     => (cs.warning,          'triangle-alert'),
-      _                    => (cs.onSurfaceVariant, 'bell'),
+      'BID_CREATED' => (cs.primary, 'package'),
+      'BID_ACCEPTED' => (cs.success, 'circle-check'),
+      'BID_REJECTED' => (cs.error, 'circle-x'),
+      'HANDOVER_DEFINED' => (cs.secondary, 'map-pin'),
+      'TRIP_CANCELLED' => (cs.error, 'ban'),
+      'PAYMENT_RELEASED' => (cs.success, 'banknote'),
+      'DELIVERY_CONFIRMED' => (cs.success, 'package'),
+      'DISPUTE_OPENED' => (cs.warning, 'triangle-alert'),
+      _ => (cs.onSurfaceVariant, 'bell'),
     };
 
     return Container(
