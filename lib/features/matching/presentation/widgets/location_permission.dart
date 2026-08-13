@@ -25,15 +25,16 @@ class GeolocatorLocationService implements LocationService {
   Future<LocationPermission> requestPermission() =>
       Geolocator.requestPermission();
   @override
-  Future<Position> getCurrentPosition() =>
-      Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.low);
+  Future<Position> getCurrentPosition() => Geolocator.getCurrentPosition(
+    locationSettings: const LocationSettings(accuracy: LocationAccuracy.low),
+  );
   @override
   Stream<Position> getPositionStream() => Geolocator.getPositionStream(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-          distanceFilter: 10,
-        ),
-      );
+    locationSettings: const LocationSettings(
+      accuracy: LocationAccuracy.high,
+      distanceFilter: 10,
+    ),
+  );
   @override
   Future<bool> openAppSettings() => Geolocator.openAppSettings();
   @override
@@ -105,7 +106,7 @@ class LocationDeniedSheet extends StatelessWidget {
       : 'Accès à la position refusé';
 
   String get _body => access == LocationAccess.serviceDisabled
-      ? "Active la localisation de ton téléphone pour voir ce qui est près de toi."
+      ? 'Active la localisation de ton téléphone pour voir ce qui est près de toi.'
       : "Autorise l'accès à ta position dans les réglages pour utiliser « Près de moi » et te situer sur la carte.";
 
   @override
@@ -114,7 +115,11 @@ class LocationDeniedSheet extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.fromLTRB(
-          DonySpacing.lg, DonySpacing.sm, DonySpacing.lg, DonySpacing.lg),
+        DonySpacing.lg,
+        DonySpacing.sm,
+        DonySpacing.lg,
+        DonySpacing.lg,
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [

@@ -9,7 +9,6 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
-import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -1599,44 +1598,48 @@ class _TripFormContentState extends State<_TripFormContent> {
                 ? state.announcement
                 : (state as AnnouncementUpdated).announcement;
             final isEdit = state is AnnouncementUpdated;
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (routeContext) => DonySuccessScreen(
-                  mascotteType: DonyMascotteType.succes,
-                  title: isEdit ? 'Trajet modifié !' : 'Trajet publié !',
-                  subtitle:
-                      'Ton trajet ${announcement.departureCity} → ${announcement.arrivalCity} est en ligne.',
-                  ctaLabel: 'Voir mon trajet',
-                  ctaVariant: DonyButtonVariant.accent,
-                  onCta: () {
-                    // Le contexte de la route succès (routeContext) reste monté
-                    // sous le Navigator racine après les deux pops ci-dessous —
-                    // on capture donc le GoRouter AVANT de popper, pour éviter
-                    // « Looking up a deactivated widget's ancestor is unsafe »
-                    // (même classe de bug que le fix bid-payé, feb86b71).
-                    final router = GoRouter.of(routeContext);
-                    Navigator.of(routeContext).pop(); // ferme DonySuccessScreen
-                    Navigator.of(context).pop(
-                      true,
-                    ); // ferme create_trip_screen — contrat bool intact pour les 3 appelants
-                    router.push('/announcements/${announcement.id}/trip');
-                  },
-                  analyticsContext: 'trip_published',
-                  secondaryLabel: isEdit ? null : 'Partager mon trajet',
-                  onSecondary: isEdit
-                      ? null
-                      : () => unawaited(
-                          Share.share(
-                            '✈️ Je voyage ${announcement.departureCity} → '
-                            '${announcement.arrivalCity} le '
-                            '${DateFormat('d MMMM', 'fr').format(announcement.departureDate)} '
-                            'avec de la place dans mes bagages !\n'
-                            'Réserve tes kilos sur Yadony 📦',
-                            sharePositionOrigin: sharePositionOriginFor(
-                              routeContext,
+            unawaited(
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (routeContext) => DonySuccessScreen(
+                    mascotteType: DonyMascotteType.succes,
+                    title: isEdit ? 'Trajet modifié !' : 'Trajet publié !',
+                    subtitle:
+                        'Ton trajet ${announcement.departureCity} → ${announcement.arrivalCity} est en ligne.',
+                    ctaLabel: 'Voir mon trajet',
+                    ctaVariant: DonyButtonVariant.accent,
+                    onCta: () {
+                      // Le contexte de la route succès (routeContext) reste monté
+                      // sous le Navigator racine après les deux pops ci-dessous —
+                      // on capture donc le GoRouter AVANT de popper, pour éviter
+                      // « Looking up a deactivated widget's ancestor is unsafe »
+                      // (même classe de bug que le fix bid-payé, feb86b71).
+                      final router = GoRouter.of(routeContext);
+                      Navigator.of(
+                        routeContext,
+                      ).pop(); // ferme DonySuccessScreen
+                      Navigator.of(context).pop(
+                        true,
+                      ); // ferme create_trip_screen — contrat bool intact pour les 3 appelants
+                      router.push('/announcements/${announcement.id}/trip');
+                    },
+                    analyticsContext: 'trip_published',
+                    secondaryLabel: isEdit ? null : 'Partager mon trajet',
+                    onSecondary: isEdit
+                        ? null
+                        : () => unawaited(
+                            Share.share(
+                              '✈️ Je voyage ${announcement.departureCity} → '
+                              '${announcement.arrivalCity} le '
+                              '${DateFormat('d MMMM', 'fr').format(announcement.departureDate)} '
+                              'avec de la place dans mes bagages !\n'
+                              'Réserve tes kilos sur Yadony 📦',
+                              sharePositionOrigin: sharePositionOriginFor(
+                                routeContext,
+                              ),
                             ),
                           ),
-                        ),
+                  ),
                 ),
               ),
             );
@@ -1969,7 +1972,7 @@ class _TripFormContentState extends State<_TripFormContent> {
     //   plus grand enfant : le sheet se dimensionne au contenu de l'étape active
     return ListenableBuilder(
       listenable: Listenable.merge([
-        widget.currentStepNotifier!,
+        widget.currentStepNotifier,
         _pickupAddressNotifier,
         _deliveryAddressNotifier,
       ]),

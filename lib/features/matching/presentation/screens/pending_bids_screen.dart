@@ -111,7 +111,6 @@ class _PendingBidsViewState extends State<_PendingBidsView> {
     BuildContext context,
     acs.BidAcceptanceState state,
   ) {
-    final cs = Theme.of(context).colorScheme;
     if (state is acs.BidAccepted) {
       setState(() => _processingBidIds.clear());
       DonySnackbar.show(

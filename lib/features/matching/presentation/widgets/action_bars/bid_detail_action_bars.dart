@@ -2,10 +2,10 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
-import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
-import 'package:dony/features/matching/bloc/bid_acceptance_event.dart' as ace;
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
+import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_acceptance_event.dart' as ace;
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
@@ -96,7 +96,7 @@ class TravelerPendingBar extends StatelessWidget {
                         color: DonyColors.white,
                       ),
                     )
-                  : DonyIcon('check', size: 24, color: DonyColors.white),
+                  : const DonyIcon('check', color: DonyColors.white),
               label: const FittedBox(
                 fit: BoxFit.scaleDown,
                 child: Text('Accepter', maxLines: 1),
@@ -318,7 +318,11 @@ class SenderActionBar extends StatelessWidget {
                   : FilledButton.icon(
                       onPressed: () =>
                           context.push('/payments/pay', extra: bid),
-                      icon: DonyIcon('lock', size: 18, color: DonyColors.white),
+                      icon: const DonyIcon(
+                        'lock',
+                        size: 18,
+                        color: DonyColors.white,
+                      ),
                       label: const FittedBox(
                         fit: BoxFit.scaleDown,
                         child: Text('Payer mon envoi', maxLines: 1),
@@ -710,15 +714,25 @@ class _SenderOptionsSheet extends StatelessWidget {
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
               const SizedBox(height: DonySpacing.base),
-              ...reasons.map(
-                (r) => RadioListTile<String>(
-                  value: r,
-                  groupValue: selected,
-                  onChanged: (v) => setSheetState(() => selected = v),
-                  title: Text(r, style: tt.bodyMedium),
-                  activeColor: cs.primary,
-                  contentPadding: EdgeInsets.zero,
-                  dense: true,
+              // groupValue/onChanged portés par RadioGroup depuis Flutter 3.32 :
+              // l'état du groupe est désormais tenu par l'ancêtre, plus par
+              // chaque tuile.
+              RadioGroup<String>(
+                groupValue: selected,
+                onChanged: (v) => setSheetState(() => selected = v),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: reasons
+                      .map(
+                        (r) => RadioListTile<String>(
+                          value: r,
+                          title: Text(r, style: tt.bodyMedium),
+                          activeColor: cs.primary,
+                          contentPadding: EdgeInsets.zero,
+                          dense: true,
+                        ),
+                      )
+                      .toList(),
                 ),
               ),
               const SizedBox(height: DonySpacing.base),

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/profile/data/models/help_center_config.dart';
@@ -99,7 +100,7 @@ class TripTemplatesScreen extends StatelessWidget {
                     MediaQuery.paddingOf(context).bottom + 100,
                   ),
                   itemCount: state.templates.length,
-                  separatorBuilder: (_, __) =>
+                  separatorBuilder: (_, _) =>
                       const SizedBox(height: DonySpacing.sm),
                   itemBuilder: (context, i) {
                     final t = state.templates[i];
@@ -211,7 +212,7 @@ class _KebabMenu extends StatelessWidget {
           case _TemplateAction.edit:
             onEdit();
           case _TemplateAction.recurrence:
-            context.push('/trip-recurrences/new', extra: template);
+            unawaited(context.push('/trip-recurrences/new', extra: template));
           case _TemplateAction.delete:
             final confirmed = await DonyDialog.show(
               context,

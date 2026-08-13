@@ -370,7 +370,10 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                         }
                       } catch (_) {
                         setDialogState(() => loading = false);
-                        if (ctx.mounted) {
+                        // Le snackbar s'affiche sur l'écran, pas sur la boîte de
+                        // dialogue : c'est donc `mounted` de l'State qu'il faut
+                        // vérifier, pas celui de `ctx`.
+                        if (mounted) {
                           DonySnackbar.show(
                             context,
                             message:
@@ -1024,7 +1027,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                           height: 120,
                           width: double.infinity,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Container(
+                          errorBuilder: (_, _, _) => Container(
                             height: 120,
                             color: cs.primaryContainer,
                             child: Center(
