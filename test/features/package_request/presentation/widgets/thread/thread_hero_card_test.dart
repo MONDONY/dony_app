@@ -85,7 +85,7 @@ void main() {
       )));
       await tester.pumpAndSettle();
       // Traveler sees net: "Tu reçois 42,00 €"
-      expect(find.text('Tu reçois 42,00 €'), findsOneWidget);
+      expect(find.text('Tu reçois 42,00\u00A0€'), findsOneWidget);
       expect(find.text('EN COURS'), findsOneWidget);
       expect(find.text('Round 1/5'), findsOneWidget);
       expect(find.text('PRIX ACTUEL'), findsOneWidget);
@@ -109,7 +109,7 @@ void main() {
       )));
       await tester.pumpAndSettle();
       // Sender sees gross: 42 * 1.12 = 47.04
-      expect(find.text('Tu paies 47,04 €'), findsOneWidget);
+      expect(find.text('Tu paies 47,04\u00A0€'), findsOneWidget);
     });
 
     testWidgets('affiche alerte dernier round quand roundsRemaining == 0',

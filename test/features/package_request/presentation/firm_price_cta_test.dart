@@ -164,7 +164,7 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.textContaining('Prendre à'), findsOneWidget);
-        expect(find.textContaining('Prendre à 35,00 €'), findsOneWidget);
+        expect(find.textContaining('Prendre à 35,00\u00A0€'), findsOneWidget);
       },
     );
 

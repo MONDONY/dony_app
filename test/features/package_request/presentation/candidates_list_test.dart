@@ -146,7 +146,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Tu paies 39,20 €'), findsNWidgets(3));
+      expect(find.text('Tu paies 39,20\u00A0€'), findsNWidgets(3));
     });
 
     testWidgets(
