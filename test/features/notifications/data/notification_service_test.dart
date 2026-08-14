@@ -152,6 +152,63 @@ void main() {
   const bidId = 'b1b2c3d4-e5f6-7890-abcd-ef1234567890';
   const threadId = 'c1b2c3d4-e5f6-7890-abcd-ef1234567890';
 
+  group('NotificationService.resolveFcmToken', () {
+    // Régression : sur iOS, getToken() renvoie null tant qu'APNs n'a pas
+    // répondu. uploadCurrentToken part de authStateChanges, déclenché dès la
+    // restauration de session au démarrage — donc avant l'inscription APNs. Le
+    // jeton null était ignoré en silence, l'appareil n'était jamais enregistré
+    // et l'iPhone ne recevait plus aucune notification, sans trace nulle part.
+    test('iOS : attend le jeton APNs avant de demander le jeton FCM', () async {
+      var apnsCalls = 0;
+      final token = await NotificationService.resolveFcmToken(
+        isIOS: true,
+        // APNs ne répond qu'à la 3ᵉ tentative, comme au démarrage réel.
+        getApnsToken: () async {
+          apnsCalls++;
+          return apnsCalls < 3 ? null : 'apns-token';
+        },
+        getFcmToken: () async => 'fcm-token',
+        retryDelay: Duration.zero,
+      );
+
+      expect(token, 'fcm-token');
+      expect(apnsCalls, 3);
+    });
+
+    test('iOS : abandonne après maxAttempts sans boucler indéfiniment', () async {
+      var apnsCalls = 0;
+      final token = await NotificationService.resolveFcmToken(
+        isIOS: true,
+        getApnsToken: () async {
+          apnsCalls++;
+          return null;
+        },
+        getFcmToken: () async => null,
+        maxAttempts: 4,
+        retryDelay: Duration.zero,
+      );
+
+      expect(token, isNull);
+      expect(apnsCalls, 4);
+    });
+
+    test('Android : ne consulte jamais APNs', () async {
+      var apnsCalls = 0;
+      final token = await NotificationService.resolveFcmToken(
+        isIOS: false,
+        getApnsToken: () async {
+          apnsCalls++;
+          return null;
+        },
+        getFcmToken: () async => 'fcm-token',
+        retryDelay: Duration.zero,
+      );
+
+      expect(token, 'fcm-token');
+      expect(apnsCalls, 0);
+    });
+  });
+
   group('NotificationService.formatAndroidName', () {
     test('préfixe le fabricant quand le modèle ne commence pas par lui', () {
       expect(
