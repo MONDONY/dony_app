@@ -1,12 +1,10 @@
-import 'dart:async';
-
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/city/presentation/widgets/city_corridor_fields.dart';
-import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
+import 'package:dony/features/content_categories/presentation/content_category_selector.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_event.dart';
@@ -47,11 +45,6 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
   bool _cashAccepted = false;
   TimeOfDay? _arrivalTime;
   bool _submitted = false;
-  final _customCategoryCtrl = TextEditingController();
-  // Catalogue de types de contenu — seedé synchrone avec le catalogue
-  // embarqué (fallbackCatalog), puis remplacé par le catalogue live du
-  // repository dès qu'il répond (repli automatique hors ligne intégré).
-  List<String> _catalogLabels = fallbackCatalog.map((c) => c.label).toList();
 
   String? get _arrivalWire => _arrivalTime == null
       ? null
@@ -96,32 +89,12 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
       }
       _priceIdx = closest;
     }
-    unawaited(_loadCatalog());
-  }
-
-  Future<void> _loadCatalog() async {
-    final categories = await getIt<IContentCategoryRepository>()
-        .getCategories();
-    if (!mounted) return;
-    setState(() {
-      _catalogLabels = categories.map((c) => c.label).toList();
-    });
   }
 
   @override
   void dispose() {
     _labelCtrl.dispose();
-    _customCategoryCtrl.dispose();
     super.dispose();
-  }
-
-  void _addCustomCategory() {
-    final value = _customCategoryCtrl.text.trim();
-    if (value.isEmpty) return;
-    setState(() {
-      _categories = {..._categories, value};
-      _customCategoryCtrl.clear();
-    });
   }
 
   void _submit(BuildContext context) {
@@ -438,53 +411,17 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
                 iconAsset: 'circle-check',
               ),
               const SizedBox(height: DonySpacing.sm),
-              Wrap(
-                spacing: DonySpacing.xs,
-                runSpacing: DonySpacing.xs,
-                children: [
-                  for (final type in _catalogLabels)
-                    _AcceptedCategoryChip(
-                      label: type,
-                      selected: _categories.contains(type),
-                      onTap: () => setState(() {
-                        if (_categories.contains(type)) {
-                          _categories.remove(type);
-                        } else {
-                          _categories = {..._categories, type};
-                        }
-                      }),
-                    ),
-                  for (final type in _categories.where(
-                    (c) => !_catalogLabels.contains(c),
-                  ))
-                    _AcceptedCategoryChip(
-                      label: type,
-                      selected: true,
-                      onTap: () => setState(() => _categories.remove(type)),
-                    ),
-                ],
-              ),
-              const SizedBox(height: DonySpacing.sm),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      key: const Key('custom-category-input'),
-                      controller: _customCategoryCtrl,
-                      onSubmitted: (_) => _addCustomCategory(),
-                      decoration: const InputDecoration(
-                        hintText: 'Ajouter un autre type…',
-                        isDense: true,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    key: const Key('add-custom-category-btn'),
-                    icon: const Icon(Icons.add_rounded),
-                    onPressed: _addCustomCategory,
-                    tooltip: 'Ajouter',
-                  ),
-                ],
+              // Même combobox que la création de trajet et le wizard colis :
+              // catalogue déroulant, tags supprimables, saisie libre par la
+              // ligne « Ajouter ». Remplace la grille de chips + le champ
+              // d'ajout séparé, qui divergeaient du reste de l'app.
+              ContentCategorySelector(
+                repository: getIt<IContentCategoryRepository>(),
+                selected: _categories.toList(),
+                keyPrefix: 'template-content',
+                alwaysAllowCustom: true,
+                onChanged: (labels) =>
+                    setState(() => _categories = labels.toSet()),
               ),
               const SizedBox(height: DonySpacing.xxl),
 
@@ -602,55 +539,6 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
           ),
         );
       },
-    );
-  }
-}
-
-class _AcceptedCategoryChip extends StatelessWidget {
-  const _AcceptedCategoryChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: 160.ms,
-        padding: const EdgeInsets.symmetric(
-          horizontal: DonySpacing.md,
-          vertical: DonySpacing.xs,
-        ),
-        decoration: BoxDecoration(
-          color: selected ? cs.success : cs.surface,
-          borderRadius: BorderRadius.circular(DonyRadius.full),
-          border: Border.all(color: selected ? cs.success : cs.outline),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (selected) ...[
-              const DonyIcon('check', size: 12, color: Colors.white),
-              const SizedBox(width: DonySpacing.xs),
-            ],
-            Text(
-              label,
-              style: tt.bodySmall?.copyWith(
-                color: selected ? Colors.white : cs.onSurface,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

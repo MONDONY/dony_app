@@ -9,8 +9,31 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-class PayoutOnboardingScreen extends StatelessWidget {
+class PayoutOnboardingScreen extends StatefulWidget {
   const PayoutOnboardingScreen({super.key});
+
+  @override
+  State<PayoutOnboardingScreen> createState() => _PayoutOnboardingScreenState();
+}
+
+class _PayoutOnboardingScreenState extends State<PayoutOnboardingScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // C'est l'écran qui parle du statut : on le resynchronise avec Stripe à
+    // l'ouverture plutôt que de se fier au dernier webhook reçu. Sans ça, un
+    // compte activé entre-temps continuait d'afficher « connectez votre compte
+    // bancaire ».
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      final bloc = context.read<StripeAccountBloc>();
+      if (!bloc.isClosed) {
+        bloc.add(const StripeAccountStatusRefreshed());
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,6 +43,14 @@ class PayoutOnboardingScreen extends StatelessWidget {
             stripeState.accountStatus.isComplete) {
           return const _ActiveAccountView();
         }
+
+        // Le statut serveur, et non l'état du PaymentBloc, décide si une
+        // inscription est en cours. Le PaymentBloc est recréé à chaque montage
+        // de la route : en quittant l'écran puis en y revenant, il repartait de
+        // zéro et l'inscription entamée devenait invisible.
+        final startedOnServer =
+            stripeState is StripeAccountReady &&
+            stripeState.accountStatus.isOnboardingIncomplete;
 
         return BlocConsumer<PaymentBloc, PaymentState>(
           listener: (context, state) async {
@@ -48,7 +79,10 @@ class PayoutOnboardingScreen extends StatelessWidget {
             if (state is PaymentOnboardingComplete) {
               return const _SuccessView();
             }
-            return _OnboardingView(state: state);
+            return _OnboardingView(
+              state: state,
+              startedOnServer: startedOnServer,
+            );
           },
         );
       },
@@ -60,12 +94,17 @@ class PayoutOnboardingScreen extends StatelessWidget {
 
 class _OnboardingView extends StatelessWidget {
   final PaymentState state;
-  const _OnboardingView({required this.state});
+
+  /// Le serveur dit qu'un compte Stripe existe déjà sans être complet.
+  /// Survit au démontage de l'écran, contrairement à l'état du [PaymentBloc].
+  final bool startedOnServer;
+
+  const _OnboardingView({required this.state, required this.startedOnServer});
 
   @override
   Widget build(BuildContext context) {
     final isLoading = state is PaymentLoading;
-    final isPending = state is PaymentOnboardingPending;
+    final isPending = state is PaymentOnboardingPending || startedOnServer;
     final error = state is PaymentError
         ? ErrorPresenter.resolve((state as PaymentError).error).message
         : null;
@@ -92,11 +131,18 @@ class _OnboardingView extends StatelessWidget {
                       const _BenefitsSection(),
                       const SizedBox(height: DonySpacing.xxl),
                       if (isPending) ...[
+                        // Ne plus dire « Stripe finalise votre compte » : dans
+                        // le cas courant Stripe n'attend rien, il manque des
+                        // informations que l'utilisateur seul peut fournir.
+                        // Laisser croire à une attente le décourageait de
+                        // reprendre.
                         const DonyStatusBanner(
                           type: DonyStatusBannerType.warning,
                           iconAsset: 'clock',
                           message:
-                              'Vérification en cours : Stripe finalise votre compte. Si vous avez déjà terminé l\'inscription, rafraîchissez le statut.',
+                              'Inscription commencée mais pas terminée. '
+                              'Reprenez-la pour pouvoir être payé, vous '
+                              'retrouverez vos informations déjà saisies.',
                         ),
                         const SizedBox(height: DonySpacing.md),
                         DonyButton(
@@ -119,7 +165,12 @@ class _OnboardingView extends StatelessWidget {
                         const SizedBox(height: DonySpacing.xl),
                       ],
                       DonyButton(
-                        label: 'Connecter mon compte bancaire',
+                        // « Connecter » sous-entend un premier pas ; quand
+                        // l'inscription est déjà entamée, c'est bien d'une
+                        // reprise qu'il s'agit.
+                        label: isPending
+                            ? 'Reprendre mon inscription'
+                            : 'Connecter mon compte bancaire',
                         onPressed: isLoading
                             ? null
                             : () => context.read<PaymentBloc>().add(

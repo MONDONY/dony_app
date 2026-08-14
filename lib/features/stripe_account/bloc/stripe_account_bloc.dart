@@ -21,10 +21,28 @@ class StripeAccountBloc extends Bloc<StripeAccountEvent, StripeAccountState> {
     await _fetch(emit);
   }
 
+  /// Resynchronise depuis Stripe, puis retombe sur la lecture simple.
+  ///
+  /// Les appelants de cet event (retour d'onboarding, reprise de
+  /// l'application) veulent savoir si le compte est devenu utilisable — une
+  /// relecture du statut stocké ne l'apprend que si un webhook
+  /// `account.updated` est bien arrivé entre-temps. Un webhook manqué laissait
+  /// donc l'utilisateur bloqué sur un statut périmé, sans aucun moyen de s'en
+  /// sortir depuis l'application.
+  ///
+  /// Le repli sur [_fetch] couvre les échecs attendus : pas encore de compte
+  /// Stripe (409), réseau coupé, Stripe indisponible. Sans lui, un simple
+  /// retour au premier plan sans compte Connect afficherait une erreur.
   Future<void> _onRefresh(
     StripeAccountStatusRefreshed event,
     Emitter<StripeAccountState> emit,
   ) async {
+    try {
+      emit(StripeAccountReady(await _repository.refreshAccountStatus()));
+      return;
+    } catch (_) {
+      // Volontairement silencieux : le repli ci-dessous décide de l'état final.
+    }
     await _fetch(emit);
   }
 

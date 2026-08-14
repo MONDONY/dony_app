@@ -4,6 +4,9 @@ import 'package:dony/features/stripe_account/data/stripe_account_datasource.dart
 
 abstract class IStripeAccountRepository {
   Future<ConnectAccountStatus> getAccountStatus();
+
+  /// Voir [StripeAccountDatasource.refreshAccountStatus].
+  Future<ConnectAccountStatus> refreshAccountStatus();
 }
 
 class StripeAccountRepository implements IStripeAccountRepository {
@@ -15,6 +18,15 @@ class StripeAccountRepository implements IStripeAccountRepository {
   Future<ConnectAccountStatus> getAccountStatus() async {
     try {
       return await _datasource.getAccountStatus();
+    } catch (e) {
+      throw unwrapDioError(e);
+    }
+  }
+
+  @override
+  Future<ConnectAccountStatus> refreshAccountStatus() async {
+    try {
+      return await _datasource.refreshAccountStatus();
     } catch (e) {
       throw unwrapDioError(e);
     }

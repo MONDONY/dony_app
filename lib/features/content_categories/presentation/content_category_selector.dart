@@ -26,6 +26,7 @@ class ContentCategorySelector extends StatefulWidget {
     this.hint = 'Ajouter un type de contenu…',
     this.keyPrefix = 'content-combo',
     this.singleSelection = false,
+    this.alwaysAllowCustom = false,
   });
 
   final IContentCategoryRepository repository;
@@ -39,6 +40,9 @@ class ContentCategorySelector extends StatefulWidget {
 
   /// Voir [ContentCategoryComboBox.singleSelection].
   final bool singleSelection;
+
+  /// Voir [ContentCategoryComboBox.alwaysAllowCustom].
+  final bool alwaysAllowCustom;
 
   @override
   State<ContentCategorySelector> createState() =>
@@ -72,6 +76,7 @@ class _ContentCategorySelectorState extends State<ContentCategorySelector> {
       hint: widget.hint,
       keyPrefix: widget.keyPrefix,
       singleSelection: widget.singleSelection,
+      alwaysAllowCustom: widget.alwaysAllowCustom,
     );
   }
 }
@@ -84,8 +89,11 @@ class _ContentCategorySelectorState extends State<ContentCategorySelector> {
 ///   champ) listant tout [catalog] (emoji + label), avec un ✓ sur les items
 ///   déjà sélectionnés.
 /// - Taper filtre la liste (insensible à la casse, espaces de bord ignorés).
-/// - Tap sur un item = toggle ; la liste reste ouverte (multi-sélection) et
-///   le champ se vide après chaque sélection.
+/// - Tap sur un item = toggle ; la liste **se referme** et le champ se vide.
+///   Pour en choisir un autre, on rouvre en retapant dans le champ. La
+///   multi-sélection reste possible (les tags s'accumulent), mais chaque choix
+///   est confirmé visuellement au lieu de laisser un panneau ouvert par-dessus
+///   le reste du formulaire.
 /// - Si le texte tapé ne matche aucun item du catalogue, la liste affiche une
 ///   ligne « Ajouter "X" » qui ajoute X comme type libre.
 /// - La liste se ferme au tap extérieur et à la perte de focus. Les tags
@@ -240,14 +248,20 @@ class _ContentCategoryComboBoxState extends State<ContentCategoryComboBox>
 
   void _emit() => widget.onChanged(_selected.toList());
 
-  /// Suites communes à toute mutation de la sélection.
+  /// Suites communes à toute mutation de la sélection faite **depuis la
+  /// liste** : on émet, on vide la saisie, et on referme.
+  ///
+  /// La fermeture passe par `unfocus()` plutôt que par un `_closeOverlay()`
+  /// direct : sans lâcher le focus, le champ reste actif et le prochain
+  /// `_onFocusChanged` ne se déclencherait jamais, laissant la liste
+  /// définitivement close alors que le champ a l'air prêt à saisir.
   void _afterChange() {
     _emit();
     _controller.clear();
-    if (!_focusNode.hasFocus) {
-      _focusNode.requestFocus();
-    }
+    // Rafraîchit le contenu du panneau le temps de son animation de sortie
+    // (150 ms) : sans ça, il s'efface en affichant l'état d'avant le tap.
     _overlayEntry?.markNeedsBuild();
+    _focusNode.unfocus();
   }
 
   /// Ajoute [label], en remplaçant la sélection courante si le composant est
