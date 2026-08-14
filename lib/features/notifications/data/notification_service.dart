@@ -84,6 +84,14 @@ Future<void> ackCriticalFromBackground(
 }
 
 class NotificationService {
+  /// Attente maximale du jeton APNs sur iOS : 10 tentatives d'une seconde.
+  /// L'inscription APNs aboutit en général en moins de deux secondes ; la marge
+  /// couvre un réseau lent sans retarder l'enregistrement dans le cas normal.
+  @visibleForTesting
+  static const apnsMaxAttempts = 10;
+  @visibleForTesting
+  static const apnsRetryDelay = Duration(seconds: 1);
+
   final ApiClient _apiClient;
   final NotificationRepository _repository;
   final DeviceIdService _deviceIdService;
@@ -163,11 +171,65 @@ class NotificationService {
   /// Call this after the user is authenticated (Firebase sign-in complete).
   Future<void> uploadCurrentToken() async {
     try {
-      final token = await _fcm.getToken();
-      if (token != null) await _uploadToken(token);
+      final token = await _resolveFcmToken();
+      if (token != null) {
+        await _uploadToken(token);
+        return;
+      }
+      // Un jeton absent signifie que l'appareil ne sera jamais une cible de push.
+      // L'ignorer en silence est ce qui a rendu les iPhone muets sans laisser de
+      // trace : on le remonte désormais comme une vraie anomalie.
+      if (kDebugMode) {
+        debugPrint('[FCM] Aucun jeton FCM — appareil non enregistré');
+      }
+      unawaited(
+        _errorReporter?.report(
+              StateError('FCM token null — appareil non enregistré'),
+              operation: 'notifications.fcm_token_unavailable',
+              context: {
+                'feature': 'notifications',
+                'channel': 'fcm',
+                'platform': Platform.operatingSystem,
+              },
+            ) ??
+            Future<void>.value(),
+      );
     } catch (e) {
       if (kDebugMode) debugPrint('[FCM] uploadCurrentToken failed: $e');
     }
+  }
+
+  /// Récupère le jeton FCM, en attendant le jeton APNs sur iOS.
+  ///
+  /// `getToken()` renvoie `null` sur iOS tant qu'APNs n'a pas répondu. Or
+  /// `uploadCurrentToken` part de `authStateChanges`, qui se déclenche dès la
+  /// restauration de session au démarrage — bien avant l'inscription APNs.
+  /// Sans cette attente, le jeton était null, l'appareil n'était jamais
+  /// enregistré, et l'iPhone ne recevait plus aucune notification. Aucune
+  /// reprise ne rattrapait le coup : `onTokenRefresh` ne se déclenche que si le
+  /// jeton change, ce qui n'arrive pas dans ce cas.
+  Future<String?> _resolveFcmToken() => resolveFcmToken(
+    isIOS: Platform.isIOS,
+    getApnsToken: _fcm.getAPNSToken,
+    getFcmToken: _fcm.getToken,
+  );
+
+  /// Cœur testable de [_resolveFcmToken], sans dépendance à Firebase.
+  @visibleForTesting
+  static Future<String?> resolveFcmToken({
+    required bool isIOS,
+    required Future<String?> Function() getApnsToken,
+    required Future<String?> Function() getFcmToken,
+    int maxAttempts = apnsMaxAttempts,
+    Duration retryDelay = apnsRetryDelay,
+  }) async {
+    if (isIOS) {
+      for (var attempt = 0; attempt < maxAttempts; attempt++) {
+        if (await getApnsToken() != null) break;
+        await Future<void>.delayed(retryDelay);
+      }
+    }
+    return getFcmToken();
   }
 
   Future<void> _uploadToken(String token) async {
