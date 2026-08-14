@@ -515,8 +515,10 @@ class _ComboDropdown extends StatelessWidget {
           // Column eager (pas de lazy-build) : le catalogue est petit (~11
           // items) et les tests widgets doivent pouvoir trouver n'importe
           // quel item sans scroller manuellement au préalable.
+          // Surtout pas de `keyboardDismissBehavior.onDrag` ici : cette liste
+          // vit dans un overlay piloté par le focus du champ, donc refermer le
+          // clavier au drag la ferait disparaître dès qu'on la fait défiler.
           child: SingleChildScrollView(
-            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             key: Key('$keyPrefix-dropdown'),
             padding: const EdgeInsets.all(DonySpacing.xs),
             // Items du catalogue filtré PUIS, le cas échéant, la ligne
