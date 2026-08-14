@@ -73,6 +73,11 @@ class _AddressSuggestFieldState extends State<AddressSuggestField> {
   bool _offline = false;
   bool _suppressListener = false;
 
+  /// Verrou posé à la sélection d'une suggestion : empêche une requête déjà
+  /// partie (debounce 300 ms) de rouvrir l'overlay qu'on vient de fermer.
+  /// Levé dès que l'utilisateur retape ou revient dans le champ.
+  bool _suppressSuggestions = false;
+
   // Texte de la dernière suggestion résolue : sert à détecter une édition
   // manuelle qui rend les coordonnées obsolètes.
   String? _resolvedText;
@@ -121,6 +126,9 @@ class _AddressSuggestFieldState extends State<AddressSuggestField> {
       return; // sélection/curseur seulement
     }
     _lastText = text;
+    // Frappe manuelle : l'utilisateur cherche autre chose, la liste peut
+    // rouvrir.
+    _suppressSuggestions = false;
 
     // Édition manuelle après une résolution → coords obsolètes.
     if (_resolvedText != null && text != _resolvedText) {
@@ -165,7 +173,7 @@ class _AddressSuggestFieldState extends State<AddressSuggestField> {
         _suggestions = results;
         _loading = false;
       });
-      if (_focus.hasFocus && results.isNotEmpty) {
+      if (_focus.hasFocus && results.isNotEmpty && !_suppressSuggestions) {
         _showOverlay();
       } else {
         _removeOverlay();
@@ -192,7 +200,12 @@ class _AddressSuggestFieldState extends State<AddressSuggestField> {
   }
 
   Future<void> _selectSuggestion(AddressSuggestion s) async {
+    _suppressSuggestions = true;
+    _debounce?.cancel();
     _removeOverlay();
+    if (mounted) {
+      setState(() => _suggestions = []);
+    }
     // Affiche immédiatement le libellé court (rue/quartier), texte libre conservé.
     _setText(s.mainText);
     widget.onChanged?.call(s.mainText);
@@ -230,6 +243,7 @@ class _AddressSuggestFieldState extends State<AddressSuggestField> {
       _removeOverlay();
       setState(() => _suggestions = []);
     } else {
+      _suppressSuggestions = false;
       setState(() {}); // bordure/label focus
     }
   }

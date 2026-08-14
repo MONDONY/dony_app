@@ -57,6 +57,13 @@ class ConnectOnboardingBloc
     ConnectOnboardingPollingRequested event,
     Emitter<ConnectOnboardingState> emit,
   ) async {
+    // Passer par Loading n'est pas cosmétique. Les états sont des `const` sans
+    // égalité de valeur : Dart les canonicalise, donc réémettre
+    // ConnectOnboardingPending alors qu'on y est déjà est ignoré par Bloc. Sans
+    // cette transition intermédiaire, taper « J'ai complété le formulaire »
+    // sans avoir fini ne produisait strictement rien à l'écran, ni spinner ni
+    // message, et l'utilisateur retapait dans le vide.
+    emit(const ConnectOnboardingLoading());
     try {
       final status = await _repository.getAccountStatus();
       if (status.isComplete) {

@@ -114,6 +114,9 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
       '/traveler/$announcementId',
 
     'ACCOUNT_SUSPENDED' => '/account/disabled',
+    // Relance d'un onboarding Connect abandonné : la seule action utile est de
+    // le reprendre, on ouvre donc directement l'écran d'inscription.
+    'STRIPE_ONBOARDING_INCOMPLETE' => '/connect/onboarding/intro',
     'CARD_EXPIRING' => '/payments/commission-method',
 
     // PROMO et types inconnus : aucune cible connue, reste sur l'inbox

@@ -179,7 +179,10 @@ void main() {
         ).thenAnswer((_) async => _complete);
       },
       act: (b) => b.add(const ConnectOnboardingPollingRequested()),
-      expect: () => [isA<ConnectOnboardingComplete>()],
+      expect: () => [
+        isA<ConnectOnboardingLoading>(),
+        isA<ConnectOnboardingComplete>(),
+      ],
     );
 
     blocTest<ConnectOnboardingBloc, ConnectOnboardingState>(
@@ -191,7 +194,10 @@ void main() {
         ).thenAnswer((_) async => _pending);
       },
       act: (b) => b.add(const ConnectOnboardingPollingRequested()),
-      expect: () => [isA<ConnectOnboardingPending>()],
+      expect: () => [
+        isA<ConnectOnboardingLoading>(),
+        isA<ConnectOnboardingPending>(),
+      ],
     );
 
     blocTest<ConnectOnboardingBloc, ConnectOnboardingState>(
@@ -203,7 +209,10 @@ void main() {
         ).thenAnswer((_) async => _disabled);
       },
       act: (b) => b.add(const ConnectOnboardingPollingRequested()),
-      expect: () => [isA<ConnectOnboardingDisabled>()],
+      expect: () => [
+        isA<ConnectOnboardingLoading>(),
+        isA<ConnectOnboardingDisabled>(),
+      ],
     );
 
     blocTest<ConnectOnboardingBloc, ConnectOnboardingState>(
@@ -216,6 +225,7 @@ void main() {
       },
       act: (b) => b.add(const ConnectOnboardingPollingRequested()),
       expect: () => [
+        isA<ConnectOnboardingLoading>(),
         isA<ConnectOnboardingRejected>().having(
           (s) => s.reason,
           'reason',
@@ -231,7 +241,30 @@ void main() {
         when(() => mockRepo.getAccountStatus()).thenThrow(Exception('Timeout'));
       },
       act: (b) => b.add(const ConnectOnboardingPollingRequested()),
-      expect: () => [isA<ConnectOnboardingError>()],
+      expect: () => [
+        isA<ConnectOnboardingLoading>(),
+        isA<ConnectOnboardingError>(),
+      ],
+    );
+
+    blocTest<ConnectOnboardingBloc, ConnectOnboardingState>(
+      'repasse par Loading même en partant de Pending, sinon le tap sur '
+      '« J\'ai complété le formulaire » ne produit rien à l\'écran',
+      build: buildBloc,
+      seed: () => const ConnectOnboardingPending(),
+      setUp: () {
+        when(
+          () => mockRepo.getAccountStatus(),
+        ).thenAnswer((_) async => _pending);
+      },
+      act: (b) => b.add(const ConnectOnboardingPollingRequested()),
+      // Les états sont des `const` canonicalisés : sans le Loading
+      // intermédiaire, Bloc considère Pending → Pending comme un non-événement
+      // et n'émet rien du tout.
+      expect: () => [
+        isA<ConnectOnboardingLoading>(),
+        isA<ConnectOnboardingPending>(),
+      ],
     );
   });
 

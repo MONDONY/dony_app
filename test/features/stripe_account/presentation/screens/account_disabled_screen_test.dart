@@ -1,37 +1,66 @@
 import 'package:dony/features/stripe_account/presentation/screens/account_disabled_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 
 void main() {
-  Widget buildWidget() => const MaterialApp(home: AccountDisabledScreen());
+  late GoRouter router;
 
-  testWidgets('affiche le titre et le message', (tester) async {
-    await tester.pumpWidget(buildWidget());
-    expect(find.textContaining('temporairement désactivé'), findsWidgets);
-    expect(find.textContaining('réactivation automatique'), findsOneWidget);
+  setUp(() {
+    router = GoRouter(
+      initialLocation: '/account/disabled',
+      routes: [
+        GoRoute(
+          path: '/account/disabled',
+          builder: (_, _) => const AccountDisabledScreen(),
+        ),
+        GoRoute(
+          path: '/connect/onboarding/intro',
+          builder: (_, _) =>
+              const Scaffold(body: Text('onboarding-intro-stub')),
+        ),
+      ],
+    );
   });
 
-  testWidgets('affiche le bouton Stripe dès le premier affichage', (
+  Widget buildWidget() => MaterialApp.router(routerConfig: router);
+
+  testWidgets('annonce ce qui manque, sans parler de compte désactivé', (
     tester,
   ) async {
     await tester.pumpWidget(buildWidget());
-    expect(find.text('Voir mon compte Stripe'), findsOneWidget);
+
+    expect(find.textContaining('Terminez la configuration'), findsOneWidget);
+    // L'ancien discours (« désactivé », « réactivation automatique par
+    // Stripe ») laissait croire qu'il fallait attendre, alors que l'action
+    // est du côté de l'utilisateur.
+    expect(find.textContaining('désactivé'), findsNothing);
+    expect(find.textContaining('réactivation automatique'), findsNothing);
   });
 
-  testWidgets('bouton support absent au premier affichage', (tester) async {
+  testWidgets('liste les pièces à fournir', (tester) async {
     await tester.pumpWidget(buildWidget());
-    expect(find.text('Contacter le support Yadony'), findsNothing);
+
+    expect(find.textContaining('identité'), findsOneWidget);
+    expect(find.textContaining('IBAN'), findsOneWidget);
+    expect(find.textContaining('conditions'), findsOneWidget);
   });
 
-  testWidgets('bouton support apparaît après 2 taps sur le bouton principal', (
+  testWidgets('le bouton principal mène à l\'onboarding Connect', (
     tester,
   ) async {
     await tester.pumpWidget(buildWidget());
-    await tester.tap(find.text('Voir mon compte Stripe'));
-    await tester.pump();
-    expect(find.text('Contacter le support Yadony'), findsNothing);
-    await tester.tap(find.text('Voir mon compte Stripe'));
-    await tester.pump();
+
+    await tester.tap(find.text('Compléter mes informations'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('onboarding-intro-stub'), findsOneWidget);
+  });
+
+  testWidgets('le recours support est visible d\'emblée', (tester) async {
+    await tester.pumpWidget(buildWidget());
+    // Le bouton principal quitte l'écran : un support révélé après plusieurs
+    // taps ne serait jamais atteignable.
     expect(find.text('Contacter le support Yadony'), findsOneWidget);
   });
 }

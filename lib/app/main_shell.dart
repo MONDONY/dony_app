@@ -27,7 +27,6 @@ import 'package:dony/features/ratings/bloc/rating_event.dart';
 import 'package:dony/features/ratings/bloc/rating_state.dart';
 import 'package:dony/features/ratings/presentation/widgets/rating_bottom_sheet.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
-import 'package:dony/features/stripe_account/presentation/widgets/account_disabled_banner.dart';
 import 'package:dony/features/stripe_account/presentation/widgets/account_rejected_banner.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -207,18 +206,24 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
       child: BlocBuilder<StripeAccountBloc, StripeAccountState>(
         buildWhen: (prev, curr) {
           if (prev is StripeAccountReady && curr is StripeAccountReady) {
-            return prev.accountStatus.isDisabled !=
-                    curr.accountStatus.isDisabled ||
-                prev.accountStatus.isRejected != curr.accountStatus.isRejected;
+            return prev.accountStatus.isRejected !=
+                curr.accountStatus.isRejected;
           }
           return prev.runtimeType != curr.runtimeType;
         },
         builder: (context, accountState) {
           Widget? banner;
+          // Seul un compte REJETÉ garde un bandeau permanent : c'est un état
+          // terminal qui exige de contacter le support, l'utilisateur doit le
+          // voir sans le chercher.
+          //
+          // Un compte simplement désactivé n'en a plus : le bandeau squattait
+          // le haut de toutes les pages avec l'allure d'une erreur réseau,
+          // pour un état qui se règle en reprenant l'onboarding Stripe. Le
+          // gating de `/trips/create` (voir router.dart) suffit à l'annoncer
+          // au moment où il gêne vraiment.
           if (accountState is StripeAccountReady) {
-            if (accountState.accountStatus.isDisabled) {
-              banner = const AccountDisabledBanner();
-            } else if (accountState.accountStatus.isRejected) {
+            if (accountState.accountStatus.isRejected) {
               banner = const AccountRejectedBanner();
             }
           }

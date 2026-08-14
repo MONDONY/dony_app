@@ -1,7 +1,9 @@
 // Tests de TripTemplateEditScreen — section "CE QUE J'ACCEPTE".
 //
-// Vérifie que les chips de catégorie viennent du catalogue fourni par le
-// repository (pas d'une liste figée) et que la saisie libre est possible.
+// La section utilise le combobox partagé ContentCategorySelector (même
+// composant que la création de trajet et le wizard colis) : catalogue
+// déroulant issu du repository, tags supprimables, saisie libre par la ligne
+// « Ajouter ».
 
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
@@ -86,24 +88,59 @@ void main() {
     unregisterFakeRecentCityStore();
   });
 
+  const field = Key('template-content-field');
+
   testWidgets(
-    'affiche le catalogue fourni par le repository (pas une liste figée)',
+    'le combo affiche le catalogue fourni par le repository (pas une liste '
+    'figée)',
     (tester) async {
+      tester.view.physicalSize = const Size(800, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
       await tester.pumpWidget(_wrap(const TripTemplateEditScreen(), bloc));
       await tester.pump(const Duration(milliseconds: 600));
 
+      await tester.ensureVisible(find.byKey(field));
+      await tester.tap(find.byKey(field));
+      await tester.pumpAndSettle();
+
       for (final category in fallbackCatalog) {
-        // findsAtLeastNWidgets : le libellé "Autre" existe aussi comme mode
-        // de transport ailleurs sur l'écran — pas d'exclusivité de texte
-        // attendue, seule la présence du libellé du catalogue est vérifiée.
         expect(
-          find.text(category.label),
-          findsAtLeastNWidgets(1),
-          reason: 'Chip "${category.label}" doit être présente',
+          find.byKey(Key('template-content-item-${category.label}')),
+          findsOneWidget,
+          reason: 'Item "${category.label}" doit être proposé',
         );
       }
     },
   );
+
+  testWidgets('choisir un item ajoute un tag et referme la liste', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 3000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(_wrap(const TripTemplateEditScreen(), bloc));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    await tester.ensureVisible(find.byKey(field));
+    await tester.tap(find.byKey(field));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(
+      find.byKey(const Key('template-content-item-Livres')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('template-content-item-Livres')));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const Key('template-content-tag-Livres')),
+      findsOneWidget,
+    );
+    expect(find.byKey(const Key('template-content-dropdown')), findsNothing);
+  });
 
   testWidgets('saisie libre ajoute une catégorie custom', (tester) async {
     tester.view.physicalSize = const Size(800, 3000);
@@ -111,15 +148,19 @@ void main() {
     addTearDown(tester.view.reset);
 
     await tester.pumpWidget(_wrap(const TripTemplateEditScreen(), bloc));
-    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
 
-    await tester.enterText(
-      find.byKey(const Key('custom-category-input')),
-      'Poissons',
+    await tester.ensureVisible(find.byKey(field));
+    await tester.tap(find.byKey(field));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(field), 'Poissons');
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('template-content-item-add')));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const Key('template-content-tag-Poissons')),
+      findsOneWidget,
     );
-    await tester.tap(find.byKey(const Key('add-custom-category-btn')));
-    await tester.pump();
-
-    expect(find.text('Poissons'), findsOneWidget);
   });
 }
