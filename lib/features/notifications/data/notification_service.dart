@@ -179,17 +179,18 @@ class NotificationService {
       // Un jeton absent signifie que l'appareil ne sera jamais une cible de push.
       // L'ignorer en silence est ce qui a rendu les iPhone muets sans laisser de
       // trace : on le remonte désormais comme une vraie anomalie.
-      if (kDebugMode) debugPrint('[FCM] Aucun jeton FCM — appareil non enregistré');
+      if (kDebugMode)
+        debugPrint('[FCM] Aucun jeton FCM — appareil non enregistré');
       unawaited(
         _errorReporter?.report(
-          StateError('FCM token null — appareil non enregistré'),
-          operation: 'notifications.fcm_token_unavailable',
-          context: {
-            'feature': 'notifications',
-            'channel': 'fcm',
-            'platform': Platform.operatingSystem,
-          },
-        ) ??
+              StateError('FCM token null — appareil non enregistré'),
+              operation: 'notifications.fcm_token_unavailable',
+              context: {
+                'feature': 'notifications',
+                'channel': 'fcm',
+                'platform': Platform.operatingSystem,
+              },
+            ) ??
             Future<void>.value(),
       );
     } catch (e) {

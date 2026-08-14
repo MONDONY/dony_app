@@ -175,22 +175,25 @@ void main() {
       expect(apnsCalls, 3);
     });
 
-    test('iOS : abandonne après maxAttempts sans boucler indéfiniment', () async {
-      var apnsCalls = 0;
-      final token = await NotificationService.resolveFcmToken(
-        isIOS: true,
-        getApnsToken: () async {
-          apnsCalls++;
-          return null;
-        },
-        getFcmToken: () async => null,
-        maxAttempts: 4,
-        retryDelay: Duration.zero,
-      );
+    test(
+      'iOS : abandonne après maxAttempts sans boucler indéfiniment',
+      () async {
+        var apnsCalls = 0;
+        final token = await NotificationService.resolveFcmToken(
+          isIOS: true,
+          getApnsToken: () async {
+            apnsCalls++;
+            return null;
+          },
+          getFcmToken: () async => null,
+          maxAttempts: 4,
+          retryDelay: Duration.zero,
+        );
 
-      expect(token, isNull);
-      expect(apnsCalls, 4);
-    });
+        expect(token, isNull);
+        expect(apnsCalls, 4);
+      },
+    );
 
     test('Android : ne consulte jamais APNs', () async {
       var apnsCalls = 0;
