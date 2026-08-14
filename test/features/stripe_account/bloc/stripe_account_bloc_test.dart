@@ -106,10 +106,44 @@ void main() {
 
   group('StripeAccountStatusRefreshed', () {
     blocTest<StripeAccountBloc, StripeAccountState>(
-      'emits [Ready(complete)] without Loading on refresh',
+      'resynchronise depuis Stripe plutôt que de relire le statut stocké',
       build: buildBloc,
       seed: () => const StripeAccountReady(_disabled),
       setUp: () {
+        // Le statut stocké est encore périmé (webhook manqué) : seule la
+        // resynchronisation apprend que le compte est devenu utilisable.
+        when(
+          () => mockRepo.refreshAccountStatus(),
+        ).thenAnswer((_) async => _complete);
+        when(
+          () => mockRepo.getAccountStatus(),
+        ).thenAnswer((_) async => _disabled);
+      },
+      act: (b) => b.add(const StripeAccountStatusRefreshed()),
+      expect: () => [
+        isA<StripeAccountReady>().having(
+          (s) => s.accountStatus.isComplete,
+          'isComplete',
+          isTrue,
+        ),
+      ],
+      verify: (_) {
+        verify(() => mockRepo.refreshAccountStatus()).called(1);
+        verifyNever(() => mockRepo.getAccountStatus());
+      },
+    );
+
+    blocTest<StripeAccountBloc, StripeAccountState>(
+      'retombe sur le statut stocké quand la resynchronisation échoue',
+      build: buildBloc,
+      seed: () => const StripeAccountReady(_disabled),
+      setUp: () {
+        // Cas courant : aucun compte Stripe encore créé (409), réseau coupé,
+        // ou Stripe indisponible. Afficher une erreur ici serait une
+        // régression — un simple retour au premier plan la déclencherait.
+        when(
+          () => mockRepo.refreshAccountStatus(),
+        ).thenThrow(Exception('stripe-account-required'));
         when(
           () => mockRepo.getAccountStatus(),
         ).thenAnswer((_) async => _complete);
@@ -122,13 +156,17 @@ void main() {
           isTrue,
         ),
       ],
+      verify: (_) => verify(() => mockRepo.getAccountStatus()).called(1),
     );
 
     blocTest<StripeAccountBloc, StripeAccountState>(
-      'emits [LoadError] silently on refresh failure',
+      'emits [LoadError] quand la resynchronisation ET la relecture échouent',
       build: buildBloc,
       seed: () => const StripeAccountReady(_complete),
       setUp: () {
+        when(
+          () => mockRepo.refreshAccountStatus(),
+        ).thenThrow(Exception('Timeout'));
         when(() => mockRepo.getAccountStatus()).thenThrow(Exception('Timeout'));
       },
       act: (b) => b.add(const StripeAccountStatusRefreshed()),

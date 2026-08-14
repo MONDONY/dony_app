@@ -63,6 +63,11 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
   Timer? _debounce;
   bool _suppressListener = false;
 
+  /// Verrou posé à la sélection d'une adresse : empêche une requête déjà partie
+  /// (debounce 300 ms) de rouvrir l'overlay qu'on vient de fermer. Levé dès que
+  /// l'utilisateur retape ou revient dans le champ.
+  bool _suppressSuggestions = false;
+
   // Tracks the last text value we acted on, to distinguish real keystrokes from
   // cursor/selection changes (which also fire the TextEditingController listener
   // but must NOT trigger a new autocomplete search).
@@ -129,12 +134,16 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
         _showFallback = false;
       });
     } else {
+      _suppressSuggestions = false;
       setState(() {}); // rebuild for border/label color update
     }
   }
 
   void _onTyped(String val) {
     _debounce?.cancel();
+    // Frappe manuelle : l'utilisateur cherche autre chose, la liste peut
+    // rouvrir.
+    _suppressSuggestions = false;
     if (val.trim().isEmpty) {
       _removeOverlay();
       _sessionToken = null;
@@ -168,7 +177,7 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
       // Guard: if focus was lost while the HTTP request was in flight (e.g.
       // user opened the preview sheet before the response arrived), don't
       // re-show the overlay — _onFocusChange already cleaned up.
-      if (_focus.hasFocus) {
+      if (_focus.hasFocus && !_suppressSuggestions) {
         results.isNotEmpty ? _showOverlay() : _removeOverlay();
       } else {
         _removeOverlay();
@@ -191,6 +200,10 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
   }
 
   Future<void> _resolveAndSelect(AddressSuggestion suggestion) async {
+    // Verrou posé avant l'await : resolvePlace() dure, et une recherche en vol
+    // rouvrirait l'overlay pendant ce temps.
+    _suppressSuggestions = true;
+    _debounce?.cancel();
     _removeOverlay();
     if (!mounted) return;
     setState(() => _resolvingPlace = true);
@@ -216,6 +229,9 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
   }
 
   void _select(AddressData addr) {
+    _suppressSuggestions = true;
+    _debounce?.cancel();
+    _removeOverlay();
     _committed = addr;
     _setCtrlText(addr.label);
     didChange(addr);
