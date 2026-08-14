@@ -202,6 +202,56 @@ void main() {
     expect(tf.controller?.text, 'Abidjan');
   });
 
+  testWidgets(
+    'la liste se referme après sélection même si le BLoC reste sur Loaded '
+    '(réponse debouncée arrivée après le tap)',
+    (tester) async {
+      const city = CityModel(
+        name: 'Abidjan',
+        countryCode: 'CI',
+        countryName: 'Côte d\'Ivoire',
+        lat: 5.35,
+        lng: -4.01,
+      );
+      // L'état reste Loaded tout du long : c'est le cas réel où la requête
+      // debouncée (300 ms) répond après le tap, juste après CitySearchCleared.
+      when(() => mockBloc.state).thenReturn(const CitySearchLoaded([city]));
+
+      await tester.pumpWidget(buildWidget());
+      await tester.pump(const Duration(milliseconds: 250));
+      expect(find.text('Côte d\'Ivoire'), findsOneWidget);
+
+      await tester.tap(find.text('Abidjan'));
+      await tester.pump(const Duration(milliseconds: 400));
+
+      // Le sous-titre pays n'existe que dans la liste : le nom, lui, est
+      // désormais dans le champ.
+      expect(find.text('Côte d\'Ivoire'), findsNothing);
+    },
+  );
+
+  testWidgets('retaper après une sélection rouvre la liste', (tester) async {
+    const city = CityModel(
+      name: 'Abidjan',
+      countryCode: 'CI',
+      countryName: 'Côte d\'Ivoire',
+      lat: 5.35,
+      lng: -4.01,
+    );
+    when(() => mockBloc.state).thenReturn(const CitySearchLoaded([city]));
+
+    await tester.pumpWidget(buildWidget());
+    await tester.pump(const Duration(milliseconds: 250));
+    await tester.tap(find.text('Abidjan'));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('Côte d\'Ivoire'), findsNothing);
+
+    await tester.enterText(find.byType(TextField), 'Aby');
+    await tester.pump(const Duration(milliseconds: 250));
+
+    expect(find.text('Côte d\'Ivoire'), findsOneWidget);
+  });
+
   // ── Frappe / onChanged ────────────────────────────────────────────────────
 
   testWidgets('frappe dans le champ dispatche CitySearchQueryChanged', (

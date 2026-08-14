@@ -95,6 +95,9 @@ void main() {
         find.byKey(const Key('package-content-item-Vêtements & tissus')),
       );
       await tester.pumpAndSettle();
+      // Le combo se referme après chaque choix : on le rouvre pour le suivant.
+      await tester.tap(find.byKey(kField));
+      await tester.pumpAndSettle();
       await tester.tap(
         find.byKey(const Key('package-content-item-Documents & administratif')),
       );

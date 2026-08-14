@@ -120,6 +120,16 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
   Timer? _ensureVisibleTimer;
   bool _suggestionsVisible = false;
 
+  /// Verrou posé à la sélection d'une ville : tant qu'il tient, aucune liste
+  /// n'est rendue.
+  ///
+  /// Indispensable parce que `CitySearchQueryChanged` est debouncé (300 ms) :
+  /// une requête déjà partie au moment du tap répond **après**
+  /// [CitySearchCleared] et rouvrait la liste juste refermée. Le verrou saute
+  /// dès que l'utilisateur retape ou revient dans le champ — il peut donc
+  /// toujours choisir une autre ville.
+  bool _suppressSuggestions = false;
+
   /// Remonte le changement d'état de la liste au parent, en différé : le calcul
   /// se fait pendant le build (voir [_buildSuggestions]), et prévenir un parent
   /// qui se reconstruit en réaction déclencherait un setState pendant le build.
@@ -160,6 +170,13 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
   void _onFocusChanged() {
     setState(() {});
     if (_focusNode.hasFocus) {
+      if (_suppressSuggestions) {
+        _suppressSuggestions = false;
+        // Le résultat arrivé pendant le verrou dort peut-être encore dans le
+        // BLoC : sans ce nettoyage, revenir dans le champ rouvrirait la liste
+        // d'une recherche que l'utilisateur a déjà tranchée.
+        context.read<CitySearchBloc>().add(const CitySearchCleared());
+      }
       // Après le frame suivant, le clavier est en cours d'ouverture et le champ
       // peut être partiellement masqué — on le ramène dans la zone visible.
       // Un Timer annulable est utilisé pour attendre que les viewInsets du
@@ -193,6 +210,10 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
 
   void _onCitySelected(CityModel city) {
     _controller.text = city.name;
+    // setState explicite : le rebuild ne peut pas dépendre du seul `unfocus()`
+    // ci-dessous, qui ne notifie rien si le champ n'avait pas le focus (tap
+    // direct sur un récent, sélection programmée).
+    setState(() => _suppressSuggestions = true);
     _focusNode.unfocus();
     context.read<CitySearchBloc>().add(const CitySearchCleared());
     final role = widget.recentRole;
@@ -217,6 +238,7 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
           icon: DonyIcon('x', size: 18, color: cs.onSurfaceVariant),
           onPressed: () {
             _controller.clear();
+            _suppressSuggestions = false;
             setState(() {});
             context.read<CitySearchBloc>().add(const CitySearchCleared());
             // Le champ visuellement vide DOIT vider le filtre côté parent,
@@ -227,6 +249,8 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
       : null;
 
   void _onChanged(String value) {
+    // Toute frappe rouvre le jeu : l'utilisateur cherche une autre ville.
+    _suppressSuggestions = false;
     setState(() {});
     context.read<CitySearchBloc>().add(CitySearchQueryChanged(value));
     if (value.isEmpty) {
@@ -362,6 +386,10 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
   /// fréquent. Dès qu'une lettre est tapée, `_controller.text` n'est plus vide
   /// et on repasse sur les résultats serveur du [CitySearchBloc].
   Widget _buildSuggestions(BuildContext context) {
+    if (_suppressSuggestions) {
+      _notifySuggestions(false);
+      return const SizedBox.shrink();
+    }
     final role = widget.recentRole;
     // Le rôle et le focus se testent avant de lire le magasin : hors focus ou
     // dès la première lettre tapée, la liste des récents n'est jamais affichée

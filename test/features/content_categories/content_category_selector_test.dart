@@ -93,7 +93,8 @@ void main() {
   );
 
   testWidgets(
-    'tap sur un item ajoute un tag, coche l\'item et laisse la liste ouverte',
+    'tap sur un item ajoute un tag, referme la liste, et l\'item est coché '
+    'à la réouverture',
     (tester) async {
       List<String>? emitted;
       await tester.pumpWidget(
@@ -118,8 +119,17 @@ void main() {
 
       expect(emitted, ['Livres']);
       expect(find.byKey(const Key('content-combo-tag-Livres')), findsOneWidget);
-      // La liste reste ouverte (multi-sélection).
-      expect(find.byKey(const Key('content-combo-dropdown')), findsOneWidget);
+      // La liste se referme : chaque choix est confirmé, le formulaire
+      // redevient lisible.
+      expect(find.byKey(const Key('content-combo-dropdown')), findsNothing);
+
+      // Réouverture : l'item porte bien sa coche.
+      await tester.tap(fieldFinder());
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(
+        find.byKey(const Key('content-combo-item-Livres')),
+      );
+      await tester.pumpAndSettle();
       final item = tester.widget<Row>(
         find.descendant(
           of: find.byKey(const Key('content-combo-item-Livres')),
@@ -269,6 +279,9 @@ void main() {
       );
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('content-combo-item-Livres')));
+      await tester.pumpAndSettle();
+      // La liste s'est refermée : il faut la rouvrir pour le choix suivant.
+      await tester.tap(fieldFinder());
       await tester.pumpAndSettle();
       await tester.ensureVisible(
         find.byKey(const Key('content-combo-item-Documents & administratif')),
