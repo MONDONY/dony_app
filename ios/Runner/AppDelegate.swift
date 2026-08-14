@@ -2,6 +2,7 @@ import Flutter
 import UIKit
 import GoogleMaps
 import FirebaseAuth
+import FirebaseMessaging
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
@@ -20,14 +21,17 @@ import FirebaseAuth
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
   }
 
-  // Transmet le jeton APNs à Firebase Auth (vérification téléphone par silent push).
-  // En DEBUG, on NE transmet PAS le token : sans APNs, Firebase Auth bascule sur
-  // le mode "numéro de test" (appVerificationDisabledForTesting) au lieu de tenter
-  // une vérification push réelle qui ne peut pas aboutir sans clé APNs serveur.
+  // FirebaseAppDelegateProxyEnabled est à false (Info.plist) : sans le swizzling,
+  // c'est à nous de donner le jeton APNs à FCM, sinon aucune push n'est délivrée.
+  //
+  // Pour Firebase Auth en revanche, on ne transmet pas le jeton en DEBUG : sans APNs,
+  // Auth bascule sur le mode "numéro de test" (appVerificationDisabledForTesting) au
+  // lieu de tenter une vérification push réelle qui ne peut pas aboutir.
   override func application(
     _ application: UIApplication,
     didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
   ) {
+    Messaging.messaging().apnsToken = deviceToken
     #if !DEBUG
     Auth.auth().setAPNSToken(deviceToken, type: .unknown)
     #endif
