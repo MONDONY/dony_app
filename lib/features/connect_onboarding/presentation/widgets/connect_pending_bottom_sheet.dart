@@ -63,6 +63,15 @@ class ConnectPendingBottomSheet extends StatelessWidget {
             type: DonySnackbarType.success,
           );
           context.go('/home');
+        } else if (state is ConnectOnboardingPending) {
+          // L'utilisateur a affirmé avoir terminé, Stripe dit le contraire :
+          // sans ce retour, le bouton semblait ne rien faire.
+          DonySnackbar.show(
+            context,
+            message:
+                "Stripe n'a pas encore reçu toutes vos informations. "
+                'Reprenez le formulaire pour le terminer.',
+          );
         } else if (state is ConnectOnboardingError) {
           ErrorPresenter.show(context, state.error);
         }

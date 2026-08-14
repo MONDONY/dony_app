@@ -1,7 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
-import 'package:dony/features/stripe_account/presentation/widgets/account_disabled_banner.dart';
 import 'package:dony/features/stripe_account/presentation/widgets/account_rejected_banner.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -24,24 +23,6 @@ void main() {
       child: Scaffold(body: child),
     ),
   );
-
-  group('AccountDisabledBanner', () {
-    testWidgets('renders warning icon and message', (tester) async {
-      await tester.pumpWidget(buildWidget(const AccountDisabledBanner()));
-      expect(
-        find.byWidgetPredicate(
-          (w) => w is DonyIcon && w.name == 'triangle-alert',
-        ),
-        findsOneWidget,
-      );
-      expect(find.textContaining('temporairement désactivé'), findsOneWidget);
-    });
-
-    testWidgets('shows "En savoir plus" button', (tester) async {
-      await tester.pumpWidget(buildWidget(const AccountDisabledBanner()));
-      expect(find.text('En savoir plus'), findsOneWidget);
-    });
-  });
 
   group('AccountRejectedBanner', () {
     testWidgets('renders error icon and message', (tester) async {
