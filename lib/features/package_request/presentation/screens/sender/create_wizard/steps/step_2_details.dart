@@ -216,6 +216,7 @@ class Step2DetailsState extends State<Step2Details> {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     return SingleChildScrollView(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       padding: const EdgeInsets.fromLTRB(
         DonySpacing.lg,
         DonySpacing.md,

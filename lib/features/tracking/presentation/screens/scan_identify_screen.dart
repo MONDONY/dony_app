@@ -168,6 +168,7 @@ class _ScanIdentifyScreenState extends State<ScanIdentifyScreen> {
             ],
           ),
           body: SingleChildScrollView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             padding: const EdgeInsets.fromLTRB(
               DonySpacing.lg,
               DonySpacing.xl,

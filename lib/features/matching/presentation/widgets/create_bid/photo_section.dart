@@ -68,47 +68,130 @@ class PhotoSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
     return BlocBuilder<BidPhotosCubit, List<BidPhotoUpload>>(
       builder: (context, photos) {
         final canAdd = photos.length < BidPhotosCubit.maxPhotos;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Wrap(
-              spacing: DonySpacing.sm,
-              runSpacing: DonySpacing.sm,
+            Row(
               children: [
-                for (final p in photos)
-                  _PhotoThumb(
-                    upload: p,
-                    onRemove: () =>
-                        context.read<BidPhotosCubit>().remove(p.localId),
-                  ),
-                if (canAdd)
-                  Semantics(
-                    button: true,
-                    container: true,
-                    excludeSemantics: true,
-                    label: 'Ajouter une photo du colis',
-                    child: GestureDetector(
-                      onTap: () => _showSourceSheet(context),
-                      child: Container(
-                        width: 64,
-                        height: 64,
-                        decoration: BoxDecoration(
-                          color: cs.primaryContainer,
-                          borderRadius: BorderRadius.circular(DonyRadius.md),
-                          border: Border.all(color: cs.primary, width: 1.5),
-                        ),
-                        child: Icon(Icons.add_rounded, color: cs.primary),
-                      ),
+                Expanded(
+                  child: Text(
+                    'Visibles par le voyageur, elles rassurent sur le contenu.',
+                    style: tt.bodySmall?.copyWith(
+                      color: cs.onSurfaceVariant,
+                      height: 1.4,
                     ),
                   ),
+                ),
+                const SizedBox(width: DonySpacing.sm),
+                Text(
+                  '${photos.length} / ${BidPhotosCubit.maxPhotos}',
+                  style: tt.labelSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: cs.primary,
+                  ),
+                ),
               ],
             ),
+            const SizedBox(height: DonySpacing.sm),
+            // Vide : un seul CTA plein largeur, comme le wizard de demande
+            // d'envoi. Une case de 64 px se rate quand on fait défiler vite.
+            if (photos.isEmpty)
+              _AddPhotoCta(onTap: () => _showSourceSheet(context))
+            else
+              Wrap(
+                spacing: DonySpacing.sm,
+                runSpacing: DonySpacing.sm,
+                children: [
+                  for (final p in photos)
+                    _PhotoThumb(
+                      upload: p,
+                      onRemove: () =>
+                          context.read<BidPhotosCubit>().remove(p.localId),
+                    ),
+                  if (canAdd)
+                    Semantics(
+                      button: true,
+                      container: true,
+                      excludeSemantics: true,
+                      label: 'Ajouter une photo du colis',
+                      child: GestureDetector(
+                        key: const Key('bid-add-photo'),
+                        onTap: () => _showSourceSheet(context),
+                        child: Container(
+                          width: 88,
+                          height: 88,
+                          decoration: BoxDecoration(
+                            color: cs.primaryContainer,
+                            borderRadius: BorderRadius.circular(DonyRadius.md),
+                            border: Border.all(color: cs.primary, width: 2),
+                          ),
+                          child: Icon(
+                            Icons.add_rounded,
+                            color: cs.primary,
+                            size: 32,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
           ],
         );
       },
+    );
+  }
+}
+
+/// CTA plein largeur affiché tant qu'aucune photo n'est ajoutée — même
+/// traitement que le wizard « demande d'envoi ».
+class _AddPhotoCta extends StatelessWidget {
+  const _AddPhotoCta({required this.onTap});
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Semantics(
+      button: true,
+      container: true,
+      excludeSemantics: true,
+      label: 'Ajouter une photo du colis',
+      child: GestureDetector(
+        key: const Key('bid-add-photo'),
+        onTap: onTap,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: DonySpacing.lg),
+          decoration: BoxDecoration(
+            color: cs.primaryContainer,
+            borderRadius: BorderRadius.circular(DonyRadius.md),
+            border: Border.all(color: cs.primary, width: 2),
+          ),
+          child: Column(
+            children: [
+              Icon(Icons.add_a_photo_rounded, color: cs.primary, size: 30),
+              const SizedBox(height: DonySpacing.xs),
+              Text(
+                'Ajouter une photo',
+                style: tt.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: cs.primary,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                'Fortement recommandé, rassure le voyageur',
+                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

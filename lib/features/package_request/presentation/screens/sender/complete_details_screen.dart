@@ -187,6 +187,8 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
               : Stack(
                   children: [
                     SingleChildScrollView(
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
                       padding: EdgeInsets.fromLTRB(
                         DonySpacing.lg,
                         DonySpacing.xl,

@@ -76,6 +76,8 @@ class _RatingScreenState extends State<RatingScreen> {
             builder: (context) {
               final h = DonyLayout.hPadding(context);
               return SingleChildScrollView(
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
                 padding: EdgeInsets.fromLTRB(
                   h,
                   DonySpacing.xs,

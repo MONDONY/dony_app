@@ -81,6 +81,7 @@ class _IncidentReportScreenState extends State<IncidentReportScreen> {
         appBar: AppBar(title: const Text('Signaler un problème')),
         body: SafeArea(
           child: SingleChildScrollView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             padding: const EdgeInsets.all(DonySpacing.md),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

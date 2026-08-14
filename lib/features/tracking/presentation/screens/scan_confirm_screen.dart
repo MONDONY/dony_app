@@ -115,6 +115,7 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
             ),
           ),
           body: SingleChildScrollView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             padding: EdgeInsets.fromLTRB(
               DonySpacing.lg,
               DonySpacing.xl,

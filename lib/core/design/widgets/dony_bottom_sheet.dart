@@ -166,6 +166,10 @@ class _DonyBottomSheetContent extends StatelessWidget {
             const SizedBox(height: DonySpacing.sm),
           Flexible(
             child: SingleChildScrollView(
+              // Faire défiler la feuille referme le clavier : sans ça, une
+              // saisie en cours garde le clavier collé par-dessus les champs
+              // suivants et les listes d'autocomplétion.
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               padding: EdgeInsets.fromLTRB(
                 DonySpacing.lg,
                 title != null ? 0 : DonySpacing.sm,

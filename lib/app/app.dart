@@ -318,18 +318,23 @@ class _DonyAppState extends State<DonyApp> {
                           // présenter le bottom sheet de consentement
                           // analytics + brancher identify/reset sur le
                           // cycle d'authentification.
-                          child: Column(
-                            children: [
-                              // Bandeau réseau global : au-dessus de
-                              // TOUTE route (shell ou pushée), jamais
-                              // seulement les onglets du shell.
-                              const ConnectivityBanner(),
-                              Expanded(
-                                child: AnalyticsConsentGate(
-                                  child: child ?? const SizedBox.shrink(),
+                          // Tap hors champ = clavier fermé, et barre
+                          // « Terminé » au-dessus des claviers sans touche de
+                          // validation (pavé numérique, champs multilignes).
+                          child: DonyKeyboardScope(
+                            child: Column(
+                              children: [
+                                // Bandeau réseau global : au-dessus de
+                                // TOUTE route (shell ou pushée), jamais
+                                // seulement les onglets du shell.
+                                const ConnectivityBanner(),
+                                Expanded(
+                                  child: AnalyticsConsentGate(
+                                    child: child ?? const SizedBox.shrink(),
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       );

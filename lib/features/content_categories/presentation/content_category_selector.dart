@@ -516,6 +516,7 @@ class _ComboDropdown extends StatelessWidget {
           // items) et les tests widgets doivent pouvoir trouver n'importe
           // quel item sans scroller manuellement au préalable.
           child: SingleChildScrollView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             key: Key('$keyPrefix-dropdown'),
             padding: const EdgeInsets.all(DonySpacing.xs),
             // Items du catalogue filtré PUIS, le cas échéant, la ligne
