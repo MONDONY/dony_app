@@ -135,7 +135,10 @@ void main() {
     await tester.tap(find.byKey(const Key('template-content-item-Livres')));
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('template-content-tag-Livres')), findsOneWidget);
+    expect(
+      find.byKey(const Key('template-content-tag-Livres')),
+      findsOneWidget,
+    );
     expect(find.byKey(const Key('template-content-dropdown')), findsNothing);
   });
 

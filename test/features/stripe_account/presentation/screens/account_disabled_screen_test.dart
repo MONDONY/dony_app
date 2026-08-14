@@ -30,10 +30,7 @@ void main() {
   ) async {
     await tester.pumpWidget(buildWidget());
 
-    expect(
-      find.textContaining('Terminez la configuration'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('Terminez la configuration'), findsOneWidget);
     // L'ancien discours (« désactivé », « réactivation automatique par
     // Stripe ») laissait croire qu'il fallait attendre, alors que l'action
     // est du côté de l'utilisateur.

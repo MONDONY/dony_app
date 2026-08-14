@@ -206,7 +206,8 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
       child: BlocBuilder<StripeAccountBloc, StripeAccountState>(
         buildWhen: (prev, curr) {
           if (prev is StripeAccountReady && curr is StripeAccountReady) {
-            return prev.accountStatus.isRejected != curr.accountStatus.isRejected;
+            return prev.accountStatus.isRejected !=
+                curr.accountStatus.isRejected;
           }
           return prev.runtimeType != curr.runtimeType;
         },

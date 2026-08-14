@@ -246,7 +246,7 @@ void main() {
         isA<ConnectOnboardingError>(),
       ],
     );
-  
+
     blocTest<ConnectOnboardingBloc, ConnectOnboardingState>(
       'repasse par Loading même en partant de Pending, sinon le tap sur '
       '« J\'ai complété le formulaire » ne produit rien à l\'écran',
