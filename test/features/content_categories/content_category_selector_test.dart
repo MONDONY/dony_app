@@ -308,4 +308,31 @@ void main() {
       expect(tagFinder, findsNWidgets(3));
     },
   );
+
+  testWidgets('faire défiler la liste ne la referme pas', (tester) async {
+    await tester.pumpWidget(
+      _wrap(
+        ContentCategorySelector(
+          repository: repository,
+          selected: const [],
+          onChanged: (_) {},
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(fieldFinder());
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('content-combo-dropdown')), findsOneWidget);
+
+    // La liste vit dans un overlay piloté par le focus du champ : un
+    // `keyboardDismissBehavior.onDrag` la refermerait au premier glissement.
+    await tester.drag(
+      find.byKey(const Key('content-combo-dropdown')),
+      const Offset(0, -60),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('content-combo-dropdown')), findsOneWidget);
+  });
 }

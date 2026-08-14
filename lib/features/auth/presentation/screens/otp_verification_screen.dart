@@ -221,6 +221,8 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                 // ── Scrollable content ───────────────────────────
                 Expanded(
                   child: SingleChildScrollView(
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
                     physics: const ClampingScrollPhysics(),
                     padding: EdgeInsets.fromLTRB(
                       h,

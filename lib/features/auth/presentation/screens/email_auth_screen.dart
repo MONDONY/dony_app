@@ -107,6 +107,8 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
                   // ── Scrollable content ──────────────────────────
                   Expanded(
                     child: SingleChildScrollView(
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
                       physics: const ClampingScrollPhysics(),
                       padding: EdgeInsets.fromLTRB(
                         h,

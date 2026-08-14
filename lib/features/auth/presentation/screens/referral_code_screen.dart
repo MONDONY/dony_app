@@ -110,6 +110,7 @@ class _FormView extends StatelessWidget {
         Expanded(
           child: LayoutBuilder(
             builder: (context, constraints) => SingleChildScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               child: ConstrainedBox(
                 constraints: BoxConstraints(minHeight: constraints.maxHeight),
                 child: Column(
@@ -180,6 +181,7 @@ class _SuccessView extends StatelessWidget {
         Expanded(
           child: LayoutBuilder(
             builder: (context, constraints) => SingleChildScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               child: ConstrainedBox(
                 constraints: BoxConstraints(minHeight: constraints.maxHeight),
                 child: Column(

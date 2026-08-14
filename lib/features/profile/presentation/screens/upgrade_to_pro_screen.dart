@@ -192,6 +192,7 @@ class _ProActiveScreen extends StatelessWidget {
         children: [
           Expanded(
             child: SingleChildScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               padding: const EdgeInsets.fromLTRB(
                 DonySpacing.lg,
                 DonySpacing.xl,
@@ -411,6 +412,7 @@ class _UpgradeFormScreen extends StatelessWidget {
     return Scaffold(
       appBar: const DonyAppBar(title: 'Compte PRO'),
       body: SingleChildScrollView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         padding: const EdgeInsets.fromLTRB(
           DonySpacing.lg,
           DonySpacing.xl,

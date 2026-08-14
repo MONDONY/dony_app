@@ -678,6 +678,8 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                         ),
                       ],
                       child: SingleChildScrollView(
+                        keyboardDismissBehavior:
+                            ScrollViewKeyboardDismissBehavior.onDrag,
                         padding: const EdgeInsets.fromLTRB(
                           DonySpacing.lg,
                           DonySpacing.xl,

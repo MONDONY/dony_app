@@ -143,6 +143,7 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
         // le cas "prix tapé après avoir choisi le mode ferme".
         WidgetsBinding.instance.addPostFrameCallback((_) => _sync());
         return SingleChildScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           padding: const EdgeInsets.fromLTRB(
             DonySpacing.lg,
             DonySpacing.md,

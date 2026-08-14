@@ -111,6 +111,7 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
       if (state.displayed.isEmpty) {
         return LayoutBuilder(
           builder: (ctx, constraints) => SingleChildScrollView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             child: ConstrainedBox(
               constraints: BoxConstraints(minHeight: constraints.maxHeight),
               child: DonyEmptyState(

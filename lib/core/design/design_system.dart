@@ -37,6 +37,7 @@ export 'package:dony/core/design/widgets/dony_hero_avatar.dart';
 export 'package:dony/core/design/widgets/dony_icon_container.dart';
 export 'package:dony/core/design/widgets/dony_image.dart';
 export 'package:dony/core/design/widgets/dony_info_row.dart';
+export 'package:dony/core/design/widgets/dony_keyboard_scope.dart';
 export 'package:dony/core/design/widgets/dony_list_tile.dart';
 // Foundation components
 export 'package:dony/core/design/widgets/dony_logo.dart';

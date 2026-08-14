@@ -63,6 +63,7 @@ class _TrackingSearchScreenState extends State<TrackingSearchScreen> {
         builder: (context) {
           final h = DonyLayout.hPadding(context);
           return SingleChildScrollView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             padding: EdgeInsets.fromLTRB(
               h,
               DonySpacing.xxl,

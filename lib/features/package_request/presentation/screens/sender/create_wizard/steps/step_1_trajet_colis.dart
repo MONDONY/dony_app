@@ -152,6 +152,7 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     return SingleChildScrollView(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       padding: const EdgeInsets.fromLTRB(
         DonySpacing.lg,
         DonySpacing.md,

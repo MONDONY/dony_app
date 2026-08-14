@@ -116,6 +116,8 @@ class _CancellationScreenState extends State<CancellationScreen> {
               children: [
                 Expanded(
                   child: SingleChildScrollView(
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
                     padding: EdgeInsets.fromLTRB(
                       h,
                       DonySpacing.xl,
