@@ -63,16 +63,29 @@ class _DonyKeyboardScopeState extends State<DonyKeyboardScope> {
 
   @override
   Widget build(BuildContext context) {
-    final inset = MediaQuery.viewInsetsOf(context).bottom;
+    final media = MediaQuery.of(context);
+    final inset = media.viewInsets.bottom;
     final showBar = inset > 0 && _needsDoneBar();
     return Stack(
       children: [
-        GestureDetector(
-          // translucent : le tap continue vers les widgets en dessous, on ne
-          // vole aucun bouton, on ne fait qu'observer.
-          behavior: HitTestBehavior.translucent,
-          onTap: _dismiss,
-          child: widget.child,
+        // La barre est posée en surimpression au-dessus du clavier. Sans
+        // l'annoncer dans les viewInsets, elle recouvrait le contenu collé au
+        // clavier : le champ de saisie du chat, qui se place exactement là,
+        // disparaissait derrière elle. En la déclarant ici, tout Scaffold en
+        // dessous (resizeToAvoidBottomInset) lui réserve sa place.
+        MediaQuery(
+          data: media.copyWith(
+            viewInsets: media.viewInsets.copyWith(
+              bottom: inset + (showBar ? kDonyKeyboardDoneBarHeight : 0),
+            ),
+          ),
+          child: GestureDetector(
+            // translucent : le tap continue vers les widgets en dessous, on ne
+            // vole aucun bouton, on ne fait qu'observer.
+            behavior: HitTestBehavior.translucent,
+            onTap: _dismiss,
+            child: widget.child,
+          ),
         ),
         if (showBar)
           Positioned(
@@ -86,6 +99,10 @@ class _DonyKeyboardScopeState extends State<DonyKeyboardScope> {
   }
 }
 
+/// Hauteur de la barre « Terminé ». Partagée avec les viewInsets annoncés au
+/// contenu, pour que la barre ne recouvre jamais ce qui se colle au clavier.
+const double kDonyKeyboardDoneBarHeight = 44;
+
 /// Barre compacte « Terminé » posée au ras du clavier.
 class _KeyboardDoneBar extends StatelessWidget {
   const _KeyboardDoneBar();
@@ -98,7 +115,7 @@ class _KeyboardDoneBar extends StatelessWidget {
       key: const Key('donyKeyboardDoneBar'),
       color: cs.surfaceContainerHighest,
       child: SizedBox(
-        height: 44,
+        height: kDonyKeyboardDoneBarHeight,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
