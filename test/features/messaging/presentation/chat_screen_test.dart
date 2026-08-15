@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/design/widgets/dony_keyboard_scope.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -149,6 +150,57 @@ void main() {
         findsNothing,
       );
     });
+
+    // Régression : le champ du chat est multiligne (`maxLines: null`), ce qui
+    // déclenche la barre « Terminé » de DonyKeyboardScope. Cette barre est
+    // posée en surimpression juste au-dessus du clavier — exactement là où se
+    // place le composer — et le recouvrait entièrement.
+    testWidgets(
+      'clavier ouvert : la barre « Terminé » ne recouvre pas le champ',
+      (tester) async {
+        when(() => bloc.state).thenReturn(const ChatLoaded([]));
+
+        const screen = Size(390, 844); // iPhone 14
+        const keyboard = 336.0; // clavier iOS avec barre de suggestions
+
+        // `tester.view` pilote la vraie surface de rendu. Passer par un
+        // MediaQuery injecté ne suffit pas : la surface resterait 800×600 et le
+        // Scaffold calculerait sa hauteur sur des contraintes sans rapport.
+        tester.view.devicePixelRatio = 1.0;
+        tester.view.physicalSize = screen;
+        tester.view.viewInsets = const FakeViewPadding(bottom: keyboard);
+        addTearDown(tester.view.reset);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: AppTheme.light(),
+            // Comme en production : le scope enveloppe le Navigator racine.
+            builder: (context, child) =>
+                DonyKeyboardScope(child: child ?? const SizedBox.shrink()),
+            home: BlocProvider<ChatBloc>.value(
+              value: bloc,
+              child: const ChatScreen(conversation: _conversation),
+            ),
+          ),
+        );
+        // Le focus pilote l'affichage de la barre.
+        await tester.tap(find.byType(TextField));
+        await tester.pump(const Duration(milliseconds: 400));
+
+        expect(tester.takeException(), isNull);
+
+        final doneBar = find.byKey(const Key('donyKeyboardDoneBar'));
+        expect(
+          doneBar,
+          findsOneWidget,
+          reason: 'champ multiligne → barre requise',
+        );
+
+        // Le champ doit rester au-dessus de la barre, pas dessous.
+        final field = tester.getRect(find.byType(TextField));
+        expect(field.bottom, lessThanOrEqualTo(tester.getRect(doneBar).top));
+      },
+    );
 
     testWidgets('texte valide → ChatTextSendRequested dispatché', (
       tester,
