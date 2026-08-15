@@ -64,6 +64,66 @@ void main() {
       expect(thread.status, NegotiationThreadStatus.open);
       expect(thread.currentPriceEur, 30.0);
     });
+
+    test('sends createDedicatedTrip payload when provided', () async {
+      Map<String, dynamic>? sentData;
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer((inv) async {
+        sentData =
+            inv.namedArguments[const Symbol('data')] as Map<String, dynamic>;
+        return _ok(_threadJson, '/negotiations');
+      });
+
+      await repo.start(
+        packageRequestId: 'pr-1',
+        proposedPriceEur: 30.0,
+        travelerTravelDate: DateTime(2026, 6, 15),
+        travelerAvailableKg: 10.0,
+        createDedicatedTrip: true,
+        dedicatedTripPayload: {
+          'departureDate': '2026-06-15',
+          'pickupAddress': {'label': 'Pickup', 'lat': 48.8, 'lng': 2.3},
+          'deliveryAddress': {'label': 'Delivery', 'lat': 5.3, 'lng': -4.0},
+          'useCardForCommission': false,
+        },
+      );
+
+      expect(sentData?['createDedicatedTrip'], isTrue);
+      expect(sentData?['dedicatedTrip'], isA<Map<String, dynamic>>());
+    });
+
+    test(
+      'defaults createDedicatedTrip to false and omits dedicatedTrip '
+      'when not provided',
+      () async {
+        Map<String, dynamic>? sentData;
+        when(
+          () => mockDio.post<Map<String, dynamic>>(
+            '/negotiations',
+            data: any(named: 'data'),
+          ),
+        ).thenAnswer((inv) async {
+          sentData =
+              inv.namedArguments[const Symbol('data')]
+                  as Map<String, dynamic>;
+          return _ok(_threadJson, '/negotiations');
+        });
+
+        await repo.start(
+          packageRequestId: 'pr-1',
+          proposedPriceEur: 30.0,
+          travelerTravelDate: DateTime(2026, 6, 15),
+          travelerAvailableKg: 10.0,
+        );
+
+        expect(sentData?['createDedicatedTrip'], isFalse);
+        expect(sentData?.containsKey('dedicatedTrip'), isFalse);
+      },
+    );
   });
 
   group('findMine', () {

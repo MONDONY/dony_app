@@ -15,6 +15,8 @@ class NegotiationRepository {
     required double travelerAvailableKg,
     String? travelerAnnouncementId,
     String? body,
+    bool createDedicatedTrip = false,
+    Map<String, dynamic>? dedicatedTripPayload,
   }) async {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
       '/negotiations',
@@ -28,6 +30,8 @@ class NegotiationRepository {
         'travelerAvailableKg': travelerAvailableKg,
         'travelerAnnouncementId': ?travelerAnnouncementId,
         'body': ?body,
+        'createDedicatedTrip': createDedicatedTrip,
+        'dedicatedTrip': ?dedicatedTripPayload,
       },
     );
     return NegotiationThread.fromJson(response.data!);

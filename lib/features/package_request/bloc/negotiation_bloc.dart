@@ -42,6 +42,8 @@ class NegotiationStartRequested extends NegotiationEvent {
     this.travelerAnnouncementId,
     this.body,
     this.isFirmPrice = false,
+    this.createDedicatedTrip = false,
+    this.dedicatedTripPayload,
   });
   final String packageRequestId;
   final double proposedPriceEur;
@@ -53,6 +55,14 @@ class NegotiationStartRequested extends NegotiationEvent {
   /// True when the traveler accepted a firm (non-negotiable) price.
   final bool isFirmPrice;
 
+  /// True when no existing trip matches: the traveler creates a dedicated
+  /// trip atomically with the offer instead of picking one.
+  final bool createDedicatedTrip;
+
+  /// Mirrors NegotiationCreateDedicatedTripRequest fields. Required when
+  /// [createDedicatedTrip] is true.
+  final Map<String, dynamic>? dedicatedTripPayload;
+
   @override
   List<Object?> get props => [
     packageRequestId,
@@ -62,6 +72,8 @@ class NegotiationStartRequested extends NegotiationEvent {
     travelerAnnouncementId,
     body,
     isFirmPrice,
+    createDedicatedTrip,
+    dedicatedTripPayload,
   ];
 }
 
@@ -370,6 +382,8 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
         travelerAvailableKg: e.travelerAvailableKg,
         travelerAnnouncementId: e.travelerAnnouncementId,
         body: e.body,
+        createDedicatedTrip: e.createDedicatedTrip,
+        dedicatedTripPayload: e.dedicatedTripPayload,
       );
       emit(NegotiationLoaded(thread));
       if (e.isFirmPrice) {
