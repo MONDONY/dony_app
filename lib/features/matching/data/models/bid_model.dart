@@ -74,6 +74,7 @@ class BidModel {
   final String status;
   final String? rejectionReason;
   final String? handoverLocation;
+
   /// Date limite de dépôt héritée du trajet à l'acceptation.
   final DateTime? handoverDeadline;
   final bool voyageurConfirmed;

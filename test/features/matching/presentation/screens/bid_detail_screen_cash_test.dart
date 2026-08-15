@@ -301,9 +301,7 @@ void main() {
         await _pump(
           tester,
           bid: _makeBid(
-            handoverDeadline: DateTime.now().subtract(
-              const Duration(hours: 1),
-            ),
+            handoverDeadline: DateTime.now().subtract(const Duration(hours: 1)),
           ),
           authBloc: authBloc,
         );
@@ -359,9 +357,7 @@ void main() {
           tester,
           bid: _makeBid(
             paymentMethod: BidPaymentMethod.stripe,
-            handoverDeadline: DateTime.now().subtract(
-              const Duration(hours: 1),
-            ),
+            handoverDeadline: DateTime.now().subtract(const Duration(hours: 1)),
           ),
           authBloc: authBloc,
         );
@@ -394,9 +390,7 @@ void main() {
           tester,
           bid: _makeBid(
             paymentMethod: BidPaymentMethod.stripe,
-            handoverDeadline: DateTime.now().subtract(
-              const Duration(hours: 1),
-            ),
+            handoverDeadline: DateTime.now().subtract(const Duration(hours: 1)),
           ),
           authBloc: authBloc,
         );
@@ -426,9 +420,7 @@ void main() {
           tester,
           bid: _makeBid(
             status: 'HANDED_OVER',
-            handoverDeadline: DateTime.now().subtract(
-              const Duration(hours: 1),
-            ),
+            handoverDeadline: DateTime.now().subtract(const Duration(hours: 1)),
           ),
           authBloc: authBloc,
         );

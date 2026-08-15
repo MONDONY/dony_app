@@ -988,42 +988,38 @@ void main() {
   // ── Group: Handover deadline error display ────────────────────────────────────
 
   group('CreateTripScreen — Handover deadline validation', () {
-    testWidgets(
-      'erreur affichée quand la date limite tombe après le départ',
-      (tester) async {
-        setupViewport(tester);
+    testWidgets('erreur affichée quand la date limite tombe après le départ', (
+      tester,
+    ) async {
+      setupViewport(tester);
 
-        // date limite (2 août) > date de départ (1er août) → _handoverDeadlineError non-null
-        final ann = AnnouncementModel(
-          id: 'ann-handover-err',
-          travelerId: 'trav-1',
-          departureCity: 'Paris',
-          arrivalCity: 'Dakar',
-          departureDate: DateTime(2026, 8),
-          departureTime: '22:00',
-          availableKg: 10.0,
-          totalKg: 23.0,
-          pricePerKg: 8.0,
-          status: 'ACTIVE',
-          bidsCount: 0,
-          createdAt: DateTime(2026),
-          updatedAt: DateTime(2026),
-          handoverDeadline: DateTime(2026, 8, 2), // après le départ du 1er août
-          transportMode: TransportMode.plane,
-          acceptedPaymentMethods: {BidPaymentMethod.stripe},
-          acceptedContentTypes: const ['Vêtements'],
-          refusedTypes: const [],
-        );
+      // date limite (2 août) > date de départ (1er août) → _handoverDeadlineError non-null
+      final ann = AnnouncementModel(
+        id: 'ann-handover-err',
+        travelerId: 'trav-1',
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        departureDate: DateTime(2026, 8),
+        departureTime: '22:00',
+        availableKg: 10.0,
+        totalKg: 23.0,
+        pricePerKg: 8.0,
+        status: 'ACTIVE',
+        bidsCount: 0,
+        createdAt: DateTime(2026),
+        updatedAt: DateTime(2026),
+        handoverDeadline: DateTime(2026, 8, 2), // après le départ du 1er août
+        transportMode: TransportMode.plane,
+        acceptedPaymentMethods: {BidPaymentMethod.stripe},
+        acceptedContentTypes: const ['Vêtements'],
+        refusedTypes: const [],
+      );
 
-        final args = CreateTripArgs(announcement: ann);
-        await pumpAndDrain(
-          tester,
-          _wrapWithRouter(CreateTripScreen(args: args)),
-        );
+      final args = CreateTripArgs(announcement: ann);
+      await pumpAndDrain(tester, _wrapWithRouter(CreateTripScreen(args: args)));
 
-        expect(find.textContaining('précéder le départ'), findsOneWidget);
-      },
-    );
+      expect(find.textContaining('précéder le départ'), findsOneWidget);
+    });
   });
 
   // ── Group: _submit() via Enregistrer ─────────────────────────────────────────
@@ -1623,16 +1619,15 @@ void main() {
       expect(find.text('Date limite de dépôt'), findsOneWidget);
     });
 
-    testWidgets(
-      'mode création : la row affiche "Choisir" (aucune valeur)',
-      (tester) async {
-        setupViewport(tester);
+    testWidgets('mode création : la row affiche "Choisir" (aucune valeur)', (
+      tester,
+    ) async {
+      setupViewport(tester);
 
-        await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
+      await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
 
-        expect(find.text('Choisir'), findsOneWidget);
-      },
-    );
+      expect(find.text('Choisir'), findsOneWidget);
+    });
 
     testWidgets(
       'mode édition préremplit les valeurs existantes (plus aucun "Choisir")',
@@ -1651,47 +1646,46 @@ void main() {
       },
     );
 
-    testWidgets(
-      'date limite après le départ affiche le message inline',
-      (tester) async {
-        setupViewport(tester);
+    testWidgets('date limite après le départ affiche le message inline', (
+      tester,
+    ) async {
+      setupViewport(tester);
 
-        final ann = AnnouncementModel(
-          id: 'ann-handover-late',
-          travelerId: 'trav-1',
-          departureCity: 'Paris',
-          arrivalCity: 'Dakar',
-          departureDate: DateTime(2026, 8, 20),
-          departureTime: '22:00',
-          availableKg: 10.0,
-          totalKg: 23.0,
-          pricePerKg: 8.0,
-          status: 'ACTIVE',
-          bidsCount: 0,
-          createdAt: DateTime(2026),
-          updatedAt: DateTime(2026),
-          // Lendemain du départ → date limite impossible.
-          handoverDeadline: DateTime(2026, 8, 21, 16),
-          transportMode: TransportMode.plane,
-          acceptedPaymentMethods: {BidPaymentMethod.stripe},
-          acceptedContentTypes: const ['Vêtements'],
-          refusedTypes: const [],
-        );
+      final ann = AnnouncementModel(
+        id: 'ann-handover-late',
+        travelerId: 'trav-1',
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        departureDate: DateTime(2026, 8, 20),
+        departureTime: '22:00',
+        availableKg: 10.0,
+        totalKg: 23.0,
+        pricePerKg: 8.0,
+        status: 'ACTIVE',
+        bidsCount: 0,
+        createdAt: DateTime(2026),
+        updatedAt: DateTime(2026),
+        // Lendemain du départ → date limite impossible.
+        handoverDeadline: DateTime(2026, 8, 21, 16),
+        transportMode: TransportMode.plane,
+        acceptedPaymentMethods: {BidPaymentMethod.stripe},
+        acceptedContentTypes: const ['Vêtements'],
+        refusedTypes: const [],
+      );
 
-        await pumpAndDrain(
-          tester,
-          _wrapWithRouter(
-            CreateTripScreen(args: CreateTripArgs(announcement: ann)),
-          ),
-        );
+      await pumpAndDrain(
+        tester,
+        _wrapWithRouter(
+          CreateTripScreen(args: CreateTripArgs(announcement: ann)),
+        ),
+      );
 
-        expect(find.byKey(const Key('sheet-handover-error')), findsOneWidget);
-        expect(
-          find.text('La date limite doit précéder le départ.'),
-          findsOneWidget,
-        );
-      },
-    );
+      expect(find.byKey(const Key('sheet-handover-error')), findsOneWidget);
+      expect(
+        find.text('La date limite doit précéder le départ.'),
+        findsOneWidget,
+      );
+    });
 
     testWidgets('date limite valide : aucun message d\'erreur inline', (
       tester,

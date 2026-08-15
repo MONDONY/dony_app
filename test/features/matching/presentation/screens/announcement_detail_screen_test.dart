@@ -238,9 +238,7 @@ void main() {
     tester,
   ) async {
     final end = DateTime(2026, 6, 14, 18).toUtc();
-    final announcement = _makeAnnouncement(
-      handoverDeadline: end,
-    );
+    final announcement = _makeAnnouncement(handoverDeadline: end);
 
     await _pump(
       tester,

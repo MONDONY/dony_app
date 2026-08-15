@@ -525,6 +525,7 @@ class _TripFormContentState extends State<_TripFormContent> {
   final _departureDateNotifier = ValueNotifier<DateTime?>(null);
   final _departureTimeNotifier = ValueNotifier<TimeOfDay?>(null);
   final _arrivalTimeNotifier = ValueNotifier<TimeOfDay?>(null);
+
   /// Date limite de dépôt : jour seul choisi par le voyageur, converti en
   /// instant à l'envoi (cf. [_resolveHandoverDeadline]).
   final _handoverDeadlineNotifier = ValueNotifier<DateTime?>(null);

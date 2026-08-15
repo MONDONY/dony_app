@@ -97,7 +97,10 @@ void main() {
         windowEnd: DateTime.now().subtract(const Duration(hours: 1)),
       ),
     );
-    expect(find.textContaining('Date limite de dépôt dépassée'), findsOneWidget);
+    expect(
+      find.textContaining('Date limite de dépôt dépassée'),
+      findsOneWidget,
+    );
     expect(
       find.textContaining("Signaler l'absence de l'expéditeur"),
       findsOneWidget,
@@ -120,7 +123,10 @@ void main() {
         find.textContaining("Signaler l'absence de l'expéditeur"),
         findsNothing,
       );
-      expect(find.textContaining('Date limite de dépôt dépassée'), findsNothing);
+      expect(
+        find.textContaining('Date limite de dépôt dépassée'),
+        findsNothing,
+      );
     },
   );
 
@@ -326,9 +332,7 @@ void main() {
     expect(find.textContaining('Récupérez le colis'), findsOneWidget);
   });
 
-  testWidgets('date limite dépassée → subtitle avec la date', (
-    tester,
-  ) async {
+  testWidgets('date limite dépassée → subtitle avec la date', (tester) async {
     final pastEnd = DateTime.now().subtract(const Duration(hours: 1));
     final bid = BidModel(
       id: 'b1',
@@ -354,7 +358,10 @@ void main() {
       ),
     );
     await tester.pump(const Duration(milliseconds: 300));
-    expect(find.textContaining('Date limite de dépôt dépassée'), findsOneWidget);
+    expect(
+      find.textContaining('Date limite de dépôt dépassée'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('tap Signaler absence → DonyBottomSheet ouvert', (tester) async {

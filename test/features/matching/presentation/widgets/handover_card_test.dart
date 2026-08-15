@@ -49,12 +49,7 @@ void main() {
   });
 
   testWidgets('affiche la date limite quand renseignée', (tester) async {
-    await _pump(
-      tester,
-      _bid(
-        handoverDeadline: DateTime(2026, 6, 15, 12),
-      ),
-    );
+    await _pump(tester, _bid(handoverDeadline: DateTime(2026, 6, 15, 12)));
     expect(find.text('Date limite'), findsOneWidget);
     expect(find.text('15/06/2026'), findsOneWidget);
   });
