@@ -179,6 +179,32 @@ void main() {
       expect(attempts, 1);
     });
 
+    // Régression : le 429 était traité comme transitoire, donc rejoué. Or il
+    // signale que l'appelant dépasse déjà le quota — chaque reprise lançait
+    // trois requêtes qui entretenaient la saturation, et l'appareil n'était
+    // jamais enregistré. Observé en staging, où l'endpoint héritait de la
+    // limite à 5 req/min de la zone `/auth`.
+    test('does not retry a rate-limited response', () async {
+      var attempts = 0;
+      final error = DioException(
+        type: DioExceptionType.badResponse,
+        requestOptions: RequestOptions(path: '/auth/me/fcm-token'),
+        response: Response(
+          requestOptions: RequestOptions(path: '/auth/me/fcm-token'),
+          statusCode: 429,
+        ),
+      );
+
+      await expectLater(
+        NotificationService.retryOperation(() async {
+          attempts++;
+          throw error;
+        }, retryDelay: Duration.zero),
+        throwsA(same(error)),
+      );
+      expect(attempts, 1);
+    });
+
     test('rejects a non-positive attempt limit', () async {
       expect(
         () => NotificationService.retryOperation(

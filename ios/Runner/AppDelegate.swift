@@ -1,6 +1,7 @@
 import Flutter
 import UIKit
 import GoogleMaps
+import FirebaseCore
 import FirebaseAuth
 import FirebaseMessaging
 import Sentry
@@ -15,6 +16,20 @@ import Sentry
       ?? (Bundle.main.object(forInfoDictionaryKey: "GMSApiKey") as? String)
       ?? ""
     GMSServices.provideAPIKey(apiKey)
+
+    // FirebaseAppDelegateProxyEnabled est à false : le swizzling de
+    // GULAppDelegateSwizzler, sur lequel repose l'inscription automatique de
+    // FLTFirebaseMessagingPlugin, ne s'applique pas. Personne ne demandait donc
+    // l'inscription APNs : `didRegisterForRemoteNotificationsWithDeviceToken`
+    // n'était jamais appelé, `getAPNSToken()` renvoyait null indéfiniment, et
+    // `getToken()` levait `apns-token-not-set` à chaque tentative. L'appareil
+    // n'était jamais enregistré comme cible de push.
+    //
+    // Appeler l'inscription ici n'affiche aucune demande d'autorisation : elle
+    // reste portée par `requestPermission()`. iOS délivre le jeton APNs dès que
+    // l'utilisateur a accordé les notifications.
+    application.registerForRemoteNotifications()
+
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
@@ -32,11 +47,42 @@ import Sentry
     _ application: UIApplication,
     didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
   ) {
+    // Firebase est configuré depuis Dart, donc après le lancement natif. Or
+    // l'inscription APNs demandée dans didFinishLaunching fait revenir ce
+    // callback en quelques centaines de millisecondes : `Messaging.messaging()`
+    // et `Auth.auth()` peuvent être atteints avant `FirebaseApp.configure()`,
+    // ce qui est une erreur fatale et faisait planter l'application au
+    // démarrage. On diffère alors la pose du jeton au lieu de la forcer.
+    guard FirebaseApp.app() != nil else {
+      deferAPNSToken(application, deviceToken)
+      return
+    }
+    apnsRetryCount = 0
     Messaging.messaging().apnsToken = deviceToken
     #if !DEBUG
     Auth.auth().setAPNSToken(deviceToken, type: .unknown)
     #endif
     super.application(application, didRegisterForRemoteNotificationsWithDeviceToken: deviceToken)
+  }
+
+  /// Nombre de reports déjà effectués en attendant l'initialisation de Firebase.
+  private var apnsRetryCount = 0
+
+  /// Réessaie la pose du jeton APNs jusqu'à ce que Firebase soit configuré.
+  /// Borné : sans cette limite, un échec d'initialisation ferait boucler ce
+  /// report indéfiniment sur la boucle principale.
+  private func deferAPNSToken(_ application: UIApplication, _ deviceToken: Data) {
+    guard apnsRetryCount < 40 else {
+      NSLog("[APNs] Firebase jamais configuré, jeton APNs abandonné")
+      return
+    }
+    apnsRetryCount += 1
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { [weak self] in
+      self?.application(
+        application,
+        didRegisterForRemoteNotificationsWithDeviceToken: deviceToken
+      )
+    }
   }
 
   override func application(

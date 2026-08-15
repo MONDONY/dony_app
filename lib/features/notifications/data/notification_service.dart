@@ -182,14 +182,31 @@ class NotificationService {
 
     // Token upload is deferred to after authentication (called by app.dart).
     // onTokenRefresh re-uploads automatically once the user is signed in.
-    _fcm.onTokenRefresh.listen((_) {
-      final activeUpload = _inFlightUpload;
-      if (activeUpload == null) {
-        unawaited(uploadCurrentToken());
-      } else {
-        unawaited(activeUpload.whenComplete(uploadCurrentToken));
-      }
-    });
+    _fcm.onTokenRefresh.listen((_) => _scheduleTokenUpload());
+
+    // Au tout premier lancement, `authStateChanges` déclenche l'upload avant
+    // que l'utilisateur n'ait répondu à la demande d'autorisation ci-dessus :
+    // sans autorisation, iOS n'inscrit pas l'appareil auprès d'APNs, aucun
+    // jeton n'existe et la tentative échoue. Or accepter la demande ne fait pas
+    // passer l'application en arrière-plan — `onAppResumed` n'est donc jamais
+    // appelé, et rien ne rattrapait cette première tentative perdue. On relance
+    // ici, une fois l'autorisation connue.
+    if (settings.authorizationStatus != AuthorizationStatus.denied &&
+        FirebaseAuth.instance.currentUser != null) {
+      _scheduleTokenUpload();
+    }
+  }
+
+  /// Relance un upload en respectant celui déjà en vol : la garde de
+  /// réentrance de [uploadCurrentToken] ferait sinon ignorer l'appel, et la
+  /// tentative déclenchée par un événement plus récent serait perdue.
+  void _scheduleTokenUpload() {
+    final activeUpload = _inFlightUpload;
+    if (activeUpload == null) {
+      unawaited(uploadCurrentToken());
+    } else {
+      unawaited(activeUpload.whenComplete(uploadCurrentToken));
+    }
   }
 
   /// Call this after the user is authenticated (Firebase sign-in complete).
@@ -361,6 +378,11 @@ class NotificationService {
     Error.throwWithStackTrace(lastError!, lastStackTrace!);
   }
 
+  /// Le 429 est délibérément absent : il signale que l'appelant est déjà
+  /// au-dessus du quota, et réessayer aggrave exactement ce qu'on subit. C'est
+  /// ce qui s'est produit en staging, où l'endpoint héritait de la limite à
+  /// 5 req/min de la zone `/auth` : chaque reprise déclenchait trois tentatives
+  /// qui entretenaient la saturation, et l'appareil n'était jamais enregistré.
   static bool _isTransientUploadFailure(Object error) {
     if (error is! DioException) return false;
     return switch (error.type) {
@@ -368,17 +390,20 @@ class NotificationService {
       DioExceptionType.connectionTimeout ||
       DioExceptionType.sendTimeout ||
       DioExceptionType.receiveTimeout => true,
-      DioExceptionType.badResponse =>
-        error.response?.statusCode == 429 ||
-            (error.response?.statusCode ?? 0) >= 500,
+      DioExceptionType.badResponse => (error.response?.statusCode ?? 0) >= 500,
       _ => false,
     };
   }
 
+  /// Le 429 doit remonter : c'est une panne de configuration côté passerelle,
+  /// pas un aléa réseau. Le filtrer a masqué neuf jours de notifications
+  /// muettes, l'appareil n'étant jamais enregistré sans qu'aucune alerte ne
+  /// parte.
   static bool _shouldReportFailure(Object error) {
     if (error is! DioException) return true;
-    return error.type == DioExceptionType.badResponse &&
-        (error.response?.statusCode ?? 0) >= 500;
+    if (error.type != DioExceptionType.badResponse) return false;
+    final status = error.response?.statusCode ?? 0;
+    return status == 429 || status >= 500;
   }
 
   Future<void> _uploadToken(String token) {
