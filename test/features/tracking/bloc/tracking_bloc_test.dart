@@ -221,14 +221,16 @@ void main() {
       'emits [ConfirmCodeLoading, ConfirmCodeLoaded] on success',
       build: buildBloc,
       setUp: () {
-        when(
-          () => mockRepo.getConfirmationCode('bid-1'),
-        ).thenAnswer((_) async => (code: '472', expiresAt: null));
+        when(() => mockRepo.getConfirmationCode('bid-1')).thenAnswer(
+          (_) async => (code: '472', expiresAt: null, publicPageVisible: true),
+        );
       },
       act: (b) => b.add(TrackingConfirmCodeRequested('bid-1')),
       expect: () => [
         isA<TrackingConfirmCodeLoading>(),
-        isA<TrackingConfirmCodeLoaded>().having((s) => s.code, 'code', '472'),
+        isA<TrackingConfirmCodeLoaded>()
+            .having((s) => s.code, 'code', '472')
+            .having((s) => s.publicPageVisible, 'publicPageVisible', true),
       ],
     );
 
@@ -244,6 +246,30 @@ void main() {
       expect: () => [
         isA<TrackingConfirmCodeLoading>(),
         isA<TrackingConfirmCodeError>(),
+      ],
+    );
+  });
+
+  group('TrackingSetCodePublicVisibilityRequested', () {
+    blocTest<TrackingBloc, TrackingState>(
+      'emits [ConfirmCodePublicVisibilityLoading, ConfirmCodeLoaded] on success',
+      build: buildBloc,
+      setUp: () {
+        when(
+          () =>
+              mockRepo.setConfirmationCodePublicVisible('bid-1', visible: true),
+        ).thenAnswer(
+          (_) async => (code: '472', expiresAt: null, publicPageVisible: true),
+        );
+      },
+      act: (b) => b.add(
+        TrackingSetCodePublicVisibilityRequested('bid-1', visible: true),
+      ),
+      expect: () => [
+        isA<TrackingConfirmCodePublicVisibilityLoading>(),
+        isA<TrackingConfirmCodeLoaded>()
+            .having((s) => s.code, 'code', '472')
+            .having((s) => s.publicPageVisible, 'publicPageVisible', true),
       ],
     );
   });

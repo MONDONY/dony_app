@@ -67,6 +67,7 @@ void main() {
         eventType: 'ARRIVEE',
         gpsLat: 48.8566,
         gpsLon: 2.3522,
+        gpsLabel: 'Paris',
         photoPath: '/tmp/photo.jpg',
       );
       final entry = Map<String, dynamic>.from(
@@ -74,6 +75,7 @@ void main() {
       );
       expect(entry['gpsLat'], 48.8566);
       expect(entry['gpsLon'], 2.3522);
+      expect(entry['gpsLabel'], 'Paris');
       expect(entry['photoPath'], '/tmp/photo.jpg');
     });
 
@@ -105,6 +107,7 @@ void main() {
           eventType: any(named: 'eventType'),
           gpsLat: any(named: 'gpsLat'),
           gpsLon: any(named: 'gpsLon'),
+          gpsLabel: any(named: 'gpsLabel'),
           photoUrl: any(named: 'photoUrl'),
           offlineTimestamp: any(named: 'offlineTimestamp'),
         ),
@@ -125,6 +128,7 @@ void main() {
           eventType: 'TRANSIT',
           gpsLat: any(named: 'gpsLat'),
           gpsLon: any(named: 'gpsLon'),
+          gpsLabel: any(named: 'gpsLabel'),
           photoUrl: any(named: 'photoUrl'),
           offlineTimestamp: any(named: 'offlineTimestamp'),
         ),
@@ -138,6 +142,7 @@ void main() {
           eventType: any(named: 'eventType'),
           gpsLat: any(named: 'gpsLat'),
           gpsLon: any(named: 'gpsLon'),
+          gpsLabel: any(named: 'gpsLabel'),
           photoUrl: any(named: 'photoUrl'),
           offlineTimestamp: any(named: 'offlineTimestamp'),
         ),
@@ -156,6 +161,7 @@ void main() {
           eventType: any(named: 'eventType'),
           gpsLat: any(named: 'gpsLat'),
           gpsLon: any(named: 'gpsLon'),
+          gpsLabel: any(named: 'gpsLabel'),
           photoUrl: any(named: 'photoUrl'),
           offlineTimestamp: any(named: 'offlineTimestamp'),
         ),
@@ -175,6 +181,7 @@ void main() {
           eventType: any(named: 'eventType'),
           gpsLat: any(named: 'gpsLat'),
           gpsLon: any(named: 'gpsLon'),
+          gpsLabel: any(named: 'gpsLabel'),
           photoUrl: any(named: 'photoUrl'),
           offlineTimestamp: any(named: 'offlineTimestamp'),
         ),

@@ -23,6 +23,9 @@ class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
     on<TrackingEventsRequested>(_onEventsRequested);
     on<TrackingConfirmCodeRequested>(_onConfirmCodeRequested);
     on<TrackingRefreshCodeRequested>(_onRefreshCodeRequested);
+    on<TrackingSetCodePublicVisibilityRequested>(
+      _onSetCodePublicVisibilityRequested,
+    );
     on<QrScanSubmitRequested>(_onScanSubmit);
     on<ConfirmDeliveryRequested>(_onConfirmDelivery);
     on<OfflineSyncRequested>(_onOfflineSync);
@@ -75,7 +78,13 @@ class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
     emit(TrackingConfirmCodeLoading());
     try {
       final result = await _repository.getConfirmationCode(event.bidId);
-      emit(TrackingConfirmCodeLoaded(result.code, expiresAt: result.expiresAt));
+      emit(
+        TrackingConfirmCodeLoaded(
+          result.code,
+          expiresAt: result.expiresAt,
+          publicPageVisible: result.publicPageVisible,
+        ),
+      );
     } catch (e) {
       emit(TrackingConfirmCodeError());
     }
@@ -88,9 +97,40 @@ class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
     emit(TrackingRefreshCodeLoading());
     try {
       final result = await _repository.refreshCode(event.bidId);
-      emit(TrackingConfirmCodeLoaded(result.code, expiresAt: result.expiresAt));
+      emit(
+        TrackingConfirmCodeLoaded(
+          result.code,
+          expiresAt: result.expiresAt,
+          publicPageVisible: result.publicPageVisible,
+        ),
+      );
     } catch (e) {
       if (kDebugMode) debugPrint('[TrackingBloc] refreshCode error: $e');
+      emit(TrackingRefreshCodeError(unwrapDioError(e)));
+    }
+  }
+
+  Future<void> _onSetCodePublicVisibilityRequested(
+    TrackingSetCodePublicVisibilityRequested event,
+    Emitter<TrackingState> emit,
+  ) async {
+    emit(TrackingConfirmCodePublicVisibilityLoading());
+    try {
+      final result = await _repository.setConfirmationCodePublicVisible(
+        event.bidId,
+        visible: event.visible,
+      );
+      emit(
+        TrackingConfirmCodeLoaded(
+          result.code,
+          expiresAt: result.expiresAt,
+          publicPageVisible: result.publicPageVisible,
+        ),
+      );
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[TrackingBloc] set public code visibility error: $e');
+      }
       emit(TrackingRefreshCodeError(unwrapDioError(e)));
     }
   }
@@ -110,6 +150,7 @@ class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
           eventType: event.eventType,
           gpsLat: event.gpsLat,
           gpsLon: event.gpsLon,
+          gpsLabel: event.gpsLabel,
           photoPath: event.photo?.path,
         );
         emit(QrScanQueued());
@@ -128,6 +169,7 @@ class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
         eventType: event.eventType,
         gpsLat: event.gpsLat,
         gpsLon: event.gpsLon,
+        gpsLabel: event.gpsLabel,
         photoUrl: photoKey,
       );
       emit(QrScanSuccess(result));

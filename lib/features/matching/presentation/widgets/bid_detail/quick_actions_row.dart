@@ -15,7 +15,7 @@ import 'package:share_plus/share_plus.dart';
 String trackingPublicUrl(String token) {
   const base = String.fromEnvironment(
     'TRACKING_PUBLIC_URL',
-    defaultValue: 'https://track.yadony.com',
+    defaultValue: 'https://yadony.com/tracking',
   );
   return '$base/$token';
 }
@@ -75,6 +75,12 @@ class QuickActionsRow extends StatelessWidget {
               context,
               bidId: bid.id,
               corridor: _corridor,
+              onShareTracking: hasToken
+                  ? () => shareTrackingLink(
+                      bid,
+                      sharePositionOrigin: sharePositionOriginFor(context),
+                    )
+                  : null,
             ),
           ),
         ),

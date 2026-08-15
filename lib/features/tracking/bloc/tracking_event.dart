@@ -28,6 +28,7 @@ class QrScanSubmitRequested extends TrackingEvent {
   final XFile? photo;
   final double? gpsLat;
   final double? gpsLon;
+  final String? gpsLabel;
 
   QrScanSubmitRequested({
     required this.bidId,
@@ -35,6 +36,7 @@ class QrScanSubmitRequested extends TrackingEvent {
     this.photo,
     this.gpsLat,
     this.gpsLon,
+    this.gpsLabel,
   });
 }
 
@@ -47,6 +49,13 @@ class ConfirmDeliveryRequested extends TrackingEvent {
 class TrackingRefreshCodeRequested extends TrackingEvent {
   final String bidId;
   TrackingRefreshCodeRequested(this.bidId);
+}
+
+class TrackingSetCodePublicVisibilityRequested extends TrackingEvent {
+  final String bidId;
+  final bool visible;
+
+  TrackingSetCodePublicVisibilityRequested(this.bidId, {required this.visible});
 }
 
 class OfflineSyncRequested extends TrackingEvent {}

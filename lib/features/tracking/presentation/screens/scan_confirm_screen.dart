@@ -30,6 +30,7 @@ class ScanConfirmScreen extends StatefulWidget {
     this.photoPath,
     this.gpsLat,
     this.gpsLon,
+    this.gpsLabel,
   });
 
   final String bidId;
@@ -38,6 +39,7 @@ class ScanConfirmScreen extends StatefulWidget {
   final String? photoPath;
   final double? gpsLat;
   final double? gpsLon;
+  final String? gpsLabel;
 
   @override
   State<ScanConfirmScreen> createState() => _ScanConfirmScreenState();
@@ -70,6 +72,7 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
           photo: photo,
           gpsLat: widget.gpsLat,
           gpsLon: widget.gpsLon,
+          gpsLabel: widget.gpsLabel,
         ),
       );
     }
@@ -81,6 +84,7 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
     final tt = Theme.of(context).textTheme;
     final etapeInfo = _etapeLabels[widget.etape];
     final bottomPad = MediaQuery.of(context).padding.bottom;
+    final locationLabel = _displayLocationLabel();
 
     return BlocConsumer<TrackingBloc, TrackingState>(
       listener: (context, state) {
@@ -191,8 +195,7 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
                                   ? etapeInfo.$1
                                   : widget.etape,
                             ),
-                            if (widget.gpsLat != null &&
-                                widget.gpsLon != null) ...[
+                            if (locationLabel != null) ...[
                               const SizedBox(height: DonySpacing.sm),
                               Container(
                                 padding: const EdgeInsets.symmetric(
@@ -215,7 +218,7 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
                                     ),
                                     const SizedBox(width: DonySpacing.xs),
                                     Text(
-                                      '${widget.gpsLat!.toStringAsFixed(4)}, ${widget.gpsLon!.toStringAsFixed(4)}',
+                                      locationLabel,
                                       style: tt.labelSmall?.copyWith(
                                         color: cs.primary,
                                         fontWeight: FontWeight.w600,
@@ -341,6 +344,15 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
         );
       },
     );
+  }
+
+  String? _displayLocationLabel() {
+    final label = widget.gpsLabel?.trim();
+    if (label != null && label.isNotEmpty) return label;
+    if (widget.gpsLat != null && widget.gpsLon != null) {
+      return 'Lieu GPS enregistré';
+    }
+    return null;
   }
 
   void _showSuccess(BuildContext context, String label) {

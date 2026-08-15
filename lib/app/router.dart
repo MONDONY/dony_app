@@ -461,6 +461,7 @@ final appRouter = GoRouter(
             photoPath: extra['photoPath'] as String?,
             gpsLat: extra['gpsLat'] as double?,
             gpsLon: extra['gpsLon'] as double?,
+            gpsLabel: extra['gpsLabel'] as String?,
             packageLabel: extra['packageLabel'] as String? ?? '',
           ),
         );

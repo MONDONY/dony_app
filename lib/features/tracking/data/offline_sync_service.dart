@@ -32,6 +32,7 @@ class OfflineSyncService {
     required String eventType,
     double? gpsLat,
     double? gpsLon,
+    String? gpsLabel,
     String? photoPath,
   }) async {
     final entry = <String, dynamic>{
@@ -39,6 +40,7 @@ class OfflineSyncService {
       'eventType': eventType,
       'gpsLat': ?gpsLat,
       'gpsLon': ?gpsLon,
+      'gpsLabel': ?gpsLabel,
       'photoPath': ?photoPath,
       'offlineTimestamp': DateTime.now().toUtc().toIso8601String(),
     };
@@ -71,6 +73,7 @@ class OfflineSyncService {
             eventType: entry['eventType'] as String,
             gpsLat: (entry['gpsLat'] as num?)?.toDouble(),
             gpsLon: (entry['gpsLon'] as num?)?.toDouble(),
+            gpsLabel: entry['gpsLabel'] as String?,
             photoUrl: photoKey,
             offlineTimestamp: DateTime.parse(
               entry['offlineTimestamp'] as String,

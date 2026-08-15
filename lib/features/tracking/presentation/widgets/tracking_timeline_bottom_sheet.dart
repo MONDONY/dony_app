@@ -16,6 +16,7 @@ void showTrackingTimelineSheet(
   BuildContext context, {
   required String bidId,
   required String corridor,
+  VoidCallback? onShareTracking,
 }) {
   DonyBottomSheet.show(
     context,
@@ -27,11 +28,13 @@ void showTrackingTimelineSheet(
     ),
     stickyBottom: BlocBuilder<TrackingBloc, TrackingState>(
       builder: (context, state) {
-        if (state is! TrackingEventsLoaded) return const SizedBox.shrink();
+        if (state is! TrackingEventsLoaded || onShareTracking == null) {
+          return const SizedBox.shrink();
+        }
         return DonyButton(
-          label: "J'ouvre la confirmation",
-          iconAsset: 'qr-code',
-          onPressed: () {},
+          label: 'Partager le suivi',
+          iconAsset: 'share-2',
+          onPressed: onShareTracking,
         );
       },
     ),
@@ -211,139 +214,146 @@ class _TimelineItem extends StatelessWidget {
     };
 
     return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Timeline indicator — all recorded events are completed
-          SizedBox(
-            width: 40,
-            child: Column(
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: stepColor,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const DonyIcon(
-                    'check',
-                    color: DonyColors.white,
-                    size: 16,
-                  ),
-                ),
-                if (!isLast)
-                  Expanded(
-                    child: Container(
-                      width: 2,
-                      color: cs.outlineVariant,
-                      margin: const EdgeInsets.symmetric(
-                        vertical: DonySpacing.xs,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Timeline indicator — all recorded events are completed
+              SizedBox(
+                width: 40,
+                child: Column(
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: stepColor,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const DonyIcon(
+                        'check',
+                        color: DonyColors.white,
+                        size: 16,
                       ),
                     ),
-                  ),
-              ],
-            ),
-          ),
-          const SizedBox(width: DonySpacing.md),
-
-          // Content card
-          Expanded(
-            child: Container(
-              margin: EdgeInsets.only(bottom: isLast ? 0 : DonySpacing.base),
-              padding: const EdgeInsets.all(DonySpacing.md),
-              decoration: BoxDecoration(
-                color: cs.surface,
-                borderRadius: BorderRadius.circular(DonyRadius.lg),
-                border: Border.all(color: cs.outline),
+                    if (!isLast)
+                      Expanded(
+                        child: Container(
+                          width: 2,
+                          color: cs.outlineVariant,
+                          margin: const EdgeInsets.symmetric(
+                            vertical: DonySpacing.xs,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    event.stepLabel,
-                    style: tt.titleSmall?.copyWith(color: cs.onSurface),
+              const SizedBox(width: DonySpacing.md),
+
+              // Content card
+              Expanded(
+                child: Container(
+                  margin: EdgeInsets.only(
+                    bottom: isLast ? 0 : DonySpacing.base,
                   ),
-                  const SizedBox(height: DonySpacing.xs),
-                  Text(
-                    DateFormat(
-                      'dd/MM/yyyy à HH:mm',
-                    ).format(event.scannedAt.toLocal()),
-                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                  padding: const EdgeInsets.all(DonySpacing.md),
+                  decoration: BoxDecoration(
+                    color: cs.surface,
+                    borderRadius: BorderRadius.circular(DonyRadius.lg),
+                    border: Border.all(color: cs.outline),
                   ),
-                  if (event.gpsLat != null && event.gpsLon != null) ...[
-                    const SizedBox(height: DonySpacing.xs),
-                    Row(
-                      children: [
-                        DonyIcon(
-                          'map-pin',
-                          size: 12,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        event.stepLabel,
+                        style: tt.titleSmall?.copyWith(color: cs.onSurface),
+                      ),
+                      const SizedBox(height: DonySpacing.xs),
+                      Text(
+                        DateFormat(
+                          'dd/MM/yyyy à HH:mm',
+                        ).format(event.scannedAt.toLocal()),
+                        style: tt.bodySmall?.copyWith(
                           color: cs.onSurfaceVariant,
                         ),
-                        const SizedBox(width: DonySpacing.xs),
-                        Text(
-                          '${event.gpsLat!.toStringAsFixed(4)}, ${event.gpsLon!.toStringAsFixed(4)}',
-                          style: tt.bodySmall?.copyWith(
-                            color: cs.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                  if (event.photoUrl != null) ...[
-                    const SizedBox(height: DonySpacing.sm),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(DonyRadius.sm),
-                      child: DonyImage(
-                        url: event.photoUrl!,
-                        height: 120,
-                        width: double.infinity,
-                        placeholder: (_) => Container(
-                          height: 120,
-                          color: cs.primaryContainer,
-                          child: Center(
-                            child: CircularProgressIndicator(
-                              color: cs.primary,
-                              strokeWidth: 2,
-                            ),
-                          ),
-                        ),
-                        errorWidget: (_) => Container(
-                          height: 60,
-                          color: cs.surfaceContainerHighest,
-                          child: Center(
-                            child: DonyIcon(
-                              'image-off',
+                      ),
+                      if (event.displayLocationLabel != null) ...[
+                        const SizedBox(height: DonySpacing.xs),
+                        Row(
+                          children: [
+                            DonyIcon(
+                              'map-pin',
+                              size: 12,
                               color: cs.onSurfaceVariant,
                             ),
-                          ),
+                            const SizedBox(width: DonySpacing.xs),
+                            Text(
+                              event.displayLocationLabel!,
+                              style: tt.bodySmall?.copyWith(
+                                color: cs.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                    ),
-                  ],
-                  if (event.offlineTimestamp != null) ...[
-                    const SizedBox(height: DonySpacing.sm),
-                    Row(
-                      children: [
-                        DonyIcon('wifi-off', size: 12, color: cs.warning),
-                        const SizedBox(width: DonySpacing.xs),
-                        Text(
-                          'Lecture hors-ligne synchronisée',
-                          style: tt.bodySmall?.copyWith(
-                            color: cs.warning,
-                            fontWeight: FontWeight.w500,
+                      ],
+                      if (event.photoUrl != null) ...[
+                        const SizedBox(height: DonySpacing.sm),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(DonyRadius.sm),
+                          child: DonyImage(
+                            url: event.photoUrl!,
+                            height: 120,
+                            width: double.infinity,
+                            placeholder: (_) => Container(
+                              height: 120,
+                              color: cs.primaryContainer,
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  color: cs.primary,
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                            ),
+                            errorWidget: (_) => Container(
+                              height: 60,
+                              color: cs.surfaceContainerHighest,
+                              child: Center(
+                                child: DonyIcon(
+                                  'image-off',
+                                  color: cs.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                       ],
-                    ),
-                  ],
-                ],
+                      if (event.offlineTimestamp != null) ...[
+                        const SizedBox(height: DonySpacing.sm),
+                        Row(
+                          children: [
+                            DonyIcon('wifi-off', size: 12, color: cs.warning),
+                            const SizedBox(width: DonySpacing.xs),
+                            Text(
+                              'Lecture hors-ligne synchronisée',
+                              style: tt.bodySmall?.copyWith(
+                                color: cs.warning,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
-        ],
-      ),
-    ).animate(delay: (index * 60).ms).fadeIn(duration: 250.ms).slideX(begin: 0.04);
+        )
+        .animate(delay: (index * 60).ms)
+        .fadeIn(duration: 250.ms)
+        .slideX(begin: 0.04);
   }
 }
 

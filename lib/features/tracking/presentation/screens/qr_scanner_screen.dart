@@ -14,6 +14,7 @@ import 'package:dony/features/tracking/data/tracking_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -665,6 +666,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
   String _eventType = 'DEPART';
   XFile? _photo;
   Position? _position;
+  String? _gpsLabel;
   bool _loadingLocation = false;
   bool _photoTooBig = false;
   final _codeController = TextEditingController();
@@ -706,9 +708,12 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
 
       if (picked != null && mounted) {
         if (pos != null) await _writeGpsExif(picked.path, pos);
+        final gpsLabel = pos != null ? await _resolveGpsLabel(pos) : null;
+        if (!mounted) return;
         setState(() {
           _photo = picked;
           _position = pos;
+          _gpsLabel = gpsLabel;
           _loadingLocation = false;
         });
       } else {
@@ -752,6 +757,38 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
     return '$deg/1,$min/1,$sec/100';
   }
 
+  Future<String?> _resolveGpsLabel(Position position) async {
+    try {
+      final places = await placemarkFromCoordinates(
+        position.latitude,
+        position.longitude,
+      );
+      if (places.isEmpty) return null;
+      return _formatPlacemark(places.first);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  String? _formatPlacemark(Placemark place) {
+    final parts = <String>[
+      ?_cleanPlacePart(place.street),
+      ?_cleanPlacePart(place.locality),
+      ?_cleanPlacePart(place.administrativeArea),
+      ?_cleanPlacePart(place.country),
+    ];
+    final unique = <String>[];
+    for (final part in parts) {
+      if (!unique.contains(part)) unique.add(part);
+    }
+    return unique.isEmpty ? null : unique.take(3).join(', ');
+  }
+
+  String? _cleanPlacePart(String? value) {
+    final trimmed = value?.trim();
+    return trimmed == null || trimmed.isEmpty ? null : trimmed;
+  }
+
   void _submit(BuildContext context) {
     if (_eventType == 'ARRIVEE') {
       final code = _codeController.text.trim();
@@ -767,6 +804,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
           photo: _photo,
           gpsLat: _position?.latitude,
           gpsLon: _position?.longitude,
+          gpsLabel: _gpsLabel,
         ),
       );
     }
@@ -1078,7 +1116,9 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                       DonyIcon('map-pin', color: cs.success, size: 14),
                       const SizedBox(width: DonySpacing.xs),
                       Text(
-                        'GPS : ${_position!.latitude.toStringAsFixed(4)}, ${_position!.longitude.toStringAsFixed(4)}',
+                        _gpsLabel?.trim().isNotEmpty == true
+                            ? _gpsLabel!.trim()
+                            : 'Lieu GPS enregistré',
                         style: tt.bodySmall?.copyWith(
                           color: cs.onSurfaceVariant,
                         ),

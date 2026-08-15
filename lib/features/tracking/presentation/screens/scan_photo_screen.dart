@@ -3,6 +3,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/media_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -33,6 +34,7 @@ class ScanPhotoScreen extends StatefulWidget {
 class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
   final ValueNotifier<bool> _loading = ValueNotifier(false);
   Position? _position;
+  String? _gpsLabel;
   late final Future<void> _gpsFuture;
 
   bool get _photoRequired =>
@@ -60,6 +62,7 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
             accuracy: LocationAccuracy.high,
           ),
         );
+        _gpsLabel = await _resolveGpsLabel(_position!);
       }
     } catch (_) {}
   }
@@ -103,8 +106,41 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
         'photoPath': photoPath,
         'gpsLat': _position?.latitude,
         'gpsLon': _position?.longitude,
+        'gpsLabel': _gpsLabel,
       },
     );
+  }
+
+  Future<String?> _resolveGpsLabel(Position position) async {
+    try {
+      final places = await placemarkFromCoordinates(
+        position.latitude,
+        position.longitude,
+      );
+      if (places.isEmpty) return null;
+      return _formatPlacemark(places.first);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  String? _formatPlacemark(Placemark place) {
+    final parts = <String>[
+      ?_cleanPlacePart(place.street),
+      ?_cleanPlacePart(place.locality),
+      ?_cleanPlacePart(place.administrativeArea),
+      ?_cleanPlacePart(place.country),
+    ];
+    final unique = <String>[];
+    for (final part in parts) {
+      if (!unique.contains(part)) unique.add(part);
+    }
+    return unique.isEmpty ? null : unique.take(3).join(', ');
+  }
+
+  String? _cleanPlacePart(String? value) {
+    final trimmed = value?.trim();
+    return trimmed == null || trimmed.isEmpty ? null : trimmed;
   }
 
   Future<void> _writeGpsExif(String path, Position pos) async {
