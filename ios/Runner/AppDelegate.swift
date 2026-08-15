@@ -15,6 +15,20 @@ import Sentry
       ?? (Bundle.main.object(forInfoDictionaryKey: "GMSApiKey") as? String)
       ?? ""
     GMSServices.provideAPIKey(apiKey)
+
+    // FirebaseAppDelegateProxyEnabled est à false : le swizzling de
+    // GULAppDelegateSwizzler, sur lequel repose l'inscription automatique de
+    // FLTFirebaseMessagingPlugin, ne s'applique pas. Personne ne demandait donc
+    // l'inscription APNs : `didRegisterForRemoteNotificationsWithDeviceToken`
+    // n'était jamais appelé, `getAPNSToken()` renvoyait null indéfiniment, et
+    // `getToken()` levait `apns-token-not-set` à chaque tentative. L'appareil
+    // n'était jamais enregistré comme cible de push.
+    //
+    // Appeler l'inscription ici n'affiche aucune demande d'autorisation : elle
+    // reste portée par `requestPermission()`. iOS délivre le jeton APNs dès que
+    // l'utilisateur a accordé les notifications.
+    application.registerForRemoteNotifications()
+
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
