@@ -246,7 +246,9 @@ void main() {
     testWidgets('ligne Thème affiche Auto quand themeMode system', (
       tester,
     ) async {
-      await tester.pumpWidget(_wrap(prefs: const UserPreferencesModel()));
+      await tester.pumpWidget(
+        _wrap(prefs: const UserPreferencesModel(themeMode: 'system')),
+      );
       await tester.pumpAndSettle();
       expect(find.text('Auto'), findsOneWidget);
     });

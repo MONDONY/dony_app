@@ -14,7 +14,9 @@ class UserPreferencesModel {
   final bool appLockBiometricEnabled;
 
   const UserPreferencesModel({
-    this.themeMode = 'system',
+    // Thème clair par défaut : le sombre reste accessible, mais il se choisit
+    // explicitement dans Réglages (« Système » y compris).
+    this.themeMode = 'light',
     this.languageCode = 'fr',
     this.favDestinations = const [],
     this.weightUnit = 'kg',
@@ -52,8 +54,7 @@ class UserPreferencesModel {
   );
 
   factory UserPreferencesModel.fromHive(Box box) => UserPreferencesModel(
-    themeMode:
-        box.get(HiveService.kThemeMode, defaultValue: 'system') as String,
+    themeMode: box.get(HiveService.kThemeMode, defaultValue: 'light') as String,
     languageCode:
         box.get(HiveService.kLanguageCode, defaultValue: 'fr') as String,
     favDestinations: List<String>.from(
