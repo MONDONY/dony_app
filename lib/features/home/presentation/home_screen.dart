@@ -1118,6 +1118,8 @@ class _MapSenderViewState extends State<_MapSenderView> {
                             MediaQuery.of(context).padding.bottom,
                             currentUserId: currentUserId,
                             isKycVerified: isKycVerified,
+                            tripsFailed: state is AnnouncementError,
+                            tripsLoading: state is AnnouncementLoading,
                           ),
                         );
                       },
@@ -1446,6 +1448,8 @@ class _MapSenderViewState extends State<_MapSenderView> {
     double bottomPad, {
     String? currentUserId,
     required bool isKycVerified,
+    required bool tripsFailed,
+    required bool tripsLoading,
   }) {
     final tt = Theme.of(ctx).textTheme;
     final cs = Theme.of(ctx).colorScheme;
@@ -1606,6 +1610,25 @@ class _MapSenderViewState extends State<_MapSenderView> {
                           ),
                         );
                       }
+                      // Backend injoignable : surtout ne pas afficher « aucun
+                      // résultat », qui laisserait croire que le corridor est
+                      // vide. On propose un réessai explicite.
+                      if (prState.status == SearchStatus.error) {
+                        return SliverFillRemaining(
+                          hasScrollBody: false,
+                          child: DonyEmptyState(
+                            type: DonyEmptyStateType.error,
+                            title: 'Connexion impossible',
+                            description:
+                                'Impossible de charger les demandes. Vérifie ta connexion puis réessaie.',
+                            mascotte: DonyMascotteType.erreurLegere,
+                            actionLabel: 'Réessayer',
+                            onAction: () => ctx
+                                .read<PackageRequestSearchBloc>()
+                                .add(const SearchRefresh()),
+                          ),
+                        );
+                      }
                       final visibleResults = _visibleRequests(prState.results);
                       if (visibleResults.isEmpty) {
                         final hasFilters = _activeFilterCount > 0;
@@ -1680,6 +1703,27 @@ class _MapSenderViewState extends State<_MapSenderView> {
                         ],
                       );
                     },
+                  )
+                else if (tripsLoading && count == 0)
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(
+                      child: CircularProgressIndicator(color: cs.primary),
+                    ),
+                  )
+                // Backend injoignable : « aucun voyageur » serait un mensonge.
+                else if (tripsFailed && count == 0)
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: DonyEmptyState(
+                      type: DonyEmptyStateType.error,
+                      title: 'Connexion impossible',
+                      description:
+                          'Impossible de charger les trajets. Vérifie ta connexion puis réessaie.',
+                      mascotte: DonyMascotteType.erreurLegere,
+                      actionLabel: 'Réessayer',
+                      onAction: _dispatchSearch,
+                    ),
                   )
                 else if (count == 0)
                   SliverFillRemaining(
