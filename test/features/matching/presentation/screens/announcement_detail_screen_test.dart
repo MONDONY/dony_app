@@ -33,8 +33,7 @@ class _MockAnalyticsService extends Mock implements AnalyticsService {}
 // ── Fixture builder ───────────────────────────────────────────────────────────
 
 AnnouncementModel _makeAnnouncement({
-  DateTime? handoverWindowStart,
-  DateTime? handoverWindowEnd,
+  DateTime? handoverDeadline,
   String status = 'ACTIVE',
   int bidsCount = 0,
   String currency = 'EUR',
@@ -51,8 +50,7 @@ AnnouncementModel _makeAnnouncement({
   bidsCount: bidsCount,
   createdAt: DateTime(2026, 6),
   updatedAt: DateTime(2026, 6),
-  handoverWindowStart: handoverWindowStart,
-  handoverWindowEnd: handoverWindowEnd,
+  handoverDeadline: handoverDeadline,
   currency: currency,
 );
 
@@ -165,10 +163,9 @@ void main() {
 
   // ── Fenêtre de remise — présente ──────────────────────────────────────────
 
-  testWidgets('affiche la fenêtre de remise si présente', (tester) async {
+  testWidgets('affiche la date limite de dépôt si présente', (tester) async {
     final announcement = _makeAnnouncement(
-      handoverWindowStart: DateTime(2026, 6, 14, 16),
-      handoverWindowEnd: DateTime(2026, 6, 14, 18),
+      handoverDeadline: DateTime(2026, 6, 14, 18),
     );
 
     await _pump(
@@ -179,11 +176,12 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Fenêtre de remise'), findsOneWidget);
-    // L'icône horaire est désormais un DonyIcon SVG Lucide ('clock').
+    expect(find.text('Dépôt des colis'), findsOneWidget);
+    // L'écran porte déjà d'autres icônes calendrier (date de départ) : on
+    // vérifie seulement que la section en affiche une.
     expect(
-      find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'clock'),
-      findsOneWidget,
+      find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'calendar'),
+      findsAtLeastNWidgets(1),
     );
   });
 
@@ -222,7 +220,7 @@ void main() {
     tester,
   ) async {
     final announcement = _makeAnnouncement(
-      handoverWindowStart: DateTime(2026, 6, 14, 16),
+      handoverDeadline: DateTime(2026, 6, 14, 16),
     );
 
     await _pump(
@@ -236,14 +234,12 @@ void main() {
     expect(find.text('Fenêtre de remise'), findsNothing);
   });
 
-  testWidgets('la fenêtre affiche les horaires formatés correctement', (
+  testWidgets('la date limite de dépôt est affichée et formatée', (
     tester,
   ) async {
-    final start = DateTime(2026, 6, 14, 16).toUtc();
     final end = DateTime(2026, 6, 14, 18).toUtc();
     final announcement = _makeAnnouncement(
-      handoverWindowStart: start,
-      handoverWindowEnd: end,
+      handoverDeadline: end,
     );
 
     await _pump(
@@ -254,8 +250,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Fenêtre de remise'), findsOneWidget);
-    // Verify the → separator appears in the time range text
-    expect(find.textContaining('→'), findsOneWidget);
+    expect(find.text('Dépôt des colis'), findsOneWidget);
+    // Une seule date, préfixée : plus de plage « début → fin ».
+    expect(find.textContaining('Jusqu\'au'), findsOneWidget);
+    expect(find.textContaining('→'), findsNothing);
   });
 }

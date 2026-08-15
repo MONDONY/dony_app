@@ -30,8 +30,7 @@ class AnnouncementRemoteDatasource {
     List<String> acceptedPaymentMethods = const ['STRIPE'],
     String? capacityUnit,
     String pricingMode = 'KG',
-    required DateTime handoverWindowStart,
-    required DateTime handoverWindowEnd,
+    required DateTime handoverDeadline,
     bool saveAsDraft = false,
   }) async {
     final response = await _apiClient.dio.post(
@@ -56,8 +55,7 @@ class AnnouncementRemoteDatasource {
         'acceptedPaymentMethods': acceptedPaymentMethods,
         'capacityUnit': ?capacityUnit,
         'pricingMode': pricingMode,
-        'handoverWindowStart': handoverWindowStart.toUtc().toIso8601String(),
-        'handoverWindowEnd': handoverWindowEnd.toUtc().toIso8601String(),
+        'handoverDeadline': handoverDeadline.toUtc().toIso8601String(),
         if (saveAsDraft) 'saveAsDraft': true,
       },
     );
@@ -329,8 +327,7 @@ class AnnouncementRemoteDatasource {
     List<String> acceptedPaymentMethods = const ['STRIPE'],
     String? capacityUnit,
     String pricingMode = 'KG',
-    required DateTime handoverWindowStart,
-    required DateTime handoverWindowEnd,
+    required DateTime handoverDeadline,
   }) async {
     final response = await _apiClient.dio.put(
       '/announcements/$id',
@@ -354,8 +351,7 @@ class AnnouncementRemoteDatasource {
         'acceptedPaymentMethods': acceptedPaymentMethods,
         'capacityUnit': ?capacityUnit,
         'pricingMode': pricingMode,
-        'handoverWindowStart': handoverWindowStart.toUtc().toIso8601String(),
-        'handoverWindowEnd': handoverWindowEnd.toUtc().toIso8601String(),
+        'handoverDeadline': handoverDeadline.toUtc().toIso8601String(),
       },
     );
 

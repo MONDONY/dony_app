@@ -397,8 +397,7 @@ AnnouncementModel _tripMakeFullAnnouncement() => AnnouncementModel(
   bidsCount: 0,
   createdAt: DateTime(2026),
   updatedAt: DateTime(2026),
-  handoverWindowStart: DateTime(2026, 8, 1, 16),
-  handoverWindowEnd: DateTime(2026, 8, 1, 18),
+  handoverDeadline: DateTime(2026, 8, 1, 18),
   pickupAddress: const AddressData(
     label: 'Tour Eiffel',
     lat: 48.858,

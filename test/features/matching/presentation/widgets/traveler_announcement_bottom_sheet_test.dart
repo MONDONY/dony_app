@@ -69,8 +69,7 @@ AnnouncementModel _buildAnnouncement({
   int? totalTrips,
   double? rating,
   String displayName = 'Ibrahima Diallo',
-  DateTime? handoverStart,
-  DateTime? handoverEnd,
+  DateTime? handoverDeadline,
   bool acceptsUnverified = false,
   String currency = 'EUR',
 }) {
@@ -96,8 +95,7 @@ AnnouncementModel _buildAnnouncement({
     ),
     createdAt: now,
     updatedAt: now,
-    handoverWindowStart: handoverStart,
-    handoverWindowEnd: handoverEnd,
+    handoverDeadline: handoverDeadline,
   );
 }
 
@@ -180,20 +178,19 @@ void main() {
 
   // ── Tests existants (comportement inchangé) ────────────────────────────────
 
-  testWidgets('affiche la fenêtre de remise quand elle est définie', (
+  testWidgets('affiche la date limite de dépôt quand elle est définie', (
     tester,
   ) async {
     final now = DateTime.now();
     final a = _buildAnnouncement(
       kycVerified: true,
-      handoverStart: DateTime(now.year, now.month + 1, 14, 16),
-      handoverEnd: DateTime(now.year, now.month + 1, 14, 18),
+      handoverDeadline: DateTime(now.year, now.month + 1, 14, 18),
     );
     await tester.pumpWidget(_harness(announcement: a));
     await tester.tap(find.text('Ouvrir'));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('Remise :'), findsOneWidget);
+    expect(find.textContaining('Dépôt des colis'), findsOneWidget);
   });
 
   testWidgets('masque la fenêtre de remise quand absente (annonce legacy)', (

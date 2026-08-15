@@ -23,8 +23,7 @@ class AnnouncementCreateRequested extends AnnouncementEvent {
   final List<String> acceptedPaymentMethods;
   final String? capacityUnit;
   final String pricingMode;
-  final DateTime handoverWindowStart;
-  final DateTime handoverWindowEnd;
+  final DateTime handoverDeadline;
   final bool saveAsDraft;
 
   AnnouncementCreateRequested({
@@ -46,8 +45,7 @@ class AnnouncementCreateRequested extends AnnouncementEvent {
     this.acceptedPaymentMethods = const ['STRIPE'],
     this.capacityUnit,
     this.pricingMode = 'KG',
-    required this.handoverWindowStart,
-    required this.handoverWindowEnd,
+    required this.handoverDeadline,
     this.saveAsDraft = false,
   });
 }
@@ -154,8 +152,7 @@ class AnnouncementUpdateRequested extends AnnouncementEvent {
   final List<String> acceptedPaymentMethods;
   final String? capacityUnit;
   final String pricingMode;
-  final DateTime handoverWindowStart;
-  final DateTime handoverWindowEnd;
+  final DateTime handoverDeadline;
 
   AnnouncementUpdateRequested({
     required this.id,
@@ -177,7 +174,6 @@ class AnnouncementUpdateRequested extends AnnouncementEvent {
     this.acceptedPaymentMethods = const ['STRIPE'],
     this.capacityUnit,
     this.pricingMode = 'KG',
-    required this.handoverWindowStart,
-    required this.handoverWindowEnd,
+    required this.handoverDeadline,
   });
 }

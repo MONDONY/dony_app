@@ -170,10 +170,10 @@ class AnnouncementModel {
   /// Le surplus a déjà été ouvert au public (action définitive, non répétable).
   final bool surplusPublished;
 
-  /// Fenêtre de remise du trajet (créneau pendant lequel l'expéditeur remet le
-  /// colis). Définie à la création ; null pour les anciennes annonces.
-  final DateTime? handoverWindowStart;
-  final DateTime? handoverWindowEnd;
+  /// Date limite de dépôt : jusqu'à quand les expéditeurs peuvent remettre
+  /// leurs colis au voyageur. Définie à la création ; null pour les anciennes
+  /// annonces.
+  final DateTime? handoverDeadline;
 
   /// Indique si ce trajet est dans les favoris de l'utilisateur courant.
   /// Fourni par le backend sur les endpoints de feed ; `false` par défaut.
@@ -226,8 +226,7 @@ class AnnouncementModel {
     this.reservedKg = 0,
     this.surplusEligible = false,
     this.surplusPublished = false,
-    this.handoverWindowStart,
-    this.handoverWindowEnd,
+    this.handoverDeadline,
     this.isFavorite = false,
     this.urgent,
     this.currency = 'EUR',

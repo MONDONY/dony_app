@@ -74,8 +74,8 @@ class BidModel {
   final String status;
   final String? rejectionReason;
   final String? handoverLocation;
-  final DateTime? handoverWindowStart;
-  final DateTime? handoverWindowEnd;
+  /// Date limite de dépôt héritée du trajet à l'acceptation.
+  final DateTime? handoverDeadline;
   final bool voyageurConfirmed;
   final DateTime? disclaimerSignedAt;
   final DateTime createdAt;
@@ -195,8 +195,7 @@ class BidModel {
     required this.status,
     this.rejectionReason,
     this.handoverLocation,
-    this.handoverWindowStart,
-    this.handoverWindowEnd,
+    this.handoverDeadline,
     this.voyageurConfirmed = false,
     this.disclaimerSignedAt,
     required this.createdAt,

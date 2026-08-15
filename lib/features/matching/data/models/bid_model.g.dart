@@ -24,12 +24,9 @@ BidModel _$BidModelFromJson(Map<String, dynamic> json) => BidModel(
   status: json['status'] as String,
   rejectionReason: json['rejectionReason'] as String?,
   handoverLocation: json['handoverLocation'] as String?,
-  handoverWindowStart: json['handoverWindowStart'] == null
+  handoverDeadline: json['handoverDeadline'] == null
       ? null
-      : DateTime.parse(json['handoverWindowStart'] as String),
-  handoverWindowEnd: json['handoverWindowEnd'] == null
-      ? null
-      : DateTime.parse(json['handoverWindowEnd'] as String),
+      : DateTime.parse(json['handoverDeadline'] as String),
   voyageurConfirmed: json['voyageurConfirmed'] as bool? ?? false,
   disclaimerSignedAt: json['disclaimerSignedAt'] == null
       ? null
@@ -130,8 +127,7 @@ Map<String, dynamic> _$BidModelToJson(BidModel instance) => <String, dynamic>{
   'status': instance.status,
   'rejectionReason': instance.rejectionReason,
   'handoverLocation': instance.handoverLocation,
-  'handoverWindowStart': instance.handoverWindowStart?.toIso8601String(),
-  'handoverWindowEnd': instance.handoverWindowEnd?.toIso8601String(),
+  'handoverDeadline': instance.handoverDeadline?.toIso8601String(),
   'voyageurConfirmed': instance.voyageurConfirmed,
   'disclaimerSignedAt': instance.disclaimerSignedAt?.toIso8601String(),
   'createdAt': instance.createdAt.toIso8601String(),

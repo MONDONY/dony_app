@@ -30,7 +30,7 @@ BidModel _bid({
   weightKg: 5,
   totalAmountEur: total,
   voyageurConfirmed: voyageurConfirmed,
-  handoverWindowEnd: windowEnd,
+  handoverDeadline: windowEnd,
   recipientName: recipientName,
   cancellationNoShowStatus: cancellationNoShowStatus,
   createdAt: DateTime(2026, 5),
@@ -87,7 +87,7 @@ void main() {
     expect(find.textContaining('Livraison confirmée'), findsOneWidget);
   });
 
-  testWidgets('fenêtre dépassée → bouton signaler absence expéditeur', (
+  testWidgets('date limite dépassée → bouton signaler absence expéditeur', (
     tester,
   ) async {
     await _pump(
@@ -97,7 +97,7 @@ void main() {
         windowEnd: DateTime.now().subtract(const Duration(hours: 1)),
       ),
     );
-    expect(find.textContaining('Fenêtre de remise dépassée'), findsOneWidget);
+    expect(find.textContaining('Date limite de dépôt dépassée'), findsOneWidget);
     expect(
       find.textContaining("Signaler l'absence de l'expéditeur"),
       findsOneWidget,
@@ -120,7 +120,7 @@ void main() {
         find.textContaining("Signaler l'absence de l'expéditeur"),
         findsNothing,
       );
-      expect(find.textContaining('Fenêtre de remise dépassée'), findsNothing);
+      expect(find.textContaining('Date limite de dépôt dépassée'), findsNothing);
     },
   );
 
@@ -208,8 +208,7 @@ void main() {
       senderId: 's1',
       status: 'ACCEPTED',
       weightKg: 5,
-      handoverWindowStart: futureStart,
-      handoverWindowEnd: futureStart.add(const Duration(hours: 1)),
+      handoverDeadline: futureStart.add(const Duration(hours: 1)),
       handoverLocation: 'CDG Terminal 2',
       createdAt: DateTime(2026, 5),
       updatedAt: DateTime(2026, 5),
@@ -281,7 +280,7 @@ void main() {
       senderId: 's1',
       status: 'ACCEPTED',
       weightKg: 5,
-      handoverWindowStart: futureStart,
+      handoverDeadline: futureStart,
       // no windowEnd
       createdAt: DateTime(2026, 5),
       updatedAt: DateTime(2026, 5),
@@ -301,7 +300,7 @@ void main() {
       status: 'ACCEPTED',
       weightKg: 5,
       // no windowStart, only end (future so not expired)
-      handoverWindowEnd: futureEnd,
+      handoverDeadline: futureEnd,
       createdAt: DateTime(2026, 5),
       updatedAt: DateTime(2026, 5),
     );
@@ -319,8 +318,7 @@ void main() {
       senderId: 's1',
       status: 'ACCEPTED',
       weightKg: 5,
-      handoverWindowStart: futureStart,
-      handoverWindowEnd: futureStart.add(const Duration(days: 1)),
+      handoverDeadline: futureStart.add(const Duration(days: 1)),
       createdAt: DateTime(2026, 5),
       updatedAt: DateTime(2026, 5),
     );
@@ -328,10 +326,9 @@ void main() {
     expect(find.textContaining('Récupérez le colis'), findsOneWidget);
   });
 
-  testWidgets('fenêtre dépassée avec fenêtre start → subtitle avec date', (
+  testWidgets('date limite dépassée → subtitle avec la date', (
     tester,
   ) async {
-    final pastStart = DateTime.now().subtract(const Duration(hours: 3));
     final pastEnd = DateTime.now().subtract(const Duration(hours: 1));
     final bid = BidModel(
       id: 'b1',
@@ -339,8 +336,7 @@ void main() {
       senderId: 's1',
       status: 'ACCEPTED',
       weightKg: 5,
-      handoverWindowStart: pastStart,
-      handoverWindowEnd: pastEnd,
+      handoverDeadline: pastEnd,
       createdAt: DateTime(2026, 5),
       updatedAt: DateTime(2026, 5),
     );
@@ -358,7 +354,7 @@ void main() {
       ),
     );
     await tester.pump(const Duration(milliseconds: 300));
-    expect(find.textContaining('Fenêtre de remise dépassée'), findsOneWidget);
+    expect(find.textContaining('Date limite de dépôt dépassée'), findsOneWidget);
   });
 
   testWidgets('tap Signaler absence → DonyBottomSheet ouvert', (tester) async {
@@ -369,7 +365,7 @@ void main() {
       senderId: 's1',
       status: 'ACCEPTED',
       weightKg: 5,
-      handoverWindowEnd: pastEnd,
+      handoverDeadline: pastEnd,
       createdAt: DateTime(2026, 5),
       updatedAt: DateTime(2026, 5),
     );
@@ -527,7 +523,7 @@ void main() {
       senderId: 's1',
       status: 'ACCEPTED',
       weightKg: 5,
-      handoverWindowEnd: pastEnd,
+      handoverDeadline: pastEnd,
       createdAt: DateTime(2026, 5),
       updatedAt: DateTime(2026, 5),
     );

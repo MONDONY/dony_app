@@ -38,9 +38,9 @@ class TravelerStickyBar extends StatelessWidget {
         if (bid.voyageurConfirmed) {
           return _TravelerAction.scan;
         }
-        final end = bid.handoverWindowEnd;
-        // Window has expired and traveler hasn't confirmed → hero handles it
-        if (end != null && now.isAfter(end)) {
+        final deadline = bid.handoverDeadline;
+        // Date limite dépassée sans confirmation du voyageur → le hero prend le relais
+        if (deadline != null && now.isAfter(deadline)) {
           return null;
         }
         return _TravelerAction.confirmPresence;

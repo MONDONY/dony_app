@@ -86,8 +86,7 @@ void main() {
           acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
           capacityUnit: any(named: 'capacityUnit'),
           pricingMode: any(named: 'pricingMode'),
-          handoverWindowStart: any(named: 'handoverWindowStart'),
-          handoverWindowEnd: any(named: 'handoverWindowEnd'),
+          handoverDeadline: any(named: 'handoverDeadline'),
         ),
       ).thenAnswer((_) async => fakeAnnouncement());
 
@@ -102,8 +101,7 @@ void main() {
           availableKg: 10.0,
           pricePerKg: 15.0,
           transportMode: TransportMode.plane,
-          handoverWindowStart: DateTime(2026, 6, 14, 16),
-          handoverWindowEnd: DateTime(2026, 6, 14, 18),
+          handoverDeadline: DateTime(2026, 6, 14, 18),
         ),
       );
       await bloc.stream.firstWhere((s) => s is AnnouncementCreated);
@@ -167,8 +165,7 @@ void main() {
         acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
         capacityUnit: any(named: 'capacityUnit'),
         pricingMode: any(named: 'pricingMode'),
-        handoverWindowStart: any(named: 'handoverWindowStart'),
-        handoverWindowEnd: any(named: 'handoverWindowEnd'),
+        handoverDeadline: any(named: 'handoverDeadline'),
       ),
     ).thenAnswer((_) async => fakeAnnouncement());
 
@@ -183,8 +180,7 @@ void main() {
         availableKg: 10.0,
         pricePerKg: 15.0,
         transportMode: TransportMode.plane,
-        handoverWindowStart: DateTime(2026, 6, 14, 16),
-        handoverWindowEnd: DateTime(2026, 6, 14, 18),
+        handoverDeadline: DateTime(2026, 6, 14, 18),
       ),
     );
     await bloc.stream.firstWhere((s) => s is AnnouncementCreated);

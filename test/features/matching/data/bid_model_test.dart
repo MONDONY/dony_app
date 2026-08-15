@@ -15,8 +15,7 @@ final _fullJson = {
   'status': 'ACCEPTED',
   'rejectionReason': null,
   'handoverLocation': 'Gare du Nord',
-  'handoverWindowStart': '2024-06-01T10:00:00.000Z',
-  'handoverWindowEnd': '2024-06-01T12:00:00.000Z',
+  'handoverDeadline': '2024-06-01T12:00:00.000Z',
   'voyageurConfirmed': true,
   'disclaimerSignedAt': '2024-05-15T08:00:00.000Z',
   'createdAt': '2024-05-01T00:00:00.000Z',
@@ -62,8 +61,7 @@ void main() {
       expect(model.recipientPhone, '+22177000000');
       expect(model.status, 'ACCEPTED');
       expect(model.handoverLocation, 'Gare du Nord');
-      expect(model.handoverWindowStart, isNotNull);
-      expect(model.handoverWindowEnd, isNotNull);
+      expect(model.handoverDeadline, isNotNull);
       expect(model.voyageurConfirmed, isTrue);
       expect(model.disclaimerSignedAt, isNotNull);
       expect(model.departureCity, 'Paris');
@@ -89,8 +87,7 @@ void main() {
       expect(model.recipientName, isNull);
       expect(model.recipientPhone, isNull);
       expect(model.handoverLocation, isNull);
-      expect(model.handoverWindowStart, isNull);
-      expect(model.handoverWindowEnd, isNull);
+      expect(model.handoverDeadline, isNull);
       expect(model.voyageurConfirmed, isFalse);
       expect(model.disclaimerSignedAt, isNull);
       expect(model.departureCity, isNull);
@@ -147,7 +144,7 @@ void main() {
       expect(json['id'], 'bid-001');
       expect(json['weightKg'], 5.0);
       expect(json['voyageurConfirmed'], isTrue);
-      expect(json['handoverWindowStart'], isNotNull);
+      expect(json['handoverDeadline'], isNotNull);
       expect(json['disclaimerSignedAt'], isNotNull);
       expect(json['departureDate'], isNotNull);
     });
@@ -156,8 +153,7 @@ void main() {
       final model = BidModel.fromJson(_minimalJson);
       final json = model.toJson();
       expect(json['senderName'], isNull);
-      expect(json['handoverWindowStart'], isNull);
-      expect(json['handoverWindowEnd'], isNull);
+      expect(json['handoverDeadline'], isNull);
       expect(json['disclaimerSignedAt'], isNull);
       expect(json['departureDate'], isNull);
     });
