@@ -23,12 +23,13 @@ class _MockConvBloc
 class _MockCancelBloc extends MockBloc<CancellationEvent, CancellationState>
     implements CancellationBloc {}
 
-BidModel _bid(String status) => BidModel(
+BidModel _bid(String status, {String? trackingToken}) => BidModel(
   id: 'b1',
   announcementId: 'a1',
   senderId: 's1',
   status: status,
   weightKg: 5,
+  trackingToken: trackingToken,
   totalAmountEur: 48,
   senderName: 'Mariama D.',
   createdAt: DateTime(2026, 5),
@@ -71,5 +72,25 @@ void main() {
     await _pump(tester, _bid('PENDING'));
     expect(find.byType(ExpediteurContactCard), findsNothing);
     expect(find.byType(TravelerGainCard), findsOneWidget);
+  });
+
+  testWidgets('trackingToken présent → pas de lien ni action suivi voyageur', (
+    tester,
+  ) async {
+    await _pump(tester, _bid('ACCEPTED', trackingToken: 'public-token'));
+
+    expect(find.text('Suivi du colis'), findsNothing);
+    expect(find.text('Partager le suivi'), findsNothing);
+
+    await tester.scrollUntilVisible(
+      find.text('Plus de détails'),
+      300,
+      scrollable: find.byType(Scrollable),
+    );
+    await tester.tap(find.text('Plus de détails'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('LIEN DE SUIVI'), findsNothing);
+    expect(find.textContaining('public-token'), findsNothing);
   });
 }

@@ -22,7 +22,7 @@ const _kRemisStatuses = <String>{
 /// Accordéon « Plus de détails » — contient 4 sections :
 ///   1. FENÊTRE DE REMISE
 ///   2. TRAJET
-///   3. LIEN DE SUIVI (si trackingToken != null)
+///   3. LIEN DE SUIVI (si autorisé et trackingToken != null)
 ///   4. RESPONSABILITÉ LÉGALE
 ///
 /// NOTE : ce widget est un [StatefulWidget] pour gérer l'état UI `_open`
@@ -30,8 +30,13 @@ const _kRemisStatuses = <String>{
 /// fermeture de l'accordéon — aucun état métier.
 class DetailsAccordion extends StatefulWidget {
   final BidModel bid;
+  final bool showTrackingLink;
 
-  const DetailsAccordion({super.key, required this.bid});
+  const DetailsAccordion({
+    super.key,
+    required this.bid,
+    this.showTrackingLink = true,
+  });
 
   @override
   State<DetailsAccordion> createState() => _DetailsAccordionState();
@@ -183,7 +188,8 @@ class _DetailsAccordionState extends State<DetailsAccordion> {
                           ),
                         ],
                         // Section 3 — LIEN DE SUIVI (conditionnel)
-                        if (bid.trackingToken != null) ...[
+                        if (widget.showTrackingLink &&
+                            bid.trackingToken != null) ...[
                           const SizedBox(height: DonySpacing.md),
                           Divider(color: cs.outline, height: 1),
                           const SizedBox(height: DonySpacing.md),

@@ -479,7 +479,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
                       DonyFeedbackButton(
                         repaintBoundaryKey: _screenBoundaryKey,
                       ),
-                      if (_bid.trackingToken != null)
+                      if (isSender && _bid.trackingToken != null)
                         IconButton(
                           icon: DonyIcon('share-2', color: cs.onSurface),
                           tooltip: 'Partager le suivi',

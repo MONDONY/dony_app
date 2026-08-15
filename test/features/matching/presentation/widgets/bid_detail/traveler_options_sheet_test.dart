@@ -89,12 +89,12 @@ void main() {
   });
 
   testWidgets(
-    'ACCEPTED → contacter / détails / partager / signaler / annuler',
+    'ACCEPTED → contacter / détails / signaler / annuler sans partage suivi',
     (tester) async {
       await _open(tester, _bid());
       expect(find.text("Contacter l'expéditeur"), findsOneWidget);
       expect(find.text('Détails du colis'), findsOneWidget);
-      expect(find.text('Partager le suivi'), findsOneWidget);
+      expect(find.text('Partager le suivi'), findsNothing);
       expect(find.text("Signaler l'expéditeur"), findsOneWidget);
       expect(find.text('Annuler ce transport'), findsOneWidget);
       expect(find.text('Supprimer cette demande'), findsNothing);
@@ -258,14 +258,11 @@ void main() {
     expect(find.text('Détails du colis'), findsWidgets);
   });
 
-  testWidgets('tap Partager le suivi → shareTrackingLink appelé (sans exception)', (
+  testWidgets('avec trackingToken → le voyageur ne voit pas le partage suivi', (
     tester,
   ) async {
     await _open(tester, _bid(token: 'abc123'));
-    // Tap the share button — it calls shareTrackingLink which may do nothing in test env
-    await tester.tap(find.text('Partager le suivi'));
-    await tester.pumpAndSettle();
-    // Just verify no crash; the bottom sheet closes (ACCEPTED tile is gone from sheet)
+    expect(find.text('Partager le suivi'), findsNothing);
   });
 
   testWidgets('tap Annuler ce transport → dialog affiché', (tester) async {
