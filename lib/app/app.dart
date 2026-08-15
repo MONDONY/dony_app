@@ -50,6 +50,7 @@ class _DonyAppState extends State<DonyApp> {
   StreamSubscription<String>? _navSub;
   StreamSubscription<User?>? _authSub;
   StreamSubscription<Uri>? _deepLinkSub;
+  AppLifecycleListener? _lifecycleListener;
   final _appLinks = AppLinks();
 
   // go() est nécessaire pour activer le bon onglet du shell principal.
@@ -74,6 +75,11 @@ class _DonyAppState extends State<DonyApp> {
         getIt<NotificationService>().uploadCurrentToken();
       }
     });
+    _lifecycleListener = AppLifecycleListener(
+      onResume: () {
+        unawaited(getIt<NotificationService>().onAppResumed());
+      },
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) => _initDeepLinks());
   }
 
@@ -147,6 +153,7 @@ class _DonyAppState extends State<DonyApp> {
     _navSub?.cancel();
     _authSub?.cancel();
     _deepLinkSub?.cancel();
+    _lifecycleListener?.dispose();
     super.dispose();
   }
 

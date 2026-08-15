@@ -51,6 +51,16 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
     'CONFIRMATION_CODE_READY' when _isUuid(bidId) => '/bids/$bidId',
     'DELIVERY_NOSHOW_REPORTED' when _isUuid(bidId) => '/bids/$bidId',
     'MM_PAYMENT_PENDING' when _isUuid(bidId) => '/bids/$bidId',
+    'HANDOVER_REMINDER_H2' when _isUuid(bidId) => '/bids/$bidId',
+    'MOBILE_MONEY_PAYMENT_CONFIRMED' when _isUuid(bidId) => '/bids/$bidId',
+    'PARCEL_RETURNED' when _isUuid(bidId) => '/bids/$bidId',
+    'RETURN_DEADLINE_WARNING' when _isUuid(bidId) => '/bids/$bidId',
+    'RETURN_DEADLINE_EXPIRED' when _isUuid(bidId) => '/bids/$bidId',
+
+    'KYC_VERIFIED' => '/kyc/status',
+    'KYC_ACTION_REQUIRED' => '/kyc/verify',
+    'DISPUTE_UPDATED' => '/disputes',
+    'DISPUTE_RESOLVED' => '/disputes',
 
     // Offre refusée → alternatives rematch si le back en a trouvé
     'BID_REJECTED' when _isUuid(cancellationId) =>

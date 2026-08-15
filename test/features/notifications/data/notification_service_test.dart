@@ -1,8 +1,13 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/core/services/device_id_service.dart';
+import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/features/notifications/data/notification_repository.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -14,6 +19,19 @@ class MockNotificationRepository extends Mock
 class MockDeviceIdService extends Mock implements DeviceIdService {}
 
 class MockDio extends Mock implements Dio {}
+
+class _RecordingErrorSink implements ErrorReportingSink {
+  final contexts = <Map<String, Object>>[];
+
+  @override
+  Future<void> capture(
+    Object error, {
+    StackTrace? stackTrace,
+    required Map<String, Object> context,
+  }) async {
+    contexts.add(context);
+  }
+}
 
 void main() {
   late MockApiClient apiClient;
@@ -75,6 +93,130 @@ void main() {
 
       await expectLater(service.testUploadToken('test-fcm-token'), completes);
     });
+
+    test('coalesces concurrent uploads for the same device', () async {
+      final response = Completer<Response<dynamic>>();
+      when(
+        () => mockDio.put('/auth/me/fcm-token', data: any(named: 'data')),
+      ).thenAnswer((_) => response.future);
+
+      final first = service.testUploadToken('same-token');
+      final second = service.testUploadToken('same-token');
+      await Future<void>.delayed(Duration.zero);
+
+      verify(
+        () => mockDio.put('/auth/me/fcm-token', data: any(named: 'data')),
+      ).called(1);
+      response.complete(
+        Response(
+          requestOptions: RequestOptions(path: '/auth/me/fcm-token'),
+          statusCode: 204,
+        ),
+      );
+      await Future.wait([first, second]);
+    });
+
+    test('does not report exhausted connection failures to Sentry', () async {
+      final sink = _RecordingErrorSink();
+      service = NotificationService(
+        apiClient,
+        repository,
+        deviceIdService,
+        ErrorReportingService(sink),
+      );
+      when(
+        () => mockDio.put('/auth/me/fcm-token', data: any(named: 'data')),
+      ).thenThrow(
+        DioException(
+          type: DioExceptionType.connectionError,
+          requestOptions: RequestOptions(path: '/auth/me/fcm-token'),
+          error: const SocketException('offline'),
+        ),
+      );
+
+      await service.testUploadToken('test-fcm-token');
+      await Future<void>.delayed(Duration.zero);
+
+      expect(sink.contexts, isEmpty);
+    });
+  });
+
+  group('NotificationService.retryOperation', () {
+    test('retries transient failures until the operation succeeds', () async {
+      var attempts = 0;
+
+      await NotificationService.retryOperation(() async {
+        attempts++;
+        if (attempts < 3) {
+          throw DioException(
+            type: DioExceptionType.connectionError,
+            requestOptions: RequestOptions(),
+          );
+        }
+      }, retryDelay: Duration.zero);
+
+      expect(attempts, 3);
+    });
+
+    test('does not retry a permanent client response', () async {
+      var attempts = 0;
+      final error = DioException(
+        type: DioExceptionType.badResponse,
+        requestOptions: RequestOptions(path: '/auth/me/fcm-token'),
+        response: Response(
+          requestOptions: RequestOptions(path: '/auth/me/fcm-token'),
+          statusCode: 422,
+        ),
+      );
+
+      await expectLater(
+        NotificationService.retryOperation(() async {
+          attempts++;
+          throw error;
+        }, retryDelay: Duration.zero),
+        throwsA(same(error)),
+      );
+      expect(attempts, 1);
+    });
+
+    test('rejects a non-positive attempt limit', () async {
+      expect(
+        () => NotificationService.retryOperation(
+          () async {},
+          maxAttempts: 0,
+          retryDelay: Duration.zero,
+        ),
+        throwsAssertionError,
+      );
+    });
+  });
+
+  group('NotificationService.resumeNotifications', () {
+    test('reports denial and skips token resolution and upload', () async {
+      var reported = false;
+      var uploaded = false;
+
+      await NotificationService.resumeNotifications(
+        getAuthorizationStatus: () async => AuthorizationStatus.denied,
+        uploadToken: () async => uploaded = true,
+        reportDenied: () async => reported = true,
+      );
+
+      expect(reported, isTrue);
+      expect(uploaded, isFalse);
+    });
+
+    test('does not report when permission is authorized', () async {
+      var reported = false;
+
+      await NotificationService.resumeNotifications(
+        getAuthorizationStatus: () async => AuthorizationStatus.authorized,
+        uploadToken: () async {},
+        reportDenied: () async => reported = true,
+      );
+
+      expect(reported, isFalse);
+    });
   });
 
   group('NotificationService._ackIfCritical', () {
@@ -109,6 +251,17 @@ void main() {
       });
 
       verify(() => repository.ack('notif-44')).called(1);
+    });
+
+    test('sends ACK for HANDOVER_REMINDER_H2', () async {
+      when(() => repository.ack('notif-h2')).thenAnswer((_) async {});
+
+      await service.testAckIfCritical({
+        'type': 'HANDOVER_REMINDER_H2',
+        'notificationId': 'notif-h2',
+      });
+
+      verify(() => repository.ack('notif-h2')).called(1);
     });
 
     test('does NOT send ACK for non-critical type (BID_ACCEPTED)', () async {

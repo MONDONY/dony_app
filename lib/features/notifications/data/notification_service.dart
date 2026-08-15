@@ -27,6 +27,7 @@ const _criticalTypes = {
   'PAYMENT_RELEASED',
   'DELIVERY_CONFIRMED',
   'DISPUTE_OPENED',
+  'HANDOVER_REMINDER_H2',
 };
 
 /// Accuse réception d'une notification critique depuis l'isolate d'arrière-plan.
@@ -91,11 +92,18 @@ class NotificationService {
   static const apnsMaxAttempts = 10;
   @visibleForTesting
   static const apnsRetryDelay = Duration(seconds: 1);
+  @visibleForTesting
+  static const uploadMaxAttempts = 3;
+  @visibleForTesting
+  static const uploadRetryDelay = Duration(seconds: 1);
 
   final ApiClient _apiClient;
   final NotificationRepository _repository;
   final DeviceIdService _deviceIdService;
   final ErrorReportingService? _errorReporter;
+  Future<void>? _inFlightUpload;
+  Future<void>? _inFlightTokenUpload;
+  bool _permissionDeniedReported = false;
 
   NotificationService(
     this._apiClient,
@@ -123,6 +131,12 @@ class NotificationService {
     importance: Importance.high,
   );
 
+  static const _androidGeneralChannel = AndroidNotificationChannel(
+    'dony_general',
+    'Actualités Yadony',
+    description: 'Correspondances, invitations et informations générales',
+  );
+
   Future<void> initialize() async {
     // iOS / Android 13+ permission request
     final settings = await _fcm.requestPermission();
@@ -131,11 +145,14 @@ class NotificationService {
     }
 
     // Create Android notification channel
-    await _localNotifications
+    final androidNotifications = _localNotifications
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
-        >()
-        ?.createNotificationChannel(_androidChannel);
+        >();
+    await androidNotifications?.createNotificationChannel(_androidChannel);
+    await androidNotifications?.createNotificationChannel(
+      _androidGeneralChannel,
+    );
 
     // Init flutter_local_notifications
     const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -165,11 +182,32 @@ class NotificationService {
 
     // Token upload is deferred to after authentication (called by app.dart).
     // onTokenRefresh re-uploads automatically once the user is signed in.
-    _fcm.onTokenRefresh.listen(_uploadToken);
+    _fcm.onTokenRefresh.listen((_) {
+      final activeUpload = _inFlightUpload;
+      if (activeUpload == null) {
+        unawaited(uploadCurrentToken());
+      } else {
+        unawaited(activeUpload.whenComplete(uploadCurrentToken));
+      }
+    });
   }
 
   /// Call this after the user is authenticated (Firebase sign-in complete).
-  Future<void> uploadCurrentToken() async {
+  Future<void> uploadCurrentToken() {
+    final activeUpload = _inFlightUpload;
+    if (activeUpload != null) return activeUpload;
+
+    late final Future<void> upload;
+    upload = _uploadCurrentTokenOnce().whenComplete(() {
+      if (identical(_inFlightUpload, upload)) {
+        _inFlightUpload = null;
+      }
+    });
+    _inFlightUpload = upload;
+    return upload;
+  }
+
+  Future<void> _uploadCurrentTokenOnce() async {
     try {
       final token = await _resolveFcmToken();
       if (token != null) {
@@ -182,21 +220,81 @@ class NotificationService {
       if (kDebugMode) {
         debugPrint('[FCM] Aucun jeton FCM — appareil non enregistré');
       }
+      final diagnosticContext = <String, Object>{
+        'feature': 'notifications',
+        'channel': 'fcm',
+        'platform': Platform.operatingSystem,
+      };
+      if (Platform.isIOS) {
+        try {
+          diagnosticContext['apns_token_available'] =
+              await _fcm.getAPNSToken() != null;
+        } catch (_) {
+          diagnosticContext['apns_token_available'] = false;
+        }
+      }
       unawaited(
         _errorReporter?.report(
               StateError('FCM token null — appareil non enregistré'),
               operation: 'notifications.fcm_token_unavailable',
+              context: diagnosticContext,
+            ) ??
+            Future<void>.value(),
+      );
+    } catch (e, stackTrace) {
+      if (kDebugMode) debugPrint('[FCM] uploadCurrentToken failed: $e');
+      unawaited(
+        _errorReporter?.report(
+          e,
+          operation: 'notifications.resolve_fcm_token',
+          stackTrace: stackTrace,
+          context: {
+            'feature': 'notifications',
+            'channel': 'fcm',
+            'platform': Platform.operatingSystem,
+          },
+        ),
+      );
+    }
+  }
+
+  /// Réévalue l'autorisation et réenregistre le jeton après un retour depuis
+  /// Réglages iOS ou après une reprise réseau.
+  Future<void> onAppResumed() async {
+    if (FirebaseAuth.instance.currentUser == null) return;
+    await resumeNotifications(
+      getAuthorizationStatus: () async =>
+          (await _fcm.getNotificationSettings()).authorizationStatus,
+      uploadToken: uploadCurrentToken,
+      reportDenied: () async {
+        if (_permissionDeniedReported) return;
+        _permissionDeniedReported = true;
+        await (_errorReporter?.report(
+              StateError('Notifications refusées dans les réglages système'),
+              operation: 'notifications.permission_denied',
               context: {
                 'feature': 'notifications',
                 'channel': 'fcm',
                 'platform': Platform.operatingSystem,
               },
             ) ??
-            Future<void>.value(),
-      );
-    } catch (e) {
-      if (kDebugMode) debugPrint('[FCM] uploadCurrentToken failed: $e');
+            Future<void>.value());
+      },
+    );
+  }
+
+  @visibleForTesting
+  static Future<void> resumeNotifications({
+    required Future<AuthorizationStatus> Function() getAuthorizationStatus,
+    required Future<void> Function() uploadToken,
+    required Future<void> Function() reportDenied,
+  }) async {
+    final status = await getAuthorizationStatus();
+    if (status == AuthorizationStatus.denied) {
+      await reportDenied();
+      return;
     }
+    await uploadToken();
   }
 
   /// Récupère le jeton FCM, en attendant le jeton APNs sur iOS.
@@ -232,32 +330,104 @@ class NotificationService {
     return getFcmToken();
   }
 
-  Future<void> _uploadToken(String token) async {
+  /// Réessaie une opération réseau bornée. Le délai croît linéairement afin
+  /// d'absorber les pertes de réseau transitoires au démarrage de l'iPhone.
+  @visibleForTesting
+  static Future<void> retryOperation(
+    Future<void> Function() operation, {
+    int maxAttempts = uploadMaxAttempts,
+    Duration retryDelay = uploadRetryDelay,
+    void Function(int attempt)? onAttempt,
+  }) async {
+    assert(maxAttempts >= 1, 'maxAttempts must be at least 1');
+    Object? lastError;
+    StackTrace? lastStackTrace;
+    for (var attempt = 1; attempt <= maxAttempts; attempt++) {
+      onAttempt?.call(attempt);
+      try {
+        await operation();
+        return;
+      } catch (error, stackTrace) {
+        if (!_isTransientUploadFailure(error)) {
+          Error.throwWithStackTrace(error, stackTrace);
+        }
+        lastError = error;
+        lastStackTrace = stackTrace;
+        if (attempt < maxAttempts) {
+          await Future<void>.delayed(retryDelay * attempt);
+        }
+      }
+    }
+    Error.throwWithStackTrace(lastError!, lastStackTrace!);
+  }
+
+  static bool _isTransientUploadFailure(Object error) {
+    if (error is! DioException) return false;
+    return switch (error.type) {
+      DioExceptionType.connectionError ||
+      DioExceptionType.connectionTimeout ||
+      DioExceptionType.sendTimeout ||
+      DioExceptionType.receiveTimeout => true,
+      DioExceptionType.badResponse =>
+        error.response?.statusCode == 429 ||
+            (error.response?.statusCode ?? 0) >= 500,
+      _ => false,
+    };
+  }
+
+  static bool _shouldReportFailure(Object error) {
+    if (error is! DioException) return true;
+    return error.type == DioExceptionType.badResponse &&
+        (error.response?.statusCode ?? 0) >= 500;
+  }
+
+  Future<void> _uploadToken(String token) {
+    final activeUpload = _inFlightTokenUpload;
+    if (activeUpload != null) return activeUpload;
+
+    late final Future<void> upload;
+    upload = _performTokenUpload(token).whenComplete(() {
+      if (identical(_inFlightTokenUpload, upload)) {
+        _inFlightTokenUpload = null;
+      }
+    });
+    _inFlightTokenUpload = upload;
+    return upload;
+  }
+
+  Future<void> _performTokenUpload(String token) async {
+    var attempts = 0;
     try {
-      final deviceId = await _deviceIdService.getDeviceId();
-      final (deviceName, platform) = await _getDeviceInfo();
-      await _apiClient.dio.put(
-        '/auth/me/fcm-token',
-        data: {
-          'fcmToken': token,
-          'deviceId': deviceId,
-          'deviceName': deviceName,
-          'platform': platform,
-        },
-      );
+      await retryOperation(() async {
+        final deviceId = await _deviceIdService.getDeviceId();
+        final (deviceName, platform) = await _getDeviceInfo();
+        await _apiClient.dio.put(
+          '/auth/me/fcm-token',
+          data: {
+            'fcmToken': token,
+            'deviceId': deviceId,
+            'deviceName': deviceName,
+            'platform': platform,
+          },
+        );
+      }, onAttempt: (attempt) => attempts = attempt);
       if (kDebugMode) debugPrint('[FCM] Token uploaded to backend');
     } catch (e, stackTrace) {
       if (kDebugMode) debugPrint('[FCM] Token upload failed: $e');
-      if (e is! DioException) {
-        unawaited(
-          _errorReporter?.report(
-            e,
-            operation: 'notifications.upload_fcm_token',
-            stackTrace: stackTrace,
-            context: {'feature': 'notifications', 'channel': 'fcm'},
-          ),
-        );
-      }
+      if (!_shouldReportFailure(e)) return;
+      unawaited(
+        _errorReporter?.report(
+          e,
+          operation: 'notifications.upload_fcm_token',
+          stackTrace: stackTrace,
+          context: {
+            'feature': 'notifications',
+            'channel': 'fcm',
+            'attempts': attempts,
+            'platform': Platform.operatingSystem,
+          },
+        ),
+      );
     }
   }
 
@@ -311,7 +481,7 @@ class NotificationService {
       if (kDebugMode) debugPrint('[FCM] ACK sent for $type / $notificationId');
     } catch (e, stackTrace) {
       if (kDebugMode) debugPrint('[FCM] ACK failed: $e');
-      if (e is! DioException) {
+      if (_shouldReportFailure(e)) {
         unawaited(
           _errorReporter?.report(
             e,

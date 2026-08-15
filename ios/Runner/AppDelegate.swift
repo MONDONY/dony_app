@@ -3,6 +3,7 @@ import UIKit
 import GoogleMaps
 import FirebaseAuth
 import FirebaseMessaging
+import Sentry
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
@@ -36,6 +37,21 @@ import FirebaseMessaging
     Auth.auth().setAPNSToken(deviceToken, type: .unknown)
     #endif
     super.application(application, didRegisterForRemoteNotificationsWithDeviceToken: deviceToken)
+  }
+
+  override func application(
+    _ application: UIApplication,
+    didFailToRegisterForRemoteNotificationsWithError error: Error
+  ) {
+    NSLog("[APNs] Remote notification registration failed: %@", error.localizedDescription)
+    SentrySDK.capture(error: error) { scope in
+      scope.setTag(value: "apns_registration", key: "component")
+      scope.setTag(value: "ios", key: "platform")
+    }
+    super.application(
+      application,
+      didFailToRegisterForRemoteNotificationsWithError: error
+    )
   }
 
   // Laisse Firebase Auth consommer les notifications de vérification avant FCM.
