@@ -78,6 +78,60 @@ void main() {
   );
 
   blocTest<NegotiationBloc, NegotiationState>(
+    'start forwards createDedicatedTrip and dedicatedTripPayload unmodified '
+    'to repository.start',
+    build: () {
+      when(
+        () => repo.start(
+          packageRequestId: any(named: 'packageRequestId'),
+          proposedPriceEur: any(named: 'proposedPriceEur'),
+          travelerTravelDate: any(named: 'travelerTravelDate'),
+          travelerAvailableKg: any(named: 'travelerAvailableKg'),
+          travelerAnnouncementId: any(named: 'travelerAnnouncementId'),
+          body: any(named: 'body'),
+          createDedicatedTrip: any(named: 'createDedicatedTrip'),
+          dedicatedTripPayload: any(named: 'dedicatedTripPayload'),
+        ),
+      ).thenAnswer((_) async => _fakeThread());
+      return _makeBloc(repo);
+    },
+    act: (bloc) => bloc.add(
+      NegotiationStartRequested(
+        packageRequestId: 'pr-1',
+        proposedPriceEur: 30,
+        travelerTravelDate: DateTime(2026, 6, 15),
+        travelerAvailableKg: 10,
+        createDedicatedTrip: true,
+        dedicatedTripPayload: const {
+          'departureDate': '2026-07-01',
+          'pickupAddress': {'label': 'Paris'},
+          'deliveryAddress': {'label': 'Dakar'},
+        },
+      ),
+    ),
+    expect: () => [
+      isA<NegotiationLoading>(),
+      isA<NegotiationLoaded>(),
+    ],
+    verify: (_) => verify(
+      () => repo.start(
+        packageRequestId: 'pr-1',
+        proposedPriceEur: 30,
+        travelerTravelDate: DateTime(2026, 6, 15),
+        travelerAvailableKg: 10,
+        travelerAnnouncementId: null,
+        body: null,
+        createDedicatedTrip: true,
+        dedicatedTripPayload: const {
+          'departureDate': '2026-07-01',
+          'pickupAddress': {'label': 'Paris'},
+          'deliveryAddress': {'label': 'Dakar'},
+        },
+      ),
+    ).called(1),
+  );
+
+  blocTest<NegotiationBloc, NegotiationState>(
     'counter from Loaded emits ActionInProgress then Loaded',
     build: () {
       when(
