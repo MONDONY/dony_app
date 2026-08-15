@@ -22,7 +22,6 @@ class _MockAcceptBloc extends MockBloc<BidAcceptanceEvent, BidAcceptanceState>
 BidModel _bid({
   required String status,
   bool voyageurConfirmed = false,
-  DateTime? windowStart,
   DateTime? windowEnd,
 }) => BidModel(
   id: 'b1',
@@ -31,8 +30,7 @@ BidModel _bid({
   status: status,
   weightKg: 5,
   voyageurConfirmed: voyageurConfirmed,
-  handoverWindowStart: windowStart,
-  handoverWindowEnd: windowEnd,
+  handoverDeadline: windowEnd,
   createdAt: DateTime(2026, 5),
   updatedAt: DateTime(2026, 5),
 );

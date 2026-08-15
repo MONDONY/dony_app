@@ -277,7 +277,7 @@ AnnouncementModel _makeAnnouncement() => AnnouncementModel(
 
 /// Returns a complete `AnnouncementModel` that passes ALL step-0 validation:
 /// • departure city, arrival city, departure date
-/// • handoverWindowStart < handoverWindowEnd < departure time
+/// • handoverDeadline < handoverDeadline < departure time
 /// • pickupAddress + deliveryAddress (enables step-1 → step-2 navigation)
 /// • departureTime + arrivalTime (covers TimeOfDay parsing in initState)
 /// • acceptedContentTypes + refusedTypes (covers content-type init code)
@@ -297,8 +297,7 @@ AnnouncementModel _makeFullAnnouncement() => AnnouncementModel(
   bidsCount: 0,
   createdAt: DateTime(2026),
   updatedAt: DateTime(2026),
-  handoverWindowStart: DateTime(2026, 8, 1, 16),
-  handoverWindowEnd: DateTime(2026, 8, 1, 18),
+  handoverDeadline: DateTime(2026, 8, 1, 18),
   pickupAddress: const AddressData(
     label: 'Tour Eiffel',
     lat: 48.858,
@@ -556,8 +555,8 @@ void main() {
 
         // Edit mode with a full announcement (all required fields present):
         // _canContinueNotifier is true after _updateCanContinue fires because
-        // departureCity, arrivalCity, departureDate, handoverWindowStart and
-        // handoverWindowEnd are all set, and handoverEnd (18:00) < departure (22:00).
+        // departureCity, arrivalCity, departureDate, handoverDeadline and
+        // handoverDeadline are all set, and handoverEnd (18:00) < departure (22:00).
         final args = CreateTripArgs(announcement: _makeFullAnnouncement());
         await pumpAndDrain(
           tester,
@@ -688,16 +687,16 @@ void main() {
       },
     );
 
-    testWidgets('section fenêtre de remise est visible à l\'étape 0', (
+    testWidgets('section dépôt des colis est visible à l\'étape 0', (
       tester,
     ) async {
       setupViewport(tester);
 
       await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
 
-      // Step 0 contains the handover window section with these list tiles
-      expect(find.text('Début de remise'), findsOneWidget);
-      expect(find.text('Fin de remise'), findsOneWidget);
+      // L'étape 0 porte la section « dépôt » avec sa ligne unique.
+      expect(find.text('DÉPÔT DES COLIS'), findsOneWidget);
+      expect(find.text('Date limite de dépôt'), findsOneWidget);
     });
 
     testWidgets('mode locked: bannière "Trajet dédié à la demande" affichée', (
@@ -790,8 +789,7 @@ void main() {
         bidsCount: 0,
         createdAt: DateTime(2026),
         updatedAt: DateTime(2026),
-        handoverWindowStart: DateTime(2026, 8, 1, 16),
-        handoverWindowEnd: DateTime(2026, 8, 1, 18),
+        handoverDeadline: DateTime(2026, 8, 1, 18),
         pickupAddress: const AddressData(
           label: 'Tour Eiffel',
           lat: 48.858,
@@ -835,8 +833,7 @@ void main() {
           bidsCount: 0,
           createdAt: DateTime(2026),
           updatedAt: DateTime(2026),
-          handoverWindowStart: DateTime(2026, 8, 1, 16),
-          handoverWindowEnd: DateTime(2026, 8, 1, 18),
+          handoverDeadline: DateTime(2026, 8, 1, 18),
           transportMode: TransportMode.plane,
           acceptedPaymentMethods: {BidPaymentMethod.stripe},
           acceptedContentTypes: const ['Vêtements'],
@@ -988,47 +985,41 @@ void main() {
     });
   });
 
-  // ── Group: Handover window error display ──────────────────────────────────────
+  // ── Group: Handover deadline error display ────────────────────────────────────
 
-  group('CreateTripScreen — Handover window validation', () {
-    testWidgets(
-      'erreur affichée quand fenêtre se termine après heure de départ',
-      (tester) async {
-        setupViewport(tester);
+  group('CreateTripScreen — Handover deadline validation', () {
+    testWidgets('erreur affichée quand la date limite tombe après le départ', (
+      tester,
+    ) async {
+      setupViewport(tester);
 
-        // handoverEnd (23:00) > departureTime (22:00) → _handoverWindowError non-null
-        final ann = AnnouncementModel(
-          id: 'ann-handover-err',
-          travelerId: 'trav-1',
-          departureCity: 'Paris',
-          arrivalCity: 'Dakar',
-          departureDate: DateTime(2026, 8),
-          departureTime: '22:00',
-          availableKg: 10.0,
-          totalKg: 23.0,
-          pricePerKg: 8.0,
-          status: 'ACTIVE',
-          bidsCount: 0,
-          createdAt: DateTime(2026),
-          updatedAt: DateTime(2026),
-          handoverWindowStart: DateTime(2026, 8, 1, 20),
-          handoverWindowEnd: DateTime(2026, 8, 1, 23), // after 22:00 departure
-          transportMode: TransportMode.plane,
-          acceptedPaymentMethods: {BidPaymentMethod.stripe},
-          acceptedContentTypes: const ['Vêtements'],
-          refusedTypes: const [],
-        );
+      // date limite (2 août) > date de départ (1er août) → _handoverDeadlineError non-null
+      final ann = AnnouncementModel(
+        id: 'ann-handover-err',
+        travelerId: 'trav-1',
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        departureDate: DateTime(2026, 8),
+        departureTime: '22:00',
+        availableKg: 10.0,
+        totalKg: 23.0,
+        pricePerKg: 8.0,
+        status: 'ACTIVE',
+        bidsCount: 0,
+        createdAt: DateTime(2026),
+        updatedAt: DateTime(2026),
+        handoverDeadline: DateTime(2026, 8, 2), // après le départ du 1er août
+        transportMode: TransportMode.plane,
+        acceptedPaymentMethods: {BidPaymentMethod.stripe},
+        acceptedContentTypes: const ['Vêtements'],
+        refusedTypes: const [],
+      );
 
-        final args = CreateTripArgs(announcement: ann);
-        await pumpAndDrain(
-          tester,
-          _wrapWithRouter(CreateTripScreen(args: args)),
-        );
+      final args = CreateTripArgs(announcement: ann);
+      await pumpAndDrain(tester, _wrapWithRouter(CreateTripScreen(args: args)));
 
-        // Error message displayed — "avant le départ (22:00)"
-        expect(find.textContaining('avant le départ'), findsOneWidget);
-      },
-    );
+      expect(find.textContaining('précéder le départ'), findsOneWidget);
+    });
   });
 
   // ── Group: _submit() via Enregistrer ─────────────────────────────────────────
@@ -1613,35 +1604,37 @@ void main() {
   // rendues au step 0, à la suite de TrajetStep ; le préfixe `sheet-` des clés
   // est un reliquat de nommage, ce ne sont pas des bottom sheets.
 
-  group('CreateTripScreen — Fenêtre de remise (rendu)', () {
-    testWidgets('les deux rows début/fin sont affichées en mode création', (
+  group('CreateTripScreen — Date limite de dépôt (rendu)', () {
+    testWidgets('une seule row date limite est affichée en mode création', (
       tester,
     ) async {
       setupViewport(tester);
 
       await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
 
-      expect(find.byKey(const Key('sheet-handover-start-row')), findsOneWidget);
-      expect(find.byKey(const Key('sheet-handover-end-row')), findsOneWidget);
+      expect(
+        find.byKey(const Key('sheet-handover-deadline-row')),
+        findsOneWidget,
+      );
+      expect(find.text('Date limite de dépôt'), findsOneWidget);
     });
 
-    testWidgets(
-      'mode création : les deux rows affichent "Choisir" (aucune valeur)',
-      (tester) async {
-        setupViewport(tester);
+    testWidgets('mode création : la row affiche "Choisir" (aucune valeur)', (
+      tester,
+    ) async {
+      setupViewport(tester);
 
-        await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
+      await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
 
-        expect(find.text('Choisir'), findsNWidgets(2));
-      },
-    );
+      expect(find.text('Choisir'), findsOneWidget);
+    });
 
     testWidgets(
       'mode édition préremplit les valeurs existantes (plus aucun "Choisir")',
       (tester) async {
         setupViewport(tester);
 
-        // _makeFullAnnouncement() porte une fenêtre 16:00 → 18:00.
+        // _makeFullAnnouncement() porte une date limite au 1er août.
         final args = CreateTripArgs(announcement: _makeFullAnnouncement());
         await pumpAndDrain(
           tester,
@@ -1649,55 +1642,52 @@ void main() {
         );
 
         expect(find.text('Choisir'), findsNothing);
-        expect(find.text('01/08 16:00'), findsOneWidget);
-        expect(find.text('01/08 18:00'), findsOneWidget);
+        expect(find.text('1 août'), findsOneWidget);
       },
     );
 
-    testWidgets(
-      'fenêtre inversée (fin avant début) affiche le message inline',
-      (tester) async {
-        setupViewport(tester);
+    testWidgets('date limite après le départ affiche le message inline', (
+      tester,
+    ) async {
+      setupViewport(tester);
 
-        final ann = AnnouncementModel(
-          id: 'ann-handover-inverted',
-          travelerId: 'trav-1',
-          departureCity: 'Paris',
-          arrivalCity: 'Dakar',
-          departureDate: DateTime(2026, 8, 20),
-          departureTime: '22:00',
-          availableKg: 10.0,
-          totalKg: 23.0,
-          pricePerKg: 8.0,
-          status: 'ACTIVE',
-          bidsCount: 0,
-          createdAt: DateTime(2026),
-          updatedAt: DateTime(2026),
-          // Fin AVANT début → fenêtre invalide.
-          handoverWindowStart: DateTime(2026, 8, 20, 18),
-          handoverWindowEnd: DateTime(2026, 8, 20, 16),
-          transportMode: TransportMode.plane,
-          acceptedPaymentMethods: {BidPaymentMethod.stripe},
-          acceptedContentTypes: const ['Vêtements'],
-          refusedTypes: const [],
-        );
+      final ann = AnnouncementModel(
+        id: 'ann-handover-late',
+        travelerId: 'trav-1',
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        departureDate: DateTime(2026, 8, 20),
+        departureTime: '22:00',
+        availableKg: 10.0,
+        totalKg: 23.0,
+        pricePerKg: 8.0,
+        status: 'ACTIVE',
+        bidsCount: 0,
+        createdAt: DateTime(2026),
+        updatedAt: DateTime(2026),
+        // Lendemain du départ → date limite impossible.
+        handoverDeadline: DateTime(2026, 8, 21, 16),
+        transportMode: TransportMode.plane,
+        acceptedPaymentMethods: {BidPaymentMethod.stripe},
+        acceptedContentTypes: const ['Vêtements'],
+        refusedTypes: const [],
+      );
 
-        await pumpAndDrain(
-          tester,
-          _wrapWithRouter(
-            CreateTripScreen(args: CreateTripArgs(announcement: ann)),
-          ),
-        );
+      await pumpAndDrain(
+        tester,
+        _wrapWithRouter(
+          CreateTripScreen(args: CreateTripArgs(announcement: ann)),
+        ),
+      );
 
-        expect(find.byKey(const Key('sheet-handover-error')), findsOneWidget);
-        expect(
-          find.text('La fin de la fenêtre doit être après le début.'),
-          findsOneWidget,
-        );
-      },
-    );
+      expect(find.byKey(const Key('sheet-handover-error')), findsOneWidget);
+      expect(
+        find.text('La date limite doit précéder le départ.'),
+        findsOneWidget,
+      );
+    });
 
-    testWidgets('fenêtre valide : aucun message d\'erreur inline', (
+    testWidgets('date limite valide : aucun message d\'erreur inline', (
       tester,
     ) async {
       setupViewport(tester);
@@ -1709,11 +1699,11 @@ void main() {
     });
   });
 
-  // ── Group: Fenêtre de remise — garde au submit ───────────────────────────────
+  // ── Group: Date limite de dépôt — garde au submit ────────────────────────────
   // Migré de create_announcement_handover_test.dart. Capture l'instance
   // AnnouncementBloc créée par l'écran pour pouvoir verify() le dispatch.
 
-  group('CreateTripScreen — Fenêtre de remise (submit)', () {
+  group('CreateTripScreen — Date limite de dépôt (submit)', () {
     late _MockAnnouncementBloc announcementBloc;
 
     setUp(() {
@@ -1830,7 +1820,7 @@ void main() {
       },
     );
 
-    testWidgets('submit en édition forwarde la fenêtre de remise au bloc', (
+    testWidgets('submit en édition forwarde la date limite au bloc', (
       tester,
     ) async {
       final ann = _makeFullAnnouncement();
@@ -1840,21 +1830,16 @@ void main() {
       await tester.tap(find.byKey(const Key('create-announcement-submit')));
       await tester.pump(const Duration(milliseconds: 600));
 
-      expect(find.text('Fenêtre de remise obligatoire'), findsNothing);
+      expect(find.text('Date limite de dépôt obligatoire'), findsNothing);
       verify(
         () => announcementBloc.add(
           any(
-            that: isA<AnnouncementUpdateRequested>()
-                .having(
-                  (e) => e.handoverWindowStart,
-                  'handoverWindowStart',
-                  ann.handoverWindowStart,
-                )
-                .having(
-                  (e) => e.handoverWindowEnd,
-                  'handoverWindowEnd',
-                  ann.handoverWindowEnd,
-                ),
+            that: isA<AnnouncementUpdateRequested>().having(
+              (e) => e.handoverDeadline,
+              'handoverDeadline',
+              // Date limite le jour du départ → bornée à l'heure de départ.
+              DateTime(2026, 8, 1, 22),
+            ),
           ),
         ),
       ).called(1);
@@ -2008,8 +1993,7 @@ void main() {
       bidsCount: 0,
       createdAt: DateTime(2026),
       updatedAt: DateTime(2026),
-      handoverWindowStart: DateTime(2026, 8, 1, 16),
-      handoverWindowEnd: DateTime(2026, 8, 1, 18),
+      handoverDeadline: DateTime(2026, 8, 1, 18),
       pickupAddress: pickupAddress,
       deliveryAddress: deliveryAddress,
       transportMode: TransportMode.plane,

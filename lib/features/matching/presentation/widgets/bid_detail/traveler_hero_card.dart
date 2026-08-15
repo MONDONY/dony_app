@@ -61,11 +61,11 @@ class TravelerHeroCard extends StatelessWidget {
       );
     }
 
-    // ── Priorité 2 : fenêtre dépassée ─────────────────────────────────────
-    final windowEnd = bid.handoverWindowEnd;
+    // ── Priorité 2 : date limite de dépôt dépassée ────────────────────────
+    final deadline = bid.handoverDeadline;
     if (bid.status == 'ACCEPTED' &&
-        windowEnd != null &&
-        DateTime.now().isAfter(windowEnd)) {
+        deadline != null &&
+        DateTime.now().isAfter(deadline)) {
       return AnimatedSwitcher(
         duration: const Duration(milliseconds: 250),
         child: _WindowExpiredHero(
@@ -171,41 +171,20 @@ _HeroContent? _buildContent(BuildContext context, BidModel bid) {
 
 // ── Date / window helpers ─────────────────────────────────────────────────────
 
-String _formatWindow(DateTime? start, DateTime? end) {
-  if (start == null && end == null) {
+String _formatDeadline(DateTime? deadline) {
+  if (deadline == null) {
     return '';
   }
   try {
-    final fmt = DateFormat('EEE d MMM HH:mm', 'fr');
-    final fmtTime = DateFormat('HH:mm', 'fr');
-    if (start != null && end != null) {
-      final sameDay =
-          start.year == end.year &&
-          start.month == end.month &&
-          start.day == end.day;
-      if (sameDay) {
-        return '${fmt.format(start)} – ${fmtTime.format(end)}';
-      }
-      return '${fmt.format(start)} – ${fmt.format(end)}';
-    }
-    if (start != null) {
-      return fmt.format(start);
-    }
-    return fmt.format(end!);
+    return 'jusqu\'au ${DateFormat('EEE d MMM', 'fr').format(deadline)}';
   } catch (_) {
-    final fallback = DateFormat('dd/MM HH:mm');
-    if (start != null && end != null) {
-      return '${fallback.format(start)} – ${fallback.format(end)}';
-    }
-    if (start != null) {
-      return fallback.format(start);
-    }
-    return fallback.format(end!);
+    // Repli quand les données de locale manquent (tests isolés).
+    return 'jusqu\'au ${DateFormat('dd/MM').format(deadline)}';
   }
 }
 
 String _buildAcceptedSubtitle(BidModel bid) {
-  final window = _formatWindow(bid.handoverWindowStart, bid.handoverWindowEnd);
+  final window = _formatDeadline(bid.handoverDeadline);
   final location = bid.handoverLocation;
   final parts = <String>[];
   if (window.isNotEmpty) {
@@ -338,7 +317,7 @@ class _HeroButton extends StatelessWidget {
   }
 }
 
-// ── Hero : fenêtre dépassée ───────────────────────────────────────────────────
+// ── Hero : date limite de dépôt dépassée ──────────────────────────────────────
 
 class _WindowExpiredHero extends StatelessWidget {
   const _WindowExpiredHero({super.key, required this.bid});
@@ -347,20 +326,17 @@ class _WindowExpiredHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final window = _formatWindow(
-      bid.handoverWindowStart,
-      bid.handoverWindowEnd,
-    );
+    final window = _formatDeadline(bid.handoverDeadline);
     final subtitle = window.isNotEmpty
-        ? 'La remise était prévue $window. L\'expéditeur ne s\'est pas présenté ?'
-        : "L'expéditeur ne s'est pas présenté au point de remise ?";
+        ? 'Le dépôt était possible $window. L\'expéditeur ne s\'est pas présenté ?'
+        : "L'expéditeur ne s'est pas présenté au point de dépôt ?";
 
     return BlocBuilder<CancellationBloc, CancellationState>(
       builder: (context, state) {
         final isLoading = state is CancellationLoading;
         return _HeroShell(
           variant: TravelerHeroVariant.alert,
-          title: '⚠ Fenêtre de remise dépassée',
+          title: '⚠ Date limite de dépôt dépassée',
           subtitle: subtitle,
           footer: _HeroButton(
             label: "Signaler l'absence de l'expéditeur",

@@ -25,8 +25,7 @@ BidModel _bid({
   String status = 'PENDING',
   String? cancellationNoShowStatus,
   DateTime? contestationDeadline,
-  DateTime? handoverWindowStart,
-  DateTime? handoverWindowEnd,
+  DateTime? handoverDeadline,
   String? handoverLocation,
   String? travelerName,
   String? recipientName,
@@ -46,8 +45,7 @@ BidModel _bid({
   updatedAt: DateTime(2026),
   cancellationNoShowStatus: cancellationNoShowStatus,
   contestationDeadline: contestationDeadline,
-  handoverWindowStart: handoverWindowStart,
-  handoverWindowEnd: handoverWindowEnd,
+  handoverDeadline: handoverDeadline,
   handoverLocation: handoverLocation,
   travelerName: travelerName,
   recipientName: recipientName,
@@ -126,8 +124,7 @@ void main() {
     final now = DateTime.now();
     final bid = _bid(
       status: 'ACCEPTED',
-      handoverWindowStart: now.add(const Duration(days: 1)),
-      handoverWindowEnd: now.add(const Duration(days: 1, hours: 2)),
+      handoverDeadline: now.add(const Duration(days: 1, hours: 2)),
       handoverLocation: 'Gare de Lyon, Paris',
     );
     await tester.pumpWidget(_host(bid, cancellationBloc));
@@ -145,8 +142,7 @@ void main() {
       final now = DateTime.now();
       final bid = _bid(
         status: 'ACCEPTED',
-        handoverWindowStart: now.subtract(const Duration(hours: 4)),
-        handoverWindowEnd: now.subtract(const Duration(hours: 2)),
+        handoverDeadline: now.subtract(const Duration(hours: 2)),
       );
       await tester.pumpWidget(_host(bid, cancellationBloc));
       await tester.pump();
@@ -167,8 +163,7 @@ void main() {
       final now = DateTime.now();
       final bid = _bid(
         status: 'ACCEPTED',
-        handoverWindowStart: now.subtract(const Duration(hours: 4)),
-        handoverWindowEnd: now.subtract(const Duration(hours: 2)),
+        handoverDeadline: now.subtract(const Duration(hours: 2)),
       );
       await tester.pumpWidget(_host(bid, cancellationBloc));
       await tester.pump();

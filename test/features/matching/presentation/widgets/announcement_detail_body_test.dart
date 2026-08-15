@@ -35,8 +35,7 @@ AnnouncementModel _full() => AnnouncementModel(
     lat: 14.67,
     lng: -17.43,
   ),
-  handoverWindowStart: DateTime(2026, 8, 5, 9),
-  handoverWindowEnd: DateTime(2026, 8, 10, 18),
+  handoverDeadline: DateTime(2026, 8, 10, 18),
   acceptedPaymentMethods: const {
     BidPaymentMethod.cash,
     BidPaymentMethod.stripe,
@@ -93,7 +92,7 @@ void main() {
     expect(find.text('LIEUX DE REMISE'), findsOneWidget);
     expect(find.text('12 rue de Paris, 75001'), findsOneWidget);
     expect(find.text('Marché Sandaga, Dakar'), findsOneWidget);
-    expect(find.text('FENÊTRE DE REMISE'), findsOneWidget);
+    expect(find.text('DÉPÔT DES COLIS'), findsOneWidget);
     expect(find.text('PAIEMENTS ACCEPTÉS'), findsOneWidget);
     expect(find.text('💵 Espèces'), findsOneWidget);
     expect(find.text('💳 Carte'), findsOneWidget);
@@ -144,7 +143,7 @@ void main() {
       expect(find.text('● ACTIF'), findsOneWidget);
       // Sections optionnelles absentes
       expect(find.text('LIEUX DE REMISE'), findsNothing);
-      expect(find.text('FENÊTRE DE REMISE'), findsNothing);
+      expect(find.text('DÉPÔT DES COLIS'), findsNothing);
       expect(find.text('PAIEMENTS ACCEPTÉS'), findsNothing);
       expect(find.text('CE QUE J\'ACCEPTE'), findsNothing);
       expect(find.text('CE QUE JE REFUSE'), findsNothing);

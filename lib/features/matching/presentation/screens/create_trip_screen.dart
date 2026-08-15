@@ -525,8 +525,10 @@ class _TripFormContentState extends State<_TripFormContent> {
   final _departureDateNotifier = ValueNotifier<DateTime?>(null);
   final _departureTimeNotifier = ValueNotifier<TimeOfDay?>(null);
   final _arrivalTimeNotifier = ValueNotifier<TimeOfDay?>(null);
-  final _handoverStartNotifier = ValueNotifier<DateTime?>(null);
-  final _handoverEndNotifier = ValueNotifier<DateTime?>(null);
+
+  /// Date limite de dépôt : jour seul choisi par le voyageur, converti en
+  /// instant à l'envoi (cf. [_resolveHandoverDeadline]).
+  final _handoverDeadlineNotifier = ValueNotifier<DateTime?>(null);
   final _pickupAddressNotifier = ValueNotifier<AddressData?>(null);
   final _deliveryAddressNotifier = ValueNotifier<AddressData?>(null);
   AddressData? get _pickupAddress => _pickupAddressNotifier.value;
@@ -632,8 +634,7 @@ class _TripFormContentState extends State<_TripFormContent> {
       _departureCountryCodeNotifier.value = a.departureCountryCode;
       _arrivalCountryCodeNotifier.value = a.arrivalCountryCode;
       _departureDateNotifier.value = a.departureDate;
-      _handoverStartNotifier.value = widget.announcement?.handoverWindowStart;
-      _handoverEndNotifier.value = widget.announcement?.handoverWindowEnd;
+      _handoverDeadlineNotifier.value = widget.announcement?.handoverDeadline;
       _availableKgNotifier.value = a.availableKg;
 
       if (a.departureTime != null) {
@@ -741,8 +742,7 @@ class _TripFormContentState extends State<_TripFormContent> {
     _departureDateNotifier.addListener(_updateCanContinue);
     _departureTimeNotifier.addListener(_updateCanContinue);
     _transportModeNotifier.addListener(_updateCanContinue);
-    _handoverStartNotifier.addListener(_updateCanContinue);
-    _handoverEndNotifier.addListener(_updateCanContinue);
+    _handoverDeadlineNotifier.addListener(_updateCanContinue);
     _updateCanContinue(); // état initial (pré-remplissage en mode édition)
 
     // Armé APRÈS le calcul initial : la pré-sélection automatique du mode
@@ -755,8 +755,7 @@ class _TripFormContentState extends State<_TripFormContent> {
     // Facultative, mais y toucher reste une interaction avec l'étape.
     _arrivalTimeNotifier.addListener(_markStep0Touched);
     _transportModeNotifier.addListener(_markStep0Touched);
-    _handoverStartNotifier.addListener(_markStep0Touched);
-    _handoverEndNotifier.addListener(_markStep0Touched);
+    _handoverDeadlineNotifier.addListener(_markStep0Touched);
 
     // L'étape 1 n'a que deux champs, et on n'y arrive qu'en ayant complété
     // l'étape 0 : y entrer vaut engagement, on annonce donc tout de suite ce
@@ -800,15 +799,13 @@ class _TripFormContentState extends State<_TripFormContent> {
     if (_arrivalCityNotifier.value == null) _Step0Field.arrivalCity,
     if (_departureDateNotifier.value == null) _Step0Field.departureDate,
     if (_transportModeNotifier.value == null) _Step0Field.transportMode,
-    if (_handoverStartNotifier.value == null ||
-        _handoverEndNotifier.value == null)
-      _Step0Field.handoverWindow,
+    if (_handoverDeadlineNotifier.value == null) _Step0Field.handoverDeadline,
   };
 
   void _updateCanContinue() {
     final missing = _missingStep0Fields;
     widget.canContinueNotifier?.value =
-        missing.isEmpty && _handoverWindowError() == null;
+        missing.isEmpty && _handoverDeadlineError() == null;
     _refreshStep0Errors(missing);
   }
 
@@ -851,8 +848,7 @@ class _TripFormContentState extends State<_TripFormContent> {
     _departureDateNotifier,
     _departureTimeNotifier,
     _arrivalTimeNotifier,
-    _handoverStartNotifier,
-    _handoverEndNotifier,
+    _handoverDeadlineNotifier,
     _pickupAddressNotifier,
     _deliveryAddressNotifier,
     _availableKgNotifier,
@@ -890,8 +886,7 @@ class _TripFormContentState extends State<_TripFormContent> {
       _departureDateNotifier.value,
       _departureTimeNotifier.value,
       _arrivalTimeNotifier.value,
-      _handoverStartNotifier.value,
-      _handoverEndNotifier.value,
+      _handoverDeadlineNotifier.value,
       _pickupAddressNotifier.value?.label,
       _deliveryAddressNotifier.value?.label,
       _availableKgNotifier.value,
@@ -975,29 +970,47 @@ class _TripFormContentState extends State<_TripFormContent> {
 
   /// Valide les champs obligatoires de l'étape 0 (Trajet).
   /// Affiche un snackbar d'erreur si un champ manque et retourne false.
-  /// Raison pour laquelle la fenêtre de remise saisie est invalide, ou null si
-  /// elle est correcte (ou pas encore renseignée). Affichée en direct sous le
-  /// picker, utilisée pour bloquer le passage à l'étape suivante.
-  String? _handoverWindowError() {
-    final start = _handoverStartNotifier.value;
-    final end = _handoverEndNotifier.value;
-    if (start == null || end == null) return null;
-    if (!end.isAfter(start)) {
-      return 'La fin de la fenêtre doit être après le début.';
-    }
+  /// Raison pour laquelle la date limite de dépôt saisie est invalide, ou null
+  /// si elle est correcte (ou pas encore renseignée). Affichée en direct sous
+  /// la ligne, utilisée pour bloquer le passage à l'étape suivante.
+  String? _handoverDeadlineError() {
+    final deadline = _handoverDeadlineNotifier.value;
+    if (deadline == null) return null;
     final date = _departureDateNotifier.value;
-    if (date != null) {
-      final t = _departureTimeNotifier.value;
-      final bound = t != null
-          ? DateTime(date.year, date.month, date.day, t.hour, t.minute)
-          : DateTime(date.year, date.month, date.day, 23, 59);
-      if (end.isAfter(bound)) {
-        return t != null
-            ? 'La fenêtre doit se terminer avant le départ (${_formatTime(t)}).'
-            : 'La fenêtre doit se terminer le jour du départ au plus tard.';
-      }
+    if (date == null) return null;
+    final deadlineDay = DateTime(deadline.year, deadline.month, deadline.day);
+    final departureDay = DateTime(date.year, date.month, date.day);
+    if (deadlineDay.isAfter(departureDay)) {
+      return 'La date limite doit précéder le départ.';
     }
     return null;
+  }
+
+  /// Convertit le jour choisi en instant envoyé au backend.
+  ///
+  /// Le voyageur ne saisit qu'une date : on la borne à la fin de journée, sauf
+  /// le jour du départ où la limite devient l'heure de départ — le backend
+  /// refuse toute date limite postérieure au départ.
+  DateTime? _resolveHandoverDeadline() {
+    final deadline = _handoverDeadlineNotifier.value;
+    if (deadline == null) return null;
+    final date = _departureDateNotifier.value;
+    final time = _departureTimeNotifier.value;
+    final sameDayAsDeparture =
+        date != null &&
+        deadline.year == date.year &&
+        deadline.month == date.month &&
+        deadline.day == date.day;
+    if (sameDayAsDeparture && time != null) {
+      return DateTime(
+        deadline.year,
+        deadline.month,
+        deadline.day,
+        time.hour,
+        time.minute,
+      );
+    }
+    return DateTime(deadline.year, deadline.month, deadline.day, 23, 59);
   }
 
   void _syncCityToFormBloc() {
@@ -1103,8 +1116,7 @@ class _TripFormContentState extends State<_TripFormContent> {
     _arrivalCityNotifier.removeListener(_updateCanContinue);
     _departureDateNotifier.removeListener(_updateCanContinue);
     _departureTimeNotifier.removeListener(_updateCanContinue);
-    _handoverStartNotifier.removeListener(_updateCanContinue);
-    _handoverEndNotifier.removeListener(_updateCanContinue);
+    _handoverDeadlineNotifier.removeListener(_updateCanContinue);
     _departureCityNotifier.removeListener(_syncCityToFormBloc);
     _arrivalCityNotifier.removeListener(_syncCityToFormBloc);
     _departureDateNotifier.removeListener(_syncDateToFormBloc);
@@ -1137,8 +1149,7 @@ class _TripFormContentState extends State<_TripFormContent> {
     _departureDateNotifier.dispose();
     _departureTimeNotifier.dispose();
     _arrivalTimeNotifier.dispose();
-    _handoverStartNotifier.dispose();
-    _handoverEndNotifier.dispose();
+    _handoverDeadlineNotifier.dispose();
     _availableKgNotifier.dispose();
     _priceOptionNotifier.dispose();
     _selectedContentNotifier.dispose();
@@ -1284,14 +1295,9 @@ class _TripFormContentState extends State<_TripFormContent> {
         : 'KG';
     final pricePerKgToSubmit = formBlocState.pricePerKg ?? 0.0;
 
-    final handoverStart = _handoverStartNotifier.value;
-    final handoverEnd = _handoverEndNotifier.value;
-    if (handoverStart == null || handoverEnd == null) {
-      _showError('Fenêtre de remise obligatoire');
-      return;
-    }
-    if (!handoverEnd.isAfter(handoverStart)) {
-      _showError('La fin de la fenêtre doit être après le début');
+    final handoverDeadline = _resolveHandoverDeadline();
+    if (handoverDeadline == null) {
+      _showError('Date limite de dépôt obligatoire');
       return;
     }
     final departureBound = DateTime(
@@ -1301,8 +1307,8 @@ class _TripFormContentState extends State<_TripFormContent> {
       departureTimeVal.hour,
       departureTimeVal.minute,
     );
-    if (handoverEnd.isAfter(departureBound)) {
-      _showError('La fenêtre de remise doit se terminer avant le départ');
+    if (handoverDeadline.isAfter(departureBound)) {
+      _showError('La date limite de dépôt doit précéder le départ');
       return;
     }
 
@@ -1328,8 +1334,7 @@ class _TripFormContentState extends State<_TripFormContent> {
           acceptedPaymentMethods: paymentMethods,
           capacityUnit: capacityUnitWire,
           pricingMode: pricingModeWire,
-          handoverWindowStart: handoverStart,
-          handoverWindowEnd: handoverEnd,
+          handoverDeadline: handoverDeadline,
         ),
       );
     } else {
@@ -1353,8 +1358,7 @@ class _TripFormContentState extends State<_TripFormContent> {
           acceptedPaymentMethods: paymentMethods,
           capacityUnit: capacityUnitWire,
           pricingMode: pricingModeWire,
-          handoverWindowStart: handoverStart,
-          handoverWindowEnd: handoverEnd,
+          handoverDeadline: handoverDeadline,
           saveAsDraft: saveAsDraft,
         ),
       );
@@ -1476,16 +1480,25 @@ class _TripFormContentState extends State<_TripFormContent> {
     }
   }
 
-  Future<DateTime?> _pickDateTime(
-    DateTime? initial, {
-    TimeOfDay defaultTime = const TimeOfDay(hour: 18, minute: 0),
-  }) async {
+  /// Sélection de la date limite de dépôt : un seul calendrier, pas d'heure.
+  ///
+  /// L'heure exacte se cale de toute façon dans le chat entre les deux parties,
+  /// et la demander ici était la moitié de la friction de l'ancienne fenêtre.
+  /// Le calendrier est borné à la date de départ quand elle est déjà saisie :
+  /// une date limite postérieure au départ est impossible à choisir.
+  Future<void> _selectHandoverDeadline() async {
     final cs = Theme.of(context).colorScheme;
-    final date = await showDatePicker(
+    final departure = _departureDateNotifier.value;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final last = departure ?? today.add(const Duration(days: 365));
+    final current = _handoverDeadlineNotifier.value;
+    final initial = current != null && !current.isAfter(last) ? current : last;
+    final picked = await showDatePicker(
       context: context,
-      initialDate: initial ?? DateTime.now().add(const Duration(days: 1)),
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
+      initialDate: initial.isBefore(today) ? today : initial,
+      firstDate: today,
+      lastDate: last.isBefore(today) ? today : last,
       builder: (ctx, child) => Theme(
         data: Theme.of(
           ctx,
@@ -1493,36 +1506,7 @@ class _TripFormContentState extends State<_TripFormContent> {
         child: child!,
       ),
     );
-    if (date == null || !mounted) return null;
-    final time = await showTimePicker(
-      context: context,
-      initialTime: initial != null
-          ? TimeOfDay.fromDateTime(initial)
-          : defaultTime,
-      builder: (ctx, child) => Theme(
-        data: Theme.of(
-          ctx,
-        ).copyWith(colorScheme: ColorScheme.light(primary: cs.primary)),
-        child: child!,
-      ),
-    );
-    if (time == null) return null;
-    return DateTime(date.year, date.month, date.day, time.hour, time.minute);
-  }
-
-  Future<void> _selectHandoverStart() async {
-    // Défaut 16:00 : avec la fin par défaut à 18:00, accepter les deux propose
-    // d'emblée une fenêtre de remise valide de 2 h.
-    final picked = await _pickDateTime(
-      _handoverStartNotifier.value,
-      defaultTime: const TimeOfDay(hour: 16, minute: 0),
-    );
-    if (picked != null) _handoverStartNotifier.value = picked;
-  }
-
-  Future<void> _selectHandoverEnd() async {
-    final picked = await _pickDateTime(_handoverEndNotifier.value);
-    if (picked != null) _handoverEndNotifier.value = picked;
+    if (picked != null) _handoverDeadlineNotifier.value = picked;
   }
 
   @override
@@ -1797,7 +1781,6 @@ class _TripFormContentState extends State<_TripFormContent> {
           departureDateNotifier: _departureDateNotifier,
           departureTimeNotifier: _departureTimeNotifier,
           arrivalTimeNotifier: _arrivalTimeNotifier,
-          transportModeNotifier: _transportModeNotifier,
           onSelectDepartureTime: _selectDepartureTime,
           onSelectArrivalTime: _selectArrivalTime,
           onSelectDate: _selectDate,
@@ -1805,7 +1788,6 @@ class _TripFormContentState extends State<_TripFormContent> {
           arrivalCityError: _msg(missing, _Step0Field.arrivalCity),
           departureDateError: _msg(missing, _Step0Field.departureDate),
           departureTimeError: _msg(missing, _Step0Field.departureTime),
-          transportModeError: _msg(missing, _Step0Field.transportMode),
           // Corridor verrouillé en modification (Q1) ET en trajet dédié (lockContext).
           // Date verrouillée seulement en modification ; le dédié la garde éditable
           // dans la fenêtre de tolérance.
@@ -1813,75 +1795,51 @@ class _TripFormContentState extends State<_TripFormContent> {
           lockDate: widget.lockCorridorAndDate,
         ),
       ),
-      const SizedBox(height: DonySpacing.lg),
-      const CaSectionLabel(label: 'FENÊTRE DE REMISE', iconAsset: 'clock'),
+      const CaSectionLabel(label: 'DÉPÔT DES COLIS', iconAsset: 'package'),
       const SizedBox(height: DonySpacing.xs),
       CaSectionCard(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ValueListenableBuilder<DateTime?>(
-              valueListenable: _handoverStartNotifier,
+              valueListenable: _handoverDeadlineNotifier,
               builder: (context, dt, _) => ListTile(
-                key: const Key('sheet-handover-start-row'),
+                key: const Key('sheet-handover-deadline-row'),
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: DonySpacing.base,
                 ),
                 leading: DonyIcon(
-                  'clock',
+                  'calendar',
                   size: 20,
                   color: Theme.of(context).colorScheme.primary,
                 ),
-                title: const Text('Début de remise'),
+                title: const Text('Date limite de dépôt'),
+                subtitle: const Text(
+                  'Jusqu\'à quand les expéditeurs peuvent te remettre leurs colis',
+                ),
                 trailing: Text(
-                  dt != null
-                      ? DateFormat('dd/MM HH:mm', 'fr').format(dt)
-                      : 'Choisir',
+                  dt != null ? DateFormat('d MMM', 'fr').format(dt) : 'Choisir',
                 ),
-                onTap: _selectHandoverStart,
-              ),
-            ),
-            const CaRowDivider(),
-            ValueListenableBuilder<DateTime?>(
-              valueListenable: _handoverEndNotifier,
-              builder: (context, dt, _) => ListTile(
-                key: const Key('sheet-handover-end-row'),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: DonySpacing.base,
-                ),
-                leading: DonyIcon(
-                  'clock',
-                  size: 20,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                title: const Text('Fin de remise'),
-                trailing: Text(
-                  dt != null
-                      ? DateFormat('dd/MM HH:mm', 'fr').format(dt)
-                      : 'Choisir',
-                ),
-                onTap: _selectHandoverEnd,
+                onTap: _selectHandoverDeadline,
               ),
             ),
             AnimatedBuilder(
               animation: Listenable.merge([
-                _handoverStartNotifier,
-                _handoverEndNotifier,
+                _handoverDeadlineNotifier,
                 _departureDateNotifier,
-                _departureTimeNotifier,
                 _step0ErrorsNotifier,
               ]),
               builder: (context, _) {
-                // Deux erreurs distinctes sur la même ligne : « fenêtre
-                // incohérente » (dates posées mais invalides) et « fenêtre
+                // Deux erreurs distinctes sur la même ligne : « date limite
+                // incohérente » (postérieure au départ) et « date limite
                 // absente » (rien de choisi). La seconde n'apparaît qu'après
                 // une première interaction avec l'étape.
                 final err =
-                    _handoverWindowError() ??
+                    _handoverDeadlineError() ??
                     (_step0ErrorsNotifier.value.contains(
-                          _Step0Field.handoverWindow,
+                          _Step0Field.handoverDeadline,
                         )
-                        ? _Step0Field.handoverWindow.message
+                        ? _Step0Field.handoverDeadline.message
                         : null);
                 return DonyFieldError(
                   message: err,
@@ -2028,7 +1986,7 @@ enum _Step0Field {
   departureDate('Date de départ obligatoire'),
   departureTime('Heure de départ obligatoire'),
   transportMode('Mode de transport obligatoire'),
-  handoverWindow('Fenêtre de remise obligatoire');
+  handoverDeadline('Date limite de dépôt obligatoire');
 
   const _Step0Field(this.message);
 

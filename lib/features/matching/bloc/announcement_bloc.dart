@@ -59,8 +59,7 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
         acceptedPaymentMethods: event.acceptedPaymentMethods,
         capacityUnit: event.capacityUnit,
         pricingMode: event.pricingMode,
-        handoverWindowStart: event.handoverWindowStart,
-        handoverWindowEnd: event.handoverWindowEnd,
+        handoverDeadline: event.handoverDeadline,
         saveAsDraft: event.saveAsDraft,
       );
       // Un brouillon n'est pas une publication : le flag "premier pas voyageur"
@@ -305,8 +304,7 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
         acceptedPaymentMethods: event.acceptedPaymentMethods,
         capacityUnit: event.capacityUnit,
         pricingMode: event.pricingMode,
-        handoverWindowStart: event.handoverWindowStart,
-        handoverWindowEnd: event.handoverWindowEnd,
+        handoverDeadline: event.handoverDeadline,
       );
       emit(AnnouncementUpdated(announcement));
     } catch (e) {

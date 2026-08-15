@@ -108,8 +108,7 @@ void main() {
             availableKg: any(named: 'availableKg'),
             pricePerKg: any(named: 'pricePerKg'),
             transportMode: any(named: 'transportMode'),
-            handoverWindowStart: any(named: 'handoverWindowStart'),
-            handoverWindowEnd: any(named: 'handoverWindowEnd'),
+            handoverDeadline: any(named: 'handoverDeadline'),
           ),
         ).thenAnswer((_) async => ann);
         return buildBloc();
@@ -124,8 +123,7 @@ void main() {
           availableKg: 20.0,
           pricePerKg: 5.0,
           transportMode: TransportMode.plane,
-          handoverWindowStart: DateTime(2026, 6, 14, 16),
-          handoverWindowEnd: DateTime(2026, 6, 14, 18),
+          handoverDeadline: DateTime(2026, 6, 14, 18),
         ),
       ),
       expect: () => [
@@ -151,8 +149,7 @@ void main() {
             availableKg: any(named: 'availableKg'),
             pricePerKg: any(named: 'pricePerKg'),
             transportMode: any(named: 'transportMode'),
-            handoverWindowStart: any(named: 'handoverWindowStart'),
-            handoverWindowEnd: any(named: 'handoverWindowEnd'),
+            handoverDeadline: any(named: 'handoverDeadline'),
           ),
         ).thenThrow(Exception('Server error'));
         return buildBloc();
@@ -167,8 +164,7 @@ void main() {
           availableKg: 20.0,
           pricePerKg: 5.0,
           transportMode: TransportMode.plane,
-          handoverWindowStart: DateTime(2026, 6, 14, 16),
-          handoverWindowEnd: DateTime(2026, 6, 14, 18),
+          handoverDeadline: DateTime(2026, 6, 14, 18),
         ),
       ),
       expect: () => [isA<AnnouncementLoading>(), isA<AnnouncementError>()],
@@ -195,8 +191,7 @@ void main() {
             availableKg: any(named: 'availableKg'),
             pricePerKg: any(named: 'pricePerKg'),
             transportMode: any(named: 'transportMode'),
-            handoverWindowStart: any(named: 'handoverWindowStart'),
-            handoverWindowEnd: any(named: 'handoverWindowEnd'),
+            handoverDeadline: any(named: 'handoverDeadline'),
           ),
         ).thenThrow(
           DioException(
@@ -220,8 +215,7 @@ void main() {
           availableKg: 20.0,
           pricePerKg: 5.0,
           transportMode: TransportMode.plane,
-          handoverWindowStart: DateTime(2026, 6, 14, 16),
-          handoverWindowEnd: DateTime(2026, 6, 14, 18),
+          handoverDeadline: DateTime(2026, 6, 14, 18),
         ),
       ),
       expect: () => [
@@ -251,8 +245,7 @@ void main() {
             availableKg: any(named: 'availableKg'),
             pricePerKg: any(named: 'pricePerKg'),
             transportMode: any(named: 'transportMode'),
-            handoverWindowStart: any(named: 'handoverWindowStart'),
-            handoverWindowEnd: any(named: 'handoverWindowEnd'),
+            handoverDeadline: any(named: 'handoverDeadline'),
           ),
         ).thenThrow(
           const ForbiddenException(
@@ -272,8 +265,7 @@ void main() {
           availableKg: 20.0,
           pricePerKg: 5.0,
           transportMode: TransportMode.plane,
-          handoverWindowStart: DateTime(2026, 6, 14, 16),
-          handoverWindowEnd: DateTime(2026, 6, 14, 18),
+          handoverDeadline: DateTime(2026, 6, 14, 18),
         ),
       ),
       expect: () => [
@@ -304,8 +296,7 @@ void main() {
             availableKg: any(named: 'availableKg'),
             pricePerKg: any(named: 'pricePerKg'),
             transportMode: any(named: 'transportMode'),
-            handoverWindowStart: any(named: 'handoverWindowStart'),
-            handoverWindowEnd: any(named: 'handoverWindowEnd'),
+            handoverDeadline: any(named: 'handoverDeadline'),
           ),
         ).thenAnswer((_) async {
           // Délai → le 1er event reste en AnnouncementLoading le temps que les
@@ -325,8 +316,7 @@ void main() {
           availableKg: 20.0,
           pricePerKg: 5.0,
           transportMode: TransportMode.plane,
-          handoverWindowStart: DateTime(2026, 6, 14, 16),
-          handoverWindowEnd: DateTime(2026, 6, 14, 18),
+          handoverDeadline: DateTime(2026, 6, 14, 18),
         );
         bloc.add(event);
         bloc.add(event);
@@ -348,8 +338,7 @@ void main() {
             availableKg: any(named: 'availableKg'),
             pricePerKg: any(named: 'pricePerKg'),
             transportMode: any(named: 'transportMode'),
-            handoverWindowStart: any(named: 'handoverWindowStart'),
-            handoverWindowEnd: any(named: 'handoverWindowEnd'),
+            handoverDeadline: any(named: 'handoverDeadline'),
           ),
         ).called(1);
       },
@@ -376,8 +365,7 @@ void main() {
             availableKg: any(named: 'availableKg'),
             pricePerKg: any(named: 'pricePerKg'),
             transportMode: any(named: 'transportMode'),
-            handoverWindowStart: any(named: 'handoverWindowStart'),
-            handoverWindowEnd: any(named: 'handoverWindowEnd'),
+            handoverDeadline: any(named: 'handoverDeadline'),
           ),
         ).thenAnswer((_) async => ann);
         return buildBloc();
@@ -392,8 +380,7 @@ void main() {
           availableKg: 20.0,
           pricePerKg: 5.0,
           transportMode: TransportMode.plane,
-          handoverWindowStart: DateTime(2026, 6, 14, 16),
-          handoverWindowEnd: DateTime(2026, 6, 14, 18),
+          handoverDeadline: DateTime(2026, 6, 14, 18),
         ),
       ),
       expect: () => [isA<AnnouncementLoading>(), isA<AnnouncementCreated>()],
@@ -417,8 +404,7 @@ void main() {
             availableKg: any(named: 'availableKg'),
             pricePerKg: any(named: 'pricePerKg'),
             transportMode: any(named: 'transportMode'),
-            handoverWindowStart: any(named: 'handoverWindowStart'),
-            handoverWindowEnd: any(named: 'handoverWindowEnd'),
+            handoverDeadline: any(named: 'handoverDeadline'),
           ),
         ).thenThrow(const ForbiddenException('Accès refusé', 'account-banned'));
         return buildBloc();
@@ -433,8 +419,7 @@ void main() {
           availableKg: 20.0,
           pricePerKg: 5.0,
           transportMode: TransportMode.plane,
-          handoverWindowStart: DateTime(2026, 6, 14, 16),
-          handoverWindowEnd: DateTime(2026, 6, 14, 18),
+          handoverDeadline: DateTime(2026, 6, 14, 18),
         ),
       ),
       expect: () => [isA<AnnouncementLoading>(), isA<AnnouncementError>()],
@@ -461,8 +446,7 @@ void main() {
             availableKg: any(named: 'availableKg'),
             pricePerKg: any(named: 'pricePerKg'),
             transportMode: any(named: 'transportMode'),
-            handoverWindowStart: any(named: 'handoverWindowStart'),
-            handoverWindowEnd: any(named: 'handoverWindowEnd'),
+            handoverDeadline: any(named: 'handoverDeadline'),
             saveAsDraft: any(named: 'saveAsDraft'),
           ),
         ).thenAnswer((_) async => ann);
@@ -478,8 +462,7 @@ void main() {
           availableKg: 20.0,
           pricePerKg: 5.0,
           transportMode: TransportMode.plane,
-          handoverWindowStart: DateTime(2026, 6, 14, 16),
-          handoverWindowEnd: DateTime(2026, 6, 14, 18),
+          handoverDeadline: DateTime(2026, 6, 14, 18),
           saveAsDraft: true,
         ),
       ),
@@ -497,8 +480,7 @@ void main() {
             availableKg: any(named: 'availableKg'),
             pricePerKg: any(named: 'pricePerKg'),
             transportMode: any(named: 'transportMode'),
-            handoverWindowStart: any(named: 'handoverWindowStart'),
-            handoverWindowEnd: any(named: 'handoverWindowEnd'),
+            handoverDeadline: any(named: 'handoverDeadline'),
             saveAsDraft: captureAny(named: 'saveAsDraft'),
           ),
         ).captured;
@@ -522,8 +504,7 @@ void main() {
             availableKg: any(named: 'availableKg'),
             pricePerKg: any(named: 'pricePerKg'),
             transportMode: any(named: 'transportMode'),
-            handoverWindowStart: any(named: 'handoverWindowStart'),
-            handoverWindowEnd: any(named: 'handoverWindowEnd'),
+            handoverDeadline: any(named: 'handoverDeadline'),
             saveAsDraft: any(named: 'saveAsDraft'),
           ),
         ).thenThrow(
@@ -544,8 +525,7 @@ void main() {
           availableKg: 20.0,
           pricePerKg: 5.0,
           transportMode: TransportMode.plane,
-          handoverWindowStart: DateTime(2026, 6, 14, 16),
-          handoverWindowEnd: DateTime(2026, 6, 14, 18),
+          handoverDeadline: DateTime(2026, 6, 14, 18),
           saveAsDraft: true,
         ),
       ),
@@ -574,8 +554,7 @@ void main() {
             availableKg: any(named: 'availableKg'),
             pricePerKg: any(named: 'pricePerKg'),
             transportMode: any(named: 'transportMode'),
-            handoverWindowStart: any(named: 'handoverWindowStart'),
-            handoverWindowEnd: any(named: 'handoverWindowEnd'),
+            handoverDeadline: any(named: 'handoverDeadline'),
             saveAsDraft: any(named: 'saveAsDraft'),
           ),
         ).thenThrow(
@@ -599,8 +578,7 @@ void main() {
           availableKg: 20.0,
           pricePerKg: 5.0,
           transportMode: TransportMode.plane,
-          handoverWindowStart: DateTime(2026, 6, 14, 16),
-          handoverWindowEnd: DateTime(2026, 6, 14, 18),
+          handoverDeadline: DateTime(2026, 6, 14, 18),
           saveAsDraft: true,
         ),
       ),
@@ -1344,8 +1322,7 @@ void main() {
             availableKg: any(named: 'availableKg'),
             pricePerKg: any(named: 'pricePerKg'),
             transportMode: any(named: 'transportMode'),
-            handoverWindowStart: any(named: 'handoverWindowStart'),
-            handoverWindowEnd: any(named: 'handoverWindowEnd'),
+            handoverDeadline: any(named: 'handoverDeadline'),
           ),
         ).thenAnswer((_) async => updated);
         return buildBloc();
@@ -1361,8 +1338,7 @@ void main() {
           availableKg: 25.0,
           pricePerKg: 6.0,
           transportMode: TransportMode.plane,
-          handoverWindowStart: DateTime(2026, 6, 14, 16),
-          handoverWindowEnd: DateTime(2026, 6, 14, 18),
+          handoverDeadline: DateTime(2026, 6, 14, 18),
         ),
       ),
       expect: () => [isA<AnnouncementLoading>(), isA<AnnouncementUpdated>()],
@@ -1384,8 +1360,7 @@ void main() {
             availableKg: any(named: 'availableKg'),
             pricePerKg: any(named: 'pricePerKg'),
             transportMode: any(named: 'transportMode'),
-            handoverWindowStart: any(named: 'handoverWindowStart'),
-            handoverWindowEnd: any(named: 'handoverWindowEnd'),
+            handoverDeadline: any(named: 'handoverDeadline'),
           ),
         ).thenThrow(
           DioException(
@@ -1409,8 +1384,7 @@ void main() {
           availableKg: 25.0,
           pricePerKg: 6.0,
           transportMode: TransportMode.plane,
-          handoverWindowStart: DateTime(2026, 6, 14, 16),
-          handoverWindowEnd: DateTime(2026, 6, 14, 18),
+          handoverDeadline: DateTime(2026, 6, 14, 18),
         ),
       ),
       expect: () => [
@@ -1439,8 +1413,7 @@ void main() {
             availableKg: any(named: 'availableKg'),
             pricePerKg: any(named: 'pricePerKg'),
             transportMode: any(named: 'transportMode'),
-            handoverWindowStart: any(named: 'handoverWindowStart'),
-            handoverWindowEnd: any(named: 'handoverWindowEnd'),
+            handoverDeadline: any(named: 'handoverDeadline'),
           ),
         ).thenThrow(Exception('Server error'));
         return buildBloc();
@@ -1456,8 +1429,7 @@ void main() {
           availableKg: 25.0,
           pricePerKg: 6.0,
           transportMode: TransportMode.plane,
-          handoverWindowStart: DateTime(2026, 6, 14, 16),
-          handoverWindowEnd: DateTime(2026, 6, 14, 18),
+          handoverDeadline: DateTime(2026, 6, 14, 18),
         ),
       ),
       expect: () => [isA<AnnouncementLoading>(), isA<AnnouncementError>()],
@@ -1468,7 +1440,7 @@ void main() {
 
   group('Handover window forwarding', () {
     blocTest<AnnouncementBloc, AnnouncementState>(
-      'createAnnouncement reçoit handoverWindowStart/End depuis l\'event',
+      'createAnnouncement reçoit handoverDeadline depuis l\'event',
       build: () {
         when(
           () => mockRepo.createAnnouncement(
@@ -1482,8 +1454,7 @@ void main() {
             availableKg: any(named: 'availableKg'),
             pricePerKg: any(named: 'pricePerKg'),
             transportMode: any(named: 'transportMode'),
-            handoverWindowStart: any(named: 'handoverWindowStart'),
-            handoverWindowEnd: any(named: 'handoverWindowEnd'),
+            handoverDeadline: any(named: 'handoverDeadline'),
           ),
         ).thenAnswer((_) async => buildAnnouncement());
         return buildBloc();
@@ -1498,8 +1469,7 @@ void main() {
           availableKg: 20.0,
           pricePerKg: 5.0,
           transportMode: TransportMode.plane,
-          handoverWindowStart: DateTime(2026, 6, 14, 16),
-          handoverWindowEnd: DateTime(2026, 6, 14, 18),
+          handoverDeadline: DateTime(2026, 6, 14, 18),
         ),
       ),
       verify: (_) {
@@ -1515,15 +1485,14 @@ void main() {
             availableKg: any(named: 'availableKg'),
             pricePerKg: any(named: 'pricePerKg'),
             transportMode: any(named: 'transportMode'),
-            handoverWindowStart: DateTime(2026, 6, 14, 16),
-            handoverWindowEnd: DateTime(2026, 6, 14, 18),
+            handoverDeadline: DateTime(2026, 6, 14, 18),
           ),
         ).called(1);
       },
     );
 
     blocTest<AnnouncementBloc, AnnouncementState>(
-      'updateAnnouncement reçoit handoverWindowStart/End depuis l\'event',
+      'updateAnnouncement reçoit handoverDeadline depuis l\'event',
       build: () {
         when(
           () => mockRepo.updateAnnouncement(
@@ -1538,8 +1507,7 @@ void main() {
             availableKg: any(named: 'availableKg'),
             pricePerKg: any(named: 'pricePerKg'),
             transportMode: any(named: 'transportMode'),
-            handoverWindowStart: any(named: 'handoverWindowStart'),
-            handoverWindowEnd: any(named: 'handoverWindowEnd'),
+            handoverDeadline: any(named: 'handoverDeadline'),
           ),
         ).thenAnswer((_) async => buildAnnouncement());
         return buildBloc();
@@ -1555,8 +1523,7 @@ void main() {
           availableKg: 25.0,
           pricePerKg: 6.0,
           transportMode: TransportMode.plane,
-          handoverWindowStart: DateTime(2026, 6, 14, 16),
-          handoverWindowEnd: DateTime(2026, 6, 14, 18),
+          handoverDeadline: DateTime(2026, 6, 14, 18),
         ),
       ),
       verify: (_) {
@@ -1573,8 +1540,7 @@ void main() {
             availableKg: any(named: 'availableKg'),
             pricePerKg: any(named: 'pricePerKg'),
             transportMode: any(named: 'transportMode'),
-            handoverWindowStart: DateTime(2026, 6, 14, 16),
-            handoverWindowEnd: DateTime(2026, 6, 14, 18),
+            handoverDeadline: DateTime(2026, 6, 14, 18),
           ),
         ).called(1);
       },

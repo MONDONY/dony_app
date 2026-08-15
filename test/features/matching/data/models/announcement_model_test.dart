@@ -311,28 +311,23 @@ void main() {
   });
 
   group('AnnouncementModel handover window', () {
-    test('parse handoverWindowStart/End depuis le JSON', () {
+    test('parse handoverDeadline depuis le JSON', () {
       final json = baseAnnouncementJson()
-        ..['handoverWindowStart'] = '2026-06-14T16:00:00'
-        ..['handoverWindowEnd'] = '2026-06-14T18:00:00';
+        ..['handoverDeadline'] = '2026-06-14T18:00:00';
       final model = AnnouncementModel.fromJson(json);
-      expect(model.handoverWindowStart, DateTime.parse('2026-06-14T16:00:00'));
-      expect(model.handoverWindowEnd, DateTime.parse('2026-06-14T18:00:00'));
+      expect(model.handoverDeadline, DateTime.parse('2026-06-14T18:00:00'));
     });
 
     test('handover window null toléré (annonce legacy)', () {
       final model = AnnouncementModel.fromJson(baseAnnouncementJson());
-      expect(model.handoverWindowStart, isNull);
-      expect(model.handoverWindowEnd, isNull);
+      expect(model.handoverDeadline, isNull);
     });
 
     test('round-trips handover window through toJson', () {
       final json = baseAnnouncementJson()
-        ..['handoverWindowStart'] = '2026-06-14T16:00:00.000Z'
-        ..['handoverWindowEnd'] = '2026-06-14T18:00:00.000Z';
+        ..['handoverDeadline'] = '2026-06-14T18:00:00.000Z';
       final out = AnnouncementModel.fromJson(json).toJson();
-      expect(out['handoverWindowStart'], isNotNull);
-      expect(out['handoverWindowEnd'], isNotNull);
+      expect(out['handoverDeadline'], isNotNull);
     });
   });
 

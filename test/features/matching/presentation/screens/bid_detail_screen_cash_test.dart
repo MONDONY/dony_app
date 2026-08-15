@@ -71,7 +71,7 @@ const _kTravelerId = 'traveler-001';
 BidModel _makeBid({
   BidPaymentMethod paymentMethod = BidPaymentMethod.cash,
   String status = 'ACCEPTED',
-  DateTime? handoverWindowEnd,
+  DateTime? handoverDeadline,
   String? cancellationNoShowStatus,
 }) => BidModel(
   id: 'bid-001',
@@ -82,7 +82,7 @@ BidModel _makeBid({
   createdAt: DateTime(2026, 5),
   updatedAt: DateTime(2026, 5),
   paymentMethod: paymentMethod,
-  handoverWindowEnd: handoverWindowEnd,
+  handoverDeadline: handoverDeadline,
   cancellationNoShowStatus: cancellationNoShowStatus,
 );
 
@@ -288,7 +288,7 @@ void main() {
 
   group('Bouton no-show (voyageur, CASH, ACCEPTED, fenêtre passée)', () {
     testWidgets(
-      'voyageur + cash + ACCEPTED + handoverWindowEnd passé → bouton visible',
+      'voyageur + cash + ACCEPTED + handoverDeadline passé → bouton visible',
       (tester) async {
         final authBloc = _MockAuthBloc();
         when(
@@ -301,9 +301,7 @@ void main() {
         await _pump(
           tester,
           bid: _makeBid(
-            handoverWindowEnd: DateTime.now().subtract(
-              const Duration(hours: 1),
-            ),
+            handoverDeadline: DateTime.now().subtract(const Duration(hours: 1)),
           ),
           authBloc: authBloc,
         );
@@ -317,7 +315,7 @@ void main() {
     );
 
     testWidgets(
-      'voyageur + cash + ACCEPTED + handoverWindowEnd futur → bouton absent',
+      'voyageur + cash + ACCEPTED + handoverDeadline futur → bouton absent',
       (tester) async {
         final authBloc = _MockAuthBloc();
         when(
@@ -330,7 +328,7 @@ void main() {
         await _pump(
           tester,
           bid: _makeBid(
-            handoverWindowEnd: DateTime.now().add(const Duration(hours: 2)),
+            handoverDeadline: DateTime.now().add(const Duration(hours: 2)),
           ),
           authBloc: authBloc,
         );
@@ -345,7 +343,7 @@ void main() {
     // Régression : le flux no-show est désormais bidirectionnel (CASH + Stripe).
     // Le voyageur peut signaler l'absence de l'expéditeur même en Stripe.
     testWidgets(
-      'voyageur + STRIPE + ACCEPTED + handoverWindowEnd passé → bouton visible',
+      'voyageur + STRIPE + ACCEPTED + handoverDeadline passé → bouton visible',
       (tester) async {
         final authBloc = _MockAuthBloc();
         when(
@@ -359,9 +357,7 @@ void main() {
           tester,
           bid: _makeBid(
             paymentMethod: BidPaymentMethod.stripe,
-            handoverWindowEnd: DateTime.now().subtract(
-              const Duration(hours: 1),
-            ),
+            handoverDeadline: DateTime.now().subtract(const Duration(hours: 1)),
           ),
           authBloc: authBloc,
         );
@@ -380,7 +376,7 @@ void main() {
     const kTitle = "Le voyageur ne s'est pas présenté ?";
 
     testWidgets(
-      'expéditeur + ACCEPTED + handoverWindowEnd passé → section visible',
+      'expéditeur + ACCEPTED + handoverDeadline passé → section visible',
       (tester) async {
         final authBloc = _MockAuthBloc();
         when(
@@ -394,9 +390,7 @@ void main() {
           tester,
           bid: _makeBid(
             paymentMethod: BidPaymentMethod.stripe,
-            handoverWindowEnd: DateTime.now().subtract(
-              const Duration(hours: 1),
-            ),
+            handoverDeadline: DateTime.now().subtract(const Duration(hours: 1)),
           ),
           authBloc: authBloc,
         );
@@ -426,9 +420,7 @@ void main() {
           tester,
           bid: _makeBid(
             status: 'HANDED_OVER',
-            handoverWindowEnd: DateTime.now().subtract(
-              const Duration(hours: 1),
-            ),
+            handoverDeadline: DateTime.now().subtract(const Duration(hours: 1)),
           ),
           authBloc: authBloc,
         );
@@ -441,7 +433,7 @@ void main() {
     );
 
     testWidgets(
-      'expéditeur + ACCEPTED + handoverWindowEnd futur → section absente',
+      'expéditeur + ACCEPTED + handoverDeadline futur → section absente',
       (tester) async {
         final authBloc = _MockAuthBloc();
         when(
@@ -454,7 +446,7 @@ void main() {
         await _pump(
           tester,
           bid: _makeBid(
-            handoverWindowEnd: DateTime.now().add(const Duration(hours: 2)),
+            handoverDeadline: DateTime.now().add(const Duration(hours: 2)),
           ),
           authBloc: authBloc,
         );
@@ -592,7 +584,7 @@ void main() {
 
   // ── Task 10 : ConfirmPresenceBar (fenêtre de remise depuis l'annonce) ──────────
 
-  group('ConfirmPresenceBar (handoverWindowStart depuis annonce)', () {
+  group('ConfirmPresenceBar (handoverDeadline depuis annonce)', () {
     testWidgets(
       'voyageur + ACCEPTED + dans la fenêtre de remise → Confirmer ma présence visible',
       (tester) async {
@@ -615,8 +607,7 @@ void main() {
           status: 'ACCEPTED',
           createdAt: now,
           updatedAt: now,
-          handoverWindowStart: now.add(const Duration(hours: 1)),
-          handoverWindowEnd: now.add(const Duration(hours: 2)),
+          handoverDeadline: now.add(const Duration(hours: 2)),
         );
 
         await _pump(tester, bid: bid, authBloc: authBloc);
@@ -626,10 +617,10 @@ void main() {
     );
 
     testWidgets(
-      'voyageur + ACCEPTED + handoverWindowStart null + handoverWindowEnd futur → Confirmer ma présence visible',
+      'voyageur + ACCEPTED + handoverDeadline null + handoverDeadline futur → Confirmer ma présence visible',
       (tester) async {
-        // Dans le redesign, TravelerStickyBar utilise uniquement handoverWindowEnd
-        // pour décider d'afficher ConfirmPresenceBar. handoverWindowStart null
+        // Dans le redesign, TravelerStickyBar utilise uniquement handoverDeadline
+        // pour décider d'afficher ConfirmPresenceBar. handoverDeadline null
         // n'empêche plus l'affichage si la fenêtre de fin est dans le futur.
         final authBloc = _MockAuthBloc();
         when(
@@ -643,7 +634,7 @@ void main() {
           tester,
           bid: _makeBid(
             paymentMethod: BidPaymentMethod.stripe,
-            handoverWindowEnd: DateTime.now().add(const Duration(hours: 2)),
+            handoverDeadline: DateTime.now().add(const Duration(hours: 2)),
           ),
           authBloc: authBloc,
         );

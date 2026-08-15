@@ -177,20 +177,17 @@ class AnnouncementDetailBody extends StatelessWidget {
           const SizedBox(height: DonySpacing.md),
         ],
 
-        // ── Fenêtre de remise (sky) — dates complètes ────────────────────────
-        if (a.handoverWindowStart != null && a.handoverWindowEnd != null) ...[
+        // ── Dépôt des colis (sky) — date limite ──────────────────────────────
+        if (a.handoverDeadline != null) ...[
           const _BSectionTitle(
-            label: 'Fenêtre de remise',
+            label: 'Dépôt des colis',
             color: Color(0xFF0284C7),
           ),
           const SizedBox(height: DonySpacing.xs),
           _BSectionRow(
-            iconAsset: 'clock',
-            label: 'Créneau',
-            value: _handoverRangeLabel(
-              a.handoverWindowStart!.toLocal(),
-              a.handoverWindowEnd!.toLocal(),
-            ),
+            iconAsset: 'calendar',
+            label: 'Date limite',
+            value: _handoverDeadlineLabel(a.handoverDeadline!.toLocal()),
             iconBg: const Color(0xFFFEF9C3),
             iconColor: const Color(0xFFB45309),
           ).animate().fadeIn(delay: 110.ms),
@@ -538,9 +535,8 @@ class _ParcelStatCell extends StatelessWidget {
 }
 
 /// Formate la plage de remise — toujours dates complètes début et fin.
-String _handoverRangeLabel(DateTime start, DateTime end) {
-  final fmt = DateFormat('EEE d MMM, HH:mm', 'fr');
-  return '${fmt.format(start)} → ${fmt.format(end)}';
+String _handoverDeadlineLabel(DateTime deadline) {
+  return 'Jusqu\'au ${DateFormat('EEE d MMM', 'fr').format(deadline)}';
 }
 
 class _HeroChip extends StatelessWidget {

@@ -88,12 +88,9 @@ AnnouncementModel _$AnnouncementModelFromJson(
   reservedKg: (json['reservedKg'] as num?)?.toDouble() ?? 0,
   surplusEligible: json['surplusEligible'] as bool? ?? false,
   surplusPublished: json['surplusPublished'] as bool? ?? false,
-  handoverWindowStart: json['handoverWindowStart'] == null
+  handoverDeadline: json['handoverDeadline'] == null
       ? null
-      : DateTime.parse(json['handoverWindowStart'] as String),
-  handoverWindowEnd: json['handoverWindowEnd'] == null
-      ? null
-      : DateTime.parse(json['handoverWindowEnd'] as String),
+      : DateTime.parse(json['handoverDeadline'] as String),
   isFavorite: json['isFavorite'] as bool? ?? false,
   urgent: json['urgent'] as bool?,
   currency: json['currency'] as String? ?? 'EUR',
@@ -138,8 +135,7 @@ Map<String, dynamic> _$AnnouncementModelToJson(AnnouncementModel instance) =>
       'reservedKg': instance.reservedKg,
       'surplusEligible': instance.surplusEligible,
       'surplusPublished': instance.surplusPublished,
-      'handoverWindowStart': instance.handoverWindowStart?.toIso8601String(),
-      'handoverWindowEnd': instance.handoverWindowEnd?.toIso8601String(),
+      'handoverDeadline': instance.handoverDeadline?.toIso8601String(),
       'isFavorite': instance.isFavorite,
       'urgent': instance.urgent,
       'currency': instance.currency,

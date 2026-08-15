@@ -4,7 +4,7 @@ import 'package:dony/features/matching/presentation/widgets/detail_card.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-/// Carte affichant la fenêtre de remise (lieu, début, fin, confirmation voyageur).
+/// Carte affichant le dépôt du colis (lieu, date limite, confirmation voyageur).
 ///
 /// Correspond à l'ancienne classe privée `_HandoverCard` de
 /// `bid_detail_screen.dart`.
@@ -16,26 +16,17 @@ class HandoverCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DetailCard(
-      title: 'Fenêtre de remise',
+      title: 'Dépôt du colis',
       child: Column(
         children: [
           InfoRow(label: 'Lieu', value: bid.handoverLocation ?? '-'),
-          if (bid.handoverWindowStart != null) ...[
+          if (bid.handoverDeadline != null) ...[
             const SizedBox(height: DonySpacing.sm),
             InfoRow(
-              label: 'Début',
+              label: 'Date limite',
               value: DateFormat(
-                'dd/MM/yyyy HH:mm',
-              ).format(bid.handoverWindowStart!.toLocal()),
-            ),
-          ],
-          if (bid.handoverWindowEnd != null) ...[
-            const SizedBox(height: DonySpacing.sm),
-            InfoRow(
-              label: 'Fin',
-              value: DateFormat(
-                'dd/MM/yyyy HH:mm',
-              ).format(bid.handoverWindowEnd!.toLocal()),
+                'dd/MM/yyyy',
+              ).format(bid.handoverDeadline!.toLocal()),
             ),
           ],
           const SizedBox(height: DonySpacing.sm),

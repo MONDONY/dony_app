@@ -334,9 +334,8 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
               ).animate().fadeIn(delay: 80.ms),
             ],
 
-            // Fenêtre de remise
-            if (a.handoverWindowStart != null &&
-                a.handoverWindowEnd != null) ...[
+            // Date limite de dépôt
+            if (a.handoverDeadline != null) ...[
               const SizedBox(height: DonySpacing.md),
               Container(
                 padding: const EdgeInsets.all(DonySpacing.md),
@@ -347,14 +346,14 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                 ),
                 child: Row(
                   children: [
-                    DonyIcon('clock', size: 16, color: cs.primary),
+                    DonyIcon('calendar', size: 16, color: cs.primary),
                     const SizedBox(width: DonySpacing.sm),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Fenêtre de remise',
+                            'Dépôt des colis',
                             style: tt.labelMedium?.copyWith(
                               color: cs.onSurfaceVariant,
                               letterSpacing: 0.5,
@@ -362,8 +361,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                           ),
                           const SizedBox(height: DonySpacing.xs),
                           Text(
-                            '${DateFormat('EEE d MMM, HH:mm', 'fr').format(a.handoverWindowStart!.toLocal())}'
-                            ' → ${DateFormat('HH:mm', 'fr').format(a.handoverWindowEnd!.toLocal())}',
+                            'Jusqu\'au ${DateFormat('EEE d MMM', 'fr').format(a.handoverDeadline!.toLocal())}',
                             style: tt.bodyMedium?.copyWith(
                               fontWeight: FontWeight.w500,
                               color: cs.onSurface,

@@ -6,8 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 BidModel _bid({
   String? handoverLocation,
-  DateTime? handoverWindowStart,
-  DateTime? handoverWindowEnd,
+  DateTime? handoverDeadline,
   bool voyageurConfirmed = false,
 }) => BidModel(
   id: 'bid-1',
@@ -18,8 +17,7 @@ BidModel _bid({
   createdAt: DateTime(2026, 5, 10),
   updatedAt: DateTime(2026, 5, 10),
   handoverLocation: handoverLocation,
-  handoverWindowStart: handoverWindowStart,
-  handoverWindowEnd: handoverWindowEnd,
+  handoverDeadline: handoverDeadline,
   voyageurConfirmed: voyageurConfirmed,
 );
 
@@ -34,9 +32,9 @@ Future<void> _pump(WidgetTester tester, BidModel bid) async {
 }
 
 void main() {
-  testWidgets('affiche le titre "Fenêtre de remise"', (tester) async {
+  testWidgets('affiche le titre "Dépôt du colis"', (tester) async {
     await _pump(tester, _bid());
-    expect(find.text('Fenêtre de remise'), findsOneWidget);
+    expect(find.text('Dépôt du colis'), findsOneWidget);
   });
 
   testWidgets('affiche le lieu de remise quand renseigné', (tester) async {
@@ -50,22 +48,15 @@ void main() {
     expect(find.text('-'), findsOneWidget);
   });
 
-  testWidgets('affiche les dates début/fin quand renseignées', (tester) async {
-    await _pump(
-      tester,
-      _bid(
-        handoverWindowStart: DateTime(2026, 6, 15, 9),
-        handoverWindowEnd: DateTime(2026, 6, 15, 12),
-      ),
-    );
-    expect(find.text('Début'), findsOneWidget);
-    expect(find.text('Fin'), findsOneWidget);
+  testWidgets('affiche la date limite quand renseignée', (tester) async {
+    await _pump(tester, _bid(handoverDeadline: DateTime(2026, 6, 15, 12)));
+    expect(find.text('Date limite'), findsOneWidget);
+    expect(find.text('15/06/2026'), findsOneWidget);
   });
 
-  testWidgets('pas de dates → "Début" et "Fin" absents', (tester) async {
+  testWidgets('pas de date limite → la ligne est absente', (tester) async {
     await _pump(tester, _bid());
-    expect(find.text('Début'), findsNothing);
-    expect(find.text('Fin'), findsNothing);
+    expect(find.text('Date limite'), findsNothing);
   });
 
   testWidgets('voyageurConfirmed=true → "Oui ✓"', (tester) async {

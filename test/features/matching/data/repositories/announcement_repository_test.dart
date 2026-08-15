@@ -56,8 +56,7 @@ void main() {
         availableKg: any(named: 'availableKg'),
         pricePerKg: any(named: 'pricePerKg'),
         transportMode: any(named: 'transportMode'),
-        handoverWindowStart: any(named: 'handoverWindowStart'),
-        handoverWindowEnd: any(named: 'handoverWindowEnd'),
+        handoverDeadline: any(named: 'handoverDeadline'),
       ),
     ).thenAnswer((_) async => _ann());
 
@@ -70,8 +69,7 @@ void main() {
       availableKg: 10.0,
       pricePerKg: 12.0,
       transportMode: TransportMode.plane,
-      handoverWindowStart: DateTime(2026, 6, 14, 16),
-      handoverWindowEnd: DateTime(2026, 6, 14, 18),
+      handoverDeadline: DateTime(2026, 6, 14, 18),
     );
     expect(result.id, 'ann-1');
   });
@@ -90,8 +88,7 @@ void main() {
         availableKg: any(named: 'availableKg'),
         pricePerKg: any(named: 'pricePerKg'),
         transportMode: any(named: 'transportMode'),
-        handoverWindowStart: any(named: 'handoverWindowStart'),
-        handoverWindowEnd: any(named: 'handoverWindowEnd'),
+        handoverDeadline: any(named: 'handoverDeadline'),
       ),
     ).thenAnswer((inv) async {
       capturedMode =
@@ -108,8 +105,7 @@ void main() {
       availableKg: 10.0,
       pricePerKg: 12.0,
       transportMode: TransportMode.train,
-      handoverWindowStart: DateTime(2026, 6, 14, 16),
-      handoverWindowEnd: DateTime(2026, 6, 14, 18),
+      handoverDeadline: DateTime(2026, 6, 14, 18),
     );
 
     expect(capturedMode, TransportMode.train);
@@ -128,8 +124,7 @@ void main() {
         availableKg: any(named: 'availableKg'),
         pricePerKg: any(named: 'pricePerKg'),
         transportMode: any(named: 'transportMode'),
-        handoverWindowStart: any(named: 'handoverWindowStart'),
-        handoverWindowEnd: any(named: 'handoverWindowEnd'),
+        handoverDeadline: any(named: 'handoverDeadline'),
         saveAsDraft: any(named: 'saveAsDraft'),
       ),
     ).thenAnswer((_) async => _ann());
@@ -143,8 +138,7 @@ void main() {
       availableKg: 10.0,
       pricePerKg: 12.0,
       transportMode: TransportMode.plane,
-      handoverWindowStart: DateTime(2026, 6, 14, 16),
-      handoverWindowEnd: DateTime(2026, 6, 14, 18),
+      handoverDeadline: DateTime(2026, 6, 14, 18),
       saveAsDraft: true,
     );
 
@@ -160,8 +154,7 @@ void main() {
         availableKg: any(named: 'availableKg'),
         pricePerKg: any(named: 'pricePerKg'),
         transportMode: any(named: 'transportMode'),
-        handoverWindowStart: any(named: 'handoverWindowStart'),
-        handoverWindowEnd: any(named: 'handoverWindowEnd'),
+        handoverDeadline: any(named: 'handoverDeadline'),
         saveAsDraft: captureAny(named: 'saveAsDraft'),
       ),
     ).captured;
@@ -333,8 +326,7 @@ void main() {
         availableKg: any(named: 'availableKg'),
         pricePerKg: any(named: 'pricePerKg'),
         transportMode: any(named: 'transportMode'),
-        handoverWindowStart: any(named: 'handoverWindowStart'),
-        handoverWindowEnd: any(named: 'handoverWindowEnd'),
+        handoverDeadline: any(named: 'handoverDeadline'),
       ),
     ).thenAnswer((_) async => _ann());
 
@@ -348,8 +340,7 @@ void main() {
       availableKg: 10.0,
       pricePerKg: 12.0,
       transportMode: TransportMode.car,
-      handoverWindowStart: DateTime(2026, 6, 14, 16),
-      handoverWindowEnd: DateTime(2026, 6, 14, 18),
+      handoverDeadline: DateTime(2026, 6, 14, 18),
     );
     expect(result.id, 'ann-1');
   });
@@ -369,8 +360,7 @@ void main() {
         availableKg: any(named: 'availableKg'),
         pricePerKg: any(named: 'pricePerKg'),
         transportMode: any(named: 'transportMode'),
-        handoverWindowStart: any(named: 'handoverWindowStart'),
-        handoverWindowEnd: any(named: 'handoverWindowEnd'),
+        handoverDeadline: any(named: 'handoverDeadline'),
       ),
     ).thenAnswer((inv) async {
       capturedMode =
@@ -388,8 +378,7 @@ void main() {
       availableKg: 10.0,
       pricePerKg: 12.0,
       transportMode: TransportMode.bus,
-      handoverWindowStart: DateTime(2026, 6, 14, 16),
-      handoverWindowEnd: DateTime(2026, 6, 14, 18),
+      handoverDeadline: DateTime(2026, 6, 14, 18),
     );
 
     expect(capturedMode, TransportMode.bus);

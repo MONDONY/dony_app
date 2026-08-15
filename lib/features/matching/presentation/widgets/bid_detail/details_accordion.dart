@@ -47,9 +47,9 @@ class _DetailsAccordionState extends State<DetailsAccordion> {
       return '-';
     }
     try {
-      return DateFormat('dd/MM/yyyy HH:mm', 'fr').format(d.toLocal());
+      return DateFormat('dd/MM/yyyy', 'fr').format(d.toLocal());
     } catch (_) {
-      return DateFormat('dd/MM/yyyy HH:mm').format(d.toLocal());
+      return DateFormat('dd/MM/yyyy').format(d.toLocal());
     }
   }
 
@@ -132,25 +132,18 @@ class _DetailsAccordionState extends State<DetailsAccordion> {
                       children: [
                         Divider(color: cs.outline, height: 1),
                         const SizedBox(height: DonySpacing.md),
-                        // Section 1 — FENÊTRE DE REMISE
-                        const _SectionLabel(label: 'FENÊTRE DE REMISE'),
+                        // Section 1 — DÉPÔT DU COLIS
+                        const _SectionLabel(label: 'DÉPÔT DU COLIS'),
                         const SizedBox(height: DonySpacing.sm),
                         InfoRow(
                           label: 'Lieu',
                           value: bid.handoverLocation ?? '-',
                         ),
-                        if (bid.handoverWindowStart != null) ...[
+                        if (bid.handoverDeadline != null) ...[
                           const SizedBox(height: DonySpacing.sm),
                           InfoRow(
-                            label: 'Début',
-                            value: _formatHandoverDate(bid.handoverWindowStart),
-                          ),
-                        ],
-                        if (bid.handoverWindowEnd != null) ...[
-                          const SizedBox(height: DonySpacing.sm),
-                          InfoRow(
-                            label: 'Fin',
-                            value: _formatHandoverDate(bid.handoverWindowEnd),
+                            label: 'Date limite',
+                            value: _formatHandoverDate(bid.handoverDeadline),
                           ),
                         ],
                         const SizedBox(height: DonySpacing.sm),
