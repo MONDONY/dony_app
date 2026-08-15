@@ -84,7 +84,16 @@ class ErrorReportingService {
 
   static Map<String, Object> _safeContext(Map<String, Object>? context) {
     if (context == null) return const {};
-    const allowed = {'method', 'feature', 'endpoint', 'retry_count', 'channel'};
+    const allowed = {
+      'method',
+      'feature',
+      'endpoint',
+      'retry_count',
+      'channel',
+      'apns_token_available',
+      'platform',
+      'attempts',
+    };
     final output = <String, Object>{};
     for (final entry in context.entries) {
       if (!allowed.contains(entry.key)) continue;

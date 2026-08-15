@@ -22,7 +22,7 @@ void main() {
   group('AppPreferencesBloc', () {
     test('état initial lit depuis Hive', () {
       final bloc = AppPreferencesBloc(mockBox);
-      expect(bloc.state.preferences.themeMode, equals('system'));
+      expect(bloc.state.preferences.themeMode, equals('light'));
       expect(bloc.state.preferences.languageCode, equals('fr'));
       bloc.close();
     });

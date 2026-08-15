@@ -193,10 +193,13 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
     }
     final me = _myLocation;
     if (me != null) {
-      // Cadre ~1000 km autour de la position : l'user voit sa zone + les
-      // annonces dans ce rayon, sans zoomer trop près (échelle région/pays).
+      // Cadre ~300 km autour de la position, soit l'échelle du pays (zoom ~5,5).
+      // 1000 km auparavant : le cadre couvrait 2000 km de diamètre, ce qui donne
+      // un zoom ~3,8 contre 3,5 pour la vue par défaut sans position. Accepter la
+      // localisation ne changeait donc quasiment rien à l'écran, et l'utilisateur
+      // ne se reconnaissait pas sur la carte.
       controller.animateCamera(
-        CameraUpdate.newLatLngBounds(boundsAround(me, 1000), 60.0),
+        CameraUpdate.newLatLngBounds(boundsAround(me, 300), 60.0),
       );
     } else if (!_awaitingFirstLocation) {
       _fitInitialBounds();

@@ -55,6 +55,32 @@ void main() {
     expect(sink.stackTrace, isNotNull);
   });
 
+  test(
+    'preserves safe APNs diagnostics used to investigate token failures',
+    () async {
+      final sink = _RecordingSink();
+      final reporter = ErrorReportingService(sink);
+
+      await reporter.report(
+        StateError('FCM token unavailable'),
+        operation: 'notifications.fcm_token_unavailable',
+        context: {
+          'feature': 'notifications',
+          'channel': 'fcm',
+          'apns_token_available': false,
+          'platform': 'ios',
+          'attempts': 3,
+          'device_token': 'must-not-leak',
+        },
+      );
+
+      expect(sink.context, containsPair('apns_token_available', false));
+      expect(sink.context, containsPair('platform', 'ios'));
+      expect(sink.context, containsPair('attempts', 3));
+      expect(sink.context, isNot(contains('device_token')));
+    },
+  );
+
   test('captures server errors but not validation errors', () async {
     final sink = _RecordingSink();
     final reporter = ErrorReportingService(sink);

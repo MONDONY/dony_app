@@ -31,6 +31,44 @@ void main() {
     }
   });
 
+  group('resolveNotificationRoute — nouveaux événements transactionnels', () {
+    for (final type in [
+      'HANDOVER_REMINDER_H2',
+      'MOBILE_MONEY_PAYMENT_CONFIRMED',
+      'PARCEL_RETURNED',
+      'RETURN_DEADLINE_WARNING',
+      'RETURN_DEADLINE_EXPIRED',
+    ]) {
+      test('$type routes to bid detail', () {
+        expect(
+          resolveNotificationRoute(type, {'bidId': bidId}),
+          '/bids/$bidId',
+        );
+      });
+
+      test('$type rejects an invalid bidId', () {
+        expect(resolveNotificationRoute(type, {'bidId': '../admin'}), isNull);
+      });
+    }
+
+    test('KYC_VERIFIED routes to KYC status', () {
+      expect(resolveNotificationRoute('KYC_VERIFIED', {}), '/kyc/status');
+    });
+
+    test('KYC_ACTION_REQUIRED routes to KYC verification', () {
+      expect(
+        resolveNotificationRoute('KYC_ACTION_REQUIRED', {}),
+        '/kyc/verify',
+      );
+    });
+
+    for (final type in ['DISPUTE_UPDATED', 'DISPUTE_RESOLVED']) {
+      test('$type routes to disputes list', () {
+        expect(resolveNotificationRoute(type, {}), '/disputes');
+      });
+    }
+  });
+
   group('resolveNotificationRoute — négociation', () {
     test('negotiation (relance/annulation) routes to thread page', () {
       expect(
