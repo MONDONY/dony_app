@@ -56,5 +56,16 @@ void main() {
       expect(b.contains(lyon), isTrue);
       expect(b.contains(dakar), isFalse);
     });
+
+    // Rayon du cadrage d'ouverture quand la localisation est accordée
+    // (AnnouncementMapView._applyInitialCamera). À 1000 km, le cadre couvrait
+    // 2000 km de diamètre : un zoom ~3,8 contre 3,5 pour la vue par défaut sans
+    // position, donc aucun recentrage perceptible. 300 km ramène à l'échelle du
+    // pays, ce que Lyon exclu vérifie ici.
+    test('rayon ~300 km : échelle pays, Lyon (~392 km) sort du cadre', () {
+      final b = boundsAround(paris, 300);
+      expect(b.contains(paris), isTrue);
+      expect(b.contains(lyon), isFalse);
+    });
   });
 }
