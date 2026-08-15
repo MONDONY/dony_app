@@ -7,7 +7,6 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/bloc/city_search_event.dart';
 import 'package:dony/features/city/bloc/city_search_state.dart';
-import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trajet_step.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -26,7 +25,6 @@ Widget _buildWithValues({
   DateTime? departureDate,
   TimeOfDay? departureTime,
   TimeOfDay? arrivalTime,
-  TransportMode? transportMode,
   required MockCitySearchBloc departureCityBloc,
   required MockCitySearchBloc arrivalCityBloc,
 }) {
@@ -35,7 +33,6 @@ Widget _buildWithValues({
   final departureDateNotifier = ValueNotifier<DateTime?>(departureDate);
   final departureTimeNotifier = ValueNotifier<TimeOfDay?>(departureTime);
   final arrivalTimeNotifier = ValueNotifier<TimeOfDay?>(arrivalTime);
-  final transportModeNotifier = ValueNotifier<TransportMode?>(transportMode);
 
   return MaterialApp(
     home: Scaffold(
@@ -46,7 +43,6 @@ Widget _buildWithValues({
           departureDateNotifier: departureDateNotifier,
           departureTimeNotifier: departureTimeNotifier,
           arrivalTimeNotifier: arrivalTimeNotifier,
-          transportModeNotifier: transportModeNotifier,
           departureCityBloc: departureCityBloc,
           arrivalCityBloc: arrivalCityBloc,
           onSelectDepartureTime: () async {},
@@ -266,117 +262,6 @@ void main() {
     );
   });
 
-  group('Transport chips', () {
-    testWidgets('chip avion sélectionnable — tap met à jour le notifier', (
-      tester,
-    ) async {
-      final transportNotifier = ValueNotifier<TransportMode?>(null);
-      final departureCityNotifier = ValueNotifier<String?>(null);
-      final arrivalCityNotifier = ValueNotifier<String?>(null);
-      final departureDateNotifier = ValueNotifier<DateTime?>(null);
-      final departureTimeNotifier = ValueNotifier<TimeOfDay?>(null);
-      final arrivalTimeNotifier = ValueNotifier<TimeOfDay?>(null);
-
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: SingleChildScrollView(
-              child: TrajetStep(
-                departureCityNotifier: departureCityNotifier,
-                arrivalCityNotifier: arrivalCityNotifier,
-                departureDateNotifier: departureDateNotifier,
-                departureTimeNotifier: departureTimeNotifier,
-                arrivalTimeNotifier: arrivalTimeNotifier,
-                transportModeNotifier: transportNotifier,
-                departureCityBloc: departureCityBloc,
-                arrivalCityBloc: arrivalCityBloc,
-                onSelectDepartureTime: () async {},
-                onSelectArrivalTime: () async {},
-                onSelectDate: () async {},
-              ),
-            ),
-          ),
-        ),
-      );
-      await tester.pump(const Duration(milliseconds: 300));
-      await tester.pump();
-
-      // Tapper sur le chip avion
-      await tester.tap(find.byKey(const Key('transport-chip-plane')));
-      await tester.pump();
-
-      expect(transportNotifier.value, TransportMode.plane);
-    });
-
-    testWidgets(
-      'chip non-avion désactivé — tap affiche un snackbar "Bientôt disponible"',
-      (tester) async {
-        final transportNotifier = ValueNotifier<TransportMode?>(null);
-        final departureCityNotifier = ValueNotifier<String?>(null);
-        final arrivalCityNotifier = ValueNotifier<String?>(null);
-        final departureDateNotifier = ValueNotifier<DateTime?>(null);
-        final departureTimeNotifier = ValueNotifier<TimeOfDay?>(null);
-        final arrivalTimeNotifier = ValueNotifier<TimeOfDay?>(null);
-
-        await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: SingleChildScrollView(
-                child: TrajetStep(
-                  departureCityNotifier: departureCityNotifier,
-                  arrivalCityNotifier: arrivalCityNotifier,
-                  departureDateNotifier: departureDateNotifier,
-                  departureTimeNotifier: departureTimeNotifier,
-                  arrivalTimeNotifier: arrivalTimeNotifier,
-                  transportModeNotifier: transportNotifier,
-                  departureCityBloc: departureCityBloc,
-                  arrivalCityBloc: arrivalCityBloc,
-                  onSelectDepartureTime: () async {},
-                  onSelectArrivalTime: () async {},
-                  onSelectDate: () async {},
-                ),
-              ),
-            ),
-          ),
-        );
-        await tester.pump(const Duration(milliseconds: 300));
-        await tester.pump();
-
-        // Tapper sur le chip voiture (non-avion)
-        await tester.tap(find.byKey(const Key('transport-chip-car')));
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 500));
-
-        // Le notifier n'a pas changé (avion seulement sélectionnable)
-        expect(transportNotifier.value, isNull);
-        // Le snackbar "Bientôt disponible" est visible
-        expect(find.text('Bientôt disponible'), findsOneWidget);
-      },
-    );
-
-    testWidgets(
-      'tous les chips de transport sont présents (un par TransportMode)',
-      (tester) async {
-        await tester.pumpWidget(
-          _buildWithValues(
-            departureCityBloc: departureCityBloc,
-            arrivalCityBloc: arrivalCityBloc,
-          ),
-        );
-        await tester.pump(const Duration(milliseconds: 300));
-        await tester.pump();
-
-        for (final mode in TransportMode.values) {
-          expect(
-            find.byKey(Key('transport-chip-${mode.name}')),
-            findsOneWidget,
-            reason: 'Le chip ${mode.name} doit être rendu',
-          );
-        }
-      },
-    );
-  });
-
   group('Labels de section', () {
     testWidgets('le label "Trajet" est affiché', (tester) async {
       await tester.pumpWidget(
@@ -389,15 +274,5 @@ void main() {
       expect(find.text('Trajet'), findsOneWidget);
     });
 
-    testWidgets('le label "Mode de transport" est affiché', (tester) async {
-      await tester.pumpWidget(
-        _buildWithValues(
-          departureCityBloc: departureCityBloc,
-          arrivalCityBloc: arrivalCityBloc,
-        ),
-      );
-      await tester.pump(const Duration(milliseconds: 300));
-      expect(find.text('Mode de transport'), findsOneWidget);
-    });
   });
 }

@@ -17,7 +17,6 @@ import 'package:dony/features/city/bloc/city_search_event.dart';
 import 'package:dony/features/city/bloc/city_search_state.dart';
 import 'package:dony/features/city/data/city_model.dart';
 import 'package:dony/features/city/presentation/widgets/city_corridor_fields.dart';
-import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trajet_step.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -57,7 +56,6 @@ Widget _buildSubject({
   final departureDateNotifier = ValueNotifier<DateTime?>(null);
   final departureTimeNotifier = ValueNotifier<TimeOfDay?>(null);
   final arrivalTimeNotifier = ValueNotifier<TimeOfDay?>(null);
-  final transportModeNotifier = ValueNotifier<TransportMode?>(null);
 
   return MaterialApp(
     home: Scaffold(
@@ -68,7 +66,6 @@ Widget _buildSubject({
           departureDateNotifier: departureDateNotifier,
           departureTimeNotifier: departureTimeNotifier,
           arrivalTimeNotifier: arrivalTimeNotifier,
-          transportModeNotifier: transportModeNotifier,
           departureCityBloc: departureCityBloc,
           arrivalCityBloc: arrivalCityBloc,
           onSelectDepartureTime: () async {},
@@ -159,7 +156,6 @@ void main() {
         final departureDateNotifier = ValueNotifier<DateTime?>(null);
         final departureTimeNotifier = ValueNotifier<TimeOfDay?>(null);
         final arrivalTimeNotifier = ValueNotifier<TimeOfDay?>(null);
-        final transportModeNotifier = ValueNotifier<TransportMode?>(null);
 
         await tester.pumpWidget(
           MaterialApp(
@@ -171,7 +167,6 @@ void main() {
                   departureDateNotifier: departureDateNotifier,
                   departureTimeNotifier: departureTimeNotifier,
                   arrivalTimeNotifier: arrivalTimeNotifier,
-                  transportModeNotifier: transportModeNotifier,
                   departureCityBloc: departureCityBloc,
                   arrivalCityBloc: arrivalCityBloc,
                   onSelectDepartureTime: () async {
@@ -202,7 +197,6 @@ void main() {
       final departureDateNotifier = ValueNotifier<DateTime?>(null);
       final departureTimeNotifier = ValueNotifier<TimeOfDay?>(null);
       final arrivalTimeNotifier = ValueNotifier<TimeOfDay?>(null);
-      final transportModeNotifier = ValueNotifier<TransportMode?>(null);
 
       await tester.pumpWidget(
         MaterialApp(
@@ -214,7 +208,6 @@ void main() {
                 departureDateNotifier: departureDateNotifier,
                 departureTimeNotifier: departureTimeNotifier,
                 arrivalTimeNotifier: arrivalTimeNotifier,
-                transportModeNotifier: transportModeNotifier,
                 departureCityBloc: departureCityBloc,
                 arrivalCityBloc: arrivalCityBloc,
                 onSelectDepartureTime: () async {},
@@ -554,7 +547,6 @@ void main() {
       final departureDateNotifier = ValueNotifier<DateTime?>(null);
       final departureTimeNotifier = ValueNotifier<TimeOfDay?>(null);
       final arrivalTimeNotifier = ValueNotifier<TimeOfDay?>(null);
-      final transportModeNotifier = ValueNotifier<TransportMode?>(null);
 
       await tester.pumpWidget(
         MaterialApp(
@@ -566,7 +558,6 @@ void main() {
                 departureDateNotifier: departureDateNotifier,
                 departureTimeNotifier: departureTimeNotifier,
                 arrivalTimeNotifier: arrivalTimeNotifier,
-                transportModeNotifier: transportModeNotifier,
                 departureCityBloc: departureCityBloc,
                 arrivalCityBloc: arrivalCityBloc,
                 onSelectDepartureTime: () async {},
@@ -602,7 +593,6 @@ void main() {
         final departureDateNotifier = ValueNotifier<DateTime?>(null);
         final departureTimeNotifier = ValueNotifier<TimeOfDay?>(null);
         final arrivalTimeNotifier = ValueNotifier<TimeOfDay?>(null);
-        final transportModeNotifier = ValueNotifier<TransportMode?>(null);
 
         await tester.pumpWidget(
           MaterialApp(
@@ -614,7 +604,6 @@ void main() {
                   departureDateNotifier: departureDateNotifier,
                   departureTimeNotifier: departureTimeNotifier,
                   arrivalTimeNotifier: arrivalTimeNotifier,
-                  transportModeNotifier: transportModeNotifier,
                   departureCityBloc: departureCityBloc,
                   arrivalCityBloc: arrivalCityBloc,
                   onSelectDepartureTime: () async {},

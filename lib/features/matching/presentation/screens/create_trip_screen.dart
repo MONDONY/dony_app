@@ -1780,7 +1780,6 @@ class _TripFormContentState extends State<_TripFormContent> {
           departureDateNotifier: _departureDateNotifier,
           departureTimeNotifier: _departureTimeNotifier,
           arrivalTimeNotifier: _arrivalTimeNotifier,
-          transportModeNotifier: _transportModeNotifier,
           onSelectDepartureTime: _selectDepartureTime,
           onSelectArrivalTime: _selectArrivalTime,
           onSelectDate: _selectDate,
@@ -1788,7 +1787,6 @@ class _TripFormContentState extends State<_TripFormContent> {
           arrivalCityError: _msg(missing, _Step0Field.arrivalCity),
           departureDateError: _msg(missing, _Step0Field.departureDate),
           departureTimeError: _msg(missing, _Step0Field.departureTime),
-          transportModeError: _msg(missing, _Step0Field.transportMode),
           // Corridor verrouillé en modification (Q1) ET en trajet dédié (lockContext).
           // Date verrouillée seulement en modification ; le dédié la garde éditable
           // dans la fenêtre de tolérance.
@@ -1796,7 +1794,6 @@ class _TripFormContentState extends State<_TripFormContent> {
           lockDate: widget.lockCorridorAndDate,
         ),
       ),
-      const SizedBox(height: DonySpacing.lg),
       const CaSectionLabel(label: 'DÉPÔT DES COLIS', iconAsset: 'package'),
       const SizedBox(height: DonySpacing.xs),
       CaSectionCard(

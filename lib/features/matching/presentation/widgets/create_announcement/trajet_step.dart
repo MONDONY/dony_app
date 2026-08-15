@@ -1,4 +1,4 @@
-// Étape 0 du formulaire "Publier un trajet" : Trajet + Mode de transport.
+// Étape 0 du formulaire "Publier un trajet" : corridor, dates et horaires.
 // Extrait de create_announcement_bottom_sheet.dart — refactor pur, aucun changement
 // de comportement.
 import 'package:dony/core/constants/city_airport_codes.dart';
@@ -9,13 +9,12 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/data/city_model.dart';
 import 'package:dony/features/city/presentation/widgets/city_corridor_fields.dart';
-import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 
-/// Corps de l'étape 0 (Trajet + Mode de transport) du formulaire de création
+/// Corps de l'étape 0 (corridor, dates, horaires) du formulaire de création
 /// d'annonce.
 ///
 /// Tous les notifiers restent dans [_CreateAnnouncementContentState] (parent) ;
@@ -35,7 +34,6 @@ class TrajetStep extends StatelessWidget {
   final ValueNotifier<DateTime?> departureDateNotifier;
   final ValueNotifier<TimeOfDay?> departureTimeNotifier;
   final ValueNotifier<TimeOfDay?> arrivalTimeNotifier;
-  final ValueNotifier<TransportMode?> transportModeNotifier;
 
   /// Callbacks vers les méthodes du state parent.
   final Future<void> Function() onSelectDepartureTime;
@@ -66,7 +64,6 @@ class TrajetStep extends StatelessWidget {
   final String? arrivalCityError;
   final String? departureDateError;
   final String? departureTimeError;
-  final String? transportModeError;
 
   const TrajetStep({
     super.key,
@@ -77,7 +74,6 @@ class TrajetStep extends StatelessWidget {
     required this.departureDateNotifier,
     required this.departureTimeNotifier,
     required this.arrivalTimeNotifier,
-    required this.transportModeNotifier,
     required this.onSelectDepartureTime,
     required this.onSelectArrivalTime,
     required this.onSelectDate,
@@ -89,7 +85,6 @@ class TrajetStep extends StatelessWidget {
     this.arrivalCityError,
     this.departureDateError,
     this.departureTimeError,
-    this.transportModeError,
   });
 
   @override
@@ -394,47 +389,13 @@ class TrajetStep extends StatelessWidget {
           ).animate().fadeIn(delay: 60.ms);
         },
       ),
-      const SizedBox(height: DonySpacing.xxl),
-
-      // ── MODE DE TRANSPORT ─────────────────────────────────────────────────
-      const CaSectionLabel(label: 'Mode de transport', iconAsset: 'route'),
-      const SizedBox(height: DonySpacing.sm),
-      ValueListenableBuilder<TransportMode?>(
-        valueListenable: transportModeNotifier,
-        builder: (context, current, _) {
-          return Wrap(
-            spacing: DonySpacing.sm,
-            runSpacing: DonySpacing.sm,
-            children: [
-              for (final mode in TransportMode.values)
-                Opacity(
-                  opacity: mode != TransportMode.plane ? 0.4 : 1.0,
-                  child: DonyChip(
-                    key: Key('transport-chip-${mode.name}'),
-                    label: mode.label,
-                    icon: mode.icon,
-                    selected: current == mode,
-                    onTap: mode == TransportMode.plane
-                        ? () => transportModeNotifier.value = mode
-                        : () {
-                            DonySnackbar.show(
-                              context,
-                              message: 'Bientôt disponible',
-                            );
-                          },
-                  ),
-                ),
-            ],
-          );
-        },
-      ).animate().fadeIn(delay: 110.ms),
-      // Les chips ne sont pas un champ de formulaire : pas de décoration, donc
-      // pas d'errorText natif.
-      DonyFieldError(
-        message: transportModeError,
-        textKey: const Key('transport-mode-error'),
-      ),
-      const SizedBox(height: DonySpacing.xxl),
+      // Le sélecteur « Mode de transport » a été retiré de l'écran : seul
+      // l'avion était réellement proposé (les autres modes affichaient
+      // « Bientôt disponible »), la question n'apportait donc rien au voyageur
+      // et éloignait les sections utiles. Le mode reste porté par
+      // `transportModeNotifier`, positionné sur `plane` par défaut à la
+      // création, et continue d'être envoyé au backend qui l'exige.
+      const SizedBox(height: DonySpacing.lg),
     ];
   }
 }
