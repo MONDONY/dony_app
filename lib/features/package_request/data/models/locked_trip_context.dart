@@ -8,7 +8,7 @@ import 'package:equatable/equatable.dart';
 /// must NOT be editable in the create-announcement form.
 class LockedTripContext extends Equatable {
   const LockedTripContext({
-    required this.threadId,
+    this.threadId,
     required this.packageRequestId,
     required this.departureCity,
     required this.arrivalCity,
@@ -21,7 +21,13 @@ class LockedTripContext extends Equatable {
     this.currency = 'EUR',
   });
 
-  final String threadId;
+  /// Null when creating this dedicated trip as part of a brand-new offer (no
+  /// negotiation thread exists yet — the offer and the trip are created
+  /// atomically, see `NegotiationStartWithDedicatedTripRequested`). Non-null
+  /// when recovering from an existing AWAITING_TRIP thread (refuseTrip loop),
+  /// where the trip is linked to that thread via
+  /// `NegotiationCreateDedicatedTripRequested`.
+  final String? threadId;
   final String packageRequestId;
   final String departureCity;
   final String arrivalCity;

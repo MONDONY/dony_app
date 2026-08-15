@@ -132,6 +132,74 @@ void main() {
   );
 
   blocTest<NegotiationBloc, NegotiationState>(
+    'NegotiationStartWithDedicatedTripRequested calls repository.start with '
+    'createDedicatedTrip=true',
+    build: () {
+      when(
+        () => repo.start(
+          packageRequestId: any(named: 'packageRequestId'),
+          proposedPriceEur: any(named: 'proposedPriceEur'),
+          travelerTravelDate: any(named: 'travelerTravelDate'),
+          travelerAvailableKg: any(named: 'travelerAvailableKg'),
+          travelerAnnouncementId: any(named: 'travelerAnnouncementId'),
+          body: any(named: 'body'),
+          createDedicatedTrip: any(named: 'createDedicatedTrip'),
+          dedicatedTripPayload: any(named: 'dedicatedTripPayload'),
+        ),
+      ).thenAnswer((_) async => _fakeThread());
+      return _makeBloc(repo);
+    },
+    act: (bloc) => bloc.add(
+      NegotiationStartWithDedicatedTripRequested(
+        packageRequestId: 'req-1',
+        proposedPriceEur: 42,
+        travelerTravelDate: DateTime(2026, 9, 1),
+        travelerAvailableKg: 5,
+        dedicatedTrip: DedicatedTripPayload(
+          departureDate: DateTime(2026, 9, 1),
+          pickupAddress: const {'label': 'Pickup', 'lat': 48.8, 'lng': 2.3},
+          deliveryAddress: const {'label': 'Delivery', 'lat': 5.3, 'lng': -4.0},
+        ),
+      ),
+    ),
+    expect: () => [isA<NegotiationLoading>(), isA<NegotiationLoaded>()],
+    verify: (_) => verify(
+      () => repo.start(
+        packageRequestId: 'req-1',
+        proposedPriceEur: 42,
+        travelerTravelDate: DateTime(2026, 9, 1),
+        travelerAvailableKg: 5,
+        travelerAnnouncementId: null,
+        body: null,
+        createDedicatedTrip: true,
+        dedicatedTripPayload: any(named: 'dedicatedTripPayload'),
+      ),
+    ).called(1),
+  );
+
+  test('DedicatedTripPayload.toJson omits nulls and includes required fields', () {
+    final payload = DedicatedTripPayload(
+      departureDate: DateTime(2026, 9, 1),
+      pickupAddress: const {'label': 'Pickup', 'lat': 48.8, 'lng': 2.3},
+      deliveryAddress: const {'label': 'Delivery', 'lat': 5.3, 'lng': -4.0},
+    );
+    final json = payload.toJson();
+    expect(json['departureDate'], '2026-09-01');
+    expect(json['pickupAddress'], {'label': 'Pickup', 'lat': 48.8, 'lng': 2.3});
+    expect(json['deliveryAddress'], {
+      'label': 'Delivery',
+      'lat': 5.3,
+      'lng': -4.0,
+    });
+    expect(json['useCardForCommission'], false);
+    expect(json.containsKey('departureTime'), isFalse);
+    expect(json.containsKey('arrivalTime'), isFalse);
+    expect(json.containsKey('description'), isFalse);
+    expect(json.containsKey('acceptedContentTypes'), isFalse);
+    expect(json.containsKey('refusedTypes'), isFalse);
+  });
+
+  blocTest<NegotiationBloc, NegotiationState>(
     'counter from Loaded emits ActionInProgress then Loaded',
     build: () {
       when(

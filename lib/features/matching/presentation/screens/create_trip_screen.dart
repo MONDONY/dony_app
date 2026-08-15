@@ -1251,31 +1251,59 @@ class _TripFormContentState extends State<_TripFormContent> {
 
     if (_isLocked) {
       final lc = widget.lockContext!;
-      final event = NegotiationCreateDedicatedTripRequested(
-        threadId: lc.threadId,
-        departureDate: departureDate,
-        departureTime: departureTime,
-        arrivalTime: arrivalTime,
-        pickupAddress: {
-          'label': _pickupAddress!.label,
-          'lat': _pickupAddress!.lat,
-          'lng': _pickupAddress!.lng,
-        },
-        deliveryAddress: {
-          'label': _deliveryAddress!.label,
-          'lat': _deliveryAddress!.lat,
-          'lng': _deliveryAddress!.lng,
-        },
-        description: description,
-        acceptedContentTypes: allAccepted,
-        refusedTypes: refused,
-        paymentMethod: lc.paymentMethod,
+      final pickupAddress = {
+        'label': _pickupAddress!.label,
+        'lat': _pickupAddress!.lat,
+        'lng': _pickupAddress!.lng,
+      };
+      final deliveryAddress = {
+        'label': _deliveryAddress!.label,
+        'lat': _deliveryAddress!.lat,
+        'lng': _deliveryAddress!.lng,
+      };
+
+      if (lc.threadId != null) {
+        final event = NegotiationCreateDedicatedTripRequested(
+          threadId: lc.threadId!,
+          departureDate: departureDate,
+          departureTime: departureTime,
+          arrivalTime: arrivalTime,
+          pickupAddress: pickupAddress,
+          deliveryAddress: deliveryAddress,
+          description: description,
+          acceptedContentTypes: allAccepted,
+          refusedTypes: refused,
+          paymentMethod: lc.paymentMethod,
+        );
+        // Stashed so a payment-method block (cash-funds-required /
+        // none-available) can resubmit the SAME data with card consent, cf.
+        // `_resubmitDedicated`.
+        _lastDedicatedTripEvent = event;
+        context.read<NegotiationBloc>().add(event);
+        return;
+      }
+
+      // No existing negotiation thread: the traveler reached this form
+      // directly from the package request (no AWAITING_TRIP thread to link
+      // to yet) — create the offer AND the dedicated trip atomically.
+      context.read<NegotiationBloc>().add(
+        NegotiationStartWithDedicatedTripRequested(
+          packageRequestId: lc.packageRequestId,
+          proposedPriceEur: lc.agreedPriceEur,
+          travelerTravelDate: departureDate,
+          travelerAvailableKg: lc.weightKg,
+          dedicatedTrip: DedicatedTripPayload(
+            departureDate: departureDate,
+            departureTime: departureTime,
+            arrivalTime: arrivalTime,
+            pickupAddress: pickupAddress,
+            deliveryAddress: deliveryAddress,
+            description: description,
+            acceptedContentTypes: allAccepted,
+            refusedTypes: refused,
+          ),
+        ),
       );
-      // Stashed so a payment-method block (cash-funds-required /
-      // none-available) can resubmit the SAME data with card consent, cf.
-      // `_resubmitDedicated`.
-      _lastDedicatedTripEvent = event;
-      context.read<NegotiationBloc>().add(event);
       return;
     }
 

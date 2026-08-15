@@ -77,6 +77,100 @@ class NegotiationStartRequested extends NegotiationEvent {
   ];
 }
 
+/// Mirrors `NegotiationCreateDedicatedTripRequest` fields (backend DTO) —
+/// shared shape between [NegotiationCreateDedicatedTripRequested] (linked to
+/// an existing AWAITING_TRIP thread) and
+/// [NegotiationStartWithDedicatedTripRequested] (no thread yet, created
+/// atomically with the offer).
+class DedicatedTripPayload extends Equatable {
+  const DedicatedTripPayload({
+    required this.departureDate,
+    this.departureTime,
+    this.arrivalTime,
+    required this.pickupAddress,
+    required this.deliveryAddress,
+    this.description,
+    this.acceptedContentTypes,
+    this.refusedTypes,
+    this.useCardForCommission = false,
+  });
+
+  final DateTime departureDate;
+  final String? departureTime;
+  final String? arrivalTime;
+  final Map<String, dynamic> pickupAddress;
+  final Map<String, dynamic> deliveryAddress;
+  final String? description;
+  final List<String>? acceptedContentTypes;
+  final List<String>? refusedTypes;
+
+  /// CASH only: traveler consents to pay the commission on their card when
+  /// the wallet is short (charged at finalize, wallet-first then card).
+  final bool useCardForCommission;
+
+  Map<String, dynamic> toJson() => {
+    'departureDate': departureDate.toIso8601String().substring(0, 10),
+    if (departureTime != null) 'departureTime': departureTime,
+    if (arrivalTime != null) 'arrivalTime': arrivalTime,
+    'pickupAddress': pickupAddress,
+    'deliveryAddress': deliveryAddress,
+    if (description != null) 'description': description,
+    if (acceptedContentTypes != null)
+      'acceptedContentTypes': acceptedContentTypes,
+    if (refusedTypes != null) 'refusedTypes': refusedTypes,
+    'useCardForCommission': useCardForCommission,
+  };
+
+  @override
+  List<Object?> get props => [
+    departureDate,
+    departureTime,
+    arrivalTime,
+    pickupAddress,
+    deliveryAddress,
+    description,
+    acceptedContentTypes,
+    refusedTypes,
+    useCardForCommission,
+  ];
+}
+
+/// Creates the offer AND a dedicated trip atomically (no existing negotiation
+/// thread yet) — used from `CreateTripScreen` when
+/// `LockedTripContext.threadId` is null (traveler reached the create-trip
+/// form directly from a package request, not from an AWAITING_TRIP thread).
+class NegotiationStartWithDedicatedTripRequested extends NegotiationEvent {
+  const NegotiationStartWithDedicatedTripRequested({
+    required this.packageRequestId,
+    required this.proposedPriceEur,
+    required this.travelerTravelDate,
+    required this.travelerAvailableKg,
+    required this.dedicatedTrip,
+    this.body,
+    this.isFirmPrice = false,
+  });
+  final String packageRequestId;
+  final double proposedPriceEur;
+  final DateTime travelerTravelDate;
+  final double travelerAvailableKg;
+  final DedicatedTripPayload dedicatedTrip;
+  final String? body;
+
+  /// True when the traveler accepted a firm (non-negotiable) price.
+  final bool isFirmPrice;
+
+  @override
+  List<Object?> get props => [
+    packageRequestId,
+    proposedPriceEur,
+    travelerTravelDate,
+    travelerAvailableKg,
+    dedicatedTrip,
+    body,
+    isFirmPrice,
+  ];
+}
+
 class NegotiationCounterRequested extends NegotiationEvent {
   const NegotiationCounterRequested({
     required this.threadId,
@@ -297,6 +391,7 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
       super(const NegotiationInitial()) {
     on<NegotiationFetchRequested>(_onFetch);
     on<NegotiationStartRequested>(_onStart);
+    on<NegotiationStartWithDedicatedTripRequested>(_onStartWithDedicatedTrip);
     on<NegotiationCounterRequested>(_onCounter);
     on<NegotiationAcceptRequested>(_onAccept);
     on<NegotiationRejectRequested>(_onReject);
@@ -384,6 +479,45 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
         body: e.body,
         createDedicatedTrip: e.createDedicatedTrip,
         dedicatedTripPayload: e.dedicatedTripPayload,
+      );
+      emit(NegotiationLoaded(thread));
+      if (e.isFirmPrice) {
+        unawaited(
+          _analytics.logEvent(
+            AnalyticsEvents.firmPriceTaken,
+            properties: {'request_id': e.packageRequestId},
+          ),
+        );
+      } else {
+        unawaited(
+          _analytics.logEvent(
+            AnalyticsEvents.negotiationOfferMade,
+            properties: {
+              'amount_bracket': _amountBracket(e.proposedPriceEur),
+              'currency': ActiveCurrency.current?.code ?? 'unknown',
+              'context': 'sender',
+            },
+          ),
+        );
+      }
+    } catch (err) {
+      emit(NegotiationError(unwrapDioError(err)));
+    }
+  }
+
+  Future<void> _onStartWithDedicatedTrip(
+    NegotiationStartWithDedicatedTripRequested e,
+    Emitter<NegotiationState> emit,
+  ) async {
+    emit(const NegotiationLoading());
+    try {
+      final thread = await _repository.start(
+        packageRequestId: e.packageRequestId,
+        proposedPriceEur: e.proposedPriceEur,
+        travelerTravelDate: e.travelerTravelDate,
+        travelerAvailableKg: e.travelerAvailableKg,
+        createDedicatedTrip: true,
+        dedicatedTripPayload: e.dedicatedTrip.toJson(),
       );
       emit(NegotiationLoaded(thread));
       if (e.isFirmPrice) {

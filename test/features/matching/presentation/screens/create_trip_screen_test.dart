@@ -2419,6 +2419,81 @@ void main() {
       },
     );
   });
+
+  // ── Group: threadId==null — offer + dedicated trip created atomically ────────
+
+  group(
+    'CreateTripScreen — locked flow without an existing thread (Task 9+10)',
+    () {
+      late _MockNegotiationBloc negotiationBloc;
+
+      setUp(() {
+        negotiationBloc = _makeNegotiationBloc();
+        when(() => negotiationBloc.add(any())).thenReturn(null);
+      });
+
+      testWidgets(
+        'dispatches NegotiationStartWithDedicatedTripRequested when '
+        'lockContext.threadId is null',
+        (tester) async {
+          tester.view.physicalSize = const Size(800, 1024);
+          tester.view.devicePixelRatio = 1.0;
+          addTearDown(tester.view.resetPhysicalSize);
+
+          final lockContext = LockedTripContext(
+            packageRequestId: 'req-1',
+            departureCity: 'Lyon',
+            arrivalCity: 'Abidjan',
+            desiredDate: DateTime(2026, 9),
+            dateToleranceDays: 5,
+            weightKg: 5.0,
+            transportMode: TransportMode.plane,
+            agreedPriceEur: 50.0,
+          );
+
+          final args = CreateTripArgs(
+            lockContext: lockContext,
+            announcement: _makeFullAnnouncement(),
+            negotiationBloc: negotiationBloc,
+          );
+          await pumpAndDrain(
+            tester,
+            _wrapWithRouter(CreateTripScreen(args: args)),
+          );
+
+          await tester.tap(find.text('Continuer'));
+          await tester.pump(const Duration(milliseconds: 600));
+          await tester.tap(find.text('Continuer'));
+          await tester.pump(const Duration(milliseconds: 600));
+
+          expect(
+            find.byKey(const Key('create-dedicated-trip-submit')),
+            findsOneWidget,
+          );
+          await tester.tap(
+            find.byKey(const Key('create-dedicated-trip-submit')),
+          );
+          await tester.pump();
+
+          final captured = verify(
+            () => negotiationBloc.add(captureAny()),
+          ).captured;
+          expect(
+            captured.whereType<NegotiationStartWithDedicatedTripRequested>(),
+            hasLength(1),
+          );
+          final event = captured
+              .whereType<NegotiationStartWithDedicatedTripRequested>()
+              .single;
+          expect(event.packageRequestId, 'req-1');
+          expect(event.proposedPriceEur, 50.0);
+          expect(event.travelerAvailableKg, 5.0);
+          expect(event.dedicatedTrip.pickupAddress['label'], 'Tour Eiffel');
+          expect(event.dedicatedTrip.deliveryAddress['label'], 'Dakar Centre');
+        },
+      );
+    },
+  );
 }
 
 // ── Route observer for navigation tests ──────────────────────────────────────
