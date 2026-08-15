@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:bloc/bloc.dart';
 import 'package:dony/app/app.dart';
+import 'package:dony/app/initial_location.dart';
+import 'package:dony/app/router.dart';
 import 'package:dony/core/config/api_config.dart';
 import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/di/injection.dart';
@@ -126,7 +128,12 @@ Future<void> _bootstrap() async {
   // OTP redemandé en boucle. La révocation cross-device doit être ré-appliquée
   // côté backend (rejet du token → 401), pas par une heuristique cliente.
 
-  // Show UI immediately — splash screen handles loading state
+  // Route d'entrée résolue à partir du seul état local (session Firebase, code
+  // local, onboarding) : pas de health check bloquant, donc pas de second
+  // splash. Le splash natif reste affiché jusqu'au premier frame de DonyApp,
+  // qui appelle FlutterNativeSplash.remove().
+  initialAppLocation = await resolveInitialLocation();
+
   runApp(const DonyApp());
 
   // Heavy async init runs after UI is displayed (no ANR risk)

@@ -10,6 +10,7 @@ import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/analytics_consent_gate.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/bloc/local_auth_bloc.dart';
 import 'package:dony/features/connectivity/bloc/connectivity_cubit.dart';
@@ -38,6 +39,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 
 class DonyApp extends StatefulWidget {
   const DonyApp({super.key});
@@ -52,6 +54,12 @@ class _DonyAppState extends State<DonyApp> {
   StreamSubscription<Uri>? _deepLinkSub;
   AppLifecycleListener? _lifecycleListener;
   final _appLinks = AppLinks();
+
+  /// Le premier verdict de `AuthCheckRequested` a été traité. Le garde-fou
+  /// « compte absent côté backend » ne doit jouer qu'à ce moment-là, pas sur
+  /// les `AuthInitial` ultérieurs (déconnexion volontaire, changement de
+  /// compte) qui ont déjà leur propre navigation.
+  bool _startupAuthResolved = false;
 
   // go() est nécessaire pour activer le bon onglet du shell principal.
   // Toutes les autres routes utilisent push() pour empiler par-dessus l'état
@@ -80,7 +88,12 @@ class _DonyAppState extends State<DonyApp> {
         unawaited(getIt<NotificationService>().onAppResumed());
       },
     );
-    WidgetsBinding.instance.addPostFrameCallback((_) => _initDeepLinks());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Le splash natif était maintenu depuis `_bootstrap` : on le retire dès
+      // que le premier écran réel est peint. C'est le seul splash de l'app.
+      FlutterNativeSplash.remove();
+      _initDeepLinks();
+    });
   }
 
   @override
@@ -203,7 +216,21 @@ class _DonyAppState extends State<DonyApp> {
                 BlocProvider<ActiveRoleCubit>(
                   create: (_) => getIt<ActiveRoleCubit>(),
                 ),
-                BlocProvider<AuthBloc>(create: (_) => getIt<AuthBloc>()),
+                // lazy: false + AuthCheckRequested : le profil serveur est
+                // chargé dès le démarrage, EN ARRIÈRE-PLAN. La navigation
+                // initiale, elle, ne l'attend pas (cf. resolveInitialLocation)
+                // — c'est ce qui supprime l'écran d'attente bloquant qui
+                // apparaissait quand le backend mettait du temps à répondre.
+                BlocProvider<AuthBloc>(
+                  lazy: false,
+                  create: (_) {
+                    final bloc = getIt<AuthBloc>();
+                    if (FirebaseAuth.instance.currentUser != null) {
+                      bloc.add(const AuthCheckRequested());
+                    }
+                    return bloc;
+                  },
+                ),
                 BlocProvider<LocalAuthBloc>(
                   create: (_) => getIt<LocalAuthBloc>(),
                 ),
@@ -249,6 +276,19 @@ class _DonyAppState extends State<DonyApp> {
               ],
               child: BlocListener<AuthBloc, AuthState>(
                 listener: (context, state) {
+                  // Garde-fou de démarrage : session Firebase valide mais
+                  // compte absent côté backend (404 → AuthInitial). On ne peut
+                  // pas rester sur /home avec un compte inexistant. Une erreur
+                  // réseau, elle, émet AuthError : on ne déconnecte pas et
+                  // l'écran affiche son état d'erreur avec réessai.
+                  if (!_startupAuthResolved && state is! AuthLoading) {
+                    _startupAuthResolved = true;
+                    if (state is AuthInitial &&
+                        FirebaseAuth.instance.currentUser != null) {
+                      appRouter.go('/auth/method');
+                      return;
+                    }
+                  }
                   if (state is AuthAuthenticated) {
                     context.read<ActiveRoleCubit>().syncWithRoles(
                       state.user.roles,

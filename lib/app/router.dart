@@ -149,7 +149,6 @@ import 'package:dony/features/settings/presentation/screens/notification_setting
 import 'package:dony/features/settings/presentation/screens/privacy_settings_screen.dart';
 import 'package:dony/features/settings/presentation/screens/security_settings_screen.dart';
 import 'package:dony/features/settings/presentation/settings_screen.dart';
-import 'package:dony/features/splash/presentation/splash_screen.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/stripe_account/presentation/screens/account_disabled_screen.dart';
 import 'package:dony/features/stripe_account/presentation/screens/account_rejected_screen.dart';
@@ -186,7 +185,6 @@ import 'package:posthog_flutter/posthog_flutter.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 const _publicRoutes = {
-  '/splash',
   '/onboarding',
   '/auth/method',
   '/auth/phone',
@@ -199,8 +197,17 @@ const _publicRoutes = {
   '/auth/local',
 };
 
+/// Route d'entrée, calculée par `resolveInitialLocation()` avant `runApp`
+/// (cf. `lib/app/initial_location.dart`).
+///
+/// `appRouter` est un `final` de haut niveau : Dart l'initialise paresseusement,
+/// au premier accès (le `MaterialApp.router` de `DonyApp`). Affecter cette
+/// variable dans le bootstrap, avant `runApp`, est donc bien pris en compte.
+/// Repli sur `/auth/method` si le bootstrap ne l'a pas renseignée (tests).
+String initialAppLocation = '/auth/method';
+
 final appRouter = GoRouter(
-  initialLocation: '/splash',
+  initialLocation: initialAppLocation,
   // PosthogObserver : auto-capture des vues d'écran ($screen) à chaque
   // changement de route (no-op tant que le consentement n'est pas accordé).
   observers: [SentryNavigatorObserver(), PosthogObserver()],
@@ -227,7 +234,6 @@ final appRouter = GoRouter(
   },
   routes: [
     // ── Auth (hors shell) ─────────────────────────────────────────────────
-    GoRoute(path: '/splash', builder: (context, state) => const SplashScreen()),
     GoRoute(
       path: '/onboarding',
       builder: (context, state) => const OnboardingScreen(),
