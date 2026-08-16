@@ -84,15 +84,14 @@ void main() {
       );
     });
 
-    // La commission espèces n'a pas pu être prélevée : le voyageur est le seul
-    // à pouvoir débloquer l'accord, on l'emmène recharger sans détour par le
-    // thread (qui ne lui offre aucune action utile).
-    test('negotiation_cash_commission_failed routes to wallet topup', () {
+    // Commission en attente : le fil porte le CTA de règlement (bouton +
+    // sheet de recharge le cas échéant), pas de détour nécessaire.
+    test('negotiation_commission_pending routes to the thread', () {
       expect(
-        resolveNotificationRoute('negotiation_cash_commission_failed', {
+        resolveNotificationRoute('negotiation_commission_pending', {
           'threadId': threadId,
         }),
-        '/payments/wallet/topup/method',
+        '/negotiations/$threadId',
       );
     });
 

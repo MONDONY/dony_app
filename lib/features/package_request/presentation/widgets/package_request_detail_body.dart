@@ -442,14 +442,17 @@ class CandidatesSection extends StatelessWidget {
       final openThreads = threads
           .where((t) => t.status == NegotiationThreadStatus.open)
           .toList();
-      // Offre déjà choisie : le thread est passé en AWAITING_TRIP / AWAITING_PAYMENT.
-      // Tant qu'elle n'est pas payée, elle doit RESTER visible ici pour que
-      // l'expéditeur la finalise — sinon l'offre disparaît de « Ma demande ».
+      // Offre déjà choisie : le thread est passé en AWAITING_TRIP /
+      // AWAITING_PAYMENT / AWAITING_COMMISSION (accord cash conclu, mais le
+      // voyageur n'a pas encore réglé la commission). Tant qu'elle n'est pas
+      // scellée, elle doit RESTER visible ici pour que l'expéditeur la
+      // finalise, sinon l'offre disparaît de « Ma demande ».
       final chosen = threads
           .where(
             (t) =>
                 t.status == NegotiationThreadStatus.awaitingTrip ||
-                t.status == NegotiationThreadStatus.awaitingPayment,
+                t.status == NegotiationThreadStatus.awaitingPayment ||
+                t.status == NegotiationThreadStatus.awaitingCommission,
           )
           .toList();
 

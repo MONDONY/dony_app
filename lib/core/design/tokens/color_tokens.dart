@@ -140,6 +140,9 @@ abstract final class DonyColors {
   static const threadStatusViolet = Color(0xFF5B21B6);
   static const threadStatusGreen = Color(0xFF15803D);
   static const threadStatusNeutral = Color(0xFF6B7280);
+  // Distinct de threadStatusAmber (ATT. TRAJET) : AWAITING_COMMISSION est une
+  // urgence à échéance (compte à rebours 2h), pas une simple attente passive.
+  static const threadStatusOrange = Color(0xFFC2410C);
 
   /// Texte des pastilles de statut de négociation, posé sur des fonds pâles
   /// figés.
@@ -150,6 +153,7 @@ abstract final class DonyColors {
   /// seuil de 4.5:1.
   static const threadPillAmberFg = Color(0xFF8A5A12); // 5.31:1 sur #FEF3C7
   static const threadPillNeutralFg = Color(0xFF5F6673); // 5.44:1 sur #F3F4F6
+  static const threadPillOrangeFg = Color(0xFF9A3412); // 6.37:1 sur #FFEDD5
 
   // Dégradé hero (shipment_list) — fond bleu-sable/navy selon brightness
   static const heroGradientDarkA = Color(0xFF080D18);

@@ -128,14 +128,7 @@ class _MyNegotiationsBodyState extends State<MyNegotiationsBody> {
                 }
 
                 final all = state.threads;
-                final activeCount = all
-                    .where(
-                      (t) =>
-                          t.status == NegotiationThreadStatus.open ||
-                          t.status == NegotiationThreadStatus.awaitingTrip ||
-                          t.status == NegotiationThreadStatus.awaitingPayment,
-                    )
-                    .length;
+                final activeCount = all.where((t) => t.status.isActive).length;
                 final terminalCount = all.length - activeCount;
                 final filtered = applyNegotiationFilters(all, filter);
 
@@ -340,6 +333,8 @@ class _NegoCard extends StatelessWidget {
     NegotiationThreadStatus.open => DonyColors.primary,
     NegotiationThreadStatus.awaitingTrip => DonyColors.threadStatusAmber,
     NegotiationThreadStatus.awaitingPayment => DonyColors.threadStatusViolet,
+    NegotiationThreadStatus.awaitingCommission =>
+      DonyColors.threadStatusOrange,
     NegotiationThreadStatus.accepted => DonyColors.threadStatusGreen,
     _ => DonyColors.neutral300,
   };
@@ -348,6 +343,7 @@ class _NegoCard extends StatelessWidget {
     NegotiationThreadStatus.open => 'proposition',
     NegotiationThreadStatus.awaitingTrip => 'accord',
     NegotiationThreadStatus.awaitingPayment => 'à payer',
+    NegotiationThreadStatus.awaitingCommission => 'commission due',
     NegotiationThreadStatus.accepted => 'payé',
     _ => 'terminé',
   };
@@ -589,6 +585,11 @@ class _StatusPill extends StatelessWidget {
         'PAIEMENT',
         DonyColors.threadStatusViolet,
         const Color(0xFFF5F3FF),
+      ),
+      NegotiationThreadStatus.awaitingCommission => (
+        'COMMISSION',
+        DonyColors.threadPillOrangeFg,
+        const Color(0xFFFFEDD5),
       ),
       NegotiationThreadStatus.accepted => (
         'ACCEPTÉE',

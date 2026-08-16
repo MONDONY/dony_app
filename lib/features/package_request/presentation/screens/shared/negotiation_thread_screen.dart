@@ -6,6 +6,7 @@ import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_message.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
+import 'package:dony/features/package_request/presentation/widgets/commission_settlement_sheet.dart';
 import 'package:dony/features/package_request/presentation/widgets/thread/linked_trip_card.dart';
 import 'package:dony/features/package_request/presentation/widgets/thread/thread_hero_card.dart';
 import 'package:dony/features/package_request/presentation/widgets/thread/thread_message_bubble.dart';
@@ -37,10 +38,28 @@ class NegotiationThreadScreen extends StatelessWidget {
   }
 }
 
-class _ThreadView extends StatelessWidget {
+class _ThreadView extends StatefulWidget {
   const _ThreadView({required this.threadId, required this.viewerUserId});
   final String threadId;
   final String viewerUserId;
+
+  @override
+  State<_ThreadView> createState() => _ThreadViewState();
+}
+
+class _ThreadViewState extends State<_ThreadView> {
+  String get threadId => widget.threadId;
+  String get viewerUserId => widget.viewerUserId;
+
+  // Dernier thread chargé avec succès. Des états ponctuels comme
+  // NegotiationCommissionInsufficientWallet / ...Settled / ...Declined ne
+  // portent pas de thread rafraîchi (juste un id, des montants) : sans ce
+  // repli, l'écran retombait sur `thread == null` → CircularProgressIndicator
+  // (animation indéterminée qui ne se stabilise jamais) pile pendant qu'une
+  // sheet s'ouvre par-dessus, ce qui est à la fois moche à l'écran et fait
+  // boucler `pumpAndSettle()` à l'infini dans les tests. On garde donc le
+  // dernier thread connu tant qu'aucun état plus récent n'en fournit un neuf.
+  NegotiationThread? _lastThread;
 
   @override
   Widget build(BuildContext context) {
@@ -52,17 +71,7 @@ class _ThreadView extends StatelessWidget {
           );
         }
         if (state is NegotiationError) {
-          if (state.error.code == 'negotiation/commission-charge-failed') {
-            DonySnackbar.show(
-              ctx,
-              message:
-                  'Commission non prélevée au voyageur. Il vient d\'être invité à recharger son portefeuille.',
-              type: DonySnackbarType.warning,
-            );
-            ctx.pop();
-          } else {
-            ErrorPresenter.show(ctx, state.error);
-          }
+          ErrorPresenter.show(ctx, state.error);
         }
         if (state is NegotiationRejected) {
           DonySnackbar.show(
@@ -74,20 +83,66 @@ class _ThreadView extends StatelessWidget {
           );
           ctx.pop();
         }
+        // Solde insuffisant pour régler la commission Yadony : la sheet gère
+        // elle-même la recharge / le paiement par carte et rappelle
+        // NegotiationSettleCommissionRequested via onRetry.
+        if (state is NegotiationCommissionInsufficientWallet) {
+          showCommissionSettlementSheet(
+            ctx,
+            requiredCommission: state.requiredCommission,
+            availableBalance: state.availableBalance,
+            hasCard: state.hasCard,
+            currency: state.currency ?? 'EUR',
+            onRetry: ({required useCard}) => ctx.read<NegotiationBloc>().add(
+              NegotiationSettleCommissionRequested(
+                state.threadId,
+                useCard: useCard,
+              ),
+            ),
+          );
+        }
+        // Commission réglée : l'accord est scellé. On recharge le fil pour
+        // afficher l'état ACCEPTED réel (l'état émis par le bloc ne porte que
+        // l'id, pas le thread rafraîchi).
+        if (state is NegotiationCommissionSettled) {
+          DonySnackbar.show(
+            ctx,
+            message: 'Commission réglée : ce colis est à toi !',
+            type: DonySnackbarType.success,
+          );
+          ctx.read<NegotiationBloc>().add(
+            NegotiationFetchRequested(state.threadId),
+          );
+        }
+        // Renoncement confirmé : la demande est aussitôt libérée pour un
+        // autre voyageur, rien à faire de plus ici.
+        if (state is NegotiationCommissionDeclined) {
+          DonySnackbar.show(
+            ctx,
+            message:
+                'Tu as renoncé à ce colis, il reste disponible pour un '
+                'autre voyageur.',
+            type: DonySnackbarType.warning,
+          );
+          ctx.pop();
+        }
       },
       builder: (context, state) {
-        NegotiationThread? thread;
         if (state is NegotiationLoaded) {
-          thread = state.thread;
+          _lastThread = state.thread;
         }
         if (state is NegotiationActionInProgress) {
-          thread = state.thread;
+          _lastThread = state.thread;
         }
         // Refreshed thread from a successful nudge (canNudge now false) — the
         // snackbar itself is shown locally by ThreadStateCtaBar.
         if (state is NegotiationNudgeSent) {
-          thread = state.thread;
+          _lastThread = state.thread;
         }
+        // Tout autre état ponctuel (erreur, rejet, solde insuffisant,
+        // commission réglée/déclinée…) ne porte pas de thread neuf : on garde
+        // le dernier connu plutôt que de retomber sur un spinner.
+        final thread = _lastThread;
 
         return Scaffold(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
