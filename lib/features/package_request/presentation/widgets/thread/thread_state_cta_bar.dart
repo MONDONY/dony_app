@@ -185,6 +185,28 @@ class ThreadStateCtaBar extends StatelessWidget {
                 subtitle: "Tu seras notifié dès qu'il aura réglé.",
               );
 
+      case NegotiationThreadStatus.awaitingCommission:
+        // Accord en espèces conclu par l'expéditeur, mais rien n'est scellé
+        // tant que le voyageur n'a pas réglé la commission Yadony. Le
+        // règlement effectif (bouton, sheet) arrive dans une tâche dédiée.
+        return _isSender
+            ? const ThreadStateBanner(
+                iconAsset: 'hourglass',
+                tint: kWarning,
+                message: 'En attente du règlement de la commission',
+                subtitle:
+                    "L'accord sera scellé dès que le voyageur aura réglé "
+                    'la commission Yadony.',
+              )
+            : const ThreadStateBanner(
+                iconAsset: 'banknote',
+                tint: kWarning,
+                message: 'Règle la commission Yadony',
+                subtitle:
+                    'Il te reste à régler la commission pour valider cet '
+                    'accord.',
+              );
+
       case NegotiationThreadStatus.accepted:
         // En cash (et autres modes hors Stripe), le paiement se fait en main
         // propre à la remise : ne pas afficher « payée ».

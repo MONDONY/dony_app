@@ -18,6 +18,10 @@ enum ThreadStatusVariant {
         NegotiationThreadStatus.open => open,
         NegotiationThreadStatus.awaitingTrip => awaitingTrip,
         NegotiationThreadStatus.awaitingPayment => awaitingPayment,
+        // Accord en espèces en attente du règlement de la commission Yadony
+        // par le voyageur : même famille visuelle que « à régler », en
+        // attendant la tâche dédiée au traitement complet de cet état.
+        NegotiationThreadStatus.awaitingCommission => awaitingPayment,
         NegotiationThreadStatus.accepted => accepted,
         NegotiationThreadStatus.rejected ||
         NegotiationThreadStatus.autoRejected ||

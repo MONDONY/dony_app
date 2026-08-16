@@ -356,4 +356,39 @@ void main() {
       expect(t1, isNot(equals(t2)));
     });
   });
+
+  group('AWAITING_COMMISSION status', () {
+    test('AWAITING_COMMISSION est reconnu et compté comme actif', () {
+      expect(
+        NegotiationThreadStatus.fromJson('AWAITING_COMMISSION'),
+        NegotiationThreadStatus.awaitingCommission,
+      );
+      expect(NegotiationThreadStatus.awaitingCommission.isActive, isTrue);
+    });
+
+    // Garde-fou de compatibilité : un statut inconnu ne doit jamais rendre un fil
+    // impossible à ouvrir. Avant ce correctif, firstWhere levait une StateError.
+    test('un statut inconnu ne lève pas et retombe sur open', () {
+      expect(
+        NegotiationThreadStatus.fromJson('STATUT_DU_FUTUR'),
+        NegotiationThreadStatus.open,
+      );
+    });
+  });
+
+  group('commissionDeadline', () {
+    final baseJson = _baseJson();
+
+    test('fromJson lit commissionDeadline', () {
+      final thread = NegotiationThread.fromJson({
+        ...baseJson,
+        'commissionDeadline': '2026-08-16T14:30:00',
+      });
+      expect(thread.commissionDeadline, DateTime.parse('2026-08-16T14:30:00'));
+    });
+
+    test('commissionDeadline absent reste null', () {
+      expect(NegotiationThread.fromJson(baseJson).commissionDeadline, isNull);
+    });
+  });
 }
