@@ -64,6 +64,22 @@ class TripPickerSectionState extends State<TripPickerSection> {
   }
 
   @override
+  void didUpdateWidget(TripPickerSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Le voyageur peut choisir sa date de voyage APRÈS l'ouverture de ce
+    // sélecteur (ex. dans la feuille d'offre) : sans rechargement, la liste
+    // resterait calculée sur la fenêtre du premier build et masquerait ou
+    // proposerait à tort des trajets.
+    if (oldWidget.desiredDate != widget.desiredDate ||
+        oldWidget.dateToleranceDays != widget.dateToleranceDays ||
+        oldWidget.departureCity != widget.departureCity ||
+        oldWidget.arrivalCity != widget.arrivalCity ||
+        oldWidget.weightKg != widget.weightKg) {
+      _load();
+    }
+  }
+
+  @override
   void dispose() {
     _loadingNotifier.dispose();
     _errorNotifier.dispose();
@@ -132,74 +148,114 @@ class TripPickerSectionState extends State<TripPickerSection> {
         if (loading) {
           return Center(child: CircularProgressIndicator(color: cs.primary));
         }
-        return ValueListenableBuilder<List<AnnouncementModel>>(
-          valueListenable: _matchingTripsNotifier,
-          builder: (context, matchingTrips, _) => Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                matchingTrips.isEmpty
-                    ? 'Aucun de tes trajets ne correspond'
-                    : 'Tes trajets compatibles',
-                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: cs.onSurfaceVariant,
-                  letterSpacing: 0.5,
+        return ValueListenableBuilder<String?>(
+          valueListenable: _errorNotifier,
+          builder: (context, error, _) {
+            if (error != null) {
+              return Container(
+                padding: const EdgeInsets.all(DonySpacing.lg),
+                decoration: BoxDecoration(
+                  color: cs.surface,
+                  borderRadius: BorderRadius.circular(DonyRadius.md),
+                  border: Border.all(color: cs.outline),
                 ),
-              ),
-              const SizedBox(height: DonySpacing.md),
-              if (matchingTrips.isEmpty)
-                Container(
-                  padding: const EdgeInsets.all(DonySpacing.lg),
-                  decoration: BoxDecoration(
-                    color: cs.surface,
-                    borderRadius: BorderRadius.circular(DonyRadius.md),
-                    border: Border.all(color: cs.outline),
-                  ),
-                  child: Column(
-                    children: [
-                      const DonyIcon('plane', size: 36, color: kTextHint),
-                      const SizedBox(height: DonySpacing.sm),
-                      Text(
-                        'Crée un trajet correspondant à cette demande',
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyMedium!
-                            .copyWith(fontSize: 14, color: cs.onSurfaceVariant),
+                child: Column(
+                  children: [
+                    DonyIcon('circle-alert', size: 36, color: cs.error),
+                    const SizedBox(height: DonySpacing.sm),
+                    Text(
+                      'Impossible de charger tes trajets',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        fontSize: 14,
+                        color: cs.onSurfaceVariant,
                       ),
-                    ],
-                  ),
-                )
-              else
-                ...matchingTrips.asMap().entries.map(
-                  (e) => TripTile(
-                    key: Key('trip-tile-${e.key}'),
-                    announcement: e.value,
-                    index: e.key,
-                    isSelected: widget.selected?.id == e.value.id,
-                    onTap: () => widget.onSelected(e.value),
-                    onModify:
-                        widget.onModify != null &&
-                            (widget.canModify?.call(e.value) ?? true)
-                        ? () => widget.onModify!(e.value)
-                        : null,
-                  ),
+                    ),
+                    const SizedBox(height: DonySpacing.sm),
+                    OutlinedButton(
+                      onPressed: _load,
+                      child: const Text('Réessayer'),
+                    ),
+                  ],
                 ),
-              const SizedBox(height: DonySpacing.base),
-              OutlinedButton.icon(
-                onPressed: widget.onCreateDedicated,
-                icon: const DonyIcon('plus'),
-                label: const Text('Créer un nouveau trajet'),
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 52),
-                  foregroundColor: cs.primary,
-                  side: BorderSide(color: cs.primary, width: 1.5),
-                ),
-              ),
-            ],
-          ),
+              );
+            }
+            return _matchingTripsList(context, cs);
+          },
         );
       },
+    );
+  }
+
+  Widget _matchingTripsList(BuildContext context, ColorScheme cs) {
+    return ValueListenableBuilder<List<AnnouncementModel>>(
+      valueListenable: _matchingTripsNotifier,
+      builder: (context, matchingTrips, _) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            matchingTrips.isEmpty
+                ? 'Aucun de tes trajets ne correspond'
+                : 'Tes trajets compatibles',
+            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: cs.onSurfaceVariant,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: DonySpacing.md),
+          if (matchingTrips.isEmpty)
+            Container(
+              padding: const EdgeInsets.all(DonySpacing.lg),
+              decoration: BoxDecoration(
+                color: cs.surface,
+                borderRadius: BorderRadius.circular(DonyRadius.md),
+                border: Border.all(color: cs.outline),
+              ),
+              child: Column(
+                children: [
+                  const DonyIcon('plane', size: 36, color: kTextHint),
+                  const SizedBox(height: DonySpacing.sm),
+                  Text(
+                    'Crée un trajet correspondant à cette demande',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      fontSize: 14,
+                      color: cs.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else
+            ...matchingTrips.asMap().entries.map(
+              (e) => TripTile(
+                key: Key('trip-tile-${e.key}'),
+                announcement: e.value,
+                index: e.key,
+                isSelected: widget.selected?.id == e.value.id,
+                onTap: () => widget.onSelected(e.value),
+                onModify:
+                    widget.onModify != null &&
+                        (widget.canModify?.call(e.value) ?? true)
+                    ? () => widget.onModify!(e.value)
+                    : null,
+              ),
+            ),
+          const SizedBox(height: DonySpacing.base),
+          OutlinedButton.icon(
+            onPressed: widget.onCreateDedicated,
+            icon: const DonyIcon('plus'),
+            label: const Text('Créer un nouveau trajet'),
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size(double.infinity, 52),
+              foregroundColor: cs.primary,
+              side: BorderSide(color: cs.primary, width: 1.5),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

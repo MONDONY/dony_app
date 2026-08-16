@@ -532,6 +532,7 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
         proposedPriceEur: e.proposedPriceEur,
         travelerTravelDate: e.travelerTravelDate,
         travelerAvailableKg: e.travelerAvailableKg,
+        body: e.body,
         createDedicatedTrip: true,
         dedicatedTripPayload: e.dedicatedTrip.toJson(),
       );

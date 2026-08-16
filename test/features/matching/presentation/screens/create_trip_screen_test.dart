@@ -2453,9 +2453,74 @@ void main() {
         when(() => negotiationBloc.add(any())).thenReturn(null);
       });
 
+      testWidgets('dispatches NegotiationStartWithDedicatedTripRequested when '
+          'lockContext.threadId is null', (tester) async {
+        tester.view.physicalSize = const Size(800, 1024);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+
+        final lockContext = LockedTripContext(
+          packageRequestId: 'req-1',
+          departureCity: 'Lyon',
+          arrivalCity: 'Abidjan',
+          desiredDate: DateTime(2026, 9),
+          dateToleranceDays: 5,
+          weightKg: 5.0,
+          transportMode: TransportMode.plane,
+          agreedPriceEur: 50.0,
+          // Capacité et message saisis par le voyageur dans la feuille
+          // d'offre AVANT de créer le trajet dédié — distincts du poids de
+          // la demande (weightKg) et absents par défaut.
+          offerAvailableKg: 8.0,
+          offerBody: 'Je peux prendre ce colis',
+        );
+
+        final args = CreateTripArgs(
+          lockContext: lockContext,
+          announcement: _makeFullAnnouncement(),
+          negotiationBloc: negotiationBloc,
+        );
+        await pumpAndDrain(
+          tester,
+          _wrapWithRouter(CreateTripScreen(args: args)),
+        );
+
+        await tester.tap(find.text('Continuer'));
+        await tester.pump(const Duration(milliseconds: 600));
+        await tester.tap(find.text('Continuer'));
+        await tester.pump(const Duration(milliseconds: 600));
+
+        expect(
+          find.byKey(const Key('create-dedicated-trip-submit')),
+          findsOneWidget,
+        );
+        await tester.tap(find.byKey(const Key('create-dedicated-trip-submit')));
+        await tester.pump();
+
+        final captured = verify(
+          () => negotiationBloc.add(captureAny()),
+        ).captured;
+        expect(
+          captured.whereType<NegotiationStartWithDedicatedTripRequested>(),
+          hasLength(1),
+        );
+        final event = captured
+            .whereType<NegotiationStartWithDedicatedTripRequested>()
+            .single;
+        expect(event.packageRequestId, 'req-1');
+        expect(event.proposedPriceEur, 50.0);
+        // La capacité saisie dans l'offre (8 kg), pas lockContext.weightKg
+        // (5 kg, le poids de la demande) — régression : ces deux valeurs
+        // étaient confondues avant le fix.
+        expect(event.travelerAvailableKg, 8.0);
+        expect(event.body, 'Je peux prendre ce colis');
+        expect(event.dedicatedTrip.pickupAddress['label'], 'Tour Eiffel');
+        expect(event.dedicatedTrip.deliveryAddress['label'], 'Dakar Centre');
+      });
+
       testWidgets(
-        'dispatches NegotiationStartWithDedicatedTripRequested when '
-        'lockContext.threadId is null',
+        'falls back to lockContext.weightKg and null body when the offer '
+        'form didn\'t carry them (defensive default)',
         (tester) async {
           tester.view.physicalSize = const Size(800, 1024);
           tester.view.devicePixelRatio = 1.0;
@@ -2486,31 +2551,16 @@ void main() {
           await tester.pump(const Duration(milliseconds: 600));
           await tester.tap(find.text('Continuer'));
           await tester.pump(const Duration(milliseconds: 600));
-
-          expect(
-            find.byKey(const Key('create-dedicated-trip-submit')),
-            findsOneWidget,
-          );
           await tester.tap(
             find.byKey(const Key('create-dedicated-trip-submit')),
           );
           await tester.pump();
 
-          final captured = verify(
-            () => negotiationBloc.add(captureAny()),
-          ).captured;
-          expect(
-            captured.whereType<NegotiationStartWithDedicatedTripRequested>(),
-            hasLength(1),
-          );
-          final event = captured
+          final event = verify(() => negotiationBloc.add(captureAny())).captured
               .whereType<NegotiationStartWithDedicatedTripRequested>()
               .single;
-          expect(event.packageRequestId, 'req-1');
-          expect(event.proposedPriceEur, 50.0);
           expect(event.travelerAvailableKg, 5.0);
-          expect(event.dedicatedTrip.pickupAddress['label'], 'Tour Eiffel');
-          expect(event.dedicatedTrip.deliveryAddress['label'], 'Dakar Centre');
+          expect(event.body, isNull);
         },
       );
     },
@@ -2527,7 +2577,9 @@ void main() {
       setUp(() {
         negoStreamCtrl = StreamController<NegotiationState>.broadcast();
         negotiationBloc = _MockNegotiationBloc();
-        when(() => negotiationBloc.state).thenReturn(const NegotiationInitial());
+        when(
+          () => negotiationBloc.state,
+        ).thenReturn(const NegotiationInitial());
         when(
           () => negotiationBloc.stream,
         ).thenAnswer((_) => negoStreamCtrl.stream);
@@ -2574,7 +2626,10 @@ void main() {
           announcement: _makeFullAnnouncement(),
           negotiationBloc: negotiationBloc,
         );
-        await pumpAndDrain(tester, _wrapWithRouter(CreateTripScreen(args: args)));
+        await pumpAndDrain(
+          tester,
+          _wrapWithRouter(CreateTripScreen(args: args)),
+        );
 
         await tester.tap(find.text('Continuer'));
         await tester.pump(const Duration(milliseconds: 600));
@@ -2617,7 +2672,9 @@ void main() {
           await tester.tap(find.text('done-commission-method'));
           await tester.pumpAndSettle();
 
-          final calls = verify(() => negotiationBloc.add(captureAny())).captured;
+          final calls = verify(
+            () => negotiationBloc.add(captureAny()),
+          ).captured;
           final resubmits = calls
               .whereType<NegotiationStartWithDedicatedTripRequested>();
           // Fix #1: before the fix, this resubmit was a silent no-op because
@@ -2721,11 +2778,15 @@ void main() {
           await tester.pump(const Duration(milliseconds: 600));
           await tester.tap(find.text('Continuer'));
           await tester.pump(const Duration(milliseconds: 600));
-          await tester.tap(find.byKey(const Key('create-dedicated-trip-submit')));
+          await tester.tap(
+            find.byKey(const Key('create-dedicated-trip-submit')),
+          );
           await tester.pump();
 
           negoStreamCtrl.add(
-            NegotiationLoaded(_fakeThread(status: NegotiationThreadStatus.open)),
+            NegotiationLoaded(
+              _fakeThread(status: NegotiationThreadStatus.open),
+            ),
           );
           await tester.pumpAndSettle();
 
@@ -2735,7 +2796,10 @@ void main() {
           // all. It must now pop back to '/' with a success confirmation.
           expect(find.text('open'), findsOneWidget);
           expect(find.byType(CreateTripScreen), findsNothing);
-          expect(find.text('Offre envoyée avec le trajet associé.'), findsOneWidget);
+          expect(
+            find.text('Offre envoyée avec le trajet associé.'),
+            findsOneWidget,
+          );
         },
       );
     },

@@ -1299,7 +1299,8 @@ class _TripFormContentState extends State<_TripFormContent> {
         packageRequestId: lc.packageRequestId,
         proposedPriceEur: lc.agreedPriceEur,
         travelerTravelDate: departureDate,
-        travelerAvailableKg: lc.weightKg,
+        travelerAvailableKg: lc.offerAvailableKg ?? lc.weightKg,
+        body: lc.offerBody,
         dedicatedTrip: DedicatedTripPayload(
           departureDate: departureDate,
           departureTime: departureTime,

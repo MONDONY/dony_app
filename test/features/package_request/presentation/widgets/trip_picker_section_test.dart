@@ -157,9 +157,9 @@ void main() {
   testWidgets(
     'tapping "Créer un nouveau trajet" calls onCreateDedicated, not navigation',
     (tester) async {
-      when(
-        () => announcementRepo.getMyAnnouncements(),
-      ).thenAnswer((_) async => (announcements: <AnnouncementModel>[], totalElements: 0));
+      when(() => announcementRepo.getMyAnnouncements()).thenAnswer(
+        (_) async => (announcements: <AnnouncementModel>[], totalElements: 0),
+      );
 
       var createTapped = false;
       await tester.pumpWidget(
@@ -181,6 +181,123 @@ void main() {
       await tester.pump();
 
       expect(createTapped, isTrue);
+    },
+  );
+
+  testWidgets(
+    'échec réseau → message d\'erreur + Réessayer, pas la fausse liste vide',
+    (tester) async {
+      when(
+        () => announcementRepo.getMyAnnouncements(),
+      ).thenThrow(Exception('network down'));
+
+      await tester.pumpWidget(
+        _harness(
+          TripPickerSection(
+            departureCity: 'Paris',
+            arrivalCity: 'Dakar',
+            desiredDate: DateTime(2026, 9, 1),
+            dateToleranceDays: 3,
+            weightKg: 10,
+            onSelected: (_) {},
+            onCreateDedicated: () {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Sans le garde-fou, l'écran vide affiche "Aucun de tes trajets ne
+      // correspond" — indiscernable pour l'utilisateur d'un vrai échec réseau.
+      expect(find.text('Aucun de tes trajets ne correspond'), findsNothing);
+      expect(find.text('Impossible de charger tes trajets'), findsOneWidget);
+      expect(find.text('Réessayer'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    '"Réessayer" relance le chargement et affiche la liste en cas de succès',
+    (tester) async {
+      var callCount = 0;
+      when(() => announcementRepo.getMyAnnouncements()).thenAnswer((_) async {
+        callCount++;
+        if (callCount == 1) throw Exception('network down');
+        return (
+          announcements: [
+            _announcement(
+              id: 'a1',
+              status: 'ACTIVE',
+              departureCity: 'Paris',
+              arrivalCity: 'Dakar',
+            ),
+          ],
+          totalElements: 1,
+        );
+      });
+
+      await tester.pumpWidget(
+        _harness(
+          TripPickerSection(
+            departureCity: 'Paris',
+            arrivalCity: 'Dakar',
+            desiredDate: DateTime(2026, 9, 1),
+            dateToleranceDays: 3,
+            weightKg: 10,
+            onSelected: (_) {},
+            onCreateDedicated: () {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Impossible de charger tes trajets'), findsOneWidget);
+
+      await tester.tap(find.text('Réessayer'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Impossible de charger tes trajets'), findsNothing);
+      expect(find.byKey(const Key('trip-tile-0')), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'changement de desiredDate après montage recharge la liste des trajets',
+    (tester) async {
+      when(() => announcementRepo.getMyAnnouncements()).thenAnswer(
+        (_) async => (
+          announcements: [
+            // Ne matche que la fenêtre du 1er septembre, pas celle du 1er juin.
+            _announcement(
+              id: 'a1',
+              status: 'ACTIVE',
+              departureCity: 'Paris',
+              arrivalCity: 'Dakar',
+            ),
+          ],
+          totalElements: 1,
+        ),
+      );
+
+      Widget build(DateTime desiredDate) => _harness(
+        TripPickerSection(
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          desiredDate: desiredDate,
+          dateToleranceDays: 3,
+          weightKg: 10,
+          onSelected: (_) {},
+          onCreateDedicated: () {},
+        ),
+      );
+
+      await tester.pumpWidget(build(DateTime(2026, 6, 1)));
+      await tester.pumpAndSettle();
+      // Hors fenêtre (juin vs trajet en septembre) : aucun trajet compatible.
+      expect(find.byKey(const Key('trip-tile-0')), findsNothing);
+
+      await tester.pumpWidget(build(DateTime(2026, 9, 1)));
+      await tester.pumpAndSettle();
+      // Même widget, nouvelle desiredDate → didUpdateWidget recharge et le
+      // trajet de septembre apparaît désormais.
+      expect(find.byKey(const Key('trip-tile-0')), findsOneWidget);
     },
   );
 }

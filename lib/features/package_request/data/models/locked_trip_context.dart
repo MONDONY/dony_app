@@ -19,6 +19,8 @@ class LockedTripContext extends Equatable {
     required this.agreedPriceEur,
     this.paymentMethod = PaymentMethod.stripe,
     this.currency = 'EUR',
+    this.offerAvailableKg,
+    this.offerBody,
   });
 
   /// Null when creating this dedicated trip as part of a brand-new offer (no
@@ -41,6 +43,17 @@ class LockedTripContext extends Equatable {
   final PaymentMethod paymentMethod;
   final String currency;
 
+  /// Only set when [threadId] is null (atomic offer + dedicated-trip flow):
+  /// the capacity the traveler typed in the offer form's "CAPACITÉ" field,
+  /// which may differ from [weightKg] (the package request's own weight —
+  /// just the default). Falls back to [weightKg] when null.
+  final double? offerAvailableKg;
+
+  /// Only set when [threadId] is null: the optional message the traveler
+  /// typed in the offer form, carried through to the atomically-created
+  /// negotiation thread.
+  final String? offerBody;
+
   DateTime get earliestDate =>
       desiredDate.subtract(Duration(days: dateToleranceDays));
   DateTime get latestDate => desiredDate.add(Duration(days: dateToleranceDays));
@@ -58,5 +71,7 @@ class LockedTripContext extends Equatable {
     agreedPriceEur,
     paymentMethod,
     currency,
+    offerAvailableKg,
+    offerBody,
   ];
 }
