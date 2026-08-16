@@ -69,6 +69,7 @@ TrackingEventModel _event(String type) => TrackingEventModel(
 Widget _wrap(
   TrackingBloc bloc, {
   String helpConfigJson = _emptyHelpConfigJson,
+  String? arrivalInstructions,
 }) {
   final router = GoRouter(
     routes: [
@@ -87,9 +88,10 @@ Widget _wrap(
               )..add(const HelpCenterLoadRequested()),
             ),
           ],
-          child: const TrackingTimelineScreen(
+          child: TrackingTimelineScreen(
             bidId: 'bid-1',
             corridor: 'Paris → Dakar',
+            arrivalInstructions: arrivalInstructions,
           ),
         ),
       ),
@@ -158,6 +160,50 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('TutorialStub:tracking_read'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'shows arrival instructions banner when hasArrivee and instructions present',
+    (tester) async {
+      when(() => bloc.state).thenReturn(
+        TrackingEventsLoaded([_event('DEPART'), _event('ARRIVEE')]),
+      );
+      await tester.pumpWidget(
+        _wrap(bloc, arrivalInstructions: 'Métro Châtelet, sortie 3'),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Métro Châtelet'), findsOneWidget);
+      expect(find.text('Instructions de retrait'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'hides arrival instructions banner when not yet arrived',
+    (tester) async {
+      when(
+        () => bloc.state,
+      ).thenReturn(TrackingEventsLoaded([_event('DEPART')]));
+      await tester.pumpWidget(
+        _wrap(bloc, arrivalInstructions: 'Métro Châtelet, sortie 3'),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Instructions de retrait'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'hides arrival instructions banner when instructions are null',
+    (tester) async {
+      when(
+        () => bloc.state,
+      ).thenReturn(TrackingEventsLoaded([_event('ARRIVEE')]));
+      await tester.pumpWidget(_wrap(bloc));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Instructions de retrait'), findsNothing);
     },
   );
 }

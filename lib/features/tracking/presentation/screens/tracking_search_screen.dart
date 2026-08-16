@@ -389,7 +389,7 @@ class _TrackingResultCard extends StatelessWidget {
                             '${result.departureCity} → ${result.arrivalCity}';
                         context.push(
                           '/tracking/${result.bidId}/timeline',
-                          extra: corridor,
+                          extra: (corridor, result.arrivalInstructions),
                         );
                       },
                       variant: DonyButtonVariant.secondary,

@@ -18,11 +18,13 @@ import 'package:intl/intl.dart';
 class TrackingTimelineScreen extends StatefulWidget {
   final String bidId;
   final String corridor;
+  final String? arrivalInstructions;
 
   const TrackingTimelineScreen({
     super.key,
     required this.bidId,
     required this.corridor,
+    this.arrivalInstructions,
   });
 
   @override
@@ -186,7 +188,11 @@ class _TrackingTimelineScreenState extends State<TrackingTimelineScreen> {
                                       const SizedBox(height: DonySpacing.base),
 
                                       // Timeline
-                                      _Timeline(events: state.events),
+                                      _Timeline(
+                                        events: state.events,
+                                        arrivalInstructions:
+                                            widget.arrivalInstructions,
+                                      ),
 
                                       const SizedBox(height: DonySpacing.base),
 
@@ -224,7 +230,8 @@ class _TrackingTimelineScreenState extends State<TrackingTimelineScreen> {
 
 class _Timeline extends StatelessWidget {
   final List<TrackingEventModel> events;
-  const _Timeline({required this.events});
+  final String? arrivalInstructions;
+  const _Timeline({required this.events, this.arrivalInstructions});
 
   @override
   Widget build(BuildContext context) {
@@ -261,6 +268,35 @@ class _Timeline extends StatelessWidget {
         if (!hasArrivee) ...[
           const SizedBox(height: DonySpacing.base),
           _PendingConfirmationBanner(),
+        ] else if ((arrivalInstructions ?? '').trim().isNotEmpty) ...[
+          const SizedBox(height: DonySpacing.md),
+          Container(
+            padding: const EdgeInsets.all(DonySpacing.base),
+            decoration: BoxDecoration(
+              color: cs.infoLight,
+              borderRadius: BorderRadius.circular(DonyRadius.md),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    DonyIcon('map-pin', color: cs.info, size: 16),
+                    const SizedBox(width: DonySpacing.xs),
+                    Text(
+                      'Instructions de retrait',
+                      style: tt.titleSmall?.copyWith(color: cs.info),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: DonySpacing.xs),
+                Text(
+                  arrivalInstructions!,
+                  style: tt.bodyMedium?.copyWith(color: cs.onSurface),
+                ),
+              ],
+            ),
+          ),
         ],
       ],
     );

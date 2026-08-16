@@ -792,10 +792,20 @@ final appRouter = GoRouter(
       path: '/tracking/:bidId/timeline',
       builder: (context, state) {
         final bidId = state.pathParameters['bidId']!;
-        final corridor = state.extra as String? ?? '';
+        final extra = state.extra;
+        final corridor = extra is (String, String?)
+            ? extra.$1
+            : (extra as String? ?? '');
+        final arrivalInstructions = extra is (String, String?)
+            ? extra.$2
+            : null;
         return BlocProvider(
           create: (_) => getIt<TrackingBloc>(),
-          child: TrackingTimelineScreen(bidId: bidId, corridor: corridor),
+          child: TrackingTimelineScreen(
+            bidId: bidId,
+            corridor: corridor,
+            arrivalInstructions: arrivalInstructions,
+          ),
         );
       },
     ),
