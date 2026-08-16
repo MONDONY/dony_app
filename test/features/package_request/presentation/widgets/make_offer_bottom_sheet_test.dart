@@ -2,6 +2,8 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/price_estimation_repository.dart';
 import 'package:dony/features/package_request/presentation/widgets/make_offer_bottom_sheet.dart';
@@ -17,9 +19,32 @@ class _MockNegotiationBloc extends MockBloc<NegotiationEvent, NegotiationState>
 class _MockPriceEstimationRepository extends Mock
     implements PriceEstimationRepository {}
 
+class _MockAnnouncementRepository extends Mock
+    implements AnnouncementRepository {}
+
+/// Trajet du voyageur compatible avec la demande ouverte par `wrap()`
+/// (Paris → Dakar, poids 5 kg, date 12 juin 2026 — alignée sur l'`initialDate`
+/// utilisée par les tests qui sélectionnent un trajet, pour rester dans la
+/// fenêtre de tolérance de `TripPickerSection`).
+AnnouncementModel _sampleAnnouncement() => AnnouncementModel(
+  id: 'ann-1',
+  travelerId: 'trav-1',
+  departureCity: 'Paris',
+  arrivalCity: 'Dakar',
+  departureDate: DateTime(2026, 6, 12),
+  availableKg: 20.0,
+  totalKg: 20.0,
+  pricePerKg: 8.0,
+  status: 'ACTIVE',
+  bidsCount: 0,
+  createdAt: DateTime(2026),
+  updatedAt: DateTime(2026),
+);
+
 void main() {
   late _MockNegotiationBloc negoBloc;
   late _MockPriceEstimationRepository priceRepo;
+  late _MockAnnouncementRepository announcementRepo;
 
   setUpAll(() async {
     await initializeDateFormatting('fr');
@@ -36,6 +61,7 @@ void main() {
   setUp(() {
     negoBloc = _MockNegotiationBloc();
     priceRepo = _MockPriceEstimationRepository();
+    announcementRepo = _MockAnnouncementRepository();
 
     when(() => negoBloc.state).thenReturn(const NegotiationInitial());
     when(
@@ -48,6 +74,9 @@ void main() {
         weight: any(named: 'weight'),
       ),
     ).thenThrow(Exception('no estimate'));
+    when(() => announcementRepo.getMyAnnouncements()).thenAnswer(
+      (_) async => (announcements: [_sampleAnnouncement()], totalElements: 1),
+    );
 
     if (getIt.isRegistered<NegotiationBloc>()) {
       getIt.unregister<NegotiationBloc>();
@@ -55,8 +84,12 @@ void main() {
     if (getIt.isRegistered<PriceEstimationRepository>()) {
       getIt.unregister<PriceEstimationRepository>();
     }
+    if (getIt.isRegistered<AnnouncementRepository>()) {
+      getIt.unregister<AnnouncementRepository>();
+    }
     getIt.registerFactory<NegotiationBloc>(() => negoBloc);
     getIt.registerLazySingleton<PriceEstimationRepository>(() => priceRepo);
+    getIt.registerLazySingleton<AnnouncementRepository>(() => announcementRepo);
   });
 
   tearDown(() async {
@@ -65,6 +98,9 @@ void main() {
     }
     if (getIt.isRegistered<PriceEstimationRepository>()) {
       getIt.unregister<PriceEstimationRepository>();
+    }
+    if (getIt.isRegistered<AnnouncementRepository>()) {
+      getIt.unregister<AnnouncementRepository>();
     }
   });
 
@@ -248,6 +284,14 @@ void main() {
         expect(find.text('35.50'), findsOneWidget);
         expect(find.text('Prendre à 35,50 €'), findsOneWidget);
 
+        // Un trajet doit être sélectionné avant de pouvoir soumettre.
+        // `ensureVisible` : la feuille défile (TripPickerSection pousse le
+        // contenu sous le pli de la fenêtre de test), sinon le tap atterrit
+        // hors du viewport visible.
+        await tester.ensureVisible(find.byKey(const Key('trip-tile-select-inkwell')));
+        await tester.tap(find.byKey(const Key('trip-tile-select-inkwell')));
+        await tester.pumpAndSettle();
+
         // Soumission → événement avec le prix EXACT (régression firm-price-must-match).
         await tester.tap(find.text('Prendre à 35,50 €'));
         await tester.pump();
@@ -262,5 +306,40 @@ void main() {
         ).called(1);
       },
     );
+
+    testWidgets('le bouton d\'envoi reste désactivé tant qu\'aucun trajet '
+        'n\'est sélectionné', (tester) async {
+      await tester.pumpWidget(wrap(initialDate: DateTime(2026, 6, 12)));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      final sendButton = find.widgetWithText(DonyButton, 'Envoyer l\'offre');
+      expect(tester.widget<DonyButton>(sendButton).onPressed, isNull);
+
+      // Prix requis par le validateur du formulaire (aucun prix cible fourni
+      // ici, contrairement au test « prix ferme »).
+      await tester.enterText(find.byType(TextFormField).first, '25');
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(find.byKey(const Key('trip-tile-select-inkwell')));
+      await tester.tap(find.byKey(const Key('trip-tile-select-inkwell')));
+      await tester.pumpAndSettle();
+
+      expect(tester.widget<DonyButton>(sendButton).onPressed, isNotNull);
+
+      await tester.tap(sendButton);
+      await tester.pump();
+      verify(
+        () => negoBloc.add(
+          any(
+            that: isA<NegotiationStartRequested>().having(
+              (e) => e.travelerAnnouncementId,
+              'travelerAnnouncementId',
+              'ann-1',
+            ),
+          ),
+        ),
+      ).called(1);
+    });
   });
 }

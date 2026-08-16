@@ -6,10 +6,15 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
+import 'package:dony/features/package_request/data/models/locked_trip_context.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/data/models/price_estimate.dart';
 import 'package:dony/features/package_request/data/price_estimation_repository.dart';
+import 'package:dony/features/package_request/presentation/widgets/trip_picker_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -50,48 +55,74 @@ class MakeOfferBottomSheet {
 
     VoidCallback? submitFn;
 
-    await DonyBottomSheet.show<void>(
-      context,
-      title: isFirmPrice ? 'Prendre ce colis' : 'Faire une offre',
-      // Le glissement vers le bas appelle `Navigator.pop()` sans consulter
-      // `PopScope` (vérifié sur Flutter 3.44) : il contournerait la
-      // confirmation. La barrière et la croix, elles, passent par
-      // `maybePop` et honorent donc le garde.
-      enableDrag: false,
-      wrapper: (child) =>
-          BlocProvider(create: (_) => getIt<NegotiationBloc>(), child: child),
-      child: _MakeOfferContent(
-        packageRequestId: packageRequestId,
-        targetPriceEur: targetPriceEur,
-        weightKg: weightKg,
-        estimate: estimate,
-        rootRouter: rootRouter,
-        onSubmitReady: (fn) => submitFn = fn,
-        initialDate: initialDate,
-        isFirmPrice: isFirmPrice,
-        currency: currency,
-      ),
-      stickyBottom: BlocBuilder<NegotiationBloc, NegotiationState>(
-        builder: (ctx, state) {
-          final loading = state is NegotiationLoading;
-          final String label;
-          if (loading) {
-            label = 'Envoi…';
-          } else if (isFirmPrice) {
-            label = targetPriceEur != null
-                ? 'Prendre à ${PriceDisplay.money(targetPriceEur, currency)}'
-                : 'Prendre ce colis';
-          } else {
-            label = 'Envoyer l\'offre';
-          }
-          return DonyButton(
-            label: label,
-            isLoading: loading,
-            onPressed: loading ? null : () => submitFn?.call(),
-          );
-        },
-      ),
-    );
+    // Créé ICI (avant `DonyBottomSheet.show`) et non dans
+    // `_MakeOfferContentState.initState()` : contrairement à `onSubmitReady`
+    // (une closure lue paresseusement à l'appui sur le bouton), le paramètre
+    // `valueListenable` d'un `ValueListenableBuilder` est lu une seule fois, à
+    // la construction du widget `stickyBottom` — donc AVANT que `show()`
+    // n'appelle `showModalBottomSheet` et, a fortiori, avant que
+    // `_MakeOfferContentState.initState()` ne s'exécute. Un callback
+    // `onTripSelectionReady` capturé plus tard arriverait trop tard : le
+    // `ValueListenableBuilder` du bouton resterait accroché à un notifier
+    // jetable qui ne reçoit jamais aucune mise à jour.
+    final selectedTripNotifier = ValueNotifier<AnnouncementModel?>(null);
+
+    try {
+      await DonyBottomSheet.show<void>(
+        context,
+        title: isFirmPrice ? 'Prendre ce colis' : 'Faire une offre',
+        // Le glissement vers le bas appelle `Navigator.pop()` sans consulter
+        // `PopScope` (vérifié sur Flutter 3.44) : il contournerait la
+        // confirmation. La barrière et la croix, elles, passent par
+        // `maybePop` et honorent donc le garde.
+        enableDrag: false,
+        wrapper: (child) => BlocProvider(
+          create: (_) => getIt<NegotiationBloc>(),
+          child: child,
+        ),
+        child: _MakeOfferContent(
+          packageRequestId: packageRequestId,
+          targetPriceEur: targetPriceEur,
+          weightKg: weightKg,
+          departureCity: departureCity,
+          arrivalCity: arrivalCity,
+          estimate: estimate,
+          rootRouter: rootRouter,
+          onSubmitReady: (fn) => submitFn = fn,
+          selectedTripNotifier: selectedTripNotifier,
+          initialDate: initialDate,
+          isFirmPrice: isFirmPrice,
+          currency: currency,
+        ),
+        stickyBottom: ValueListenableBuilder<AnnouncementModel?>(
+          valueListenable: selectedTripNotifier,
+          builder: (_, selectedTrip, _) =>
+              BlocBuilder<NegotiationBloc, NegotiationState>(
+                builder: (ctx, state) {
+                  final loading = state is NegotiationLoading;
+                  final disabled = loading || selectedTrip == null;
+                  final String label;
+                  if (loading) {
+                    label = 'Envoi…';
+                  } else if (isFirmPrice) {
+                    label = targetPriceEur != null
+                        ? 'Prendre à ${PriceDisplay.money(targetPriceEur, currency)}'
+                        : 'Prendre ce colis';
+                  } else {
+                    label = 'Envoyer l\'offre';
+                  }
+                  return DonyButton(
+                    label: label,
+                    isLoading: loading,
+                    onPressed: disabled ? null : () => submitFn?.call(),
+                  );
+                },
+              ),
+        ),
+      );
+    } finally {
+      selectedTripNotifier.dispose();
+    }
   }
 }
 
@@ -100,9 +131,12 @@ class _MakeOfferContent extends StatefulWidget {
     required this.packageRequestId,
     required this.targetPriceEur,
     required this.weightKg,
+    required this.departureCity,
+    required this.arrivalCity,
     required this.estimate,
     required this.rootRouter,
     required this.onSubmitReady,
+    required this.selectedTripNotifier,
     this.initialDate,
     this.isFirmPrice = false,
     this.currency = 'EUR',
@@ -111,9 +145,15 @@ class _MakeOfferContent extends StatefulWidget {
   final String packageRequestId;
   final double? targetPriceEur;
   final double weightKg;
+  final String departureCity;
+  final String arrivalCity;
   final PriceEstimate? estimate;
   final GoRouter rootRouter;
   final void Function(VoidCallback) onSubmitReady;
+
+  /// Détenu et disposé par `MakeOfferBottomSheet.show()` — voir le commentaire
+  /// à sa création pour pourquoi il ne peut pas être créé ici.
+  final ValueNotifier<AnnouncementModel?> selectedTripNotifier;
   final DateTime? initialDate;
   final bool isFirmPrice;
   final String currency;
@@ -233,6 +273,14 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
       );
       return;
     }
+    if (widget.selectedTripNotifier.value == null) {
+      DonySnackbar.show(
+        context,
+        message: 'Sélectionnez ou créez un trajet',
+        type: DonySnackbarType.warning,
+      );
+      return;
+    }
     context.read<NegotiationBloc>().add(
       NegotiationStartRequested(
         packageRequestId: widget.packageRequestId,
@@ -243,6 +291,7 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
             : double.parse(_priceCtrl.text.replaceAll(',', '.')),
         travelerTravelDate: _dateNotifier.value!,
         travelerAvailableKg: double.parse(_kgCtrl.text.replaceAll(',', '.')),
+        travelerAnnouncementId: widget.selectedTripNotifier.value!.id,
         body: _bodyCtrl.text.trim().isEmpty ? null : _bodyCtrl.text.trim(),
         isFirmPrice: widget.isFirmPrice,
       ),
@@ -414,6 +463,57 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
                       ),
                     ),
                   ),
+                ),
+              ),
+              const SizedBox(height: DonySpacing.md),
+
+              // ── Trajet ────────────────────────────────────────────────────
+              ValueListenableBuilder<AnnouncementModel?>(
+                valueListenable: widget.selectedTripNotifier,
+                builder: (ctx, selected, _) => TripPickerSection(
+                  departureCity: widget.departureCity,
+                  arrivalCity: widget.arrivalCity,
+                  desiredDate: _dateNotifier.value ?? DateTime.now(),
+                  // Aligné sur PackageRequest.dateToleranceDays (fenêtre par
+                  // défaut) — cette feuille n'a pas accès à la tolérance réelle
+                  // de la demande, on prend la même valeur par défaut que le
+                  // reste du flux traveler.
+                  dateToleranceDays: 3,
+                  weightKg: widget.weightKg,
+                  selected: selected,
+                  onSelected: (ann) => widget.selectedTripNotifier.value = ann,
+                  onCreateDedicated: () async {
+                    await context.push<bool>(
+                      '/trips/create',
+                      extra: CreateTripArgs(
+                        lockContext: LockedTripContext(
+                          // threadId omis (null par défaut) : aucun thread de
+                          // négociation n'existe encore — l'offre et le trajet
+                          // seront créés atomiquement
+                          // (NegotiationStartWithDedicatedTripRequested).
+                          packageRequestId: widget.packageRequestId,
+                          departureCity: widget.departureCity,
+                          arrivalCity: widget.arrivalCity,
+                          desiredDate: _dateNotifier.value ?? DateTime.now(),
+                          dateToleranceDays: 3,
+                          weightKg: widget.weightKg,
+                          transportMode: TransportMode.plane,
+                          agreedPriceEur:
+                              widget.isFirmPrice && widget.targetPriceEur != null
+                              ? widget.targetPriceEur!
+                              : double.tryParse(
+                                      _priceCtrl.text.replaceAll(',', '.'),
+                                    ) ??
+                                    0,
+                          currency: widget.currency,
+                        ),
+                        negotiationBloc: context.read<NegotiationBloc>(),
+                      ),
+                    );
+                    if (context.mounted) {
+                      Navigator.of(context, rootNavigator: true).pop();
+                    }
+                  },
                 ),
               ),
               const SizedBox(height: DonySpacing.md),
