@@ -12,9 +12,13 @@ import 'package:dony/features/cancellation/presentation/widgets/cancellation_bot
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
+import 'package:dony/features/matching/bloc/bid_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_detail_body.dart';
+import 'package:dony/features/matching/presentation/widgets/arrival_instructions_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/owner_action_grid.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_parcels_section.dart';
 import 'package:flutter/material.dart';
@@ -22,6 +26,19 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
+
+const _biddableActiveStatuses = <String>{
+  'ACCEPTED',
+  'HANDED_OVER',
+  'IN_TRANSIT',
+};
+
+bool _allActiveBidsInTransit(List<BidModel> bids) {
+  final active = bids
+      .where((b) => _biddableActiveStatuses.contains(b.status))
+      .toList();
+  return active.isNotEmpty && active.every((b) => b.status == 'IN_TRANSIT');
+}
 
 /// Écran plein écran « Trajet » côté propriétaire (voyageur).
 ///
@@ -199,6 +216,27 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
                   OwnerActionGrid(a: a, isOwner: isOwner),
                   const SizedBox(height: DonySpacing.lg),
                   const TripParcelsSection(),
+                  BlocBuilder<BidBloc, BidState>(
+                    builder: (context, bidState) {
+                      if (!isOwner || bidState is! BidListLoaded) {
+                        return const SizedBox.shrink();
+                      }
+                      if (!_allActiveBidsInTransit(bidState.bids)) {
+                        return const SizedBox.shrink();
+                      }
+                      return Padding(
+                        padding: const EdgeInsets.only(top: DonySpacing.md),
+                        child: DonyButton(
+                          label: 'Arrivé à destination',
+                          onPressed: () => ArrivalInstructionsBottomSheet.show(
+                            context,
+                            announcementId: a.id,
+                            initialInstructions: a.arrivalInstructions,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                 ],
               ),
             );
