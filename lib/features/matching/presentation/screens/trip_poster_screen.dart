@@ -98,13 +98,13 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
       : value.toStringAsFixed(2);
 
   static String _symbol(String currency) => switch (currency) {
-        'EUR' => '€',
-        'USD' => r'$',
-        'GBP' => '£',
-        'CAD' => r'$ CA',
-        'XOF' => 'F CFA',
-        _ => currency,
-      };
+    'EUR' => '€',
+    'USD' => r'$',
+    'GBP' => '£',
+    'CAD' => r'$ CA',
+    'XOF' => 'F CFA',
+    _ => currency,
+  };
 
   /// Capture l'affiche en PNG.
   ///
@@ -191,7 +191,10 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
           properties: {'action': 'save'},
         ),
       );
-      _notify('Affiche enregistrée dans votre galerie', DonySnackbarType.success);
+      _notify(
+        'Affiche enregistrée dans votre galerie',
+        DonySnackbarType.success,
+      );
     } catch (_) {
       _notify('Impossible d\'enregistrer l\'affiche', DonySnackbarType.error);
     } finally {
@@ -201,7 +204,10 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
     }
   }
 
-  Future<void> _copy({required String value, required String confirmation}) async {
+  Future<void> _copy({
+    required String value,
+    required String confirmation,
+  }) async {
     await Clipboard.setData(ClipboardData(text: value));
     unawaited(
       getItSafe<AnalyticsService>()?.logEvent(
@@ -224,10 +230,7 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
     final text = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Mon affiche'),
-        centerTitle: false,
-      ),
+      appBar: AppBar(title: const Text('Mon affiche'), centerTitle: false),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(
           DonySpacing.lg,
@@ -238,7 +241,11 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _Preview(posterKey: _posterKey, announcement: widget.announcement, shareUrl: _shareUrl),
+            _Preview(
+              posterKey: _posterKey,
+              announcement: widget.announcement,
+              shareUrl: _shareUrl,
+            ),
             const SizedBox(height: DonySpacing.xl),
             Text(
               'Postez cette affiche comme d\'habitude, puis collez la légende dans le texte de votre publication. Le lien y devient cliquable, ce qui n\'est pas le cas d\'une adresse écrite sur l\'image.',
@@ -264,9 +271,9 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
                     onPressed: busy
                         ? null
                         : () => _copy(
-                              value: _caption,
-                              confirmation: 'Légende copiée',
-                            ),
+                            value: _caption,
+                            confirmation: 'Légende copiée',
+                          ),
                   ),
                   const SizedBox(height: DonySpacing.sm),
                   DonyButton(
@@ -276,9 +283,9 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
                     onPressed: busy
                         ? null
                         : () => _copy(
-                              value: _shareUrl,
-                              confirmation: 'Lien copié',
-                            ),
+                            value: _shareUrl,
+                            confirmation: 'Lien copié',
+                          ),
                   ),
                   const SizedBox(height: DonySpacing.sm),
                   DonyButton(

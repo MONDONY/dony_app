@@ -53,10 +53,7 @@ void main() {
     });
 
     test('rejette un chemin vide', () {
-      expect(
-        resolveAnnouncementDeepLink(Uri.parse('dony://annonce')),
-        isNull,
-      );
+      expect(resolveAnnouncementDeepLink(Uri.parse('dony://annonce')), isNull);
     });
 
     /// Sans validation stricte du segment, une correspondance par préfixe

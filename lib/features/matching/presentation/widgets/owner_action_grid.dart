@@ -90,10 +90,7 @@ class OwnerActionGrid extends StatelessWidget {
           iconAsset: 'share-2',
           label: 'Affiche',
           accent: cs.primary,
-          onTap: () => context.push(
-            '/announcements/${a.id}/affiche',
-            extra: a,
-          ),
+          onTap: () => context.push('/announcements/${a.id}/affiche', extra: a),
         ),
       if (isActive && (a.bidsCount ?? 0) == 0)
         _tile(

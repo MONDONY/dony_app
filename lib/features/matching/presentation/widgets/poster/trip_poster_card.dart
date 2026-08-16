@@ -50,13 +50,13 @@ class TripPosterCard extends StatelessWidget {
       announcement.pricePerKgDisplay ?? announcement.pricePerKg;
 
   String get _currencySymbol => switch (announcement.currency) {
-        'EUR' => '€',
-        'USD' => r'$',
-        'GBP' => '£',
-        'CAD' => r'$ CA',
-        'XOF' => 'F CFA',
-        _ => announcement.currency,
-      };
+    'EUR' => '€',
+    'USD' => r'$',
+    'GBP' => '£',
+    'CAD' => r'$ CA',
+    'XOF' => 'F CFA',
+    _ => announcement.currency,
+  };
 
   String _formatAmount(double value) {
     final rounded = value.roundToDouble();

@@ -52,11 +52,11 @@ void main() {
     copied = <String>[];
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(SystemChannels.platform, (call) async {
-      if (call.method == 'Clipboard.setData') {
-        copied.add((call.arguments as Map)['text'] as String);
-      }
-      return null;
-    });
+          if (call.method == 'Clipboard.setData') {
+            copied.add((call.arguments as Map)['text'] as String);
+          }
+          return null;
+        });
   });
 
   tearDown(() {
@@ -86,9 +86,7 @@ void main() {
 
     await _tapAction(tester, 'Copier le lien');
 
-    expect(copied, [
-      'https://api.yadony.test/api/v1/public/annonce/a1',
-    ]);
+    expect(copied, ['https://api.yadony.test/api/v1/public/annonce/a1']);
   });
 
   /// Sur Facebook, une URL écrite dans l'image n'est pas cliquable : la légende

@@ -26,16 +26,17 @@ AnnouncementModel _announcement({
   'updatedAt': DateTime(2026, 8).toIso8601String(),
 });
 
-Future<void> _pump(WidgetTester tester, AnnouncementModel a) => tester.pumpWidget(
-  MaterialApp(
-    home: Scaffold(
-      body: TripPosterCard(
-        announcement: a,
-        shareUrl: 'https://api.yadony.test/api/v1/public/annonce/a1',
+Future<void> _pump(WidgetTester tester, AnnouncementModel a) =>
+    tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: TripPosterCard(
+            announcement: a,
+            shareUrl: 'https://api.yadony.test/api/v1/public/annonce/a1',
+          ),
+        ),
       ),
-    ),
-  ),
-);
+    );
 
 void main() {
   setUpAll(() async => initializeDateFormatting('fr'));
@@ -71,7 +72,9 @@ void main() {
   ) async {
     await _pump(
       tester,
-      _announcement(handoverDeadline: DateTime(2026, 8, 19, 19).toIso8601String()),
+      _announcement(
+        handoverDeadline: DateTime(2026, 8, 19, 19).toIso8601String(),
+      ),
     );
 
     expect(find.text('Dernier dépôt'), findsOneWidget);
@@ -108,7 +111,10 @@ void main() {
   });
 
   testWidgets('gère une devise hors euro', (tester) async {
-    await _pump(tester, _announcement(currency: 'XOF', pricePerKgDisplay: 6000));
+    await _pump(
+      tester,
+      _announcement(currency: 'XOF', pricePerKgDisplay: 6000),
+    );
 
     expect(find.text('6000F CFA'), findsOneWidget);
   });
