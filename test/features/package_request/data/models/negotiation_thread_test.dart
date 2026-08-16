@@ -304,4 +304,56 @@ void main() {
     );
     expect(t1, isNot(equals(t2)));
   });
+
+  group('commissionStatus', () {
+    final baseJson = _baseJson();
+
+    test(
+      'fromJson lit commissionStatus et en déduit le besoin de règlement',
+      () {
+        final thread = NegotiationThread.fromJson({
+          ...baseJson,
+          'commissionStatus': 'PENDING',
+        });
+        expect(thread.commissionStatus, 'PENDING');
+        expect(thread.needsCommissionSettlement, isTrue);
+      },
+    );
+
+    test('commissionStatus absent → aucun règlement attendu', () {
+      final thread = NegotiationThread.fromJson(baseJson);
+      expect(thread.commissionStatus, isNull);
+      expect(thread.needsCommissionSettlement, isFalse);
+    });
+
+    test('commissionStatus CHARGED → aucun règlement attendu', () {
+      final thread = NegotiationThread.fromJson({
+        ...baseJson,
+        'commissionStatus': 'CHARGED',
+      });
+      expect(thread.commissionStatus, 'CHARGED');
+      expect(thread.needsCommissionSettlement, isFalse);
+    });
+
+    test(
+      'commissionStatus REQUIRES_3DS → règlement encore attendu (3DS bancaire)',
+      () {
+        final thread = NegotiationThread.fromJson({
+          ...baseJson,
+          'commissionStatus': 'REQUIRES_3DS',
+        });
+        expect(thread.commissionStatus, 'REQUIRES_3DS');
+        expect(thread.needsCommissionSettlement, isTrue);
+      },
+    );
+
+    test('commissionStatus participates in props/equality', () {
+      final t1 = NegotiationThread.fromJson(baseJson);
+      final t2 = NegotiationThread.fromJson({
+        ...baseJson,
+        'commissionStatus': 'PENDING',
+      });
+      expect(t1, isNot(equals(t2)));
+    });
+  });
 }

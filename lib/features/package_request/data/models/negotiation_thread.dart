@@ -66,6 +66,7 @@ class NegotiationThread extends Equatable {
     this.canNudge = false,
     this.hasUnread = false,
     this.currency = 'EUR',
+    this.commissionStatus,
   });
 
   final String id;
@@ -128,6 +129,19 @@ class NegotiationThread extends Equatable {
   /// Devise du thread, figée à la création. `EUR` par défaut pour les
   /// anciens payloads sans ce champ.
   final String currency;
+
+  /// État du règlement de la commission Yadony pour un accord en espèces.
+  /// `PENDING` tant que le voyageur ne l'a pas réglée, `CHARGED` une fois
+  /// réglée, `REQUIRES_3DS` si sa banque exige une authentification forte en
+  /// cours de règlement, `null` pour les accords par carte dont la commission
+  /// passe par Stripe et ne concerne pas le voyageur.
+  final String? commissionStatus;
+
+  /// Vrai quand le voyageur doit encore régler la commission de cet accord
+  /// (règlement pas encore effectué, ou bloqué en attente d'une
+  /// authentification forte 3DS).
+  bool get needsCommissionSettlement =>
+      commissionStatus == 'PENDING' || commissionStatus == 'REQUIRES_3DS';
 
   bool get isTravelerKgFree => travelerCapacityUnit == 'KG_FREE';
 
@@ -193,6 +207,7 @@ class NegotiationThread extends Equatable {
     canNudge: json['canNudge'] as bool? ?? false,
     hasUnread: json['hasUnread'] as bool? ?? false,
     currency: json['currency'] as String? ?? 'EUR',
+    commissionStatus: json['commissionStatus'] as String?,
   );
 
   @override
@@ -233,5 +248,6 @@ class NegotiationThread extends Equatable {
     canNudge,
     hasUnread,
     currency,
+    commissionStatus,
   ];
 }
