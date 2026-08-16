@@ -755,6 +755,21 @@ void main() {
 
   group('NegotiationSettleCommissionRequested', () {
     blocTest<NegotiationBloc, NegotiationState>(
+      'garde anti double-débit : un règlement déjà en cours '
+      '(ActionInProgress) ignore un second event, aucun appel réseau',
+      build: () => _makeBloc(repo),
+      seed: () => NegotiationActionInProgress(_fakeThread()),
+      act: (b) => b.add(const NegotiationSettleCommissionRequested('t-1')),
+      expect: () => [],
+      verify: (_) => verifyNever(
+        () => repo.settleCommission(
+          any(),
+          commissionSource: any(named: 'commissionSource'),
+        ),
+      ),
+    );
+
+    blocTest<NegotiationBloc, NegotiationState>(
       'règlement accepté → ActionInProgress puis NegotiationCommissionSettled',
       build: () {
         when(
@@ -1025,6 +1040,16 @@ void main() {
   // ── NegotiationDeclineCommissionRequested ───────────────────────────────────
 
   group('NegotiationDeclineCommissionRequested', () {
+    blocTest<NegotiationBloc, NegotiationState>(
+      'garde anti double-débit : un renoncement déjà en cours '
+      '(ActionInProgress) ignore un second event, aucun appel réseau',
+      build: () => _makeBloc(repo),
+      seed: () => NegotiationActionInProgress(_fakeThread()),
+      act: (b) => b.add(const NegotiationDeclineCommissionRequested('t-1')),
+      expect: () => [],
+      verify: (_) => verifyNever(() => repo.declineCommission(any())),
+    );
+
     blocTest<NegotiationBloc, NegotiationState>(
       'renoncement réussi → ActionInProgress puis NegotiationCommissionDeclined,'
       ' la demande est libérée',
