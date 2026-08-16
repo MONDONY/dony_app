@@ -11,6 +11,7 @@ const kActiveBidStatuses = <String>{
   'ACCEPTED',
   'HANDED_OVER',
   'IN_TRANSIT',
+  'ARRIVED',
   'COMPLETED',
 };
 

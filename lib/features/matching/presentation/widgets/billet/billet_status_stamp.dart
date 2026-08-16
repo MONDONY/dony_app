@@ -17,6 +17,7 @@ class BilletStatusStamp extends StatelessWidget {
       'ACCEPTED' => (cs.success, 'Confirmé'),
       'HANDED_OVER' => (cs.primary, 'En route'),
       'IN_TRANSIT' => (cs.primary, 'En transit'),
+      'ARRIVED' => (cs.primary, 'Arrivé'),
       'COMPLETED' || 'DELIVERED' => (cs.success, 'Livré'),
       'REJECTED' => (cs.error, 'Refusé'),
       'CANCELLED' => (cs.onSurfaceVariant, 'Annulé'),

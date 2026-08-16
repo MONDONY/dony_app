@@ -36,6 +36,7 @@ BidModel _bid({
   DateTime? departureDate,
   String? deliveryNoShowStatus,
   bool? deliveryNoShowReportedByTraveler,
+  String? arrivalInstructions,
 }) => BidModel(
   id: 'bid-001',
   announcementId: 'ann-001',
@@ -56,6 +57,7 @@ BidModel _bid({
   departureDate: departureDate,
   deliveryNoShowStatus: deliveryNoShowStatus,
   deliveryNoShowReportedByTraveler: deliveryNoShowReportedByTraveler,
+  arrivalInstructions: arrivalInstructions,
 );
 
 // ── Host widget ───────────────────────────────────────────────────────────────
@@ -250,6 +252,39 @@ void main() {
       // l'instruction de transmission fait autorité sur le talon.
       expect(find.textContaining('code de retrait'), findsOneWidget);
       expect(find.textContaining('billet'), findsOneWidget);
+    },
+  );
+
+  // ── Test 8b: ARRIVED avec instructions de retrait ────────────────────────────
+
+  testWidgets(
+    '8b · ARRIVED avec arrivalInstructions → instructions affichées',
+    (tester) async {
+      final bid = _bid(
+        status: 'ARRIVED',
+        arrivalInstructions: 'Métro Châtelet',
+      );
+      await tester.pumpWidget(_host(bid, cancellationBloc));
+      await tester.pump();
+
+      expect(find.textContaining('Métro Châtelet'), findsOneWidget);
+    },
+  );
+
+  // ── Test 8c: ARRIVED sans instructions de retrait ────────────────────────────
+
+  testWidgets(
+    '8c · ARRIVED sans arrivalInstructions → message d\'attente générique',
+    (tester) async {
+      final bid = _bid(status: 'ARRIVED');
+      await tester.pumpWidget(_host(bid, cancellationBloc));
+      await tester.pump();
+
+      expect(find.textContaining('Colis arrivé à destination'), findsOneWidget);
+      expect(
+        find.textContaining('instructions de retrait arrivent bientôt'),
+        findsOneWidget,
+      );
     },
   );
 
