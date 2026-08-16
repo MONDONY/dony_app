@@ -128,6 +128,7 @@ void main() {
 
   setUpAll(() async {
     await initializeDateFormatting('fr');
+    registerFallbackValue(BidListRequested('fallback'));
   });
 
   setUp(() {
@@ -314,6 +315,64 @@ void main() {
 
     expect(find.text('Arrivé à destination'), findsNothing);
   });
+
+  testWidgets(
+    'reloads bids after AnnouncementTripArrived so the CTA can switch mode',
+    (tester) async {
+      final announcement = _makeAnnouncement();
+      when(
+        () => annBloc.state,
+      ).thenReturn(AnnouncementDetailLoaded(announcement));
+      whenListen(
+        annBloc,
+        Stream<AnnouncementState>.fromIterable([
+          AnnouncementDetailLoaded(announcement),
+          AnnouncementTripArrived(announcement),
+        ]),
+        initialState: AnnouncementDetailLoaded(announcement),
+      );
+
+      when(() => authBloc.state).thenReturn(const AuthAuthenticated(_owner));
+      whenListen(
+        authBloc,
+        const Stream<AuthState>.empty(),
+        initialState: const AuthAuthenticated(_owner),
+      );
+
+      final bids = [_makeBid(status: 'IN_TRANSIT')];
+      when(() => bidBloc.state).thenReturn(BidListLoaded(bids));
+      whenListen(
+        bidBloc,
+        Stream<BidState>.value(BidListLoaded(bids)),
+        initialState: BidListLoaded(bids),
+      );
+
+      await _pump(
+        tester,
+        annBloc: annBloc,
+        bidBloc: bidBloc,
+        cancelBloc: cancelBloc,
+        authBloc: authBloc,
+      );
+      await tester.pumpAndSettle();
+
+      // Régression I9(a) : sans le refresh, AnnouncementTripArrived ne
+      // déclenche aucun BidListRequested, le bloc bids reste figé sur
+      // IN_TRANSIT et le CTA rediraffiche "Arrivé à destination" au lieu de
+      // basculer vers l'édition des instructions.
+      verify(
+        () => bidBloc.add(
+          any(
+            that: isA<BidListRequested>().having(
+              (e) => e.announcementId,
+              'announcementId',
+              'ann-trip-001',
+            ),
+          ),
+        ),
+      ).called(1);
+    },
+  );
 
   // ── Régression ARRIVED : le CTA doit survivre au marquage ────────────────────
   // Avant le fix, ARRIVED n'était pas un statut « actif » : la liste des bids

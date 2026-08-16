@@ -13,6 +13,7 @@ import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
@@ -129,6 +130,15 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
               _current = state.announcement;
             } else if (state is AnnouncementUpdated) {
               _current = state.announcement;
+            } else if (state is AnnouncementTripArrived ||
+                state is AnnouncementArrivalInstructionsUpdated) {
+              _current = state is AnnouncementTripArrived
+                  ? state.announcement
+                  : (state as AnnouncementArrivalInstructionsUpdated)
+                        .announcement;
+              context.read<BidBloc>().add(
+                BidListRequested(widget.announcementId),
+              );
             }
             if (state is AnnouncementDeleted) {
               DonySnackbar.show(
