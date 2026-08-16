@@ -921,6 +921,15 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
     Emitter<NegotiationState> emit,
   ) async {
     final current = state;
+    // Garde-fou anti double-débit : un règlement de commission est un débit
+    // d'argent, jamais deux en vol simultanément. Un second event reçu
+    // pendant qu'un premier règlement/renoncement est encore en cours
+    // (ActionInProgress/Loading) est ignoré silencieusement. Ceci vient en
+    // plus de la désactivation du bouton côté écran, pas à sa place.
+    if (current is NegotiationActionInProgress ||
+        current is NegotiationLoading) {
+      return;
+    }
     if (current is NegotiationLoaded) {
       emit(NegotiationActionInProgress(current.thread));
     } else {
@@ -1018,6 +1027,13 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
     Emitter<NegotiationState> emit,
   ) async {
     final current = state;
+    // Même garde-fou que _onSettleCommission : le renoncement libère la
+    // demande, un double envoi ne doit pas déclencher deux appels réseau
+    // concurrents (idempotence non garantie côté backend supposée).
+    if (current is NegotiationActionInProgress ||
+        current is NegotiationLoading) {
+      return;
+    }
     if (current is NegotiationLoaded) {
       emit(NegotiationActionInProgress(current.thread));
     } else {

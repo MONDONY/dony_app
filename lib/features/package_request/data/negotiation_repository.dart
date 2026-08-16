@@ -252,9 +252,22 @@ class NegotiationRepository {
   ///
   /// The 409 (solde insuffisant) and 422 (échec) portent un corps
   /// exploitable : ce sont des issues métier porteuses des montants à
-  /// afficher, pas des erreurs de transport. On les parse donc comme des
-  /// [AcceptanceResponse] valides, à l'image de
-  /// `BidRemoteDatasource.acceptBidWithCommission`.
+  /// afficher, pas des erreurs de transport. On détecte donc l'issue métier
+  /// par le **code HTTP**, jamais par la forme du corps — exactement comme
+  /// `BidRemoteDatasource.acceptBidWithCommission` (`bid_remote_datasource.
+  /// dart:218-223`).
+  ///
+  /// Nuance propre à cet endpoint : plusieurs voyageurs peuvent régler en
+  /// même temps, seul le premier gagne. La garde de course renvoie donc,
+  /// elle aussi, un 409 (`thread/not-awaiting-commission`,
+  /// `request/already-accepted`) — mais en RFC 7807, dont le champ `status`
+  /// est l'entier HTTP (409), pas le statut métier `String` attendu par
+  /// [AcceptanceResponse.fromJson]. On ne parse donc le corps comme
+  /// [AcceptanceResponse] que si `status` y est bien une chaîne ; sinon on
+  /// laisse le `DioException` d'origine remonter tel quel — l'intercepteur
+  /// global (`api_client.dart`) l'a déjà enrichi d'un `ConflictException`
+  /// exploitable via `unwrapDioError`, exactement comme pour la course
+  /// webhook Stripe gérée dans `NegotiationBloc._onCheckout`.
   Future<AcceptanceResponse> settleCommission(
     String threadId, {
     String commissionSource = 'WALLET_FIRST',
@@ -266,8 +279,11 @@ class NegotiationRepository {
       );
       return AcceptanceResponse.fromJson(response.data!);
     } on DioException catch (e) {
+      final code = e.response?.statusCode;
       final data = e.response?.data;
-      if (data is Map<String, dynamic> && data['status'] != null) {
+      if ((code == 409 || code == 422) &&
+          data is Map<String, dynamic> &&
+          data['status'] is String) {
         return AcceptanceResponse.fromJson(data);
       }
       rethrow;
