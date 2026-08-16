@@ -266,4 +266,8 @@ abstract final class AnalyticsEvents {
 
   // Accessibilité
   static const accessibilitySettingChanged = 'accessibility_setting_changed';
+
+  // Arrivée à destination (trajet)
+  static const tripMarkedArrived = 'trip_marked_arrived';
+  static const arrivalInstructionsUpdated = 'arrival_instructions_updated';
 }

@@ -27,6 +27,10 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
     on<AnnouncementDeleteRequested>(_onDeleteRequested);
     on<AnnouncementSearchRequested>(_onSearchRequested);
     on<AnnouncementSurplusOpenRequested>(_onSurplusOpenRequested);
+    on<AnnouncementTripMarkArrivedRequested>(_onTripMarkArrivedRequested);
+    on<AnnouncementArrivalInstructionsUpdateRequested>(
+      _onArrivalInstructionsUpdateRequested,
+    );
   }
 
   Future<void> _onCreateRequested(
@@ -320,6 +324,44 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
       } else {
         emit(AnnouncementError(unwrapDioError(e)));
       }
+    }
+  }
+
+  Future<void> _onTripMarkArrivedRequested(
+    AnnouncementTripMarkArrivedRequested event,
+    Emitter<AnnouncementState> emit,
+  ) async {
+    if (state is AnnouncementLoading) return;
+    emit(AnnouncementLoading());
+    try {
+      final announcement = await _repository.markTripArrived(
+        announcementId: event.announcementId,
+        arrivalInstructions: event.arrivalInstructions,
+      );
+      emit(AnnouncementTripArrived(announcement));
+      unawaited(_analytics.logEvent(AnalyticsEvents.tripMarkedArrived));
+    } catch (e) {
+      emit(AnnouncementError(unwrapDioError(e)));
+    }
+  }
+
+  Future<void> _onArrivalInstructionsUpdateRequested(
+    AnnouncementArrivalInstructionsUpdateRequested event,
+    Emitter<AnnouncementState> emit,
+  ) async {
+    if (state is AnnouncementLoading) return;
+    emit(AnnouncementLoading());
+    try {
+      final announcement = await _repository.updateArrivalInstructions(
+        announcementId: event.announcementId,
+        arrivalInstructions: event.arrivalInstructions,
+      );
+      emit(AnnouncementArrivalInstructionsUpdated(announcement));
+      unawaited(
+        _analytics.logEvent(AnalyticsEvents.arrivalInstructionsUpdated),
+      );
+    } catch (e) {
+      emit(AnnouncementError(unwrapDioError(e)));
     }
   }
 }
