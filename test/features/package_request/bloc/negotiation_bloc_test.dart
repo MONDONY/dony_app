@@ -109,10 +109,7 @@ void main() {
         },
       ),
     ),
-    expect: () => [
-      isA<NegotiationLoading>(),
-      isA<NegotiationLoaded>(),
-    ],
+    expect: () => [isA<NegotiationLoading>(), isA<NegotiationLoaded>()],
     verify: (_) => verify(
       () => repo.start(
         packageRequestId: 'pr-1',
@@ -177,27 +174,34 @@ void main() {
     ).called(1),
   );
 
-  test('DedicatedTripPayload.toJson omits nulls and includes required fields', () {
-    final payload = DedicatedTripPayload(
-      departureDate: DateTime(2026, 9, 1),
-      pickupAddress: const {'label': 'Pickup', 'lat': 48.8, 'lng': 2.3},
-      deliveryAddress: const {'label': 'Delivery', 'lat': 5.3, 'lng': -4.0},
-    );
-    final json = payload.toJson();
-    expect(json['departureDate'], '2026-09-01');
-    expect(json['pickupAddress'], {'label': 'Pickup', 'lat': 48.8, 'lng': 2.3});
-    expect(json['deliveryAddress'], {
-      'label': 'Delivery',
-      'lat': 5.3,
-      'lng': -4.0,
-    });
-    expect(json['useCardForCommission'], false);
-    expect(json.containsKey('departureTime'), isFalse);
-    expect(json.containsKey('arrivalTime'), isFalse);
-    expect(json.containsKey('description'), isFalse);
-    expect(json.containsKey('acceptedContentTypes'), isFalse);
-    expect(json.containsKey('refusedTypes'), isFalse);
-  });
+  test(
+    'DedicatedTripPayload.toJson omits nulls and includes required fields',
+    () {
+      final payload = DedicatedTripPayload(
+        departureDate: DateTime(2026, 9, 1),
+        pickupAddress: const {'label': 'Pickup', 'lat': 48.8, 'lng': 2.3},
+        deliveryAddress: const {'label': 'Delivery', 'lat': 5.3, 'lng': -4.0},
+      );
+      final json = payload.toJson();
+      expect(json['departureDate'], '2026-09-01');
+      expect(json['pickupAddress'], {
+        'label': 'Pickup',
+        'lat': 48.8,
+        'lng': 2.3,
+      });
+      expect(json['deliveryAddress'], {
+        'label': 'Delivery',
+        'lat': 5.3,
+        'lng': -4.0,
+      });
+      expect(json['useCardForCommission'], false);
+      expect(json.containsKey('departureTime'), isFalse);
+      expect(json.containsKey('arrivalTime'), isFalse);
+      expect(json.containsKey('description'), isFalse);
+      expect(json.containsKey('acceptedContentTypes'), isFalse);
+      expect(json.containsKey('refusedTypes'), isFalse);
+    },
+  );
 
   blocTest<NegotiationBloc, NegotiationState>(
     'counter from Loaded emits ActionInProgress then Loaded',
@@ -574,6 +578,74 @@ void main() {
           paymentMethod: PaymentMethod.stripe,
         ),
       ).called(1),
+    );
+  });
+
+  // ── NegotiationChangeTripRequested ──────────────────────────────────────────
+
+  group('NegotiationChangeTripRequested', () {
+    blocTest<NegotiationBloc, NegotiationState>(
+      'calls repository.changeTrip and emits [Loading, Loaded]',
+      build: () {
+        when(
+          () => repo.changeTrip('thread-1', travelerAnnouncementId: 'ann-2'),
+        ).thenAnswer((_) async => _fakeThread());
+        return _makeBloc(repo);
+      },
+      act: (bloc) => bloc.add(
+        const NegotiationChangeTripRequested(
+          threadId: 'thread-1',
+          travelerAnnouncementId: 'ann-2',
+        ),
+      ),
+      expect: () => [isA<NegotiationLoading>(), isA<NegotiationLoaded>()],
+      verify: (_) => verify(
+        () => repo.changeTrip('thread-1', travelerAnnouncementId: 'ann-2'),
+      ).called(1),
+    );
+
+    blocTest<NegotiationBloc, NegotiationState>(
+      'from Loaded emits [ActionInProgress, Loaded]',
+      build: () {
+        when(
+          () => repo.changeTrip(
+            any(),
+            travelerAnnouncementId: any(named: 'travelerAnnouncementId'),
+          ),
+        ).thenAnswer((_) async => _fakeThread());
+        return _makeBloc(repo);
+      },
+      seed: () => NegotiationLoaded(_fakeThread()),
+      act: (bloc) => bloc.add(
+        const NegotiationChangeTripRequested(
+          threadId: 't-1',
+          travelerAnnouncementId: 'ann-2',
+        ),
+      ),
+      expect: () => [
+        isA<NegotiationActionInProgress>(),
+        isA<NegotiationLoaded>(),
+      ],
+    );
+
+    blocTest<NegotiationBloc, NegotiationState>(
+      'emits [Loading, Error] when changeTrip throws',
+      build: () {
+        when(
+          () => repo.changeTrip(
+            any(),
+            travelerAnnouncementId: any(named: 'travelerAnnouncementId'),
+          ),
+        ).thenThrow(Exception('server error'));
+        return _makeBloc(repo);
+      },
+      act: (bloc) => bloc.add(
+        const NegotiationChangeTripRequested(
+          threadId: 't-1',
+          travelerAnnouncementId: 'ann-2',
+        ),
+      ),
+      expect: () => [isA<NegotiationLoading>(), isA<NegotiationError>()],
     );
   });
 

@@ -314,6 +314,21 @@ class NegotiationRefuseTripRequested extends NegotiationEvent {
   List<Object?> get props => [threadId, reason];
 }
 
+/// Traveler changes the trip already linked to an `OPEN` thread (before
+/// payment). Distinct from [NegotiationSubmitTripRequested], which still
+/// serves the legacy `AWAITING_TRIP` recovery loop (post-`refuseTrip`).
+class NegotiationChangeTripRequested extends NegotiationEvent {
+  const NegotiationChangeTripRequested({
+    required this.threadId,
+    required this.travelerAnnouncementId,
+  });
+  final String threadId;
+  final String travelerAnnouncementId;
+
+  @override
+  List<Object?> get props => [threadId, travelerAnnouncementId];
+}
+
 sealed class NegotiationState extends Equatable {
   const NegotiationState();
   @override
@@ -397,6 +412,7 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
     on<NegotiationRejectRequested>(_onReject);
     on<NegotiationCancelRequested>(_onCancel);
     on<NegotiationSubmitTripRequested>(_onSubmitTrip);
+    on<NegotiationChangeTripRequested>(_onChangeTrip);
     on<NegotiationCreateDedicatedTripRequested>(_onCreateDedicatedTrip);
     on<NegotiationCheckoutRequested>(_onCheckout);
     on<NegotiationRefuseTripRequested>(_onRefuseTrip);
@@ -670,6 +686,27 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
         );
       }
       emit(NegotiationError(appErr));
+    }
+  }
+
+  Future<void> _onChangeTrip(
+    NegotiationChangeTripRequested e,
+    Emitter<NegotiationState> emit,
+  ) async {
+    final current = state;
+    if (current is NegotiationLoaded) {
+      emit(NegotiationActionInProgress(current.thread));
+    } else {
+      emit(const NegotiationLoading());
+    }
+    try {
+      final thread = await _repository.changeTrip(
+        e.threadId,
+        travelerAnnouncementId: e.travelerAnnouncementId,
+      );
+      emit(NegotiationLoaded(thread));
+    } catch (err) {
+      emit(NegotiationError(unwrapDioError(err)));
     }
   }
 

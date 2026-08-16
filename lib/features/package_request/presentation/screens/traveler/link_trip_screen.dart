@@ -121,22 +121,38 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
     final ann = _selectedTripNotifier.value;
     final request = _requestNotifier.value;
     if (ann == null || request == null) return;
-    context.read<NegotiationBloc>().add(
-      NegotiationSubmitTripRequested(
-        threadId: widget.thread.id,
-        travelerAnnouncementId: ann.id,
-        // The back-end no longer decides capability from this field — it only
-        // requires a non-null accepted method to satisfy the DTO. The actual
-        // payment method is chosen by the sender at checkout, from the SET the
-        // back-end computes server-side. Falls back to stripe on an empty set
-        // (shouldn't happen — a request always has at least one accepted
-        // method — but `.first` on an empty Set throws StateError).
-        paymentMethod: request.acceptedPaymentMethods.isEmpty
-            ? PaymentMethod.stripe
-            : request.acceptedPaymentMethods.first,
-      ),
-    );
-    // Navigation handled by BlocListener on NegotiationLoaded(awaitingPayment).
+    if (widget.thread.status == NegotiationThreadStatus.awaitingTrip) {
+      // Legacy `refuseTrip` recovery loop: the back-end still requires
+      // submitTrip (with a paymentMethod) for this specific status.
+      context.read<NegotiationBloc>().add(
+        NegotiationSubmitTripRequested(
+          threadId: widget.thread.id,
+          travelerAnnouncementId: ann.id,
+          // The back-end no longer decides capability from this field — it
+          // only requires a non-null accepted method to satisfy the DTO. The
+          // actual payment method is chosen by the sender at checkout, from
+          // the SET the back-end computes server-side. Falls back to stripe
+          // on an empty set (shouldn't happen — a request always has at
+          // least one accepted method — but `.first` on an empty Set throws
+          // StateError).
+          paymentMethod: request.acceptedPaymentMethods.isEmpty
+              ? PaymentMethod.stripe
+              : request.acceptedPaymentMethods.first,
+        ),
+      );
+    } else {
+      // New flow: the thread already has a linked trip (status OPEN) — this
+      // screen is reached via a "change trip" entry point rather than the
+      // post-acceptance auto-navigation.
+      context.read<NegotiationBloc>().add(
+        NegotiationChangeTripRequested(
+          threadId: widget.thread.id,
+          travelerAnnouncementId: ann.id,
+        ),
+      );
+    }
+    // Navigation handled by BlocListener on NegotiationLoaded
+    // (awaitingPayment or open).
   }
 
   void _resubmitCash(String announcementId, {required bool useCard}) {
@@ -216,8 +232,10 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
           curr is NegotiationLoaded || curr is NegotiationError,
       listener: (context, state) {
         if (state is NegotiationLoaded &&
-            state.thread.status == NegotiationThreadStatus.awaitingPayment) {
-          // Trip linked successfully: leave this screen.
+            (state.thread.status == NegotiationThreadStatus.awaitingPayment ||
+                state.thread.status == NegotiationThreadStatus.open)) {
+          // Trip linked (legacy AWAITING_TRIP -> AWAITING_PAYMENT) or changed
+          // (new flow: OPEN -> OPEN) successfully: leave this screen.
           if (context.canPop()) context.pop();
         } else if (state is NegotiationError) {
           // `/trips/create` is on top and already owns error handling for

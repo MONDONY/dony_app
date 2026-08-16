@@ -219,6 +219,22 @@ class NegotiationRepository {
     return NegotiationThread.fromJson(response.data!);
   }
 
+  /// Traveler changes the trip already linked to an OPEN thread (before
+  /// payment), swapping it for another of their announcements. Mirrors
+  /// [submitTrip] but for a thread that already has a trip — used by the new
+  /// "change trip" flow, distinct from the legacy `AWAITING_TRIP` recovery
+  /// loop still served by [submitTrip].
+  Future<NegotiationThread> changeTrip(
+    String threadId, {
+    required String travelerAnnouncementId,
+  }) async {
+    final response = await _apiClient.dio.patch<Map<String, dynamic>>(
+      '/negotiations/$threadId/trip',
+      data: {'travelerAnnouncementId': travelerAnnouncementId},
+    );
+    return NegotiationThread.fromJson(response.data!);
+  }
+
   /// Sends a nudge on this thread to prompt the other party to act.
   /// Backend validates whether the current viewer is allowed to nudge.
   Future<NegotiationThread> nudge(String id) async {
