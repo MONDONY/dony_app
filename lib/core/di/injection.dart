@@ -848,6 +848,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => NegotiationBloc(
       getIt<NegotiationRepository>(),
       analytics: getIt<AnalyticsService>(),
+      stripe: Stripe.instance,
     ),
   );
   getIt.registerLazySingleton<NegotiationListBloc>(

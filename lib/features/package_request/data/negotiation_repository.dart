@@ -1,4 +1,6 @@
+import 'package:dio/dio.dart';
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/features/matching/data/models/acceptance_response.dart';
 import 'package:dony/features/package_request/data/models/negotiation_quote.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
@@ -242,5 +244,63 @@ class NegotiationRepository {
       '/negotiations/$id/nudge',
     );
     return NegotiationThread.fromJson(response.data!);
+  }
+
+  /// Traveler settles the Yadony commission for a cash-agreed offer the
+  /// sender already accepted. Nothing is sealed until this succeeds: the
+  /// sender's acceptance alone doesn't finalize a cash deal.
+  ///
+  /// The 409 (solde insuffisant) and 422 (échec) portent un corps
+  /// exploitable : ce sont des issues métier porteuses des montants à
+  /// afficher, pas des erreurs de transport. On les parse donc comme des
+  /// [AcceptanceResponse] valides, à l'image de
+  /// `BidRemoteDatasource.acceptBidWithCommission`.
+  Future<AcceptanceResponse> settleCommission(
+    String threadId, {
+    String commissionSource = 'WALLET_FIRST',
+  }) async {
+    try {
+      final response = await _apiClient.dio.post<Map<String, dynamic>>(
+        '/negotiations/$threadId/settle-commission',
+        queryParameters: {'commissionSource': commissionSource},
+      );
+      return AcceptanceResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      final data = e.response?.data;
+      if (data is Map<String, dynamic> && data['status'] != null) {
+        return AcceptanceResponse.fromJson(data);
+      }
+      rethrow;
+    }
+  }
+
+  /// Confirms a commission settlement after a successful 3D Secure
+  /// authentication. Mirrors `BidRemoteDatasource.confirmCommissionAcceptance`:
+  /// the backend returns 422 with `ConfirmResponse(accepted: false, error:
+  /// ...)` when the confirmation fails post-3DS, and that body must be parsed
+  /// rather than surfaced as a transport error.
+  Future<ConfirmResponse> confirmCommission(String threadId) async {
+    try {
+      final response = await _apiClient.dio.post<Map<String, dynamic>>(
+        '/negotiations/$threadId/confirm-commission',
+      );
+      return ConfirmResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 422 && e.response?.data != null) {
+        return ConfirmResponse.fromJson(
+          e.response!.data as Map<String, dynamic>,
+        );
+      }
+      rethrow;
+    }
+  }
+
+  /// Traveler explicitly declines to settle the commission: the request is
+  /// released immediately for another traveler instead of waiting out the
+  /// settlement deadline.
+  Future<void> declineCommission(String threadId) async {
+    await _apiClient.dio.post<void>(
+      '/negotiations/$threadId/decline-commission',
+    );
   }
 }

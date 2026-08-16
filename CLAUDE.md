@@ -340,6 +340,8 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `negotiation_offer_accepted` | NegotiationBloc._onAccept() |
 | `negotiation_cancelled` | NegotiationBloc._onCancel() — l'une des parties met fin à la négociation |
 | `negotiation_nudge_sent` | NegotiationBloc._onNudge() — relance envoyée |
+| `negotiation_commission_settled` | NegotiationBloc._handleCommissionResponse() — voyageur a réglé la commission Yadony d'un accord cash (direct ou après 3DS), l'accord est scellé (propriété `thread_id`) |
+| `negotiation_commission_declined` | NegotiationBloc._onDeclineCommission() — voyageur renonce explicitement au règlement, la demande est libérée immédiatement pour un autre voyageur |
 | `conversation_opened` | ChatScreen.initState |
 | `message_sent` | ChatBloc._onSendText() |
 | `conversation_call_initiated` | ChatScreen._call() — tap 📞 dans le header chat (numéro révélé) |
