@@ -500,9 +500,7 @@ class _TravelerCommissionActions extends StatelessWidget {
         const SizedBox(height: DonySpacing.xs),
         Center(
           child: TextButton(
-            onPressed: actionInProgress
-                ? null
-                : () => _confirmDecline(context),
+            onPressed: actionInProgress ? null : () => _confirmDecline(context),
             child: Text(
               'Renoncer à ce colis',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -535,8 +533,9 @@ class _CommissionCountdownState extends State<_CommissionCountdown> {
   /// Le restant vit dans un notifier, jamais dans un `setState` : la règle du
   /// projet l'interdit, et cela évite surtout de reconstruire toute la barre
   /// d'action à chaque tick. Seul le texte se redessine.
-  late final ValueNotifier<Duration> _remaining =
-      ValueNotifier(_computeRemaining());
+  late final ValueNotifier<Duration> _remaining = ValueNotifier(
+    _computeRemaining(),
+  );
 
   @override
   void initState() {
@@ -548,8 +547,9 @@ class _CommissionCountdownState extends State<_CommissionCountdown> {
 
   /// La cadence suit la précision affichée : inutile de réveiller l'écran
   /// chaque seconde quand on affiche « 1h 45min ».
-  Duration _tickInterval(Duration remaining) =>
-      remaining.inHours > 0 ? const Duration(minutes: 1) : const Duration(seconds: 1);
+  Duration _tickInterval(Duration remaining) => remaining.inHours > 0
+      ? const Duration(minutes: 1)
+      : const Duration(seconds: 1);
 
   Duration _computeRemaining() {
     final diff = widget.deadline.difference(DateTime.now().toUtc());

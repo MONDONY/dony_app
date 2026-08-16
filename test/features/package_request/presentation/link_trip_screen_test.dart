@@ -318,60 +318,58 @@ void main() {
 
   // ── Thread OPEN (change-trip flow) ────────────────────────────────────────
 
-  testWidgets(
-    'confirmer un trajet sur un thread OPEN dispatch '
-    'NegotiationChangeTripRequested (pas NegotiationSubmitTripRequested)',
-    (tester) async {
-      when(() => packageRequestRepo.getById(any())).thenAnswer(
-        (_) async =>
-            _packageRequest(methods: {PaymentMethod.cash, PaymentMethod.stripe}),
-      );
-      when(
-        () => announcementRepo.getMyAnnouncements(),
-      ).thenAnswer((_) async => (announcements: [_trip()], totalElements: 1));
+  testWidgets('confirmer un trajet sur un thread OPEN dispatch '
+      'NegotiationChangeTripRequested (pas NegotiationSubmitTripRequested)', (
+    tester,
+  ) async {
+    when(() => packageRequestRepo.getById(any())).thenAnswer(
+      (_) async =>
+          _packageRequest(methods: {PaymentMethod.cash, PaymentMethod.stripe}),
+    );
+    when(
+      () => announcementRepo.getMyAnnouncements(),
+    ).thenAnswer((_) async => (announcements: [_trip()], totalElements: 1));
 
-      await tester.pumpWidget(
-        _harness(_fakeThread(status: NegotiationThreadStatus.open)),
-      );
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(
+      _harness(_fakeThread(status: NegotiationThreadStatus.open)),
+    );
+    await tester.pumpAndSettle();
 
-      expect(find.byKey(const Key('trip-tile-select-inkwell')), findsOneWidget);
-      await tester.tap(find.byKey(const Key('trip-tile-select-inkwell')));
-      await tester.pumpAndSettle();
+    expect(find.byKey(const Key('trip-tile-select-inkwell')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('trip-tile-select-inkwell')));
+    await tester.pumpAndSettle();
 
-      expect(find.text('Confirmer ce trajet'), findsOneWidget);
-      await tester.tap(find.text('Confirmer ce trajet'));
-      await tester.pump();
+    expect(find.text('Confirmer ce trajet'), findsOneWidget);
+    await tester.tap(find.text('Confirmer ce trajet'));
+    await tester.pump();
 
-      verify(
-        () => negotiationBloc.add(
-          any(
-            that: predicate<NegotiationEvent>(
-              (e) =>
-                  e is NegotiationChangeTripRequested &&
-                  e.threadId == 't-1' &&
-                  e.travelerAnnouncementId == 'ann-1',
-              'NegotiationChangeTripRequested(threadId=t-1, '
-              'travelerAnnouncementId=ann-1)',
-            ),
+    verify(
+      () => negotiationBloc.add(
+        any(
+          that: predicate<NegotiationEvent>(
+            (e) =>
+                e is NegotiationChangeTripRequested &&
+                e.threadId == 't-1' &&
+                e.travelerAnnouncementId == 'ann-1',
+            'NegotiationChangeTripRequested(threadId=t-1, '
+            'travelerAnnouncementId=ann-1)',
           ),
         ),
-      ).called(1);
-      verifyNever(
-        () => negotiationBloc.add(
-          any(that: isA<NegotiationSubmitTripRequested>()),
-        ),
-      );
-    },
-  );
+      ),
+    ).called(1);
+    verifyNever(
+      () =>
+          negotiationBloc.add(any(that: isA<NegotiationSubmitTripRequested>())),
+    );
+  });
 
   testWidgets(
     'l\'écran se ferme (pop) quand NegotiationLoaded porte status=open '
     '(changeTrip réussi)',
     (tester) async {
-      when(() => packageRequestRepo.getById(any())).thenAnswer(
-        (_) async => _packageRequest(),
-      );
+      when(
+        () => packageRequestRepo.getById(any()),
+      ).thenAnswer((_) async => _packageRequest());
       when(
         () => announcementRepo.getMyAnnouncements(),
       ).thenAnswer((_) async => (announcements: [_trip()], totalElements: 1));

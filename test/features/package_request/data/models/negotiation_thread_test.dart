@@ -379,12 +379,20 @@ void main() {
   group('commissionDeadline', () {
     final baseJson = _baseJson();
 
-    test('fromJson lit commissionDeadline', () {
+    test('fromJson lit commissionDeadline comme un instant UTC', () {
+      // Le backend sérialise tous ses LocalDateTime en ISO_OFFSET_DATE_TIME
+      // après atOffset(UTC) : le Z est donc toujours présent sur le fil. Le
+      // test doit refléter ce format réel, sinon il valide un cas qui n'arrive
+      // jamais et laisse passer une lecture en heure locale.
       final thread = NegotiationThread.fromJson({
         ...baseJson,
-        'commissionDeadline': '2026-08-16T14:30:00',
+        'commissionDeadline': '2026-08-16T14:30:00Z',
       });
-      expect(thread.commissionDeadline, DateTime.parse('2026-08-16T14:30:00'));
+      expect(thread.commissionDeadline!.isUtc, isTrue);
+      expect(
+        thread.commissionDeadline!.millisecondsSinceEpoch,
+        DateTime.utc(2026, 8, 16, 14, 30).millisecondsSinceEpoch,
+      );
     });
 
     test('commissionDeadline absent reste null', () {

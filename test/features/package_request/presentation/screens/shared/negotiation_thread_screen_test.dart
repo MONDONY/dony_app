@@ -244,24 +244,21 @@ void main() {
       expect(find.byType(DonyAvatar), findsOneWidget);
     });
 
-    testWidgets(
-      'affiche la carte du trajet lié dès que le thread est OPEN '
-      '(offre initiale, avant tout paiement)',
-      (tester) async {
-        when(() => bloc.state).thenReturn(
-          NegotiationLoaded(
-            _thread(
-              status: NegotiationThreadStatus.open,
-              linkedTrip: _sampleLinkedTrip,
-            ),
+    testWidgets('affiche la carte du trajet lié dès que le thread est OPEN '
+        '(offre initiale, avant tout paiement)', (tester) async {
+      when(() => bloc.state).thenReturn(
+        NegotiationLoaded(
+          _thread(
+            status: NegotiationThreadStatus.open,
+            linkedTrip: _sampleLinkedTrip,
           ),
-        );
-        await tester.pumpWidget(wrap());
-        await tester.pumpAndSettle();
+        ),
+      );
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
 
-        expect(find.byType(LinkedTripCard), findsOneWidget);
-      },
-    );
+      expect(find.byType(LinkedTripCard), findsOneWidget);
+    });
 
     testWidgets(
       'bouton retour sans pile de navigation (arrivée via go depuis un '

@@ -2417,10 +2417,7 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text('Aucun moyen de paiement disponible'), findsNothing);
-        expect(
-          find.byKey(const Key('unlock-cash-payment-cta')),
-          findsNothing,
-        );
+        expect(find.byKey(const Key('unlock-cash-payment-cta')), findsNothing);
         expect(find.byType(SnackBar), findsOneWidget);
       },
     );

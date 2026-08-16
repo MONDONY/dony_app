@@ -442,22 +442,29 @@ class CandidatesSection extends StatelessWidget {
       final openThreads = threads
           .where((t) => t.status == NegotiationThreadStatus.open)
           .toList();
-      // Offre déjà choisie : le thread est passé en AWAITING_TRIP /
-      // AWAITING_PAYMENT / AWAITING_COMMISSION (accord cash conclu, mais le
-      // voyageur n'a pas encore réglé la commission). Tant qu'elle n'est pas
-      // scellée, elle doit RESTER visible ici pour que l'expéditeur la
-      // finalise, sinon l'offre disparaît de « Ma demande ».
+      // Offre déjà choisie : la demande est réellement engagée, plus aucune
+      // autre ne peut aboutir, on n'affiche donc que celle à finaliser.
       final chosen = threads
           .where(
             (t) =>
                 t.status == NegotiationThreadStatus.awaitingTrip ||
-                t.status == NegotiationThreadStatus.awaitingPayment ||
-                t.status == NegotiationThreadStatus.awaitingCommission,
+                t.status == NegotiationThreadStatus.awaitingPayment,
           )
           .toList();
 
-      // Une fois un voyageur choisi, on n'affiche que l'offre en cours à finaliser.
-      final visible = chosen.isNotEmpty ? chosen : openThreads;
+      // Accord en espèces conclu mais commission non réglée : rien n'est scellé
+      // et le serveur garde la demande ouverte, offres concurrentes vivantes.
+      // Cette offre passe donc en tête SANS masquer les autres, sinon
+      // l'expéditeur perdrait de vue ses autres candidats pendant toute la
+      // fenêtre de règlement, alors que le fil lui affirme au même moment qu'il
+      // peut continuer à accepter quelqu'un d'autre.
+      final pendingCommission = threads
+          .where((t) => t.status == NegotiationThreadStatus.awaitingCommission)
+          .toList();
+
+      final visible = chosen.isNotEmpty
+          ? chosen
+          : [...pendingCommission, ...openThreads];
       final showingChosen = chosen.isNotEmpty;
 
       if (visible.isEmpty) return const SizedBox.shrink();

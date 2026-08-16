@@ -97,34 +97,30 @@ void main() {
       expect(sentData?['dedicatedTrip'], isA<Map<String, dynamic>>());
     });
 
-    test(
-      'defaults createDedicatedTrip to false and omits dedicatedTrip '
-      'when not provided',
-      () async {
-        Map<String, dynamic>? sentData;
-        when(
-          () => mockDio.post<Map<String, dynamic>>(
-            '/negotiations',
-            data: any(named: 'data'),
-          ),
-        ).thenAnswer((inv) async {
-          sentData =
-              inv.namedArguments[const Symbol('data')]
-                  as Map<String, dynamic>;
-          return _ok(_threadJson, '/negotiations');
-        });
+    test('defaults createDedicatedTrip to false and omits dedicatedTrip '
+        'when not provided', () async {
+      Map<String, dynamic>? sentData;
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer((inv) async {
+        sentData =
+            inv.namedArguments[const Symbol('data')] as Map<String, dynamic>;
+        return _ok(_threadJson, '/negotiations');
+      });
 
-        await repo.start(
-          packageRequestId: 'pr-1',
-          proposedPriceEur: 30.0,
-          travelerTravelDate: DateTime(2026, 6, 15),
-          travelerAvailableKg: 10.0,
-        );
+      await repo.start(
+        packageRequestId: 'pr-1',
+        proposedPriceEur: 30.0,
+        travelerTravelDate: DateTime(2026, 6, 15),
+        travelerAvailableKg: 10.0,
+      );
 
-        expect(sentData?['createDedicatedTrip'], isFalse);
-        expect(sentData?.containsKey('dedicatedTrip'), isFalse);
-      },
-    );
+      expect(sentData?['createDedicatedTrip'], isFalse);
+      expect(sentData?.containsKey('dedicatedTrip'), isFalse);
+    });
   });
 
   group('findMine', () {
@@ -590,25 +586,21 @@ void main() {
   // ── settleCommission ─────────────────────────────────────────────────────────
 
   group('settleCommission', () {
-    test(
-      'POSTs to /negotiations/:id/settle-commission and returns '
-      'AcceptanceResponse on success (200 ACCEPTED)',
-      () async {
-        when(
-          () => mockDio.post<Map<String, dynamic>>(
-            '/negotiations/th-1/settle-commission',
-            queryParameters: any(named: 'queryParameters'),
-          ),
-        ).thenAnswer(
-          (_) async => _ok({
-            'status': 'ACCEPTED',
-          }, '/negotiations/th-1/settle-commission'),
-        );
+    test('POSTs to /negotiations/:id/settle-commission and returns '
+        'AcceptanceResponse on success (200 ACCEPTED)', () async {
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/settle-commission',
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenAnswer(
+        (_) async =>
+            _ok({'status': 'ACCEPTED'}, '/negotiations/th-1/settle-commission'),
+      );
 
-        final result = await repo.settleCommission('th-1');
-        expect(result.status, AcceptanceStatus.accepted);
-      },
-    );
+      final result = await repo.settleCommission('th-1');
+      expect(result.status, AcceptanceStatus.accepted);
+    });
 
     test('sends WALLET_FIRST commissionSource by default', () async {
       dynamic capturedQuery;
@@ -715,46 +707,43 @@ void main() {
       expect(result.error, 'Carte refusée');
     });
 
-    test(
-      'rethrows a 409 race-guard RFC 7807 body cleanly instead of crashing '
-      'or masking it as an AcceptanceResponse — plusieurs voyageurs peuvent '
-      'régler en même temps, le corps porte un `status` NUMÉRIQUE (409, pas '
-      "'INSUFFICIENT_WALLET') qui ne doit jamais atteindre "
-      'AcceptanceResponse.fromJson',
-      () async {
-        final raceGuardJson = {
-          'type': 'about:blank',
-          'title': 'Conflict',
-          'status': 409,
-          'detail': 'La demande a déjà été acceptée par un autre voyageur.',
-          'code': 'request/already-accepted',
-        };
-        when(
-          () => mockDio.post<Map<String, dynamic>>(
-            '/negotiations/th-1/settle-commission',
-            queryParameters: any(named: 'queryParameters'),
+    test('rethrows a 409 race-guard RFC 7807 body cleanly instead of crashing '
+        'or masking it as an AcceptanceResponse — plusieurs voyageurs peuvent '
+        'régler en même temps, le corps porte un `status` NUMÉRIQUE (409, pas '
+        "'INSUFFICIENT_WALLET') qui ne doit jamais atteindre "
+        'AcceptanceResponse.fromJson', () async {
+      final raceGuardJson = {
+        'type': 'about:blank',
+        'title': 'Conflict',
+        'status': 409,
+        'detail': 'La demande a déjà été acceptée par un autre voyageur.',
+        'code': 'request/already-accepted',
+      };
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/settle-commission',
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(
+            path: '/negotiations/th-1/settle-commission',
           ),
-        ).thenThrow(
-          DioException(
+          response: Response(
             requestOptions: RequestOptions(
               path: '/negotiations/th-1/settle-commission',
             ),
-            response: Response(
-              requestOptions: RequestOptions(
-                path: '/negotiations/th-1/settle-commission',
-              ),
-              statusCode: 409,
-              data: raceGuardJson,
-            ),
+            statusCode: 409,
+            data: raceGuardJson,
           ),
-        );
+        ),
+      );
 
-        await expectLater(
-          repo.settleCommission('th-1'),
-          throwsA(isA<DioException>()),
-        );
-      },
-    );
+      await expectLater(
+        repo.settleCommission('th-1'),
+        throwsA(isA<DioException>()),
+      );
+    });
 
     test('rethrows DioException non-409-422', () async {
       when(
@@ -796,38 +785,35 @@ void main() {
       expect(result.accepted, isTrue);
     });
 
-    test(
-      'parses 422 DioException body as ConfirmResponse when confirmation '
-      'fails post-3DS',
-      () async {
-        final failedJson = {
-          'accepted': false,
-          'error': 'Confirmation refusée par la banque',
-        };
-        when(
-          () => mockDio.post<Map<String, dynamic>>(
-            '/negotiations/th-1/confirm-commission',
+    test('parses 422 DioException body as ConfirmResponse when confirmation '
+        'fails post-3DS', () async {
+      final failedJson = {
+        'accepted': false,
+        'error': 'Confirmation refusée par la banque',
+      };
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/confirm-commission',
+        ),
+      ).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(
+            path: '/negotiations/th-1/confirm-commission',
           ),
-        ).thenThrow(
-          DioException(
+          response: Response(
             requestOptions: RequestOptions(
               path: '/negotiations/th-1/confirm-commission',
             ),
-            response: Response(
-              requestOptions: RequestOptions(
-                path: '/negotiations/th-1/confirm-commission',
-              ),
-              statusCode: 422,
-              data: failedJson,
-            ),
+            statusCode: 422,
+            data: failedJson,
           ),
-        );
+        ),
+      );
 
-        final result = await repo.confirmCommission('th-1');
-        expect(result.accepted, isFalse);
-        expect(result.error, 'Confirmation refusée par la banque');
-      },
-    );
+      final result = await repo.confirmCommission('th-1');
+      expect(result.accepted, isFalse);
+      expect(result.error, 'Confirmation refusée par la banque');
+    });
 
     test('rethrows DioException non-422', () async {
       when(

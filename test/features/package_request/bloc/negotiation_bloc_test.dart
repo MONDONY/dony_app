@@ -1054,9 +1054,7 @@ void main() {
       'renoncement réussi → ActionInProgress puis NegotiationCommissionDeclined,'
       ' la demande est libérée',
       build: () {
-        when(
-          () => repo.declineCommission('t-1'),
-        ).thenAnswer((_) async {});
+        when(() => repo.declineCommission('t-1')).thenAnswer((_) async {});
         return _makeBloc(repo);
       },
       seed: () => NegotiationLoaded(_fakeThread()),
@@ -1076,9 +1074,7 @@ void main() {
       'renoncement depuis un état autre que Loaded → Loading puis '
       'NegotiationCommissionDeclined',
       build: () {
-        when(
-          () => repo.declineCommission('t-1'),
-        ).thenAnswer((_) async {});
+        when(() => repo.declineCommission('t-1')).thenAnswer((_) async {});
         return _makeBloc(repo);
       },
       act: (b) => b.add(const NegotiationDeclineCommissionRequested('t-1')),

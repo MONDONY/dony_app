@@ -223,31 +223,30 @@ void main() {
       },
     );
 
-    testWidgets(
-      'tap "Renoncer à ce colis" puis annuler → aucun dispatch',
-      (tester) async {
-        await tester.pumpWidget(
-          wrap(
-            _thread(
-              status: NegotiationThreadStatus.awaitingCommission,
-              commissionStatus: 'PENDING',
-            ),
-            _viewerTraveler,
+    testWidgets('tap "Renoncer à ce colis" puis annuler → aucun dispatch', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrap(
+          _thread(
+            status: NegotiationThreadStatus.awaitingCommission,
+            commissionStatus: 'PENDING',
           ),
-        );
-        await tester.pumpAndSettle();
+          _viewerTraveler,
+        ),
+      );
+      await tester.pumpAndSettle();
 
-        await tester.tap(find.text('Renoncer à ce colis'));
-        await tester.pumpAndSettle();
+      await tester.tap(find.text('Renoncer à ce colis'));
+      await tester.pumpAndSettle();
 
-        await tester.tap(find.text('Annuler'));
-        await tester.pumpAndSettle();
+      await tester.tap(find.text('Annuler'));
+      await tester.pumpAndSettle();
 
-        verifyNever(
-          () => bloc.add(const NegotiationDeclineCommissionRequested('t1')),
-        );
-      },
-    );
+      verifyNever(
+        () => bloc.add(const NegotiationDeclineCommissionRequested('t1')),
+      );
+    });
 
     testWidgets('compte à rebours : échéance future → "Il te reste …"', (
       tester,
@@ -372,27 +371,20 @@ void main() {
       return MaterialApp.router(theme: AppTheme.light(), routerConfig: router);
     }
 
-    testWidgets(
-      'solde insuffisant, hasCard → recharge et paiement par carte',
-      (tester) async {
-        await tester.pumpWidget(wrapSheet(hasCard: true));
-        await tester.tap(find.text('open'));
-        await tester.pumpAndSettle();
+    testWidgets('solde insuffisant, hasCard → recharge et paiement par carte', (
+      tester,
+    ) async {
+      await tester.pumpWidget(wrapSheet(hasCard: true));
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
 
-        expect(find.text('Solde insuffisant'), findsOneWidget);
-        expect(
-          find.textContaining(formatPriceIn(5, 'EUR')),
-          findsOneWidget,
-        );
-        expect(
-          find.textContaining(formatPriceIn(1, 'EUR')),
-          findsOneWidget,
-        );
-        expect(find.text('Recharger mon portefeuille'), findsOneWidget);
-        expect(find.text('Payer par carte'), findsOneWidget);
-        expect(find.text('Ajouter une carte'), findsNothing);
-      },
-    );
+      expect(find.text('Solde insuffisant'), findsOneWidget);
+      expect(find.textContaining(formatPriceIn(5, 'EUR')), findsOneWidget);
+      expect(find.textContaining(formatPriceIn(1, 'EUR')), findsOneWidget);
+      expect(find.text('Recharger mon portefeuille'), findsOneWidget);
+      expect(find.text('Payer par carte'), findsOneWidget);
+      expect(find.text('Ajouter une carte'), findsNothing);
+    });
 
     testWidgets('solde insuffisant, pas de carte → « Ajouter une carte »', (
       tester,
@@ -479,145 +471,142 @@ void main() {
           ),
         );
 
-    testWidgets(
-      'solde insuffisant → sheet avec recharge et carte',
-      (tester) async {
-        final controller = StreamController<NegotiationState>();
-        addTearDown(controller.close);
-        whenListen(
-          bloc,
-          controller.stream,
-          initialState: NegotiationLoaded(
-            _thread(
-              status: NegotiationThreadStatus.awaitingCommission,
-              commissionStatus: 'PENDING',
+    testWidgets('solde insuffisant → sheet avec recharge et carte', (
+      tester,
+    ) async {
+      final controller = StreamController<NegotiationState>();
+      addTearDown(controller.close);
+      whenListen(
+        bloc,
+        controller.stream,
+        initialState: NegotiationLoaded(
+          _thread(
+            status: NegotiationThreadStatus.awaitingCommission,
+            commissionStatus: 'PENDING',
+          ),
+        ),
+      );
+
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
+
+      controller.add(
+        const NegotiationCommissionInsufficientWallet(
+          availableBalance: 1,
+          requiredCommission: 5,
+          hasCard: true,
+          threadId: 't1',
+          currency: 'EUR',
+        ),
+      );
+      // pump() cible, jamais pumpAndSettle : l ecran porte des timers (compte a
+      // rebours, auto-fermeture de la snackbar) qui empechent toute stabilisation.
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.text('Solde insuffisant'), findsOneWidget);
+      expect(find.text('Recharger mon portefeuille'), findsOneWidget);
+      expect(find.text('Payer par carte'), findsOneWidget);
+    });
+
+    testWidgets('commission réglée → snackbar de succès et rafraîchit le fil', (
+      tester,
+    ) async {
+      final controller = StreamController<NegotiationState>();
+      addTearDown(controller.close);
+      whenListen(
+        bloc,
+        controller.stream,
+        initialState: NegotiationLoaded(
+          _thread(
+            status: NegotiationThreadStatus.awaitingCommission,
+            commissionStatus: 'PENDING',
+          ),
+        ),
+      );
+
+      await tester.pumpWidget(wrap());
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+
+      // Le montage de l'écran déclenche déjà son propre chargement : on repart
+      // de zéro pour n'observer que le rafraîchissement dû au règlement.
+      clearInteractions(bloc);
+
+      controller.add(const NegotiationCommissionSettled('t1'));
+      // pump() ciblé, jamais pumpAndSettle : l'écran porte des timers (compte à
+      // rebours, auto-fermeture de la snackbar) qui empêchent toute stabilisation.
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(
+        find.text('Commission réglée : ce colis est à toi !'),
+        findsOneWidget,
+      );
+      verify(() => bloc.add(const NegotiationFetchRequested('t1'))).called(1);
+
+      // Flush the snackbar's auto-dismiss timer.
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets('renoncement confirmé → snackbar puis retour arrière', (
+      tester,
+    ) async {
+      final controller = StreamController<NegotiationState>();
+      addTearDown(controller.close);
+      whenListen(
+        bloc,
+        controller.stream,
+        initialState: NegotiationLoaded(
+          _thread(
+            status: NegotiationThreadStatus.awaitingCommission,
+            commissionStatus: 'PENDING',
+          ),
+        ),
+      );
+
+      final router = GoRouter(
+        initialLocation: '/negotiations',
+        routes: [
+          GoRoute(
+            path: '/negotiations',
+            builder: (_, _) => const Scaffold(body: Text('LISTE_NEGOCIATIONS')),
+          ),
+          GoRoute(
+            path: '/negotiations/:id',
+            builder: (_, _) => NegotiationThreadScreen(
+              threadId: 't1',
+              viewerUserId: _viewerTraveler,
             ),
           ),
-        );
-
-        await tester.pumpWidget(wrap());
-        await tester.pumpAndSettle();
-
-        controller.add(
-          const NegotiationCommissionInsufficientWallet(
-            availableBalance: 1,
-            requiredCommission: 5,
-            hasCard: true,
-            threadId: 't1',
-            currency: 'EUR',
+        ],
+      );
+      await tester.pumpWidget(
+        BlocProvider<HelpCenterBloc>(
+          create: (_) => HelpCenterBloc(
+            HelpCenterRepository(
+              const _StaticHelpCenterSource(_emptyHelpConfigJson),
+              fallbackJsonLoader: () async => _emptyHelpConfigJson,
+            ),
+            makeDisabledAnalytics(MockAnalyticsBackend()),
+          )..add(const HelpCenterLoadRequested()),
+          child: MaterialApp.router(
+            theme: AppTheme.light(),
+            routerConfig: router,
           ),
-        );
-        // pump() cible, jamais pumpAndSettle : l ecran porte des timers (compte a
-        // rebours, auto-fermeture de la snackbar) qui empechent toute stabilisation.
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 400));
+        ),
+      );
+      await tester.pumpAndSettle();
+      unawaited(router.push('/negotiations/t1'));
+      await tester.pumpAndSettle();
 
-        expect(find.text('Solde insuffisant'), findsOneWidget);
-        expect(find.text('Recharger mon portefeuille'), findsOneWidget);
-        expect(find.text('Payer par carte'), findsOneWidget);
-      },
-    );
+      controller.add(const NegotiationCommissionDeclined('t1'));
+      await tester.pumpAndSettle();
 
-    testWidgets(
-      'commission réglée → snackbar de succès et rafraîchit le fil',
-      (tester) async {
-        final controller = StreamController<NegotiationState>();
-        addTearDown(controller.close);
-        whenListen(
-          bloc,
-          controller.stream,
-          initialState: NegotiationLoaded(
-            _thread(
-              status: NegotiationThreadStatus.awaitingCommission,
-              commissionStatus: 'PENDING',
-            ),
-          ),
-        );
+      expect(find.text('LISTE_NEGOCIATIONS'), findsOneWidget);
 
-        await tester.pumpWidget(wrap());
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 400));
-
-        // Le montage de l'écran déclenche déjà son propre chargement : on repart
-        // de zéro pour n'observer que le rafraîchissement dû au règlement.
-        clearInteractions(bloc);
-
-        controller.add(const NegotiationCommissionSettled('t1'));
-        // pump() ciblé, jamais pumpAndSettle : l'écran porte des timers (compte à
-        // rebours, auto-fermeture de la snackbar) qui empêchent toute stabilisation.
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 400));
-
-        expect(find.text('Commission réglée : ce colis est à toi !'), findsOneWidget);
-        verify(
-          () => bloc.add(const NegotiationFetchRequested('t1')),
-        ).called(1);
-
-        // Flush the snackbar's auto-dismiss timer.
-        await tester.pump(const Duration(seconds: 5));
-      },
-    );
-
-    testWidgets(
-      'renoncement confirmé → snackbar puis retour arrière',
-      (tester) async {
-        final controller = StreamController<NegotiationState>();
-        addTearDown(controller.close);
-        whenListen(
-          bloc,
-          controller.stream,
-          initialState: NegotiationLoaded(
-            _thread(
-              status: NegotiationThreadStatus.awaitingCommission,
-              commissionStatus: 'PENDING',
-            ),
-          ),
-        );
-
-        final router = GoRouter(
-          initialLocation: '/negotiations',
-          routes: [
-            GoRoute(
-              path: '/negotiations',
-              builder: (_, _) =>
-                  const Scaffold(body: Text('LISTE_NEGOCIATIONS')),
-            ),
-            GoRoute(
-              path: '/negotiations/:id',
-              builder: (_, _) => NegotiationThreadScreen(
-                threadId: 't1',
-                viewerUserId: _viewerTraveler,
-              ),
-            ),
-          ],
-        );
-        await tester.pumpWidget(
-          BlocProvider<HelpCenterBloc>(
-            create: (_) => HelpCenterBloc(
-              HelpCenterRepository(
-                const _StaticHelpCenterSource(_emptyHelpConfigJson),
-                fallbackJsonLoader: () async => _emptyHelpConfigJson,
-              ),
-              makeDisabledAnalytics(MockAnalyticsBackend()),
-            )..add(const HelpCenterLoadRequested()),
-            child: MaterialApp.router(
-              theme: AppTheme.light(),
-              routerConfig: router,
-            ),
-          ),
-        );
-        await tester.pumpAndSettle();
-        unawaited(router.push('/negotiations/t1'));
-        await tester.pumpAndSettle();
-
-        controller.add(const NegotiationCommissionDeclined('t1'));
-        await tester.pumpAndSettle();
-
-        expect(find.text('LISTE_NEGOCIATIONS'), findsOneWidget);
-
-        // Flush the snackbar's auto-dismiss timer.
-        await tester.pump(const Duration(seconds: 5));
-      },
-    );
+      // Flush the snackbar's auto-dismiss timer.
+      await tester.pump(const Duration(seconds: 5));
+    });
   });
 }

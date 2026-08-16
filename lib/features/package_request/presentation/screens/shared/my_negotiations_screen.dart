@@ -333,8 +333,7 @@ class _NegoCard extends StatelessWidget {
     NegotiationThreadStatus.open => DonyColors.primary,
     NegotiationThreadStatus.awaitingTrip => DonyColors.threadStatusAmber,
     NegotiationThreadStatus.awaitingPayment => DonyColors.threadStatusViolet,
-    NegotiationThreadStatus.awaitingCommission =>
-      DonyColors.threadStatusOrange,
+    NegotiationThreadStatus.awaitingCommission => DonyColors.threadStatusOrange,
     NegotiationThreadStatus.accepted => DonyColors.threadStatusGreen,
     _ => DonyColors.neutral300,
   };

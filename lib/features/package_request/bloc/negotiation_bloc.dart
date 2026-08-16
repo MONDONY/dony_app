@@ -936,13 +936,59 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
       emit(const NegotiationLoading());
     }
     try {
+      // Reprise d'une authentification bancaire interrompue : le voyageur a
+      // basculé vers son application bancaire et l'OS a tué dony entre-temps.
+      // Il faut confirmer le PaymentIntent existant, surtout pas en relancer
+      // un : la clé d'idempotence Stripe rejouerait « authentification
+      // requise » en boucle et il ne pourrait plus jamais aboutir. Si la
+      // confirmation n'aboutit pas, le serveur marque l'échec et incrémente
+      // son compteur de réessai, ce qui autorise le nouveau règlement ci-dessous.
+      final resumed =
+          current is NegotiationLoaded &&
+          current.thread.commissionStatus == 'REQUIRES_3DS';
+      if (resumed) {
+        final c = await _repository.confirmCommission(e.threadId);
+        if (c.accepted) {
+          emit(NegotiationCommissionSettled(e.threadId));
+          unawaited(
+            _analytics.logEvent(
+              AnalyticsEvents.negotiationCommissionSettled,
+              properties: {'thread_id': e.threadId},
+            ),
+          );
+          return;
+        }
+      }
       final response = await _repository.settleCommission(
         e.threadId,
         commissionSource: e.useCard ? 'CARD' : 'WALLET_FIRST',
       );
       await _handleCommissionResponse(response, e.threadId, emit);
     } catch (err) {
-      emit(NegotiationError(unwrapDioError(err)));
+      _emitCommissionFailure(err, e.threadId, emit);
+    }
+  }
+
+  /// Codes que le serveur renvoie quand la course est perdue : la demande est
+  /// partie à un autre voyageur, ou l'attente s'est terminée autrement.
+  static const _commissionRaceLostCodes = {
+    'request/already-accepted',
+    'thread/not-awaiting-commission',
+  };
+
+  /// Émet l'échec, et recharge le fil quand la place est prise : sans ce
+  /// rechargement l'écran reste bloqué sur l'ancien état, le bouton « Régler la
+  /// commission » redevient actif, et le voyageur peut retaper indéfiniment sans
+  /// jamais apprendre que le colis lui a échappé.
+  void _emitCommissionFailure(
+    Object err,
+    String threadId,
+    Emitter<NegotiationState> emit,
+  ) {
+    final failure = unwrapDioError(err);
+    emit(NegotiationError(failure));
+    if (_commissionRaceLostCodes.contains(failure.code)) {
+      add(NegotiationFetchRequested(threadId));
     }
   }
 
@@ -1046,7 +1092,7 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
       );
       emit(NegotiationCommissionDeclined(e.threadId));
     } catch (err) {
-      emit(NegotiationError(unwrapDioError(err)));
+      _emitCommissionFailure(err, e.threadId, emit);
     }
   }
 }
