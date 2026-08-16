@@ -428,6 +428,9 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `home_guidance_carousel_slide_dismissed` | EvergreenGuidanceCarousel — croix (X) de fermeture manuelle d'une slide, masquage définitif (propriété `slide` : trip/parcel/alert/kyc/tutorial) |
 | `settings_guidance_cards_reset` | SettingsScreen._resetGuidanceCards — tuile « Réafficher les suggestions », efface tous les flags de fermeture manuelle du carousel de guidance (Recherche) et des `ContextualTutorialCard` fermées ailleurs dans l'app |
 | `accessibility_setting_changed` | AccessibilityBloc — un réglage d'accessibilité est modifié (propriétés `setting`, `value`) ou réinitialisation complète (`setting: reset`) |
+| `trip_poster_opened` | TripPosterScreen.initState — ouverture de l'affiche partageable d'un trajet |
+| `trip_poster_shared` | TripPosterScreen — partage de l'image via la feuille système, ou enregistrement galerie (propriété `action: save`) ; non émis si le partage est annulé |
+| `trip_poster_link_copied` | TripPosterScreen — tap sur « Copier le lien » ou « Copier la légende » |
 | `bloc_error` | AnalyticsBlocObserver.onError() — global |
 
 ---

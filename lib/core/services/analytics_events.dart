@@ -266,4 +266,11 @@ abstract final class AnalyticsEvents {
 
   // Accessibilité
   static const accessibilitySettingChanged = 'accessibility_setting_changed';
+
+  // Affiche de trajet — le voyageur la génère puis la poste sur ses propres
+  // canaux. Ces trois events mesurent le seul entonnoir qui compte ici :
+  // combien d'affiches ouvertes finissent réellement publiées.
+  static const tripPosterOpened = 'trip_poster_opened';
+  static const tripPosterShared = 'trip_poster_shared';
+  static const tripPosterLinkCopied = 'trip_poster_link_copied';
 }

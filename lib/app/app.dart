@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app_links/app_links.dart';
+import 'package:dony/app/announcement_deep_link.dart';
 import 'package:dony/app/reduced_motion_priming.dart';
 import 'package:dony/app/router.dart';
 import 'package:dony/core/design/design_system.dart';
@@ -150,6 +151,20 @@ class _DonyAppState extends State<DonyApp> {
     if (uri.scheme != 'dony') {
       return;
     }
+
+    // Chemin paramétré : traité à part de la liste blanche exhaustive, qui
+    // fonctionne par égalité stricte et ne peut donc pas porter un identifiant
+    // variable. La validation du segment vit dans resolveAnnouncementDeepLink.
+    final announcementRoute = resolveAnnouncementDeepLink(uri);
+    if (announcementRoute != null) {
+      try {
+        _navigateToRoute(announcementRoute);
+      } catch (_) {
+        // Route indisponible — no-op, comme pour les autres liens profonds.
+      }
+      return;
+    }
+
     final routePath = '/${uri.host}${uri.path}';
     if (!_allowedDeepLinkPaths.contains(routePath)) {
       return;
