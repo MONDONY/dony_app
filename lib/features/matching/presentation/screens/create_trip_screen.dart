@@ -511,10 +511,19 @@ class _TripFormContentState extends State<_TripFormContent> {
   final _formKey = GlobalKey<FormState>();
 
   /// The last `NegotiationCreateDedicatedTripRequested` dispatched by
-  /// `_submit()`, kept around so a payment-method block (cash-funds-required
-  /// / none-available) can resubmit the exact same data with card consent
+  /// `_submit()` (existing AWAITING_TRIP thread — `lockContext.threadId !=
+  /// null`), kept around so a payment-method block (cash-funds-required /
+  /// none-available) can resubmit the exact same data with card consent
   /// (`useCardForCommission: true`) instead of re-collecting the form.
   NegotiationCreateDedicatedTripRequested? _lastDedicatedTripEvent;
+
+  /// Mirrors [_lastDedicatedTripEvent] for the other locked flow — brand-new
+  /// offer with no existing thread yet (`lockContext.threadId == null`),
+  /// dispatched as `NegotiationStartWithDedicatedTripRequested`. Both fields
+  /// share the same backend payment-capability-block mechanism, so
+  /// `_resubmitDedicated` must be able to resubmit whichever of the two was
+  /// last sent.
+  NegotiationStartWithDedicatedTripRequested? _lastStartWithDedicatedTripEvent;
 
   final _departureCityNotifier = ValueNotifier<String?>(null);
   final _arrivalCityNotifier = ValueNotifier<String?>(null);
@@ -1286,24 +1295,27 @@ class _TripFormContentState extends State<_TripFormContent> {
       // No existing negotiation thread: the traveler reached this form
       // directly from the package request (no AWAITING_TRIP thread to link
       // to yet) — create the offer AND the dedicated trip atomically.
-      context.read<NegotiationBloc>().add(
-        NegotiationStartWithDedicatedTripRequested(
-          packageRequestId: lc.packageRequestId,
-          proposedPriceEur: lc.agreedPriceEur,
-          travelerTravelDate: departureDate,
-          travelerAvailableKg: lc.weightKg,
-          dedicatedTrip: DedicatedTripPayload(
-            departureDate: departureDate,
-            departureTime: departureTime,
-            arrivalTime: arrivalTime,
-            pickupAddress: pickupAddress,
-            deliveryAddress: deliveryAddress,
-            description: description,
-            acceptedContentTypes: allAccepted,
-            refusedTypes: refused,
-          ),
+      final startEvent = NegotiationStartWithDedicatedTripRequested(
+        packageRequestId: lc.packageRequestId,
+        proposedPriceEur: lc.agreedPriceEur,
+        travelerTravelDate: departureDate,
+        travelerAvailableKg: lc.weightKg,
+        dedicatedTrip: DedicatedTripPayload(
+          departureDate: departureDate,
+          departureTime: departureTime,
+          arrivalTime: arrivalTime,
+          pickupAddress: pickupAddress,
+          deliveryAddress: deliveryAddress,
+          description: description,
+          acceptedContentTypes: allAccepted,
+          refusedTypes: refused,
         ),
       );
+      // Stashed so a payment-method block (cash-funds-required /
+      // none-available) can resubmit the SAME data with card consent, cf.
+      // `_resubmitDedicated`.
+      _lastStartWithDedicatedTripEvent = startEvent;
+      context.read<NegotiationBloc>().add(startEvent);
       return;
     }
 
@@ -1413,28 +1425,59 @@ class _TripFormContentState extends State<_TripFormContent> {
     return null;
   }
 
-  /// Resubmits the exact `NegotiationCreateDedicatedTripRequested` the
-  /// traveler just sent (cf. `_lastDedicatedTripEvent`), only flipping
-  /// `useCardForCommission` — used by the cash-funds-required /
+  /// Resubmits the exact dedicated-trip event the traveler just sent (cf.
+  /// `_lastDedicatedTripEvent` / `_lastStartWithDedicatedTripEvent`), only
+  /// flipping `useCardForCommission` — used by the cash-funds-required /
   /// none-available block sheets so the traveler doesn't have to re-fill the
   /// form after a wallet top-up or a card-consent decision.
+  ///
+  /// Both locked flows (existing AWAITING_TRIP thread and brand-new offer)
+  /// share this same payment-capability-block mechanism, so both of their
+  /// last-sent events must be resubmittable here — only one is ever non-null
+  /// at a time, since a single `_submit()` call dispatches exactly one of
+  /// them.
   void _resubmitDedicated({required bool useCard}) {
     if (!mounted) return;
-    final last = _lastDedicatedTripEvent;
-    if (last == null) return;
+    final lastLinked = _lastDedicatedTripEvent;
+    if (lastLinked != null) {
+      context.read<NegotiationBloc>().add(
+        NegotiationCreateDedicatedTripRequested(
+          threadId: lastLinked.threadId,
+          departureDate: lastLinked.departureDate,
+          departureTime: lastLinked.departureTime,
+          arrivalTime: lastLinked.arrivalTime,
+          pickupAddress: lastLinked.pickupAddress,
+          deliveryAddress: lastLinked.deliveryAddress,
+          description: lastLinked.description,
+          acceptedContentTypes: lastLinked.acceptedContentTypes,
+          refusedTypes: lastLinked.refusedTypes,
+          paymentMethod: lastLinked.paymentMethod,
+          useCardForCommission: useCard,
+        ),
+      );
+      return;
+    }
+    final lastStart = _lastStartWithDedicatedTripEvent;
+    if (lastStart == null) return;
     context.read<NegotiationBloc>().add(
-      NegotiationCreateDedicatedTripRequested(
-        threadId: last.threadId,
-        departureDate: last.departureDate,
-        departureTime: last.departureTime,
-        arrivalTime: last.arrivalTime,
-        pickupAddress: last.pickupAddress,
-        deliveryAddress: last.deliveryAddress,
-        description: last.description,
-        acceptedContentTypes: last.acceptedContentTypes,
-        refusedTypes: last.refusedTypes,
-        paymentMethod: last.paymentMethod,
-        useCardForCommission: useCard,
+      NegotiationStartWithDedicatedTripRequested(
+        packageRequestId: lastStart.packageRequestId,
+        proposedPriceEur: lastStart.proposedPriceEur,
+        travelerTravelDate: lastStart.travelerTravelDate,
+        travelerAvailableKg: lastStart.travelerAvailableKg,
+        body: lastStart.body,
+        isFirmPrice: lastStart.isFirmPrice,
+        dedicatedTrip: DedicatedTripPayload(
+          departureDate: lastStart.dedicatedTrip.departureDate,
+          departureTime: lastStart.dedicatedTrip.departureTime,
+          arrivalTime: lastStart.dedicatedTrip.arrivalTime,
+          pickupAddress: lastStart.dedicatedTrip.pickupAddress,
+          deliveryAddress: lastStart.dedicatedTrip.deliveryAddress,
+          description: lastStart.dedicatedTrip.description,
+          acceptedContentTypes: lastStart.dedicatedTrip.acceptedContentTypes,
+          refusedTypes: lastStart.dedicatedTrip.refusedTypes,
+          useCardForCommission: useCard,
+        ),
       ),
     );
   }
@@ -1544,6 +1587,23 @@ class _TripFormContentState extends State<_TripFormContent> {
       return BlocListener<NegotiationBloc, NegotiationState>(
         listener: (context, state) {
           if (state is NegotiationLoaded &&
+              _lastStartWithDedicatedTripEvent != null) {
+            // Brand-new offer + dedicated trip created atomically (no
+            // pre-existing thread — cf. `_lastStartWithDedicatedTripEvent`).
+            // `NegotiationBloc.start()` always leaves a freshly-created
+            // thread OPEN (pending the sender's accept/reject/counter) — it
+            // is never awaitingPayment straight away, since the sender
+            // hasn't seen/accepted the offer yet. Mirrors the plain
+            // `NegotiationStartRequested` success handling in
+            // make_offer_bottom_sheet.dart, which pops on ANY NegotiationLoaded
+            // without gating on thread status.
+            context.pop();
+            DonySnackbar.show(
+              context,
+              message: 'Offre envoyée avec le trajet associé.',
+              type: DonySnackbarType.success,
+            );
+          } else if (state is NegotiationLoaded &&
               state.thread.status == NegotiationThreadStatus.awaitingPayment) {
             context.pop();
             DonySnackbar.show(
