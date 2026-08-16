@@ -135,8 +135,6 @@ void main() {
         proposedPriceEur: 30,
         travelerTravelDate: DateTime(2026, 6, 15),
         travelerAvailableKg: 10,
-        travelerAnnouncementId: null,
-        body: null,
         createDedicatedTrip: true,
         dedicatedTripPayload: const {
           'departureDate': '2026-07-01',
@@ -169,10 +167,10 @@ void main() {
       NegotiationStartWithDedicatedTripRequested(
         packageRequestId: 'req-1',
         proposedPriceEur: 42,
-        travelerTravelDate: DateTime(2026, 9, 1),
+        travelerTravelDate: DateTime(2026, 9),
         travelerAvailableKg: 5,
         dedicatedTrip: DedicatedTripPayload(
-          departureDate: DateTime(2026, 9, 1),
+          departureDate: DateTime(2026, 9),
           pickupAddress: const {'label': 'Pickup', 'lat': 48.8, 'lng': 2.3},
           deliveryAddress: const {'label': 'Delivery', 'lat': 5.3, 'lng': -4.0},
         ),
@@ -183,10 +181,8 @@ void main() {
       () => repo.start(
         packageRequestId: 'req-1',
         proposedPriceEur: 42,
-        travelerTravelDate: DateTime(2026, 9, 1),
+        travelerTravelDate: DateTime(2026, 9),
         travelerAvailableKg: 5,
-        travelerAnnouncementId: null,
-        body: null,
         createDedicatedTrip: true,
         dedicatedTripPayload: any(named: 'dedicatedTripPayload'),
       ),
@@ -197,7 +193,7 @@ void main() {
     'DedicatedTripPayload.toJson omits nulls and includes required fields',
     () {
       final payload = DedicatedTripPayload(
-        departureDate: DateTime(2026, 9, 1),
+        departureDate: DateTime(2026, 9),
         pickupAddress: const {'label': 'Pickup', 'lat': 48.8, 'lng': 2.3},
         deliveryAddress: const {'label': 'Delivery', 'lat': 5.3, 'lng': -4.0},
       );
@@ -793,9 +789,7 @@ void main() {
           't-1',
         ),
       ],
-      verify: (_) => verify(
-        () => repo.settleCommission('t-1', commissionSource: 'WALLET_FIRST'),
-      ).called(1),
+      verify: (_) => verify(() => repo.settleCommission('t-1')).called(1),
     );
 
     blocTest<NegotiationBloc, NegotiationState>(

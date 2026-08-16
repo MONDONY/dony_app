@@ -574,7 +574,7 @@ void main() {
           ),
           GoRoute(
             path: '/negotiations/:id',
-            builder: (_, _) => NegotiationThreadScreen(
+            builder: (_, _) => const NegotiationThreadScreen(
               threadId: 't1',
               viewerUserId: _viewerTraveler,
             ),

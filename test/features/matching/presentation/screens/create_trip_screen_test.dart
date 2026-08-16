@@ -2743,11 +2743,7 @@ void main() {
           );
           await tester.pump();
 
-          negoStreamCtrl.add(
-            NegotiationLoaded(
-              _fakeThread(status: NegotiationThreadStatus.open),
-            ),
-          );
+          negoStreamCtrl.add(NegotiationLoaded(_fakeThread()));
           await tester.pumpAndSettle();
 
           // Before the fix, the listener only reacted to `awaitingPayment` —

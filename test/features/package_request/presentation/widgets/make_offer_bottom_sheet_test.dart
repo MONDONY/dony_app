@@ -5,7 +5,6 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
-import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
@@ -56,8 +55,8 @@ NegotiationThread _sampleThread() => NegotiationThread(
   status: NegotiationThreadStatus.open,
   currentPriceEur: 25,
   roundsCount: 1,
-  lastActivityAt: DateTime(2026, 6, 1),
-  createdAt: DateTime(2026, 6, 1),
+  lastActivityAt: DateTime(2026, 6),
+  createdAt: DateTime(2026, 6),
   messages: const [],
 );
 

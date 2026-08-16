@@ -24,7 +24,7 @@ AnnouncementModel _announcement({
   travelerId: 'trav-1',
   departureCity: departureCity,
   arrivalCity: arrivalCity,
-  departureDate: departureDate ?? DateTime(2026, 9, 1),
+  departureDate: departureDate ?? DateTime(2026, 9),
   availableKg: availableKg,
   totalKg: 23,
   pricePerKg: 7,
@@ -100,7 +100,7 @@ void main() {
           TripPickerSection(
             departureCity: 'Paris',
             arrivalCity: 'Dakar',
-            desiredDate: DateTime(2026, 9, 1),
+            desiredDate: DateTime(2026, 9),
             dateToleranceDays: 3,
             weightKg: 10,
             onSelected: (_) {},
@@ -138,7 +138,7 @@ void main() {
         TripPickerSection(
           departureCity: 'Paris',
           arrivalCity: 'Dakar',
-          desiredDate: DateTime(2026, 9, 1),
+          desiredDate: DateTime(2026, 9),
           dateToleranceDays: 3,
           weightKg: 10,
           onSelected: (ann) => selected = ann,
@@ -167,7 +167,7 @@ void main() {
           TripPickerSection(
             departureCity: 'Paris',
             arrivalCity: 'Dakar',
-            desiredDate: DateTime(2026, 9, 1),
+            desiredDate: DateTime(2026, 9),
             dateToleranceDays: 3,
             weightKg: 10,
             onSelected: (_) {},
@@ -196,7 +196,7 @@ void main() {
           TripPickerSection(
             departureCity: 'Paris',
             arrivalCity: 'Dakar',
-            desiredDate: DateTime(2026, 9, 1),
+            desiredDate: DateTime(2026, 9),
             dateToleranceDays: 3,
             weightKg: 10,
             onSelected: (_) {},
@@ -239,7 +239,7 @@ void main() {
           TripPickerSection(
             departureCity: 'Paris',
             arrivalCity: 'Dakar',
-            desiredDate: DateTime(2026, 9, 1),
+            desiredDate: DateTime(2026, 9),
             dateToleranceDays: 3,
             weightKg: 10,
             onSelected: (_) {},
@@ -288,12 +288,12 @@ void main() {
         ),
       );
 
-      await tester.pumpWidget(build(DateTime(2026, 6, 1)));
+      await tester.pumpWidget(build(DateTime(2026, 6)));
       await tester.pumpAndSettle();
       // Hors fenêtre (juin vs trajet en septembre) : aucun trajet compatible.
       expect(find.byKey(const Key('trip-tile-0')), findsNothing);
 
-      await tester.pumpWidget(build(DateTime(2026, 9, 1)));
+      await tester.pumpWidget(build(DateTime(2026, 9)));
       await tester.pumpAndSettle();
       // Même widget, nouvelle desiredDate → didUpdateWidget recharge et le
       // trajet de septembre apparaît désormais.

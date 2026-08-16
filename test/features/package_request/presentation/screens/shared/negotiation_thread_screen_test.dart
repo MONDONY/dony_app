@@ -246,14 +246,9 @@ void main() {
 
     testWidgets('affiche la carte du trajet lié dès que le thread est OPEN '
         '(offre initiale, avant tout paiement)', (tester) async {
-      when(() => bloc.state).thenReturn(
-        NegotiationLoaded(
-          _thread(
-            status: NegotiationThreadStatus.open,
-            linkedTrip: _sampleLinkedTrip,
-          ),
-        ),
-      );
+      when(
+        () => bloc.state,
+      ).thenReturn(NegotiationLoaded(_thread(linkedTrip: _sampleLinkedTrip)));
       await tester.pumpWidget(wrap());
       await tester.pumpAndSettle();
 
