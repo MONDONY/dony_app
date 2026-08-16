@@ -166,9 +166,9 @@ void main() {
   testWidgets(
     'shows arrival instructions banner when hasArrivee and instructions present',
     (tester) async {
-      when(() => bloc.state).thenReturn(
-        TrackingEventsLoaded([_event('DEPART'), _event('ARRIVEE')]),
-      );
+      when(
+        () => bloc.state,
+      ).thenReturn(TrackingEventsLoaded([_event('DEPART'), _event('ARRIVEE')]));
       await tester.pumpWidget(
         _wrap(bloc, arrivalInstructions: 'Métro Châtelet, sortie 3'),
       );
@@ -179,31 +179,27 @@ void main() {
     },
   );
 
-  testWidgets(
-    'hides arrival instructions banner when not yet arrived',
-    (tester) async {
-      when(
-        () => bloc.state,
-      ).thenReturn(TrackingEventsLoaded([_event('DEPART')]));
-      await tester.pumpWidget(
-        _wrap(bloc, arrivalInstructions: 'Métro Châtelet, sortie 3'),
-      );
-      await tester.pumpAndSettle();
+  testWidgets('hides arrival instructions banner when not yet arrived', (
+    tester,
+  ) async {
+    when(() => bloc.state).thenReturn(TrackingEventsLoaded([_event('DEPART')]));
+    await tester.pumpWidget(
+      _wrap(bloc, arrivalInstructions: 'Métro Châtelet, sortie 3'),
+    );
+    await tester.pumpAndSettle();
 
-      expect(find.text('Instructions de retrait'), findsNothing);
-    },
-  );
+    expect(find.text('Instructions de retrait'), findsNothing);
+  });
 
-  testWidgets(
-    'hides arrival instructions banner when instructions are null',
-    (tester) async {
-      when(
-        () => bloc.state,
-      ).thenReturn(TrackingEventsLoaded([_event('ARRIVEE')]));
-      await tester.pumpWidget(_wrap(bloc));
-      await tester.pumpAndSettle();
+  testWidgets('hides arrival instructions banner when instructions are null', (
+    tester,
+  ) async {
+    when(
+      () => bloc.state,
+    ).thenReturn(TrackingEventsLoaded([_event('ARRIVEE')]));
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pumpAndSettle();
 
-      expect(find.text('Instructions de retrait'), findsNothing);
-    },
-  );
+    expect(find.text('Instructions de retrait'), findsNothing);
+  });
 }

@@ -1584,7 +1584,10 @@ void main() {
           arrivalInstructions: 'x',
         ),
       ),
-      expect: () => [isA<AnnouncementLoading>(), isA<AnnouncementTripArrived>()],
+      expect: () => [
+        isA<AnnouncementLoading>(),
+        isA<AnnouncementTripArrived>(),
+      ],
     );
 
     blocTest<AnnouncementBloc, AnnouncementState>(
@@ -1597,7 +1600,10 @@ void main() {
       },
       act: (bloc) =>
           bloc.add(AnnouncementTripMarkArrivedRequested(announcementId: 'a1')),
-      expect: () => [isA<AnnouncementLoading>(), isA<AnnouncementTripArrived>()],
+      expect: () => [
+        isA<AnnouncementLoading>(),
+        isA<AnnouncementTripArrived>(),
+      ],
     );
 
     blocTest<AnnouncementBloc, AnnouncementState>(

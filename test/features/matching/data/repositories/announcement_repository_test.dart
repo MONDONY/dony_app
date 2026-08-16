@@ -386,31 +386,47 @@ void main() {
 
   test('markTripArrived delegates to remote datasource', () async {
     final testAnnouncement = _ann();
-    when(() => mockDs.markTripArrived(
-            announcementId: 'a1', arrivalInstructions: 'x'))
-        .thenAnswer((_) async => testAnnouncement);
+    when(
+      () => mockDs.markTripArrived(
+        announcementId: 'a1',
+        arrivalInstructions: 'x',
+      ),
+    ).thenAnswer((_) async => testAnnouncement);
 
     final result = await repo.markTripArrived(
-        announcementId: 'a1', arrivalInstructions: 'x');
+      announcementId: 'a1',
+      arrivalInstructions: 'x',
+    );
 
     expect(result, same(testAnnouncement));
-    verify(() => mockDs.markTripArrived(
-            announcementId: 'a1', arrivalInstructions: 'x'))
-        .called(1);
+    verify(
+      () => mockDs.markTripArrived(
+        announcementId: 'a1',
+        arrivalInstructions: 'x',
+      ),
+    ).called(1);
   });
 
   test('updateArrivalInstructions delegates to remote datasource', () async {
     final testAnnouncement = _ann();
-    when(() => mockDs.updateArrivalInstructions(
-            announcementId: 'a1', arrivalInstructions: 'instructions'))
-        .thenAnswer((_) async => testAnnouncement);
+    when(
+      () => mockDs.updateArrivalInstructions(
+        announcementId: 'a1',
+        arrivalInstructions: 'instructions',
+      ),
+    ).thenAnswer((_) async => testAnnouncement);
 
     final result = await repo.updateArrivalInstructions(
-        announcementId: 'a1', arrivalInstructions: 'instructions');
+      announcementId: 'a1',
+      arrivalInstructions: 'instructions',
+    );
 
     expect(result, same(testAnnouncement));
-    verify(() => mockDs.updateArrivalInstructions(
-            announcementId: 'a1', arrivalInstructions: 'instructions'))
-        .called(1);
+    verify(
+      () => mockDs.updateArrivalInstructions(
+        announcementId: 'a1',
+        arrivalInstructions: 'instructions',
+      ),
+    ).called(1);
   });
 }

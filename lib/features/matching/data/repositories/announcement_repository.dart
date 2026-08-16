@@ -228,15 +228,15 @@ class AnnouncementRepository {
     required String announcementId,
     String? arrivalInstructions,
   }) => _remoteDatasource.markTripArrived(
-        announcementId: announcementId,
-        arrivalInstructions: arrivalInstructions,
-      );
+    announcementId: announcementId,
+    arrivalInstructions: arrivalInstructions,
+  );
 
   Future<AnnouncementModel> updateArrivalInstructions({
     required String announcementId,
     required String arrivalInstructions,
   }) => _remoteDatasource.updateArrivalInstructions(
-        announcementId: announcementId,
-        arrivalInstructions: arrivalInstructions,
-      );
+    announcementId: announcementId,
+    arrivalInstructions: arrivalInstructions,
+  );
 }
