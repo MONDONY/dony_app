@@ -133,6 +133,26 @@ void main() {
           path: '/negotiations/:id',
           builder: (_, _) => const Scaffold(body: Text('Négociation')),
         ),
+        // Écran factice simulant /trips/create : deux boutons pour rejouer
+        // les deux issues réelles observées dans create_trip_screen.dart —
+        // succès → `pop(true)`, annulation/retour → `pop()` (aucune valeur).
+        GoRoute(
+          path: '/trips/create',
+          builder: (routeCtx, _) => Scaffold(
+            body: Column(
+              children: [
+                ElevatedButton(
+                  onPressed: () => Navigator.of(routeCtx).pop(true),
+                  child: const Text('Simuler trajet créé'),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.of(routeCtx).pop(),
+                  child: const Text('Simuler annulation'),
+                ),
+              ],
+            ),
+          ),
+        ),
       ],
     ),
     theme: AppTheme.light(),
@@ -341,5 +361,51 @@ void main() {
         ),
       ).called(1);
     });
+
+    testWidgets(
+      'annulation de /trips/create garde la feuille ouverte avec la saisie '
+      'intacte (pas de perte de données)',
+      (tester) async {
+        await tester.pumpWidget(wrap(initialDate: DateTime(2026, 6, 12)));
+        await tester.tap(find.text('Ouvrir'));
+        await tester.pumpAndSettle();
+
+        await tester.enterText(find.byType(TextFormField).first, '25');
+        await tester.pumpAndSettle();
+
+        await tester.ensureVisible(find.text('Créer un nouveau trajet'));
+        await tester.tap(find.text('Créer un nouveau trajet'));
+        await tester.pumpAndSettle();
+
+        // On est bien sur l'écran factice /trips/create.
+        expect(find.text('Simuler annulation'), findsOneWidget);
+        await tester.tap(find.text('Simuler annulation'));
+        await tester.pumpAndSettle();
+
+        // La feuille d'offre est toujours là, avec le prix saisi conservé.
+        expect(find.text('Faire une offre'), findsOneWidget);
+        expect(find.text('25'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'création réussie de /trips/create ferme bien la feuille d\'offre',
+      (tester) async {
+        await tester.pumpWidget(wrap(initialDate: DateTime(2026, 6, 12)));
+        await tester.tap(find.text('Ouvrir'));
+        await tester.pumpAndSettle();
+
+        await tester.ensureVisible(find.text('Créer un nouveau trajet'));
+        await tester.tap(find.text('Créer un nouveau trajet'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Simuler trajet créé'), findsOneWidget);
+        await tester.tap(find.text('Simuler trajet créé'));
+        await tester.pumpAndSettle();
+
+        // La feuille d'offre est fermée (comportement historique préservé).
+        expect(find.text('Faire une offre'), findsNothing);
+      },
+    );
   });
 }

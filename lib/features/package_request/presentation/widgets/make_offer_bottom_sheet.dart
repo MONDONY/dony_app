@@ -483,7 +483,7 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
                   selected: selected,
                   onSelected: (ann) => widget.selectedTripNotifier.value = ann,
                   onCreateDedicated: () async {
-                    await context.push<bool>(
+                    final result = await context.push<bool>(
                       '/trips/create',
                       extra: CreateTripArgs(
                         lockContext: LockedTripContext(
@@ -510,7 +510,12 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
                         negotiationBloc: context.read<NegotiationBloc>(),
                       ),
                     );
-                    if (context.mounted) {
+                    // Un trajet a bien été créé (et l'offre envoyée avec) :
+                    // on ferme la feuille d'offre. Si l'utilisateur annule ou
+                    // revient en arrière depuis /trips/create (`result` faux
+                    // ou null), on reste sur le formulaire d'offre en cours,
+                    // saisie intacte.
+                    if (context.mounted && result == true) {
                       Navigator.of(context, rootNavigator: true).pop();
                     }
                   },

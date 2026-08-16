@@ -1597,7 +1597,10 @@ class _TripFormContentState extends State<_TripFormContent> {
             // `NegotiationStartRequested` success handling in
             // make_offer_bottom_sheet.dart, which pops on ANY NegotiationLoaded
             // without gating on thread status.
-            context.pop();
+            // `pop(true)` : signale au caller (make_offer_bottom_sheet) qu'un
+            // trajet a bien été créé, pour qu'il ferme la feuille d'offre
+            // uniquement dans ce cas (pas sur un simple retour/annulation).
+            context.pop(true);
             DonySnackbar.show(
               context,
               message: 'Offre envoyée avec le trajet associé.',
@@ -1605,7 +1608,7 @@ class _TripFormContentState extends State<_TripFormContent> {
             );
           } else if (state is NegotiationLoaded &&
               state.thread.status == NegotiationThreadStatus.awaitingPayment) {
-            context.pop();
+            context.pop(true);
             DonySnackbar.show(
               context,
               message: 'Trajet lié. L\'expéditeur peut désormais payer.',
