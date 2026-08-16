@@ -68,6 +68,30 @@ void main() {
     );
   });
 
+  Widget editHost({String? initialInstructions = 'Métro Châtelet'}) =>
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: BlocProvider<AnnouncementBloc>.value(
+          value: bloc,
+          child: Builder(
+            builder: (ctx) => Scaffold(
+              body: Center(
+                child: ElevatedButton(
+                  key: const Key('open-btn'),
+                  onPressed: () => ArrivalInstructionsBottomSheet.show(
+                    ctx,
+                    announcementId: 'a1',
+                    initialInstructions: initialInstructions,
+                    isEditing: true,
+                  ),
+                  child: const Text('open'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
   Widget host() => MaterialApp(
     theme: AppTheme.light(),
     home: BlocProvider<AnnouncementBloc>.value(
@@ -146,6 +170,63 @@ void main() {
 
       expect(find.text('Trajet marqué comme arrivé'), findsOneWidget);
       expect(find.text('Arrivé à destination'), findsNothing);
+    },
+  );
+
+  // ── Mode édition (trajet déjà ARRIVED) ─────────────────────────────────────
+  // Régression : le sheet dispatchait toujours MarkArrived, jamais Update.
+
+  testWidgets(
+    'isEditing → dispatche AnnouncementArrivalInstructionsUpdateRequested',
+    (tester) async {
+      await tester.pumpWidget(editHost());
+      await tester.tap(find.byKey(const Key('open-btn')));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField), 'Gare de Dakar, hall 2');
+      await tester.tap(find.text('Enregistrer'));
+      await tester.pump();
+
+      final captured = verify(() => bloc.add(captureAny())).captured;
+      expect(
+        captured.whereType<AnnouncementTripMarkArrivedRequested>(),
+        isEmpty,
+      );
+      final event = captured
+          .whereType<AnnouncementArrivalInstructionsUpdateRequested>()
+          .single;
+      expect(event.announcementId, 'a1');
+      expect(event.arrivalInstructions, 'Gare de Dakar, hall 2');
+    },
+  );
+
+  testWidgets('isEditing + champ vidé → bouton désactivé', (tester) async {
+    await tester.pumpWidget(editHost());
+    await tester.tap(find.byKey(const Key('open-btn')));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField), '   ');
+    await tester.pump();
+
+    final button = tester.widget<DonyButton>(find.byType(DonyButton));
+    expect(button.onPressed, isNull);
+  });
+
+  testWidgets(
+    'isEditing → snackbar de succès sur AnnouncementArrivalInstructionsUpdated',
+    (tester) async {
+      final controller = StreamController<AnnouncementState>.broadcast();
+      addTearDown(controller.close);
+      whenListen(bloc, controller.stream, initialState: AnnouncementInitial());
+
+      await tester.pumpWidget(editHost());
+      await tester.tap(find.byKey(const Key('open-btn')));
+      await tester.pumpAndSettle();
+
+      controller.add(AnnouncementArrivalInstructionsUpdated(_announcement()));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Instructions mises à jour'), findsOneWidget);
     },
   );
 

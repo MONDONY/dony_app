@@ -188,6 +188,21 @@ void main() {
       final r = applyShipmentFilters(bids, const ShipmentFilterState(), now);
       expect(r.first.status, 'ACCEPTED');
     });
+    test('ARRIVED passe devant IN_TRANSIT et COMPLETED dans le tri', () {
+      final r = applyShipmentFilters([
+        _bid(status: 'COMPLETED'),
+        _bid(status: 'IN_TRANSIT'),
+        _bid(status: 'ARRIVED'),
+      ], const ShipmentFilterState(), now);
+      expect(r.map((b) => b.status), ['ARRIVED', 'IN_TRANSIT', 'COMPLETED']);
+    });
+    test('kEnvoisEnCours retient les colis ARRIVED', () {
+      expect(kEnvoisEnCours, contains('ARRIVED'));
+      final r = applyShipmentFilters([
+        _bid(status: 'ARRIVED'),
+      ], const ShipmentFilterState(statuses: kEnvoisEnCours), now);
+      expect(r, hasLength(1));
+    });
   });
 
   group('ShipmentFilterCubit', () {

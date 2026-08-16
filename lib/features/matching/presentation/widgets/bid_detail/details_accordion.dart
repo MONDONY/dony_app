@@ -15,6 +15,8 @@ import 'package:intl/intl.dart';
 const _kRemisStatuses = <String>{
   'HANDED_OVER',
   'IN_TRANSIT',
+  // ARRIVED implique HANDED_OVER puis IN_TRANSIT : le colis a forcément été remis.
+  'ARRIVED',
   'COMPLETED',
   'DELIVERED',
 };

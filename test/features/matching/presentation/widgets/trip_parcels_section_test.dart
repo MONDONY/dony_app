@@ -212,6 +212,20 @@ void main() {
     expect(find.text('Bijoux'), findsNothing);
   });
 
+  // Régression : sans entrée ARRIVED, _statusMeta retombait sur le défaut et
+  // affichait la chaîne brute anglaise « ARRIVED » au voyageur.
+  testWidgets('ARRIVED → libellé français « Arrivé », jamais la chaîne brute', (
+    tester,
+  ) async {
+    stub(BidListLoaded([_makeBid(status: 'ARRIVED', id: 'b1')]));
+
+    await _pump(tester, bidBloc);
+    await tester.pump();
+
+    expect(find.text('Arrivé'), findsOneWidget);
+    expect(find.text('ARRIVED'), findsNothing);
+  });
+
   testWidgets('un seul statut → pas de filtre rapide', (tester) async {
     stub(
       BidListLoaded([

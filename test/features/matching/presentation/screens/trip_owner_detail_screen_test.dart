@@ -314,4 +314,90 @@ void main() {
 
     expect(find.text('Arrivé à destination'), findsNothing);
   });
+
+  // ── Régression ARRIVED : le CTA doit survivre au marquage ────────────────────
+  // Avant le fix, ARRIVED n'était pas un statut « actif » : la liste des bids
+  // actifs devenait vide et le bouton disparaissait définitivement, rendant les
+  // instructions de retrait non éditables.
+  testWidgets(
+    'tous les colis ARRIVED → bouton "Modifier les instructions de retrait"',
+    (tester) async {
+      final announcement = _makeAnnouncement();
+      when(
+        () => annBloc.state,
+      ).thenReturn(AnnouncementDetailLoaded(announcement));
+      whenListen(
+        annBloc,
+        Stream<AnnouncementState>.value(AnnouncementDetailLoaded(announcement)),
+        initialState: AnnouncementDetailLoaded(announcement),
+      );
+
+      when(() => authBloc.state).thenReturn(const AuthAuthenticated(_owner));
+      whenListen(
+        authBloc,
+        const Stream<AuthState>.empty(),
+        initialState: const AuthAuthenticated(_owner),
+      );
+
+      final bids = [_makeBid(status: 'ARRIVED')];
+      when(() => bidBloc.state).thenReturn(BidListLoaded(bids));
+      whenListen(
+        bidBloc,
+        Stream<BidState>.value(BidListLoaded(bids)),
+        initialState: BidListLoaded(bids),
+      );
+
+      await _pump(
+        tester,
+        annBloc: annBloc,
+        bidBloc: bidBloc,
+        cancelBloc: cancelBloc,
+        authBloc: authBloc,
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Modifier les instructions de retrait'),
+        findsOneWidget,
+      );
+      expect(find.text('Arrivé à destination'), findsNothing);
+    },
+  );
+
+  group('tripArrivalCtaFor', () {
+    test('tous IN_TRANSIT → markArrived', () {
+      expect(
+        tripArrivalCtaFor([_makeBid(status: 'IN_TRANSIT')]),
+        TripArrivalCta.markArrived,
+      );
+    });
+    test('tous ARRIVED → editInstructions', () {
+      expect(
+        tripArrivalCtaFor([_makeBid(status: 'ARRIVED')]),
+        TripArrivalCta.editInstructions,
+      );
+    });
+    test('ARRIVED restant + COMPLETED → editInstructions', () {
+      expect(
+        tripArrivalCtaFor([
+          _makeBid(status: 'ARRIVED'),
+          _makeBid(status: 'COMPLETED'),
+        ]),
+        TripArrivalCta.editInstructions,
+      );
+    });
+    test('un colis encore HANDED_OVER → aucun CTA', () {
+      expect(
+        tripArrivalCtaFor([
+          _makeBid(status: 'HANDED_OVER'),
+          _makeBid(status: 'IN_TRANSIT'),
+        ]),
+        isNull,
+      );
+    });
+    test('aucun colis actif → aucun CTA', () {
+      expect(tripArrivalCtaFor([_makeBid(status: 'COMPLETED')]), isNull);
+      expect(tripArrivalCtaFor(const []), isNull);
+    });
+  });
 }

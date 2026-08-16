@@ -92,9 +92,12 @@ class _BidDetailViewState extends State<_BidDetailView> {
     _skeletonLoading = _bid.isSkeleton;
     context.read<BidBloc>().add(BidDetailRequested(_bid.id));
     _loadPaymentStatus();
+    // ARRIVED : le colis attend encore son retrait, le statut peut passer à
+    // COMPLETED à tout moment → le polling doit rester actif.
     if (_bid.status == 'ACCEPTED' ||
         _bid.status == 'HANDED_OVER' ||
-        _bid.status == 'IN_TRANSIT') {
+        _bid.status == 'IN_TRANSIT' ||
+        _bid.status == 'ARRIVED') {
       _refreshTimer = Timer.periodic(const Duration(seconds: 10), (_) {
         if (mounted) context.read<BidBloc>().add(BidDetailRequested(_bid.id));
       });
@@ -408,10 +411,13 @@ class _BidDetailViewState extends State<_BidDetailView> {
                       !_paymentLoadedNotifier.value) {
                     _loadPaymentStatus();
                   }
-                  // Restart timer if bid transitioned to HANDED_OVER or IN_TRANSIT
+                  // Restart timer if bid transitioned to HANDED_OVER,
+                  // IN_TRANSIT or ARRIVED (statut vivant : passe à COMPLETED
+                  // dès le retrait par le destinataire).
                   if ((state.bid.status == 'ACCEPTED' ||
                           state.bid.status == 'HANDED_OVER' ||
-                          state.bid.status == 'IN_TRANSIT') &&
+                          state.bid.status == 'IN_TRANSIT' ||
+                          state.bid.status == 'ARRIVED') &&
                       _refreshTimer == null) {
                     _refreshTimer = Timer.periodic(
                       const Duration(seconds: 10),
@@ -425,7 +431,8 @@ class _BidDetailViewState extends State<_BidDetailView> {
                     );
                   } else if (state.bid.status != 'ACCEPTED' &&
                       state.bid.status != 'HANDED_OVER' &&
-                      state.bid.status != 'IN_TRANSIT') {
+                      state.bid.status != 'IN_TRANSIT' &&
+                      state.bid.status != 'ARRIVED') {
                     _refreshTimer?.cancel();
                     _refreshTimer = null;
                   }

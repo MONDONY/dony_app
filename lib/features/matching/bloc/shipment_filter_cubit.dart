@@ -20,7 +20,12 @@ enum ShipmentPeriodPreset {
 }
 
 /// Groupes de statuts pour les puces rapides (miroir de _populateLists).
-const kEnvoisEnCours = <String>{'ACCEPTED', 'HANDED_OVER', 'IN_TRANSIT'};
+const kEnvoisEnCours = <String>{
+  'ACCEPTED',
+  'HANDED_OVER',
+  'IN_TRANSIT',
+  'ARRIVED',
+};
 const kEnvoisAVenir = <String>{
   'PENDING',
   'AWAITING_PAYMENT',
@@ -36,6 +41,9 @@ const kEnvoisPasses = <String>{
 };
 
 const _statusPriority = {
+  // ARRIVED est l'étape la plus avancée avant la livraison → priorité la plus
+  // haute, sinon un colis arrivé retombait en bas de liste avec les COMPLETED.
+  'ARRIVED': 7,
   'IN_TRANSIT': 6,
   'HANDED_OVER': 5,
   'ACCEPTED': 4,

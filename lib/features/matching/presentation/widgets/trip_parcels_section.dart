@@ -18,7 +18,8 @@ import 'package:go_router/go_router.dart';
 ///
 /// Consomme le [BidBloc] fourni par la route (`BidListRequested(announcementId)`).
 /// Filtre les offres réellement embarquées via [isAcceptedTabBid] (source de
-/// vérité du projet : ACCEPTED / HANDED_OVER / IN_TRANSIT / COMPLETED, moins les
+/// vérité du projet : ACCEPTED / HANDED_OVER / IN_TRANSIT / ARRIVED / COMPLETED,
+/// moins les
 /// auto-annulés). Émet une fois l'event analytics `trip_parcels_viewed` au
 /// premier chargement de la liste (compteur uniquement, aucune PII).
 class TripParcelsSection extends StatefulWidget {
@@ -277,6 +278,7 @@ const _kStatusOrder = <String>[
   'ACCEPTED',
   'HANDED_OVER',
   'IN_TRANSIT',
+  'ARRIVED',
   'COMPLETED',
   'NO_SHOW',
   'PARCEL_REFUSED',
@@ -288,6 +290,8 @@ const _kStatusOrder = <String>[
   'ACCEPTED' => ('Accepté', cs.primary),
   'HANDED_OVER' => ('Remis', cs.warning),
   'IN_TRANSIT' => ('En transit', cs.info),
+  // Même libellé/couleur que le _StatusDot de bid_card.dart.
+  'ARRIVED' => ('Arrivé', cs.info),
   'COMPLETED' => ('Livré', cs.success),
   'NO_SHOW' => ('Absent', cs.error),
   'PARCEL_REFUSED' => ('Refusé', cs.error),

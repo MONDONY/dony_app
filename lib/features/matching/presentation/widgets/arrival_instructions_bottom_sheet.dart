@@ -6,47 +6,79 @@ import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// Bottom sheet « Arrivé à destination » : le voyageur marque son trajet
-/// comme arrivé et peut renseigner en une fois des instructions de retrait
-/// optionnelles (lieu/heure de récupération du colis).
+/// Bottom sheet « Arrivé à destination » / « Instructions de retrait ».
+///
+/// Deux modes, pilotés par [isEditing] :
+///   * `false` (premier passage, trajet pas encore ARRIVED) : le voyageur
+///     marque son trajet comme arrivé et peut renseigner en une fois des
+///     instructions de retrait optionnelles →
+///     [AnnouncementTripMarkArrivedRequested].
+///   * `true` (trajet déjà ARRIVED) : le voyageur corrige seulement ses
+///     instructions → [AnnouncementArrivalInstructionsUpdateRequested]. Le
+///     texte y est obligatoire (l'event porte un `String` non nullable), donc
+///     le bouton reste désactivé tant que le champ est vide.
 class ArrivalInstructionsBottomSheet extends StatefulWidget {
   const ArrivalInstructionsBottomSheet({
     super.key,
     required this.announcementId,
     this.initialInstructions,
+    this.isEditing = false,
     this.onSubmitReady,
+    this.onCanSubmitChanged,
   });
 
   final String announcementId;
   final String? initialInstructions;
+
+  /// `true` quand le trajet est déjà ARRIVED : édition des instructions.
+  final bool isEditing;
+
   final void Function(VoidCallback)? onSubmitReady;
+
+  /// Notifie le bouton collant de la validité du formulaire (mode édition).
+  final ValueChanged<bool>? onCanSubmitChanged;
 
   static Future<void> show(
     BuildContext context, {
     required String announcementId,
     String? initialInstructions,
+    bool isEditing = false,
   }) {
     final announcementBloc = context.read<AnnouncementBloc>();
     VoidCallback? submit;
+    final canSubmit = ValueNotifier<bool>(
+      !isEditing || (initialInstructions?.trim().isNotEmpty ?? false),
+    );
     return DonyBottomSheet.show(
       context,
-      title: 'Arrivé à destination',
+      title: isEditing ? 'Instructions de retrait' : 'Arrivé à destination',
       subtitle: 'Indiquez où et comment récupérer le colis',
       wrapper: (child) =>
           BlocProvider.value(value: announcementBloc, child: child),
-      stickyBottom: BlocBuilder<AnnouncementBloc, AnnouncementState>(
-        builder: (ctx, state) => DonyButton(
-          label: "Confirmer l'arrivée",
-          isLoading: state is AnnouncementLoading,
-          onPressed: state is AnnouncementLoading ? null : () => submit?.call(),
-        ),
+      stickyBottom: ValueListenableBuilder<bool>(
+        valueListenable: canSubmit,
+        builder: (ctx, enabled, _) =>
+            BlocBuilder<AnnouncementBloc, AnnouncementState>(
+              builder: (ctx, state) {
+                final loading = state is AnnouncementLoading;
+                return DonyButton(
+                  label: isEditing ? 'Enregistrer' : "Confirmer l'arrivée",
+                  isLoading: loading,
+                  onPressed: (loading || !enabled)
+                      ? null
+                      : () => submit?.call(),
+                );
+              },
+            ),
       ),
       child: ArrivalInstructionsBottomSheet(
         announcementId: announcementId,
         initialInstructions: initialInstructions,
+        isEditing: isEditing,
         onSubmitReady: (fn) => submit = fn,
+        onCanSubmitChanged: (v) => canSubmit.value = v,
       ),
-    );
+    ).whenComplete(canSubmit.dispose);
   }
 
   @override
@@ -64,17 +96,39 @@ class _ArrivalInstructionsBottomSheetState
   void initState() {
     super.initState();
     widget.onSubmitReady?.call(_submit);
+    _ctrl.addListener(_notifyValidity);
   }
 
   @override
   void dispose() {
+    _ctrl.removeListener(_notifyValidity);
     _ctrl.dispose();
     super.dispose();
+  }
+
+  /// En mode édition, le texte est obligatoire ; à la création il reste
+  /// optionnel (le bouton n'est jamais bloqué).
+  void _notifyValidity() {
+    widget.onCanSubmitChanged?.call(
+      !widget.isEditing || _ctrl.text.trim().isNotEmpty,
+    );
   }
 
   void _submit() {
     final bloc = context.read<AnnouncementBloc>();
     final text = _ctrl.text.trim();
+    if (widget.isEditing) {
+      if (text.isEmpty) {
+        return;
+      }
+      bloc.add(
+        AnnouncementArrivalInstructionsUpdateRequested(
+          announcementId: widget.announcementId,
+          arrivalInstructions: text,
+        ),
+      );
+      return;
+    }
     bloc.add(
       AnnouncementTripMarkArrivedRequested(
         announcementId: widget.announcementId,
@@ -94,6 +148,13 @@ class _ArrivalInstructionsBottomSheetState
             message: 'Trajet marqué comme arrivé',
             type: DonySnackbarType.success,
           );
+        } else if (state is AnnouncementArrivalInstructionsUpdated) {
+          Navigator.of(context, rootNavigator: true).pop();
+          DonySnackbar.show(
+            context,
+            message: 'Instructions mises à jour',
+            type: DonySnackbarType.success,
+          );
         } else if (state is AnnouncementError) {
           ErrorPresenter.show(context, state.error);
         }
@@ -108,7 +169,9 @@ class _ArrivalInstructionsBottomSheetState
           const SizedBox(height: DonySpacing.sm),
           DonyTextField(
             controller: _ctrl,
-            label: 'Instructions (optionnel)',
+            label: widget.isEditing
+                ? 'Instructions'
+                : 'Instructions (optionnel)',
             hint: 'Ex : Métro Châtelet, sortie 3',
             maxLines: 3,
           ),

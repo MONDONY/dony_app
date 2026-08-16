@@ -789,5 +789,28 @@ void main() {
         await tester.pump();
       },
     );
+
+    // ── Régression ARRIVED ────────────────────────────────────────────────────
+    // Avant le fix, ARRIVED n'était pas listé : hasAction retombait sur
+    // kEnvoisPasses (false) et le CTA « Suivi du colis » disparaissait.
+
+    testWidgets('20. ARRIVED → hasAction true et CTA "Suivi du colis"', (
+      tester,
+    ) async {
+      final bid = _bid(status: 'ARRIVED');
+      expect(SenderStickyBar.hasAction(bid), isTrue);
+
+      final bloc = _MockBidBloc();
+      whenListen<BidState>(
+        bloc,
+        const Stream.empty(),
+        initialState: BidInitial(),
+      );
+
+      await tester.pumpWidget(_host(bloc, bid, paymentLoaded: true));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Suivi du colis'), findsOneWidget);
+    });
   });
 }

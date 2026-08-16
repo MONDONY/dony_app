@@ -60,6 +60,7 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
     'ACCEPTED',
     'HANDED_OVER',
     'IN_TRANSIT',
+    'ARRIVED',
     'COMPLETED',
     'DELIVERED',
   };

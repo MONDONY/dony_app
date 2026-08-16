@@ -31,13 +31,35 @@ const _biddableActiveStatuses = <String>{
   'ACCEPTED',
   'HANDED_OVER',
   'IN_TRANSIT',
+  'ARRIVED',
 };
 
-bool _allActiveBidsInTransit(List<BidModel> bids) {
+/// Mode du CTA d'arrivée affiché au voyageur propriétaire.
+enum TripArrivalCta {
+  /// Trajet pas encore marqué arrivé, tous les colis actifs sont en transit.
+  markArrived,
+
+  /// Trajet déjà marqué arrivé : seule l'édition des instructions reste
+  /// possible (le bouton doit rester accessible, sinon les instructions
+  /// deviennent définitivement figées).
+  editInstructions,
+}
+
+/// `null` = aucun CTA (colis pas tous partis, ou plus aucun colis actif).
+TripArrivalCta? tripArrivalCtaFor(List<BidModel> bids) {
   final active = bids
       .where((b) => _biddableActiveStatuses.contains(b.status))
       .toList();
-  return active.isNotEmpty && active.every((b) => b.status == 'IN_TRANSIT');
+  if (active.isEmpty) {
+    return null;
+  }
+  if (active.every((b) => b.status == 'ARRIVED')) {
+    return TripArrivalCta.editInstructions;
+  }
+  if (active.every((b) => b.status == 'IN_TRANSIT')) {
+    return TripArrivalCta.markArrived;
+  }
+  return null;
 }
 
 /// Écran plein écran « Trajet » côté propriétaire (voyageur).
@@ -221,17 +243,26 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
                       if (!isOwner || bidState is! BidListLoaded) {
                         return const SizedBox.shrink();
                       }
-                      if (!_allActiveBidsInTransit(bidState.bids)) {
+                      final cta = tripArrivalCtaFor(bidState.bids);
+                      if (cta == null) {
                         return const SizedBox.shrink();
                       }
+                      final isEditing =
+                          cta == TripArrivalCta.editInstructions;
                       return Padding(
                         padding: const EdgeInsets.only(top: DonySpacing.md),
                         child: DonyButton(
-                          label: 'Arrivé à destination',
+                          label: isEditing
+                              ? 'Modifier les instructions de retrait'
+                              : 'Arrivé à destination',
+                          variant: isEditing
+                              ? DonyButtonVariant.secondary
+                              : DonyButtonVariant.primary,
                           onPressed: () => ArrivalInstructionsBottomSheet.show(
                             context,
                             announcementId: a.id,
                             initialInstructions: a.arrivalInstructions,
+                            isEditing: isEditing,
                           ),
                         ),
                       );

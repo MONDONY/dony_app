@@ -316,10 +316,16 @@ class BidModel {
       (resolvedDepartureAt == null ||
           DateTime.now().isBefore(resolvedDepartureAt!));
 
-  /// Signalement d'absence à la livraison possible : bid IN_TRANSIT, trajet
-  /// déjà parti, aucun signalement en cours ou contesté sur ce bid.
+  /// Signalement d'absence à la livraison possible : bid IN_TRANSIT ou ARRIVED,
+  /// trajet déjà parti, aucun signalement en cours ou contesté sur ce bid.
+  ///
+  /// ARRIVED est inclus (miroir de `CancellationService.assertDeliveryReportable`
+  /// côté backend) : les signalements d'absence à la livraison ne se déclenchent
+  /// qu'à destination, donc justement sur un bid ARRIVED. Sans lui, un voyageur
+  /// pourrait marquer son trajet arrivé puis ne jamais livrer, sans que
+  /// l'expéditeur puisse signaler l'absence.
   bool get canReportDeliveryNoShow =>
-      status == 'IN_TRANSIT' &&
+      (status == 'IN_TRANSIT' || status == 'ARRIVED') &&
       deliveryNoShowStatus == null &&
       resolvedDepartureAt != null &&
       DateTime.now().isAfter(resolvedDepartureAt!);
