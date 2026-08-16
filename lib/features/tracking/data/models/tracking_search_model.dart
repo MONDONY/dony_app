@@ -6,6 +6,7 @@ class TrackingSearchModel {
   final String currentStep;
   final String stepLabel;
   final String paymentStatus;
+  final String? arrivalInstructions;
 
   const TrackingSearchModel({
     required this.trackingNumber,
@@ -15,6 +16,7 @@ class TrackingSearchModel {
     required this.currentStep,
     required this.stepLabel,
     required this.paymentStatus,
+    this.arrivalInstructions,
   });
 
   factory TrackingSearchModel.fromJson(Map<String, dynamic> json) =>
@@ -26,5 +28,6 @@ class TrackingSearchModel {
         currentStep: json['currentStep'] as String,
         stepLabel: json['stepLabel'] as String,
         paymentStatus: json['paymentStatus'] as String,
+        arrivalInstructions: json['arrivalInstructions'] as String?,
       );
 }

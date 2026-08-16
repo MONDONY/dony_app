@@ -352,6 +352,35 @@ class _TrackingResultCard extends StatelessWidget {
                     ),
                     const SizedBox(height: DonySpacing.base),
                     _StepTimeline(currentStep: result.currentStep),
+                    if ((result.arrivalInstructions ?? '')
+                        .trim()
+                        .isNotEmpty) ...[
+                      const SizedBox(height: DonySpacing.md),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(DonySpacing.base),
+                        decoration: BoxDecoration(
+                          color: cs.infoLight,
+                          borderRadius: BorderRadius.circular(DonyRadius.md),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Instructions de retrait',
+                              style: tt.titleSmall?.copyWith(color: cs.info),
+                            ),
+                            const SizedBox(height: DonySpacing.xs),
+                            Text(
+                              result.arrivalInstructions!,
+                              style: tt.bodyMedium?.copyWith(
+                                color: cs.onSurface,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: DonySpacing.lg),
                     DonyButton(
                       label: 'Voir le suivi détaillé',
