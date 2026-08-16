@@ -349,6 +349,7 @@ class _NotificationIcon extends StatelessWidget {
 
       // Réclame une action
       'negotiation_awaiting_payment' => (cs.warning, 'credit-card'),
+      'negotiation_cash_commission_failed' => (cs.warning, 'wallet'),
       'MM_PAYMENT_PENDING' => (cs.warning, 'credit-card'),
       'CARD_EXPIRING' => (cs.warning, 'credit-card'),
       'DISPUTE_OPENED' => (cs.warning, 'triangle-alert'),

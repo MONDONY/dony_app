@@ -379,7 +379,8 @@ abstract final class ErrorCatalog {
     'negotiation/commission-charge-failed': ErrorPresentation(
       title: 'Accord non validé',
       message:
-          "Impossible de finaliser : la commission n'a pas pu être prélevée au voyageur (solde et carte indisponibles). L'accord n'est pas validé.",
+          "La commission n'a pas pu être prélevée au voyageur. L'accord n'est pas validé. "
+          "Il vient d'être invité à recharger son portefeuille, réessaie ensuite.",
       severity: ErrorSeverity.critical,
       icon: Icons.account_balance_wallet_outlined,
     ),

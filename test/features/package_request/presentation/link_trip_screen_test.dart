@@ -173,19 +173,23 @@ void main() {
       );
     });
 
-    test('mappe cash-funds-required', () {
+    // Le solde du portefeuille ne conditionne plus la liaison d'un trajet : il
+    // n'est vérifié qu'au paiement, où le voyageur est invité à recharger. Ces
+    // deux reasons ne peuvent donc plus être levées au trip-linking, et ne
+    // doivent surtout pas ressusciter une feuille de blocage.
+    test('ne mappe plus cash-funds-required', () {
       expect(
         PaymentCapabilityBlock.fromErrorCode(
           'payment-method/cash-funds-required',
         ),
-        PaymentCapabilityBlock.cashFundsRequired,
+        isNull,
       );
     });
 
-    test('mappe none-available', () {
+    test('ne mappe plus none-available', () {
       expect(
         PaymentCapabilityBlock.fromErrorCode('payment-method/none-available'),
-        PaymentCapabilityBlock.noneAvailable,
+        isNull,
       );
     });
 
@@ -469,40 +473,40 @@ void main() {
       },
     );
 
-    testWidgets(
-      'cash-funds-required → sheet « Solde insuffisant » (recharge / carte)',
-      (tester) async {
-        final controller = StreamController<NegotiationState>.broadcast();
-        addTearDown(controller.close);
-        whenListen(
-          negotiationBloc,
-          controller.stream,
-          initialState: const NegotiationInitial(),
-        );
-
-        await pumpWithTripSelected(tester);
-        await tester.tap(find.text('Confirmer ce trajet'));
-        await tester.pump();
-
-        controller.add(
-          const NegotiationError(
-            ValidationException(
-              'Cash funds required',
-              code: 'payment-method/cash-funds-required',
-            ),
-          ),
-        );
-        await tester.pumpAndSettle();
-
-        expect(find.text('Solde insuffisant'), findsOneWidget);
-        expect(find.text('Recharger mon portefeuille'), findsOneWidget);
-        expect(find.textContaining('commission'), findsWidgets);
-      },
-    );
-
-    testWidgets('none-available → sheet combinée offrant carte ET espèces', (
+    // Le solde du portefeuille ne bloque plus la liaison d'un trajet : ces deux
+    // reasons ne sont plus levées par le back-end au trip-linking, et aucune
+    // feuille de blocage ne doit apparaître si elles remontent quand même. Le
+    // voyageur est invité à recharger au moment du paiement, pas ici.
+    testWidgets('cash-funds-required → aucune feuille de blocage', (
       tester,
     ) async {
+      final controller = StreamController<NegotiationState>.broadcast();
+      addTearDown(controller.close);
+      whenListen(
+        negotiationBloc,
+        controller.stream,
+        initialState: const NegotiationInitial(),
+      );
+
+      await pumpWithTripSelected(tester);
+      await tester.tap(find.text('Confirmer ce trajet'));
+      await tester.pump();
+
+      controller.add(
+        const NegotiationError(
+          ValidationException(
+            'Cash funds required',
+            code: 'payment-method/cash-funds-required',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Solde insuffisant'), findsNothing);
+      expect(find.text('Recharger mon portefeuille'), findsNothing);
+    });
+
+    testWidgets('none-available → aucune feuille de blocage', (tester) async {
       final controller = StreamController<NegotiationState>.broadcast();
       addTearDown(controller.close);
       whenListen(
@@ -525,12 +529,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Aucun moyen de paiement disponible'), findsOneWidget);
-      expect(
-        find.byKey(const Key('activate-card-payment-cta')),
-        findsOneWidget,
-      );
-      expect(find.byKey(const Key('unlock-cash-payment-cta')), findsOneWidget);
+      expect(find.text('Aucun moyen de paiement disponible'), findsNothing);
+      expect(find.byKey(const Key('unlock-cash-payment-cta')), findsNothing);
     });
 
     testWidgets('reason inconnue → snackbar générique (pas de sheet)', (

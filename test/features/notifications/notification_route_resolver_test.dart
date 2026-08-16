@@ -84,6 +84,18 @@ void main() {
       );
     });
 
+    // La commission espèces n'a pas pu être prélevée : le voyageur est le seul
+    // à pouvoir débloquer l'accord, on l'emmène recharger sans détour par le
+    // thread (qui ne lui offre aucune action utile).
+    test('negotiation_cash_commission_failed routes to wallet topup', () {
+      expect(
+        resolveNotificationRoute('negotiation_cash_commission_failed', {
+          'threadId': threadId,
+        }),
+        '/payments/wallet/topup/method',
+      );
+    });
+
     test('request_expired routes to the sender package request', () {
       expect(
         resolveNotificationRoute('request_expired', {

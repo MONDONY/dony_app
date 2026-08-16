@@ -510,19 +510,11 @@ class _TripFormContent extends StatefulWidget {
 class _TripFormContentState extends State<_TripFormContent> {
   final _formKey = GlobalKey<FormState>();
 
-  /// The last `NegotiationCreateDedicatedTripRequested` dispatched by
-  /// `_submit()` (existing AWAITING_TRIP thread — `lockContext.threadId !=
-  /// null`), kept around so a payment-method block (cash-funds-required /
-  /// none-available) can resubmit the exact same data with card consent
-  /// (`useCardForCommission: true`) instead of re-collecting the form.
-  NegotiationCreateDedicatedTripRequested? _lastDedicatedTripEvent;
-
-  /// Mirrors [_lastDedicatedTripEvent] for the other locked flow — brand-new
-  /// offer with no existing thread yet (`lockContext.threadId == null`),
-  /// dispatched as `NegotiationStartWithDedicatedTripRequested`. Both fields
-  /// share the same backend payment-capability-block mechanism, so
-  /// `_resubmitDedicated` must be able to resubmit whichever of the two was
-  /// last sent.
+  /// The last `NegotiationStartWithDedicatedTripRequested` dispatched by
+  /// `_submit()` — brand-new offer with no existing thread yet
+  /// (`lockContext.threadId == null`). Kept to tell that flow apart from the
+  /// existing-thread one when the shared `NegotiationBloc` reports success:
+  /// the two pop with different results and different messages.
   NegotiationStartWithDedicatedTripRequested? _lastStartWithDedicatedTripEvent;
 
   final _departureCityNotifier = ValueNotifier<String?>(null);
@@ -1284,10 +1276,6 @@ class _TripFormContentState extends State<_TripFormContent> {
           refusedTypes: refused,
           paymentMethod: lc.paymentMethod,
         );
-        // Stashed so a payment-method block (cash-funds-required /
-        // none-available) can resubmit the SAME data with card consent, cf.
-        // `_resubmitDedicated`.
-        _lastDedicatedTripEvent = event;
         context.read<NegotiationBloc>().add(event);
         return;
       }
@@ -1312,9 +1300,7 @@ class _TripFormContentState extends State<_TripFormContent> {
           refusedTypes: refused,
         ),
       );
-      // Stashed so a payment-method block (cash-funds-required /
-      // none-available) can resubmit the SAME data with card consent, cf.
-      // `_resubmitDedicated`.
+      // Distingue ce flux de celui à thread existant au retour du bloc.
       _lastStartWithDedicatedTripEvent = startEvent;
       context.read<NegotiationBloc>().add(startEvent);
       return;
@@ -1408,79 +1394,6 @@ class _TripFormContentState extends State<_TripFormContent> {
 
   void _showError(String message) {
     DonySnackbar.show(context, message: message, type: DonySnackbarType.error);
-  }
-
-  /// Net price agreed for this dedicated trip — used by the payment-block
-  /// sheets to show the commission owed. Locked server-side, carried by
-  /// `LockedTripContext.agreedPriceEur`.
-  double get _lockedNetPriceEur => widget.lockContext?.agreedPriceEur ?? 0;
-
-  /// Gross price, when the shared `NegotiationBloc`'s last known thread
-  /// carries it — `LockedTripContext` doesn't, so this is best-effort;
-  /// `showCashInsufficientSheet` falls back to computing it from the net
-  /// price when `null`.
-  double? get _lockedGrossPriceEur {
-    final s = context.read<NegotiationBloc>().state;
-    if (s is NegotiationLoaded) return s.thread.grossPriceEur;
-    if (s is NegotiationActionInProgress) return s.thread.grossPriceEur;
-    return null;
-  }
-
-  /// Resubmits the exact dedicated-trip event the traveler just sent (cf.
-  /// `_lastDedicatedTripEvent` / `_lastStartWithDedicatedTripEvent`), only
-  /// flipping `useCardForCommission` — used by the cash-funds-required /
-  /// none-available block sheets so the traveler doesn't have to re-fill the
-  /// form after a wallet top-up or a card-consent decision.
-  ///
-  /// Both locked flows (existing AWAITING_TRIP thread and brand-new offer)
-  /// share this same payment-capability-block mechanism, so both of their
-  /// last-sent events must be resubmittable here — only one is ever non-null
-  /// at a time, since a single `_submit()` call dispatches exactly one of
-  /// them.
-  void _resubmitDedicated({required bool useCard}) {
-    if (!mounted) return;
-    final lastLinked = _lastDedicatedTripEvent;
-    if (lastLinked != null) {
-      context.read<NegotiationBloc>().add(
-        NegotiationCreateDedicatedTripRequested(
-          threadId: lastLinked.threadId,
-          departureDate: lastLinked.departureDate,
-          departureTime: lastLinked.departureTime,
-          arrivalTime: lastLinked.arrivalTime,
-          pickupAddress: lastLinked.pickupAddress,
-          deliveryAddress: lastLinked.deliveryAddress,
-          description: lastLinked.description,
-          acceptedContentTypes: lastLinked.acceptedContentTypes,
-          refusedTypes: lastLinked.refusedTypes,
-          paymentMethod: lastLinked.paymentMethod,
-          useCardForCommission: useCard,
-        ),
-      );
-      return;
-    }
-    final lastStart = _lastStartWithDedicatedTripEvent;
-    if (lastStart == null) return;
-    context.read<NegotiationBloc>().add(
-      NegotiationStartWithDedicatedTripRequested(
-        packageRequestId: lastStart.packageRequestId,
-        proposedPriceEur: lastStart.proposedPriceEur,
-        travelerTravelDate: lastStart.travelerTravelDate,
-        travelerAvailableKg: lastStart.travelerAvailableKg,
-        body: lastStart.body,
-        isFirmPrice: lastStart.isFirmPrice,
-        dedicatedTrip: DedicatedTripPayload(
-          departureDate: lastStart.dedicatedTrip.departureDate,
-          departureTime: lastStart.dedicatedTrip.departureTime,
-          arrivalTime: lastStart.dedicatedTrip.arrivalTime,
-          pickupAddress: lastStart.dedicatedTrip.pickupAddress,
-          deliveryAddress: lastStart.dedicatedTrip.deliveryAddress,
-          description: lastStart.dedicatedTrip.description,
-          acceptedContentTypes: lastStart.dedicatedTrip.acceptedContentTypes,
-          refusedTypes: lastStart.dedicatedTrip.refusedTypes,
-          useCardForCommission: useCard,
-        ),
-      ),
-    );
   }
 
   Future<void> _selectDate() async {
@@ -1617,8 +1530,7 @@ class _TripFormContentState extends State<_TripFormContent> {
             );
           } else if (state is NegotiationError) {
             // This screen OWNS payment-method-block feedback for the
-            // dedicated-trip flow (cf. `_lastDedicatedTripEvent` /
-            // `_resubmitDedicated`) — LinkTripScreen, which shares this same
+            // dedicated-trip flow — LinkTripScreen, which shares this same
             // NegotiationBloc underneath, stands down while this screen is
             // on top (see its `_creatingDedicatedTripNotifier`). Reacting
             // here AND letting the generic ErrorPresenter also fire below
@@ -1628,26 +1540,6 @@ class _TripFormContentState extends State<_TripFormContent> {
             );
             if (block == PaymentCapabilityBlock.cardCapabilityRequired) {
               unawaited(showCardCapabilityRequiredSheet(context));
-            } else if (block == PaymentCapabilityBlock.cashFundsRequired) {
-              unawaited(
-                showCashInsufficientSheet(
-                  context,
-                  netPriceEur: _lockedNetPriceEur,
-                  grossPriceEur: _lockedGrossPriceEur,
-                  currency: widget.lockContext?.currency,
-                  onResubmit: _resubmitDedicated,
-                ),
-              );
-            } else if (block == PaymentCapabilityBlock.noneAvailable) {
-              unawaited(
-                showNoPaymentMethodAvailableSheet(
-                  context,
-                  netPriceEur: _lockedNetPriceEur,
-                  grossPriceEur: _lockedGrossPriceEur,
-                  currency: widget.lockContext?.currency,
-                  onResubmit: _resubmitDedicated,
-                ),
-              );
             } else {
               // Not a payment-method block: fall back to the generic error UX.
               ErrorPresenter.show(context, state.error);

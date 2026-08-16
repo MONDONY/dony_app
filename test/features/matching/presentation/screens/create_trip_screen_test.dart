@@ -2371,11 +2371,16 @@ void main() {
       },
     );
 
+    // Le solde du portefeuille ne conditionne plus la liaison d'un trajet : ces
+    // deux reasons ne sont plus levées au trip-linking, et les feuilles de
+    // blocage qui les traitaient ont été supprimées. Si elles remontent quand
+    // même, le voyageur reçoit l'erreur générique, jamais une feuille morte.
     testWidgets(
-      'cash-funds-required → sheet « Solde insuffisant », le CTA "Ajouter une '
-      'carte" (plus jamais mort) resoumet la MÊME demande avec '
-      'useCardForCommission=true',
+      'cash-funds-required → aucune feuille de blocage, erreur générique',
       (tester) async {
+        // DonySnackbar déduplique le même message pendant 5 s : sans ce reset,
+        // le snackbar générique du test précédent avale celui-ci.
+        DonySnackbar.clearDedup();
         await navigateLockedToStep2AndSubmit(tester);
 
         negoStreamCtrl.add(
@@ -2388,33 +2393,17 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        expect(find.text('Solde insuffisant'), findsOneWidget);
-        expect(find.text('Ajouter une carte'), findsOneWidget);
-
-        await tester.tap(find.text('Ajouter une carte'));
-        await tester.pumpAndSettle();
-        expect(find.text('done-commission-method'), findsOneWidget);
-
-        // Simulates the traveler completing card entry and returning.
-        await tester.tap(find.text('done-commission-method'));
-        await tester.pumpAndSettle();
-
-        final calls = verify(() => negotiationBloc.add(captureAny())).captured;
-        final resubmit = calls
-            .whereType<NegotiationCreateDedicatedTripRequested>()
-            .last;
-        expect(resubmit.useCardForCommission, isTrue);
-        expect(resubmit.threadId, 'thread-1');
-        // Same form data as the original submit — not a fresh/empty request.
-        expect(resubmit.pickupAddress['label'], 'Tour Eiffel');
-        expect(resubmit.deliveryAddress['label'], 'Dakar Centre');
-        expect(resubmit.departureDate, DateTime(2026, 8));
+        expect(find.text('Solde insuffisant'), findsNothing);
+        expect(find.text('Ajouter une carte'), findsNothing);
+        expect(find.byType(SnackBar), findsOneWidget);
       },
     );
 
     testWidgets(
-      'none-available → sheet combinée carte + espèces, sans double feedback',
+      'none-available → aucune feuille de blocage, erreur générique',
       (tester) async {
+        // Cf. le test précédent : la déduplication des snackbars est globale.
+        DonySnackbar.clearDedup();
         await navigateLockedToStep2AndSubmit(tester);
 
         negoStreamCtrl.add(
@@ -2427,16 +2416,12 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        expect(find.text('Aucun moyen de paiement disponible'), findsOneWidget);
-        expect(
-          find.byKey(const Key('activate-card-payment-cta')),
-          findsOneWidget,
-        );
+        expect(find.text('Aucun moyen de paiement disponible'), findsNothing);
         expect(
           find.byKey(const Key('unlock-cash-payment-cta')),
-          findsOneWidget,
+          findsNothing,
         );
-        expect(find.byType(SnackBar), findsNothing);
+        expect(find.byType(SnackBar), findsOneWidget);
       },
     );
   });
@@ -2644,10 +2629,12 @@ void main() {
         await tester.pump();
       }
 
+      // Ce flux non plus ne se fait plus bloquer sur le solde : la demande part
+      // une seule fois, aucune feuille ne propose de la resoumettre avec un
+      // consentement carte, et l'erreur éventuelle reste générique.
       testWidgets(
-        'cash-funds-required block on the null-threadId flow: "Ajouter une '
-        'carte" resubmits NegotiationStartWithDedicatedTripRequested (not a '
-        'silent no-op)',
+        'cash-funds-required sur le flux sans thread : aucune feuille, aucune '
+        'resoumission',
         (tester) async {
           await navigateNullThreadToStep2AndSubmit(tester);
 
@@ -2661,39 +2648,15 @@ void main() {
           );
           await tester.pumpAndSettle();
 
-          expect(find.text('Solde insuffisant'), findsOneWidget);
-          expect(find.text('Ajouter une carte'), findsOneWidget);
-
-          await tester.tap(find.text('Ajouter une carte'));
-          await tester.pumpAndSettle();
-          expect(find.text('done-commission-method'), findsOneWidget);
-
-          // Simulates the traveler completing card entry and returning.
-          await tester.tap(find.text('done-commission-method'));
-          await tester.pumpAndSettle();
+          expect(find.text('Solde insuffisant'), findsNothing);
+          expect(find.text('Ajouter une carte'), findsNothing);
 
           final calls = verify(
             () => negotiationBloc.add(captureAny()),
           ).captured;
-          final resubmits = calls
+          final submits = calls
               .whereType<NegotiationStartWithDedicatedTripRequested>();
-          // Fix #1: before the fix, this resubmit was a silent no-op because
-          // `_lastDedicatedTripEvent` (checked by `_resubmitDedicated`) is
-          // never set on the null-threadId branch — only
-          // `_lastStartWithDedicatedTripEvent` is. `_resubmitDedicated` must
-          // now fall back to it and re-dispatch this event. Two
-          // `NegotiationStartWithDedicatedTripRequested` were dispatched in
-          // total: the original submit, then the resubmit — `.last` is the
-          // one that must carry `useCardForCommission: true`.
-          expect(resubmits, hasLength(2));
-          final resubmit = resubmits.last;
-          expect(resubmit.dedicatedTrip.useCardForCommission, isTrue);
-          expect(resubmit.packageRequestId, 'req-1');
-          expect(resubmit.dedicatedTrip.pickupAddress['label'], 'Tour Eiffel');
-          expect(
-            resubmit.dedicatedTrip.deliveryAddress['label'],
-            'Dakar Centre',
-          );
+          expect(submits, hasLength(1));
         },
       );
 

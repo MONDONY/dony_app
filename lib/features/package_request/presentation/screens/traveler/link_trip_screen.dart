@@ -155,35 +155,6 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
     // (awaitingPayment or open).
   }
 
-  /// Retry after the cash-insufficient / no-payment-method sheet. Always
-  /// dispatches the legacy `submitTrip` event — **not** branched on
-  /// `widget.thread.status` like [_confirmTrip], and intentionally so:
-  /// `NegotiationChangeTripRequested` / `NegotiationRepository.changeTrip`
-  /// (`PATCH /negotiations/{id}/trip`) carries no `paymentMethod` or
-  /// `useCardForCommission` field at all — by design, per the
-  /// task-13-brief.md contract for the OPEN "change trip" flow. Server-side,
-  /// `cash-funds-required` is only ever thrown from `submitTrip`'s
-  /// `computeAvailableMethods`/`assertNonEmptyOrThrow` path
-  /// (`NegotiationService`), which `changeTrip` does not call — swapping the
-  /// linked trip on an already-OPEN thread does not re-negotiate payment
-  /// capability. So the cash-insufficient/no-payment-method sheets are
-  /// structurally unreachable from an OPEN-status thread today, and
-  /// `_resubmitCash` correctly has only the one (legacy AWAITING_TRIP) path
-  /// to retry. If a future backend change makes `changeTrip` recompute
-  /// capability, this method (and `NegotiationChangeTripRequested`, which
-  /// would need a `useCardForCommission` field) must be revisited together.
-  void _resubmitCash(String announcementId, {required bool useCard}) {
-    if (!mounted) return;
-    context.read<NegotiationBloc>().add(
-      NegotiationSubmitTripRequested(
-        threadId: widget.thread.id,
-        travelerAnnouncementId: announcementId,
-        paymentMethod: PaymentMethod.cash,
-        useCardForCommission: useCard,
-      ),
-    );
-  }
-
   Future<void> _createNewTrip() async {
     final r = _requestNotifier.value;
     if (r == null) return;
@@ -259,34 +230,13 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
           // this SAME shared bloc (cf. `_creatingDedicatedTripNotifier` doc):
           // reacting here too would stack duplicate feedback.
           if (_creatingDedicatedTripNotifier.value) return;
-          // Le voyageur ne choisit plus de mode de paiement : le back-end
-          // calcule la SET qu'il peut réellement fournir et ne rejette (422)
-          // que si elle est vide. Chaque reason route vers son CTA dédié,
-          // jamais un message d'erreur sans issue.
+          // Le voyageur ne choisit pas de mode de paiement : l'expéditeur le
+          // déclare sur sa demande et le back-end vérifie que le voyageur peut
+          // l'honorer. Seule la carte peut manquer (compte Stripe absent), et
+          // elle route vers son CTA dédié plutôt qu'un message sans issue.
           final block = PaymentCapabilityBlock.fromErrorCode(state.error.code);
-          final announcementId = _selectedTripNotifier.value?.id;
           if (block == PaymentCapabilityBlock.cardCapabilityRequired) {
             showCardCapabilityRequiredSheet(context);
-          } else if (block == PaymentCapabilityBlock.cashFundsRequired &&
-              announcementId != null) {
-            showCashInsufficientSheet(
-              context,
-              netPriceEur: widget.thread.currentPriceEur,
-              grossPriceEur: widget.thread.grossPriceEur,
-              currency: widget.thread.currency,
-              onResubmit: ({required useCard}) =>
-                  _resubmitCash(announcementId, useCard: useCard),
-            );
-          } else if (block == PaymentCapabilityBlock.noneAvailable &&
-              announcementId != null) {
-            showNoPaymentMethodAvailableSheet(
-              context,
-              netPriceEur: widget.thread.currentPriceEur,
-              grossPriceEur: widget.thread.grossPriceEur,
-              currency: widget.thread.currency,
-              onResubmit: ({required useCard}) =>
-                  _resubmitCash(announcementId, useCard: useCard),
-            );
           } else {
             DonySnackbar.show(
               context,

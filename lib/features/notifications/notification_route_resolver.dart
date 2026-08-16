@@ -82,6 +82,10 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
     'negotiation_awaiting_payment' when _isUuid(threadId) =>
       '/negotiations/$threadId',
     'negotiation_expired' when _isUuid(threadId) => '/negotiations/$threadId',
+
+    // Commission espèces non prélevée : seul le voyageur peut débloquer
+    // l'accord, en rechargeant son portefeuille. On l'y emmène directement.
+    'negotiation_cash_commission_failed' => '/payments/wallet/topup/method',
     'negotiation' when _isUuid(threadId) => '/negotiations/$threadId',
     'request_accepted' when _isUuid(threadId) => '/negotiations/$threadId',
 
