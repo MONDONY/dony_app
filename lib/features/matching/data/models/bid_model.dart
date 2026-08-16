@@ -83,6 +83,11 @@ class BidModel {
   final DateTime updatedAt;
   final String? departureCity;
   final String? arrivalCity;
+
+  /// Instructions d'arrivée laissées par le voyageur pour l'expéditeur (ex :
+  /// point de rendez-vous précis, consignes de retrait). Facultatif, hérité
+  /// du trajet à l'acceptation.
+  final String? arrivalInstructions;
   final DateTime? departureDate;
   final String? departureTime;
   // Instant canonique de départ (date + heure, fuseau ville de départ).
@@ -203,6 +208,7 @@ class BidModel {
     required this.updatedAt,
     this.departureCity,
     this.arrivalCity,
+    this.arrivalInstructions,
     this.departureDate,
     this.departureTime,
     this.departureAt,

@@ -147,6 +147,10 @@ class AnnouncementModel {
   final int confirmedParcelCount;
   final TravelerProfile? traveler;
   final String? description;
+
+  /// Instructions d'arrivée laissées par le voyageur pour l'expéditeur (ex :
+  /// point de rendez-vous précis, consignes de retrait). Facultatif.
+  final String? arrivalInstructions;
   final List<String>? acceptedContentTypes;
   final List<String>? refusedTypes;
   final DateTime createdAt;
@@ -215,6 +219,7 @@ class AnnouncementModel {
     this.confirmedParcelCount = 0,
     this.traveler,
     this.description,
+    this.arrivalInstructions,
     this.acceptedContentTypes,
     this.refusedTypes,
     required this.createdAt,
