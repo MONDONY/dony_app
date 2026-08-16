@@ -125,6 +125,12 @@ void main() {
         paymentMethod: PaymentMethod.stripe,
       ),
     );
+    registerFallbackValue(
+      const NegotiationChangeTripRequested(
+        threadId: '',
+        travelerAnnouncementId: '',
+      ),
+    );
   });
 
   setUp(() {
@@ -305,6 +311,112 @@ void main() {
       ),
     ).called(1);
   });
+
+  // ── Thread OPEN (change-trip flow) ────────────────────────────────────────
+
+  testWidgets(
+    'confirmer un trajet sur un thread OPEN dispatch '
+    'NegotiationChangeTripRequested (pas NegotiationSubmitTripRequested)',
+    (tester) async {
+      when(() => packageRequestRepo.getById(any())).thenAnswer(
+        (_) async =>
+            _packageRequest(methods: {PaymentMethod.cash, PaymentMethod.stripe}),
+      );
+      when(
+        () => announcementRepo.getMyAnnouncements(),
+      ).thenAnswer((_) async => (announcements: [_trip()], totalElements: 1));
+
+      await tester.pumpWidget(
+        _harness(_fakeThread(status: NegotiationThreadStatus.open)),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('trip-tile-select-inkwell')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('trip-tile-select-inkwell')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Confirmer ce trajet'), findsOneWidget);
+      await tester.tap(find.text('Confirmer ce trajet'));
+      await tester.pump();
+
+      verify(
+        () => negotiationBloc.add(
+          any(
+            that: predicate<NegotiationEvent>(
+              (e) =>
+                  e is NegotiationChangeTripRequested &&
+                  e.threadId == 't-1' &&
+                  e.travelerAnnouncementId == 'ann-1',
+              'NegotiationChangeTripRequested(threadId=t-1, '
+              'travelerAnnouncementId=ann-1)',
+            ),
+          ),
+        ),
+      ).called(1);
+      verifyNever(
+        () => negotiationBloc.add(
+          any(that: isA<NegotiationSubmitTripRequested>()),
+        ),
+      );
+    },
+  );
+
+  testWidgets(
+    'l\'écran se ferme (pop) quand NegotiationLoaded porte status=open '
+    '(changeTrip réussi)',
+    (tester) async {
+      when(() => packageRequestRepo.getById(any())).thenAnswer(
+        (_) async => _packageRequest(),
+      );
+      when(
+        () => announcementRepo.getMyAnnouncements(),
+      ).thenAnswer((_) async => (announcements: [_trip()], totalElements: 1));
+
+      final controller = StreamController<NegotiationState>.broadcast();
+      addTearDown(controller.close);
+      whenListen(
+        negotiationBloc,
+        controller.stream,
+        initialState: const NegotiationInitial(),
+      );
+
+      final router = GoRouter(
+        initialLocation: '/',
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (ctx, _) => ElevatedButton(
+              onPressed: () => ctx.push('/link-trip'),
+              child: const Text('open'),
+            ),
+          ),
+          GoRoute(
+            path: '/link-trip',
+            builder: (ctx, _) => BlocProvider<NegotiationBloc>.value(
+              value: negotiationBloc,
+              child: LinkTripScreen(
+                thread: _fakeThread(status: NegotiationThreadStatus.open),
+              ),
+            ),
+          ),
+        ],
+      );
+      await tester.pumpWidget(
+        MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(LinkTripScreen), findsOneWidget);
+
+      controller.add(
+        NegotiationLoaded(_fakeThread(status: NegotiationThreadStatus.open)),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(LinkTripScreen), findsNothing);
+    },
+  );
 
   // ── 422 reason → CTA contextuel ───────────────────────────────────────────
 

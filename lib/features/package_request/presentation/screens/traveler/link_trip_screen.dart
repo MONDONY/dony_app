@@ -155,6 +155,23 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
     // (awaitingPayment or open).
   }
 
+  /// Retry after the cash-insufficient / no-payment-method sheet. Always
+  /// dispatches the legacy `submitTrip` event — **not** branched on
+  /// `widget.thread.status` like [_confirmTrip], and intentionally so:
+  /// `NegotiationChangeTripRequested` / `NegotiationRepository.changeTrip`
+  /// (`PATCH /negotiations/{id}/trip`) carries no `paymentMethod` or
+  /// `useCardForCommission` field at all — by design, per the
+  /// task-13-brief.md contract for the OPEN "change trip" flow. Server-side,
+  /// `cash-funds-required` is only ever thrown from `submitTrip`'s
+  /// `computeAvailableMethods`/`assertNonEmptyOrThrow` path
+  /// (`NegotiationService`), which `changeTrip` does not call — swapping the
+  /// linked trip on an already-OPEN thread does not re-negotiate payment
+  /// capability. So the cash-insufficient/no-payment-method sheets are
+  /// structurally unreachable from an OPEN-status thread today, and
+  /// `_resubmitCash` correctly has only the one (legacy AWAITING_TRIP) path
+  /// to retry. If a future backend change makes `changeTrip` recompute
+  /// capability, this method (and `NegotiationChangeTripRequested`, which
+  /// would need a `useCardForCommission` field) must be revisited together.
   void _resubmitCash(String announcementId, {required bool useCard}) {
     if (!mounted) return;
     context.read<NegotiationBloc>().add(
