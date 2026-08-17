@@ -17,7 +17,7 @@ const String kApiBaseUrl = String.fromEnvironment(
 /// postée sur Facebook n'est plus rappelable : son URL doit pouvoir déménager
 /// vers un domaine court sans que l'adresse de l'API bouge, et sans que celle
 /// de l'API impose son `context-path` à un lien lu par un humain. Aliaser les
-/// deux reviendrait à s'engager à servir `/api/v1/public/...` pour toujours.
+/// deux reviendrait à s'engager à servir `/api/v1/...` pour toujours.
 ///
 /// Le repli sur [kApiBaseUrl] garde le dev et le staging fonctionnels sans
 /// configuration supplémentaire : c'est bien le même serveur qui rend la page.

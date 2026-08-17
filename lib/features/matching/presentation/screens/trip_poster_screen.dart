@@ -172,8 +172,16 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
     super.dispose();
   }
 
+  /// Forme courte, sans `/public` : elle résout dans tous les environnements,
+  /// le backend exposant `/annonce/{id}` comme alias de `/public/annonce/{id}`
+  /// (même contrôleur, même sécurité, cf. `PublicAnnouncementPageController`).
+  /// Avec le repli par défaut de [TripPosterScreen.shareBaseUrl] sur
+  /// `kApiBaseUrl`, elle donne une URL techniquement correcte quoique encore
+  /// adossée à l'origine API ; une fois `POSTER_SHARE_BASE_URL` pointé sur le
+  /// domaine nu (`https://yadony.com`), c'est nginx qui la rend pleinement
+  /// lisible — sans qu'un seul octet ne change ici.
   String _urlFor(PosterShareChannel channel) =>
-      '${widget.shareBaseUrl}/public/annonce/${widget.announcement.id}'
+      '${widget.shareBaseUrl}/annonce/${widget.announcement.id}'
       '?c=${channel.code}';
 
   /// Légende prête à coller dans le texte du post. C'est elle qui porte le lien

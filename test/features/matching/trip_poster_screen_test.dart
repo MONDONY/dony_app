@@ -113,7 +113,7 @@ void main() {
     // Le canal voyage dans l'URL dès la première affiche publiée : une affiche
     // postée est irrécupérable, un lien sans dimension ne sera jamais
     // attribuable rétroactivement.
-    expect(copied, ['https://api.yadony.test/api/v1/public/annonce/a1?c=lien']);
+    expect(copied, ['https://api.yadony.test/api/v1/annonce/a1?c=lien']);
   });
 
   /// Sur Facebook, une URL écrite dans l'image n'est pas cliquable : la légende
@@ -127,7 +127,7 @@ void main() {
     expect(copied, hasLength(1));
     expect(
       copied.single,
-      contains('https://api.yadony.test/api/v1/public/annonce/a1?c=post'),
+      contains('https://api.yadony.test/api/v1/annonce/a1?c=post'),
     );
   });
 
