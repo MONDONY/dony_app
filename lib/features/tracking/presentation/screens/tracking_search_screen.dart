@@ -7,10 +7,10 @@ import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:dony/features/tracking/data/models/tracking_search_model.dart';
+import 'package:dony/features/tracking/presentation/widgets/tracking_timeline_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 
 class TrackingSearchScreen extends StatefulWidget {
   const TrackingSearchScreen({
@@ -368,9 +368,11 @@ class _TrackingResultCard extends StatelessWidget {
                       onPressed: () {
                         final corridor =
                             '${result.departureCity} → ${result.arrivalCity}';
-                        context.push(
-                          '/tracking/${result.bidId}/timeline',
-                          extra: (corridor, result.arrivalInstructions),
+                        showTrackingTimelineSheet(
+                          context,
+                          bidId: result.bidId,
+                          corridor: corridor,
+                          arrivalInstructions: result.arrivalInstructions,
                         );
                       },
                       variant: DonyButtonVariant.secondary,

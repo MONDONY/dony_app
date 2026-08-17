@@ -757,7 +757,11 @@ void main() {
         () => authBloc.stream,
       ).thenAnswer((_) => const Stream<AuthState>.empty());
 
-      await _pump(tester, bid: _makeBid(status: 'ARRIVED'), authBloc: authBloc);
+      await _pump(
+        tester,
+        bid: _makeBid(status: 'ARRIVED'),
+        authBloc: authBloc,
+      );
       // 1er add à l'initState, puis un par tick de 10 s.
       await tester.pump(const Duration(seconds: 10));
       await tester.pump(const Duration(seconds: 10));
@@ -784,9 +788,7 @@ void main() {
       await tester.pump(const Duration(seconds: 10));
       await tester.pump(const Duration(seconds: 10));
 
-      verify(
-        () => bidBloc.add(any(that: isA<BidDetailRequested>())),
-      ).called(1);
+      verify(() => bidBloc.add(any(that: isA<BidDetailRequested>()))).called(1);
     });
   });
 }

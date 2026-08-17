@@ -415,10 +415,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(
-        find.text('Modifier les instructions de retrait'),
-        findsOneWidget,
-      );
+      expect(find.text('Modifier les instructions de retrait'), findsOneWidget);
       expect(find.text('Arrivé à destination'), findsNothing);
     },
   );

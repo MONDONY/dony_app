@@ -37,10 +37,6 @@ Future<void> _pump(WidgetTester tester, TrackingBloc bloc) async {
               child: const TrackingSearchScreen(),
             ),
           ),
-          GoRoute(
-            path: '/tracking/:bidId/timeline',
-            builder: (_, _) => const Scaffold(body: Text('timeline')),
-          ),
         ],
       ),
     ),
