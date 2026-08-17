@@ -270,32 +270,11 @@ class _Timeline extends StatelessWidget {
           _PendingConfirmationBanner(),
         ] else if ((arrivalInstructions ?? '').trim().isNotEmpty) ...[
           const SizedBox(height: DonySpacing.md),
-          Container(
-            padding: const EdgeInsets.all(DonySpacing.base),
-            decoration: BoxDecoration(
-              color: cs.infoLight,
-              borderRadius: BorderRadius.circular(DonyRadius.md),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    DonyIcon('map-pin', color: cs.info, size: 16),
-                    const SizedBox(width: DonySpacing.xs),
-                    Text(
-                      'Instructions de retrait',
-                      style: tt.titleSmall?.copyWith(color: cs.info),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: DonySpacing.xs),
-                Text(
-                  arrivalInstructions!,
-                  style: tt.bodyMedium?.copyWith(color: cs.onSurface),
-                ),
-              ],
-            ),
+          DonyStatusBanner(
+            type: DonyStatusBannerType.info,
+            iconAsset: 'map-pin',
+            title: 'Instructions de retrait',
+            message: arrivalInstructions,
           ),
         ],
       ],

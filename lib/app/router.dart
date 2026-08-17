@@ -793,12 +793,9 @@ final appRouter = GoRouter(
       builder: (context, state) {
         final bidId = state.pathParameters['bidId']!;
         final extra = state.extra;
-        final corridor = extra is (String, String?)
-            ? extra.$1
-            : (extra as String? ?? '');
-        final arrivalInstructions = extra is (String, String?)
-            ? extra.$2
-            : null;
+        final (corridor, arrivalInstructions) = extra is (String, String?)
+            ? extra
+            : (extra as String? ?? '', null);
         return BlocProvider(
           create: (_) => getIt<TrackingBloc>(),
           child: TrackingTimelineScreen(

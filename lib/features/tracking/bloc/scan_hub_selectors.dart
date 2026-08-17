@@ -12,12 +12,7 @@ const _confirmedStatuses = {
   'ARRIVED',
   'COMPLETED',
 };
-const _departedStatuses = {
-  'HANDED_OVER',
-  'IN_TRANSIT',
-  'ARRIVED',
-  'COMPLETED',
-};
+const _departedStatuses = {'HANDED_OVER', 'IN_TRANSIT', 'ARRIVED', 'COMPLETED'};
 const _transitStatuses = {'IN_TRANSIT', 'ARRIVED', 'COMPLETED'};
 const _arrivedStatuses = {'COMPLETED'};
 

@@ -356,29 +356,10 @@ class _TrackingResultCard extends StatelessWidget {
                         .trim()
                         .isNotEmpty) ...[
                       const SizedBox(height: DonySpacing.md),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(DonySpacing.base),
-                        decoration: BoxDecoration(
-                          color: cs.infoLight,
-                          borderRadius: BorderRadius.circular(DonyRadius.md),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Instructions de retrait',
-                              style: tt.titleSmall?.copyWith(color: cs.info),
-                            ),
-                            const SizedBox(height: DonySpacing.xs),
-                            Text(
-                              result.arrivalInstructions!,
-                              style: tt.bodyMedium?.copyWith(
-                                color: cs.onSurface,
-                              ),
-                            ),
-                          ],
-                        ),
+                      DonyStatusBanner(
+                        type: DonyStatusBannerType.info,
+                        title: 'Instructions de retrait',
+                        message: result.arrivalInstructions,
                       ),
                     ],
                     const SizedBox(height: DonySpacing.lg),

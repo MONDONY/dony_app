@@ -130,12 +130,13 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
               _current = state.announcement;
             } else if (state is AnnouncementUpdated) {
               _current = state.announcement;
-            } else if (state is AnnouncementTripArrived ||
-                state is AnnouncementArrivalInstructionsUpdated) {
-              _current = state is AnnouncementTripArrived
-                  ? state.announcement
-                  : (state as AnnouncementArrivalInstructionsUpdated)
-                        .announcement;
+            } else if (state is AnnouncementTripArrived) {
+              _current = state.announcement;
+              context.read<BidBloc>().add(
+                BidListRequested(widget.announcementId),
+              );
+            } else if (state is AnnouncementArrivalInstructionsUpdated) {
+              _current = state.announcement;
               context.read<BidBloc>().add(
                 BidListRequested(widget.announcementId),
               );
@@ -257,8 +258,7 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
                       if (cta == null) {
                         return const SizedBox.shrink();
                       }
-                      final isEditing =
-                          cta == TripArrivalCta.editInstructions;
+                      final isEditing = cta == TripArrivalCta.editInstructions;
                       return Padding(
                         padding: const EdgeInsets.only(top: DonySpacing.md),
                         child: DonyButton(
