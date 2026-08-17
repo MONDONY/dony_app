@@ -1,3 +1,4 @@
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/poster/trip_poster_card.dart';
 import 'package:flutter/material.dart';
@@ -55,16 +56,22 @@ void main() {
   ) async {
     await _pump(tester, _announcement(pricePerKg: 6, pricePerKgDisplay: 8));
 
-    expect(find.text('8€'), findsOneWidget);
-    expect(find.text('6€'), findsNothing);
+    expect(find.text(formatPriceIn(8, 'EUR')), findsOneWidget);
+    expect(find.text(formatPriceIn(6, 'EUR')), findsNothing);
   });
 
-  testWidgets('retombe sur pricePerKg quand le prix affiché est absent', (
+  /// Sans `pricePerKgDisplay`, il faut appliquer la commission au net, pas
+  /// afficher le net tel quel : ce serait le tarif voyageur, pas celui payé.
+  testWidgets('applique la commission quand le prix affiché est absent', (
     tester,
   ) async {
     await _pump(tester, _announcement(pricePerKg: 6, pricePerKgDisplay: null));
 
-    expect(find.text('6€'), findsOneWidget);
+    expect(
+      find.text(formatPriceIn(netToSenderPrice(6), 'EUR')),
+      findsOneWidget,
+    );
+    expect(find.text(formatPriceIn(6, 'EUR')), findsNothing);
   });
 
   testWidgets('affiche la date limite de dépôt quand elle existe', (
@@ -110,12 +117,26 @@ void main() {
     expect(RegExp(r'\b0\d[\s.]?(\d{2}[\s.]?){4}\b').hasMatch(texts), isFalse);
   });
 
+  /// XOF et XAF sont les devises des corridors principaux. Une table de
+  /// symboles écrite à la main les laissait tomber dans son cas par défaut et
+  /// imprimait le code ISO brut sur l'affiche.
   testWidgets('gère une devise hors euro', (tester) async {
     await _pump(
       tester,
       _announcement(currency: 'XOF', pricePerKgDisplay: 6000),
     );
 
-    expect(find.text('6000F CFA'), findsOneWidget);
+    expect(find.text(formatPriceIn(6000, 'XOF')), findsOneWidget);
+    expect(find.textContaining('XOF'), findsNothing);
+  });
+
+  testWidgets('gère le franc CFA d\'Afrique centrale', (tester) async {
+    await _pump(
+      tester,
+      _announcement(currency: 'XAF', pricePerKgDisplay: 6000),
+    );
+
+    expect(find.text(formatPriceIn(6000, 'XAF')), findsOneWidget);
+    expect(find.textContaining('XAF'), findsNothing);
   });
 }

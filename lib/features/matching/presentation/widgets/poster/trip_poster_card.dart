@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -35,6 +36,16 @@ class TripPosterCard extends StatelessWidget {
   static const double logicalWidth = 360;
   static const double logicalHeight = 450;
 
+  /// Formats de date construits une fois pour toute la classe : ils ne
+  /// dépendent d'aucune donnée d'instance, et l'écran d'aperçu les réutilise
+  /// pour composer sa légende, ce qui garantit que l'image et le texte du post
+  /// annoncent la même chose.
+  static final DateFormat dayFormat = DateFormat('EEEE d MMMM', 'fr');
+  static final DateFormat deadlineFormat = DateFormat(
+    "d MMMM 'à' HH'h'mm",
+    'fr',
+  );
+
   static const Color _ink = DonyColors.ink900;
   static const Color _blue = DonyColors.blue500;
   static const Color _terra = DonyColors.terra500;
@@ -42,34 +53,10 @@ class TripPosterCard extends StatelessWidget {
   static const Color _muted = DonyColors.neutral500;
   static const Color _line = DonyColors.neutral200;
 
-  /// Prix affiché à l'expéditeur, commission Yadony comprise.
-  ///
-  /// L'affiche s'adresse aux expéditeurs : montrer `pricePerKg`, qui est le net
-  /// voyageur, annoncerait un prix que personne ne paiera réellement.
-  double get _displayPrice =>
-      announcement.pricePerKgDisplay ?? announcement.pricePerKg;
-
-  String get _currencySymbol => switch (announcement.currency) {
-    'EUR' => '€',
-    'USD' => r'$',
-    'GBP' => '£',
-    'CAD' => r'$ CA',
-    'XOF' => 'F CFA',
-    _ => announcement.currency,
-  };
-
-  String _formatAmount(double value) {
-    final rounded = value.roundToDouble();
-    return value == rounded
-        ? rounded.toStringAsFixed(0)
-        : value.toStringAsFixed(2);
-  }
-
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
-    final dayFmt = DateFormat('EEEE d MMMM', 'fr');
-    final deadlineFmt = DateFormat("d MMMM 'à' HH'h'mm", 'fr');
+    final deadline = announcement.handoverDeadline;
 
     return SizedBox(
       width: logicalWidth,
@@ -85,13 +72,31 @@ class TripPosterCard extends StatelessWidget {
               const SizedBox(height: 18),
               _corridor(text),
               const SizedBox(height: 18),
-              _departureBlock(text, dayFmt),
+              _InfoRow(
+                label: 'Départ',
+                value: dayFormat.format(announcement.departureDate),
+                valueColor: _ink,
+              ),
               const SizedBox(height: 10),
-              if (announcement.handoverDeadline != null) ...[
-                _deadlineBlock(text, deadlineFmt),
+              // La date limite de dépôt est le vrai butoir commercial, pas la
+              // date de départ : c'est elle qui déclenche la décision de
+              // l'expéditeur. Toutes les affiches du marché la mettent en avant
+              // en rouge, on garde ce code visuel.
+              if (deadline != null) ...[
+                _InfoRow(
+                  label: 'Dernier dépôt',
+                  value: deadlineFormat.format(deadline),
+                  valueColor: _terra,
+                ),
                 const SizedBox(height: 10),
               ],
-              _capacityBlock(text),
+              _InfoRow(
+                label: 'Place disponible',
+                // formatKgPrice retire les décimales superflues ; sa
+                // sémantique est celle d'un nombre, pas d'un prix.
+                value: '${formatKgPrice(announcement.availableKg)} kg',
+                valueColor: _ink,
+              ),
               const Spacer(),
               _priceBlock(text),
               const SizedBox(height: 14),
@@ -158,36 +163,6 @@ class TripPosterCard extends StatelessWidget {
     );
   }
 
-  Widget _departureBlock(TextTheme text, DateFormat fmt) {
-    return _InfoRow(
-      label: 'Départ',
-      value: fmt.format(announcement.departureDate),
-      valueColor: _ink,
-      textTheme: text,
-    );
-  }
-
-  /// La date limite de dépôt est le vrai butoir commercial, pas la date de
-  /// départ : c'est elle qui déclenche la décision de l'expéditeur. Toutes les
-  /// affiches du marché la mettent en avant en rouge, on garde ce code visuel.
-  Widget _deadlineBlock(TextTheme text, DateFormat fmt) {
-    return _InfoRow(
-      label: 'Dernier dépôt',
-      value: fmt.format(announcement.handoverDeadline!),
-      valueColor: _terra,
-      textTheme: text,
-    );
-  }
-
-  Widget _capacityBlock(TextTheme text) {
-    return _InfoRow(
-      label: 'Place disponible',
-      value: '${_formatAmount(announcement.availableKg)} kg',
-      valueColor: _ink,
-      textTheme: text,
-    );
-  }
-
   Widget _priceBlock(TextTheme text) {
     return Container(
       width: double.infinity,
@@ -196,8 +171,8 @@ class TripPosterCard extends StatelessWidget {
         color: _blue,
         borderRadius: BorderRadius.circular(DonyRadius.card),
       ),
-      // Mise à l'échelle plutôt que troncature : « 6000F CFA » est deux fois
-      // plus large que « 8€ », et un prix coupé par une ellipse serait pire
+      // Mise à l'échelle plutôt que troncature : « 6 000 F CFA » est deux fois
+      // plus large que « 8 € », et un prix coupé par une ellipse serait pire
       // qu'un prix légèrement plus petit. Le bloc reste lisible quelle que soit
       // la devise du corridor.
       child: FittedBox(
@@ -207,7 +182,13 @@ class TripPosterCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              '${_formatAmount(_displayPrice)}$_currencySymbol',
+              // Prix expéditeur, commission comprise, dans la devise du trajet.
+              // `pricePerKg` seul est le net voyageur : l'afficher annoncerait
+              // un tarif que personne ne paie.
+              formatPriceIn(
+                announcement.senderPricePerKg,
+                announcement.currency,
+              ),
               style: text.displayLarge?.copyWith(
                 fontSize: 38,
                 height: 1,
@@ -253,10 +234,14 @@ class TripPosterCard extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           shareUrl,
-          maxLines: 1,
+          // Deux lignes, parce que l'URL porte un UUID : sur une seule ligne
+          // elle est ellipsée, donc illisible et intapable, alors que c'est le
+          // seul support où elle doit être lue à l'œil.
+          maxLines: 2,
           overflow: TextOverflow.ellipsis,
           style: text.labelMedium?.copyWith(
             fontSize: 11,
+            height: 1.25,
             fontWeight: FontWeight.w700,
             color: _blue,
           ),
@@ -271,16 +256,15 @@ class _InfoRow extends StatelessWidget {
     required this.label,
     required this.value,
     required this.valueColor,
-    required this.textTheme,
   });
 
   final String label;
   final String value;
   final Color valueColor;
-  final TextTheme textTheme;
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.baseline,
       textBaseline: TextBaseline.alphabetic,

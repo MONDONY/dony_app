@@ -5,21 +5,100 @@ import 'dart:ui' as ui;
 import 'package:dony/core/config/api_config.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/get_it_safe.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/utils/share_position.dart';
+import 'package:dony/features/matching/bloc/announcement_bloc.dart';
+import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/poster/trip_poster_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gal/gal.dart';
-import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
-/// Aperçu de l'affiche d'un trajet, avec les trois actions qui permettent au
-/// voyageur de la publier tel qu'il le fait déjà aujourd'hui.
+/// Canal de diffusion, porté par le lien sous la forme `?c=<canal>`.
+///
+/// La dimension doit voyager dans l'URL **dès la première affiche publiée** :
+/// une affiche postée est irrécupérable, et un lien sans paramètre ne pourra
+/// jamais être attribué rétroactivement. Le backend n'exploite pas encore ce
+/// paramètre, mais il apparaît dans les journaux d'accès, donc l'historique est
+/// préservé le jour où la ventilation par canal sera construite.
+enum PosterShareChannel {
+  /// Lien imprimé sur l'image, saisi à la main par le lecteur.
+  poster('affiche'),
+
+  /// Feuille de partage système (WhatsApp, Messages, Instagram…).
+  share('partage'),
+
+  /// Légende copiée puis collée dans le texte d'un post.
+  caption('post'),
+
+  /// Lien copié seul.
+  link('lien');
+
+  const PosterShareChannel(this.code);
+
+  final String code;
+}
+
+/// Point d'entrée de la route `/announcements/:id/affiche`.
+///
+/// L'affiche est adressée par identifiant, elle doit donc savoir se résoudre à
+/// partir de lui seul : une notification « ton trajet n'a reçu aucune demande,
+/// partage ton affiche », un lien profond ou une entrée depuis Activités n'ont
+/// que l'identifiant en main. Sans cela, chaque futur appelant devrait
+/// recharger l'annonce lui-même avant de pouvoir router.
+///
+/// [initial] court-circuite l'attente quand l'appelant tient déjà le trajet,
+/// ce qui est le cas des deux entrées actuelles : l'affiche s'ouvre alors
+/// instantanément juste après la publication, au moment précis où elle est
+/// postée. Même contrat que la route sœur `/announcements/:id/trip`.
+class TripPosterRoute extends StatelessWidget {
+  const TripPosterRoute({super.key, this.initial});
+
+  final AnnouncementModel? initial;
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<AnnouncementBloc, AnnouncementState>(
+      builder: (context, state) {
+        final announcement = state is AnnouncementDetailLoaded
+            ? state.announcement
+            : initial;
+
+        if (announcement != null) {
+          return TripPosterScreen(announcement: announcement);
+        }
+
+        return Scaffold(
+          appBar: AppBar(
+            leading: const DonyAppBarBackButton(),
+            title: const Text('Mon affiche'),
+            centerTitle: false,
+          ),
+          body: Center(
+            child: state is AnnouncementError
+                ? const DonyEmptyState(
+                    title: 'Trajet introuvable',
+                    description:
+                        'Impossible de charger ce trajet pour le moment.',
+                    type: DonyEmptyStateType.error,
+                  )
+                : const CircularProgressIndicator(),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Aperçu de l'affiche d'un trajet, avec les actions qui permettent au voyageur
+/// de la publier tel qu'il le fait déjà aujourd'hui.
 ///
 /// Le partage d'image seul ne suffit pas : **sur Facebook, une URL écrite dans
 /// une image n'est pas cliquable.** Sans le lien collé dans le texte du post,
@@ -30,13 +109,13 @@ class TripPosterScreen extends StatefulWidget {
   const TripPosterScreen({
     super.key,
     required this.announcement,
-    this.shareBaseUrl,
+    this.shareBaseUrl = posterShareBaseUrl,
   });
 
   final AnnouncementModel announcement;
 
-  /// Injectable pour les tests. En production, dérivée de `kApiBaseUrl`.
-  final String? shareBaseUrl;
+  /// Injectable pour les tests. En production, [posterShareBaseUrl].
+  final String shareBaseUrl;
 
   @override
   State<TripPosterScreen> createState() => _TripPosterScreenState();
@@ -45,6 +124,13 @@ class TripPosterScreen extends StatefulWidget {
 class _TripPosterScreenState extends State<TripPosterScreen> {
   final GlobalKey _posterKey = GlobalKey();
   final ValueNotifier<bool> _busy = ValueNotifier<bool>(false);
+
+  /// PNG mémoïsé. Le trajet affiché est immuable pour la durée de l'écran, et
+  /// le texte invite explicitement à enchaîner « Partager » puis
+  /// « Enregistrer » : sans mémoïsation, chaque action refait une
+  /// rastérisation de 1080 x 1350 pour un résultat identique. Même motif que
+  /// `qr_sheet.dart`.
+  Uint8List? _posterBytes;
 
   @override
   void initState() {
@@ -64,49 +150,38 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
     super.dispose();
   }
 
-  String get _shareUrl =>
-      '${widget.shareBaseUrl ?? defaultPosterShareBaseUrl}/public/annonce/${widget.announcement.id}';
+  String _urlFor(PosterShareChannel channel) {
+    final base =
+        '${widget.shareBaseUrl}/public/annonce/${widget.announcement.id}';
+    // Le lien imprimé sur l'image est destiné à être recopié à la main : il
+    // reste nu, un paramètre de plus le rendrait encore moins saisissable.
+    return channel == PosterShareChannel.poster
+        ? base
+        : '$base?c=${channel.code}';
+  }
 
   /// Légende prête à coller dans le texte du post. C'est elle qui porte le lien
   /// cliquable, l'image ne le rendant pas actionnable sur les réseaux.
-  String get _caption {
+  String _captionFor(PosterShareChannel channel) {
     final a = widget.announcement;
-    final dayFmt = DateFormat('EEEE d MMMM', 'fr');
-    final deadlineFmt = DateFormat("d MMMM 'à' HH'h'mm", 'fr');
-    final price = a.pricePerKgDisplay ?? a.pricePerKg;
-    final priceLabel = price == price.roundToDouble()
-        ? price.toStringAsFixed(0)
-        : price.toStringAsFixed(2);
+    final deadline = a.handoverDeadline;
 
-    final lines = <String>[
+    return <String>[
       '✈️ ${a.departureCity} vers ${a.arrivalCity}',
-      '📅 Départ le ${dayFmt.format(a.departureDate)}',
-      if (a.handoverDeadline != null)
-        '⏰ Dernier dépôt le ${deadlineFmt.format(a.handoverDeadline!)}',
-      '📦 ${_kg(a.availableKg)} kg disponibles, $priceLabel${_symbol(a.currency)} le kilo',
+      '📅 Départ le ${TripPosterCard.dayFormat.format(a.departureDate)}',
+      if (deadline != null)
+        '⏰ Dernier dépôt le ${TripPosterCard.deadlineFormat.format(deadline)}',
+      '📦 ${formatKgPrice(a.availableKg)} kg disponibles, '
+          '${formatPriceIn(a.senderPricePerKg, a.currency)} le kilo',
       '',
       'Réservez vos kilos ici :',
-      _shareUrl,
+      _urlFor(channel),
       '',
       'Paiement sécurisé, suivi du colis, voyageur vérifié.',
-    ];
-    return lines.join('\n');
+    ].join('\n');
   }
 
-  static String _kg(double value) => value == value.roundToDouble()
-      ? value.toStringAsFixed(0)
-      : value.toStringAsFixed(2);
-
-  static String _symbol(String currency) => switch (currency) {
-    'EUR' => '€',
-    'USD' => r'$',
-    'GBP' => '£',
-    'CAD' => r'$ CA',
-    'XOF' => 'F CFA',
-    _ => currency,
-  };
-
-  /// Capture l'affiche en PNG.
+  /// Capture l'affiche en PNG, une seule fois par écran.
   ///
   /// Le `RepaintBoundary` porte la taille logique de l'affiche et non celle,
   /// réduite, de l'aperçu : la mise à l'échelle est appliquée par le `FittedBox`
@@ -117,30 +192,55 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
   /// capture d'un `RepaintBoundary` rend un écran noir ou gèle. Valider sur un
   /// appareil réel, pas sur l'AVD.
   Future<Uint8List?> _capture() async {
+    final cached = _posterBytes;
+    if (cached != null) {
+      return cached;
+    }
     final boundary =
         _posterKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
     if (boundary == null) {
       return null;
     }
     final image = await boundary.toImage(pixelRatio: 3);
-    final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-    return byteData?.buffer.asUint8List();
+    try {
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      // ~5,8 Mo de pixels natifs : sans dispose explicite, la libération dépend
+      // d'un finalizer non déterministe.
+      return _posterBytes = byteData?.buffer.asUint8List();
+    } finally {
+      image.dispose();
+    }
   }
 
-  Future<void> _sharePoster() async {
-    if (_busy.value) {
-      return;
-    }
+  /// Coque commune aux deux actions qui produisent l'image : garde de
+  /// réentrance, capture, message d'échec, remise à zéro. Seul le traitement
+  /// des octets diffère entre partager et enregistrer.
+  Future<void> _withPoster(
+    String failureMessage,
+    Future<void> Function(Uint8List bytes) action,
+  ) async {
     _busy.value = true;
-    // Lu avant tout await : sharePositionOriginFor interroge le RenderBox du
-    // contexte, qui peut être démonté pendant les opérations asynchrones.
-    final origin = sharePositionOriginFor(context);
     try {
       final bytes = await _capture();
       if (bytes == null) {
-        _notify('Impossible de générer l\'affiche', DonySnackbarType.error);
+        _notify(failureMessage, DonySnackbarType.error);
         return;
       }
+      await action(bytes);
+    } catch (_) {
+      _notify(failureMessage, DonySnackbarType.error);
+    } finally {
+      if (mounted) {
+        _busy.value = false;
+      }
+    }
+  }
+
+  Future<void> _sharePoster() {
+    // Lu avant tout await : sharePositionOriginFor interroge le RenderBox du
+    // contexte, qui peut être démonté pendant les opérations asynchrones.
+    final origin = sharePositionOriginFor(context);
+    return _withPoster('Impossible de partager l\'affiche', (bytes) async {
       final dir = await getTemporaryDirectory();
       final file = File(
         '${dir.path}/yadony_affiche_${widget.announcement.id}.png',
@@ -151,36 +251,22 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
         [XFile(file.path, mimeType: 'image/png')],
         subject:
             'Trajet ${widget.announcement.departureCity} vers ${widget.announcement.arrivalCity}',
-        text: _caption,
+        text: _captionFor(PosterShareChannel.share),
         sharePositionOrigin: origin,
       );
       if (result.status != ShareResultStatus.dismissed) {
         unawaited(
           getItSafe<AnalyticsService>()?.logEvent(
             AnalyticsEvents.tripPosterShared,
+            properties: {'action': 'share'},
           ),
         );
       }
-    } catch (_) {
-      _notify('Impossible de partager l\'affiche', DonySnackbarType.error);
-    } finally {
-      if (mounted) {
-        _busy.value = false;
-      }
-    }
+    });
   }
 
-  Future<void> _saveToGallery() async {
-    if (_busy.value) {
-      return;
-    }
-    _busy.value = true;
-    try {
-      final bytes = await _capture();
-      if (bytes == null) {
-        _notify('Impossible de générer l\'affiche', DonySnackbarType.error);
-        return;
-      }
+  Future<void> _saveToGallery() {
+    return _withPoster('Impossible d\'enregistrer l\'affiche', (bytes) async {
       await Gal.putImageBytes(
         bytes,
         name: 'yadony_affiche_${widget.announcement.id}.png',
@@ -195,13 +281,7 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
         'Affiche enregistrée dans votre galerie',
         DonySnackbarType.success,
       );
-    } catch (_) {
-      _notify('Impossible d\'enregistrer l\'affiche', DonySnackbarType.error);
-    } finally {
-      if (mounted) {
-        _busy.value = false;
-      }
-    }
+    });
   }
 
   Future<void> _copy({
@@ -230,7 +310,11 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
     final text = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Mon affiche'), centerTitle: false),
+      appBar: AppBar(
+        leading: const DonyAppBarBackButton(),
+        title: const Text('Mon affiche'),
+        centerTitle: false,
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(
           DonySpacing.lg,
@@ -241,10 +325,24 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _Preview(
-              posterKey: _posterKey,
-              announcement: widget.announcement,
-              shareUrl: _shareUrl,
+            // Le RepaintBoundary est SOUS le FittedBox : il conserve donc la
+            // taille logique de l'affiche, et la capture n'hérite pas de la
+            // réduction appliquée pour l'affichage.
+            ClipRRect(
+              borderRadius: BorderRadius.circular(DonyRadius.card),
+              child: AspectRatio(
+                aspectRatio:
+                    TripPosterCard.logicalWidth / TripPosterCard.logicalHeight,
+                child: FittedBox(
+                  child: RepaintBoundary(
+                    key: _posterKey,
+                    child: TripPosterCard(
+                      announcement: widget.announcement,
+                      shareUrl: _urlFor(PosterShareChannel.poster),
+                    ),
+                  ),
+                ),
+              ),
             ),
             const SizedBox(height: DonySpacing.xl),
             Text(
@@ -271,7 +369,7 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
                     onPressed: busy
                         ? null
                         : () => _copy(
-                            value: _caption,
+                            value: _captionFor(PosterShareChannel.caption),
                             confirmation: 'Légende copiée',
                           ),
                   ),
@@ -283,7 +381,7 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
                     onPressed: busy
                         ? null
                         : () => _copy(
-                            value: _shareUrl,
+                            value: _urlFor(PosterShareChannel.link),
                             confirmation: 'Lien copié',
                           ),
                   ),
@@ -298,40 +396,6 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Aperçu mis à l'échelle. Le `RepaintBoundary` est **sous** le `FittedBox` :
-/// il conserve donc la taille logique de l'affiche, et la capture n'hérite pas
-/// de la réduction appliquée pour l'affichage.
-class _Preview extends StatelessWidget {
-  const _Preview({
-    required this.posterKey,
-    required this.announcement,
-    required this.shareUrl,
-  });
-
-  final GlobalKey posterKey;
-  final AnnouncementModel announcement;
-  final String shareUrl;
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(DonyRadius.card),
-      child: AspectRatio(
-        aspectRatio: TripPosterCard.logicalWidth / TripPosterCard.logicalHeight,
-        child: FittedBox(
-          child: RepaintBoundary(
-            key: posterKey,
-            child: TripPosterCard(
-              announcement: announcement,
-              shareUrl: shareUrl,
-            ),
-          ),
         ),
       ),
     );

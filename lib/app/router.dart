@@ -772,20 +772,21 @@ final appRouter = GoRouter(
     ),
 
     // ── Affiche de trajet (hors shell — plein écran) ─────────────────────
-    // Le trajet est passé en `extra` par les deux seuls points d'entrée
-    // (écran de succès de publication, détail trajet propriétaire), qui l'ont
-    // déjà en main. Pas de rechargement réseau : l'affiche doit s'ouvrir
-    // instantanément juste après la publication, c'est là qu'elle est postée.
+    // Même contrat que `/announcements/:id/trip` : l'identifiant suffit, et
+    // `extra` n'est qu'un raccourci d'affichage immédiat pour les appelants qui
+    // tiennent déjà le trajet (succès de publication, détail propriétaire).
     GoRoute(
       path: '/announcements/:id/affiche',
       builder: (context, state) {
-        final announcement = state.extra is AnnouncementModel
+        final id = state.pathParameters['id']!;
+        final extra = state.extra is AnnouncementModel
             ? state.extra as AnnouncementModel
             : null;
-        if (announcement == null) {
-          return const _PosterUnavailableScreen();
-        }
-        return TripPosterScreen(announcement: announcement);
+        return BlocProvider(
+          create: (_) =>
+              getIt<AnnouncementBloc>()..add(AnnouncementDetailRequested(id)),
+          child: TripPosterRoute(initial: extra),
+        );
       },
     ),
 
@@ -1363,27 +1364,6 @@ GoRoute buildHelpTutorialRoute({
     builder: (context, state) => HelpTutorialScreen(
       tutorialId: state.pathParameters['tutorialId']!,
       playerSessionFactory: playerSessionFactory,
-    ),
-  );
-}
-
-/// Repli lorsque `/announcements/:id/affiche` est atteinte sans son `extra`.
-/// Ce n'est pas un parcours utilisateur, seulement un garde-fou : sans le
-/// trajet, il n'y a rien à dessiner et un écran vide serait pire qu'un message.
-class _PosterUnavailableScreen extends StatelessWidget {
-  const _PosterUnavailableScreen();
-
-  @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Mon affiche')),
-    body: const Center(
-      child: Padding(
-        padding: EdgeInsets.all(20),
-        child: Text(
-          'Ouvrez votre affiche depuis le détail du trajet.',
-          textAlign: TextAlign.center,
-        ),
-      ),
     ),
   );
 }

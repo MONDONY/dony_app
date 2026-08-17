@@ -1,3 +1,4 @@
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/screens/trip_poster_screen.dart';
 import 'package:dony/features/matching/presentation/widgets/poster/trip_poster_card.dart';
@@ -86,7 +87,10 @@ void main() {
 
     await _tapAction(tester, 'Copier le lien');
 
-    expect(copied, ['https://api.yadony.test/api/v1/public/annonce/a1']);
+    // Le canal voyage dans l'URL dès la première affiche publiée : une affiche
+    // postée est irrécupérable, un lien sans dimension ne sera jamais
+    // attribuable rétroactivement.
+    expect(copied, ['https://api.yadony.test/api/v1/public/annonce/a1?c=lien']);
   });
 
   /// Sur Facebook, une URL écrite dans l'image n'est pas cliquable : la légende
@@ -100,7 +104,7 @@ void main() {
     expect(copied, hasLength(1));
     expect(
       copied.single,
-      contains('https://api.yadony.test/api/v1/public/annonce/a1'),
+      contains('https://api.yadony.test/api/v1/public/annonce/a1?c=post'),
     );
   });
 
@@ -114,7 +118,7 @@ void main() {
     final caption = copied.single;
     expect(caption, contains('Paris vers Dakar'));
     expect(caption, contains('Dernier dépôt'));
-    expect(caption, contains('8€'));
+    expect(caption, contains(formatPriceIn(8, 'EUR')));
     expect(caption, contains('12 kg'));
   });
 
