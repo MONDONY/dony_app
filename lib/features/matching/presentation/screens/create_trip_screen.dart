@@ -9,7 +9,6 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
-import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -51,7 +50,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:share_plus/share_plus.dart';
 
 class CreateTripArgs {
   final AnnouncementModel? announcement;
@@ -1592,21 +1590,26 @@ class _TripFormContentState extends State<_TripFormContent> {
                       router.push('/announcements/${announcement.id}/trip');
                     },
                     analyticsContext: 'trip_published',
-                    secondaryLabel: isEdit ? null : 'Partager mon trajet',
+                    secondaryLabel: isEdit ? null : 'Partager mon affiche',
+                    // Le partage de texte seul ne convertit pas : sur Facebook,
+                    // c'est le visuel qui arrête le regard, et le lien doit
+                    // vivre dans la légende pour rester cliquable. On envoie
+                    // donc vers l'affiche, qui fournit l'image, le lien et la
+                    // légende en un seul écran.
+                    // Même précaution de contexte que le CTA ci-dessus : le
+                    // GoRouter est capturé AVANT les pops, routeContext étant
+                    // démonté ensuite.
                     onSecondary: isEdit
                         ? null
-                        : () => unawaited(
-                            Share.share(
-                              '✈️ Je voyage ${announcement.departureCity} → '
-                              '${announcement.arrivalCity} le '
-                              '${DateFormat('d MMMM', 'fr').format(announcement.departureDate)} '
-                              'avec de la place dans mes bagages !\n'
-                              'Réserve tes kilos sur Yadony 📦',
-                              sharePositionOrigin: sharePositionOriginFor(
-                                routeContext,
-                              ),
-                            ),
-                          ),
+                        : () {
+                            final router = GoRouter.of(routeContext);
+                            Navigator.of(routeContext).pop();
+                            Navigator.of(context).pop(true);
+                            router.push(
+                              '/announcements/${announcement.id}/affiche',
+                              extra: announcement,
+                            );
+                          },
                   ),
                 ),
               ),

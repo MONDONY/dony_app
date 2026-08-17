@@ -66,6 +66,7 @@ import 'package:dony/features/matching/presentation/screens/publish_intro_screen
 import 'package:dony/features/matching/presentation/screens/shipment_list_screen.dart';
 import 'package:dony/features/matching/presentation/screens/traveler_profile_screen.dart';
 import 'package:dony/features/matching/presentation/screens/trip_owner_detail_screen.dart';
+import 'package:dony/features/matching/presentation/screens/trip_poster_screen.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
@@ -787,6 +788,25 @@ final appRouter = GoRouter(
             BlocProvider(create: (_) => getIt<CancellationBloc>()),
           ],
           child: TripOwnerDetailScreen(announcementId: id, initial: extra),
+        );
+      },
+    ),
+
+    // ── Affiche de trajet (hors shell — plein écran) ─────────────────────
+    // Même contrat que `/announcements/:id/trip` : l'identifiant suffit, et
+    // `extra` n'est qu'un raccourci d'affichage immédiat pour les appelants qui
+    // tiennent déjà le trajet (succès de publication, détail propriétaire).
+    GoRoute(
+      path: '/announcements/:id/affiche',
+      builder: (context, state) {
+        final id = state.pathParameters['id']!;
+        final extra = state.extra is AnnouncementModel
+            ? state.extra as AnnouncementModel
+            : null;
+        return BlocProvider(
+          create: (_) =>
+              getIt<AnnouncementBloc>()..add(AnnouncementDetailRequested(id)),
+          child: TripPosterRoute(initial: extra),
         );
       },
     ),

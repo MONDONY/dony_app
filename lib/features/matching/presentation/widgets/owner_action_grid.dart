@@ -82,6 +82,16 @@ class OwnerActionGrid extends StatelessWidget {
             AnnouncementPublishRequested(a.id),
           ),
         ),
+      // ── Affiche partageable — uniquement tant qu'il reste de la place ──
+      // Une affiche n'a de sens que sur un trajet encore remplissable : la
+      // poster sur un trajet complet ferait venir des expéditeurs pour rien.
+      if (isActive)
+        _tile(
+          iconAsset: 'share-2',
+          label: 'Affiche',
+          accent: cs.primary,
+          onTap: () => context.push('/announcements/${a.id}/affiche', extra: a),
+        ),
       if (isActive && (a.bidsCount ?? 0) == 0)
         _tile(
           iconAsset: 'eye-off',
