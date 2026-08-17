@@ -110,11 +110,21 @@ void main() {
         eventType: 'DEPART',
         gpsLat: 48.8566,
         gpsLon: 2.3522,
+        gpsLabel: 'Paris',
         photoUrl: 'tracking/bid-001/photo.jpg',
         offlineTimestamp: DateTime(2024, 6, 1, 8),
       );
 
       expect(result.bidId, 'bid-001');
+      final payload =
+          verify(
+                () => mockDio.post(
+                  '/tracking/events',
+                  data: captureAny(named: 'data'),
+                ),
+              ).captured.single
+              as Map<String, dynamic>;
+      expect(payload['gpsLabel'], 'Paris');
     });
   });
 
@@ -139,6 +149,31 @@ void main() {
 
       final results = await repo.getEvents('bid-001');
       expect(results, isEmpty);
+    });
+  });
+
+  group('setConfirmationCodePublicVisible', () {
+    test('posts visibility flag and returns updated public state', () async {
+      when(
+        () => mockDio.post(
+          '/tracking/bid-001/confirmation-code/public',
+          queryParameters: {'visible': true},
+        ),
+      ).thenAnswer(
+        (_) async => _ok({
+          'confirmationCode': '4721',
+          'expiresAt': null,
+          'publicPageVisible': true,
+        }, '/tracking/bid-001/confirmation-code/public'),
+      );
+
+      final result = await repo.setConfirmationCodePublicVisible(
+        'bid-001',
+        visible: true,
+      );
+
+      expect(result.code, '4721');
+      expect(result.publicPageVisible, isTrue);
     });
   });
 

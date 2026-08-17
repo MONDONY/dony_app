@@ -108,6 +108,7 @@ class BidModel {
   final String? trackingNumber;
   final String? trackingToken;
   final String? confirmationCode;
+  final bool confirmationCodePublicEnabled;
   final String? travelerId;
   final String? travelerName;
 
@@ -218,6 +219,7 @@ class BidModel {
     this.trackingNumber,
     this.trackingToken,
     this.confirmationCode,
+    this.confirmationCodePublicEnabled = false,
     this.travelerId,
     this.travelerName,
     this.travelerPhoneAvailable = false,

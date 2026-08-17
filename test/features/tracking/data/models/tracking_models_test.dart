@@ -12,6 +12,7 @@ void main() {
       'scannedAt': '2024-01-15T10:00:00Z',
       'gpsLat': 48.8566,
       'gpsLon': 2.3522,
+      'gpsLabel': 'Paris',
       'photoUrl': 'https://cdn.dony.app/photo.jpg',
       'offlineTimestamp': '2024-01-15T09:55:00Z',
       'createdAt': '2024-01-15T10:00:05Z',
@@ -24,6 +25,8 @@ void main() {
       expect(model.eventType, 'TRANSIT');
       expect(model.gpsLat, 48.8566);
       expect(model.gpsLon, 2.3522);
+      expect(model.gpsLabel, 'Paris');
+      expect(model.displayLocationLabel, 'Paris');
       expect(model.photoUrl, 'https://cdn.dony.app/photo.jpg');
       expect(model.offlineTimestamp, isNotNull);
     });
@@ -32,11 +35,14 @@ void main() {
       final json = Map<String, dynamic>.from(baseJson)
         ..['gpsLat'] = null
         ..['gpsLon'] = null
+        ..['gpsLabel'] = null
         ..['photoUrl'] = null
         ..['offlineTimestamp'] = null;
       final model = TrackingEventModel.fromJson(json);
       expect(model.gpsLat, isNull);
       expect(model.gpsLon, isNull);
+      expect(model.gpsLabel, isNull);
+      expect(model.displayLocationLabel, isNull);
       expect(model.photoUrl, isNull);
       expect(model.offlineTimestamp, isNull);
     });
@@ -47,6 +53,14 @@ void main() {
         'eventType': 'DEPART',
       });
       expect(model.stepLabel, 'Départ confirmé');
+    });
+
+    test('displayLocationLabel hides raw coordinates when label is absent', () {
+      final model = TrackingEventModel.fromJson({
+        ...baseJson,
+        'gpsLabel': null,
+      });
+      expect(model.displayLocationLabel, 'Lieu GPS enregistré');
     });
 
     test('stepLabel returns En transit for TRANSIT', () {

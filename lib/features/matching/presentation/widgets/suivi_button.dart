@@ -1,7 +1,9 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
 import 'package:dony/features/tracking/presentation/widgets/tracking_timeline_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 
@@ -30,6 +32,12 @@ class SuiviButton extends StatelessWidget {
         context,
         bidId: bid.id,
         corridor: _corridor,
+        onShareTracking: bid.trackingToken != null
+            ? () => shareTrackingLink(
+                bid,
+                sharePositionOrigin: sharePositionOriginFor(context),
+              )
+            : null,
       ),
       child: Container(
         padding: const EdgeInsets.all(DonySpacing.base),

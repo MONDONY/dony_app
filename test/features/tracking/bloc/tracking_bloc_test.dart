@@ -214,6 +214,30 @@ void main() {
     );
   });
 
+  group('TrackingSetCodePublicVisibilityRequested', () {
+    blocTest<TrackingBloc, TrackingState>(
+      'emits [ConfirmCodePublicVisibilityLoading, ConfirmCodeLoaded] on success',
+      build: buildBloc,
+      setUp: () {
+        when(
+          () =>
+              mockRepo.setConfirmationCodePublicVisible('bid-1', visible: true),
+        ).thenAnswer(
+          (_) async => (code: '472', expiresAt: null, publicPageVisible: true),
+        );
+      },
+      act: (b) => b.add(
+        TrackingSetCodePublicVisibilityRequested('bid-1', visible: true),
+      ),
+      expect: () => [
+        isA<TrackingConfirmCodePublicVisibilityLoading>(),
+        isA<TrackingConfirmCodeLoaded>()
+            .having((s) => s.code, 'code', '472')
+            .having((s) => s.publicPageVisible, 'publicPageVisible', true),
+      ],
+    );
+  });
+
   // ── ConfirmDeliveryRequested ──────────────────────────────────────────────────
 
   group('ConfirmDeliveryRequested', () {

@@ -1,5 +1,4 @@
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
@@ -7,7 +6,6 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_destinataire_card.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
 import 'package:dony/features/matching/presentation/widgets/cancellation_dialog.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
@@ -97,23 +95,6 @@ class _TravelerOptionsSheet extends StatelessWidget {
               },
             ),
             const SizedBox(height: DonySpacing.sm),
-
-            // ── Partager le suivi (only if trackingToken available) ─────────
-            if (bid.trackingToken != null) ...[
-              _OptionTile(
-                iconAsset: 'share-2',
-                iconColor: cs.primary,
-                iconBg: cs.primaryContainer,
-                label: 'Partager le suivi',
-                subtitle: 'Envoyer le lien de suivi à l\'expéditeur',
-                onTap: () {
-                  final origin = sharePositionOriginFor(context);
-                  context.pop();
-                  shareTrackingLink(bid, sharePositionOrigin: origin);
-                },
-              ),
-              const SizedBox(height: DonySpacing.sm),
-            ],
 
             // ── Signaler l'expéditeur (always) ──────────────────────────────
             _OptionTile(

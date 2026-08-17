@@ -56,6 +56,7 @@ abstract final class RetraitCodeSheet {
         child: TalonRetraitCodeView(
           bidId: bid.id,
           initialCode: bid.confirmationCode!,
+          initialPublicPageVisible: bid.confirmationCodePublicEnabled,
           refreshCount: bid.confirmationCodeRefreshCount,
           refreshWindowStart: bid.confirmationCodeRefreshWindowStart,
         ),

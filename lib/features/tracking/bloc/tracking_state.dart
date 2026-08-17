@@ -52,10 +52,17 @@ class TrackingEventsError extends TrackingState {
 class TrackingConfirmCodeLoaded extends TrackingState {
   final String? code;
   final DateTime? expiresAt;
-  TrackingConfirmCodeLoaded(this.code, {this.expiresAt});
+  final bool publicPageVisible;
+  TrackingConfirmCodeLoaded(
+    this.code, {
+    this.expiresAt,
+    this.publicPageVisible = false,
+  });
 }
 
 class TrackingRefreshCodeLoading extends TrackingState {}
+
+class TrackingConfirmCodePublicVisibilityLoading extends TrackingState {}
 
 class TrackingRefreshCodeError extends TrackingState {
   final AppException error;

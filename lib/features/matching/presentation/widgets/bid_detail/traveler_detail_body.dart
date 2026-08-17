@@ -6,7 +6,6 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/colis_destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/details_accordion.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/expediteur_contact_card.dart';
-import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/sender_detail_body.dart'
     show RatingDoneBadge;
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_gain_card.dart';
@@ -101,8 +100,7 @@ class _TravelerDetailBodyState extends State<TravelerDetailBody> {
         ExpediteurContactCard(bid: widget.bid),
       ColisDestinataireCard(bid: widget.bid),
       TravelerGainCard(bid: widget.bid),
-      if (_activeStatuses.contains(status)) QuickActionsRow(bid: widget.bid),
-      DetailsAccordion(bid: widget.bid),
+      DetailsAccordion(bid: widget.bid, showTrackingLink: false),
       if (status == 'COMPLETED' && widget.bid.travelerHasRated)
         const RatingDoneBadge(),
     ];

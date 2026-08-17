@@ -49,6 +49,8 @@ BidModel _$BidModelFromJson(Map<String, dynamic> json) => BidModel(
   trackingNumber: json['trackingNumber'] as String?,
   trackingToken: json['trackingToken'] as String?,
   confirmationCode: json['confirmationCode'] as String?,
+  confirmationCodePublicEnabled:
+      json['confirmationCodePublicEnabled'] as bool? ?? false,
   travelerId: json['travelerId'] as String?,
   travelerName: json['travelerName'] as String?,
   travelerPhoneAvailable: json['travelerPhoneAvailable'] as bool? ?? false,
@@ -145,6 +147,7 @@ Map<String, dynamic> _$BidModelToJson(BidModel instance) => <String, dynamic>{
   'trackingNumber': instance.trackingNumber,
   'trackingToken': instance.trackingToken,
   'confirmationCode': instance.confirmationCode,
+  'confirmationCodePublicEnabled': instance.confirmationCodePublicEnabled,
   'travelerId': instance.travelerId,
   'travelerName': instance.travelerName,
   'travelerPhoneAvailable': instance.travelerPhoneAvailable,

@@ -1,7 +1,7 @@
 name: dony
 description: "P2P marketplace connecting travelers and senders for package delivery to Africa."
 publish_to: 'none'
-version: 1.0.0+30
+version: 1.0.0+31
 
 environment:
   sdk: ^3.11.5

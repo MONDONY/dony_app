@@ -24,6 +24,7 @@ class TalonRetraitCodeView extends StatefulWidget {
   final String initialCode;
   final int refreshCount;
   final DateTime? refreshWindowStart;
+  final bool initialPublicPageVisible;
 
   const TalonRetraitCodeView({
     super.key,
@@ -31,6 +32,7 @@ class TalonRetraitCodeView extends StatefulWidget {
     required this.initialCode,
     required this.refreshCount,
     this.refreshWindowStart,
+    this.initialPublicPageVisible = false,
   });
 
   @override
@@ -123,14 +125,20 @@ class _TalonRetraitCodeViewState extends State<TalonRetraitCodeView> {
       },
       buildWhen: (_, c) =>
           c is TrackingRefreshCodeLoading ||
+          c is TrackingConfirmCodePublicVisibilityLoading ||
           c is TrackingConfirmCodeLoaded ||
           c is TrackingRefreshCodeError,
       builder: (ctx, state) {
         final isApiLoading = state is TrackingRefreshCodeLoading;
+        final isVisibilityLoading =
+            state is TrackingConfirmCodePublicVisibilityLoading;
         final isBlocked = _isRateLimited || isApiLoading;
         final displayCode = state is TrackingConfirmCodeLoaded
             ? state.code ?? widget.initialCode
             : widget.initialCode;
+        final isPublicPageVisible = state is TrackingConfirmCodeLoaded
+            ? state.publicPageVisible
+            : widget.initialPublicPageVisible;
 
         return Container(
           padding: const EdgeInsets.all(DonySpacing.base),
@@ -228,6 +236,89 @@ class _TalonRetraitCodeViewState extends State<TalonRetraitCodeView> {
                   ),
                 ),
               ),
+              const SizedBox(height: DonySpacing.sm),
+              Opacity(
+                opacity: isVisibilityLoading ? 0.55 : 1.0,
+                child: GestureDetector(
+                  onTap: isVisibilityLoading
+                      ? null
+                      : () => ctx.read<TrackingBloc>().add(
+                          TrackingSetCodePublicVisibilityRequested(
+                            widget.bidId,
+                            visible: !isPublicPageVisible,
+                          ),
+                        ),
+                  child: SizedBox(
+                    height: 44,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: isPublicPageVisible
+                            ? cs.successLight
+                            : cs.primaryContainer,
+                        borderRadius: BorderRadius.circular(DonyRadius.md),
+                        border: Border.all(
+                          color: isPublicPageVisible
+                              ? cs.success.withValues(alpha: 0.28)
+                              : cs.primary.withValues(alpha: 0.20),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          if (isVisibilityLoading)
+                            SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: isPublicPageVisible
+                                    ? cs.success
+                                    : cs.onPrimaryContainer,
+                              ),
+                            )
+                          else
+                            DonyIcon(
+                              isPublicPageVisible ? 'check' : 'link',
+                              size: 16,
+                              color: isPublicPageVisible
+                                  ? cs.success
+                                  : cs.onPrimaryContainer,
+                            ),
+                          const SizedBox(width: DonySpacing.sm),
+                          Flexible(
+                            child: Text(
+                              isVisibilityLoading
+                                  ? 'Mise à jour…'
+                                  : isPublicPageVisible
+                                  ? 'Retirer le code de la page de suivi'
+                                  : 'Mettre le code sur la page de suivi',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: tt.titleSmall?.copyWith(
+                                color: isPublicPageVisible
+                                    ? cs.success
+                                    : cs.onPrimaryContainer,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              if (isPublicPageVisible) ...[
+                const SizedBox(height: DonySpacing.xs),
+                Center(
+                  child: Text(
+                    'Code visible sur la page de suivi',
+                    style: tt.bodySmall?.copyWith(
+                      color: cs.success,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
               const SizedBox(height: DonySpacing.sm),
               // Fix #4: 44pt touch target for regenerate button
               Opacity(

@@ -17,6 +17,8 @@ class _MockTrackingBloc extends MockBloc<TrackingEvent, TrackingState>
 
 class _MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
 
+class _FakeTrackingEvent extends Fake implements TrackingEvent {}
+
 Future<void> _pump(
   WidgetTester tester,
   _MockTrackingBloc t,
@@ -49,11 +51,17 @@ Future<void> _pump(
 }
 
 void main() {
+  setUpAll(() {
+    registerFallbackValue(_FakeTrackingEvent());
+  });
+
   testWidgets('affiche le code de retrait initial', (tester) async {
     final t = _MockTrackingBloc();
     final b = _MockBidBloc();
     when(() => t.state).thenReturn(TrackingInitial());
+    when(() => t.stream).thenAnswer((_) => const Stream<TrackingState>.empty());
     when(() => b.state).thenReturn(BidInitial());
+    when(() => b.stream).thenAnswer((_) => const Stream<BidState>.empty());
     await _pump(tester, t, b);
     // Digit-box restyle: each digit is a separate Text widget
     for (final d in '4729'.split('')) {
@@ -61,6 +69,57 @@ void main() {
     }
     expect(find.text('Copier le code'), findsOneWidget);
     expect(find.textContaining('Régénérer'), findsOneWidget);
+    expect(find.text('Mettre le code sur la page de suivi'), findsOneWidget);
+  });
+
+  testWidgets(
+    'tap publier le code → dispatch TrackingSetCodePublicVisibilityRequested',
+    (tester) async {
+      final t = _MockTrackingBloc();
+      final b = _MockBidBloc();
+      when(() => t.state).thenReturn(TrackingInitial());
+      when(
+        () => t.stream,
+      ).thenAnswer((_) => const Stream<TrackingState>.empty());
+      when(() => b.state).thenReturn(BidInitial());
+      when(() => b.stream).thenAnswer((_) => const Stream<BidState>.empty());
+      await _pump(tester, t, b);
+
+      await tester.tap(find.text('Mettre le code sur la page de suivi'));
+      await tester.pump();
+
+      verify(
+        () => t.add(
+          any(
+            that: isA<TrackingSetCodePublicVisibilityRequested>()
+                .having((e) => e.bidId, 'bidId', 'bid-1')
+                .having((e) => e.visible, 'visible', true),
+          ),
+        ),
+      ).called(1);
+    },
+  );
+
+  testWidgets('code public visible → affiche état partagé et action retirer', (
+    tester,
+  ) async {
+    final t = _MockTrackingBloc();
+    final b = _MockBidBloc();
+    when(
+      () => t.state,
+    ).thenReturn(TrackingConfirmCodeLoaded('4729', publicPageVisible: true));
+    when(() => t.stream).thenAnswer(
+      (_) => Stream.value(
+        TrackingConfirmCodeLoaded('4729', publicPageVisible: true),
+      ),
+    );
+    when(() => b.state).thenReturn(BidInitial());
+    when(() => b.stream).thenAnswer((_) => const Stream<BidState>.empty());
+
+    await _pump(tester, t, b);
+
+    expect(find.text('Code visible sur la page de suivi'), findsOneWidget);
+    expect(find.text('Retirer le code de la page de suivi'), findsOneWidget);
   });
 
   // Fix #6: overflow regression test on a narrow 360dp device with 6-digit code
@@ -76,7 +135,11 @@ void main() {
       final t = _MockTrackingBloc();
       final b = _MockBidBloc();
       when(() => t.state).thenReturn(TrackingInitial());
+      when(
+        () => t.stream,
+      ).thenAnswer((_) => const Stream<TrackingState>.empty());
       when(() => b.state).thenReturn(BidInitial());
+      when(() => b.stream).thenAnswer((_) => const Stream<BidState>.empty());
 
       await _pump(tester, t, b, initialCode: '472913');
       await tester.pump(const Duration(milliseconds: 400));
@@ -133,7 +196,11 @@ void main() {
       final t = _MockTrackingBloc();
       final b = _MockBidBloc();
       when(() => t.state).thenReturn(TrackingInitial());
+      when(
+        () => t.stream,
+      ).thenAnswer((_) => const Stream<TrackingState>.empty());
       when(() => b.state).thenReturn(BidInitial());
+      when(() => b.stream).thenAnswer((_) => const Stream<BidState>.empty());
       // refreshCount = 5 (max) with a recent window start = rate limited
       final recentWindow = DateTime.now().toUtc().subtract(
         const Duration(hours: 1),
@@ -160,7 +227,11 @@ void main() {
       final t = _MockTrackingBloc();
       final b = _MockBidBloc();
       when(() => t.state).thenReturn(TrackingInitial());
+      when(
+        () => t.stream,
+      ).thenAnswer((_) => const Stream<TrackingState>.empty());
       when(() => b.state).thenReturn(BidInitial());
+      when(() => b.stream).thenAnswer((_) => const Stream<BidState>.empty());
       // windowStart 25h ago → window expired, not rate limited
       final expiredWindow = DateTime.now().toUtc().subtract(
         const Duration(hours: 25),

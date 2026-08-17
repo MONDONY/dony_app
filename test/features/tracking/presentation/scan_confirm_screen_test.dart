@@ -51,6 +51,7 @@ Widget _wrap(
   String? photoPath,
   double? gpsLat,
   double? gpsLon,
+  String? gpsLabel,
 }) {
   final router = GoRouter(
     routes: [
@@ -69,6 +70,7 @@ Widget _wrap(
             photoPath: photoPath,
             gpsLat: gpsLat,
             gpsLon: gpsLon,
+            gpsLabel: gpsLabel,
           ),
         ),
       ),
@@ -246,16 +248,19 @@ void main() {
   });
 
   // ─── GPS display ─────────────────────────────────────────────────────────
-  testWidgets('affiche GPS quand gpsLat/gpsLon fournis', (tester) async {
+  testWidgets('affiche le nom du lieu quand gpsLabel est fourni', (
+    tester,
+  ) async {
     final bloc = MockTrackingBloc();
     when(() => bloc.state).thenReturn(TrackingInitial());
     whenListen(bloc, const Stream<TrackingState>.empty());
     await tester.pumpWidget(
-      _wrap('DEPART', bloc, gpsLat: 48.8566, gpsLon: 2.3522),
+      _wrap('DEPART', bloc, gpsLat: 48.8566, gpsLon: 2.3522, gpsLabel: 'Paris'),
     );
     await tester.pump();
-    expect(find.textContaining('48.8566'), findsOneWidget);
-    expect(find.textContaining('2.3522'), findsOneWidget);
+    expect(find.text('Paris'), findsOneWidget);
+    expect(find.textContaining('48.8566'), findsNothing);
+    expect(find.textContaining('2.3522'), findsNothing);
   });
 
   // ─── "Reprendre photo" visible si photoPath fourni ───────────────────────

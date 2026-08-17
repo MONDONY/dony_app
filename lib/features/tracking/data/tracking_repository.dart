@@ -5,6 +5,12 @@ import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
 import 'package:dony/features/tracking/data/models/tracking_search_model.dart';
 import 'package:dony/features/tracking/data/models/trip_scan_history_entry_model.dart';
 
+typedef ConfirmationCodeResult = ({
+  String? code,
+  DateTime? expiresAt,
+  bool publicPageVisible,
+});
+
 class TrackingRepository {
   final ApiClient _apiClient;
 
@@ -28,6 +34,7 @@ class TrackingRepository {
     required String eventType,
     double? gpsLat,
     double? gpsLon,
+    String? gpsLabel,
     String? photoUrl,
     DateTime? offlineTimestamp,
   }) async {
@@ -38,6 +45,7 @@ class TrackingRepository {
         'eventType': eventType,
         'gpsLat': ?gpsLat,
         'gpsLon': ?gpsLon,
+        'gpsLabel': ?gpsLabel,
         'photoUrl': ?photoUrl,
         if (offlineTimestamp != null)
           'offlineTimestamp': offlineTimestamp.toUtc().toIso8601String(),
@@ -80,15 +88,31 @@ class TrackingRepository {
     return (response.data as Map<String, dynamic>)['key'] as String;
   }
 
-  Future<({String? code, DateTime? expiresAt})> refreshCode(
-    String bidId,
-  ) async {
+  Future<ConfirmationCodeResult> refreshCode(String bidId) async {
     final response = await _apiClient.dio.post('/tracking/$bidId/refresh-code');
     final data = response.data as Map<String, dynamic>;
     final rawExpiry = data['expiresAt'] as String?;
     return (
       code: data['confirmationCode'] as String?,
       expiresAt: rawExpiry != null ? DateTime.parse(rawExpiry) : null,
+      publicPageVisible: data['publicPageVisible'] as bool? ?? false,
+    );
+  }
+
+  Future<ConfirmationCodeResult> setConfirmationCodePublicVisible(
+    String bidId, {
+    required bool visible,
+  }) async {
+    final response = await _apiClient.dio.post(
+      '/tracking/$bidId/confirmation-code/public',
+      queryParameters: {'visible': visible},
+    );
+    final data = response.data as Map<String, dynamic>;
+    final rawExpiry = data['expiresAt'] as String?;
+    return (
+      code: data['confirmationCode'] as String?,
+      expiresAt: rawExpiry != null ? DateTime.parse(rawExpiry) : null,
+      publicPageVisible: data['publicPageVisible'] as bool? ?? false,
     );
   }
 

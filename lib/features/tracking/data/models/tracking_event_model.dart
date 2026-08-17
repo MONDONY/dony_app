@@ -5,6 +5,7 @@ class TrackingEventModel {
   final DateTime scannedAt;
   final double? gpsLat;
   final double? gpsLon;
+  final String? gpsLabel;
   final String? photoUrl;
   final DateTime? offlineTimestamp;
   final DateTime createdAt;
@@ -16,6 +17,7 @@ class TrackingEventModel {
     required this.scannedAt,
     this.gpsLat,
     this.gpsLon,
+    this.gpsLabel,
     this.photoUrl,
     this.offlineTimestamp,
     required this.createdAt,
@@ -29,6 +31,7 @@ class TrackingEventModel {
         scannedAt: DateTime.parse(json['scannedAt'] as String),
         gpsLat: (json['gpsLat'] as num?)?.toDouble(),
         gpsLon: (json['gpsLon'] as num?)?.toDouble(),
+        gpsLabel: json['gpsLabel'] as String?,
         photoUrl: json['photoUrl'] as String?,
         offlineTimestamp: json['offlineTimestamp'] == null
             ? null
@@ -42,4 +45,11 @@ class TrackingEventModel {
     'ARRIVEE' => 'Arrivée confirmée',
     _ => eventType,
   };
+
+  String? get displayLocationLabel {
+    final label = gpsLabel?.trim();
+    if (label != null && label.isNotEmpty) return label;
+    if (gpsLat != null && gpsLon != null) return 'Lieu GPS enregistré';
+    return null;
+  }
 }

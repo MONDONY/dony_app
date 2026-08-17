@@ -551,12 +551,12 @@ void main() {
   // ── trackingPublicUrl ─────────────────────────────────────────────────────
   group('trackingPublicUrl', () {
     test(
-      'returns default base https://track.yadony.com with token appended',
+      'returns default base https://yadony.com/tracking with token appended',
       () {
         // TRACKING_PUBLIC_URL env var not set in test → default value used.
         expect(
           trackingPublicUrl('abc-token-123'),
-          equals('https://track.yadony.com/abc-token-123'),
+          equals('https://yadony.com/tracking/abc-token-123'),
         );
       },
     );
@@ -564,7 +564,7 @@ void main() {
     test('token with slashes is preserved as-is', () {
       expect(
         trackingPublicUrl('tok/2026/xyz'),
-        equals('https://track.yadony.com/tok/2026/xyz'),
+        equals('https://yadony.com/tracking/tok/2026/xyz'),
       );
     });
   });
@@ -747,6 +747,50 @@ void main() {
 
         // Le sheet de suivi doit être ouvert (titre visible).
         expect(find.text('Suivi du colis'), findsWidgets);
+      },
+    );
+
+    testWidgets(
+      'timeline sheet chargée avec token → bouton Partager le suivi, pas de placeholder',
+      (tester) async {
+        const shareChannel = MethodChannel('dev.fluttercommunity.plus/share');
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(shareChannel, (call) async => null);
+
+        addTearDown(() {
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+              .setMockMethodCallHandler(shareChannel, null);
+        });
+
+        final trackingBloc = _MockTrackingBloc();
+        when(() => trackingBloc.state).thenReturn(TrackingEventsLoaded([]));
+        when(
+          () => trackingBloc.stream,
+        ).thenAnswer((_) => const Stream<TrackingState>.empty());
+
+        if (getIt.isRegistered<TrackingBloc>()) {
+          getIt.unregister<TrackingBloc>();
+        }
+        getIt.registerFactory<TrackingBloc>(() => trackingBloc);
+        addTearDown(() {
+          if (getIt.isRegistered<TrackingBloc>()) {
+            getIt.unregister<TrackingBloc>();
+          }
+        });
+
+        final bid = _bid(
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          trackingToken: 'tok-share-sheet',
+        );
+
+        await tester.pumpWidget(hostQuickActions(bid));
+
+        await tester.tap(find.text('Suivi du colis'));
+        await tester.pumpAndSettle();
+
+        expect(find.text("J'ouvre la confirmation"), findsNothing);
+        expect(find.text('Partager le suivi'), findsWidgets);
       },
     );
 
