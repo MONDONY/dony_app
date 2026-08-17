@@ -64,7 +64,11 @@ class BilletTalon extends StatelessWidget {
         // Le code de retrait existe dès la remise (HANDED_OVER). Comme le QR,
         // il s'ouvre dans un bottom sheet : deux boutons côte à côte dans le
         // talon, le QR restant accessible jusqu'au retrait.
-        'HANDED_OVER' || 'IN_TRANSIT' when bid.confirmationCode != null => Row(
+        // ARRIVED (voyageur arrivé à destination) se comporte comme IN_TRANSIT :
+        // c'est justement le moment où le code de retrait sert le plus.
+        'HANDED_OVER' ||
+        'IN_TRANSIT' ||
+        'ARRIVED' when bid.confirmationCode != null => Row(
           children: [
             Expanded(child: _QrTalonButton(bid: bid, compact: true)),
             const SizedBox(width: DonySpacing.sm),
@@ -73,7 +77,8 @@ class BilletTalon extends StatelessWidget {
         ),
         // Code pas encore disponible → bouton QR seul, pleine largeur.
         'HANDED_OVER' ||
-        'IN_TRANSIT' => _QrTalonButton(bid: bid, compact: true),
+        'IN_TRANSIT' ||
+        'ARRIVED' => _QrTalonButton(bid: bid, compact: true),
         'COMPLETED' || 'DELIVERED' => const _DoneBlock(),
         'CANCELLED' => _CancelledBlock(bid: bid, isSender: true),
         'REJECTED' => _RejectedBlock(bid: bid, isSender: true),
@@ -88,9 +93,12 @@ class BilletTalon extends StatelessWidget {
       // lien vers les étapes du Suivi (ScanHub : Départ/Transit/Arrivée + scan
       // QR + identification par numéro). La barre collante garde son CTA
       // contextuel (Scanner le colis / Valider la remise).
+      // ARRIVED : le trajet est arrivé mais le scan d'arrivée reste à faire →
+      // le voyageur garde l'accès aux étapes de scan.
       'ACCEPTED' ||
       'HANDED_OVER' ||
-      'IN_TRANSIT' => const _TravelerScanStepsButton(),
+      'IN_TRANSIT' ||
+      'ARRIVED' => const _TravelerScanStepsButton(),
       'COMPLETED' || 'DELIVERED' => const _DoneBlock(),
       'CANCELLED' => _CancelledBlock(bid: bid, isSender: false),
       'REJECTED' => _RejectedBlock(bid: bid, isSender: false),

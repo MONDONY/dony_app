@@ -87,6 +87,11 @@ void main() {
     expect(find.textContaining('Livraison confirmée'), findsOneWidget);
   });
 
+  testWidgets('ARRIVED → arrivé à destination', (tester) async {
+    await _pump(tester, _bid(status: 'ARRIVED'));
+    expect(find.textContaining('Arrivé'), findsOneWidget);
+  });
+
   testWidgets('date limite dépassée → bouton signaler absence expéditeur', (
     tester,
   ) async {

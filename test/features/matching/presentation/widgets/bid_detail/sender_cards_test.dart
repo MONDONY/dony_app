@@ -531,6 +531,21 @@ void main() {
         expect(find.text('Non encore'), findsNothing);
       },
     );
+
+    // Régression : un colis ARRIVED est forcément passé par HANDED_OVER puis
+    // IN_TRANSIT — afficher « Non encore » y était faux.
+    testWidgets('ARRIVED → "Colis remis ✓" (jamais "Non encore")', (
+      tester,
+    ) async {
+      final bid = _bid(status: 'ARRIVED', handoverLocation: 'CDG');
+      await tester.pumpWidget(_hostAccordion(bid));
+      await tester.tap(find.textContaining('Plus de détails'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text('Colis remis ✓'), findsOneWidget);
+      expect(find.text('Non encore'), findsNothing);
+    });
   });
 
   // ── trackingPublicUrl ─────────────────────────────────────────────────────

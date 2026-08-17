@@ -74,15 +74,16 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
     'TRIP_CANCELLED' when _isUuid(bidId) => '/bids/$bidId',
     'TRIP_CANCELLED' => '/profile/shipments/history',
 
-    // Négociation — les deux parties naviguent vers le thread
-    'negotiation_started' when _isUuid(threadId) => '/negotiations/$threadId',
-    'negotiation_counter' when _isUuid(threadId) => '/negotiations/$threadId',
-    'negotiation_awaiting_trip' when _isUuid(threadId) =>
+    // Négociation — les deux parties naviguent vers le thread, quel que soit le
+    // sous-type. Le préfixe couvre d'un coup tous les `negotiation*` émis par le
+    // back (offre, contre-offre, attente de trajet, de paiement ou de commission,
+    // renoncement, expiration) : un nouveau type serveur mène désormais au fil
+    // sans qu'il faille penser à l'inscrire ici. C'est cet oubli qui laissait
+    // `negotiation_commission_declined` et `negotiation_commission_expired`
+    // ouvrir une notification inerte, alors qu'elles annoncent justement à
+    // l'utilisateur que son accord vient de tomber.
+    final String t when t.startsWith('negotiation') && _isUuid(threadId) =>
       '/negotiations/$threadId',
-    'negotiation_awaiting_payment' when _isUuid(threadId) =>
-      '/negotiations/$threadId',
-    'negotiation_expired' when _isUuid(threadId) => '/negotiations/$threadId',
-    'negotiation' when _isUuid(threadId) => '/negotiations/$threadId',
     'request_accepted' when _isUuid(threadId) => '/negotiations/$threadId',
 
     // Demande expirée avant toute négociation → pas de thread, retour à la demande

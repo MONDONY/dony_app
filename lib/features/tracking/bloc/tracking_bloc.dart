@@ -21,7 +21,6 @@ class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
     on<TrackingQrCodeRequested>(_onQrCodeRequested);
     on<TrackingSearchRequested>(_onSearchRequested);
     on<TrackingEventsRequested>(_onEventsRequested);
-    on<TrackingConfirmCodeRequested>(_onConfirmCodeRequested);
     on<TrackingRefreshCodeRequested>(_onRefreshCodeRequested);
     on<TrackingSetCodePublicVisibilityRequested>(
       _onSetCodePublicVisibilityRequested,
@@ -68,25 +67,6 @@ class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
     } catch (e) {
       if (kDebugMode) debugPrint('[TrackingBloc] getEvents error: $e');
       emit(TrackingEventsError(unwrapDioError(e)));
-    }
-  }
-
-  Future<void> _onConfirmCodeRequested(
-    TrackingConfirmCodeRequested event,
-    Emitter<TrackingState> emit,
-  ) async {
-    emit(TrackingConfirmCodeLoading());
-    try {
-      final result = await _repository.getConfirmationCode(event.bidId);
-      emit(
-        TrackingConfirmCodeLoaded(
-          result.code,
-          expiresAt: result.expiresAt,
-          publicPageVisible: result.publicPageVisible,
-        ),
-      );
-    } catch (e) {
-      emit(TrackingConfirmCodeError());
     }
   }
 

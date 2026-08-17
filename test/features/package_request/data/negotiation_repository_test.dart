@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/features/matching/data/models/acceptance_response.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/negotiation_repository.dart';
@@ -63,6 +64,62 @@ void main() {
       expect(thread.id, 'th-1');
       expect(thread.status, NegotiationThreadStatus.open);
       expect(thread.currentPriceEur, 30.0);
+    });
+
+    test('sends createDedicatedTrip payload when provided', () async {
+      Map<String, dynamic>? sentData;
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer((inv) async {
+        sentData =
+            inv.namedArguments[const Symbol('data')] as Map<String, dynamic>;
+        return _ok(_threadJson, '/negotiations');
+      });
+
+      await repo.start(
+        packageRequestId: 'pr-1',
+        proposedPriceEur: 30.0,
+        travelerTravelDate: DateTime(2026, 6, 15),
+        travelerAvailableKg: 10.0,
+        createDedicatedTrip: true,
+        dedicatedTripPayload: {
+          'departureDate': '2026-06-15',
+          'pickupAddress': {'label': 'Pickup', 'lat': 48.8, 'lng': 2.3},
+          'deliveryAddress': {'label': 'Delivery', 'lat': 5.3, 'lng': -4.0},
+          'useCardForCommission': false,
+        },
+      );
+
+      expect(sentData?['createDedicatedTrip'], isTrue);
+      expect(sentData?['dedicatedTrip'], isA<Map<String, dynamic>>());
+    });
+
+    test('defaults createDedicatedTrip to false and omits dedicatedTrip '
+        'when not provided', () async {
+      Map<String, dynamic>? sentData;
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer((inv) async {
+        sentData =
+            inv.namedArguments[const Symbol('data')] as Map<String, dynamic>;
+        return _ok(_threadJson, '/negotiations');
+      });
+
+      await repo.start(
+        packageRequestId: 'pr-1',
+        proposedPriceEur: 30.0,
+        travelerTravelDate: DateTime(2026, 6, 15),
+        travelerAvailableKg: 10.0,
+      );
+
+      expect(sentData?['createDedicatedTrip'], isFalse);
+      expect(sentData?.containsKey('dedicatedTrip'), isFalse);
     });
   });
 
@@ -524,5 +581,277 @@ void main() {
         expect(thread.canNudge, isFalse);
       },
     );
+  });
+
+  // ── settleCommission ─────────────────────────────────────────────────────────
+
+  group('settleCommission', () {
+    test('POSTs to /negotiations/:id/settle-commission and returns '
+        'AcceptanceResponse on success (200 ACCEPTED)', () async {
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/settle-commission',
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenAnswer(
+        (_) async =>
+            _ok({'status': 'ACCEPTED'}, '/negotiations/th-1/settle-commission'),
+      );
+
+      final result = await repo.settleCommission('th-1');
+      expect(result.status, AcceptanceStatus.accepted);
+    });
+
+    test('sends WALLET_FIRST commissionSource by default', () async {
+      dynamic capturedQuery;
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/settle-commission',
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenAnswer((inv) async {
+        capturedQuery = inv.namedArguments[const Symbol('queryParameters')];
+        return _ok({
+          'status': 'ACCEPTED',
+        }, '/negotiations/th-1/settle-commission');
+      });
+
+      await repo.settleCommission('th-1');
+
+      expect((capturedQuery as Map)['commissionSource'], 'WALLET_FIRST');
+    });
+
+    test('forwards CARD commissionSource when specified', () async {
+      dynamic capturedQuery;
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/settle-commission',
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenAnswer((inv) async {
+        capturedQuery = inv.namedArguments[const Symbol('queryParameters')];
+        return _ok({
+          'status': 'ACCEPTED',
+        }, '/negotiations/th-1/settle-commission');
+      });
+
+      await repo.settleCommission('th-1', commissionSource: 'CARD');
+
+      expect((capturedQuery as Map)['commissionSource'], 'CARD');
+    });
+
+    test(
+      'parses 409 DioException body as insufficientWallet AcceptanceResponse '
+      'with the amounts to display',
+      () async {
+        final insufficientJson = {
+          'status': 'INSUFFICIENT_WALLET',
+          'availableBalance': 1.0,
+          'requiredCommission': 5.0,
+          'hasCard': true,
+          'currency': 'EUR',
+        };
+        when(
+          () => mockDio.post<Map<String, dynamic>>(
+            '/negotiations/th-1/settle-commission',
+            queryParameters: any(named: 'queryParameters'),
+          ),
+        ).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(
+              path: '/negotiations/th-1/settle-commission',
+            ),
+            response: Response(
+              requestOptions: RequestOptions(
+                path: '/negotiations/th-1/settle-commission',
+              ),
+              statusCode: 409,
+              data: insufficientJson,
+            ),
+          ),
+        );
+
+        final result = await repo.settleCommission('th-1');
+        expect(result.status, AcceptanceStatus.insufficientWallet);
+        expect(result.availableBalance, 1.0);
+        expect(result.requiredCommission, 5.0);
+        expect(result.hasCard, isTrue);
+        expect(result.currency, 'EUR');
+      },
+    );
+
+    test('parses 422 DioException body as failed AcceptanceResponse', () async {
+      final failedJson = {'status': 'FAILED', 'error': 'Carte refusée'};
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/settle-commission',
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(
+            path: '/negotiations/th-1/settle-commission',
+          ),
+          response: Response(
+            requestOptions: RequestOptions(
+              path: '/negotiations/th-1/settle-commission',
+            ),
+            statusCode: 422,
+            data: failedJson,
+          ),
+        ),
+      );
+
+      final result = await repo.settleCommission('th-1');
+      expect(result.status, AcceptanceStatus.failed);
+      expect(result.error, 'Carte refusée');
+    });
+
+    test('rethrows a 409 race-guard RFC 7807 body cleanly instead of crashing '
+        'or masking it as an AcceptanceResponse — plusieurs voyageurs peuvent '
+        'régler en même temps, le corps porte un `status` NUMÉRIQUE (409, pas '
+        "'INSUFFICIENT_WALLET') qui ne doit jamais atteindre "
+        'AcceptanceResponse.fromJson', () async {
+      final raceGuardJson = {
+        'type': 'about:blank',
+        'title': 'Conflict',
+        'status': 409,
+        'detail': 'La demande a déjà été acceptée par un autre voyageur.',
+        'code': 'request/already-accepted',
+      };
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/settle-commission',
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(
+            path: '/negotiations/th-1/settle-commission',
+          ),
+          response: Response(
+            requestOptions: RequestOptions(
+              path: '/negotiations/th-1/settle-commission',
+            ),
+            statusCode: 409,
+            data: raceGuardJson,
+          ),
+        ),
+      );
+
+      await expectLater(
+        repo.settleCommission('th-1'),
+        throwsA(isA<DioException>()),
+      );
+    });
+
+    test('rethrows DioException non-409-422', () async {
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/settle-commission',
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(
+            path: '/negotiations/th-1/settle-commission',
+          ),
+          type: DioExceptionType.connectionTimeout,
+        ),
+      );
+
+      await expectLater(
+        repo.settleCommission('th-1'),
+        throwsA(isA<DioException>()),
+      );
+    });
+  });
+
+  // ── confirmCommission ────────────────────────────────────────────────────────
+
+  group('confirmCommission', () {
+    test('POSTs to /negotiations/:id/confirm-commission and returns '
+        'ConfirmResponse accepted on success', () async {
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/confirm-commission',
+        ),
+      ).thenAnswer(
+        (_) async =>
+            _ok({'accepted': true}, '/negotiations/th-1/confirm-commission'),
+      );
+
+      final result = await repo.confirmCommission('th-1');
+      expect(result.accepted, isTrue);
+    });
+
+    test('parses 422 DioException body as ConfirmResponse when confirmation '
+        'fails post-3DS', () async {
+      final failedJson = {
+        'accepted': false,
+        'error': 'Confirmation refusée par la banque',
+      };
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/confirm-commission',
+        ),
+      ).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(
+            path: '/negotiations/th-1/confirm-commission',
+          ),
+          response: Response(
+            requestOptions: RequestOptions(
+              path: '/negotiations/th-1/confirm-commission',
+            ),
+            statusCode: 422,
+            data: failedJson,
+          ),
+        ),
+      );
+
+      final result = await repo.confirmCommission('th-1');
+      expect(result.accepted, isFalse);
+      expect(result.error, 'Confirmation refusée par la banque');
+    });
+
+    test('rethrows DioException non-422', () async {
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/confirm-commission',
+        ),
+      ).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(
+            path: '/negotiations/th-1/confirm-commission',
+          ),
+          type: DioExceptionType.connectionTimeout,
+        ),
+      );
+
+      await expectLater(
+        repo.confirmCommission('th-1'),
+        throwsA(isA<DioException>()),
+      );
+    });
+  });
+
+  // ── declineCommission ────────────────────────────────────────────────────────
+
+  group('declineCommission', () {
+    test('POSTs to /negotiations/:id/decline-commission', () async {
+      when(
+        () => mockDio.post<void>('/negotiations/th-1/decline-commission'),
+      ).thenAnswer(
+        (_) async => Response<void>(
+          statusCode: 204,
+          requestOptions: RequestOptions(
+            path: '/negotiations/th-1/decline-commission',
+          ),
+        ),
+      );
+
+      await expectLater(repo.declineCommission('th-1'), completes);
+    });
   });
 }

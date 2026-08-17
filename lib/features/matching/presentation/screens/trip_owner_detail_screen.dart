@@ -12,9 +12,14 @@ import 'package:dony/features/cancellation/presentation/widgets/cancellation_bot
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
+import 'package:dony/features/matching/bloc/bid_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_event.dart';
+import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_detail_body.dart';
+import 'package:dony/features/matching/presentation/widgets/arrival_instructions_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/owner_action_grid.dart';
 import 'package:dony/features/matching/presentation/widgets/trip_parcels_section.dart';
 import 'package:flutter/material.dart';
@@ -22,6 +27,41 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
+
+const _biddableActiveStatuses = <String>{
+  'ACCEPTED',
+  'HANDED_OVER',
+  'IN_TRANSIT',
+  'ARRIVED',
+};
+
+/// Mode du CTA d'arrivée affiché au voyageur propriétaire.
+enum TripArrivalCta {
+  /// Trajet pas encore marqué arrivé, tous les colis actifs sont en transit.
+  markArrived,
+
+  /// Trajet déjà marqué arrivé : seule l'édition des instructions reste
+  /// possible (le bouton doit rester accessible, sinon les instructions
+  /// deviennent définitivement figées).
+  editInstructions,
+}
+
+/// `null` = aucun CTA (colis pas tous partis, ou plus aucun colis actif).
+TripArrivalCta? tripArrivalCtaFor(List<BidModel> bids) {
+  final active = bids
+      .where((b) => _biddableActiveStatuses.contains(b.status))
+      .toList();
+  if (active.isEmpty) {
+    return null;
+  }
+  if (active.every((b) => b.status == 'ARRIVED')) {
+    return TripArrivalCta.editInstructions;
+  }
+  if (active.every((b) => b.status == 'IN_TRANSIT')) {
+    return TripArrivalCta.markArrived;
+  }
+  return null;
+}
 
 /// Écran plein écran « Trajet » côté propriétaire (voyageur).
 ///
@@ -90,6 +130,16 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
               _current = state.announcement;
             } else if (state is AnnouncementUpdated) {
               _current = state.announcement;
+            } else if (state is AnnouncementTripArrived) {
+              _current = state.announcement;
+              context.read<BidBloc>().add(
+                BidListRequested(widget.announcementId),
+              );
+            } else if (state is AnnouncementArrivalInstructionsUpdated) {
+              _current = state.announcement;
+              context.read<BidBloc>().add(
+                BidListRequested(widget.announcementId),
+              );
             }
             if (state is AnnouncementDeleted) {
               DonySnackbar.show(
@@ -199,6 +249,35 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
                   OwnerActionGrid(a: a, isOwner: isOwner),
                   const SizedBox(height: DonySpacing.lg),
                   const TripParcelsSection(),
+                  BlocBuilder<BidBloc, BidState>(
+                    builder: (context, bidState) {
+                      if (!isOwner || bidState is! BidListLoaded) {
+                        return const SizedBox.shrink();
+                      }
+                      final cta = tripArrivalCtaFor(bidState.bids);
+                      if (cta == null) {
+                        return const SizedBox.shrink();
+                      }
+                      final isEditing = cta == TripArrivalCta.editInstructions;
+                      return Padding(
+                        padding: const EdgeInsets.only(top: DonySpacing.md),
+                        child: DonyButton(
+                          label: isEditing
+                              ? 'Modifier les instructions de retrait'
+                              : 'Arrivé à destination',
+                          variant: isEditing
+                              ? DonyButtonVariant.secondary
+                              : DonyButtonVariant.primary,
+                          onPressed: () => ArrivalInstructionsBottomSheet.show(
+                            context,
+                            announcementId: a.id,
+                            initialInstructions: a.arrivalInstructions,
+                            isEditing: isEditing,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                 ],
               ),
             );

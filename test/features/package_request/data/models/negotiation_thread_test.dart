@@ -304,4 +304,93 @@ void main() {
     );
     expect(t1, isNot(equals(t2)));
   });
+
+  group('commissionStatus', () {
+    final baseJson = _baseJson();
+
+    test('commissionStatus PENDING → aucune 3DS en cours à reprendre', () {
+      final thread = NegotiationThread.fromJson({
+        ...baseJson,
+        'commissionStatus': 'PENDING',
+      });
+      expect(thread.commissionStatus, 'PENDING');
+      expect(thread.commissionAwaits3ds, isFalse);
+    });
+
+    test('commissionStatus absent → aucune 3DS en cours', () {
+      final thread = NegotiationThread.fromJson(baseJson);
+      expect(thread.commissionStatus, isNull);
+      expect(thread.commissionAwaits3ds, isFalse);
+    });
+
+    test('commissionStatus CHARGED → aucune 3DS en cours', () {
+      final thread = NegotiationThread.fromJson({
+        ...baseJson,
+        'commissionStatus': 'CHARGED',
+      });
+      expect(thread.commissionStatus, 'CHARGED');
+      expect(thread.commissionAwaits3ds, isFalse);
+    });
+
+    test('commissionStatus REQUIRES_3DS → 3DS interrompue à reprendre', () {
+      final thread = NegotiationThread.fromJson({
+        ...baseJson,
+        'commissionStatus': 'REQUIRES_3DS',
+      });
+      expect(thread.commissionStatus, 'REQUIRES_3DS');
+      expect(thread.commissionAwaits3ds, isTrue);
+    });
+
+    test('commissionStatus participates in props/equality', () {
+      final t1 = NegotiationThread.fromJson(baseJson);
+      final t2 = NegotiationThread.fromJson({
+        ...baseJson,
+        'commissionStatus': 'PENDING',
+      });
+      expect(t1, isNot(equals(t2)));
+    });
+  });
+
+  group('AWAITING_COMMISSION status', () {
+    test('AWAITING_COMMISSION est reconnu et compté comme actif', () {
+      expect(
+        NegotiationThreadStatus.fromJson('AWAITING_COMMISSION'),
+        NegotiationThreadStatus.awaitingCommission,
+      );
+      expect(NegotiationThreadStatus.awaitingCommission.isActive, isTrue);
+    });
+
+    // Garde-fou de compatibilité : un statut inconnu ne doit jamais rendre un fil
+    // impossible à ouvrir. Avant ce correctif, firstWhere levait une StateError.
+    test('un statut inconnu ne lève pas et retombe sur open', () {
+      expect(
+        NegotiationThreadStatus.fromJson('STATUT_DU_FUTUR'),
+        NegotiationThreadStatus.open,
+      );
+    });
+  });
+
+  group('commissionDeadline', () {
+    final baseJson = _baseJson();
+
+    test('fromJson lit commissionDeadline comme un instant UTC', () {
+      // Le backend sérialise tous ses LocalDateTime en ISO_OFFSET_DATE_TIME
+      // après atOffset(UTC) : le Z est donc toujours présent sur le fil. Le
+      // test doit refléter ce format réel, sinon il valide un cas qui n'arrive
+      // jamais et laisse passer une lecture en heure locale.
+      final thread = NegotiationThread.fromJson({
+        ...baseJson,
+        'commissionDeadline': '2026-08-16T14:30:00Z',
+      });
+      expect(thread.commissionDeadline!.isUtc, isTrue);
+      expect(
+        thread.commissionDeadline!.millisecondsSinceEpoch,
+        DateTime.utc(2026, 8, 16, 14, 30).millisecondsSinceEpoch,
+      );
+    });
+
+    test('commissionDeadline absent reste null', () {
+      expect(NegotiationThread.fromJson(baseJson).commissionDeadline, isNull);
+    });
+  });
 }

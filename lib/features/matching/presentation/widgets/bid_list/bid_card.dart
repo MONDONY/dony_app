@@ -420,6 +420,7 @@ class _StatusDot extends StatelessWidget {
       'ACCEPTED' => (cs.success, cs.successLight, 'Accepté'),
       'HANDED_OVER' => (cs.primary, cs.primaryContainer, 'En route'),
       'IN_TRANSIT' => (cs.info, cs.infoLight, 'En transit'),
+      'ARRIVED' => (cs.info, cs.infoLight, 'Arrivé'),
       'COMPLETED' => (cs.success, cs.successLight, 'Livré'),
       'NO_SHOW' => (cs.warning, cs.warningLight, 'Absent'),
       'PARCEL_REFUSED' => (cs.error, cs.errorLight, 'Colis refusé'),

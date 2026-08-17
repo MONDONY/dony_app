@@ -190,6 +190,15 @@ void main() {
     },
   );
 
+  testWidgets('ARRIVED sans callbacks → badge « Arrivé »', (tester) async {
+    await _pumpCard(
+      tester,
+      BidCard(bid: _makeBid(status: 'ARRIVED'), isProcessing: false),
+    );
+
+    expect(find.text('Arrivé'), findsOneWidget);
+  });
+
   testWidgets(
     'sans catégorie mais description → pill description (ellipsis, pas d\'overflow)',
     (tester) async {

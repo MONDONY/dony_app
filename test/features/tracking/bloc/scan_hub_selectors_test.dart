@@ -72,6 +72,12 @@ void main() {
       expect(p.scannedDepart, 3); // HANDED_OVER+IN_TRANSIT+COMPLETED
     });
 
+    test('ARRIVED compte comme confirmé ET scanné au départ', () {
+      final p = computeScanProgress([_bid('ARRIVED')]);
+      expect(p.confirmedColis, 1);
+      expect(p.scannedDepart, 1);
+    });
+
     test('liste vide → zéros', () {
       final p = computeScanProgress(const []);
       expect(p.confirmedColis, 0);
@@ -88,6 +94,9 @@ void main() {
     });
     test('IN_TRANSIT → ARRIVEE', () {
       expect(nextRequiredStep(_bid('IN_TRANSIT')), 'ARRIVEE');
+    });
+    test('ARRIVED → ARRIVEE (jamais DEPART)', () {
+      expect(nextRequiredStep(_bid('ARRIVED')), 'ARRIVEE');
     });
     test('COMPLETED → null (tout est déjà scanné)', () {
       expect(nextRequiredStep(_bid('COMPLETED')), isNull);
@@ -122,6 +131,11 @@ void main() {
       expect(result.length, 4);
     });
 
+    test('ARRIVED reste dans le hub Scan & Suivi', () {
+      final arrived = _bid('ARRIVED');
+      expect(confirmedColis([arrived]), contains(arrived));
+    });
+
     test('liste vide → liste vide', () {
       expect(confirmedColis(const []), isEmpty);
     });
@@ -142,6 +156,12 @@ void main() {
     });
     test('IN_TRANSIT → départ + transit faits', () {
       final p = colisStepProgress(_bid('IN_TRANSIT'));
+      expect(p.depart, isTrue);
+      expect(p.transit, isTrue);
+      expect(p.arrivee, isFalse);
+    });
+    test('ARRIVED → départ + transit faits, arrivée pas encore scannée', () {
+      final p = colisStepProgress(_bid('ARRIVED'));
       expect(p.depart, isTrue);
       expect(p.transit, isTrue);
       expect(p.arrivee, isFalse);

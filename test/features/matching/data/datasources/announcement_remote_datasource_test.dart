@@ -282,6 +282,90 @@ void main() {
     );
   });
 
+  // ── markTripArrived ──────────────────────────────────────────────────────────
+
+  group('markTripArrived', () {
+    test(
+      'POSTs to /announcements/{id}/mark-arrived and returns AnnouncementModel',
+      () async {
+        when(
+          () => mockDio.post(
+            '/announcements/ann-001/mark-arrived',
+            data: {'arrivalInstructions': 'Métro Châtelet'},
+          ),
+        ).thenAnswer(
+          (_) async =>
+              _ok(_announcementJson, '/announcements/ann-001/mark-arrived'),
+        );
+
+        final result = await datasource.markTripArrived(
+          announcementId: 'ann-001',
+          arrivalInstructions: 'Métro Châtelet',
+        );
+
+        expect(result.id, 'ann-001');
+        verify(
+          () => mockDio.post(
+            '/announcements/ann-001/mark-arrived',
+            data: {'arrivalInstructions': 'Métro Châtelet'},
+          ),
+        ).called(1);
+      },
+    );
+
+    test('sends null arrivalInstructions when not provided', () async {
+      when(
+        () => mockDio.post(
+          '/announcements/ann-001/mark-arrived',
+          data: {'arrivalInstructions': null},
+        ),
+      ).thenAnswer(
+        (_) async =>
+            _ok(_announcementJson, '/announcements/ann-001/mark-arrived'),
+      );
+
+      final result = await datasource.markTripArrived(
+        announcementId: 'ann-001',
+      );
+
+      expect(result.id, 'ann-001');
+    });
+  });
+
+  // ── updateArrivalInstructions ────────────────────────────────────────────────
+
+  group('updateArrivalInstructions', () {
+    test(
+      'PATCHes /announcements/{id}/arrival-instructions and returns AnnouncementModel',
+      () async {
+        when(
+          () => mockDio.patch(
+            '/announcements/ann-001/arrival-instructions',
+            data: {'arrivalInstructions': 'Nouveau texte'},
+          ),
+        ).thenAnswer(
+          (_) async => _ok(
+            _announcementJson,
+            '/announcements/ann-001/arrival-instructions',
+          ),
+        );
+
+        final result = await datasource.updateArrivalInstructions(
+          announcementId: 'ann-001',
+          arrivalInstructions: 'Nouveau texte',
+        );
+
+        expect(result.id, 'ann-001');
+        verify(
+          () => mockDio.patch(
+            '/announcements/ann-001/arrival-instructions',
+            data: {'arrivalInstructions': 'Nouveau texte'},
+          ),
+        ).called(1);
+      },
+    );
+  });
+
   // ── searchAnnouncements ──────────────────────────────────────────────────────
 
   group('searchAnnouncements', () {

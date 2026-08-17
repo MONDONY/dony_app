@@ -17,11 +17,6 @@ class TrackingEventsRequested extends TrackingEvent {
   TrackingEventsRequested(this.bidId);
 }
 
-class TrackingConfirmCodeRequested extends TrackingEvent {
-  final String bidId;
-  TrackingConfirmCodeRequested(this.bidId);
-}
-
 class QrScanSubmitRequested extends TrackingEvent {
   final String bidId;
   final String eventType;

@@ -4,8 +4,10 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
+import 'package:dony/features/package_request/data/models/linked_trip_summary.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/presentation/screens/shared/negotiation_thread_screen.dart';
+import 'package:dony/features/package_request/presentation/widgets/thread/linked_trip_card.dart';
 import 'package:dony/features/profile/bloc/help_center_bloc.dart';
 import 'package:dony/features/profile/data/datasources/help_center_remote_config_datasource.dart';
 import 'package:dony/features/profile/data/repositories/help_center_repository.dart';
@@ -63,6 +65,7 @@ NegotiationThread _thread({
   double? travelerRating = 4.9,
   int? travelerTripsCount = 24,
   NegotiationThreadStatus status = NegotiationThreadStatus.open,
+  LinkedTripSummary? linkedTrip,
 }) => NegotiationThread(
   id: 't-1',
   packageRequestId: 'pr-1',
@@ -78,6 +81,16 @@ NegotiationThread _thread({
   travelerName: travelerName,
   travelerRating: travelerRating,
   travelerTripsCount: travelerTripsCount,
+  linkedTrip: linkedTrip,
+);
+
+const _sampleLinkedTrip = LinkedTripSummary(
+  announcementId: 'ann-1',
+  departureCity: 'Paris',
+  arrivalCity: 'Dakar',
+  departureDate: '2026-06-15',
+  availableKg: 10,
+  capacityUnit: 'SUITCASE_23KG',
 );
 
 void main() {
@@ -229,6 +242,17 @@ void main() {
       await tester.pumpWidget(wrap());
       await tester.pumpAndSettle();
       expect(find.byType(DonyAvatar), findsOneWidget);
+    });
+
+    testWidgets('affiche la carte du trajet lié dès que le thread est OPEN '
+        '(offre initiale, avant tout paiement)', (tester) async {
+      when(
+        () => bloc.state,
+      ).thenReturn(NegotiationLoaded(_thread(linkedTrip: _sampleLinkedTrip)));
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
+
+      expect(find.byType(LinkedTripCard), findsOneWidget);
     });
 
     testWidgets(

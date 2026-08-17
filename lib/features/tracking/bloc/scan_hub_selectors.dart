@@ -1,14 +1,19 @@
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 
+// `ARRIVED` (voyageur arrivé à destination, colis pas encore remis au
+// destinataire) est un statut intermédiaire entre IN_TRANSIT et COMPLETED : il
+// appartient à tous les groupes qui contiennent déjà IN_TRANSIT, sinon le colis
+// disparaît du hub Scan & Suivi dès le marquage d'arrivée.
 const _confirmedStatuses = {
   'ACCEPTED',
   'HANDED_OVER',
   'IN_TRANSIT',
+  'ARRIVED',
   'COMPLETED',
 };
-const _departedStatuses = {'HANDED_OVER', 'IN_TRANSIT', 'COMPLETED'};
-const _transitStatuses = {'IN_TRANSIT', 'COMPLETED'};
+const _departedStatuses = {'HANDED_OVER', 'IN_TRANSIT', 'ARRIVED', 'COMPLETED'};
+const _transitStatuses = {'IN_TRANSIT', 'ARRIVED', 'COMPLETED'};
 const _arrivedStatuses = {'COMPLETED'};
 
 class ScanHubProgress {
@@ -51,7 +56,8 @@ ScanHubProgress computeScanProgress(List<BidModel> bids) {
 
 /// Sous-ensemble de [bids] réellement confirmés/embarqués sur le trajet —
 /// mêmes statuts que ceux comptés par [computeScanProgress]
-/// (`_confirmedStatuses` : `ACCEPTED`/`HANDED_OVER`/`IN_TRANSIT`/`COMPLETED`).
+/// (`_confirmedStatuses` : `ACCEPTED`/`HANDED_OVER`/`IN_TRANSIT`/`ARRIVED`/
+/// `COMPLETED`).
 /// Source unique de vérité pour « quels bids sont scannables » dans le hub
 /// Scan & Suivi — exclut `PENDING`, `REJECTED` et tout `CANCELLED` (y compris
 /// les auto-annulés, déjà hors de `_confirmedStatuses`).

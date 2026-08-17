@@ -30,6 +30,7 @@ import 'package:dony/features/matching/presentation/widgets/cash_commission_noti
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/locked_trip_context.dart';
+import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
@@ -325,6 +326,26 @@ LockedTripContext _makeLockContext() => LockedTripContext(
   weightKg: 5.0,
   transportMode: TransportMode.plane,
   agreedPriceEur: 50.0,
+);
+
+/// Minimal `NegotiationThread` fixture for `NegotiationLoaded`/`NegotiationError`
+/// state pushes in tests that don't care about most fields — mirrors the
+/// `_fakeThread` helper in negotiation_bloc_test.dart.
+NegotiationThread _fakeThread({
+  String id = 'thread-new-1',
+  NegotiationThreadStatus status = NegotiationThreadStatus.open,
+}) => NegotiationThread(
+  id: id,
+  packageRequestId: 'req-1',
+  travelerId: 'trav-1',
+  travelerTravelDate: DateTime(2026, 9),
+  travelerAvailableKg: 5,
+  status: status,
+  currentPriceEur: 50,
+  roundsCount: 1,
+  lastActivityAt: DateTime(2026, 8, 16),
+  createdAt: DateTime(2026, 8, 16),
+  messages: const [],
 );
 
 /// Creates a pre-configured `NegotiationBloc` mock.
@@ -1351,7 +1372,7 @@ void main() {
 
         expect(find.byType(DonySuccessScreen), findsOneWidget);
         expect(find.text('Trajet publié !'), findsOneWidget);
-        expect(find.text('Partager mon trajet'), findsOneWidget);
+        expect(find.text('Partager mon affiche'), findsOneWidget);
         expect(didPop, isFalse);
       },
     );
@@ -1418,7 +1439,7 @@ void main() {
         expect(find.byType(DonySuccessScreen), findsOneWidget);
         expect(find.text('Trajet modifié !'), findsOneWidget);
         // Le partage ne s'affiche qu'à la publication, pas à l'édition.
-        expect(find.text('Partager mon trajet'), findsNothing);
+        expect(find.text('Partager mon affiche'), findsNothing);
         expect(didPop, isFalse);
       },
     );
@@ -2350,11 +2371,16 @@ void main() {
       },
     );
 
+    // Le solde du portefeuille ne conditionne plus la liaison d'un trajet : ces
+    // deux reasons ne sont plus levées au trip-linking, et les feuilles de
+    // blocage qui les traitaient ont été supprimées. Si elles remontent quand
+    // même, le voyageur reçoit l'erreur générique, jamais une feuille morte.
     testWidgets(
-      'cash-funds-required → sheet « Solde insuffisant », le CTA "Ajouter une '
-      'carte" (plus jamais mort) resoumet la MÊME demande avec '
-      'useCardForCommission=true',
+      'cash-funds-required → aucune feuille de blocage, erreur générique',
       (tester) async {
+        // DonySnackbar déduplique le même message pendant 5 s : sans ce reset,
+        // le snackbar générique du test précédent avale celui-ci.
+        DonySnackbar.clearDedup();
         await navigateLockedToStep2AndSubmit(tester);
 
         negoStreamCtrl.add(
@@ -2367,33 +2393,17 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        expect(find.text('Solde insuffisant'), findsOneWidget);
-        expect(find.text('Ajouter une carte'), findsOneWidget);
-
-        await tester.tap(find.text('Ajouter une carte'));
-        await tester.pumpAndSettle();
-        expect(find.text('done-commission-method'), findsOneWidget);
-
-        // Simulates the traveler completing card entry and returning.
-        await tester.tap(find.text('done-commission-method'));
-        await tester.pumpAndSettle();
-
-        final calls = verify(() => negotiationBloc.add(captureAny())).captured;
-        final resubmit = calls
-            .whereType<NegotiationCreateDedicatedTripRequested>()
-            .last;
-        expect(resubmit.useCardForCommission, isTrue);
-        expect(resubmit.threadId, 'thread-1');
-        // Same form data as the original submit — not a fresh/empty request.
-        expect(resubmit.pickupAddress['label'], 'Tour Eiffel');
-        expect(resubmit.deliveryAddress['label'], 'Dakar Centre');
-        expect(resubmit.departureDate, DateTime(2026, 8));
+        expect(find.text('Solde insuffisant'), findsNothing);
+        expect(find.text('Ajouter une carte'), findsNothing);
+        expect(find.byType(SnackBar), findsOneWidget);
       },
     );
 
     testWidgets(
-      'none-available → sheet combinée carte + espèces, sans double feedback',
+      'none-available → aucune feuille de blocage, erreur générique',
       (tester) async {
+        // Cf. le test précédent : la déduplication des snackbars est globale.
+        DonySnackbar.clearDedup();
         await navigateLockedToStep2AndSubmit(tester);
 
         negoStreamCtrl.add(
@@ -2406,19 +2416,350 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        expect(find.text('Aucun moyen de paiement disponible'), findsOneWidget);
-        expect(
-          find.byKey(const Key('activate-card-payment-cta')),
-          findsOneWidget,
-        );
-        expect(
-          find.byKey(const Key('unlock-cash-payment-cta')),
-          findsOneWidget,
-        );
-        expect(find.byType(SnackBar), findsNothing);
+        expect(find.text('Aucun moyen de paiement disponible'), findsNothing);
+        expect(find.byKey(const Key('unlock-cash-payment-cta')), findsNothing);
+        expect(find.byType(SnackBar), findsOneWidget);
       },
     );
   });
+
+  // ── Group: threadId==null — offer + dedicated trip created atomically ────────
+
+  group(
+    'CreateTripScreen — locked flow without an existing thread (Task 9+10)',
+    () {
+      late _MockNegotiationBloc negotiationBloc;
+
+      setUp(() {
+        negotiationBloc = _makeNegotiationBloc();
+        when(() => negotiationBloc.add(any())).thenReturn(null);
+      });
+
+      testWidgets('dispatches NegotiationStartWithDedicatedTripRequested when '
+          'lockContext.threadId is null', (tester) async {
+        tester.view.physicalSize = const Size(800, 1024);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+
+        final lockContext = LockedTripContext(
+          packageRequestId: 'req-1',
+          departureCity: 'Lyon',
+          arrivalCity: 'Abidjan',
+          desiredDate: DateTime(2026, 9),
+          dateToleranceDays: 5,
+          weightKg: 5.0,
+          transportMode: TransportMode.plane,
+          agreedPriceEur: 50.0,
+          // Capacité et message saisis par le voyageur dans la feuille
+          // d'offre AVANT de créer le trajet dédié — distincts du poids de
+          // la demande (weightKg) et absents par défaut.
+          offerAvailableKg: 8.0,
+          offerBody: 'Je peux prendre ce colis',
+        );
+
+        final args = CreateTripArgs(
+          lockContext: lockContext,
+          announcement: _makeFullAnnouncement(),
+          negotiationBloc: negotiationBloc,
+        );
+        await pumpAndDrain(
+          tester,
+          _wrapWithRouter(CreateTripScreen(args: args)),
+        );
+
+        await tester.tap(find.text('Continuer'));
+        await tester.pump(const Duration(milliseconds: 600));
+        await tester.tap(find.text('Continuer'));
+        await tester.pump(const Duration(milliseconds: 600));
+
+        expect(
+          find.byKey(const Key('create-dedicated-trip-submit')),
+          findsOneWidget,
+        );
+        await tester.tap(find.byKey(const Key('create-dedicated-trip-submit')));
+        await tester.pump();
+
+        final captured = verify(
+          () => negotiationBloc.add(captureAny()),
+        ).captured;
+        expect(
+          captured.whereType<NegotiationStartWithDedicatedTripRequested>(),
+          hasLength(1),
+        );
+        final event = captured
+            .whereType<NegotiationStartWithDedicatedTripRequested>()
+            .single;
+        expect(event.packageRequestId, 'req-1');
+        expect(event.proposedPriceEur, 50.0);
+        // La capacité saisie dans l'offre (8 kg), pas lockContext.weightKg
+        // (5 kg, le poids de la demande) — régression : ces deux valeurs
+        // étaient confondues avant le fix.
+        expect(event.travelerAvailableKg, 8.0);
+        expect(event.body, 'Je peux prendre ce colis');
+        expect(event.dedicatedTrip.pickupAddress['label'], 'Tour Eiffel');
+        expect(event.dedicatedTrip.deliveryAddress['label'], 'Dakar Centre');
+      });
+
+      testWidgets(
+        'falls back to lockContext.weightKg and null body when the offer '
+        'form didn\'t carry them (defensive default)',
+        (tester) async {
+          tester.view.physicalSize = const Size(800, 1024);
+          tester.view.devicePixelRatio = 1.0;
+          addTearDown(tester.view.resetPhysicalSize);
+
+          final lockContext = LockedTripContext(
+            packageRequestId: 'req-1',
+            departureCity: 'Lyon',
+            arrivalCity: 'Abidjan',
+            desiredDate: DateTime(2026, 9),
+            dateToleranceDays: 5,
+            weightKg: 5.0,
+            transportMode: TransportMode.plane,
+            agreedPriceEur: 50.0,
+          );
+
+          final args = CreateTripArgs(
+            lockContext: lockContext,
+            announcement: _makeFullAnnouncement(),
+            negotiationBloc: negotiationBloc,
+          );
+          await pumpAndDrain(
+            tester,
+            _wrapWithRouter(CreateTripScreen(args: args)),
+          );
+
+          await tester.tap(find.text('Continuer'));
+          await tester.pump(const Duration(milliseconds: 600));
+          await tester.tap(find.text('Continuer'));
+          await tester.pump(const Duration(milliseconds: 600));
+          await tester.tap(
+            find.byKey(const Key('create-dedicated-trip-submit')),
+          );
+          await tester.pump();
+
+          final event = verify(() => negotiationBloc.add(captureAny())).captured
+              .whereType<NegotiationStartWithDedicatedTripRequested>()
+              .single;
+          expect(event.travelerAvailableKg, 5.0);
+          expect(event.body, isNull);
+        },
+      );
+    },
+  );
+
+  // ── Group: threadId==null — fix round 1 (resubmit + success feedback) ───────
+
+  group(
+    'CreateTripScreen — locked flow without an existing thread: fix round 1',
+    () {
+      late StreamController<NegotiationState> negoStreamCtrl;
+      late _MockNegotiationBloc negotiationBloc;
+
+      setUp(() {
+        negoStreamCtrl = StreamController<NegotiationState>.broadcast();
+        negotiationBloc = _MockNegotiationBloc();
+        when(
+          () => negotiationBloc.state,
+        ).thenReturn(const NegotiationInitial());
+        when(
+          () => negotiationBloc.stream,
+        ).thenAnswer((_) => negoStreamCtrl.stream);
+        when(() => negotiationBloc.add(any())).thenReturn(null);
+
+        // Same reasoning as the "422 payment-method reason routing" group:
+        // left unregistered so showCashInsufficientSheet's try/catch exercises
+        // the "Ajouter une carte" branch deterministically.
+        if (getIt.isRegistered<WalletRepository>()) {
+          getIt.unregister<WalletRepository>();
+        }
+        if (getIt.isRegistered<CommissionMethodRepository>()) {
+          getIt.unregister<CommissionMethodRepository>();
+        }
+      });
+
+      tearDown(() async {
+        await negoStreamCtrl.close();
+      });
+
+      /// Navigates the locked (dedicated-trip) wizard to step 2 and taps
+      /// "Confirmer le trajet" with a `lockContext.threadId == null`,
+      /// dispatching the initial `NegotiationStartWithDedicatedTripRequested`.
+      Future<void> navigateNullThreadToStep2AndSubmit(
+        WidgetTester tester,
+      ) async {
+        tester.view.physicalSize = const Size(800, 1024);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+
+        final lockContext = LockedTripContext(
+          packageRequestId: 'req-1',
+          departureCity: 'Lyon',
+          arrivalCity: 'Abidjan',
+          desiredDate: DateTime(2026, 9),
+          dateToleranceDays: 5,
+          weightKg: 5.0,
+          transportMode: TransportMode.plane,
+          agreedPriceEur: 50.0,
+        );
+
+        final args = CreateTripArgs(
+          lockContext: lockContext,
+          announcement: _makeFullAnnouncement(),
+          negotiationBloc: negotiationBloc,
+        );
+        await pumpAndDrain(
+          tester,
+          _wrapWithRouter(CreateTripScreen(args: args)),
+        );
+
+        await tester.tap(find.text('Continuer'));
+        await tester.pump(const Duration(milliseconds: 600));
+        await tester.tap(find.text('Continuer'));
+        await tester.pump(const Duration(milliseconds: 600));
+
+        expect(
+          find.byKey(const Key('create-dedicated-trip-submit')),
+          findsOneWidget,
+        );
+        await tester.tap(find.byKey(const Key('create-dedicated-trip-submit')));
+        await tester.pump();
+      }
+
+      // Ce flux non plus ne se fait plus bloquer sur le solde : la demande part
+      // une seule fois, aucune feuille ne propose de la resoumettre avec un
+      // consentement carte, et l'erreur éventuelle reste générique.
+      testWidgets(
+        'cash-funds-required sur le flux sans thread : aucune feuille, aucune '
+        'resoumission',
+        (tester) async {
+          await navigateNullThreadToStep2AndSubmit(tester);
+
+          negoStreamCtrl.add(
+            const NegotiationError(
+              ValidationException(
+                'Cash funds required',
+                code: 'payment-method/cash-funds-required',
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          expect(find.text('Solde insuffisant'), findsNothing);
+          expect(find.text('Ajouter une carte'), findsNothing);
+
+          final calls = verify(
+            () => negotiationBloc.add(captureAny()),
+          ).captured;
+          final submits = calls
+              .whereType<NegotiationStartWithDedicatedTripRequested>();
+          expect(submits, hasLength(1));
+        },
+      );
+
+      testWidgets(
+        'success on the null-threadId flow: NegotiationLoaded (thread OPEN, '
+        'no pre-existing thread awaited payment) pops with confirmation '
+        'instead of silently doing nothing',
+        (tester) async {
+          tester.view.physicalSize = const Size(800, 1024);
+          tester.view.devicePixelRatio = 1.0;
+          addTearDown(tester.view.resetPhysicalSize);
+
+          final lockContext = LockedTripContext(
+            packageRequestId: 'req-1',
+            departureCity: 'Lyon',
+            arrivalCity: 'Abidjan',
+            desiredDate: DateTime(2026, 9),
+            dateToleranceDays: 5,
+            weightKg: 5.0,
+            transportMode: TransportMode.plane,
+            agreedPriceEur: 50.0,
+          );
+          final args = CreateTripArgs(
+            lockContext: lockContext,
+            announcement: _makeFullAnnouncement(),
+            negotiationBloc: negotiationBloc,
+          );
+
+          // CreateTripScreen pops on success (`context.pop()`, GoRouter) — a
+          // real app always reaches this screen via a push (from the
+          // package-request screen), so it needs somewhere to pop back TO.
+          // Pushing it on top of a real '/' route (rather than using it as
+          // `initialLocation` directly, as `_wrapWithRouter` does for the
+          // other tests in this file) mirrors that.
+          final router = GoRouter(
+            initialLocation: '/',
+            routes: [
+              GoRoute(
+                path: '/',
+                builder: (_, _) => Scaffold(
+                  body: Builder(
+                    builder: (ctx) => ElevatedButton(
+                      onPressed: () => ctx.push('/trips/create'),
+                      child: const Text('open'),
+                    ),
+                  ),
+                ),
+              ),
+              GoRoute(
+                path: '/trips/create',
+                builder: (_, _) => MultiBlocProvider(
+                  providers: [
+                    BlocProvider<StripeAccountBloc>.value(
+                      value: _makeStripeBloc(),
+                    ),
+                    BlocProvider<AuthBloc>.value(value: _makeAuthBloc()),
+                    BlocProvider<KycBloc>.value(value: _makeKycBloc()),
+                    BlocProvider<HelpCenterBloc>(
+                      create: (_) => HelpCenterBloc(
+                        HelpCenterRepository(
+                          const _StaticHelpCenterSource(_emptyHelpConfigJson),
+                          fallbackJsonLoader: () async => _emptyHelpConfigJson,
+                        ),
+                        makeDisabledAnalytics(MockAnalyticsBackend()),
+                      )..add(const HelpCenterLoadRequested()),
+                    ),
+                  ],
+                  child: CreateTripScreen(args: args),
+                ),
+              ),
+            ],
+          );
+
+          await tester.pumpWidget(
+            MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
+          );
+          await tester.pump();
+          await tester.tap(find.text('open'));
+          await tester.pumpAndSettle();
+
+          await tester.tap(find.text('Continuer'));
+          await tester.pump(const Duration(milliseconds: 600));
+          await tester.tap(find.text('Continuer'));
+          await tester.pump(const Duration(milliseconds: 600));
+          await tester.tap(
+            find.byKey(const Key('create-dedicated-trip-submit')),
+          );
+          await tester.pump();
+
+          negoStreamCtrl.add(NegotiationLoaded(_fakeThread()));
+          await tester.pumpAndSettle();
+
+          // Before the fix, the listener only reacted to `awaitingPayment` —
+          // a freshly-created thread from `NegotiationStartWithDedicatedTripRequested`
+          // is OPEN (pending the sender's response), so nothing happened at
+          // all. It must now pop back to '/' with a success confirmation.
+          expect(find.text('open'), findsOneWidget);
+          expect(find.byType(CreateTripScreen), findsNothing);
+          expect(
+            find.text('Offre envoyée avec le trajet associé.'),
+            findsOneWidget,
+          );
+        },
+      );
+    },
+  );
 }
 
 // ── Route observer for navigation tests ──────────────────────────────────────

@@ -88,19 +88,6 @@ class TrackingRepository {
     return (response.data as Map<String, dynamic>)['key'] as String;
   }
 
-  Future<ConfirmationCodeResult> getConfirmationCode(String bidId) async {
-    final response = await _apiClient.dio.get(
-      '/tracking/$bidId/confirmation-code',
-    );
-    final data = response.data as Map<String, dynamic>;
-    final rawExpiry = data['expiresAt'] as String?;
-    return (
-      code: data['confirmationCode'] as String?,
-      expiresAt: rawExpiry != null ? DateTime.parse(rawExpiry) : null,
-      publicPageVisible: data['publicPageVisible'] as bool? ?? false,
-    );
-  }
-
   Future<ConfirmationCodeResult> refreshCode(String bidId) async {
     final response = await _apiClient.dio.post('/tracking/$bidId/refresh-code');
     final data = response.data as Map<String, dynamic>;

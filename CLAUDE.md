@@ -340,6 +340,8 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `negotiation_offer_accepted` | NegotiationBloc._onAccept() |
 | `negotiation_cancelled` | NegotiationBloc._onCancel() — l'une des parties met fin à la négociation |
 | `negotiation_nudge_sent` | NegotiationBloc._onNudge() — relance envoyée |
+| `negotiation_commission_settled` | NegotiationBloc._handleCommissionResponse() — voyageur a réglé la commission Yadony d'un accord cash (direct ou après 3DS), l'accord est scellé (propriété `thread_id`) |
+| `negotiation_commission_declined` | NegotiationBloc._onDeclineCommission() — voyageur renonce explicitement au règlement, la demande est libérée immédiatement pour un autre voyageur |
 | `conversation_opened` | ChatScreen.initState |
 | `message_sent` | ChatBloc._onSendText() |
 | `conversation_call_initiated` | ChatScreen._call() — tap 📞 dans le header chat (numéro révélé) |
@@ -428,6 +430,11 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `home_guidance_carousel_slide_dismissed` | EvergreenGuidanceCarousel — croix (X) de fermeture manuelle d'une slide, masquage définitif (propriété `slide` : trip/parcel/alert/kyc/tutorial) |
 | `settings_guidance_cards_reset` | SettingsScreen._resetGuidanceCards — tuile « Réafficher les suggestions », efface tous les flags de fermeture manuelle du carousel de guidance (Recherche) et des `ContextualTutorialCard` fermées ailleurs dans l'app |
 | `accessibility_setting_changed` | AccessibilityBloc — un réglage d'accessibilité est modifié (propriétés `setting`, `value`) ou réinitialisation complète (`setting: reset`) |
+| `trip_marked_arrived` | AnnouncementBloc._onTripMarkArrivedRequested() — voyageur marque son trajet arrivé à destination |
+| `arrival_instructions_updated` | AnnouncementBloc._onArrivalInstructionsUpdateRequested() — édition des instructions de retrait après le marquage initial |
+| `trip_poster_opened` | TripPosterScreen.initState — ouverture de l'affiche partageable d'un trajet |
+| `trip_poster_shared` | TripPosterScreen — partage de l'image via la feuille système (`action: share`) ou enregistrement galerie (`action: save`) ; non émis si le partage est annulé |
+| `trip_poster_link_copied` | TripPosterScreen — tap sur « Copier le lien » ou « Copier la légende ». Le canal réel est porté par le lien lui-même (`?c=lien` / `?c=post` / `?c=partage`), pas par une propriété : il doit survivre au partage hors de l'app |
 | `bloc_error` | AnalyticsBlocObserver.onError() — global |
 
 ---

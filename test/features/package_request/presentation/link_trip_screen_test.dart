@@ -125,6 +125,12 @@ void main() {
         paymentMethod: PaymentMethod.stripe,
       ),
     );
+    registerFallbackValue(
+      const NegotiationChangeTripRequested(
+        threadId: '',
+        travelerAnnouncementId: '',
+      ),
+    );
   });
 
   setUp(() {
@@ -167,19 +173,23 @@ void main() {
       );
     });
 
-    test('mappe cash-funds-required', () {
+    // Le solde du portefeuille ne conditionne plus la liaison d'un trajet : il
+    // n'est vérifié qu'au paiement, où le voyageur est invité à recharger. Ces
+    // deux reasons ne peuvent donc plus être levées au trip-linking, et ne
+    // doivent surtout pas ressusciter une feuille de blocage.
+    test('ne mappe plus cash-funds-required', () {
       expect(
         PaymentCapabilityBlock.fromErrorCode(
           'payment-method/cash-funds-required',
         ),
-        PaymentCapabilityBlock.cashFundsRequired,
+        isNull,
       );
     });
 
-    test('mappe none-available', () {
+    test('ne mappe plus none-available', () {
       expect(
         PaymentCapabilityBlock.fromErrorCode('payment-method/none-available'),
-        PaymentCapabilityBlock.noneAvailable,
+        isNull,
       );
     });
 
@@ -306,6 +316,110 @@ void main() {
     ).called(1);
   });
 
+  // ── Thread OPEN (change-trip flow) ────────────────────────────────────────
+
+  testWidgets('confirmer un trajet sur un thread OPEN dispatch '
+      'NegotiationChangeTripRequested (pas NegotiationSubmitTripRequested)', (
+    tester,
+  ) async {
+    when(() => packageRequestRepo.getById(any())).thenAnswer(
+      (_) async =>
+          _packageRequest(methods: {PaymentMethod.cash, PaymentMethod.stripe}),
+    );
+    when(
+      () => announcementRepo.getMyAnnouncements(),
+    ).thenAnswer((_) async => (announcements: [_trip()], totalElements: 1));
+
+    await tester.pumpWidget(
+      _harness(_fakeThread(status: NegotiationThreadStatus.open)),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('trip-tile-select-inkwell')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('trip-tile-select-inkwell')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Confirmer ce trajet'), findsOneWidget);
+    await tester.tap(find.text('Confirmer ce trajet'));
+    await tester.pump();
+
+    verify(
+      () => negotiationBloc.add(
+        any(
+          that: predicate<NegotiationEvent>(
+            (e) =>
+                e is NegotiationChangeTripRequested &&
+                e.threadId == 't-1' &&
+                e.travelerAnnouncementId == 'ann-1',
+            'NegotiationChangeTripRequested(threadId=t-1, '
+            'travelerAnnouncementId=ann-1)',
+          ),
+        ),
+      ),
+    ).called(1);
+    verifyNever(
+      () =>
+          negotiationBloc.add(any(that: isA<NegotiationSubmitTripRequested>())),
+    );
+  });
+
+  testWidgets(
+    'l\'écran se ferme (pop) quand NegotiationLoaded porte status=open '
+    '(changeTrip réussi)',
+    (tester) async {
+      when(
+        () => packageRequestRepo.getById(any()),
+      ).thenAnswer((_) async => _packageRequest());
+      when(
+        () => announcementRepo.getMyAnnouncements(),
+      ).thenAnswer((_) async => (announcements: [_trip()], totalElements: 1));
+
+      final controller = StreamController<NegotiationState>.broadcast();
+      addTearDown(controller.close);
+      whenListen(
+        negotiationBloc,
+        controller.stream,
+        initialState: const NegotiationInitial(),
+      );
+
+      final router = GoRouter(
+        initialLocation: '/',
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (ctx, _) => ElevatedButton(
+              onPressed: () => ctx.push('/link-trip'),
+              child: const Text('open'),
+            ),
+          ),
+          GoRoute(
+            path: '/link-trip',
+            builder: (ctx, _) => BlocProvider<NegotiationBloc>.value(
+              value: negotiationBloc,
+              child: LinkTripScreen(
+                thread: _fakeThread(status: NegotiationThreadStatus.open),
+              ),
+            ),
+          ),
+        ],
+      );
+      await tester.pumpWidget(
+        MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(LinkTripScreen), findsOneWidget);
+
+      controller.add(
+        NegotiationLoaded(_fakeThread(status: NegotiationThreadStatus.open)),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(LinkTripScreen), findsNothing);
+    },
+  );
+
   // ── 422 reason → CTA contextuel ───────────────────────────────────────────
 
   group('LinkTripScreen — 422 reason routing', () {
@@ -357,40 +471,40 @@ void main() {
       },
     );
 
-    testWidgets(
-      'cash-funds-required → sheet « Solde insuffisant » (recharge / carte)',
-      (tester) async {
-        final controller = StreamController<NegotiationState>.broadcast();
-        addTearDown(controller.close);
-        whenListen(
-          negotiationBloc,
-          controller.stream,
-          initialState: const NegotiationInitial(),
-        );
-
-        await pumpWithTripSelected(tester);
-        await tester.tap(find.text('Confirmer ce trajet'));
-        await tester.pump();
-
-        controller.add(
-          const NegotiationError(
-            ValidationException(
-              'Cash funds required',
-              code: 'payment-method/cash-funds-required',
-            ),
-          ),
-        );
-        await tester.pumpAndSettle();
-
-        expect(find.text('Solde insuffisant'), findsOneWidget);
-        expect(find.text('Recharger mon portefeuille'), findsOneWidget);
-        expect(find.textContaining('commission'), findsWidgets);
-      },
-    );
-
-    testWidgets('none-available → sheet combinée offrant carte ET espèces', (
+    // Le solde du portefeuille ne bloque plus la liaison d'un trajet : ces deux
+    // reasons ne sont plus levées par le back-end au trip-linking, et aucune
+    // feuille de blocage ne doit apparaître si elles remontent quand même. Le
+    // voyageur est invité à recharger au moment du paiement, pas ici.
+    testWidgets('cash-funds-required → aucune feuille de blocage', (
       tester,
     ) async {
+      final controller = StreamController<NegotiationState>.broadcast();
+      addTearDown(controller.close);
+      whenListen(
+        negotiationBloc,
+        controller.stream,
+        initialState: const NegotiationInitial(),
+      );
+
+      await pumpWithTripSelected(tester);
+      await tester.tap(find.text('Confirmer ce trajet'));
+      await tester.pump();
+
+      controller.add(
+        const NegotiationError(
+          ValidationException(
+            'Cash funds required',
+            code: 'payment-method/cash-funds-required',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Solde insuffisant'), findsNothing);
+      expect(find.text('Recharger mon portefeuille'), findsNothing);
+    });
+
+    testWidgets('none-available → aucune feuille de blocage', (tester) async {
       final controller = StreamController<NegotiationState>.broadcast();
       addTearDown(controller.close);
       whenListen(
@@ -413,12 +527,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Aucun moyen de paiement disponible'), findsOneWidget);
-      expect(
-        find.byKey(const Key('activate-card-payment-cta')),
-        findsOneWidget,
-      );
-      expect(find.byKey(const Key('unlock-cash-payment-cta')), findsOneWidget);
+      expect(find.text('Aucun moyen de paiement disponible'), findsNothing);
+      expect(find.byKey(const Key('unlock-cash-payment-cta')), findsNothing);
     });
 
     testWidgets('reason inconnue → snackbar générique (pas de sheet)', (

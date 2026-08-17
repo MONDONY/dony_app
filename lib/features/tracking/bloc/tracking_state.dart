@@ -47,8 +47,8 @@ class TrackingEventsError extends TrackingState {
 }
 
 // Confirmation code (sender side)
-class TrackingConfirmCodeLoading extends TrackingState {}
-
+/// Code de retrait chargé — émis par le rafraîchissement du code
+/// (cf. [TrackingRefreshCodeRequested]) et lu par le talon du colis.
 class TrackingConfirmCodeLoaded extends TrackingState {
   final String? code;
   final DateTime? expiresAt;
@@ -59,8 +59,6 @@ class TrackingConfirmCodeLoaded extends TrackingState {
     this.publicPageVisible = false,
   });
 }
-
-class TrackingConfirmCodeError extends TrackingState {}
 
 class TrackingRefreshCodeLoading extends TrackingState {}
 

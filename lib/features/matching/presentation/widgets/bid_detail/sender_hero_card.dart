@@ -166,6 +166,16 @@ _HeroContent? _buildContent(BuildContext context, BidModel bid) {
         subtitle: subtitle,
       );
 
+    case 'ARRIVED':
+      final hasInstructions = (bid.arrivalInstructions ?? '').trim().isNotEmpty;
+      return _HeroContent(
+        variant: SenderHeroVariant.info,
+        title: '📍 Colis arrivé à destination',
+        subtitle: hasInstructions
+            ? bid.arrivalInstructions!
+            : 'Le voyageur est arrivé, les instructions de retrait arrivent bientôt.',
+      );
+
     case 'COMPLETED':
     case 'DELIVERED':
       final recipient = bid.recipientName ?? 'votre destinataire';

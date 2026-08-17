@@ -165,6 +165,30 @@ void main() {
     },
   );
 
+  testWidgets(
+    'sender + ARRIVED avec confirmationCode → boutons QR + Code de retrait',
+    (tester) async {
+      await _pump(
+        tester,
+        _bid(status: 'ARRIVED', confirmationCode: '4729'),
+        true,
+      );
+      expect(
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'qr-code'),
+        findsOneWidget,
+      );
+      expect(find.text('Code de retrait'), findsOneWidget);
+    },
+  );
+
+  testWidgets('sender + ARRIVED sans confirmationCode → bouton QR seul', (
+    tester,
+  ) async {
+    await _pump(tester, _bid(status: 'ARRIVED'), true);
+    expect(find.textContaining('QR du colis'), findsOneWidget);
+    expect(find.text('Code de retrait'), findsNothing);
+  });
+
   testWidgets('sender + COMPLETED → bloc vert "Colis livré"', (tester) async {
     await _pump(tester, _bid(status: 'COMPLETED'), true);
     expect(find.text('Colis livré'), findsOneWidget);
@@ -460,6 +484,13 @@ void main() {
     tester,
   ) async {
     await _pump(tester, _bid(status: 'IN_TRANSIT'), false);
+    expect(find.text('Lire les QR des étapes'), findsOneWidget);
+  });
+
+  testWidgets('voyageur + ARRIVED → lien "Scanner les étapes" (Suivi)', (
+    tester,
+  ) async {
+    await _pump(tester, _bid(status: 'ARRIVED'), false);
     expect(find.text('Lire les QR des étapes'), findsOneWidget);
   });
 

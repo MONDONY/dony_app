@@ -197,6 +197,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/logos/
+    - assets/logos/store/
     - assets/logos/payment/
     - assets/logos/social/
     - assets/mascotte/

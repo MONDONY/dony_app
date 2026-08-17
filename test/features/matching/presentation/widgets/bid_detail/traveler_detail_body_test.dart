@@ -5,6 +5,7 @@ import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/expediteur_contact_card.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_detail_body.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_gain_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/traveler_hero_card.dart';
@@ -64,6 +65,16 @@ void main() {
     expect(find.byType(TravelerHeroCard), findsOneWidget);
     expect(find.byType(ExpediteurContactCard), findsOneWidget);
     expect(find.byType(TravelerGainCard), findsOneWidget);
+  });
+
+  // Régression : ARRIVED absent de _activeStatuses faisait disparaître la carte
+  // expéditeur et les actions rapides dès le marquage d'arrivée.
+  testWidgets('ARRIVED → carte contact et actions rapides toujours là', (
+    tester,
+  ) async {
+    await _pump(tester, _bid('ARRIVED'));
+    expect(find.byType(ExpediteurContactCard), findsOneWidget);
+    expect(find.byType(QuickActionsRow), findsOneWidget);
   });
 
   testWidgets('PENDING → pas de carte contact (statut non actif)', (

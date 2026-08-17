@@ -59,6 +59,7 @@ class _TravelerDetailBodyState extends State<TravelerDetailBody> {
     'ACCEPTED',
     'HANDED_OVER',
     'IN_TRANSIT',
+    'ARRIVED',
     'COMPLETED',
     'DELIVERED',
   };
