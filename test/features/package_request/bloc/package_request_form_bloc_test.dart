@@ -384,7 +384,7 @@ void main() {
           .having(
             (s) => s.errorMessage,
             'errorMessage',
-            'Indique un budget pour continuer',
+            'Indiquez un budget pour continuer',
           )
           .having((s) => s.draftLimitMessage, 'draftLimitMessage', isNull),
     ],

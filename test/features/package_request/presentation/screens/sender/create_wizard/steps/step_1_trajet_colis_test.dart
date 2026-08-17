@@ -127,7 +127,9 @@ void main() {
       );
     });
 
-    testWidgets('le lieu de remise est proposé, et optionnel', (tester) async {
+    // Le lieu de remise n'est plus demandé à la publication : il se convient
+    // entre les deux parties une fois la négociation engagée.
+    testWidgets('le lieu de remise n\'est plus demandé', (tester) async {
       final key = GlobalKey<Step1TrajetColisState>();
       final canContinue = ValueNotifier<bool>(false);
       addTearDown(canContinue.dispose);
@@ -137,13 +139,32 @@ void main() {
       );
       await tester.pump();
 
-      expect(
-        find.byKey(const Key('pickup-neighborhood-field')),
-        findsOneWidget,
+      expect(find.byKey(const Key('pickup-neighborhood-field')), findsNothing);
+      expect(find.textContaining('Où remettez-vous'), findsNothing);
+    });
+
+    testWidgets('l\'en-tête fourni défile avec le contenu', (tester) async {
+      final canContinue = ValueNotifier<bool>(false);
+      addTearDown(canContinue.dispose);
+
+      await tester.pumpWidget(
+        wrap(
+          Step1TrajetColis(
+            canContinueNotifier: canContinue,
+            header: const Text('en-tête devise'),
+          ),
+        ),
       );
-      // Laissé vide, il ne bloque pas : seuls villes et date comptent.
+      await tester.pump();
+
+      // Posé sous le SingleChildScrollView de l'étape, pas au-dessus : la
+      // bannière de devise restait sinon figée pendant toute la saisie.
+      expect(find.text('en-tête devise'), findsOneWidget);
       expect(
-        find.text('Où remettez-vous le colis ? (optionnel)'),
+        find.ancestor(
+          of: find.text('en-tête devise'),
+          matching: find.byType(SingleChildScrollView),
+        ),
         findsOneWidget,
       );
     });

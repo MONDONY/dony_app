@@ -399,20 +399,15 @@ class _PackageRequestCreateScreenState
                         context: TutorialContext.requestPublish,
                       ),
                     ),
-                    if (!state.isEditing)
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(
-                          DonySpacing.base,
-                          DonySpacing.base,
-                          DonySpacing.base,
-                          0,
-                        ),
-                        child: CurrencyPublishBanner.active(),
-                      ),
                     Expanded(
                       child: Step1TrajetColis(
                         key: _step1Key,
                         canContinueNotifier: _canContinueNotifier,
+                        // Passée à l'étape, donc à l'intérieur du défilement :
+                        // au-dessus, elle restait figée pendant toute la saisie.
+                        header: state.isEditing
+                            ? null
+                            : CurrencyPublishBanner.active(),
                       ),
                     ),
                   ],

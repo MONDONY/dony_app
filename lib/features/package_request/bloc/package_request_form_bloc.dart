@@ -101,7 +101,6 @@ class PackageRequestFormBloc
         desiredDate: e.desiredDate,
         dateToleranceDays: e.dateToleranceDays,
         transportMode: e.transportMode,
-        pickupNeighborhood: e.pickupNeighborhood,
       ),
     );
   }
@@ -127,7 +126,7 @@ class PackageRequestFormBloc
       emit(
         state.copyWith(
           submissionStatus: FormSubmissionStatus.error,
-          errorMessage: 'Indique un budget pour continuer',
+          errorMessage: 'Indiquez un budget pour continuer',
           clearDraftLimitMessage: true,
         ),
       );
@@ -186,10 +185,9 @@ class PackageRequestFormBloc
           totalBudgetEur: totalBudgetEur,
           description: state.description,
           photoKeys: e.photoKeys,
-          // Lu depuis l'etat, pas depuis l'event : le lieu de remise est saisi
-          // a l'etape 1, or FormStep3Submitted ne le porte jamais. Le chemin
-          // creation lisait l'event et perdait donc la valeur, contrairement
-          // au chemin edition juste au-dessus.
+          // Lu depuis l'état, jamais depuis l'event. Le lieu de remise n'est
+          // plus saisi à la publication ; il ne subsiste que sur les demandes
+          // déjà créées, et l'édition doit le conserver au lieu de l'écraser.
           pickupNeighborhood: _blankToNull(state.pickupNeighborhood),
           deliveryNeighborhood: _blankToNull(state.deliveryNeighborhood),
           saveAsDraft: e.saveAsDraft,

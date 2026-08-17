@@ -12,10 +12,15 @@ import 'package:intl/intl.dart';
 
 /// Étape 1 / 3 — Trajet & colis (Proposal B — Sahel Warmth).
 class Step1TrajetColis extends StatefulWidget {
-  const Step1TrajetColis({super.key, this.canContinueNotifier});
+  const Step1TrajetColis({super.key, this.canContinueNotifier, this.header});
 
   /// Piloté par l'étape, lu par le bouton « Continuer » de la coque.
   final ValueNotifier<bool>? canContinueNotifier;
+
+  /// Contenu posé en tête de la zone défilante (bannière de devise). Porté par
+  /// l'étape plutôt que par la coque : au-dessus du `SingleChildScrollView`, il
+  /// restait figé et mangeait de la hauteur pendant toute la saisie.
+  final Widget? header;
 
   @override
   State<Step1TrajetColis> createState() => Step1TrajetColisState();
@@ -28,7 +33,6 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
   DateTime? _date;
   int _tolerance = 2;
   final TransportMode _transportMode = TransportMode.plane;
-  final _pickupCtrl = TextEditingController();
 
   /// Les messages rouges n'apparaissent qu'après une première interaction :
   /// un formulaire vierge ne doit pas accueillir l'utilisateur par des
@@ -69,17 +73,10 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
     _arrivalCity = s.arrivalCity;
     _date = s.desiredDate;
     if (s.dateToleranceDays != null) _tolerance = s.dateToleranceDays!;
-    _pickupCtrl.text = s.pickupNeighborhood ?? '';
     // Après la frame : la coque possède le notifier et est en train de builder.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) widget.canContinueNotifier?.value = _isComplete;
     });
-  }
-
-  @override
-  void dispose() {
-    _pickupCtrl.dispose();
-    super.dispose();
   }
 
   /// Saisie locale non encore remontée au bloc.
@@ -92,8 +89,7 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
     return _departureCity != s.departureCity ||
         _arrivalCity != s.arrivalCity ||
         _date != s.desiredDate ||
-        _tolerance != (s.dateToleranceDays ?? 2) ||
-        _pickupCtrl.text.trim() != (s.pickupNeighborhood ?? '').trim();
+        _tolerance != (s.dateToleranceDays ?? 2);
   }
 
   /// Formule la tolérance en dates concrètes plutôt qu'en nombre de jours.
@@ -143,7 +139,6 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
         desiredDate: _date!,
         dateToleranceDays: _tolerance,
         transportMode: _transportMode,
-        pickupNeighborhood: _pickupCtrl.text,
       ),
     );
   }
@@ -165,6 +160,11 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            if (widget.header != null) ...[
+              widget.header!,
+              const SizedBox(height: DonySpacing.base),
+            ],
+
             // ── Section label ──────────────────────────────────────────────
             Text(
               'TRAJET',
@@ -262,28 +262,6 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
               padding: const EdgeInsets.only(top: DonySpacing.xs),
               child: Text(
                 _toleranceHint(),
-                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-              ),
-            ),
-            const SizedBox(height: DonySpacing.base),
-
-            // ── Lieu de remise (optionnel) ─────────────────────────────────
-            const _FieldLabel('Où remettez-vous le colis ? (optionnel)'),
-            const SizedBox(height: DonySpacing.xs),
-            DonyTextField(
-              key: const Key('pickup-neighborhood-field'),
-              controller: _pickupCtrl,
-              hint: 'Ex. Château Rouge, Créteil, gare de Lyon…',
-              // `@Size(max = 100)` sur PackageRequestCreateRequest : sans
-              // garde ici, une saisie longue partait en 422 à la publication.
-              maxLength: 100,
-              onChanged: (_) => _sync(),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: DonySpacing.xs),
-              child: Text(
-                'Le voyageur saura tout de suite si ça lui convient. '
-                'Vous pourrez en discuter ensuite.',
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
             ),

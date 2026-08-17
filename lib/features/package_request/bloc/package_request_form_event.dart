@@ -16,21 +16,12 @@ class FormStep1Submitted extends PackageRequestFormEvent {
     required this.desiredDate,
     required this.dateToleranceDays,
     required this.transportMode,
-    this.pickupNeighborhood = '',
   });
   final String departureCity;
   final String arrivalCity;
   final DateTime desiredDate;
   final int dateToleranceDays;
   final TransportMode transportMode;
-
-  /// Lieu de remise du colis, saisi librement par l'expéditeur.
-  ///
-  /// Chaîne vide (et non `null`) quand le champ est laissé ou remis à blanc :
-  /// le `copyWith` de l'état conserve la valeur précédente sur `null`, donc un
-  /// `null` empêcherait d'effacer un lieu déjà renseigné. La normalisation
-  /// vide vers `null` se fait au moment de l'envoi.
-  final String pickupNeighborhood;
 
   @override
   List<Object?> get props => [
@@ -39,7 +30,6 @@ class FormStep1Submitted extends PackageRequestFormEvent {
     desiredDate,
     dateToleranceDays,
     transportMode,
-    pickupNeighborhood,
   ];
 }
 

@@ -148,9 +148,17 @@ class _ContentCategoryComboBoxState extends State<ContentCategoryComboBox>
 
   late final AnimationController _animController;
   late final Animation<double> _fadeAnim;
-  late final Animation<Offset> _slideAnim;
 
   OverlayEntry? _overlayEntry;
+
+  /// Position de défilement de la page pendant que la liste est ouverte.
+  ///
+  /// Le placement (au-dessus ou en dessous) et la hauteur disponible se
+  /// calculent depuis la position du champ à l'écran. L'ouverture du clavier
+  /// fait remonter le champ par une animation de défilement : sans réécoute,
+  /// la décision resterait celle de la première frame, et la liste retomberait
+  /// sous le clavier.
+  ScrollPosition? _watchedScrollPosition;
   late LinkedHashSet<String> _selected;
   String _query = '';
 
@@ -166,10 +174,6 @@ class _ContentCategoryComboBoxState extends State<ContentCategoryComboBox>
       parent: _animController,
       curve: Curves.easeOutCubic,
     );
-    _slideAnim = Tween<Offset>(
-      begin: const Offset(0, -0.04),
-      end: Offset.zero,
-    ).animate(_fadeAnim);
     _focusNode.addListener(_onFocusChanged);
     _controller.addListener(_onTextChanged);
   }
@@ -209,6 +213,8 @@ class _ContentCategoryComboBoxState extends State<ContentCategoryComboBox>
 
   @override
   void dispose() {
+    _watchedScrollPosition?.removeListener(_onScrolled);
+    _watchedScrollPosition = null;
     _overlayEntry?.remove();
     _overlayEntry = null;
     _animController.dispose();
@@ -308,10 +314,16 @@ class _ContentCategoryComboBoxState extends State<ContentCategoryComboBox>
     }
     _overlayEntry = OverlayEntry(builder: _buildOverlay);
     Overlay.of(context).insert(_overlayEntry!);
+    _watchedScrollPosition = Scrollable.maybeOf(context)?.position
+      ?..addListener(_onScrolled);
     _animController.forward(from: 0);
   }
 
+  void _onScrolled() => _overlayEntry?.markNeedsBuild();
+
   void _closeOverlay() {
+    _watchedScrollPosition?.removeListener(_onScrolled);
+    _watchedScrollPosition = null;
     final entry = _overlayEntry;
     if (entry == null) {
       return;
@@ -328,22 +340,40 @@ class _ContentCategoryComboBoxState extends State<ContentCategoryComboBox>
     return 280;
   }
 
-  /// Hauteur maximale de la liste : bornée par l'espace réellement disponible
-  /// sous le champ (moins une marge de sécurité), pour que la liste ne déborde
-  /// jamais de l'écran et que le scroll interne soit visible/actif.
-  double _dropdownMaxHeight(BuildContext context) {
+  /// Où poser la liste, et quelle hauteur lui laisser.
+  ///
+  /// La liste s'ouvrait toujours sous le champ, avec une hauteur plancher de
+  /// 160 px même quand il ne restait rien dessous : clavier déployé, le champ
+  /// remonte juste au-dessus du clavier et la liste passait dessous. On
+  /// bascule au-dessus du champ dès que le dessous ne suffit plus.
+  ({double maxHeight, bool above}) _dropdownPlacement(BuildContext context) {
     const margin = 16.0;
     const anchorGap = 6.0;
-    final screenHeight = MediaQuery.of(context).size.height;
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    const comfortable = 160.0;
+    const floor = 96.0;
+    const ceiling = 320.0;
+
+    final mq = MediaQuery.of(context);
     final box = _fieldBoxKey.currentContext?.findRenderObject();
-    if (box is RenderBox && box.hasSize) {
-      final fieldBottom = box.localToGlobal(Offset(0, box.size.height)).dy;
-      final available =
-          screenHeight - bottomInset - fieldBottom - anchorGap - margin;
-      return available.clamp(160.0, 320.0);
+    if (box is! RenderBox || !box.hasSize) {
+      return (maxHeight: ceiling, above: false);
     }
-    return 320;
+
+    final fieldTop = box.localToGlobal(Offset.zero).dy;
+    final fieldBottom = fieldTop + box.size.height;
+    final spaceBelow =
+        mq.size.height -
+        mq.viewInsets.bottom -
+        fieldBottom -
+        anchorGap -
+        margin;
+    final spaceAbove = fieldTop - mq.viewPadding.top - anchorGap - margin;
+
+    // Bascule seulement si le dessous est vraiment à l'étroit ET que le dessus
+    // fait mieux : sinon la liste sauterait d'un côté à l'autre à la frappe.
+    final flip = spaceBelow < comfortable && spaceAbove > spaceBelow;
+    final space = flip ? spaceAbove : spaceBelow;
+    return (maxHeight: space.clamp(floor, ceiling), above: flip);
   }
 
   Widget _buildOverlay(BuildContext context) {
@@ -365,7 +395,13 @@ class _ContentCategoryComboBoxState extends State<ContentCategoryComboBox>
         query.isNotEmpty &&
         !hasExactMatch &&
         (filtered.isEmpty || widget.alwaysAllowCustom);
-    final maxHeight = _dropdownMaxHeight(context);
+    final placement = _dropdownPlacement(context);
+    // La liste glisse depuis le champ : vers le bas quand elle s'ouvre
+    // dessous, vers le haut quand elle bascule au-dessus.
+    final slide = Tween<Offset>(
+      begin: Offset(0, placement.above ? 0.04 : -0.04),
+      end: Offset.zero,
+    ).animate(_fadeAnim);
 
     return Stack(
       children: [
@@ -378,17 +414,24 @@ class _ContentCategoryComboBoxState extends State<ContentCategoryComboBox>
         ),
         CompositedTransformFollower(
           link: _layerLink,
-          targetAnchor: Alignment.bottomLeft,
-          offset: const Offset(0, 6),
+          targetAnchor: placement.above
+              ? Alignment.topLeft
+              : Alignment.bottomLeft,
+          followerAnchor: placement.above
+              ? Alignment.bottomLeft
+              : Alignment.topLeft,
+          offset: Offset(0, placement.above ? -6 : 6),
           child: FadeTransition(
             opacity: _fadeAnim,
             child: SlideTransition(
-              position: _slideAnim,
+              position: slide,
               child: Align(
-                alignment: Alignment.topLeft,
+                alignment: placement.above
+                    ? Alignment.bottomLeft
+                    : Alignment.topLeft,
                 child: _ComboDropdown(
                   width: width,
-                  maxHeight: maxHeight,
+                  maxHeight: placement.maxHeight,
                   catalog: filtered,
                   selected: _selected,
                   query: query,
