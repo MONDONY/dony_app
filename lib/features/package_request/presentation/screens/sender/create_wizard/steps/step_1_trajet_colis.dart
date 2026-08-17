@@ -41,7 +41,7 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
   String? get _arrivalError {
     if (_arrivalCity == null) return "Ville d'arrivée obligatoire";
     if (_arrivalCity == _departureCity) {
-      return 'Choisis une ville différente du départ';
+      return 'Choisissez une ville différente du départ';
     }
     return null;
   }
@@ -102,7 +102,8 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
       return 'Seuls les voyageurs partant exactement ce jour-là pourront répondre.';
     }
     if (_date == null) {
-      return '± $_tolerance jours autour de ta date. Plus de souplesse, plus de voyageurs.';
+      return '± $_tolerance jours autour de votre date. Plus de souplesse, '
+          'plus de voyageurs.';
     }
     final f = DateFormat('d MMM', 'fr_FR');
     final from = f.format(_date!.subtract(Duration(days: _tolerance)));
@@ -166,7 +167,7 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
           children: [
             // ── Section label ──────────────────────────────────────────────
             Text(
-              'TRAJET & COLIS',
+              'TRAJET',
               style: tt.labelMedium?.copyWith(
                 color: cs.primary,
                 fontWeight: FontWeight.w800,
@@ -226,7 +227,7 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
                         Padding(
                           padding: const EdgeInsets.only(top: DonySpacing.xs),
                           child: Text(
-                            '🔥 Date proche — cette demande sera signalée urgente',
+                            '🔥 Date proche, cette demande sera signalée urgente',
                             style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(
                                   color: Theme.of(context).colorScheme.error,
@@ -267,19 +268,22 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
             const SizedBox(height: DonySpacing.base),
 
             // ── Lieu de remise (optionnel) ─────────────────────────────────
-            const _FieldLabel('Où remets-tu le colis ? (optionnel)'),
+            const _FieldLabel('Où remettez-vous le colis ? (optionnel)'),
             const SizedBox(height: DonySpacing.xs),
             DonyTextField(
               key: const Key('pickup-neighborhood-field'),
               controller: _pickupCtrl,
               hint: 'Ex. Château Rouge, Créteil, gare de Lyon…',
+              // `@Size(max = 100)` sur PackageRequestCreateRequest : sans
+              // garde ici, une saisie longue partait en 422 à la publication.
+              maxLength: 100,
               onChanged: (_) => _sync(),
             ),
             Padding(
               padding: const EdgeInsets.only(top: DonySpacing.xs),
               child: Text(
                 'Le voyageur saura tout de suite si ça lui convient. '
-                'Tu pourras en discuter ensuite.',
+                'Vous pourrez en discuter ensuite.',
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
             ),
@@ -479,7 +483,10 @@ class _ToleranceField extends StatelessWidget {
                     t == 0 ? 'Date exacte' : '± $t ${t > 1 ? "jours" : "jour"}',
                   ),
                   trailing: t == tolerance
-                      ? const DonyIcon('check', color: DonyColors.primary)
+                      ? DonyIcon(
+                          'check',
+                          color: Theme.of(ctx).colorScheme.primary,
+                        )
                       : null,
                   onTap: () {
                     onChanged(t);

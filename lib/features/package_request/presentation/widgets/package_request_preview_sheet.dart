@@ -14,20 +14,21 @@ abstract final class PackageRequestPreviewSheet {
     required PackageRequestFormState formState,
     required VoidCallback onConfirm,
     VoidCallback? onSaveDraft,
-    bool isSubmitting = false,
     SupportedCurrency? currency,
+    // Compté par l'appelant : la sheet s'ouvre sur le navigator racine et n'a
+    // donc pas accès aux providers du wizard.
+    int photoCount = 0,
   }) {
     return DonyBottomSheet.show<void>(
       context,
-      title: 'Aperçu de ta demande',
+      title: 'Aperçu de votre demande',
       stickyBottom: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           DonyButton(
             key: const Key('preview-publish'),
             label: 'Publier ma demande',
-            onPressed: isSubmitting ? null : onConfirm,
-            isLoading: isSubmitting,
+            onPressed: onConfirm,
           ),
           if (onSaveDraft != null) ...[
             const SizedBox(height: DonySpacing.sm),
@@ -35,26 +36,37 @@ abstract final class PackageRequestPreviewSheet {
               key: const Key('preview-save-draft'),
               label: 'Enregistrer en brouillon',
               variant: DonyButtonVariant.secondary,
-              onPressed: isSubmitting ? null : onSaveDraft,
+              onPressed: onSaveDraft,
             ),
           ],
         ],
       ),
-      child: _PreviewBody(formState: formState, currency: currency),
+      child: _PreviewBody(
+        formState: formState,
+        currency: currency,
+        photoCount: photoCount,
+      ),
     );
   }
 }
 
 class _PreviewBody extends StatelessWidget {
-  const _PreviewBody({required this.formState, required this.currency});
+  const _PreviewBody({
+    required this.formState,
+    required this.currency,
+    required this.photoCount,
+  });
+
   final PackageRequestFormState formState;
   final SupportedCurrency? currency;
+  final int photoCount;
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final s = formState;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -65,27 +77,102 @@ class _PreviewBody extends StatelessWidget {
         const SizedBox(height: DonySpacing.xs),
         if (s.desiredDate != null)
           Text(
-            '${DateFormat('d MMMM', 'fr').format(s.desiredDate!)} '
-            '±${s.dateToleranceDays ?? 0}j · ${s.weightKg?.toStringAsFixed(0) ?? '?'} kg',
+            _dateLine(s),
             style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
           ),
-        if (s.categories.isNotEmpty) ...[
-          const SizedBox(height: DonySpacing.xs),
-          Text(
-            s.categories.join(', '),
-            style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+        const SizedBox(height: DonySpacing.base),
+
+        // L'aperçu s'arrêtait au corridor, à la date et au prix : l'expéditeur
+        // validait sans voir le contenu, les photos, le lieu de remise ni les
+        // modes de paiement, c'est-à-dire l'essentiel de ce que lit le voyageur.
+        if (s.categories.isNotEmpty)
+          _Row(label: 'Contenu', value: s.categories.join(', ')),
+        if (s.weightKg != null) _Row(label: 'Poids', value: _weightLabel(s)),
+        if (photoCount > 0)
+          _Row(
+            label: 'Photos',
+            value: photoCount == 1 ? '1 photo' : '$photoCount photos',
           ),
-        ],
+        if (s.pickupNeighborhood != null &&
+            s.pickupNeighborhood!.trim().isNotEmpty)
+          _Row(label: 'Remise', value: s.pickupNeighborhood!.trim()),
+        if (s.description != null && s.description!.trim().isNotEmpty)
+          _Row(label: 'Description', value: s.description!.trim()),
+        _Row(label: 'Paiement', value: _paymentLabel(s)),
+
         const SizedBox(height: DonySpacing.base),
         Text(
-          s.negotiable
-              ? (s.totalBudgetEur != null
-                    ? 'Budget indicatif : ${CurrencyFormatter.formatOrPlain(s.totalBudgetEur!, currency)}'
-                    : 'Ouvert aux offres')
-              : 'Prix ferme : ${s.totalBudgetEur == null ? '?' : CurrencyFormatter.formatOrPlain(s.totalBudgetEur!, currency)}',
+          _priceLine(s),
           style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
         ),
       ],
+    );
+  }
+
+  /// Poids au dixième près. `toStringAsFixed(0)` affichait « 2 kg » pour
+  /// 2,5 kg, en désaccord avec le récap de l'étape 3 juste au-dessus.
+  String _weightLabel(PackageRequestFormState s) {
+    final w = s.weightKg!;
+    return '${w.toStringAsFixed(w.truncateToDouble() == w ? 0 : 1)} kg';
+  }
+
+  String _dateLine(PackageRequestFormState s) {
+    final date = DateFormat('d MMMM y', 'fr_FR').format(s.desiredDate!);
+    final tol = s.dateToleranceDays ?? 0;
+    return tol == 0 ? date : '$date ±${tol}j';
+  }
+
+  String _paymentLabel(PackageRequestFormState s) => s.acceptedPaymentMethods
+      .map((m) => m.displayLabel)
+      .join(', ');
+
+  String _priceLine(PackageRequestFormState s) {
+    final amount = s.totalBudgetEur;
+    if (s.negotiable) {
+      return amount == null
+          ? 'Ouvert aux offres'
+          : 'Budget indicatif : '
+                '${CurrencyFormatter.formatOrPlain(amount, currency)}';
+    }
+    return amount == null
+        ? 'Prix ferme'
+        : 'Prix ferme : ${CurrencyFormatter.formatOrPlain(amount, currency)}';
+  }
+}
+
+class _Row extends StatelessWidget {
+  const _Row({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: DonySpacing.sm),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 92,
+            child: Text(
+              label,
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: tt.bodyMedium?.copyWith(
+                color: cs.onSurface,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

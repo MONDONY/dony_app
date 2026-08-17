@@ -33,6 +33,7 @@ class DonyTextField extends StatelessWidget {
     this.autofocus = false,
     this.maxLines = 1,
     this.minLines,
+    this.maxLength,
     this.focusNode,
     this.textInputAction,
     this.onSubmitted,
@@ -76,6 +77,7 @@ class DonyTextField extends StatelessWidget {
        _trailing = trailing,
        controller = null,
        hint = null,
+       maxLength = null,
        suffixIcon = null,
        obscureText = false,
        keyboardType = null,
@@ -123,6 +125,10 @@ class DonyTextField extends StatelessWidget {
   final bool autofocus;
   final int maxLines;
   final int? minLines;
+
+  /// Longueur maximale saisissable. Sert à refléter une contrainte du backend
+  /// côté champ, plutôt que de la découvrir en 422 à la soumission.
+  final int? maxLength;
 
   /// Nœud de focus du champ, pour que le formulaire puisse donner la main au
   /// champ suivant.
@@ -196,6 +202,12 @@ class DonyTextField extends StatelessWidget {
           autofocus: autofocus,
           maxLines: maxLines,
           minLines: minLines,
+          maxLength: maxLength,
+          // Le compteur « 12/100 » n'existe nulle part dans le DS : la limite
+          // est une garde contre un 422, pas une consigne de rédaction.
+          buildCounter:
+              (_, {required currentLength, required isFocused, maxLength}) =>
+                  null,
           focusNode: focusNode,
           textInputAction: textInputAction,
           onFieldSubmitted: onSubmitted,

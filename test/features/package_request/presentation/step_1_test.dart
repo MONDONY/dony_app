@@ -100,7 +100,7 @@ void main() {
     // 6. Section label and title are still present
     testWidgets('section label and title are present', (tester) async {
       await tester.pumpWidget(wrap(const Step1TrajetColis()));
-      expect(find.text('TRAJET & COLIS'), findsOneWidget);
+      expect(find.text('TRAJET'), findsOneWidget);
       expect(find.text("D'où vers où ?"), findsOneWidget);
     });
 

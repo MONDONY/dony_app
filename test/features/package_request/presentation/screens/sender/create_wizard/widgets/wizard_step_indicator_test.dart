@@ -27,9 +27,9 @@ void main() {
       expect(find.byType(AnimatedContainer), findsNWidgets(4));
     });
 
-    testWidgets('preferredSize returns height 20', (tester) async {
+    testWidgets('preferredSize returns height 24', (tester) async {
       const indicator = WizardStepIndicator(currentStep: 0);
-      expect(indicator.preferredSize.height, 20);
+      expect(indicator.preferredSize.height, 24);
     });
 
     testWidgets('currentStep 0 renders without errors', (tester) async {

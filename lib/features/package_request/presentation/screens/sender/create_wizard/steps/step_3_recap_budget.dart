@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
@@ -34,6 +36,7 @@ class Step3RecapBudget extends StatefulWidget {
 
 class Step3RecapBudgetState extends State<Step3RecapBudget> {
   final _formKey = GlobalKey<FormState>();
+  final _budgetFieldKey = GlobalKey();
   final _budgetCtrl = TextEditingController();
   final _promoCtrl = TextEditingController();
 
@@ -62,10 +65,35 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
     });
   }
 
+  /// Les messages rouges n'apparaissent qu'après une première saisie, comme
+  /// aux étapes 1 et 2 : l'étape s'ouvrait sinon sur « Indique un budget »
+  /// avant même que le champ ait été touché.
+  bool _touched = false;
+
+  /// Budget accepté par le backend (`@DecimalMin("0.0") @DecimalMax("560.0")`),
+  /// borne basse relevée : un budget nul ne rémunère personne.
+  static const _kMinBudget = 1.0;
+  static const _kMaxBudget = 560.0;
+
+  static bool _isBudgetValid(double? v) =>
+      v != null && v >= _kMinBudget && v <= _kMaxBudget;
+
+  /// Dit ce qui manque, pas seulement qu'il manque quelque chose : un budget
+  /// hors bornes recevait le même « Indique un budget » qu'un champ vide.
+  String _budgetErrorText(double? v) {
+    if (v == null) return 'Indiquez un budget pour continuer';
+    final min = CurrencyFormatter.formatOrPlain(_kMinBudget, widget.currency);
+    final max = CurrencyFormatter.formatOrPlain(_kMaxBudget, widget.currency);
+    return 'Le budget doit être compris entre $min et $max';
+  }
+
+  /// Le bouton ne doit être actif que si la publication peut réellement
+  /// aboutir : il l'était dès qu'un montant était saisi, y compris hors
+  /// bornes, et la publication échouait ensuite sans un mot.
   void _sync() {
     if (!mounted) return;
     final s = context.read<PackageRequestFormBloc>().state;
-    widget.canContinueNotifier?.value = s.totalBudgetEur != null;
+    widget.canContinueNotifier?.value = _isBudgetValid(s.totalBudgetEur);
   }
 
   Future<void> _applyPromoCode() async {
@@ -96,6 +124,21 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
     }
   }
 
+  /// Ramène le champ budget à l'écran quand la publication est refusée : le
+  /// champ peut être hors de vue, sous l'aperçu qui vient de se refermer.
+  void _scrollToBudgetField() {
+    final ctx = _budgetFieldKey.currentContext;
+    if (ctx == null) return;
+    unawaited(
+      Scrollable.ensureVisible(
+        ctx,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
+        alignment: 0.1,
+      ),
+    );
+  }
+
   /// Le budget a changé → l'aperçu (chargé pour l'ANCIEN montant) est périmé.
   /// Retombe sur l'estimation locale instantanée jusqu'au prochain "Appliquer".
   void _invalidateQuote() {
@@ -112,13 +155,16 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
   }
 
   void submit({bool saveAsDraft = false}) {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
     final state = context.read<PackageRequestFormBloc>().state;
-    if (state.totalBudgetEur == null) {
-      // Backstop : le bouton « Aperçu » est déjà grisé dans ce cas.
+    if (!_formKey.currentState!.validate() ||
+        !_isBudgetValid(state.totalBudgetEur)) {
+      // Backstop : le bouton « Aperçu » est déjà grisé dans ce cas. On révèle
+      // quand même les messages et on remonte au champ fautif — cette sortie
+      // était muette, et l'aperçu venait de se refermer : côté utilisateur,
+      // « Publier » ne faisait tout simplement rien.
+      setState(() => _touched = true);
       _sync();
+      _scrollToBudgetField();
       return;
     }
     final photosCubit = context.read<PackageRequestPhotosCubit>();
@@ -165,7 +211,7 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                 ),
                 const SizedBox(height: DonySpacing.xs),
                 Text(
-                  'Vérifie ta demande, puis indique le budget à montrer aux voyageurs.',
+                  'Vérifiez votre demande, puis indiquez le budget à montrer aux voyageurs.',
                   style: tt.bodyMedium?.copyWith(
                     color: cs.onSurfaceVariant,
                     height: 1.4,
@@ -198,25 +244,31 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                 const SizedBox(height: DonySpacing.base),
 
                 // ── Budget ─────────────────────────────────────────────────
-                _FieldLabel(state.negotiable ? 'Budget indicatif' : 'Ton prix'),
+                _FieldLabel(state.negotiable ? 'Budget indicatif' : 'Votre prix'),
                 const SizedBox(height: DonySpacing.xs),
                 _BudgetTotalInput(
+                  key: _budgetFieldKey,
                   controller: _budgetCtrl,
                   onBudgetChanged: _invalidateQuote,
                   currency: widget.currency,
+                  minBudget: _kMinBudget,
+                  maxBudget: _kMaxBudget,
+                  onTouched: () {
+                    if (!_touched) setState(() => _touched = true);
+                  },
                 ),
                 Padding(
                   padding: const EdgeInsets.only(top: DonySpacing.xs),
                   child: Text(
                     state.negotiable
-                        ? 'Donne un ordre d\'idée pour attirer plus d\'offres, sans t\'engager.'
+                        ? 'Donnez un ordre d\'idée pour attirer plus d\'offres, sans vous engager.'
                         : 'Les voyageurs verront ce montant et pourront l\'accepter tel quel.',
                     style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                   ),
                 ),
                 DonyFieldError(
-                  message: state.totalBudgetEur == null
-                      ? 'Indique un budget pour continuer'
+                  message: _touched && !_isBudgetValid(state.totalBudgetEur)
+                      ? _budgetErrorText(state.totalBudgetEur)
                       : null,
                   textKey: const Key('budget-error'),
                 ),
@@ -304,17 +356,17 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                             const SizedBox(height: DonySpacing.xs),
                             Row(
                               children: [
-                                const DonyIcon(
+                                DonyIcon(
                                   'circle-check',
                                   size: 16,
-                                  color: Color(0xFF16A34A),
+                                  color: cs.success,
                                 ),
                                 const SizedBox(width: 6),
                                 Expanded(
                                   child: Text(
                                     quote.promoLabel ?? 'Code appliqué',
                                     style: tt.bodySmall?.copyWith(
-                                      color: const Color(0xFF16A34A),
+                                      color: cs.success,
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
@@ -326,17 +378,17 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                             const SizedBox(height: DonySpacing.xs),
                             Row(
                               children: [
-                                const DonyIcon(
+                                DonyIcon(
                                   'circle-alert',
                                   size: 16,
-                                  color: Color(0xFFE53935),
+                                  color: cs.error,
                                 ),
                                 const SizedBox(width: 6),
                                 Expanded(
                                   child: Text(
                                     promoError,
                                     style: tt.bodySmall?.copyWith(
-                                      color: const Color(0xFFE53935),
+                                      color: cs.error,
                                     ),
                                   ),
                                 ),
@@ -354,7 +406,7 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                 const _FieldLabel('Paiement accepté'),
                 const SizedBox(height: DonySpacing.xs),
                 Text(
-                  'Choisis comment tu pourras payer le voyageur.',
+                  'Choisissez comment vous paierez le voyageur.',
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
                 const SizedBox(height: DonySpacing.sm),
@@ -377,8 +429,8 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                       Expanded(
                         child: Text(
                           'Une fois publiée, les voyageurs sur ce trajet sont '
-                          'prévenus. Tu recevras une notification à la première '
-                          'offre.',
+                          'prévenus. Vous recevrez une notification à la '
+                          'première offre.',
                           style: tt.bodySmall?.copyWith(
                             color: cs.onSurface,
                             height: 1.4,
@@ -422,12 +474,21 @@ class _FieldLabel extends StatelessWidget {
 
 class _BudgetTotalInput extends StatelessWidget {
   const _BudgetTotalInput({
+    super.key,
     required this.controller,
     this.onBudgetChanged,
     required this.currency,
+    required this.minBudget,
+    required this.maxBudget,
+    required this.onTouched,
   });
   final TextEditingController controller;
   final SupportedCurrency? currency;
+  final double minBudget;
+  final double maxBudget;
+
+  /// Signale la première saisie : les messages rouges restent muets avant.
+  final VoidCallback onTouched;
 
   /// Prévient le parent qu'un devis chargé précédemment est périmé.
   final VoidCallback? onBudgetChanged;
@@ -478,19 +539,23 @@ class _BudgetTotalInput extends StatelessWidget {
         ),
       ),
       onChanged: (text) {
+        onTouched();
         final value = double.tryParse(text.replaceAll(',', '.'));
         context.read<PackageRequestFormBloc>().add(
           PackageRequestTotalBudgetChanged(value),
         );
         onBudgetChanged?.call();
       },
+      // Bornes alignées sur PackageRequestCreateRequest côté backend
+      // (@DecimalMax 560.0) : le plafond était figé à 500 côté Flutter.
       validator: (v) {
         if (v == null || v.trim().isEmpty) {
-          return 'Indique un budget';
+          return 'Indiquez un budget';
         }
         final d = double.tryParse(v.replaceAll(',', '.'));
-        if (d == null || d < 0 || d > 500) {
-          return 'Entre 0 et ${CurrencyFormatter.formatOrPlain(500, currency)}';
+        if (d == null || d < minBudget || d > maxBudget) {
+          return 'Entre ${CurrencyFormatter.formatOrPlain(minBudget, currency)} '
+              'et ${CurrencyFormatter.formatOrPlain(maxBudget, currency)}';
         }
         return null;
       },
@@ -653,8 +718,18 @@ class _PaymentMethodChips extends StatelessWidget {
         runSpacing: DonySpacing.sm,
         children: methods.map((method) {
           final isSelected = selected.contains(method);
+          final isLastSelected = isSelected && selected.length == 1;
           return GestureDetector(
             onTap: () {
+              // Le bloc refuse de vider la sélection. Sans ce mot, le refus se
+              // lisait comme un tap perdu.
+              if (isLastSelected) {
+                DonySnackbar.show(
+                  context,
+                  message: 'Gardez au moins un mode de paiement.',
+                );
+                return;
+              }
               context.read<PackageRequestFormBloc>().add(
                 PackageRequestPaymentMethodToggled(method),
               );
@@ -726,7 +801,7 @@ class _PriceModeChoice extends StatelessWidget {
           key: const Key('price-mode-open'),
           emoji: '💬',
           title: "J'ouvre aux offres",
-          subtitle: 'Les voyageurs proposent leur prix, tu choisis.',
+          subtitle: 'Les voyageurs proposent leur prix, vous choisissez.',
           selected: negotiable,
           onTap: () => onChanged(true),
         ),

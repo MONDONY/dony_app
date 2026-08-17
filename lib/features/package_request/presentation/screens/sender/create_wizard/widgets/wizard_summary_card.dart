@@ -32,6 +32,10 @@ class WizardSummaryCard extends StatelessWidget {
           ],
           _divider(cs),
           _line(context, 'Colis', _packageText(state)),
+          if (state.categories.isNotEmpty) ...[
+            _divider(cs),
+            _line(context, 'Contenu', _categoriesText(state)),
+          ],
         ],
       ),
     );
@@ -84,13 +88,17 @@ class WizardSummaryCard extends StatelessWidget {
     return tol == 0 ? f : '$f ±${tol}j';
   }
 
+  /// Poids seul. La taille n'est plus affichée : elle n'est pas saisie par
+  /// l'expéditeur (l'étape 2 la déduit du poids pour les filtres de recherche),
+  /// et le récap la sortait telle quelle du fil, en « MEDIUM ».
   String _packageText(PackageRequestFormState s) {
-    final size = s.parcelSize?.wireName ?? '-';
     final w = s.weightKg;
-    final wStr = w == null
-        ? ''
-        : ' · ${w.toStringAsFixed(w.truncateToDouble() == w ? 0 : 1)} kg';
-    final cat = s.categories.isEmpty ? '' : ' · ${s.categories.first}';
-    return '$size$wStr$cat';
+    if (w == null) return '-';
+    return '${w.toStringAsFixed(w.truncateToDouble() == w ? 0 : 1)} kg';
   }
+
+  /// Toutes les catégories, pas seulement la première : le récap en affichait
+  /// une seule et laissait croire que les autres avaient été perdues.
+  String _categoriesText(PackageRequestFormState s) =>
+      s.categories.isEmpty ? '-' : s.categories.join(', ');
 }

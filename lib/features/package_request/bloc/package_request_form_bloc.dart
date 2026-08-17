@@ -251,12 +251,14 @@ class PackageRequestFormBloc
   ) {
     final next = {...state.acceptedPaymentMethods};
     if (next.contains(e.method)) {
+      // Décocher le dernier mode retenu était absorbé en silence : la case se
+      // rendait décochée puis re-cochée, et le tap passait pour une panne. On
+      // refuse explicitement, l'écran peut alors dire pourquoi.
+      if (next.length == 1) return;
       next.remove(e.method);
     } else {
       next.add(e.method);
     }
-    // Guarantee at least one payment method is always selected.
-    if (next.isEmpty) next.add(PaymentMethod.stripe);
     emit(state.copyWith(acceptedPaymentMethods: next));
   }
 }

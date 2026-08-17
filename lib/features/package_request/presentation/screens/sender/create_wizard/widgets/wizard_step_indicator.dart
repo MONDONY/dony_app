@@ -13,8 +13,10 @@ class WizardStepIndicator extends StatelessWidget
   final int currentStep;
   final int totalSteps;
 
+  /// 8 (padding haut) + 4 (barre) + 12 (padding bas) = 24. La valeur annoncée
+  /// était 20, soit 4 px de moins que le rendu réel.
   @override
-  Size get preferredSize => const Size.fromHeight(20);
+  Size get preferredSize => const Size.fromHeight(24);
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +37,7 @@ class WizardStepIndicator extends StatelessWidget
                 curve: Curves.easeOutCubic,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: i <= currentStep ? DonyColors.primary : cs.outline,
+                  color: i <= currentStep ? cs.primary : cs.outline,
                   borderRadius: BorderRadius.circular(DonyRadius.full),
                 ),
               ),

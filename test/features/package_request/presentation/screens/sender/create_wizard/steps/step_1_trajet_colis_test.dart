@@ -64,7 +64,7 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(wrap(const Step1TrajetColis()));
-      expect(find.text('TRAJET & COLIS'), findsOneWidget);
+      expect(find.text('TRAJET'), findsOneWidget);
       expect(find.text("D'où vers où ?"), findsOneWidget);
       // Avion verrouillé remplace les 6 OptionButton
       expect(
@@ -142,7 +142,7 @@ void main() {
         findsOneWidget,
       );
       // Laissé vide, il ne bloque pas : seuls villes et date comptent.
-      expect(find.text('Où remets-tu le colis ? (optionnel)'), findsOneWidget);
+      expect(find.text('Où remettez-vous le colis ? (optionnel)'), findsOneWidget);
     });
 
     testWidgets(
@@ -218,7 +218,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.text('🔥 Date proche — cette demande sera signalée urgente'),
+        find.text('🔥 Date proche, cette demande sera signalée urgente'),
         findsOneWidget,
       );
     });
@@ -254,7 +254,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.text('🔥 Date proche — cette demande sera signalée urgente'),
+        find.text('🔥 Date proche, cette demande sera signalée urgente'),
         findsNothing,
       );
     });
@@ -266,7 +266,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.text('🔥 Date proche — cette demande sera signalée urgente'),
+        find.text('🔥 Date proche, cette demande sera signalée urgente'),
         findsNothing,
       );
     });
