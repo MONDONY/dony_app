@@ -165,20 +165,36 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
   String _captionFor(PosterShareChannel channel) {
     final a = widget.announcement;
     final deadline = a.handoverDeadline;
+    final pickup = a.pickupAddress?.label;
+    final delivery = a.deliveryAddress?.label;
 
     return <String>[
       '✈️ ${a.departureCity} vers ${a.arrivalCity}',
       '📅 Départ le ${TripPosterCard.dayFormat.format(a.departureDate)}',
       if (deadline != null)
         '⏰ Dernier dépôt le ${TripPosterCard.deadlineFormat.format(deadline)}',
-      '📦 ${formatKgPrice(a.availableKg)} kg disponibles, '
-          '${formatPriceIn(a.senderPricePerKg, a.currency)} le kilo',
+      '📦 ${TripPosterCard.capacityLabel(a)}, ${_priceSentence(a)}',
+      if (pickup != null) '📍 Remise : $pickup',
+      if (delivery != null) '🏁 Récupération : $delivery',
       '',
       'Réservez vos kilos ici :',
       _urlFor(channel),
       '',
       'Paiement sécurisé, suivi du colis, voyageur vérifié.',
     ].join('\n');
+  }
+
+  /// Phrase de prix de la légende, alignée mot pour mot sur le bloc prix de
+  /// l'affiche : les deux partent des mêmes accesseurs, donc un trajet vendu à
+  /// l'article ne peut pas annoncer « 0 € le kilo » d'un côté et sa grille de
+  /// l'autre.
+  static String _priceSentence(AnnouncementModel a) {
+    final kilo = '${formatPriceIn(a.senderPricePerKg, a.currency)} le kilo';
+    final grid = a.cheapestGridPrice;
+    if (grid == null) return kilo;
+
+    final article = "dès ${formatPriceIn(grid, a.currency)} l'article";
+    return a.hasKgPrice ? '$article et $kilo' : article;
   }
 
   /// Capture l'affiche en PNG, une seule fois par écran.

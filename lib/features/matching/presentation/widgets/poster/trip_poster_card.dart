@@ -53,10 +53,23 @@ class TripPosterCard extends StatelessWidget {
   static const Color _muted = DonyColors.neutral500;
   static const Color _line = DonyColors.neutral200;
 
+  /// Capacité telle qu'elle doit être annoncée.
+  ///
+  /// `KG_FREE` signifie « pas de plafond déclaré » : `availableKg` n'est alors
+  /// qu'une valeur de forme, et l'imprimer comme une limite tromperait
+  /// l'expéditeur. Tout le reste de l'application dit « Kg libre » dans ce cas.
+  static String capacityLabel(AnnouncementModel a) => a.isKgFree
+      ? 'Kg libre'
+      // formatKgPrice retire les décimales superflues ; sa sémantique est celle
+      // d'un nombre, pas d'un prix.
+      : '${formatKgPrice(a.availableKg)} kg';
+
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
     final deadline = announcement.handoverDeadline;
+    final pickup = announcement.pickupAddress?.label;
+    final delivery = announcement.deliveryAddress?.label;
 
     return SizedBox(
       width: logicalWidth,
@@ -64,20 +77,20 @@ class TripPosterCard extends StatelessWidget {
       child: ColoredBox(
         color: _paper,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 22, 24, 20),
+          padding: const EdgeInsets.fromLTRB(22, 20, 22, 18),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _wordmark(text),
-              const SizedBox(height: 18),
+              const SizedBox(height: 14),
               _corridor(text),
-              const SizedBox(height: 18),
+              const SizedBox(height: 14),
               _InfoRow(
                 label: 'Départ',
                 value: dayFormat.format(announcement.departureDate),
                 valueColor: _ink,
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               // La date limite de dépôt est le vrai butoir commercial, pas la
               // date de départ : c'est elle qui déclenche la décision de
               // l'expéditeur. Toutes les affiches du marché la mettent en avant
@@ -88,18 +101,37 @@ class TripPosterCard extends StatelessWidget {
                   value: deadlineFormat.format(deadline),
                   valueColor: _terra,
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 8),
               ],
               _InfoRow(
                 label: 'Place disponible',
-                // formatKgPrice retire les décimales superflues ; sa
-                // sémantique est celle d'un nombre, pas d'un prix.
-                value: '${formatKgPrice(announcement.availableKg)} kg',
+                value: capacityLabel(announcement),
                 valueColor: _ink,
               ),
+              // Lieux de remise et de récupération. Les DTO allégés ne les
+              // portent pas, d'où le test : une affiche sans adresse reste
+              // valable, elle est simplement moins précise.
+              if (pickup != null) ...[
+                const SizedBox(height: 8),
+                _InfoRow(
+                  label: 'Remise',
+                  value: pickup,
+                  valueColor: _ink,
+                  maxLines: 2,
+                ),
+              ],
+              if (delivery != null) ...[
+                const SizedBox(height: 8),
+                _InfoRow(
+                  label: 'Récupération',
+                  value: delivery,
+                  valueColor: _ink,
+                  maxLines: 2,
+                ),
+              ],
               const Spacer(),
               _priceBlock(text),
-              const SizedBox(height: 14),
+              const SizedBox(height: 12),
               _footer(text),
             ],
           ),
@@ -130,7 +162,7 @@ class TripPosterCard extends StatelessWidget {
 
   Widget _corridor(TextTheme text) {
     final style = text.displayLarge?.copyWith(
-      fontSize: 40,
+      fontSize: 34,
       height: 1.02,
       fontWeight: FontWeight.w800,
       letterSpacing: -1.6,
@@ -163,7 +195,36 @@ class TripPosterCard extends StatelessWidget {
     );
   }
 
+  /// Bloc prix, décliné selon le mode de tarification du trajet.
+  ///
+  /// Un trajet vendu à l'article n'a pas forcément de tarif au kilo : la
+  /// colonne backend étant `NOT NULL`, le formulaire y écrit `0.0`, si bien
+  /// qu'un affichage naïf annonçait « 0 € le kilo » sur l'affiche même. Le
+  /// mode commande donc ce qui est mis en avant, et les deux tarifs coexistent
+  /// quand le voyageur a réellement renseigné les deux.
   Widget _priceBlock(TextTheme text) {
+    final currency = announcement.currency;
+    final grid = announcement.cheapestGridPrice;
+    final hasKg = announcement.hasKgPrice;
+
+    final String amount;
+    final String unit;
+    String? secondary;
+
+    if (grid != null) {
+      // « dès », parce qu'un prix de grille est un point d'entrée : c'est
+      // l'article le moins cher, pas le tarif de tous les articles.
+      amount = 'dès ${formatPriceIn(grid, currency)}';
+      unit = "l'article";
+      if (hasKg) {
+        secondary =
+            '${formatPriceIn(announcement.senderPricePerKg, currency)} le kilo';
+      }
+    } else {
+      amount = formatPriceIn(announcement.senderPricePerKg, currency);
+      unit = 'le kilo';
+    }
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
@@ -171,46 +232,62 @@ class TripPosterCard extends StatelessWidget {
         color: _blue,
         borderRadius: BorderRadius.circular(DonyRadius.card),
       ),
-      // Mise à l'échelle plutôt que troncature : « 6 000 F CFA » est deux fois
-      // plus large que « 8 € », et un prix coupé par une ellipse serait pire
-      // qu'un prix légèrement plus petit. Le bloc reste lisible quelle que soit
-      // la devise du corridor.
-      child: FittedBox(
-        fit: BoxFit.scaleDown,
-        alignment: Alignment.centerLeft,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
-              // Prix expéditeur, commission comprise, dans la devise du trajet.
-              // `pricePerKg` seul est le net voyageur : l'afficher annoncerait
-              // un tarif que personne ne paie.
-              formatPriceIn(
-                announcement.senderPricePerKg,
-                announcement.currency,
-              ),
-              style: text.displayLarge?.copyWith(
-                fontSize: 38,
-                height: 1,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -1.4,
-                color: DonyColors.neutral0,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 5),
-              child: Text(
-                'le kilo',
-                style: text.titleMedium?.copyWith(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: DonyColors.blue50,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Mise à l'échelle plutôt que troncature : « 6 000 F CFA » est deux
+          // fois plus large que « 8 € », et un prix coupé par une ellipse
+          // serait pire qu'un prix légèrement plus petit. Le bloc reste lisible
+          // quelle que soit la devise du corridor.
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  // Prix expéditeur, commission comprise, dans la devise du
+                  // trajet. `pricePerKg` seul est le net voyageur : l'afficher
+                  // annoncerait un tarif que personne ne paie.
+                  amount,
+                  style: text.displayLarge?.copyWith(
+                    fontSize: 36,
+                    height: 1,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -1.4,
+                    color: DonyColors.neutral0,
+                  ),
                 ),
+                const SizedBox(width: 8),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 5),
+                  child: Text(
+                    unit,
+                    style: text.titleMedium?.copyWith(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: DonyColors.blue50,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (secondary != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              secondary,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: text.titleMedium?.copyWith(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: DonyColors.blue50,
               ),
             ),
           ],
-        ),
+        ],
       ),
     );
   }
@@ -256,18 +333,30 @@ class _InfoRow extends StatelessWidget {
     required this.label,
     required this.value,
     required this.valueColor,
+    this.maxLines = 1,
   });
 
   final String label;
   final String value;
   final Color valueColor;
 
+  /// Les adresses saisies par le voyageur sont des adresses postales
+  /// complètes : sur une seule ligne elles seraient tronquées au milieu du nom
+  /// de rue, ce qui vaut moins que pas d'adresse du tout.
+  final int maxLines;
+
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final wraps = maxLines > 1;
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.baseline,
-      textBaseline: TextBaseline.alphabetic,
+      // Une valeur sur deux lignes n'a pas de ligne de base commune avec son
+      // libellé : on aligne alors par le haut, sinon la première ligne de
+      // l'adresse remonte au-dessus du libellé.
+      crossAxisAlignment: wraps
+          ? CrossAxisAlignment.start
+          : CrossAxisAlignment.baseline,
+      textBaseline: wraps ? null : TextBaseline.alphabetic,
       children: [
         Text(
           label,
@@ -282,10 +371,11 @@ class _InfoRow extends StatelessWidget {
           child: Text(
             value,
             textAlign: TextAlign.right,
-            maxLines: 1,
+            maxLines: maxLines,
             overflow: TextOverflow.ellipsis,
             style: textTheme.titleLarge?.copyWith(
-              fontSize: 15,
+              fontSize: wraps ? 13 : 15,
+              height: wraps ? 1.25 : null,
               fontWeight: FontWeight.w700,
               color: valueColor,
             ),

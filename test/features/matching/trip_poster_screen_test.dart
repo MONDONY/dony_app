@@ -7,7 +7,15 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
-AnnouncementModel _announcement() => AnnouncementModel.fromJson({
+AnnouncementModel _announcement({
+  double pricePerKg = 6.0,
+  double? pricePerKgDisplay = 8.0,
+  String pricingMode = 'KG',
+  List<Map<String, dynamic>> gridItems = const [],
+  String capacityUnit = 'SUITCASE_23KG',
+  String? pickupLabel,
+  String? deliveryLabel,
+}) => AnnouncementModel.fromJson({
   'id': 'a1',
   'travelerId': 't1',
   'departureCity': 'Paris',
@@ -15,23 +23,38 @@ AnnouncementModel _announcement() => AnnouncementModel.fromJson({
   'departureDate': DateTime(2026, 8, 20).toIso8601String(),
   'availableKg': 12.0,
   'totalKg': 23.0,
-  'pricePerKg': 6.0,
-  'pricePerKgDisplay': 8.0,
+  'pricePerKg': pricePerKg,
+  'pricePerKgDisplay': pricePerKgDisplay,
   'handoverDeadline': DateTime(2026, 8, 19, 19).toIso8601String(),
   'currency': 'EUR',
+  'pricingMode': pricingMode,
+  'priceGridItems': gridItems,
+  'capacityUnit': capacityUnit,
+  if (pickupLabel != null)
+    'pickupAddress': {'label': pickupLabel, 'lat': 48.88, 'lng': 2.35},
+  if (deliveryLabel != null)
+    'deliveryAddress': {'label': deliveryLabel, 'lat': 14.69, 'lng': -17.44},
   'status': 'ACTIVE',
   'createdAt': DateTime(2026, 8).toIso8601String(),
   'updatedAt': DateTime(2026, 8).toIso8601String(),
 });
 
-Future<void> _pump(WidgetTester tester) => tester.pumpWidget(
-  MaterialApp(
-    home: TripPosterScreen(
-      announcement: _announcement(),
-      shareBaseUrl: 'https://api.yadony.test/api/v1',
-    ),
-  ),
-);
+Map<String, dynamic> _gridItem(String label, double display) => {
+  'id': 'g-$label',
+  'label': label,
+  'unitPriceNet': display / 1.05,
+  'unitPriceDisplay': display,
+};
+
+Future<void> _pump(WidgetTester tester, {AnnouncementModel? announcement}) =>
+    tester.pumpWidget(
+      MaterialApp(
+        home: TripPosterScreen(
+          announcement: announcement ?? _announcement(),
+          shareBaseUrl: 'https://api.yadony.test/api/v1',
+        ),
+      ),
+    );
 
 /// Les actions vivent sous la ligne de flottaison du viewport de test : sans
 /// defilement prealable, le tap tombe hors de la zone testable et n'atteint
@@ -131,5 +154,57 @@ void main() {
     await _tapAction(tester, 'Copier la légende');
 
     expect(RegExp(r'\+\d{6,}').hasMatch(copied.single), isFalse);
+  });
+
+  /// L'image et le texte du post doivent annoncer la même chose : une légende
+  /// qui promet « 0 € le kilo » sous une affiche vendant à l'article ferait
+  /// fuir l'expéditeur avant même le clic.
+  testWidgets('la légende annonce la grille et jamais 0 le kilo', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      announcement: _announcement(
+        pricingMode: 'MIXED',
+        pricePerKg: 0,
+        pricePerKgDisplay: 0,
+        gridItems: [_gridItem('Carton', 25), _gridItem('Valise', 40)],
+      ),
+    );
+
+    await _tapAction(tester, 'Copier la légende');
+
+    final caption = copied.single;
+    expect(caption, contains("dès ${formatPriceIn(25, 'EUR')} l'article"));
+    expect(caption, isNot(contains('le kilo')));
+  });
+
+  testWidgets('la légende porte les lieux de remise et de récupération', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      announcement: _announcement(
+        pickupLabel: '12 rue de Tombouctou, 75018 Paris',
+        deliveryLabel: 'Sacré-Cœur 3, Dakar',
+      ),
+    );
+
+    await _tapAction(tester, 'Copier la légende');
+
+    final caption = copied.single;
+    expect(caption, contains('Remise : 12 rue de Tombouctou, 75018 Paris'));
+    expect(caption, contains('Récupération : Sacré-Cœur 3, Dakar'));
+  });
+
+  testWidgets('la légende dit Kg libre quand la capacité est non bornée', (
+    tester,
+  ) async {
+    await _pump(tester, announcement: _announcement(capacityUnit: 'KG_FREE'));
+
+    await _tapAction(tester, 'Copier la légende');
+
+    expect(copied.single, contains('Kg libre'));
+    expect(copied.single, isNot(contains('12 kg')));
   });
 }

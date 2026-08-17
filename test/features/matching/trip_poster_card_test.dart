@@ -10,6 +10,11 @@ AnnouncementModel _announcement({
   double? pricePerKgDisplay = 7,
   String? handoverDeadline,
   String currency = 'EUR',
+  String pricingMode = 'KG',
+  List<Map<String, dynamic>> gridItems = const [],
+  String capacityUnit = 'SUITCASE_23KG',
+  String? pickupLabel,
+  String? deliveryLabel,
 }) => AnnouncementModel.fromJson({
   'id': 'a1',
   'travelerId': 't1',
@@ -22,10 +27,24 @@ AnnouncementModel _announcement({
   'pricePerKgDisplay': pricePerKgDisplay,
   'handoverDeadline': handoverDeadline,
   'currency': currency,
+  'pricingMode': pricingMode,
+  'priceGridItems': gridItems,
+  'capacityUnit': capacityUnit,
+  if (pickupLabel != null)
+    'pickupAddress': {'label': pickupLabel, 'lat': 48.88, 'lng': 2.35},
+  if (deliveryLabel != null)
+    'deliveryAddress': {'label': deliveryLabel, 'lat': 14.69, 'lng': -17.44},
   'status': 'ACTIVE',
   'createdAt': DateTime(2026, 8).toIso8601String(),
   'updatedAt': DateTime(2026, 8).toIso8601String(),
 });
+
+Map<String, dynamic> _gridItem(String label, double display) => {
+  'id': 'g-$label',
+  'label': label,
+  'unitPriceNet': display / 1.05,
+  'unitPriceDisplay': display,
+};
 
 Future<void> _pump(WidgetTester tester, AnnouncementModel a) =>
     tester.pumpWidget(
@@ -138,5 +157,98 @@ void main() {
 
     expect(find.text(formatPriceIn(6000, 'XAF')), findsOneWidget);
     expect(find.textContaining('XAF'), findsNothing);
+  });
+
+  /// En mode MIXED le prix au kilo est facultatif, mais la colonne backend est
+  /// NOT NULL et le formulaire y écrit 0.0. `pricePerKgDisplay` vaut donc 0.00
+  /// et non null : un test de nullité laissait passer « 0 € le kilo » sur une
+  /// affiche destinée à Facebook.
+  testWidgets('annonce la grille et jamais 0 le kilo en mode article', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      _announcement(
+        pricingMode: 'MIXED',
+        pricePerKg: 0,
+        pricePerKgDisplay: 0,
+        gridItems: [_gridItem('Carton', 25), _gridItem('Valise', 40)],
+      ),
+    );
+
+    expect(find.text('dès ${formatPriceIn(25, 'EUR')}'), findsOneWidget);
+    expect(find.text("l'article"), findsOneWidget);
+    expect(find.text('le kilo'), findsNothing);
+    expect(find.textContaining('0 €'), findsNothing);
+  });
+
+  testWidgets('affiche les deux tarifs quand le voyageur a rempli les deux', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      _announcement(
+        pricingMode: 'MIXED',
+        pricePerKg: 6,
+        pricePerKgDisplay: 8,
+        gridItems: [_gridItem('Carton', 25)],
+      ),
+    );
+
+    expect(find.text('dès ${formatPriceIn(25, 'EUR')}'), findsOneWidget);
+    expect(find.text('${formatPriceIn(8, 'EUR')} le kilo'), findsOneWidget);
+  });
+
+  /// KG_FREE veut dire « pas de plafond déclaré » : availableKg n'est alors
+  /// qu'une valeur de forme, et l'imprimer comme une limite tromperait
+  /// l'expéditeur.
+  testWidgets('dit Kg libre au lieu d\'un plafond inventé', (tester) async {
+    await _pump(tester, _announcement(capacityUnit: 'KG_FREE'));
+
+    expect(find.text('Kg libre'), findsOneWidget);
+    expect(find.text('12 kg'), findsNothing);
+  });
+
+  testWidgets('imprime les lieux de remise et de récupération', (tester) async {
+    await _pump(
+      tester,
+      _announcement(
+        pickupLabel: '12 rue de Tombouctou, 75018 Paris',
+        deliveryLabel: 'Sacré-Cœur 3, Dakar',
+      ),
+    );
+
+    expect(find.text('Remise'), findsOneWidget);
+    expect(find.text('12 rue de Tombouctou, 75018 Paris'), findsOneWidget);
+    expect(find.text('Récupération'), findsOneWidget);
+    expect(find.text('Sacré-Cœur 3, Dakar'), findsOneWidget);
+  });
+
+  testWidgets('omet les lieux quand le DTO ne les porte pas', (tester) async {
+    await _pump(tester, _announcement());
+
+    expect(find.text('Remise'), findsNothing);
+    expect(find.text('Récupération'), findsNothing);
+  });
+
+  /// L'affiche a une hauteur fixe : une adresse à rallonge ne doit pas faire
+  /// déborder la colonne, sinon la capture PNG sort barrée de jaune et noir.
+  testWidgets('encaisse des adresses très longues sans déborder', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      _announcement(
+        handoverDeadline: DateTime(2026, 8, 19, 19).toIso8601String(),
+        pickupLabel:
+            'Domicile, 148 bis boulevard de la Chapelle, bâtiment C, '
+            'escalier 4, 75018 Paris, France',
+        deliveryLabel:
+            'Chez ma tante, Cité Sotrac Mermoz villa 1245, '
+            'près de la station Total, Dakar, Sénégal',
+      ),
+    );
+
+    expect(tester.takeException(), isNull);
   });
 }
