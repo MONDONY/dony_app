@@ -6,10 +6,15 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
+import 'package:dony/features/package_request/data/models/locked_trip_context.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/data/models/price_estimate.dart';
 import 'package:dony/features/package_request/data/price_estimation_repository.dart';
+import 'package:dony/features/package_request/presentation/widgets/trip_picker_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -26,6 +31,9 @@ class MakeOfferBottomSheet {
     required double weightKg,
     required String departureCity,
     required String arrivalCity,
+    required DateTime desiredDate,
+    required int dateToleranceDays,
+    required TransportMode transportMode,
     DateTime? initialDate,
     bool isFirmPrice = false,
     String currency = 'EUR',
@@ -50,48 +58,75 @@ class MakeOfferBottomSheet {
 
     VoidCallback? submitFn;
 
-    await DonyBottomSheet.show<void>(
-      context,
-      title: isFirmPrice ? 'Prendre ce colis' : 'Faire une offre',
-      // Le glissement vers le bas appelle `Navigator.pop()` sans consulter
-      // `PopScope` (vérifié sur Flutter 3.44) : il contournerait la
-      // confirmation. La barrière et la croix, elles, passent par
-      // `maybePop` et honorent donc le garde.
-      enableDrag: false,
-      wrapper: (child) =>
-          BlocProvider(create: (_) => getIt<NegotiationBloc>(), child: child),
-      child: _MakeOfferContent(
-        packageRequestId: packageRequestId,
-        targetPriceEur: targetPriceEur,
-        weightKg: weightKg,
-        estimate: estimate,
-        rootRouter: rootRouter,
-        onSubmitReady: (fn) => submitFn = fn,
-        initialDate: initialDate,
-        isFirmPrice: isFirmPrice,
-        currency: currency,
-      ),
-      stickyBottom: BlocBuilder<NegotiationBloc, NegotiationState>(
-        builder: (ctx, state) {
-          final loading = state is NegotiationLoading;
-          final String label;
-          if (loading) {
-            label = 'Envoi…';
-          } else if (isFirmPrice) {
-            label = targetPriceEur != null
-                ? 'Prendre à ${PriceDisplay.money(targetPriceEur, currency)}'
-                : 'Prendre ce colis';
-          } else {
-            label = 'Envoyer l\'offre';
-          }
-          return DonyButton(
-            label: label,
-            isLoading: loading,
-            onPressed: loading ? null : () => submitFn?.call(),
-          );
-        },
-      ),
-    );
+    // Créé ICI (avant `DonyBottomSheet.show`) et non dans
+    // `_MakeOfferContentState.initState()` : contrairement à `onSubmitReady`
+    // (une closure lue paresseusement à l'appui sur le bouton), le paramètre
+    // `valueListenable` d'un `ValueListenableBuilder` est lu une seule fois, à
+    // la construction du widget `stickyBottom` — donc AVANT que `show()`
+    // n'appelle `showModalBottomSheet` et, a fortiori, avant que
+    // `_MakeOfferContentState.initState()` ne s'exécute. Un callback
+    // `onTripSelectionReady` capturé plus tard arriverait trop tard : le
+    // `ValueListenableBuilder` du bouton resterait accroché à un notifier
+    // jetable qui ne reçoit jamais aucune mise à jour.
+    final selectedTripNotifier = ValueNotifier<AnnouncementModel?>(null);
+
+    try {
+      await DonyBottomSheet.show<void>(
+        context,
+        title: isFirmPrice ? 'Prendre ce colis' : 'Faire une offre',
+        // Le glissement vers le bas appelle `Navigator.pop()` sans consulter
+        // `PopScope` (vérifié sur Flutter 3.44) : il contournerait la
+        // confirmation. La barrière et la croix, elles, passent par
+        // `maybePop` et honorent donc le garde.
+        enableDrag: false,
+        wrapper: (child) =>
+            BlocProvider(create: (_) => getIt<NegotiationBloc>(), child: child),
+        child: _MakeOfferContent(
+          packageRequestId: packageRequestId,
+          targetPriceEur: targetPriceEur,
+          weightKg: weightKg,
+          departureCity: departureCity,
+          arrivalCity: arrivalCity,
+          requestDesiredDate: desiredDate,
+          requestDateToleranceDays: dateToleranceDays,
+          transportMode: transportMode,
+          estimate: estimate,
+          rootRouter: rootRouter,
+          onSubmitReady: (fn) => submitFn = fn,
+          selectedTripNotifier: selectedTripNotifier,
+          initialDate: initialDate,
+          isFirmPrice: isFirmPrice,
+          currency: currency,
+        ),
+        stickyBottom: ValueListenableBuilder<AnnouncementModel?>(
+          valueListenable: selectedTripNotifier,
+          builder: (_, selectedTrip, _) =>
+              BlocBuilder<NegotiationBloc, NegotiationState>(
+                builder: (ctx, state) {
+                  final loading = state is NegotiationLoading;
+                  final disabled = loading || selectedTrip == null;
+                  final String label;
+                  if (loading) {
+                    label = 'Envoi…';
+                  } else if (isFirmPrice) {
+                    label = targetPriceEur != null
+                        ? 'Prendre à ${PriceDisplay.money(targetPriceEur, currency)}'
+                        : 'Prendre ce colis';
+                  } else {
+                    label = 'Envoyer l\'offre';
+                  }
+                  return DonyButton(
+                    label: label,
+                    isLoading: loading,
+                    onPressed: disabled ? null : () => submitFn?.call(),
+                  );
+                },
+              ),
+        ),
+      );
+    } finally {
+      selectedTripNotifier.dispose();
+    }
   }
 }
 
@@ -100,9 +135,15 @@ class _MakeOfferContent extends StatefulWidget {
     required this.packageRequestId,
     required this.targetPriceEur,
     required this.weightKg,
+    required this.departureCity,
+    required this.arrivalCity,
+    required this.requestDesiredDate,
+    required this.requestDateToleranceDays,
+    required this.transportMode,
     required this.estimate,
     required this.rootRouter,
     required this.onSubmitReady,
+    required this.selectedTripNotifier,
     this.initialDate,
     this.isFirmPrice = false,
     this.currency = 'EUR',
@@ -111,9 +152,22 @@ class _MakeOfferContent extends StatefulWidget {
   final String packageRequestId;
   final double? targetPriceEur;
   final double weightKg;
+  final String departureCity;
+  final String arrivalCity;
+
+  /// Fenêtre de dates de la demande — sert à filtrer `TripPickerSection` et à
+  /// borner la création d'un trajet dédié. Distincte de [initialDate] (date
+  /// pré-remplie du champ "DATE DE VOYAGE", propre au voyageur).
+  final DateTime requestDesiredDate;
+  final int requestDateToleranceDays;
+  final TransportMode transportMode;
   final PriceEstimate? estimate;
   final GoRouter rootRouter;
   final void Function(VoidCallback) onSubmitReady;
+
+  /// Détenu et disposé par `MakeOfferBottomSheet.show()` — voir le commentaire
+  /// à sa création pour pourquoi il ne peut pas être créé ici.
+  final ValueNotifier<AnnouncementModel?> selectedTripNotifier;
   final DateTime? initialDate;
   final bool isFirmPrice;
   final String currency;
@@ -137,6 +191,18 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
 
   /// Évite d'empiler deux dialogues sur retours système répétés.
   bool _confirmingExit = false;
+
+  /// Armé juste avant `context.push('/trips/create')`, désarmé dans le
+  /// `finally` qui suit. `/trips/create` (via `LockedTripContext.threadId ==
+  /// null`) réutilise CE MÊME `NegotiationBloc` (`negotiationBloc:
+  /// context.read&lt;NegotiationBloc&gt;()` dans l'appel) pour créer offre + trajet
+  /// dédié atomiquement — la feuille reste montée en dessous, donc son
+  /// propre `BlocListener` resterait sinon abonné à la même émission que
+  /// celui de `CreateTripScreen` : double traitement (double pop, double
+  /// snackbar) sur un seul `NegotiationLoaded`/`NegotiationError`. Tant que
+  /// ce drapeau est vrai, le listener de la feuille ignore l'état — seul
+  /// `CreateTripScreen` réagit.
+  bool _creatingDedicatedTripElsewhere = false;
 
   String get _formSignature => [
     _priceCtrl.text,
@@ -233,6 +299,14 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
       );
       return;
     }
+    if (widget.selectedTripNotifier.value == null) {
+      DonySnackbar.show(
+        context,
+        message: 'Sélectionnez ou créez un trajet',
+        type: DonySnackbarType.warning,
+      );
+      return;
+    }
     context.read<NegotiationBloc>().add(
       NegotiationStartRequested(
         packageRequestId: widget.packageRequestId,
@@ -243,6 +317,7 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
             : double.parse(_priceCtrl.text.replaceAll(',', '.')),
         travelerTravelDate: _dateNotifier.value!,
         travelerAvailableKg: double.parse(_kgCtrl.text.replaceAll(',', '.')),
+        travelerAnnouncementId: widget.selectedTripNotifier.value!.id,
         body: _bodyCtrl.text.trim().isEmpty ? null : _bodyCtrl.text.trim(),
         isFirmPrice: widget.isFirmPrice,
       ),
@@ -265,6 +340,7 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
       ),
       child: BlocListener<NegotiationBloc, NegotiationState>(
         listener: (ctx, state) {
+          if (_creatingDedicatedTripElsewhere) return;
           if (state is NegotiationLoaded) {
             DonySnackbar.show(
               ctx,
@@ -413,6 +489,88 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
                         ],
                       ),
                     ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: DonySpacing.md),
+
+              // ── Trajet ────────────────────────────────────────────────────
+              ValueListenableBuilder<DateTime?>(
+                valueListenable: _dateNotifier,
+                builder: (ctx, travelDate, _) => ValueListenableBuilder<AnnouncementModel?>(
+                  valueListenable: widget.selectedTripNotifier,
+                  builder: (ctx, selected, _) => TripPickerSection(
+                    departureCity: widget.departureCity,
+                    arrivalCity: widget.arrivalCity,
+                    // Fenêtre de la DEMANDE (pas de la date que le voyageur
+                    // vient de choisir) : c'est elle que le backend valide
+                    // (validateAndFetchExistingTrip / date-mismatch) — filtrer
+                    // sur autre chose masquerait des trajets valides ou en
+                    // proposerait un que le serveur rejettera en 422.
+                    desiredDate: widget.requestDesiredDate,
+                    dateToleranceDays: widget.requestDateToleranceDays,
+                    weightKg: widget.weightKg,
+                    selected: selected,
+                    onSelected: (ann) =>
+                        widget.selectedTripNotifier.value = ann,
+                    onCreateDedicated: () async {
+                      if (!_formKey.currentState!.validate()) return;
+                      if (travelDate == null) {
+                        DonySnackbar.show(
+                          context,
+                          message: 'Sélectionnez votre date de voyage',
+                          type: DonySnackbarType.warning,
+                        );
+                        return;
+                      }
+                      _creatingDedicatedTripElsewhere = true;
+                      try {
+                        final result = await context.push<bool>(
+                          '/trips/create',
+                          extra: CreateTripArgs(
+                            lockContext: LockedTripContext(
+                              // threadId omis (null par défaut) : aucun thread
+                              // de négociation n'existe encore — l'offre et le
+                              // trajet seront créés atomiquement
+                              // (NegotiationStartWithDedicatedTripRequested).
+                              packageRequestId: widget.packageRequestId,
+                              departureCity: widget.departureCity,
+                              arrivalCity: widget.arrivalCity,
+                              desiredDate: widget.requestDesiredDate,
+                              dateToleranceDays:
+                                  widget.requestDateToleranceDays,
+                              weightKg: widget.weightKg,
+                              transportMode: widget.transportMode,
+                              agreedPriceEur:
+                                  widget.isFirmPrice &&
+                                      widget.targetPriceEur != null
+                                  ? widget.targetPriceEur!
+                                  : double.parse(
+                                      _priceCtrl.text.replaceAll(',', '.'),
+                                    ),
+                              currency: widget.currency,
+                              offerAvailableKg: double.parse(
+                                _kgCtrl.text.replaceAll(',', '.'),
+                              ),
+                              offerBody: _bodyCtrl.text.trim().isEmpty
+                                  ? null
+                                  : _bodyCtrl.text.trim(),
+                            ),
+                            negotiationBloc: context.read<NegotiationBloc>(),
+                          ),
+                        );
+                        // Un trajet a bien été créé (et l'offre envoyée avec) :
+                        // on ferme la feuille d'offre. Si l'utilisateur annule
+                        // ou revient en arrière depuis /trips/create (`result`
+                        // faux ou null), on reste sur le formulaire d'offre en
+                        // cours, saisie intacte.
+                        if (context.mounted && result == true) {
+                          Navigator.of(context, rootNavigator: true).pop();
+                        }
+                      } finally {
+                        _creatingDedicatedTripElsewhere = false;
+                      }
+                    },
                   ),
                 ),
               ),

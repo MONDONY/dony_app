@@ -30,19 +30,16 @@ bool negoMatchesQuery(NegotiationThread t, String query) {
   return m(t.travelerName) || m(t.departureCity) || m(t.arrivalCity);
 }
 
+// « En cours » / « Terminées » suivent exactement `NegotiationThreadStatus
+// .isActive` (source unique) : un nouveau statut actif (comme
+// AWAITING_COMMISSION) n'a donc besoin d'être déclaré qu'à un seul endroit
+// pour apparaître correctement filtré partout, plutôt que de retomber
+// silencieusement dans le mauvais onglet.
 bool negoMatchesPreset(NegotiationThread t, NegoQuickFilter preset) =>
     switch (preset) {
       NegoQuickFilter.all => true,
-      NegoQuickFilter.active =>
-        t.status == NegotiationThreadStatus.open ||
-            t.status == NegotiationThreadStatus.awaitingTrip ||
-            t.status == NegotiationThreadStatus.awaitingPayment,
-      NegoQuickFilter.terminal =>
-        t.status == NegotiationThreadStatus.accepted ||
-            t.status == NegotiationThreadStatus.rejected ||
-            t.status == NegotiationThreadStatus.autoRejected ||
-            t.status == NegotiationThreadStatus.expired ||
-            t.status == NegotiationThreadStatus.cancelled,
+      NegoQuickFilter.active => t.status.isActive,
+      NegoQuickFilter.terminal => !t.status.isActive,
     };
 
 List<NegotiationThread> applyNegotiationFilters(

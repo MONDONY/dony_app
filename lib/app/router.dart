@@ -1,6 +1,7 @@
 import 'package:dony/app/main_shell.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/features/app_update/presentation/screens/force_update_screen.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/bloc/currency_onboarding_cubit.dart';
@@ -65,6 +66,7 @@ import 'package:dony/features/matching/presentation/screens/publish_intro_screen
 import 'package:dony/features/matching/presentation/screens/shipment_list_screen.dart';
 import 'package:dony/features/matching/presentation/screens/traveler_profile_screen.dart';
 import 'package:dony/features/matching/presentation/screens/trip_owner_detail_screen.dart';
+import 'package:dony/features/matching/presentation/screens/trip_poster_screen.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
@@ -205,12 +207,27 @@ const _publicRoutes = {
 /// Repli sur `/auth/method` si le bootstrap ne l'a pas renseignée (tests).
 String initialAppLocation = '/auth/method';
 
+/// Verrou de version minimale : calculé une fois avant `runApp`
+/// (`AppUpdateService.isUpdateRequired()` dans `main.dart`), à partir de la
+/// dernière valeur Remote Config déjà connue sur l'appareil — jamais de
+/// réseau à cet instant. Repli sûr sur `false` si le bootstrap ne l'a pas
+/// renseignée (tests) : une valeur non calculée ne doit jamais bloquer.
+bool appUpdateRequired = false;
+
 final appRouter = GoRouter(
   initialLocation: initialAppLocation,
   // PosthogObserver : auto-capture des vues d'écran ($screen) à chaque
   // changement de route (no-op tant que le consentement n'est pas accordé).
   observers: [SentryNavigatorObserver(), PosthogObserver()],
   redirect: (context, state) {
+    // Prioritaire sur tout le reste (auth incluse) : une version qui plante
+    // au premier statut de négociation inconnu ne doit jamais laisser
+    // passer un utilisateur, connecté ou non. `matchedLocation` évite la
+    // boucle une fois sur /force-update.
+    if (appUpdateRequired && state.matchedLocation != '/force-update') {
+      return '/force-update';
+    }
+
     final user = FirebaseAuth.instance.currentUser;
     final isAuthenticated = user != null;
     final isPublic = _publicRoutes.any(
@@ -232,6 +249,11 @@ final appRouter = GoRouter(
     return null;
   },
   routes: [
+    // ── Verrou de version minimale ──────────────────────────────────────────
+    GoRoute(
+      path: '/force-update',
+      builder: (context, state) => const ForceUpdateScreen(),
+    ),
     // ── Auth (hors shell) ─────────────────────────────────────────────────
     GoRoute(
       path: '/onboarding',
@@ -765,6 +787,25 @@ final appRouter = GoRouter(
             BlocProvider(create: (_) => getIt<CancellationBloc>()),
           ],
           child: TripOwnerDetailScreen(announcementId: id, initial: extra),
+        );
+      },
+    ),
+
+    // ── Affiche de trajet (hors shell — plein écran) ─────────────────────
+    // Même contrat que `/announcements/:id/trip` : l'identifiant suffit, et
+    // `extra` n'est qu'un raccourci d'affichage immédiat pour les appelants qui
+    // tiennent déjà le trajet (succès de publication, détail propriétaire).
+    GoRoute(
+      path: '/announcements/:id/affiche',
+      builder: (context, state) {
+        final id = state.pathParameters['id']!;
+        final extra = state.extra is AnnouncementModel
+            ? state.extra as AnnouncementModel
+            : null;
+        return BlocProvider(
+          create: (_) =>
+              getIt<AnnouncementBloc>()..add(AnnouncementDetailRequested(id)),
+          child: TripPosterRoute(initial: extra),
         );
       },
     ),

@@ -1,4 +1,6 @@
+import 'package:dio/dio.dart';
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/features/matching/data/models/acceptance_response.dart';
 import 'package:dony/features/package_request/data/models/negotiation_quote.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
@@ -15,6 +17,8 @@ class NegotiationRepository {
     required double travelerAvailableKg,
     String? travelerAnnouncementId,
     String? body,
+    bool createDedicatedTrip = false,
+    Map<String, dynamic>? dedicatedTripPayload,
   }) async {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
       '/negotiations',
@@ -28,6 +32,8 @@ class NegotiationRepository {
         'travelerAvailableKg': travelerAvailableKg,
         'travelerAnnouncementId': ?travelerAnnouncementId,
         'body': ?body,
+        'createDedicatedTrip': createDedicatedTrip,
+        'dedicatedTrip': ?dedicatedTripPayload,
       },
     );
     return NegotiationThread.fromJson(response.data!);
@@ -215,6 +221,22 @@ class NegotiationRepository {
     return NegotiationThread.fromJson(response.data!);
   }
 
+  /// Traveler changes the trip already linked to an OPEN thread (before
+  /// payment), swapping it for another of their announcements. Mirrors
+  /// [submitTrip] but for a thread that already has a trip — used by the new
+  /// "change trip" flow, distinct from the legacy `AWAITING_TRIP` recovery
+  /// loop still served by [submitTrip].
+  Future<NegotiationThread> changeTrip(
+    String threadId, {
+    required String travelerAnnouncementId,
+  }) async {
+    final response = await _apiClient.dio.patch<Map<String, dynamic>>(
+      '/negotiations/$threadId/trip',
+      data: {'travelerAnnouncementId': travelerAnnouncementId},
+    );
+    return NegotiationThread.fromJson(response.data!);
+  }
+
   /// Sends a nudge on this thread to prompt the other party to act.
   /// Backend validates whether the current viewer is allowed to nudge.
   Future<NegotiationThread> nudge(String id) async {
@@ -222,5 +244,79 @@ class NegotiationRepository {
       '/negotiations/$id/nudge',
     );
     return NegotiationThread.fromJson(response.data!);
+  }
+
+  /// Traveler settles the Yadony commission for a cash-agreed offer the
+  /// sender already accepted. Nothing is sealed until this succeeds: the
+  /// sender's acceptance alone doesn't finalize a cash deal.
+  ///
+  /// The 409 (solde insuffisant) and 422 (échec) portent un corps
+  /// exploitable : ce sont des issues métier porteuses des montants à
+  /// afficher, pas des erreurs de transport. On détecte donc l'issue métier
+  /// par le **code HTTP**, jamais par la forme du corps — exactement comme
+  /// `BidRemoteDatasource.acceptBidWithCommission` (`bid_remote_datasource.
+  /// dart:218-223`).
+  ///
+  /// Nuance propre à cet endpoint : plusieurs voyageurs peuvent régler en
+  /// même temps, seul le premier gagne. La garde de course renvoie donc,
+  /// elle aussi, un 409 (`thread/not-awaiting-commission`,
+  /// `request/already-accepted`) — mais en RFC 7807, dont le champ `status`
+  /// est l'entier HTTP (409), pas le statut métier `String` attendu par
+  /// [AcceptanceResponse.fromJson]. On ne parse donc le corps comme
+  /// [AcceptanceResponse] que si `status` y est bien une chaîne ; sinon on
+  /// laisse le `DioException` d'origine remonter tel quel — l'intercepteur
+  /// global (`api_client.dart`) l'a déjà enrichi d'un `ConflictException`
+  /// exploitable via `unwrapDioError`, exactement comme pour la course
+  /// webhook Stripe gérée dans `NegotiationBloc._onCheckout`.
+  Future<AcceptanceResponse> settleCommission(
+    String threadId, {
+    String commissionSource = 'WALLET_FIRST',
+  }) async {
+    try {
+      final response = await _apiClient.dio.post<Map<String, dynamic>>(
+        '/negotiations/$threadId/settle-commission',
+        queryParameters: {'commissionSource': commissionSource},
+      );
+      return AcceptanceResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      final code = e.response?.statusCode;
+      final data = e.response?.data;
+      if ((code == 409 || code == 422) &&
+          data is Map<String, dynamic> &&
+          data['status'] is String) {
+        return AcceptanceResponse.fromJson(data);
+      }
+      rethrow;
+    }
+  }
+
+  /// Confirms a commission settlement after a successful 3D Secure
+  /// authentication. Mirrors `BidRemoteDatasource.confirmCommissionAcceptance`:
+  /// the backend returns 422 with `ConfirmResponse(accepted: false, error:
+  /// ...)` when the confirmation fails post-3DS, and that body must be parsed
+  /// rather than surfaced as a transport error.
+  Future<ConfirmResponse> confirmCommission(String threadId) async {
+    try {
+      final response = await _apiClient.dio.post<Map<String, dynamic>>(
+        '/negotiations/$threadId/confirm-commission',
+      );
+      return ConfirmResponse.fromJson(response.data!);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 422 && e.response?.data != null) {
+        return ConfirmResponse.fromJson(
+          e.response!.data as Map<String, dynamic>,
+        );
+      }
+      rethrow;
+    }
+  }
+
+  /// Traveler explicitly declines to settle the commission: the request is
+  /// released immediately for another traveler instead of waiting out the
+  /// settlement deadline.
+  Future<void> declineCommission(String threadId) async {
+    await _apiClient.dio.post<void>(
+      '/negotiations/$threadId/decline-commission',
+    );
   }
 }

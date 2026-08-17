@@ -10,6 +10,7 @@ enum ThreadStatusVariant {
   open,
   awaitingTrip,
   awaitingPayment,
+  awaitingCommission,
   accepted,
   terminal;
 
@@ -18,6 +19,7 @@ enum ThreadStatusVariant {
         NegotiationThreadStatus.open => open,
         NegotiationThreadStatus.awaitingTrip => awaitingTrip,
         NegotiationThreadStatus.awaitingPayment => awaitingPayment,
+        NegotiationThreadStatus.awaitingCommission => awaitingCommission,
         NegotiationThreadStatus.accepted => accepted,
         NegotiationThreadStatus.rejected ||
         NegotiationThreadStatus.autoRejected ||
@@ -30,6 +32,7 @@ enum ThreadStatusVariant {
     open => const Color(0xFF0B5FFF),
     awaitingTrip => DonyColors.threadStatusAmber,
     awaitingPayment => DonyColors.threadStatusViolet,
+    awaitingCommission => DonyColors.threadStatusOrange,
     accepted => DonyColors.threadStatusGreen,
     terminal => const Color(0xFF374151),
   };
@@ -50,6 +53,13 @@ enum ThreadStatusVariant {
       end: Alignment.bottomRight,
       colors: [Color(0xFF4C1D95), Color(0xFF5B21B6)],
     ),
+    // Accord en espèces conclu mais rien n'est scellé : distinct du violet
+    // « paiement carte » pour ne pas laisser croire que l'affaire est faite.
+    awaitingCommission => const LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [Color(0xFF7C2D12), Color(0xFFC2410C)],
+    ),
     accepted => const LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
@@ -66,6 +76,7 @@ enum ThreadStatusVariant {
     open => 'EN COURS',
     awaitingTrip => 'ATT. TRAJET',
     awaitingPayment => 'PAIEMENT',
+    awaitingCommission => 'COMMISSION',
     accepted => 'ACCEPTÉE',
     terminal => 'TERMINÉ',
   };
@@ -74,6 +85,7 @@ enum ThreadStatusVariant {
     open => 'PRIX ACTUEL',
     awaitingTrip => 'ACCORD TROUVÉ',
     awaitingPayment => 'À RÉGLER',
+    awaitingCommission => 'COMMISSION DUE',
     accepted => 'DEMANDE ACCEPTÉE',
     terminal => 'PRIX FINAL',
   };
@@ -82,6 +94,7 @@ enum ThreadStatusVariant {
     open => 'handshake',
     awaitingTrip => 'hourglass',
     awaitingPayment => 'credit-card',
+    awaitingCommission => 'banknote',
     accepted => 'circle-check',
     terminal => 'circle-x',
   };

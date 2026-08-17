@@ -36,6 +36,27 @@ abstract final class ErrorCatalog {
   /// `DonyBusinessException` → ProblemDetail `code`.
   /// Source: `dony-back/.../DonyBusinessException` invocations (29 codes).
   static const Map<String, ErrorPresentation> _byCode = {
+    // ─── Course à la commission (accord en espèces) ──────────────────
+    // Sans ces deux entrées, le voyageur qui perd la course lit « Action
+    // impossible, l'état actuel ne permet pas cette action », soit exactement
+    // le message technique que la règle métier proscrit : il doit comprendre
+    // qu'un autre voyageur a réglé avant lui.
+    'request/already-accepted': ErrorPresentation(
+      title: 'Ce colis est parti',
+      message:
+          'Un autre voyageur a réglé la commission avant toi, ce colis ne '
+          'peut plus te revenir.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.flag_outlined,
+    ),
+    'thread/not-awaiting-commission': ErrorPresentation(
+      title: 'Ce colis est parti',
+      message:
+          'Cette offre n\'attend plus de règlement, elle a été conclue '
+          'autrement ou le délai est écoulé.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.flag_outlined,
+    ),
     // ─── Auth / accès ────────────────────────────────────────────────
     'unauthorized': ErrorPresentation(
       title: 'Session expirée',
@@ -379,7 +400,8 @@ abstract final class ErrorCatalog {
     'negotiation/commission-charge-failed': ErrorPresentation(
       title: 'Accord non validé',
       message:
-          "Impossible de finaliser : la commission n'a pas pu être prélevée au voyageur (solde et carte indisponibles). L'accord n'est pas validé.",
+          "La commission n'a pas pu être prélevée au voyageur. L'accord n'est pas validé. "
+          "Il vient d'être invité à recharger son portefeuille, réessaie ensuite.",
       severity: ErrorSeverity.critical,
       icon: Icons.account_balance_wallet_outlined,
     ),

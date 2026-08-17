@@ -164,4 +164,26 @@ extension AnnouncementSenderPricing on AnnouncementModel {
   /// surfaces vues par l'expéditeur ; les surfaces voyageur gardent `pricePerKg`.
   double get senderPricePerKg =>
       pricePerKgDisplay ?? netToSenderPrice(pricePerKg);
+
+  /// Le trajet porte-t-il un tarif au kilo exploitable ?
+  ///
+  /// En mode `MIXED` le prix au kilo est facultatif, mais la colonne backend est
+  /// `NOT NULL` et le formulaire de création la remplit avec `0.0`. Ni
+  /// `pricePerKg` ni `pricePerKgDisplay` ne valent donc jamais `null` : un test
+  /// de nullité laisse passer un « 0 € le kilo » parfaitement faux. C'est la
+  /// valeur, pas la présence, qui tranche.
+  bool get hasKgPrice => pricePerKg > 0;
+
+  /// Le trajet est-il vendu à l'article ? Le backend garantit une grille non
+  /// vide en mode `MIXED` (422 `price-grid-empty` sinon), mais on vérifie
+  /// quand même : une annonce ancienne ou un DTO allégé peut arriver sans.
+  bool get usesPriceGrid => pricingMode == 'MIXED' && priceGridItems.isNotEmpty;
+
+  /// Prix expéditeur de l'article le moins cher, pour une accroche « dès X ».
+  /// `null` si la grille est absente ou vide.
+  double? get cheapestGridPrice => usesPriceGrid
+      ? priceGridItems
+            .map((i) => i.unitPriceDisplay)
+            .reduce((a, b) => a < b ? a : b)
+      : null;
 }
