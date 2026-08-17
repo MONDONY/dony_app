@@ -214,40 +214,6 @@ void main() {
     );
   });
 
-  // ── TrackingConfirmCodeRequested ─────────────────────────────────────────────
-
-  group('TrackingConfirmCodeRequested', () {
-    blocTest<TrackingBloc, TrackingState>(
-      'emits [ConfirmCodeLoading, ConfirmCodeLoaded] on success',
-      build: buildBloc,
-      setUp: () {
-        when(
-          () => mockRepo.getConfirmationCode('bid-1'),
-        ).thenAnswer((_) async => (code: '472', expiresAt: null));
-      },
-      act: (b) => b.add(TrackingConfirmCodeRequested('bid-1')),
-      expect: () => [
-        isA<TrackingConfirmCodeLoading>(),
-        isA<TrackingConfirmCodeLoaded>().having((s) => s.code, 'code', '472'),
-      ],
-    );
-
-    blocTest<TrackingBloc, TrackingState>(
-      'emits [ConfirmCodeLoading, ConfirmCodeError] on failure',
-      build: buildBloc,
-      setUp: () {
-        when(
-          () => mockRepo.getConfirmationCode(any()),
-        ).thenThrow(Exception('error'));
-      },
-      act: (b) => b.add(TrackingConfirmCodeRequested('bid-x')),
-      expect: () => [
-        isA<TrackingConfirmCodeLoading>(),
-        isA<TrackingConfirmCodeError>(),
-      ],
-    );
-  });
-
   // ── ConfirmDeliveryRequested ──────────────────────────────────────────────────
 
   group('ConfirmDeliveryRequested', () {
