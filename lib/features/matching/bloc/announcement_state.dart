@@ -93,3 +93,15 @@ class AnnouncementDepartureDatePassed extends AnnouncementState {
   final String message;
   AnnouncementDepartureDatePassed(this.message);
 }
+
+/// Émis après le marquage groupé « Arrivé à destination » d'un trajet.
+class AnnouncementTripArrived extends AnnouncementState {
+  final AnnouncementModel announcement;
+  AnnouncementTripArrived(this.announcement);
+}
+
+/// Émis après la mise à jour des instructions de retrait.
+class AnnouncementArrivalInstructionsUpdated extends AnnouncementState {
+  final AnnouncementModel announcement;
+  AnnouncementArrivalInstructionsUpdated(this.announcement);
+}

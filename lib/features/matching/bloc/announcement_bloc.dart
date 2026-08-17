@@ -7,6 +7,7 @@ import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
+import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -27,6 +28,10 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
     on<AnnouncementDeleteRequested>(_onDeleteRequested);
     on<AnnouncementSearchRequested>(_onSearchRequested);
     on<AnnouncementSurplusOpenRequested>(_onSurplusOpenRequested);
+    on<AnnouncementTripMarkArrivedRequested>(_onTripMarkArrivedRequested);
+    on<AnnouncementArrivalInstructionsUpdateRequested>(
+      _onArrivalInstructionsUpdateRequested,
+    );
   }
 
   Future<void> _onCreateRequested(
@@ -320,6 +325,49 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
       } else {
         emit(AnnouncementError(unwrapDioError(e)));
       }
+    }
+  }
+
+  Future<void> _onTripMarkArrivedRequested(
+    AnnouncementTripMarkArrivedRequested event,
+    Emitter<AnnouncementState> emit,
+  ) => _runArrivalAction(
+    emit,
+    action: () => _repository.markTripArrived(
+      announcementId: event.announcementId,
+      arrivalInstructions: event.arrivalInstructions,
+    ),
+    onSuccess: AnnouncementTripArrived.new,
+    analyticsEvent: AnalyticsEvents.tripMarkedArrived,
+  );
+
+  Future<void> _onArrivalInstructionsUpdateRequested(
+    AnnouncementArrivalInstructionsUpdateRequested event,
+    Emitter<AnnouncementState> emit,
+  ) => _runArrivalAction(
+    emit,
+    action: () => _repository.updateArrivalInstructions(
+      announcementId: event.announcementId,
+      arrivalInstructions: event.arrivalInstructions,
+    ),
+    onSuccess: AnnouncementArrivalInstructionsUpdated.new,
+    analyticsEvent: AnalyticsEvents.arrivalInstructionsUpdated,
+  );
+
+  Future<void> _runArrivalAction(
+    Emitter<AnnouncementState> emit, {
+    required Future<AnnouncementModel> Function() action,
+    required AnnouncementState Function(AnnouncementModel) onSuccess,
+    required String analyticsEvent,
+  }) async {
+    if (state is AnnouncementLoading) return;
+    emit(AnnouncementLoading());
+    try {
+      final announcement = await action();
+      emit(onSuccess(announcement));
+      unawaited(_analytics.logEvent(analyticsEvent));
+    } catch (e) {
+      emit(AnnouncementError(unwrapDioError(e)));
     }
   }
 }

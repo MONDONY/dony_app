@@ -12,6 +12,7 @@ const _groups = <String, List<_StatusOption>>{
     _StatusOption('ACCEPTED', 'Confirmé'),
     _StatusOption('HANDED_OVER', 'En route'),
     _StatusOption('IN_TRANSIT', 'En transit'),
+    _StatusOption('ARRIVED', 'Arrivé'),
   ],
   'En attente': [
     _StatusOption('PENDING', 'En attente'),

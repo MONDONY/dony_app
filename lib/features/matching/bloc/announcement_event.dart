@@ -132,6 +132,29 @@ class AnnouncementSurplusOpenRequested extends AnnouncementEvent {
   });
 }
 
+/// Marquage groupé « Arrivé à destination » : passe le trajet à ARRIVED et
+/// enregistre en une fois des instructions de retrait optionnelles.
+class AnnouncementTripMarkArrivedRequested extends AnnouncementEvent {
+  final String announcementId;
+  final String? arrivalInstructions;
+
+  AnnouncementTripMarkArrivedRequested({
+    required this.announcementId,
+    this.arrivalInstructions,
+  });
+}
+
+/// Édition des instructions de retrait après le marquage initial.
+class AnnouncementArrivalInstructionsUpdateRequested extends AnnouncementEvent {
+  final String announcementId;
+  final String arrivalInstructions;
+
+  AnnouncementArrivalInstructionsUpdateRequested({
+    required this.announcementId,
+    required this.arrivalInstructions,
+  });
+}
+
 class AnnouncementUpdateRequested extends AnnouncementEvent {
   final String id;
   final String departureCity;

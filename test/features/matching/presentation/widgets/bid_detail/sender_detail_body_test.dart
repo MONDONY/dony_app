@@ -186,6 +186,23 @@ void main() {
     },
   );
 
+  // ── Test 2 bis: ARRIVED → voyageur + actions rapides toujours visibles ──────
+  testWidgets(
+    '2 bis · ARRIVED → VoyageurContactCard et QuickActionsRow restent affichés',
+    (tester) async {
+      sizeView(tester);
+      final bid = _bid(status: 'ARRIVED');
+
+      await tester.pumpWidget(
+        _host(bid, cancellationBloc, conversationOpenBloc),
+      );
+      await tester.pump(const Duration(seconds: 1));
+
+      expect(find.byType(VoyageurContactCard), findsOneWidget);
+      expect(find.byType(QuickActionsRow), findsOneWidget);
+    },
+  );
+
   // ── Test 3: CANCELLED → voyageur absent, hero shrink ────────────────────────
   testWidgets(
     '3 · CANCELLED → VoyageurContactCard absent (la hero rend shrink)',

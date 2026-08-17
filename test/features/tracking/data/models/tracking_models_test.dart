@@ -91,6 +91,16 @@ void main() {
       expect(model.currentStep, 'IN_TRANSIT');
       expect(model.stepLabel, 'En transit');
       expect(model.paymentStatus, 'CAPTURED');
+      expect(model.arrivalInstructions, isNull);
+    });
+
+    test('fromJson parses arrivalInstructions', () {
+      final withInstructions = {
+        ...json,
+        'arrivalInstructions': 'Métro Châtelet, sortie 3',
+      };
+      final model = TrackingSearchModel.fromJson(withInstructions);
+      expect(model.arrivalInstructions, 'Métro Châtelet, sortie 3');
     });
   });
 

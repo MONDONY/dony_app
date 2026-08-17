@@ -1564,6 +1564,112 @@ void main() {
     });
   });
 
+  // ─── AnnouncementTripMarkArrivedRequested ────────────────────────────────────
+
+  group('AnnouncementTripMarkArrivedRequested', () {
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'marquage réussi → [Loading, AnnouncementTripArrived]',
+      build: () {
+        when(
+          () => mockRepo.markTripArrived(
+            announcementId: 'a1',
+            arrivalInstructions: 'x',
+          ),
+        ).thenAnswer((_) async => buildAnnouncement());
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(
+        AnnouncementTripMarkArrivedRequested(
+          announcementId: 'a1',
+          arrivalInstructions: 'x',
+        ),
+      ),
+      expect: () => [
+        isA<AnnouncementLoading>(),
+        isA<AnnouncementTripArrived>(),
+      ],
+    );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'marquage sans instructions → [Loading, AnnouncementTripArrived]',
+      build: () {
+        when(
+          () => mockRepo.markTripArrived(announcementId: 'a1'),
+        ).thenAnswer((_) async => buildAnnouncement());
+        return buildBloc();
+      },
+      act: (bloc) =>
+          bloc.add(AnnouncementTripMarkArrivedRequested(announcementId: 'a1')),
+      expect: () => [
+        isA<AnnouncementLoading>(),
+        isA<AnnouncementTripArrived>(),
+      ],
+    );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'erreur marquage → [Loading, AnnouncementError]',
+      build: () {
+        when(
+          () => mockRepo.markTripArrived(
+            announcementId: any(named: 'announcementId'),
+            arrivalInstructions: any(named: 'arrivalInstructions'),
+          ),
+        ).thenThrow(Exception('Server error'));
+        return buildBloc();
+      },
+      act: (bloc) =>
+          bloc.add(AnnouncementTripMarkArrivedRequested(announcementId: 'a1')),
+      expect: () => [isA<AnnouncementLoading>(), isA<AnnouncementError>()],
+    );
+  });
+
+  // ─── AnnouncementArrivalInstructionsUpdateRequested ──────────────────────────
+
+  group('AnnouncementArrivalInstructionsUpdateRequested', () {
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'mise à jour réussie → [Loading, AnnouncementArrivalInstructionsUpdated]',
+      build: () {
+        when(
+          () => mockRepo.updateArrivalInstructions(
+            announcementId: 'a1',
+            arrivalInstructions: 'y',
+          ),
+        ).thenAnswer((_) async => buildAnnouncement());
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(
+        AnnouncementArrivalInstructionsUpdateRequested(
+          announcementId: 'a1',
+          arrivalInstructions: 'y',
+        ),
+      ),
+      expect: () => [
+        isA<AnnouncementLoading>(),
+        isA<AnnouncementArrivalInstructionsUpdated>(),
+      ],
+    );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'erreur mise à jour → [Loading, AnnouncementError]',
+      build: () {
+        when(
+          () => mockRepo.updateArrivalInstructions(
+            announcementId: any(named: 'announcementId'),
+            arrivalInstructions: any(named: 'arrivalInstructions'),
+          ),
+        ).thenThrow(Exception('Server error'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(
+        AnnouncementArrivalInstructionsUpdateRequested(
+          announcementId: 'a1',
+          arrivalInstructions: 'y',
+        ),
+      ),
+      expect: () => [isA<AnnouncementLoading>(), isA<AnnouncementError>()],
+    );
+  });
+
   // ─── AnnouncementError carries previousResults ──────────────────────────────
 
   group('AnnouncementError.previousResults', () {

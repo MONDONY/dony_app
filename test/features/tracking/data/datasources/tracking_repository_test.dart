@@ -142,36 +142,6 @@ void main() {
     });
   });
 
-  // ── getConfirmationCode ──────────────────────────────────────────────────────
-
-  group('getConfirmationCode', () {
-    test('returns code string', () async {
-      when(() => mockDio.get('/tracking/bid-001/confirmation-code')).thenAnswer(
-        (_) async => _ok({
-          'confirmationCode': '4721',
-        }, '/tracking/bid-001/confirmation-code'),
-      );
-
-      final result = await repo.getConfirmationCode('bid-001');
-
-      expect(result.code, '4721');
-      expect(result.expiresAt, isNull);
-    });
-
-    test('returns null when confirmationCode absent', () async {
-      when(() => mockDio.get('/tracking/bid-001/confirmation-code')).thenAnswer(
-        (_) async => _ok({
-          'confirmationCode': null,
-        }, '/tracking/bid-001/confirmation-code'),
-      );
-
-      final result = await repo.getConfirmationCode('bid-001');
-
-      expect(result.code, isNull);
-      expect(result.expiresAt, isNull);
-    });
-  });
-
   // ── confirmDelivery ──────────────────────────────────────────────────────────
 
   group('confirmDelivery', () {

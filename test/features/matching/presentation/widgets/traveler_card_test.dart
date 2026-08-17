@@ -466,6 +466,28 @@ void main() {
       },
     );
 
+    // Régression : ARRIVED tombait dans le `default` et affichait le badge
+    // trompeur « Demande en attente ».
+    testWidgets('ARRIVED affiche le chip "Arrivé", pas "Demande en attente"', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(
+          TravelerCard(
+            announcement: _makeAnn(),
+            index: 0,
+            isOwnAnnouncement: false,
+            onTap: () {},
+            existingBidStatus: 'ARRIVED',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(chipKey), findsOneWidget);
+      expect(find.text('Arrivé'), findsOneWidget);
+      expect(find.text('Demande en attente'), findsNothing);
+    });
+
     testWidgets("n'affiche pas le chip quand existingBidStatus est null", (
       tester,
     ) async {

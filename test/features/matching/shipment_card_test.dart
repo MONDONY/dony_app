@@ -68,8 +68,20 @@ void main() {
     expect(shipmentStepFor('ACCEPTED'), 1);
     expect(shipmentStepFor('HANDED_OVER'), 2);
     expect(shipmentStepFor('IN_TRANSIT'), 3);
-    expect(shipmentStepFor('COMPLETED'), 4);
+    expect(shipmentStepFor('ARRIVED'), 4);
+    expect(shipmentStepFor('COMPLETED'), 5);
     expect(shipmentStepFor('PENDING'), isNull);
     expect(shipmentStepFor('AWAITING_PAYMENT'), isNull);
+  });
+
+  testWidgets('ARRIVED : stepper étape 4, badge arrivé', (tester) async {
+    await tester.pumpWidget(
+      _wrap(ShipmentCard(bid: _bid('ARRIVED'), onTap: () {}, index: 0)),
+    );
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.textContaining('ARRIVÉ'), findsOneWidget);
+    expect(find.byType(ShipmentStepper), findsOneWidget);
+    expect(find.textContaining('Arrivé, prêt à être récupéré'), findsOneWidget);
   });
 }

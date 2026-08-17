@@ -76,6 +76,15 @@ class TravelerCard extends StatelessWidget {
           chipFg: cs.primary,
           label: 'Colis sur ce trajet',
         );
+      // Voyageur arrivé à destination, colis pas encore retiré. Même
+      // libellé/couleur que le _StatusDot de bid_card.dart.
+      case 'ARRIVED':
+        return (
+          border: cs.info,
+          chipBg: cs.infoLight,
+          chipFg: cs.info,
+          label: 'Arrivé',
+        );
       case 'PENDING':
       case 'AWAITING_PAYMENT':
       // Paiement séquestré : l'expéditeur a payé mais le voyageur n'a pas encore

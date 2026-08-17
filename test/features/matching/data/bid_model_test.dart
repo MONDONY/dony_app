@@ -347,6 +347,20 @@ void main() {
       expect(bid.canReportDeliveryNoShow, isTrue);
     });
 
+    test('true si ARRIVED (le signalement se joue à destination)', () {
+      final bid = BidModel(
+        id: 'b1',
+        announcementId: 'a1',
+        senderId: 's1',
+        weightKg: 5,
+        status: 'ARRIVED',
+        createdAt: DateTime(2026),
+        updatedAt: DateTime(2026),
+        departureAt: DateTime.now().subtract(const Duration(days: 1)),
+      );
+      expect(bid.canReportDeliveryNoShow, isTrue);
+    });
+
     test('false si un signalement existe déjà', () {
       final bid = BidModel(
         id: 'b1',

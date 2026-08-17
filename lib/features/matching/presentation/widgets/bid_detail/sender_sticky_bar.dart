@@ -69,7 +69,8 @@ class SenderStickyBar extends StatelessWidget {
 
     if (status == 'ACCEPTED' ||
         status == 'HANDED_OVER' ||
-        status == 'IN_TRANSIT') {
+        status == 'IN_TRANSIT' ||
+        status == 'ARRIVED') {
       return true;
     }
 
@@ -227,7 +228,11 @@ class SenderStickyBar extends StatelessWidget {
       );
     }
 
-    if (status == 'HANDED_OVER' || status == 'IN_TRANSIT') {
+    // ARRIVED : le colis est arrivé mais pas encore retiré, le suivi reste la
+    // bonne action primaire pour l'expéditeur.
+    if (status == 'HANDED_OVER' ||
+        status == 'IN_TRANSIT' ||
+        status == 'ARRIVED') {
       final dep = bid.departureCity ?? '';
       final arr = bid.arrivalCity ?? '';
       final corridor = (dep.isNotEmpty && arr.isNotEmpty)

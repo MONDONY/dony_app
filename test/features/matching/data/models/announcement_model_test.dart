@@ -446,4 +446,25 @@ void main() {
       expect(out['urgent'], isNull);
     });
   });
+
+  group('AnnouncementModel.arrivalInstructions', () {
+    test('fromJson parses arrivalInstructions', () {
+      final json = baseAnnouncementJson()
+        ..['arrivalInstructions'] = 'Métro Châtelet, sortie 3';
+      final model = AnnouncementModel.fromJson(json);
+      expect(model.arrivalInstructions, 'Métro Châtelet, sortie 3');
+    });
+
+    test('arrivalInstructions absent → null', () {
+      final model = AnnouncementModel.fromJson(baseAnnouncementJson());
+      expect(model.arrivalInstructions, isNull);
+    });
+
+    test('round-trips arrivalInstructions through toJson', () {
+      final json = baseAnnouncementJson()
+        ..['arrivalInstructions'] = 'Métro Châtelet, sortie 3';
+      final out = AnnouncementModel.fromJson(json).toJson();
+      expect(out['arrivalInstructions'], 'Métro Châtelet, sortie 3');
+    });
+  });
 }

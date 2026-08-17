@@ -49,7 +49,10 @@ class TravelerStickyBar extends StatelessWidget {
       case 'HANDED_OVER':
         return _TravelerAction.transit;
       // IN_TRANSIT : transit fait → dernière étape, validation de la remise.
+      // ARRIVED : voyageur a marqué son trajet arrivé, l'action reste la même
+      // (valider la remise) tant que la livraison n'est pas confirmée.
       case 'IN_TRANSIT':
+      case 'ARRIVED':
         return _TravelerAction.deliver;
       default:
         return null;

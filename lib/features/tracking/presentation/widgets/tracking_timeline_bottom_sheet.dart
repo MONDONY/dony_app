@@ -16,6 +16,7 @@ void showTrackingTimelineSheet(
   BuildContext context, {
   required String bidId,
   required String corridor,
+  String? arrivalInstructions,
 }) {
   DonyBottomSheet.show(
     context,
@@ -35,7 +36,11 @@ void showTrackingTimelineSheet(
         );
       },
     ),
-    child: _TrackingTimelineContent(bidId: bidId, corridor: corridor),
+    child: _TrackingTimelineContent(
+      bidId: bidId,
+      corridor: corridor,
+      arrivalInstructions: arrivalInstructions,
+    ),
   );
 }
 
@@ -44,8 +49,13 @@ void showTrackingTimelineSheet(
 class _TrackingTimelineContent extends StatelessWidget {
   final String bidId;
   final String corridor;
+  final String? arrivalInstructions;
 
-  const _TrackingTimelineContent({required this.bidId, required this.corridor});
+  const _TrackingTimelineContent({
+    required this.bidId,
+    required this.corridor,
+    this.arrivalInstructions,
+  });
 
   static const _cityToCodes = <String, (String, String)>{
     'Paris': ('PAR', 'CDG'),
@@ -124,7 +134,10 @@ class _TrackingTimelineContent extends StatelessWidget {
                   const SizedBox(height: DonySpacing.base),
 
                   // Timeline
-                  _Timeline(events: state.events),
+                  _Timeline(
+                    events: state.events,
+                    arrivalInstructions: arrivalInstructions,
+                  ),
 
                   const SizedBox(height: DonySpacing.base),
 
@@ -146,7 +159,8 @@ class _TrackingTimelineContent extends StatelessWidget {
 
 class _Timeline extends StatelessWidget {
   final List<TrackingEventModel> events;
-  const _Timeline({required this.events});
+  final String? arrivalInstructions;
+  const _Timeline({required this.events, this.arrivalInstructions});
 
   @override
   Widget build(BuildContext context) {
@@ -183,6 +197,14 @@ class _Timeline extends StatelessWidget {
         if (!hasArrivee) ...[
           const SizedBox(height: DonySpacing.base),
           _PendingConfirmationBanner(),
+        ] else if ((arrivalInstructions ?? '').trim().isNotEmpty) ...[
+          const SizedBox(height: DonySpacing.md),
+          DonyStatusBanner(
+            type: DonyStatusBannerType.info,
+            iconAsset: 'map-pin',
+            title: 'Instructions de retrait',
+            message: arrivalInstructions,
+          ),
         ],
       ],
     );

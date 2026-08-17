@@ -150,6 +150,14 @@ _HeroContent? _buildContent(BuildContext context, BidModel bid) {
         subtitle: 'En transit vers $arrivalCity. Bonne livraison !',
       );
 
+    case 'ARRIVED':
+      return const _HeroContent(
+        variant: TravelerHeroVariant.info,
+        title: '📍 Arrivé à destination',
+        subtitle:
+            'Attendez que le destinataire récupère le colis, puis validez la remise.',
+      );
+
     case 'COMPLETED':
     case 'DELIVERED':
       return const _HeroContent(

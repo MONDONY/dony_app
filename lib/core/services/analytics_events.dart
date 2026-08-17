@@ -278,6 +278,9 @@ abstract final class AnalyticsEvents {
   // Accessibilité
   static const accessibilitySettingChanged = 'accessibility_setting_changed';
 
+  // Arrivée à destination (trajet)
+  static const tripMarkedArrived = 'trip_marked_arrived';
+  static const arrivalInstructionsUpdated = 'arrival_instructions_updated';
   // Affiche de trajet — le voyageur la génère puis la poste sur ses propres
   // canaux. Ces trois events mesurent le seul entonnoir qui compte ici :
   // combien d'affiches ouvertes finissent réellement publiées.

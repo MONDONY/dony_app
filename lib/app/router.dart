@@ -171,7 +171,6 @@ import 'package:dony/features/tracking/presentation/screens/scan_identify_screen
 import 'package:dony/features/tracking/presentation/screens/scan_photo_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/suivi_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/tracking_search_screen.dart';
-import 'package:dony/features/tracking/presentation/screens/tracking_timeline_screen.dart';
 import 'package:dony/features/trip_templates/bloc/trip_recurrence_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_event.dart';
@@ -828,17 +827,6 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/tracking/scan-hub',
       builder: (context, state) => const ScanHubScreen(),
-    ),
-    GoRoute(
-      path: '/tracking/:bidId/timeline',
-      builder: (context, state) {
-        final bidId = state.pathParameters['bidId']!;
-        final corridor = state.extra as String? ?? '';
-        return BlocProvider(
-          create: (_) => getIt<TrackingBloc>(),
-          child: TrackingTimelineScreen(bidId: bidId, corridor: corridor),
-        );
-      },
     ),
 
     // ── Mes colis — hub expéditeur (hors shell) ───────────────────────

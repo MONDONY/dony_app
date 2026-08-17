@@ -742,4 +742,53 @@ void main() {
       },
     );
   });
+
+  // ── Régression ARRIVED : le polling 10 s doit rester actif ───────────────────
+  // Le colis arrivé attend son retrait : son statut peut passer à COMPLETED à
+  // tout moment. Avant le fix, ARRIVED n'armait aucun timer et l'écran restait
+  // figé jusqu'à un retour manuel.
+  group('Polling 10 s', () {
+    testWidgets('bid ARRIVED → refetch périodique déclenché', (tester) async {
+      final authBloc = _MockAuthBloc();
+      when(
+        () => authBloc.state,
+      ).thenReturn(AuthAuthenticated(_user(_kSenderId)));
+      when(
+        () => authBloc.stream,
+      ).thenAnswer((_) => const Stream<AuthState>.empty());
+
+      await _pump(
+        tester,
+        bid: _makeBid(status: 'ARRIVED'),
+        authBloc: authBloc,
+      );
+      // 1er add à l'initState, puis un par tick de 10 s.
+      await tester.pump(const Duration(seconds: 10));
+      await tester.pump(const Duration(seconds: 10));
+
+      verify(
+        () => bidBloc.add(any(that: isA<BidDetailRequested>())),
+      ).called(greaterThanOrEqualTo(3));
+    });
+
+    testWidgets('bid COMPLETED → aucun refetch périodique', (tester) async {
+      final authBloc = _MockAuthBloc();
+      when(
+        () => authBloc.state,
+      ).thenReturn(AuthAuthenticated(_user(_kSenderId)));
+      when(
+        () => authBloc.stream,
+      ).thenAnswer((_) => const Stream<AuthState>.empty());
+
+      await _pump(
+        tester,
+        bid: _makeBid(status: 'COMPLETED'),
+        authBloc: authBloc,
+      );
+      await tester.pump(const Duration(seconds: 10));
+      await tester.pump(const Duration(seconds: 10));
+
+      verify(() => bidBloc.add(any(that: isA<BidDetailRequested>()))).called(1);
+    });
+  });
 }

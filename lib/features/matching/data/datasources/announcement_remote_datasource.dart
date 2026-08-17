@@ -73,6 +73,28 @@ class AnnouncementRemoteDatasource {
     return AnnouncementModel.fromJson(response.data as Map<String, dynamic>);
   }
 
+  Future<AnnouncementModel> markTripArrived({
+    required String announcementId,
+    String? arrivalInstructions,
+  }) async {
+    final response = await _apiClient.dio.post(
+      '/announcements/$announcementId/mark-arrived',
+      data: {'arrivalInstructions': arrivalInstructions},
+    );
+    return AnnouncementModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  Future<AnnouncementModel> updateArrivalInstructions({
+    required String announcementId,
+    required String arrivalInstructions,
+  }) async {
+    final response = await _apiClient.dio.patch(
+      '/announcements/$announcementId/arrival-instructions',
+      data: {'arrivalInstructions': arrivalInstructions},
+    );
+    return AnnouncementModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
   Future<({List<AnnouncementModel> announcements, int totalElements})>
   getMyAnnouncements() async {
     const pageSize = 50;
