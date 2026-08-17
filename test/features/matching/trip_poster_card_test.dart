@@ -1,3 +1,4 @@
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/poster/trip_poster_card.dart';
@@ -15,11 +16,13 @@ AnnouncementModel _announcement({
   String capacityUnit = 'SUITCASE_23KG',
   String? pickupLabel,
   String? deliveryLabel,
+  String departureCity = 'Paris',
+  String arrivalCity = 'Dakar',
 }) => AnnouncementModel.fromJson({
   'id': 'a1',
   'travelerId': 't1',
-  'departureCity': 'Paris',
-  'arrivalCity': 'Dakar',
+  'departureCity': departureCity,
+  'arrivalCity': arrivalCity,
   'departureDate': DateTime(2026, 8, 20).toIso8601String(),
   'availableKg': 12.0,
   'totalKg': 23.0,
@@ -49,12 +52,7 @@ Map<String, dynamic> _gridItem(String label, double display) => {
 Future<void> _pump(WidgetTester tester, AnnouncementModel a) =>
     tester.pumpWidget(
       MaterialApp(
-        home: Scaffold(
-          body: TripPosterCard(
-            announcement: a,
-            shareUrl: 'https://api.yadony.test/api/v1/public/annonce/a1',
-          ),
-        ),
+        home: Scaffold(body: TripPosterCard(announcement: a)),
       ),
     );
 
@@ -114,13 +112,94 @@ void main() {
     expect(find.text('Dernier dépôt'), findsNothing);
   });
 
-  testWidgets('imprime le lien de partage', (tester) async {
+  /// Une URL ecrite dans une image n'est cliquable sur aucune plateforme, et
+  /// personne ne recopie a la main 80 caracteres portant un UUID. Le lien vit
+  /// dans la legende, pas sur l'image.
+  testWidgets('n\'imprime aucune URL', (tester) async {
     await _pump(tester, _announcement());
 
-    expect(
-      find.text('https://api.yadony.test/api/v1/public/annonce/a1'),
-      findsOneWidget,
+    final texts = tester
+        .widgetList<Text>(find.byType(Text))
+        .map((t) => t.data ?? '')
+        .join(' ');
+    expect(texts.contains('http'), isFalse);
+    expect(texts.contains('annonce/'), isFalse);
+  });
+
+  /// L'affiche circule hors de l'application : elle est la seule representation
+  /// de la marque que verront des gens qui ne la connaissent pas encore.
+  testWidgets('porte le mot-logo officiel, pas un texte style', (tester) async {
+    await _pump(tester, _announcement());
+
+    expect(find.byType(DonyLogo), findsOneWidget);
+    expect(find.text('Yadony'), findsNothing);
+  });
+
+  /// Sans URL sur l'image, les badges sont le seul indice de « ou trouver
+  /// l'application » pour qui recoit une capture d'ecran sans la legende.
+  testWidgets('porte les badges des deux stores', (tester) async {
+    await _pump(tester, _announcement());
+
+    final assets = tester
+        .widgetList<Image>(find.byType(Image))
+        .map((i) => i.image)
+        .whereType<AssetImage>()
+        .map((a) => a.assetName)
+        .toSet();
+
+    expect(assets, contains(TripPosterCard.appStoreBadgeAsset));
+    expect(assets, contains(TripPosterCard.googlePlayBadgeAsset));
+  });
+
+  /// Le corridor se lit d'un coup d'oeil, depart puis arrivee sur une ligne.
+  /// Empiles, rien n'indiquait lequel des deux etait le depart.
+  testWidgets('affiche le corridor sur une seule ligne', (tester) async {
+    await _pump(tester, _announcement());
+
+    final depart = tester.getRect(find.text('PARIS'));
+    final arrivee = tester.getRect(find.text('DAKAR'));
+
+    expect(arrivee.left, greaterThan(depart.right));
+    expect((arrivee.top - depart.top).abs(), lessThan(1));
+  });
+
+  /// « MARSEILLE ✈ OUAGADOUGOU » est deux fois plus large que « PARIS ✈ DAKAR ».
+  /// Le forcer sur une ligne le reduirait sous la taille des libelles qui le
+  /// suivent, inversant la hierarchie de lecture : on repasse sur deux lignes.
+  testWidgets('empile un corridor trop long au lieu de le rapetisser', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      _announcement(departureCity: 'Marseille', arrivalCity: 'Ouagadougou'),
     );
+
+    expect(tester.takeException(), isNull);
+
+    final depart = tester.getRect(find.text('MARSEILLE'));
+    final arrivee = tester.getRect(find.text('OUAGADOUGOU'));
+
+    expect(arrivee.top, greaterThan(depart.top));
+    expect(arrivee.right, lessThanOrEqualTo(TripPosterCard.logicalWidth));
+  });
+
+  /// Aucune disposition ne doit amputer un nom de ville : une affiche annoncant
+  /// « OUAGAD… » est inutilisable.
+  testWidgets('ne tronque jamais un nom de ville', (tester) async {
+    for (final pair in [
+      ('Paris', 'Dakar'),
+      ('Marseille', 'Ouagadougou'),
+      ('Charleville-Mezieres', 'Bobo-Dioulasso'),
+    ]) {
+      await _pump(
+        tester,
+        _announcement(departureCity: pair.$1, arrivalCity: pair.$2),
+      );
+
+      expect(tester.takeException(), isNull, reason: '${pair.$1} ${pair.$2}');
+      expect(find.text(pair.$1.toUpperCase()), findsOneWidget);
+      expect(find.text(pair.$2.toUpperCase()), findsOneWidget);
+    }
   });
 
   /// Toutes les affiches concurrentes placardent deux à quatre numéros. Celle

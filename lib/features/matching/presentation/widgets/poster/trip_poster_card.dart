@@ -1,3 +1,6 @@
+import 'dart:math' as math;
+import 'dart:ui' as ui;
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
@@ -15,21 +18,21 @@ import 'package:intl/intl.dart';
 /// elle ne dépend pas de la luminosité.
 ///
 /// **Aucun numéro de téléphone.** Les affiches concurrentes en placardent deux à
-/// quatre ; celle-ci porte uniquement le lien Yadony. C'est cohérent avec le
-/// masquage du numéro déjà en place côté profil, et c'est un argument en soi :
-/// le voyageur n'est plus appelé à toute heure, les demandes arrivent
-/// qualifiées dans l'application.
+/// quatre ; celle-ci n'en porte aucun. C'est cohérent avec le masquage du numéro
+/// déjà en place côté profil, et c'est un argument en soi : le voyageur n'est
+/// plus appelé à toute heure, les demandes arrivent qualifiées dans
+/// l'application.
+///
+/// **Aucune URL non plus.** Une adresse écrite dans une image n'est cliquable
+/// sur aucune plateforme, et personne ne recopie à la main 80 caractères
+/// portant un UUID. Le lien vit dans la légende, que le voyageur colle dans le
+/// texte de son post. L'image, elle, porte le mot-logo et les badges des deux
+/// stores : de quoi savoir quoi chercher et où, même détachée de sa légende,
+/// ce qui est le cas dès qu'elle est transférée en capture d'écran.
 class TripPosterCard extends StatelessWidget {
-  const TripPosterCard({
-    super.key,
-    required this.announcement,
-    required this.shareUrl,
-  });
+  const TripPosterCard({super.key, required this.announcement});
 
   final AnnouncementModel announcement;
-
-  /// URL publique imprimée en pied d'affiche.
-  final String shareUrl;
 
   /// Largeur logique de composition. La capture applique un `pixelRatio` de 3
   /// pour sortir 1080 x 1350, le format 4:5 du fil Facebook et Instagram.
@@ -45,6 +48,34 @@ class TripPosterCard extends StatelessWidget {
     "d MMMM 'à' HH'h'mm",
     'fr',
   );
+
+  /// Badges officiels des deux plateformes, en français.
+  ///
+  /// Téléchargés depuis les ressources marketing d'Apple et de Google et
+  /// embarqués tels quels : les deux exigent leur propre artwork, non modifié.
+  /// Publics car l'écran d'aperçu doit les précharger avant de rastériser
+  /// l'affiche.
+  static const String appStoreBadgeAsset =
+      'assets/logos/store/app-store-fr.png';
+  static const String googlePlayBadgeAsset =
+      'assets/logos/store/google-play-fr.png';
+
+  /// Réduction maximale tolérée pour garder le corridor sur une seule ligne.
+  ///
+  /// En deçà, le titre de l'affiche deviendrait plus petit que les libellés qui
+  /// le suivent, ce qui inverserait la hiérarchie de lecture. On passe alors sur
+  /// deux lignes plutôt que de continuer à rapetisser.
+  static const double _corridorMinScale = 0.8;
+  static const double _corridorIconSize = 30;
+  static const double _corridorGap = 12;
+
+  /// Hauteur de rendu du badge Apple, qui n'a pas de marge intégrée.
+  static const double _badgeHeight = 24;
+
+  /// Part utile du badge Google : son PNG officiel réserve 23 % de sa hauteur
+  /// à la zone de dégagement imposée par la charte. Sans ce facteur, rendu à
+  /// la même hauteur qu'Apple, il paraîtrait nettement plus petit.
+  static const double _googleBadgeContentRatio = 0.77;
 
   static const Color _ink = DonyColors.ink900;
   static const Color _blue = DonyColors.blue500;
@@ -81,7 +112,7 @@ class TripPosterCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _wordmark(text),
+              _wordmark(),
               const SizedBox(height: 14),
               _corridor(text),
               const SizedBox(height: 14),
@@ -142,57 +173,113 @@ class TripPosterCard extends StatelessWidget {
 
   /// En-tête volontairement réduit à la seule marque.
   ///
-  /// Une pastille d'accroche y a été essayée puis retirée : elle débordait dès
-  /// que la police de rendu était plus large que prévu, et elle répétait ce que
-  /// dit déjà le pied d'affiche. Un en-tête à un seul élément ne peut pas
-  /// déborder, quelle que soit la typographie disponible sur l'appareil.
-  Widget _wordmark(TextTheme text) {
-    return Text(
-      'Yadony',
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      style: text.headlineLarge?.copyWith(
-        fontSize: 22,
-        fontWeight: FontWeight.w800,
-        letterSpacing: -0.6,
-        color: _blue,
-      ),
-    );
-  }
+  /// Le mot-logo officiel, et non un texte stylé : l'affiche circule hors de
+  /// l'application, sur les canaux du voyageur, où elle est la seule
+  /// représentation de la marque que verront des gens qui ne la connaissent pas
+  /// encore. Une pastille d'accroche y a été essayée puis retirée, elle
+  /// débordait dès que la police de rendu était plus large que prévu.
+  ///
+  /// [DonyLogo] fixe la hauteur et déduit la largeur du ratio (~3,7:1), donc la
+  /// mise en page reste stable même si l'image n'est pas encore décodée. La
+  /// capture, elle, exige qu'elle le soit : cf. le préchargement dans
+  /// `TripPosterScreen`.
+  Widget _wordmark() => const DonyLogo(fontSize: 30);
 
+  /// Corridor : départ puis arrivée, séparés par l'avion qui pointe vers la
+  /// droite, dans le sens de la lecture donc du voyage.
+  ///
+  /// **La disposition suit la longueur des noms.** Sur une ligne, le trajet se
+  /// lit d'un coup d'œil, et c'est la forme retenue chaque fois qu'elle tient.
+  /// Mais « MARSEILLE ✈ OUAGADOUGOU » est deux fois plus large que
+  /// « PARIS ✈ DAKAR » : tout ramener de force sur une ligne le réduirait à la
+  /// taille du corps de texte, et le corridor cesserait d'être le titre de
+  /// l'affiche. Au-delà de [_corridorMinScale], on repasse donc sur deux
+  /// lignes, où chaque ville dispose de toute la largeur.
+  ///
+  /// Jamais de troncature dans les deux cas : une ellipse amputerait un nom de
+  /// ville et rendrait l'affiche inutilisable. On réduit, ou on réorganise.
   Widget _corridor(TextTheme text) {
-    final style = text.displayLarge?.copyWith(
+    final style = (text.displayLarge ?? const TextStyle()).copyWith(
       fontSize: 34,
       height: 1.02,
       fontWeight: FontWeight.w800,
       letterSpacing: -1.6,
       color: _ink,
     );
+
+    final departure = announcement.departureCity.toUpperCase();
+    final arrival = announcement.arrivalCity.toUpperCase();
+
+    const available = logicalWidth - 44; // padding horizontal de la carte
+    final oneLineWidth =
+        _textWidth(departure, style) +
+        _textWidth(arrival, style) +
+        _corridorIconSize +
+        _corridorGap * 2;
+
+    // Le FittedBox réduit dans le rapport available/oneLineWidth : au-delà du
+    // seuil, la ligne unique deviendrait illisible face au reste de l'affiche.
+    final fitsOnOneLine = oneLineWidth <= available / _corridorMinScale;
+
+    if (fitsOnOneLine) {
+      return _corridorLine([
+        Text(departure, style: style),
+        const SizedBox(width: _corridorGap),
+        _plane(),
+        const SizedBox(width: _corridorGap),
+        Text(arrival, style: style),
+      ]);
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          announcement.departureCity.toUpperCase(),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: style,
-        ),
-        Row(
-          children: [
-            const Icon(Icons.flight_rounded, size: 26, color: _blue),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                announcement.arrivalCity.toUpperCase(),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: style,
-              ),
-            ),
-          ],
-        ),
+        _corridorLine([Text(departure, style: style)]),
+        _corridorLine([
+          _plane(),
+          const SizedBox(width: _corridorGap),
+          Text(arrival, style: style),
+        ]),
       ],
     );
+  }
+
+  /// Une ligne de corridor, mise à l'échelle si elle dépasse encore : un seul
+  /// nom de ville peut à lui seul être trop large.
+  Widget _corridorLine(List<Widget> children) => SizedBox(
+    width: double.infinity,
+    child: FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: Alignment.centerLeft,
+      child: Row(mainAxisSize: MainAxisSize.min, children: children),
+    ),
+  );
+
+  Widget _plane() => Transform.rotate(
+    angle: math.pi / 2,
+    child: const Icon(
+      Icons.flight_rounded,
+      size: _corridorIconSize,
+      color: _blue,
+    ),
+  );
+
+  /// Largeur rendue d'un texte, pour arbitrer la disposition avant de peindre.
+  ///
+  /// Un `LayoutBuilder` ne suffirait pas : il donne la place disponible, pas la
+  /// place nécessaire. Le coût est celui d'une mise en page de quelques mots,
+  /// une fois par ouverture d'écran.
+  static double _textWidth(String value, TextStyle style) {
+    final painter = TextPainter(
+      text: TextSpan(text: value, style: style),
+      // `intl` exporte lui aussi un TextDirection : sans le prefixe,
+      // c'est le sien qui gagne et il n'a pas de membre `ltr`.
+      textDirection: ui.TextDirection.ltr,
+      maxLines: 1,
+    )..layout();
+    final width = painter.width;
+    painter.dispose();
+    return width;
   }
 
   /// Bloc prix, décliné selon le mode de tarification du trajet.
@@ -292,12 +379,19 @@ class TripPosterCard extends StatelessWidget {
     );
   }
 
+  /// Pied d'affiche : la promesse, puis où trouver l'application.
+  ///
+  /// L'URL publique n'y figure pas. Écrite dans une image elle n'est de toute
+  /// façon pas cliquable, et un lecteur ne recopie pas 80 caractères portant un
+  /// UUID. C'est la légende, elle, collable et cliquable, qui porte le lien.
+  /// Les badges prennent le relais pour qui ne voit que l'image : ils disent
+  /// quoi chercher, et où.
   Widget _footer(TextTheme text) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Divider(height: 1, thickness: 1, color: _line),
-        const SizedBox(height: 10),
+        const SizedBox(height: 8),
         Text(
           'Paiement sécurisé, suivi du colis, voyageurs vérifiés',
           maxLines: 1,
@@ -308,20 +402,21 @@ class TripPosterCard extends StatelessWidget {
             color: _muted,
           ),
         ),
-        const SizedBox(height: 4),
-        Text(
-          shareUrl,
-          // Deux lignes, parce que l'URL porte un UUID : sur une seule ligne
-          // elle est ellipsée, donc illisible et intapable, alors que c'est le
-          // seul support où elle doit être lue à l'œil.
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: text.labelMedium?.copyWith(
-            fontSize: 11,
-            height: 1.25,
-            fontWeight: FontWeight.w700,
-            color: _blue,
-          ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            // Artwork officiel des deux plateformes, repris tel quel : Apple et
+            // Google interdisent de le redessiner ou de le retoucher. Le badge
+            // Google embarque sa zone de dégagement obligatoire, qui occupe
+            // 23 % de sa hauteur ; il est donc rendu plus haut que celui
+            // d'Apple pour que les deux paraissent de la même taille.
+            Image.asset(appStoreBadgeAsset, height: _badgeHeight),
+            const SizedBox(width: 8),
+            Image.asset(
+              googlePlayBadgeAsset,
+              height: _badgeHeight / _googleBadgeContentRatio,
+            ),
+          ],
         ),
       ],
     );

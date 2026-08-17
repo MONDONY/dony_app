@@ -29,9 +29,6 @@ import 'package:share_plus/share_plus.dart';
 /// paramètre, mais il apparaît dans les journaux d'accès, donc l'historique est
 /// préservé le jour où la ventilation par canal sera construite.
 enum PosterShareChannel {
-  /// Lien imprimé sur l'image, saisi à la main par le lecteur.
-  poster('affiche'),
-
   /// Feuille de partage système (WhatsApp, Messages, Instagram…).
   share('partage'),
 
@@ -132,6 +129,22 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
   /// `qr_sheet.dart`.
   Uint8List? _posterBytes;
 
+  /// Décodage des images de l'affiche, attendu avant toute capture.
+  ///
+  /// `toImage()` fige ce qui est peint à l'instant où on l'appelle. Un
+  /// `Image.asset` se charge de façon asynchrone : sans cette attente, un
+  /// voyageur qui tape « Partager » aussitôt l'écran ouvert exporterait une
+  /// affiche amputée de son mot-logo et de ses badges, et rien dans le code ne
+  /// le signalerait. La mise en page, elle, ne bouge pas, toutes ces images
+  /// ayant une hauteur imposée.
+  Future<void>? _imagesReady;
+
+  static const List<String> _posterAssets = [
+    DonyLogo.asset,
+    TripPosterCard.appStoreBadgeAsset,
+    TripPosterCard.googlePlayBadgeAsset,
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -145,20 +158,23 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _imagesReady ??= Future.wait([
+      for (final asset in _posterAssets)
+        precacheImage(AssetImage(asset), context),
+    ]);
+  }
+
+  @override
   void dispose() {
     _busy.dispose();
     super.dispose();
   }
 
-  String _urlFor(PosterShareChannel channel) {
-    final base =
-        '${widget.shareBaseUrl}/public/annonce/${widget.announcement.id}';
-    // Le lien imprimé sur l'image est destiné à être recopié à la main : il
-    // reste nu, un paramètre de plus le rendrait encore moins saisissable.
-    return channel == PosterShareChannel.poster
-        ? base
-        : '$base?c=${channel.code}';
-  }
+  String _urlFor(PosterShareChannel channel) =>
+      '${widget.shareBaseUrl}/public/annonce/${widget.announcement.id}'
+      '?c=${channel.code}';
 
   /// Légende prête à coller dans le texte du post. C'est elle qui porte le lien
   /// cliquable, l'image ne le rendant pas actionnable sur les réseaux.
@@ -212,6 +228,15 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
     if (cached != null) {
       return cached;
     }
+    // Les images doivent être décodées ET peintes avant la capture. Le
+    // décodage seul ne suffit pas : il déclenche une reconstruction, dont il
+    // faut attendre la frame, faute de quoi on rastérise l'état précédent.
+    await _imagesReady;
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) {
+      return null;
+    }
+
     final boundary =
         _posterKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
     if (boundary == null) {
@@ -352,10 +377,7 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
                 child: FittedBox(
                   child: RepaintBoundary(
                     key: _posterKey,
-                    child: TripPosterCard(
-                      announcement: widget.announcement,
-                      shareUrl: _urlFor(PosterShareChannel.poster),
-                    ),
+                    child: TripPosterCard(announcement: widget.announcement),
                   ),
                 ),
               ),
