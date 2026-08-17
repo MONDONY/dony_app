@@ -318,6 +318,9 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                                 child: TextFormField(
                                   key: const Key('promo-code-input'),
                                   controller: _promoCtrl,
+                                  scrollPadding: const EdgeInsets.only(
+                                    bottom: 140,
+                                  ),
                                   textCapitalization:
                                       TextCapitalization.characters,
                                   decoration: InputDecoration(
@@ -504,6 +507,7 @@ class _BudgetTotalInput extends StatelessWidget {
       controller: controller,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d.,]'))],
+      scrollPadding: const EdgeInsets.only(bottom: 140),
       style: tt.headlineMedium?.copyWith(
         fontWeight: FontWeight.w800,
         fontSize: 22,

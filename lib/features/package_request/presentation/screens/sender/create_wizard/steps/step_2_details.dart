@@ -357,6 +357,7 @@ class _DescriptionInput extends StatelessWidget {
     return TextFormField(
       key: const Key('description-input'),
       controller: controller,
+      scrollPadding: const EdgeInsets.only(bottom: 140),
       maxLines: 4,
       maxLength: 500,
       textCapitalization: TextCapitalization.sentences,
@@ -413,6 +414,7 @@ class _WeightInput extends StatelessWidget {
       controller: controller,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d.,]'))],
+      scrollPadding: const EdgeInsets.only(bottom: 140),
       style: tt.headlineMedium?.copyWith(
         fontWeight: FontWeight.w800,
         fontSize: 26,

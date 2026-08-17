@@ -386,31 +386,26 @@ class _PackageRequestCreateScreenState
           children: [
             Expanded(
               child: switch (state.currentStep) {
-                0 => Column(
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        DonySpacing.base,
-                        DonySpacing.sm,
-                        DonySpacing.base,
-                        0,
-                      ),
-                      child: ContextualTutorialCard(
+                // Rien n'est épinglé au-dessus de l'étape : la carte de
+                // tutoriel et la bannière de devise vivaient hors du
+                // `SingleChildScrollView` et mangeaient de la hauteur pendant
+                // toute la saisie, clavier déployé. Elles passent en tête du
+                // contenu défilant.
+                0 => Step1TrajetColis(
+                  key: _step1Key,
+                  canContinueNotifier: _canContinueNotifier,
+                  header: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const ContextualTutorialCard(
                         context: TutorialContext.requestPublish,
                       ),
-                    ),
-                    Expanded(
-                      child: Step1TrajetColis(
-                        key: _step1Key,
-                        canContinueNotifier: _canContinueNotifier,
-                        // Passée à l'étape, donc à l'intérieur du défilement :
-                        // au-dessus, elle restait figée pendant toute la saisie.
-                        header: state.isEditing
-                            ? null
-                            : CurrencyPublishBanner.active(),
-                      ),
-                    ),
-                  ],
+                      if (!state.isEditing) ...[
+                        const SizedBox(height: DonySpacing.base),
+                        CurrencyPublishBanner.active(),
+                      ],
+                    ],
+                  ),
                 ),
                 1 => Step2Details(
                   key: _step2Key,
