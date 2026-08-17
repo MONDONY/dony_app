@@ -944,18 +944,11 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
       // confirmation n'aboutit pas, le serveur marque l'échec et incrémente
       // son compteur de réessai, ce qui autorise le nouveau règlement ci-dessous.
       final resumed =
-          current is NegotiationLoaded &&
-          current.thread.commissionStatus == 'REQUIRES_3DS';
+          current is NegotiationLoaded && current.thread.commissionAwaits3ds;
       if (resumed) {
         final c = await _repository.confirmCommission(e.threadId);
         if (c.accepted) {
-          emit(NegotiationCommissionSettled(e.threadId));
-          unawaited(
-            _analytics.logEvent(
-              AnalyticsEvents.negotiationCommissionSettled,
-              properties: {'thread_id': e.threadId},
-            ),
-          );
+          _emitCommissionSettled(e.threadId, emit);
           return;
         }
       }
@@ -992,6 +985,20 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
     }
   }
 
+  /// Commission encaissée, accord scellé. Les trois chemins qui y mènent
+  /// (règlement direct, reprise d'une 3DS interrompue, confirmation d'une 3DS
+  /// menée à son terme) doivent émettre le même état et le même événement de
+  /// suivi, sans quoi une partie des règlements manquerait aux statistiques.
+  void _emitCommissionSettled(String threadId, Emitter<NegotiationState> emit) {
+    emit(NegotiationCommissionSettled(threadId));
+    unawaited(
+      _analytics.logEvent(
+        AnalyticsEvents.negotiationCommissionSettled,
+        properties: {'thread_id': threadId},
+      ),
+    );
+  }
+
   /// Mirrors `BidAcceptanceBloc._handleResponse`, scoped to a negotiation
   /// thread instead of a materialized bid : the traveler is in front of
   /// their phone at this instant, so a strong (3DS) authentication is
@@ -1003,26 +1010,14 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
   ) async {
     switch (r.status) {
       case AcceptanceStatus.accepted:
-        emit(NegotiationCommissionSettled(threadId));
-        unawaited(
-          _analytics.logEvent(
-            AnalyticsEvents.negotiationCommissionSettled,
-            properties: {'thread_id': threadId},
-          ),
-        );
+        _emitCommissionSettled(threadId, emit);
         return;
       case AcceptanceStatus.requires3ds:
         try {
           await _stripe.handleNextAction(r.clientSecret!);
           final c = await _repository.confirmCommission(threadId);
           if (c.accepted) {
-            emit(NegotiationCommissionSettled(threadId));
-            unawaited(
-              _analytics.logEvent(
-                AnalyticsEvents.negotiationCommissionSettled,
-                properties: {'thread_id': threadId},
-              ),
-            );
+            _emitCommissionSettled(threadId, emit);
           } else {
             emit(
               NegotiationError(

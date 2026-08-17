@@ -151,11 +151,11 @@ class NegotiationThread extends Equatable {
   /// cours (accord par carte, ou commission déjà réglée).
   final DateTime? commissionDeadline;
 
-  /// Vrai quand le voyageur doit encore régler la commission de cet accord
-  /// (règlement pas encore effectué, ou bloqué en attente d'une
-  /// authentification forte 3DS).
-  bool get needsCommissionSettlement =>
-      commissionStatus == 'PENDING' || commissionStatus == 'REQUIRES_3DS';
+  /// Vrai quand un règlement est resté suspendu à une authentification forte
+  /// 3DS. Le voyageur a basculé vers son application bancaire et l'OS a pu tuer
+  /// yadony entre-temps : à sa prochaine tentative il faut confirmer le
+  /// PaymentIntent existant, surtout pas en ouvrir un second.
+  bool get commissionAwaits3ds => commissionStatus == 'REQUIRES_3DS';
 
   bool get isTravelerKgFree => travelerCapacityUnit == 'KG_FREE';
 

@@ -344,6 +344,7 @@ class _NotificationIcon extends StatelessWidget {
       // Perdu
       'BID_REJECTED' => (cs.error, 'circle-x'),
       'PARCEL_REFUSED' => (cs.error, 'circle-x'),
+      'negotiation_commission_declined' => (cs.error, 'circle-x'),
       'TRIP_CANCELLED' => (cs.error, 'ban'),
       'ACCOUNT_SUSPENDED' => (cs.error, 'shield'),
 
@@ -375,6 +376,7 @@ class _NotificationIcon extends StatelessWidget {
       'BID_EXPIRED' => (cs.onSurfaceVariant, 'timer-off'),
       'request_expired' => (cs.onSurfaceVariant, 'timer-off'),
       'negotiation_expired' => (cs.onSurfaceVariant, 'timer-off'),
+      'negotiation_commission_expired' => (cs.onSurfaceVariant, 'timer-off'),
 
       _ => (cs.onSurfaceVariant, 'bell'),
     };

@@ -308,44 +308,38 @@ void main() {
   group('commissionStatus', () {
     final baseJson = _baseJson();
 
-    test(
-      'fromJson lit commissionStatus et en déduit le besoin de règlement',
-      () {
-        final thread = NegotiationThread.fromJson({
-          ...baseJson,
-          'commissionStatus': 'PENDING',
-        });
-        expect(thread.commissionStatus, 'PENDING');
-        expect(thread.needsCommissionSettlement, isTrue);
-      },
-    );
-
-    test('commissionStatus absent → aucun règlement attendu', () {
-      final thread = NegotiationThread.fromJson(baseJson);
-      expect(thread.commissionStatus, isNull);
-      expect(thread.needsCommissionSettlement, isFalse);
+    test('commissionStatus PENDING → aucune 3DS en cours à reprendre', () {
+      final thread = NegotiationThread.fromJson({
+        ...baseJson,
+        'commissionStatus': 'PENDING',
+      });
+      expect(thread.commissionStatus, 'PENDING');
+      expect(thread.commissionAwaits3ds, isFalse);
     });
 
-    test('commissionStatus CHARGED → aucun règlement attendu', () {
+    test('commissionStatus absent → aucune 3DS en cours', () {
+      final thread = NegotiationThread.fromJson(baseJson);
+      expect(thread.commissionStatus, isNull);
+      expect(thread.commissionAwaits3ds, isFalse);
+    });
+
+    test('commissionStatus CHARGED → aucune 3DS en cours', () {
       final thread = NegotiationThread.fromJson({
         ...baseJson,
         'commissionStatus': 'CHARGED',
       });
       expect(thread.commissionStatus, 'CHARGED');
-      expect(thread.needsCommissionSettlement, isFalse);
+      expect(thread.commissionAwaits3ds, isFalse);
     });
 
-    test(
-      'commissionStatus REQUIRES_3DS → règlement encore attendu (3DS bancaire)',
-      () {
-        final thread = NegotiationThread.fromJson({
-          ...baseJson,
-          'commissionStatus': 'REQUIRES_3DS',
-        });
-        expect(thread.commissionStatus, 'REQUIRES_3DS');
-        expect(thread.needsCommissionSettlement, isTrue);
-      },
-    );
+    test('commissionStatus REQUIRES_3DS → 3DS interrompue à reprendre', () {
+      final thread = NegotiationThread.fromJson({
+        ...baseJson,
+        'commissionStatus': 'REQUIRES_3DS',
+      });
+      expect(thread.commissionStatus, 'REQUIRES_3DS');
+      expect(thread.commissionAwaits3ds, isTrue);
+    });
 
     test('commissionStatus participates in props/equality', () {
       final t1 = NegotiationThread.fromJson(baseJson);

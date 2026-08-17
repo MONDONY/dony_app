@@ -323,11 +323,12 @@ class _NegoCard extends StatelessWidget {
       thread.status == NegotiationThreadStatus.open &&
       thread.messages.isNotEmpty;
 
+  /// Un fil est terminal quand il n'est plus actif sans avoir abouti. Dérivé de
+  /// `isActive`, qui fait autorité sur les statuts en cours : réénumérer les
+  /// statuts morts ici les ferait diverger au prochain ajout côté serveur.
   bool get _isTerminal =>
-      thread.status == NegotiationThreadStatus.rejected ||
-      thread.status == NegotiationThreadStatus.autoRejected ||
-      thread.status == NegotiationThreadStatus.expired ||
-      thread.status == NegotiationThreadStatus.cancelled;
+      !thread.status.isActive &&
+      thread.status != NegotiationThreadStatus.accepted;
 
   Color get _stripColor => switch (thread.status) {
     NegotiationThreadStatus.open => DonyColors.primary,
