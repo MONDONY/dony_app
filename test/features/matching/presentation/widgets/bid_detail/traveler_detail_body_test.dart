@@ -69,12 +69,15 @@ void main() {
 
   // Régression : ARRIVED absent de _activeStatuses faisait disparaître la carte
   // expéditeur et les actions rapides dès le marquage d'arrivée.
-  testWidgets('ARRIVED → carte contact et actions rapides toujours là', (
+  testWidgets('ARRIVED → carte contact toujours là, mais aucune action suivi', (
     tester,
   ) async {
     await _pump(tester, _bid('ARRIVED'));
     expect(find.byType(ExpediteurContactCard), findsOneWidget);
-    expect(find.byType(QuickActionsRow), findsOneWidget);
+    // Le suivi appartient à l'expéditeur : le voyageur détient le colis mais
+    // n'en est pas propriétaire, il n'a donc jamais accès aux actions de suivi,
+    // y compris une fois arrivé à destination.
+    expect(find.byType(QuickActionsRow), findsNothing);
   });
 
   testWidgets('PENDING → pas de carte contact (statut non actif)', (
