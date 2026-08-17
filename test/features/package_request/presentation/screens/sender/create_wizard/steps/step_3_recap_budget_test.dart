@@ -177,9 +177,7 @@ void main() {
 
         final key = GlobalKey<Step3RecapBudgetState>();
         await tester.pumpWidget(
-          wrap(
-            Step3RecapBudget(key: key, canContinueNotifier: canContinue),
-          ),
+          wrap(Step3RecapBudget(key: key, canContinueNotifier: canContinue)),
         );
         await tester.pump();
 

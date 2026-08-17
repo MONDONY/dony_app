@@ -244,7 +244,9 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                 const SizedBox(height: DonySpacing.base),
 
                 // ── Budget ─────────────────────────────────────────────────
-                _FieldLabel(state.negotiable ? 'Budget indicatif' : 'Votre prix'),
+                _FieldLabel(
+                  state.negotiable ? 'Budget indicatif' : 'Votre prix',
+                ),
                 const SizedBox(height: DonySpacing.xs),
                 _BudgetTotalInput(
                   key: _budgetFieldKey,

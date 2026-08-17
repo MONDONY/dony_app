@@ -142,7 +142,10 @@ void main() {
         findsOneWidget,
       );
       // Laissé vide, il ne bloque pas : seuls villes et date comptent.
-      expect(find.text('Où remettez-vous le colis ? (optionnel)'), findsOneWidget);
+      expect(
+        find.text('Où remettez-vous le colis ? (optionnel)'),
+        findsOneWidget,
+      );
     });
 
     testWidgets(

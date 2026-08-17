@@ -122,9 +122,8 @@ class _PreviewBody extends StatelessWidget {
     return tol == 0 ? date : '$date ±${tol}j';
   }
 
-  String _paymentLabel(PackageRequestFormState s) => s.acceptedPaymentMethods
-      .map((m) => m.displayLabel)
-      .join(', ');
+  String _paymentLabel(PackageRequestFormState s) =>
+      s.acceptedPaymentMethods.map((m) => m.displayLabel).join(', ');
 
   String _priceLine(PackageRequestFormState s) {
     final amount = s.totalBudgetEur;
