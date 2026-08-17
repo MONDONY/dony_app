@@ -12,6 +12,8 @@ import 'package:dony/core/services/device_id_service.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/core/services/media_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/features/app_update/data/datasources/app_update_remote_config_datasource.dart';
+import 'package:dony/features/app_update/data/services/app_update_service.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/currency_onboarding_cubit.dart';
@@ -848,6 +850,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => NegotiationBloc(
       getIt<NegotiationRepository>(),
       analytics: getIt<AnalyticsService>(),
+      stripe: Stripe.instance,
     ),
   );
   getIt.registerLazySingleton<NegotiationListBloc>(
@@ -904,5 +907,13 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerFactory<DisputeListBloc>(
     () =>
         DisputeListBloc(getIt<DisputeRepository>(), getIt<AnalyticsService>()),
+  );
+
+  // Verrou de version minimale (min_supported_build, Firebase Remote Config)
+  getIt.registerLazySingleton<AppUpdateConfigSource>(
+    () => AppUpdateRemoteConfigDatasource(),
+  );
+  getIt.registerLazySingleton<AppUpdateService>(
+    () => AppUpdateService(getIt<AppUpdateConfigSource>()),
   );
 }

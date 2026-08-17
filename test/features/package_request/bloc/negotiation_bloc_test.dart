@@ -1,16 +1,34 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/features/matching/data/models/acceptance_response.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/linked_trip_summary.dart';
 import 'package:dony/features/package_request/data/models/negotiation_message.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/negotiation_repository.dart';
+// `flutter_stripe` also exports a `PaymentMethod` class which collides with
+// dony's own `PaymentMethod` enum imported above — hide it.
+import 'package:flutter_stripe/flutter_stripe.dart' hide PaymentMethod;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import '../../../helpers/mock_analytics_backend.dart';
 
 class _MockRepo extends Mock implements NegotiationRepository {}
+
+class _MockStripe extends Mock implements Stripe {}
+
+PaymentIntent _fakePaymentIntent() => const PaymentIntent(
+  id: 'pi_x',
+  amount: 100,
+  created: '1234567890',
+  currency: 'eur',
+  status: PaymentIntentsStatus.Succeeded,
+  clientSecret: 'pi_x_secret',
+  livemode: false,
+  captureMethod: CaptureMethod.Automatic,
+  confirmationMethod: ConfirmationMethod.Automatic,
+);
 
 NegotiationThread _fakeThread({
   String id = 't-1',
@@ -34,9 +52,10 @@ NegotiationThread _fakeThread({
   linkedTrip: linkedTrip,
 );
 
-NegotiationBloc _makeBloc(_MockRepo repo) => NegotiationBloc(
+NegotiationBloc _makeBloc(_MockRepo repo, {Stripe? stripe}) => NegotiationBloc(
   repo,
   analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+  stripe: stripe,
 );
 
 void main() {
@@ -75,6 +94,128 @@ void main() {
       isA<NegotiationLoading>(),
       isA<NegotiationLoaded>().having((s) => s.thread.id, 'thread.id', 't-1'),
     ],
+  );
+
+  blocTest<NegotiationBloc, NegotiationState>(
+    'start forwards createDedicatedTrip and dedicatedTripPayload unmodified '
+    'to repository.start',
+    build: () {
+      when(
+        () => repo.start(
+          packageRequestId: any(named: 'packageRequestId'),
+          proposedPriceEur: any(named: 'proposedPriceEur'),
+          travelerTravelDate: any(named: 'travelerTravelDate'),
+          travelerAvailableKg: any(named: 'travelerAvailableKg'),
+          travelerAnnouncementId: any(named: 'travelerAnnouncementId'),
+          body: any(named: 'body'),
+          createDedicatedTrip: any(named: 'createDedicatedTrip'),
+          dedicatedTripPayload: any(named: 'dedicatedTripPayload'),
+        ),
+      ).thenAnswer((_) async => _fakeThread());
+      return _makeBloc(repo);
+    },
+    act: (bloc) => bloc.add(
+      NegotiationStartRequested(
+        packageRequestId: 'pr-1',
+        proposedPriceEur: 30,
+        travelerTravelDate: DateTime(2026, 6, 15),
+        travelerAvailableKg: 10,
+        createDedicatedTrip: true,
+        dedicatedTripPayload: const {
+          'departureDate': '2026-07-01',
+          'pickupAddress': {'label': 'Paris'},
+          'deliveryAddress': {'label': 'Dakar'},
+        },
+      ),
+    ),
+    expect: () => [isA<NegotiationLoading>(), isA<NegotiationLoaded>()],
+    verify: (_) => verify(
+      () => repo.start(
+        packageRequestId: 'pr-1',
+        proposedPriceEur: 30,
+        travelerTravelDate: DateTime(2026, 6, 15),
+        travelerAvailableKg: 10,
+        createDedicatedTrip: true,
+        dedicatedTripPayload: const {
+          'departureDate': '2026-07-01',
+          'pickupAddress': {'label': 'Paris'},
+          'deliveryAddress': {'label': 'Dakar'},
+        },
+      ),
+    ).called(1),
+  );
+
+  blocTest<NegotiationBloc, NegotiationState>(
+    'NegotiationStartWithDedicatedTripRequested calls repository.start with '
+    'createDedicatedTrip=true',
+    build: () {
+      when(
+        () => repo.start(
+          packageRequestId: any(named: 'packageRequestId'),
+          proposedPriceEur: any(named: 'proposedPriceEur'),
+          travelerTravelDate: any(named: 'travelerTravelDate'),
+          travelerAvailableKg: any(named: 'travelerAvailableKg'),
+          travelerAnnouncementId: any(named: 'travelerAnnouncementId'),
+          body: any(named: 'body'),
+          createDedicatedTrip: any(named: 'createDedicatedTrip'),
+          dedicatedTripPayload: any(named: 'dedicatedTripPayload'),
+        ),
+      ).thenAnswer((_) async => _fakeThread());
+      return _makeBloc(repo);
+    },
+    act: (bloc) => bloc.add(
+      NegotiationStartWithDedicatedTripRequested(
+        packageRequestId: 'req-1',
+        proposedPriceEur: 42,
+        travelerTravelDate: DateTime(2026, 9),
+        travelerAvailableKg: 5,
+        dedicatedTrip: DedicatedTripPayload(
+          departureDate: DateTime(2026, 9),
+          pickupAddress: const {'label': 'Pickup', 'lat': 48.8, 'lng': 2.3},
+          deliveryAddress: const {'label': 'Delivery', 'lat': 5.3, 'lng': -4.0},
+        ),
+      ),
+    ),
+    expect: () => [isA<NegotiationLoading>(), isA<NegotiationLoaded>()],
+    verify: (_) => verify(
+      () => repo.start(
+        packageRequestId: 'req-1',
+        proposedPriceEur: 42,
+        travelerTravelDate: DateTime(2026, 9),
+        travelerAvailableKg: 5,
+        createDedicatedTrip: true,
+        dedicatedTripPayload: any(named: 'dedicatedTripPayload'),
+      ),
+    ).called(1),
+  );
+
+  test(
+    'DedicatedTripPayload.toJson omits nulls and includes required fields',
+    () {
+      final payload = DedicatedTripPayload(
+        departureDate: DateTime(2026, 9),
+        pickupAddress: const {'label': 'Pickup', 'lat': 48.8, 'lng': 2.3},
+        deliveryAddress: const {'label': 'Delivery', 'lat': 5.3, 'lng': -4.0},
+      );
+      final json = payload.toJson();
+      expect(json['departureDate'], '2026-09-01');
+      expect(json['pickupAddress'], {
+        'label': 'Pickup',
+        'lat': 48.8,
+        'lng': 2.3,
+      });
+      expect(json['deliveryAddress'], {
+        'label': 'Delivery',
+        'lat': 5.3,
+        'lng': -4.0,
+      });
+      expect(json['useCardForCommission'], false);
+      expect(json.containsKey('departureTime'), isFalse);
+      expect(json.containsKey('arrivalTime'), isFalse);
+      expect(json.containsKey('description'), isFalse);
+      expect(json.containsKey('acceptedContentTypes'), isFalse);
+      expect(json.containsKey('refusedTypes'), isFalse);
+    },
   );
 
   blocTest<NegotiationBloc, NegotiationState>(
@@ -455,6 +596,74 @@ void main() {
     );
   });
 
+  // ── NegotiationChangeTripRequested ──────────────────────────────────────────
+
+  group('NegotiationChangeTripRequested', () {
+    blocTest<NegotiationBloc, NegotiationState>(
+      'calls repository.changeTrip and emits [Loading, Loaded]',
+      build: () {
+        when(
+          () => repo.changeTrip('thread-1', travelerAnnouncementId: 'ann-2'),
+        ).thenAnswer((_) async => _fakeThread());
+        return _makeBloc(repo);
+      },
+      act: (bloc) => bloc.add(
+        const NegotiationChangeTripRequested(
+          threadId: 'thread-1',
+          travelerAnnouncementId: 'ann-2',
+        ),
+      ),
+      expect: () => [isA<NegotiationLoading>(), isA<NegotiationLoaded>()],
+      verify: (_) => verify(
+        () => repo.changeTrip('thread-1', travelerAnnouncementId: 'ann-2'),
+      ).called(1),
+    );
+
+    blocTest<NegotiationBloc, NegotiationState>(
+      'from Loaded emits [ActionInProgress, Loaded]',
+      build: () {
+        when(
+          () => repo.changeTrip(
+            any(),
+            travelerAnnouncementId: any(named: 'travelerAnnouncementId'),
+          ),
+        ).thenAnswer((_) async => _fakeThread());
+        return _makeBloc(repo);
+      },
+      seed: () => NegotiationLoaded(_fakeThread()),
+      act: (bloc) => bloc.add(
+        const NegotiationChangeTripRequested(
+          threadId: 't-1',
+          travelerAnnouncementId: 'ann-2',
+        ),
+      ),
+      expect: () => [
+        isA<NegotiationActionInProgress>(),
+        isA<NegotiationLoaded>(),
+      ],
+    );
+
+    blocTest<NegotiationBloc, NegotiationState>(
+      'emits [Loading, Error] when changeTrip throws',
+      build: () {
+        when(
+          () => repo.changeTrip(
+            any(),
+            travelerAnnouncementId: any(named: 'travelerAnnouncementId'),
+          ),
+        ).thenThrow(Exception('server error'));
+        return _makeBloc(repo);
+      },
+      act: (bloc) => bloc.add(
+        const NegotiationChangeTripRequested(
+          threadId: 't-1',
+          travelerAnnouncementId: 'ann-2',
+        ),
+      ),
+      expect: () => [isA<NegotiationLoading>(), isA<NegotiationError>()],
+    );
+  });
+
   group('checkout — course avec le webhook Stripe', () {
     blocTest<NegotiationBloc, NegotiationState>(
       'checkout 409 thread/not-awaiting-payment → recharge le thread et émet '
@@ -535,6 +744,354 @@ void main() {
       ),
       expect: () => [isA<NegotiationLoading>(), isA<NegotiationError>()],
       verify: (_) => verifyNever(() => repo.getById(any())),
+    );
+  });
+
+  // ── NegotiationSettleCommissionRequested ────────────────────────────────────
+
+  group('NegotiationSettleCommissionRequested', () {
+    blocTest<NegotiationBloc, NegotiationState>(
+      'garde anti double-débit : un règlement déjà en cours '
+      '(ActionInProgress) ignore un second event, aucun appel réseau',
+      build: () => _makeBloc(repo),
+      seed: () => NegotiationActionInProgress(_fakeThread()),
+      act: (b) => b.add(const NegotiationSettleCommissionRequested('t-1')),
+      expect: () => [],
+      verify: (_) => verifyNever(
+        () => repo.settleCommission(
+          any(),
+          commissionSource: any(named: 'commissionSource'),
+        ),
+      ),
+    );
+
+    blocTest<NegotiationBloc, NegotiationState>(
+      'règlement accepté → ActionInProgress puis NegotiationCommissionSettled',
+      build: () {
+        when(
+          () => repo.settleCommission(
+            any(),
+            commissionSource: any(named: 'commissionSource'),
+          ),
+        ).thenAnswer(
+          (_) async =>
+              const AcceptanceResponse(status: AcceptanceStatus.accepted),
+        );
+        return _makeBloc(repo);
+      },
+      seed: () => NegotiationLoaded(_fakeThread()),
+      act: (b) => b.add(const NegotiationSettleCommissionRequested('t-1')),
+      expect: () => [
+        isA<NegotiationActionInProgress>(),
+        isA<NegotiationCommissionSettled>().having(
+          (s) => s.threadId,
+          'threadId',
+          't-1',
+        ),
+      ],
+      verify: (_) => verify(() => repo.settleCommission('t-1')).called(1),
+    );
+
+    blocTest<NegotiationBloc, NegotiationState>(
+      'defaults to WALLET_FIRST from a state other than Loaded → Loading '
+      'puis NegotiationCommissionSettled',
+      build: () {
+        when(
+          () => repo.settleCommission(
+            any(),
+            commissionSource: any(named: 'commissionSource'),
+          ),
+        ).thenAnswer(
+          (_) async =>
+              const AcceptanceResponse(status: AcceptanceStatus.accepted),
+        );
+        return _makeBloc(repo);
+      },
+      act: (b) => b.add(const NegotiationSettleCommissionRequested('t-1')),
+      expect: () => [
+        isA<NegotiationLoading>(),
+        isA<NegotiationCommissionSettled>(),
+      ],
+    );
+
+    blocTest<NegotiationBloc, NegotiationState>(
+      'useCard: true envoie commissionSource CARD au repository',
+      build: () {
+        when(
+          () => repo.settleCommission(
+            any(),
+            commissionSource: any(named: 'commissionSource'),
+          ),
+        ).thenAnswer(
+          (_) async =>
+              const AcceptanceResponse(status: AcceptanceStatus.accepted),
+        );
+        return _makeBloc(repo);
+      },
+      seed: () => NegotiationLoaded(_fakeThread()),
+      act: (b) => b.add(
+        const NegotiationSettleCommissionRequested('t-1', useCard: true),
+      ),
+      expect: () => [
+        isA<NegotiationActionInProgress>(),
+        isA<NegotiationCommissionSettled>(),
+      ],
+      verify: (_) => verify(
+        () => repo.settleCommission('t-1', commissionSource: 'CARD'),
+      ).called(1),
+    );
+
+    blocTest<NegotiationBloc, NegotiationState>(
+      'solde insuffisant → état porteur des montants, pas une erreur',
+      build: () {
+        when(
+          () => repo.settleCommission(
+            any(),
+            commissionSource: any(named: 'commissionSource'),
+          ),
+        ).thenAnswer(
+          (_) async => const AcceptanceResponse(
+            status: AcceptanceStatus.insufficientWallet,
+            availableBalance: 1.0,
+            requiredCommission: 5.0,
+            hasCard: true,
+            currency: 'EUR',
+          ),
+        );
+        return _makeBloc(repo);
+      },
+      seed: () => NegotiationLoaded(_fakeThread()),
+      act: (b) => b.add(const NegotiationSettleCommissionRequested('t-1')),
+      expect: () => [
+        isA<NegotiationActionInProgress>(),
+        isA<NegotiationCommissionInsufficientWallet>()
+            .having((s) => s.availableBalance, 'availableBalance', 1.0)
+            .having((s) => s.requiredCommission, 'requiredCommission', 5.0)
+            .having((s) => s.hasCard, 'hasCard', true)
+            .having((s) => s.currency, 'currency', 'EUR')
+            .having((s) => s.threadId, 'threadId', 't-1'),
+      ],
+    );
+
+    blocTest<NegotiationBloc, NegotiationState>(
+      'échec (FAILED) → NegotiationError portant le message backend',
+      build: () {
+        when(
+          () => repo.settleCommission(
+            any(),
+            commissionSource: any(named: 'commissionSource'),
+          ),
+        ).thenAnswer(
+          (_) async => const AcceptanceResponse(
+            status: AcceptanceStatus.failed,
+            error: 'Carte refusée',
+          ),
+        );
+        return _makeBloc(repo);
+      },
+      seed: () => NegotiationLoaded(_fakeThread()),
+      act: (b) => b.add(const NegotiationSettleCommissionRequested('t-1')),
+      expect: () => [
+        isA<NegotiationActionInProgress>(),
+        isA<NegotiationError>().having(
+          (s) => s.error.message,
+          'error.message',
+          'Carte refusée',
+        ),
+      ],
+    );
+
+    blocTest<NegotiationBloc, NegotiationState>(
+      'erreur réseau → NegotiationError',
+      build: () {
+        when(
+          () => repo.settleCommission(
+            any(),
+            commissionSource: any(named: 'commissionSource'),
+          ),
+        ).thenThrow(Exception('timeout'));
+        return _makeBloc(repo);
+      },
+      seed: () => NegotiationLoaded(_fakeThread()),
+      act: (b) => b.add(const NegotiationSettleCommissionRequested('t-1')),
+      expect: () => [
+        isA<NegotiationActionInProgress>(),
+        isA<NegotiationError>(),
+      ],
+    );
+
+    // ── Chemin 3D Secure ──────────────────────────────────────────────────
+
+    blocTest<NegotiationBloc, NegotiationState>(
+      'requires3ds → handleNextAction réussi → confirmCommission accepté → '
+      'NegotiationCommissionSettled',
+      build: () {
+        final stripe = _MockStripe();
+        when(
+          () => repo.settleCommission(
+            any(),
+            commissionSource: any(named: 'commissionSource'),
+          ),
+        ).thenAnswer(
+          (_) async => const AcceptanceResponse(
+            status: AcceptanceStatus.requires3ds,
+            clientSecret: 'pi_x',
+          ),
+        );
+        when(
+          () => stripe.handleNextAction('pi_x'),
+        ).thenAnswer((_) async => _fakePaymentIntent());
+        when(
+          () => repo.confirmCommission('t-1'),
+        ).thenAnswer((_) async => const ConfirmResponse(accepted: true));
+        return _makeBloc(repo, stripe: stripe);
+      },
+      seed: () => NegotiationLoaded(_fakeThread()),
+      act: (b) => b.add(const NegotiationSettleCommissionRequested('t-1')),
+      expect: () => [
+        isA<NegotiationActionInProgress>(),
+        isA<NegotiationCommissionSettled>().having(
+          (s) => s.threadId,
+          'threadId',
+          't-1',
+        ),
+      ],
+    );
+
+    blocTest<NegotiationBloc, NegotiationState>(
+      'requires3ds → confirmCommission refusé après 3DS → NegotiationError',
+      build: () {
+        final stripe = _MockStripe();
+        when(
+          () => repo.settleCommission(
+            any(),
+            commissionSource: any(named: 'commissionSource'),
+          ),
+        ).thenAnswer(
+          (_) async => const AcceptanceResponse(
+            status: AcceptanceStatus.requires3ds,
+            clientSecret: 'pi_x',
+          ),
+        );
+        when(
+          () => stripe.handleNextAction('pi_x'),
+        ).thenAnswer((_) async => _fakePaymentIntent());
+        when(() => repo.confirmCommission('t-1')).thenAnswer(
+          (_) async =>
+              const ConfirmResponse(accepted: false, error: 'Carte refusée'),
+        );
+        return _makeBloc(repo, stripe: stripe);
+      },
+      seed: () => NegotiationLoaded(_fakeThread()),
+      act: (b) => b.add(const NegotiationSettleCommissionRequested('t-1')),
+      expect: () => [
+        isA<NegotiationActionInProgress>(),
+        isA<NegotiationError>().having(
+          (s) => s.error.message,
+          'error.message',
+          'Carte refusée',
+        ),
+      ],
+    );
+
+    blocTest<NegotiationBloc, NegotiationState>(
+      'requires3ds → StripeException (authentification interrompue) → '
+      'NegotiationError',
+      build: () {
+        final stripe = _MockStripe();
+        when(
+          () => repo.settleCommission(
+            any(),
+            commissionSource: any(named: 'commissionSource'),
+          ),
+        ).thenAnswer(
+          (_) async => const AcceptanceResponse(
+            status: AcceptanceStatus.requires3ds,
+            clientSecret: 'pi_x',
+          ),
+        );
+        when(() => stripe.handleNextAction('pi_x')).thenThrow(
+          const StripeException(
+            error: LocalizedErrorMessage(code: FailureCode.Canceled),
+          ),
+        );
+        return _makeBloc(repo, stripe: stripe);
+      },
+      seed: () => NegotiationLoaded(_fakeThread()),
+      act: (b) => b.add(const NegotiationSettleCommissionRequested('t-1')),
+      expect: () => [
+        isA<NegotiationActionInProgress>(),
+        isA<NegotiationError>().having(
+          (s) => s.error.code,
+          'error.code',
+          'commission/3ds-interrupted',
+        ),
+      ],
+      verify: (_) => verifyNever(() => repo.confirmCommission(any())),
+    );
+  });
+
+  // ── NegotiationDeclineCommissionRequested ───────────────────────────────────
+
+  group('NegotiationDeclineCommissionRequested', () {
+    blocTest<NegotiationBloc, NegotiationState>(
+      'garde anti double-débit : un renoncement déjà en cours '
+      '(ActionInProgress) ignore un second event, aucun appel réseau',
+      build: () => _makeBloc(repo),
+      seed: () => NegotiationActionInProgress(_fakeThread()),
+      act: (b) => b.add(const NegotiationDeclineCommissionRequested('t-1')),
+      expect: () => [],
+      verify: (_) => verifyNever(() => repo.declineCommission(any())),
+    );
+
+    blocTest<NegotiationBloc, NegotiationState>(
+      'renoncement réussi → ActionInProgress puis NegotiationCommissionDeclined,'
+      ' la demande est libérée',
+      build: () {
+        when(() => repo.declineCommission('t-1')).thenAnswer((_) async {});
+        return _makeBloc(repo);
+      },
+      seed: () => NegotiationLoaded(_fakeThread()),
+      act: (b) => b.add(const NegotiationDeclineCommissionRequested('t-1')),
+      expect: () => [
+        isA<NegotiationActionInProgress>(),
+        isA<NegotiationCommissionDeclined>().having(
+          (s) => s.threadId,
+          'threadId',
+          't-1',
+        ),
+      ],
+      verify: (_) => verify(() => repo.declineCommission('t-1')).called(1),
+    );
+
+    blocTest<NegotiationBloc, NegotiationState>(
+      'renoncement depuis un état autre que Loaded → Loading puis '
+      'NegotiationCommissionDeclined',
+      build: () {
+        when(() => repo.declineCommission('t-1')).thenAnswer((_) async {});
+        return _makeBloc(repo);
+      },
+      act: (b) => b.add(const NegotiationDeclineCommissionRequested('t-1')),
+      expect: () => [
+        isA<NegotiationLoading>(),
+        isA<NegotiationCommissionDeclined>(),
+      ],
+    );
+
+    blocTest<NegotiationBloc, NegotiationState>(
+      'renoncement en échec → NegotiationError',
+      build: () {
+        when(
+          () => repo.declineCommission('t-1'),
+        ).thenThrow(Exception('server error'));
+        return _makeBloc(repo);
+      },
+      seed: () => NegotiationLoaded(_fakeThread()),
+      act: (b) => b.add(const NegotiationDeclineCommissionRequested('t-1')),
+      expect: () => [
+        isA<NegotiationActionInProgress>(),
+        isA<NegotiationError>(),
+      ],
     );
   });
 }

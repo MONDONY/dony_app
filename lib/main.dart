@@ -14,6 +14,7 @@ import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/urgency/dony_urgency.dart';
+import 'package:dony/features/app_update/data/services/app_update_service.dart';
 import 'package:dony/features/config/data/config_repository.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
@@ -128,6 +129,14 @@ Future<void> _bootstrap() async {
   // OTP redemandé en boucle. La révocation cross-device doit être ré-appliquée
   // côté backend (rejet du token → 401), pas par une heuristique cliente.
 
+  // Verrou de version minimale (min_supported_build, Firebase Remote Config) :
+  // lecture instantanée de la dernière valeur connue (0 par défaut, jamais de
+  // réseau ici) pour décider si TOUTES les routes doivent rediriger vers
+  // /force-update dès ce lancement — voir le redirect de `appRouter`. Le
+  // rafraîchissement réseau est lancé plus bas, non bloquant : une valeur
+  // plus récente ne sera prise en compte qu'au prochain lancement.
+  appUpdateRequired = await getIt<AppUpdateService>().isUpdateRequired();
+
   // Route d'entrée résolue à partir du seul état local (session Firebase, code
   // local, onboarding) : pas de health check bloquant, donc pas de second
   // splash. Le splash natif reste affiché jusqu'au premier frame de DonyApp,
@@ -139,6 +148,11 @@ Future<void> _bootstrap() async {
   // Heavy async init runs after UI is displayed (no ANR risk)
   getIt<OfflineSyncService>().startListening();
   await getIt<NotificationService>().initialize();
+
+  // Rafraîchit min_supported_build en arrière-plan (appel réseau Remote
+  // Config) : non bloquant, la valeur mise à jour ne sera lue qu'au prochain
+  // lancement (voir plus haut).
+  unawaited(getIt<AppUpdateService>().refresh());
 
   // Taux de commission Yadony (SOURCE UNIQUE : dony.commission.rate côté backend) :
   // chargé une fois pour que les prix calculés côté app (aperçu checkout, repli des

@@ -360,11 +360,17 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
 
     final String label;
     final String iconAsset;
+    final total = _computeStripeTotal();
     if (method == BidPaymentMethod.cash) {
-      label = 'Confirmer (paiement en espèces)';
+      // Le montant figure aussi sur le bouton espèces : c'est exactement la
+      // somme à remettre en main propre, et la masquer laissait l'expéditeur
+      // confirmer sans savoir combien il devra sortir. Même total qu'en carte —
+      // en espèces le voyageur encaisse le brut, et Yadony prélève ensuite la
+      // commission sur son solde.
+      label =
+          'Confirmer ${formatPriceIn(total, widget.announcement.currency)} en espèces';
       iconAsset = 'banknote';
     } else {
-      final total = _computeStripeTotal();
       label =
           'Bloquer ${formatPriceIn(total, widget.announcement.currency)} & payer';
       iconAsset = 'lock';
@@ -1061,39 +1067,52 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                     : 0.0;
                 final localTotal = kgDisplayLocal + gridTotal;
 
-                // Lignes NET (poids × prix/kg fixé par le voyageur, articles
-                // net) — cohérentes avec leur propre libellé : "2 kg × 8€"
-                // doit valoir 16€, pas le total commission incluse. La
-                // commission apparaît sur sa propre ligne juste après.
-                double kgLine = hasKgPricing ? weightKg * _pricePerKg : 0.0;
-                double gridLine = hasGridPricing
+                // Tout le récapitulatif est exprimé du point de vue de
+                // l'EXPÉDITEUR, commission comprise. C'est la somme qu'il
+                // remettra dans les deux modes : en carte il règle le brut à
+                // Yadony, en espèces il remet ce même brut au voyageur, sur le
+                // solde duquel Yadony prélève ensuite sa commission. Le net du
+                // voyageur ne doit apparaître nulle part ici — il n'appartient
+                // qu'au voyageur.
+                double kgNet = hasKgPricing ? weightKg * _pricePerKg : 0.0;
+                double gridNet = hasGridPricing
                     ? gridTotal / donyCommissionMultiplier
                     : 0.0;
                 double total = localTotal;
                 double? original;
                 bool promoApplied = false;
-                double rate = donyCommissionRate;
-                double commissionEur = localTotal - (kgLine + gridLine);
                 if (quote != null) {
-                  kgLine = quote.kgNetEur;
-                  gridLine = quote.gridNetEur;
+                  kgNet = quote.kgNetEur;
+                  gridNet = quote.gridNetEur;
                   total = quote.totalEur;
                   promoApplied = quote.promoApplied;
                   original = promoApplied ? localTotal : null;
-                  rate = quote.rate;
-                  commissionEur = quote.commissionEur;
                 }
+                // Les lignes se répartissent le TOTAL au prorata des parts
+                // nettes, plutôt que d'appliquer un taux : sous promo, le taux
+                // porté par le devis n'est pas toujours celui qui produit le
+                // total, et les lignes ne sommeraient plus au montant annoncé.
+                // Partir du total garantit l'égalité dans tous les cas.
+                final netTotal = kgNet + gridNet;
+                final kgLine = netTotal > 0 ? total * (kgNet / netTotal) : 0.0;
+                final gridLine = netTotal > 0
+                    ? total * (gridNet / netTotal)
+                    : 0.0;
                 if (total <= 0) return const SizedBox.shrink();
                 return _PriceBreakdown(
                   weightKg: weightKg,
-                  pricePerKg: _pricePerKg,
+                  // Tarif/kg dérivé de la ligne expéditeur, jamais lu sur
+                  // l'annonce : sous promo le taux diffère du taux global, et
+                  // « 5 kg × tarif » doit toujours valoir la ligne affichée.
+                  // Miroir de pricePerKgSenderEur côté backend (brut / poids).
+                  pricePerKg: weightKg > 0
+                      ? kgLine / weightKg
+                      : widget.announcement.senderPricePerKg,
                   kgDisplay: kgLine,
                   gridDisplay: gridLine,
                   totalPrice: total,
                   originalTotal: original,
                   promoApplied: promoApplied,
-                  commissionRate: rate,
-                  commissionEur: commissionEur,
                   currency: widget.announcement.currency,
                 );
               },
@@ -2010,27 +2029,27 @@ class _PriceBreakdown extends StatelessWidget {
     required this.kgDisplay,
     required this.gridDisplay,
     required this.totalPrice,
-    required this.commissionRate,
-    required this.commissionEur,
     required this.currency,
     this.originalTotal,
     this.promoApplied = false,
   });
 
   final double weightKg;
+
+  /// Tarif au kilo **payé par l'expéditeur**, commission comprise. Jamais le
+  /// net du voyageur, qui n'appartient qu'à lui.
   final double pricePerKg;
+
+  /// Ligne poids, du point de vue de l'expéditeur (= [weightKg] × [pricePerKg]).
   final double kgDisplay;
+
+  /// Ligne articles, du point de vue de l'expéditeur.
   final double gridDisplay;
+
   final double totalPrice;
   final double? originalTotal;
   final bool promoApplied;
   final String currency;
-
-  /// Taux de commission Yadony effectif sur ce devis (ex. 0,05 = 5 %).
-  final double commissionRate;
-
-  /// Montant de la commission Yadony en € (= net × [commissionRate]).
-  final double commissionEur;
 
   @override
   Widget build(BuildContext context) {
@@ -2062,13 +2081,9 @@ class _PriceBreakdown extends StatelessWidget {
     if (gridDisplay > 0) {
       lines.add(_line(tt, 'Articles', fmt(gridDisplay)));
     }
-    lines.add(
-      _line(
-        tt,
-        'Commission Yadony (${_ratePercentLabel(commissionRate)} %)',
-        fmt(commissionEur),
-      ),
-    );
+    // Pas de ligne « Commission » en addition : elle est déjà comprise dans les
+    // lignes ci-dessus, l'ajouter la compterait deux fois. Sa présence reste
+    // annoncée sous le total (« Commission Yadony incluse »).
     if (hasRealSavings) {
       lines.add(
         _line(
@@ -2189,12 +2204,6 @@ class _PriceBreakdown extends StatelessWidget {
 
   /// Libellé pourcentage : entier si rond, sinon 1 décimale virgule FR
   /// (ex. 0.05 → « 5 », 0.065 → « 6,5 »).
-  String _ratePercentLabel(double rate) {
-    final pct = rate * 100;
-    return pct % 1 == 0
-        ? pct.toStringAsFixed(0)
-        : pct.toStringAsFixed(1).replaceFirst('.', ',');
-  }
 }
 
 // ── Refused chip ───────────────────────────────────────────────────────────────

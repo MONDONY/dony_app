@@ -7,6 +7,7 @@ enum NegotiationThreadStatus {
   open('OPEN'),
   awaitingTrip('AWAITING_TRIP'),
   awaitingPayment('AWAITING_PAYMENT'),
+  awaitingCommission('AWAITING_COMMISSION'),
   accepted('ACCEPTED'),
   rejected('REJECTED'),
   autoRejected('AUTO_REJECTED'),
@@ -16,13 +17,20 @@ enum NegotiationThreadStatus {
   final String wireName;
   const NegotiationThreadStatus(this.wireName);
 
+  /// Un statut inconnu ne doit jamais empêcher d'ouvrir un fil : le backend peut
+  /// en ajouter avant que cette version de l'app ne soit installée. On retombe
+  /// sur `open`, l'état le moins engageant, plutôt que de lever.
   static NegotiationThreadStatus fromJson(String s) =>
-      NegotiationThreadStatus.values.firstWhere((e) => e.wireName == s);
+      NegotiationThreadStatus.values.firstWhere(
+        (e) => e.wireName == s,
+        orElse: () => NegotiationThreadStatus.open,
+      );
 
   bool get isActive =>
       this == NegotiationThreadStatus.open ||
       this == NegotiationThreadStatus.awaitingTrip ||
-      this == NegotiationThreadStatus.awaitingPayment;
+      this == NegotiationThreadStatus.awaitingPayment ||
+      this == NegotiationThreadStatus.awaitingCommission;
 }
 
 class NegotiationThread extends Equatable {
@@ -66,6 +74,8 @@ class NegotiationThread extends Equatable {
     this.canNudge = false,
     this.hasUnread = false,
     this.currency = 'EUR',
+    this.commissionStatus,
+    this.commissionDeadline,
   });
 
   final String id;
@@ -128,6 +138,24 @@ class NegotiationThread extends Equatable {
   /// Devise du thread, figée à la création. `EUR` par défaut pour les
   /// anciens payloads sans ce champ.
   final String currency;
+
+  /// État du règlement de la commission Yadony pour un accord en espèces.
+  /// `PENDING` tant que le voyageur ne l'a pas réglée, `CHARGED` une fois
+  /// réglée, `REQUIRES_3DS` si sa banque exige une authentification forte en
+  /// cours de règlement, `null` pour les accords par carte dont la commission
+  /// passe par Stripe et ne concerne pas le voyageur.
+  final String? commissionStatus;
+
+  /// Date limite au-delà de laquelle le règlement de la commission Yadony
+  /// expire pour cet accord en espèces. `null` quand aucun délai n'est en
+  /// cours (accord par carte, ou commission déjà réglée).
+  final DateTime? commissionDeadline;
+
+  /// Vrai quand un règlement est resté suspendu à une authentification forte
+  /// 3DS. Le voyageur a basculé vers son application bancaire et l'OS a pu tuer
+  /// yadony entre-temps : à sa prochaine tentative il faut confirmer le
+  /// PaymentIntent existant, surtout pas en ouvrir un second.
+  bool get commissionAwaits3ds => commissionStatus == 'REQUIRES_3DS';
 
   bool get isTravelerKgFree => travelerCapacityUnit == 'KG_FREE';
 
@@ -193,6 +221,10 @@ class NegotiationThread extends Equatable {
     canNudge: json['canNudge'] as bool? ?? false,
     hasUnread: json['hasUnread'] as bool? ?? false,
     currency: json['currency'] as String? ?? 'EUR',
+    commissionStatus: json['commissionStatus'] as String?,
+    commissionDeadline: json['commissionDeadline'] == null
+        ? null
+        : DateTime.parse(json['commissionDeadline'] as String),
   );
 
   @override
@@ -233,5 +265,7 @@ class NegotiationThread extends Equatable {
     canNudge,
     hasUnread,
     currency,
+    commissionStatus,
+    commissionDeadline,
   ];
 }

@@ -510,11 +510,12 @@ class _TripFormContent extends StatefulWidget {
 class _TripFormContentState extends State<_TripFormContent> {
   final _formKey = GlobalKey<FormState>();
 
-  /// The last `NegotiationCreateDedicatedTripRequested` dispatched by
-  /// `_submit()`, kept around so a payment-method block (cash-funds-required
-  /// / none-available) can resubmit the exact same data with card consent
-  /// (`useCardForCommission: true`) instead of re-collecting the form.
-  NegotiationCreateDedicatedTripRequested? _lastDedicatedTripEvent;
+  /// The last `NegotiationStartWithDedicatedTripRequested` dispatched by
+  /// `_submit()` — brand-new offer with no existing thread yet
+  /// (`lockContext.threadId == null`). Kept to tell that flow apart from the
+  /// existing-thread one when the shared `NegotiationBloc` reports success:
+  /// the two pop with different results and different messages.
+  NegotiationStartWithDedicatedTripRequested? _lastStartWithDedicatedTripEvent;
 
   final _departureCityNotifier = ValueNotifier<String?>(null);
   final _arrivalCityNotifier = ValueNotifier<String?>(null);
@@ -1251,31 +1252,57 @@ class _TripFormContentState extends State<_TripFormContent> {
 
     if (_isLocked) {
       final lc = widget.lockContext!;
-      final event = NegotiationCreateDedicatedTripRequested(
-        threadId: lc.threadId,
-        departureDate: departureDate,
-        departureTime: departureTime,
-        arrivalTime: arrivalTime,
-        pickupAddress: {
-          'label': _pickupAddress!.label,
-          'lat': _pickupAddress!.lat,
-          'lng': _pickupAddress!.lng,
-        },
-        deliveryAddress: {
-          'label': _deliveryAddress!.label,
-          'lat': _deliveryAddress!.lat,
-          'lng': _deliveryAddress!.lng,
-        },
-        description: description,
-        acceptedContentTypes: allAccepted,
-        refusedTypes: refused,
-        paymentMethod: lc.paymentMethod,
+      final pickupAddress = {
+        'label': _pickupAddress!.label,
+        'lat': _pickupAddress!.lat,
+        'lng': _pickupAddress!.lng,
+      };
+      final deliveryAddress = {
+        'label': _deliveryAddress!.label,
+        'lat': _deliveryAddress!.lat,
+        'lng': _deliveryAddress!.lng,
+      };
+
+      if (lc.threadId != null) {
+        final event = NegotiationCreateDedicatedTripRequested(
+          threadId: lc.threadId!,
+          departureDate: departureDate,
+          departureTime: departureTime,
+          arrivalTime: arrivalTime,
+          pickupAddress: pickupAddress,
+          deliveryAddress: deliveryAddress,
+          description: description,
+          acceptedContentTypes: allAccepted,
+          refusedTypes: refused,
+          paymentMethod: lc.paymentMethod,
+        );
+        context.read<NegotiationBloc>().add(event);
+        return;
+      }
+
+      // No existing negotiation thread: the traveler reached this form
+      // directly from the package request (no AWAITING_TRIP thread to link
+      // to yet) — create the offer AND the dedicated trip atomically.
+      final startEvent = NegotiationStartWithDedicatedTripRequested(
+        packageRequestId: lc.packageRequestId,
+        proposedPriceEur: lc.agreedPriceEur,
+        travelerTravelDate: departureDate,
+        travelerAvailableKg: lc.offerAvailableKg ?? lc.weightKg,
+        body: lc.offerBody,
+        dedicatedTrip: DedicatedTripPayload(
+          departureDate: departureDate,
+          departureTime: departureTime,
+          arrivalTime: arrivalTime,
+          pickupAddress: pickupAddress,
+          deliveryAddress: deliveryAddress,
+          description: description,
+          acceptedContentTypes: allAccepted,
+          refusedTypes: refused,
+        ),
       );
-      // Stashed so a payment-method block (cash-funds-required /
-      // none-available) can resubmit the SAME data with card consent, cf.
-      // `_resubmitDedicated`.
-      _lastDedicatedTripEvent = event;
-      context.read<NegotiationBloc>().add(event);
+      // Distingue ce flux de celui à thread existant au retour du bloc.
+      _lastStartWithDedicatedTripEvent = startEvent;
+      context.read<NegotiationBloc>().add(startEvent);
       return;
     }
 
@@ -1367,48 +1394,6 @@ class _TripFormContentState extends State<_TripFormContent> {
 
   void _showError(String message) {
     DonySnackbar.show(context, message: message, type: DonySnackbarType.error);
-  }
-
-  /// Net price agreed for this dedicated trip — used by the payment-block
-  /// sheets to show the commission owed. Locked server-side, carried by
-  /// `LockedTripContext.agreedPriceEur`.
-  double get _lockedNetPriceEur => widget.lockContext?.agreedPriceEur ?? 0;
-
-  /// Gross price, when the shared `NegotiationBloc`'s last known thread
-  /// carries it — `LockedTripContext` doesn't, so this is best-effort;
-  /// `showCashInsufficientSheet` falls back to computing it from the net
-  /// price when `null`.
-  double? get _lockedGrossPriceEur {
-    final s = context.read<NegotiationBloc>().state;
-    if (s is NegotiationLoaded) return s.thread.grossPriceEur;
-    if (s is NegotiationActionInProgress) return s.thread.grossPriceEur;
-    return null;
-  }
-
-  /// Resubmits the exact `NegotiationCreateDedicatedTripRequested` the
-  /// traveler just sent (cf. `_lastDedicatedTripEvent`), only flipping
-  /// `useCardForCommission` — used by the cash-funds-required /
-  /// none-available block sheets so the traveler doesn't have to re-fill the
-  /// form after a wallet top-up or a card-consent decision.
-  void _resubmitDedicated({required bool useCard}) {
-    if (!mounted) return;
-    final last = _lastDedicatedTripEvent;
-    if (last == null) return;
-    context.read<NegotiationBloc>().add(
-      NegotiationCreateDedicatedTripRequested(
-        threadId: last.threadId,
-        departureDate: last.departureDate,
-        departureTime: last.departureTime,
-        arrivalTime: last.arrivalTime,
-        pickupAddress: last.pickupAddress,
-        deliveryAddress: last.deliveryAddress,
-        description: last.description,
-        acceptedContentTypes: last.acceptedContentTypes,
-        refusedTypes: last.refusedTypes,
-        paymentMethod: last.paymentMethod,
-        useCardForCommission: useCard,
-      ),
-    );
   }
 
   Future<void> _selectDate() async {
@@ -1516,8 +1501,28 @@ class _TripFormContentState extends State<_TripFormContent> {
       return BlocListener<NegotiationBloc, NegotiationState>(
         listener: (context, state) {
           if (state is NegotiationLoaded &&
+              _lastStartWithDedicatedTripEvent != null) {
+            // Brand-new offer + dedicated trip created atomically (no
+            // pre-existing thread — cf. `_lastStartWithDedicatedTripEvent`).
+            // `NegotiationBloc.start()` always leaves a freshly-created
+            // thread OPEN (pending the sender's accept/reject/counter) — it
+            // is never awaitingPayment straight away, since the sender
+            // hasn't seen/accepted the offer yet. Mirrors the plain
+            // `NegotiationStartRequested` success handling in
+            // make_offer_bottom_sheet.dart, which pops on ANY NegotiationLoaded
+            // without gating on thread status.
+            // `pop(true)` : signale au caller (make_offer_bottom_sheet) qu'un
+            // trajet a bien été créé, pour qu'il ferme la feuille d'offre
+            // uniquement dans ce cas (pas sur un simple retour/annulation).
+            context.pop(true);
+            DonySnackbar.show(
+              context,
+              message: 'Offre envoyée avec le trajet associé.',
+              type: DonySnackbarType.success,
+            );
+          } else if (state is NegotiationLoaded &&
               state.thread.status == NegotiationThreadStatus.awaitingPayment) {
-            context.pop();
+            context.pop(true);
             DonySnackbar.show(
               context,
               message: 'Trajet lié. L\'expéditeur peut désormais payer.',
@@ -1525,8 +1530,7 @@ class _TripFormContentState extends State<_TripFormContent> {
             );
           } else if (state is NegotiationError) {
             // This screen OWNS payment-method-block feedback for the
-            // dedicated-trip flow (cf. `_lastDedicatedTripEvent` /
-            // `_resubmitDedicated`) — LinkTripScreen, which shares this same
+            // dedicated-trip flow — LinkTripScreen, which shares this same
             // NegotiationBloc underneath, stands down while this screen is
             // on top (see its `_creatingDedicatedTripNotifier`). Reacting
             // here AND letting the generic ErrorPresenter also fire below
@@ -1536,26 +1540,6 @@ class _TripFormContentState extends State<_TripFormContent> {
             );
             if (block == PaymentCapabilityBlock.cardCapabilityRequired) {
               unawaited(showCardCapabilityRequiredSheet(context));
-            } else if (block == PaymentCapabilityBlock.cashFundsRequired) {
-              unawaited(
-                showCashInsufficientSheet(
-                  context,
-                  netPriceEur: _lockedNetPriceEur,
-                  grossPriceEur: _lockedGrossPriceEur,
-                  currency: widget.lockContext?.currency,
-                  onResubmit: _resubmitDedicated,
-                ),
-              );
-            } else if (block == PaymentCapabilityBlock.noneAvailable) {
-              unawaited(
-                showNoPaymentMethodAvailableSheet(
-                  context,
-                  netPriceEur: _lockedNetPriceEur,
-                  grossPriceEur: _lockedGrossPriceEur,
-                  currency: widget.lockContext?.currency,
-                  onResubmit: _resubmitDedicated,
-                ),
-              );
             } else {
               // Not a payment-method block: fall back to the generic error UX.
               ErrorPresenter.show(context, state.error);

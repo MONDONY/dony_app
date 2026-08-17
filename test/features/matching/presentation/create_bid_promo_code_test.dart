@@ -499,12 +499,14 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await scrollTo(tester, find.text('Commission Yadony (12 %)'));
-      expect(find.text('Commission Yadony (12 %)'), findsOneWidget);
+      await scrollTo(tester, find.text('Réduction code promo'));
       expect(find.text('Réduction code promo'), findsOneWidget);
       // Espace insécable entre le montant et le symbole (NumberFormat fr_FR) :
       // match partiel plutôt qu'une chaîne exacte fragile sur l'encodage.
       expect(find.textContaining('3,60'), findsWidgets);
+      // Plus aucune ligne « Commission » en addition : les lignes du récap sont
+      // déjà exprimées commission comprise, l'ajouter la compterait deux fois.
+      expect(find.textContaining('Commission Yadony ('), findsNothing);
     },
   );
 
@@ -542,41 +544,49 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await scrollTo(tester, find.text('Commission Yadony (12 %)'));
-      expect(find.text('Commission Yadony (12 %)'), findsOneWidget);
+      await scrollTo(tester, find.byKey(const Key('bid-total-amount')));
       expect(find.text('Réduction code promo'), findsNothing);
 
       // Ni le badge "Promo" ni le prix barré ne doivent apparaître : sans
       // eux, "16,80€ barré, 16,80€ final" faisait croire à une remise
       // inexistante (capture utilisateur, WELCOME05 en prod).
       expect(find.text('Promo'), findsNothing);
-      // Un seul "67,20" doit apparaître sur toute la carte de prix (le total
-      // final) — s'il y en avait deux, ce serait le prix barré dupliqué au
-      // même montant que le total.
-      await scrollTo(tester, find.byKey(const Key('bid-total-amount')));
-      expect(find.textContaining('67,20'), findsOneWidget);
+      // On cible le prix barré lui-même plutôt que de compter les occurrences
+      // de « 67,20 » : depuis que les lignes du récap sont exprimées commission
+      // comprise, le montant apparaît légitimement deux fois (ligne poids et
+      // total), et un simple comptage ne dirait plus rien de la remise.
+      expect(
+        find.byWidgetPredicate(
+          (w) => w is Text && w.style?.decoration == TextDecoration.lineThrough,
+        ),
+        findsNothing,
+      );
     },
   );
 
-  // ── 9. Ligne "kg × prix/kg" cohérente avec sa propre valeur ──────────────
+  // ── 9. Le récap est intégralement du point de vue de l'expéditeur ────────
 
-  testWidgets('ligne "X kg × Yprix€" affiche le NET (pas le total commission '
-      'incluse) — sinon 5 kg × 12€ affichait 67,20€ au lieu de 60€', (
-    tester,
-  ) async {
+  /// L'expéditeur ne doit jamais voir le net du voyageur : ni le tarif/kg net,
+  /// ni le sous-total net. Il voit la somme qu'il remettra — identique en carte
+  /// et en espèces, puisqu'en espèces il remet le brut au voyageur et que Yadony
+  /// prélève ensuite la commission sur le solde de celui-ci. Le backend applique
+  /// déjà la même règle en masquant `pricePerKg` et `totalNetAmountEur`.
+  testWidgets('ligne "X kg × Yprix€" affiche le tarif EXPÉDITEUR, commission '
+      'comprise — jamais le net du voyageur', (tester) async {
     await openSheet(tester);
 
-    // Poids par défaut à l'ouverture = 5 kg (prix/kg net voyageur = 12€,
-    // fixture du fichier) — pas de promo : calcul 100 % local, 12 % de
-    // commission (taux pinné par ce fichier).
-    await scrollTo(tester, find.textContaining('5 kg × 12'));
-    expect(find.textContaining('5 kg × 12'), findsOneWidget);
-    // La valeur de cette ligne doit être le NET (5×12=60€), pas le total
-    // commission incluse (67,20€).
-    expect(find.textContaining('60,00'), findsWidgets);
-
-    expect(find.text('Commission Yadony (12 %)'), findsOneWidget);
-    expect(find.textContaining('7,20'), findsWidgets);
+    // Poids par défaut à l'ouverture = 5 kg, prix/kg net voyageur = 12 €
+    // (fixture du fichier), commission 12 % → l'expéditeur paie 13,44 €/kg,
+    // soit 67,20 € au total. Calcul 100 % local, sans promo.
+    await scrollTo(tester, find.textContaining('5 kg × 13,44'));
+    expect(find.textContaining('5 kg × 13,44'), findsOneWidget);
+    // Le net du voyageur ne doit apparaître nulle part : ni son tarif au kilo
+    // (12,00 €), ni son sous-total (60,00 €).
+    expect(find.textContaining('5 kg × 12,00'), findsNothing);
+    expect(find.textContaining('60,00'), findsNothing);
+    // Et plus de ligne « Commission » : elle est comprise dans la ligne
+    // ci-dessus, l'afficher en addition la compterait deux fois.
+    expect(find.textContaining('Commission Yadony ('), findsNothing);
 
     final totalFinder = find.byKey(const Key('bid-total-amount'));
     await scrollTo(tester, totalFinder);

@@ -277,6 +277,12 @@ Future<void> _goToPaymentPicker(WidgetTester tester) async {
 
 // ── Tests ──────────────────────────────────────────────────────────────────────
 
+/// Libellé du bouton de confirmation en espèces. Il porte désormais le montant
+/// à remettre (« Confirmer 67,20 € en espèces ») : on cible donc le motif, pas
+/// une chaîne exacte, pour que ces tests ne cassent pas au moindre changement de
+/// tarif de fixture. Le montant lui-même est asserté par les tests de prix.
+final RegExp cashCtaLabel = RegExp(r'^Confirmer .* en espèces$');
+
 void main() {
   setUpAll(() async {
     await initializeDateFormatting('fr');
@@ -410,7 +416,7 @@ void main() {
       // Bouton sticky du picker : "Bloquer X€ & payer" (mode Stripe par défaut).
       expect(find.textContaining('Bloquer'), findsWidgets);
       // Le bouton ne dit pas "Envoyer (paiement en espèces)".
-      expect(find.text('Confirmer (paiement en espèces)'), findsNothing);
+      expect(find.textContaining(cashCtaLabel), findsNothing);
     });
   });
 
@@ -426,7 +432,7 @@ void main() {
       await tester.tap(find.byKey(const Key('payment-method-cash')));
       await tester.pump();
 
-      expect(find.text('Confirmer (paiement en espèces)'), findsOneWidget);
+      expect(find.textContaining(cashCtaLabel), findsOneWidget);
       expect(find.textContaining('Bloquer'), findsNothing);
     });
 
@@ -442,7 +448,7 @@ void main() {
       await tester.pump();
 
       expect(find.textContaining('Bloquer'), findsWidgets);
-      expect(find.text('Confirmer (paiement en espèces)'), findsNothing);
+      expect(find.textContaining(cashCtaLabel), findsNothing);
     });
   });
 
@@ -460,7 +466,7 @@ void main() {
 
         // Cash est le mode par défaut (Stripe indisponible) → le bouton sticky
         // affiche directement le libellé « espèces », jamais « Bloquer ».
-        expect(find.text('Confirmer (paiement en espèces)'), findsOneWidget);
+        expect(find.textContaining(cashCtaLabel), findsOneWidget);
         expect(find.textContaining('Bloquer'), findsNothing);
 
         // Note D5 : absence de séquestre en paiement cash.
@@ -480,7 +486,7 @@ void main() {
         await _openSheet(tester, _cashOnlyAnnouncement());
         await _goToPaymentPicker(tester);
 
-        await tester.tap(find.text('Confirmer (paiement en espèces)'));
+        await tester.tap(find.textContaining(cashCtaLabel));
         await tester.pump();
 
         verify(
@@ -549,7 +555,7 @@ void main() {
         await tester.tap(find.byKey(const Key('payment-method-cash')));
         await tester.pump();
 
-        await tester.tap(find.text('Confirmer (paiement en espèces)'));
+        await tester.tap(find.textContaining(cashCtaLabel));
         await tester.pump();
 
         verify(

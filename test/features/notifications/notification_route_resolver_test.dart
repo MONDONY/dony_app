@@ -84,6 +84,17 @@ void main() {
       );
     });
 
+    // Commission en attente : le fil porte le CTA de règlement (bouton +
+    // sheet de recharge le cas échéant), pas de détour nécessaire.
+    test('negotiation_commission_pending routes to the thread', () {
+      expect(
+        resolveNotificationRoute('negotiation_commission_pending', {
+          'threadId': threadId,
+        }),
+        '/negotiations/$threadId',
+      );
+    });
+
     test('request_expired routes to the sender package request', () {
       expect(
         resolveNotificationRoute('request_expired', {

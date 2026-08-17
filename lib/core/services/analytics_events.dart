@@ -74,6 +74,17 @@ abstract final class AnalyticsEvents {
   /// Relance (nudge) envoyée par une partie à l'autre sur un thread de
   /// négociation. Pas de propriétés (aucune PII).
   static const negotiationNudgeSent = 'negotiation_nudge_sent';
+
+  /// Le voyageur a réglé la commission Yadony d'un accord conclu en espèces
+  /// (directement ou après authentification 3DS), scellant l'accord.
+  /// Propriété `thread_id` (identifiant technique, pas de PII).
+  static const negotiationCommissionSettled = 'negotiation_commission_settled';
+
+  /// Le voyageur a explicitement renoncé à régler la commission : la
+  /// demande est libérée immédiatement pour un autre voyageur. Pas de
+  /// propriétés (aucune PII).
+  static const negotiationCommissionDeclined =
+      'negotiation_commission_declined';
   static const firmPriceTaken = 'firm_price_taken';
   static const paymentMethodSelected = 'payment_method_selected';
 
