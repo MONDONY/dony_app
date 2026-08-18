@@ -8,12 +8,30 @@ class DonyKeypad extends StatelessWidget {
     required this.onDigit,
     required this.onDelete,
     this.onBiometric,
+    this.onDecimal,
+    this.decimalLabel = ',',
     this.enabled = true,
-  });
+  }) : assert(
+         onBiometric == null || onDecimal == null,
+         'Le slot bas-gauche ne peut porter qu\'une seule fonction : '
+         'biométrie (saisie de code) ou séparateur décimal (saisie de montant).',
+       );
 
   final void Function(String) onDigit;
   final VoidCallback onDelete;
+
+  /// Occupe le slot bas-gauche pour un déverrouillage biométrique.
+  /// Exclusif avec [onDecimal].
   final VoidCallback? onBiometric;
+
+  /// Occupe le slot bas-gauche pour un séparateur décimal, quand le pavé sert
+  /// à saisir un montant et non un code. Exclusif avec [onBiometric].
+  final VoidCallback? onDecimal;
+
+  /// Caractère affiché sur la touche décimale. Virgule par défaut, la
+  /// convention francophone.
+  final String decimalLabel;
+
   final bool enabled;
 
   @override
@@ -30,10 +48,18 @@ class DonyKeypad extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             _KeypadKey(
-              onTap: onBiometric,
-              enabled: enabled && onBiometric != null,
+              onTap: onBiometric ?? onDecimal,
+              enabled: enabled && (onBiometric ?? onDecimal) != null,
               child: onBiometric != null
                   ? const DonyIcon('fingerprint', size: 28)
+                  : onDecimal != null
+                  ? Text(
+                      decimalLabel,
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    )
                   : const SizedBox.shrink(),
             ),
             const SizedBox(width: 12),
@@ -90,31 +116,37 @@ class _KeypadKey extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    // Couleurs lues au thème : le pavé sert aussi bien sur un fond clair
+    // (saisie de code) que sur les surfaces chaudes de la grille de prix, et
+    // il doit rester lisible en mode sombre.
+    final keyColor = enabled
+        ? cs.surfaceContainerHighest
+        : cs.surfaceContainerLow;
+    final inkColor = enabled
+        ? cs.onSurface
+        : cs.onSurfaceVariant.withValues(alpha: 0.45);
+
     return Material(
       color: Colors.transparent,
       borderRadius: BorderRadius.circular(40),
       child: InkWell(
         onTap: (enabled && onTap != null) ? onTap : null,
         borderRadius: BorderRadius.circular(40),
-        splashColor: const Color(0xFF1E88E5).withValues(alpha: 0.15),
+        splashColor: cs.primary.withValues(alpha: 0.15),
         child: Container(
           width: 80,
           height: 80,
           alignment: Alignment.center,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: enabled ? const Color(0xFFF8F9FA) : Colors.grey.shade100,
-          ),
+          decoration: BoxDecoration(shape: BoxShape.circle, color: keyColor),
           child: DefaultTextStyle(
             style: TextStyle(
-              color: enabled ? const Color(0xFF1A1A2E) : Colors.grey.shade400,
+              color: inkColor,
               fontSize: 22,
               fontWeight: FontWeight.w500,
             ),
             child: IconTheme(
-              data: IconThemeData(
-                color: enabled ? const Color(0xFF1A1A2E) : Colors.grey.shade400,
-              ),
+              data: IconThemeData(color: inkColor),
               child: child,
             ),
           ),
