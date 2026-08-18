@@ -13,6 +13,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../../../helpers/mock_analytics_backend.dart';
+
 Widget _host({
   void Function(AddressData? addr)? onPickupChanged,
   void Function(AddressData? addr)? onDeliveryChanged,
@@ -22,7 +24,9 @@ Widget _host({
   return MaterialApp(
     home: Scaffold(
       body: BlocProvider<AnnouncementFormBloc>(
-        create: (_) => AnnouncementFormBloc(),
+        create: (_) => AnnouncementFormBloc(
+          analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+        ),
         child: Form(
           child: SingleChildScrollView(
             child: LieuxCapaciteStep(

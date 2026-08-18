@@ -1,4 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_form_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
@@ -10,14 +12,26 @@ import 'package:dony/features/price_grid/data/repositories/price_grid_repository
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../helpers/mock_analytics_backend.dart';
+
 class MockPriceGridRepository extends Mock implements PriceGridRepository {}
+
+/// Fabrique commune : le bloc exige désormais un [AnalyticsService].
+/// Par défaut un service sans consentement, qui n'émet rien.
+AnnouncementFormBloc _makeBloc({
+  PriceGridRepository? priceGridRepository,
+  AnalyticsService? analytics,
+}) => AnnouncementFormBloc(
+  priceGridRepository: priceGridRepository,
+  analytics: analytics ?? makeDisabledAnalytics(MockAnalyticsBackend()),
+);
 
 void main() {
   group('AnnouncementFormBloc', () {
     late AnnouncementFormBloc bloc;
 
     setUp(() {
-      bloc = AnnouncementFormBloc();
+      bloc = _makeBloc();
     });
 
     tearDown(() => bloc.close());
@@ -34,7 +48,7 @@ void main() {
 
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(
       'PriceChanged avec 3.0 → warning prix trop bas',
-      build: () => AnnouncementFormBloc(),
+      build: () => _makeBloc(),
       act: (b) => b.add(const PriceChanged(3.0)),
       expect: () => [
         predicate<AnnouncementFormState>(
@@ -46,7 +60,7 @@ void main() {
 
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(
       'PriceChanged avec 20.0 → warning prix trop élevé',
-      build: () => AnnouncementFormBloc(),
+      build: () => _makeBloc(),
       act: (b) => b.add(const PriceChanged(20.0)),
       expect: () => [
         predicate<AnnouncementFormState>(
@@ -58,7 +72,7 @@ void main() {
 
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(
       'PriceChanged avec 10.0 → pas de warning',
-      build: () => AnnouncementFormBloc(),
+      build: () => _makeBloc(),
       act: (b) => b.add(const PriceChanged(10.0)),
       expect: () => [
         predicate<AnnouncementFormState>(
@@ -70,7 +84,7 @@ void main() {
 
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(
       'PriceChanged avec 5.0 (limite basse) → pas de warning',
-      build: () => AnnouncementFormBloc(),
+      build: () => _makeBloc(),
       act: (b) => b.add(const PriceChanged(5.0)),
       expect: () => [
         predicate<AnnouncementFormState>(
@@ -82,7 +96,7 @@ void main() {
 
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(
       'PriceChanged avec 15.0 (limite haute) → pas de warning',
-      build: () => AnnouncementFormBloc(),
+      build: () => _makeBloc(),
       act: (b) => b.add(const PriceChanged(15.0)),
       expect: () => [
         predicate<AnnouncementFormState>(
@@ -94,7 +108,7 @@ void main() {
 
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(
       'DepartureCityChanged met à jour departureCity',
-      build: () => AnnouncementFormBloc(),
+      build: () => _makeBloc(),
       act: (b) => b.add(const DepartureCityChanged('Paris')),
       expect: () => [
         predicate<AnnouncementFormState>(
@@ -106,7 +120,7 @@ void main() {
 
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(
       'ArrivalCityChanged met à jour arrivalCity',
-      build: () => AnnouncementFormBloc(),
+      build: () => _makeBloc(),
       act: (b) => b.add(const ArrivalCityChanged('Dakar')),
       expect: () => [
         predicate<AnnouncementFormState>(
@@ -118,7 +132,7 @@ void main() {
 
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(
       'DepartureCityChanged(countryCode: US) stocke departureCountryCode',
-      build: () => AnnouncementFormBloc(),
+      build: () => _makeBloc(),
       act: (b) =>
           b.add(const DepartureCityChanged('New York', countryCode: 'US')),
       expect: () => [
@@ -132,7 +146,7 @@ void main() {
 
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(
       'ArrivalCityChanged(countryCode: JP) stocke arrivalCountryCode',
-      build: () => AnnouncementFormBloc(),
+      build: () => _makeBloc(),
       act: (b) => b.add(const ArrivalCityChanged('Tokyo', countryCode: 'JP')),
       expect: () => [
         predicate<AnnouncementFormState>(
@@ -144,7 +158,7 @@ void main() {
 
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(
       'DepartureCityChanged sans countryCode laisse departureCountryCode null',
-      build: () => AnnouncementFormBloc(),
+      build: () => _makeBloc(),
       act: (b) => b.add(const DepartureCityChanged('Paris')),
       expect: () => [
         predicate<AnnouncementFormState>(
@@ -156,7 +170,7 @@ void main() {
 
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(
       'CapacityUnitChanged met à jour capacityUnit',
-      build: () => AnnouncementFormBloc(),
+      build: () => _makeBloc(),
       act: (b) => b.add(const CapacityUnitChanged(CapacityUnit.suitcase32kg)),
       expect: () => [
         predicate<AnnouncementFormState>(
@@ -168,7 +182,7 @@ void main() {
 
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(
       'CapacityUnitChanged → kgFree',
-      build: () => AnnouncementFormBloc(),
+      build: () => _makeBloc(),
       act: (b) => b.add(const CapacityUnitChanged(CapacityUnit.kgFree)),
       expect: () => [
         predicate<AnnouncementFormState>(
@@ -180,7 +194,7 @@ void main() {
 
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(
       'AvailableKgChanged met à jour availableKg',
-      build: () => AnnouncementFormBloc(),
+      build: () => _makeBloc(),
       act: (b) => b.add(const AvailableKgChanged(15.0)),
       expect: () => [
         predicate<AnnouncementFormState>(
@@ -192,7 +206,7 @@ void main() {
 
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(
       'DescriptionChanged met à jour description',
-      build: () => AnnouncementFormBloc(),
+      build: () => _makeBloc(),
       act: (b) => b.add(const DescriptionChanged('Colis bien emballé')),
       expect: () => [
         predicate<AnnouncementFormState>(
@@ -204,7 +218,7 @@ void main() {
 
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(
       'FormResetRequested remet l\'état initial',
-      build: () => AnnouncementFormBloc(),
+      build: () => _makeBloc(),
       act: (b) {
         b.add(const DepartureCityChanged('Paris'));
         b.add(const PriceChanged(10.0));
@@ -217,7 +231,7 @@ void main() {
 
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(
       'formulaire complet → isFormValid=true',
-      build: () => AnnouncementFormBloc(),
+      build: () => _makeBloc(),
       act: (b) {
         b.add(const DepartureCityChanged('Paris'));
         b.add(const ArrivalCityChanged('Dakar'));
@@ -261,7 +275,7 @@ void main() {
 
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(
       'sélectionner suitcase32kg fixe availableKg à 32',
-      build: () => AnnouncementFormBloc(),
+      build: () => _makeBloc(),
       act: (b) => b.add(const CapacityUnitChanged(CapacityUnit.suitcase32kg)),
       expect: () => [
         isA<AnnouncementFormState>()
@@ -272,7 +286,7 @@ void main() {
 
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(
       'sélectionner kgFree conserve un availableKg ≥ 1 (option b — défaut 1.0)',
-      build: () => AnnouncementFormBloc(),
+      build: () => _makeBloc(),
       act: (b) => b.add(const CapacityUnitChanged(CapacityUnit.kgFree)),
       expect: () => [
         isA<AnnouncementFormState>()
@@ -284,7 +298,7 @@ void main() {
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(
       'kgFree préserve un availableKg déjà saisi (valeur ignorée par le backend, '
       'mais conservée pour ne pas perdre la saisie sur un retour en mode exact)',
-      build: () => AnnouncementFormBloc(),
+      build: () => _makeBloc(),
       seed: () => const AnnouncementFormState(availableKg: 23),
       act: (b) => b.add(const CapacityUnitChanged(CapacityUnit.kgFree)),
       expect: () => [
@@ -296,7 +310,7 @@ void main() {
 
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(
       'kgFree + autres champs requis → isFormValid true SANS AvailableKgChanged',
-      build: () => AnnouncementFormBloc(),
+      build: () => _makeBloc(),
       act: (b) {
         b.add(const DepartureCityChanged('Paris'));
         b.add(const ArrivalCityChanged('Dakar'));
@@ -324,7 +338,7 @@ void main() {
 
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(
       'sélectionner custom sur formulaire vierge → availableKg=1.0',
-      build: () => AnnouncementFormBloc(),
+      build: () => _makeBloc(),
       act: (b) => b.add(const CapacityUnitChanged(CapacityUnit.custom)),
       expect: () => [
         isA<AnnouncementFormState>()
@@ -335,7 +349,7 @@ void main() {
 
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(
       'sélectionner custom puis régler le slider met availableKg',
-      build: () => AnnouncementFormBloc(),
+      build: () => _makeBloc(),
       act: (b) => b
         ..add(const CapacityUnitChanged(CapacityUnit.custom))
         ..add(const AvailableKgChanged(15)),
@@ -355,7 +369,7 @@ void main() {
 
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(
       'TransportModeChanged met à jour transportMode',
-      build: () => AnnouncementFormBloc(),
+      build: () => _makeBloc(),
       act: (b) => b.add(const TransportModeChanged(TransportMode.plane)),
       expect: () => [
         predicate<AnnouncementFormState>(
@@ -367,7 +381,7 @@ void main() {
 
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(
       'TransportModeChanged → null efface le mode',
-      build: () => AnnouncementFormBloc(),
+      build: () => _makeBloc(),
       act: (b) {
         b.add(const TransportModeChanged(TransportMode.car));
         b.add(const TransportModeChanged(TransportMode.plane));
@@ -377,7 +391,7 @@ void main() {
 
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(
       'PickupAddressChanged met à jour pickupAddress',
-      build: () => AnnouncementFormBloc(),
+      build: () => _makeBloc(),
       act: (b) => b.add(
         const PickupAddressChanged(
           AddressData(label: '12 rue de la Paix, Paris', lat: 48.87, lng: 2.33),
@@ -393,7 +407,7 @@ void main() {
 
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(
       'PickupAddressChanged → null efface l\'adresse',
-      build: () => AnnouncementFormBloc(),
+      build: () => _makeBloc(),
       seed: () => const AnnouncementFormState(
         pickupAddress: AddressData(label: 'Quelque part', lat: 0, lng: 0),
       ),
@@ -408,7 +422,7 @@ void main() {
 
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(
       'DeliveryAddressChanged met à jour deliveryAddress',
-      build: () => AnnouncementFormBloc(),
+      build: () => _makeBloc(),
       act: (b) => b.add(
         const DeliveryAddressChanged(
           AddressData(label: 'Plateau, Abidjan', lat: 5.32, lng: -4.01),
@@ -424,7 +438,7 @@ void main() {
 
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(
       'CashAcceptedChanged met à jour cashAccepted',
-      build: () => AnnouncementFormBloc(),
+      build: () => _makeBloc(),
       act: (b) => b.add(const CashAcceptedChanged(true)),
       expect: () => [
         predicate<AnnouncementFormState>(
@@ -436,7 +450,7 @@ void main() {
 
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(
       'AcceptedTypesChanged met à jour acceptedTypes',
-      build: () => AnnouncementFormBloc(),
+      build: () => _makeBloc(),
       act: (b) =>
           b.add(const AcceptedTypesChanged(['Vêtements', 'Médicaments'])),
       expect: () => [
@@ -451,7 +465,7 @@ void main() {
 
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(
       'RejectedTypesChanged met à jour rejectedTypes',
-      build: () => AnnouncementFormBloc(),
+      build: () => _makeBloc(),
       act: (b) => b.add(const RejectedTypesChanged(['Alcool'])),
       expect: () => [
         predicate<AnnouncementFormState>(
@@ -469,7 +483,7 @@ void main() {
 
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(
       'isStep1Valid: vrai avec ville départ + arrivée + date',
-      build: () => AnnouncementFormBloc(),
+      build: () => _makeBloc(),
       act: (b) {
         b.add(const DepartureCityChanged('Paris'));
         b.add(const ArrivalCityChanged('Dakar'));
@@ -486,7 +500,7 @@ void main() {
 
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(
       'isStep2Valid: vrai avec pickup + delivery',
-      build: () => AnnouncementFormBloc(),
+      build: () => _makeBloc(),
       act: (b) {
         b.add(
           const PickupAddressChanged(
@@ -508,14 +522,14 @@ void main() {
 
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(
       'isStep3Valid: vrai avec prix > 0',
-      build: () => AnnouncementFormBloc(),
+      build: () => _makeBloc(),
       act: (b) => b.add(const PriceChanged(8.0)),
       verify: (b) => expect(b.state.isStep3Valid, isTrue),
     );
 
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(
       'isStep3Valid: faux avec prix = 0',
-      build: () => AnnouncementFormBloc(),
+      build: () => _makeBloc(),
       act: (b) => b.add(const PriceChanged(0.0)),
       verify: (b) => expect(b.state.isStep3Valid, isFalse),
     );
@@ -529,7 +543,7 @@ void main() {
 
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(
       'AnnouncementPricingModeSetRequested.kg → pricingMode = kg',
-      build: () => AnnouncementFormBloc(),
+      build: () => _makeBloc(),
       act: (b) =>
           b.add(const AnnouncementPricingModeSetRequested(PricingMode.kg)),
       expect: () => [
@@ -556,7 +570,7 @@ void main() {
             ),
           ],
         );
-        return AnnouncementFormBloc(priceGridRepository: mockRepo);
+        return _makeBloc(priceGridRepository: mockRepo);
       },
       act: (b) =>
           b.add(const AnnouncementPricingModeSetRequested(PricingMode.mixed)),
@@ -574,7 +588,7 @@ void main() {
 
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(
       'AnnouncementGridPreviewLoadRequested silencieux si repository null',
-      build: () => AnnouncementFormBloc(),
+      build: () => _makeBloc(),
       act: (b) => b.add(const AnnouncementGridPreviewLoadRequested()),
       expect: () => <AnnouncementFormState>[],
     );
@@ -584,7 +598,7 @@ void main() {
       build: () {
         final mockRepo = MockPriceGridRepository();
         when(() => mockRepo.getItems()).thenThrow(Exception('network error'));
-        return AnnouncementFormBloc(priceGridRepository: mockRepo);
+        return _makeBloc(priceGridRepository: mockRepo);
       },
       act: (b) => b.add(const AnnouncementGridPreviewLoadRequested()),
       expect: () => <AnnouncementFormState>[],
@@ -605,7 +619,7 @@ void main() {
             ),
           ],
         );
-        return AnnouncementFormBloc(priceGridRepository: mockRepo);
+        return _makeBloc(priceGridRepository: mockRepo);
       },
       act: (b) async {
         b.add(const AnnouncementPricingModeSetRequested(PricingMode.mixed));
@@ -636,7 +650,7 @@ void main() {
             ),
           ],
         );
-        return AnnouncementFormBloc(priceGridRepository: mockRepo);
+        return _makeBloc(priceGridRepository: mockRepo);
       },
       act: (b) =>
           b.add(const AnnouncementPricingModeSetRequested(PricingMode.mixed)),
@@ -652,7 +666,7 @@ void main() {
 
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(
       'AnnouncementPricePerKgClearedRequested → pricePerKg == null',
-      build: () => AnnouncementFormBloc(),
+      build: () => _makeBloc(),
       seed: () => const AnnouncementFormState(pricePerKg: 8.0),
       act: (b) => b.add(const AnnouncementPricePerKgClearedRequested()),
       expect: () => [
@@ -691,6 +705,58 @@ void main() {
 
     test('DeliveryAddressChanged null props', () {
       expect(const DeliveryAddressChanged(null).props, [null]);
+    });
+  });
+
+  group('AnnouncementFormBloc — ouverture aux propositions de prix', () {
+    late MockAnalyticsBackend backend;
+    late AnalyticsService analytics;
+
+    setUp(() {
+      backend = MockAnalyticsBackend();
+      analytics = makeEnabledAnalytics(backend)..onConfigured();
+    });
+
+    AnnouncementFormBloc buildBloc() => _makeBloc(analytics: analytics);
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'negotiable vaut false a l etat initial',
+      build: buildBloc,
+      verify: (bloc) => expect(bloc.state.negotiable, isFalse),
+    );
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'NegotiableChanged met a jour l etat et tire l event analytics',
+      build: buildBloc,
+      act: (bloc) => bloc.add(const NegotiableChanged(true)),
+      expect: () => [predicate<AnnouncementFormState>((s) => s.negotiable)],
+      verify: (_) {
+        verify(
+          () => backend.capture(AnalyticsEvents.tripNegotiableToggled, {
+            'enabled': true,
+          }),
+        ).called(1);
+      },
+    );
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'NegotiableChanged(false) remet l etat a false',
+      build: buildBloc,
+      act: (bloc) => bloc
+        ..add(const NegotiableChanged(true))
+        ..add(const NegotiableChanged(false)),
+      expect: () => [
+        predicate<AnnouncementFormState>((s) => s.negotiable),
+        predicate<AnnouncementFormState>((s) => !s.negotiable),
+      ],
+    );
+
+    test('NegotiableChanged expose sa valeur dans props', () {
+      expect(const NegotiableChanged(true).props, [true]);
+      expect(
+        const NegotiableChanged(true),
+        equals(const NegotiableChanged(true)),
+      );
     });
   });
 }

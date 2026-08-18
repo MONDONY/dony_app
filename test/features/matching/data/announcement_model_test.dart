@@ -58,7 +58,7 @@ Map<String, dynamic> _negotiableJson({bool? negotiable}) => {
   'status': 'ACTIVE',
   'createdAt': DateTime(2026, 8).toIso8601String(),
   'updatedAt': DateTime(2026, 8).toIso8601String(),
-  if (negotiable != null) 'negotiable': negotiable,
+  'negotiable': ?negotiable,
 };
 
 void main() {
@@ -69,7 +69,9 @@ void main() {
 
     test('negotiable est lu depuis le payload', () {
       expect(
-        AnnouncementModel.fromJson(_negotiableJson(negotiable: true)).negotiable,
+        AnnouncementModel.fromJson(
+          _negotiableJson(negotiable: true),
+        ).negotiable,
         isTrue,
       );
     });

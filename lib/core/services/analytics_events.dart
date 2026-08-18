@@ -284,6 +284,10 @@ abstract final class AnalyticsEvents {
   // Affiche de trajet — le voyageur la génère puis la poste sur ses propres
   // canaux. Ces trois events mesurent le seul entonnoir qui compte ici :
   // combien d'affiches ouvertes finissent réellement publiées.
+  // Négociation du prix d'un trajet
+  // Bascule « J'accepte les propositions de prix » à la création du trajet.
+  static const tripNegotiableToggled = 'trip_negotiable_toggled';
+
   static const tripPosterOpened = 'trip_poster_opened';
   static const tripPosterShared = 'trip_poster_shared';
   static const tripPosterLinkCopied = 'trip_poster_link_copied';

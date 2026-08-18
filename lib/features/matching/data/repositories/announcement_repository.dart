@@ -29,6 +29,7 @@ class AnnouncementRepository {
     String? capacityUnit,
     String pricingMode = 'KG',
     required DateTime handoverDeadline,
+    bool negotiable = false,
     bool saveAsDraft = false,
   }) async {
     return _remoteDatasource.createAnnouncement(
@@ -51,6 +52,7 @@ class AnnouncementRepository {
       capacityUnit: capacityUnit,
       pricingMode: pricingMode,
       handoverDeadline: handoverDeadline,
+      negotiable: negotiable,
       saveAsDraft: saveAsDraft,
     );
   }
@@ -199,6 +201,7 @@ class AnnouncementRepository {
     String? capacityUnit,
     String pricingMode = 'KG',
     required DateTime handoverDeadline,
+    bool negotiable = false,
   }) async {
     return _remoteDatasource.updateAnnouncement(
       id: id,
@@ -221,6 +224,7 @@ class AnnouncementRepository {
       capacityUnit: capacityUnit,
       pricingMode: pricingMode,
       handoverDeadline: handoverDeadline,
+      negotiable: negotiable,
     );
   }
 

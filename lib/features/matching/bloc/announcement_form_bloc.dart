@@ -1,3 +1,7 @@
+import 'dart:async';
+
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/bloc/announcement_form_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:dony/features/matching/data/models/grid_preview_item.dart';
@@ -10,10 +14,14 @@ class AnnouncementFormBloc
   static const double _maxReasonablePrice = 15.0;
 
   final PriceGridRepository? _priceGridRepository;
+  final AnalyticsService _analytics;
 
-  AnnouncementFormBloc({PriceGridRepository? priceGridRepository})
-    : _priceGridRepository = priceGridRepository,
-      super(const AnnouncementFormState()) {
+  AnnouncementFormBloc({
+    PriceGridRepository? priceGridRepository,
+    required AnalyticsService analytics,
+  }) : _priceGridRepository = priceGridRepository,
+       _analytics = analytics,
+       super(const AnnouncementFormState()) {
     on<DepartureCityChanged>(_onDepartureCityChanged);
     on<ArrivalCityChanged>(_onArrivalCityChanged);
     on<DepartureDateChanged>(_onDepartureDateChanged);
@@ -25,6 +33,7 @@ class AnnouncementFormBloc
     on<PickupAddressChanged>(_onPickupAddressChanged);
     on<DeliveryAddressChanged>(_onDeliveryAddressChanged);
     on<CashAcceptedChanged>(_onCashAcceptedChanged);
+    on<NegotiableChanged>(_onNegotiableChanged);
     on<AcceptedTypesChanged>(_onAcceptedTypesChanged);
     on<RejectedTypesChanged>(_onRejectedTypesChanged);
     on<FormResetRequested>(_onFormReset);
@@ -157,6 +166,19 @@ class AnnouncementFormBloc
     Emitter<AnnouncementFormState> emit,
   ) {
     emit(state.copyWith(cashAccepted: event.accepted));
+  }
+
+  void _onNegotiableChanged(
+    NegotiableChanged event,
+    Emitter<AnnouncementFormState> emit,
+  ) {
+    emit(state.copyWith(negotiable: event.negotiable));
+    unawaited(
+      _analytics.logEvent(
+        AnalyticsEvents.tripNegotiableToggled,
+        properties: {'enabled': event.negotiable},
+      ),
+    );
   }
 
   void _onAcceptedTypesChanged(

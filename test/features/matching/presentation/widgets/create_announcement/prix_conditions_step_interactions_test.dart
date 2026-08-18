@@ -22,6 +22,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../../helpers/mock_analytics_backend.dart';
+
 class _MockStripeAccountBloc
     extends MockBloc<StripeAccountEvent, StripeAccountState>
     implements StripeAccountBloc {}
@@ -79,7 +81,9 @@ Widget _host({
       body: MultiBlocProvider(
         providers: [
           BlocProvider<AnnouncementFormBloc>(
-            create: (_) => AnnouncementFormBloc(),
+            create: (_) => AnnouncementFormBloc(
+              analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+            ),
           ),
           BlocProvider<StripeAccountBloc>.value(value: mockStripeBloc),
           BlocProvider<CommissionMethodBloc>.value(value: mockCommissionBloc),
@@ -92,6 +96,7 @@ Widget _host({
             availableKgNotifier: availableKg ?? ValueNotifier<double>(10),
             cashEnabledNotifier: cashEnabled ?? ValueNotifier<bool>(false),
             kgPriceEnabledNotifier: kgPriceEnabled ?? ValueNotifier<bool>(true),
+            negotiableNotifier: ValueNotifier<bool>(false),
             selectedContentNotifier:
                 selectedContent ?? ValueNotifier<Set<String>>({}),
             customAcceptedNotifier:

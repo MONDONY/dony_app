@@ -33,6 +33,9 @@ class PrixConditionsStep extends StatelessWidget {
   final ValueNotifier<double> availableKgNotifier;
   final ValueNotifier<bool> cashEnabledNotifier;
   final ValueNotifier<bool> kgPriceEnabledNotifier; // ← NOUVEAU
+  /// Le voyageur accepte les propositions de prix des expéditeurs.
+  /// Propriété du parent, comme les autres notifiers de cette étape.
+  final ValueNotifier<bool> negotiableNotifier;
   final ValueNotifier<Set<String>> selectedContentNotifier;
   final ValueNotifier<Set<String>> customAcceptedNotifier;
   final ValueNotifier<Set<String>> refusedTypesNotifier;
@@ -72,6 +75,7 @@ class PrixConditionsStep extends StatelessWidget {
     required this.availableKgNotifier,
     required this.cashEnabledNotifier,
     required this.kgPriceEnabledNotifier, // ← NOUVEAU
+    required this.negotiableNotifier,
     required this.selectedContentNotifier,
     required this.customAcceptedNotifier,
     required this.refusedTypesNotifier,
@@ -509,6 +513,34 @@ class PrixConditionsStep extends StatelessWidget {
                     ),
                   ),
                 ],
+              );
+            },
+          ),
+          // ── OUVERTURE AUX PROPOSITIONS DE PRIX ────────────────────────────
+          const SizedBox(height: DonySpacing.md),
+          ValueListenableBuilder<bool>(
+            valueListenable: negotiableNotifier,
+            builder: (context, negotiable, _) {
+              return SwitchListTile(
+                key: const Key('negotiable-toggle'),
+                value: negotiable,
+                onChanged: (v) {
+                  negotiableNotifier.value = v;
+                  context.read<AnnouncementFormBloc>().add(
+                    NegotiableChanged(v),
+                  );
+                },
+                activeThumbColor: cs.primary,
+                contentPadding: EdgeInsets.zero,
+                title: Text(
+                  'J\'accepte les propositions de prix',
+                  style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                ),
+                subtitle: Text(
+                  'Les expéditeurs pourront vous proposer un montant, vous '
+                  'restez libre de refuser',
+                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                ),
               );
             },
           ),

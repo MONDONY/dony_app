@@ -63,6 +63,7 @@ import 'package:dony/features/incident_report/data/repositories/incident_report_
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/data/repositories/kyc_repository.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
+import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_list_filter_cubit.dart';
@@ -337,6 +338,14 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<PriceGridBloc>(
     () => PriceGridBloc(getIt<PriceGridRepository>()),
+  );
+
+  // Matching — formulaire de publication d'un trajet
+  getIt.registerFactory<AnnouncementFormBloc>(
+    () => AnnouncementFormBloc(
+      priceGridRepository: getIt<PriceGridRepository>(),
+      analytics: getIt<AnalyticsService>(),
+    ),
   );
 
   // Matching — Bids

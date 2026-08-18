@@ -31,6 +31,7 @@ class AnnouncementRemoteDatasource {
     String? capacityUnit,
     String pricingMode = 'KG',
     required DateTime handoverDeadline,
+    bool negotiable = false,
     bool saveAsDraft = false,
   }) async {
     final response = await _apiClient.dio.post(
@@ -56,6 +57,7 @@ class AnnouncementRemoteDatasource {
         'capacityUnit': ?capacityUnit,
         'pricingMode': pricingMode,
         'handoverDeadline': handoverDeadline.toUtc().toIso8601String(),
+        'negotiable': negotiable,
         if (saveAsDraft) 'saveAsDraft': true,
       },
     );
@@ -350,6 +352,7 @@ class AnnouncementRemoteDatasource {
     String? capacityUnit,
     String pricingMode = 'KG',
     required DateTime handoverDeadline,
+    bool negotiable = false,
   }) async {
     final response = await _apiClient.dio.put(
       '/announcements/$id',
@@ -374,6 +377,7 @@ class AnnouncementRemoteDatasource {
         'capacityUnit': ?capacityUnit,
         'pricingMode': pricingMode,
         'handoverDeadline': handoverDeadline.toUtc().toIso8601String(),
+        'negotiable': negotiable,
       },
     );
 
