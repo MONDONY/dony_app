@@ -76,9 +76,11 @@ import 'package:dony/features/matching/bloc/traveler_bids_bloc.dart';
 import 'package:dony/features/matching/bloc/trip_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/matching/data/datasources/announcement_remote_datasource.dart';
+import 'package:dony/features/matching/data/datasources/bid_negotiation_remote_datasource.dart';
 import 'package:dony/features/matching/data/datasources/bid_remote_datasource.dart';
 import 'package:dony/features/matching/data/datasources/mobile_money_remote_datasource.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
+import 'package:dony/features/matching/data/repositories/bid_negotiation_repository.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:dony/features/matching/data/repositories/mobile_money_repository.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
@@ -357,6 +359,14 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<BidBloc>(
     () => BidBloc(getIt<BidRepository>(), getIt<AnalyticsService>()),
+  );
+
+  // Matching — négociation du prix d'un trajet
+  getIt.registerLazySingleton<BidNegotiationRemoteDatasource>(
+    () => BidNegotiationRemoteDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<BidNegotiationRepository>(
+    () => BidNegotiationRepository(getIt<BidNegotiationRemoteDatasource>()),
   );
   getIt.registerFactory<BidPhotosCubit>(
     () => BidPhotosCubit(getIt<BidRepository>(), getIt<AnalyticsService>()),
