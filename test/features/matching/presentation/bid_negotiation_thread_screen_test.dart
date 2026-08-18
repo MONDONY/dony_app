@@ -463,7 +463,9 @@ void main() {
       expect(find.text('Proposition refusée.'), findsOneWidget);
     });
 
-    testWidgets('sans message REJECT, le fil a simplement péri', (tester) async {
+    testWidgets('sans message REJECT, le fil a simplement péri', (
+      tester,
+    ) async {
       await pumpScreen(
         tester,
         BidNegotiationLoaded(

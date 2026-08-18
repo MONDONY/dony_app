@@ -78,18 +78,18 @@ void main() {
     // La casse, les accents et les espaces de saisie sont absorbés une seule
     // fois, au niveau de la liste : le filtrage doit rester identique.
     test('la requete brute est normalisee avant le filtrage', () {
-      final r = applyNegotiationFilters(
-        [_t(traveler: 'Modou'), _t(arrivee: 'Abidjan')],
-        const NegotiationFilterState(query: '  MODOU '),
-      );
+      final r = applyNegotiationFilters([
+        _t(traveler: 'Modou'),
+        _t(arrivee: 'Abidjan'),
+      ], const NegotiationFilterState(query: '  MODOU '));
       expect(r.single.counterpartyName, 'Modou');
     });
 
     test('les accents de la requete sont ignores', () {
-      final r = applyNegotiationFilters(
-        [_t(traveler: 'Modou', arrivee: 'Bamako'), _t()],
-        const NegotiationFilterState(query: 'bàmakô'),
-      );
+      final r = applyNegotiationFilters([
+        _t(traveler: 'Modou', arrivee: 'Bamako'),
+        _t(),
+      ], const NegotiationFilterState(query: 'bàmakô'));
       expect(r.single.arrivalCity, 'Bamako');
     });
 

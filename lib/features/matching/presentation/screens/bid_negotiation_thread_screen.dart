@@ -23,9 +23,10 @@ import 'package:go_router/go_router.dart';
 
 /// Fil de négociation du prix d'un trajet.
 ///
-/// Les deux parties voient le même colis mais pas le même montant : le
-/// backend n'envoie `netEur` qu'au voyageur, et c'est ce champ, lui seul, qui
-/// décide de la vue rendue ici.
+/// Les deux parties voient le même colis mais pas le même montant : le backend
+/// n'envoie `netEur` qu'au voyageur. La vue rendue ici suit le champ `role`
+/// qu'il expose, et non la présence de ce montant — un fil sans proposition tait
+/// les deux montants, ce qui faisait passer un voyageur pour un expéditeur.
 class BidNegotiationThreadScreen extends StatefulWidget {
   const BidNegotiationThreadScreen({super.key, required this.bidId});
 
@@ -155,7 +156,9 @@ class _BidNegotiationThreadScreenState
   /// Fil connu de l'état courant, quel qu'il soit : une erreur ou un checkout
   /// en portent un, et c'est lui qui décide de tout le rendu (corps ET barre
   /// d'actions). Le lire une fois évite de réénumérer les états deux fois.
-  static BidNegotiation? _threadOf(BidNegotiationState state) => switch (state) {
+  static BidNegotiation? _threadOf(
+    BidNegotiationState state,
+  ) => switch (state) {
     BidNegotiationLoaded(:final negotiation) => negotiation,
     // Le checkout est parti : le fil reste affiché sous la feuille de paiement
     // qui s'ouvre par-dessus.
@@ -569,17 +572,18 @@ class _ThreadActions extends StatelessWidget {
   /// n'est posé que lorsqu'une des deux parties ferme, jamais par le balayage
   /// d'expiration. Son absence signe donc une péremption. On teste sa présence
   /// plutôt que le dernier message, pour ne dépendre d'aucun ordre de tri.
-  static String _closedLabel(BidNegotiation negotiation) => switch (negotiation
-      .status) {
-    'ACCEPTED' => 'Prix accepté. Rendez-vous sur votre colis pour la suite.',
-    'NEGOTIATION_CLOSED' =>
-      negotiation.messages.any(
-            (m) => m.kind == BidNegotiationMessageKind.reject,
-          )
-          ? 'Proposition refusée.'
-          : 'Proposition expirée.',
-    _ => 'Négociation terminée.',
-  };
+  static String _closedLabel(BidNegotiation negotiation) =>
+      switch (negotiation.status) {
+        'ACCEPTED' =>
+          'Prix accepté. Rendez-vous sur votre colis pour la suite.',
+        'NEGOTIATION_CLOSED' =>
+          negotiation.messages.any(
+                (m) => m.kind == BidNegotiationMessageKind.reject,
+              )
+              ? 'Proposition refusée.'
+              : 'Proposition expirée.',
+        _ => 'Négociation terminée.',
+      };
 }
 
 /// Feuille de contre-offre. Le `DonyButton` vit dans `stickyBottom`, les

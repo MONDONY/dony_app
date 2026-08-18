@@ -8,10 +8,7 @@ Widget _wrap(
 }) => MaterialApp(
   home: Scaffold(
     body: SingleChildScrollView(
-      child: CustomItemsSection(
-        notifier: notifier,
-        currencyCode: currencyCode,
-      ),
+      child: CustomItemsSection(notifier: notifier, currencyCode: currencyCode),
     ),
   ),
 );
