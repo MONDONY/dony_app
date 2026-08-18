@@ -13,6 +13,7 @@ import 'package:dony/features/package_request/bloc/package_request_photos_cubit.
 import 'package:dony/features/package_request/data/models/negotiation_quote.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
+import 'package:dony/features/package_request/data/package_request_limits.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/widgets/wizard_summary_card.dart';
 import 'package:flutter/material.dart';
@@ -65,35 +66,15 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
     });
   }
 
-  /// Les messages rouges n'apparaissent qu'après une première saisie, comme
-  /// aux étapes 1 et 2 : l'étape s'ouvrait sinon sur « Indique un budget »
-  /// avant même que le champ ait été touché.
-  bool _touched = false;
-
-  /// Budget accepté par le backend (`@DecimalMin("0.0") @DecimalMax("560.0")`),
-  /// borne basse relevée : un budget nul ne rémunère personne.
-  static const _kMinBudget = 1.0;
-  static const _kMaxBudget = 560.0;
-
-  static bool _isBudgetValid(double? v) =>
-      v != null && v >= _kMinBudget && v <= _kMaxBudget;
-
-  /// Dit ce qui manque, pas seulement qu'il manque quelque chose : un budget
-  /// hors bornes recevait le même « Indique un budget » qu'un champ vide.
-  String _budgetErrorText(double? v) {
-    if (v == null) return 'Indiquez un budget pour continuer';
-    final min = CurrencyFormatter.formatOrPlain(_kMinBudget, widget.currency);
-    final max = CurrencyFormatter.formatOrPlain(_kMaxBudget, widget.currency);
-    return 'Le budget doit être compris entre $min et $max';
-  }
-
   /// Le bouton ne doit être actif que si la publication peut réellement
   /// aboutir : il l'était dès qu'un montant était saisi, y compris hors
   /// bornes, et la publication échouait ensuite sans un mot.
   void _sync() {
     if (!mounted) return;
     final s = context.read<PackageRequestFormBloc>().state;
-    widget.canContinueNotifier?.value = _isBudgetValid(s.totalBudgetEur);
+    widget.canContinueNotifier?.value = PackageRequestLimits.isBudgetValid(
+      s.totalBudgetEur,
+    );
   }
 
   Future<void> _applyPromoCode() async {
@@ -157,13 +138,11 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
   void submit({bool saveAsDraft = false}) {
     final state = context.read<PackageRequestFormBloc>().state;
     if (!_formKey.currentState!.validate() ||
-        !_isBudgetValid(state.totalBudgetEur)) {
-      // Backstop : le bouton « Aperçu » est déjà grisé dans ce cas. On révèle
-      // quand même les messages et on remonte au champ fautif — cette sortie
-      // était muette, et l'aperçu venait de se refermer : côté utilisateur,
-      // « Publier » ne faisait tout simplement rien.
-      setState(() => _touched = true);
-      _sync();
+        !PackageRequestLimits.isBudgetValid(state.totalBudgetEur)) {
+      // Backstop : le bouton « Aperçu » est déjà grisé dans ce cas. `validate()`
+      // vient d'afficher le message sous le champ ; on y ramène l'utilisateur,
+      // car l'aperçu qui se referme le laissait sinon devant un « Publier »
+      // qui ne produisait rien.
       _scrollToBudgetField();
       return;
     }
@@ -253,11 +232,6 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                   controller: _budgetCtrl,
                   onBudgetChanged: _invalidateQuote,
                   currency: widget.currency,
-                  minBudget: _kMinBudget,
-                  maxBudget: _kMaxBudget,
-                  onTouched: () {
-                    if (!_touched) setState(() => _touched = true);
-                  },
                 ),
                 Padding(
                   padding: const EdgeInsets.only(top: DonySpacing.xs),
@@ -267,12 +241,6 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                         : 'Les voyageurs verront ce montant et pourront l\'accepter tel quel.',
                     style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                   ),
-                ),
-                DonyFieldError(
-                  message: _touched && !_isBudgetValid(state.totalBudgetEur)
-                      ? _budgetErrorText(state.totalBudgetEur)
-                      : null,
-                  textKey: const Key('budget-error'),
                 ),
 
                 // ── Net voyageur : décomposition transparente ───────────────
@@ -318,9 +286,7 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                                 child: TextFormField(
                                   key: const Key('promo-code-input'),
                                   controller: _promoCtrl,
-                                  scrollPadding: const EdgeInsets.only(
-                                    bottom: 140,
-                                  ),
+                                  scrollPadding: kDonyKeyboardScrollPadding,
                                   textCapitalization:
                                       TextCapitalization.characters,
                                   decoration: InputDecoration(
@@ -483,17 +449,9 @@ class _BudgetTotalInput extends StatelessWidget {
     required this.controller,
     this.onBudgetChanged,
     required this.currency,
-    required this.minBudget,
-    required this.maxBudget,
-    required this.onTouched,
   });
   final TextEditingController controller;
   final SupportedCurrency? currency;
-  final double minBudget;
-  final double maxBudget;
-
-  /// Signale la première saisie : les messages rouges restent muets avant.
-  final VoidCallback onTouched;
 
   /// Prévient le parent qu'un devis chargé précédemment est périmé.
   final VoidCallback? onBudgetChanged;
@@ -507,7 +465,10 @@ class _BudgetTotalInput extends StatelessWidget {
       controller: controller,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d.,]'))],
-      scrollPadding: const EdgeInsets.only(bottom: 140),
+      scrollPadding: kDonyKeyboardScrollPadding,
+      // Le « touched » natif : le message n'apparaît qu'après une première
+      // interaction, sans drapeau ni second afficheur d'erreur à tenir.
+      autovalidateMode: AutovalidateMode.onUserInteraction,
       style: tt.headlineMedium?.copyWith(
         fontWeight: FontWeight.w800,
         fontSize: 22,
@@ -545,23 +506,27 @@ class _BudgetTotalInput extends StatelessWidget {
         ),
       ),
       onChanged: (text) {
-        onTouched();
         final value = double.tryParse(text.replaceAll(',', '.'));
         context.read<PackageRequestFormBloc>().add(
           PackageRequestTotalBudgetChanged(value),
         );
         onBudgetChanged?.call();
       },
-      // Bornes alignées sur PackageRequestCreateRequest côté backend
-      // (@DecimalMax 560.0) : le plafond était figé à 500 côté Flutter.
       validator: (v) {
         if (v == null || v.trim().isEmpty) {
           return 'Indiquez un budget';
         }
         final d = double.tryParse(v.replaceAll(',', '.'));
-        if (d == null || d < minBudget || d > maxBudget) {
-          return 'Entre ${CurrencyFormatter.formatOrPlain(minBudget, currency)} '
-              'et ${CurrencyFormatter.formatOrPlain(maxBudget, currency)}';
+        if (!PackageRequestLimits.isBudgetValid(d)) {
+          final min = CurrencyFormatter.formatOrPlain(
+            PackageRequestLimits.minBudget,
+            currency,
+          );
+          final max = CurrencyFormatter.formatOrPlain(
+            PackageRequestLimits.maxBudget,
+            currency,
+          );
+          return 'Entre $min et $max';
         }
         return null;
       },
@@ -724,7 +689,9 @@ class _PaymentMethodChips extends StatelessWidget {
         runSpacing: DonySpacing.sm,
         children: methods.map((method) {
           final isSelected = selected.contains(method);
-          final isLastSelected = isSelected && selected.length == 1;
+          final isLastSelected =
+              isSelected &&
+              !PackageRequestFormBloc.canDeselectPaymentMethod(selected);
           return GestureDetector(
             onTap: () {
               // Le bloc refuse de vider la sélection. Sans ce mot, le refus se

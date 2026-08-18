@@ -186,12 +186,13 @@ void main() {
         expect(find.text('Budget indicatif (optionnel)'), findsNothing);
         // Le message ne s'affiche plus à l'ouverture — un formulaire vierge
         // n'accueille pas par un reproche —, mais dès que la publication est
-        // tentée. Sans lui, le tap sur « Publier » ne produisait rien.
-        expect(find.byKey(const Key('budget-error')), findsNothing);
+        // tentée. Sans lui, le tap sur « Publier » ne produisait rien. Il est
+        // porté par le validateur du champ, seul afficheur de cette erreur.
+        expect(find.text('Indiquez un budget'), findsNothing);
 
         key.currentState!.submit();
         await tester.pump();
-        expect(find.byKey(const Key('budget-error')), findsOneWidget);
+        expect(find.text('Indiquez un budget'), findsOneWidget);
       },
     );
 
@@ -239,7 +240,9 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(canContinue.value, isFalse);
-        expect(find.byKey(const Key('budget-error')), findsOneWidget);
+        // Champ vidé après saisie : l'autovalidation à l'interaction rend le
+        // message sans qu'il faille tenter la publication.
+        expect(find.text('Indiquez un budget'), findsOneWidget);
       },
     );
 

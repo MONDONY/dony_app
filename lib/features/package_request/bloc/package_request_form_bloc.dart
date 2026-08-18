@@ -137,8 +137,6 @@ class PackageRequestFormBloc
       state.copyWith(
         submissionStatus: FormSubmissionStatus.submitting,
         targetPriceEur: totalBudgetEur,
-        pickupNeighborhood: e.pickupNeighborhood,
-        deliveryNeighborhood: e.deliveryNeighborhood,
         // Chaque nouvelle tentative repart d'un message de limite propre :
         // sinon un draftLimitMessage périmé d'une tentative précédente peut
         // survivre à côté d'un nouvel errorMessage générique posé par le
@@ -185,9 +183,9 @@ class PackageRequestFormBloc
           totalBudgetEur: totalBudgetEur,
           description: state.description,
           photoKeys: e.photoKeys,
-          // Lu depuis l'état, jamais depuis l'event. Le lieu de remise n'est
-          // plus saisi à la publication ; il ne subsiste que sur les demandes
-          // déjà créées, et l'édition doit le conserver au lieu de l'écraser.
+          // Le lieu de remise n'est plus saisi à la publication ; il ne
+          // subsiste que sur les demandes déjà créées, et l'édition doit le
+          // conserver au lieu de l'écraser.
           pickupNeighborhood: _blankToNull(state.pickupNeighborhood),
           deliveryNeighborhood: _blankToNull(state.deliveryNeighborhood),
           saveAsDraft: e.saveAsDraft,
@@ -243,6 +241,11 @@ class PackageRequestFormBloc
     }
   }
 
+  /// Peut-on encore décocher un mode de paiement ? La règle est lue ici et par
+  /// l'écran, qui a besoin de la même réponse pour expliquer son refus.
+  static bool canDeselectPaymentMethod(Set<PaymentMethod> selected) =>
+      selected.length > 1;
+
   void _onPaymentMethodToggled(
     PackageRequestPaymentMethodToggled e,
     Emitter<PackageRequestFormState> emit,
@@ -252,7 +255,7 @@ class PackageRequestFormBloc
       // Décocher le dernier mode retenu était absorbé en silence : la case se
       // rendait décochée puis re-cochée, et le tap passait pour une panne. On
       // refuse explicitement, l'écran peut alors dire pourquoi.
-      if (next.length == 1) return;
+      if (!canDeselectPaymentMethod(next)) return;
       next.remove(e.method);
     } else {
       next.add(e.method);

@@ -149,6 +149,12 @@ class _ContentCategoryComboBoxState extends State<ContentCategoryComboBox>
   late final AnimationController _animController;
   late final Animation<double> _fadeAnim;
 
+  /// Deux glissements figés : la liste entre par le haut quand elle s'ouvre
+  /// sous le champ, par le bas quand elle bascule au-dessus. Construits une
+  /// fois — l'overlay se reconstruit, ces deux bornes ne changent jamais.
+  late final Animation<Offset> _slideDown;
+  late final Animation<Offset> _slideUp;
+
   OverlayEntry? _overlayEntry;
 
   /// Position de défilement de la page pendant que la liste est ouverte.
@@ -159,6 +165,10 @@ class _ContentCategoryComboBoxState extends State<ContentCategoryComboBox>
   /// la décision resterait celle de la première frame, et la liste retomberait
   /// sous le clavier.
   ScrollPosition? _watchedScrollPosition;
+
+  /// Dernier placement rendu, pour ne reconstruire l'overlay que lorsqu'il
+  /// change vraiment.
+  ({double maxHeight, bool above})? _lastPlacement;
   late LinkedHashSet<String> _selected;
   String _query = '';
 
@@ -174,6 +184,14 @@ class _ContentCategoryComboBoxState extends State<ContentCategoryComboBox>
       parent: _animController,
       curve: Curves.easeOutCubic,
     );
+    _slideDown = Tween<Offset>(
+      begin: const Offset(0, -0.04),
+      end: Offset.zero,
+    ).animate(_fadeAnim);
+    _slideUp = Tween<Offset>(
+      begin: const Offset(0, 0.04),
+      end: Offset.zero,
+    ).animate(_fadeAnim);
     _focusNode.addListener(_onFocusChanged);
     _controller.addListener(_onTextChanged);
   }
@@ -319,7 +337,16 @@ class _ContentCategoryComboBoxState extends State<ContentCategoryComboBox>
     _animController.forward(from: 0);
   }
 
-  void _onScrolled() => _overlayEntry?.markNeedsBuild();
+  /// `ScrollPosition` notifie à chaque pixel : reconstruire l'overlay à chaque
+  /// notification refaisait le filtrage du catalogue et deux `localToGlobal`
+  /// 60 à 120 fois par seconde, pour un résultat identique presque à chaque
+  /// fois. La position visuelle, elle, suit sans rebuild via
+  /// `CompositedTransformFollower`. Seul un changement de placement compte.
+  void _onScrolled() {
+    if (_overlayEntry == null) return;
+    if (_dropdownPlacement(context) == _lastPlacement) return;
+    _overlayEntry!.markNeedsBuild();
+  }
 
   void _closeOverlay() {
     _watchedScrollPosition?.removeListener(_onScrolled);
@@ -329,6 +356,7 @@ class _ContentCategoryComboBoxState extends State<ContentCategoryComboBox>
       return;
     }
     _overlayEntry = null;
+    _lastPlacement = null;
     _animController.reverse().whenCompleteOrCancel(entry.remove);
   }
 
@@ -396,12 +424,12 @@ class _ContentCategoryComboBoxState extends State<ContentCategoryComboBox>
         !hasExactMatch &&
         (filtered.isEmpty || widget.alwaysAllowCustom);
     final placement = _dropdownPlacement(context);
-    // La liste glisse depuis le champ : vers le bas quand elle s'ouvre
-    // dessous, vers le haut quand elle bascule au-dessus.
-    final slide = Tween<Offset>(
-      begin: Offset(0, placement.above ? 0.04 : -0.04),
-      end: Offset.zero,
-    ).animate(_fadeAnim);
+    _lastPlacement = placement;
+    // Le suiveur s'accroche par l'ancre opposée à celle de la cible, et
+    // s'aligne du même côté : une seule idée, trois emplois.
+    final target = placement.above ? Alignment.topLeft : Alignment.bottomLeft;
+    final follower = placement.above ? Alignment.bottomLeft : Alignment.topLeft;
+    final slide = placement.above ? _slideUp : _slideDown;
 
     return Stack(
       children: [
@@ -414,21 +442,15 @@ class _ContentCategoryComboBoxState extends State<ContentCategoryComboBox>
         ),
         CompositedTransformFollower(
           link: _layerLink,
-          targetAnchor: placement.above
-              ? Alignment.topLeft
-              : Alignment.bottomLeft,
-          followerAnchor: placement.above
-              ? Alignment.bottomLeft
-              : Alignment.topLeft,
+          targetAnchor: target,
+          followerAnchor: follower,
           offset: Offset(0, placement.above ? -6 : 6),
           child: FadeTransition(
             opacity: _fadeAnim,
             child: SlideTransition(
               position: slide,
               child: Align(
-                alignment: placement.above
-                    ? Alignment.bottomLeft
-                    : Alignment.topLeft,
+                alignment: follower,
                 child: _ComboDropdown(
                   width: width,
                   maxHeight: placement.maxHeight,

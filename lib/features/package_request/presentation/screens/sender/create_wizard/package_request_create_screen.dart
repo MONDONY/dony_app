@@ -402,7 +402,10 @@ class _PackageRequestCreateScreenState
                       ),
                       if (!state.isEditing) ...[
                         const SizedBox(height: DonySpacing.base),
-                        CurrencyPublishBanner.active(),
+                        // `_activeCurrency` est déjà résolue une fois pour
+                        // tout le formulaire ; la factory `.active()` refaisait
+                        // un lookup GetIt et une lecture Hive à chaque build.
+                        CurrencyPublishBanner(currency: _activeCurrency),
                       ],
                     ],
                   ),

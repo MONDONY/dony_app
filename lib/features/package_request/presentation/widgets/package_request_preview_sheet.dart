@@ -1,9 +1,11 @@
 import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
+import 'package:dony/features/package_request/data/models/payment_method.dart';
+import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/widgets/wizard_summary_card.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 /// Sheet d'aperçu de l'étape 3 du wizard de demande d'envoi — miroir de
 /// `AnnouncementPreviewSheet`. Deux sorties : publication immédiate ou
@@ -66,6 +68,8 @@ class _PreviewBody extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final s = formState;
+    final pickup = s.pickupNeighborhood?.trim() ?? '';
+    final description = s.description?.trim() ?? '';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -74,31 +78,41 @@ class _PreviewBody extends StatelessWidget {
           '${s.departureCity} → ${s.arrivalCity}',
           style: tt.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
         ),
-        const SizedBox(height: DonySpacing.xs),
-        if (s.desiredDate != null)
+        if (s.desiredDate != null) ...[
+          const SizedBox(height: DonySpacing.xs),
           Text(
-            _dateLine(s),
+            formatDesiredDate(s.desiredDate, s.dateToleranceDays, long: true),
             style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
           ),
+        ],
         const SizedBox(height: DonySpacing.base),
 
         // L'aperçu s'arrêtait au corridor, à la date et au prix : l'expéditeur
         // validait sans voir le contenu, les photos, le lieu de remise ni les
         // modes de paiement, c'est-à-dire l'essentiel de ce que lit le voyageur.
         if (s.categories.isNotEmpty)
-          _Row(label: 'Contenu', value: s.categories.join(', ')),
-        if (s.weightKg != null) _Row(label: 'Poids', value: _weightLabel(s)),
+          DonyInfoRow(label: 'Contenu', value: s.categories.join(', ')),
+        if (s.weightKg != null)
+          DonyInfoRow(label: 'Poids', value: formatWeightKg(s.weightKg!)),
         if (photoCount > 0)
-          _Row(
+          DonyInfoRow(
             label: 'Photos',
             value: photoCount == 1 ? '1 photo' : '$photoCount photos',
           ),
-        if (s.pickupNeighborhood != null &&
-            s.pickupNeighborhood!.trim().isNotEmpty)
-          _Row(label: 'Remise', value: s.pickupNeighborhood!.trim()),
-        if (s.description != null && s.description!.trim().isNotEmpty)
-          _Row(label: 'Description', value: s.description!.trim()),
-        _Row(label: 'Paiement', value: _paymentLabel(s)),
+        if (pickup.isNotEmpty) DonyInfoRow(label: 'Remise', value: pickup),
+        if (description.isNotEmpty)
+          DonyInfoRow(
+            label: 'Description',
+            value: description,
+            // Une description tient rarement sur une ligne, et la valeur d'une
+            // DonyInfoRow est tronquée par défaut.
+            valueWidget: Text(
+              description,
+              textAlign: TextAlign.end,
+              style: tt.bodyMedium?.copyWith(color: cs.onSurface),
+            ),
+          ),
+        DonyInfoRow(label: 'Paiement', value: _paymentLabel(s)),
 
         const SizedBox(height: DonySpacing.base),
         Text(
@@ -109,21 +123,14 @@ class _PreviewBody extends StatelessWidget {
     );
   }
 
-  /// Poids au dixième près. `toStringAsFixed(0)` affichait « 2 kg » pour
-  /// 2,5 kg, en désaccord avec le récap de l'étape 3 juste au-dessus.
-  String _weightLabel(PackageRequestFormState s) {
-    final w = s.weightKg!;
-    return '${w.toStringAsFixed(w.truncateToDouble() == w ? 0 : 1)} kg';
-  }
-
-  String _dateLine(PackageRequestFormState s) {
-    final date = DateFormat('d MMMM y', 'fr_FR').format(s.desiredDate!);
-    final tol = s.dateToleranceDays ?? 0;
-    return tol == 0 ? date : '$date ±${tol}j';
-  }
-
-  String _paymentLabel(PackageRequestFormState s) =>
-      s.acceptedPaymentMethods.map((m) => m.displayLabel).join(', ');
+  /// Ordre canonique (carte, espèces, mobile money), et non l'ordre de cochage
+  /// du `Set` : l'aperçu annonçait « Espèces, Carte » là où les chips de
+  /// l'étape 3 et la fiche lue par le voyageur affichent « Carte, Espèces ».
+  String _paymentLabel(PackageRequestFormState s) => PaymentMethod
+      .canonicalOrder
+      .where(s.acceptedPaymentMethods.contains)
+      .map((m) => m.displayLabel)
+      .join(', ');
 
   String _priceLine(PackageRequestFormState s) {
     final amount = s.totalBudgetEur;
@@ -136,42 +143,5 @@ class _PreviewBody extends StatelessWidget {
     return amount == null
         ? 'Prix ferme'
         : 'Prix ferme : ${CurrencyFormatter.formatOrPlain(amount, currency)}';
-  }
-}
-
-class _Row extends StatelessWidget {
-  const _Row({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: DonySpacing.sm),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 92,
-            child: Text(
-              label,
-              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: tt.bodyMedium?.copyWith(
-                color: cs.onSurface,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }

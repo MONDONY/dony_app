@@ -53,28 +53,19 @@ class FormStep3Submitted extends PackageRequestFormEvent {
   const FormStep3Submitted({
     this.targetPriceEur,
     this.photoKeys,
-    this.pickupNeighborhood,
-    this.deliveryNeighborhood,
     this.saveAsDraft = false,
   });
   final double? targetPriceEur;
 
   /// Clés S3 des photos colis. null = conserver (édition) ; liste = remplacer.
   final List<String>? photoKeys;
-  final String? pickupNeighborhood;
-  final String? deliveryNeighborhood;
 
   /// true → POST avec saveAsDraft. Ignoré en édition : un brouillon édité
   /// reste un brouillon côté backend, aucun signal à envoyer.
   final bool saveAsDraft;
 
   @override
-  List<Object?> get props => [
-    targetPriceEur,
-    pickupNeighborhood,
-    deliveryNeighborhood,
-    saveAsDraft,
-  ];
+  List<Object?> get props => [targetPriceEur, photoKeys, saveAsDraft];
 }
 
 class FormStepBack extends PackageRequestFormEvent {

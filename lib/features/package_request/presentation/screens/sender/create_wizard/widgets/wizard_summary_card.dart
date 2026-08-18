@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/utils/format_weight.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
 import 'package:flutter/material.dart';
@@ -81,24 +82,34 @@ class WizardSummaryCard extends StatelessWidget {
     return '$dep → $arr';
   }
 
-  String _dateText(PackageRequestFormState s) {
-    if (s.desiredDate == null) return '-';
-    final f = DateFormat('d MMM. y', 'fr_FR').format(s.desiredDate!);
-    final tol = s.dateToleranceDays ?? 0;
-    return tol == 0 ? f : '$f ±${tol}j';
-  }
+  String _dateText(PackageRequestFormState s) =>
+      formatDesiredDate(s.desiredDate, s.dateToleranceDays);
 
   /// Poids seul. La taille n'est plus affichée : elle n'est pas saisie par
   /// l'expéditeur (l'étape 2 la déduit du poids pour les filtres de recherche),
   /// et le récap la sortait telle quelle du fil, en « MEDIUM ».
   String _packageText(PackageRequestFormState s) {
     final w = s.weightKg;
-    if (w == null) return '-';
-    return '${w.toStringAsFixed(w.truncateToDouble() == w ? 0 : 1)} kg';
+    return w == null ? '-' : formatWeightKg(w);
   }
 
   /// Toutes les catégories, pas seulement la première : le récap en affichait
   /// une seule et laissait croire que les autres avaient été perdues.
   String _categoriesText(PackageRequestFormState s) =>
       s.categories.isEmpty ? '-' : s.categories.join(', ');
+}
+
+/// Date souhaitée et sa tolérance, en un libellé.
+///
+/// Le récap de l'étape 3 et l'aperçu qui s'ouvre par-dessus rendaient la même
+/// donnée avec deux motifs différents, à deux secondes d'intervalle.
+String formatDesiredDate(
+  DateTime? date,
+  int? toleranceDays, {
+  bool long = false,
+}) {
+  if (date == null) return '-';
+  final f = DateFormat(long ? 'd MMMM y' : 'd MMM. y', 'fr_FR').format(date);
+  final tol = toleranceDays ?? 0;
+  return tol == 0 ? f : '$f ±${tol}j';
 }

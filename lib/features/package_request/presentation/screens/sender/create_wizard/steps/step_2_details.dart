@@ -8,6 +8,7 @@ import 'package:dony/features/content_categories/presentation/content_category_s
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
+import 'package:dony/features/package_request/data/package_request_limits.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/widgets/package_request_photo_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -52,18 +53,11 @@ class Step2DetailsState extends State<Step2Details> {
   /// Les messages rouges n'apparaissent qu'après une première interaction.
   bool _touched = false;
 
-  /// Bornes alignées sur `PackageRequestCreateRequest` côté backend
-  /// (`@DecimalMin("0.5") @DecimalMax("32.0")`).
-  static const kMinWeightKg = 0.5;
-  static const kMaxWeightKg = 32.0;
-
   /// Mêmes bornes que le validateur du champ. Le gate se contentait de
   /// `v > 0` : « Continuer » s'activait sur 0,2 kg puis refusait la saisie.
-  bool get _isWeightValid {
-    final raw = _weightCtrl.text.trim().replaceAll(',', '.');
-    final v = double.tryParse(raw);
-    return v != null && v >= kMinWeightKg && v <= kMaxWeightKg;
-  }
+  bool get _isWeightValid => PackageRequestLimits.isWeightValid(
+    double.tryParse(_weightCtrl.text.trim().replaceAll(',', '.')),
+  );
 
   bool get _isComplete => _isWeightValid && _allCategories.isNotEmpty;
 
@@ -262,7 +256,7 @@ class Step2DetailsState extends State<Step2Details> {
             Padding(
               padding: const EdgeInsets.only(top: DonySpacing.xs),
               child: Text(
-                'Entre 0,5 et 32 kg.',
+                '${PackageRequestLimits.weightRangeLabel}.',
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
             ),
@@ -357,7 +351,7 @@ class _DescriptionInput extends StatelessWidget {
     return TextFormField(
       key: const Key('description-input'),
       controller: controller,
-      scrollPadding: const EdgeInsets.only(bottom: 140),
+      scrollPadding: kDonyKeyboardScrollPadding,
       maxLines: 4,
       maxLength: 500,
       textCapitalization: TextCapitalization.sentences,
@@ -414,7 +408,7 @@ class _WeightInput extends StatelessWidget {
       controller: controller,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d.,]'))],
-      scrollPadding: const EdgeInsets.only(bottom: 140),
+      scrollPadding: kDonyKeyboardScrollPadding,
       style: tt.headlineMedium?.copyWith(
         fontWeight: FontWeight.w800,
         fontSize: 26,
@@ -448,9 +442,8 @@ class _WeightInput extends StatelessWidget {
       validator: (v) {
         final d = double.tryParse(v?.replaceAll(',', '.') ?? '');
         if (d == null) return 'Valeur invalide';
-        if (d < Step2DetailsState.kMinWeightKg ||
-            d > Step2DetailsState.kMaxWeightKg) {
-          return 'Entre 0,5 et 32 kg';
+        if (!PackageRequestLimits.isWeightValid(d)) {
+          return PackageRequestLimits.weightRangeLabel;
         }
         return null;
       },
