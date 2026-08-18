@@ -42,7 +42,8 @@ class ConversationRepository {
 
   Future<List<ConversationModel>> getArchivedConversations() async {
     final response = await _api.dio.get('/conversations/archived');
-    final list = (response.data as List<dynamic>? ?? []);
+    final data = response.data as Map<String, dynamic>? ?? const {};
+    final list = data['content'] as List<dynamic>? ?? const [];
     return list
         .map((e) => ConversationModel.fromJson(e as Map<String, dynamic>))
         .toList();
