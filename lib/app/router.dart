@@ -356,8 +356,18 @@ final appRouter = GoRouter(
     // ── Création d'une offre (hors shell) ───────────────────────────────
     GoRoute(
       path: '/bids/new',
-      builder: (_, state) =>
-          CreateBidScreen(announcement: state.extra as AnnouncementModel),
+      builder: (_, state) {
+        // `extra` reste tolérant à l'annonce nue : tous les points d'entrée
+        // historiques la passaient telle quelle.
+        final extra = state.extra;
+        final args = extra is CreateBidArgs
+            ? extra
+            : CreateBidArgs(announcement: extra! as AnnouncementModel);
+        return CreateBidScreen(
+          announcement: args.announcement,
+          negotiation: args.negotiation,
+        );
+      },
     ),
 
     // ── Bid detail (hors shell) ──────────────────────────────────────────

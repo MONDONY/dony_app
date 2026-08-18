@@ -15,12 +15,16 @@ import 'package:dony/features/content_categories/data/content_category_repositor
 import 'package:dony/features/content_categories/presentation/content_category_selector.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
+import 'package:dony/features/matching/bloc/bid_negotiation_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_negotiation_event.dart';
+import 'package:dony/features/matching/bloc/bid_negotiation_state.dart';
 import 'package:dony/features/matching/bloc/bid_photos_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_quote_response.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid/photo_section.dart';
+import 'package:dony/features/matching/presentation/widgets/custom_items_section.dart';
 import 'package:dony/features/matching/presentation/widgets/grid_item_selection_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/reimbursement_info_banner.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
@@ -76,19 +80,42 @@ class _CollectedFormData {
 
 // ── Public API ─────────────────────────────────────────────────────────────────
 
+/// Arguments de la route `/bids/new`.
+///
+/// Le mode négociation double la route plutôt que de la dupliquer : c'est le
+/// même formulaire, avec en plus les articles hors grille et le prix proposé.
+class CreateBidArgs {
+  const CreateBidArgs({required this.announcement, this.negotiation = false});
+
+  final AnnouncementModel announcement;
+  final bool negotiation;
+}
+
 class CreateBidBottomSheet {
   static Future<void> show(
     BuildContext context, {
     required AnnouncementModel announcement,
-  }) => context.push<void>('/bids/new', extra: announcement);
+    bool negotiation = false,
+  }) => context.push<void>(
+    '/bids/new',
+    extra: CreateBidArgs(announcement: announcement, negotiation: negotiation),
+  );
 }
 
 // ── Screen ─────────────────────────────────────────────────────────────────────
 
 class CreateBidScreen extends StatefulWidget {
-  const CreateBidScreen({super.key, required this.announcement});
+  const CreateBidScreen({
+    super.key,
+    required this.announcement,
+    this.negotiation = false,
+  });
 
   final AnnouncementModel announcement;
+
+  /// L'expéditeur propose son prix au lieu de payer le tarif affiché.
+  /// Le trajet doit être `negotiable`, le backend en reste l'arbitre.
+  final bool negotiation;
 
   @override
   State<CreateBidScreen> createState() => _CreateBidScreenState();
@@ -100,6 +127,22 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   late final BidBloc _bidBloc;
   late final PaymentBloc _paymentBloc;
   late final BidPhotosCubit _photosCubit;
+
+  /// Nul hors mode négociation : les écrans à prix ferme n'ont pas à exiger
+  /// ce BLoC de leurs appelants (ni de leurs tests).
+  late final BidNegotiationBloc? _negotiationBloc;
+
+  // ── Mode négociation ────────────────────────────────────────────────────────
+  /// Articles que le voyageur n'a pas tarifés, chiffrés par l'expéditeur.
+  final _customItemsNotifier = ValueNotifier<List<BidCustomItemDraft>>([]);
+
+  /// Prix global proposé. Pré-rempli avec la suggestion, puis libre.
+  final _proposalCtrl = TextEditingController();
+
+  /// Dernière suggestion écrite dans le champ. Sert à distinguer un champ
+  /// resté au montant suggéré (à resynchroniser) d'une saisie de l'expéditeur
+  /// (à ne jamais écraser).
+  String _lastWrittenSuggestion = '';
 
   // ── Payment method availability ─────────────────────────────────────────────
   // Mobile money (Wave/Orange Money) n'est plus proposé comme paiement direct
@@ -191,6 +234,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _bidBloc = getIt<BidBloc>();
     _paymentBloc = getIt<PaymentBloc>();
     _photosCubit = getIt<BidPhotosCubit>();
+    _negotiationBloc = widget.negotiation ? getIt<BidNegotiationBloc>() : null;
 
     _isCashAvailable = widget.announcement.acceptedPaymentMethods.contains(
       BidPaymentMethod.cash,
@@ -222,6 +266,19 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _methodNotifier.addListener(_syncPickerButtonState);
 
     WidgetsBinding.instance.addPostFrameCallback((_) => _syncFormButtonState());
+
+    if (widget.negotiation) {
+      _customItemsNotifier.addListener(_syncProposal);
+      _weightNotifier.addListener(_syncProposal);
+      _gridQuantitiesNotifier.addListener(_syncProposal);
+      _quoteNotifier.addListener(_syncProposal);
+      _syncProposal();
+      // L'ouverture du mode est un début d'entonnoir : elle se mesure même si
+      // aucune proposition n'est finalement envoyée.
+      _negotiationBloc!.add(
+        BidNegotiationOpenRequested(widget.announcement.id),
+      );
+    }
 
     unawaited(_loadCatalog());
     for (final l in _dirtySources) {
@@ -298,6 +355,15 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       l.removeListener(_recomputeDirty);
     }
     unawaited(_photosSub?.cancel());
+    if (widget.negotiation) {
+      _customItemsNotifier.removeListener(_syncProposal);
+      _weightNotifier.removeListener(_syncProposal);
+      _gridQuantitiesNotifier.removeListener(_syncProposal);
+      _quoteNotifier.removeListener(_syncProposal);
+      _negotiationBloc?.close();
+    }
+    _customItemsNotifier.dispose();
+    _proposalCtrl.dispose();
     _isDirtyNotifier.dispose();
     _btnConfigNotifier.dispose();
     _bidBloc.close();
@@ -347,6 +413,15 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         _categoriesNotifier.value.isNotEmpty &&
         _disclaimerNotifier.value;
 
+    if (widget.negotiation) {
+      _btnConfigNotifier.value = _BtnConfig(
+        label: 'Envoyer ma proposition',
+        iconAsset: 'send',
+        onPressed: canSubmit ? _submitNegotiation : null,
+      );
+      return;
+    }
+
     _btnConfigNotifier.value = _BtnConfig(
       label: 'Envoyer',
       iconAsset: 'send',
@@ -381,6 +456,104 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       iconAsset: iconAsset,
       onPressed: _confirmPayment,
     );
+  }
+
+  // ── Mode négociation ────────────────────────────────────────────────────────
+
+  /// Total expéditeur calculé localement, sans attendre le devis serveur.
+  double _localSenderTotal() {
+    final kg = widget.announcement.pricePerKg > 0
+        ? netToSenderPrice(_weightNotifier.value * _pricePerKg)
+        : 0.0;
+    return kg + _gridDisplayTotal();
+  }
+
+  /// Prix suggéré : ce que coûterait le colis au tarif du voyageur, plus ce que
+  /// l'expéditeur a lui-même chiffré hors grille. Le devis serveur prime dès
+  /// qu'il existe (il porte les promos).
+  double get _suggestedTotalEur {
+    final quote = _quoteNotifier.value;
+    final base = quote is BidQuoteResponse
+        ? quote.totalEur
+        : _localSenderTotal();
+    return base + customItemsTotalEur(_customItemsNotifier.value);
+  }
+
+  /// Réaligne le champ sur la suggestion, sauf si l'expéditeur y a saisi son
+  /// propre montant : sa proposition est le cœur de la négociation, la
+  /// recalculer sous ses doigts serait la lui confisquer.
+  void _syncProposal() {
+    final next = _suggestedTotalEur.toStringAsFixed(2);
+    if (_proposalCtrl.text.isNotEmpty &&
+        _proposalCtrl.text != _lastWrittenSuggestion) {
+      return;
+    }
+    _lastWrittenSuggestion = next;
+    _proposalCtrl.text = next;
+  }
+
+  double? _readProposal() {
+    final raw = _proposalCtrl.text.trim().replaceAll(',', '.');
+    final value = double.tryParse(raw);
+    if (value == null || value <= 0) return null;
+    return value;
+  }
+
+  /// Première proposition. Le destinataire et le disclaimer sont demandés dès
+  /// maintenant : décision produit assumée, le voyageur doit pouvoir juger le
+  /// colis complet avant d'accepter un prix.
+  void _submitNegotiation() {
+    if (_descCtrl.text.trim().isEmpty) {
+      _showError('Description obligatoire');
+      return;
+    }
+    if (_recipientNameCtrl.text.trim().isEmpty) {
+      _showError('Nom du destinataire obligatoire');
+      return;
+    }
+    if (_recipientPhoneCtrl.text.trim().isEmpty) {
+      _showError('Téléphone du destinataire obligatoire');
+      return;
+    }
+    final proposed = _readProposal();
+    if (proposed == null) {
+      _showError('Indiquez le prix que vous proposez');
+      return;
+    }
+
+    _recipientSection.maybeSaveManualEntry();
+
+    final weight = _weightNotifier.value;
+    _negotiationBloc!.add(
+      BidNegotiationProposeRequested(
+        announcementId: widget.announcement.id,
+        weightKg: weight > 0 ? weight : null,
+        description: _descCtrl.text.trim(),
+        contentCategory: _categoriesNotifier.value.join(', '),
+        recipientName: _recipientNameCtrl.text.trim(),
+        recipientPhone: _recipientPhoneCtrl.text.trim(),
+        proposedTotalEur: proposed,
+        photoKeys: _photosCubit.readyKeys,
+        customItems: _customItemsNotifier.value
+            .map((item) => item.toJson())
+            .toList(),
+        gridItems: _selectedGridItems(),
+      ),
+    );
+  }
+
+  void _onNegotiationState(BuildContext context, BidNegotiationState state) {
+    if (state is BidNegotiationLoaded &&
+        state.action == BidNegotiationAction.proposed) {
+      context.pop();
+      DonySnackbar.show(
+        context,
+        message: 'Proposition envoyée, le voyageur va vous répondre.',
+        type: DonySnackbarType.success,
+      );
+    } else if (state is BidNegotiationError) {
+      unawaited(ErrorPresenter.show(context, state.error));
+    }
   }
 
   double _computeStripeTotal() {
@@ -682,6 +855,11 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                         BlocListener<PaymentBloc, PaymentState>(
                           listener: _onPaymentState,
                         ),
+                        if (_negotiationBloc != null)
+                          BlocListener<BidNegotiationBloc, BidNegotiationState>(
+                            bloc: _negotiationBloc,
+                            listener: _onNegotiationState,
+                          ),
                       ],
                       child: SingleChildScrollView(
                         keyboardDismissBehavior:
@@ -1117,10 +1295,51 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                 );
               },
             ),
+            if (widget.negotiation) ...[
+              const SizedBox(height: DonySpacing.xxl),
+              CustomItemsSection(notifier: _customItemsNotifier),
+              const SizedBox(height: DonySpacing.xxl),
+              _buildProposalSection(context),
+            ],
             const SizedBox(height: DonySpacing.md),
           ],
         );
       },
+    );
+  }
+
+  /// Champ de prix proposé, avec le rappel de la suggestion juste en dessous :
+  /// l'expéditeur doit voir en permanence de quoi il s'écarte.
+  Widget _buildProposalSection(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _SectionLabel(label: 'VOTRE PROPOSITION'),
+        const SizedBox(height: DonySpacing.sm),
+        DonyTextField(
+          key: const Key('negotiation-proposal-field'),
+          controller: _proposalCtrl,
+          label: 'Prix proposé (€)',
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        ),
+        const SizedBox(height: DonySpacing.xs),
+        ListenableBuilder(
+          listenable: Listenable.merge([
+            _customItemsNotifier,
+            _weightNotifier,
+            _gridQuantitiesNotifier,
+            _quoteNotifier,
+          ]),
+          builder: (context, _) => Text(
+            'Suggéré : ${formatPriceIn(_suggestedTotalEur, widget.announcement.currency)}',
+            key: const Key('negotiation-suggested-hint'),
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+          ),
+        ),
+      ],
     );
   }
 
@@ -1340,6 +1559,7 @@ class _StickyBottom extends StatelessWidget {
               bottomInset + DonySpacing.md,
             ),
             child: DonyButton(
+              key: const Key('bid-submit-btn'),
               label: config?.label ?? 'Envoyer',
               iconAsset: config?.iconAsset ?? 'send',
               isLoading: isLoading,
