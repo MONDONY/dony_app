@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/design/widgets/dony_skeleton.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/profile/bloc/profile_public_bloc.dart';
 import 'package:dony/features/profile/bloc/profile_public_event.dart';
@@ -165,51 +166,47 @@ void main() {
 
   // ─── Test 3: ProfilePublicLoading → header shows a loader ──────────────────
 
-  testWidgets(
-    'ProfilePublicLoading → CircularProgressIndicator dans le header',
-    (tester) async {
-      await tester.binding.setSurfaceSize(const Size(400, 900));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
+  testWidgets('ProfilePublicLoading → skeleton dans le header', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(400, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
 
-      when(() => profileBloc.state).thenReturn(const ProfilePublicLoading());
-      when(
-        () => hubBloc.state,
-      ).thenReturn(const TravelerHubState(status: TravelerHubStatus.success));
+    when(() => profileBloc.state).thenReturn(const ProfilePublicLoading());
+    when(
+      () => hubBloc.state,
+    ).thenReturn(const TravelerHubState(status: TravelerHubStatus.success));
 
-      await tester.pumpWidget(pump());
-      // Drain flutter_animate pending timers while still in loading state
-      await tester.pump(const Duration(milliseconds: 600));
+    await tester.pumpWidget(pump());
+    // Drain flutter_animate pending timers while still in loading state
+    await tester.pump(const Duration(milliseconds: 600));
 
-      expect(find.byType(CircularProgressIndicator), findsWidgets);
-    },
-  );
+    expect(find.byType(DonySkeletonCircle), findsWidgets);
+  });
 
   // ─── Test 4: TravelerHubStatus.loading on trips tab → spinner ───────────────
 
-  testWidgets(
-    'TravelerHubStatus.loading → CircularProgressIndicator dans l\'onglet Trajets',
-    (tester) async {
-      await tester.binding.setSurfaceSize(const Size(400, 900));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
+  testWidgets('TravelerHubStatus.loading → skeleton dans l\'onglet Trajets', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(400, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
 
-      when(() => profileBloc.state).thenReturn(
-        ProfilePublicLoaded(
-          profile: _fakeProfile(),
-          recentRatings: _fakeRatings(),
-        ),
-      );
+    when(() => profileBloc.state).thenReturn(
+      ProfilePublicLoaded(
+        profile: _fakeProfile(),
+        recentRatings: _fakeRatings(),
+      ),
+    );
 
-      when(
-        () => hubBloc.state,
-      ).thenReturn(const TravelerHubState(status: TravelerHubStatus.loading));
+    when(
+      () => hubBloc.state,
+    ).thenReturn(const TravelerHubState(status: TravelerHubStatus.loading));
 
-      await tester.pumpWidget(pump());
-      await tester.pump(const Duration(milliseconds: 600));
+    await tester.pumpWidget(pump());
+    await tester.pump(const Duration(milliseconds: 600));
 
-      // Should show a spinner in the trips tab body
-      expect(find.byType(CircularProgressIndicator), findsWidgets);
-    },
-  );
+    // Should show a skeleton in the trips tab body
+    expect(find.byType(DonyTripCardSkeleton), findsWidgets);
+  });
 
   // ─── Test 5: Empty announcements ─────────────────────────────────────────────
 

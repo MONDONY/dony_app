@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/design/widgets/dony_keyboard_scope.dart';
+import 'package:dony/core/design/widgets/dony_skeleton.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -86,13 +87,11 @@ void main() {
   tearDown(() => bloc.close());
 
   group('ChatScreen', () {
-    testWidgets('shows loading indicator when state is ChatLoading', (
-      tester,
-    ) async {
+    testWidgets('shows skeleton when state is ChatLoading', (tester) async {
       when(() => bloc.state).thenReturn(const ChatLoading());
       await _pump(tester, bloc);
 
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byType(DonyChatSkeleton), findsOneWidget);
     });
 
     testWidgets('shows empty prompt when conversation has no messages', (

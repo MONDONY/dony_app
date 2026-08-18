@@ -119,8 +119,17 @@ class _SearchViewState extends State<_SearchView> {
                 >(
                   builder: (context, state) {
                     if (state.status == SearchStatus.loading) {
-                      return Center(
-                        child: CircularProgressIndicator(color: cs.primary),
+                      return ListView.separated(
+                        padding: const EdgeInsets.fromLTRB(
+                          DonySpacing.lg,
+                          DonySpacing.md,
+                          DonySpacing.lg,
+                          40,
+                        ),
+                        itemCount: 4,
+                        separatorBuilder: (_, _) =>
+                            const SizedBox(height: DonySpacing.md),
+                        itemBuilder: (_, _) => const DonyTicketCardSkeleton(),
                       );
                     }
                     if (state.status == SearchStatus.error) {
@@ -197,16 +206,7 @@ class _SearchViewState extends State<_SearchView> {
                               const SizedBox(height: DonySpacing.md),
                           itemBuilder: (context, i) {
                             if (i >= state.results.length) {
-                              return Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: DonySpacing.base,
-                                ),
-                                child: Center(
-                                  child: CircularProgressIndicator(
-                                    color: cs.primary,
-                                  ),
-                                ),
-                              );
+                              return const DonyTicketCardSkeleton();
                             }
                             final r = state.results[i];
                             return _PublicRequestCard(request: r)

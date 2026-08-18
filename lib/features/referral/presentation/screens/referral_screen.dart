@@ -30,7 +30,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
 
   Widget _buildBody(ReferralState state) {
     if (state is ReferralLoading || state is ReferralInitial) {
-      return const Center(child: CircularProgressIndicator());
+      return const DonyDetailSkeleton();
     }
     if (state is ReferralError) {
       return _ErrorView(message: state.error.message);
@@ -38,7 +38,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
     if (state is ReferralLoaded) {
       return _LoadedBody(info: state.info);
     }
-    return const Center(child: CircularProgressIndicator());
+    return const DonyDetailSkeleton();
   }
 
   @override

@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/design/widgets/dony_skeleton.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/subscriptions/bloc/subscriptions_bloc.dart';
 import 'package:dony/features/subscriptions/bloc/subscriptions_event.dart';
@@ -98,14 +99,14 @@ void main() {
 
   // ─── Loading state ────────────────────────────────────────────────────────────
 
-  testWidgets('état loading → CircularProgressIndicator', (tester) async {
+  testWidgets('état loading → skeleton', (tester) async {
     when(
       () => bloc.state,
     ).thenReturn(const SubscriptionsState(status: SubscriptionsStatus.loading));
     await tester.pumpWidget(pump());
     // No pump(600ms) here — we want to catch the loading indicator before items arrive.
     await tester.pump();
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.byType(DonyUserCardSkeleton), findsWidgets);
   });
 
   // ─── Error state ──────────────────────────────────────────────────────────────

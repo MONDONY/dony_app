@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/design/widgets/dony_skeleton.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
@@ -83,7 +84,7 @@ void main() {
   tearDownAll(() => GetIt.instance.reset());
 
   group('ConversationLoaderScreen', () {
-    testWidgets('shows a loading indicator while fetching', (tester) async {
+    testWidgets('shows a skeleton while fetching', (tester) async {
       when(
         () => repository.getConversation('conv-1'),
       ).thenAnswer((_) => Completer<ConversationModel>().future);
@@ -91,7 +92,7 @@ void main() {
       await _pump(tester, 'conv-1');
       await tester.pump();
 
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byType(DonyChatSkeleton), findsOneWidget);
     });
 
     testWidgets('opens the chat screen once the conversation is loaded', (

@@ -115,13 +115,25 @@ void main() {
     );
 
     blocTest<WalletBloc, WalletState>(
-      'émet WalletError sur échec',
+      'émet WalletError sur échec (aucune donnée préalable)',
       build: () {
         when(() => repo.getBalance()).thenThrow(Exception('network error'));
         return bloc;
       },
       act: (b) => b.add(WalletRefreshRequested()),
       expect: () => [isA<WalletError>()],
+    );
+
+    blocTest<WalletBloc, WalletState>(
+      'échec avec solde déjà affiché → garde le solde, aucun état émis',
+      build: () {
+        when(() => repo.getBalance()).thenThrow(Exception('network error'));
+        return bloc;
+      },
+      seed: () => WalletLoaded(wallet),
+      act: (b) => b.add(WalletRefreshRequested()),
+      expect: () => <Matcher>[],
+      verify: (b) => expect(b.state, isA<WalletLoaded>()),
     );
   });
 

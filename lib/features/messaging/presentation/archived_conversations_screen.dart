@@ -18,7 +18,10 @@ class ArchivedConversationsScreen extends StatelessWidget {
       body: BlocBuilder<ConversationListBloc, ConversationListState>(
         builder: (context, state) {
           if (state is! ConversationListLoaded) {
-            return const Center(child: CircularProgressIndicator());
+            return ListView.builder(
+              itemCount: 6,
+              itemBuilder: (_, _) => const DonyConversationTileSkeleton(),
+            );
           }
 
           final archived = state.archivedConversations;

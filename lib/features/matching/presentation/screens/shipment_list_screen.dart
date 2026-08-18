@@ -593,11 +593,17 @@ class _LoadingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: CircularProgressIndicator(
-        color: Theme.of(context).colorScheme.primary,
-        strokeWidth: 2.5,
+    final hPadding = DonyLayout.hPadding(context);
+    return ListView.separated(
+      padding: EdgeInsets.fromLTRB(
+        hPadding,
+        DonySpacing.base,
+        hPadding,
+        DonySpacing.huge,
       ),
+      itemCount: 4,
+      separatorBuilder: (_, _) => const SizedBox(height: DonySpacing.md),
+      itemBuilder: (_, _) => const DonyUserCardSkeleton(),
     );
   }
 }

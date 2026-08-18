@@ -26,12 +26,19 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     Emitter<WalletState> emit,
   ) async {
     // Pas de WalletLoading : on garde la liste affichée pendant le pull-to-refresh.
+    final previous = state;
     try {
       final wallet = await _repository.getBalance();
       if (emit.isDone) return;
       emit(WalletLoaded(wallet));
     } catch (e) {
       if (emit.isDone) return;
+      // Refresh silencieux raté (ex: coupure réseau pendant le pull) : on
+      // garde le solde déjà affiché plutôt que de l'effacer pour un écran
+      // d'erreur — même principe que BidBloc._onMyListAutoRefreshRequested.
+      // Seul un échec sans aucune donnée préalable (1er chargement) affiche
+      // vraiment l'erreur.
+      if (previous is WalletLoaded) return;
       emit(WalletError(unwrapDioError(e).message));
     }
   }

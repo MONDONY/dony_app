@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/design/widgets/dony_skeleton.dart';
 import 'package:dony/features/ratings/bloc/my_reviews_bloc.dart';
 import 'package:dony/features/ratings/bloc/my_reviews_event.dart';
 import 'package:dony/features/ratings/bloc/my_reviews_state.dart';
@@ -66,15 +67,13 @@ void main() {
   });
 
   // 1. Affiche CircularProgressIndicator quand MyReviewsLoading
-  testWidgets('shows CircularProgressIndicator when MyReviewsLoading', (
-    tester,
-  ) async {
+  testWidgets('shows skeleton when MyReviewsLoading', (tester) async {
     when(() => bloc.state).thenReturn(const MyReviewsLoading());
 
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
 
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.byType(DonyUserCardSkeleton), findsWidgets);
   });
 
   // 2. Affiche "Mes avis reçus" comme titre

@@ -520,9 +520,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
                   body: RepaintBoundary(
                     key: _screenBoundaryKey,
                     child: _skeletonLoading
-                        ? Center(
-                            child: CircularProgressIndicator(color: cs.primary),
-                          )
+                        ? const DonyDetailSkeleton()
                         : isSender
                         ? SenderDetailBody(bid: _bid)
                         : TravelerDetailBody(bid: _bid),

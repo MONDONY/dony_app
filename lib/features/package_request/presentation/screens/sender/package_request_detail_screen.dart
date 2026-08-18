@@ -147,13 +147,11 @@ class _PackageRequestDetailScreenState
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: const DonyAppBar(title: 'Ma demande'),
       body: _loading
-          ? Center(child: CircularProgressIndicator(color: cs.primary))
+          ? const DonyDetailSkeleton()
           : _error != null
           ? _ErrorView(message: _error!, onRetry: _load)
           : _request == null
@@ -383,7 +381,7 @@ class _SheetFrameState extends State<_SheetFrame> {
           Divider(height: DonySpacing.base, color: cs.outline),
           Expanded(
             child: _loading
-                ? Center(child: CircularProgressIndicator(color: cs.primary))
+                ? const DonyDetailSkeleton()
                 : _error != null
                 ? _ErrorView(message: _error!, onRetry: _load)
                 : _request == null

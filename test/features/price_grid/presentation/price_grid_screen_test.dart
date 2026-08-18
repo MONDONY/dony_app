@@ -59,11 +59,11 @@ void main() {
   });
 
   group('PriceGridScreen — états', () {
-    testWidgets('chargement : indicateur de progression', (tester) async {
+    testWidgets('chargement : skeleton', (tester) async {
       await tester.pumpWidget(_wrap(_blocWith(const PriceGridLoading())));
       await tester.pump();
 
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byType(DonyPriceTagSkeleton), findsWidgets);
     });
 
     testWidgets('erreur : message et bouton Réessayer', (tester) async {

@@ -196,7 +196,18 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen>
           // ── Full-screen loading / error ───────────────────────────────────
           if ((state is AnnouncementLoading || state is AnnouncementInitial) &&
               _lastList.isEmpty) {
-            return Center(child: CircularProgressIndicator(color: cs.primary));
+            return ListView.separated(
+              padding: EdgeInsets.fromLTRB(
+                hPad,
+                DonySpacing.lg,
+                hPad,
+                DonySpacing.huge,
+              ),
+              itemCount: 4,
+              separatorBuilder: (_, _) =>
+                  const SizedBox(height: DonySpacing.md),
+              itemBuilder: (_, _) => const DonyTripCardSkeleton(),
+            );
           }
 
           if (state is AnnouncementError && _lastList.isEmpty) {

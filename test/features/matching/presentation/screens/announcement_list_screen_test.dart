@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/design/widgets/dony_skeleton.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -264,26 +265,22 @@ void main() {
   // ── Preserved existing tests ────────────────────────────────────────────────
 
   group('AnnouncementListScreen — états BLoC', () {
-    testWidgets('AnnouncementInitial → affiche CircularProgressIndicator', (
-      tester,
-    ) async {
+    testWidgets('AnnouncementInitial → affiche un skeleton', (tester) async {
       when(() => bloc.state).thenReturn(AnnouncementInitial());
       when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
 
       await _pump(tester, bloc);
 
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byType(DonyTripCardSkeleton), findsWidgets);
     });
 
-    testWidgets('AnnouncementLoading → affiche CircularProgressIndicator', (
-      tester,
-    ) async {
+    testWidgets('AnnouncementLoading → affiche un skeleton', (tester) async {
       when(() => bloc.state).thenReturn(AnnouncementLoading());
       when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
 
       await _pump(tester, bloc);
 
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byType(DonyTripCardSkeleton), findsWidgets);
     });
 
     testWidgets(

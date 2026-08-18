@@ -97,7 +97,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
         },
         builder: (context, state) {
           if (state is AnnouncementLoading || state is AnnouncementInitial) {
-            return Center(child: CircularProgressIndicator(color: cs.primary));
+            return const DonyDetailSkeleton();
           }
 
           if (state is AnnouncementDetailLoaded) {

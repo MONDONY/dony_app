@@ -176,13 +176,11 @@ void main() {
   }
 
   group('NegotiationThreadScreen', () {
-    testWidgets('affiche CircularProgressIndicator en état Initial', (
-      tester,
-    ) async {
+    testWidgets('affiche un skeleton en état Initial', (tester) async {
       when(() => bloc.state).thenReturn(const NegotiationInitial());
       await tester.pumpWidget(wrap());
       await tester.pump();
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byType(DonyChatSkeleton), findsOneWidget);
     });
 
     testWidgets('affiche "Négociation" dans l\'AppBar en état Initial', (

@@ -108,7 +108,17 @@ class _TripsTab extends StatelessWidget {
     return BlocBuilder<FavoriteTripsCubit, FavoriteTripsState>(
       builder: (context, state) {
         if (state is FavoriteTripsLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return ListView.separated(
+            padding: const EdgeInsets.fromLTRB(
+              DonySpacing.lg,
+              DonySpacing.xl,
+              DonySpacing.lg,
+              DonySpacing.huge,
+            ),
+            itemCount: 4,
+            separatorBuilder: (_, _) => const SizedBox(height: DonySpacing.md),
+            itemBuilder: (_, _) => const DonyTripCardSkeleton(),
+          );
         }
 
         if (state is FavoriteTripsEmpty) {
@@ -169,7 +179,17 @@ class _RequestsTab extends StatelessWidget {
     return BlocBuilder<FavoriteRequestsCubit, FavoriteRequestsState>(
       builder: (context, state) {
         if (state is FavoriteRequestsLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return ListView.separated(
+            padding: const EdgeInsets.fromLTRB(
+              DonySpacing.lg,
+              DonySpacing.xl,
+              DonySpacing.lg,
+              DonySpacing.huge,
+            ),
+            itemCount: 4,
+            separatorBuilder: (_, _) => const SizedBox(height: DonySpacing.md),
+            itemBuilder: (_, _) => const DonyTicketCardSkeleton(),
+          );
         }
 
         if (state is FavoriteRequestsEmpty) {

@@ -133,10 +133,17 @@ class _MyNegotiationsBodyState extends State<MyNegotiationsBody> {
                           tripState.status == BidNegotiationListStatus.error;
 
                       if (bothEmpty && anyLoading) {
-                        return const Center(
-                          child: CircularProgressIndicator(
-                            color: DonyColors.primary,
+                        return ListView.separated(
+                          padding: const EdgeInsets.fromLTRB(
+                            DonySpacing.lg,
+                            DonySpacing.lg,
+                            DonySpacing.lg,
+                            DonySpacing.huge,
                           ),
+                          itemCount: 4,
+                          separatorBuilder: (_, _) =>
+                              const SizedBox(height: DonySpacing.md),
+                          itemBuilder: (_, _) => const DonyUserCardSkeleton(),
                         );
                       }
                       if (bothEmpty && anyError) {

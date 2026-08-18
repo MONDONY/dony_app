@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/design/widgets/dony_skeleton.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_state.dart';
@@ -51,16 +52,14 @@ void main() {
     bloc.close();
   });
 
-  testWidgets('shows loading indicator when CommissionMethodLoading', (
-    tester,
-  ) async {
+  testWidgets('shows skeleton when CommissionMethodLoading', (tester) async {
     whenListen(
       bloc,
       Stream.value(CommissionMethodLoading()),
       initialState: CommissionMethodLoading(),
     );
     await tester.pumpWidget(_wrap(const CommissionMethodScreen(), bloc));
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.byType(DonyDetailSkeleton), findsOneWidget);
   });
 
   testWidgets('shows empty state when CommissionMethodNotConfigured', (

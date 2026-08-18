@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/design/widgets/dony_skeleton.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_model.dart';
 import 'package:dony/features/profile/presentation/widgets/wallet_balance_card.dart';
@@ -66,7 +67,7 @@ void main() {
     prefsBloc = stubBusinessPrefsBloc();
   });
 
-  testWidgets('état loading affiche un indicateur, pas de montant', (
+  testWidgets('état loading affiche un skeleton, pas de montant', (
     tester,
   ) async {
     whenListen<WalletState>(
@@ -76,12 +77,12 @@ void main() {
     );
 
     await tester.pumpWidget(_wrap(bloc, prefsBloc));
-    // Un seul pump borné : l'anneau de chargement tourne indéfiniment,
-    // pumpAndSettle n'y mettrait jamais fin. On avance juste assez pour
-    // laisser l'entrée .animate() (fadeIn 300ms) purger son timer interne.
+    // Un seul pump borné : l'entrée .animate() de _CardShell (fadeIn 300ms)
+    // purge son timer interne, mais le shimmer du skeleton tourne
+    // indéfiniment — pumpAndSettle n'y mettrait jamais fin.
     await tester.pump(const Duration(milliseconds: 350));
 
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.byType(DonySkeletonBox), findsWidgets);
     expect(find.textContaining('Recharger'), findsNothing);
   });
 

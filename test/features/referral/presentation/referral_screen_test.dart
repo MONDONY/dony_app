@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/design/widgets/dony_skeleton.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
 import 'package:dony/features/referral/data/models/referral_info.dart';
@@ -46,15 +47,13 @@ void main() {
   });
 
   // 1. Affiche CircularProgressIndicator quand ReferralLoading
-  testWidgets('shows CircularProgressIndicator when ReferralLoading', (
-    tester,
-  ) async {
+  testWidgets('shows skeleton when ReferralLoading', (tester) async {
     when(() => bloc.state).thenReturn(const ReferralLoading());
 
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
 
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.byType(DonyDetailSkeleton), findsOneWidget);
   });
 
   // 2. Affiche "Parrainage" comme titre AppBar

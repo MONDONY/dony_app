@@ -180,15 +180,13 @@ void main() {
   );
 
   group('MyNegotiationsBody', () {
-    testWidgets('affiche CircularProgressIndicator en état loading', (
-      tester,
-    ) async {
+    testWidgets('affiche un skeleton en état loading', (tester) async {
       when(
         () => bloc.state,
       ).thenReturn(NegotiationListState(status: NegotiationListStatus.loading));
       await tester.pumpWidget(wrap());
       await tester.pump();
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byType(DonyUserCardSkeleton), findsWidgets);
     });
 
     testWidgets('affiche _EmptyState quand la liste est vide', (tester) async {

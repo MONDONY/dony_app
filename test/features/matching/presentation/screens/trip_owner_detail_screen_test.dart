@@ -2,6 +2,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/design/widgets/dony_app_bar.dart';
 import 'package:dony/core/design/widgets/dony_feedback_button.dart';
+import 'package:dony/core/design/widgets/dony_skeleton.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -214,7 +215,7 @@ void main() {
   });
 
   testWidgets(
-    'affiche un loader quand le détail charge sans annonce initiale',
+    'affiche un skeleton quand le détail charge sans annonce initiale',
     (tester) async {
       when(() => annBloc.state).thenReturn(AnnouncementLoading());
       whenListen(
@@ -232,7 +233,7 @@ void main() {
       );
       await tester.pump();
 
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byType(DonyDetailSkeleton), findsOneWidget);
     },
   );
 

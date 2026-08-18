@@ -31,8 +31,13 @@ class DisputeListScreen extends StatelessWidget {
           Expanded(
             child: BlocBuilder<DisputeListBloc, DisputeListState>(
               builder: (context, state) => switch (state) {
-                DisputeListInitial() || DisputeListLoading() => Center(
-                  child: CircularProgressIndicator(color: cs.primary),
+                DisputeListInitial() ||
+                DisputeListLoading() => ListView.separated(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
+                  itemCount: 5,
+                  separatorBuilder: (_, _) => const SizedBox(height: 12),
+                  itemBuilder: (_, _) => const DonyListCardSkeleton(),
                 ),
                 DisputeListError(:final error) => DonyEmptyState(
                   type: DonyEmptyStateType.error,

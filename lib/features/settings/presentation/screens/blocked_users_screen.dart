@@ -37,8 +37,17 @@ class BlockedUsersScreen extends StatelessWidget {
       body: BlocBuilder<BlockedUsersBloc, BlockedUsersState>(
         builder: (context, state) {
           if (state is BlockedUsersLoading) {
-            return const Center(
-              child: CircularProgressIndicator(color: Color(0xFF1A6B3C)),
+            return ListView.separated(
+              padding: const EdgeInsets.fromLTRB(
+                DonySpacing.lg,
+                DonySpacing.lg,
+                DonySpacing.lg,
+                DonySpacing.huge,
+              ),
+              itemCount: 4,
+              separatorBuilder: (_, _) =>
+                  const SizedBox(height: DonySpacing.md),
+              itemBuilder: (_, _) => const DonyUserCardSkeleton(),
             );
           }
           if (state is BlockedUsersError) {

@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/design/widgets/dony_skeleton.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -254,7 +255,7 @@ void main() {
   // Loading state
   // ---------------------------------------------------------------------------
   group('FavoritesScreen — état chargement', () {
-    testWidgets('affiche un spinner CircularProgressIndicator', (tester) async {
+    testWidgets('affiche un skeleton', (tester) async {
       await tester.pumpWidget(
         _buildScreen(
           isTraveler: false,
@@ -264,7 +265,7 @@ void main() {
       );
       await tester.pump();
 
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byType(DonyTripCardSkeleton), findsWidgets);
     });
   });
 

@@ -209,10 +209,7 @@ class _BidNegotiationThreadScreenState
                           BidNegotiationFetchRequested(widget.bidId),
                         ),
                       ),
-                      _ => const Center(
-                        key: Key('nego-loading'),
-                        child: CircularProgressIndicator(),
-                      ),
+                      _ => const DonyChatSkeleton(key: Key('nego-loading')),
                     },
             );
           },

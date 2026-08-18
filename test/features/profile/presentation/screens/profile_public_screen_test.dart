@@ -224,13 +224,13 @@ void main() {
 
   // ── 1. Loading ────────────────────────────────────────────────────────────
 
-  testWidgets('shows CircularProgressIndicator when loading', (tester) async {
+  testWidgets('shows skeleton when loading', (tester) async {
     when(() => bloc.state).thenReturn(const ProfilePublicLoading());
 
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
 
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.byType(DonyDetailSkeleton), findsOneWidget);
   });
 
   // ── 2. Title — contextual ─────────────────────────────────────────────────

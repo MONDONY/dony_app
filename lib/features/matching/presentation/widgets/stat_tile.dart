@@ -53,12 +53,11 @@ class StatTile extends StatelessWidget {
             ),
             const SizedBox(height: DonySpacing.xxs),
             if (isLoading)
-              Container(
-                width: 48,
-                height: 18,
-                decoration: BoxDecoration(
-                  color: cs.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(DonyRadius.xs),
+              const DonyShimmer(
+                child: DonySkeletonBox(
+                  width: 48,
+                  height: 18,
+                  radius: DonyRadius.xs,
                 ),
               )
             else

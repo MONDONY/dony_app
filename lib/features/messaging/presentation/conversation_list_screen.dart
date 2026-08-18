@@ -90,7 +90,13 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
     final cs = Theme.of(context).colorScheme;
 
     if (state is ConversationListLoading || state is ConversationListInitial) {
-      return Center(child: CircularProgressIndicator(color: cs.primary));
+      return ListView.builder(
+        padding: EdgeInsets.only(
+          bottom: 100 + MediaQuery.paddingOf(context).bottom,
+        ),
+        itemCount: 6,
+        itemBuilder: (_, _) => const DonyConversationTileSkeleton(),
+      );
     }
 
     if (state is ConversationListError) {
