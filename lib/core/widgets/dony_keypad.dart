@@ -10,6 +10,7 @@ class DonyKeypad extends StatelessWidget {
     this.onBiometric,
     this.onDecimal,
     this.decimalLabel = ',',
+    this.compact = false,
     this.enabled = true,
   }) : assert(
          onBiometric == null || onDecimal == null,
@@ -32,22 +33,32 @@ class DonyKeypad extends StatelessWidget {
   /// convention francophone.
   final String decimalLabel;
 
+  /// Touches resserrées, pour les feuilles où le pavé partage la hauteur avec
+  /// un en-tête et un bouton collé en bas. En taille normale, la dernière
+  /// rangée passe sous la barre d'action et devient inatteignable.
+  /// La cible tactile reste au-dessus des 44 pt requis.
+  final bool compact;
+
   final bool enabled;
+
+  double get _keySize => compact ? 62 : 80;
+  double get _gap => compact ? 8 : 12;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
         _buildRow(['1', '2', '3']),
-        const SizedBox(height: 12),
+        SizedBox(height: _gap),
         _buildRow(['4', '5', '6']),
-        const SizedBox(height: 12),
+        SizedBox(height: _gap),
         _buildRow(['7', '8', '9']),
-        const SizedBox(height: 12),
+        SizedBox(height: _gap),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             _KeypadKey(
+              size: _keySize,
               onTap: onBiometric ?? onDecimal,
               enabled: enabled && (onBiometric ?? onDecimal) != null,
               child: onBiometric != null
@@ -62,8 +73,9 @@ class DonyKeypad extends StatelessWidget {
                     )
                   : const SizedBox.shrink(),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: _gap),
             _KeypadKey(
+              size: _keySize,
               onTap: () => onDigit('0'),
               enabled: enabled,
               child: const Text(
@@ -71,8 +83,9 @@ class DonyKeypad extends StatelessWidget {
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.w500),
               ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: _gap),
             _KeypadKey(
+              size: _keySize,
               onTap: onDelete,
               enabled: enabled,
               child: const DonyIcon('delete'),
@@ -88,8 +101,9 @@ class DonyKeypad extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         for (int i = 0; i < digits.length; i++) ...[
-          if (i > 0) const SizedBox(width: 12),
+          if (i > 0) SizedBox(width: _gap),
           _KeypadKey(
+            size: _keySize,
             onTap: () => onDigit(digits[i]),
             enabled: enabled,
             child: Text(
@@ -107,11 +121,13 @@ class _KeypadKey extends StatelessWidget {
   const _KeypadKey({
     required this.child,
     required this.onTap,
+    required this.size,
     this.enabled = true,
   });
 
   final Widget child;
   final VoidCallback? onTap;
+  final double size;
   final bool enabled;
 
   @override
@@ -135,8 +151,8 @@ class _KeypadKey extends StatelessWidget {
         borderRadius: BorderRadius.circular(40),
         splashColor: cs.primary.withValues(alpha: 0.15),
         child: Container(
-          width: 80,
-          height: 80,
+          width: size,
+          height: size,
           alignment: Alignment.center,
           decoration: BoxDecoration(shape: BoxShape.circle, color: keyColor),
           child: DefaultTextStyle(

@@ -410,14 +410,14 @@ class _PriceStep extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: DonySpacing.lg),
+            const SizedBox(height: DonySpacing.md),
 
             Text(
               'Ce que vous encaissez',
               style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: DonySpacing.xs),
+            const SizedBox(height: DonySpacing.xxs),
             Text(
               value.isEmpty ? '0' : value,
               key: const Key('price-grid-amount'),
@@ -430,9 +430,12 @@ class _PriceStep extends StatelessWidget {
             const SizedBox(height: DonySpacing.sm),
 
             _Echo(price: price, tooHigh: tooHigh),
-            const SizedBox(height: DonySpacing.lg),
+            const SizedBox(height: DonySpacing.md),
 
             DonyKeypad(
+              // Sans cela, la rangée « virgule / 0 / effacer » passe sous la
+              // barre de validation et devient inatteignable.
+              compact: true,
               onDigit: (d) => raw.value = _append(raw.value, d),
               onDecimal: () => raw.value = _appendDecimal(raw.value),
               onDelete: () => raw.value = raw.value.isEmpty

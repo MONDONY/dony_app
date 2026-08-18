@@ -411,6 +411,14 @@ class _PriceGridItemTile extends StatelessWidget {
           : PopupMenuButton<String>(
               icon: DonyIcon('ellipsis-vertical', color: cs.onSurfaceVariant),
               tooltip: 'Options',
+              // Le rembourrage par défaut vole une vingtaine de points au
+              // libellé, qui se met à s'ellipser sur les écrans étroits. La
+              // cible tactile reste à 44 pt par les contraintes.
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(
+                minWidth: 44,
+                minHeight: 44,
+              ),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(DonyRadius.md),
               ),

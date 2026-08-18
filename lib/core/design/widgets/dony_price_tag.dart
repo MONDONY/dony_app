@@ -65,6 +65,31 @@ class DonyPriceTag extends StatelessWidget {
     final stampColor = highlighted ? cs.primary : cs.onSurface;
     final stampInk = highlighted ? cs.onPrimary : cs.surface;
 
+    final stamp = Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: compact ? DonySpacing.sm : DonySpacing.sm + 2,
+        vertical: compact ? DonySpacing.xs : DonySpacing.xs + 2,
+      ),
+      decoration: BoxDecoration(
+        color: stampColor,
+        borderRadius: BorderRadius.circular(DonyRadius.sm),
+      ),
+      child: Text(
+        price,
+        style: (compact ? tt.titleMedium : tt.titleLarge)?.copyWith(
+          color: stampInk,
+          fontWeight: FontWeight.w800,
+          fontFeatures: const [FontFeature.tabularFigures()],
+        ),
+      ),
+    );
+
+    // Un sélecteur de quantité en fin de ligne ne laisse plus assez de place
+    // au nom de l'article sur un écran étroit : « Alimentation sèche » se
+    // réduit à « Alimentati… ». Le prix descend alors sous le libellé, qui
+    // récupère toute la largeur.
+    final stackPrice = compact && trailing != null;
+
     final tag = Container(
       padding: EdgeInsets.fromLTRB(
         compact ? 24 : 28,
@@ -94,57 +119,55 @@ class DonyPriceTag extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Text(emoji, style: TextStyle(fontSize: compact ? 15 : 19)),
-          const SizedBox(width: DonySpacing.sm + 2),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  label,
-                  style: (compact ? tt.titleMedium : tt.titleLarge)?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-                  maxLines: compact ? 1 : 2,
-                  overflow: TextOverflow.ellipsis,
+          Row(
+            children: [
+              Text(emoji, style: TextStyle(fontSize: compact ? 15 : 19)),
+              const SizedBox(width: DonySpacing.sm + 2),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      label,
+                      style: (compact ? tt.titleMedium : tt.titleLarge)
+                          ?.copyWith(fontWeight: FontWeight.w800),
+                      maxLines: compact ? 1 : 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (stackPrice) ...[
+                      const SizedBox(height: DonySpacing.xs + 1),
+                      stamp,
+                    ],
+                  ],
                 ),
-                if (caption != null && !compact) ...[
-                  const SizedBox(height: 1),
-                  Text(
-                    caption!,
-                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ],
-            ),
-          ),
-          const SizedBox(width: DonySpacing.sm),
-          Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: compact ? DonySpacing.sm : DonySpacing.sm + 2,
-              vertical: compact ? DonySpacing.xs : DonySpacing.xs + 2,
-            ),
-            decoration: BoxDecoration(
-              color: stampColor,
-              borderRadius: BorderRadius.circular(DonyRadius.sm),
-            ),
-            child: Text(
-              price,
-              style: (compact ? tt.titleMedium : tt.titleLarge)?.copyWith(
-                color: stampInk,
-                fontWeight: FontWeight.w800,
-                fontFeatures: const [FontFeature.tabularFigures()],
               ),
-            ),
+              if (!stackPrice) ...[
+                const SizedBox(width: DonySpacing.sm),
+                stamp,
+              ],
+              if (trailing != null) ...[
+                const SizedBox(width: DonySpacing.sm),
+                trailing!,
+              ],
+            ],
           ),
-          if (trailing != null) ...[
-            const SizedBox(width: DonySpacing.xs),
-            trailing!,
+          // La légende occupe toute la largeur, sous la ligne principale.
+          // Logée dans la colonne du libellé, elle se réduisait à
+          // « vous recevez 1… » : le prix et le menu ne lui laissaient qu'une
+          // centaine de points.
+          if (caption != null && !compact) ...[
+            const SizedBox(height: DonySpacing.xs),
+            Text(
+              caption!,
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ],
         ],
       ),
