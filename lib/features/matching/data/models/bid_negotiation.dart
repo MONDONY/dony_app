@@ -211,6 +211,14 @@ class BidNegotiation {
 
   /// Le fil ne se négocie plus (accepté, refusé, annulé, expiré).
   bool get isClosed => status != 'NEGOTIATING';
+
+  /// Le backend ne renseigne [netEur] que pour le voyageur : c'est donc lui,
+  /// et lui seul, le discriminant de rôle côté client. L'expéditeur ne doit
+  /// jamais voir le net, il raisonne en total.
+  bool get isTravelerView => netEur != null;
+
+  /// Rôle du point de vue courant, pour les properties analytics.
+  String get viewerRole => isTravelerView ? 'traveler' : 'sender';
 }
 
 /// Ligne de la liste « Discussions de prix » côté trajet.
