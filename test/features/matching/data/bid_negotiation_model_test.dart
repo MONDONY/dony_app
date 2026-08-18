@@ -116,10 +116,10 @@ void main() {
       expect(thread.proposedGrossEur, 48.5);
     });
 
-    test('isMyTurn et isClosed derivent du statut et du tour', () {
-      expect(BidNegotiation.fromJson(_threadJson()).isMyTurn, isTrue);
+    test('myTurn et isClosed derivent du statut et du tour', () {
+      expect(BidNegotiation.fromJson(_threadJson()).myTurn, isTrue);
       expect(
-        BidNegotiation.fromJson(_threadJson(myTurn: false)).isMyTurn,
+        BidNegotiation.fromJson(_threadJson(myTurn: false)).myTurn,
         isFalse,
       );
       expect(BidNegotiation.fromJson(_threadJson()).isClosed, isFalse);

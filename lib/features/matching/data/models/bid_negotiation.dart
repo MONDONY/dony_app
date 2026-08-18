@@ -206,9 +206,6 @@ class BidNegotiation {
         .toList(),
   );
 
-  /// C'est à moi de jouer : je peux accepter, contre-proposer ou refuser.
-  bool get isMyTurn => myTurn;
-
   /// Le fil ne se négocie plus (accepté, refusé, annulé, expiré).
   bool get isClosed => status != 'NEGOTIATING';
 

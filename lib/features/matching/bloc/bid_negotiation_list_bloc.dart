@@ -37,13 +37,6 @@ class BidNegotiationListState extends Equatable {
   final List<BidNegotiationSummary> summaries;
   final String? errorMessage;
 
-  /// Fils encore ouverts, quel que soit le tour.
-  int get activeCount => summaries.where((s) => !s.isClosed).length;
-
-  /// Fils ouverts où une action est attendue du viewer.
-  int get actionableCount =>
-      summaries.where((s) => !s.isClosed && s.myTurn).length;
-
   BidNegotiationListState copyWith({
     BidNegotiationListStatus? status,
     List<BidNegotiationSummary>? summaries,

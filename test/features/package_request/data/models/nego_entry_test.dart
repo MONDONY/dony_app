@@ -58,10 +58,8 @@ void main() {
     test('expose les champs communs d une negociation de demande', () {
       final entry = NegoEntry.fromRequest(_thread(hasUnread: true));
 
-      expect(entry.kind, NegoEntryKind.request);
+      expect(entry, isA<RequestNegoEntry>());
       expect(entry.isActive, isTrue);
-      expect(entry.isMyTurn, isTrue);
-      expect(entry.hasUnread, isTrue);
       expect(entry.updatedAt, DateTime(2026, 6, 10));
       expect(entry.counterpartyName, 'Mamadou Diallo');
       expect(entry.departureCity, 'Paris');
@@ -80,10 +78,8 @@ void main() {
     test('expose les champs communs d une negociation de trajet', () {
       final entry = NegoEntry.fromTrip(_summary());
 
-      expect(entry.kind, NegoEntryKind.trip);
+      expect(entry, isA<TripNegoEntry>());
       expect(entry.isActive, isTrue);
-      expect(entry.isMyTurn, isFalse);
-      expect(entry.hasUnread, isTrue);
       expect(entry.updatedAt, DateTime(2026, 6, 12));
       expect(entry.counterpartyName, 'Awa Diop');
       expect(entry.departureCity, 'Lyon');
@@ -126,10 +122,8 @@ void main() {
         const NegotiationFilterState(preset: NegoQuickFilter.active),
       );
       expect(result, hasLength(2));
-      expect(result.map((e) => e.kind).toSet(), {
-        NegoEntryKind.request,
-        NegoEntryKind.trip,
-      });
+      expect(result.whereType<RequestNegoEntry>(), hasLength(1));
+      expect(result.whereType<TripNegoEntry>(), hasLength(1));
     });
 
     test('le filtre Terminees ne garde que les termines des deux sources', () {
@@ -146,13 +140,13 @@ void main() {
         mixed(),
         const NegotiationFilterState(query: 'abidjan'),
       );
-      expect(byTrip.single.kind, NegoEntryKind.trip);
+      expect(byTrip.single, isA<TripNegoEntry>());
 
       final byRequest = applyNegotiationFilters(
         mixed(),
         const NegotiationFilterState(query: 'mamadou'),
       );
-      expect(byRequest.map((e) => e.kind).toSet(), {NegoEntryKind.request});
+      expect(byRequest, everyElement(isA<RequestNegoEntry>()));
     });
 
     test('la liste fusionnee est triee par updatedAt decroissant', () {

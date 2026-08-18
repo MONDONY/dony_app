@@ -513,7 +513,7 @@ class _ThreadActions extends StatelessWidget {
     }
 
     if (negotiation.isClosed) {
-      return hint(_closedLabel(negotiation.status), 'nego-closed-hint');
+      return hint(_closedLabel(negotiation), 'nego-closed-hint');
     }
 
     if (!negotiation.myTurn) {
@@ -561,11 +561,23 @@ class _ThreadActions extends StatelessWidget {
     );
   }
 
-  static String _closedLabel(String status) => switch (status) {
+  /// Un fil éteint porte toujours le même statut, `NEGOTIATION_CLOSED` : le
+  /// serveur ne recycle plus les statuts de colis (REJECTED, CANCELLED,
+  /// EXPIRED), qui faisaient réapparaître la discussion en demande refusée.
+  ///
+  /// La nuance perdue par le statut se relit sur le fil : un message REJECT
+  /// n'est posé que lorsqu'une des deux parties ferme, jamais par le balayage
+  /// d'expiration. Son absence signe donc une péremption. On teste sa présence
+  /// plutôt que le dernier message, pour ne dépendre d'aucun ordre de tri.
+  static String _closedLabel(BidNegotiation negotiation) => switch (negotiation
+      .status) {
     'ACCEPTED' => 'Prix accepté. Rendez-vous sur votre colis pour la suite.',
-    'REJECTED' => 'Proposition refusée.',
-    'CANCELLED' => 'Négociation annulée.',
-    'EXPIRED' => 'Proposition expirée.',
+    'NEGOTIATION_CLOSED' =>
+      negotiation.messages.any(
+            (m) => m.kind == BidNegotiationMessageKind.reject,
+          )
+          ? 'Proposition refusée.'
+          : 'Proposition expirée.',
     _ => 'Négociation terminée.',
   };
 }

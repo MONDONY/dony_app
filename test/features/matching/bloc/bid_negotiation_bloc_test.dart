@@ -319,43 +319,15 @@ void main() {
       ),
       expect: () => [
         isA<BidNegotiationLoading>(),
-        isA<BidNegotiationError>()
-            .having((s) => s.error.code, 'code', 'not-your-turn')
-            .having((s) => s.isRoundLimitReached, 'isRoundLimitReached', false),
+        isA<BidNegotiationError>().having(
+          (s) => s.error.code,
+          'code',
+          'not-your-turn',
+        ),
       ],
       verify: (_) {
         verifyNever(() => backend.capture(any(), any()));
       },
-    );
-
-    blocTest<BidNegotiationBloc, BidNegotiationState>(
-      '409 negotiation-round-limit-reached leve le drapeau de plafond atteint',
-      build: () {
-        when(
-          () => repo.counter(
-            'bid1',
-            proposedTotalEur: any(named: 'proposedTotalEur'),
-            body: any(named: 'body'),
-          ),
-        ).thenThrow(
-          const ConflictException(
-            'Plafond atteint',
-            code: 'negotiation-round-limit-reached',
-          ),
-        );
-        return buildBloc();
-      },
-      act: (bloc) => bloc.add(
-        const BidNegotiationCounterRequested('bid1', proposedTotalEur: 38),
-      ),
-      expect: () => [
-        isA<BidNegotiationLoading>(),
-        isA<BidNegotiationError>().having(
-          (s) => s.isRoundLimitReached,
-          'isRoundLimitReached',
-          true,
-        ),
-      ],
     );
 
     blocTest<BidNegotiationBloc, BidNegotiationState>(

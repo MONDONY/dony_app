@@ -1,7 +1,9 @@
 import 'package:dony/features/matching/data/models/bid_negotiation.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 
-/// Source d'une entrée de « Discussions de prix ».
+/// Source d'une entrée de « Discussions de prix », telle qu'affichée sur la
+/// carte. Le contrat commun [NegoEntry] ne la porte pas : le rendu filtre déjà
+/// par variante, et seul le marqueur de source a besoin de la nommer.
 enum NegoEntryKind { request, trip }
 
 /// Adaptateur commun aux deux négociations de l'app.
@@ -11,6 +13,10 @@ enum NegoEntryKind { request, trip }
 /// sur le prix d'un trajet. Les filtres, le tri et les compteurs ne travaillent
 /// que sur cette interface, ce qui évite de les écrire deux fois, et donc de
 /// les faire diverger.
+///
+/// Le contrat se limite à ce que ces trois usages consomment. Tout le reste se
+/// lit sur la variante, que le rendu discrimine déjà : un membre commun de plus
+/// serait un membre à tenir à jour des deux côtés sans personne pour le lire.
 sealed class NegoEntry {
   const NegoEntry();
 
@@ -20,18 +26,8 @@ sealed class NegoEntry {
   static NegoEntry fromTrip(BidNegotiationSummary summary) =>
       TripNegoEntry(summary);
 
-  NegoEntryKind get kind;
-
-  /// Identifiant de l'entrée dans sa propre source.
-  String get id;
-
   /// La négociation attend encore quelque chose de quelqu'un.
   bool get isActive;
-
-  /// C'est au viewer de jouer.
-  bool get isMyTurn;
-
-  bool get hasUnread;
 
   /// Dernière activité, seule base du tri de la liste fusionnée.
   DateTime get updatedAt;
@@ -47,19 +43,7 @@ class RequestNegoEntry extends NegoEntry {
   final NegotiationThread thread;
 
   @override
-  NegoEntryKind get kind => NegoEntryKind.request;
-
-  @override
-  String get id => thread.id;
-
-  @override
   bool get isActive => thread.status.isActive;
-
-  @override
-  bool get isMyTurn => thread.isMyTurn;
-
-  @override
-  bool get hasUnread => thread.hasUnread;
 
   @override
   DateTime get updatedAt => thread.lastActivityAt;
@@ -81,19 +65,7 @@ class TripNegoEntry extends NegoEntry {
   final BidNegotiationSummary summary;
 
   @override
-  NegoEntryKind get kind => NegoEntryKind.trip;
-
-  @override
-  String get id => summary.bidId;
-
-  @override
   bool get isActive => !summary.isClosed;
-
-  @override
-  bool get isMyTurn => summary.myTurn;
-
-  @override
-  bool get hasUnread => summary.hasUnread;
 
   /// Un résumé sans date passe en fin de liste plutôt que de remonter en tête
   /// par accident.

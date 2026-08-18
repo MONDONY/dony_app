@@ -79,7 +79,7 @@ void main() {
     // fois, au niveau de la liste : le filtrage doit rester identique.
     test('la requete brute est normalisee avant le filtrage', () {
       final r = applyNegotiationFilters(
-        [_t(traveler: 'Modou'), _t(traveler: 'Awa', arrivee: 'Abidjan')],
+        [_t(traveler: 'Modou'), _t(arrivee: 'Abidjan')],
         const NegotiationFilterState(query: '  MODOU '),
       );
       expect(r.single.counterpartyName, 'Modou');
@@ -87,7 +87,7 @@ void main() {
 
     test('les accents de la requete sont ignores', () {
       final r = applyNegotiationFilters(
-        [_t(traveler: 'Modou', arrivee: 'Bamako'), _t(traveler: 'Awa')],
+        [_t(traveler: 'Modou', arrivee: 'Bamako'), _t()],
         const NegotiationFilterState(query: 'bàmakô'),
       );
       expect(r.single.arrivalCity, 'Bamako');

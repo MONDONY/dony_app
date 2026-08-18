@@ -64,6 +64,15 @@ BidNegotiation _thread({
   double? netEur,
   String status = 'NEGOTIATING',
   int round = 1,
+  List<BidNegotiationMessage> messages = const [
+    BidNegotiationMessage(
+      id: 'm1',
+      kind: BidNegotiationMessageKind.proposal,
+      authorId: 'sender-1',
+      proposedGrossEur: 42,
+      body: 'Je propose 42 euros pour le tout.',
+    ),
+  ],
 }) => BidNegotiation(
   bidId: 'bid1',
   announcementId: 'ann1',
@@ -93,15 +102,7 @@ BidNegotiation _thread({
   counterpartyName: 'Mamadou Diallo',
   departureCity: 'Paris',
   arrivalCity: 'Dakar',
-  messages: const [
-    BidNegotiationMessage(
-      id: 'm1',
-      kind: BidNegotiationMessageKind.proposal,
-      authorId: 'sender-1',
-      proposedGrossEur: 42,
-      body: 'Je propose 42 euros pour le tout.',
-    ),
-  ],
+  messages: messages,
 );
 
 void main() {
@@ -421,6 +422,63 @@ void main() {
 
     expect(find.byKey(const Key('nego-accept-btn')), findsNothing);
     expect(find.byKey(const Key('nego-closed-hint')), findsOneWidget);
+  });
+
+  // Le serveur n'envoie plus qu'un seul statut de clôture, NEGOTIATION_CLOSED,
+  // pour ne plus recycler les statuts de colis. La raison se relit sur le fil.
+  group('fil eteint : refus ou peremption', () {
+    testWidgets('un message REJECT signe une fermeture par une des parties', (
+      tester,
+    ) async {
+      await pumpScreen(
+        tester,
+        BidNegotiationLoaded(
+          _thread(
+            status: 'NEGOTIATION_CLOSED',
+            myTurn: false,
+            messages: const [
+              BidNegotiationMessage(
+                id: 'm1',
+                kind: BidNegotiationMessageKind.proposal,
+                authorId: 'sender-1',
+                proposedGrossEur: 42,
+              ),
+              BidNegotiationMessage(
+                id: 'm2',
+                kind: BidNegotiationMessageKind.reject,
+                authorId: 'traveler-1',
+              ),
+            ],
+          ),
+        ),
+      );
+
+      expect(find.text('Proposition refusée.'), findsOneWidget);
+    });
+
+    testWidgets('sans message REJECT, le fil a simplement péri', (tester) async {
+      await pumpScreen(
+        tester,
+        BidNegotiationLoaded(
+          _thread(
+            status: 'NEGOTIATION_CLOSED',
+            myTurn: false,
+            messages: const [
+              BidNegotiationMessage(
+                id: 'm1',
+                kind: BidNegotiationMessageKind.proposal,
+                authorId: 'sender-1',
+                proposedGrossEur: 42,
+              ),
+            ],
+          ),
+        ),
+      );
+
+      // Le balayage d'expiration ne poste aucun message : son absence est le
+      // seul signal disponible, et il ne dépend pas de l'ordre de tri.
+      expect(find.text('Proposition expirée.'), findsOneWidget);
+    });
   });
 
   // ── Après accord : carte vs espèces ────────────────────────────────────────

@@ -68,11 +68,6 @@ class BidNegotiationError extends BidNegotiationState {
 
   const BidNegotiationError(this.error, {this.negotiation});
 
-  /// Le plafond de tours est atteint : la contre-offre doit se désactiver,
-  /// accepter et refuser restent possibles.
-  bool get isRoundLimitReached =>
-      error.code == 'negotiation-round-limit-reached';
-
   @override
   List<Object?> get props => [error, negotiation];
 }

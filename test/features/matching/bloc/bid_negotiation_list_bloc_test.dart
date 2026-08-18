@@ -81,18 +81,4 @@ void main() {
       ),
     ],
   );
-
-  test('les compteurs comptent les fils ouverts et les non-lus', () {
-    final state = BidNegotiationListState(
-      status: BidNegotiationListStatus.loaded,
-      summaries: [
-        _summary(),
-        _summary(bidId: 'bid2', myTurn: false, hasUnread: false),
-        _summary(bidId: 'bid3', status: 'ACCEPTED'),
-      ],
-    );
-
-    expect(state.activeCount, 2);
-    expect(state.actionableCount, 1);
-  });
 }
