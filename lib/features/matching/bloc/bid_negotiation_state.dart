@@ -1,4 +1,5 @@
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/features/matching/data/models/bid_checkout_response_model.dart';
 import 'package:dony/features/matching/data/models/bid_negotiation.dart';
 import 'package:equatable/equatable.dart';
 
@@ -41,6 +42,21 @@ class BidNegotiationLoaded extends BidNegotiationState {
 
   @override
   List<Object?> get props => [negotiation, action];
+}
+
+/// Le checkout de l'accord est prêt : l'écran enchaîne sur le parcours de
+/// paiement carte existant (`PaymentBloc` → `DonyPaymentSheet`).
+///
+/// Le fil est porté avec, pour que l'écran continue d'afficher le colis et les
+/// échanges pendant que la feuille de paiement s'ouvre par-dessus.
+class BidNegotiationCheckoutReady extends BidNegotiationState {
+  final BidCheckoutResponseModel checkout;
+  final BidNegotiation? negotiation;
+
+  const BidNegotiationCheckoutReady(this.checkout, {this.negotiation});
+
+  @override
+  List<Object?> get props => [checkout, negotiation];
 }
 
 class BidNegotiationError extends BidNegotiationState {

@@ -131,3 +131,17 @@ class BidNegotiationReadRequested extends BidNegotiationEvent {
   @override
   List<Object?> get props => [bidId];
 }
+
+/// Ouvre le paiement d'un accord scellé côté carte (`AWAITING_PAYMENT`).
+///
+/// Aucun montant n'est porté : le serveur rejoue le prix figé à l'acceptation.
+/// Un accord en espèces (`PENDING`) ne passe jamais par là, c'est le voyageur
+/// qui règle la commission par le geste existant.
+class BidNegotiationCheckoutRequested extends BidNegotiationEvent {
+  final String bidId;
+
+  const BidNegotiationCheckoutRequested(this.bidId);
+
+  @override
+  List<Object?> get props => [bidId];
+}

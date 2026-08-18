@@ -290,6 +290,8 @@ abstract final class AnalyticsEvents {
   static const tripNegotiationCountered = 'trip_negotiation_countered';
   static const tripNegotiationAccepted = 'trip_negotiation_accepted';
   static const tripNegotiationRejected = 'trip_negotiation_rejected';
+  static const tripNegotiationPaymentStarted =
+      'trip_negotiation_payment_started';
 
   // Affiche de trajet — le voyageur la génère puis la poste sur ses propres
   // canaux. Ces trois events mesurent le seul entonnoir qui compte ici :

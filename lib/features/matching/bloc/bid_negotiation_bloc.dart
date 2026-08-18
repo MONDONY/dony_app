@@ -29,6 +29,7 @@ class BidNegotiationBloc
     on<BidNegotiationRejectRequested>(_onReject);
     on<BidNegotiationCancelRequested>(_onCancel);
     on<BidNegotiationReadRequested>(_onRead);
+    on<BidNegotiationCheckoutRequested>(_onCheckout);
   }
 
   /// Dernier fil connu : sert à garder l'écran affichable derrière une erreur.
@@ -199,6 +200,33 @@ class BidNegotiationBloc
     try {
       final thread = await _repository.cancel(event.bidId);
       _emitLoaded(thread, BidNegotiationAction.cancelled, emit);
+    } catch (e) {
+      _emitError(e, emit);
+    }
+  }
+
+  /// Paiement d'un accord scellé côté carte.
+  ///
+  /// Aucune garde d'appel concurrent ici, contrairement à [BidBloc] : le
+  /// serveur est idempotent, un double tap renvoie le même `clientSecret`. Le
+  /// [BidNegotiationLoading] émis d'abord garantit malgré tout la transition,
+  /// sans quoi un second état Equatable-égal serait avalé en silence.
+  Future<void> _onCheckout(
+    BidNegotiationCheckoutRequested event,
+    Emitter<BidNegotiationState> emit,
+  ) async {
+    emit(const BidNegotiationLoading());
+    try {
+      final checkout = await _repository.negotiationCheckout(event.bidId);
+      emit(BidNegotiationCheckoutReady(checkout, negotiation: _cachedThread));
+      // Ni montant ni destinataire : seule l'entrée dans le tunnel de paiement
+      // d'un accord négocié est mesurée.
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.tripNegotiationPaymentStarted,
+          properties: {'bid_id': event.bidId},
+        ),
+      );
     } catch (e) {
       _emitError(e, emit);
     }

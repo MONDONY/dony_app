@@ -229,4 +229,37 @@ void main() {
       },
     );
   });
+
+  group('ErrorCatalog — checkout d\'un accord negocie', () {
+    test('les quatre refus du checkout ont un message dedie', () {
+      const codes = [
+        'bid-not-negotiated',
+        'bid-not-awaiting-payment',
+        'payment-already-completed',
+        'traveler-stripe-invalid',
+      ];
+
+      for (final code in codes) {
+        final p = ErrorCatalog.lookup(NetworkException('brut', code: code));
+
+        expect(
+          ErrorCatalog.isKnown(NetworkException('brut', code: code)),
+          isTrue,
+          reason: '$code doit avoir une entree dediee',
+        );
+        // Le detail brut du backend ne doit jamais atteindre l'utilisateur.
+        expect(p.message, isNot(contains('brut')));
+        // Vouvoiement cote expediteur, et jamais de tiret cadratin.
+        expect(p.message, isNot(contains('\u2014')));
+      }
+    });
+
+    test('accord deja paye n alarme pas', () {
+      final p = ErrorCatalog.lookup(
+        const ConflictException('x', code: 'payment-already-completed'),
+      );
+
+      expect(p.severity, isNot(ErrorSeverity.critical));
+    });
+  });
 }

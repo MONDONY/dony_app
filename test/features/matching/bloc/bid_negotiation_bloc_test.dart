@@ -4,6 +4,7 @@ import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/features/matching/bloc/bid_negotiation_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_negotiation_event.dart';
 import 'package:dony/features/matching/bloc/bid_negotiation_state.dart';
+import 'package:dony/features/matching/data/models/bid_checkout_response_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_negotiation.dart';
 import 'package:dony/features/matching/data/repositories/bid_negotiation_repository.dart';
@@ -488,6 +489,155 @@ void main() {
       },
       act: (bloc) => bloc.add(const BidNegotiationReadRequested('bid1')),
       expect: () => <BidNegotiationState>[],
+    );
+  });
+
+  group('checkout', () {
+    BidCheckoutResponseModel checkout() => BidCheckoutResponseModel(
+      bidId: 'bid1',
+      clientSecret: 'pi_1_secret_2',
+      publishableKey: 'pk_test_1',
+      expiresAt: DateTime(2026, 8, 19, 4, 12),
+      currency: 'eur',
+      paymentMethodTypes: const ['card', 'paypal'],
+    );
+
+    blocTest<BidNegotiationBloc, BidNegotiationState>(
+      'checkout reussi emet CheckoutReady et tire l event de paiement',
+      build: () {
+        when(
+          () => repo.negotiationCheckout('bid1'),
+        ).thenAnswer((_) async => checkout());
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const BidNegotiationCheckoutRequested('bid1')),
+      wait: const Duration(milliseconds: 1),
+      expect: () => [
+        isA<BidNegotiationLoading>(),
+        isA<BidNegotiationCheckoutReady>()
+            .having(
+              (s) => s.checkout.clientSecret,
+              'clientSecret',
+              'pi_1_secret_2',
+            )
+            .having((s) => s.checkout.bidId, 'bidId', 'bid1'),
+      ],
+      verify: (_) {
+        verify(
+          () => backend.capture(AnalyticsEvents.tripNegotiationPaymentStarted, {
+            'bid_id': 'bid1',
+          }),
+        ).called(1);
+      },
+    );
+
+    blocTest<BidNegotiationBloc, BidNegotiationState>(
+      'le fil deja charge est conserve dans l etat de checkout',
+      build: () {
+        when(
+          () => repo.thread('bid1'),
+        ).thenAnswer((_) async => _thread(status: 'AWAITING_PAYMENT'));
+        when(
+          () => repo.negotiationCheckout('bid1'),
+        ).thenAnswer((_) async => checkout());
+        return buildBloc();
+      },
+      act: (bloc) async {
+        bloc.add(const BidNegotiationFetchRequested('bid1'));
+        await Future<void>.delayed(const Duration(milliseconds: 1));
+        bloc.add(const BidNegotiationCheckoutRequested('bid1'));
+      },
+      wait: const Duration(milliseconds: 5),
+      skip: 2,
+      expect: () => [
+        isA<BidNegotiationLoading>(),
+        isA<BidNegotiationCheckoutReady>().having(
+          (s) => s.negotiation?.status,
+          'status du fil conserve',
+          'AWAITING_PAYMENT',
+        ),
+      ],
+    );
+
+    for (final entry in const {
+      'bid-not-negotiated': 409,
+      'bid-not-awaiting-payment': 409,
+      'payment-already-completed': 409,
+      'traveler-stripe-invalid': 422,
+    }.entries) {
+      blocTest<BidNegotiationBloc, BidNegotiationState>(
+        '${entry.value} ${entry.key} donne une erreur portant le code, '
+        'sans event analytics',
+        build: () {
+          when(() => repo.negotiationCheckout('bid1')).thenThrow(
+            entry.value == 409
+                ? ConflictException('refus', code: entry.key)
+                : ValidationException('refus', code: entry.key),
+          );
+          return buildBloc();
+        },
+        act: (bloc) => bloc.add(const BidNegotiationCheckoutRequested('bid1')),
+        wait: const Duration(milliseconds: 1),
+        expect: () => [
+          isA<BidNegotiationLoading>(),
+          isA<BidNegotiationError>().having(
+            (s) => s.error.code,
+            'code',
+            entry.key,
+          ),
+        ],
+        verify: (_) {
+          verifyNever(() => backend.capture(any(), any()));
+        },
+      );
+    }
+
+    blocTest<BidNegotiationBloc, BidNegotiationState>(
+      '404 bid-not-found et 403 forbidden remontent aussi leur code',
+      build: () {
+        when(() => repo.negotiationCheckout('bid1')).thenThrow(
+          const NotFoundException(
+            message: 'introuvable',
+            apiCode: 'bid-not-found',
+          ),
+        );
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const BidNegotiationCheckoutRequested('bid1')),
+      wait: const Duration(milliseconds: 1),
+      expect: () => [
+        isA<BidNegotiationLoading>(),
+        isA<BidNegotiationError>().having(
+          (s) => s.error.code,
+          'code',
+          'bid-not-found',
+        ),
+      ],
+    );
+
+    blocTest<BidNegotiationBloc, BidNegotiationState>(
+      'un double tap rejoue le checkout, idempotent cote serveur',
+      build: () {
+        when(
+          () => repo.negotiationCheckout('bid1'),
+        ).thenAnswer((_) async => checkout());
+        return buildBloc();
+      },
+      act: (bloc) async {
+        bloc.add(const BidNegotiationCheckoutRequested('bid1'));
+        await Future<void>.delayed(const Duration(milliseconds: 1));
+        bloc.add(const BidNegotiationCheckoutRequested('bid1'));
+      },
+      wait: const Duration(milliseconds: 5),
+      expect: () => [
+        isA<BidNegotiationLoading>(),
+        isA<BidNegotiationCheckoutReady>(),
+        isA<BidNegotiationLoading>(),
+        isA<BidNegotiationCheckoutReady>(),
+      ],
+      verify: (_) {
+        verify(() => repo.negotiationCheckout('bid1')).called(2);
+      },
     );
   });
 }

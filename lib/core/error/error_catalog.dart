@@ -405,6 +405,41 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.critical,
       icon: Icons.account_balance_wallet_outlined,
     ),
+    // Refus du checkout d'un accord de prix négocié sur un trajet. Le payeur
+    // est toujours l'expéditeur, d'où le vouvoiement.
+    'bid-not-negotiated': ErrorPresentation(
+      title: 'Rien à payer ici',
+      message:
+          'Ce colis n\'est pas issu d\'une discussion de prix, il n\'y a pas de '
+          'paiement à lancer depuis cet écran.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.receipt_long_outlined,
+    ),
+    'bid-not-awaiting-payment': ErrorPresentation(
+      title: 'Accord non payable',
+      message:
+          'Cette discussion n\'attend pas de paiement par carte. Rouvrez-la '
+          'pour voir où elle en est.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.hourglass_empty_rounded,
+    ),
+    'payment-already-completed': ErrorPresentation(
+      title: 'Déjà payé',
+      message:
+          'Ce colis est déjà payé. Retrouvez-le dans vos envois pour suivre '
+          'la suite.',
+      severity: ErrorSeverity.info,
+      icon: Icons.check_circle_outline_rounded,
+    ),
+    'traveler-stripe-invalid': ErrorPresentation(
+      title: 'Voyageur non configuré',
+      message:
+          'Le voyageur n\'a pas terminé la configuration de ses paiements. '
+          'Le paiement par carte est impossible pour l\'instant, contactez-le '
+          'depuis la discussion.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.credit_card_off_outlined,
+    ),
     'payment-method/traveler-insufficient-funds-cash': ErrorPresentation(
       title: 'Solde insuffisant',
       message:
