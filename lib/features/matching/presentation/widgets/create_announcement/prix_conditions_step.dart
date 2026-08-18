@@ -14,6 +14,7 @@ import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:dony/features/matching/presentation/widgets/cash_commission_notice.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_create_announcement_constants.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/grid_preview_card.dart';
 import 'package:dony/features/matching/presentation/widgets/price_hint_widget.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:flutter/material.dart';
@@ -422,79 +423,9 @@ class PrixConditionsStep extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: DonySpacing.md),
-                  Container(
-                    padding: const EdgeInsets.all(DonySpacing.md),
-                    decoration: BoxDecoration(
-                      color: cs.surface,
-                      borderRadius: BorderRadius.circular(DonyRadius.md),
-                      border: Border.all(color: cs.outline),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Ma grille · ${formState.gridPreviewItems.length} article${formState.gridPreviewItems.length == 1 ? '' : 's'}',
-                              style: tt.labelSmall?.copyWith(
-                                color: cs.onSurfaceVariant,
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: () => context.push('/profile/price-grid'),
-                              child: Text(
-                                'Modifier →',
-                                style: tt.labelSmall?.copyWith(
-                                  color: cs.primary,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        if (formState.gridPreviewItems.isNotEmpty) ...[
-                          const SizedBox(height: DonySpacing.sm),
-                          ...formState.gridPreviewItems.map(
-                            (item) => Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 3),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      item.label,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: tt.bodySmall,
-                                    ),
-                                  ),
-                                  const SizedBox(width: DonySpacing.sm),
-                                  Text(
-                                    CurrencyFormatter.formatOrPlain(
-                                      item.unitPriceDisplay,
-                                      currency,
-                                    ),
-                                    style: tt.labelSmall?.copyWith(
-                                      color: cs.primary,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ] else ...[
-                          const SizedBox(height: DonySpacing.sm),
-                          Text(
-                            'Aucun article configuré',
-                            style: tt.bodySmall?.copyWith(
-                              color: cs.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
+                  GridPreviewCard(
+                    items: formState.gridPreviewItems,
+                    currency: currency,
                   ),
                   const SizedBox(height: DonySpacing.sm),
                   Container(

@@ -611,14 +611,17 @@ void main() {
       expect(find.byKey(const Key('kg-price-toggle')), findsNothing);
     });
 
-    testWidgets('mode MIXED sans items — affiche "Aucun article configuré"', (
+    testWidgets('mode MIXED sans items — invite à composer la grille', (
       tester,
     ) async {
       await _pump(tester);
       await tester.tap(find.text('Grille + kilo'));
       await tester.pump(const Duration(milliseconds: 200));
       await tester.pump();
-      expect(find.text('Aucun article configuré'), findsOneWidget);
+      expect(find.text('Votre grille est vide'), findsOneWidget);
+      // L'état vide ne se contente pas de constater : il ouvre l'écran où la
+      // grille se compose.
+      expect(find.byKey(const Key('grid-preview-create')), findsOneWidget);
     });
 
     testWidgets('mode MIXED avec items — affiche les labels et prix', (
