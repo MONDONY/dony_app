@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
@@ -653,8 +654,10 @@ abstract final class CounterProposalSheet {
     return DonyBottomSheet.show<void>(
       context,
       title: 'Contre-proposer',
+      // Jamais « en euros » : la devise est celle du trajet, figée à sa
+      // publication, et le champ la porte déjà dans son libellé.
       subtitle:
-          'Indiquez le montant total que vous proposez, en euros. Votre interlocuteur pourra l\'accepter ou répondre à son tour.',
+          'Indiquez le montant total que vous proposez. Votre interlocuteur pourra l\'accepter ou répondre à son tour.',
       stickyBottom: ValueListenableBuilder<VoidCallback?>(
         valueListenable: submitNotifier,
         builder: (_, submit, _) => DonyButton(
@@ -667,6 +670,7 @@ abstract final class CounterProposalSheet {
         bloc: bloc,
         bidId: bidId,
         initialAmount: negotiation.proposedGrossEur,
+        currencyCode: negotiation.currency,
         onSubmitReady: (fn) => WidgetsBinding.instance.addPostFrameCallback(
           (_) => submitNotifier.value = fn,
         ),
@@ -680,12 +684,14 @@ class _CounterProposalForm extends StatefulWidget {
     required this.bloc,
     required this.bidId,
     required this.initialAmount,
+    required this.currencyCode,
     required this.onSubmitReady,
   });
 
   final BidNegotiationBloc bloc;
   final String bidId;
   final double initialAmount;
+  final String currencyCode;
   final void Function(VoidCallback?) onSubmitReady;
 
   @override
@@ -750,7 +756,8 @@ class _CounterProposalFormState extends State<_CounterProposalForm> {
         DonyTextField(
           key: const Key('nego-counter-amount'),
           controller: _amountCtrl,
-          label: 'Montant proposé (€)',
+          label:
+              'Montant proposé (${SupportedCurrency.symbolOf(widget.currencyCode)})',
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           requiredLabel: true,
         ),

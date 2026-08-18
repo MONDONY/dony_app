@@ -2,9 +2,17 @@ import 'package:dony/features/matching/presentation/widgets/custom_items_section
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-Widget _wrap(ValueNotifier<List<BidCustomItemDraft>> notifier) => MaterialApp(
+Widget _wrap(
+  ValueNotifier<List<BidCustomItemDraft>> notifier, {
+  String currencyCode = 'EUR',
+}) => MaterialApp(
   home: Scaffold(
-    body: SingleChildScrollView(child: CustomItemsSection(notifier: notifier)),
+    body: SingleChildScrollView(
+      child: CustomItemsSection(
+        notifier: notifier,
+        currencyCode: currencyCode,
+      ),
+    ),
   ),
 );
 
@@ -119,7 +127,41 @@ void main() {
     final total = tester.widget<Text>(
       find.byKey(const Key('custom-items-total')),
     );
-    expect(total.data, contains('18,00'));
+    // `\s` et non une espace littérale : `intl` sépare montant et symbole par
+    // une espace insécable.
+    expect(total.data, matches(RegExp(r'^18\s€$')));
+  });
+
+  // Le trajet fige sa devise à la publication : un montant en franc CFA
+  // affiché « € » ment sur le prix, et c'est exactement la régression que la
+  // cohérence multidevise avait supprimée ailleurs dans l'app.
+  testWidgets('aucun symbole euro sur un trajet en devise etrangere', (
+    tester,
+  ) async {
+    final notifier = ValueNotifier<List<BidCustomItemDraft>>([
+      BidCustomItemDraft(label: 'Sac de riz', quantity: 2, amountEur: 6000),
+    ]);
+    addTearDown(notifier.dispose);
+
+    await tester.pumpWidget(_wrap(notifier, currencyCode: 'XOF'));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.textContaining('€', findRichText: true), findsNothing);
+    final total = tester.widget<Text>(
+      find.byKey(const Key('custom-items-total')),
+    );
+    expect(total.data, contains('F CFA'));
+    expect(find.textContaining('F CFA'), findsWidgets);
+
+    // Le champ de saisie du formulaire d'ajout porte la même devise : « Prix
+    // (€) » y ferait saisir un montant dans une unité qui n'est pas celle du
+    // trajet.
+    await _openForm(tester);
+    expect(find.textContaining('€', findRichText: true), findsNothing);
+    expect(
+      find.textContaining('Prix (F CFA)', findRichText: true),
+      findsOneWidget,
+    );
   });
 
   testWidgets('une ligne sans libelle n est pas ajoutable', (tester) async {

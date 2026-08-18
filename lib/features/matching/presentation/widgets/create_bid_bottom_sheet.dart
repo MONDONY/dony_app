@@ -1297,7 +1297,10 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
             ),
             if (widget.negotiation) ...[
               const SizedBox(height: DonySpacing.xxl),
-              CustomItemsSection(notifier: _customItemsNotifier),
+              CustomItemsSection(
+                notifier: _customItemsNotifier,
+                currencyCode: widget.announcement.currency,
+              ),
               const SizedBox(height: DonySpacing.xxl),
               _buildProposalSection(context),
             ],
@@ -1322,7 +1325,8 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         DonyTextField(
           key: const Key('negotiation-proposal-field'),
           controller: _proposalCtrl,
-          label: 'Prix proposé (€)',
+          label:
+              'Prix proposé (${SupportedCurrency.symbolOf(widget.announcement.currency)})',
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
         ),
         const SizedBox(height: DonySpacing.xs),

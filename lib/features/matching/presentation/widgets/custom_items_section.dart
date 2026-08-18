@@ -1,6 +1,6 @@
-import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:flutter/material.dart';
 
 /// Article hors grille en cours de saisie.
@@ -32,18 +32,24 @@ class BidCustomItemDraft {
 double customItemsTotalEur(List<BidCustomItemDraft> items) =>
     items.fold<double>(0, (sum, item) => sum + item.totalEur);
 
-String _formatEur(double amount) =>
-    CurrencyFormatter.format(amount, SupportedCurrency.eur);
-
 /// Section « Articles hors grille » du formulaire de proposition.
 ///
 /// Vit dans son propre fichier : `create_bid_bottom_sheet.dart` dépasse déjà
 /// les 2 200 lignes. Le [notifier] appartient à l'écran parent, qui le crée et
 /// le dispose, comme les autres notifiers du formulaire.
 class CustomItemsSection extends StatelessWidget {
-  const CustomItemsSection({super.key, required this.notifier});
+  const CustomItemsSection({
+    super.key,
+    required this.notifier,
+    required this.currencyCode,
+  });
 
   final ValueNotifier<List<BidCustomItemDraft>> notifier;
+
+  /// Devise du trajet négocié, figée à sa publication. Les montants saisis ici
+  /// s'ajoutent au prix du voyageur : les afficher en euro sur un trajet en
+  /// franc CFA annoncerait un prix que personne ne paiera.
+  final String currencyCode;
 
   void _add(BidCustomItemDraft draft) {
     notifier.value = [...notifier.value, draft];
@@ -97,6 +103,7 @@ class CustomItemsSection extends StatelessWidget {
                   key: Key('custom-item-row-$i'),
                   index: i,
                   item: items[i],
+                  currencyCode: currencyCode,
                   onRemove: () => _removeAt(i),
                 ),
               ),
@@ -110,7 +117,7 @@ class CustomItemsSection extends StatelessWidget {
                     style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                   ),
                   Text(
-                    _formatEur(customItemsTotalEur(items)),
+                    formatPriceIn(customItemsTotalEur(items), currencyCode),
                     key: const Key('custom-items-total'),
                     style: tt.titleSmall?.copyWith(
                       fontWeight: FontWeight.w700,
@@ -135,7 +142,10 @@ class CustomItemsSection extends StatelessWidget {
   }
 
   Future<void> _showAddSheet(BuildContext context) async {
-    final draft = await CustomItemFormSheet.show(context);
+    final draft = await CustomItemFormSheet.show(
+      context,
+      currencyCode: currencyCode,
+    );
     if (draft != null) _add(draft);
   }
 }
@@ -145,11 +155,13 @@ class _CustomItemRow extends StatelessWidget {
     super.key,
     required this.index,
     required this.item,
+    required this.currencyCode,
     required this.onRemove,
   });
 
   final int index;
   final BidCustomItemDraft item;
+  final String currencyCode;
   final VoidCallback onRemove;
 
   @override
@@ -182,14 +194,14 @@ class _CustomItemRow extends StatelessWidget {
                 ),
                 const SizedBox(height: DonySpacing.xxs),
                 Text(
-                  '${item.quantity} × ${_formatEur(item.amountEur)}',
+                  '${item.quantity} × ${formatPriceIn(item.amountEur, currencyCode)}',
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
               ],
             ),
           ),
           Text(
-            _formatEur(item.totalEur),
+            formatPriceIn(item.totalEur, currencyCode),
             style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
           ),
           IconButton(
@@ -216,7 +228,10 @@ class _CustomItemRow extends StatelessWidget {
 /// de fermeture, un dispose en `whenComplete` les leur retirerait trop tôt.
 /// Seul le `ValueNotifier` du bouton, jamais réabonné, se dispose là.
 abstract final class CustomItemFormSheet {
-  static Future<BidCustomItemDraft?> show(BuildContext context) {
+  static Future<BidCustomItemDraft?> show(
+    BuildContext context, {
+    required String currencyCode,
+  }) {
     final submitNotifier = ValueNotifier<VoidCallback?>(null);
 
     return DonyBottomSheet.show<BidCustomItemDraft>(
@@ -233,6 +248,7 @@ abstract final class CustomItemFormSheet {
         ),
       ),
       child: _CustomItemForm(
+        currencyCode: currencyCode,
         onSubmitReady: (fn) => WidgetsBinding.instance.addPostFrameCallback(
           (_) => submitNotifier.value = fn,
         ),
@@ -242,8 +258,12 @@ abstract final class CustomItemFormSheet {
 }
 
 class _CustomItemForm extends StatefulWidget {
-  const _CustomItemForm({required this.onSubmitReady});
+  const _CustomItemForm({
+    required this.currencyCode,
+    required this.onSubmitReady,
+  });
 
+  final String currencyCode;
   final void Function(VoidCallback?) onSubmitReady;
 
   @override
@@ -328,7 +348,8 @@ class _CustomItemFormState extends State<_CustomItemForm> {
               child: DonyTextField(
                 key: const Key('custom-item-amount'),
                 controller: _amountCtrl,
-                label: 'Prix (€)',
+                label:
+                    'Prix (${SupportedCurrency.symbolOf(widget.currencyCode)})',
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
