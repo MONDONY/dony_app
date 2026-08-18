@@ -8,6 +8,7 @@ import 'package:dony/features/content_categories/presentation/content_category_s
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
+import 'package:dony/features/package_request/data/package_request_limits.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/widgets/package_request_photo_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -33,7 +34,6 @@ class Step2Details extends StatefulWidget {
 class Step2DetailsState extends State<Step2Details> {
   final _formKey = GlobalKey<FormState>();
   final _weightCtrl = TextEditingController();
-  final _customCatCtrl = TextEditingController();
   final _descriptionCtrl = TextEditingController();
 
   /// Libellé catalogue de la catégorie « autre », affiché dans le combo et
@@ -53,11 +53,11 @@ class Step2DetailsState extends State<Step2Details> {
   /// Les messages rouges n'apparaissent qu'après une première interaction.
   bool _touched = false;
 
-  bool get _isWeightValid {
-    final raw = _weightCtrl.text.trim().replaceAll(',', '.');
-    final v = double.tryParse(raw);
-    return v != null && v > 0;
-  }
+  /// Mêmes bornes que le validateur du champ. Le gate se contentait de
+  /// `v > 0` : « Continuer » s'activait sur 0,2 kg puis refusait la saisie.
+  bool get _isWeightValid => PackageRequestLimits.isWeightValid(
+    double.tryParse(_weightCtrl.text.trim().replaceAll(',', '.')),
+  );
 
   bool get _isComplete => _isWeightValid && _allCategories.isNotEmpty;
 
@@ -84,7 +84,7 @@ class Step2DetailsState extends State<Step2Details> {
       ..clear()
       ..addAll(labels.where((l) => !catalogLabels.contains(l)));
     _catError = _allCategories.isEmpty
-        ? 'Choisis au moins une catégorie'
+        ? 'Choisissez au moins une catégorie'
         : null;
     _sync(markTouched: true);
     // « Autre » seul ne dit rien au voyageur : on propose tout de suite une
@@ -101,7 +101,7 @@ class Step2DetailsState extends State<Step2Details> {
     VoidCallback? submitFn;
     final result = await DonyBottomSheet.show<String>(
       context,
-      title: 'Précise le contenu (optionnel)',
+      title: 'Précisez le contenu (optionnel)',
       subtitle: 'Ça aide le voyageur à savoir ce qu\'il transporte.',
       child: _AutrePrecisionField(onSubmitReady: (fn) => submitFn = fn),
       stickyBottom: DonyButton(
@@ -118,11 +118,10 @@ class Step2DetailsState extends State<Step2Details> {
     _sync(markTouched: true);
   }
 
-  /// Nombre max de catégories sélectionnables. Le DTO backend
-  /// (`PackageRequestCreateRequest.contentCategory`) est `@Size(max=255)` et
-  /// la valeur envoyée est `categories.join(',')` : 11 libellés canoniques
-  /// joints avoisinent déjà ~250 caractères, donc on plafonne côté Flutter
-  /// plutôt que de risquer un 422 silencieux sur une sélection large.
+  /// Nombre max de catégories sélectionnables. Plafond de lisibilité, pas
+  /// de capacité : le DTO backend (`PackageRequestCreateRequest.contentCategory`)
+  /// accepte `@Size(max=500)`, largement de quoi tenir tout le catalogue joint
+  /// par `categories.join(',')`.
   static const _kMaxCategories = 5;
 
   /// Catégories prédéfinies (dont « Autre ») proposées dans le combo —
@@ -172,7 +171,6 @@ class Step2DetailsState extends State<Step2Details> {
   void dispose() {
     _weightCtrl.removeListener(_onWeightChanged);
     _weightCtrl.dispose();
-    _customCatCtrl.dispose();
     _descriptionCtrl.dispose();
     super.dispose();
   }
@@ -184,7 +182,7 @@ class Step2DetailsState extends State<Step2Details> {
     final formOk = _formKey.currentState!.validate();
     final cats = _allCategories;
     if (cats.isEmpty) {
-      _catError = 'Choisis au moins une catégorie';
+      _catError = 'Choisissez au moins une catégorie';
     }
     if (!formOk || cats.isEmpty) {
       _sync(markTouched: true);
@@ -229,7 +227,7 @@ class Step2DetailsState extends State<Step2Details> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Décris ton colis',
+              'Décrivez votre colis',
               style: tt.headlineMedium?.copyWith(
                 fontWeight: FontWeight.w800,
                 color: cs.onSurface,
@@ -238,7 +236,8 @@ class Step2DetailsState extends State<Step2Details> {
             ),
             const SizedBox(height: DonySpacing.xs),
             Text(
-              "Ces infos aident les voyageurs à savoir s'ils peuvent transporter ton envoi.",
+              'Ces infos aident les voyageurs à savoir s\'ils peuvent '
+              'transporter votre envoi.',
               style: tt.bodyMedium?.copyWith(
                 color: cs.onSurfaceVariant,
                 height: 1.4,
@@ -254,6 +253,13 @@ class Step2DetailsState extends State<Step2Details> {
             const _FieldLabel('Poids approximatif'),
             const SizedBox(height: DonySpacing.xs),
             _WeightInput(controller: _weightCtrl),
+            Padding(
+              padding: const EdgeInsets.only(top: DonySpacing.xs),
+              child: Text(
+                '${PackageRequestLimits.weightRangeLabel}.',
+                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+              ),
+            ),
             const SizedBox(height: DonySpacing.base),
 
             // ── Contenu ────────────────────────────────────────────────────
@@ -264,7 +270,7 @@ class Step2DetailsState extends State<Step2Details> {
             const _FieldLabel('Contenu'),
             const SizedBox(height: DonySpacing.xs),
             Text(
-              'Tape pour chercher, ou écris ta propre catégorie.',
+              'Tapez pour chercher, ou écrivez votre propre catégorie.',
               style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             ),
             const SizedBox(height: DonySpacing.sm),
@@ -345,6 +351,7 @@ class _DescriptionInput extends StatelessWidget {
     return TextFormField(
       key: const Key('description-input'),
       controller: controller,
+      scrollPadding: kDonyKeyboardScrollPadding,
       maxLines: 4,
       maxLength: 500,
       textCapitalization: TextCapitalization.sentences,
@@ -364,7 +371,7 @@ class _DescriptionInput extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(DonyRadius.md),
-          borderSide: const BorderSide(color: DonyColors.primary, width: 2),
+          borderSide: BorderSide(color: cs.primary, width: 2),
         ),
       ),
     );
@@ -401,6 +408,7 @@ class _WeightInput extends StatelessWidget {
       controller: controller,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d.,]'))],
+      scrollPadding: kDonyKeyboardScrollPadding,
       style: tt.headlineMedium?.copyWith(
         fontWeight: FontWeight.w800,
         fontSize: 26,
@@ -424,7 +432,7 @@ class _WeightInput extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(DonyRadius.md),
-          borderSide: const BorderSide(color: DonyColors.primary, width: 2),
+          borderSide: BorderSide(color: cs.primary, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(DonyRadius.md),
@@ -434,7 +442,9 @@ class _WeightInput extends StatelessWidget {
       validator: (v) {
         final d = double.tryParse(v?.replaceAll(',', '.') ?? '');
         if (d == null) return 'Valeur invalide';
-        if (d < 0.5 || d > 30) return 'Entre 0.5 et 30 kg';
+        if (!PackageRequestLimits.isWeightValid(d)) {
+          return PackageRequestLimits.weightRangeLabel;
+        }
         return null;
       },
     );

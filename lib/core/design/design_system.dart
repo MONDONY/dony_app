@@ -44,6 +44,7 @@ export 'package:dony/core/design/widgets/dony_logo.dart';
 export 'package:dony/core/design/widgets/dony_mascotte.dart';
 export 'package:dony/core/design/widgets/dony_page_scaffold.dart';
 export 'package:dony/core/design/widgets/dony_pressable.dart';
+export 'package:dony/core/design/widgets/dony_price_tag.dart';
 export 'package:dony/core/design/widgets/dony_radio_group.dart';
 export 'package:dony/core/design/widgets/dony_search_field.dart';
 // Structural

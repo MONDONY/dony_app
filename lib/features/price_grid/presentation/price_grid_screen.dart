@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_bloc.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_event.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_state.dart';
@@ -14,6 +15,8 @@ class PriceGridScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
     return BlocConsumer<PriceGridBloc, PriceGridState>(
       listener: (context, state) {
         if (state is PriceGridError) {
@@ -26,10 +29,14 @@ class PriceGridScreen extends StatelessWidget {
       },
       builder: (context, state) {
         return Scaffold(
+          // Fond kraft : la grille est une liasse d'étiquettes posée sur le
+          // comptoir, pas une page de réglages.
+          backgroundColor: cs.surfaceWarm,
           appBar: AppBar(
             leading: const DonyAppBarBackButton(),
             title: const Text('Ma grille de prix'),
             centerTitle: false,
+            backgroundColor: cs.surfaceWarm,
           ),
           body: _buildBody(context, state),
         );
@@ -39,7 +46,7 @@ class PriceGridScreen extends StatelessWidget {
 
   Widget _buildBody(BuildContext context, PriceGridState state) {
     if (state is PriceGridInitial) {
-      // Trigger load on first render — deferred to avoid setState during build
+      // Premier rendu : chargement différé pour ne pas émettre pendant le build
       WidgetsBinding.instance.addPostFrameCallback((_) {
         context.read<PriceGridBloc>().add(const PriceGridLoadRequested());
       });
@@ -113,94 +120,188 @@ class _ErrorView extends StatelessWidget {
 
 // ── Loaded view ─────────────────────────────────────────────────────────────
 
-class _LoadedView extends StatelessWidget {
+class _LoadedView extends StatefulWidget {
   const _LoadedView({required this.items});
 
   final List<PriceGridItemModel> items;
 
   @override
+  State<_LoadedView> createState() => _LoadedViewState();
+}
+
+class _LoadedViewState extends State<_LoadedView> {
+  /// Mode réorganisation : les poignées remplacent les menus d'options.
+  /// `ValueNotifier` et non `setState`, conformément aux règles du projet.
+  final _reordering = ValueNotifier<bool>(false);
+
+  @override
+  void dispose() {
+    _reordering.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final bottomPadding = MediaQuery.paddingOf(context).bottom + 100;
+    final items = widget.items;
 
-    return Column(
-      children: [
-        // Info banner
-        Container(
-          margin: const EdgeInsets.fromLTRB(
-            DonySpacing.lg,
-            DonySpacing.base,
-            DonySpacing.lg,
-            0,
-          ),
-          padding: const EdgeInsets.all(DonySpacing.md),
-          decoration: BoxDecoration(
-            color: cs.infoLight,
-            borderRadius: BorderRadius.circular(DonyRadius.md),
-            border: Border.all(color: cs.info.withValues(alpha: 0.25)),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              DonyIcon('info', size: 18, color: cs.info),
-              const SizedBox(width: DonySpacing.sm),
-              Expanded(
-                child: Text(
-                  'Yadony ajoute $donyCommissionPercentLabel % sur chaque prix. '
-                  'Vous recevez exactement le montant saisi.',
-                  style: tt.bodySmall?.copyWith(color: cs.info),
+    if (items.isEmpty) {
+      return _EmptyGrid(onAdd: () => _openAddSheet(context));
+    }
+
+    final bottomPadding = MediaQuery.paddingOf(context).bottom + 110;
+
+    return ValueListenableBuilder<bool>(
+      valueListenable: _reordering,
+      builder: (context, reordering, _) {
+        return Column(
+          children: [
+            // Tampon : la première chose que dit l'écran, c'est la portée du
+            // barème. Une grille, tous les trajets.
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                DonySpacing.lg,
+                DonySpacing.md,
+                DonySpacing.lg,
+                DonySpacing.sm,
+              ),
+              child: Row(
+                children: [
+                  // Flexible et non figé : à grande échelle de texte, le
+                  // tampon et le bouton se disputent la ligne.
+                  const Flexible(child: _ScopeStamp()),
+                  const SizedBox(width: DonySpacing.sm),
+                  TextButton(
+                    onPressed: () => _reordering.value = !reordering,
+                    child: Text(reordering ? 'Terminé' : 'Réordonner'),
+                  ),
+                ],
+              ),
+            ),
+
+            Expanded(
+              child: ReorderableListView.builder(
+                padding: EdgeInsets.fromLTRB(
+                  DonySpacing.lg,
+                  DonySpacing.xs,
+                  DonySpacing.lg,
+                  bottomPadding,
+                ),
+                itemCount: items.length,
+                // Poignées explicites, jamais l'appui long : un appui long sur
+                // une étiquette entrerait en conflit avec le tap d'édition.
+                buildDefaultDragHandles: false,
+                proxyDecorator: (child, index, animation) =>
+                    Material(type: MaterialType.transparency, child: child),
+                // `onReorderItem` et non `onReorder` : il livre un newIndex
+                // déjà corrigé du retrait de l'élément déplacé.
+                onReorderItem: (oldIndex, newIndex) =>
+                    _onReorder(context, oldIndex, newIndex),
+                itemBuilder: (context, index) => Padding(
+                  key: ValueKey(items[index].id),
+                  padding: const EdgeInsets.only(bottom: DonySpacing.sm + 2),
+                  child: _PriceGridItemTile(
+                    item: items[index],
+                    index: index,
+                    reordering: reordering,
+                  ),
                 ),
               ),
-            ],
-          ),
-        ),
+            ),
 
-        // List
-        Expanded(
-          child: items.isEmpty
-              ? _EmptyGrid(onAdd: () => _openAddSheet(context))
-              : ListView.separated(
-                  padding: EdgeInsets.fromLTRB(
-                    DonySpacing.lg,
-                    DonySpacing.base,
-                    DonySpacing.lg,
-                    bottomPadding,
+            // L'information de commission vit en pied de liste, là où on la
+            // consulte, plutôt qu'en bandeau qui mange le haut de l'écran.
+            Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: cs.surface,
+                border: Border(top: BorderSide(color: cs.outline)),
+              ),
+              padding: EdgeInsets.fromLTRB(
+                DonySpacing.lg,
+                DonySpacing.md,
+                DonySpacing.lg,
+                MediaQuery.paddingOf(context).bottom + DonySpacing.base,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Yadony ajoute $donyCommissionPercentLabel % au prix que '
+                    'vous saisissez. Vous encaissez exactement votre montant.',
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                    textAlign: TextAlign.center,
                   ),
-                  itemCount: items.length,
-                  separatorBuilder: (context, index) =>
-                      const SizedBox(height: DonySpacing.sm),
-                  itemBuilder: (context, index) =>
-                      _PriceGridItemTile(item: items[index]),
-                ),
-        ),
-
-        // Add button
-        if (items.isNotEmpty)
-          Container(
-            decoration: BoxDecoration(
-              color: cs.surface,
-              border: Border(top: BorderSide(color: cs.outline)),
+                  const SizedBox(height: DonySpacing.md),
+                  DonyButton(
+                    label: 'Nouvelle étiquette',
+                    iconAsset: 'plus',
+                    onPressed: () => _openAddSheet(context),
+                  ),
+                ],
+              ),
             ),
-            padding: EdgeInsets.fromLTRB(
-              DonySpacing.lg,
-              DonySpacing.md,
-              DonySpacing.lg,
-              MediaQuery.paddingOf(context).bottom + DonySpacing.base,
-            ),
-            child: DonyButton(
-              label: 'Ajouter un article',
-              iconAsset: 'plus',
-              onPressed: () => _openAddSheet(context),
-            ),
-          ),
-      ],
+          ],
+        );
+      },
     );
   }
 
-  Future<void> _openAddSheet(BuildContext context) async {
-    await PriceGridItemFormSheet.show(context);
-    // The BLoC is shared via wrapper, so the screen rebuilds automatically.
+  void _onReorder(BuildContext context, int oldIndex, int newIndex) {
+    if (newIndex == oldIndex) return;
+
+    final ordered = List<PriceGridItemModel>.from(widget.items);
+    final moved = ordered.removeAt(oldIndex);
+    ordered.insert(newIndex, moved);
+
+    context.read<PriceGridBloc>().add(
+      PriceGridItemsReorderRequested(ordered.map((e) => e.id).toList()),
+    );
+  }
+
+  void _openAddSheet(BuildContext context) {
+    PriceGridItemFormSheet.show(
+      context,
+      // Un article déjà tarifé ne se repropose pas : deux étiquettes de même
+      // nom rendraient la grille illisible pour l'expéditeur.
+      takenLabels: widget.items.map((e) => e.label).toList(),
+    );
+    // Le BLoC est partagé via `wrapper` : l'écran se reconstruit seul.
+  }
+}
+
+/// Tampon encré indiquant la portée du barème.
+class _ScopeStamp extends StatelessWidget {
+  const _ScopeStamp();
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return Transform.rotate(
+      angle: -0.028,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.sm + 2,
+          vertical: DonySpacing.xs + 1,
+        ),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(DonyRadius.xs + 1),
+          border: Border.all(color: cs.primary, width: 1.5),
+        ),
+        child: Text(
+          'Valable sur tous vos trajets',
+          style: tt.labelMedium?.copyWith(
+            color: cs.primary,
+            letterSpacing: 0.8,
+          ),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
+    );
   }
 }
 
@@ -229,24 +330,24 @@ class _EmptyGrid extends StatelessWidget {
                 color: cs.primaryContainer,
                 shape: BoxShape.circle,
               ),
-              child: DonyIcon('layout-grid', size: 32, color: cs.primary),
+              child: DonyIcon('tag', size: 32, color: cs.primary),
             ),
             const SizedBox(height: DonySpacing.base),
             Text(
-              'Grille vide',
+              'Aucune étiquette',
               style: tt.titleLarge,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: DonySpacing.xs),
             Text(
-              'Ajoutez vos articles pour que les expéditeurs '
-              'puissent choisir ce qu\'ils souhaitent envoyer.',
+              'Fixez le prix des articles que vous transportez. Le même '
+              'barème servira sur tous vos trajets.',
               style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: DonySpacing.xl),
             DonyButton(
-              label: 'Ajouter un article',
+              label: 'Nouvelle étiquette',
               iconAsset: 'plus',
               onPressed: onAdd,
             ),
@@ -259,131 +360,122 @@ class _EmptyGrid extends StatelessWidget {
 
 // ── Item tile ────────────────────────────────────────────────────────────────
 
-class _PriceGridItemTile extends StatelessWidget {
-  const _PriceGridItemTile({required this.item});
+/// Poignée de déplacement, visible en mode réorganisation.
+class _DragHandle extends StatelessWidget {
+  const _DragHandle({required this.index, required this.label});
 
-  final PriceGridItemModel item;
+  final int index;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return ReorderableDragStartListener(
+      index: index,
+      child: Semantics(
+        label: 'Déplacer $label',
+        button: true,
+        container: true,
+        excludeSemantics: true,
+        child: SizedBox(
+          width: kDonyMinTapTarget,
+          height: kDonyMinTapTarget,
+          child: Center(
+            child: DonyIcon(
+              'grip-vertical',
+              size: 20,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Menu d'options d'une étiquette, hors mode réorganisation.
+class _ItemMenu extends StatelessWidget {
+  const _ItemMenu({required this.onEdit, required this.onDelete});
+
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
 
-    return DonyCard(
-      onTap: () => _openEditSheet(context),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Position badge
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: cs.primaryContainer,
-              borderRadius: BorderRadius.circular(DonyRadius.sm),
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              '${item.position}',
-              style: tt.labelMedium?.copyWith(color: cs.primary),
-            ),
-          ),
-          const SizedBox(width: DonySpacing.md),
-
-          // Label + prices
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item.label,
-                  style: tt.titleMedium,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: DonySpacing.sm),
-                _priceLine(
-                  context,
-                  label: 'Tu reçois',
-                  value: formatPriceActive(item.unitPriceNet),
-                  valueColor: cs.success,
-                  valueWeight: FontWeight.w700,
-                ),
-                const SizedBox(height: DonySpacing.xxs),
-                _priceLine(
-                  context,
-                  label: 'Expéditeur paie',
-                  value: formatPriceActive(item.unitPriceDisplay),
-                  valueColor: cs.onSurfaceVariant,
-                  valueWeight: FontWeight.w600,
-                ),
-              ],
-            ),
-          ),
-
-          // Menu actions (⋮)
-          PopupMenuButton<String>(
-            icon: DonyIcon('ellipsis-vertical', color: cs.onSurfaceVariant),
-            tooltip: 'Options',
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(DonyRadius.md),
-            ),
-            onSelected: (value) {
-              if (value == 'edit') {
-                _openEditSheet(context);
-              } else if (value == 'delete') {
-                _confirmDelete(context);
-              }
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem<String>(
-                value: 'edit',
-                child: Row(
-                  children: [
-                    DonyIcon('square-pen', size: 20, color: cs.primary),
-                    const SizedBox(width: DonySpacing.md),
-                    const Text('Modifier'),
-                  ],
-                ),
-              ),
-              PopupMenuItem<String>(
-                value: 'delete',
-                child: Row(
-                  children: [
-                    DonyIcon('trash-2', size: 20, color: cs.error),
-                    const SizedBox(width: DonySpacing.md),
-                    Text('Supprimer', style: TextStyle(color: cs.error)),
-                  ],
-                ),
-              ),
+    return PopupMenuButton<String>(
+      icon: DonyIcon('ellipsis-vertical', color: cs.onSurfaceVariant),
+      tooltip: 'Options',
+      // Le rembourrage par défaut vole une vingtaine de points au libellé, qui
+      // se met à s'ellipser sur les écrans étroits. La cible tactile est
+      // préservée par les contraintes.
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(
+        minWidth: kDonyMinTapTarget,
+        minHeight: kDonyMinTapTarget,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(DonyRadius.md),
+      ),
+      onSelected: (value) => value == 'edit' ? onEdit() : onDelete(),
+      itemBuilder: (context) => [
+        PopupMenuItem<String>(
+          value: 'edit',
+          child: Row(
+            children: [
+              DonyIcon('square-pen', size: 20, color: cs.primary),
+              const SizedBox(width: DonySpacing.md),
+              const Text('Modifier'),
             ],
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _priceLine(
-    BuildContext context, {
-    required String label,
-    required String value,
-    required Color valueColor,
-    required FontWeight valueWeight,
-  }) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    return Row(
-      children: [
-        Text(label, style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
-        const Spacer(),
-        Text(
-          value,
-          style: tt.bodyMedium?.copyWith(
-            color: valueColor,
-            fontWeight: valueWeight,
+        ),
+        PopupMenuItem<String>(
+          value: 'delete',
+          child: Row(
+            children: [
+              DonyIcon('trash-2', size: 20, color: cs.error),
+              const SizedBox(width: DonySpacing.md),
+              Text('Supprimer', style: TextStyle(color: cs.error)),
+            ],
           ),
         ),
       ],
+    );
+  }
+}
+
+class _PriceGridItemTile extends StatelessWidget {
+  const _PriceGridItemTile({
+    required this.item,
+    required this.index,
+    required this.reordering,
+  });
+
+  final PriceGridItemModel item;
+  final int index;
+  final bool reordering;
+
+  @override
+  Widget build(BuildContext context) {
+    // Deux valeurs, cinq usages : le formatage passe par NumberFormat et n'a
+    // aucune raison d'être refait à chaque lecture.
+    final paid = formatPriceActive(item.unitPriceDisplay);
+    final net = formatPriceActive(item.unitPriceNet);
+
+    return DonyPriceTag(
+      label: item.label,
+      emoji: emojiForLabel(item.label),
+      price: paid,
+      caption: 'vous recevez $net',
+      onTap: reordering ? null : () => _openEditSheet(context),
+      semanticLabel:
+          '${item.label}, l\'expéditeur paie $paid, vous recevez $net',
+      trailing: reordering
+          ? _DragHandle(index: index, label: item.label)
+          : _ItemMenu(
+              onEdit: () => _openEditSheet(context),
+              onDelete: () => _confirmDelete(context),
+            ),
     );
   }
 
@@ -392,29 +484,15 @@ class _PriceGridItemTile extends StatelessWidget {
   }
 
   void _confirmDelete(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
-    showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Supprimer l\'article ?'),
-        content: Text(
-          'L\'article "${item.label}" sera supprimé définitivement.',
-          style: tt.bodyMedium,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Annuler'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            style: TextButton.styleFrom(foregroundColor: cs.error),
-            child: const Text('Supprimer'),
-          ),
-        ],
-      ),
+    DonyDialog.show(
+      context,
+      title: 'Supprimer l\'étiquette ?',
+      message:
+          'L\'article "${item.label}" sera retiré de votre grille, sur tous '
+          'vos trajets.',
+      confirmLabel: 'Supprimer',
+      variant: DonyDialogVariant.destructive,
+      iconAsset: 'trash-2',
     ).then((confirmed) {
       if (confirmed == true && context.mounted) {
         context.read<PriceGridBloc>().add(

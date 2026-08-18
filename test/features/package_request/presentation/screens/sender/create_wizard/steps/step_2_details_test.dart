@@ -103,7 +103,7 @@ void main() {
 
     testWidgets('rend titre + sous-titre + labels de section', (tester) async {
       await tester.pumpWidget(wrap(const Step2Details()));
-      expect(find.text('Décris ton colis'), findsOneWidget);
+      expect(find.text('Décrivez votre colis'), findsOneWidget);
       expect(
         find.textContaining('Ces infos aident les voyageurs'),
         findsOneWidget,
@@ -144,7 +144,7 @@ void main() {
       await tester.enterText(find.byType(TextFormField).first, '5');
       key.currentState!.submit();
       await tester.pump();
-      expect(find.text('Choisis au moins une catégorie'), findsOneWidget);
+      expect(find.text('Choisissez au moins une catégorie'), findsOneWidget);
     });
 
     testWidgets('validation poids échoue si vide', (tester) async {
@@ -161,7 +161,7 @@ void main() {
       await tester.enterText(find.byType(TextFormField).first, '35');
       key.currentState!.submit();
       await tester.pump();
-      expect(find.text('Entre 0.5 et 30 kg'), findsOneWidget);
+      expect(find.text('Entre 0,5 et 32 kg'), findsOneWidget);
     });
 
     testWidgets('rend le champ Description (optionnel)', (tester) async {
@@ -274,7 +274,7 @@ void main() {
         await tester.pumpAndSettle();
 
         // Le bottom sheet de précision s'ouvre automatiquement.
-        expect(find.text('Précise le contenu (optionnel)'), findsOneWidget);
+        expect(find.text('Précisez le contenu (optionnel)'), findsOneWidget);
         await tester.enterText(
           find.byKey(const Key('autre-detail-input')),
           'Instruments de musique',

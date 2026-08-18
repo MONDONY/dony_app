@@ -101,7 +101,6 @@ class PackageRequestFormBloc
         desiredDate: e.desiredDate,
         dateToleranceDays: e.dateToleranceDays,
         transportMode: e.transportMode,
-        pickupNeighborhood: e.pickupNeighborhood,
       ),
     );
   }
@@ -127,7 +126,7 @@ class PackageRequestFormBloc
       emit(
         state.copyWith(
           submissionStatus: FormSubmissionStatus.error,
-          errorMessage: 'Indique un budget pour continuer',
+          errorMessage: 'Indiquez un budget pour continuer',
           clearDraftLimitMessage: true,
         ),
       );
@@ -138,8 +137,6 @@ class PackageRequestFormBloc
       state.copyWith(
         submissionStatus: FormSubmissionStatus.submitting,
         targetPriceEur: totalBudgetEur,
-        pickupNeighborhood: e.pickupNeighborhood,
-        deliveryNeighborhood: e.deliveryNeighborhood,
         // Chaque nouvelle tentative repart d'un message de limite propre :
         // sinon un draftLimitMessage périmé d'une tentative précédente peut
         // survivre à côté d'un nouvel errorMessage générique posé par le
@@ -186,10 +183,9 @@ class PackageRequestFormBloc
           totalBudgetEur: totalBudgetEur,
           description: state.description,
           photoKeys: e.photoKeys,
-          // Lu depuis l'etat, pas depuis l'event : le lieu de remise est saisi
-          // a l'etape 1, or FormStep3Submitted ne le porte jamais. Le chemin
-          // creation lisait l'event et perdait donc la valeur, contrairement
-          // au chemin edition juste au-dessus.
+          // Le lieu de remise n'est plus saisi à la publication ; il ne
+          // subsiste que sur les demandes déjà créées, et l'édition doit le
+          // conserver au lieu de l'écraser.
           pickupNeighborhood: _blankToNull(state.pickupNeighborhood),
           deliveryNeighborhood: _blankToNull(state.deliveryNeighborhood),
           saveAsDraft: e.saveAsDraft,
@@ -245,18 +241,25 @@ class PackageRequestFormBloc
     }
   }
 
+  /// Peut-on encore décocher un mode de paiement ? La règle est lue ici et par
+  /// l'écran, qui a besoin de la même réponse pour expliquer son refus.
+  static bool canDeselectPaymentMethod(Set<PaymentMethod> selected) =>
+      selected.length > 1;
+
   void _onPaymentMethodToggled(
     PackageRequestPaymentMethodToggled e,
     Emitter<PackageRequestFormState> emit,
   ) {
     final next = {...state.acceptedPaymentMethods};
     if (next.contains(e.method)) {
+      // Décocher le dernier mode retenu était absorbé en silence : la case se
+      // rendait décochée puis re-cochée, et le tap passait pour une panne. On
+      // refuse explicitement, l'écran peut alors dire pourquoi.
+      if (!canDeselectPaymentMethod(next)) return;
       next.remove(e.method);
     } else {
       next.add(e.method);
     }
-    // Guarantee at least one payment method is always selected.
-    if (next.isEmpty) next.add(PaymentMethod.stripe);
     emit(state.copyWith(acceptedPaymentMethods: next));
   }
 }

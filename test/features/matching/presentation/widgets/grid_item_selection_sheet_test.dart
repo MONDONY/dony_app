@@ -221,7 +221,9 @@ void main() {
       expect(find.text('Paris → Abidjan'), findsOneWidget);
     });
 
-    testWidgets('affiche le compteur total après sélection', (tester) async {
+    testWidgets('affiche le compteur et le total après sélection', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _wrap(
           Builder(
@@ -245,7 +247,65 @@ void main() {
       await tester.pump();
       await tester.tap(find.byKey(const Key('grid-item-add-item-2')));
       await tester.pump();
-      expect(find.text('2 articles sélectionnés'), findsOneWidget);
+      expect(find.text('2 articles'), findsOneWidget);
+      // Confirmer une sélection sans jamais voir son montant n'a pas de sens :
+      // 11,20 + 22,40 = 33,60.
+      expect(find.byKey(const Key('grid-sheet-total')), findsOneWidget);
+      expect(find.textContaining('33,60'), findsOneWidget);
+    });
+
+    testWidgets('le total suit les quantités', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          Builder(
+            builder: (context) {
+              return ElevatedButton(
+                onPressed: () => GridItemSelectionSheet.show(
+                  context,
+                  items: _items,
+                  initialQuantities: {},
+                  corridor: 'Paris → Dakar',
+                ),
+                child: const Text('Ouvrir'),
+              );
+            },
+          ),
+        ),
+      );
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      // Deux téléphones à 11,20 font 22,40.
+      await tester.tap(find.byKey(const Key('grid-item-add-item-1')));
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('grid-item-add-item-1')));
+      await tester.pump();
+
+      expect(find.textContaining('22,40'), findsWidgets);
+    });
+
+    testWidgets('aucun total tant que rien n\'est sélectionné', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          Builder(
+            builder: (context) {
+              return ElevatedButton(
+                onPressed: () => GridItemSelectionSheet.show(
+                  context,
+                  items: _items,
+                  initialQuantities: {},
+                  corridor: 'Paris → Dakar',
+                ),
+                child: const Text('Ouvrir'),
+              );
+            },
+          ),
+        ),
+      );
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('grid-sheet-total')), findsNothing);
     });
   });
 }

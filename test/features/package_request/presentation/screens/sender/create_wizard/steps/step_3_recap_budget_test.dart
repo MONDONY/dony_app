@@ -112,13 +112,26 @@ void main() {
       expect(find.text('Entre 0 et 500€'), findsNothing);
     });
 
-    testWidgets('validation budget — refuse > 500', (tester) async {
+    // Plafond aligné sur le backend (@DecimalMax("560.0")), qui acceptait
+    // 60 € de plus que ce que le formulaire laissait saisir.
+    testWidgets('validation budget — refuse au-delà de 560', (tester) async {
       final key = GlobalKey<Step3RecapBudgetState>();
       await tester.pumpWidget(wrap(Step3RecapBudget(key: key)));
       await tester.enterText(find.byType(TextFormField).first, '600');
       key.currentState!.submit();
       await tester.pump();
-      expect(find.text('Entre 0 et 500'), findsOneWidget);
+      expect(find.textContaining('560'), findsWidgets);
+    });
+
+    testWidgets('validation budget — accepte 560', (tester) async {
+      final canContinue = ValueNotifier<bool>(false);
+      addTearDown(canContinue.dispose);
+      await tester.pumpWidget(
+        wrap(Step3RecapBudget(canContinueNotifier: canContinue)),
+      );
+      await tester.enterText(find.byType(TextFormField).first, '560');
+      await tester.pump();
+      expect(canContinue.value, isTrue);
     });
 
     testWidgets('affiche le suffixe et le détail du budget en CAD', (
@@ -162,15 +175,24 @@ void main() {
         final canContinue = ValueNotifier<bool>(true);
         addTearDown(canContinue.dispose);
 
+        final key = GlobalKey<Step3RecapBudgetState>();
         await tester.pumpWidget(
-          wrap(Step3RecapBudget(canContinueNotifier: canContinue)),
+          wrap(Step3RecapBudget(key: key, canContinueNotifier: canContinue)),
         );
         await tester.pump();
 
         expect(canContinue.value, isFalse);
         expect(find.text('Budget indicatif'), findsOneWidget);
         expect(find.text('Budget indicatif (optionnel)'), findsNothing);
-        expect(find.byKey(const Key('budget-error')), findsOneWidget);
+        // Le message ne s'affiche plus à l'ouverture — un formulaire vierge
+        // n'accueille pas par un reproche —, mais dès que la publication est
+        // tentée. Sans lui, le tap sur « Publier » ne produisait rien. Il est
+        // porté par le validateur du champ, seul afficheur de cette erreur.
+        expect(find.text('Indiquez un budget'), findsNothing);
+
+        key.currentState!.submit();
+        await tester.pump();
+        expect(find.text('Indiquez un budget'), findsOneWidget);
       },
     );
 
@@ -218,7 +240,9 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(canContinue.value, isFalse);
-        expect(find.byKey(const Key('budget-error')), findsOneWidget);
+        // Champ vidé après saisie : l'autovalidation à l'interaction rend le
+        // message sans qu'il faille tenter la publication.
+        expect(find.text('Indiquez un budget'), findsOneWidget);
       },
     );
 

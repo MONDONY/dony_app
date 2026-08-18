@@ -64,7 +64,7 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(wrap(const Step1TrajetColis()));
-      expect(find.text('TRAJET & COLIS'), findsOneWidget);
+      expect(find.text('TRAJET'), findsOneWidget);
       expect(find.text("D'où vers où ?"), findsOneWidget);
       // Avion verrouillé remplace les 6 OptionButton
       expect(
@@ -127,7 +127,9 @@ void main() {
       );
     });
 
-    testWidgets('le lieu de remise est proposé, et optionnel', (tester) async {
+    // Le lieu de remise n'est plus demandé à la publication : il se convient
+    // entre les deux parties une fois la négociation engagée.
+    testWidgets('le lieu de remise n\'est plus demandé', (tester) async {
       final key = GlobalKey<Step1TrajetColisState>();
       final canContinue = ValueNotifier<bool>(false);
       addTearDown(canContinue.dispose);
@@ -137,12 +139,34 @@ void main() {
       );
       await tester.pump();
 
+      expect(find.byKey(const Key('pickup-neighborhood-field')), findsNothing);
+      expect(find.textContaining('Où remettez-vous'), findsNothing);
+    });
+
+    testWidgets('l\'en-tête fourni défile avec le contenu', (tester) async {
+      final canContinue = ValueNotifier<bool>(false);
+      addTearDown(canContinue.dispose);
+
+      await tester.pumpWidget(
+        wrap(
+          Step1TrajetColis(
+            canContinueNotifier: canContinue,
+            header: const Text('en-tête devise'),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      // Posé sous le SingleChildScrollView de l'étape, pas au-dessus : la
+      // bannière de devise restait sinon figée pendant toute la saisie.
+      expect(find.text('en-tête devise'), findsOneWidget);
       expect(
-        find.byKey(const Key('pickup-neighborhood-field')),
+        find.ancestor(
+          of: find.text('en-tête devise'),
+          matching: find.byType(SingleChildScrollView),
+        ),
         findsOneWidget,
       );
-      // Laissé vide, il ne bloque pas : seuls villes et date comptent.
-      expect(find.text('Où remets-tu le colis ? (optionnel)'), findsOneWidget);
     });
 
     testWidgets(
@@ -218,7 +242,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.text('🔥 Date proche — cette demande sera signalée urgente'),
+        find.text('🔥 Date proche, cette demande sera signalée urgente'),
         findsOneWidget,
       );
     });
@@ -254,7 +278,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.text('🔥 Date proche — cette demande sera signalée urgente'),
+        find.text('🔥 Date proche, cette demande sera signalée urgente'),
         findsNothing,
       );
     });
@@ -266,7 +290,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.text('🔥 Date proche — cette demande sera signalée urgente'),
+        find.text('🔥 Date proche, cette demande sera signalée urgente'),
         findsNothing,
       );
     });
