@@ -152,93 +152,67 @@ class _BidNegotiationThreadScreenState
     );
   }
 
+  /// Fil connu de l'état courant, quel qu'il soit : une erreur ou un checkout
+  /// en portent un, et c'est lui qui décide de tout le rendu (corps ET barre
+  /// d'actions). Le lire une fois évite de réénumérer les états deux fois.
+  static BidNegotiation? _threadOf(BidNegotiationState state) => switch (state) {
+    BidNegotiationLoaded(:final negotiation) => negotiation,
+    // Le checkout est parti : le fil reste affiché sous la feuille de paiement
+    // qui s'ouvre par-dessus.
+    BidNegotiationCheckoutReady(:final negotiation) => negotiation,
+    BidNegotiationError(:final negotiation) => negotiation,
+    BidNegotiationInitial() || BidNegotiationLoading() => null,
+  };
+
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
     return MultiBlocProvider(
       providers: [
         BlocProvider<PaymentBloc>.value(value: _paymentBloc),
         BlocProvider<BidBloc>.value(value: _bidBloc),
       ],
-      child: Scaffold(
-        backgroundColor: cs.surface,
-        appBar: DonyAppBar(
-          title: 'Discussion de prix',
-          onBack: () => context.pop(),
-        ),
-        body: BlocListener<PaymentBloc, PaymentState>(
-          listener: (ctx, state) => unawaited(_onPaymentState(ctx, state)),
-          child: BlocConsumer<BidNegotiationBloc, BidNegotiationState>(
-            listener: _onState,
-            builder: (context, state) => switch (state) {
-              BidNegotiationInitial() ||
-              BidNegotiationLoading() => const Center(
-                key: Key('nego-loading'),
-                child: CircularProgressIndicator(),
-              ),
-              BidNegotiationError(:final negotiation)
-                  when negotiation != null =>
-                _ThreadBody(negotiation: negotiation, bidId: widget.bidId),
-              BidNegotiationError(:final error) => _ErrorView(
-                message: ErrorPresenter.resolve(error).message,
-                onRetry: () => context.read<BidNegotiationBloc>().add(
-                  BidNegotiationFetchRequested(widget.bidId),
-                ),
-              ),
-              // Le checkout est parti : le fil reste affiché sous la feuille de
-              // paiement qui s'ouvre par-dessus.
-              BidNegotiationCheckoutReady(:final negotiation)
-                  when negotiation != null =>
-                _ThreadBody(negotiation: negotiation, bidId: widget.bidId),
-              BidNegotiationCheckoutReady() => const Center(
-                key: Key('nego-loading'),
-                child: CircularProgressIndicator(),
-              ),
-              BidNegotiationLoaded(:final negotiation) => _ThreadBody(
-                negotiation: negotiation,
-                bidId: widget.bidId,
-              ),
-            },
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ErrorView extends StatelessWidget {
-  const _ErrorView({required this.message, required this.onRetry});
-
-  final String message;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
-    return Center(
-      key: const Key('nego-error'),
-      child: Padding(
-        padding: const EdgeInsets.all(DonySpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.cloud_off_rounded, size: 40, color: cs.onSurfaceVariant),
-            const SizedBox(height: DonySpacing.base),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-            ),
-            const SizedBox(height: DonySpacing.xl),
-            DonyButton(
-              label: 'Réessayer',
-              fullWidth: false,
-              onPressed: onRetry,
-            ),
-          ],
+      child: BlocListener<PaymentBloc, PaymentState>(
+        listener: (ctx, state) => unawaited(_onPaymentState(ctx, state)),
+        // Le `BlocConsumer` est AU-DESSUS du scaffold : la barre d'actions
+        // change avec l'état du fil, et `stickyBottom` doit pouvoir en changer
+        // avec lui.
+        child: BlocConsumer<BidNegotiationBloc, BidNegotiationState>(
+          listener: _onState,
+          builder: (context, state) {
+            final negotiation = _threadOf(state);
+            return DonyPageScaffold(
+              title: 'Discussion de prix',
+              onBack: () => context.pop(),
+              // Le fil défile et garde l'inset clavier ; un chargement ou une
+              // erreur, eux, doivent occuper toute la hauteur pour rester
+              // centrés.
+              scrollable: negotiation != null,
+              stickyBottom: negotiation == null
+                  ? null
+                  : _ThreadActions(
+                      negotiation: negotiation,
+                      bidId: widget.bidId,
+                    ),
+              body: negotiation != null
+                  ? _ThreadBody(negotiation: negotiation)
+                  : switch (state) {
+                      BidNegotiationError(:final error) => DonyEmptyState(
+                        key: const Key('nego-error'),
+                        title: 'Discussion indisponible',
+                        description: ErrorPresenter.resolve(error).message,
+                        type: DonyEmptyStateType.error,
+                        actionLabel: 'Réessayer',
+                        onAction: () => context.read<BidNegotiationBloc>().add(
+                          BidNegotiationFetchRequested(widget.bidId),
+                        ),
+                      ),
+                      _ => const Center(
+                        key: Key('nego-loading'),
+                        child: CircularProgressIndicator(),
+                      ),
+                    },
+            );
+          },
         ),
       ),
     );
@@ -246,36 +220,20 @@ class _ErrorView extends StatelessWidget {
 }
 
 class _ThreadBody extends StatelessWidget {
-  const _ThreadBody({required this.negotiation, required this.bidId});
+  const _ThreadBody({required this.negotiation});
 
   final BidNegotiation negotiation;
-  final String bidId;
 
   @override
   Widget build(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(
-              DonySpacing.lg,
-              DonySpacing.xl,
-              DonySpacing.lg,
-              DonySpacing.xxl,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _AmountHeader(negotiation: negotiation),
-                const SizedBox(height: DonySpacing.xl),
-                _ParcelSummary(negotiation: negotiation),
-                const SizedBox(height: DonySpacing.xl),
-                _MessagesTimeline(negotiation: negotiation),
-              ],
-            ),
-          ),
-        ),
-        _ThreadActions(negotiation: negotiation, bidId: bidId),
+        _AmountHeader(negotiation: negotiation),
+        const SizedBox(height: DonySpacing.xl),
+        _ParcelSummary(negotiation: negotiation),
+        const SizedBox(height: DonySpacing.xl),
+        _MessagesTimeline(negotiation: negotiation),
       ],
     );
   }
@@ -505,22 +463,6 @@ class _ThreadActions extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final bottomInset = MediaQuery.of(context).viewPadding.bottom;
-
-    Widget shell(Widget child) => Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: cs.surface,
-        border: Border(top: BorderSide(color: cs.outlineVariant)),
-      ),
-      padding: EdgeInsets.fromLTRB(
-        DonySpacing.lg,
-        DonySpacing.md,
-        DonySpacing.lg,
-        bottomInset + DonySpacing.md,
-      ),
-      child: child,
-    );
 
     Widget hint(String message, String key) => Text(
       message,
@@ -536,97 +478,86 @@ class _ThreadActions extends StatelessWidget {
     if (negotiation.isAwaitingCardPayment) {
       if (negotiation.needsMyPayment) {
         final bloc = context.read<BidNegotiationBloc>();
-        return shell(
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              hint(
-                'Prix accepté. Réglez maintenant pour réserver votre place, '
-                    'le montant reste bloqué jusqu\'à la livraison.',
-                'nego-pay-hint',
-              ),
-              const SizedBox(height: DonySpacing.sm),
-              DonyButton(
-                key: const Key('nego-pay-btn'),
-                label: 'Payer',
-                onPressed: () =>
-                    bloc.add(BidNegotiationCheckoutRequested(bidId)),
-              ),
-            ],
-          ),
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            hint(
+              'Prix accepté. Réglez maintenant pour réserver votre place, '
+                  'le montant reste bloqué jusqu\'à la livraison.',
+              'nego-pay-hint',
+            ),
+            const SizedBox(height: DonySpacing.sm),
+            DonyButton(
+              key: const Key('nego-pay-btn'),
+              label: 'Payer',
+              onPressed: () => bloc.add(BidNegotiationCheckoutRequested(bidId)),
+            ),
+          ],
         );
       }
-      return shell(
-        hint(
-          'Prix accepté. En attente du paiement de l\'expéditeur.',
-          'nego-awaiting-payment-hint',
-        ),
+      return hint(
+        'Prix accepté. En attente du paiement de l\'expéditeur.',
+        'nego-awaiting-payment-hint',
       );
     }
 
     if (negotiation.isAwaitingCashSettlement) {
-      return shell(
-        hint(
-          negotiation.isTravelerView
-              ? 'Prix accepté. Paiement en espèces, il vous reste à régler la '
-                    'commission Yadony.'
-              : 'Prix accepté. Paiement en espèces, en attente du voyageur, '
-                    'vous n\'avez rien à régler ici.',
-          'nego-awaiting-traveler-hint',
-        ),
+      return hint(
+        negotiation.isTravelerView
+            ? 'Prix accepté. Paiement en espèces, il vous reste à régler la '
+                  'commission Yadony.'
+            : 'Prix accepté. Paiement en espèces, en attente du voyageur, '
+                  'vous n\'avez rien à régler ici.',
+        'nego-awaiting-traveler-hint',
       );
     }
 
     if (negotiation.isClosed) {
-      return shell(hint(_closedLabel(negotiation.status), 'nego-closed-hint'));
+      return hint(_closedLabel(negotiation.status), 'nego-closed-hint');
     }
 
-    if (!negotiation.isMyTurn) {
-      return shell(
-        hint(
-          'En attente de la réponse de ${negotiation.counterpartyName ?? 'votre interlocuteur'}.',
-          'nego-waiting-hint',
-        ),
+    if (!negotiation.myTurn) {
+      return hint(
+        'En attente de la réponse de ${negotiation.counterpartyName ?? 'votre interlocuteur'}.',
+        'nego-waiting-hint',
       );
     }
 
     final bloc = context.read<BidNegotiationBloc>();
-    return shell(
-      Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          DonyButton(
-            key: const Key('nego-accept-btn'),
-            label: 'Accepter',
-            onPressed: () => bloc.add(BidNegotiationAcceptRequested(bidId)),
-          ),
-          const SizedBox(height: DonySpacing.sm),
-          DonyButton(
-            key: const Key('nego-counter-btn'),
-            label: 'Contre-proposer',
-            variant: DonyButtonVariant.secondary,
-            // Au plafond de tours, seules l'acceptation et le refus restent
-            // ouverts : le serveur refuserait toute nouvelle contre-offre.
-            onPressed: negotiation.canCounter
-                ? () => unawaited(
-                    CounterProposalSheet.show(
-                      context,
-                      bloc: bloc,
-                      bidId: bidId,
-                      negotiation: negotiation,
-                    ),
-                  )
-                : null,
-          ),
-          const SizedBox(height: DonySpacing.sm),
-          DonyButton(
-            key: const Key('nego-reject-btn'),
-            label: 'Refuser',
-            variant: DonyButtonVariant.ghost,
-            onPressed: () => bloc.add(BidNegotiationRejectRequested(bidId)),
-          ),
-        ],
-      ),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        DonyButton(
+          key: const Key('nego-accept-btn'),
+          label: 'Accepter',
+          onPressed: () => bloc.add(BidNegotiationAcceptRequested(bidId)),
+        ),
+        const SizedBox(height: DonySpacing.sm),
+        DonyButton(
+          key: const Key('nego-counter-btn'),
+          label: 'Contre-proposer',
+          variant: DonyButtonVariant.secondary,
+          // Au plafond de tours, seules l'acceptation et le refus restent
+          // ouverts : le serveur refuserait toute nouvelle contre-offre.
+          onPressed: negotiation.canCounter
+              ? () => unawaited(
+                  CounterProposalSheet.show(
+                    context,
+                    bloc: bloc,
+                    bidId: bidId,
+                    negotiation: negotiation,
+                  ),
+                )
+              : null,
+        ),
+        const SizedBox(height: DonySpacing.sm),
+        DonyButton(
+          key: const Key('nego-reject-btn'),
+          label: 'Refuser',
+          variant: DonyButtonVariant.ghost,
+          onPressed: () => bloc.add(BidNegotiationRejectRequested(bidId)),
+        ),
+      ],
     );
   }
 

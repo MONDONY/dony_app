@@ -284,10 +284,23 @@ void main() {
     expect(find.byKey(const Key('nego-loading')), findsOneWidget);
   });
 
+  // Le chassis du design system porte l ombre de la barre collante, le padding
+  // responsive, la largeur max sur tablette et l inset clavier. Les remonter a
+  // la main, comme le faisait cet ecran, revenait a les perdre un par un.
+  testWidgets('l ecran s appuie sur le chassis DonyPageScaffold', (
+    tester,
+  ) async {
+    await pumpScreen(tester, BidNegotiationLoaded(_thread(netEur: 37)));
+
+    expect(find.byType(DonyPageScaffold), findsOneWidget);
+  });
+
   testWidgets('l etat d erreur propose de reessayer', (tester) async {
     await pumpScreen(tester, const BidNegotiationError(OfflineException()));
 
     expect(find.byKey(const Key('nego-error')), findsOneWidget);
+    // L etat d erreur est celui du design system, pas une reimplementation.
+    expect(find.byType(DonyEmptyState), findsOneWidget);
     expect(find.text('Réessayer'), findsOneWidget);
 
     await tester.tap(find.text('Réessayer'));
