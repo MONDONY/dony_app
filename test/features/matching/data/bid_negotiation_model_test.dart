@@ -9,6 +9,9 @@ Map<String, dynamic> _threadJson({
   'bidId': 'bid-1',
   'announcementId': 'ann-1',
   'status': status,
+  // Le serveur envoie les deux ensemble : un net n'est renseigné que pour le
+  // voyageur. La fixture reflète ce couplage, le modèle ne le suppose plus.
+  'role': withNet ? 'TRAVELER' : 'SENDER',
   'round': 2,
   'maxRounds': 6,
   'myTurn': myTurn,
@@ -114,6 +117,33 @@ void main() {
       expect(thread.netEur, isNull);
       expect(thread.commissionEur, isNull);
       expect(thread.proposedGrossEur, 48.5);
+    });
+
+    test('le role vient du serveur, pas de la presence du net', () {
+      // L'ancienne deduction lisait `netEur != null`, ce qui confondait deux
+      // causes : le net est tu a l'expediteur, mais AUSSI tant qu'aucun brut
+      // n'a ete propose. Un voyageur sans montant basculait en vue expediteur.
+      final travelerWithoutAmount = BidNegotiation.fromJson({
+        'bidId': 'bid-3',
+        'announcementId': 'ann-3',
+        'status': 'NEGOTIATING',
+        'role': 'TRAVELER',
+      });
+
+      expect(travelerWithoutAmount.netEur, isNull);
+      expect(travelerWithoutAmount.isTravelerView, isTrue);
+      expect(travelerWithoutAmount.viewerRole, 'traveler');
+    });
+
+    test('un serveur sans champ role est lu comme expediteur', () {
+      final thread = BidNegotiation.fromJson({
+        'bidId': 'bid-4',
+        'announcementId': 'ann-4',
+        'status': 'NEGOTIATING',
+      });
+
+      expect(thread.role, 'SENDER');
+      expect(thread.isTravelerView, isFalse);
     });
 
     test('myTurn et isClosed derivent du statut et du tour', () {

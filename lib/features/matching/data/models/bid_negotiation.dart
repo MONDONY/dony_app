@@ -120,6 +120,10 @@ class BidNegotiation {
   final String bidId;
   final String announcementId;
   final String status;
+
+  /// `TRAVELER` ou `SENDER`, décidé par le serveur. Mêmes valeurs que le
+  /// `role` de [BidNegotiationSummary], pour ne pas avoir deux conventions.
+  final String role;
   final int round;
   final int maxRounds;
   final bool myTurn;
@@ -148,6 +152,7 @@ class BidNegotiation {
     required this.bidId,
     required this.announcementId,
     required this.status,
+    this.role = 'SENDER',
     this.round = 0,
     this.maxRounds = 0,
     this.myTurn = false,
@@ -175,6 +180,7 @@ class BidNegotiation {
     bidId: json['bidId'] as String,
     announcementId: json['announcementId'] as String,
     status: json['status'] as String,
+    role: json['role'] as String? ?? 'SENDER',
     round: (json['round'] as num?)?.toInt() ?? 0,
     maxRounds: (json['maxRounds'] as num?)?.toInt() ?? 0,
     myTurn: json['myTurn'] as bool? ?? false,
@@ -209,10 +215,13 @@ class BidNegotiation {
   /// Le fil ne se négocie plus (accepté, refusé, annulé, expiré).
   bool get isClosed => status != 'NEGOTIATING';
 
-  /// Le backend ne renseigne [netEur] que pour le voyageur : c'est donc lui,
-  /// et lui seul, le discriminant de rôle côté client. L'expéditeur ne doit
-  /// jamais voir le net, il raisonne en total.
-  bool get isTravelerView => netEur != null;
+  /// Le serveur dit le rôle, le client ne le devine plus.
+  ///
+  /// L'ancien discriminant, `netEur != null`, confondait deux causes : le net
+  /// est tu à l'expéditeur, mais AUSSI tant qu'aucun brut n'a été proposé. Un
+  /// voyageur ouvrant un fil sans montant se voyait donc servir la vue d'en
+  /// face. Le repli sur `sender` ne vaut que pour un serveur plus ancien.
+  bool get isTravelerView => role == 'TRAVELER';
 
   /// Rôle du point de vue courant, pour les properties analytics.
   String get viewerRole => isTravelerView ? 'traveler' : 'sender';

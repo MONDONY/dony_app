@@ -26,6 +26,9 @@ BidNegotiation _thread({
   bidId: bidId,
   announcementId: 'ann1',
   status: status,
+  // Le serveur dit le rôle ; on le fait suivre le net pour garder leur sens
+  // aux appels qui passent `netEur` afin de simuler la vue voyageur.
+  role: netEur != null ? 'TRAVELER' : 'SENDER',
   round: round,
   maxRounds: 6,
   canCounter: canCounter,

@@ -62,6 +62,12 @@ BidNegotiation _thread({
   bool myTurn = true,
   bool canCounter = true,
   double? netEur,
+  // Par défaut, le rôle suit la présence du net : c'est ce que le serveur
+  // produit sur un fil qui porte un montant, et ça garde leur sens aux appels
+  // qui passent `netEur` pour dire « vue voyageur ». À forcer explicitement
+  // pour tester un voyageur SANS montant proposé, le cas que la déduction
+  // `netEur != null` traitait à tort comme un expéditeur.
+  String? role,
   String status = 'NEGOTIATING',
   int round = 1,
   List<BidNegotiationMessage> messages = const [
@@ -77,6 +83,7 @@ BidNegotiation _thread({
   bidId: 'bid1',
   announcementId: 'ann1',
   status: status,
+  role: role ?? (netEur != null ? 'TRAVELER' : 'SENDER'),
   round: round,
   maxRounds: 6,
   myTurn: myTurn,
