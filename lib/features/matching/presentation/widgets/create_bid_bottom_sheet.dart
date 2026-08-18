@@ -492,12 +492,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _proposalCtrl.text = next;
   }
 
-  double? _readProposal() {
-    final raw = _proposalCtrl.text.trim().replaceAll(',', '.');
-    final value = double.tryParse(raw);
-    if (value == null || value <= 0) return null;
-    return value;
-  }
+  double? _readProposal() => parsePriceInput(_proposalCtrl.text);
 
   /// Première proposition. Le destinataire et le disclaimer sont demandés dès
   /// maintenant : décision produit assumée, le voyageur doit pouvoir juger le

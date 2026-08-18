@@ -296,9 +296,9 @@ class _CustomItemFormState extends State<_CustomItemForm> {
   /// le voyageur n'aurait rien à accepter ou refuser.
   BidCustomItemDraft? _read() {
     final label = _labelCtrl.text.trim();
-    final amount = double.tryParse(_amountCtrl.text.replaceAll(',', '.')) ?? 0;
+    final amount = parsePriceInput(_amountCtrl.text);
     final quantity = int.tryParse(_quantityCtrl.text.trim()) ?? 0;
-    if (label.isEmpty || amount <= 0 || quantity < 1) return null;
+    if (label.isEmpty || amount == null || quantity < 1) return null;
     return BidCustomItemDraft(
       label: label,
       quantity: quantity,

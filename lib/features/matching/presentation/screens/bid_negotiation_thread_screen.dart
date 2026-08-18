@@ -720,12 +720,7 @@ class _CounterProposalFormState extends State<_CounterProposalForm> {
     super.dispose();
   }
 
-  double? _read() {
-    final raw = _amountCtrl.text.trim().replaceAll(',', '.');
-    final value = double.tryParse(raw);
-    if (value == null || value <= 0) return null;
-    return value;
-  }
+  double? _read() => parsePriceInput(_amountCtrl.text);
 
   void _validate() {
     final isValid = _read() != null;
