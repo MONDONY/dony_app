@@ -95,6 +95,7 @@ AnnouncementModel _$AnnouncementModelFromJson(
   isFavorite: json['isFavorite'] as bool? ?? false,
   urgent: json['urgent'] as bool?,
   currency: json['currency'] as String? ?? 'EUR',
+  negotiable: json['negotiable'] as bool? ?? false,
 );
 
 Map<String, dynamic> _$AnnouncementModelToJson(AnnouncementModel instance) =>
@@ -141,6 +142,7 @@ Map<String, dynamic> _$AnnouncementModelToJson(AnnouncementModel instance) =>
       'isFavorite': instance.isFavorite,
       'urgent': instance.urgent,
       'currency': instance.currency,
+      'negotiable': instance.negotiable,
     };
 
 const _$BidPaymentMethodEnumMap = {
