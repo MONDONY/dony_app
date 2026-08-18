@@ -219,6 +219,18 @@ class BidNegotiation {
 
   /// Rôle du point de vue courant, pour les properties analytics.
   String get viewerRole => isTravelerView ? 'traveler' : 'sender';
+
+  /// Accord scellé côté CARTE : l'expéditeur doit encore payer, le bid part en
+  /// soft delete au bout de 24 h si personne ne le fait.
+  bool get isAwaitingCardPayment => status == 'AWAITING_PAYMENT';
+
+  /// Accord scellé en ESPÈCES : le bid repart dans le flux classique et c'est
+  /// le voyageur qui règle la commission Yadony. L'expéditeur n'a rien à payer
+  /// dans l'application.
+  bool get isAwaitingCashSettlement => status == 'PENDING';
+
+  /// C'est à moi de payer : accord carte, vu par l'expéditeur.
+  bool get needsMyPayment => isAwaitingCardPayment && !isTravelerView;
 }
 
 /// Ligne de la liste « Discussions de prix » côté trajet.

@@ -1,12 +1,21 @@
 import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/features/auth/data/services/local_auth_service.dart';
+import 'package:dony/features/matching/bloc/bid_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_negotiation_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_negotiation_event.dart';
 import 'package:dony/features/matching/bloc/bid_negotiation_state.dart';
 import 'package:dony/features/matching/data/models/bid_negotiation.dart';
+import 'package:dony/features/payments/bloc/payment_bloc.dart';
+import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
+import 'package:dony/features/payments/presentation/payment_auth.dart';
+import 'package:dony/features/payments/presentation/widgets/dony_payment_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -28,9 +37,18 @@ class BidNegotiationThreadScreen extends StatefulWidget {
 
 class _BidNegotiationThreadScreenState
     extends State<BidNegotiationThreadScreen> {
+  /// Le paiement d'un accord carte emprunte EXACTEMENT le parcours du checkout
+  /// direct : `PaymentBloc` transforme le `clientSecret` en feuille prête, la
+  /// `DonyPaymentSheet` encaisse, puis `BidBloc` confirme côté serveur. Les
+  /// deux blocs appartiennent à l'écran, comme dans `CreateBidScreen`.
+  late final PaymentBloc _paymentBloc;
+  late final BidBloc _bidBloc;
+
   @override
   void initState() {
     super.initState();
+    _paymentBloc = getIt<PaymentBloc>();
+    _bidBloc = getIt<BidBloc>();
     // L'accusé de lecture éteint la pastille de non-lus. Il ne dépend pas du
     // chargement du fil : arriver sur l'écran suffit.
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -41,7 +59,29 @@ class _BidNegotiationThreadScreenState
     });
   }
 
+  @override
+  void dispose() {
+    unawaited(_paymentBloc.close());
+    unawaited(_bidBloc.close());
+    super.dispose();
+  }
+
   void _onState(BuildContext context, BidNegotiationState state) {
+    if (state is BidNegotiationCheckoutReady) {
+      _paymentBloc.add(
+        BidCheckoutPaymentRequested(
+          clientSecret: state.checkout.clientSecret,
+          publishableKey: state.checkout.publishableKey,
+          bidId: state.checkout.bidId,
+          // Le montant affiché à l'expéditeur est le total brut figé à
+          // l'acceptation : le client n'en recalcule aucune part.
+          amountEur: state.negotiation?.proposedGrossEur ?? 0,
+          currencyCode: state.checkout.currency,
+          paymentMethodTypes: state.checkout.paymentMethodTypes,
+        ),
+      );
+      return;
+    }
     if (state is BidNegotiationError) {
       unawaited(ErrorPresenter.show(context, state.error));
       return;
@@ -49,8 +89,11 @@ class _BidNegotiationThreadScreenState
     if (state is! BidNegotiationLoaded) return;
     switch (state.action) {
       // L'appelant (liste des discussions, détail du colis) doit recharger :
-      // le fil vient de changer d'état pour de bon.
+      // le fil vient de changer d'état pour de bon. Seule exception, l'accord
+      // carte côté expéditeur : le fil reste ouvert, il lui reste à payer.
       case BidNegotiationAction.accepted:
+        if (state.negotiation.needsMyPayment) break;
+        context.pop(true);
       case BidNegotiationAction.rejected:
       case BidNegotiationAction.cancelled:
         context.pop(true);
@@ -61,36 +104,103 @@ class _BidNegotiationThreadScreenState
     }
   }
 
+  Future<void> _onPaymentState(BuildContext context, PaymentState state) async {
+    if (state is CheckoutPaymentSheetReady) {
+      await _presentPaymentSheet(context, state);
+    }
+  }
+
+  /// Motif repris tel quel de `CreateBidScreen._presentPaymentSheet` :
+  /// `requirePaymentAuth` d'abord, la feuille ensuite. C'est lui qui décide si
+  /// biométrie ou PIN s'appliquent, jamais l'appelant.
+  Future<void> _presentPaymentSheet(
+    BuildContext context,
+    CheckoutPaymentSheetReady state,
+  ) async {
+    final authenticated = await requirePaymentAuth(
+      context,
+      authService: getIt<LocalAuthService>(),
+      userPrefs: getIt<HiveService>().userPrefs,
+    );
+    if (!context.mounted) return;
+    if (!authenticated) {
+      DonySnackbar.show(
+        context,
+        message: 'Paiement non confirmé, réessayez',
+        type: DonySnackbarType.error,
+      );
+      return;
+    }
+
+    await DonyPaymentSheet.show(
+      context,
+      config: PaymentSheetConfig(
+        clientSecret: state.clientSecret,
+        amountEur: state.amountEur,
+        currencyCode: state.currencyCode,
+        paymentMethodTypes: state.paymentMethodTypes,
+      ),
+      contextLabel: 'Prix négocié de votre colis',
+      onSuccess: () {
+        if (!context.mounted) return;
+        _bidBloc.add(BidConfirmPaymentRequested(state.bidId));
+        // Le fil n'a plus rien à montrer : l'appelant recharge sa liste et y
+        // verra le colis passé en payé.
+        context.pop(true);
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    return Scaffold(
-      backgroundColor: cs.surface,
-      appBar: DonyAppBar(
-        title: 'Discussion de prix',
-        onBack: () => context.pop(),
-      ),
-      body: BlocConsumer<BidNegotiationBloc, BidNegotiationState>(
-        listener: _onState,
-        builder: (context, state) => switch (state) {
-          BidNegotiationInitial() || BidNegotiationLoading() => const Center(
-            key: Key('nego-loading'),
-            child: CircularProgressIndicator(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<PaymentBloc>.value(value: _paymentBloc),
+        BlocProvider<BidBloc>.value(value: _bidBloc),
+      ],
+      child: Scaffold(
+        backgroundColor: cs.surface,
+        appBar: DonyAppBar(
+          title: 'Discussion de prix',
+          onBack: () => context.pop(),
+        ),
+        body: BlocListener<PaymentBloc, PaymentState>(
+          listener: (ctx, state) => unawaited(_onPaymentState(ctx, state)),
+          child: BlocConsumer<BidNegotiationBloc, BidNegotiationState>(
+            listener: _onState,
+            builder: (context, state) => switch (state) {
+              BidNegotiationInitial() ||
+              BidNegotiationLoading() => const Center(
+                key: Key('nego-loading'),
+                child: CircularProgressIndicator(),
+              ),
+              BidNegotiationError(:final negotiation)
+                  when negotiation != null =>
+                _ThreadBody(negotiation: negotiation, bidId: widget.bidId),
+              BidNegotiationError(:final error) => _ErrorView(
+                message: ErrorPresenter.resolve(error).message,
+                onRetry: () => context.read<BidNegotiationBloc>().add(
+                  BidNegotiationFetchRequested(widget.bidId),
+                ),
+              ),
+              // Le checkout est parti : le fil reste affiché sous la feuille de
+              // paiement qui s'ouvre par-dessus.
+              BidNegotiationCheckoutReady(:final negotiation)
+                  when negotiation != null =>
+                _ThreadBody(negotiation: negotiation, bidId: widget.bidId),
+              BidNegotiationCheckoutReady() => const Center(
+                key: Key('nego-loading'),
+                child: CircularProgressIndicator(),
+              ),
+              BidNegotiationLoaded(:final negotiation) => _ThreadBody(
+                negotiation: negotiation,
+                bidId: widget.bidId,
+              ),
+            },
           ),
-          BidNegotiationError(:final negotiation) when negotiation != null =>
-            _ThreadBody(negotiation: negotiation, bidId: widget.bidId),
-          BidNegotiationError(:final error) => _ErrorView(
-            message: ErrorPresenter.resolve(error).message,
-            onRetry: () => context.read<BidNegotiationBloc>().add(
-              BidNegotiationFetchRequested(widget.bidId),
-            ),
-          ),
-          BidNegotiationLoaded(:final negotiation) => _ThreadBody(
-            negotiation: negotiation,
-            bidId: widget.bidId,
-          ),
-        },
+        ),
       ),
     );
   }
@@ -411,24 +521,70 @@ class _ThreadActions extends StatelessWidget {
       child: child,
     );
 
-    if (negotiation.isClosed) {
+    Widget hint(String message, String key) => Text(
+      message,
+      key: Key(key),
+      textAlign: TextAlign.center,
+      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+    );
+
+    // ── Après accord ────────────────────────────────────────────────────────
+    // Le `status` distingue les deux aval, et lui seul : `AWAITING_PAYMENT`
+    // pour un accord réglé par carte, `PENDING` pour un accord en espèces où
+    // c'est le voyageur qui règle la commission Yadony.
+    if (negotiation.isAwaitingCardPayment) {
+      if (negotiation.needsMyPayment) {
+        final bloc = context.read<BidNegotiationBloc>();
+        return shell(
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              hint(
+                'Prix accepté. Réglez maintenant pour réserver votre place, '
+                    'le montant reste bloqué jusqu\'à la livraison.',
+                'nego-pay-hint',
+              ),
+              const SizedBox(height: DonySpacing.sm),
+              DonyButton(
+                key: const Key('nego-pay-btn'),
+                label: 'Payer',
+                onPressed: () =>
+                    bloc.add(BidNegotiationCheckoutRequested(bidId)),
+              ),
+            ],
+          ),
+        );
+      }
       return shell(
-        Text(
-          _closedLabel(negotiation.status),
-          key: const Key('nego-closed-hint'),
-          textAlign: TextAlign.center,
-          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+        hint(
+          'Prix accepté. En attente du paiement de l\'expéditeur.',
+          'nego-awaiting-payment-hint',
         ),
       );
     }
 
+    if (negotiation.isAwaitingCashSettlement) {
+      return shell(
+        hint(
+          negotiation.isTravelerView
+              ? 'Prix accepté. Paiement en espèces, il vous reste à régler la '
+                    'commission Yadony.'
+              : 'Prix accepté. Paiement en espèces, en attente du voyageur, '
+                    'vous n\'avez rien à régler ici.',
+          'nego-awaiting-traveler-hint',
+        ),
+      );
+    }
+
+    if (negotiation.isClosed) {
+      return shell(hint(_closedLabel(negotiation.status), 'nego-closed-hint'));
+    }
+
     if (!negotiation.isMyTurn) {
       return shell(
-        Text(
+        hint(
           'En attente de la réponse de ${negotiation.counterpartyName ?? 'votre interlocuteur'}.',
-          key: const Key('nego-waiting-hint'),
-          textAlign: TextAlign.center,
-          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+          'nego-waiting-hint',
         ),
       );
     }
