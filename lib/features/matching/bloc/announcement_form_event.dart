@@ -115,6 +115,17 @@ class CashAcceptedChanged extends AnnouncementFormEvent {
   List<Object?> get props => [accepted];
 }
 
+/// Le voyageur ouvre (ou referme) son trajet aux propositions de prix des
+/// expéditeurs.
+class NegotiableChanged extends AnnouncementFormEvent {
+  final bool negotiable;
+
+  const NegotiableChanged(this.negotiable);
+
+  @override
+  List<Object?> get props => [negotiable];
+}
+
 class AcceptedTypesChanged extends AnnouncementFormEvent {
   final List<String> types;
 

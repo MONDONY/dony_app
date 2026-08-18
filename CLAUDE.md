@@ -432,6 +432,13 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `accessibility_setting_changed` | AccessibilityBloc — un réglage d'accessibilité est modifié (propriétés `setting`, `value`) ou réinitialisation complète (`setting: reset`) |
 | `trip_marked_arrived` | AnnouncementBloc._onTripMarkArrivedRequested() — voyageur marque son trajet arrivé à destination |
 | `arrival_instructions_updated` | AnnouncementBloc._onArrivalInstructionsUpdateRequested() — édition des instructions de retrait après le marquage initial |
+| `trip_negotiable_toggled` | AnnouncementFormBloc._onNegotiableChanged — bascule « J'accepte les propositions de prix » de l'étape Prix & Conditions du wizard de publication d'un trajet (propriété `enabled`) |
+| `trip_negotiation_opened` | BidNegotiationBloc._onOpen — l'expéditeur ouvre le mode négociation depuis le second CTA « Proposer un prix » du détail du trajet (propriété `announcement_id`). Aucun appel réseau : c'est l'entrée de l'entonnoir, mesurée même si aucune proposition n'est envoyée |
+| `trip_negotiation_proposed` | BidNegotiationBloc._onPropose — première proposition de prix envoyée avec succès (propriétés `announcement_id`, `has_custom_items`, `custom_item_count`). Ni description, ni destinataire, ni montant : seul le motif de négociation est mesuré |
+| `trip_negotiation_countered` | BidNegotiationBloc._onCounter — contre-offre acceptée par le serveur (propriétés `bid_id`, `round`, `actor`: `sender`/`traveler`). `actor` est dérivé de `netEur`, que le backend ne renseigne que pour le voyageur |
+| `trip_negotiation_accepted` | BidNegotiationBloc._onAccept — l'une des parties accepte le prix en discussion (propriétés `bid_id`, `round`, `actor`) |
+| `trip_negotiation_rejected` | BidNegotiationBloc._onReject — l'une des parties refuse et clôt le fil (propriétés `bid_id`, `round`, `actor`) |
+| `trip_negotiation_payment_started` | BidNegotiationBloc._onCheckout — l'expéditeur lance le paiement d'un accord scellé côté carte depuis le fil, `POST /bids/{bidId}/negotiation/checkout` accepté (propriété `bid_id`). Un accord en espèces (`PENDING`) ne l'émet jamais : c'est le voyageur qui règle la commission par le geste existant |
 | `trip_poster_opened` | TripPosterScreen.initState — ouverture de l'affiche partageable d'un trajet |
 | `trip_poster_shared` | TripPosterScreen — partage de l'image via la feuille système (`action: share`) ou enregistrement galerie (`action: save`) ; non émis si le partage est annulé |
 | `trip_poster_link_copied` | TripPosterScreen — tap sur « Copier le lien » ou « Copier la légende ». Le canal réel est porté par le lien lui-même (`?c=lien` / `?c=post` / `?c=partage`), pas par une propriété : il doit survivre au partage hors de l'app |

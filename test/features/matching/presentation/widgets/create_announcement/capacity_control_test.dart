@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../../../helpers/mock_analytics_backend.dart';
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────────────────────────────────────
@@ -14,7 +16,9 @@ Widget _host() {
   return MaterialApp(
     home: Scaffold(
       body: BlocProvider<AnnouncementFormBloc>(
-        create: (_) => AnnouncementFormBloc(),
+        create: (_) => AnnouncementFormBloc(
+          analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+        ),
         child: const SingleChildScrollView(child: CapacityControl()),
       ),
     ),
@@ -103,7 +107,9 @@ void main() {
     testWidgets(
       'Kg libre → le BLoC reçoit availableKg=1.0 automatiquement (pas de AvailableKgChanged)',
       (tester) async {
-        final bloc = AnnouncementFormBloc();
+        final bloc = AnnouncementFormBloc(
+          analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+        );
         addTearDown(bloc.close);
 
         await tester.pumpWidget(_hostWithBloc(bloc));
@@ -138,7 +144,9 @@ void main() {
     testWidgets(
       'Personnalisé → saisir une valeur valide dispatche AvailableKgChanged',
       (tester) async {
-        final bloc = AnnouncementFormBloc();
+        final bloc = AnnouncementFormBloc(
+          analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+        );
         addTearDown(bloc.close);
 
         await tester.pumpWidget(_hostWithBloc(bloc));
@@ -157,7 +165,9 @@ void main() {
     testWidgets(
       'Personnalisé → saisie vide ou invalide ne dispatche pas de valeur garbage',
       (tester) async {
-        final bloc = AnnouncementFormBloc();
+        final bloc = AnnouncementFormBloc(
+          analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+        );
         addTearDown(bloc.close);
 
         await tester.pumpWidget(_hostWithBloc(bloc));
@@ -180,7 +190,9 @@ void main() {
     testWidgets(
       'Personnalisé → saisie "0" ne dispatche pas (valeur < 1 interdite)',
       (tester) async {
-        final bloc = AnnouncementFormBloc();
+        final bloc = AnnouncementFormBloc(
+          analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+        );
         addTearDown(bloc.close);
 
         await tester.pumpWidget(_hostWithBloc(bloc));
@@ -252,7 +264,9 @@ void main() {
     testWidgets('compteur + (suitcase23kg) → availableKg passe à 46 (2×23)', (
       tester,
     ) async {
-      final bloc = AnnouncementFormBloc();
+      final bloc = AnnouncementFormBloc(
+        analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+      );
       addTearDown(bloc.close);
 
       await tester.pumpWidget(_hostWithBloc(bloc));
@@ -274,7 +288,9 @@ void main() {
     testWidgets(
       'compteur + deux fois (suitcase23kg) → availableKg passe à 69 (3×23)',
       (tester) async {
-        final bloc = AnnouncementFormBloc();
+        final bloc = AnnouncementFormBloc(
+          analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+        );
         addTearDown(bloc.close);
 
         await tester.pumpWidget(_hostWithBloc(bloc));
@@ -300,7 +316,9 @@ void main() {
     testWidgets('compteur − depuis 2 → availableKg revient à 23 (1×23)', (
       tester,
     ) async {
-      final bloc = AnnouncementFormBloc();
+      final bloc = AnnouncementFormBloc(
+        analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+      );
       addTearDown(bloc.close);
 
       // Départ : 2 valises (46 kg)
@@ -322,7 +340,9 @@ void main() {
     testWidgets('compteur − désactivé/inopérant à quantité 1 (suitcase23kg)', (
       tester,
     ) async {
-      final bloc = AnnouncementFormBloc();
+      final bloc = AnnouncementFormBloc(
+        analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+      );
       addTearDown(bloc.close);
 
       await tester.pumpWidget(_hostWithBloc(bloc));
@@ -346,7 +366,9 @@ void main() {
     testWidgets(
       'compteur affiche le bon label "N valises" (pluriel) pour 2 valises',
       (tester) async {
-        final bloc = AnnouncementFormBloc();
+        final bloc = AnnouncementFormBloc(
+          analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+        );
         addTearDown(bloc.close);
 
         bloc.add(const CapacityUnitChanged(CapacityUnit.suitcase23kg));
@@ -362,7 +384,9 @@ void main() {
     testWidgets('compteur affiche "1 valise" (singulier) pour quantité 1', (
       tester,
     ) async {
-      final bloc = AnnouncementFormBloc();
+      final bloc = AnnouncementFormBloc(
+        analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+      );
       addTearDown(bloc.close);
 
       await tester.pumpWidget(_hostWithBloc(bloc));
@@ -375,7 +399,9 @@ void main() {
     testWidgets(
       'changer de preset suitcase23kg → suitcase32kg remet la quantité à 1',
       (tester) async {
-        final bloc = AnnouncementFormBloc();
+        final bloc = AnnouncementFormBloc(
+          analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+        );
         addTearDown(bloc.close);
 
         // Passer à 2 valises de 23 kg
@@ -397,7 +423,9 @@ void main() {
     // ── Aucun Slider dans toute l'app ────────────────────────────────────────
 
     testWidgets('aucun Slider dans aucun mode', (tester) async {
-      final bloc = AnnouncementFormBloc();
+      final bloc = AnnouncementFormBloc(
+        analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+      );
       addTearDown(bloc.close);
 
       await tester.pumpWidget(_hostWithBloc(bloc));

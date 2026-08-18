@@ -6,6 +6,7 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
+import 'package:dony/features/matching/bloc/bid_negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/bloc/negotiation_filter_cubit.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_message.dart';
@@ -68,6 +69,13 @@ class _MockNegotiationListBloc
 class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
     implements AuthBloc {}
 
+/// Depuis la fusion des deux sources, « Discussions de prix » consomme aussi
+/// les négociations de prix de trajet. Toujours vide ici : ce fichier teste
+/// la branche « demande d'envoi ».
+class _MockTripListBloc
+    extends MockBloc<BidNegotiationListEvent, BidNegotiationListState>
+    implements BidNegotiationListBloc {}
+
 UserModel _user(String id) => UserModel(
   id: id,
   roles: const ['SENDER'],
@@ -120,6 +128,7 @@ void main() {
 
   late _MockNegotiationListBloc bloc;
   late _MockAuthBloc authBloc;
+  late _MockTripListBloc tripBloc;
 
   setUpAll(() async {
     await initializeDateFormatting('fr');
@@ -128,6 +137,11 @@ void main() {
 
   setUp(() {
     bloc = _MockNegotiationListBloc();
+    tripBloc = _MockTripListBloc();
+    when(() => tripBloc.state).thenReturn(const BidNegotiationListState());
+    when(
+      () => tripBloc.stream,
+    ).thenAnswer((_) => const Stream<BidNegotiationListState>.empty());
     when(() => bloc.state).thenReturn(NegotiationListState());
     when(
       () => bloc.stream,
@@ -158,6 +172,7 @@ void main() {
     home: MultiBlocProvider(
       providers: [
         BlocProvider<NegotiationListBloc>.value(value: bloc),
+        BlocProvider<BidNegotiationListBloc>.value(value: tripBloc),
         BlocProvider<AuthBloc>.value(value: authBloc),
       ],
       child: const Scaffold(body: MyNegotiationsBody()),
@@ -683,11 +698,18 @@ void main() {
         getIt.unregister<NegotiationListBloc>();
       }
       getIt.registerLazySingleton<NegotiationListBloc>(() => bloc);
+      if (getIt.isRegistered<BidNegotiationListBloc>()) {
+        getIt.unregister<BidNegotiationListBloc>();
+      }
+      getIt.registerLazySingleton<BidNegotiationListBloc>(() => tripBloc);
     });
 
     tearDown(() {
       if (getIt.isRegistered<NegotiationListBloc>()) {
         getIt.unregister<NegotiationListBloc>();
+      }
+      if (getIt.isRegistered<BidNegotiationListBloc>()) {
+        getIt.unregister<BidNegotiationListBloc>();
       }
     });
 

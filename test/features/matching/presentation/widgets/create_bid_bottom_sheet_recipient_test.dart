@@ -132,8 +132,10 @@ Widget _buildHarness(AnnouncementModel announcement) {
       // lib/app/router.dart.
       GoRoute(
         path: '/bids/new',
-        builder: (_, state) =>
-            CreateBidScreen(announcement: state.extra as AnnouncementModel),
+        builder: (_, state) => CreateBidScreen(
+          announcement: (state.extra! as CreateBidArgs).announcement,
+          negotiation: (state.extra! as CreateBidArgs).negotiation,
+        ),
       ),
       GoRoute(
         path: '/bids/:id',

@@ -117,27 +117,47 @@ void showTravelerAnnouncementSheet(
             ],
           );
         }
-        return DonyButton(
-          label: 'Faire une demande',
-          iconAsset: 'send',
-          onPressed: () async {
-            final navigator = Navigator.of(innerCtx, rootNavigator: true);
-            final rootCtx = navigator.context;
-            navigator.pop();
-            if (canSendRequest) {
-              await CreateBidBottomSheet.show(
-                rootCtx,
-                announcement: announcement,
-              );
-              // Refresh silencieux du BidBloc parent pour que la liste
-              // affiche immédiatement le chip "Demande en attente".
-              parentBidBloc?.add(
-                const BidMyListAutoRefreshRequested(force: true),
-              );
-            } else {
-              await KycStatusBottomSheet.show(rootCtx);
-            }
-          },
+        Future<void> openCreateBid({required bool negotiation}) async {
+          final navigator = Navigator.of(innerCtx, rootNavigator: true);
+          final rootCtx = navigator.context;
+          navigator.pop();
+          if (canSendRequest) {
+            await CreateBidBottomSheet.show(
+              rootCtx,
+              announcement: announcement,
+              negotiation: negotiation,
+            );
+            // Refresh silencieux du BidBloc parent pour que la liste
+            // affiche immédiatement le chip "Demande en attente".
+            parentBidBloc?.add(
+              const BidMyListAutoRefreshRequested(force: true),
+            );
+          } else {
+            await KycStatusBottomSheet.show(rootCtx);
+          }
+        }
+
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            DonyButton(
+              label: 'Faire une demande',
+              iconAsset: 'send',
+              onPressed: () => openCreateBid(negotiation: false),
+            ),
+            // Second CTA réservé aux trajets ouverts aux propositions : sur un
+            // prix ferme, il n'aurait rien à proposer.
+            if (announcement.negotiable) ...[
+              const SizedBox(height: DonySpacing.sm),
+              DonyButton(
+                key: const Key('negotiate-price-btn'),
+                label: 'Proposer un prix',
+                iconAsset: 'handshake',
+                variant: DonyButtonVariant.secondary,
+                onPressed: () => openCreateBid(negotiation: true),
+              ),
+            ],
+          ],
         );
       },
     ),

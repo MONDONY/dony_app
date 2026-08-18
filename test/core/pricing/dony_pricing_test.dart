@@ -112,4 +112,35 @@ void main() {
       expect(a.senderPricePerKg, closeTo(10.50, 1e-9));
     });
   });
+
+  group('parsePriceInput', () {
+    test('accepte la virgule decimale francaise', () {
+      expect(parsePriceInput('12,50'), 12.5);
+    });
+
+    test('accepte le point decimal', () {
+      expect(parsePriceInput('12.50'), 12.5);
+    });
+
+    test('ignore les espaces autour de la saisie', () {
+      expect(parsePriceInput('  8 '), 8);
+    });
+
+    test('refuse une saisie vide', () {
+      expect(parsePriceInput(''), isNull);
+      expect(parsePriceInput('   '), isNull);
+    });
+
+    test('refuse une saisie non numerique', () {
+      expect(parsePriceInput('abc'), isNull);
+    });
+
+    // Zéro et négatif ne sont pas des prix : un article à 0 ne laisserait rien
+    // à accepter ou refuser au voyageur.
+    test('refuse zero et les montants negatifs', () {
+      expect(parsePriceInput('0'), isNull);
+      expect(parsePriceInput('0,00'), isNull);
+      expect(parsePriceInput('-3'), isNull);
+    });
+  });
 }

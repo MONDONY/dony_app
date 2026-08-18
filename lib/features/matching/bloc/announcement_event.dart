@@ -24,6 +24,9 @@ class AnnouncementCreateRequested extends AnnouncementEvent {
   final String? capacityUnit;
   final String pricingMode;
   final DateTime handoverDeadline;
+
+  /// Le voyageur ouvre son trajet aux propositions de prix des expéditeurs.
+  final bool negotiable;
   final bool saveAsDraft;
 
   AnnouncementCreateRequested({
@@ -46,6 +49,7 @@ class AnnouncementCreateRequested extends AnnouncementEvent {
     this.capacityUnit,
     this.pricingMode = 'KG',
     required this.handoverDeadline,
+    this.negotiable = false,
     this.saveAsDraft = false,
   });
 }
@@ -177,6 +181,9 @@ class AnnouncementUpdateRequested extends AnnouncementEvent {
   final String pricingMode;
   final DateTime handoverDeadline;
 
+  /// Le voyageur ouvre son trajet aux propositions de prix des expéditeurs.
+  final bool negotiable;
+
   AnnouncementUpdateRequested({
     required this.id,
     required this.departureCity,
@@ -198,5 +205,6 @@ class AnnouncementUpdateRequested extends AnnouncementEvent {
     this.capacityUnit,
     this.pricingMode = 'KG',
     required this.handoverDeadline,
+    this.negotiable = false,
   });
 }

@@ -71,6 +71,11 @@ class AnnouncementFormState extends Equatable {
   final AddressData? pickupAddress;
   final AddressData? deliveryAddress;
   final bool cashAccepted;
+
+  /// Le voyageur accepte les propositions de prix des expéditeurs sur ce
+  /// trajet. `false` par défaut : un trajet reste à prix ferme tant que le
+  /// voyageur ne l'ouvre pas explicitement.
+  final bool negotiable;
   final List<String> acceptedTypes;
   final List<String> rejectedTypes;
 
@@ -94,6 +99,7 @@ class AnnouncementFormState extends Equatable {
     this.pickupAddress,
     this.deliveryAddress,
     this.cashAccepted = false,
+    this.negotiable = false,
     this.acceptedTypes = const [],
     this.rejectedTypes = const [],
     this.pricingMode = PricingMode.kg,
@@ -149,6 +155,7 @@ class AnnouncementFormState extends Equatable {
     AddressData? Function()? pickupAddressGetter,
     AddressData? Function()? deliveryAddressGetter,
     bool? cashAccepted,
+    bool? negotiable,
     List<String>? acceptedTypes,
     List<String>? rejectedTypes,
     PricingMode? pricingMode,
@@ -182,6 +189,7 @@ class AnnouncementFormState extends Equatable {
           ? deliveryAddressGetter()
           : deliveryAddress,
       cashAccepted: cashAccepted ?? this.cashAccepted,
+      negotiable: negotiable ?? this.negotiable,
       acceptedTypes: acceptedTypes ?? this.acceptedTypes,
       rejectedTypes: rejectedTypes ?? this.rejectedTypes,
       pricingMode: pricingMode ?? this.pricingMode,
@@ -206,6 +214,7 @@ class AnnouncementFormState extends Equatable {
     pickupAddress,
     deliveryAddress,
     cashAccepted,
+    negotiable,
     acceptedTypes,
     rejectedTypes,
     pricingMode,

@@ -48,6 +48,8 @@ import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
+import 'package:dony/features/matching/bloc/bid_negotiation_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_negotiation_event.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
 import 'package:dony/features/matching/bloc/mobile_money_payment_bloc.dart';
 import 'package:dony/features/matching/bloc/trip_filter_cubit.dart';
@@ -58,6 +60,7 @@ import 'package:dony/features/matching/presentation/screens/activites_hub_screen
 import 'package:dony/features/matching/presentation/screens/announcement_list_screen.dart';
 import 'package:dony/features/matching/presentation/screens/bid_detail_screen.dart';
 import 'package:dony/features/matching/presentation/screens/bid_list_screen.dart';
+import 'package:dony/features/matching/presentation/screens/bid_negotiation_thread_screen.dart';
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
 import 'package:dony/features/matching/presentation/screens/demandes_screen.dart';
 import 'package:dony/features/matching/presentation/screens/mobile_money_awaiting_screen.dart';
@@ -356,8 +359,34 @@ final appRouter = GoRouter(
     // ── Création d'une offre (hors shell) ───────────────────────────────
     GoRoute(
       path: '/bids/new',
-      builder: (_, state) =>
-          CreateBidScreen(announcement: state.extra as AnnouncementModel),
+      builder: (_, state) {
+        // `extra` reste tolérant à l'annonce nue : tous les points d'entrée
+        // historiques la passaient telle quelle.
+        final extra = state.extra;
+        final args = extra is CreateBidArgs
+            ? extra
+            : CreateBidArgs(announcement: extra! as AnnouncementModel);
+        return CreateBidScreen(
+          announcement: args.announcement,
+          negotiation: args.negotiation,
+        );
+      },
+    ),
+
+    // ── Fil de négociation du prix d'un trajet (hors shell) ──────────────
+    // Déclarée avant `/bids/:bidId` : GoRouter retient la première route qui
+    // matche, et `:bidId` avalerait le segment `negotiation`.
+    GoRoute(
+      path: '/bids/:bidId/negotiation',
+      builder: (_, state) {
+        final bidId = state.pathParameters['bidId']!;
+        return BlocProvider<BidNegotiationBloc>(
+          create: (_) =>
+              getIt<BidNegotiationBloc>()
+                ..add(BidNegotiationFetchRequested(bidId)),
+          child: BidNegotiationThreadScreen(bidId: bidId),
+        );
+      },
     ),
 
     // ── Bid detail (hors shell) ──────────────────────────────────────────

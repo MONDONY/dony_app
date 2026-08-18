@@ -37,7 +37,6 @@ import 'package:dony/features/package_request/data/models/negotiation_thread.dar
 import 'package:dony/features/package_request/presentation/widgets/payment_capability_block_sheets.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
-import 'package:dony/features/price_grid/data/repositories/price_grid_repository.dart';
 import 'package:dony/features/profile/data/models/help_center_config.dart';
 import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
@@ -180,9 +179,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
         create: (_) => getIt<CommissionMethodBloc>(),
       ),
       BlocProvider<AnnouncementFormBloc>(
-        create: (_) => AnnouncementFormBloc(
-          priceGridRepository: getIt<PriceGridRepository>(),
-        ),
+        create: (_) => getIt<AnnouncementFormBloc>(),
       ),
       BlocProvider<TripTemplateBloc>(
         create: (_) =>
@@ -562,6 +559,9 @@ class _TripFormContentState extends State<_TripFormContent> {
   );
   final _refusedTypesNotifier = ValueNotifier<Set<String>>({});
   final _cashEnabledNotifier = ValueNotifier<bool>(false);
+
+  /// Le voyageur ouvre son trajet aux propositions de prix des expéditeurs.
+  final _negotiableNotifier = ValueNotifier<bool>(false);
   late final ValueNotifier<bool> _kgPriceEnabledNotifier;
   final _descriptionCtrl = TextEditingController();
   final _customAcceptedCtrl = TextEditingController();
@@ -677,6 +677,10 @@ class _TripFormContentState extends State<_TripFormContent> {
       _cashEnabledNotifier.value = a.acceptedPaymentMethods.contains(
         BidPaymentMethod.cash,
       );
+
+      // Sans ce report, rouvrir un trajet ouvert aux propositions pour le
+      // modifier le refermerait en silence à l'enregistrement.
+      _negotiableNotifier.value = a.negotiable;
 
       final price = a.pricePerKg;
       final presetIdx = kPriceOptions.indexOf(price);
@@ -858,6 +862,7 @@ class _TripFormContentState extends State<_TripFormContent> {
     _customAcceptedNotifier,
     _refusedTypesNotifier,
     _cashEnabledNotifier,
+    _negotiableNotifier,
     _kgPriceEnabledNotifier,
     _descriptionCtrl,
     _customAcceptedCtrl,
@@ -893,6 +898,7 @@ class _TripFormContentState extends State<_TripFormContent> {
       _customPriceNotifier.value,
       _transportModeNotifier.value,
       _cashEnabledNotifier.value,
+      _negotiableNotifier.value,
       _kgPriceEnabledNotifier.value,
       set(_selectedContentNotifier.value),
       set(_customAcceptedNotifier.value),
@@ -1136,6 +1142,7 @@ class _TripFormContentState extends State<_TripFormContent> {
     _customPriceCtrl.removeListener(_syncCanSubmit);
     _kgPriceEnabledNotifier.dispose();
     _cashEnabledNotifier.dispose();
+    _negotiableNotifier.dispose();
     _descriptionCtrl.dispose();
     _customAcceptedCtrl.dispose();
     _refusedCtrl.dispose();
@@ -1360,6 +1367,7 @@ class _TripFormContentState extends State<_TripFormContent> {
           capacityUnit: capacityUnitWire,
           pricingMode: pricingModeWire,
           handoverDeadline: handoverDeadline,
+          negotiable: _negotiableNotifier.value,
         ),
       );
     } else {
@@ -1384,6 +1392,7 @@ class _TripFormContentState extends State<_TripFormContent> {
           capacityUnit: capacityUnitWire,
           pricingMode: pricingModeWire,
           handoverDeadline: handoverDeadline,
+          negotiable: _negotiableNotifier.value,
           saveAsDraft: saveAsDraft,
         ),
       );
@@ -1882,6 +1891,7 @@ class _TripFormContentState extends State<_TripFormContent> {
         availableKgNotifier: _availableKgNotifier,
         cashEnabledNotifier: _cashEnabledNotifier,
         kgPriceEnabledNotifier: _kgPriceEnabledNotifier,
+        negotiableNotifier: _negotiableNotifier,
         selectedContentNotifier: _selectedContentNotifier,
         customAcceptedNotifier: _customAcceptedNotifier,
         refusedTypesNotifier: _refusedTypesNotifier,

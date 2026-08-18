@@ -46,7 +46,44 @@ final _minimalJson = {
   'updatedAt': '2024-06-01T00:00:00.000Z',
 };
 
+Map<String, dynamic> _negotiableJson({bool? negotiable}) => {
+  'id': 'a1',
+  'travelerId': 't1',
+  'departureCity': 'Paris',
+  'arrivalCity': 'Dakar',
+  'departureDate': DateTime(2026, 9, 12).toIso8601String(),
+  'availableKg': 20.0,
+  'totalKg': 20.0,
+  'pricePerKg': 5.0,
+  'status': 'ACTIVE',
+  'createdAt': DateTime(2026, 8).toIso8601String(),
+  'updatedAt': DateTime(2026, 8).toIso8601String(),
+  'negotiable': ?negotiable,
+};
+
 void main() {
+  group('AnnouncementModel.negotiable', () {
+    test('negotiable vaut false quand le backend ne l envoie pas', () {
+      expect(AnnouncementModel.fromJson(_negotiableJson()).negotiable, isFalse);
+    });
+
+    test('negotiable est lu depuis le payload', () {
+      expect(
+        AnnouncementModel.fromJson(
+          _negotiableJson(negotiable: true),
+        ).negotiable,
+        isTrue,
+      );
+    });
+
+    test('negotiable est renvoye dans toJson', () {
+      final model = AnnouncementModel.fromJson(
+        _negotiableJson(negotiable: true),
+      );
+      expect(model.toJson()['negotiable'], isTrue);
+    });
+  });
+
   group('AnnouncementModel.fromJson', () {
     test('parses all fields from full JSON', () {
       final model = AnnouncementModel.fromJson(_fullJson);

@@ -281,6 +281,18 @@ abstract final class AnalyticsEvents {
   // Arrivée à destination (trajet)
   static const tripMarkedArrived = 'trip_marked_arrived';
   static const arrivalInstructionsUpdated = 'arrival_instructions_updated';
+  // Négociation du prix d'un trajet. L'entonnoir se lit dans cet ordre :
+  // ouverture du mode → première proposition → contre-offres → issue.
+  // Bascule « J'accepte les propositions de prix » à la création du trajet.
+  static const tripNegotiableToggled = 'trip_negotiable_toggled';
+  static const tripNegotiationOpened = 'trip_negotiation_opened';
+  static const tripNegotiationProposed = 'trip_negotiation_proposed';
+  static const tripNegotiationCountered = 'trip_negotiation_countered';
+  static const tripNegotiationAccepted = 'trip_negotiation_accepted';
+  static const tripNegotiationRejected = 'trip_negotiation_rejected';
+  static const tripNegotiationPaymentStarted =
+      'trip_negotiation_payment_started';
+
   // Affiche de trajet — le voyageur la génère puis la poste sur ses propres
   // canaux. Ces trois events mesurent le seul entonnoir qui compte ici :
   // combien d'affiches ouvertes finissent réellement publiées.

@@ -63,9 +63,12 @@ import 'package:dony/features/incident_report/data/repositories/incident_report_
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/data/repositories/kyc_repository.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
+import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_list_filter_cubit.dart';
+import 'package:dony/features/matching/bloc/bid_negotiation_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_negotiation_list_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_photos_cubit.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
 import 'package:dony/features/matching/bloc/mobile_money_payment_bloc.dart';
@@ -75,9 +78,11 @@ import 'package:dony/features/matching/bloc/traveler_bids_bloc.dart';
 import 'package:dony/features/matching/bloc/trip_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/matching/data/datasources/announcement_remote_datasource.dart';
+import 'package:dony/features/matching/data/datasources/bid_negotiation_remote_datasource.dart';
 import 'package:dony/features/matching/data/datasources/bid_remote_datasource.dart';
 import 'package:dony/features/matching/data/datasources/mobile_money_remote_datasource.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
+import 'package:dony/features/matching/data/repositories/bid_negotiation_repository.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:dony/features/matching/data/repositories/mobile_money_repository.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
@@ -339,6 +344,14 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => PriceGridBloc(getIt<PriceGridRepository>()),
   );
 
+  // Matching — formulaire de publication d'un trajet
+  getIt.registerFactory<AnnouncementFormBloc>(
+    () => AnnouncementFormBloc(
+      priceGridRepository: getIt<PriceGridRepository>(),
+      analytics: getIt<AnalyticsService>(),
+    ),
+  );
+
   // Matching — Bids
   getIt.registerLazySingleton<BidRemoteDatasource>(
     () => BidRemoteDatasource(getIt<ApiClient>()),
@@ -348,6 +361,20 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<BidBloc>(
     () => BidBloc(getIt<BidRepository>(), getIt<AnalyticsService>()),
+  );
+
+  // Matching — négociation du prix d'un trajet
+  getIt.registerLazySingleton<BidNegotiationRemoteDatasource>(
+    () => BidNegotiationRemoteDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<BidNegotiationRepository>(
+    () => BidNegotiationRepository(getIt<BidNegotiationRemoteDatasource>()),
+  );
+  getIt.registerFactory<BidNegotiationBloc>(
+    () => BidNegotiationBloc(
+      getIt<BidNegotiationRepository>(),
+      getIt<AnalyticsService>(),
+    ),
   );
   getIt.registerFactory<BidPhotosCubit>(
     () => BidPhotosCubit(getIt<BidRepository>(), getIt<AnalyticsService>()),
@@ -852,6 +879,12 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       analytics: getIt<AnalyticsService>(),
       stripe: Stripe.instance,
     ),
+  );
+  // Singleton comme son homologue des demandes : l'écran « Discussions de
+  // prix » le fournit par `BlocProvider.value`, et son compteur alimente des
+  // pastilles hors de cet écran.
+  getIt.registerLazySingleton<BidNegotiationListBloc>(
+    () => BidNegotiationListBloc(getIt<BidNegotiationRepository>()),
   );
   getIt.registerLazySingleton<NegotiationListBloc>(
     () => NegotiationListBloc(getIt<NegotiationRepository>()),

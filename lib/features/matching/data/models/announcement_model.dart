@@ -194,6 +194,12 @@ class AnnouncementModel {
   @JsonKey(defaultValue: 'EUR')
   final String currency;
 
+  /// Le voyageur accepte les propositions de prix de l'expéditeur.
+  /// `false` par défaut pour les anciens payloads : un trajet publié avant
+  /// cette fonctionnalité reste à prix ferme.
+  @JsonKey(defaultValue: false)
+  final bool negotiable;
+
   const AnnouncementModel({
     required this.id,
     required this.travelerId,
@@ -235,6 +241,7 @@ class AnnouncementModel {
     this.isFavorite = false,
     this.urgent,
     this.currency = 'EUR',
+    this.negotiable = false,
   });
 
   factory AnnouncementModel.fromJson(Map<String, dynamic> json) =>

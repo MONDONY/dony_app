@@ -26,6 +26,7 @@ import 'package:dony/features/kyc/bloc/kyc_event.dart';
 import 'package:dony/features/kyc/bloc/kyc_state.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
+import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
@@ -425,6 +426,14 @@ void _tripRegisterDependencies() {
   if (!getIt.isRegistered<PriceGridRepository>()) {
     getIt.registerSingleton<PriceGridRepository>(
       _TripMockPriceGridRepository(),
+    );
+  }
+  if (!getIt.isRegistered<AnnouncementFormBloc>()) {
+    getIt.registerFactory<AnnouncementFormBloc>(
+      () => AnnouncementFormBloc(
+        priceGridRepository: getIt<PriceGridRepository>(),
+        analytics: getIt<AnalyticsService>(),
+      ),
     );
   }
   if (!getIt.isRegistered<IContentCategoryRepository>()) {

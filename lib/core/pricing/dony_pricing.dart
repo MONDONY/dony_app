@@ -83,6 +83,18 @@ String formatPriceIn(double value, String? currencyCode) {
 String formatPriceActive(double value) =>
     formatPriceIn(value, ActiveCurrency.current?.code);
 
+/// Lit un prix saisi à la main dans un champ de formulaire.
+///
+/// Le clavier décimal d'un téléphone français produit une virgule, que
+/// `double.tryParse` refuse : sans cette normalisation, un montant parfaitement
+/// valide passe pour vide. Renvoie `null` dès que la saisie ne donne pas un
+/// montant strictement positif, un prix nul n'étant pas un prix.
+double? parsePriceInput(String raw) {
+  final value = double.tryParse(raw.trim().replaceAll(',', '.'));
+  if (value == null || value <= 0) return null;
+  return value;
+}
+
 /// Symbole de la devise active, pour les rares surfaces qui affichent l'unité
 /// séparément du montant (suffixe de champ, en-tête de colonne).
 String get activeCurrencySymbol =>

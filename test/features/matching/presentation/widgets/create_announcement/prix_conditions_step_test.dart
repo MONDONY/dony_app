@@ -33,6 +33,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../../helpers/mock_analytics_backend.dart';
+
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
 class _MockStripeAccountBloc
@@ -78,6 +80,7 @@ Widget _host({
   CommissionMethodState? commissionState,
   double initialAvailableKg = 10,
   SupportedCurrency? currency = SupportedCurrency.eur,
+  ValueNotifier<bool>? negotiableNotifier,
 }) {
   final mockStripeBloc = _MockStripeAccountBloc();
   final resolvedStripeState = stripeState ?? _stripeConfiguredState;
@@ -98,6 +101,8 @@ Widget _host({
   final availableKgNotifier = ValueNotifier<double>(initialAvailableKg);
   final cashEnabledNotifier = ValueNotifier<bool>(false);
   final kgPriceEnabledNotifier = ValueNotifier<bool>(true);
+  final resolvedNegotiableNotifier =
+      negotiableNotifier ?? ValueNotifier<bool>(false);
   final selectedContentNotifier = ValueNotifier<Set<String>>({});
   final customAcceptedNotifier = ValueNotifier<Set<String>>({});
   final refusedTypesNotifier = ValueNotifier<Set<String>>({});
@@ -114,7 +119,9 @@ Widget _host({
       body: MultiBlocProvider(
         providers: [
           BlocProvider<AnnouncementFormBloc>(
-            create: (_) => AnnouncementFormBloc(),
+            create: (_) => AnnouncementFormBloc(
+              analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+            ),
           ),
           BlocProvider<StripeAccountBloc>.value(value: mockStripeBloc),
           BlocProvider<CommissionMethodBloc>.value(value: mockCommissionBloc),
@@ -127,6 +134,7 @@ Widget _host({
             availableKgNotifier: availableKgNotifier,
             cashEnabledNotifier: cashEnabledNotifier,
             kgPriceEnabledNotifier: kgPriceEnabledNotifier,
+            negotiableNotifier: resolvedNegotiableNotifier,
             selectedContentNotifier: selectedContentNotifier,
             customAcceptedNotifier: customAcceptedNotifier,
             refusedTypesNotifier: refusedTypesNotifier,
@@ -147,9 +155,14 @@ Future<void> _pump(
   WidgetTester tester, {
   StripeAccountState? stripeState,
   CommissionMethodState? commissionState,
+  ValueNotifier<bool>? negotiableNotifier,
 }) async {
   await tester.pumpWidget(
-    _host(stripeState: stripeState, commissionState: commissionState),
+    _host(
+      stripeState: stripeState,
+      commissionState: commissionState,
+      negotiableNotifier: negotiableNotifier,
+    ),
   );
   await tester.pump(const Duration(milliseconds: 200));
   await tester.pump();
@@ -166,6 +179,33 @@ void main() {
     ) async {
       await _pump(tester);
       expect(find.byType(PrixConditionsStep), findsOneWidget);
+    });
+
+    // ── Ouverture aux propositions de prix ────────────────────────────────────
+
+    testWidgets(
+      'le toggle de negociation est present et desactive par defaut',
+      (tester) async {
+        await tester.pumpWidget(
+          _host(negotiableNotifier: ValueNotifier(false)),
+        );
+        await tester.pump(const Duration(milliseconds: 600));
+
+        final toggle = find.byKey(const Key('negotiable-toggle'));
+        expect(toggle, findsOneWidget);
+        expect(tester.widget<SwitchListTile>(toggle).value, isFalse);
+      },
+    );
+
+    testWidgets('basculer le toggle met a jour le notifier', (tester) async {
+      final notifier = ValueNotifier(false);
+      await tester.pumpWidget(_host(negotiableNotifier: notifier));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      await tester.tap(find.byKey(const Key('negotiable-toggle')));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(notifier.value, isTrue);
     });
 
     // ── Section PRIX PAR KG ───────────────────────────────────────────────────
@@ -359,7 +399,11 @@ void main() {
                 body: MultiBlocProvider(
                   providers: [
                     BlocProvider<AnnouncementFormBloc>(
-                      create: (_) => AnnouncementFormBloc(),
+                      create: (_) => AnnouncementFormBloc(
+                        analytics: makeDisabledAnalytics(
+                          MockAnalyticsBackend(),
+                        ),
+                      ),
                     ),
                     BlocProvider<StripeAccountBloc>.value(
                       value: mockStripeBloc,
@@ -376,6 +420,7 @@ void main() {
                       availableKgNotifier: ValueNotifier<double>(10),
                       cashEnabledNotifier: ValueNotifier<bool>(false),
                       kgPriceEnabledNotifier: ValueNotifier<bool>(true),
+                      negotiableNotifier: ValueNotifier<bool>(false),
                       selectedContentNotifier: ValueNotifier<Set<String>>({}),
                       customAcceptedNotifier: ValueNotifier<Set<String>>({}),
                       refusedTypesNotifier: ValueNotifier<Set<String>>({}),
@@ -423,6 +468,14 @@ void main() {
       'focus sur le combobox « accepte » ouvre le catalogue complet (11 items) — pas une liste figée',
       (tester) async {
         await _pump(tester);
+        // Même traitement que le combobox « refuse » : le champ est passé
+        // sous la ligne de flottaison du viewport de test, il faut le remonter
+        // avant de le taper.
+        await tester.dragUntilVisible(
+          find.byKey(const Key('accepted-content-field')),
+          find.byType(SingleChildScrollView),
+          const Offset(0, -200),
+        );
         await tester.tap(find.byKey(const Key('accepted-content-field')));
         await tester.pumpAndSettle();
         for (final category in fallbackCatalog) {
@@ -690,6 +743,7 @@ void main() {
                   availableKgNotifier: availKg,
                   cashEnabledNotifier: cash,
                   kgPriceEnabledNotifier: kgEnabled,
+                  negotiableNotifier: ValueNotifier<bool>(false),
                   selectedContentNotifier: selContent,
                   customAcceptedNotifier: custAccepted,
                   refusedTypesNotifier: refused,

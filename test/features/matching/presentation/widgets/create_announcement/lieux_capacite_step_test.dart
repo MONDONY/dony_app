@@ -15,6 +15,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../../../helpers/mock_analytics_backend.dart';
+
 /// Construit le widget sous test à l'intérieur d'un arbre minimal valide.
 /// AddressSelectorField n'utilise pas getIt directement dans build() —
 /// il ouvre des sheets via GestureDetector → pas besoin de mock GetIt ici.
@@ -25,7 +27,9 @@ Widget _host({
   return MaterialApp(
     home: Scaffold(
       body: BlocProvider<AnnouncementFormBloc>(
-        create: (_) => AnnouncementFormBloc(),
+        create: (_) => AnnouncementFormBloc(
+          analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+        ),
         child: Form(
           child: SingleChildScrollView(
             child: LieuxCapaciteStep(

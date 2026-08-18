@@ -1,5 +1,5 @@
 import 'package:dony/core/utils/text_search.dart';
-import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
+import 'package:dony/features/package_request/data/models/nego_entry.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -21,35 +21,53 @@ class NegotiationFilterState extends Equatable {
   List<Object?> get props => [query, preset];
 }
 
-bool negoMatchesQuery(NegotiationThread t, String query) {
-  final q = normalizeSearch(query.trim());
-  if (q.isEmpty) {
+/// Teste une entrée contre une requête **déjà normalisée**.
+///
+/// La normalisation appartient à l'appelant, et non à ce prédicat : elle coûte
+/// une allocation de `String` par caractère (`split('')` + `StringBuffer`) et
+/// ne dépend pas de l'entrée. La refaire à chaque ligne, c'est la refaire
+/// autant de fois qu'il y a de discussions, à chaque frappe.
+bool negoMatchesNormalizedQuery(NegoEntry entry, String normalizedQuery) {
+  if (normalizedQuery.isEmpty) {
     return true;
   }
-  bool m(String? s) => s != null && normalizeSearch(s).contains(q);
-  return m(t.travelerName) || m(t.departureCity) || m(t.arrivalCity);
+  bool m(String? s) =>
+      s != null && normalizeSearch(s).contains(normalizedQuery);
+  return m(entry.counterpartyName) ||
+      m(entry.departureCity) ||
+      m(entry.arrivalCity);
 }
 
-// « En cours » / « Terminées » suivent exactement `NegotiationThreadStatus
-// .isActive` (source unique) : un nouveau statut actif (comme
-// AWAITING_COMMISSION) n'a donc besoin d'être déclaré qu'à un seul endroit
-// pour apparaître correctement filtré partout, plutôt que de retomber
+// « En cours » / « Terminées » suivent exactement `NegoEntry.isActive` (source
+// unique) : un nouveau statut actif (comme AWAITING_COMMISSION côté demande,
+// ou un futur statut côté trajet) n'a donc besoin d'être déclaré qu'à un seul
+// endroit pour apparaître correctement filtré partout, plutôt que de retomber
 // silencieusement dans le mauvais onglet.
-bool negoMatchesPreset(NegotiationThread t, NegoQuickFilter preset) =>
+bool negoMatchesPreset(NegoEntry entry, NegoQuickFilter preset) =>
     switch (preset) {
       NegoQuickFilter.all => true,
-      NegoQuickFilter.active => t.status.isActive,
-      NegoQuickFilter.terminal => !t.status.isActive,
+      NegoQuickFilter.active => entry.isActive,
+      NegoQuickFilter.terminal => !entry.isActive,
     };
 
-List<NegotiationThread> applyNegotiationFilters(
-  List<NegotiationThread> all,
+/// Filtre ET trie : les deux sources n'arrivent pas entrelacées, seule une
+/// remise en ordre par activité récente donne une liste lisible.
+///
+/// La requête est normalisée une seule fois, ici, et non par entrée : cette
+/// liste est reconstruite à chaque frappe, et elle fusionne désormais les deux
+/// sources de discussions.
+List<NegoEntry> applyNegotiationFilters(
+  List<NegoEntry> all,
   NegotiationFilterState f,
-) => all
-    .where(
-      (t) => negoMatchesPreset(t, f.preset) && negoMatchesQuery(t, f.query),
-    )
-    .toList();
+) {
+  final query = normalizeSearch(f.query.trim());
+  return <NegoEntry>[
+    for (final e in all)
+      if (negoMatchesPreset(e, f.preset) &&
+          negoMatchesNormalizedQuery(e, query))
+        e,
+  ]..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+}
 
 class NegotiationFilterCubit extends Cubit<NegotiationFilterState> {
   NegotiationFilterCubit() : super(const NegotiationFilterState());
