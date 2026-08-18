@@ -89,9 +89,14 @@ abstract final class PriceGridItemFormSheet {
 }
 
 /// Montant saisi, ou `null` si la saisie n'est pas encore un prix valide.
+///
+/// Une virgule en fin de saisie est ignorée plutôt que rejetée : « 15, » est
+/// un état de frappe normal, et griser le bouton à cet instant donnerait
+/// l'impression que le montant est refusé.
 double? _parse(String raw) {
-  if (raw.isEmpty) return null;
-  final parsed = double.tryParse(raw.replaceAll(',', '.'));
+  final trimmed = raw.endsWith(',') ? raw.substring(0, raw.length - 1) : raw;
+  if (trimmed.isEmpty) return null;
+  final parsed = double.tryParse(trimmed.replaceAll(',', '.'));
   if (parsed == null || parsed <= 0 || parsed > maxUnitPriceActive) return null;
   return parsed;
 }

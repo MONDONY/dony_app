@@ -168,8 +168,10 @@ class _LoadedViewState extends State<_LoadedView> {
               ),
               child: Row(
                 children: [
-                  const _ScopeStamp(),
-                  const Spacer(),
+                  // Flexible et non figé : à grande échelle de texte, le
+                  // tampon et le bouton se disputent la ligne.
+                  const Flexible(child: _ScopeStamp()),
+                  const SizedBox(width: DonySpacing.sm),
                   TextButton(
                     onPressed: () => _reordering.value = !reordering,
                     child: Text(reordering ? 'Terminé' : 'Réordonner'),
@@ -297,6 +299,8 @@ class _ScopeStamp extends StatelessWidget {
             color: cs.primary,
             letterSpacing: 0.8,
           ),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
         ),
       ),
     );

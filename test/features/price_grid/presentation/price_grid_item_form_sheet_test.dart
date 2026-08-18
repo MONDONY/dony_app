@@ -254,6 +254,24 @@ void main() {
       expect(btn.onPressed, isNull);
     });
 
+    testWidgets('une virgule en fin de frappe ne grise pas le bouton', (
+      tester,
+    ) async {
+      await _open(tester);
+      await tester.tap(find.text('Chaussures'));
+      await tester.pumpAndSettle();
+
+      await _type(tester, '15');
+      await tester.tap(find.widgetWithText(InkWell, ',').last);
+      await tester.pump();
+
+      // « 15, » est un état de frappe normal, pas un montant refusé.
+      final btn = tester.widget<DonyButton>(
+        find.byKey(const Key('price-grid-submit')),
+      );
+      expect(btn.onPressed, isNotNull);
+    });
+
     testWidgets('« Changer » ramène au catalogue', (tester) async {
       await _open(tester);
       await tester.tap(find.text('Chaussures'));
