@@ -6,8 +6,11 @@ import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/matching/bloc/bid_negotiation_list_bloc.dart';
+import 'package:dony/features/matching/data/models/bid_negotiation.dart';
 import 'package:dony/features/package_request/bloc/negotiation_filter_cubit.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
+import 'package:dony/features/package_request/data/models/nego_entry.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/profile/data/models/help_center_config.dart';
@@ -29,6 +32,9 @@ class _MyNegotiationsScreenState extends State<MyNegotiationsScreen> {
   void initState() {
     super.initState();
     getIt<NegotiationListBloc>().add(const NegotiationListFetchRequested());
+    getIt<BidNegotiationListBloc>().add(
+      const BidNegotiationListFetchRequested(),
+    );
   }
 
   @override
@@ -50,8 +56,15 @@ class _MyNegotiationsScreenState extends State<MyNegotiationsScreen> {
             child: ContextualTutorialCard(context: TutorialContext.negotiation),
           ),
           Expanded(
-            child: BlocProvider<NegotiationListBloc>.value(
-              value: getIt<NegotiationListBloc>(),
+            child: MultiBlocProvider(
+              providers: [
+                BlocProvider<NegotiationListBloc>.value(
+                  value: getIt<NegotiationListBloc>(),
+                ),
+                BlocProvider<BidNegotiationListBloc>.value(
+                  value: getIt<BidNegotiationListBloc>(),
+                ),
+              ],
               child: const MyNegotiationsBody(),
             ),
           ),
@@ -103,123 +116,175 @@ class _MyNegotiationsBodyState extends State<MyNegotiationsBody> {
       child: BlocBuilder<NegotiationFilterCubit, NegotiationFilterState>(
         builder: (context, filter) =>
             BlocBuilder<NegotiationListBloc, NegotiationListState>(
-              builder: (context, state) {
-                if (state.status == NegotiationListStatus.loading &&
-                    state.threads.isEmpty) {
-                  return const Center(
-                    child: CircularProgressIndicator(color: DonyColors.primary),
-                  );
-                }
-                if (state.status == NegotiationListStatus.error) {
-                  return _ErrorState(
-                    message: state.errorMessage ?? 'Erreur',
-                    onRetry: () => context.read<NegotiationListBloc>().add(
-                      const NegotiationListRefreshRequested(),
-                    ),
-                  );
-                }
-                if (state.threads.isEmpty) {
-                  return const DonyEmptyState(
-                    title: 'Aucune négociation',
-                    description:
-                        "Tes négociations actives apparaîtront ici dès qu'un voyageur fait une offre.",
-                    mascotte: DonyMascotteType.assis,
-                  );
-                }
+              builder: (context, state) =>
+                  BlocBuilder<BidNegotiationListBloc, BidNegotiationListState>(
+                    builder: (context, tripState) {
+                      // Les deux sources sont indépendantes : tant que l'une a
+                      // quelque chose à montrer, l'écran la montre. Chargement,
+                      // erreur et vide ne concernent donc que le cas où les deux
+                      // sont muettes.
+                      final bothEmpty =
+                          state.threads.isEmpty && tripState.summaries.isEmpty;
+                      final anyLoading =
+                          state.status == NegotiationListStatus.loading ||
+                          tripState.status == BidNegotiationListStatus.loading;
+                      final anyError =
+                          state.status == NegotiationListStatus.error ||
+                          tripState.status == BidNegotiationListStatus.error;
 
-                final all = state.threads;
-                final activeCount = all.where((t) => t.status.isActive).length;
-                final terminalCount = all.length - activeCount;
-                final filtered = applyNegotiationFilters(all, filter);
+                      if (bothEmpty && anyLoading) {
+                        return const Center(
+                          child: CircularProgressIndicator(
+                            color: DonyColors.primary,
+                          ),
+                        );
+                      }
+                      if (bothEmpty && anyError) {
+                        return _ErrorState(
+                          message:
+                              state.errorMessage ??
+                              tripState.errorMessage ??
+                              'Erreur',
+                          onRetry: () {
+                            context.read<NegotiationListBloc>().add(
+                              const NegotiationListRefreshRequested(),
+                            );
+                            context.read<BidNegotiationListBloc>().add(
+                              const BidNegotiationListRefreshRequested(),
+                            );
+                          },
+                        );
+                      }
+                      if (bothEmpty) {
+                        return const DonyEmptyState(
+                          title: 'Aucune négociation',
+                          description:
+                              "Tes négociations actives apparaîtront ici dès qu'un voyageur fait une offre.",
+                          mascotte: DonyMascotteType.assis,
+                        );
+                      }
 
-                return Column(
-                  children: [
-                    // Search bar
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                        DonySpacing.base,
-                        DonySpacing.sm,
-                        DonySpacing.base,
-                        0,
-                      ),
-                      child: DonySearchField(
-                        hint: 'Voyageur, ville…',
-                        controller: _searchController,
-                        onChanged: _onQuery,
-                        onClear: () => _filterCubit.setQuery(''),
-                      ),
-                    ),
-                    // Filter chips
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                        DonySpacing.base,
-                        DonySpacing.md,
-                        DonySpacing.base,
-                        DonySpacing.xs,
-                      ),
-                      child: Row(
+                      final all = <NegoEntry>[
+                        ...state.threads.map(NegoEntry.fromRequest),
+                        ...tripState.summaries.map(NegoEntry.fromTrip),
+                      ];
+                      final activeCount = all.where((e) => e.isActive).length;
+                      final terminalCount = all.length - activeCount;
+                      final filtered = applyNegotiationFilters(all, filter);
+
+                      return Column(
                         children: [
-                          Expanded(
-                            child: _FilterChip(
-                              label: 'Toutes (${all.length})',
-                              active: filter.preset == NegoQuickFilter.all,
-                              onTap: () =>
-                                  _filterCubit.setPreset(NegoQuickFilter.all),
+                          // Search bar
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(
+                              DonySpacing.base,
+                              DonySpacing.sm,
+                              DonySpacing.base,
+                              0,
+                            ),
+                            child: DonySearchField(
+                              hint: 'Voyageur, ville…',
+                              controller: _searchController,
+                              onChanged: _onQuery,
+                              onClear: () => _filterCubit.setQuery(''),
                             ),
                           ),
-                          const SizedBox(width: DonySpacing.xs + 2),
-                          Expanded(
-                            child: _FilterChip(
-                              label: 'En cours ($activeCount)',
-                              active: filter.preset == NegoQuickFilter.active,
-                              onTap: () => _filterCubit.setPreset(
-                                NegoQuickFilter.active,
-                              ),
+                          // Filter chips
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(
+                              DonySpacing.base,
+                              DonySpacing.md,
+                              DonySpacing.base,
+                              DonySpacing.xs,
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: _FilterChip(
+                                    label: 'Toutes (${all.length})',
+                                    active:
+                                        filter.preset == NegoQuickFilter.all,
+                                    onTap: () => _filterCubit.setPreset(
+                                      NegoQuickFilter.all,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: DonySpacing.xs + 2),
+                                Expanded(
+                                  child: _FilterChip(
+                                    label: 'En cours ($activeCount)',
+                                    active:
+                                        filter.preset == NegoQuickFilter.active,
+                                    onTap: () => _filterCubit.setPreset(
+                                      NegoQuickFilter.active,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: DonySpacing.xs + 2),
+                                Expanded(
+                                  child: _FilterChip(
+                                    label: 'Terminées ($terminalCount)',
+                                    active:
+                                        filter.preset ==
+                                        NegoQuickFilter.terminal,
+                                    onTap: () => _filterCubit.setPreset(
+                                      NegoQuickFilter.terminal,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          const SizedBox(width: DonySpacing.xs + 2),
+                          // List
                           Expanded(
-                            child: _FilterChip(
-                              label: 'Terminées ($terminalCount)',
-                              active: filter.preset == NegoQuickFilter.terminal,
-                              onTap: () => _filterCubit.setPreset(
-                                NegoQuickFilter.terminal,
-                              ),
-                            ),
+                            child: filtered.isEmpty
+                                ? _FilterEmptyState(
+                                    preset: filter.preset,
+                                    hasQuery: filter.query.isNotEmpty,
+                                  )
+                                : RefreshIndicator(
+                                    color: DonyColors.primary,
+                                    onRefresh: () async {
+                                      context.read<NegotiationListBloc>().add(
+                                        const NegotiationListRefreshRequested(),
+                                      );
+                                      context.read<BidNegotiationListBloc>().add(
+                                        const BidNegotiationListRefreshRequested(),
+                                      );
+                                    },
+                                    child: ListView.separated(
+                                      padding: EdgeInsets.fromLTRB(
+                                        DonySpacing.base,
+                                        DonySpacing.sm,
+                                        DonySpacing.base,
+                                        MediaQuery.of(context).padding.bottom +
+                                            100,
+                                      ),
+                                      itemCount: filtered.length,
+                                      separatorBuilder: (_, i) =>
+                                          const SizedBox(
+                                            height: DonySpacing.sm,
+                                          ),
+                                      itemBuilder: (_, i) =>
+                                          switch (filtered[i]) {
+                                            RequestNegoEntry(:final thread) =>
+                                              _NegoCard(
+                                                thread: thread,
+                                                index: i,
+                                              ),
+                                            TripNegoEntry(:final summary) =>
+                                              _TripNegoCard(
+                                                summary: summary,
+                                                index: i,
+                                              ),
+                                          },
+                                    ),
+                                  ),
                           ),
                         ],
-                      ),
-                    ),
-                    // List
-                    Expanded(
-                      child: filtered.isEmpty
-                          ? _FilterEmptyState(
-                              preset: filter.preset,
-                              hasQuery: filter.query.isNotEmpty,
-                            )
-                          : RefreshIndicator(
-                              color: DonyColors.primary,
-                              onRefresh: () async => context
-                                  .read<NegotiationListBloc>()
-                                  .add(const NegotiationListRefreshRequested()),
-                              child: ListView.separated(
-                                padding: EdgeInsets.fromLTRB(
-                                  DonySpacing.base,
-                                  DonySpacing.sm,
-                                  DonySpacing.base,
-                                  MediaQuery.of(context).padding.bottom + 100,
-                                ),
-                                itemCount: filtered.length,
-                                separatorBuilder: (_, i) =>
-                                    const SizedBox(height: DonySpacing.sm),
-                                itemBuilder: (_, i) =>
-                                    _NegoCard(thread: filtered[i], index: i),
-                              ),
-                            ),
-                    ),
-                  ],
-                );
-              },
+                      );
+                    },
+                  ),
             ),
       ),
     );
@@ -487,6 +552,8 @@ class _NegoCard extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(width: 6),
+                              const _SourcePill(kind: NegoEntryKind.request),
+                              const SizedBox(width: 4),
                               _StatusPill(status: thread.status),
                             ],
                           ),
@@ -559,6 +626,202 @@ class _NegoCard extends StatelessWidget {
         .animate()
         .fadeIn(duration: 220.ms, delay: (50 * index).ms)
         .slideY(begin: 0.04, curve: Curves.easeOutCubic);
+  }
+}
+
+// ── Carte d'une négociation de prix de trajet ────────────────────────────────
+
+/// Pendant de [_NegoCard] pour les fils de trajet.
+///
+/// Volontairement plus sobre : un résumé de trajet ne porte ni rounds détaillés
+/// ni statut de paiement, seulement de quoi reconnaître la discussion et
+/// l'ouvrir.
+class _TripNegoCard extends StatelessWidget {
+  const _TripNegoCard({required this.summary, required this.index});
+
+  final BidNegotiationSummary summary;
+  final int index;
+
+  /// Le résumé ne porte que le brut. L'afficher au voyageur lui montrerait un
+  /// montant qui n'est pas le sien : côté voyageur, le chiffre attend le fil.
+  bool get _showsAmount => summary.role != 'TRAVELER';
+
+  String get _route {
+    final dep = summary.departureCity;
+    final arr = summary.arrivalCity;
+    if (dep != null && arr != null) return '$dep → $arr';
+    return 'Trajet';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final isTerminal = summary.isClosed;
+
+    return Opacity(
+          opacity: isTerminal ? 0.65 : 1.0,
+          child: Material(
+            color: cs.surface,
+            borderRadius: BorderRadius.circular(DonyRadius.card),
+            child: InkWell(
+              key: Key('trip-nego-card-${summary.bidId}'),
+              borderRadius: BorderRadius.circular(DonyRadius.card),
+              onTap: () => context.push('/bids/${summary.bidId}/negotiation'),
+              child: Container(
+                clipBehavior: Clip.antiAlias,
+                decoration: BoxDecoration(
+                  color: cs.surface,
+                  borderRadius: BorderRadius.circular(DonyRadius.card),
+                  border: Border.all(
+                    color: summary.hasUnread
+                        ? DonyColors.primary.withValues(alpha: 0.30)
+                        : cs.outline,
+                    width: summary.hasUnread ? 1.5 : 1.0,
+                  ),
+                ),
+                child: Stack(
+                  children: [
+                    Positioned(
+                      left: 0,
+                      top: 0,
+                      bottom: 0,
+                      child: Container(
+                        width: 4,
+                        color: isTerminal
+                            ? DonyColors.neutral300
+                            : DonyColors.primary,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  _route,
+                                  style: tt.titleLarge?.copyWith(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w800,
+                                    color: isTerminal
+                                        ? cs.onSurfaceVariant
+                                        : cs.onSurface,
+                                    letterSpacing: -0.3,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              if (_showsAmount)
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      PriceDisplay.money(
+                                        summary.proposedGrossEur,
+                                        summary.currency,
+                                      ),
+                                      style: tt.headlineMedium?.copyWith(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w800,
+                                        color: isTerminal
+                                            ? cs.onSurfaceVariant
+                                            : cs.onSurface,
+                                        letterSpacing: -0.5,
+                                        height: 1.0,
+                                      ),
+                                    ),
+                                    Text(
+                                      isTerminal ? 'terminé' : 'proposition',
+                                      style: tt.bodySmall?.copyWith(
+                                        fontSize: 10,
+                                        color: cs.onSurfaceVariant,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  summary.counterpartyName ?? 'Interlocuteur',
+                                  overflow: TextOverflow.ellipsis,
+                                  style: tt.bodySmall?.copyWith(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: cs.onSurfaceVariant,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              const _SourcePill(kind: NegoEntryKind.trip),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Tour ${summary.round} · ${_timeAgo(summary.updatedAt ?? DateTime.now())}',
+                            overflow: TextOverflow.ellipsis,
+                            style: tt.bodySmall?.copyWith(
+                              fontSize: 11,
+                              color: cs.onSurfaceVariant,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        )
+        .animate()
+        .fadeIn(duration: 220.ms, delay: (50 * index).ms)
+        .slideY(begin: 0.04, curve: Curves.easeOutCubic);
+  }
+}
+
+// ── Marqueur de source ───────────────────────────────────────────────────────
+
+/// Distingue les deux natures de discussion mélangées dans la même liste :
+/// sans lui, une carte « Paris → Dakar » ne dit pas si l'on négocie sa demande
+/// d'envoi ou le prix d'un trajet.
+class _SourcePill extends StatelessWidget {
+  const _SourcePill({required this.kind});
+
+  final NegoEntryKind kind;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final isTrip = kind == NegoEntryKind.trip;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(DonyRadius.full),
+        border: Border.all(color: cs.outlineVariant),
+      ),
+      child: Text(
+        isTrip ? 'Trajet' : 'Demande',
+        style: tt.bodySmall?.copyWith(
+          fontSize: 9,
+          fontWeight: FontWeight.w700,
+          color: cs.onSurfaceVariant,
+          letterSpacing: 0.3,
+        ),
+      ),
+    );
   }
 }
 

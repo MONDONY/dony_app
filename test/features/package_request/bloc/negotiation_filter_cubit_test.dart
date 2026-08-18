@@ -1,26 +1,29 @@
 import 'package:dony/features/package_request/bloc/negotiation_filter_cubit.dart';
+import 'package:dony/features/package_request/data/models/nego_entry.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-NegotiationThread _t({
+NegoEntry _t({
   String? traveler = 'Awa',
   String? arrivee = 'Dakar',
   NegotiationThreadStatus status = NegotiationThreadStatus.open,
-}) => NegotiationThread(
-  id: 't_${arrivee}_${status.name}',
-  packageRequestId: 'p1',
-  travelerId: 'v1',
-  travelerName: traveler,
-  departureCity: 'Paris',
-  arrivalCity: arrivee,
-  status: status,
-  currentPriceEur: 15,
-  lastActivityAt: DateTime(2026, 6),
-  createdAt: DateTime(2026, 5),
-  travelerTravelDate: DateTime(2026, 7),
-  travelerAvailableKg: 10,
-  roundsCount: 1,
-  messages: const [],
+}) => NegoEntry.fromRequest(
+  NegotiationThread(
+    id: 't_${arrivee}_${status.name}',
+    packageRequestId: 'p1',
+    travelerId: 'v1',
+    travelerName: traveler,
+    departureCity: 'Paris',
+    arrivalCity: arrivee,
+    status: status,
+    currentPriceEur: 15,
+    lastActivityAt: DateTime(2026, 6),
+    createdAt: DateTime(2026, 5),
+    travelerTravelDate: DateTime(2026, 7),
+    travelerAvailableKg: 10,
+    roundsCount: 1,
+    messages: const [],
+  ),
 );
 
 void main() {

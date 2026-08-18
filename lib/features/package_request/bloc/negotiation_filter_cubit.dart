@@ -1,5 +1,5 @@
 import 'package:dony/core/utils/text_search.dart';
-import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
+import 'package:dony/features/package_request/data/models/nego_entry.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -21,35 +21,41 @@ class NegotiationFilterState extends Equatable {
   List<Object?> get props => [query, preset];
 }
 
-bool negoMatchesQuery(NegotiationThread t, String query) {
+bool negoMatchesQuery(NegoEntry entry, String query) {
   final q = normalizeSearch(query.trim());
   if (q.isEmpty) {
     return true;
   }
   bool m(String? s) => s != null && normalizeSearch(s).contains(q);
-  return m(t.travelerName) || m(t.departureCity) || m(t.arrivalCity);
+  return m(entry.counterpartyName) ||
+      m(entry.departureCity) ||
+      m(entry.arrivalCity);
 }
 
-// « En cours » / « Terminées » suivent exactement `NegotiationThreadStatus
-// .isActive` (source unique) : un nouveau statut actif (comme
-// AWAITING_COMMISSION) n'a donc besoin d'être déclaré qu'à un seul endroit
-// pour apparaître correctement filtré partout, plutôt que de retomber
+// « En cours » / « Terminées » suivent exactement `NegoEntry.isActive` (source
+// unique) : un nouveau statut actif (comme AWAITING_COMMISSION côté demande,
+// ou un futur statut côté trajet) n'a donc besoin d'être déclaré qu'à un seul
+// endroit pour apparaître correctement filtré partout, plutôt que de retomber
 // silencieusement dans le mauvais onglet.
-bool negoMatchesPreset(NegotiationThread t, NegoQuickFilter preset) =>
+bool negoMatchesPreset(NegoEntry entry, NegoQuickFilter preset) =>
     switch (preset) {
       NegoQuickFilter.all => true,
-      NegoQuickFilter.active => t.status.isActive,
-      NegoQuickFilter.terminal => !t.status.isActive,
+      NegoQuickFilter.active => entry.isActive,
+      NegoQuickFilter.terminal => !entry.isActive,
     };
 
-List<NegotiationThread> applyNegotiationFilters(
-  List<NegotiationThread> all,
+/// Filtre ET trie : les deux sources n'arrivent pas entrelacées, seule une
+/// remise en ordre par activité récente donne une liste lisible.
+List<NegoEntry> applyNegotiationFilters(
+  List<NegoEntry> all,
   NegotiationFilterState f,
-) => all
-    .where(
-      (t) => negoMatchesPreset(t, f.preset) && negoMatchesQuery(t, f.query),
-    )
-    .toList();
+) =>
+    all
+        .where(
+          (e) => negoMatchesPreset(e, f.preset) && negoMatchesQuery(e, f.query),
+        )
+        .toList()
+      ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
 
 class NegotiationFilterCubit extends Cubit<NegotiationFilterState> {
   NegotiationFilterCubit() : super(const NegotiationFilterState());
