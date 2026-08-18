@@ -432,6 +432,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `accessibility_setting_changed` | AccessibilityBloc — un réglage d'accessibilité est modifié (propriétés `setting`, `value`) ou réinitialisation complète (`setting: reset`) |
 | `trip_marked_arrived` | AnnouncementBloc._onTripMarkArrivedRequested() — voyageur marque son trajet arrivé à destination |
 | `arrival_instructions_updated` | AnnouncementBloc._onArrivalInstructionsUpdateRequested() — édition des instructions de retrait après le marquage initial |
+| `trip_negotiable_toggled` | AnnouncementFormBloc._onNegotiableChanged — bascule « J'accepte les propositions de prix » de l'étape Prix & Conditions du wizard de publication d'un trajet (propriété `enabled`) |
 | `trip_poster_opened` | TripPosterScreen.initState — ouverture de l'affiche partageable d'un trajet |
 | `trip_poster_shared` | TripPosterScreen — partage de l'image via la feuille système (`action: share`) ou enregistrement galerie (`action: save`) ; non émis si le partage est annulé |
 | `trip_poster_link_copied` | TripPosterScreen — tap sur « Copier le lien » ou « Copier la légende ». Le canal réel est porté par le lien lui-même (`?c=lien` / `?c=post` / `?c=partage`), pas par une propriété : il doit survivre au partage hors de l'app |
