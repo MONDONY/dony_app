@@ -14,11 +14,7 @@ void main() {
     testWidgets('affiche le libellé, l\'emoji et le prix', (tester) async {
       await tester.pumpWidget(
         _wrap(
-          const DonyPriceTag(
-            label: 'Téléphone',
-            emoji: '📱',
-            price: '12,60 €',
-          ),
+          const DonyPriceTag(label: 'Téléphone', emoji: '📱', price: '12,60 €'),
         ),
       );
 
@@ -79,14 +75,12 @@ void main() {
       expect(taps, 1);
     });
 
-    testWidgets('sans onTap, l\'étiquette n\'est pas un bouton', (tester) async {
+    testWidgets('sans onTap, l\'étiquette n\'est pas un bouton', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _wrap(
-          const DonyPriceTag(
-            label: 'Téléphone',
-            emoji: '📱',
-            price: '12,60 €',
-          ),
+          const DonyPriceTag(label: 'Téléphone', emoji: '📱', price: '12,60 €'),
         ),
       );
 
@@ -112,18 +106,11 @@ void main() {
       final handle = tester.ensureSemantics();
       await tester.pumpWidget(
         _wrap(
-          const DonyPriceTag(
-            label: 'Téléphone',
-            emoji: '📱',
-            price: '12,60 €',
-          ),
+          const DonyPriceTag(label: 'Téléphone', emoji: '📱', price: '12,60 €'),
         ),
       );
 
-      expect(
-        find.bySemanticsLabel('Téléphone, 12,60 €'),
-        findsOneWidget,
-      );
+      expect(find.bySemanticsLabel('Téléphone, 12,60 €'), findsOneWidget);
       handle.dispose();
     });
 

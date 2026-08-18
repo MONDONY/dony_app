@@ -192,10 +192,8 @@ class _LoadedViewState extends State<_LoadedView> {
                 // Poignées explicites, jamais l'appui long : un appui long sur
                 // une étiquette entrerait en conflit avec le tap d'édition.
                 buildDefaultDragHandles: false,
-                proxyDecorator: (child, index, animation) => Material(
-                  type: MaterialType.transparency,
-                  child: child,
-                ),
+                proxyDecorator: (child, index, animation) =>
+                    Material(type: MaterialType.transparency, child: child),
                 // `onReorderItem` et non `onReorder` : il livre un newIndex
                 // déjà corrigé du retrait de l'élément déplacé.
                 onReorderItem: (oldIndex, newIndex) =>
@@ -415,10 +413,7 @@ class _PriceGridItemTile extends StatelessWidget {
               // libellé, qui se met à s'ellipser sur les écrans étroits. La
               // cible tactile reste à 44 pt par les contraintes.
               padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(
-                minWidth: 44,
-                minHeight: 44,
-              ),
+              constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(DonyRadius.md),
               ),

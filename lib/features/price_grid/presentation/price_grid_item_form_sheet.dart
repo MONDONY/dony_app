@@ -65,11 +65,7 @@ abstract final class PriceGridItemFormSheet {
           Navigator.of(ctx, rootNavigator: true).pop();
         },
       ),
-      child: _FormContent(
-        label: label,
-        raw: raw,
-        takenLabels: takenLabels,
-      ),
+      child: _FormContent(label: label, raw: raw, takenLabels: takenLabels),
     ).whenComplete(() {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         label.dispose();
@@ -230,9 +226,7 @@ class _CatalogStepState extends State<_CatalogStep> {
         final value = _controller.value;
         final query = value.text.trim();
         final lowered = query.toLowerCase();
-        final taken = widget.takenLabels
-            .map((e) => e.toLowerCase())
-            .toSet();
+        final taken = widget.takenLabels.map((e) => e.toLowerCase()).toSet();
 
         final matches = _catalog.value
             .where((c) => !taken.contains(c.label.toLowerCase()))
@@ -243,7 +237,8 @@ class _CatalogStepState extends State<_CatalogStep> {
 
         // « Ajouter "X" » dès qu'on tape quelque chose qui n'existe pas déjà,
         // à l'identique, dans le catalogue ou dans la grille.
-        final exact = query.isNotEmpty &&
+        final exact =
+            query.isNotEmpty &&
             (matches.any((c) => c.label.toLowerCase() == lowered) ||
                 taken.contains(lowered));
         final canCreate = query.isNotEmpty && !exact && query.length <= 100;
@@ -268,9 +263,7 @@ class _CatalogStepState extends State<_CatalogStep> {
 
             if (matches.isEmpty && !canCreate)
               Padding(
-                padding: const EdgeInsets.symmetric(
-                  vertical: DonySpacing.xl,
-                ),
+                padding: const EdgeInsets.symmetric(vertical: DonySpacing.xl),
                 child: Text(
                   'Tous les articles du catalogue sont déjà dans votre '
                   'grille. Écrivez le vôtre pour en ajouter un autre.',
@@ -379,7 +372,8 @@ class _PriceStep extends StatelessWidget {
       valueListenable: raw,
       builder: (context, value, _) {
         final price = _parse(value);
-        final tooHigh = value.isNotEmpty &&
+        final tooHigh =
+            value.isNotEmpty &&
             (double.tryParse(value.replaceAll(',', '.')) ?? 0) >
                 maxUnitPriceActive;
 
@@ -485,8 +479,7 @@ class _Echo extends StatelessWidget {
     if (tooHigh) {
       background = cs.errorLight;
       ink = cs.error;
-      message =
-          'Maximum ${formatPriceActive(maxUnitPriceActive)} par article.';
+      message = 'Maximum ${formatPriceActive(maxUnitPriceActive)} par article.';
     } else if (price == null) {
       background = cs.surfaceContainerHighest;
       ink = cs.onSurfaceVariant;

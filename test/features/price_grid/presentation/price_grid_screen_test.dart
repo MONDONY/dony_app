@@ -77,18 +77,13 @@ void main() {
     });
 
     testWidgets('grille vide : invite à créer une étiquette', (tester) async {
-      await tester.pumpWidget(
-        _wrap(_blocWith(const PriceGridLoaded([]))),
-      );
+      await tester.pumpWidget(_wrap(_blocWith(const PriceGridLoaded([]))));
       await tester.pumpAndSettle();
 
       expect(find.text('Aucune étiquette'), findsOneWidget);
       expect(find.text('Nouvelle étiquette'), findsOneWidget);
       // Le vide dit déjà que le barème vaut pour tous les trajets.
-      expect(
-        find.textContaining('tous vos trajets'),
-        findsOneWidget,
-      );
+      expect(find.textContaining('tous vos trajets'), findsOneWidget);
     });
   });
 
@@ -190,9 +185,9 @@ void main() {
       await gesture.up();
       await tester.pumpAndSettle();
 
-      final captured = verify(() => bloc.add(captureAny())).captured
-          .whereType<PriceGridItemsReorderRequested>()
-          .toList();
+      final captured = verify(
+        () => bloc.add(captureAny()),
+      ).captured.whereType<PriceGridItemsReorderRequested>().toList();
 
       expect(
         captured,
@@ -220,8 +215,10 @@ void main() {
       // Le retrait ne vaut pas que pour le trajet en cours : la grille est
       // commune, et le dialogue doit le dire avant de supprimer.
       expect(
-        find.textContaining('sera retiré de votre grille, sur tous vos '
-            'trajets'),
+        find.textContaining(
+          'sera retiré de votre grille, sur tous vos '
+          'trajets',
+        ),
         findsOneWidget,
       );
     });
@@ -238,9 +235,9 @@ void main() {
       await tester.tap(find.text('Supprimer').last);
       await tester.pumpAndSettle();
 
-      final captured = verify(() => bloc.add(captureAny())).captured
-          .whereType<PriceGridItemDeleteRequested>()
-          .toList();
+      final captured = verify(
+        () => bloc.add(captureAny()),
+      ).captured.whereType<PriceGridItemDeleteRequested>().toList();
 
       expect(captured, hasLength(1));
       expect(captured.single.itemId, 'a1');

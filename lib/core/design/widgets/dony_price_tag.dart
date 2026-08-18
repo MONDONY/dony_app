@@ -105,16 +105,14 @@ class DonyPriceTag extends StatelessWidget {
           left: Radius.circular(DonyRadius.xs + 1),
           right: Radius.circular(DonyRadius.card),
         ),
-        border: Border.all(
-          color: borderColor,
-          width: highlighted ? 1.5 : 1,
-        ),
+        border: Border.all(color: borderColor, width: highlighted ? 1.5 : 1),
         boxShadow: [
           // Ombre franche, sans flou : du papier posé, pas une carte qui
           // flotte. C'est ce décalage net qui porte la direction.
           BoxShadow(
-            color: (highlighted ? cs.primary : cs.onSurface)
-                .withValues(alpha: highlighted ? 0.22 : 0.09),
+            color: (highlighted ? cs.primary : cs.onSurface).withValues(
+              alpha: highlighted ? 0.22 : 0.09,
+            ),
             offset: const Offset(2, 3),
           ),
         ],
@@ -200,9 +198,7 @@ class DonyPriceTag extends StatelessWidget {
           left: compact ? 18 : 21,
           top: DonySpacing.sm,
           bottom: DonySpacing.sm,
-          child: _PerforationLine(
-            color: cs.onSurface.withValues(alpha: 0.18),
-          ),
+          child: _PerforationLine(color: cs.onSurface.withValues(alpha: 0.18)),
         ),
       ],
     );

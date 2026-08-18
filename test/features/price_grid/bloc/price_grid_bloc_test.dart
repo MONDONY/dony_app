@@ -193,9 +193,7 @@ void main() {
       'PriceGridItemsReorderRequested rétablit l\'ordre initial si le serveur '
       'refuse',
       build: () {
-        when(
-          () => repository.reorder(any()),
-        ).thenThrow(Exception('réseau'));
+        when(() => repository.reorder(any())).thenThrow(Exception('réseau'));
         return PriceGridBloc(repository);
       },
       seed: () => const PriceGridLoaded([_item1, _item2]),

@@ -216,10 +216,7 @@ void main() {
       await tester.tap(find.text('Chaussures'));
       await tester.pumpAndSettle();
 
-      expect(
-        find.textContaining('Saisissez le montant'),
-        findsOneWidget,
-      );
+      expect(find.textContaining('Saisissez le montant'), findsOneWidget);
 
       await _type(tester, '15');
 
@@ -294,9 +291,9 @@ void main() {
       await tester.tap(find.byKey(const Key('price-grid-submit')));
       await tester.pumpAndSettle();
 
-      final captured = verify(() => bloc.add(captureAny())).captured
-          .whereType<PriceGridItemAddRequested>()
-          .toList();
+      final captured = verify(
+        () => bloc.add(captureAny()),
+      ).captured.whereType<PriceGridItemAddRequested>().toList();
 
       expect(captured, hasLength(1));
       expect(captured.single.label, 'Chaussures');
@@ -317,9 +314,9 @@ void main() {
       await tester.tap(find.byKey(const Key('price-grid-submit')));
       await tester.pumpAndSettle();
 
-      final captured = verify(() => bloc.add(captureAny())).captured
-          .whereType<PriceGridItemAddRequested>()
-          .toList();
+      final captured = verify(
+        () => bloc.add(captureAny()),
+      ).captured.whereType<PriceGridItemAddRequested>().toList();
 
       expect(captured.single.label, 'Pagne 6 yards');
     });
@@ -338,9 +335,9 @@ void main() {
       await tester.tap(find.byKey(const Key('price-grid-submit')));
       await tester.pumpAndSettle();
 
-      final captured = verify(() => bloc.add(captureAny())).captured
-          .whereType<PriceGridItemAddRequested>()
-          .toList();
+      final captured = verify(
+        () => bloc.add(captureAny()),
+      ).captured.whereType<PriceGridItemAddRequested>().toList();
 
       expect(captured.single.unitPriceNet, 12.5);
     });
@@ -368,9 +365,9 @@ void main() {
       await tester.tap(find.byKey(const Key('price-grid-submit')));
       await tester.pumpAndSettle();
 
-      final updates = verify(() => bloc.add(captureAny())).captured
-          .whereType<PriceGridItemUpdateRequested>()
-          .toList();
+      final updates = verify(
+        () => bloc.add(captureAny()),
+      ).captured.whereType<PriceGridItemUpdateRequested>().toList();
 
       expect(updates, hasLength(1));
       expect(updates.single.itemId, 'a1');

@@ -24,10 +24,7 @@ const _items = [
 
 /// Monte la carte derrière un GoRouter réel : « Modifier » pousse la route de
 /// la grille, et le retour doit provoquer un rechargement.
-Widget _wrap(
-  List<GridPreviewItem> items, {
-  AnnouncementFormBloc? bloc,
-}) {
+Widget _wrap(List<GridPreviewItem> items, {AnnouncementFormBloc? bloc}) {
   final router = GoRouter(
     initialLocation: '/',
     routes: [
@@ -127,10 +124,7 @@ void main() {
       await tester.pumpWidget(_wrap(_items));
       await tester.pumpAndSettle();
 
-      expect(
-        find.textContaining('viennent de votre profil'),
-        findsOneWidget,
-      );
+      expect(find.textContaining('viennent de votre profil'), findsOneWidget);
     });
   });
 
