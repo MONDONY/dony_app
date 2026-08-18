@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/design/widgets/dony_skeleton.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/contact_picker_service.dart';
@@ -561,9 +562,7 @@ void main() {
     },
   );
 
-  testWidgets('shows loading indicator while first load is in flight', (
-    tester,
-  ) async {
+  testWidgets('shows skeleton while first load is in flight', (tester) async {
     final bloc = MockRecipientBloc();
     when(
       () => bloc.state,
@@ -572,7 +571,7 @@ void main() {
 
     await pumpSheet(tester, bloc, resultHolder: results, settle: false);
 
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.byType(DonyUserCardSkeleton), findsWidgets);
   });
 
   testWidgets('close button pops the sheet with null', (tester) async {

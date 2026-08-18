@@ -231,7 +231,19 @@ class _RecipientPickerSheetState extends State<RecipientPickerSheet> {
                       child:
                           state.status == RecipientStatus.loading &&
                               state.recipients.isEmpty
-                          ? const Center(child: CircularProgressIndicator())
+                          ? ListView.separated(
+                              padding: const EdgeInsets.fromLTRB(
+                                DonySpacing.lg,
+                                DonySpacing.md,
+                                DonySpacing.lg,
+                                DonySpacing.sm,
+                              ),
+                              itemCount: 4,
+                              separatorBuilder: (_, _) =>
+                                  const SizedBox(height: DonySpacing.sm),
+                              itemBuilder: (_, _) =>
+                                  const DonyUserCardSkeleton(),
+                            )
                           : ListView(
                               controller: scrollController,
                               padding: const EdgeInsets.only(

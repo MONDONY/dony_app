@@ -84,9 +84,15 @@ class _AllReviewsSheetBodyState extends State<_AllReviewsSheetBody> {
     return BlocBuilder<UserReviewsCubit, UserReviewsState>(
       builder: (context, state) {
         if (state is UserReviewsLoading) {
-          return const SizedBox(
-            height: 200,
-            child: Center(child: CircularProgressIndicator()),
+          return const Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DonyUserCardSkeleton(),
+              SizedBox(height: DonySpacing.sm),
+              DonyUserCardSkeleton(),
+              SizedBox(height: DonySpacing.sm),
+              DonyUserCardSkeleton(),
+            ],
           );
         }
 
@@ -158,10 +164,7 @@ class _LoadedBody extends StatelessWidget {
                 const SizedBox(height: DonySpacing.sm),
             itemBuilder: (context, index) {
               if (index == items.length) {
-                return const Padding(
-                  padding: EdgeInsets.symmetric(vertical: DonySpacing.base),
-                  child: Center(child: CircularProgressIndicator()),
-                );
+                return const DonyUserCardSkeleton();
               }
               return _ReviewRow(item: items[index]);
             },

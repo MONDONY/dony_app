@@ -89,11 +89,12 @@ class _TripParcelsSectionState extends State<TripParcelsSection> {
         BlocBuilder<BidBloc, BidState>(
           builder: (context, state) {
             if (state is BidInitial || state is BidLoading) {
-              return Padding(
-                padding: const EdgeInsets.all(DonySpacing.lg),
-                child: Center(
-                  child: CircularProgressIndicator(color: cs.primary),
-                ),
+              return const Column(
+                children: [
+                  DonyUserCardSkeleton(),
+                  SizedBox(height: DonySpacing.sm),
+                  DonyUserCardSkeleton(),
+                ],
               );
             }
             if (state is BidListLoaded) {

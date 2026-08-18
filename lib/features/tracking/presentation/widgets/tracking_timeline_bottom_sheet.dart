@@ -102,18 +102,12 @@ class _TrackingTimelineContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final corridorCodes = _parseCorridor();
 
     return BlocBuilder<TrackingBloc, TrackingState>(
       builder: (context, state) {
         if (state is TrackingEventsLoading) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(DonySpacing.xxl),
-              child: CircularProgressIndicator(color: cs.primary),
-            ),
-          );
+          return const DonyDetailSkeleton();
         }
         if (state is TrackingEventsError) {
           return _ErrorView(

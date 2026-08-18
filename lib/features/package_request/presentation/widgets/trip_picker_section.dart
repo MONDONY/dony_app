@@ -146,7 +146,13 @@ class TripPickerSectionState extends State<TripPickerSection> {
       valueListenable: _loadingNotifier,
       builder: (context, loading, _) {
         if (loading) {
-          return Center(child: CircularProgressIndicator(color: cs.primary));
+          return const Column(
+            children: [
+              DonyUserCardSkeleton(compact: true),
+              SizedBox(height: DonySpacing.sm),
+              DonyUserCardSkeleton(compact: true),
+            ],
+          );
         }
         return ValueListenableBuilder<String?>(
           valueListenable: _errorNotifier,

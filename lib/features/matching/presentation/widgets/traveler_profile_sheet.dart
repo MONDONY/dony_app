@@ -251,8 +251,12 @@ class _TravelerProfileSheet extends StatelessWidget {
                                 ),
                               );
                             }
-                            return const Center(
-                              child: CircularProgressIndicator(),
+                            return const Column(
+                              children: [
+                                DonyUserCardSkeleton(compact: true),
+                                SizedBox(height: DonySpacing.sm),
+                                DonyUserCardSkeleton(compact: true),
+                              ],
                             );
                           },
                         ),

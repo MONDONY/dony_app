@@ -1,3 +1,4 @@
+import 'package:dony/core/design/widgets/dony_skeleton.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/matching/presentation/widgets/route_map_components.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
@@ -86,7 +87,7 @@ void main() {
 
     await _openSheet(tester, bloc, settle: false);
 
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.byType(DonyDetailSkeleton), findsOneWidget);
   });
 
   testWidgets('affiche la carte corridor quand les étapes sont chargées', (

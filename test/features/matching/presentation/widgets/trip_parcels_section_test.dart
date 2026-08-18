@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/design/widgets/dony_empty_state.dart';
+import 'package:dony/core/design/widgets/dony_skeleton.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
@@ -150,13 +151,13 @@ void main() {
     },
   );
 
-  testWidgets('état de chargement → CircularProgressIndicator', (tester) async {
+  testWidgets('état de chargement → skeleton', (tester) async {
     stub(BidLoading());
 
     await _pump(tester, bidBloc);
     await tester.pump();
 
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.byType(DonyUserCardSkeleton), findsWidgets);
   });
 
   testWidgets('≥ 2 statuts → filtre rapide affiché avec compteur « Tous »', (

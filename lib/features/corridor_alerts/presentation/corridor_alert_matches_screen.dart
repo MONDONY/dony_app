@@ -87,8 +87,19 @@ class _CorridorAlertMatchesView extends StatelessWidget {
           switch (state.status) {
             case CorridorAlertMatchesStatus.initial:
             case CorridorAlertMatchesStatus.loading:
-              return Center(
-                child: CircularProgressIndicator(color: cs.primary),
+              return ListView.separated(
+                padding: const EdgeInsets.fromLTRB(
+                  DonySpacing.lg,
+                  DonySpacing.lg,
+                  DonySpacing.lg,
+                  DonySpacing.huge,
+                ),
+                itemCount: 4,
+                separatorBuilder: (_, _) =>
+                    const SizedBox(height: DonySpacing.md),
+                itemBuilder: (_, _) => isTrip
+                    ? const DonyTripCardSkeleton()
+                    : const DonyTicketCardSkeleton(),
               );
             case CorridorAlertMatchesStatus.error:
               return DonyEmptyState(

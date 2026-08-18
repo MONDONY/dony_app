@@ -1,3 +1,4 @@
+import 'package:dony/core/design/widgets/dony_skeleton.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/profile/bloc/user_reviews_cubit.dart';
 import 'package:dony/features/profile/presentation/widgets/all_reviews_bottom_sheet.dart';
@@ -101,12 +102,12 @@ void main() {
     }
   }
 
-  testWidgets('état chargement : indicateur, aucun avis rendu', (tester) async {
+  testWidgets('état chargement : skeleton, aucun avis rendu', (tester) async {
     stubState(const UserReviewsLoading());
 
     await openSheet(tester, settle: false);
 
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.byType(DonyUserCardSkeleton), findsWidgets);
     expect(find.text('Aucun avis pour le moment.'), findsNothing);
   });
 
@@ -187,6 +188,6 @@ void main() {
     await openSheet(tester, settle: false);
 
     expect(find.text('Awa Diop'), findsOneWidget);
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.byType(DonyUserCardSkeleton), findsWidgets);
   });
 }
