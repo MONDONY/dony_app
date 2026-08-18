@@ -75,15 +75,13 @@ void main() {
   );
 
   group('MyPackageRequestsBody', () {
-    testWidgets('affiche CircularProgressIndicator en état loading', (
-      tester,
-    ) async {
+    testWidgets('affiche un skeleton en état loading', (tester) async {
       when(() => bloc.state).thenReturn(
         PackageRequestState(status: PackageRequestListStatus.loading),
       );
       await tester.pumpWidget(wrap());
       await tester.pump();
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byType(DonyTicketCardSkeleton), findsWidgets);
     });
 
     testWidgets('affiche _EmptyView quand la liste est vide', (tester) async {

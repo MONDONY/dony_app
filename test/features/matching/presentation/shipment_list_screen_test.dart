@@ -173,7 +173,7 @@ void main() {
     },
   );
 
-  testWidgets('état BidLoading affiche un spinner', (tester) async {
+  testWidgets('état BidLoading affiche un skeleton', (tester) async {
     whenListen(
       bidBloc,
       const Stream<BidState>.empty(),
@@ -182,10 +182,10 @@ void main() {
     await tester.pumpWidget(subject());
     await tester.pump(const Duration(milliseconds: 400));
 
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.byType(DonyUserCardSkeleton), findsWidgets);
   });
 
-  testWidgets('état BidInitial affiche un spinner', (tester) async {
+  testWidgets('état BidInitial affiche un skeleton', (tester) async {
     whenListen(
       bidBloc,
       const Stream<BidState>.empty(),
@@ -194,7 +194,7 @@ void main() {
     await tester.pumpWidget(subject());
     await tester.pump(const Duration(milliseconds: 400));
 
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.byType(DonyUserCardSkeleton), findsWidgets);
   });
 
   testWidgets('état BidError affiche un message d\'erreur', (tester) async {

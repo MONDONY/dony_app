@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/design/widgets/dony_skeleton.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_event.dart';
@@ -127,13 +128,11 @@ void main() {
       }
     });
 
-    testWidgets('shows loading indicator when state is Loading', (
-      tester,
-    ) async {
+    testWidgets('shows skeleton when state is Loading', (tester) async {
       when(() => bloc.state).thenReturn(const ConversationListLoading());
       await _pump(tester, bloc);
 
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byType(DonyConversationTileSkeleton), findsWidgets);
     });
 
     testWidgets('shows empty state when no conversations', (tester) async {

@@ -1603,10 +1603,19 @@ class _MapSenderViewState extends State<_MapSenderView> {
                   >(
                     builder: (ctx, prState) {
                       if (prState.status == SearchStatus.loading) {
-                        return SliverFillRemaining(
-                          hasScrollBody: false,
-                          child: Center(
-                            child: CircularProgressIndicator(color: cs.primary),
+                        return SliverPadding(
+                          padding: const EdgeInsets.fromLTRB(
+                            DonySpacing.base,
+                            DonySpacing.sm,
+                            DonySpacing.base,
+                            DonySpacing.huge,
+                          ),
+                          sliver: SliverList.separated(
+                            itemCount: 4,
+                            separatorBuilder: (_, _) =>
+                                const SizedBox(height: DonySpacing.md),
+                            itemBuilder: (_, _) =>
+                                const DonyTicketCardSkeleton(),
                           ),
                         );
                       }
@@ -1705,10 +1714,18 @@ class _MapSenderViewState extends State<_MapSenderView> {
                     },
                   )
                 else if (tripsLoading && count == 0)
-                  SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: Center(
-                      child: CircularProgressIndicator(color: cs.primary),
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(
+                      DonySpacing.base,
+                      DonySpacing.sm,
+                      DonySpacing.base,
+                      DonySpacing.huge,
+                    ),
+                    sliver: SliverList.separated(
+                      itemCount: 4,
+                      separatorBuilder: (_, _) =>
+                          const SizedBox(height: DonySpacing.md),
+                      itemBuilder: (_, _) => const DonyTripCardSkeleton(),
                     ),
                   )
                 // Backend injoignable : « aucun voyageur » serait un mensonge.

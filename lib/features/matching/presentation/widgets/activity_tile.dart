@@ -144,13 +144,8 @@ class _ValueText extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
 
     if (isLoading) {
-      return Container(
-        width: 32,
-        height: 22,
-        decoration: BoxDecoration(
-          color: cs.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(DonyRadius.xs),
-        ),
+      return const DonyShimmer(
+        child: DonySkeletonBox(width: 32, height: 22, radius: DonyRadius.xs),
       );
     }
 

@@ -551,8 +551,6 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
     return MultiBlocListener(
       listeners: [
         BlocListener<BidAcceptanceBloc, acs.BidAcceptanceState>(
@@ -562,8 +560,16 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
       ],
       child: BlocBuilder<TravelerBidsBloc, TravelerBidsState>(
         builder: (context, state) => switch (state) {
-          TravelerBidsInitial() || TravelerBidsLoading() => Center(
-            child: CircularProgressIndicator(color: cs.primary),
+          TravelerBidsInitial() || TravelerBidsLoading() => ListView.separated(
+            padding: EdgeInsets.fromLTRB(
+              DonyLayout.hPadding(context),
+              DonySpacing.lg,
+              DonyLayout.hPadding(context),
+              DonySpacing.huge,
+            ),
+            itemCount: 4,
+            separatorBuilder: (_, _) => const SizedBox(height: DonySpacing.md),
+            itemBuilder: (_, _) => const DonyUserCardSkeleton(),
           ),
           final TravelerBidsError s => BidListErrorView(
             message: ErrorPresenter.resolve(s.error).message,
@@ -634,10 +640,7 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
                         const SizedBox(height: DonySpacing.md),
                     itemBuilder: (context, i) {
                       if (i >= visible.length) {
-                        return const Padding(
-                          padding: EdgeInsets.all(DonySpacing.base),
-                          child: Center(child: CircularProgressIndicator()),
-                        );
+                        return const DonyUserCardSkeleton();
                       }
                       final bid = visible[i];
                       final canAct = state.filter == TravelerBidFilter.aTraiter;

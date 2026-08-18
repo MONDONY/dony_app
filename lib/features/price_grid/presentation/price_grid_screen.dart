@@ -50,11 +50,11 @@ class PriceGridScreen extends StatelessWidget {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         context.read<PriceGridBloc>().add(const PriceGridLoadRequested());
       });
-      return const Center(child: CircularProgressIndicator());
+      return const _LoadingGrid();
     }
 
     if (state is PriceGridLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const _LoadingGrid();
     }
 
     if (state is PriceGridError) {
@@ -70,6 +70,25 @@ class PriceGridScreen extends StatelessWidget {
     }
 
     return const SizedBox.shrink();
+  }
+}
+
+class _LoadingGrid extends StatelessWidget {
+  const _LoadingGrid();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.separated(
+      padding: EdgeInsets.fromLTRB(
+        DonySpacing.lg,
+        DonySpacing.md,
+        DonySpacing.lg,
+        MediaQuery.paddingOf(context).bottom + 110,
+      ),
+      itemCount: 6,
+      separatorBuilder: (_, _) => const SizedBox(height: DonySpacing.sm),
+      itemBuilder: (_, _) => const DonyPriceTagSkeleton(),
+    );
   }
 }
 

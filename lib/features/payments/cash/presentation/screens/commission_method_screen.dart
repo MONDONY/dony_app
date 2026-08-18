@@ -60,7 +60,7 @@ class _CommissionMethodScreenState extends State<CommissionMethodScreen>
         },
         builder: (ctx, state) {
           if (state is CommissionMethodLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return const DonyDetailSkeleton();
           }
           if (state is CommissionMethodNotConfigured) {
             return CommissionCardEmptyState(

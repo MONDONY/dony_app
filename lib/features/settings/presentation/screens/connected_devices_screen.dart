@@ -19,7 +19,18 @@ class ConnectedDevicesScreen extends StatelessWidget {
       body: BlocBuilder<ConnectedDevicesBloc, ConnectedDevicesState>(
         builder: (context, state) {
           if (state is ConnectedDevicesLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return ListView.separated(
+              padding: const EdgeInsets.fromLTRB(
+                DonySpacing.lg,
+                DonySpacing.lg,
+                DonySpacing.lg,
+                DonySpacing.huge,
+              ),
+              itemCount: 3,
+              separatorBuilder: (_, _) =>
+                  const SizedBox(height: DonySpacing.md),
+              itemBuilder: (_, _) => const DonyUserCardSkeleton(),
+            );
           }
           if (state is ConnectedDevicesError) {
             return _ErrorView(

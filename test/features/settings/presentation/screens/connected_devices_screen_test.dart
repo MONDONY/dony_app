@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/design/widgets/dony_skeleton.dart';
 import 'package:dony/features/settings/bloc/connected_devices_bloc.dart';
 import 'package:dony/features/settings/data/models/device_model.dart';
 import 'package:dony/features/settings/presentation/screens/connected_devices_screen.dart';
@@ -46,11 +47,11 @@ void main() {
 
   setUp(() => bloc = MockConnectedDevicesBloc());
 
-  testWidgets('Loading → spinner', (tester) async {
+  testWidgets('Loading → skeleton', (tester) async {
     when(() => bloc.state).thenReturn(const ConnectedDevicesLoading());
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump();
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.byType(DonyUserCardSkeleton), findsWidgets);
   });
 
   testWidgets('Loaded → liste avec badge appareil courant et bouton Révoquer', (

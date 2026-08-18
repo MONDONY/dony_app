@@ -148,9 +148,7 @@ class _ThreadViewState extends State<_ThreadView> {
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           appBar: _buildAppBar(context, thread),
           body: thread == null
-              ? const Center(
-                  child: CircularProgressIndicator(color: DonyColors.primary),
-                )
+              ? const DonyChatSkeleton()
               : _LoadedView(
                   thread: thread,
                   viewerUserId: viewerUserId,

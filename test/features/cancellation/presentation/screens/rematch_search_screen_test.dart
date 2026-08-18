@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/widgets/dony_feedback_button.dart';
+import 'package:dony/core/design/widgets/dony_skeleton.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
@@ -227,12 +228,14 @@ void main() {
     },
   );
 
-  testWidgets('affiche un loader pendant CancellationLoading', (tester) async {
+  testWidgets('affiche un skeleton pendant CancellationLoading', (
+    tester,
+  ) async {
     when(() => bloc.state).thenReturn(CancellationLoading());
 
     await tester.pumpWidget(_wrap(bloc, cancellationId: 'canc-1'));
 
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.byType(DonyTripCardSkeleton), findsWidgets);
   });
 
   testWidgets('rend une TravelerCard par suggestion avec la note voyageur', (

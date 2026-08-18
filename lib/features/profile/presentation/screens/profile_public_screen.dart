@@ -109,7 +109,7 @@ class _ProfilePublicScreenState extends State<ProfilePublicScreen> {
 
         Widget body;
         if (state is ProfilePublicLoading || state is ProfilePublicInitial) {
-          body = const Center(child: CircularProgressIndicator());
+          body = const DonyDetailSkeleton();
         } else if (state is ProfilePublicError) {
           body = _ErrorView(
             message: state.message,

@@ -487,7 +487,7 @@ void main() {
 
   // ── État BidLoading ─────────────────────────────────────────────────────────
 
-  testWidgets('BidLoading affiche un spinner centré', (tester) async {
+  testWidgets('BidLoading affiche un skeleton', (tester) async {
     when(() => bidBloc.state).thenReturn(BidLoading());
     whenListen(
       bidBloc,
@@ -498,7 +498,7 @@ void main() {
     await _pump(tester, bidBloc);
     await tester.pump();
 
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.byType(DonyUserCardSkeleton), findsWidgets);
   });
 
   // ── État BidError dans le body ──────────────────────────────────────────────

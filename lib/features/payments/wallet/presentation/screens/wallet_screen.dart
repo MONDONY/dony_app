@@ -51,9 +51,49 @@ class _LoadingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: CircularProgressIndicator(
-        color: Theme.of(context).colorScheme.primary,
+    return DonyShimmer(
+      child: Column(
+        children: [
+          Container(
+            height: 220,
+            decoration: const BoxDecoration(color: DonyColors.blue700),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              DonySpacing.lg,
+              DonySpacing.xl,
+              DonySpacing.lg,
+              0,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const DonySkeletonBox(width: 100, height: 14),
+                const SizedBox(height: DonySpacing.lg),
+                for (var i = 0; i < 4; i++) ...[
+                  const Row(
+                    children: [
+                      DonySkeletonCircle(diameter: 40),
+                      SizedBox(width: DonySpacing.md),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            DonySkeletonBox(width: 140, height: 13),
+                            SizedBox(height: DonySpacing.xs),
+                            DonySkeletonBox(width: 80, height: 11),
+                          ],
+                        ),
+                      ),
+                      DonySkeletonBox(width: 56, height: 14),
+                    ],
+                  ),
+                  const SizedBox(height: DonySpacing.lg),
+                ],
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

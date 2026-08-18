@@ -35,7 +35,7 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
       body: BlocBuilder<MyReviewsBloc, MyReviewsState>(
         builder: (context, state) {
           if (state is MyReviewsLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return const _LoadingView();
           }
           if (state is MyReviewsError) {
             return _ErrorView(message: state.message);
@@ -46,8 +46,43 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
             }
             return _LoadedView(state: state);
           }
-          return const Center(child: CircularProgressIndicator());
+          return const _LoadingView();
         },
+      ),
+    );
+  }
+}
+
+// ─── Loading state ───────────────────────────────────────────────────────────
+
+class _LoadingView extends StatelessWidget {
+  const _LoadingView();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        DonySpacing.lg,
+        DonySpacing.lg,
+        DonySpacing.lg,
+        DonySpacing.huge,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const DonyShimmer(
+            child: DonySkeletonBox(
+              width: 140,
+              height: 40,
+              radius: DonyRadius.card,
+            ),
+          ),
+          const SizedBox(height: DonySpacing.xl),
+          for (var i = 0; i < 3; i++) ...[
+            const DonyUserCardSkeleton(),
+            const SizedBox(height: DonySpacing.md),
+          ],
+        ],
       ),
     );
   }

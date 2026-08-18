@@ -753,13 +753,9 @@ class TravelerProfileLoaderScreen extends StatelessWidget {
       child: BlocBuilder<AnnouncementBloc, AnnouncementState>(
         builder: (context, state) {
           if (state is AnnouncementInitial || state is AnnouncementLoading) {
-            return Scaffold(
-              appBar: const DonyAppBar(title: ''),
-              body: Center(
-                child: CircularProgressIndicator(
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              ),
+            return const Scaffold(
+              appBar: DonyAppBar(title: ''),
+              body: DonyDetailSkeleton(),
             );
           }
 

@@ -228,10 +228,16 @@ class _BidListView extends StatelessWidget {
     List<BidModel> acceptedBids,
   ) {
     if (state is BidLoading) {
-      return Center(
-        child: CircularProgressIndicator(
-          color: Theme.of(context).colorScheme.primary,
+      return ListView.separated(
+        padding: const EdgeInsets.fromLTRB(
+          DonySpacing.lg,
+          DonySpacing.lg,
+          DonySpacing.lg,
+          DonySpacing.huge,
         ),
+        itemCount: 4,
+        separatorBuilder: (_, _) => const SizedBox(height: DonySpacing.md),
+        itemBuilder: (_, _) => const DonyUserCardSkeleton(),
       );
     }
 

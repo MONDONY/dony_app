@@ -109,10 +109,17 @@ class _ListContentState extends State<_ListContent> {
         builder: (context, filter) => BlocBuilder<PackageRequestBloc, PackageRequestState>(
           builder: (context, state) {
             if (state.status == PackageRequestListStatus.loading) {
-              return Center(
-                child: CircularProgressIndicator(
-                  color: Theme.of(context).colorScheme.primary,
+              return ListView.separated(
+                padding: const EdgeInsets.fromLTRB(
+                  DonySpacing.lg,
+                  DonySpacing.lg,
+                  DonySpacing.lg,
+                  DonySpacing.huge,
                 ),
+                itemCount: 4,
+                separatorBuilder: (_, _) =>
+                    const SizedBox(height: DonySpacing.md),
+                itemBuilder: (_, _) => const DonyTicketCardSkeleton(),
               );
             }
             if (state.status == PackageRequestListStatus.error) {

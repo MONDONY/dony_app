@@ -118,7 +118,7 @@ class _ProfileHeader extends StatelessWidget {
               ),
             );
           }
-          return const Center(child: CircularProgressIndicator());
+          return const _HeaderSkeleton();
         },
       ),
     );
@@ -360,6 +360,77 @@ class _StatCard extends StatelessWidget {
   }
 }
 
+/// Skeleton du header, calqué sur [_LoadedProfileHeader] — même avatar +
+/// hauteur de contenu, en blanc translucide : le fond reste le dégradé nuit
+/// (marque assumée, non theme-aware) même pendant le chargement.
+class _HeaderSkeleton extends StatelessWidget {
+  const _HeaderSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    const boxColor = Color.fromRGBO(255, 255, 255, 0.18);
+
+    return const Stack(
+      children: [
+        Positioned.fill(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: RadialGradient(
+                center: Alignment(-0.6, -0.9),
+                radius: 1.4,
+                colors: [
+                  DonyColors.proBg3,
+                  DonyColors.proBg1,
+                  DonyColors.proBg2,
+                ],
+              ),
+            ),
+          ),
+        ),
+        Align(
+          alignment: Alignment.bottomLeft,
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(
+              DonySpacing.base,
+              0,
+              DonySpacing.base,
+              _StatsAndTabBar.height + DonySpacing.md,
+            ),
+            child: DonyShimmer(
+              color: Color.fromRGBO(255, 255, 255, 0.35),
+              child: Row(
+                children: [
+                  DonySkeletonCircle(diameter: 56, color: boxColor),
+                  SizedBox(width: DonySpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        DonySkeletonBox(
+                          width: 160,
+                          height: 20,
+                          color: boxColor,
+                        ),
+                        SizedBox(height: DonySpacing.xs),
+                        DonySkeletonBox(
+                          width: 100,
+                          height: 14,
+                          color: boxColor,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _StatsAndTabBar extends StatelessWidget implements PreferredSizeWidget {
   const _StatsAndTabBar({required this.controller});
 
@@ -559,7 +630,17 @@ class _TripsTab extends StatelessWidget {
       builder: (context, state) {
         if (state.status == TravelerHubStatus.loading ||
             state.status == TravelerHubStatus.initial) {
-          return const Center(child: CircularProgressIndicator());
+          return ListView.separated(
+            padding: const EdgeInsets.fromLTRB(
+              DonySpacing.lg,
+              DonySpacing.lg,
+              DonySpacing.lg,
+              DonySpacing.huge,
+            ),
+            itemCount: 3,
+            separatorBuilder: (_, _) => const SizedBox(height: DonySpacing.md),
+            itemBuilder: (_, _) => const DonyTripCardSkeleton(),
+          );
         }
 
         if (state.status == TravelerHubStatus.error) {
@@ -621,7 +702,17 @@ class _ReviewsTab extends StatelessWidget {
     return BlocBuilder<ProfilePublicBloc, ProfilePublicState>(
       builder: (context, state) {
         if (state is ProfilePublicLoading || state is ProfilePublicInitial) {
-          return const Center(child: CircularProgressIndicator());
+          return ListView.separated(
+            padding: const EdgeInsets.fromLTRB(
+              DonySpacing.lg,
+              DonySpacing.lg,
+              DonySpacing.lg,
+              DonySpacing.huge,
+            ),
+            itemCount: 3,
+            separatorBuilder: (_, _) => const SizedBox(height: DonySpacing.md),
+            itemBuilder: (_, _) => const DonyUserCardSkeleton(),
+          );
         }
 
         if (state is ProfilePublicError) {

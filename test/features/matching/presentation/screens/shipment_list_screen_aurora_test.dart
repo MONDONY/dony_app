@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
-import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
@@ -259,33 +259,31 @@ void main() {
 
   // ── État loading ──────────────────────────────────────────────────────────
 
-  testWidgets(
-    'affiche CircularProgressIndicator quand BidLoading sans données',
-    (tester) async {
-      when(() => bidBloc.state).thenReturn(BidLoading());
-      await _pump(
-        tester,
-        bidBloc: bidBloc,
-        paymentBloc: paymentBloc,
-        authBloc: authBloc,
-      );
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
-    },
-  );
+  testWidgets('affiche un skeleton quand BidLoading sans données', (
+    tester,
+  ) async {
+    when(() => bidBloc.state).thenReturn(BidLoading());
+    await _pump(
+      tester,
+      bidBloc: bidBloc,
+      paymentBloc: paymentBloc,
+      authBloc: authBloc,
+    );
+    expect(find.byType(DonyUserCardSkeleton), findsWidgets);
+  });
 
-  testWidgets(
-    'affiche CircularProgressIndicator quand BidInitial sans données',
-    (tester) async {
-      when(() => bidBloc.state).thenReturn(BidInitial());
-      await _pump(
-        tester,
-        bidBloc: bidBloc,
-        paymentBloc: paymentBloc,
-        authBloc: authBloc,
-      );
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
-    },
-  );
+  testWidgets('affiche un skeleton quand BidInitial sans données', (
+    tester,
+  ) async {
+    when(() => bidBloc.state).thenReturn(BidInitial());
+    await _pump(
+      tester,
+      bidBloc: bidBloc,
+      paymentBloc: paymentBloc,
+      authBloc: authBloc,
+    );
+    expect(find.byType(DonyUserCardSkeleton), findsWidgets);
+  });
 
   // ── État erreur ───────────────────────────────────────────────────────────
 

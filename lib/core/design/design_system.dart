@@ -50,6 +50,7 @@ export 'package:dony/core/design/widgets/dony_search_field.dart';
 // Structural
 export 'package:dony/core/design/widgets/dony_section_header.dart';
 export 'package:dony/core/design/widgets/dony_select_bar.dart';
+export 'package:dony/core/design/widgets/dony_skeleton.dart';
 export 'package:dony/core/design/widgets/dony_snackbar.dart';
 export 'package:dony/core/design/widgets/dony_status_banner.dart';
 export 'package:dony/core/design/widgets/dony_step_indicator.dart';

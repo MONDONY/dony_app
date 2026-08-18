@@ -58,7 +58,7 @@ class _ConversationLoaderScreenState extends State<ConversationLoaderScreen> {
               elevation: 0,
               leading: const DonyAppBarBackButton(),
             ),
-            body: Center(child: CircularProgressIndicator(color: cs.primary)),
+            body: const DonyChatSkeleton(),
           );
         }
 

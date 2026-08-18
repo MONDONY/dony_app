@@ -115,8 +115,17 @@ class _CorridorAlertListView extends StatelessWidget {
 
                 if (state.status == CorridorAlertListStatus.loading &&
                     visible.isEmpty) {
-                  return Center(
-                    child: CircularProgressIndicator(color: cs.primary),
+                  return ListView.separated(
+                    padding: const EdgeInsets.fromLTRB(
+                      DonySpacing.lg,
+                      DonySpacing.md,
+                      DonySpacing.lg,
+                      DonySpacing.huge,
+                    ),
+                    itemCount: 4,
+                    separatorBuilder: (_, _) =>
+                        const SizedBox(height: DonySpacing.md),
+                    itemBuilder: (_, _) => const DonyListCardSkeleton(),
                   );
                 }
                 if (state.status == CorridorAlertListStatus.error &&

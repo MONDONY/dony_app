@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/design/widgets/dony_skeleton.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_currency_balance_model.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_model.dart';
@@ -69,7 +70,7 @@ void main() {
     expect(find.text('Solde disponible'), findsOneWidget);
   });
 
-  testWidgets('affiche un spinner quand WalletLoading', (tester) async {
+  testWidgets('affiche un skeleton quand WalletLoading', (tester) async {
     whenListen(
       bloc,
       Stream.value(WalletLoading()),
@@ -79,7 +80,7 @@ void main() {
     await tester.pumpWidget(buildSubject(bloc, prefsBloc));
     await tester.pump();
 
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.byType(DonySkeletonCircle), findsWidgets);
   });
 
   testWidgets('le bouton Recharger est présent', (tester) async {

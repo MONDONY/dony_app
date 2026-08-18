@@ -338,9 +338,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 child: Builder(
                   builder: (context) {
                     if (state is ChatLoading || state is ChatInitial) {
-                      return Center(
-                        child: CircularProgressIndicator(color: cs.primary),
-                      );
+                      return const DonyChatSkeleton();
                     }
                     if (state is ChatError) {
                       return DonyEmptyState(

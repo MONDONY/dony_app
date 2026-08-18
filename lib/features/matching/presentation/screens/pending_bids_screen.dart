@@ -392,10 +392,16 @@ class _PendingBidsViewState extends State<_PendingBidsView> {
     List<BidModel> pendingBids,
   ) {
     if (state is BidLoading) {
-      return Center(
-        child: CircularProgressIndicator(
-          color: Theme.of(context).colorScheme.primary,
+      return ListView.separated(
+        padding: EdgeInsets.fromLTRB(
+          DonyLayout.hPadding(context),
+          DonySpacing.lg,
+          DonyLayout.hPadding(context),
+          DonySpacing.huge,
         ),
+        itemCount: 4,
+        separatorBuilder: (_, _) => const SizedBox(height: DonySpacing.md),
+        itemBuilder: (_, _) => const DonyUserCardSkeleton(),
       );
     }
 

@@ -176,10 +176,17 @@ class _RematchSearchScreenState extends State<RematchSearchScreen> {
                     // CancellationInitial / CancellationLoading / tout autre état
                     // transitoire du même bloc (registerFactory → instance dédiée
                     // à cette route).
-                    return Center(
-                      child: CircularProgressIndicator(
-                        color: Theme.of(context).colorScheme.primary,
+                    return ListView.separated(
+                      padding: const EdgeInsets.fromLTRB(
+                        DonySpacing.lg,
+                        DonySpacing.lg,
+                        DonySpacing.lg,
+                        DonySpacing.huge,
                       ),
+                      itemCount: 3,
+                      separatorBuilder: (_, _) =>
+                          const SizedBox(height: DonySpacing.md),
+                      itemBuilder: (_, _) => const DonyTripCardSkeleton(),
                     );
                   },
                 ),

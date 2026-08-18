@@ -113,7 +113,6 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final safeBottom = MediaQuery.paddingOf(context).bottom;
 
     return Scaffold(
@@ -220,9 +219,7 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
                 ? state.announcement
                 : (_current ?? widget.initial);
             if (a == null) {
-              return Center(
-                child: CircularProgressIndicator(color: cs.primary),
-              );
+              return const DonyDetailSkeleton();
             }
             final isOwner = _isOwner(context, a);
             return SingleChildScrollView(

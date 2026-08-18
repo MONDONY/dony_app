@@ -36,7 +36,18 @@ class _MesAbonnementsScreenState extends State<MesAbonnementsScreen> {
         builder: (context, state) {
           if (state.status == SubscriptionsStatus.loading &&
               state.items.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
+            return ListView.separated(
+              padding: const EdgeInsets.fromLTRB(
+                DonySpacing.base,
+                DonySpacing.md,
+                DonySpacing.base,
+                DonySpacing.huge,
+              ),
+              itemCount: 5,
+              separatorBuilder: (_, _) =>
+                  const SizedBox(height: DonySpacing.sm),
+              itemBuilder: (_, _) => const DonyUserCardSkeleton(),
+            );
           }
           if (state.status == SubscriptionsStatus.error &&
               state.items.isEmpty) {
