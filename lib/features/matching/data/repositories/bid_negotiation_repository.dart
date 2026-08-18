@@ -1,4 +1,5 @@
 import 'package:dony/features/matching/data/datasources/bid_negotiation_remote_datasource.dart';
+import 'package:dony/features/matching/data/models/bid_checkout_response_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_negotiation.dart';
 
@@ -60,6 +61,9 @@ class BidNegotiationRepository {
   Future<BidNegotiation> thread(String bidId) => _datasource.thread(bidId);
 
   Future<void> markRead(String bidId) => _datasource.markRead(bidId);
+
+  Future<BidCheckoutResponseModel> negotiationCheckout(String bidId) =>
+      _datasource.negotiationCheckout(bidId);
 
   Future<List<BidNegotiationSummary>> myNegotiations() =>
       _datasource.myNegotiations();

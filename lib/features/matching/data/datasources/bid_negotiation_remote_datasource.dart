@@ -1,4 +1,5 @@
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/features/matching/data/models/bid_checkout_response_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_negotiation.dart';
 
@@ -101,6 +102,21 @@ class BidNegotiationRemoteDatasource {
   /// Marque le fil comme lu (badge de non-lus). Réponse 204, sans corps.
   Future<void> markRead(String bidId) async {
     await _apiClient.dio.post('/bids/$bidId/negotiation/read');
+  }
+
+  /// Checkout d'un accord scellé côté carte.
+  ///
+  /// Aucun corps : le montant est celui figé à l'acceptation, le serveur ne
+  /// prend rien du client. L'appel est idempotent, un double tap renvoie le
+  /// même `clientSecret`. La réponse a la forme exacte de `POST /bids/checkout`,
+  /// d'où la réutilisation de [BidCheckoutResponseModel].
+  Future<BidCheckoutResponseModel> negotiationCheckout(String bidId) async {
+    final response = await _apiClient.dio.post(
+      '/bids/$bidId/negotiation/checkout',
+    );
+    return BidCheckoutResponseModel.fromJson(
+      response.data as Map<String, dynamic>,
+    );
   }
 
   Future<List<BidNegotiationSummary>> myNegotiations() async {

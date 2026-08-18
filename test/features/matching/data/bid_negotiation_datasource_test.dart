@@ -23,6 +23,15 @@ final _threadJson = {
   'proposedGrossEur': 48.5,
 };
 
+final _checkoutJson = {
+  'bidId': 'bid-1',
+  'clientSecret': 'pi_123_secret_456',
+  'publishableKey': 'pk_test_1',
+  'expiresAt': '2026-08-19T04:12:00',
+  'currency': 'eur',
+  'paymentMethodTypes': ['card', 'paypal'],
+};
+
 final _summaryJson = {
   'bidId': 'bid-1',
   'announcementId': 'ann-1',
@@ -346,6 +355,38 @@ void main() {
     });
   });
 
+  group('negotiationCheckout', () {
+    test('poste sans corps et mappe la reponse de checkout', () async {
+      when(() => dio.post('/bids/bid-1/negotiation/checkout')).thenAnswer(
+        (_) async => _ok(_checkoutJson, '/bids/bid-1/negotiation/checkout'),
+      );
+
+      final checkout = await datasource.negotiationCheckout('bid-1');
+
+      verify(() => dio.post('/bids/bid-1/negotiation/checkout')).called(1);
+      expect(checkout.bidId, 'bid-1');
+      expect(checkout.clientSecret, 'pi_123_secret_456');
+      expect(checkout.publishableKey, 'pk_test_1');
+      expect(checkout.currency, 'eur');
+      expect(checkout.paymentMethodTypes, ['card', 'paypal']);
+    });
+
+    test('laisse remonter la DioException brute', () async {
+      when(() => dio.post('/bids/bid-1/negotiation/checkout')).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(
+            path: '/bids/bid-1/negotiation/checkout',
+          ),
+        ),
+      );
+
+      expect(
+        () => datasource.negotiationCheckout('bid-1'),
+        throwsA(isA<DioException>()),
+      );
+    });
+  });
+
   group('BidNegotiationRepository', () {
     late BidNegotiationRepository repository;
 
@@ -418,6 +459,17 @@ void main() {
       expect((await repository.thread('bid-1')).bidId, 'bid-1');
       await repository.markRead('bid-1');
       expect(await repository.myNegotiations(), hasLength(1));
+    });
+
+    test('negotiationCheckout delegue au datasource', () async {
+      when(() => dio.post('/bids/bid-1/negotiation/checkout')).thenAnswer(
+        (_) async => _ok(_checkoutJson, '/bids/bid-1/negotiation/checkout'),
+      );
+
+      final checkout = await repository.negotiationCheckout('bid-1');
+
+      expect(checkout.clientSecret, 'pi_123_secret_456');
+      verify(() => dio.post('/bids/bid-1/negotiation/checkout')).called(1);
     });
   });
 }
