@@ -477,7 +477,7 @@ void main() {
     expect(find.text('Demande publiée !'), findsOneWidget);
     expect(
       find.text(
-        'Les voyageurs sont notifiés. Tu recevras des offres très vite.',
+        'Les voyageurs sont notifiés. Vous recevrez des offres très vite.',
       ),
       findsOneWidget,
     );
@@ -494,7 +494,7 @@ void main() {
 
       expect(find.byType(DonySuccessScreen), findsOneWidget);
       expect(find.text('Demande modifiée !'), findsOneWidget);
-      expect(find.text('Tes modifications sont en ligne.'), findsOneWidget);
+      expect(find.text('Vos modifications sont en ligne.'), findsOneWidget);
       expect(find.text('Voir ma demande'), findsOneWidget);
     },
   );
@@ -560,7 +560,7 @@ void main() {
       );
       expect(find.text('Brouillon enregistré !'), findsOneWidget);
       expect(
-        find.text('Tu pourras la publier quand tu le souhaites.'),
+        find.text('Vous pourrez la publier quand vous le souhaitez.'),
         findsOneWidget,
       );
       expect(find.text('Voir mon brouillon'), findsOneWidget);
@@ -577,7 +577,7 @@ void main() {
       await tester.tap(find.text('Aperçu'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Aperçu de ta demande'), findsOneWidget);
+      expect(find.text('Aperçu de votre demande'), findsOneWidget);
       expect(find.byKey(const Key('preview-publish')), findsOneWidget);
       expect(find.byKey(const Key('preview-save-draft')), findsOneWidget);
     },

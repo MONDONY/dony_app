@@ -19,6 +19,7 @@ import 'package:dony/features/package_request/presentation/widgets/package_reque
 import 'package:dony/features/profile/data/models/help_center_config.dart';
 import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -220,10 +221,10 @@ class _PackageRequestCreateScreenState
                 ? 'Demande modifiée !'
                 : 'Demande publiée !',
             subtitle: isDraft
-                ? 'Tu pourras la publier quand tu le souhaites.'
+                ? 'Vous pourrez la publier quand vous le souhaitez.'
                 : isEditing
-                ? 'Tes modifications sont en ligne.'
-                : 'Les voyageurs sont notifiés. Tu recevras des offres '
+                ? 'Vos modifications sont en ligne.'
+                : 'Les voyageurs sont notifiés. Vous recevrez des offres '
                       'très vite.',
             ctaLabel: isDraft ? 'Voir mon brouillon' : 'Voir ma demande',
             onCta: () {
@@ -293,10 +294,12 @@ class _PackageRequestCreateScreenState
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
+    // Un titre par contenu d'étape, pas un mélange de contenu et de position :
+    // le badge « 2 / 3 » dit déjà où l'on en est.
     final title = switch (state.currentStep) {
-      0 => state.isEditing ? 'Modifier la demande' : 'Nouvelle demande',
-      1 => 'Ton colis',
-      _ => 'Dernière étape',
+      0 => state.isEditing ? 'Modifier la demande' : 'Le trajet',
+      1 => 'Le colis',
+      _ => 'Le budget',
     };
 
     _initialSignature ??= _signatureOf(state);
@@ -383,36 +386,29 @@ class _PackageRequestCreateScreenState
           children: [
             Expanded(
               child: switch (state.currentStep) {
-                0 => Column(
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        DonySpacing.base,
-                        DonySpacing.sm,
-                        DonySpacing.base,
-                        0,
-                      ),
-                      child: ContextualTutorialCard(
+                // Rien n'est épinglé au-dessus de l'étape : la carte de
+                // tutoriel et la bannière de devise vivaient hors du
+                // `SingleChildScrollView` et mangeaient de la hauteur pendant
+                // toute la saisie, clavier déployé. Elles passent en tête du
+                // contenu défilant.
+                0 => Step1TrajetColis(
+                  key: _step1Key,
+                  canContinueNotifier: _canContinueNotifier,
+                  header: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const ContextualTutorialCard(
                         context: TutorialContext.requestPublish,
                       ),
-                    ),
-                    if (!state.isEditing)
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(
-                          DonySpacing.base,
-                          DonySpacing.base,
-                          DonySpacing.base,
-                          0,
-                        ),
-                        child: CurrencyPublishBanner.active(),
-                      ),
-                    Expanded(
-                      child: Step1TrajetColis(
-                        key: _step1Key,
-                        canContinueNotifier: _canContinueNotifier,
-                      ),
-                    ),
-                  ],
+                      if (!state.isEditing) ...[
+                        const SizedBox(height: DonySpacing.base),
+                        // `_activeCurrency` est déjà résolue une fois pour
+                        // tout le formulaire ; la factory `.active()` refaisait
+                        // un lookup GetIt et une lecture Hive à chaque build.
+                        CurrencyPublishBanner(currency: _activeCurrency),
+                      ],
+                    ],
+                  ),
                 ),
                 1 => Step2Details(
                   key: _step2Key,
@@ -449,6 +445,10 @@ class _PackageRequestCreateScreenState
           context,
           formState: state,
           currency: _activeCurrency,
+          photoCount: context
+              .read<PackageRequestPhotosCubit>()
+              .readyKeys
+              .length,
           onConfirm: () {
             Navigator.of(context, rootNavigator: true).pop();
             _step3Key.currentState?.submit();
@@ -463,6 +463,63 @@ class _PackageRequestCreateScreenState
               : null,
         );
     }
+  }
+}
+
+// ─── Mention CGU ────────────────────────────────────────────────────────────
+
+/// Mention légale au-dessus du CTA de publication.
+///
+/// « CGU » était un mot ordinaire, ni souligné ni tappable, alors qu'on
+/// demandait d'y consentir : le lien ouvre maintenant le même écran que
+/// l'onboarding et les réglages.
+class _CguNotice extends StatefulWidget {
+  const _CguNotice();
+
+  @override
+  State<_CguNotice> createState() => _CguNoticeState();
+}
+
+class _CguNoticeState extends State<_CguNotice> {
+  /// Un `TapGestureRecognizer` doit être libéré à la main : construit dans un
+  /// `build()`, il fuirait à chaque reconstruction de la barre sticky.
+  late final TapGestureRecognizer _cguTap = TapGestureRecognizer()
+    ..onTap = () => unawaited(context.push('/settings/legal/terms'));
+
+  @override
+  void dispose() {
+    _cguTap.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final base = tt.bodySmall?.copyWith(
+      color: cs.onSurfaceVariant,
+      fontSize: 12,
+    );
+    return Text.rich(
+      TextSpan(
+        style: base,
+        children: [
+          const TextSpan(text: 'En publiant, vous acceptez les '),
+          TextSpan(
+            text: 'CGU',
+            style: base?.copyWith(
+              color: cs.primary,
+              fontWeight: FontWeight.w700,
+              decoration: TextDecoration.underline,
+              decorationColor: cs.primary,
+            ),
+            recognizer: _cguTap,
+          ),
+          const TextSpan(text: '.'),
+        ],
+      ),
+      textAlign: TextAlign.center,
+    );
   }
 }
 
@@ -488,7 +545,6 @@ class _StickyCta extends StatelessWidget {
   Widget build(BuildContext context) {
     final isFinalStep = currentStep == 2;
     final bottomInset = MediaQuery.of(context).viewPadding.bottom;
-    final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
 
     return Container(
@@ -513,13 +569,7 @@ class _StickyCta extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (isFinalStep) ...[
-            Text(
-              'En publiant, tu acceptes les CGU',
-              style: tt.bodySmall?.copyWith(
-                color: cs.onSurfaceVariant,
-                fontSize: 12,
-              ),
-            ),
+            const _CguNotice(),
             const SizedBox(height: DonySpacing.sm),
           ],
           if (currentStep > 0)

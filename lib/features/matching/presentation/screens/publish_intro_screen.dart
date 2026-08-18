@@ -244,7 +244,14 @@ class _IntroConfig {
               'Aucun **objet interdit** (espèces, armes, produits '
                   'dangereux…).',
             ),
-            _Rule('tag', 'Déclarer la **valeur réelle** du colis (max 500 €).'),
+            // La valeur déclarée n'est jamais demandée dans le wizard : la
+            // promettre ici laissait chercher un champ qui n'existe pas, et le
+            // « max 500 € » se confondait avec le plafond du budget voyageur.
+            _Rule(
+              'tag',
+              'Décrire **honnêtement** le contenu et sa valeur si '
+                  'le voyageur la demande.',
+            ),
             _Rule(
               'square-pen',
               '**Emballer soigneusement** et décrire '
