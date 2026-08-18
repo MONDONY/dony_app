@@ -206,6 +206,55 @@ void main() {
     expect(find.text('Awa Diop'), findsOneWidget);
   });
 
+  // Les deux cartes partagent un chassis : meme estompage des fils termines,
+  // meme mise en avant des non-lus. Ce test tient les deux sources ensemble,
+  // pour qu extraire le chassis ne puisse pas en desservir une seule.
+  testWidgets('un fil termine est estompe, quelle que soit sa source', (
+    tester,
+  ) async {
+    loadBoth(
+      threads: [_thread(status: NegotiationThreadStatus.rejected)],
+      summaries: [_summary(status: 'REJECTED')],
+    );
+    await pumpBody(tester);
+
+    List<double> opacitiesAbove(String name) => tester
+        .widgetList<Opacity>(
+          find.ancestor(of: find.text(name), matching: find.byType(Opacity)),
+        )
+        .map((o) => o.opacity)
+        .toList();
+
+    expect(opacitiesAbove('Mamadou Diallo'), contains(0.65));
+    expect(opacitiesAbove('Awa Diop'), contains(0.65));
+  });
+
+  testWidgets('un fil actif n est pas estompe, quelle que soit sa source', (
+    tester,
+  ) async {
+    loadBoth(threads: [_thread()], summaries: [_summary()]);
+    await pumpBody(tester);
+
+    List<double> opacitiesAbove(String name) => tester
+        .widgetList<Opacity>(
+          find.ancestor(of: find.text(name), matching: find.byType(Opacity)),
+        )
+        .map((o) => o.opacity)
+        .toList();
+
+    expect(opacitiesAbove('Mamadou Diallo'), isNot(contains(0.65)));
+    expect(opacitiesAbove('Awa Diop'), isNot(contains(0.65)));
+  });
+
+  testWidgets('un fil de trajet non lu reste ouvrable par sa cle', (
+    tester,
+  ) async {
+    loadBoth(summaries: [_summary()]);
+    await pumpBody(tester);
+
+    expect(find.byKey(const Key('trip-nego-card-bid-1')), findsOneWidget);
+  });
+
   testWidgets('la liste reste triee par activite la plus recente', (
     tester,
   ) async {

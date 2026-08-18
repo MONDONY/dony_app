@@ -446,186 +446,140 @@ class _NegoCard extends StatelessWidget {
         : (thread.grossPriceEur ??
               PriceDisplay.grossFromNet(thread.currentPriceEur));
 
-    return Opacity(
-          opacity: _isTerminal ? 0.65 : 1.0,
-          child: Material(
-            color: cs.surface,
-            borderRadius: BorderRadius.circular(DonyRadius.card),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(DonyRadius.card),
-              onTap: () => context.push('/negotiations/${thread.id}'),
-              child: Container(
-                clipBehavior: Clip.antiAlias,
-                decoration: BoxDecoration(
-                  color: cs.surface,
-                  borderRadius: BorderRadius.circular(DonyRadius.card),
-                  border: Border.all(
-                    color: _isNew
-                        ? DonyColors.primary.withValues(alpha: 0.30)
-                        : cs.outline,
-                    width: _isNew ? 1.5 : 1.0,
+    return _NegoCardShell(
+      stripColor: _stripColor,
+      dimmed: _isTerminal,
+      highlighted: _isNew,
+      index: index,
+      onTap: () => context.push('/negotiations/${thread.id}'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Ligne 1 : route + prix
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  _buildRoute(),
+                  style: tt.titleLarge?.copyWith(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: _isTerminal ? cs.onSurfaceVariant : cs.onSurface,
+                    letterSpacing: -0.3,
                   ),
                 ),
-                child: Stack(
-                  children: [
-                    // Bande colorée gauche via Positioned (hauteur automatique)
-                    Positioned(
-                      left: 0,
-                      top: 0,
-                      bottom: 0,
-                      child: Container(width: 4, color: _stripColor),
+              ),
+              const SizedBox(width: 8),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    PriceDisplay.money(displayPrice, thread.currency),
+                    style: tt.headlineMedium?.copyWith(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: _isTerminal ? cs.onSurfaceVariant : cs.onSurface,
+                      letterSpacing: -0.5,
+                      height: 1.0,
                     ),
-                    // Contenu — padding gauche 16 = 4 (strip) + 12 (espacement)
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Ligne 1 : route + prix
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  _buildRoute(),
-                                  style: tt.titleLarge?.copyWith(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w800,
-                                    color: _isTerminal
-                                        ? cs.onSurfaceVariant
-                                        : cs.onSurface,
-                                    letterSpacing: -0.3,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    PriceDisplay.money(
-                                      displayPrice,
-                                      thread.currency,
-                                    ),
-                                    style: tt.headlineMedium?.copyWith(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w800,
-                                      color: _isTerminal
-                                          ? cs.onSurfaceVariant
-                                          : cs.onSurface,
-                                      letterSpacing: -0.5,
-                                      height: 1.0,
-                                    ),
-                                  ),
-                                  Text(
-                                    _priceLabel,
-                                    style: tt.bodySmall?.copyWith(
-                                      fontSize: 10,
-                                      color: cs.onSurfaceVariant,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 6),
-                          // Ligne 2 : avatar + nom + badge statut
-                          Row(
-                            children: [
-                              DonyAvatar(
-                                name: name,
-                                imageUrl: thread.travelerPhotoUrl,
-                                size: DonyAvatarSize.sm,
-                                verified: (thread.travelerTripsCount ?? 0) > 0,
-                              ),
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: Text(
-                                  name,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: tt.bodySmall?.copyWith(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    color: cs.onSurfaceVariant,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              const _SourcePill(kind: NegoEntryKind.request),
-                              const SizedBox(width: 4),
-                              _StatusPill(status: thread.status),
-                            ],
-                          ),
-                          const SizedBox(height: 6),
-                          // Ligne 3 : round dots + méta + badge NOUVEAU
-                          Row(
-                            children: [
-                              ...List.generate(
-                                5,
-                                (i) => Container(
-                                  width: 16,
-                                  height: 3,
-                                  margin: const EdgeInsets.only(right: 4),
-                                  decoration: BoxDecoration(
-                                    color: i < rounds
-                                        ? (_isTerminal
-                                              ? DonyColors.neutral300
-                                              : cs.onSurface)
-                                        : cs.outline,
-                                    borderRadius: BorderRadius.circular(2),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 2),
-                              Expanded(
-                                child: Text(
-                                  'R.${thread.roundsCount}/5 · ${_timeAgo(thread.lastActivityAt)}',
-                                  overflow: TextOverflow.ellipsis,
-                                  style: tt.bodySmall?.copyWith(
-                                    fontSize: 11,
-                                    color: cs.onSurfaceVariant,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                              if (_isNew)
-                                Container(
-                                  margin: const EdgeInsets.only(left: 4),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 6,
-                                    vertical: 2,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: DonyColors.primary,
-                                    borderRadius: BorderRadius.circular(
-                                      DonyRadius.full,
-                                    ),
-                                  ),
-                                  child: Text(
-                                    'NOUVEAU',
-                                    style: tt.bodySmall?.copyWith(
-                                      fontSize: 9,
-                                      fontWeight: FontWeight.w800,
-                                      color: Colors.white,
-                                      letterSpacing: 0.5,
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ],
-                      ),
+                  ),
+                  Text(
+                    _priceLabel,
+                    style: tt.bodySmall?.copyWith(
+                      fontSize: 10,
+                      color: cs.onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
                     ),
-                  ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          // Ligne 2 : avatar + nom + badge statut
+          Row(
+            children: [
+              DonyAvatar(
+                name: name,
+                imageUrl: thread.travelerPhotoUrl,
+                size: DonyAvatarSize.sm,
+                verified: (thread.travelerTripsCount ?? 0) > 0,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  name,
+                  overflow: TextOverflow.ellipsis,
+                  style: tt.bodySmall?.copyWith(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: cs.onSurfaceVariant,
+                  ),
                 ),
               ),
-            ),
+              const SizedBox(width: 6),
+              const _SourcePill(kind: NegoEntryKind.request),
+              const SizedBox(width: 4),
+              _StatusPill(status: thread.status),
+            ],
           ),
-        )
-        .animate()
-        .fadeIn(duration: 220.ms, delay: (50 * index).ms)
-        .slideY(begin: 0.04, curve: Curves.easeOutCubic);
+          const SizedBox(height: 6),
+          // Ligne 3 : round dots + méta + badge NOUVEAU
+          Row(
+            children: [
+              ...List.generate(
+                5,
+                (i) => Container(
+                  width: 16,
+                  height: 3,
+                  margin: const EdgeInsets.only(right: 4),
+                  decoration: BoxDecoration(
+                    color: i < rounds
+                        ? (_isTerminal ? DonyColors.neutral300 : cs.onSurface)
+                        : cs.outline,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 2),
+              Expanded(
+                child: Text(
+                  'R.${thread.roundsCount}/5 · ${_timeAgo(thread.lastActivityAt)}',
+                  overflow: TextOverflow.ellipsis,
+                  style: tt.bodySmall?.copyWith(
+                    fontSize: 11,
+                    color: cs.onSurfaceVariant,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              if (_isNew)
+                Container(
+                  margin: const EdgeInsets.only(left: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: DonyColors.primary,
+                    borderRadius: BorderRadius.circular(DonyRadius.full),
+                  ),
+                  child: Text(
+                    'NOUVEAU',
+                    style: tt.bodySmall?.copyWith(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -659,123 +613,167 @@ class _TripNegoCard extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final isTerminal = summary.isClosed;
 
+    return _NegoCardShell(
+      key: Key('trip-nego-card-${summary.bidId}'),
+      stripColor: isTerminal ? DonyColors.neutral300 : DonyColors.primary,
+      dimmed: isTerminal,
+      highlighted: summary.hasUnread,
+      index: index,
+      onTap: () => context.push('/bids/${summary.bidId}/negotiation'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  _route,
+                  style: tt.titleLarge?.copyWith(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: isTerminal ? cs.onSurfaceVariant : cs.onSurface,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              if (_showsAmount)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      PriceDisplay.money(
+                        summary.proposedGrossEur,
+                        summary.currency,
+                      ),
+                      style: tt.headlineMedium?.copyWith(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        color: isTerminal ? cs.onSurfaceVariant : cs.onSurface,
+                        letterSpacing: -0.5,
+                        height: 1.0,
+                      ),
+                    ),
+                    Text(
+                      isTerminal ? 'terminé' : 'proposition',
+                      style: tt.bodySmall?.copyWith(
+                        fontSize: 10,
+                        color: cs.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  summary.counterpartyName ?? 'Interlocuteur',
+                  overflow: TextOverflow.ellipsis,
+                  style: tt.bodySmall?.copyWith(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: cs.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              const _SourcePill(kind: NegoEntryKind.trip),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Tour ${summary.round} · ${_timeAgo(summary.updatedAt ?? DateTime.now())}',
+            overflow: TextOverflow.ellipsis,
+            style: tt.bodySmall?.copyWith(
+              fontSize: 11,
+              color: cs.onSurfaceVariant,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Chassis commun aux deux cartes ───────────────────────────────────────────
+
+/// Enveloppe partagee par [_NegoCard] et [_TripNegoCard].
+///
+/// Les deux cartes n affichent pas la meme chose, mais elles sont le meme
+/// objet a l ecran : meme bordure, meme bande de statut a gauche, meme
+/// estompage une fois le fil termine, meme entree en cascade. Ecrite deux
+/// fois, cette identite se serait defaite au premier reglage applique d un
+/// seul cote.
+class _NegoCardShell extends StatelessWidget {
+  const _NegoCardShell({
+    super.key,
+    required this.stripColor,
+    required this.dimmed,
+    required this.highlighted,
+    required this.onTap,
+    required this.index,
+    required this.child,
+  });
+
+  /// Bande verticale de gauche : la couleur porte le statut du fil.
+  final Color stripColor;
+
+  /// Fil termine : la carte reste lisible mais recule.
+  final bool dimmed;
+
+  /// Fil qui reclame l attention (non lu, offre fraiche) : bordure accentuee.
+  final bool highlighted;
+
+  final VoidCallback onTap;
+
+  /// Rang dans la liste, pour l entree en cascade.
+  final int index;
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
     return Opacity(
-          opacity: isTerminal ? 0.65 : 1.0,
+          opacity: dimmed ? 0.65 : 1.0,
           child: Material(
             color: cs.surface,
             borderRadius: BorderRadius.circular(DonyRadius.card),
             child: InkWell(
-              key: Key('trip-nego-card-${summary.bidId}'),
               borderRadius: BorderRadius.circular(DonyRadius.card),
-              onTap: () => context.push('/bids/${summary.bidId}/negotiation'),
+              onTap: onTap,
               child: Container(
                 clipBehavior: Clip.antiAlias,
                 decoration: BoxDecoration(
                   color: cs.surface,
                   borderRadius: BorderRadius.circular(DonyRadius.card),
                   border: Border.all(
-                    color: summary.hasUnread
+                    color: highlighted
                         ? DonyColors.primary.withValues(alpha: 0.30)
                         : cs.outline,
-                    width: summary.hasUnread ? 1.5 : 1.0,
+                    width: highlighted ? 1.5 : 1.0,
                   ),
                 ),
                 child: Stack(
                   children: [
+                    // Bande colorée gauche via Positioned (hauteur automatique)
                     Positioned(
                       left: 0,
                       top: 0,
                       bottom: 0,
-                      child: Container(
-                        width: 4,
-                        color: isTerminal
-                            ? DonyColors.neutral300
-                            : DonyColors.primary,
-                      ),
+                      child: Container(width: 4, color: stripColor),
                     ),
+                    // Contenu — padding gauche 16 = 4 (strip) + 12 (espacement)
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  _route,
-                                  style: tt.titleLarge?.copyWith(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w800,
-                                    color: isTerminal
-                                        ? cs.onSurfaceVariant
-                                        : cs.onSurface,
-                                    letterSpacing: -0.3,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              if (_showsAmount)
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Text(
-                                      PriceDisplay.money(
-                                        summary.proposedGrossEur,
-                                        summary.currency,
-                                      ),
-                                      style: tt.headlineMedium?.copyWith(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.w800,
-                                        color: isTerminal
-                                            ? cs.onSurfaceVariant
-                                            : cs.onSurface,
-                                        letterSpacing: -0.5,
-                                        height: 1.0,
-                                      ),
-                                    ),
-                                    Text(
-                                      isTerminal ? 'terminé' : 'proposition',
-                                      style: tt.bodySmall?.copyWith(
-                                        fontSize: 10,
-                                        color: cs.onSurfaceVariant,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                            ],
-                          ),
-                          const SizedBox(height: 6),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  summary.counterpartyName ?? 'Interlocuteur',
-                                  overflow: TextOverflow.ellipsis,
-                                  style: tt.bodySmall?.copyWith(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    color: cs.onSurfaceVariant,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              const _SourcePill(kind: NegoEntryKind.trip),
-                            ],
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            'Tour ${summary.round} · ${_timeAgo(summary.updatedAt ?? DateTime.now())}',
-                            overflow: TextOverflow.ellipsis,
-                            style: tt.bodySmall?.copyWith(
-                              fontSize: 11,
-                              color: cs.onSurfaceVariant,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
+                      child: child,
                     ),
                   ],
                 ),
