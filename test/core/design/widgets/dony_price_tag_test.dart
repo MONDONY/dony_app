@@ -152,9 +152,11 @@ void main() {
       expect(find.text('Téléphone'), findsOneWidget);
     });
 
-    testWidgets('un libellé très long s\'ellipse sans déborder', (
+    testWidgets('un libellé très long s\'ellipse sur une seule ligne', (
       tester,
     ) async {
+      // Sur un écran étroit, les libellés du catalogue dépassent la largeur
+      // disponible : ils doivent être coupés, pas repousser le prix.
       await tester.pumpWidget(
         _wrap(
           const SizedBox(
@@ -169,6 +171,11 @@ void main() {
         ),
       );
 
+      final label = tester.widget<Text>(
+        find.text('Médicaments traditionnels et plantes séchées du pays'),
+      );
+      expect(label.maxLines, 1);
+      expect(label.overflow, TextOverflow.ellipsis);
       expect(tester.takeException(), isNull);
     });
   });

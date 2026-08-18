@@ -7,7 +7,6 @@ import 'package:dony/features/content_categories/data/content_category_model.dar
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_bloc.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_event.dart';
-import 'package:dony/features/price_grid/bloc/price_grid_state.dart';
 import 'package:dony/features/price_grid/data/models/price_grid_item_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -67,6 +66,9 @@ abstract final class PriceGridItemFormSheet {
       ),
       child: _FormContent(label: label, raw: raw, takenLabels: takenLabels),
     ).whenComplete(() {
+      // Report d'une frame : `stickyBottom` écoute encore ces notifiers au
+      // moment où la feuille se referme, et les libérer dans le même frame
+      // ferait échouer son dernier build.
       WidgetsBinding.instance.addPostFrameCallback((_) {
         label.dispose();
         raw.dispose();
@@ -84,15 +86,22 @@ abstract final class PriceGridItemFormSheet {
   }
 }
 
-/// Montant saisi, ou `null` si la saisie n'est pas encore un prix valide.
+/// Montant que la saisie représente, hors toute règle métier, ou `null` si ce
+/// n'est pas encore un nombre.
 ///
 /// Une virgule en fin de saisie est ignorée plutôt que rejetée : « 15, » est
 /// un état de frappe normal, et griser le bouton à cet instant donnerait
 /// l'impression que le montant est refusé.
-double? _parse(String raw) {
+double? _amount(String raw) {
   final trimmed = raw.endsWith(',') ? raw.substring(0, raw.length - 1) : raw;
   if (trimmed.isEmpty) return null;
-  final parsed = double.tryParse(trimmed.replaceAll(',', '.'));
+  return double.tryParse(trimmed.replaceAll(',', '.'));
+}
+
+/// Montant saisi une fois les bornes du domaine appliquées, ou `null` si la
+/// saisie n'est pas un prix acceptable.
+double? _parse(String raw) {
+  final parsed = _amount(raw);
   if (parsed == null || parsed <= 0 || parsed > maxUnitPriceActive) return null;
   return parsed;
 }
@@ -114,30 +123,23 @@ class _SubmitBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<String?>(
-      valueListenable: label,
-      builder: (context, chosen, _) {
+    // Un seul builder pour les deux notifiers : le bouton dépend à la fois de
+    // l'article retenu et du montant saisi.
+    return ListenableBuilder(
+      listenable: Listenable.merge([label, raw]),
+      builder: (context, _) {
+        final chosen = label.value;
         // Étape catalogue : aucun bouton. Choisir un article fait avancer,
         // un bouton « Suivant » n'ajouterait qu'un geste.
         if (chosen == null) return const SizedBox.shrink();
 
-        return ValueListenableBuilder<String>(
-          valueListenable: raw,
-          builder: (context, value, _) {
-            final price = _parse(value);
-            return BlocBuilder<PriceGridBloc, PriceGridState>(
-              builder: (context, state) {
-                return DonyButton(
-                  key: const Key('price-grid-submit'),
-                  label: isEditing ? 'Enregistrer' : 'Ajouter à ma grille',
-                  isLoading: state is PriceGridLoading,
-                  onPressed: price == null
-                      ? null
-                      : () => onSubmit(context, chosen, price),
-                );
-              },
-            );
-          },
+        final price = _parse(raw.value);
+        return DonyButton(
+          key: const Key('price-grid-submit'),
+          label: isEditing ? 'Enregistrer' : 'Ajouter à ma grille',
+          onPressed: price == null
+              ? null
+              : () => onSubmit(context, chosen, price),
         );
       },
     );
@@ -168,7 +170,11 @@ class _FormContent extends StatelessWidget {
             onPicked: (picked) => label.value = picked,
           );
         }
-        return _PriceStep(label: label, raw: raw, chosen: chosen);
+        return _PriceStep(
+          raw: raw,
+          chosen: chosen,
+          onChangeItem: () => label.value = null,
+        );
       },
     );
   }
@@ -193,6 +199,16 @@ class _CatalogStepState extends State<_CatalogStep> {
   /// utilisable dès l'ouverture, puis se complète avec le catalogue serveur,
   /// qui fait autorité et peut gagner des entrées sans release mobile.
   final _catalog = ValueNotifier<List<ContentCategory>>(fallbackCatalog);
+
+  /// Abonnement construit une fois : recréer le `Listenable.merge` à chaque
+  /// build ferait réabonner les deux sources à chaque frappe.
+  late final Listenable _sources = Listenable.merge([_controller, _catalog]);
+
+  /// Articles déjà tarifés, en minuscules. Figés à l'ouverture de la feuille,
+  /// donc inutile de reconstruire ce Set à chaque caractère saisi.
+  late final Set<String> _taken = widget.takenLabels
+      .map((e) => e.toLowerCase())
+      .toSet();
 
   @override
   void initState() {
@@ -221,26 +237,29 @@ class _CatalogStepState extends State<_CatalogStep> {
     final tt = Theme.of(context).textTheme;
 
     return ListenableBuilder(
-      listenable: Listenable.merge([_controller, _catalog]),
+      listenable: _sources,
       builder: (context, _) {
-        final value = _controller.value;
-        final query = value.text.trim();
+        final query = _controller.text.trim();
         final lowered = query.toLowerCase();
-        final taken = widget.takenLabels.map((e) => e.toLowerCase()).toSet();
 
-        final matches = _catalog.value
-            .where((c) => !taken.contains(c.label.toLowerCase()))
-            .where(
-              (c) => lowered.isEmpty || c.label.toLowerCase().contains(lowered),
-            )
-            .toList();
+        // Une seule mise en minuscules par entrée, réutilisée par les deux
+        // filtres et par la détection de doublon plus bas.
+        final matches = <ContentCategory>[];
+        var exact = false;
+        for (final category in _catalog.value) {
+          final key = category.label.toLowerCase();
+          if (_taken.contains(key)) {
+            if (key == lowered) exact = true;
+            continue;
+          }
+          if (lowered.isEmpty || key.contains(lowered)) {
+            matches.add(category);
+            if (key == lowered) exact = true;
+          }
+        }
 
         // « Ajouter "X" » dès qu'on tape quelque chose qui n'existe pas déjà,
         // à l'identique, dans le catalogue ou dans la grille.
-        final exact =
-            query.isNotEmpty &&
-            (matches.any((c) => c.label.toLowerCase() == lowered) ||
-                taken.contains(lowered));
         final canCreate = query.isNotEmpty && !exact && query.length <= 100;
 
         return Column(
@@ -354,92 +373,90 @@ class _CatalogRow extends StatelessWidget {
 
 class _PriceStep extends StatelessWidget {
   const _PriceStep({
-    required this.label,
     required this.raw,
     required this.chosen,
+    required this.onChangeItem,
   });
 
-  final ValueNotifier<String?> label;
   final ValueNotifier<String> raw;
   final String chosen;
+  final VoidCallback onChangeItem;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    return ValueListenableBuilder<String>(
-      valueListenable: raw,
-      builder: (context, value, _) {
-        final price = _parse(value);
-        final tooHigh =
-            value.isNotEmpty &&
-            (double.tryParse(value.replaceAll(',', '.')) ?? 0) >
-                maxUnitPriceActive;
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisSize: MainAxisSize.min,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // En-tête : l'article choisi, avec le retour au catalogue. Hors du
+        // builder, il ne dépend pas du montant saisi.
+        Row(
           children: [
-            // En-tête : l'article choisi, avec le retour au catalogue.
-            Row(
-              children: [
-                Text(
-                  emojiForLabel(chosen),
-                  style: const TextStyle(fontSize: 26),
-                ),
-                const SizedBox(width: DonySpacing.md),
-                Expanded(
-                  child: Text(
-                    chosen,
-                    style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                TextButton(
-                  key: const Key('price-grid-change-item'),
-                  onPressed: () => label.value = null,
-                  child: const Text('Changer'),
-                ),
-              ],
-            ),
-            const SizedBox(height: DonySpacing.md),
-
-            Text(
-              'Ce que vous encaissez',
-              style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: DonySpacing.xxs),
-            Text(
-              value.isEmpty ? '0' : value,
-              key: const Key('price-grid-amount'),
-              style: tt.displayLarge?.copyWith(
-                color: value.isEmpty ? cs.onSurfaceVariant : cs.onSurface,
-                fontFeatures: const [FontFeature.tabularFigures()],
+            Text(emojiForLabel(chosen), style: const TextStyle(fontSize: 26)),
+            const SizedBox(width: DonySpacing.md),
+            Expanded(
+              child: Text(
+                chosen,
+                style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
-              textAlign: TextAlign.center,
             ),
-            const SizedBox(height: DonySpacing.sm),
-
-            _Echo(price: price, tooHigh: tooHigh),
-            const SizedBox(height: DonySpacing.md),
-
-            DonyKeypad(
-              // Sans cela, la rangée « virgule / 0 / effacer » passe sous la
-              // barre de validation et devient inatteignable.
-              compact: true,
-              onDigit: (d) => raw.value = _append(raw.value, d),
-              onDecimal: () => raw.value = _appendDecimal(raw.value),
-              onDelete: () => raw.value = raw.value.isEmpty
-                  ? ''
-                  : raw.value.substring(0, raw.value.length - 1),
+            TextButton(
+              key: const Key('price-grid-change-item'),
+              onPressed: onChangeItem,
+              child: const Text('Changer'),
             ),
-            const SizedBox(height: DonySpacing.base),
           ],
-        );
-      },
+        ),
+        const SizedBox(height: DonySpacing.md),
+
+        Text(
+          'Ce que vous encaissez',
+          style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: DonySpacing.xxs),
+
+        // Seuls le montant et son écho suivent la frappe. Englober le pavé
+        // ferait reconstruire ses douze touches à chaque chiffre saisi.
+        ValueListenableBuilder<String>(
+          valueListenable: raw,
+          builder: (context, value, _) => Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                value.isEmpty ? '0' : value,
+                key: const Key('price-grid-amount'),
+                style: tt.displayLarge?.copyWith(
+                  color: value.isEmpty ? cs.onSurfaceVariant : cs.onSurface,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: DonySpacing.sm),
+              _Echo(raw: value),
+            ],
+          ),
+        ),
+        const SizedBox(height: DonySpacing.md),
+
+        DonyKeypad(
+          // À taille pleine, la dernière rangée tombe sous la ligne de
+          // flottaison de la feuille et n'est atteignable qu'en défilant.
+          compact: true,
+          onDigit: (d) => raw.value = _append(raw.value, d),
+          onDecimal: () => raw.value = _appendDecimal(raw.value),
+          onDelete: () => raw.value = raw.value.isEmpty
+              ? ''
+              : raw.value.substring(0, raw.value.length - 1),
+        ),
+        const SizedBox(height: DonySpacing.base),
+      ],
     );
   }
 
@@ -460,42 +477,57 @@ class _PriceStep extends StatelessWidget {
   }
 }
 
+/// Nature du message d'écho, qui sert de clé d'animation.
+enum _EchoKind { invite, valid, tooHigh }
+
 /// Écho du montant réellement payé par l'expéditeur, recalculé à chaque touche.
 class _Echo extends StatelessWidget {
-  const _Echo({required this.price, required this.tooHigh});
+  const _Echo({required this.raw});
 
-  final double? price;
-  final bool tooHigh;
+  final String raw;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
+    final amount = _amount(raw);
+    final price = _parse(raw);
+    final kind = amount != null && amount > maxUnitPriceActive
+        ? _EchoKind.tooHigh
+        : price == null
+        ? _EchoKind.invite
+        : _EchoKind.valid;
+
     final Color background;
     final Color ink;
     final String message;
 
-    if (tooHigh) {
-      background = cs.errorLight;
-      ink = cs.error;
-      message = 'Maximum ${formatPriceActive(maxUnitPriceActive)} par article.';
-    } else if (price == null) {
-      background = cs.surfaceContainerHighest;
-      ink = cs.onSurfaceVariant;
-      message = 'Saisissez le montant que vous voulez toucher.';
-    } else {
-      background = cs.primaryContainer;
-      ink = cs.primary;
-      message =
-          'L\'expéditeur paiera ${formatPriceActive(netToSenderPrice(price!))}, '
-          'commission Yadony de $donyCommissionPercentLabel % comprise.';
+    switch (kind) {
+      case _EchoKind.tooHigh:
+        background = cs.errorLight;
+        ink = cs.error;
+        message =
+            'Maximum ${formatPriceActive(maxUnitPriceActive)} par article.';
+      case _EchoKind.invite:
+        background = cs.surfaceContainerHighest;
+        ink = cs.onSurfaceVariant;
+        message = 'Saisissez le montant que vous voulez toucher.';
+      case _EchoKind.valid:
+        background = cs.primaryContainer;
+        ink = cs.primary;
+        message =
+            'L\'expéditeur paiera ${formatPriceActive(netToSenderPrice(price!))}, '
+            'commission Yadony de $donyCommissionPercentLabel % comprise.';
     }
 
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 180),
       child: Container(
-        key: ValueKey(message),
+        // Clé sur la nature du message et non sur son texte : le texte porte
+        // le montant, donc une transition croisée se relancerait à chaque
+        // chiffre tapé.
+        key: ValueKey(kind),
         width: double.infinity,
         padding: const EdgeInsets.symmetric(
           horizontal: DonySpacing.md,

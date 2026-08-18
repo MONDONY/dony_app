@@ -123,6 +123,11 @@ class _GridItemSelectionContent extends StatelessWidget {
         ...items.asMap().entries.map((entry) {
           final i = entry.key;
           final item = entry.value;
+          // Toutes les lignes se reconstruisent à chaque appui, alors qu'une
+          // seule change. Assumé : une grille tient sous la dizaine d'articles
+          // et une ligne ne déclenche ni repaint du CustomPaint ni layout
+          // coûteux. Filtrer par article demanderait un notifier dérivé et un
+          // StatefulWidget par ligne, pour un gain non perceptible.
           return ValueListenableBuilder<Map<String, int>>(
             valueListenable: quantitiesNotifier,
             builder: (context, quantities, _) {
@@ -197,7 +202,7 @@ class _GridItemRow extends StatelessWidget {
             _StepBtn(
               key: Key('grid-item-remove-${item.id}'),
               iconAsset: 'minus',
-              active: quantity > 0,
+              active: isActive,
               semanticLabel: 'Retirer un ${item.label}',
               onTap: onDecrement,
             ),
@@ -246,8 +251,16 @@ class _StepBtn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final bgColor = active ? cs.primary : cs.surfaceContainerLow;
-    final iconColor = active ? cs.onPrimary : cs.onSurfaceVariant;
+    // Estompe fondue dans les couleurs plutôt qu'une couche Opacity : à
+    // l'ouverture tous les boutons « moins » sont inactifs, ce qui pousserait
+    // autant de couches de composition sur le thread raster.
+    final dimmed = onTap == null;
+    final bgColor = (active ? cs.primary : cs.surfaceContainerLow).withValues(
+      alpha: dimmed ? 0.4 : 1,
+    );
+    final iconColor = (active ? cs.onPrimary : cs.onSurfaceVariant).withValues(
+      alpha: dimmed ? 0.4 : 1,
+    );
     return Semantics(
       button: true,
       container: true,
@@ -256,8 +269,13 @@ class _StepBtn extends StatelessWidget {
       label: semanticLabel,
       child: GestureDetector(
         onTap: onTap,
-        child: Opacity(
-          opacity: onTap != null ? 1.0 : 0.4,
+        // Le visuel reste à 28 pt, la zone tappable monte au minimum requis.
+        child: Container(
+          constraints: const BoxConstraints(
+            minWidth: kDonyMinTapTarget,
+            minHeight: kDonyMinTapTarget,
+          ),
+          alignment: Alignment.center,
           child: Container(
             width: 28,
             height: 28,

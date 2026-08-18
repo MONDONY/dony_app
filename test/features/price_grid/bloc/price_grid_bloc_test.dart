@@ -84,7 +84,7 @@ void main() {
     );
 
     blocTest<PriceGridBloc, PriceGridState>(
-      'PriceGridItemAddRequested emits Loading then Loaded',
+      'PriceGridItemAddRequested recharge la grille sans état de chargement',
       build: () {
         when(
           () => repository.addItem(
@@ -103,8 +103,9 @@ void main() {
           unitPriceNet: 10.0,
         ),
       ),
+      // Aucun PriceGridLoading : la grille doit rester à l'écran pendant
+      // l'aller-retour, sinon elle disparaît à chaque ajout.
       expect: () => [
-        isA<PriceGridLoading>(),
         isA<PriceGridLoaded>().having((s) => s.items, 'items', [
           _item1,
           _item2,
@@ -116,7 +117,7 @@ void main() {
     );
 
     blocTest<PriceGridBloc, PriceGridState>(
-      'PriceGridItemUpdateRequested emits Loading then Loaded',
+      'PriceGridItemUpdateRequested recharge la grille sans état de chargement',
       build: () {
         when(
           () => repository.updateItem(
@@ -138,7 +139,6 @@ void main() {
         ),
       ),
       expect: () => [
-        isA<PriceGridLoading>(),
         isA<PriceGridLoaded>().having((s) => s.items, 'items', [
           _item1,
           _item2,
@@ -147,7 +147,7 @@ void main() {
     );
 
     blocTest<PriceGridBloc, PriceGridState>(
-      'PriceGridItemDeleteRequested emits Loading then Loaded',
+      'PriceGridItemDeleteRequested recharge la grille sans état de chargement',
       build: () {
         when(() => repository.deleteItem(any())).thenAnswer((_) async {});
         when(() => repository.getItems()).thenAnswer((_) async => [_item2]);
@@ -155,8 +155,26 @@ void main() {
       },
       act: (b) => b.add(const PriceGridItemDeleteRequested('uuid-1')),
       expect: () => [
-        isA<PriceGridLoading>(),
         isA<PriceGridLoaded>().having((s) => s.items, 'items', [_item2]),
+      ],
+    );
+
+    blocTest<PriceGridBloc, PriceGridState>(
+      'une suppression qui échoue rétablit la grille précédente',
+      build: () {
+        when(() => repository.deleteItem(any())).thenThrow(Exception('réseau'));
+        return PriceGridBloc(repository);
+      },
+      seed: () => const PriceGridLoaded([_item1, _item2]),
+      act: (b) => b.add(const PriceGridItemDeleteRequested('uuid-1')),
+      expect: () => [
+        isA<PriceGridError>(),
+        // L'erreur déclenche le message, puis la liste revient telle quelle :
+        // le serveur n'a rien supprimé.
+        isA<PriceGridLoaded>().having((s) => s.items, 'items', [
+          _item1,
+          _item2,
+        ]),
       ],
     );
 

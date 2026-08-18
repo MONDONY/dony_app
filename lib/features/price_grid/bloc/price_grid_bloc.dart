@@ -28,54 +28,56 @@ class PriceGridBloc extends Bloc<PriceGridEvent, PriceGridState> {
     }
   }
 
+  /// Applique une mutation puis recharge la grille, sans jamais passer par
+  /// [PriceGridLoading].
+  ///
+  /// Un indicateur plein cadre entre l'action et la réponse ferait disparaître
+  /// la grille à chaque ajout, modification ou suppression, perdrait la
+  /// position de défilement et sortirait du mode réorganisation. En cas
+  /// d'échec, l'état d'erreur déclenche le message puis la liste précédente
+  /// est rétablie : le serveur, lui, n'a rien changé.
+  Future<void> _mutate(
+    Emitter<PriceGridState> emit,
+    Future<void> Function() action,
+  ) async {
+    final current = state;
+    final previous = current is PriceGridLoaded ? current.items : null;
+    try {
+      await action();
+      emit(PriceGridLoaded(await _repository.getItems()));
+    } catch (e) {
+      emit(PriceGridError(e.toString()));
+      if (previous != null) emit(PriceGridLoaded(previous));
+    }
+  }
+
   Future<void> _onAdd(
     PriceGridItemAddRequested event,
     Emitter<PriceGridState> emit,
-  ) async {
-    try {
-      emit(const PriceGridLoading());
-      await _repository.addItem(
-        label: event.label,
-        unitPriceNet: event.unitPriceNet,
-      );
-      final items = await _repository.getItems();
-      emit(PriceGridLoaded(items));
-    } catch (e) {
-      emit(PriceGridError(e.toString()));
-    }
-  }
+  ) => _mutate(
+    emit,
+    () => _repository.addItem(
+      label: event.label,
+      unitPriceNet: event.unitPriceNet,
+    ),
+  );
 
   Future<void> _onUpdate(
     PriceGridItemUpdateRequested event,
     Emitter<PriceGridState> emit,
-  ) async {
-    try {
-      emit(const PriceGridLoading());
-      await _repository.updateItem(
-        itemId: event.itemId,
-        label: event.label,
-        unitPriceNet: event.unitPriceNet,
-      );
-      final items = await _repository.getItems();
-      emit(PriceGridLoaded(items));
-    } catch (e) {
-      emit(PriceGridError(e.toString()));
-    }
-  }
+  ) => _mutate(
+    emit,
+    () => _repository.updateItem(
+      itemId: event.itemId,
+      label: event.label,
+      unitPriceNet: event.unitPriceNet,
+    ),
+  );
 
   Future<void> _onDelete(
     PriceGridItemDeleteRequested event,
     Emitter<PriceGridState> emit,
-  ) async {
-    try {
-      emit(const PriceGridLoading());
-      await _repository.deleteItem(event.itemId);
-      final items = await _repository.getItems();
-      emit(PriceGridLoaded(items));
-    } catch (e) {
-      emit(PriceGridError(e.toString()));
-    }
-  }
+  ) => _mutate(emit, () => _repository.deleteItem(event.itemId));
 
   Future<void> _onReorder(
     PriceGridItemsReorderRequested event,

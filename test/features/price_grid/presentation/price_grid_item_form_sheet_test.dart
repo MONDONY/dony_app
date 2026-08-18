@@ -1,7 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
-import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_bloc.dart';
@@ -372,13 +371,6 @@ void main() {
       expect(updates, hasLength(1));
       expect(updates.single.itemId, 'a1');
       expect(updates.single.unitPriceNet, 159.0);
-    });
-  });
-
-  group('PriceGridItemFormSheet — garde-fous', () {
-    test('le plafond par article reste celui du domaine', () {
-      // Si le plafond bouge, le message d'erreur de la feuille doit suivre.
-      expect(maxUnitPriceActive, greaterThan(0));
     });
   });
 }

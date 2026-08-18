@@ -9,7 +9,6 @@ class DonyKeypad extends StatelessWidget {
     required this.onDelete,
     this.onBiometric,
     this.onDecimal,
-    this.decimalLabel = ',',
     this.compact = false,
     this.enabled = true,
   }) : assert(
@@ -29,14 +28,11 @@ class DonyKeypad extends StatelessWidget {
   /// à saisir un montant et non un code. Exclusif avec [onBiometric].
   final VoidCallback? onDecimal;
 
-  /// Caractère affiché sur la touche décimale. Virgule par défaut, la
-  /// convention francophone.
-  final String decimalLabel;
-
   /// Touches resserrées, pour les feuilles où le pavé partage la hauteur avec
-  /// un en-tête et un bouton collé en bas. En taille normale, la dernière
-  /// rangée passe sous la barre d'action et devient inatteignable.
-  /// La cible tactile reste au-dessus des 44 pt requis.
+  /// un en-tête et un bouton collé en bas. À taille pleine, la dernière rangée
+  /// tombe alors sous la ligne de flottaison et n'est atteignable qu'en
+  /// faisant défiler, ce qui n'a pas de sens pour saisir un montant.
+  /// La cible tactile reste au-dessus de [kDonyMinTapTarget].
   final bool compact;
 
   final bool enabled;
@@ -46,31 +42,28 @@ class DonyKeypad extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bottomLeft = onBiometric ?? onDecimal;
     return Column(
       children: [
-        _buildRow(['1', '2', '3']),
+        _buildRow(const ['1', '2', '3']),
         SizedBox(height: _gap),
-        _buildRow(['4', '5', '6']),
+        _buildRow(const ['4', '5', '6']),
         SizedBox(height: _gap),
-        _buildRow(['7', '8', '9']),
+        _buildRow(const ['7', '8', '9']),
         SizedBox(height: _gap),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             _KeypadKey(
               size: _keySize,
-              onTap: onBiometric ?? onDecimal,
-              enabled: enabled && (onBiometric ?? onDecimal) != null,
+              onTap: bottomLeft,
+              enabled: enabled && bottomLeft != null,
+              // L'assert du constructeur garantit qu'au plus une des deux
+              // fonctions occupe ce slot.
               child: onBiometric != null
                   ? const DonyIcon('fingerprint', size: 28)
                   : onDecimal != null
-                  ? Text(
-                      decimalLabel,
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    )
+                  ? const Text(',')
                   : const SizedBox.shrink(),
             ),
             SizedBox(width: _gap),
@@ -78,10 +71,7 @@ class DonyKeypad extends StatelessWidget {
               size: _keySize,
               onTap: () => onDigit('0'),
               enabled: enabled,
-              child: const Text(
-                '0',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w500),
-              ),
+              child: const Text('0'),
             ),
             SizedBox(width: _gap),
             _KeypadKey(
@@ -104,12 +94,10 @@ class DonyKeypad extends StatelessWidget {
           if (i > 0) SizedBox(width: _gap),
           _KeypadKey(
             size: _keySize,
+            // Taille et graisse viennent du DefaultTextStyle de _KeypadKey.
             onTap: () => onDigit(digits[i]),
             enabled: enabled,
-            child: Text(
-              digits[i],
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w500),
-            ),
+            child: Text(digits[i]),
           ),
         ],
       ],

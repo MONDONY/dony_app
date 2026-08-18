@@ -56,6 +56,14 @@ class DonyPriceTag extends StatelessWidget {
   /// Remplace l'annonce par défaut, qui énonce l'article puis son prix.
   final String? semanticLabel;
 
+  /// Silhouette de l'étiquette : accrochée par la gauche, donc coin gauche
+  /// presque droit et coins droits arrondis. Partagée par la décoration et par
+  /// le ripple, qui déborderait du cadre si les deux divergeaient.
+  static const _shape = BorderRadius.horizontal(
+    left: Radius.circular(DonyRadius.xs + 1),
+    right: Radius.circular(DonyRadius.card),
+  );
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -64,6 +72,7 @@ class DonyPriceTag extends StatelessWidget {
     final borderColor = highlighted ? cs.primary : cs.outline;
     final stampColor = highlighted ? cs.primary : cs.onSurface;
     final stampInk = highlighted ? cs.onPrimary : cs.surface;
+    final titleStyle = compact ? tt.titleMedium : tt.titleLarge;
 
     final stamp = Container(
       padding: EdgeInsets.symmetric(
@@ -76,7 +85,7 @@ class DonyPriceTag extends StatelessWidget {
       ),
       child: Text(
         price,
-        style: (compact ? tt.titleMedium : tt.titleLarge)?.copyWith(
+        style: titleStyle?.copyWith(
           color: stampInk,
           fontWeight: FontWeight.w800,
           fontFeatures: const [FontFeature.tabularFigures()],
@@ -99,12 +108,7 @@ class DonyPriceTag extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: cs.surface,
-        // Coin gauche presque droit, coins droits arrondis : la silhouette
-        // d'une étiquette accrochée par la gauche.
-        borderRadius: const BorderRadius.horizontal(
-          left: Radius.circular(DonyRadius.xs + 1),
-          right: Radius.circular(DonyRadius.card),
-        ),
+        borderRadius: _shape,
         border: Border.all(color: borderColor, width: highlighted ? 1.5 : 1),
         boxShadow: [
           // Ombre franche, sans flou : du papier posé, pas une carte qui
@@ -132,8 +136,7 @@ class DonyPriceTag extends StatelessWidget {
                   children: [
                     Text(
                       label,
-                      style: (compact ? tt.titleMedium : tt.titleLarge)
-                          ?.copyWith(fontWeight: FontWeight.w800),
+                      style: titleStyle?.copyWith(fontWeight: FontWeight.w800),
                       maxLines: compact ? 1 : 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -198,7 +201,10 @@ class DonyPriceTag extends StatelessWidget {
           left: compact ? 18 : 21,
           top: DonySpacing.sm,
           bottom: DonySpacing.sm,
-          child: _PerforationLine(color: cs.onSurface.withValues(alpha: 0.18)),
+          child: CustomPaint(
+            size: const Size(1.5, double.infinity),
+            painter: _PerforationPainter(cs.onSurface.withValues(alpha: 0.18)),
+          ),
         ),
       ],
     );
@@ -214,10 +220,7 @@ class DonyPriceTag extends StatelessWidget {
               type: MaterialType.transparency,
               child: InkWell(
                 onTap: onTap,
-                borderRadius: const BorderRadius.horizontal(
-                  left: Radius.circular(DonyRadius.xs + 1),
-                  right: Radius.circular(DonyRadius.card),
-                ),
+                borderRadius: _shape,
                 child: withPunch,
               ),
             ),
@@ -226,20 +229,6 @@ class DonyPriceTag extends StatelessWidget {
 }
 
 /// Ligne pointillée verticale, la perforation détachable de l'étiquette.
-class _PerforationLine extends StatelessWidget {
-  const _PerforationLine({required this.color});
-
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomPaint(
-      size: const Size(1.5, double.infinity),
-      painter: _PerforationPainter(color),
-    );
-  }
-}
-
 class _PerforationPainter extends CustomPainter {
   const _PerforationPainter(this.color);
 

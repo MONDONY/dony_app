@@ -14,7 +14,22 @@ import 'package:go_router/go_router.dart';
 /// Nombre d'étiquettes montrées dans le formulaire avant repli. Au-delà, la
 /// liste complète part dans une feuille : le formulaire de publication est
 /// déjà long, un barème de dix articles y noierait les champs suivants.
-const int kGridPreviewVisibleCount = 3;
+const int _visibleCount = 3;
+
+/// Étiquette d'un article du barème, montée à l'identique dans l'aperçu replié
+/// et dans la feuille complète.
+Widget _tag(
+  GridPreviewItem item,
+  SupportedCurrency? currency, {
+  bool compact = false,
+}) {
+  return DonyPriceTag(
+    label: item.label,
+    emoji: emojiForLabel(item.label),
+    price: CurrencyFormatter.formatOrPlain(item.unitPriceDisplay, currency),
+    compact: compact,
+  );
+}
 
 /// Aperçu de la grille du profil dans l'étape « Prix & conditions ».
 ///
@@ -32,7 +47,7 @@ class GridPreviewCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    final visible = items.take(kGridPreviewVisibleCount).toList();
+    final visible = items.take(_visibleCount).toList();
     final hidden = items.length - visible.length;
 
     return Column(
@@ -60,15 +75,7 @@ class GridPreviewCard extends StatelessWidget {
           for (final item in visible)
             Padding(
               padding: const EdgeInsets.only(bottom: DonySpacing.sm),
-              child: DonyPriceTag(
-                label: item.label,
-                emoji: emojiForLabel(item.label),
-                price: CurrencyFormatter.formatOrPlain(
-                  item.unitPriceDisplay,
-                  currency,
-                ),
-                compact: true,
-              ),
+              child: _tag(item, currency, compact: true),
             ),
 
           if (hidden > 0)
@@ -162,14 +169,7 @@ class _GridPreviewSheetContent extends StatelessWidget {
         for (final item in items)
           Padding(
             padding: const EdgeInsets.only(bottom: DonySpacing.sm + 2),
-            child: DonyPriceTag(
-              label: item.label,
-              emoji: emojiForLabel(item.label),
-              price: CurrencyFormatter.formatOrPlain(
-                item.unitPriceDisplay,
-                currency,
-              ),
-            ),
+            child: _tag(item, currency),
           ),
         const SizedBox(height: DonySpacing.xs),
         Text(
@@ -195,16 +195,9 @@ class _EmptyGridNotice extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(DonySpacing.base),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: cs.outline),
-      ),
+    return DonyCard(
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
             'Votre grille est vide',

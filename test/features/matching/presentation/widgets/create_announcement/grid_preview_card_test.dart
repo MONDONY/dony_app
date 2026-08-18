@@ -83,14 +83,7 @@ void main() {
       // Les deux derniers sont repliés dans la feuille.
       expect(find.text('Sac de riz'), findsNothing);
       expect(find.text('Livre'), findsNothing);
-    });
-
-    testWidgets('le bouton annonce le nombre total d\'articles', (
-      tester,
-    ) async {
-      await tester.pumpWidget(_wrap(_items));
-      await tester.pumpAndSettle();
-
+      // Et le bouton annonce le total, pas le reste caché.
       expect(find.text('Voir les 5 articles'), findsOneWidget);
     });
 
