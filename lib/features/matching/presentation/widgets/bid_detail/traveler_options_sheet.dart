@@ -2,6 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
+import 'package:dony/features/incident_report/data/repositories/incident_report_repository.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
@@ -201,97 +202,13 @@ class _TravelerOptionsSheet extends StatelessWidget {
     );
   }
 
+  /// Signalement réel de l'expéditeur — délègue au flux existant
+  /// (IncidentReportScreen), comme pour showSenderOptionsSheet côté
+  /// expéditeur et profile_public_screen.dart pour un profil.
   void _showReportSheet(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    final reasons = [
-      'Comportement inapproprié',
-      'Informations fausses',
-      'Tentative d\'arnaque',
-      'Non-respect des délais',
-      'Autre',
-    ];
-    String? selected;
-
-    showModalBottomSheet<void>(
-      context: context,
-      useRootNavigator: true,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setSheetState) => Container(
-          decoration: BoxDecoration(
-            color: cs.surface,
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(DonyRadius.sheet),
-            ),
-          ),
-          padding: EdgeInsets.fromLTRB(
-            DonySpacing.lg,
-            0,
-            DonySpacing.lg,
-            MediaQuery.of(ctx).padding.bottom + DonySpacing.xl,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  margin: const EdgeInsets.symmetric(vertical: DonySpacing.md),
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: cs.outline,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              Text("Signaler l'expéditeur", style: tt.headlineMedium),
-              const SizedBox(height: DonySpacing.xs),
-              Text(
-                'Votre signalement sera traité par l\'équipe Yadony.',
-                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-              ),
-              const SizedBox(height: DonySpacing.base),
-              // groupValue/onChanged portés par RadioGroup depuis Flutter 3.32.
-              RadioGroup<String>(
-                groupValue: selected,
-                onChanged: (v) => setSheetState(() => selected = v),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: reasons
-                      .map(
-                        (r) => RadioListTile<String>(
-                          value: r,
-                          title: Text(r, style: tt.bodyMedium),
-                          activeColor: cs.primary,
-                          contentPadding: EdgeInsets.zero,
-                          dense: true,
-                        ),
-                      )
-                      .toList(),
-                ),
-              ),
-              const SizedBox(height: DonySpacing.base),
-              DonyButton(
-                label: 'Envoyer le signalement',
-                variant: DonyButtonVariant.destructive,
-                onPressed: selected == null
-                    ? null
-                    : () {
-                        ctx.pop();
-                        DonySnackbar.show(
-                          context,
-                          message: 'Signalement envoyé. Merci !',
-                          type: DonySnackbarType.success,
-                        );
-                      },
-              ),
-            ],
-          ),
-        ),
-      ),
+    context.push(
+      '/settings/report-incident',
+      extra: {'targetType': IncidentTargetType.user, 'targetId': bid.senderId},
     );
   }
 

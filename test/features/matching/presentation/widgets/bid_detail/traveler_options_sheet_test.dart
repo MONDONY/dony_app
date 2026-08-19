@@ -67,6 +67,17 @@ Widget _buildApp({
           ),
         ),
       ),
+      GoRoute(
+        path: '/settings/report-incident',
+        builder: (_, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return Scaffold(
+            body: Text(
+              'Reported: ${extra?['targetType']}/${extra?['targetId']}',
+            ),
+          );
+        },
+      ),
     ],
   );
   return MaterialApp.router(theme: AppTheme.light(), routerConfig: router);
@@ -176,79 +187,16 @@ void main() {
     ).called(1);
   });
 
-  testWidgets('tap Signaler → sheet signalement apparaît', (tester) async {
-    // Suppress RadioListTile-inside-DecoratedBox assertion (known Flutter warning).
-    final List<FlutterErrorDetails> suppressedErrors = [];
-    final originalOnError = FlutterError.onError;
-    FlutterError.onError = (details) {
-      if (details.exceptionAsString().contains('ListTile background color')) {
-        suppressedErrors.add(details);
-        return;
-      }
-      originalOnError?.call(details);
-    };
-
-    try {
-      await _open(tester, _bid());
-      await tester.tap(find.text("Signaler l'expéditeur"));
-      await tester.pumpAndSettle();
-      expect(find.text('Comportement inapproprié'), findsOneWidget);
-    } finally {
-      FlutterError.onError = originalOnError;
-    }
-  });
-
-  testWidgets('tap Signaler → sélectionner raison → bouton Envoyer activé', (
-    tester,
-  ) async {
-    // Suppress RadioListTile-inside-DecoratedBox assertion (known Flutter warning).
-    final List<FlutterErrorDetails> suppressedErrors = [];
-    final originalOnError = FlutterError.onError;
-    FlutterError.onError = (details) {
-      if (details.exceptionAsString().contains('ListTile background color')) {
-        suppressedErrors.add(details);
-        return;
-      }
-      originalOnError?.call(details);
-    };
-
-    try {
+  testWidgets(
+    'tap Signaler → navigue vers report-incident avec la cible USER/expéditeur',
+    (tester) async {
       await _open(tester, _bid());
       await tester.tap(find.text("Signaler l'expéditeur"));
       await tester.pumpAndSettle();
 
-      // The DonyButton renders as an ElevatedButton; when onPressed == null it is disabled.
-      final btns = tester
-          .widgetList<ElevatedButton>(
-            find.ancestor(
-              of: find.text('Envoyer le signalement'),
-              matching: find.byType(ElevatedButton),
-            ),
-          )
-          .toList();
-      if (btns.isNotEmpty) {
-        expect(btns.first.onPressed, isNull);
-      }
-
-      // Sélectionner une raison
-      await tester.tap(find.text('Comportement inapproprié'));
-      await tester.pumpAndSettle();
-
-      final btnsAfter = tester
-          .widgetList<ElevatedButton>(
-            find.ancestor(
-              of: find.text('Envoyer le signalement'),
-              matching: find.byType(ElevatedButton),
-            ),
-          )
-          .toList();
-      if (btnsAfter.isNotEmpty) {
-        expect(btnsAfter.first.onPressed, isNotNull);
-      }
-    } finally {
-      FlutterError.onError = originalOnError;
-    }
-  });
+      expect(find.text('Reported: IncidentTargetType.user/s1'), findsOneWidget);
+    },
+  );
 
   testWidgets('tap Détails du colis → sub-sheet apparaît', (tester) async {
     await _open(tester, _bid());

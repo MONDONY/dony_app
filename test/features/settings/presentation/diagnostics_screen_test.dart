@@ -6,6 +6,7 @@ import 'package:dony/features/settings/presentation/widgets/settings_section_hea
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockDiagnosticsBloc extends MockBloc<DiagnosticsEvent, DiagnosticsState>
@@ -39,6 +40,50 @@ Widget _wrap({
       child: const DiagnosticsScreen(),
     ),
   );
+}
+
+// « Signaler un bug » doit naviguer vers l'écran réel de signalement (celui qui
+// accepte des captures d'écran), pas ouvrir une boîte de dialogue qui n'envoie
+// rien au back. Le routeur du test enregistre la même route que router.dart.
+Widget _wrapWithRouter({
+  String? appVersion = '1.2.3',
+  String? buildNumber = '42',
+}) {
+  final mockBloc = MockDiagnosticsBloc();
+  final state = DiagnosticsState(
+    appVersion: appVersion,
+    buildNumber: buildNumber,
+  );
+  when(() => mockBloc.state).thenReturn(state);
+  whenListen<DiagnosticsState>(
+    mockBloc,
+    const Stream.empty(),
+    initialState: state,
+  );
+
+  final router = GoRouter(
+    initialLocation: '/',
+    routes: [
+      GoRoute(
+        path: '/',
+        builder: (context, state) => BlocProvider<DiagnosticsBloc>.value(
+          value: mockBloc,
+          child: const DiagnosticsScreen(),
+        ),
+      ),
+      GoRoute(
+        path: '/settings/report-incident',
+        builder: (_, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return Scaffold(
+            body: Text('report-incident:${extra?['targetType']}'),
+          );
+        },
+      ),
+    ],
+  );
+
+  return MaterialApp.router(routerConfig: router);
 }
 
 void main() {
@@ -102,5 +147,23 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Copier mon ID utilisateur'), findsOneWidget);
     });
+
+    testWidgets(
+      'tap Signaler un bug navigue vers le vrai formulaire (avec photos), '
+      "n'ouvre pas une boîte de dialogue qui n'envoie rien",
+      (tester) async {
+        await tester.pumpWidget(_wrapWithRouter());
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Signaler un bug'));
+        await tester.pumpAndSettle();
+
+        expect(
+          find.text('report-incident:IncidentTargetType.app'),
+          findsOneWidget,
+        );
+        expect(find.byType(AlertDialog), findsNothing);
+      },
+    );
   });
 }
