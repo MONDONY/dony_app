@@ -19,7 +19,8 @@ import 'package:rxdart/rxdart.dart';
 /// Deux chemins mènent au même état : la phrase, qui passe par le parseur, et les
 /// filtres réglés au doigt, qui n'y passent pas. Le compteur se met à jour dans les
 /// deux cas, c'est lui qui remplace la liste de résultats absente de cet écran.
-class SearchComposerBloc extends Bloc<SearchComposerEvent, SearchComposerState> {
+class SearchComposerBloc
+    extends Bloc<SearchComposerEvent, SearchComposerState> {
   SearchComposerBloc(
     this._parseRepository,
     this._announcementRepository,
@@ -27,8 +28,8 @@ class SearchComposerBloc extends Bloc<SearchComposerEvent, SearchComposerState> 
     this._analytics, {
     required SearchMode mode,
     required HomeSearchFilters initialFilters,
-  })  : _mode = mode,
-        super(SearchComposerState(filters: initialFilters)) {
+  }) : _mode = mode,
+       super(SearchComposerState(filters: initialFilters)) {
     on<SearchComposerStarted>(_onStarted);
     on<SearchComposerPhraseSubmitted>(_onPhraseSubmitted);
     on<SearchComposerUnresolvedAnswered>(_onUnresolvedAnswered);
@@ -54,10 +55,12 @@ class SearchComposerBloc extends Bloc<SearchComposerEvent, SearchComposerState> 
     SearchComposerStarted event,
     Emitter<SearchComposerState> emit,
   ) async {
-    unawaited(_analytics.logEvent(
-      AnalyticsEvents.searchComposerOpened,
-      properties: {'mode': _mode.name},
-    ));
+    unawaited(
+      _analytics.logEvent(
+        AnalyticsEvents.searchComposerOpened,
+        properties: {'mode': _mode.name},
+      ),
+    );
     await _refreshCount(emit, state.filters);
   }
 
@@ -74,30 +77,38 @@ class SearchComposerBloc extends Bloc<SearchComposerEvent, SearchComposerState> 
       final result = await _parseRepository.parse(text, _mode);
       final applied = result.applyTo(state.filters);
 
-      emit(state.copyWith(
-        filters: applied,
-        recognized: result.recognized,
-        unresolved: result.unresolved,
-        isParsing: false,
-      ));
+      emit(
+        state.copyWith(
+          filters: applied,
+          recognized: result.recognized,
+          unresolved: result.unresolved,
+          isParsing: false,
+        ),
+      );
 
       // La phrase elle-même n'est jamais envoyée : seules des mesures agrégées.
-      unawaited(_analytics.logEvent(
-        AnalyticsEvents.searchPhraseParsed,
-        properties: {
-          'recognized_count': result.recognized.length,
-          'unresolved_count': result.unresolved.length,
-          'used_voice': event.fromVoice,
-        },
-      ));
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.searchPhraseParsed,
+          properties: {
+            'recognized_count': result.recognized.length,
+            'unresolved_count': result.unresolved.length,
+            'used_voice': event.fromVoice,
+          },
+        ),
+      );
 
       if (result.recognized.isEmpty) {
-        unawaited(_analytics.logEvent(
-          AnalyticsEvents.searchParseFailed,
-          properties: {
-            'unresolved_kinds': result.unresolved.map((u) => u.kind.name).toList(),
-          },
-        ));
+        unawaited(
+          _analytics.logEvent(
+            AnalyticsEvents.searchParseFailed,
+            properties: {
+              'unresolved_kinds': result.unresolved
+                  .map((u) => u.kind.name)
+                  .toList(),
+            },
+          ),
+        );
       }
 
       await _refreshCount(emit, applied);
@@ -121,23 +132,43 @@ class SearchComposerBloc extends Bloc<SearchComposerEvent, SearchComposerState> 
     Emitter<SearchComposerState> emit,
   ) async {
     var filters = state.filters;
+    final value = event.value;
 
+    // Une valeur vide (« Peu importe ») signifie « pas de contrainte » : elle
+    // retire un filtre déjà réglé plutôt que de le laisser tel quel, sinon un
+    // prix ou une date posés avant la phrase survivraient à un choix qui dit
+    // explicitement le contraire.
     switch (event.kind) {
       case UnresolvedKind.priceVague:
-        final price = double.tryParse(event.value);
-        if (price != null) filters = filters.copyWith(maxPricePerKg: price);
+        if (value.isEmpty) {
+          filters = filters.copyWith(clearMaxPricePerKg: true);
+        } else {
+          final price = double.tryParse(value);
+          if (price != null) filters = filters.copyWith(maxPricePerKg: price);
+        }
       case UnresolvedKind.cityUnknown:
       case UnresolvedKind.cityAmbiguous:
-        filters = filters.copyWith(arrivalCity: event.value);
+        if (value.isNotEmpty) filters = filters.copyWith(arrivalCity: value);
       case UnresolvedKind.dateVague:
-        final date = DateTime.tryParse(event.value);
-        if (date != null) filters = filters.copyWith(customDate: date);
+        if (value.isEmpty) {
+          filters = filters.copyWith(
+            datePreset: DonyDatePreset.none,
+            clearCustomDate: true,
+          );
+        } else {
+          final date = DateTime.tryParse(value);
+          if (date != null) filters = filters.copyWith(customDate: date);
+        }
     }
 
-    emit(state.copyWith(
-      filters: filters,
-      unresolved: state.unresolved.where((u) => u.kind != event.kind).toList(),
-    ));
+    emit(
+      state.copyWith(
+        filters: filters,
+        unresolved: state.unresolved
+            .where((u) => u.kind != event.kind)
+            .toList(),
+      ),
+    );
 
     await _refreshCount(emit, filters);
   }

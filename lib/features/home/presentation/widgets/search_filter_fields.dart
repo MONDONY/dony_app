@@ -37,22 +37,6 @@ class CommonFilterBlock extends StatelessWidget {
   final HomeSearchFilters value;
   final ValueChanged<HomeSearchFilters> onChanged;
 
-  static const _presets = <(DonyDatePreset, String)>[
-    (DonyDatePreset.today, "Aujourd'hui"),
-    (DonyDatePreset.thisWeek, 'Cette semaine'),
-    (DonyDatePreset.thisMonth, 'Ce mois'),
-  ];
-
-  void _togglePreset(DonyDatePreset preset) {
-    final active = value.datePreset == preset;
-    onChanged(
-      value.copyWith(
-        datePreset: active ? DonyDatePreset.none : preset,
-        clearCustomDate: true,
-      ),
-    );
-  }
-
   /// Vider un champ de ville DOIT vider le filtre correspondant : sans ça le
   /// champ paraît vide alors que la recherche applique toujours l'ancienne
   /// ville. `copyWith` n'expose qu'un seul drapeau d'effacement pour le
@@ -70,25 +54,10 @@ class CommonFilterBlock extends StatelessWidget {
         .copyWith(departureCity: value.departureCity),
   );
 
-  void _onCustomDate(DateTime? date) {
-    if (date == null) {
-      onChanged(
-        value.copyWith(datePreset: DonyDatePreset.none, clearCustomDate: true),
-      );
-      return;
-    }
-    onChanged(
-      value.copyWith(datePreset: DonyDatePreset.custom, customDate: date),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    final customDate = value.datePreset == DonyDatePreset.custom
-        ? value.customDate
-        : null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -112,6 +81,67 @@ class CommonFilterBlock extends StatelessWidget {
           style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
         ),
         const SizedBox(height: DonySpacing.md),
+        DatePresetsField(value: value, onChanged: onChanged),
+      ],
+    ).animate().fadeIn(duration: 250.ms);
+  }
+}
+
+/// Presets de date (Aujourd'hui / Cette semaine / Ce mois) + date précise,
+/// sans corridor ni en-tête propre.
+///
+/// Extrait de [CommonFilterBlock] pour que l'écran de composition plein écran
+/// (`SearchComposerScreen`) puisse le placer sous sa propre étiquette
+/// « QUAND », distincte de « OÙ » — alors que la feuille de filtres continue
+/// d'afficher les deux sous un même bloc « QUAND » interne. Comportement
+/// inchangé dans les deux cas : seul l'emballage visuel diffère.
+class DatePresetsField extends StatelessWidget {
+  const DatePresetsField({
+    super.key,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final HomeSearchFilters value;
+  final ValueChanged<HomeSearchFilters> onChanged;
+
+  static const _presets = <(DonyDatePreset, String)>[
+    (DonyDatePreset.today, "Aujourd'hui"),
+    (DonyDatePreset.thisWeek, 'Cette semaine'),
+    (DonyDatePreset.thisMonth, 'Ce mois'),
+  ];
+
+  void _togglePreset(DonyDatePreset preset) {
+    final active = value.datePreset == preset;
+    onChanged(
+      value.copyWith(
+        datePreset: active ? DonyDatePreset.none : preset,
+        clearCustomDate: true,
+      ),
+    );
+  }
+
+  void _onCustomDate(DateTime? date) {
+    if (date == null) {
+      onChanged(
+        value.copyWith(datePreset: DonyDatePreset.none, clearCustomDate: true),
+      );
+      return;
+    }
+    onChanged(
+      value.copyWith(datePreset: DonyDatePreset.custom, customDate: date),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final customDate = value.datePreset == DonyDatePreset.custom
+        ? value.customDate
+        : null;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
         Wrap(
           spacing: DonySpacing.sm,
           runSpacing: DonySpacing.sm,
@@ -138,7 +168,7 @@ class CommonFilterBlock extends StatelessWidget {
           ],
         ),
       ],
-    ).animate().fadeIn(duration: 250.ms);
+    );
   }
 }
 

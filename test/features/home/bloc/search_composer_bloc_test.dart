@@ -14,20 +14,22 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 class _MockParseRepo extends Mock implements SearchParseRepository {}
+
 class _MockAnnouncementRepo extends Mock implements AnnouncementRepository {}
+
 class _MockPackageRepo extends Mock implements PackageRequestRepository {}
+
 class _MockAnalytics extends Mock implements AnalyticsService {}
 
 SearchParseResult _result({
   Map<String, dynamic> filters = const {},
   List<Map<String, dynamic>> unresolved = const [],
-}) =>
-    SearchParseResult.fromJson({
-      'filters': filters,
-      'recognized': const [],
-      'unresolved': unresolved,
-      'ignored': const [],
-    });
+}) => SearchParseResult.fromJson({
+  'filters': filters,
+  'recognized': const [],
+  'unresolved': unresolved,
+  'ignored': const [],
+});
 
 void main() {
   late _MockParseRepo parseRepo;
@@ -52,43 +54,47 @@ void main() {
     analytics = _MockAnalytics();
 
     // Setup mock pour countAnnouncements - accepte n'importe quels paramètres
-    when(() => announcementRepo.countAnnouncements(
-          departureCity: any(named: 'departureCity'),
-          arrivalCity: any(named: 'arrivalCity'),
-          departureDateFrom: any(named: 'departureDateFrom'),
-          departureDateTo: any(named: 'departureDateTo'),
-          minAvailableKg: any(named: 'minAvailableKg'),
-          maxAvailableKg: any(named: 'maxAvailableKg'),
-          maxPricePerKg: any(named: 'maxPricePerKg'),
-          kiloProOnly: any(named: 'kiloProOnly'),
-          minRating: any(named: 'minRating'),
-          weekendOnly: any(named: 'weekendOnly'),
-          transportMode: any(named: 'transportMode'),
-          kycVerifiedOnly: any(named: 'kycVerifiedOnly'),
-          contentType: any(named: 'contentType'),
-          userLat: any(named: 'userLat'),
-          userLng: any(named: 'userLng'),
-          radiusKm: any(named: 'radiusKm'),
-          urgent: any(named: 'urgent'),
-        )).thenAnswer((_) async => 14);
-    when(() => analytics.logEvent(any(), properties: any(named: 'properties')))
-        .thenAnswer((_) async {});
+    when(
+      () => announcementRepo.countAnnouncements(
+        departureCity: any(named: 'departureCity'),
+        arrivalCity: any(named: 'arrivalCity'),
+        departureDateFrom: any(named: 'departureDateFrom'),
+        departureDateTo: any(named: 'departureDateTo'),
+        minAvailableKg: any(named: 'minAvailableKg'),
+        maxAvailableKg: any(named: 'maxAvailableKg'),
+        maxPricePerKg: any(named: 'maxPricePerKg'),
+        kiloProOnly: any(named: 'kiloProOnly'),
+        minRating: any(named: 'minRating'),
+        weekendOnly: any(named: 'weekendOnly'),
+        transportMode: any(named: 'transportMode'),
+        kycVerifiedOnly: any(named: 'kycVerifiedOnly'),
+        contentType: any(named: 'contentType'),
+        userLat: any(named: 'userLat'),
+        userLng: any(named: 'userLng'),
+        radiusKm: any(named: 'radiusKm'),
+        urgent: any(named: 'urgent'),
+      ),
+    ).thenAnswer((_) async => 14);
+    when(
+      () => analytics.logEvent(any(), properties: any(named: 'properties')),
+    ).thenAnswer((_) async {});
   });
 
   SearchComposerBloc build() => SearchComposerBloc(
-        parseRepo,
-        announcementRepo,
-        packageRepo,
-        analytics,
-        mode: SearchMode.trips,
-        initialFilters: const HomeSearchFilters(),
-      );
+    parseRepo,
+    announcementRepo,
+    packageRepo,
+    analytics,
+    mode: SearchMode.trips,
+    initialFilters: const HomeSearchFilters(),
+  );
 
   blocTest<SearchComposerBloc, SearchComposerState>(
     'une phrase comprise pose les filtres et met à jour le compteur',
     build: () {
-      when(() => parseRepo.parse(any(), any()))
-          .thenAnswer((_) async => _result(filters: const {'arrivalCity': 'Bamako'}));
+      when(() => parseRepo.parse(any(), any())).thenAnswer(
+        (_) async => _result(filters: const {'arrivalCity': 'Bamako'}),
+      );
       return build();
     },
     act: (bloc) => bloc.add(const SearchComposerPhraseSubmitted('à Bamako')),
@@ -98,23 +104,38 @@ void main() {
       isA<SearchComposerState>()
           .having((s) => s.filters.arrivalCity, 'arrivalCity', 'Bamako')
           .having((s) => s.isParsing, 'isParsing', false),
-      isA<SearchComposerState>().having((s) => s.isCounting, 'isCounting', true),
-      isA<SearchComposerState>().having((s) => s.resultCount, 'resultCount', 14),
+      isA<SearchComposerState>().having(
+        (s) => s.isCounting,
+        'isCounting',
+        true,
+      ),
+      isA<SearchComposerState>().having(
+        (s) => s.resultCount,
+        'resultCount',
+        14,
+      ),
     ],
   );
 
   blocTest<SearchComposerBloc, SearchComposerState>(
     'une ambiguïté de prix ne pose aucun filtre de prix',
     build: () {
-      when(() => parseRepo.parse(any(), any())).thenAnswer((_) async => _result(
-            filters: const {'arrivalCity': 'Kolda'},
-            unresolved: const [
-              {'kind': 'PRICE_VAGUE', 'phrase': 'pas trop cher', 'options': ['6', '9']},
-            ],
-          ));
+      when(() => parseRepo.parse(any(), any())).thenAnswer(
+        (_) async => _result(
+          filters: const {'arrivalCity': 'Kolda'},
+          unresolved: const [
+            {
+              'kind': 'PRICE_VAGUE',
+              'phrase': 'pas trop cher',
+              'options': ['6', '9'],
+            },
+          ],
+        ),
+      );
       return build();
     },
-    act: (bloc) => bloc.add(const SearchComposerPhraseSubmitted('à Kolda pas trop cher')),
+    act: (bloc) =>
+        bloc.add(const SearchComposerPhraseSubmitted('à Kolda pas trop cher')),
     wait: const Duration(milliseconds: 600),
     verify: (bloc) {
       expect(bloc.state.filters.maxPricePerKg, isNull);
@@ -125,24 +146,84 @@ void main() {
   blocTest<SearchComposerBloc, SearchComposerState>(
     'répondre à une ambiguïté pose le filtre et retire la question',
     build: () {
-      when(() => parseRepo.parse(any(), any())).thenAnswer((_) async => _result(
-            unresolved: const [
-              {'kind': 'PRICE_VAGUE', 'phrase': 'pas cher', 'options': ['6', '9']},
-            ],
-          ));
+      when(() => parseRepo.parse(any(), any())).thenAnswer(
+        (_) async => _result(
+          unresolved: const [
+            {
+              'kind': 'PRICE_VAGUE',
+              'phrase': 'pas cher',
+              'options': ['6', '9'],
+            },
+          ],
+        ),
+      );
       return build();
     },
     act: (bloc) async {
       bloc.add(const SearchComposerPhraseSubmitted('pas cher'));
       await Future<void>.delayed(const Duration(milliseconds: 600));
-      bloc.add(const SearchComposerUnresolvedAnswered(
-        kind: UnresolvedKind.priceVague,
-        value: '6',
-      ));
+      bloc.add(
+        const SearchComposerUnresolvedAnswered(
+          kind: UnresolvedKind.priceVague,
+          value: '6',
+        ),
+      );
     },
     wait: const Duration(milliseconds: 900),
     verify: (bloc) {
       expect(bloc.state.filters.maxPricePerKg, 6);
+      expect(bloc.state.unresolved, isEmpty);
+    },
+  );
+
+  blocTest<SearchComposerBloc, SearchComposerState>(
+    '"peu importe" efface un prix déjà réglé et retire la question sans en poser un nouveau',
+    build: build,
+    seed: () => const SearchComposerState(
+      filters: HomeSearchFilters(maxPricePerKg: 9),
+      unresolved: [
+        UnresolvedItem(
+          kind: UnresolvedKind.priceVague,
+          phrase: 'pas cher',
+          options: ['6', '9'],
+        ),
+      ],
+    ),
+    act: (bloc) => bloc.add(
+      const SearchComposerUnresolvedAnswered(
+        kind: UnresolvedKind.priceVague,
+        value: '',
+      ),
+    ),
+    wait: const Duration(milliseconds: 600),
+    verify: (bloc) {
+      expect(bloc.state.filters.maxPricePerKg, isNull);
+      expect(bloc.state.unresolved, isEmpty);
+    },
+  );
+
+  blocTest<SearchComposerBloc, SearchComposerState>(
+    '"peu importe" efface une date déjà réglée sans poser de nouvelle contrainte',
+    build: build,
+    seed: () => const SearchComposerState(
+      filters: HomeSearchFilters(datePreset: DonyDatePreset.thisWeek),
+      unresolved: [
+        UnresolvedItem(
+          kind: UnresolvedKind.dateVague,
+          phrase: 'bientôt',
+          options: [],
+        ),
+      ],
+    ),
+    act: (bloc) => bloc.add(
+      const SearchComposerUnresolvedAnswered(
+        kind: UnresolvedKind.dateVague,
+        value: '',
+      ),
+    ),
+    wait: const Duration(milliseconds: 600),
+    verify: (bloc) {
+      expect(bloc.state.filters.datePreset, DonyDatePreset.none);
       expect(bloc.state.unresolved, isEmpty);
     },
   );
@@ -164,9 +245,11 @@ void main() {
   blocTest<SearchComposerBloc, SearchComposerState>(
     'régler un filtre à la main met le compteur à jour sans appeler le parseur',
     build: build,
-    act: (bloc) => bloc.add(const SearchComposerFiltersChanged(
-      HomeSearchFilters(arrivalCity: 'Dakar'),
-    )),
+    act: (bloc) => bloc.add(
+      const SearchComposerFiltersChanged(
+        HomeSearchFilters(arrivalCity: 'Dakar'),
+      ),
+    ),
     wait: const Duration(milliseconds: 600),
     verify: (bloc) {
       expect(bloc.state.resultCount, 14);
@@ -177,15 +260,19 @@ void main() {
   blocTest<SearchComposerBloc, SearchComposerState>(
     'un échec du comptage masque le nombre sans casser l écran',
     build: () {
-      when(() => announcementRepo.countAnnouncements(
-            departureCity: any(named: 'departureCity'),
-            arrivalCity: any(named: 'arrivalCity'),
-          )).thenThrow(Exception('réseau'));
+      when(
+        () => announcementRepo.countAnnouncements(
+          departureCity: any(named: 'departureCity'),
+          arrivalCity: any(named: 'arrivalCity'),
+        ),
+      ).thenThrow(Exception('réseau'));
       return build();
     },
-    act: (bloc) => bloc.add(const SearchComposerFiltersChanged(
-      HomeSearchFilters(arrivalCity: 'Dakar'),
-    )),
+    act: (bloc) => bloc.add(
+      const SearchComposerFiltersChanged(
+        HomeSearchFilters(arrivalCity: 'Dakar'),
+      ),
+    ),
     wait: const Duration(milliseconds: 600),
     verify: (bloc) {
       expect(bloc.state.resultCount, isNull);
@@ -200,10 +287,12 @@ void main() {
     wait: const Duration(milliseconds: 600),
     verify: (bloc) {
       expect(bloc.state.resultCount, 14);
-      verify(() => analytics.logEvent(
-            AnalyticsEvents.searchComposerOpened,
-            properties: any(named: 'properties'),
-          )).called(1);
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.searchComposerOpened,
+          properties: any(named: 'properties'),
+        ),
+      ).called(1);
     },
   );
 
@@ -214,7 +303,11 @@ void main() {
       filters: HomeSearchFilters(arrivalCity: 'Dakar'),
       phrase: 'à Dakar pas cher',
       unresolved: [
-        UnresolvedItem(kind: UnresolvedKind.priceVague, phrase: 'pas cher', options: ['6']),
+        UnresolvedItem(
+          kind: UnresolvedKind.priceVague,
+          phrase: 'pas cher',
+          options: ['6'],
+        ),
       ],
       resultCount: 3,
     ),
