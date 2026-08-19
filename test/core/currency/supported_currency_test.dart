@@ -3,6 +3,13 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('SupportedCurrency', () {
+    test('le catalogue porte les sept devises derivees d\'un pays', () {
+      expect(
+        SupportedCurrency.values.map((c) => c.code).toList(),
+        containsAll(<String>['EUR', 'USD', 'CAD', 'GBP', 'CHF', 'XOF', 'XAF']),
+      );
+    });
+
     test('expose les devises initiales avec leur précision Stripe', () {
       expect(SupportedCurrency.usd.code, 'USD');
       expect(SupportedCurrency.cad.code, 'CAD');
