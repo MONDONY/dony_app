@@ -314,10 +314,40 @@ void main() {
     act: (bloc) => bloc.add(const SearchComposerCleared()),
     wait: const Duration(milliseconds: 600),
     verify: (bloc) {
-      expect(bloc.state.filters, const HomeSearchFilters());
+      // HomeSearchFilters n'a pas d'égalité structurelle (pas d'Equatable) :
+      // comparer l'instance entière ne vaut que par accident de
+      // canonicalisation `const`. On vérifie donc les champs un par un,
+      // seul le corridor (commun) était réglé par le seed.
+      expect(bloc.state.filters.arrivalCity, isNull);
+      expect(bloc.state.filters.departureCity, isNull);
       expect(bloc.state.phrase, isEmpty);
       expect(bloc.state.unresolved, isEmpty);
       expect(bloc.state.resultCount, 14);
+    },
+  );
+
+  blocTest<SearchComposerBloc, SearchComposerState>(
+    'tout effacer en mode trips préserve les filtres propres au mode colis',
+    build: build,
+    seed: () => const SearchComposerState(
+      filters: HomeSearchFilters(
+        arrivalCity: 'Dakar', // commun : doit être effacé
+        kiloProOnly: true, // propre à trips : doit être effacé
+        maxWeight: 25, // propre à colis : doit survivre
+      ),
+    ),
+    act: (bloc) => bloc.add(const SearchComposerCleared()),
+    wait: const Duration(milliseconds: 600),
+    verify: (bloc) {
+      expect(bloc.state.filters.arrivalCity, isNull);
+      expect(bloc.state.filters.kiloProOnly, isFalse);
+      expect(
+        bloc.state.filters.maxWeight,
+        25,
+        reason:
+            'un filtre du mode colis ne doit pas disparaître silencieusement '
+            'quand on efface depuis le mode trips',
+      );
     },
   );
 }

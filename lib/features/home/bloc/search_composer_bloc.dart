@@ -177,9 +177,44 @@ class SearchComposerBloc
     SearchComposerCleared event,
     Emitter<SearchComposerState> emit,
   ) async {
-    const emptyFilters = HomeSearchFilters();
-    emit(const SearchComposerState(filters: emptyFilters));
-    await _refreshCount(emit, emptyFilters);
+    final cleared = _clearedForMode(state.filters, _mode);
+    emit(SearchComposerState(filters: cleared));
+    await _refreshCount(emit, cleared);
+  }
+
+  /// Efface les filtres communs et ceux du mode courant. Ceux de l'autre mode
+  /// sont préservés, à l'identique de `SearchFilterSheet._cleared` : les
+  /// effacer serait une surprise invisible pour l'utilisateur qui ne consulte
+  /// pas ce mode-là depuis cet écran.
+  static HomeSearchFilters _clearedForMode(
+    HomeSearchFilters value,
+    SearchMode mode,
+  ) {
+    final common = value.copyWith(
+      clearCorridor: true,
+      datePreset: DonyDatePreset.none,
+      clearCustomDate: true,
+      urgentOnly: false,
+      clearNearMe: true,
+    );
+    if (mode.isTrips) {
+      return common.copyWith(
+        clearMaxPricePerKg: true,
+        clearWeight: true,
+        kiloProOnly: false,
+        clearMinRating: true,
+        weekendOnly: false,
+        clearTransportMode: true,
+        kycVerifiedOnly: false,
+        clearContentType: true,
+        clearUrgencyFilter: true,
+      );
+    }
+    return common.copyWith(
+      clearMaxWeight: true,
+      clearParcelSize: true,
+      matchingMyTrips: false,
+    );
   }
 
   /// Compte les résultats du mode courant.
