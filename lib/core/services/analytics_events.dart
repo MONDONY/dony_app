@@ -4,8 +4,8 @@ abstract final class AnalyticsEvents {
   static const otpSubmitted = 'otp_submitted';
   static const signupCompleted = 'signup_completed';
   static const analyticsConsentAnswered = 'analytics_consent_answered';
-  static const currencyOnboardingSelected = 'currency_onboarding_selected';
-  static const currencyOnboardingSkipped = 'currency_onboarding_skipped';
+  static const countryOnboardingSelected = 'country_onboarding_selected';
+  static const countryOnboardingSkipped = 'country_onboarding_skipped';
   static const loginSuccess = 'login_success';
   static const loginFailed = 'login_failed';
 

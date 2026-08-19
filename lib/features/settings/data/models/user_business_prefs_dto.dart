@@ -13,6 +13,17 @@ class UserBusinessPrefsDto {
   /// prétendre pouvoir être modifié par le client.
   final bool currencyLocked;
 
+  /// Code ISO 3166-1 alpha-2, ou `null` tant que l'utilisateur ne l'a pas
+  /// renseigné (état normal, complétable dans les Réglages). La devise est
+  /// désormais dérivée du pays côté serveur : c'est ce champ, pas
+  /// [currencyCode], qui est modifiable par le client.
+  final String? country;
+
+  /// Lecture seule, renvoyé par le serveur (gel au premier mouvement
+  /// d'argent, même mécanisme que [currencyLocked]). Jamais envoyé dans
+  /// [toJson].
+  final bool countryLocked;
+
   const UserBusinessPrefsDto({
     required this.weightUnit,
     required this.currencyCode,
@@ -22,6 +33,8 @@ class UserBusinessPrefsDto {
     this.contactMode,
     this.responseDelayHours,
     this.currencyLocked = false,
+    this.country,
+    this.countryLocked = false,
   });
 
   /// Recopier les champs un à un sur les sites d'appel fait perdre en silence
@@ -35,6 +48,8 @@ class UserBusinessPrefsDto {
     String? contactMode,
     int? responseDelayHours,
     bool? currencyLocked,
+    String? country,
+    bool? countryLocked,
   }) => UserBusinessPrefsDto(
     weightUnit: weightUnit ?? this.weightUnit,
     currencyCode: currencyCode ?? this.currencyCode,
@@ -45,6 +60,8 @@ class UserBusinessPrefsDto {
     contactMode: contactMode ?? this.contactMode,
     responseDelayHours: responseDelayHours ?? this.responseDelayHours,
     currencyLocked: currencyLocked ?? this.currencyLocked,
+    country: country ?? this.country,
+    countryLocked: countryLocked ?? this.countryLocked,
   );
 
   factory UserBusinessPrefsDto.fromJson(Map<String, dynamic> json) =>
@@ -57,6 +74,8 @@ class UserBusinessPrefsDto {
         contactMode: json['contactMode'] as String?,
         responseDelayHours: json['responseDelayHours'] as int?,
         currencyLocked: json['currencyLocked'] as bool? ?? false,
+        country: json['country'] as String?,
+        countryLocked: json['countryLocked'] as bool? ?? false,
       );
 
   Map<String, dynamic> toJson() => {
@@ -67,5 +86,6 @@ class UserBusinessPrefsDto {
     'minBidPriceEur': minBidPriceEur,
     if (contactMode != null) 'contactMode': contactMode,
     if (responseDelayHours != null) 'responseDelayHours': responseDelayHours,
+    if (country != null) 'country': country,
   };
 }
