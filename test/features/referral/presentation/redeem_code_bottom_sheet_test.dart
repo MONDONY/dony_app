@@ -16,10 +16,9 @@ const _fakeInfo = ReferralInfo(
   totalInvited: 0,
   signedUp: 0,
   rewarded: 0,
-  totalEarnedCents: 0,
   hasBeenReferred: false,
-  currency: 'EUR',
-  rewardAmountCents: 500,
+  activeVoucherCount: 0,
+  voucherFactor: 0.5,
 );
 
 void main() {

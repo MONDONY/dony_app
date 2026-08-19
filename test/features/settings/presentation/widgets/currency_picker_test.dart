@@ -51,8 +51,8 @@ void main() {
 
       expect(find.text('Devise d\'affichage'), findsOneWidget);
       expect(find.text('Euro (EUR)'), findsOneWidget);
-      expect(find.text('Dollar canadien (CAD)'), findsOneWidget);
-      expect(find.text('Dollar américain (USD)'), findsOneWidget);
+      expect(find.text('Franc CFA Ouest (XOF)'), findsOneWidget);
+      expect(find.text('Franc CFA Centre (XAF)'), findsOneWidget);
     });
 
     testWidgets('taper la devise déjà active ferme le picker sans dialogue', (
@@ -76,12 +76,12 @@ void main() {
         await tester.tap(find.text('Trigger'));
         await tester.pumpAndSettle();
 
-        await tester.tap(find.text('Dollar canadien (CAD)'));
+        await tester.tap(find.text('Franc CFA Centre (XAF)'));
         await tester.pumpAndSettle();
-        await tester.tap(find.text('Changer pour CAD'));
+        await tester.tap(find.text('Changer pour XAF'));
         await tester.pumpAndSettle();
 
-        verify(() => bloc.changeCurrency('CAD')).called(1);
+        verify(() => bloc.changeCurrency('XAF')).called(1);
       },
     );
 
@@ -92,7 +92,7 @@ void main() {
       await tester.tap(find.text('Trigger'));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Dollar canadien (CAD)'));
+      await tester.tap(find.text('Franc CFA Centre (XAF)'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Annuler'));
       await tester.pumpAndSettle();
@@ -119,22 +119,22 @@ void main() {
       'cible différente : dialogue de confirmation puis CurrencyChanged',
       (tester) async {
         await tester.pumpWidget(
-          wrap((c) => CurrencyPicker.switchTo(c, SupportedCurrency.cad)),
+          wrap((c) => CurrencyPicker.switchTo(c, SupportedCurrency.xaf)),
         );
         await tester.tap(find.text('Trigger'));
         await tester.pumpAndSettle();
 
         expect(find.text('Changer de devise'), findsOneWidget);
-        await tester.tap(find.text('Changer pour CAD'));
+        await tester.tap(find.text('Changer pour XAF'));
         await tester.pumpAndSettle();
 
-        verify(() => bloc.changeCurrency('CAD')).called(1);
+        verify(() => bloc.changeCurrency('XAF')).called(1);
       },
     );
 
     testWidgets('annuler ne dispatch rien', (tester) async {
       await tester.pumpWidget(
-        wrap((c) => CurrencyPicker.switchTo(c, SupportedCurrency.cad)),
+        wrap((c) => CurrencyPicker.switchTo(c, SupportedCurrency.xaf)),
       );
       await tester.tap(find.text('Trigger'));
       await tester.pumpAndSettle();

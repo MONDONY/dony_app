@@ -43,8 +43,8 @@ void main() {
   group('formatPriceIn — le symbole suit la devise', () {
     test('chaque devise porte son propre symbole', () {
       expect(formatPriceIn(8, 'EUR'), contains('€'));
-      expect(formatPriceIn(8, 'XOF'), contains('CFA'));
-      expect(formatPriceIn(8, 'GBP'), contains('£'));
+      expect(formatPriceIn(8, 'XOF'), contains('F CFA'));
+      expect(formatPriceIn(8, 'XAF'), contains('FCFA'));
     });
 
     test('la casse du code est indifférente', () {

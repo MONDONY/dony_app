@@ -11,6 +11,11 @@ class BusinessPrefsState extends Equatable {
   final bool isSyncing;
   final String? errorMessage;
 
+  /// Lot 2 : gel de la devise au premier mouvement d'argent. Renseigné par le
+  /// serveur à chaque synchro (`GET`/`PUT`), jamais dérivé localement — seul
+  /// le backend voit le portefeuille et les envois engagés.
+  final bool currencyLocked;
+
   const BusinessPrefsState({
     this.weightUnit = 'kg',
     this.currencyCode = 'EUR',
@@ -21,6 +26,7 @@ class BusinessPrefsState extends Equatable {
     this.responseDelayHours,
     this.isSyncing = false,
     this.errorMessage,
+    this.currencyLocked = false,
   });
 
   BusinessPrefsState copyWith({
@@ -33,6 +39,7 @@ class BusinessPrefsState extends Equatable {
     int? Function()? responseDelayHoursGetter,
     bool? isSyncing,
     String? Function()? errorMessageGetter,
+    bool? currencyLocked,
   }) => BusinessPrefsState(
     weightUnit: weightUnit ?? this.weightUnit,
     currencyCode: currencyCode ?? this.currencyCode,
@@ -48,6 +55,7 @@ class BusinessPrefsState extends Equatable {
     errorMessage: errorMessageGetter != null
         ? errorMessageGetter()
         : errorMessage,
+    currencyLocked: currencyLocked ?? this.currencyLocked,
   );
 
   @override
@@ -61,5 +69,6 @@ class BusinessPrefsState extends Equatable {
     responseDelayHours,
     isSyncing,
     errorMessage,
+    currencyLocked,
   ];
 }

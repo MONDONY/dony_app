@@ -209,12 +209,12 @@ void main() {
   testWidgets('affiche le prix dans la devise du trajet, pas toujours en EUR', (
     tester,
   ) async {
-    final a = _buildAnnouncement(kycVerified: true, currency: 'CAD');
+    final a = _buildAnnouncement(kycVerified: true, currency: 'XAF');
     await tester.pumpWidget(_harness(announcement: a));
     await tester.tap(find.text('Ouvrir'));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('CA\$'), findsOneWidget);
+    expect(find.textContaining('FCFA'), findsOneWidget);
     expect(find.textContaining('€/kg'), findsNothing);
   });
 

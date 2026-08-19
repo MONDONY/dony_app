@@ -66,6 +66,21 @@ abstract final class CurrencyPicker {
     if (current == target.code) {
       return false;
     }
+    if (bloc.state.currencyLocked) {
+      // Lot 2 (2026-08-19) : gel au premier mouvement d'argent. S'applique
+      // aussi au déverrouillage d'un solde secondaire — le serveur refuserait
+      // de toute façon (422 currency-locked), autant l'annoncer ici plutôt
+      // que de laisser échouer silencieusement en "Impossible de synchroniser".
+      await DonyDialog.show(
+        context,
+        title: 'Devise verrouillée',
+        message:
+            'Un envoi est en cours ou ton portefeuille n\'est pas vide : la '
+            'devise ne peut plus être changée pour l\'instant.',
+        confirmLabel: 'Compris',
+      );
+      return false;
+    }
     final confirmed = await DonyDialog.show(
       context,
       title: 'Changer de devise',

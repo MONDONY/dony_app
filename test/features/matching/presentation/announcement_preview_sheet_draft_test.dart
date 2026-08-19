@@ -1,3 +1,4 @@
+import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_preview_sheet.dart';
@@ -22,14 +23,14 @@ Widget _app({required VoidCallback onConfirm, VoidCallback? onSaveDraft}) =>
     );
 
 void main() {
-  testWidgets('affiche le prix de l’aperçu en CAD sans conversion', (
+  testWidgets('affiche le prix de l’aperçu en XAF sans conversion', (
     tester,
   ) async {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
           body: AnnouncementPreviewSheet(
-            currency: SupportedCurrency.cad,
+            currency: SupportedCurrency.xaf,
             formState: const AnnouncementFormState(
               pricePerKg: 5,
               availableKg: 10,
@@ -40,7 +41,9 @@ void main() {
       ),
     );
 
-    expect(find.text(r'CA$5.00/kg · estimation CA$50.00 net'), findsOneWidget);
+    final price = CurrencyFormatter.formatOrPlain(5, SupportedCurrency.xaf);
+    final net = CurrencyFormatter.formatOrPlain(50, SupportedCurrency.xaf);
+    expect(find.text('$price/kg · estimation $net net'), findsOneWidget);
     expect(find.textContaining('€/kg'), findsNothing);
   });
 

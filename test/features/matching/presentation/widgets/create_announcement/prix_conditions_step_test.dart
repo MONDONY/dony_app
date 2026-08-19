@@ -227,13 +227,21 @@ void main() {
       }
     });
 
-    testWidgets('affiche les montants en CAD sans conversion', (tester) async {
-      await tester.pumpWidget(_host(currency: SupportedCurrency.cad));
+    testWidgets('affiche les montants en XAF sans conversion', (tester) async {
+      await tester.pumpWidget(_host(currency: SupportedCurrency.xaf));
       await tester.pump(const Duration(milliseconds: 200));
 
-      expect(find.text(r'CA$5.00'), findsOneWidget);
+      expect(
+        find.text(CurrencyFormatter.format(5, SupportedCurrency.xaf)),
+        findsOneWidget,
+      );
       expect(find.text('5€'), findsNothing);
-      expect(find.textContaining(r'CA$50.00'), findsOneWidget);
+      expect(
+        find.textContaining(
+          CurrencyFormatter.format(50, SupportedCurrency.xaf),
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('chip "Autre prix" est affiché', (tester) async {

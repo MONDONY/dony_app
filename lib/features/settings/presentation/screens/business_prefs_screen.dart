@@ -79,12 +79,16 @@ class _BusinessPrefsScreenState extends State<BusinessPrefsScreen> {
                           iconColor: cs.primary,
                           iconBgColor: cs.primaryContainer,
                           label: 'Devise d\'affichage',
+                          subtitle: state.currencyLocked
+                              ? 'Verrouillée : envoi en cours ou portefeuille non vide'
+                              : null,
                           trailing: Text(
                             state.currencyCode,
                             style: tt.labelMedium?.copyWith(
                               color: cs.onSurfaceVariant,
                             ),
                           ),
+                          enabled: !state.currencyLocked,
                           onTap: () => unawaited(CurrencyPicker.show(context)),
                         ),
                       ],

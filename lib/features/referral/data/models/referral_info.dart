@@ -5,10 +5,10 @@ class ReferralInfo {
     required this.totalInvited,
     required this.signedUp,
     required this.rewarded,
-    required this.totalEarnedCents,
     required this.hasBeenReferred,
-    required this.currency,
-    required this.rewardAmountCents,
+    required this.activeVoucherCount,
+    this.voucherFactor,
+    this.nextVoucherExpiresAt,
   });
 
   final String code;
@@ -16,18 +16,26 @@ class ReferralInfo {
   final int totalInvited;
   final int signedUp;
   final int rewarded;
-  final int totalEarnedCents;
   final bool hasBeenReferred;
 
-  /// Devise du total gagné. Les récompenses sont versées dans la devise active
-  /// du parrain au moment du versement : le serveur ne cumule donc que les
-  /// crédits de cette devise, et c'est elle qu'il faut afficher.
-  final String currency;
+  /// Nombre de bons octroyés et pas encore consommés ni expirés.
+  final int activeVoucherCount;
 
-  /// Montant unitaire de la récompense, en unités mineures, tel que configuré
-  /// côté serveur. Les libellés d'invitation annonçaient « 5 € » en dur, ce qui
-  /// devenait faux dès que le parrain travaillait dans une autre devise.
-  final int rewardAmountCents;
+  /// Facteur multiplicatif appliqué par un bon (0.50 = moitié prix), tel que
+  /// configuré côté serveur. Toujours renseigné (barème courant) même sans bon
+  /// actif — c'est la promesse faite au prochain parrainage, pas une propriété
+  /// d'un bon en particulier. `null` uniquement en repli défensif (backend
+  /// antérieur au lot 3 ou champ absent).
+  final double? voucherFactor;
+
+  /// Expiration du bon actif le plus proche, `null` si aucun bon actif.
+  final DateTime? nextVoucherExpiresAt;
+
+  /// Réduction en pourcentage entier (50 pour un facteur 0.50), ou `null` si
+  /// aucun bon actif. Calculée ici pour que l'écran n'ait jamais à refaire
+  /// l'arithmétique lui-même.
+  int? get voucherPercentOff =>
+      voucherFactor == null ? null : ((1 - voucherFactor!) * 100).round();
 
   factory ReferralInfo.fromJson(Map<String, dynamic> json) => ReferralInfo(
     code: json['code'] as String,
@@ -35,10 +43,11 @@ class ReferralInfo {
     totalInvited: json['totalInvited'] as int? ?? 0,
     signedUp: json['signedUp'] as int? ?? 0,
     rewarded: json['rewarded'] as int? ?? 0,
-    totalEarnedCents: json['totalEarnedCents'] as int? ?? 0,
     hasBeenReferred: json['hasBeenReferred'] as bool? ?? false,
-    // Repli euro pour rester compatible avec un backend antérieur à V203.
-    currency: json['currency'] as String? ?? 'EUR',
-    rewardAmountCents: json['rewardAmountCents'] as int? ?? 500,
+    activeVoucherCount: json['activeVoucherCount'] as int? ?? 0,
+    voucherFactor: (json['voucherFactor'] as num?)?.toDouble(),
+    nextVoucherExpiresAt: json['nextVoucherExpiresAt'] == null
+        ? null
+        : DateTime.parse(json['nextVoucherExpiresAt'] as String),
   );
 }

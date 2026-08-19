@@ -33,10 +33,9 @@ void main() {
     totalInvited: 5,
     signedUp: 3,
     rewarded: 2,
-    totalEarnedCents: 1000,
     hasBeenReferred: false,
-    currency: 'EUR',
-    rewardAmountCents: 500,
+    activeVoucherCount: 1,
+    voucherFactor: 0.5,
   );
 
   // 1. État initial = ReferralInitial

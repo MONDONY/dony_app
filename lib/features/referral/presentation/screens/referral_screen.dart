@@ -1,5 +1,4 @@
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
@@ -8,7 +7,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
+
+String _formatDate(DateTime date) => DateFormat('d MMMM yyyy', 'fr_FR').format(date);
 
 class ReferralScreen extends StatefulWidget {
   const ReferralScreen({super.key});
@@ -119,7 +121,7 @@ class _LoadedBody extends StatelessWidget {
             ],
           ).animate().fadeIn(delay: 200.ms, duration: 300.ms),
 
-          if (info.totalEarnedCents > 0) ...[
+          if (info.activeVoucherCount > 0) ...[
             const SizedBox(height: DonySpacing.md),
             Container(
               width: double.infinity,
@@ -131,16 +133,32 @@ class _LoadedBody extends StatelessWidget {
                 color: cs.successLight,
                 borderRadius: BorderRadius.circular(DonyRadius.card),
               ),
-              child: Text(
-                // La récompense est versée dans la devise active du parrain au
-                // moment du versement : on affiche donc la devise renvoyée par le
-                // serveur, qui n'additionne que les crédits de celle-ci.
-                '💰 Tu as gagné ${formatMinorAmount(info.totalEarnedCents, info.currency)} grâce au parrainage',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: cs.success,
-                  fontWeight: FontWeight.w700,
-                ),
+              child: Column(
+                children: [
+                  Text(
+                    // Ce n'est plus un montant crédité mais un bon de réduction :
+                    // jamais de devise à afficher, juste le pourcentage et son
+                    // décompte (un bon = une transaction, jamais cumulables).
+                    info.activeVoucherCount == 1
+                        ? '🎁 Tu as un bon de -${info.voucherPercentOff}% sur ta prochaine commission'
+                        : '🎁 Tu as ${info.activeVoucherCount} bons de -${info.voucherPercentOff}% sur tes prochaines commissions',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: cs.success,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  if (info.nextVoucherExpiresAt != null) ...[
+                    const SizedBox(height: DonySpacing.xs),
+                    Text(
+                      'Valable jusqu\'au ${_formatDate(info.nextVoucherExpiresAt!)}',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: cs.success,
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ).animate().fadeIn(delay: 300.ms, duration: 300.ms),
           ],
@@ -155,12 +173,13 @@ class _LoadedBody extends StatelessWidget {
 class _HeroCard extends StatelessWidget {
   const _HeroCard({required this.info});
 
-  /// Le montant promis suit la devise du parrain : il ne peut donc plus être
-  /// écrit en dur dans la carte.
+  /// Ce n'est plus un montant mais une réduction en pourcentage : elle ne
+  /// dépend d'aucune devise et ne peut donc plus être écrite en dur.
   final ReferralInfo info;
 
   @override
   Widget build(BuildContext context) {
+    final percentOff = info.voucherPercentOff ?? 50;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(DonySpacing.xl),
@@ -177,7 +196,7 @@ class _HeroCard extends StatelessWidget {
           const DonyIcon('gift', size: 48, color: Colors.white),
           const SizedBox(height: DonySpacing.md),
           Text(
-            'Invite et gagne ${formatMinorAmount(info.rewardAmountCents, info.currency)}',
+            'Invite et gagne -$percentOff%',
             style: Theme.of(context).textTheme.headlineLarge?.copyWith(
               color: Colors.white,
               fontWeight: FontWeight.w800,
@@ -186,7 +205,7 @@ class _HeroCard extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.sm),
           Text(
-            'Tu reçois ${formatMinorAmount(info.rewardAmountCents, info.currency)} de crédit dès la première livraison de ton invité.',
+            'Tu reçois un bon de -$percentOff% sur ta prochaine commission dès la première livraison de ton invité.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: Colors.white.withValues(alpha: 0.85),
             ),
@@ -352,7 +371,10 @@ class _ShareButton extends StatelessWidget {
             ),
           ),
           onPressed: () => Share.share(
-            'Salut ! Utilise mon code Yadony : ${info.code} et reçois ton 1er envoi avec ${formatMinorAmount(info.rewardAmountCents, info.currency)} de réduction. ${info.shareUrl}',
+            // Le bon récompense qui invite, pas qui est invité — la promesse
+            // ne doit jamais laisser croire à l'inscrit qu'il gagne lui-même
+            // une réduction.
+            'Salut ! Utilise mon code Yadony : ${info.code} pour t\'inscrire — ça m\'aide à gagner une réduction sur ma prochaine commission. ${info.shareUrl}',
             sharePositionOrigin: sharePositionOriginFor(context),
           ),
         ),

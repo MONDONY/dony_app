@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockReferralBloc extends MockBloc<ReferralEvent, ReferralState>
@@ -24,22 +25,27 @@ Widget _wrap(ReferralBloc bloc) => BlocProvider<ReferralBloc>.value(
   ),
 );
 
-const _testInfo = ReferralInfo(
+// Lot 3 (2026-08-19/20) : le parrainage n'est plus un montant crédité mais un
+// bon de réduction de commission — plus aucune devise n'entre en jeu.
+final _testInfo = ReferralInfo(
   code: 'DONY-XYZ42',
   shareUrl: 'https://dony.app/invite/DONY-XYZ42',
   totalInvited: 4,
   signedUp: 2,
   rewarded: 1,
-  totalEarnedCents: 500,
   hasBeenReferred: false,
-  currency: 'EUR',
-  rewardAmountCents: 500,
+  activeVoucherCount: 1,
+  voucherFactor: 0.5,
+  nextVoucherExpiresAt: DateTime(2027, 1, 15),
 );
 
 void main() {
   late MockReferralBloc bloc;
 
-  setUpAll(() => registerFallbackValue(FakeReferralEvent()));
+  setUpAll(() async {
+    registerFallbackValue(FakeReferralEvent());
+    await initializeDateFormatting('fr_FR');
+  });
 
   setUp(() {
     bloc = MockReferralBloc();
@@ -68,7 +74,7 @@ void main() {
 
   // 3. Affiche le code quand ReferralLoaded
   testWidgets('shows referral code when ReferralLoaded', (tester) async {
-    when(() => bloc.state).thenReturn(const ReferralLoaded(_testInfo));
+    when(() => bloc.state).thenReturn(ReferralLoaded(_testInfo));
 
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
@@ -80,7 +86,7 @@ void main() {
   testWidgets('shows "Partager mon code" button when ReferralLoaded', (
     tester,
   ) async {
-    when(() => bloc.state).thenReturn(const ReferralLoaded(_testInfo));
+    when(() => bloc.state).thenReturn(ReferralLoaded(_testInfo));
 
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
@@ -90,7 +96,7 @@ void main() {
 
   // 5. Affiche les stats (invités / inscrits / récompensés)
   testWidgets('shows stats labels when ReferralLoaded', (tester) async {
-    when(() => bloc.state).thenReturn(const ReferralLoaded(_testInfo));
+    when(() => bloc.state).thenReturn(ReferralLoaded(_testInfo));
 
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
@@ -114,7 +120,7 @@ void main() {
 
   // 7. Affiche les valeurs numériques des stats
   testWidgets('shows numeric stat values when ReferralLoaded', (tester) async {
-    when(() => bloc.state).thenReturn(const ReferralLoaded(_testInfo));
+    when(() => bloc.state).thenReturn(ReferralLoaded(_testInfo));
 
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
@@ -125,61 +131,81 @@ void main() {
     expect(find.text('1'), findsOneWidget);
   });
 
-  // 8. Affiche le message de gains si totalEarnedCents > 0
-  testWidgets('shows earnings banner when totalEarnedCents > 0', (
+  // 8. Affiche le bandeau du bon si activeVoucherCount > 0
+  testWidgets('shows voucher banner when activeVoucherCount > 0', (
     tester,
   ) async {
-    when(() => bloc.state).thenReturn(const ReferralLoaded(_testInfo));
+    when(() => bloc.state).thenReturn(ReferralLoaded(_testInfo));
 
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
 
-    // totalEarnedCents = 500 avec currency EUR → « 5,00 € ». Le montant garde
-    // ses décimales : c'est une somme créditée, pas un arrondi d'affichage.
+    // Ce n'est plus un montant crédité (aucune devise) mais un pourcentage de
+    // réduction, calculé depuis voucherFactor (0.5 → -50 %). Le préfixe 🎁
+    // distingue ce bandeau du sous-titre de la hero card, qui répète la même
+    // formulation générique.
     expect(
-      find.textContaining('5,00\u00A0€ grâce au parrainage'),
+      find.text('🎁 Tu as un bon de -50% sur ta prochaine commission'),
       findsOneWidget,
     );
   });
 
-  testWidgets('le gain suit la devise renvoyée par le serveur', (tester) async {
-    // La récompense est versée dans la devise active du parrain au moment du
-    // versement : afficher « € » en dur aurait annoncé un montant faux à un
-    // parrain travaillant en dollar.
-    const infoUsd = ReferralInfo(
+  testWidgets('affiche le décompte au pluriel avec plusieurs bons actifs', (
+    tester,
+  ) async {
+    final infoTwoVouchers = ReferralInfo(
       code: 'DONY-XYZ42',
       shareUrl: 'https://dony.app/invite/DONY-XYZ42',
       totalInvited: 4,
       signedUp: 2,
-      rewarded: 1,
-      totalEarnedCents: 500,
+      rewarded: 2,
       hasBeenReferred: false,
-      currency: 'USD',
-      rewardAmountCents: 500,
+      activeVoucherCount: 2,
+      voucherFactor: 0.5,
+      nextVoucherExpiresAt: DateTime(2027, 1, 15),
     );
-    when(() => bloc.state).thenReturn(const ReferralLoaded(infoUsd));
+    when(() => bloc.state).thenReturn(ReferralLoaded(infoTwoVouchers));
 
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
 
-    // Le montant apparaît sur la carte, dans le sous-titre et dans le message
-    // de partage : ce qui compte est qu'aucun euro ne subsiste.
-    expect(find.textContaining(r'$5.00'), findsWidgets);
-    expect(find.textContaining('€'), findsNothing);
+    expect(
+      find.text('🎁 Tu as 2 bons de -50% sur tes prochaines commissions'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('aucun bandeau si aucun bon actif', (tester) async {
+    final infoNoVoucher = ReferralInfo(
+      code: 'DONY-XYZ42',
+      shareUrl: 'https://dony.app/invite/DONY-XYZ42',
+      totalInvited: 4,
+      signedUp: 2,
+      rewarded: 0,
+      hasBeenReferred: false,
+      activeVoucherCount: 0,
+      voucherFactor: 0.5,
+    );
+    when(() => bloc.state).thenReturn(ReferralLoaded(infoNoVoucher));
+
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.textContaining('🎁'), findsNothing);
   });
 
   // 9. Hero card affiche le texte d'invite
   testWidgets('shows hero card invite text when ReferralLoaded', (
     tester,
   ) async {
-    when(() => bloc.state).thenReturn(const ReferralLoaded(_testInfo));
+    when(() => bloc.state).thenReturn(ReferralLoaded(_testInfo));
 
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
 
-    // Le montant promis vient du serveur (rewardAmountCents) et suit la devise
-    // du parrain : il n'est plus écrit en dur dans l'écran.
-    expect(find.text('Invite et gagne 5,00\u00A0€'), findsOneWidget);
+    // Le pourcentage promis vient du serveur (voucherFactor) : plus aucun
+    // montant ni devise écrits en dur dans l'écran.
+    expect(find.text('Invite et gagne -50%'), findsOneWidget);
   });
 
   // 10. Message d'erreur affiché dans l'error view

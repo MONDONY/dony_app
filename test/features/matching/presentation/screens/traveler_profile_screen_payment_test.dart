@@ -105,13 +105,13 @@ void main() {
       (tester) async {
         final a = _announcement(
           acceptedPaymentMethods: {BidPaymentMethod.stripe},
-          currency: 'CAD',
+          currency: 'XAF',
         );
 
         await tester.pumpWidget(_wrap(a));
         await tester.pumpAndSettle();
 
-        expect(find.textContaining('CA\$'), findsOneWidget);
+        expect(find.textContaining('FCFA'), findsOneWidget);
         expect(find.textContaining('€/kg'), findsNothing);
       },
     );

@@ -28,9 +28,9 @@ const _prefs = UserBusinessPrefsDto(
   minBidPriceEur: 0,
 );
 
-const _cadPrefs = UserBusinessPrefsDto(
+const _xafPrefs = UserBusinessPrefsDto(
   weightUnit: 'kg',
-  currencyCode: 'CAD',
+  currencyCode: 'XAF',
   pickupRadiusKm: 10,
   defaultPackageWeightKg: 23,
   minBidPriceEur: 0,
@@ -282,7 +282,7 @@ void main() {
   blocTest<CurrencyOnboardingCubit, CurrencyOnboardingState>(
     'passer : relit la devise serveur puis la met en cache avant le flag vu',
     setUp: () {
-      when(() => repository.fetchPrefs()).thenAnswer((_) async => _cadPrefs);
+      when(() => repository.fetchPrefs()).thenAnswer((_) async => _xafPrefs);
     },
     build: build,
     act: (cubit) => cubit.skip(),
@@ -294,7 +294,7 @@ void main() {
       verifyNever(() => repository.updatePrefs(any()));
       verifyInOrder([
         () => repository.fetchPrefs(),
-        () => prefs.put(HiveService.kCurrencyCode, 'CAD'),
+        () => prefs.put(HiveService.kCurrencyCode, 'XAF'),
         () => prefs.put(HiveService.kCurrencyOnboardingSeen, true),
         () => analytics.logEvent(AnalyticsEvents.currencyOnboardingSkipped),
       ]);

@@ -7,6 +7,12 @@ class UserBusinessPrefsDto {
   final String? contactMode;
   final int? responseDelayHours;
 
+  /// Lecture seule, renvoyé par le serveur (lot 2 : gel au premier mouvement
+  /// d'argent). Jamais envoyé dans [toJson] — le serveur l'ignorerait de
+  /// toute façon, mais un champ qu'on ne lit jamais côté écriture ne doit pas
+  /// prétendre pouvoir être modifié par le client.
+  final bool currencyLocked;
+
   const UserBusinessPrefsDto({
     required this.weightUnit,
     required this.currencyCode,
@@ -15,6 +21,7 @@ class UserBusinessPrefsDto {
     required this.minBidPriceEur,
     this.contactMode,
     this.responseDelayHours,
+    this.currencyLocked = false,
   });
 
   /// Recopier les champs un à un sur les sites d'appel fait perdre en silence
@@ -27,6 +34,7 @@ class UserBusinessPrefsDto {
     int? minBidPriceEur,
     String? contactMode,
     int? responseDelayHours,
+    bool? currencyLocked,
   }) => UserBusinessPrefsDto(
     weightUnit: weightUnit ?? this.weightUnit,
     currencyCode: currencyCode ?? this.currencyCode,
@@ -36,6 +44,7 @@ class UserBusinessPrefsDto {
     minBidPriceEur: minBidPriceEur ?? this.minBidPriceEur,
     contactMode: contactMode ?? this.contactMode,
     responseDelayHours: responseDelayHours ?? this.responseDelayHours,
+    currencyLocked: currencyLocked ?? this.currencyLocked,
   );
 
   factory UserBusinessPrefsDto.fromJson(Map<String, dynamic> json) =>
@@ -47,6 +56,7 @@ class UserBusinessPrefsDto {
         minBidPriceEur: json['minBidPriceEur'] as int? ?? 0,
         contactMode: json['contactMode'] as String?,
         responseDelayHours: json['responseDelayHours'] as int?,
+        currencyLocked: json['currencyLocked'] as bool? ?? false,
       );
 
   Map<String, dynamic> toJson() => {

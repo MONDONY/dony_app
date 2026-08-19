@@ -27,38 +27,6 @@ class SupportedCurrency {
     displayName: 'Euro',
     unitsPerEur: 1,
   );
-  static const usd = SupportedCurrency._(
-    code: 'USD',
-    symbol: r'$',
-    minorUnit: 2,
-    locale: 'en_US',
-    displayName: 'Dollar américain',
-    unitsPerEur: 1.08,
-  );
-  static const cad = SupportedCurrency._(
-    code: 'CAD',
-    symbol: r'CA$',
-    minorUnit: 2,
-    locale: 'en_CA',
-    displayName: 'Dollar canadien',
-    unitsPerEur: 1.47,
-  );
-  static const gbp = SupportedCurrency._(
-    code: 'GBP',
-    symbol: '£',
-    minorUnit: 2,
-    locale: 'en_GB',
-    displayName: 'Livre sterling',
-    unitsPerEur: 0.86,
-  );
-  static const chf = SupportedCurrency._(
-    code: 'CHF',
-    symbol: 'CHF',
-    minorUnit: 2,
-    locale: 'de_CH',
-    displayName: 'Franc suisse',
-    unitsPerEur: 0.95,
-  );
   static const xof = SupportedCurrency._(
     code: 'XOF',
     symbol: 'F CFA',
@@ -76,7 +44,7 @@ class SupportedCurrency {
     unitsPerEur: 655.957,
   );
 
-  static const values = <SupportedCurrency>[eur, usd, cad, gbp, chf, xof, xaf];
+  static const values = <SupportedCurrency>[eur, xof, xaf];
 
   static SupportedCurrency? fromCode(String? value) {
     if (value == null) {

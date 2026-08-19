@@ -99,7 +99,7 @@ void main() {
         await tester.pumpWidget(
           _wrap(
             TravelerCard(
-              announcement: _makeAnn(currency: 'CAD'),
+              announcement: _makeAnn(currency: 'XAF'),
               index: 0,
               isOwnAnnouncement: false,
               onTap: () {},
@@ -107,7 +107,7 @@ void main() {
           ),
         );
         await tester.pumpAndSettle();
-        expect(find.textContaining('CA\$'), findsOneWidget);
+        expect(find.textContaining('FCFA'), findsOneWidget);
         expect(find.textContaining('€/kg'), findsNothing);
       },
     );

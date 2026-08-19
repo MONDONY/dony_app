@@ -236,6 +236,7 @@ class BusinessPrefsBloc extends Bloc<BusinessPrefsEvent, BusinessPrefsState> {
         minBidPriceEur: dto.minBidPriceEur,
         contactMode: dto.contactMode,
         responseDelayHours: dto.responseDelayHours,
+        currencyLocked: dto.currencyLocked,
       );
 
   UserBusinessPrefsDto _stateToDto(BusinessPrefsState s) =>
