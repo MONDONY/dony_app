@@ -153,6 +153,17 @@ Widget _harness({
         builder: (context, state) =>
             const Scaffold(body: Center(child: Text('Bid détail'))),
       ),
+      GoRoute(
+        path: '/settings/report-incident',
+        builder: (_, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return Scaffold(
+            body: Text(
+              'Reported: ${extra?['targetType']}/${extra?['targetId']}',
+            ),
+          );
+        },
+      ),
     ],
   );
 
@@ -287,6 +298,27 @@ void main() {
     final inkWell = tester.widget<InkWell>(block);
     expect(inkWell.onTap, isNotNull);
   });
+
+  testWidgets(
+    'Signaler ce trajet navigue vers report-incident avec la cible ANNOUNCEMENT, '
+    'sans exiger de candidature',
+    (tester) async {
+      final a = _buildAnnouncement(kycVerified: true, totalTrips: 3);
+      await tester.pumpWidget(_harness(announcement: a));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('report-announcement-link')), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('report-announcement-link')));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Reported: IncidentTargetType.announcement/a1'),
+        findsOneWidget,
+      );
+    },
+  );
 
   // ── Colis existant sur le trajet (existingBid) ─────────────────────────────
 

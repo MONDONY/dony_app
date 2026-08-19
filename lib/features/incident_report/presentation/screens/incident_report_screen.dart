@@ -2,19 +2,11 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/incident_report/bloc/incident_photo_upload.dart';
 import 'package:dony/features/incident_report/bloc/incident_photos_cubit.dart';
 import 'package:dony/features/incident_report/bloc/incident_report_cubit.dart';
+import 'package:dony/features/incident_report/data/report_reasons.dart';
 import 'package:dony/features/incident_report/data/repositories/incident_report_repository.dart';
 import 'package:dony/features/incident_report/presentation/widgets/incident_photo_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-/// Motifs proposés pour un signalement depuis les réglages (cible APP).
-const incidentReasons = <String>[
-  'Problème de paiement',
-  'Problème avec un colis',
-  'Problème avec un utilisateur',
-  'Bug de l\'application',
-  'Autre',
-];
 
 /// Écran « Signaler un problème » : motif + description + captures (max 4).
 class IncidentReportScreen extends StatefulWidget {
@@ -35,7 +27,7 @@ class IncidentReportScreen extends StatefulWidget {
 
 class _IncidentReportScreenState extends State<IncidentReportScreen> {
   final _descriptionController = TextEditingController();
-  String? _reason;
+  ReportReason? _reason;
 
   @override
   void dispose() {
@@ -48,7 +40,7 @@ class _IncidentReportScreenState extends State<IncidentReportScreen> {
     context.read<IncidentReportCubit>().submit(
       targetType: widget.targetType,
       targetId: widget.targetId,
-      reason: _reason!,
+      reason: _reason!.apiValue,
       description: _descriptionController.text.trim(),
       photoKeys: photos.readyKeys,
     );
@@ -92,9 +84,9 @@ class _IncidentReportScreenState extends State<IncidentReportScreen> {
                   spacing: DonySpacing.sm,
                   runSpacing: DonySpacing.sm,
                   children: [
-                    for (final reason in incidentReasons)
+                    for (final reason in reportReasonsFor(widget.targetType))
                       ChoiceChip(
-                        label: Text(reason),
+                        label: Text(reason.label),
                         selected: _reason == reason,
                         onSelected: (_) => setState(() => _reason = reason),
                       ),
