@@ -14,6 +14,7 @@ void main() {
     expect(CountryCatalog.byCode('fr')!.code, 'FR');
     expect(CountryCatalog.byCode('ZZ'), isNull);
     expect(CountryCatalog.byCode(null), isNull);
+    expect(CountryCatalog.byCode(''), isNull);
   });
 
   test('le catalogue couvre les 38 memes pays que le backend', () {
@@ -23,5 +24,17 @@ void main() {
   test('la recherche ignore la casse et les accents', () {
     expect(CountryCatalog.search('senegal').map((c) => c.code), contains('SN'));
     expect(CountryCatalog.search('CANADA').map((c) => c.code), contains('CA'));
+  });
+
+  test('une recherche vide renvoie le catalogue complet', () {
+    expect(CountryCatalog.search(''), CountryCatalog.all);
+    expect(CountryCatalog.search('   '), CountryCatalog.all);
+  });
+
+  test('la recherche ignore les espaces en tete et en queue', () {
+    expect(
+      CountryCatalog.search('  senegal  ').map((c) => c.code),
+      contains('SN'),
+    );
   });
 }

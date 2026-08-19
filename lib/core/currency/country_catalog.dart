@@ -45,10 +45,10 @@ class CountryCatalog {
     Country('MT', 'Malte', SupportedCurrency.eur, CountryZone.europe),
     Country('NL', 'Pays-Bas', SupportedCurrency.eur, CountryZone.europe),
     Country('PT', 'Portugal', SupportedCurrency.eur, CountryZone.europe),
+    Country('GB', 'Royaume-Uni', SupportedCurrency.gbp, CountryZone.europe),
     Country('SK', 'Slovaquie', SupportedCurrency.eur, CountryZone.europe),
     Country('SI', 'Slovénie', SupportedCurrency.eur, CountryZone.europe),
     Country('CH', 'Suisse', SupportedCurrency.chf, CountryZone.europe),
-    Country('GB', 'Royaume-Uni', SupportedCurrency.gbp, CountryZone.europe),
     // Amérique du Nord
     Country('CA', 'Canada', SupportedCurrency.cad, CountryZone.ameriqueDuNord),
     Country(
@@ -128,14 +128,14 @@ class CountryCatalog {
   }
 
   static String _fold(String value) {
-    const from = 'àâäçéèêëîïôöùûüÀÂÄÇÉÈÊËÎÏÔÖÙÛÜ';
-    const to = 'aaaceeeeiioouuuAAACEEEEIIOOUUU';
+    const from = 'àâäçéèêëîïôöùûü';
+    const to = 'aaaceeeeiioouuu';
     final buffer = StringBuffer();
     for (final rune in value.trim().toLowerCase().runes) {
       final char = String.fromCharCode(rune);
       final index = from.indexOf(char);
       buffer.write(index >= 0 ? to[index] : char);
     }
-    return buffer.toString().toLowerCase();
+    return buffer.toString();
   }
 }
