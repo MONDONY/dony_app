@@ -299,18 +299,18 @@ class _DictationMicButton extends StatefulWidget {
 }
 
 class _DictationMicButtonState extends State<_DictationMicButton> {
-  Future<void> _onDown() async {
+  Future<void> _onDown(PointerDownEvent _) async {
     await widget.controller.start();
   }
 
-  Future<void> _onUp() async {
+  Future<void> _onUp(PointerUpEvent _) async {
     final text = await widget.controller.release();
     if (mounted) {
       Navigator.of(context, rootNavigator: true).pop(text);
     }
   }
 
-  void _onCancelPress() {
+  void _onCancelPress(PointerCancelEvent _) {
     unawaited(widget.controller.abandon());
   }
 
@@ -329,10 +329,17 @@ class _DictationMicButtonState extends State<_DictationMicButton> {
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
           const SizedBox(height: DonySpacing.sm),
-          GestureDetector(
-            onTapDown: (_) => unawaited(_onDown()),
-            onTapUp: (_) => unawaited(_onUp()),
-            onTapCancel: _onCancelPress,
+          // Listener sur les événements pointeur bruts, pas GestureDetector :
+          // le TapGestureRecognizer sous-jacent de ce dernier tolère ~18px de
+          // glissement cumulé depuis le point de contact initial avant
+          // d'annuler le tap (onTapCancel), ce qui abandonnait
+          // silencieusement l'enregistrement au moindre mouvement naturel de
+          // la main pendant une dictée de plusieurs secondes. Les événements
+          // pointeur bruts n'ont aucune tolérance de ce type.
+          Listener(
+            onPointerDown: (event) => unawaited(_onDown(event)),
+            onPointerUp: (event) => unawaited(_onUp(event)),
+            onPointerCancel: _onCancelPress,
             child: Semantics(
               button: true,
               label: 'Maintenir enfoncé pour dicter, relâcher pour valider',
