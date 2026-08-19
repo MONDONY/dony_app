@@ -305,4 +305,5 @@ abstract final class AnalyticsEvents {
   static const searchPhraseParsed = 'search_phrase_parsed';
   static const searchVoiceUsed = 'search_voice_used';
   static const searchParseFailed = 'search_parse_failed';
+  static const searchSubmitted = 'search_submitted';
 }

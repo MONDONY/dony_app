@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/home/bloc/search_composer_bloc.dart';
 import 'package:dony/features/home/bloc/search_composer_event.dart';
@@ -189,6 +190,41 @@ void main() {
     verify: (bloc) {
       expect(bloc.state.resultCount, isNull);
       expect(bloc.state.error, isNull);
+    },
+  );
+
+  blocTest<SearchComposerBloc, SearchComposerState>(
+    'ouvrir l écran mesure l ouverture et compte les filtres hérités',
+    build: build,
+    act: (bloc) => bloc.add(const SearchComposerStarted()),
+    wait: const Duration(milliseconds: 600),
+    verify: (bloc) {
+      expect(bloc.state.resultCount, 14);
+      verify(() => analytics.logEvent(
+            AnalyticsEvents.searchComposerOpened,
+            properties: any(named: 'properties'),
+          )).called(1);
+    },
+  );
+
+  blocTest<SearchComposerBloc, SearchComposerState>(
+    'tout effacer vide les filtres, la phrase et les questions puis recompte',
+    build: build,
+    seed: () => const SearchComposerState(
+      filters: HomeSearchFilters(arrivalCity: 'Dakar'),
+      phrase: 'à Dakar pas cher',
+      unresolved: [
+        UnresolvedItem(kind: UnresolvedKind.priceVague, phrase: 'pas cher', options: ['6']),
+      ],
+      resultCount: 3,
+    ),
+    act: (bloc) => bloc.add(const SearchComposerCleared()),
+    wait: const Duration(milliseconds: 600),
+    verify: (bloc) {
+      expect(bloc.state.filters, const HomeSearchFilters());
+      expect(bloc.state.phrase, isEmpty);
+      expect(bloc.state.unresolved, isEmpty);
+      expect(bloc.state.resultCount, 14);
     },
   );
 }
