@@ -37,7 +37,9 @@ void main() {
     when(() => mockBox.get(any())).thenReturn(null);
     when(() => mockBox.put(any(), any())).thenAnswer((_) async {});
     when(() => mockBox.delete(any())).thenAnswer((_) async {});
-    when(() => mockRepo.updatePrefs(any())).thenAnswer((_) async {});
+    when(
+      () => mockRepo.updatePrefs(any()),
+    ).thenAnswer((_) async => _defaultDto);
   });
 
   BusinessPrefsBloc build() => BusinessPrefsBloc(mockRepo, mockBox);
@@ -293,10 +295,10 @@ void main() {
 
   group('CountryChanged', () {
     blocTest<BusinessPrefsBloc, BusinessPrefsState>(
-      'écrit Hive, PUT le pays, puis relit le state complet — la devise '
+      'écrit Hive, PUT le pays, puis adopte la réponse du PUT : la devise '
       'recalculée par le serveur n\'est jamais devinée côté client',
       setUp: () {
-        when(() => mockRepo.fetchPrefs()).thenAnswer(
+        when(() => mockRepo.updatePrefs(any())).thenAnswer(
           (_) async => const UserBusinessPrefsDto(
             weightUnit: 'kg',
             currencyCode: 'CAD',
@@ -320,10 +322,12 @@ void main() {
       ],
       verify: (_) {
         // 2 écritures : la valeur optimiste, puis la reconfirmation par
-        // `_writeToHive(refreshed)` une fois le state complet relu.
+        // `_writeToHive(saved)` depuis la réponse du PUT.
         verify(() => mockBox.put(HiveService.kCountryCode, 'CA')).called(2);
+        verify(() => mockBox.put(HiveService.kCurrencyCode, 'CAD')).called(1);
         verify(() => mockRepo.updatePrefs(any())).called(1);
-        verify(() => mockRepo.fetchPrefs()).called(1);
+        // Le PUT porte déjà l'état recalculé : aucun aller-retour de plus.
+        verifyNever(() => mockRepo.fetchPrefs());
       },
     );
 

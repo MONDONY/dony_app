@@ -375,7 +375,7 @@ class _ShareButton extends StatelessWidget {
             // Le bon récompense qui invite, pas qui est invité — la promesse
             // ne doit jamais laisser croire à l'inscrit qu'il gagne lui-même
             // une réduction.
-            'Salut ! Utilise mon code Yadony : ${info.code} pour t\'inscrire — ça m\'aide à gagner une réduction sur ma prochaine commission. ${info.shareUrl}',
+            'Salut ! Utilise mon code Yadony : ${info.code} pour t\'inscrire, ça m\'aide à gagner une réduction sur ma prochaine commission. ${info.shareUrl}',
             sharePositionOrigin: sharePositionOriginFor(context),
           ),
         ),

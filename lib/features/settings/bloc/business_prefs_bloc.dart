@@ -68,10 +68,9 @@ class BusinessPrefsBloc extends Bloc<BusinessPrefsEvent, BusinessPrefsState> {
   }
 
   /// Le pays part au serveur, qui recalcule seul la devise (lot pays-
-  /// onboarding-devise-dérivée) : on ne la devine jamais côté client. Un
-  /// simple `PUT` suivi d'un rollback ne suffit donc pas ici — on relit
-  /// l'état complet une fois la synchro confirmée, plutôt que de garder la
-  /// devise (potentiellement périmée) déjà en mémoire.
+  /// onboarding-devise-dérivée) : on ne la devine jamais côté client. La
+  /// réponse du `PUT` porte déjà l'état complet recalculé, devise et verrous
+  /// compris : on l'adopte telle quelle, sans relecture supplémentaire.
   Future<void> _onCountry(
     CountryChanged e,
     Emitter<BusinessPrefsState> emit,
@@ -86,10 +85,9 @@ class BusinessPrefsBloc extends Bloc<BusinessPrefsEvent, BusinessPrefsState> {
       ),
     );
     try {
-      await _repo.updatePrefs(_stateToDto(state));
-      final refreshed = await _repo.fetchPrefs();
-      await _writeToHive(refreshed);
-      emit(_dtoToState(refreshed).copyWith(isSyncing: false));
+      final saved = await _repo.updatePrefs(_stateToDto(state));
+      await _writeToHive(saved);
+      emit(_dtoToState(saved).copyWith(isSyncing: false));
     } catch (_) {
       await _writeToHive(_stateToDto(prev));
       emit(

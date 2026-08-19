@@ -72,9 +72,28 @@ void main() {
           ),
         ),
         () => prefs.put(HiveService.kCountryCode, 'CA'),
+        () => prefs.put(HiveService.kCurrencyCode, 'EUR'),
         () => prefs.put(HiveService.kCountryOnboardingSeen, true),
         () => analytics.logEvent(AnalyticsEvents.countryOnboardingSelected),
       ]);
+    },
+  );
+
+  blocTest<CountryOnboardingCubit, CountryOnboardingState>(
+    'select met en cache la devise renvoyée par le serveur, pas celle du catalogue local',
+    setUp: () {
+      // Le catalogue local associerait CAD au Canada : si le cubit dérivait la
+      // devise côté client, cette valeur serveur (volontairement différente)
+      // ne serait jamais écrite.
+      when(() => repository.updatePrefs(any())).thenAnswer(
+        (_) async => _prefs.copyWith(currencyCode: 'XOF', country: 'CA'),
+      );
+    },
+    build: build,
+    act: (cubit) => cubit.select('CA'),
+    verify: (_) {
+      verify(() => prefs.put(HiveService.kCurrencyCode, 'XOF')).called(1);
+      verifyNever(() => prefs.put(HiveService.kCurrencyCode, 'CAD'));
     },
   );
 
@@ -260,14 +279,36 @@ void main() {
       CountryOnboardingSuccess(),
     ],
     verify: (_) {
-      verifyNever(() => repository.fetchPrefs());
+      // Le pays reste vide, mais la devise par défaut du serveur est mise en
+      // cache : sans elle, tous les plafonds de prix retomberaient sur EUR.
+      verify(() => repository.fetchPrefs()).called(1);
       verifyNever(() => repository.updatePrefs(any()));
       verifyNever(() => prefs.put(HiveService.kCountryCode, any()));
+      verify(() => prefs.put(HiveService.kCurrencyCode, 'EUR')).called(1);
       verify(
         () => prefs.put(HiveService.kCountryOnboardingSeen, true),
       ).called(1);
       verify(
         () => analytics.logEvent(AnalyticsEvents.countryOnboardingSkipped),
+      ).called(1);
+    },
+  );
+
+  blocTest<CountryOnboardingCubit, CountryOnboardingState>(
+    'skip tolère un échec réseau : le passage est mémorisé quand même',
+    setUp: () {
+      when(() => repository.fetchPrefs()).thenThrow(Exception('offline'));
+    },
+    build: build,
+    act: (cubit) => cubit.skip(),
+    expect: () => const [
+      CountryOnboardingSaving(null),
+      CountryOnboardingSuccess(),
+    ],
+    verify: (_) {
+      verifyNever(() => prefs.put(HiveService.kCurrencyCode, any()));
+      verify(
+        () => prefs.put(HiveService.kCountryOnboardingSeen, true),
       ).called(1);
     },
   );
@@ -306,7 +347,6 @@ void main() {
           'Impossible d’enregistrer ce choix. Réessayez.',
         ),
       );
-      verifyNever(() => repository.fetchPrefs());
       verifyNever(
         () => analytics.logEvent(AnalyticsEvents.countryOnboardingSkipped),
       );

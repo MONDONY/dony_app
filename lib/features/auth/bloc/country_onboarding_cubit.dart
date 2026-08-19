@@ -49,9 +49,15 @@ class CountryOnboardingError extends CountryOnboardingState {
 /// accepté son choix.
 ///
 /// Le pays a le droit de rester vide : c'est un état normal signifiant « pas
-/// encore renseigné », complétable plus tard dans les Réglages. Contrairement
-/// à l'ancienne devise obligatoire, [skip] ne relit donc aucune valeur
-/// backend : il se contente de mémoriser que l'étape a été vue.
+/// encore renseigné », complétable plus tard dans les Réglages. [skip] ne
+/// bloque donc jamais sur le réseau : il relit les préférences au mieux, pour
+/// poser la devise par défaut du serveur en cache, mais mémorise le passage
+/// même si cette lecture échoue.
+///
+/// Les deux chemins écrivent [HiveService.kCurrencyCode] avec la devise
+/// **renvoyée par le serveur** : sans ce cache, `ActiveCurrency.current` rend
+/// `null` et tout le calcul de prix retombe sur les plafonds EUR pour un
+/// utilisateur qui n'ouvrirait jamais Réglages › Préférences.
 class CountryOnboardingCubit extends Cubit<CountryOnboardingState> {
   CountryOnboardingCubit(this._repository, this._prefs, this._analytics)
     : super(const CountryOnboardingInitial());
@@ -66,8 +72,13 @@ class CountryOnboardingCubit extends Cubit<CountryOnboardingState> {
     emit(CountryOnboardingSaving(countryCode));
     try {
       final current = await _repository.fetchPrefs();
-      await _repository.updatePrefs(current.copyWith(country: countryCode));
+      final saved = await _repository.updatePrefs(
+        current.copyWith(country: countryCode),
+      );
       await _prefs.put(HiveService.kCountryCode, countryCode);
+      // Devise du serveur, jamais `CountryCatalog.byCode(...).currency` : la
+      // table locale n'est qu'un miroir d'affichage, le backend tranche.
+      await _prefs.put(HiveService.kCurrencyCode, saved.currencyCode);
       await _prefs.put(HiveService.kCountryOnboardingSeen, true);
       unawaited(_analytics.logEvent(AnalyticsEvents.countryOnboardingSelected));
       emit(const CountryOnboardingSuccess());
@@ -85,6 +96,15 @@ class CountryOnboardingCubit extends Cubit<CountryOnboardingState> {
 
     emit(const CountryOnboardingSaving(null));
     try {
+      // Au mieux : poser en cache la devise par défaut du serveur. Un échec
+      // réseau ne doit pas empêcher de passer l'étape, l'utilisateur n'a rien
+      // à enregistrer ici.
+      try {
+        final current = await _repository.fetchPrefs();
+        await _prefs.put(HiveService.kCurrencyCode, current.currencyCode);
+      } catch (_) {
+        // Ignoré volontairement : la devise sera posée à la première synchro.
+      }
       await _prefs.put(HiveService.kCountryOnboardingSeen, true);
       unawaited(_analytics.logEvent(AnalyticsEvents.countryOnboardingSkipped));
       emit(const CountryOnboardingSuccess());
