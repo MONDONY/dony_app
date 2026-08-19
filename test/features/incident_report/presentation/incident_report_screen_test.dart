@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/incident_report/bloc/incident_photos_cubit.dart';
 import 'package:dony/features/incident_report/bloc/incident_report_cubit.dart';
+import 'package:dony/features/incident_report/data/report_reasons.dart';
 import 'package:dony/features/incident_report/data/repositories/incident_report_repository.dart';
 import 'package:dony/features/incident_report/presentation/screens/incident_report_screen.dart';
 import 'package:flutter/material.dart';
@@ -52,8 +53,8 @@ void main() {
       await tester.pumpWidget(wrap());
 
       expect(find.text('Signaler un problème'), findsOneWidget);
-      for (final reason in incidentReasons) {
-        expect(find.text(reason), findsOneWidget);
+      for (final reason in reportReasonsFor(IncidentTargetType.app)) {
+        expect(find.text(reason.label), findsOneWidget);
       }
       expect(find.text('Description'), findsOneWidget);
 
@@ -96,7 +97,7 @@ void main() {
     verify(
       () => repo.submit(
         targetType: IncidentTargetType.app,
-        reason: 'Problème de paiement',
+        reason: 'PAYMENT_ISSUE',
         description: 'Double débit',
       ),
     ).called(1);

@@ -4,6 +4,7 @@ import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/incident_report/data/repositories/incident_report_repository.dart';
 import 'package:dony/features/kyc/presentation/widgets/kyc_status_bottom_sheet.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
@@ -432,6 +433,40 @@ class _TravelerAnnouncementContent extends StatelessWidget {
           Text(announcement.description!, style: tt.bodyMedium),
         ],
 
+        const SizedBox(height: DonySpacing.lg),
+        Center(
+          child: InkWell(
+            key: const Key('report-announcement-link'),
+            borderRadius: BorderRadius.circular(DonyRadius.sm),
+            onTap: () {
+              Navigator.of(context, rootNavigator: true).pop();
+              context.push(
+                '/settings/report-incident',
+                extra: {
+                  'targetType': IncidentTargetType.announcement,
+                  'targetId': announcement.id,
+                },
+              );
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: DonySpacing.sm,
+                vertical: DonySpacing.xs,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  DonyIcon('flag', size: 14, color: cs.onSurfaceVariant),
+                  const SizedBox(width: DonySpacing.xs),
+                  Text(
+                    'Signaler ce trajet',
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
         const SizedBox(height: DonySpacing.md),
       ],
     );

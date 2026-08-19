@@ -131,4 +131,54 @@ void main() {
       verify(() => bidBloc.add(any(that: isA<BidAcceptRequested>()))).called(1);
     });
   });
+
+  group('showSenderOptionsSheet — Signaler ce trajet', () {
+    Widget wrapSender(BidModel bid) => MaterialApp.router(
+      routerConfig: GoRouter(
+        initialLocation: '/',
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (context, _) => Scaffold(
+              body: Center(
+                child: ElevatedButton(
+                  onPressed: () => showSenderOptionsSheet(context, bid),
+                  child: const Text('open'),
+                ),
+              ),
+            ),
+          ),
+          GoRoute(
+            path: '/settings/report-incident',
+            builder: (_, state) {
+              final extra = state.extra as Map<String, dynamic>?;
+              return Scaffold(
+                body: Text(
+                  'Reported: ${extra?['targetType']}/${extra?['targetId']}',
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    testWidgets(
+      'tap Signaler ce trajet → navigue vers report-incident avec la cible BID',
+      (tester) async {
+        final bid = _makeBid(BidPaymentMethod.stripe);
+        await tester.pumpWidget(wrapSender(bid));
+        await tester.tap(find.text('open'));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Signaler ce trajet'));
+        await tester.pumpAndSettle();
+
+        expect(
+          find.text('Reported: IncidentTargetType.bid/${bid.id}'),
+          findsOneWidget,
+        );
+      },
+    );
+  });
 }
