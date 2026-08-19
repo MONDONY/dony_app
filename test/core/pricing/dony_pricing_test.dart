@@ -83,7 +83,9 @@ void main() {
 
   group('formatPriceIn', () {
     test('formate dans la devise donnée, pas toujours en EUR', () {
-      expect(formatPriceIn(8, 'CAD'), 'CA\$8');
+      final result = formatPriceIn(8, 'CAD');
+      expect(result, contains('8'));
+      expect(result, contains('CA\$'));
     });
 
     test('devise EUR : symbole € en suffixe, entier si rond', () {

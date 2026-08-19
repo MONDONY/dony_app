@@ -11,6 +11,20 @@ class BusinessPrefsState extends Equatable {
   final bool isSyncing;
   final String? errorMessage;
 
+  /// Lot 2 : gel de la devise au premier mouvement d'argent. Renseigné par le
+  /// serveur à chaque synchro (`GET`/`PUT`), jamais dérivé localement — seul
+  /// le backend voit le portefeuille et les envois engagés.
+  final bool currencyLocked;
+
+  /// Code ISO 3166-1 alpha-2, ou `null` tant que l'utilisateur ne l'a pas
+  /// renseigné. La devise ([currencyCode]) est désormais dérivée de ce champ
+  /// côté serveur — jamais recalculée ici.
+  final String? country;
+
+  /// Même mécanisme que [currencyLocked] (lot pays-onboarding-devise-dérivée) :
+  /// renseigné par le serveur, jamais dérivé localement.
+  final bool countryLocked;
+
   const BusinessPrefsState({
     this.weightUnit = 'kg',
     this.currencyCode = 'EUR',
@@ -21,6 +35,9 @@ class BusinessPrefsState extends Equatable {
     this.responseDelayHours,
     this.isSyncing = false,
     this.errorMessage,
+    this.currencyLocked = false,
+    this.country,
+    this.countryLocked = false,
   });
 
   BusinessPrefsState copyWith({
@@ -33,6 +50,9 @@ class BusinessPrefsState extends Equatable {
     int? Function()? responseDelayHoursGetter,
     bool? isSyncing,
     String? Function()? errorMessageGetter,
+    bool? currencyLocked,
+    String? Function()? countryGetter,
+    bool? countryLocked,
   }) => BusinessPrefsState(
     weightUnit: weightUnit ?? this.weightUnit,
     currencyCode: currencyCode ?? this.currencyCode,
@@ -48,6 +68,9 @@ class BusinessPrefsState extends Equatable {
     errorMessage: errorMessageGetter != null
         ? errorMessageGetter()
         : errorMessage,
+    currencyLocked: currencyLocked ?? this.currencyLocked,
+    country: countryGetter != null ? countryGetter() : country,
+    countryLocked: countryLocked ?? this.countryLocked,
   );
 
   @override
@@ -61,5 +84,8 @@ class BusinessPrefsState extends Equatable {
     responseDelayHours,
     isSyncing,
     errorMessage,
+    currencyLocked,
+    country,
+    countryLocked,
   ];
 }

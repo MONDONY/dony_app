@@ -7,6 +7,9 @@ class BusinessPrefsRepository {
 
   Future<UserBusinessPrefsDto> fetchPrefs() => _datasource.fetchPrefs();
 
-  Future<void> updatePrefs(UserBusinessPrefsDto dto) =>
+  /// Rend les préférences telles que le serveur les a enregistrées : la
+  /// devise y est recalculée depuis le pays et ne doit jamais être dérivée
+  /// côté client.
+  Future<UserBusinessPrefsDto> updatePrefs(UserBusinessPrefsDto dto) =>
       _datasource.updatePrefs(dto);
 }

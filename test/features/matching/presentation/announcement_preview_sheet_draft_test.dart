@@ -1,3 +1,4 @@
+import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_preview_sheet.dart';
@@ -40,7 +41,9 @@ void main() {
       ),
     );
 
-    expect(find.text(r'CA$5.00/kg · estimation CA$50.00 net'), findsOneWidget);
+    final price = CurrencyFormatter.formatOrPlain(5, SupportedCurrency.cad);
+    final net = CurrencyFormatter.formatOrPlain(50, SupportedCurrency.cad);
+    expect(find.text('$price/kg · estimation $net net'), findsOneWidget);
     expect(find.textContaining('€/kg'), findsNothing);
   });
 

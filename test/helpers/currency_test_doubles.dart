@@ -20,11 +20,7 @@ class _MockHiveService extends Mock implements HiveService {}
 
 class _MockBox extends Mock implements Box<dynamic> {}
 
-/// Prépare un [BusinessPrefsBloc] mocké prêt pour `CurrencyPicker`.
-///
-/// `switchTo()` délègue à `bloc.changeCurrency()`, qui n'aboutit qu'après
-/// confirmation du backend. On le stube donc explicitement — sans quoi le
-/// mock renvoie `null` là où un `Future<bool>` est attendu.
+/// Prépare un [BusinessPrefsBloc] mocké.
 ///
 /// `stream` est stubé à la main plutôt que via `whenListen` : ce dernier
 /// enveloppe la source dans un `asBroadcastStream()` qui la consomme dès
@@ -34,14 +30,10 @@ class _MockBox extends Mock implements Box<dynamic> {}
 /// spécifiquement par un test (bannière d'erreur, par exemple).
 MockBusinessPrefsBloc stubBusinessPrefsBloc({
   BusinessPrefsState state = const BusinessPrefsState(),
-  bool changeCurrencySucceeds = true,
 }) {
   final bloc = MockBusinessPrefsBloc();
   when(() => bloc.state).thenReturn(state);
   when(() => bloc.stream).thenAnswer((_) => Stream.value(bloc.state));
-  when(
-    () => bloc.changeCurrency(any()),
-  ).thenAnswer((_) async => changeCurrencySucceeds);
   return bloc;
 }
 

@@ -33,8 +33,8 @@ Widget _buildEmail({
           ),
         ),
         GoRoute(
-          path: '/auth/currency-selection',
-          builder: (_, _) => const Scaffold(body: Text('Currency selection')),
+          path: '/auth/country-selection',
+          builder: (_, _) => const Scaffold(body: Text('Country selection')),
         ),
       ],
     ),
@@ -222,7 +222,7 @@ void main() {
   });
 
   testWidgets(
-    'mode email — poursuit vers la sélection de devise, aucune étape code PIN quand AuthAuthenticated émis',
+    'mode email — poursuit vers la sélection du pays, aucune étape code PIN quand AuthAuthenticated émis',
     (tester) async {
       tester.view.physicalSize = const Size(1080, 1920);
       tester.view.devicePixelRatio = 3.0;
@@ -247,7 +247,7 @@ void main() {
       await tester.pumpWidget(_buildEmail(bloc: mockBloc));
       await tester.pumpAndSettle();
 
-      expect(find.text('Currency selection'), findsOneWidget);
+      expect(find.text('Country selection'), findsOneWidget);
     },
   );
 }

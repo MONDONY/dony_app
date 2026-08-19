@@ -3,7 +3,6 @@ import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
-import 'package:dony/features/settings/presentation/widgets/currency_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -13,9 +12,10 @@ import 'package:go_router/go_router.dart';
 /// « Mon portefeuille » (sous-titre statique « Solde & recharges ») par le
 /// solde réel, avec un accès direct à la recharge.
 ///
-/// La devise n'est jamais codée en dur : elle vient de [WalletModel.currency]
-/// (déduite du pays de l'utilisateur pour l'instant, modifiable par lui plus
-/// tard — cf. le repère visuel en pointillés à côté du code devise).
+/// La devise n'est jamais codée en dur : elle vient de [WalletModel.currency],
+/// dérivée par le serveur du pays de l'utilisateur (Réglages › Préférences).
+/// Elle n'est pas modifiable directement depuis cette carte : changer de
+/// devise passe par le pays.
 class WalletBalanceCard extends StatelessWidget {
   const WalletBalanceCard({super.key});
 
@@ -123,52 +123,11 @@ class _CurrencyBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: 'Changer de devise, actuellement $currency',
-      child: InkWell(
-        borderRadius: BorderRadius.circular(DonyRadius.sm),
-        onTap: () async {
-          // Le solde est libellé dans la devise active : il n'est périmé que
-          // si la bascule a réellement eu lieu.
-          final changed = await CurrencyPicker.show(context);
-          if (changed && context.mounted) {
-            context.read<WalletBloc>().add(WalletLoadRequested());
-          }
-        },
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: DonySpacing.xxs,
-            vertical: DonySpacing.xxs,
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  border: Border(
-                    bottom: BorderSide(
-                      color: Colors.white.withValues(alpha: 0.45),
-                    ),
-                  ),
-                ),
-                child: Text(
-                  currency,
-                  style: style?.copyWith(
-                    color: Colors.white.withValues(alpha: 0.70),
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 2),
-              DonyIcon(
-                'chevron-down',
-                color: Colors.white.withValues(alpha: 0.55),
-                size: 11,
-              ),
-            ],
-          ),
-        ),
+    return Text(
+      currency,
+      style: style?.copyWith(
+        color: Colors.white.withValues(alpha: 0.70),
+        fontWeight: FontWeight.w700,
       ),
     );
   }

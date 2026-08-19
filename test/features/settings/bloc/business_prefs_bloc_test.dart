@@ -37,7 +37,9 @@ void main() {
     when(() => mockBox.get(any())).thenReturn(null);
     when(() => mockBox.put(any(), any())).thenAnswer((_) async {});
     when(() => mockBox.delete(any())).thenAnswer((_) async {});
-    when(() => mockRepo.updatePrefs(any())).thenAnswer((_) async {});
+    when(
+      () => mockRepo.updatePrefs(any()),
+    ).thenAnswer((_) async => _defaultDto);
   });
 
   BusinessPrefsBloc build() => BusinessPrefsBloc(mockRepo, mockBox);
@@ -92,6 +94,17 @@ void main() {
       expect(bloc.state.contactMode, isNull);
       expect(bloc.state.responseDelayHours, isNull);
       bloc.close();
+    });
+
+    test('country est lu depuis Hive si présent, sinon null', () {
+      final blocSansPays = build();
+      expect(blocSansPays.state.country, isNull);
+      blocSansPays.close();
+
+      when(() => mockBox.get(HiveService.kCountryCode)).thenReturn('SN');
+      final blocAvecPays = build();
+      expect(blocAvecPays.state.country, 'SN');
+      blocAvecPays.close();
     });
   });
 
@@ -280,49 +293,91 @@ void main() {
     );
   });
 
-  group(
-    'events existants — WeightUnitChanged, CurrencyChanged, PickupRadiusChanged',
-    () {
-      blocTest<BusinessPrefsBloc, BusinessPrefsState>(
-        'WeightUnitChanged écrit Hive + PUT',
-        build: build,
-        act: (bloc) => bloc.add(const WeightUnitChanged('lbs')),
-        expect: () => [
-          isA<BusinessPrefsState>().having((s) => s.weightUnit, 'unit', 'lbs'),
-          syncStarted,
-          syncSettled,
-        ],
-        verify: (_) {
-          verify(() => mockBox.put(HiveService.kWeightUnit, 'lbs')).called(1);
-          verify(() => mockRepo.updatePrefs(any())).called(1);
-        },
-      );
-
-      blocTest<BusinessPrefsBloc, BusinessPrefsState>(
-        'CurrencyChanged écrit Hive + PUT',
-        build: build,
-        act: (bloc) => bloc.add(const CurrencyChanged('XOF')),
-        expect: () => [
-          isA<BusinessPrefsState>().having(
-            (s) => s.currencyCode,
-            'code',
-            'XOF',
+  group('CountryChanged', () {
+    blocTest<BusinessPrefsBloc, BusinessPrefsState>(
+      'écrit Hive, PUT le pays, puis adopte la réponse du PUT : la devise '
+      'recalculée par le serveur n\'est jamais devinée côté client',
+      setUp: () {
+        when(() => mockRepo.updatePrefs(any())).thenAnswer(
+          (_) async => const UserBusinessPrefsDto(
+            weightUnit: 'kg',
+            currencyCode: 'CAD',
+            pickupRadiusKm: 10,
+            defaultPackageWeightKg: 23,
+            minBidPriceEur: 0,
+            country: 'CA',
           ),
-          syncStarted,
-          syncSettled,
-        ],
-      );
+        );
+      },
+      build: build,
+      act: (bloc) => bloc.add(const CountryChanged('CA')),
+      expect: () => [
+        isA<BusinessPrefsState>()
+            .having((s) => s.isSyncing, 'isSyncing', true)
+            .having((s) => s.country, 'country', 'CA'),
+        isA<BusinessPrefsState>()
+            .having((s) => s.isSyncing, 'isSyncing', false)
+            .having((s) => s.country, 'country', 'CA')
+            .having((s) => s.currencyCode, 'currencyCode', 'CAD'),
+      ],
+      verify: (_) {
+        // 2 écritures : la valeur optimiste, puis la reconfirmation par
+        // `_writeToHive(saved)` depuis la réponse du PUT.
+        verify(() => mockBox.put(HiveService.kCountryCode, 'CA')).called(2);
+        verify(() => mockBox.put(HiveService.kCurrencyCode, 'CAD')).called(1);
+        verify(() => mockRepo.updatePrefs(any())).called(1);
+        // Le PUT porte déjà l'état recalculé : aucun aller-retour de plus.
+        verifyNever(() => mockRepo.fetchPrefs());
+      },
+    );
 
-      blocTest<BusinessPrefsBloc, BusinessPrefsState>(
-        'PickupRadiusChanged écrit Hive + PUT',
-        build: build,
-        act: (bloc) => bloc.add(const PickupRadiusChanged(25)),
-        expect: () => [
-          isA<BusinessPrefsState>().having((s) => s.pickupRadiusKm, 'km', 25),
-          syncStarted,
-          syncSettled,
-        ],
-      );
-    },
-  );
+    blocTest<BusinessPrefsBloc, BusinessPrefsState>(
+      'erreur PUT : rollback au pays précédent',
+      setUp: () {
+        when(() => mockRepo.updatePrefs(any())).thenThrow(Exception('server'));
+      },
+      build: build,
+      seed: () => const BusinessPrefsState(country: 'FR'),
+      act: (bloc) => bloc.add(const CountryChanged('CA')),
+      expect: () => [
+        isA<BusinessPrefsState>()
+            .having((s) => s.isSyncing, 'isSyncing', true)
+            .having((s) => s.country, 'country', 'CA'),
+        isA<BusinessPrefsState>()
+            .having((s) => s.country, 'country', 'FR')
+            .having((s) => s.errorMessage, 'error', isNotNull),
+      ],
+      verify: (_) {
+        verifyNever(() => mockRepo.fetchPrefs());
+      },
+    );
+  });
+
+  group('events existants — WeightUnitChanged, PickupRadiusChanged', () {
+    blocTest<BusinessPrefsBloc, BusinessPrefsState>(
+      'WeightUnitChanged écrit Hive + PUT',
+      build: build,
+      act: (bloc) => bloc.add(const WeightUnitChanged('lbs')),
+      expect: () => [
+        isA<BusinessPrefsState>().having((s) => s.weightUnit, 'unit', 'lbs'),
+        syncStarted,
+        syncSettled,
+      ],
+      verify: (_) {
+        verify(() => mockBox.put(HiveService.kWeightUnit, 'lbs')).called(1);
+        verify(() => mockRepo.updatePrefs(any())).called(1);
+      },
+    );
+
+    blocTest<BusinessPrefsBloc, BusinessPrefsState>(
+      'PickupRadiusChanged écrit Hive + PUT',
+      build: build,
+      act: (bloc) => bloc.add(const PickupRadiusChanged(25)),
+      expect: () => [
+        isA<BusinessPrefsState>().having((s) => s.pickupRadiusKm, 'km', 25),
+        syncStarted,
+        syncSettled,
+      ],
+    );
+  });
 }

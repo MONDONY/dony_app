@@ -20,7 +20,7 @@ void main() {
   // État Hive piloté par chaque test.
   Object? storedConsent;
   String? detectedCountry;
-  bool currencyOnboardingSeen = false;
+  bool countryOnboardingSeen = false;
 
   setUp(() {
     backend = MockAnalyticsBackend();
@@ -29,7 +29,7 @@ void main() {
     box = MockBox();
     storedConsent = null;
     detectedCountry = null;
-    currencyOnboardingSeen = false;
+    countryOnboardingSeen = false;
 
     when(() => hive.userPrefs).thenReturn(box);
     when(
@@ -39,8 +39,8 @@ void main() {
       () => box.get(HiveService.kDetectedCountryCode),
     ).thenAnswer((_) => detectedCountry);
     when(
-      () => box.get(HiveService.kCurrencyOnboardingSeen, defaultValue: false),
-    ).thenAnswer((_) => currencyOnboardingSeen);
+      () => box.get(HiveService.kCountryOnboardingSeen, defaultValue: false),
+    ).thenAnswer((_) => countryOnboardingSeen);
     when(() => box.put(HiveService.kAnalyticsConsent, any())).thenAnswer((
       invocation,
     ) async {
@@ -64,7 +64,7 @@ void main() {
 
   group('resolvePostSignupRoute — réinstall (Hive vide, backend renseigné)', () {
     test(
-      'backend granted=true → /auth/currency-selection, PAS de re-prompt (régression corrigée)',
+      'backend granted=true → /auth/country-selection, PAS de re-prompt (régression corrigée)',
       () async {
         // Réinstall dans un pays RGPD : sans le sync backend, hasAnswered serait
         // faux → l'utilisateur verrait à tort /auth/analytics-consent.
@@ -75,13 +75,13 @@ void main() {
 
         final route = await resolvePostSignupRoute(service, box);
 
-        expect(route, '/auth/currency-selection');
+        expect(route, '/auth/country-selection');
         verify(() => remote.fetch()).called(1);
       },
     );
 
     test(
-      'backend granted=false → /auth/currency-selection (révocation respectée, pas de re-prompt)',
+      'backend granted=false → /auth/country-selection (révocation respectée, pas de re-prompt)',
       () async {
         storedConsent = null;
         detectedCountry = 'FR';
@@ -90,7 +90,7 @@ void main() {
 
         final route = await resolvePostSignupRoute(service, box);
 
-        expect(route, '/auth/currency-selection');
+        expect(route, '/auth/country-selection');
         verify(() => remote.fetch()).called(1);
       },
     );
@@ -145,20 +145,20 @@ void main() {
 
   group('resolvePostSignupRoute — pas de sync inutile', () {
     test(
-      'non configuré (analytics off) → /auth/currency-selection sans appel backend',
+      'non configuré (analytics off) → /auth/country-selection sans appel backend',
       () async {
         // onConfigured non appelé → isConfigured=false.
         final route = await resolvePostSignupRoute(service, box);
 
-        expect(route, '/auth/currency-selection');
+        expect(route, '/auth/country-selection');
         verifyNever(() => remote.fetch());
       },
     );
 
-    test('devise déjà vue → /auth/referral-code sans re-sync', () async {
+    test('pays déjà vu → /auth/referral-code sans re-sync', () async {
       storedConsent = true;
       detectedCountry = 'FR';
-      currencyOnboardingSeen = true;
+      countryOnboardingSeen = true;
       await service.onConfigured();
 
       final route = await resolvePostSignupRoute(service, box);
@@ -168,14 +168,14 @@ void main() {
     });
 
     test(
-      'devise non vue → /auth/currency-selection après consentement local',
+      'pays non vu → /auth/country-selection après consentement local',
       () async {
         storedConsent = true;
         await service.onConfigured();
 
         final route = await resolvePostSignupRoute(service, box);
 
-        expect(route, '/auth/currency-selection');
+        expect(route, '/auth/country-selection');
       },
     );
   });

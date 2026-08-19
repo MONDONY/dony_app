@@ -5,7 +5,6 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_currency_balance_model.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_transaction_model.dart';
-import 'package:dony/features/settings/presentation/widgets/currency_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -530,17 +529,10 @@ class _LockedBalanceTile extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: DonySpacing.sm),
       child: Semantics(
-        button: true,
         label:
-            'Devise verrouillée ${currency.displayName}, '
-            'appuyez pour basculer et l\'utiliser',
+            'Devise verrouillée ${currency.displayName}, ce solde reste '
+            'disponible dans sa propre devise',
         child: DonyCard(
-          onTap: () async {
-            final changed = await CurrencyPicker.switchTo(context, currency);
-            if (changed && context.mounted) {
-              context.read<WalletBloc>().add(WalletLoadRequested());
-            }
-          },
           child: Row(
             children: [
               Container(
@@ -591,7 +583,7 @@ class _LockedBalanceTile extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Appuie pour basculer sur ${currency.displayName} et l\'utiliser.',
+                      'Reste dans sa devise d\'origine (${currency.displayName}).',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: cs.onSurfaceVariant,
                       ),

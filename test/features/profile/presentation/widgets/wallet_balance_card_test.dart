@@ -56,7 +56,6 @@ Widget _wrap(MockWalletBloc bloc, MockBusinessPrefsBloc prefsBloc) {
 void main() {
   setUpAll(() {
     registerFallbackValue(WalletLoadRequested());
-    registerFallbackValue(const CurrencyChanged('EUR'));
   });
 
   late MockWalletBloc bloc;
@@ -190,7 +189,7 @@ void main() {
   );
 
   testWidgets(
-    'tap sur le badge devise ouvre le sélecteur de devise, pas le wallet',
+    'le badge devise n\'est plus interactif : le tap ouvre le portefeuille',
     (tester) async {
       whenListen<WalletState>(
         bloc,
@@ -206,8 +205,10 @@ void main() {
       await tester.tap(find.text('EUR').first);
       await tester.pumpAndSettle();
 
-      expect(find.text('Devise d\'affichage'), findsOneWidget);
-      expect(find.text('WalletScreen'), findsNothing);
+      // Le badge n'a plus d'InkWell propre : le tap remonte à la carte
+      // entière, qui ouvre toujours l'écran portefeuille.
+      expect(find.text('Devise d\'affichage'), findsNothing);
+      expect(find.text('WalletScreen'), findsOneWidget);
     },
   );
 

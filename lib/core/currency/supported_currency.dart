@@ -29,7 +29,7 @@ class SupportedCurrency {
   );
   static const usd = SupportedCurrency._(
     code: 'USD',
-    symbol: r'$',
+    symbol: '\$',
     minorUnit: 2,
     locale: 'en_US',
     displayName: 'Dollar américain',
@@ -37,9 +37,9 @@ class SupportedCurrency {
   );
   static const cad = SupportedCurrency._(
     code: 'CAD',
-    symbol: r'CA$',
+    symbol: 'CA\$',
     minorUnit: 2,
-    locale: 'en_CA',
+    locale: 'fr_CA',
     displayName: 'Dollar canadien',
     unitsPerEur: 1.47,
   );
@@ -55,7 +55,7 @@ class SupportedCurrency {
     code: 'CHF',
     symbol: 'CHF',
     minorUnit: 2,
-    locale: 'de_CH',
+    locale: 'fr_CH',
     displayName: 'Franc suisse',
     unitsPerEur: 0.95,
   );

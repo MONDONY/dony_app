@@ -16,7 +16,7 @@ import 'package:dony/features/app_update/data/datasources/app_update_remote_conf
 import 'package:dony/features/app_update/data/services/app_update_service.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
-import 'package:dony/features/auth/bloc/currency_onboarding_cubit.dart';
+import 'package:dony/features/auth/bloc/country_onboarding_cubit.dart';
 import 'package:dony/features/auth/bloc/local_auth_bloc.dart';
 import 'package:dony/features/auth/data/datasources/auth_remote_datasource.dart';
 import 'package:dony/features/auth/data/repositories/auth_repository.dart';
@@ -272,8 +272,8 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       analytics: getIt<AnalyticsService>(),
     ),
   );
-  getIt.registerFactory<CurrencyOnboardingCubit>(
-    () => CurrencyOnboardingCubit(
+  getIt.registerFactory<CountryOnboardingCubit>(
+    () => CountryOnboardingCubit(
       getIt<BusinessPrefsRepository>(),
       getIt<HiveService>().userPrefs,
       getIt<AnalyticsService>(),

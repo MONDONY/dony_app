@@ -10,7 +10,14 @@ class BusinessPrefsRemoteDatasource {
     return UserBusinessPrefsDto.fromJson(resp.data as Map<String, dynamic>);
   }
 
-  Future<void> updatePrefs(UserBusinessPrefsDto dto) async {
-    await _api.dio.put('/users/me/business-preferences', data: dto.toJson());
+  /// Le `PUT` renvoie le DTO complet, devise recalculée par le serveur depuis
+  /// le pays comprise : jeter cette réponse obligerait à relire les
+  /// préférences juste après, ou pire à deviner la devise côté client.
+  Future<UserBusinessPrefsDto> updatePrefs(UserBusinessPrefsDto dto) async {
+    final resp = await _api.dio.put(
+      '/users/me/business-preferences',
+      data: dto.toJson(),
+    );
+    return UserBusinessPrefsDto.fromJson(resp.data as Map<String, dynamic>);
   }
 }

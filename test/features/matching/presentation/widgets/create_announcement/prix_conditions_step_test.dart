@@ -231,9 +231,17 @@ void main() {
       await tester.pumpWidget(_host(currency: SupportedCurrency.cad));
       await tester.pump(const Duration(milliseconds: 200));
 
-      expect(find.text(r'CA$5.00'), findsOneWidget);
+      expect(
+        find.text(CurrencyFormatter.format(5, SupportedCurrency.cad)),
+        findsOneWidget,
+      );
       expect(find.text('5€'), findsNothing);
-      expect(find.textContaining(r'CA$50.00'), findsOneWidget);
+      expect(
+        find.textContaining(
+          CurrencyFormatter.format(50, SupportedCurrency.cad),
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('chip "Autre prix" est affiché', (tester) async {

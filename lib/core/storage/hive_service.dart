@@ -45,8 +45,12 @@ class HiveService {
 
   // ── Préférences métier ───────────────────────────────────────────────────
   static const String kWeightUnit = 'weight_unit'; // 'kg' | 'lbs'
-  static const String kCurrencyCode = 'currency_code'; // 'EUR' | 'XOF' | 'XAF'
-  static const String kCurrencyOnboardingSeen = 'currency_onboarding_seen';
+  // Devise active, telle que renvoyée par le serveur (dérivée du pays) : une
+  // des 7 devises de SupportedCurrency, jamais devinée côté client.
+  static const String kCurrencyCode = 'currency_code';
+  static const String kCountryCode =
+      'country_code'; // ISO 3166-1 alpha-2, ou absent
+  static const String kCountryOnboardingSeen = 'country_onboarding_seen';
   static const String kPickupRadiusKm = 'pickup_radius_km'; // int
   static const String kDefaultPackageWeight = 'default_package_weight'; // int
   static const String kMinBidPrice = 'min_bid_price'; // int

@@ -43,7 +43,6 @@ void main() {
   setUpAll(() async {
     await initializeDateFormatting('fr_FR');
     registerFallbackValue(WalletLoadRequested());
-    registerFallbackValue(const CurrencyChanged('EUR'));
   });
 
   setUp(() {
@@ -253,7 +252,7 @@ void main() {
   );
 
   testWidgets(
-    'tap sur un solde verrouillé propose de basculer vers cette devise',
+    'un solde verrouillé ne propose plus de bascule : tap sans effet',
     (tester) async {
       const wallet = WalletModel(
         balance: 47.50,
@@ -284,50 +283,33 @@ void main() {
       await tester.tap(find.textContaining('Dollar canadien'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Changer de devise'), findsOneWidget);
-      expect(find.text('Changer pour CAD'), findsOneWidget);
-      verifyNever(() => prefsBloc.changeCurrency(any()));
-    },
-  );
-
-  testWidgets(
-    'confirmer la bascule d\'un solde verrouillé envoie CurrencyChanged '
-    'et recharge le wallet',
-    (tester) async {
-      const wallet = WalletModel(
-        balance: 47.50,
-        currency: 'EUR',
-        transactions: [],
-        balances: [
-          WalletCurrencyBalanceModel(
-            currency: 'EUR',
-            balance: 47.50,
-            active: true,
-          ),
-          WalletCurrencyBalanceModel(
-            currency: 'CAD',
-            balance: 15.00,
-            active: false,
-          ),
-        ],
+      expect(find.text('Changer de devise'), findsNothing);
+      // Assertion probante : les deux entrées de solde (le solde actif du
+      // hero et la ligne verrouillée) ne sont plus annoncées comme des
+      // boutons. Seules les actions du hero le restent.
+      final semanticsButton = find.byWidgetPredicate(
+        (w) => w is Semantics && w.properties.button == true,
       );
-      whenListen(
-        bloc,
-        Stream.value(WalletLoaded(wallet)),
-        initialState: WalletInitial(),
+      expect(
+        find.ancestor(
+          of: find.textContaining('Dollar canadien'),
+          matching: semanticsButton,
+        ),
+        findsNothing,
       );
-
-      await tester.pumpWidget(buildSubject(bloc, prefsBloc));
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.textContaining('Dollar canadien'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Changer pour CAD'));
-      await tester.pumpAndSettle();
-
-      verify(() => prefsBloc.changeCurrency('CAD')).called(1);
-      // 1 au initState + 1 après la bascule de devise.
-      verify(() => bloc.add(any(that: isA<WalletLoadRequested>()))).called(2);
+      expect(
+        find.ancestor(
+          of: find.text('Solde disponible'),
+          matching: semanticsButton,
+        ),
+        findsNothing,
+      );
+      // Témoin : le prédicat trouve bien des boutons ailleurs (Recharger,
+      // Utiliser), les deux `findsNothing` ci-dessus ne sont donc pas vides
+      // de sens.
+      expect(semanticsButton, findsWidgets);
+      // 1 seul appel : celui de l'initState, aucun déclenché par le tap.
+      verify(() => bloc.add(any(that: isA<WalletLoadRequested>()))).called(1);
     },
   );
 

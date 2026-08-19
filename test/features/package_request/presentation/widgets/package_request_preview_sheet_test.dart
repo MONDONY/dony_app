@@ -1,3 +1,4 @@
+import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
@@ -30,7 +31,8 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
 
-    expect(find.text(r'Budget indicatif : CA$40.00'), findsOneWidget);
+    final budget = CurrencyFormatter.formatOrPlain(40, SupportedCurrency.cad);
+    expect(find.text('Budget indicatif : $budget'), findsOneWidget);
     expect(find.textContaining('40 €'), findsNothing);
   });
 

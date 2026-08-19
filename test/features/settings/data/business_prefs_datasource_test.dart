@@ -65,14 +65,30 @@ void main() {
           () =>
               mockDio.put('/users/me/business-preferences', data: dto.toJson()),
         ).thenAnswer(
-          (_) async =>
-              Response(requestOptions: RequestOptions(), statusCode: 200),
+          (_) async => Response(
+            requestOptions: RequestOptions(),
+            statusCode: 200,
+            // Le serveur renvoie l'état recalculé : la devise dérivée du pays
+            // ne ressemble pas forcément à celle envoyée.
+            data: const {
+              'weightUnit': 'kg',
+              'currencyCode': 'XOF',
+              'pickupRadiusKm': 10,
+              'defaultPackageWeightKg': 23,
+              'minBidPriceEur': 0,
+              'country': 'SN',
+              'countryLocked': true,
+            },
+          ),
         );
-        await datasource.updatePrefs(dto);
+        final saved = await datasource.updatePrefs(dto);
         verify(
           () =>
               mockDio.put('/users/me/business-preferences', data: dto.toJson()),
         ).called(1);
+        expect(saved.currencyCode, 'XOF');
+        expect(saved.country, 'SN');
+        expect(saved.countryLocked, isTrue);
       },
     );
   });
