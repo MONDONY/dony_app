@@ -149,6 +149,15 @@ void main() {
       ),
     );
     expect(tile.enabled, isFalse);
+    // Griser sans expliquer laisse l'utilisateur croire à un bug : le
+    // sous-titre doit dire pourquoi le pays est figé.
+    expect(tile.subtitle, isNotNull);
+    expect(
+      find.textContaining(
+        'Verrouillé : un envoi est en cours ou votre compte de paiement est créé',
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets('sans pays renseigne, la tuile invite a le choisir', (
@@ -173,6 +182,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Rechercher un pays'), findsOneWidget);
+    // Les 38 pays sont groupés par zone, pas listés à plat.
+    expect(find.text('EUROPE'), findsOneWidget);
+    expect(find.text('AFRIQUE DE L\'OUEST'), findsOneWidget);
     expect(find.text('France'), findsOneWidget);
   });
 

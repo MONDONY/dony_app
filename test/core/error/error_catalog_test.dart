@@ -52,10 +52,45 @@ void main() {
       expect(
         p.message,
         'Ce trajet n\'est plus disponible dans ta devise. '
-        'Change de devise dans Réglages pour le voir.',
+        'Change de pays dans Réglages pour le voir.',
       );
       expect(p.severity, ErrorSeverity.warning);
       expect(p.icon, Icons.currency_exchange_rounded);
+    });
+  });
+
+  group('ErrorCatalog — pays', () {
+    // Sans entrée dédiée, ces trois 422 tombaient dans le message générique :
+    // le voyageur ne pouvait pas deviner qu'il devait renseigner son pays.
+    test('country-required oriente vers la tuile Pays des Réglages', () {
+      const error = NetworkException('ignored', code: 'country-required');
+
+      final p = ErrorCatalog.lookup(error);
+
+      expect(p.title, 'Pays manquant');
+      expect(p.message, contains('Réglages'));
+      expect(p.message, contains('Préférences'));
+      expect(p.severity, ErrorSeverity.warning);
+    });
+
+    test('country-locked explique le gel plutôt qu\'un refus opaque', () {
+      const error = NetworkException('ignored', code: 'country-locked');
+
+      final p = ErrorCatalog.lookup(error);
+
+      expect(p.title, 'Pays verrouillé');
+      expect(p.message, contains('envoi est en cours'));
+      expect(p.severity, ErrorSeverity.warning);
+    });
+
+    test('country-unsupported invite à choisir un autre pays', () {
+      const error = NetworkException('ignored', code: 'country-unsupported');
+
+      final p = ErrorCatalog.lookup(error);
+
+      expect(p.title, 'Pays non desservi');
+      expect(p.message, contains('Yadony'));
+      expect(p.severity, ErrorSeverity.warning);
     });
   });
 

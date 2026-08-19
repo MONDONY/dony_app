@@ -111,13 +111,24 @@ class _CountryList extends StatefulWidget {
 
 class _CountryListState extends State<_CountryList> {
   final _controller = TextEditingController();
-  List<Country> _results = CountryCatalog.all;
+
+  /// Groupes aplatis en une seule liste d'entrées (`CountryZone` pour une
+  /// en-tête, `Country` pour un pays) : le groupement ne doit pas coûter la
+  /// virtualisation des 38 entrées.
+  List<Object> _entries = _flatten(CountryCatalog.groupedSearch(''));
+
+  static List<Object> _flatten(List<CountryZoneGroup> groups) => [
+    for (final group in groups) ...[group.zone, ...group.countries],
+  ];
 
   @override
   void initState() {
     super.initState();
     _controller.addListener(() {
-      setState(() => _results = CountryCatalog.search(_controller.text));
+      setState(
+        () =>
+            _entries = _flatten(CountryCatalog.groupedSearch(_controller.text)),
+      );
     });
   }
 
@@ -138,27 +149,67 @@ class _CountryListState extends State<_CountryList> {
         ),
         const SizedBox(height: DonySpacing.md),
         Expanded(
-          child: _results.isEmpty
+          child: _entries.isEmpty
               ? const _EmptyCountryResults()
-              : ListView.separated(
+              : ListView.builder(
                   padding: const EdgeInsets.only(bottom: DonySpacing.base),
-                  itemCount: _results.length,
-                  separatorBuilder: (_, _) =>
-                      const SizedBox(height: DonySpacing.sm),
+                  itemCount: _entries.length,
                   itemBuilder: (context, index) {
-                    final country = _results[index];
-                    return _CountryTile(
-                      country: country,
-                      isSelected: widget.selectedCode == country.code,
-                      enabled: !widget.isSaving,
-                      onTap: () => context
-                          .read<CountryOnboardingCubit>()
-                          .select(country.code),
+                    final entry = _entries[index];
+                    if (entry is CountryZone) {
+                      return _ZoneHeader(zone: entry);
+                    }
+                    final country = entry as Country;
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: DonySpacing.sm),
+                      child: _CountryTile(
+                        country: country,
+                        isSelected: widget.selectedCode == country.code,
+                        enabled: !widget.isSaving,
+                        onTap: () => context
+                            .read<CountryOnboardingCubit>()
+                            .select(country.code),
+                      ),
                     );
                   },
                 ),
         ),
       ],
+    );
+  }
+}
+
+/// En-tête de section : la zone regroupe les pays partageant une même devise,
+/// ce qui rend les 38 entrées lisibles au lieu d'une liste à plat.
+class _ZoneHeader extends StatelessWidget {
+  const _ZoneHeader({required this.zone});
+
+  final CountryZone zone;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+
+    return Semantics(
+      header: true,
+      container: true,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          DonySpacing.xxs,
+          DonySpacing.sm,
+          DonySpacing.xxs,
+          DonySpacing.sm,
+        ),
+        child: Text(
+          zone.label.toUpperCase(),
+          style: tt.labelMedium?.copyWith(
+            color: cs.onSurfaceVariant,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.6,
+          ),
+        ),
+      ),
     );
   }
 }

@@ -45,7 +45,9 @@ class HiveService {
 
   // ── Préférences métier ───────────────────────────────────────────────────
   static const String kWeightUnit = 'weight_unit'; // 'kg' | 'lbs'
-  static const String kCurrencyCode = 'currency_code'; // 'EUR' | 'XOF' | 'XAF'
+  // Devise active, telle que renvoyée par le serveur (dérivée du pays) : une
+  // des 7 devises de SupportedCurrency, jamais devinée côté client.
+  static const String kCurrencyCode = 'currency_code';
   static const String kCountryCode =
       'country_code'; // ISO 3166-1 alpha-2, ou absent
   static const String kCountryOnboardingSeen = 'country_onboarding_seen';

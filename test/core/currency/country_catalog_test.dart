@@ -18,7 +18,79 @@ void main() {
   });
 
   test('le catalogue couvre les 38 memes pays que le backend', () {
-    expect(CountryCatalog.all.length, 38);
+    // Copie figee de `CountryCatalog.java` (payments/currency), qui fait
+    // autorite : le serveur derive la devise depuis SA table. Une simple
+    // egalite de longueur laisserait passer un GB renomme UK ou un CH bascule
+    // sur EUR, exactement les divergences qui produisent des 422 en prod.
+    const expected = <String, SupportedCurrency>{
+      'AT': SupportedCurrency.eur,
+      'BE': SupportedCurrency.eur,
+      'HR': SupportedCurrency.eur,
+      'CY': SupportedCurrency.eur,
+      'EE': SupportedCurrency.eur,
+      'FI': SupportedCurrency.eur,
+      'FR': SupportedCurrency.eur,
+      'DE': SupportedCurrency.eur,
+      'GR': SupportedCurrency.eur,
+      'IE': SupportedCurrency.eur,
+      'IT': SupportedCurrency.eur,
+      'LV': SupportedCurrency.eur,
+      'LT': SupportedCurrency.eur,
+      'LU': SupportedCurrency.eur,
+      'MT': SupportedCurrency.eur,
+      'NL': SupportedCurrency.eur,
+      'PT': SupportedCurrency.eur,
+      'SK': SupportedCurrency.eur,
+      'SI': SupportedCurrency.eur,
+      'ES': SupportedCurrency.eur,
+      'CH': SupportedCurrency.chf,
+      'GB': SupportedCurrency.gbp,
+      'CA': SupportedCurrency.cad,
+      'US': SupportedCurrency.usd,
+      'BJ': SupportedCurrency.xof,
+      'BF': SupportedCurrency.xof,
+      'CI': SupportedCurrency.xof,
+      'GW': SupportedCurrency.xof,
+      'ML': SupportedCurrency.xof,
+      'NE': SupportedCurrency.xof,
+      'SN': SupportedCurrency.xof,
+      'TG': SupportedCurrency.xof,
+      'CM': SupportedCurrency.xaf,
+      'CF': SupportedCurrency.xaf,
+      'TD': SupportedCurrency.xaf,
+      'CG': SupportedCurrency.xaf,
+      'GQ': SupportedCurrency.xaf,
+      'GA': SupportedCurrency.xaf,
+    };
+
+    expect(expected.length, 38);
+    expect({for (final c in CountryCatalog.all) c.code: c.currency}, expected);
+  });
+
+  test('chaque pays est declare une seule fois', () {
+    expect(
+      CountryCatalog.all.map((c) => c.code).toSet().length,
+      CountryCatalog.all.length,
+    );
+  });
+
+  test('groupedSearch conserve tous les pays et ordonne les zones', () {
+    final groups = CountryCatalog.groupedSearch('');
+    expect(groups.map((g) => g.zone), CountryZone.values);
+    expect(groups.expand((g) => g.countries).length, CountryCatalog.all.length);
+    for (final group in groups) {
+      for (final country in group.countries) {
+        expect(country.zone, group.zone);
+      }
+    }
+  });
+
+  test('groupedSearch n\'expose aucune zone vide', () {
+    final groups = CountryCatalog.groupedSearch('senegal');
+    expect(groups, hasLength(1));
+    expect(groups.single.zone, CountryZone.afriqueOuest);
+    expect(groups.single.countries.map((c) => c.code), ['SN']);
+    expect(CountryCatalog.groupedSearch('zzzz'), isEmpty);
   });
 
   test('la recherche ignore la casse et les accents', () {

@@ -204,9 +204,37 @@ abstract final class ErrorCatalog {
     'currency-mismatch': ErrorPresentation(
       title: 'Devise différente',
       message:
-          'Ce trajet n\'est plus disponible dans ta devise. Change de devise dans Réglages pour le voir.',
+          'Ce trajet n\'est plus disponible dans ta devise. Change de pays dans Réglages pour le voir.',
       severity: ErrorSeverity.warning,
       icon: Icons.currency_exchange_rounded,
+    ),
+    // ─── Pays (la devise en est dérivée côté serveur) ────────────────
+    // Sans ces trois entrées, un voyageur qui a passé l'étape pays (ce que le
+    // parcours autorise) lit un message générique au moment de créer son
+    // compte de paiement, sans aucun moyen de deviner quoi corriger.
+    'country-required': ErrorPresentation(
+      title: 'Pays manquant',
+      message:
+          'Renseigne ton pays dans Réglages, rubrique Préférences, avant de '
+          'créer ton compte de paiement. Il détermine ta devise et ne pourra '
+          'plus être modifié ensuite.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.public_rounded,
+    ),
+    'country-locked': ErrorPresentation(
+      title: 'Pays verrouillé',
+      message:
+          'Impossible de changer de pays : un envoi est en cours, ton '
+          'portefeuille n\'est pas vide, ou ton compte de paiement est déjà '
+          'créé.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.lock_outline_rounded,
+    ),
+    'country-unsupported': ErrorPresentation(
+      title: 'Pays non desservi',
+      message: 'Yadony ne dessert pas encore ce pays. Choisis-en un autre.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.public_off_rounded,
     ),
     'deletion-impossible': ErrorPresentation(
       title: 'Suppression impossible',

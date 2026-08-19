@@ -213,13 +213,13 @@ class _CountryPickerList extends StatefulWidget {
 
 class _CountryPickerListState extends State<_CountryPickerList> {
   final _controller = TextEditingController();
-  List<Country> _results = CountryCatalog.all;
+  List<CountryZoneGroup> _results = CountryCatalog.groupedSearch('');
 
   @override
   void initState() {
     super.initState();
     _controller.addListener(() {
-      setState(() => _results = CountryCatalog.search(_controller.text));
+      setState(() => _results = CountryCatalog.groupedSearch(_controller.text));
     });
   }
 
@@ -253,17 +253,44 @@ class _CountryPickerListState extends State<_CountryPickerList> {
             ),
           )
         else
-          for (final country in _results)
-            ListTile(
-              title: Text(country.name),
-              subtitle: Text(
-                '${country.currency.code} · ${country.currency.symbol}',
+          for (final group in _results) ...[
+            // Les pays sont groupés par zone : 38 entrées à plat seraient
+            // illisibles, et la zone explique la devise affichée dessous.
+            Semantics(
+              header: true,
+              container: true,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  DonySpacing.base,
+                  DonySpacing.md,
+                  DonySpacing.base,
+                  DonySpacing.xs,
+                ),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    group.zone.label.toUpperCase(),
+                    style: tt.labelMedium?.copyWith(
+                      color: cs.onSurfaceVariant,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.6,
+                    ),
+                  ),
+                ),
               ),
-              trailing: widget.selectedCode == country.code
-                  ? DonyIcon('check', color: cs.primary)
-                  : null,
-              onTap: () => context.pop(country.code),
             ),
+            for (final country in group.countries)
+              ListTile(
+                title: Text(country.name),
+                subtitle: Text(
+                  '${country.currency.code} · ${country.currency.symbol}',
+                ),
+                trailing: widget.selectedCode == country.code
+                    ? DonyIcon('check', color: cs.primary)
+                    : null,
+                onTap: () => context.pop(country.code),
+              ),
+          ],
       ],
     );
   }

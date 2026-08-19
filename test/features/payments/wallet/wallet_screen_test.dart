@@ -284,7 +284,30 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Changer de devise'), findsNothing);
-      expect(find.text('Devise verrouillée'), findsNothing);
+      // Assertion probante : les deux entrées de solde (le solde actif du
+      // hero et la ligne verrouillée) ne sont plus annoncées comme des
+      // boutons. Seules les actions du hero le restent.
+      final semanticsButton = find.byWidgetPredicate(
+        (w) => w is Semantics && w.properties.button == true,
+      );
+      expect(
+        find.ancestor(
+          of: find.textContaining('Dollar canadien'),
+          matching: semanticsButton,
+        ),
+        findsNothing,
+      );
+      expect(
+        find.ancestor(
+          of: find.text('Solde disponible'),
+          matching: semanticsButton,
+        ),
+        findsNothing,
+      );
+      // Témoin : le prédicat trouve bien des boutons ailleurs (Recharger,
+      // Utiliser), les deux `findsNothing` ci-dessus ne sont donc pas vides
+      // de sens.
+      expect(semanticsButton, findsWidgets);
       // 1 seul appel : celui de l'initState, aucun déclenché par le tap.
       verify(() => bloc.add(any(that: isA<WalletLoadRequested>()))).called(1);
     },

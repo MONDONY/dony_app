@@ -75,6 +75,28 @@ void main() {
     );
   });
 
+  testWidgets('les pays sont groupés par zone, en-têtes comprises', (
+    tester,
+  ) async {
+    await _wrap(tester, cubit);
+
+    expect(find.text('EUROPE'), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.text('AFRIQUE DE L\'OUEST'),
+      200,
+      scrollable: find.byType(Scrollable).last,
+    );
+    expect(find.text('AFRIQUE DE L\'OUEST'), findsOneWidget);
+
+    // Une zone sans résultat ne laisse pas d'en-tête orpheline.
+    await tester.enterText(find.byType(TextField), 'senegal');
+    await tester.pumpAndSettle();
+
+    expect(find.text('AFRIQUE DE L\'OUEST'), findsOneWidget);
+    expect(find.text('EUROPE'), findsNothing);
+  });
+
   testWidgets('la recherche filtre la liste des pays', (tester) async {
     await _wrap(tester, cubit);
 

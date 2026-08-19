@@ -19,6 +19,14 @@ class Country {
   final CountryZone zone;
 }
 
+/// Une zone et les pays qu'elle contient, prêts à être affichés en section.
+class CountryZoneGroup {
+  const CountryZoneGroup(this.zone, this.countries);
+
+  final CountryZone zone;
+  final List<Country> countries;
+}
+
 /// Miroir de `CountryCatalog.java`. Les deux surfaces doivent lister exactement
 /// les mêmes pays : un pays proposé ici mais absent du backend produirait un 422
 /// au moment de l'enregistrement.
@@ -116,6 +124,25 @@ class CountryCatalog {
       }
     }
     return null;
+  }
+
+  /// Résultats de [search] groupés par zone, dans l'ordre de déclaration du
+  /// catalogue. Une zone sans résultat n'apparaît pas : la liste filtrée ne
+  /// doit pas laisser d'en-tête orpheline.
+  ///
+  /// C'est cette forme, pas [search], que les deux sélecteurs de pays
+  /// affichent : 38 entrées à plat sont illisibles, et la zone porte
+  /// l'information utile (« ma devise dépend de ma zone »).
+  static List<CountryZoneGroup> groupedSearch(String query) {
+    final matches = search(query);
+    final groups = <CountryZoneGroup>[];
+    for (final zone in CountryZone.values) {
+      final countries = matches.where((c) => c.zone == zone).toList();
+      if (countries.isNotEmpty) {
+        groups.add(CountryZoneGroup(zone, countries));
+      }
+    }
+    return groups;
   }
 
   /// Recherche insensible à la casse et aux accents : « senegal » trouve Sénégal.

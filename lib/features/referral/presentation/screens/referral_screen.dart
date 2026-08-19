@@ -180,7 +180,10 @@ class _HeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final percentOff = info.voucherPercentOff ?? 50;
+    // Aucun barème en dur : quand le serveur ne renseigne pas le pourcentage
+    // (backend antérieur au lot 3, ou champ absent), on masque la promesse
+    // chiffrée plutôt que d'annoncer un chiffre inventé.
+    final percentOff = info.voucherPercentOff;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(DonySpacing.xl),
@@ -197,7 +200,9 @@ class _HeroCard extends StatelessWidget {
           const DonyIcon('gift', size: 48, color: Colors.white),
           const SizedBox(height: DonySpacing.md),
           Text(
-            'Invite et gagne -$percentOff%',
+            percentOff == null
+                ? 'Invite tes proches'
+                : 'Invite et gagne -$percentOff%',
             style: Theme.of(context).textTheme.headlineLarge?.copyWith(
               color: Colors.white,
               fontWeight: FontWeight.w800,
@@ -206,7 +211,9 @@ class _HeroCard extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.sm),
           Text(
-            'Tu reçois un bon de -$percentOff% sur ta prochaine commission dès la première livraison de ton invité.',
+            percentOff == null
+                ? 'Tu reçois un bon de réduction sur ta prochaine commission dès la première livraison de ton invité.'
+                : 'Tu reçois un bon de -$percentOff% sur ta prochaine commission dès la première livraison de ton invité.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: Colors.white.withValues(alpha: 0.85),
             ),

@@ -208,6 +208,30 @@ void main() {
     expect(find.text('Invite et gagne -50%'), findsOneWidget);
   });
 
+  // 9 bis. Sans barème serveur, la promesse chiffrée disparaît : aucun
+  // pourcentage inventé côté client.
+  testWidgets('hides the discount promise when voucherFactor is missing', (
+    tester,
+  ) async {
+    const info = ReferralInfo(
+      code: 'DONY-XYZ42',
+      shareUrl: 'https://dony.app/invite/DONY-XYZ42',
+      totalInvited: 4,
+      signedUp: 2,
+      rewarded: 1,
+      hasBeenReferred: false,
+      activeVoucherCount: 0,
+    );
+    when(() => bloc.state).thenReturn(const ReferralLoaded(info));
+
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('Invite tes proches'), findsOneWidget);
+    expect(find.textContaining('-50%'), findsNothing);
+    expect(find.textContaining('-null%'), findsNothing);
+  });
+
   // 10. Message d'erreur affiché dans l'error view
   testWidgets('shows error message text when ReferralError', (tester) async {
     when(
