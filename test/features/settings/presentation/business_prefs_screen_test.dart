@@ -211,10 +211,7 @@ void main() {
       await tester.pumpWidget(buildScreen());
       await tester.pumpAndSettle();
 
-      expect(
-        find.textContaining('Verrouillée'),
-        findsOneWidget,
-      );
+      expect(find.textContaining('Verrouillée'), findsOneWidget);
 
       await tester.tap(find.text('EUR'));
       await tester.pumpAndSettle();

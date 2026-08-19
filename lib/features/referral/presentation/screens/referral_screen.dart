@@ -10,7 +10,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 
-String _formatDate(DateTime date) => DateFormat('d MMMM yyyy', 'fr_FR').format(date);
+String _formatDate(DateTime date) =>
+    DateFormat('d MMMM yyyy', 'fr_FR').format(date);
 
 class ReferralScreen extends StatefulWidget {
   const ReferralScreen({super.key});
@@ -153,9 +154,9 @@ class _LoadedBody extends StatelessWidget {
                     Text(
                       'Valable jusqu\'au ${_formatDate(info.nextVoucherExpiresAt!)}',
                       textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: cs.success,
-                      ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(color: cs.success),
                     ),
                   ],
                 ],
