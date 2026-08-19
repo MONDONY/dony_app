@@ -50,9 +50,16 @@ Widget _wrapWithRouter({
   String? buildNumber = '42',
 }) {
   final mockBloc = MockDiagnosticsBloc();
-  final state = DiagnosticsState(appVersion: appVersion, buildNumber: buildNumber);
+  final state = DiagnosticsState(
+    appVersion: appVersion,
+    buildNumber: buildNumber,
+  );
   when(() => mockBloc.state).thenReturn(state);
-  whenListen<DiagnosticsState>(mockBloc, const Stream.empty(), initialState: state);
+  whenListen<DiagnosticsState>(
+    mockBloc,
+    const Stream.empty(),
+    initialState: state,
+  );
 
   final router = GoRouter(
     initialLocation: '/',
@@ -151,7 +158,10 @@ void main() {
         await tester.tap(find.text('Signaler un bug'));
         await tester.pumpAndSettle();
 
-        expect(find.text('report-incident:IncidentTargetType.app'), findsOneWidget);
+        expect(
+          find.text('report-incident:IncidentTargetType.app'),
+          findsOneWidget,
+        );
         expect(find.byType(AlertDialog), findsNothing);
       },
     );
