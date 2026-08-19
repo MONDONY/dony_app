@@ -14,13 +14,6 @@ class WeightUnitChanged extends BusinessPrefsEvent {
   List<Object?> get props => [unit];
 }
 
-class CurrencyChanged extends BusinessPrefsEvent {
-  final String code;
-  const CurrencyChanged(this.code);
-  @override
-  List<Object?> get props => [code];
-}
-
 /// Le pays choisi est envoyé au serveur ; la devise qui en dérive revient
 /// dans la réponse (`_onCountry`), jamais recalculée côté client.
 class CountryChanged extends BusinessPrefsEvent {

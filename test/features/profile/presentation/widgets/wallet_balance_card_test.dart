@@ -56,7 +56,6 @@ Widget _wrap(MockWalletBloc bloc, MockBusinessPrefsBloc prefsBloc) {
 void main() {
   setUpAll(() {
     registerFallbackValue(WalletLoadRequested());
-    registerFallbackValue(const CurrencyChanged('EUR'));
   });
 
   late MockWalletBloc bloc;

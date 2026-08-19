@@ -28,9 +28,7 @@ void main() {
   late MockBusinessPrefsBloc mockPrefsBloc;
   late MockAuthBloc mockAuthBloc;
 
-  setUpAll(() {
-    registerFallbackValue(const CurrencyChanged('EUR'));
-  });
+  setUpAll(() {});
 
   setUp(() {
     mockPrefsBloc = MockBusinessPrefsBloc();

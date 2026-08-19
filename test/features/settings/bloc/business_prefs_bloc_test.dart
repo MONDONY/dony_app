@@ -349,49 +349,31 @@ void main() {
     );
   });
 
-  group(
-    'events existants — WeightUnitChanged, CurrencyChanged, PickupRadiusChanged',
-    () {
-      blocTest<BusinessPrefsBloc, BusinessPrefsState>(
-        'WeightUnitChanged écrit Hive + PUT',
-        build: build,
-        act: (bloc) => bloc.add(const WeightUnitChanged('lbs')),
-        expect: () => [
-          isA<BusinessPrefsState>().having((s) => s.weightUnit, 'unit', 'lbs'),
-          syncStarted,
-          syncSettled,
-        ],
-        verify: (_) {
-          verify(() => mockBox.put(HiveService.kWeightUnit, 'lbs')).called(1);
-          verify(() => mockRepo.updatePrefs(any())).called(1);
-        },
-      );
+  group('events existants — WeightUnitChanged, PickupRadiusChanged', () {
+    blocTest<BusinessPrefsBloc, BusinessPrefsState>(
+      'WeightUnitChanged écrit Hive + PUT',
+      build: build,
+      act: (bloc) => bloc.add(const WeightUnitChanged('lbs')),
+      expect: () => [
+        isA<BusinessPrefsState>().having((s) => s.weightUnit, 'unit', 'lbs'),
+        syncStarted,
+        syncSettled,
+      ],
+      verify: (_) {
+        verify(() => mockBox.put(HiveService.kWeightUnit, 'lbs')).called(1);
+        verify(() => mockRepo.updatePrefs(any())).called(1);
+      },
+    );
 
-      blocTest<BusinessPrefsBloc, BusinessPrefsState>(
-        'CurrencyChanged écrit Hive + PUT',
-        build: build,
-        act: (bloc) => bloc.add(const CurrencyChanged('XOF')),
-        expect: () => [
-          isA<BusinessPrefsState>().having(
-            (s) => s.currencyCode,
-            'code',
-            'XOF',
-          ),
-          syncStarted,
-          syncSettled,
-        ],
-      );
-
-      blocTest<BusinessPrefsBloc, BusinessPrefsState>(
-        'PickupRadiusChanged écrit Hive + PUT',
-        build: build,
-        act: (bloc) => bloc.add(const PickupRadiusChanged(25)),
-        expect: () => [
-          isA<BusinessPrefsState>().having((s) => s.pickupRadiusKm, 'km', 25),
-          syncStarted,
-          syncSettled,
-        ],
-      );
-    },
-  );
+    blocTest<BusinessPrefsBloc, BusinessPrefsState>(
+      'PickupRadiusChanged écrit Hive + PUT',
+      build: build,
+      act: (bloc) => bloc.add(const PickupRadiusChanged(25)),
+      expect: () => [
+        isA<BusinessPrefsState>().having((s) => s.pickupRadiusKm, 'km', 25),
+        syncStarted,
+        syncSettled,
+      ],
+    );
+  });
 }

@@ -17,7 +17,6 @@ class BusinessPrefsBloc extends Bloc<BusinessPrefsEvent, BusinessPrefsState> {
   BusinessPrefsBloc(this._repo, this._box) : super(_initialState(_box)) {
     on<BusinessPrefsSyncRequested>(_onSync);
     on<WeightUnitChanged>(_onWeightUnit);
-    on<CurrencyChanged>(_onCurrency);
     on<CountryChanged>(_onCountry);
     on<PickupRadiusChanged>(_onPickupRadius);
     on<DefaultWeightChanged>(_onDefaultWeight);
@@ -65,16 +64,6 @@ class BusinessPrefsBloc extends Bloc<BusinessPrefsEvent, BusinessPrefsState> {
     final prev = state;
     await _box.put(HiveService.kWeightUnit, e.unit);
     emit(state.copyWith(weightUnit: e.unit, errorMessageGetter: () => null));
-    await _putOrRollback(emit, prev);
-  }
-
-  Future<void> _onCurrency(
-    CurrencyChanged e,
-    Emitter<BusinessPrefsState> emit,
-  ) async {
-    final prev = state;
-    await _box.put(HiveService.kCurrencyCode, e.code);
-    emit(state.copyWith(currencyCode: e.code, errorMessageGetter: () => null));
     await _putOrRollback(emit, prev);
   }
 

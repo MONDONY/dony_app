@@ -43,7 +43,6 @@ void main() {
   setUpAll(() async {
     await initializeDateFormatting('fr_FR');
     registerFallbackValue(WalletLoadRequested());
-    registerFallbackValue(const CurrencyChanged('EUR'));
   });
 
   setUp(() {
