@@ -124,10 +124,12 @@ void main() {
       await tester.tap(find.text('EUR'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Franc CFA Ouest (XOF)'), findsOneWidget);
-      expect(find.text('Franc CFA Centre (XAF)'), findsOneWidget);
+      expect(find.text('Dollar américain (USD)'), findsOneWidget);
+      expect(find.text('Dollar canadien (CAD)'), findsOneWidget);
+      expect(find.text('Livre sterling (GBP)'), findsOneWidget);
+      expect(find.text('Franc suisse (CHF)'), findsOneWidget);
+      expect(find.textContaining('1 EUR ≈ 1,08 USD'), findsOneWidget);
       expect(find.textContaining('1 EUR ≈ 655,957 XOF'), findsOneWidget);
-      expect(find.textContaining('1 EUR ≈ 655,957 XAF'), findsOneWidget);
     },
   );
 
@@ -141,7 +143,7 @@ void main() {
 
       await tester.tap(find.text('EUR'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Franc CFA Centre (XAF)'));
+      await tester.tap(find.text('Dollar canadien (CAD)'));
       await tester.pumpAndSettle();
 
       expect(find.text('Changer de devise'), findsOneWidget);
@@ -158,12 +160,12 @@ void main() {
 
       await tester.tap(find.text('EUR'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Franc CFA Centre (XAF)'));
+      await tester.tap(find.text('Dollar canadien (CAD)'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Changer pour XAF'));
+      await tester.tap(find.text('Changer pour CAD'));
       await tester.pumpAndSettle();
 
-      verify(() => mockPrefsBloc.changeCurrency('XAF')).called(1);
+      verify(() => mockPrefsBloc.changeCurrency('CAD')).called(1);
     },
   );
 
@@ -176,7 +178,7 @@ void main() {
 
     await tester.tap(find.text('EUR'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Franc CFA Centre (XAF)'));
+    await tester.tap(find.text('Dollar canadien (CAD)'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Annuler'));
     await tester.pumpAndSettle();

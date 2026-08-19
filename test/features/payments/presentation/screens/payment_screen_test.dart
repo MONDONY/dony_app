@@ -273,8 +273,8 @@ void main() {
     testWidgets('tarif/kg affiché dans la devise du bid, pas toujours en EUR', (
       tester,
     ) async {
-      final xafBid = BidModel(
-        id: 'bid-xaf-1',
+      final cadBid = BidModel(
+        id: 'bid-cad-1',
         announcementId: 'ann-1',
         senderId: 'sender-1',
         weightKg: 5.0,
@@ -286,13 +286,13 @@ void main() {
         departureDate: DateTime(2025, 6),
         createdAt: DateTime(2025, 5),
         updatedAt: DateTime(2025, 5),
-        currency: 'XAF',
+        currency: 'CAD',
       );
 
       await tester.pumpWidget(
         _wrap(
           PaymentScreen(
-            bid: xafBid,
+            bid: cadBid,
             localAuthService: mockLocalAuth,
             userPrefs: _mockUserPrefs(biometricEnabled: true),
           ),
@@ -302,7 +302,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('FCFA'), findsWidgets);
+      expect(find.textContaining('CA\$'), findsWidgets);
       expect(find.textContaining('€'), findsNothing);
     });
 

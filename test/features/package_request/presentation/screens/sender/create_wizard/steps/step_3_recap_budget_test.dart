@@ -135,20 +135,20 @@ void main() {
       expect(canContinue.value, isTrue);
     });
 
-    testWidgets('affiche le suffixe et le détail du budget en XAF', (
+    testWidgets('affiche le suffixe et le détail du budget en CAD', (
       tester,
     ) async {
       const seed = PackageRequestFormState(totalBudgetEur: 40);
       await tester.pumpWidget(
         wrap(
-          const Step3RecapBudget(currency: SupportedCurrency.xaf),
+          const Step3RecapBudget(currency: SupportedCurrency.cad),
           seed: seed,
           useMock: true,
         ),
       );
 
-      final budget = CurrencyFormatter.formatOrPlain(40, SupportedCurrency.xaf);
-      expect(find.text('FCFA'), findsOneWidget);
+      final budget = CurrencyFormatter.formatOrPlain(40, SupportedCurrency.cad);
+      expect(find.text(r'CA$'), findsOneWidget);
       expect(find.text(budget), findsOneWidget);
       expect(find.textContaining('€'), findsNothing);
     });

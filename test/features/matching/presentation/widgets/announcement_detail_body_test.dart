@@ -123,13 +123,13 @@ void main() {
       createdAt: DateTime(2026, 7),
       updatedAt: DateTime(2026, 7),
       acceptedPaymentMethods: const <BidPaymentMethod>{},
-      currency: 'XAF',
+      currency: 'CAD',
     );
 
     await tester.pumpWidget(host(announcement));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('FCFA'), findsOneWidget);
+    expect(find.textContaining('CA\$'), findsOneWidget);
     expect(find.textContaining('8€/kg'), findsNothing);
   });
 

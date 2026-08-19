@@ -23,14 +23,14 @@ Widget _app({required VoidCallback onConfirm, VoidCallback? onSaveDraft}) =>
     );
 
 void main() {
-  testWidgets('affiche le prix de l’aperçu en XAF sans conversion', (
+  testWidgets('affiche le prix de l’aperçu en CAD sans conversion', (
     tester,
   ) async {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
           body: AnnouncementPreviewSheet(
-            currency: SupportedCurrency.xaf,
+            currency: SupportedCurrency.cad,
             formState: const AnnouncementFormState(
               pricePerKg: 5,
               availableKg: 10,
@@ -41,8 +41,8 @@ void main() {
       ),
     );
 
-    final price = CurrencyFormatter.formatOrPlain(5, SupportedCurrency.xaf);
-    final net = CurrencyFormatter.formatOrPlain(50, SupportedCurrency.xaf);
+    final price = CurrencyFormatter.formatOrPlain(5, SupportedCurrency.cad);
+    final net = CurrencyFormatter.formatOrPlain(50, SupportedCurrency.cad);
     expect(find.text('$price/kg · estimation $net net'), findsOneWidget);
     expect(find.textContaining('€/kg'), findsNothing);
   });

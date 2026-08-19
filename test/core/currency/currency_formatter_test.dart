@@ -3,10 +3,17 @@ import 'package:dony/core/currency/supported_currency.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('formate EUR avec deux décimales et la locale française', () {
+  test('formate USD avec deux décimales et le code local', () {
     expect(
-      CurrencyFormatter.format(1234.5, SupportedCurrency.eur, locale: 'fr_FR'),
-      contains('234,50'),
+      CurrencyFormatter.format(1234.5, SupportedCurrency.usd, locale: 'en_US'),
+      r'$1,234.50',
+    );
+  });
+
+  test('formate CAD avec deux décimales', () {
+    expect(
+      CurrencyFormatter.format(25, SupportedCurrency.cad, locale: 'en_CA'),
+      r'CA$25.00',
     );
   });
 
@@ -61,15 +68,15 @@ void main() {
       );
     });
 
-    test('compact respecte la position/symbole de la devise (XOF)', () {
+    test('compact respecte la position/symbole de la devise (CAD)', () {
       expect(
         CurrencyFormatter.format(
-          1250,
-          SupportedCurrency.xof,
-          locale: 'fr_SN',
+          25,
+          SupportedCurrency.cad,
+          locale: 'en_CA',
           compact: true,
         ),
-        contains('250'),
+        r'CA$25',
       );
     });
   });

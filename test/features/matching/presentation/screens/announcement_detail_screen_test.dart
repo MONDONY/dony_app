@@ -188,7 +188,7 @@ void main() {
   testWidgets('affiche le prix dans la devise du trajet, pas toujours en EUR', (
     tester,
   ) async {
-    final announcement = _makeAnnouncement(currency: 'XAF');
+    final announcement = _makeAnnouncement(currency: 'CAD');
 
     await _pump(
       tester,
@@ -198,7 +198,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('FCFA'), findsOneWidget);
+    expect(find.textContaining('CA\$'), findsOneWidget);
     expect(find.textContaining('8 €/kg'), findsNothing);
   });
 

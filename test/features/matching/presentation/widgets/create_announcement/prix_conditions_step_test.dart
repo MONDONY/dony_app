@@ -227,18 +227,18 @@ void main() {
       }
     });
 
-    testWidgets('affiche les montants en XAF sans conversion', (tester) async {
-      await tester.pumpWidget(_host(currency: SupportedCurrency.xaf));
+    testWidgets('affiche les montants en CAD sans conversion', (tester) async {
+      await tester.pumpWidget(_host(currency: SupportedCurrency.cad));
       await tester.pump(const Duration(milliseconds: 200));
 
       expect(
-        find.text(CurrencyFormatter.format(5, SupportedCurrency.xaf)),
+        find.text(CurrencyFormatter.format(5, SupportedCurrency.cad)),
         findsOneWidget,
       );
       expect(find.text('5€'), findsNothing);
       expect(
         find.textContaining(
-          CurrencyFormatter.format(50, SupportedCurrency.xaf),
+          CurrencyFormatter.format(50, SupportedCurrency.cad),
         ),
         findsOneWidget,
       );

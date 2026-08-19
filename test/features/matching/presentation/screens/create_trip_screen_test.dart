@@ -646,13 +646,13 @@ void main() {
       );
     });
 
-    testWidgets('bandeau devise lit XAF depuis Hive', (tester) async {
+    testWidgets('bandeau devise lit CAD depuis Hive', (tester) async {
       setupViewport(tester);
-      registerCurrencyPreference('XAF');
+      registerCurrencyPreference('CAD');
 
       await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
 
-      expect(find.text('Publié en Franc CFA Centre (XAF)'), findsOneWidget);
+      expect(find.text('Publié en Dollar canadien (CAD)'), findsOneWidget);
     });
 
     testWidgets('bandeau devise absent en mode édition', (tester) async {

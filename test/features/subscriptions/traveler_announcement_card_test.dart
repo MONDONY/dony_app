@@ -105,12 +105,12 @@ void main() {
     await tester.pumpWidget(
       wrap(
         TravelerAnnouncementCard(
-          announcement: announcement(currency: 'XAF'),
+          announcement: announcement(currency: 'CAD'),
           onReserve: () {},
         ),
       ),
     );
-    expect(find.textContaining('FCFA'), findsOneWidget);
+    expect(find.textContaining('CA\$'), findsOneWidget);
     expect(find.textContaining('€'), findsNothing);
   });
 

@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('affiche le budget de l’aperçu en XAF sans conversion', (
+  testWidgets('affiche le budget de l’aperçu en CAD sans conversion', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -18,7 +18,7 @@ void main() {
             builder: (context) => TextButton(
               onPressed: () => PackageRequestPreviewSheet.show(
                 context,
-                currency: SupportedCurrency.xaf,
+                currency: SupportedCurrency.cad,
                 formState: const PackageRequestFormState(totalBudgetEur: 40),
                 onConfirm: () {},
               ),
@@ -31,7 +31,7 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
 
-    final budget = CurrencyFormatter.formatOrPlain(40, SupportedCurrency.xaf);
+    final budget = CurrencyFormatter.formatOrPlain(40, SupportedCurrency.cad);
     expect(find.text('Budget indicatif : $budget'), findsOneWidget);
     expect(find.textContaining('40 €'), findsNothing);
   });

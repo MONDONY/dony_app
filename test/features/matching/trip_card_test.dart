@@ -73,7 +73,7 @@ void main() {
     await tester.pumpWidget(
       _wrap(
         TripCard(
-          announcement: _announcement(currency: 'XAF'),
+          announcement: _announcement(currency: 'CAD'),
           onTap: () {},
           index: 0,
         ),
@@ -81,7 +81,7 @@ void main() {
     );
     await tester.pump(const Duration(milliseconds: 600));
 
-    expect(find.textContaining('FCFA'), findsOneWidget);
+    expect(find.textContaining('CA\$'), findsOneWidget);
     expect(find.textContaining('8 €'), findsNothing);
   });
 

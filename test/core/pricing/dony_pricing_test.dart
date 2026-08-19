@@ -83,9 +83,9 @@ void main() {
 
   group('formatPriceIn', () {
     test('formate dans la devise donnée, pas toujours en EUR', () {
-      final result = formatPriceIn(8, 'XAF');
+      final result = formatPriceIn(8, 'CAD');
       expect(result, contains('8'));
-      expect(result, contains('FCFA'));
+      expect(result, contains('CA\$'));
     });
 
     test('devise EUR : symbole € en suffixe, entier si rond', () {

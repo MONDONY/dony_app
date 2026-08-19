@@ -169,11 +169,11 @@ void main() {
   ) async {
     const wallet = WalletModel(
       balance: 15.00,
-      currency: 'XAF',
+      currency: 'CAD',
       transactions: [],
       balances: [
         WalletCurrencyBalanceModel(
-          currency: 'XAF',
+          currency: 'CAD',
           balance: 15.00,
           active: true,
         ),
@@ -188,7 +188,7 @@ void main() {
     await tester.pumpWidget(buildSubject(bloc, prefsBloc));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('FCFA'), findsAtLeastNWidgets(1));
+    expect(find.textContaining('CA\$'), findsAtLeastNWidgets(1));
   });
 
   testWidgets('affiche les soldes verrouillés des devises non actives', (
@@ -205,7 +205,7 @@ void main() {
           active: true,
         ),
         WalletCurrencyBalanceModel(
-          currency: 'XAF',
+          currency: 'CAD',
           balance: 15.00,
           active: false,
         ),
@@ -221,7 +221,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('verrouillé'), findsOneWidget);
-    expect(find.textContaining('Franc CFA Centre'), findsOneWidget);
+    expect(find.textContaining('Dollar canadien'), findsOneWidget);
   });
 
   testWidgets(
@@ -266,7 +266,7 @@ void main() {
             active: true,
           ),
           WalletCurrencyBalanceModel(
-            currency: 'XAF',
+            currency: 'CAD',
             balance: 15.00,
             active: false,
           ),
@@ -281,11 +281,11 @@ void main() {
       await tester.pumpWidget(buildSubject(bloc, prefsBloc));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.textContaining('Franc CFA Centre'));
+      await tester.tap(find.textContaining('Dollar canadien'));
       await tester.pumpAndSettle();
 
       expect(find.text('Changer de devise'), findsOneWidget);
-      expect(find.text('Changer pour XAF'), findsOneWidget);
+      expect(find.text('Changer pour CAD'), findsOneWidget);
       verifyNever(() => prefsBloc.changeCurrency(any()));
     },
   );
@@ -347,7 +347,7 @@ void main() {
             active: true,
           ),
           WalletCurrencyBalanceModel(
-            currency: 'XAF',
+            currency: 'CAD',
             balance: 15.00,
             active: false,
           ),
@@ -362,12 +362,12 @@ void main() {
       await tester.pumpWidget(buildSubject(bloc, prefsBloc));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.textContaining('Franc CFA Centre'));
+      await tester.tap(find.textContaining('Dollar canadien'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Changer pour XAF'));
+      await tester.tap(find.text('Changer pour CAD'));
       await tester.pumpAndSettle();
 
-      verify(() => prefsBloc.changeCurrency('XAF')).called(1);
+      verify(() => prefsBloc.changeCurrency('CAD')).called(1);
       // 1 au initState + 1 après la bascule de devise.
       verify(() => bloc.add(any(that: isA<WalletLoadRequested>()))).called(2);
     },
