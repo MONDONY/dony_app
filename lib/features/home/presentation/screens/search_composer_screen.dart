@@ -18,6 +18,8 @@ import 'dart:async';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/city/data/city_model.dart';
 import 'package:dony/features/city/presentation/widgets/city_corridor_fields.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
@@ -34,6 +36,7 @@ import 'package:dony/features/home/presentation/widgets/search_filter_sheet.dart
 import 'package:dony/features/home/presentation/widgets/search_phrase_field.dart';
 import 'package:dony/features/home/presentation/widgets/search_section_label.dart';
 import 'package:dony/features/home/presentation/widgets/unresolved_question.dart';
+import 'package:dony/features/home/presentation/widgets/voice_dictation_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/location_permission.dart';
 import 'package:dony/features/matching/presentation/widgets/near_me_radius_sheet.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
@@ -50,6 +53,7 @@ class SearchComposerScreen extends StatefulWidget {
     required this.initialFilters,
     this.activeTrips,
     this.onPublishTrip,
+    this.speechAvailable = true,
   });
 
   final SearchMode mode;
@@ -62,6 +66,14 @@ class SearchComposerScreen extends StatefulWidget {
 
   /// Publication d'un trajet demandée depuis le garde-fou « Pour mes trajets ».
   final VoidCallback? onPublishTrip;
+
+  /// Disponibilité de la dictée vocale, injectée pour la rendre testable sans
+  /// plateforme. `true` par défaut : l'appelant réel n'a rien à faire tant
+  /// que `VoiceDictationSheet.show` gère lui-même l'indisponibilité
+  /// (`initialize()` en échec ou permission refusée) en renvoyant `null`, ce
+  /// qui masque déjà le micro à la prochaine ouverture. Ce paramètre sert
+  /// surtout aux tests, qui n'ont pas de plateforme de reconnaissance vocale.
+  final bool speechAvailable;
 
   @override
   State<SearchComposerScreen> createState() => _SearchComposerScreenState();
@@ -100,6 +112,22 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
   void _submitPhrase(String text) {
     if (text.trim().isEmpty) return;
     context.read<SearchComposerBloc>().add(SearchComposerPhraseSubmitted(text));
+  }
+
+  /// Ouvre la feuille de dictée. Au relâchement du micro, le texte reconnu
+  /// remplit le champ visible puis déclenche le même parsing qu'une saisie
+  /// au clavier, marqué `fromVoice: true` pour l'entonnoir analytics du BLoC.
+  Future<void> _onMicPressed() async {
+    final text = await VoiceDictationSheet.show(context);
+    if (text == null || !mounted) return;
+
+    _phraseController.text = text;
+    context.read<SearchComposerBloc>().add(
+      SearchComposerPhraseSubmitted(text, fromVoice: true),
+    );
+    unawaited(
+      getIt<AnalyticsService>().logEvent(AnalyticsEvents.searchVoiceUsed),
+    );
   }
 
   // Voir `CommonFilterBlock._clearDeparture`/`_clearArrival` dans
@@ -162,6 +190,9 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
               SearchPhraseField(
                 controller: _phraseController,
                 onSubmitted: _submitPhrase,
+                onMicPressed: widget.speechAvailable
+                    ? () => unawaited(_onMicPressed())
+                    : null,
                 isParsing: state.isParsing,
               ).animate().fadeIn(duration: 250.ms),
               if (state.recognized.isNotEmpty)

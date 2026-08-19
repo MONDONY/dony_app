@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 
 /// Champ de saisie du bloc « En une phrase ».
 ///
-/// Le micro est un simple bouton pour l'instant : [onMicPressed] reste `null`
-/// tant que la dictée (Task 4) n'est pas câblée, ce qui masque l'icône plutôt
+/// [onMicPressed] ouvre `VoiceDictationSheet` (câblé par
+/// `SearchComposerScreen`). Il reste `null` quand la dictée est indisponible
+/// sur l'appareil (`speechAvailable: false`), ce qui masque l'icône plutôt
 /// que d'afficher un bouton mort.
 class SearchPhraseField extends StatelessWidget {
   const SearchPhraseField({

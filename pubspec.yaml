@@ -48,6 +48,9 @@ dependencies:
   native_exif: ^0.7.0
   flutter_image_compress: ^2.4.0
 
+  # Dictée sur l'appareil : aucun son n'est envoyé à un serveur.
+  speech_to_text: ^7.0.0
+
   # Contacts — picker natif OS (aucune permission READ_CONTACTS requise)
   flutter_native_contact_picker: ^0.0.12
 
