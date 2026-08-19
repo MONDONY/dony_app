@@ -176,7 +176,7 @@ void main() {
   });
 
   testWidgets('aucun bandeau si aucun bon actif', (tester) async {
-    final infoNoVoucher = ReferralInfo(
+    const infoNoVoucher = ReferralInfo(
       code: 'DONY-XYZ42',
       shareUrl: 'https://dony.app/invite/DONY-XYZ42',
       totalInvited: 4,
@@ -186,7 +186,7 @@ void main() {
       activeVoucherCount: 0,
       voucherFactor: 0.5,
     );
-    when(() => bloc.state).thenReturn(ReferralLoaded(infoNoVoucher));
+    when(() => bloc.state).thenReturn(const ReferralLoaded(infoNoVoucher));
 
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
