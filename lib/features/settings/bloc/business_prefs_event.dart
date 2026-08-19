@@ -21,6 +21,15 @@ class CurrencyChanged extends BusinessPrefsEvent {
   List<Object?> get props => [code];
 }
 
+/// Le pays choisi est envoyé au serveur ; la devise qui en dérive revient
+/// dans la réponse (`_onCountry`), jamais recalculée côté client.
+class CountryChanged extends BusinessPrefsEvent {
+  final String code;
+  const CountryChanged(this.code);
+  @override
+  List<Object?> get props => [code];
+}
+
 class PickupRadiusChanged extends BusinessPrefsEvent {
   final int km;
   const PickupRadiusChanged(this.km);

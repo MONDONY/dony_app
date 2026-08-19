@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dony/core/currency/country_catalog.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
@@ -7,13 +8,13 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
-import 'package:dony/features/settings/presentation/widgets/currency_picker.dart';
 import 'package:dony/features/settings/presentation/widgets/settings_flat_group.dart';
 import 'package:dony/features/settings/presentation/widgets/settings_section_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 class BusinessPrefsScreen extends StatefulWidget {
   const BusinessPrefsScreen({super.key});
@@ -75,21 +76,38 @@ class _BusinessPrefsScreenState extends State<BusinessPrefsScreen> {
                     SettingsFlatGroup(
                       children: [
                         DonyListTile(
+                          iconAsset: 'globe',
+                          iconColor: cs.primary,
+                          iconBgColor: cs.primaryContainer,
+                          label: 'Pays',
+                          subtitle: state.countryLocked
+                              ? 'Verrouillé : un envoi est en cours ou votre compte de paiement est créé'
+                              : null,
+                          trailing: Text(
+                            CountryCatalog.byCode(state.country)?.name ??
+                                'Choisir mon pays',
+                            style: tt.labelMedium?.copyWith(
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
+                          enabled: !state.countryLocked,
+                          onTap: () =>
+                              unawaited(_openCountryPicker(context, state)),
+                        ),
+                        DonyListTile(
                           iconAsset: 'euro',
                           iconColor: cs.primary,
                           iconBgColor: cs.primaryContainer,
-                          label: 'Devise d\'affichage',
-                          subtitle: state.currencyLocked
-                              ? 'Verrouillée : envoi en cours ou portefeuille non vide'
-                              : null,
+                          label: 'Devise',
+                          subtitle: 'Définie par votre pays',
                           trailing: Text(
                             state.currencyCode,
                             style: tt.labelMedium?.copyWith(
                               color: cs.onSurfaceVariant,
                             ),
                           ),
-                          enabled: !state.currencyLocked,
-                          onTap: () => unawaited(CurrencyPicker.show(context)),
+                          enabled: false,
+                          showDivider: false,
                         ),
                       ],
                     ),
@@ -157,6 +175,96 @@ class _BusinessPrefsScreenState extends State<BusinessPrefsScreen> {
                   curve: Curves.easeOutCubic,
                 ),
       ),
+    );
+  }
+}
+
+// ── Sélecteur de pays ────────────────────────────────────────────────────────
+
+/// Ouvre la liste des pays desservis et, si l'utilisateur en choisit un
+/// nouveau, envoie [CountryChanged] au [BusinessPrefsBloc]. La devise n'est
+/// jamais calculée ici : elle revient recalculée par le serveur dans la
+/// réponse du `PUT`.
+Future<void> _openCountryPicker(
+  BuildContext context,
+  BusinessPrefsState state,
+) async {
+  final bloc = context.read<BusinessPrefsBloc>();
+  final selected = await DonyBottomSheet.show<String>(
+    context,
+    title: 'Pays',
+    heightFraction: 0.85,
+    child: _CountryPickerList(selectedCode: state.country),
+  );
+  if (selected == null || !context.mounted) {
+    return;
+  }
+  bloc.add(CountryChanged(selected));
+}
+
+class _CountryPickerList extends StatefulWidget {
+  const _CountryPickerList({required this.selectedCode});
+
+  final String? selectedCode;
+
+  @override
+  State<_CountryPickerList> createState() => _CountryPickerListState();
+}
+
+class _CountryPickerListState extends State<_CountryPickerList> {
+  final _controller = TextEditingController();
+  List<Country> _results = CountryCatalog.all;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.addListener(() {
+      setState(() => _results = CountryCatalog.search(_controller.text));
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        DonyTextField(
+          controller: _controller,
+          hint: 'Rechercher un pays',
+          prefixIcon: Icons.search,
+        ),
+        const SizedBox(height: DonySpacing.md),
+        if (_results.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: DonySpacing.xl),
+            child: Text(
+              'Aucun pays trouvé',
+              textAlign: TextAlign.center,
+              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+            ),
+          )
+        else
+          for (final country in _results)
+            ListTile(
+              title: Text(country.name),
+              subtitle: Text(
+                '${country.currency.code} · ${country.currency.symbol}',
+              ),
+              trailing: widget.selectedCode == country.code
+                  ? DonyIcon('check', color: cs.primary)
+                  : null,
+              onTap: () => context.pop(country.code),
+            ),
+      ],
     );
   }
 }

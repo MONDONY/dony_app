@@ -92,6 +92,19 @@ void main() {
     expect(find.text('Sénégal'), findsOneWidget);
   });
 
+  testWidgets('une recherche sans résultat affiche un état vide sobre', (
+    tester,
+  ) async {
+    await _wrap(tester, cubit);
+
+    await tester.enterText(find.byType(TextField), 'zzzzzzz');
+    await tester.pumpAndSettle();
+
+    expect(find.text('Aucun pays trouvé'), findsOneWidget);
+    expect(find.text('Canada'), findsNothing);
+    expect(find.text('Sénégal'), findsNothing);
+  });
+
   testWidgets('choisir un pays appelle le cubit avec son code', (tester) async {
     await _wrap(tester, cubit);
 

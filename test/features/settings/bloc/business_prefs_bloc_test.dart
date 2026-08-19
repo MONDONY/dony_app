@@ -93,6 +93,17 @@ void main() {
       expect(bloc.state.responseDelayHours, isNull);
       bloc.close();
     });
+
+    test('country est lu depuis Hive si présent, sinon null', () {
+      final blocSansPays = build();
+      expect(blocSansPays.state.country, isNull);
+      blocSansPays.close();
+
+      when(() => mockBox.get(HiveService.kCountryCode)).thenReturn('SN');
+      final blocAvecPays = build();
+      expect(blocAvecPays.state.country, 'SN');
+      blocAvecPays.close();
+    });
   });
 
   group('BusinessPrefsSyncRequested', () {
@@ -277,6 +288,64 @@ void main() {
       ],
       verify: (_) =>
           verify(() => mockBox.delete(HiveService.kResponseDelay)).called(1),
+    );
+  });
+
+  group('CountryChanged', () {
+    blocTest<BusinessPrefsBloc, BusinessPrefsState>(
+      'écrit Hive, PUT le pays, puis relit le state complet — la devise '
+      'recalculée par le serveur n\'est jamais devinée côté client',
+      setUp: () {
+        when(() => mockRepo.fetchPrefs()).thenAnswer(
+          (_) async => const UserBusinessPrefsDto(
+            weightUnit: 'kg',
+            currencyCode: 'CAD',
+            pickupRadiusKm: 10,
+            defaultPackageWeightKg: 23,
+            minBidPriceEur: 0,
+            country: 'CA',
+          ),
+        );
+      },
+      build: build,
+      act: (bloc) => bloc.add(const CountryChanged('CA')),
+      expect: () => [
+        isA<BusinessPrefsState>()
+            .having((s) => s.isSyncing, 'isSyncing', true)
+            .having((s) => s.country, 'country', 'CA'),
+        isA<BusinessPrefsState>()
+            .having((s) => s.isSyncing, 'isSyncing', false)
+            .having((s) => s.country, 'country', 'CA')
+            .having((s) => s.currencyCode, 'currencyCode', 'CAD'),
+      ],
+      verify: (_) {
+        // 2 écritures : la valeur optimiste, puis la reconfirmation par
+        // `_writeToHive(refreshed)` une fois le state complet relu.
+        verify(() => mockBox.put(HiveService.kCountryCode, 'CA')).called(2);
+        verify(() => mockRepo.updatePrefs(any())).called(1);
+        verify(() => mockRepo.fetchPrefs()).called(1);
+      },
+    );
+
+    blocTest<BusinessPrefsBloc, BusinessPrefsState>(
+      'erreur PUT : rollback au pays précédent',
+      setUp: () {
+        when(() => mockRepo.updatePrefs(any())).thenThrow(Exception('server'));
+      },
+      build: build,
+      seed: () => const BusinessPrefsState(country: 'FR'),
+      act: (bloc) => bloc.add(const CountryChanged('CA')),
+      expect: () => [
+        isA<BusinessPrefsState>()
+            .having((s) => s.isSyncing, 'isSyncing', true)
+            .having((s) => s.country, 'country', 'CA'),
+        isA<BusinessPrefsState>()
+            .having((s) => s.country, 'country', 'FR')
+            .having((s) => s.errorMessage, 'error', isNotNull),
+      ],
+      verify: (_) {
+        verifyNever(() => mockRepo.fetchPrefs());
+      },
     );
   });
 

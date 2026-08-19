@@ -253,7 +253,7 @@ void main() {
   );
 
   testWidgets(
-    'tap sur un solde verrouillé propose de basculer vers cette devise',
+    'un solde verrouillé ne propose plus de bascule : tap sans effet',
     (tester) async {
       const wallet = WalletModel(
         balance: 47.50,
@@ -284,92 +284,10 @@ void main() {
       await tester.tap(find.textContaining('Dollar canadien'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Changer de devise'), findsOneWidget);
-      expect(find.text('Changer pour CAD'), findsOneWidget);
-      verifyNever(() => prefsBloc.changeCurrency(any()));
-    },
-  );
-
-  testWidgets(
-    'devise gelée (lot 2) : tap sur un solde verrouillé explique le gel au '
-    'lieu de proposer la bascule',
-    (tester) async {
-      prefsBloc = stubBusinessPrefsBloc(
-        state: const BusinessPrefsState(currencyLocked: true),
-      );
-      const wallet = WalletModel(
-        balance: 47.50,
-        currency: 'EUR',
-        transactions: [],
-        balances: [
-          WalletCurrencyBalanceModel(
-            currency: 'EUR',
-            balance: 47.50,
-            active: true,
-          ),
-          WalletCurrencyBalanceModel(
-            currency: 'XAF',
-            balance: 15.00,
-            active: false,
-          ),
-        ],
-      );
-      whenListen(
-        bloc,
-        Stream.value(WalletLoaded(wallet)),
-        initialState: WalletInitial(),
-      );
-
-      await tester.pumpWidget(buildSubject(bloc, prefsBloc));
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.textContaining('Franc CFA Centre'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Devise verrouillée'), findsOneWidget);
       expect(find.text('Changer de devise'), findsNothing);
-      verifyNever(() => prefsBloc.changeCurrency(any()));
-    },
-  );
-
-  testWidgets(
-    'confirmer la bascule d\'un solde verrouillé envoie CurrencyChanged '
-    'et recharge le wallet',
-    (tester) async {
-      const wallet = WalletModel(
-        balance: 47.50,
-        currency: 'EUR',
-        transactions: [],
-        balances: [
-          WalletCurrencyBalanceModel(
-            currency: 'EUR',
-            balance: 47.50,
-            active: true,
-          ),
-          WalletCurrencyBalanceModel(
-            currency: 'CAD',
-            balance: 15.00,
-            active: false,
-          ),
-        ],
-      );
-      whenListen(
-        bloc,
-        Stream.value(WalletLoaded(wallet)),
-        initialState: WalletInitial(),
-      );
-
-      await tester.pumpWidget(buildSubject(bloc, prefsBloc));
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.textContaining('Dollar canadien'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Changer pour CAD'));
-      await tester.pumpAndSettle();
-
-      verify(() => prefsBloc.changeCurrency('CAD')).called(1);
-      // 1 au initState + 1 après la bascule de devise.
-      verify(() => bloc.add(any(that: isA<WalletLoadRequested>()))).called(2);
+      expect(find.text('Devise verrouillée'), findsNothing);
+      // 1 seul appel : celui de l'initState, aucun déclenché par le tap.
+      verify(() => bloc.add(any(that: isA<WalletLoadRequested>()))).called(1);
     },
   );
 

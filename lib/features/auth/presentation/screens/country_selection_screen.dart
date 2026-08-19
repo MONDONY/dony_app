@@ -138,23 +138,43 @@ class _CountryListState extends State<_CountryList> {
         ),
         const SizedBox(height: DonySpacing.md),
         Expanded(
-          child: ListView.separated(
-            padding: const EdgeInsets.only(bottom: DonySpacing.base),
-            itemCount: _results.length,
-            separatorBuilder: (_, _) => const SizedBox(height: DonySpacing.sm),
-            itemBuilder: (context, index) {
-              final country = _results[index];
-              return _CountryTile(
-                country: country,
-                isSelected: widget.selectedCode == country.code,
-                enabled: !widget.isSaving,
-                onTap: () =>
-                    context.read<CountryOnboardingCubit>().select(country.code),
-              );
-            },
-          ),
+          child: _results.isEmpty
+              ? const _EmptyCountryResults()
+              : ListView.separated(
+                  padding: const EdgeInsets.only(bottom: DonySpacing.base),
+                  itemCount: _results.length,
+                  separatorBuilder: (_, _) =>
+                      const SizedBox(height: DonySpacing.sm),
+                  itemBuilder: (context, index) {
+                    final country = _results[index];
+                    return _CountryTile(
+                      country: country,
+                      isSelected: widget.selectedCode == country.code,
+                      enabled: !widget.isSaving,
+                      onTap: () => context
+                          .read<CountryOnboardingCubit>()
+                          .select(country.code),
+                    );
+                  },
+                ),
         ),
       ],
+    );
+  }
+}
+
+class _EmptyCountryResults extends StatelessWidget {
+  const _EmptyCountryResults();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Text(
+        'Aucun pays trouvé',
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
+      ),
     );
   }
 }

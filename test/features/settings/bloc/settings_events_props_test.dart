@@ -194,6 +194,19 @@ void main() {
       expect(a.props, equals(['XOF']));
     });
 
+    test('CountryChanged props are correct', () {
+      const a = CountryChanged('CA');
+      const b = CountryChanged('CA');
+      expect(a, equals(b));
+      expect(a.props, equals(['CA']));
+    });
+
+    test('CountryChanged with different codes are not equal', () {
+      const a = CountryChanged('CA');
+      const b = CountryChanged('SN');
+      expect(a, isNot(equals(b)));
+    });
+
     test('PickupRadiusChanged props are correct', () {
       const a = PickupRadiusChanged(25);
       const b = PickupRadiusChanged(25);

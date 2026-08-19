@@ -14,13 +14,11 @@ class BusinessPrefsBloc extends Bloc<BusinessPrefsEvent, BusinessPrefsState> {
   final BusinessPrefsRepository _repo;
   final Box _box;
 
-  /// Complété par `_onCurrency` une fois la synchro backend terminée.
-  Completer<bool>? _pendingCurrencySync;
-
   BusinessPrefsBloc(this._repo, this._box) : super(_initialState(_box)) {
     on<BusinessPrefsSyncRequested>(_onSync);
     on<WeightUnitChanged>(_onWeightUnit);
     on<CurrencyChanged>(_onCurrency);
+    on<CountryChanged>(_onCountry);
     on<PickupRadiusChanged>(_onPickupRadius);
     on<DefaultWeightChanged>(_onDefaultWeight);
     on<MinBidPriceChanged>(_onMinBidPrice);
@@ -39,33 +37,8 @@ class BusinessPrefsBloc extends Bloc<BusinessPrefsEvent, BusinessPrefsState> {
     minBidPriceEur: box.get(HiveService.kMinBidPrice, defaultValue: 0) as int,
     contactMode: box.get(HiveService.kContactMode) as String?,
     responseDelayHours: box.get(HiveService.kResponseDelay) as int?,
+    country: box.get(HiveService.kCountryCode) as String?,
   );
-
-  /// Change la devise et ne se résout qu'une fois le backend ayant confirmé
-  /// (ou le changement annulé). Renvoie `true` si la bascule a abouti.
-  ///
-  /// [add] étant fire-and-forget, un appelant qui recharge des données
-  /// dépendant de la devise active — le solde du portefeuille, que
-  /// `GET /wallet/balance` calcule en relisant la devise côté serveur — lirait
-  /// sinon l'ancienne valeur. L'attente vit ici plutôt que dans les widgets :
-  /// elle appartient à l'opération, pas à ses appelants.
-  Future<bool> changeCurrency(String code) {
-    if (state.currencyCode == code) {
-      return Future.value(true);
-    }
-    final pending = Completer<bool>();
-    _pendingCurrencySync = pending;
-    add(CurrencyChanged(code));
-    return pending.future;
-  }
-
-  @override
-  Future<void> close() {
-    // Un appelant en attente ne doit pas rester bloqué si le bloc disparaît.
-    _pendingCurrencySync?.complete(false);
-    _pendingCurrencySync = null;
-    return super.close();
-  }
 
   // ── Sync depuis API ────────────────────────────────────────────────────────
 
@@ -103,11 +76,40 @@ class BusinessPrefsBloc extends Bloc<BusinessPrefsEvent, BusinessPrefsState> {
     await _box.put(HiveService.kCurrencyCode, e.code);
     emit(state.copyWith(currencyCode: e.code, errorMessageGetter: () => null));
     await _putOrRollback(emit, prev);
-    // Rend la main à [changeCurrency] : la devise est désormais persistée
-    // côté serveur (ou restaurée), les données qui en dépendent peuvent être
-    // rechargées sans lire un solde dans l'ancienne devise.
-    _pendingCurrencySync?.complete(state.errorMessage == null);
-    _pendingCurrencySync = null;
+  }
+
+  /// Le pays part au serveur, qui recalcule seul la devise (lot pays-
+  /// onboarding-devise-dérivée) : on ne la devine jamais côté client. Un
+  /// simple `PUT` suivi d'un rollback ne suffit donc pas ici — on relit
+  /// l'état complet une fois la synchro confirmée, plutôt que de garder la
+  /// devise (potentiellement périmée) déjà en mémoire.
+  Future<void> _onCountry(
+    CountryChanged e,
+    Emitter<BusinessPrefsState> emit,
+  ) async {
+    final prev = state;
+    await _box.put(HiveService.kCountryCode, e.code);
+    emit(
+      state.copyWith(
+        isSyncing: true,
+        countryGetter: () => e.code,
+        errorMessageGetter: () => null,
+      ),
+    );
+    try {
+      await _repo.updatePrefs(_stateToDto(state));
+      final refreshed = await _repo.fetchPrefs();
+      await _writeToHive(refreshed);
+      emit(_dtoToState(refreshed).copyWith(isSyncing: false));
+    } catch (_) {
+      await _writeToHive(_stateToDto(prev));
+      emit(
+        prev.copyWith(
+          isSyncing: false,
+          errorMessageGetter: () => 'Impossible de synchroniser. Réessayez.',
+        ),
+      );
+    }
   }
 
   Future<void> _onPickupRadius(
@@ -225,6 +227,11 @@ class BusinessPrefsBloc extends Bloc<BusinessPrefsEvent, BusinessPrefsState> {
     } else {
       await _box.put(HiveService.kResponseDelay, dto.responseDelayHours);
     }
+    if (dto.country == null) {
+      await _box.delete(HiveService.kCountryCode);
+    } else {
+      await _box.put(HiveService.kCountryCode, dto.country);
+    }
   }
 
   BusinessPrefsState _dtoToState(UserBusinessPrefsDto dto) =>
@@ -237,6 +244,8 @@ class BusinessPrefsBloc extends Bloc<BusinessPrefsEvent, BusinessPrefsState> {
         contactMode: dto.contactMode,
         responseDelayHours: dto.responseDelayHours,
         currencyLocked: dto.currencyLocked,
+        country: dto.country,
+        countryLocked: dto.countryLocked,
       );
 
   UserBusinessPrefsDto _stateToDto(BusinessPrefsState s) =>
@@ -248,5 +257,6 @@ class BusinessPrefsBloc extends Bloc<BusinessPrefsEvent, BusinessPrefsState> {
         minBidPriceEur: s.minBidPriceEur,
         contactMode: s.contactMode,
         responseDelayHours: s.responseDelayHours,
+        country: s.country,
       );
 }

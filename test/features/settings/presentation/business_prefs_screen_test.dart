@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -114,112 +115,136 @@ void main() {
     expect(find.text('Impossible de synchroniser. Réessayez.'), findsOneWidget);
   });
 
-  testWidgets(
-    'sélecteur devise affiche toutes les devises du catalogue et leur taux EUR',
-    (tester) async {
-      when(() => mockAuthBloc.state).thenReturn(const AuthInitial());
-      await tester.pumpWidget(buildScreen());
-      await tester.pumpAndSettle();
+  testWidgets('la tuile Pays affiche la devise derivee en lecture seule', (
+    tester,
+  ) async {
+    mockPrefsBloc = stubBusinessPrefsBloc(
+      state: const BusinessPrefsState(country: 'CA', currencyCode: 'CAD'),
+    );
+    when(() => mockAuthBloc.state).thenReturn(const AuthInitial());
+    await tester.pumpWidget(buildScreen());
+    await tester.pumpAndSettle();
 
-      await tester.tap(find.text('EUR'));
-      await tester.pumpAndSettle();
+    expect(find.text('Canada'), findsOneWidget);
+    expect(find.textContaining('CAD'), findsOneWidget);
+    expect(find.textContaining('Définie par votre pays'), findsOneWidget);
+  });
 
-      expect(find.text('Dollar américain (USD)'), findsOneWidget);
-      expect(find.text('Dollar canadien (CAD)'), findsOneWidget);
-      expect(find.text('Livre sterling (GBP)'), findsOneWidget);
-      expect(find.text('Franc suisse (CHF)'), findsOneWidget);
-      expect(find.textContaining('1 EUR ≈ 1,08 USD'), findsOneWidget);
-      expect(find.textContaining('1 EUR ≈ 655,957 XOF'), findsOneWidget);
-    },
-  );
+  testWidgets('la tuile Pays est grisee quand le pays est verrouille', (
+    tester,
+  ) async {
+    mockPrefsBloc = stubBusinessPrefsBloc(
+      state: const BusinessPrefsState(
+        country: 'CA',
+        currencyCode: 'CAD',
+        countryLocked: true,
+      ),
+    );
+    when(() => mockAuthBloc.state).thenReturn(const AuthInitial());
+    await tester.pumpWidget(buildScreen());
+    await tester.pumpAndSettle();
 
-  testWidgets(
-    'taper une devise différente affiche un dialogue de confirmation sans '
-    'envoyer CurrencyChanged avant validation',
-    (tester) async {
-      when(() => mockAuthBloc.state).thenReturn(const AuthInitial());
-      await tester.pumpWidget(buildScreen());
-      await tester.pumpAndSettle();
+    final tile = tester.widget<DonyListTile>(
+      find.ancestor(
+        of: find.text('Canada'),
+        matching: find.byType(DonyListTile),
+      ),
+    );
+    expect(tile.enabled, isFalse);
+  });
 
-      await tester.tap(find.text('EUR'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Dollar canadien (CAD)'));
-      await tester.pumpAndSettle();
+  testWidgets('sans pays renseigne, la tuile invite a le choisir', (
+    tester,
+  ) async {
+    // État par défaut (setUp) : ni pays ni devise renseignés côté serveur.
+    when(() => mockAuthBloc.state).thenReturn(const AuthInitial());
+    await tester.pumpWidget(buildScreen());
+    await tester.pumpAndSettle();
 
-      expect(find.text('Changer de devise'), findsOneWidget);
-      verifyNever(() => mockPrefsBloc.changeCurrency(any()));
-    },
-  );
+    expect(find.textContaining('Choisir mon pays'), findsOneWidget);
+  });
 
-  testWidgets(
-    'confirmer le dialogue envoie CurrencyChanged avec la devise choisie',
-    (tester) async {
-      when(() => mockAuthBloc.state).thenReturn(const AuthInitial());
-      await tester.pumpWidget(buildScreen());
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('EUR'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Dollar canadien (CAD)'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Changer pour CAD'));
-      await tester.pumpAndSettle();
-
-      verify(() => mockPrefsBloc.changeCurrency('CAD')).called(1);
-    },
-  );
-
-  testWidgets('annuler le dialogue n\'envoie jamais CurrencyChanged', (
+  testWidgets('tap sur la tuile Pays ouvre le sélecteur avec recherche', (
     tester,
   ) async {
     when(() => mockAuthBloc.state).thenReturn(const AuthInitial());
     await tester.pumpWidget(buildScreen());
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('EUR'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Dollar canadien (CAD)'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Annuler'));
+    await tester.tap(find.text('Choisir mon pays'));
     await tester.pumpAndSettle();
 
-    verifyNever(() => mockPrefsBloc.changeCurrency(any()));
+    expect(find.text('Rechercher un pays'), findsOneWidget);
+    expect(find.text('France'), findsOneWidget);
   });
 
-  testWidgets('taper la devise déjà active ferme le picker sans dialogue', (
+  testWidgets('choisir un pays dans le sélecteur envoie CountryChanged', (
     tester,
   ) async {
     when(() => mockAuthBloc.state).thenReturn(const AuthInitial());
     await tester.pumpWidget(buildScreen());
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('EUR'));
+    await tester.tap(find.text('Choisir mon pays'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Euro (EUR)'));
+    // Filtrer d'abord : la liste complète (38 entrées) dépasse la hauteur de
+    // la feuille, un tap direct sur une entrée lointaine ne serait pas fiable.
+    await tester.enterText(find.byType(TextField), 'senegal');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Sénégal'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Changer de devise'), findsNothing);
-    verifyNever(() => mockPrefsBloc.changeCurrency(any()));
+    verify(() => mockPrefsBloc.add(const CountryChanged('SN'))).called(1);
+  });
+
+  testWidgets('la recherche filtre le sélecteur de pays', (tester) async {
+    when(() => mockAuthBloc.state).thenReturn(const AuthInitial());
+    await tester.pumpWidget(buildScreen());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Choisir mon pays'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'senegal');
+    await tester.pumpAndSettle();
+
+    expect(find.text('France'), findsNothing);
+    expect(find.text('Sénégal'), findsOneWidget);
   });
 
   testWidgets(
-    'devise verrouillée : la tuile est grisée avec une explication et ne '
-    'répond plus au tap',
+    'une recherche sans résultat dans le sélecteur de pays affiche un état '
+    'vide sobre',
     (tester) async {
-      mockPrefsBloc = stubBusinessPrefsBloc(
-        state: const BusinessPrefsState(currencyLocked: true),
-      );
       when(() => mockAuthBloc.state).thenReturn(const AuthInitial());
       await tester.pumpWidget(buildScreen());
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('Verrouillée'), findsOneWidget);
-
-      await tester.tap(find.text('EUR'));
+      await tester.tap(find.text('Choisir mon pays'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'zzzzzzz');
       await tester.pumpAndSettle();
 
-      expect(find.text('Devise d\'affichage'), findsOneWidget);
-      verifyNever(() => mockPrefsBloc.changeCurrency(any()));
+      expect(find.text('Aucun pays trouvé'), findsOneWidget);
     },
   );
+
+  testWidgets('pays verrouillé : le tap n\'ouvre pas le sélecteur', (
+    tester,
+  ) async {
+    mockPrefsBloc = stubBusinessPrefsBloc(
+      state: const BusinessPrefsState(
+        country: 'CA',
+        currencyCode: 'CAD',
+        countryLocked: true,
+      ),
+    );
+    when(() => mockAuthBloc.state).thenReturn(const AuthInitial());
+    await tester.pumpWidget(buildScreen());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Canada'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Rechercher un pays'), findsNothing);
+  });
 }
