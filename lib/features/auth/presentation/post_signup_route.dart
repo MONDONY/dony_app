@@ -10,13 +10,13 @@ import 'package:hive/hive.dart';
 /// donc `hasAnswered` faux à tort) qui a déjà consenti côté backend serait
 /// redemandé — exactement la régression que la persistance backend élimine.
 ///
-/// - Consentement résolu + devise non vue → `/auth/currency-selection`.
-/// - Consentement résolu + devise vue → `/auth/referral-code`.
+/// - Consentement résolu + pays non vu → `/auth/country-selection`.
+/// - Consentement résolu + pays vu → `/auth/referral-code`.
 /// - Jamais répondu → `/auth/analytics-consent`, affiché à TOUT nouvel
 ///   utilisateur au 1er lancement, quel que soit le pays. Le choix reste
 ///   modifiable ensuite dans Réglages › Confidentialité.
 ///
-/// [prefs] fournit le flag local de fin d'onboarding devise ; le pays n'est
+/// [prefs] fournit le flag local de fin d'onboarding pays ; le pays n'est
 /// plus discriminant depuis qu'on affiche l'écran de consentement partout.
 ///
 /// Anciennement `resolvePostPinSetupRoute` : la création du code PIN ne fait
@@ -31,9 +31,9 @@ Future<String> resolvePostSignupRoute(
   if (analytics.isConfigured && !analytics.hasAnswered) {
     return '/auth/analytics-consent';
   }
-  if (prefs.get(HiveService.kCurrencyOnboardingSeen, defaultValue: false) !=
+  if (prefs.get(HiveService.kCountryOnboardingSeen, defaultValue: false) !=
       true) {
-    return '/auth/currency-selection';
+    return '/auth/country-selection';
   }
   return '/auth/referral-code';
 }

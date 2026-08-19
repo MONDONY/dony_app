@@ -4,11 +4,11 @@ import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/app_update/presentation/screens/force_update_screen.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
-import 'package:dony/features/auth/bloc/currency_onboarding_cubit.dart';
+import 'package:dony/features/auth/bloc/country_onboarding_cubit.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/auth/presentation/screens/analytics_consent_screen.dart';
 import 'package:dony/features/auth/presentation/screens/auth_method_screen.dart';
-import 'package:dony/features/auth/presentation/screens/currency_selection_screen.dart';
+import 'package:dony/features/auth/presentation/screens/country_selection_screen.dart';
 import 'package:dony/features/auth/presentation/screens/email_auth_screen.dart';
 import 'package:dony/features/auth/presentation/screens/local_auth_screen.dart';
 import 'package:dony/features/auth/presentation/screens/onboarding_screen.dart';
@@ -197,7 +197,7 @@ const _publicRoutes = {
   '/auth/email-otp',
   '/auth/referral-code',
   '/auth/analytics-consent',
-  '/auth/currency-selection',
+  '/auth/country-selection',
   '/auth/local',
 };
 
@@ -302,10 +302,10 @@ final appRouter = GoRouter(
       },
     ),
     GoRoute(
-      path: '/auth/currency-selection',
+      path: '/auth/country-selection',
       builder: (context, state) => BlocProvider(
-        create: (_) => getIt<CurrencyOnboardingCubit>(),
-        child: const CurrencySelectionScreen(),
+        create: (_) => getIt<CountryOnboardingCubit>(),
+        child: const CountrySelectionScreen(),
       ),
     ),
     GoRoute(

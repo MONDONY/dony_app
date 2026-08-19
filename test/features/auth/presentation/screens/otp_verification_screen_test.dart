@@ -80,8 +80,8 @@ void main() {
           ),
         ),
         GoRoute(
-          path: '/auth/currency-selection',
-          builder: (_, _) => const Scaffold(body: Text('currency-selection')),
+          path: '/auth/country-selection',
+          builder: (_, _) => const Scaffold(body: Text('country-selection')),
         ),
       ],
     );
@@ -108,7 +108,7 @@ void main() {
   );
 
   testWidgets(
-    'quand AuthAuthenticated est émis, poursuit vers la sélection de devise, aucune étape code PIN',
+    'quand AuthAuthenticated est émis, poursuit vers la sélection du pays, aucune étape code PIN',
     (tester) async {
       tester.view.physicalSize = const Size(1080, 1920);
       tester.view.devicePixelRatio = 3.0;
@@ -119,7 +119,7 @@ void main() {
         buildScreen([const AuthAuthenticated(_testUser)]),
       );
       await tester.pumpAndSettle();
-      expect(find.text('currency-selection'), findsOneWidget);
+      expect(find.text('country-selection'), findsOneWidget);
     },
   );
 
