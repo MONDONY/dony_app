@@ -299,4 +299,10 @@ abstract final class AnalyticsEvents {
   static const tripPosterOpened = 'trip_poster_opened';
   static const tripPosterShared = 'trip_poster_shared';
   static const tripPosterLinkCopied = 'trip_poster_link_copied';
+
+  // Recherche en langage naturel — écran de composition
+  static const searchComposerOpened = 'search_composer_opened';
+  static const searchPhraseParsed = 'search_phrase_parsed';
+  static const searchVoiceUsed = 'search_voice_used';
+  static const searchParseFailed = 'search_parse_failed';
 }
