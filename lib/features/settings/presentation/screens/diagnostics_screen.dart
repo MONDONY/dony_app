@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/features/incident_report/data/repositories/incident_report_repository.dart';
 import 'package:dony/features/settings/bloc/diagnostics_bloc.dart';
 import 'package:dony/features/settings/presentation/widgets/settings_flat_group.dart';
 import 'package:dony/features/settings/presentation/widgets/settings_section_header.dart';
@@ -7,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 class DiagnosticsScreen extends StatefulWidget {
   const DiagnosticsScreen({super.key});
@@ -107,7 +109,10 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
                           iconColor: cs.primary,
                           iconBgColor: cs.primaryContainer,
                           label: 'Signaler un bug',
-                          onTap: () => _showBugReportDialog(context),
+                          onTap: () => context.push(
+                            '/settings/report-incident',
+                            extra: {'targetType': IncidentTargetType.app},
+                          ),
                         ),
                         DonyListTile(
                           iconAsset: 'copy',
@@ -170,52 +175,6 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
       context,
       message: 'ID copie dans le presse-papier',
       type: DonySnackbarType.success,
-    );
-  }
-
-  void _showBugReportDialog(BuildContext context) {
-    final controller = TextEditingController();
-    final cs = Theme.of(context).colorScheme;
-    showDialog<void>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Signaler un bug'),
-        content: TextField(
-          controller: controller,
-          maxLines: 4,
-          decoration: InputDecoration(
-            hintText: 'Décris le problème rencontré...',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(DonyRadius.md),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(DonyRadius.md),
-              borderSide: BorderSide(color: cs.outline),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(DonyRadius.md),
-              borderSide: BorderSide(color: cs.primary, width: 2),
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Annuler'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              DonySnackbar.show(
-                context,
-                message: 'Merci ! Ton rapport a ete envoye.',
-                type: DonySnackbarType.success,
-              );
-            },
-            child: const Text('Envoyer'),
-          ),
-        ],
-      ),
     );
   }
 }
