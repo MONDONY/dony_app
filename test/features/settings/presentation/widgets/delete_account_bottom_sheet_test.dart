@@ -5,6 +5,7 @@ import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:dony/features/settings/bloc/deletion_eligibility_cubit.dart';
+import 'package:dony/features/settings/data/account_deletion_repository.dart';
 import 'package:dony/features/settings/presentation/widgets/delete_account_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -297,4 +298,82 @@ void main() {
     expect(find.textContaining('séquestre'), findsNothing);
     expect(find.textContaining('wallet'), findsNothing);
   });
+
+  testWidgets(
+    'bloqué escrow (pas wallet) → pas de CTA remboursement (aucun parcours self-service pour ce motif)',
+    (tester) async {
+      when(() => mockEligibilityCubit.state).thenReturn(
+        const DeletionEligibilityState(
+          isLoading: false,
+          blockedReasonCode: 'active-transactions',
+          blockedReasonMessage: 'fonds bloqués en séquestre',
+        ),
+      );
+
+      await tester.pumpWidget(buildWidget());
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Demander le remboursement de mon solde'),
+        findsNothing,
+      );
+    },
+  );
+
+  testWidgets(
+    'bloqué wallet → CTA remboursement visible, tap déclenche requestWalletRefund()',
+    (tester) async {
+      when(() => mockEligibilityCubit.state).thenReturn(
+        const DeletionEligibilityState(
+          isLoading: false,
+          blockedReasonCode: 'wallet-balance-not-empty',
+          blockedReasonMessage: 'Vous avez un solde disponible sur votre wallet.',
+        ),
+      );
+      when(
+        () => mockEligibilityCubit.requestWalletRefund(),
+      ).thenAnswer((_) async {});
+
+      await tester.pumpWidget(buildWidget());
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Demander le remboursement de mon solde'),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.text('Demander le remboursement de mon solde'));
+      await tester.pump();
+
+      verify(() => mockEligibilityCubit.requestWalletRefund()).called(1);
+    },
+  );
+
+  testWidgets(
+    'ticket déjà demandé → bannière de confirmation avec le montant, plus de bouton',
+    (tester) async {
+      when(() => mockEligibilityCubit.state).thenReturn(
+        const DeletionEligibilityState(
+          isLoading: false,
+          blockedReasonCode: 'wallet-balance-not-empty',
+          blockedReasonMessage: 'Vous avez un solde disponible sur votre wallet.',
+          walletRefundRequests: [
+            WalletRefundRequest(currency: 'CAD', amount: 45.00),
+          ],
+        ),
+      );
+
+      await tester.pumpWidget(buildWidget());
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Demander le remboursement de mon solde'),
+        findsNothing,
+      );
+      expect(find.textContaining('Demande envoyée'), findsOneWidget);
+    },
+  );
 }

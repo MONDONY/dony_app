@@ -9,6 +9,19 @@ class DeletionEligibility {
   const DeletionEligibility({required this.canDelete, this.blockedReasonCode});
 }
 
+class WalletRefundRequest {
+  final String currency;
+  final double amount;
+
+  const WalletRefundRequest({required this.currency, required this.amount});
+
+  factory WalletRefundRequest.fromJson(Map<String, dynamic> json) =>
+      WalletRefundRequest(
+        currency: json['currency'] as String,
+        amount: (json['amount'] as num).toDouble(),
+      );
+}
+
 class AccountDeletionRepository {
   final ApiClient _client;
 
@@ -25,6 +38,23 @@ class AccountDeletionRepository {
         canDelete: data['canDelete'] as bool,
         blockedReasonCode: data['blockedReasonCode'] as String?,
       );
+    } catch (e) {
+      throw unwrapDioError(e);
+    }
+  }
+
+  /// Ouvre un ticket de remboursement manuel pour chaque devise en solde
+  /// wallet positif — parcours de déblocage de `wallet-balance-not-empty`
+  /// (aucun remboursement automatique n'existe côté Stripe pour le wallet).
+  /// Ne débloque pas la suppression elle-même : un admin doit résoudre le
+  /// ticket après remboursement Stripe hors-app.
+  Future<List<WalletRefundRequest>> requestWalletRefund() async {
+    try {
+      final response = await _client.dio.post('/auth/me/wallet-refund-request');
+      final data = response.data as List<dynamic>;
+      return data
+          .map((e) => WalletRefundRequest.fromJson(e as Map<String, dynamic>))
+          .toList();
     } catch (e) {
       throw unwrapDioError(e);
     }
