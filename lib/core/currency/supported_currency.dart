@@ -78,6 +78,19 @@ class SupportedCurrency {
 
   static const values = <SupportedCurrency>[eur, usd, cad, gbp, chf, xof, xaf];
 
+  /// Devises pour lesquelles Stripe peut traiter un paiement carte, verbatim
+  /// depuis les contraintes globales du plan devise-par-annonce (2026-08-20) :
+  /// « Rails carte : EUR, USD, CAD, GBP, CHF ». XOF et XAF en sont exclues —
+  /// espèces uniquement, quel que soit l'état Stripe Connect du voyageur.
+  ///
+  /// Le serveur reste seul décideur au moment du paiement réel
+  /// (`AnnouncementPaymentRails.availableFor`) : ce champ ne sert qu'à
+  /// prévisualiser côté client, avant qu'aucune requête n'ait de raison
+  /// d'exister (choix de devise à la création d'une annonce).
+  static const _stripeEligibleCodes = {'EUR', 'USD', 'CAD', 'GBP', 'CHF'};
+
+  bool get isStripeEligible => _stripeEligibleCodes.contains(code);
+
   static SupportedCurrency? fromCode(String? value) {
     if (value == null) {
       return null;

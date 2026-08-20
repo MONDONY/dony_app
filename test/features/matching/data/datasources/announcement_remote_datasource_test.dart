@@ -120,6 +120,60 @@ void main() {
       expect(capturedData!['transportMode'], 'TRAIN');
     });
 
+    test('sends the chosen currency in the payload', () async {
+      Map<String, dynamic>? capturedData;
+      when(
+        () => mockDio.post('/announcements', data: any(named: 'data')),
+      ).thenAnswer((inv) async {
+        capturedData =
+            inv.namedArguments[const Symbol('data')] as Map<String, dynamic>;
+        return _ok(_announcementJson, '/announcements');
+      });
+
+      await datasource.createAnnouncement(
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        departureDate: DateTime(2024, 6),
+        pickupAddress: kPickup,
+        deliveryAddress: kDelivery,
+        availableKg: 10.0,
+        pricePerKg: 12.0,
+        transportMode: TransportMode.plane,
+        handoverDeadline: DateTime(2026, 6, 14, 18),
+        currency: 'USD',
+      );
+
+      expect(capturedData, isNotNull);
+      expect(capturedData!['currency'], 'USD');
+    });
+
+    test('omits currency from the payload when absent (server falls back to '
+        'the wallet currency)', () async {
+      Map<String, dynamic>? capturedData;
+      when(
+        () => mockDio.post('/announcements', data: any(named: 'data')),
+      ).thenAnswer((inv) async {
+        capturedData =
+            inv.namedArguments[const Symbol('data')] as Map<String, dynamic>;
+        return _ok(_announcementJson, '/announcements');
+      });
+
+      await datasource.createAnnouncement(
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        departureDate: DateTime(2024, 6),
+        pickupAddress: kPickup,
+        deliveryAddress: kDelivery,
+        availableKg: 10.0,
+        pricePerKg: 12.0,
+        transportMode: TransportMode.plane,
+        handoverDeadline: DateTime(2026, 6, 14, 18),
+      );
+
+      expect(capturedData, isNotNull);
+      expect(capturedData!.containsKey('currency'), isFalse);
+    });
+
     test('includes country codes in payload when provided', () async {
       Map<String, dynamic>? capturedData;
       when(

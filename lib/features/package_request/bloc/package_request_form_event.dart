@@ -1,3 +1,4 @@
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
@@ -98,6 +99,15 @@ class PackageRequestTotalBudgetChanged extends PackageRequestFormEvent {
 
   @override
   List<Object?> get props => [value];
+}
+
+/// Devise choisie pour la demande, sélectionnée à l'étape budget.
+class PackageRequestCurrencyChanged extends PackageRequestFormEvent {
+  const PackageRequestCurrencyChanged(this.currency);
+  final SupportedCurrency currency;
+
+  @override
+  List<Object?> get props => [currency];
 }
 
 class PackageRequestPromoCodeChanged extends PackageRequestFormEvent {

@@ -126,8 +126,18 @@ const double kMaxUnitPriceEur = 500;
 /// ici et dans `CurrencyBounds` côté serveur) : le formulaire accepte donc
 /// exactement ce que l'API accepte. Les faire diverger rouvrirait l'écart entre
 /// ce que l'écran promet et ce que le serveur autorise.
-double get maxUnitPriceActive {
-  final currency = ActiveCurrency.current ?? SupportedCurrency.eur;
+double get maxUnitPriceActive =>
+    maxUnitPriceFor(ActiveCurrency.current ?? SupportedCurrency.eur);
+
+/// Plafond d'un prix unitaire dans [currency], quelle qu'elle soit — pas
+/// nécessairement la devise active du profil.
+///
+/// Extrait de [maxUnitPriceActive] : une annonce peut désormais se publier
+/// dans une devise choisie à la création, distincte de celle du portefeuille.
+/// Borner la saisie sur la devise active aurait laissé passer un prix
+/// absurde (ou refusé un prix valide) dès que l'annonce et le profil
+/// divergent.
+double maxUnitPriceFor(SupportedCurrency currency) {
   final scaled = kMaxUnitPriceEur * currency.unitsPerEur;
   return currency.minorUnit == 0 ? scaled.floorToDouble() : scaled;
 }

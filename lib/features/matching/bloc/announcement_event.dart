@@ -29,6 +29,10 @@ class AnnouncementCreateRequested extends AnnouncementEvent {
   final bool negotiable;
   final bool saveAsDraft;
 
+  /// Devise choisie pour l'annonce (code ISO, ex. `USD`). `null` → l'API
+  /// retombe sur la devise du portefeuille du créateur.
+  final String? currency;
+
   AnnouncementCreateRequested({
     required this.departureCity,
     required this.arrivalCity,
@@ -51,6 +55,7 @@ class AnnouncementCreateRequested extends AnnouncementEvent {
     required this.handoverDeadline,
     this.negotiable = false,
     this.saveAsDraft = false,
+    this.currency,
   });
 }
 

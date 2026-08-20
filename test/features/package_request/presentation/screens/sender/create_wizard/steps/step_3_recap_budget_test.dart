@@ -248,6 +248,65 @@ void main() {
       },
     );
 
+    testWidgets(
+      'tap sur la ligne devise ouvre le sélecteur avec l\'avertissement sur '
+      'les moyens de paiement, et le choix se répercute',
+      (tester) async {
+        await tester.pumpWidget(
+          wrap(const Step3RecapBudget(currency: SupportedCurrency.eur)),
+        );
+        await tester.pump();
+
+        expect(
+          find.byKey(const Key('package-request-currency-selector-row')),
+          findsOneWidget,
+        );
+        expect(find.text('Euro (EUR)'), findsOneWidget);
+
+        await tester.tap(
+          find.byKey(const Key('package-request-currency-selector-row')),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Choisir une devise'), findsOneWidget);
+        expect(
+          find.byKey(const Key('currency-payment-methods-notice')),
+          findsOneWidget,
+        );
+
+        await tester.tap(find.text('Dollar canadien (CAD)'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('currency-selector-confirm')));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Dollar canadien (CAD)'), findsOneWidget);
+        expect(find.text('Euro (EUR)'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'devise verrouillée en édition : aucune ligne devise affichée',
+      (tester) async {
+        const seed = PackageRequestFormState(
+          editingRequestId: 'pr-1',
+          totalBudgetEur: 40,
+        );
+        await tester.pumpWidget(
+          wrap(
+            const Step3RecapBudget(currency: SupportedCurrency.eur),
+            seed: seed,
+            useMock: true,
+          ),
+        );
+        await tester.pump();
+
+        expect(
+          find.byKey(const Key('package-request-currency-selector-row')),
+          findsNothing,
+        );
+      },
+    );
+
     testWidgets('la suite de la publication est annoncée', (tester) async {
       await tester.pumpWidget(wrap(const Step3RecapBudget()));
       await tester.pump();

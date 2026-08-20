@@ -1,11 +1,14 @@
 import 'dart:async';
 
+import 'package:dony/core/currency/active_currency.dart';
 import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/currency_selector.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
@@ -62,7 +65,22 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
       _promoCtrl.text = s.promoCode!;
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _sync();
+      if (!mounted) return;
+      _sync();
+      // Seed la devise dans le bloc si elle n'y est pas déjà : sans ce sync,
+      // une demande jamais retouchée par l'utilisateur partirait sans
+      // devise, alors que la borne d'affichage (widget.currency) en montre
+      // déjà une. Absent en édition : la devise d'une demande déjà créée ne
+      // se change pas ici (cf. PackageRequestFormBloc._onStep3, currency
+      // n'est envoyée qu'à la création).
+      if (context.read<PackageRequestFormBloc>().state.currency == null &&
+          !s.isEditing) {
+        context.read<PackageRequestFormBloc>().add(
+          PackageRequestCurrencyChanged(
+            widget.currency ?? ActiveCurrency.current ?? SupportedCurrency.eur,
+          ),
+        );
+      }
     });
   }
 
@@ -167,6 +185,15 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
         // (prix, mode, etc.) — le seul appel dans initState/toggle ratait
         // le cas "prix tapé après avoir choisi le mode ferme".
         WidgetsBinding.instance.addPostFrameCallback((_) => _sync());
+        // Devise EFFECTIVE de cette demande : celle du bloc une fois choisie
+        // (par défaut ou via le sélecteur), repli sur celle transmise par
+        // l'écran parent tant que le sync post-frame de initState n'est pas
+        // encore passé.
+        final currency =
+            state.currency ??
+            widget.currency ??
+            ActiveCurrency.current ??
+            SupportedCurrency.eur;
         return SingleChildScrollView(
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           padding: const EdgeInsets.fromLTRB(
@@ -222,6 +249,16 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                 ),
                 const SizedBox(height: DonySpacing.base),
 
+                // ── Devise ─────────────────────────────────────────────────
+                // Figée une fois la demande créée : elle ne se change plus en
+                // édition, exactement comme côté trajet.
+                if (!state.isEditing) ...[
+                  const _FieldLabel('Devise'),
+                  const SizedBox(height: DonySpacing.sm),
+                  _CurrencySelectionRow(currency: currency),
+                  const SizedBox(height: DonySpacing.base),
+                ],
+
                 // ── Budget ─────────────────────────────────────────────────
                 _FieldLabel(
                   state.negotiable ? 'Budget indicatif' : 'Votre prix',
@@ -231,7 +268,7 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                   key: _budgetFieldKey,
                   controller: _budgetCtrl,
                   onBudgetChanged: _invalidateQuote,
-                  currency: widget.currency,
+                  currency: currency,
                 ),
                 Padding(
                   padding: const EdgeInsets.only(top: DonySpacing.xs),
@@ -256,7 +293,7 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                       return _BudgetBreakdown(
                         budgetEur: state.totalBudgetEur!,
                         quote: quote,
-                        currency: widget.currency,
+                        currency: currency,
                       );
                     },
                   ),
@@ -418,6 +455,94 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
           ),
         );
       },
+    );
+  }
+}
+
+// ─── Devise ─────────────────────────────────────────────────────────────────
+
+/// Ligne tappable ouvrant le sélecteur de devise partagé. Aucun voyageur
+/// n'est encore choisi à ce stade (la demande est publiée avant tout
+/// matching) : le rail carte prévisualisé dépend donc seulement de la devise
+/// (`SupportedCurrency.isStripeEligible`), pas d'un compte Connect précis.
+/// Le serveur retranchera ce qu'il faut au moment du paiement réel.
+class _CurrencySelectionRow extends StatelessWidget {
+  const _CurrencySelectionRow({required this.currency});
+
+  final SupportedCurrency currency;
+
+  List<CurrencyPaymentOption> get _options => [
+    for (final c in SupportedCurrency.values)
+      CurrencyPaymentOption(
+        currency: c,
+        availablePaymentMethods: {
+          BidPaymentMethod.cash,
+          if (c.isStripeEligible) BidPaymentMethod.stripe,
+        },
+      ),
+  ];
+
+  Future<void> _openSelector(BuildContext context) async {
+    final formBloc = context.read<PackageRequestFormBloc>();
+    final selected = await CurrencySelector.show(
+      context,
+      options: _options,
+      initialCurrency: currency,
+    );
+    if (selected != null) {
+      formBloc.add(PackageRequestCurrencyChanged(selected));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Semantics(
+      button: true,
+      label:
+          'Devise de la demande : ${currency.displayName}, ${currency.code}. '
+          'Bouton, modifier la devise.',
+      child: ExcludeSemantics(
+        child: InkWell(
+          key: const Key('package-request-currency-selector-row'),
+          borderRadius: BorderRadius.circular(DonyRadius.md),
+          onTap: () => unawaited(_openSelector(context)),
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: DonySpacing.base,
+              vertical: DonySpacing.md,
+            ),
+            decoration: BoxDecoration(
+              color: cs.surface,
+              borderRadius: BorderRadius.circular(DonyRadius.md),
+              border: Border.all(color: cs.outline),
+            ),
+            child: Row(
+              children: [
+                DonyIcon('banknote', size: 18, color: cs.primary),
+                const SizedBox(width: DonySpacing.sm),
+                Expanded(
+                  child: Text(
+                    '${currency.displayName} (${currency.code})',
+                    style: tt.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: cs.onSurface,
+                    ),
+                  ),
+                ),
+                Text(
+                  'Changer',
+                  style: tt.labelLarge?.copyWith(
+                    color: cs.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

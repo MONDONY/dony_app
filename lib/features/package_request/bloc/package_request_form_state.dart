@@ -1,3 +1,4 @@
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
@@ -31,6 +32,7 @@ class PackageRequestFormState extends Equatable {
     this.draftLimitMessage,
     this.createdRequest,
     this.editingRequestId,
+    this.currency,
   });
 
   final int currentStep;
@@ -64,6 +66,10 @@ class PackageRequestFormState extends Equatable {
 
   /// Non-null en mode édition : id de la demande modifiée (sinon création).
   final String? editingRequestId;
+
+  /// Devise choisie pour cette demande. `null` tant que l'écran ne l'a pas
+  /// encore initialisée (repli sur la devise du portefeuille côté serveur).
+  final SupportedCurrency? currency;
 
   bool get isEditing => editingRequestId != null;
 
@@ -99,6 +105,7 @@ class PackageRequestFormState extends Equatable {
     bool clearDraftLimitMessage = false,
     PackageRequest? createdRequest,
     String? editingRequestId,
+    SupportedCurrency? currency,
   }) => PackageRequestFormState(
     currentStep: currentStep ?? this.currentStep,
     departureCity: departureCity ?? this.departureCity,
@@ -128,6 +135,7 @@ class PackageRequestFormState extends Equatable {
         : (draftLimitMessage ?? this.draftLimitMessage),
     createdRequest: createdRequest ?? this.createdRequest,
     editingRequestId: editingRequestId ?? this.editingRequestId,
+    currency: currency ?? this.currency,
   );
 
   @override
@@ -155,5 +163,6 @@ class PackageRequestFormState extends Equatable {
     draftLimitMessage,
     createdRequest,
     editingRequestId,
+    currency,
   ];
 }

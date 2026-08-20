@@ -120,6 +120,7 @@ class PackageRequestRepository {
     List<String>? photoKeys,
     bool saveAsDraft = false,
     String? promoCode,
+    String? currency,
   }) async {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
       '/package-requests',
@@ -144,6 +145,9 @@ class PackageRequestRepository {
         if (photoKeys != null && photoKeys.isNotEmpty) 'photoKeys': photoKeys,
         'promoCode': ?promoCode,
         'saveAsDraft': saveAsDraft,
+        // Optionnel : absente, l'API retombe sur la devise du portefeuille de
+        // l'expéditeur (cf. plan devise-par-annonce, tâche 6).
+        'currency': ?currency,
       },
     );
     return PackageRequest.fromJson(response.data!);

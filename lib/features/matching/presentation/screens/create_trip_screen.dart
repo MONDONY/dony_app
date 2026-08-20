@@ -2,11 +2,12 @@ import 'dart:async';
 
 import 'package:dony/core/currency/active_currency.dart';
 import 'package:dony/core/currency/currency_formatter.dart';
-import 'package:dony/core/currency/currency_publish_banner.dart';
+import 'package:dony/core/currency/currency_selector.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -81,10 +82,20 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
   late final ValueNotifier<TimeOfDay?> _departureTimeNotifier;
   void Function({bool saveAsDraft})? _submit;
 
-  /// Résolue une fois : la devise active ne peut pas changer pendant qu'un
-  /// formulaire de publication est ouvert, et ce getter était réévalué
-  /// jusque dans un `itemBuilder` (lookup GetIt + lecture Hive par ligne).
-  late final SupportedCurrency? _activeCurrency = ActiveCurrency.current;
+  /// Devise de l'annonce. En création, choisie par l'utilisateur (défaut :
+  /// devise du portefeuille) ; en édition ou trajet dédié, figée sur la
+  /// devise déjà portée par l'annonce/le verrou — elle ne se change plus une
+  /// fois l'annonce publiée.
+  late final ValueNotifier<SupportedCurrency> _currencyNotifier =
+      ValueNotifier<SupportedCurrency>(_initialCurrency());
+
+  SupportedCurrency _initialCurrency() {
+    final announcement = widget.args?.announcement;
+    if (announcement != null) {
+      return SupportedCurrency.fromCodeOrDefault(announcement.currency);
+    }
+    return ActiveCurrency.current ?? SupportedCurrency.eur;
+  }
 
   /// Vrai dès que l'utilisateur a modifié un champ depuis l'ouverture.
   ///
@@ -137,6 +148,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
     _canContinueNotifier.dispose();
     _canContinueStep1Notifier.dispose();
     _isDirtyNotifier.dispose();
+    _currencyNotifier.dispose();
     super.dispose();
   }
 
@@ -235,7 +247,9 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                       ),
                       const SizedBox(height: DonySpacing.base),
                       if (!isEdit && !isLocked) ...[
-                        CurrencyPublishBanner.active(),
+                        _CurrencySelectionBanner(
+                          currencyNotifier: _currencyNotifier,
+                        ),
                         const SizedBox(height: DonySpacing.base),
                       ],
                       _TripFormContent(
@@ -247,6 +261,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                         canContinueStep1Notifier: _canContinueStep1Notifier,
                         currentStepNotifier: _currentStepNotifier,
                         departureTimeNotifier: _departureTimeNotifier,
+                        currencyNotifier: _currencyNotifier,
                         onSubmitReady: (fn) => _submit = fn,
                         dirtyNotifier: _isDirtyNotifier,
                       ),
@@ -441,7 +456,8 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                                                 departureTime:
                                                     _departureTimeNotifier
                                                         .value,
-                                                currency: _activeCurrency,
+                                                currency:
+                                                    _currencyNotifier.value,
                                               );
                                             }
                                           : null,
@@ -483,6 +499,10 @@ class _TripFormContent extends StatefulWidget {
   /// sert pour décider si quitter l'écran doit être confirmé.
   final ValueNotifier<bool>? dirtyNotifier;
   final ValueNotifier<TimeOfDay?>? departureTimeNotifier;
+
+  /// Devise de l'annonce, portée par le parent (cf. `_CreateTripScreenState`).
+  /// Choisie par l'utilisateur en création, figée en édition/trajet dédié.
+  final ValueNotifier<SupportedCurrency> currencyNotifier;
   final void Function(void Function({bool saveAsDraft}))? onSubmitReady;
 
   const _TripFormContent({
@@ -495,6 +515,7 @@ class _TripFormContent extends StatefulWidget {
     this.currentStepNotifier,
     this.dirtyNotifier,
     this.departureTimeNotifier,
+    required this.currencyNotifier,
     this.onSubmitReady,
   });
 
@@ -572,10 +593,10 @@ class _TripFormContentState extends State<_TripFormContent> {
   bool get _isEdit => widget.announcement != null;
   bool get _isLocked => widget.lockContext != null;
 
-  /// Résolue une fois : la devise active ne peut pas changer pendant qu'un
-  /// formulaire de publication est ouvert, et ce getter était réévalué
-  /// jusque dans un `itemBuilder` (lookup GetIt + lecture Hive par ligne).
-  late final SupportedCurrency? _activeCurrency = ActiveCurrency.current;
+  /// Devise de l'annonce — suit le sélecteur du parent (`_CreateTripScreenState`),
+  /// pas la devise active du profil : une annonce se publie désormais dans la
+  /// devise choisie à la création, potentiellement distincte du portefeuille.
+  SupportedCurrency get _currency => widget.currencyNotifier.value;
   bool get _isCustomPrice => _priceOptionNotifier.value == kPriceOptions.length;
   double get _pricePerKg => _isCustomPrice
       ? _customPriceNotifier.value
@@ -589,7 +610,12 @@ class _TripFormContentState extends State<_TripFormContent> {
   // — kg toggle OFF (mode grille) → tarification via la grille, toujours valide
   // — aucun choix effectué (idx == -1) → invalide
   // — chip preset sélectionnée → valide
-  // — "Autre prix" sélectionné → le champ doit contenir un nombre > 0
+  // — "Autre prix" sélectionné → le champ doit contenir un nombre > 0, et ne
+  //   pas dépasser le plafond de la devise DE L'ANNONCE (pas celle du
+  //   profil) : changer de devise dans le sélecteur fait donc suivre cette
+  //   borne, sans quoi un montant valide en XOF resterait bloqué au plafond
+  //   (bien plus bas) de l'euro, ou l'inverse laisserait passer un montant
+  //   que le serveur refuserait.
   bool get _isPriceValid {
     if (_isLocked) return true;
     if (!_kgPriceEnabledNotifier.value) return true;
@@ -597,7 +623,7 @@ class _TripFormContentState extends State<_TripFormContent> {
     if (idx == -1) return false;
     if (!_isCustomPrice) return true;
     final parsed = double.tryParse(_customPriceCtrl.text.replaceAll(',', '.'));
-    return parsed != null && parsed > 0;
+    return parsed != null && parsed > 0 && parsed <= maxUnitPriceFor(_currency);
   }
 
   Future<void> _loadCatalog() async {
@@ -732,6 +758,10 @@ class _TripFormContentState extends State<_TripFormContent> {
     _transportModeNotifier.addListener(_syncCanSubmit);
     _priceOptionNotifier.addListener(_syncCanSubmit);
     _customPriceCtrl.addListener(_syncCanSubmit);
+    // Un prix custom valide dans une devise peut dépasser le plafond d'une
+    // autre (cf. _isPriceValid) : changer de devise doit donc réévaluer
+    // canSubmit sans que l'utilisateur retouche le champ prix.
+    widget.currencyNotifier.addListener(_syncCanSubmit);
     // Avion sélectionné par défaut en mode création
     if (!_isEdit && !_isLocked) {
       _transportModeNotifier.value = TransportMode.plane;
@@ -1140,6 +1170,7 @@ class _TripFormContentState extends State<_TripFormContent> {
     _kgPriceEnabledNotifier.removeListener(_syncCanSubmit);
     _priceOptionNotifier.removeListener(_syncCanSubmit);
     _customPriceCtrl.removeListener(_syncCanSubmit);
+    widget.currencyNotifier.removeListener(_syncCanSubmit);
     _kgPriceEnabledNotifier.dispose();
     _cashEnabledNotifier.dispose();
     _negotiableNotifier.dispose();
@@ -1394,6 +1425,7 @@ class _TripFormContentState extends State<_TripFormContent> {
           handoverDeadline: handoverDeadline,
           negotiable: _negotiableNotifier.value,
           saveAsDraft: saveAsDraft,
+          currency: _currency.code,
         ),
       );
     }
@@ -1745,7 +1777,7 @@ class _TripFormContentState extends State<_TripFormContent> {
                         ? Text(t.emoji!)
                         : DonyIcon('bookmark', size: 16, color: cs.primary),
                     label: Text(
-                      '${t.label} · ${CurrencyFormatter.formatOrPlain(t.pricePerKg, _activeCurrency, compact: true)}/kg',
+                      '${t.label} · ${CurrencyFormatter.formatOrPlain(t.pricePerKg, _currency, compact: true)}/kg',
                     ),
                     onPressed: () => _applyTemplate(t),
                   );
@@ -1766,7 +1798,12 @@ class _TripFormContentState extends State<_TripFormContent> {
         _LockedBanner(lockContext: widget.lockContext!),
         const SizedBox(height: DonySpacing.lg),
       ],
-      if (!_isEdit && !_isLocked) _buildTemplatesSuggestionBar(context, tt, cs),
+      if (!_isEdit && !_isLocked)
+        ValueListenableBuilder<SupportedCurrency>(
+          valueListenable: widget.currencyNotifier,
+          builder: (context, _, _) =>
+              _buildTemplatesSuggestionBar(context, tt, cs),
+        ),
       ValueListenableBuilder<Set<_Step0Field>>(
         valueListenable: _step0ErrorsNotifier,
         builder: (context, missing, _) => TrajetStep(
@@ -1884,31 +1921,34 @@ class _TripFormContentState extends State<_TripFormContent> {
   // ── Step 2 — Prix & Conditions ───────────────────────────────────────────────
   List<Widget> _buildStep2(BuildContext context, TextTheme tt, ColorScheme cs) {
     return [
-      PrixConditionsStep(
-        currency: _activeCurrency,
-        priceOptionNotifier: _priceOptionNotifier,
-        customPriceNotifier: _customPriceNotifier,
-        availableKgNotifier: _availableKgNotifier,
-        cashEnabledNotifier: _cashEnabledNotifier,
-        kgPriceEnabledNotifier: _kgPriceEnabledNotifier,
-        negotiableNotifier: _negotiableNotifier,
-        selectedContentNotifier: _selectedContentNotifier,
-        customAcceptedNotifier: _customAcceptedNotifier,
-        refusedTypesNotifier: _refusedTypesNotifier,
-        catalogLabelsNotifier: _catalogLabelsNotifier,
-        descriptionCtrl: _descriptionCtrl,
-        customAcceptedCtrl: _customAcceptedCtrl,
-        refusedCtrl: _refusedCtrl,
-        customPriceCtrl: _customPriceCtrl,
-        // Prix verrouillé en modification-pour-négo ET en trajet dédié : il est
-        // fixé par la négociation.
-        lockPrice: widget.lockCorridorAndDate || _isLocked,
-        // Trajet dédié : affiche le prix total convenu et masque la section
-        // « Modes de paiement » (déjà fixé par la négociation).
-        lockedTotalPriceEur: _isLocked
-            ? widget.lockContext!.agreedPriceEur
-            : null,
-        showPaymentMethods: !_isLocked,
+      ValueListenableBuilder<SupportedCurrency>(
+        valueListenable: widget.currencyNotifier,
+        builder: (context, currency, _) => PrixConditionsStep(
+          currency: currency,
+          priceOptionNotifier: _priceOptionNotifier,
+          customPriceNotifier: _customPriceNotifier,
+          availableKgNotifier: _availableKgNotifier,
+          cashEnabledNotifier: _cashEnabledNotifier,
+          kgPriceEnabledNotifier: _kgPriceEnabledNotifier,
+          negotiableNotifier: _negotiableNotifier,
+          selectedContentNotifier: _selectedContentNotifier,
+          customAcceptedNotifier: _customAcceptedNotifier,
+          refusedTypesNotifier: _refusedTypesNotifier,
+          catalogLabelsNotifier: _catalogLabelsNotifier,
+          descriptionCtrl: _descriptionCtrl,
+          customAcceptedCtrl: _customAcceptedCtrl,
+          refusedCtrl: _refusedCtrl,
+          customPriceCtrl: _customPriceCtrl,
+          // Prix verrouillé en modification-pour-négo ET en trajet dédié : il
+          // est fixé par la négociation.
+          lockPrice: widget.lockCorridorAndDate || _isLocked,
+          // Trajet dédié : affiche le prix total convenu et masque la section
+          // « Modes de paiement » (déjà fixé par la négociation).
+          lockedTotalPriceEur: _isLocked
+              ? widget.lockContext!.agreedPriceEur
+              : null,
+          showPaymentMethods: !_isLocked,
+        ),
       ),
     ];
   }
@@ -2000,6 +2040,121 @@ enum _Step1Field {
   const _Step1Field(this.message);
 
   final String message;
+}
+
+// ─── Currency selection banner ────────────────────────────────────────────
+
+/// Bannière interactive : annonce la devise choisie pour la publication et
+/// ouvre le sélecteur partagé (`CurrencySelector`) au tap. Remplace l'ancienne
+/// `CurrencyPublishBanner` statique — la devise n'était encore jamais
+/// envoyée au serveur avant ce lot, elle se choisit désormais explicitement.
+class _CurrencySelectionBanner extends StatelessWidget {
+  const _CurrencySelectionBanner({required this.currencyNotifier});
+
+  final ValueNotifier<SupportedCurrency> currencyNotifier;
+
+  /// Moyens de paiement prévisualisés par devise. `stripeConfigured` reflète
+  /// le compte Connect du créateur (seul voyageur concerné à cette étape) ;
+  /// l'éligibilité Stripe par devise suit `SupportedCurrency.isStripeEligible`
+  /// (verbatim contrainte serveur). Aperçu client uniquement : le serveur
+  /// reste seul décideur au paiement réel.
+  List<CurrencyPaymentOption> _options(bool stripeConfigured) => [
+    for (final currency in SupportedCurrency.values)
+      CurrencyPaymentOption(
+        currency: currency,
+        availablePaymentMethods: {
+          BidPaymentMethod.cash,
+          if (stripeConfigured && currency.isStripeEligible)
+            BidPaymentMethod.stripe,
+        },
+      ),
+  ];
+
+  Future<void> _openSelector(BuildContext context) async {
+    final stripeState = context.read<StripeAccountBloc>().state;
+    final stripeConfigured =
+        stripeState is StripeAccountReady &&
+        stripeState.accountStatus.isComplete;
+    final selected = await CurrencySelector.show(
+      context,
+      options: _options(stripeConfigured),
+      initialCurrency: currencyNotifier.value,
+    );
+    if (selected != null) {
+      currencyNotifier.value = selected;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return ValueListenableBuilder<SupportedCurrency>(
+      valueListenable: currencyNotifier,
+      builder: (context, currency, _) {
+        final semanticsLabel =
+            'Devise de publication : ${currency.displayName}, '
+            '${currency.code}. Les utilisateurs dans une autre devise ne '
+            'verront pas cette annonce. Bouton, modifier la devise.';
+        return Semantics(
+          container: true,
+          button: true,
+          label: semanticsLabel,
+          child: ExcludeSemantics(
+            child: InkWell(
+              key: const Key('trip-currency-selector-row'),
+              borderRadius: BorderRadius.circular(DonyRadius.card),
+              onTap: () => unawaited(_openSelector(context)),
+              child: Container(
+                padding: const EdgeInsets.all(DonySpacing.base),
+                decoration: BoxDecoration(
+                  color: cs.infoLight,
+                  borderRadius: BorderRadius.circular(DonyRadius.card),
+                  border: Border.all(color: cs.info.withValues(alpha: 0.35)),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.info_outline_rounded, color: cs.info),
+                    const SizedBox(width: DonySpacing.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Publié en ${currency.displayName} (${currency.code})',
+                            style: tt.titleMedium?.copyWith(
+                              color: cs.onSurface,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: DonySpacing.xs),
+                          Text(
+                            'Les utilisateurs dans une autre devise ne verront pas cette annonce.',
+                            style: tt.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: DonySpacing.sm),
+                    Text(
+                      'Changer',
+                      style: tt.labelLarge?.copyWith(
+                        color: cs.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
 
 // ─── Locked banner & locked-mode helpers ─────────────────────────────────────
