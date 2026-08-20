@@ -83,6 +83,10 @@ void main() {
           path: '/auth/country-selection',
           builder: (_, _) => const Scaffold(body: Text('country-selection')),
         ),
+        GoRoute(
+          path: '/home',
+          builder: (_, _) => const Scaffold(body: Text('home')),
+        ),
       ],
     );
 
@@ -108,7 +112,23 @@ void main() {
   );
 
   testWidgets(
-    'quand AuthAuthenticated est émis, poursuit vers la sélection du pays, aucune étape code PIN',
+    'quand AuthNewAccountAuthenticated est émis, poursuit vers la sélection du pays',
+    (tester) async {
+      tester.view.physicalSize = const Size(1080, 1920);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        buildScreen([const AuthNewAccountAuthenticated(_testUser)]),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('country-selection'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'quand AuthAuthenticated est émis pour un compte existant, va à l’accueil',
     (tester) async {
       tester.view.physicalSize = const Size(1080, 1920);
       tester.view.devicePixelRatio = 3.0;
@@ -119,7 +139,9 @@ void main() {
         buildScreen([const AuthAuthenticated(_testUser)]),
       );
       await tester.pumpAndSettle();
-      expect(find.text('country-selection'), findsOneWidget);
+
+      expect(find.text('home'), findsOneWidget);
+      expect(find.text('country-selection'), findsNothing);
     },
   );
 
@@ -154,6 +176,27 @@ void main() {
       ),
     );
   }
+
+  testWidgets('affiche le visuel sécurité Yadony du tunnel auth', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1080, 1920);
+    tester.view.devicePixelRatio = 3.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(buildPhoneScreenNoStream());
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.byType(DonyLogo), findsOneWidget);
+    expect(
+      find.image(
+        const AssetImage('assets/illustrations/auth-login-security.png'),
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Connexion protégée'), findsOneWidget);
+  });
 
   testWidgets(
     'phone mode — tapper Vérifier sans code complet affiche snackbar',

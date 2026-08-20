@@ -10,6 +10,7 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/presentation/post_signup_route.dart';
+import 'package:dony/features/auth/presentation/widgets/auth_flow_chrome.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -167,16 +168,20 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
               context.read<AuthBloc>().add(
                 AuthRegisterWithEmailRequested(email: state.email),
               );
-            } else if (state is AuthAuthenticated) {
+            } else if (state is AuthNewAccountAuthenticated) {
               unawaited(_continueAfterSignup(context));
+            } else if (state is AuthAuthenticated) {
+              context.go('/home');
             } else if (state is AuthError) {
               ErrorPresenter.show(context, state.error);
             }
           } else {
             if (state is AuthOtpVerified) {
               context.read<AuthBloc>().add(const AuthRegisterRequested());
-            } else if (state is AuthAuthenticated) {
+            } else if (state is AuthNewAccountAuthenticated) {
               unawaited(_continueAfterSignup(context));
+            } else if (state is AuthAuthenticated) {
+              context.go('/home');
             } else if (state is AuthError) {
               ErrorPresenter.show(context, state.error);
             }
@@ -195,193 +200,175 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
           final h = DonyLayout.hPadding(context);
           final bottom = MediaQuery.paddingOf(context).bottom;
 
-          return SafeArea(
-            bottom: false,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // ── Top bar ──────────────────────────────────────
-                Padding(
-                  padding: EdgeInsets.fromLTRB(h, DonySpacing.md, h, 0),
-                  child: Row(
-                    children: [
-                      const DonyAppBarBackButton(),
-                      const Spacer(),
-                      DonyStepPill(
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              const AuthFlowBackground(),
+              SafeArea(
+                bottom: false,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(h, DonySpacing.md, h, 0),
+                      child: AuthFlowHeader(
                         current: 2,
                         total: 3,
                         label: widget.mode == OtpMode.email
                             ? 'Code email'
                             : 'Code SMS',
                       ),
-                    ],
-                  ),
-                ),
-
-                // ── Scrollable content ───────────────────────────
-                Expanded(
-                  child: SingleChildScrollView(
-                    keyboardDismissBehavior:
-                        ScrollViewKeyboardDismissBehavior.onDrag,
-                    physics: const ClampingScrollPhysics(),
-                    padding: EdgeInsets.fromLTRB(
-                      h,
-                      DonySpacing.lg,
-                      h,
-                      DonySpacing.xl,
                     ),
-                    child: DonyLayout.constrained(
-                      context,
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Center(
-                            child: DonyHeroAvatar(
-                              emoji: widget.mode == OtpMode.email ? '📧' : '🔢',
-                              size: 72,
-                            ),
-                          ),
-                          const SizedBox(height: DonySpacing.xl),
-                          Text(
-                            widget.mode == OtpMode.email
-                                ? 'Code reçu ?'
-                                : 'Entrez le code',
-                            style: tt.displayLarge?.copyWith(
-                              color: cs.onSurface,
-                              letterSpacing: -0.8,
-                            ),
-                          ),
-                          const SizedBox(height: DonySpacing.sm),
-                          Text.rich(
-                            TextSpan(
-                              style: tt.bodyLarge?.copyWith(
-                                color: cs.onSurfaceVariant,
-                                height: 1.5,
+
+                    // ── Scrollable content ───────────────────────────
+                    Expanded(
+                      child: SingleChildScrollView(
+                        keyboardDismissBehavior:
+                            ScrollViewKeyboardDismissBehavior.onDrag,
+                        physics: const ClampingScrollPhysics(),
+                        padding: EdgeInsets.fromLTRB(
+                          h,
+                          DonySpacing.xl,
+                          h,
+                          DonySpacing.xl,
+                        ),
+                        child: DonyLayout.constrained(
+                          context,
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              AuthIntroCard(
+                                iconAsset: widget.mode == OtpMode.email
+                                    ? 'mail'
+                                    : 'key-round',
+                                title: widget.mode == OtpMode.email
+                                    ? 'Code reçu ?'
+                                    : 'Entrez le code',
+                                body: widget.mode == OtpMode.email
+                                    ? 'Code envoyé à $contact'
+                                    : 'Code envoyé au $contact',
+                                footnote:
+                                    'Le code expire rapidement pour garder ton compte Yadony protégé.',
                               ),
-                              children: [
-                                TextSpan(
-                                  text: widget.mode == OtpMode.email
-                                      ? 'Code envoyé à '
-                                      : 'Code envoyé au ',
-                                ),
-                                TextSpan(
-                                  text: contact,
-                                  style: tt.bodyLarge?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                    color: cs.primary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: DonySpacing.xxl),
+                              const SizedBox(height: DonySpacing.xxl),
 
-                          // OTP 6-digit input
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: List.generate(6, (index) {
-                              return SizedBox(
-                                width:
-                                    (DonyLayout.screenWidth(context) -
-                                        h * 2 -
-                                        DonySpacing.sm * 5) /
-                                    6,
-                                height: 56,
-                                child: TextFormField(
-                                  controller: _controllers[index],
-                                  focusNode: _focusNodes[index],
-                                  keyboardType: TextInputType.number,
-                                  textAlign: TextAlign.center,
-                                  maxLength: 1,
-                                  inputFormatters: [
-                                    FilteringTextInputFormatter.digitsOnly,
-                                  ],
-                                  style: tt.headlineMedium?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                    color: cs.onSurface,
-                                  ),
-                                  decoration: InputDecoration(
-                                    counterText: '',
-                                    filled: true,
-                                    fillColor: cs.surface,
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(
-                                        DonyRadius.md,
+                              // OTP 6-digit input
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: List.generate(6, (index) {
+                                  return SizedBox(
+                                    width:
+                                        (DonyLayout.screenWidth(context) -
+                                            h * 2 -
+                                            DonySpacing.sm * 5) /
+                                        6,
+                                    height: 56,
+                                    child: TextFormField(
+                                      controller: _controllers[index],
+                                      focusNode: _focusNodes[index],
+                                      keyboardType: TextInputType.number,
+                                      textAlign: TextAlign.center,
+                                      maxLength: 1,
+                                      inputFormatters: [
+                                        FilteringTextInputFormatter.digitsOnly,
+                                      ],
+                                      style: tt.headlineMedium?.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                        color: cs.onSurface,
                                       ),
-                                      borderSide: BorderSide(color: cs.outline),
+                                      decoration: InputDecoration(
+                                        counterText: '',
+                                        filled: true,
+                                        fillColor: cs.surface,
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            DonyRadius.md,
+                                          ),
+                                          borderSide: BorderSide(
+                                            color: cs.outline,
+                                          ),
+                                        ),
+                                        enabledBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            DonyRadius.md,
+                                          ),
+                                          borderSide: BorderSide(
+                                            color: cs.outline,
+                                          ),
+                                        ),
+                                        focusedBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            DonyRadius.md,
+                                          ),
+                                          borderSide: BorderSide(
+                                            color: cs.primary,
+                                            width: 2,
+                                          ),
+                                        ),
+                                        contentPadding: EdgeInsets.zero,
+                                      ),
+                                      onChanged: (value) {
+                                        if (value.isNotEmpty && index < 5) {
+                                          _focusNodes[index + 1].requestFocus();
+                                        } else if (value.isEmpty && index > 0) {
+                                          _focusNodes[index - 1].requestFocus();
+                                        }
+                                      },
                                     ),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(
-                                        DonyRadius.md,
-                                      ),
-                                      borderSide: BorderSide(color: cs.outline),
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(
-                                        DonyRadius.md,
-                                      ),
-                                      borderSide: BorderSide(
-                                        color: cs.primary,
-                                        width: 2,
-                                      ),
-                                    ),
-                                    contentPadding: EdgeInsets.zero,
-                                  ),
-                                  onChanged: (value) {
-                                    if (value.isNotEmpty && index < 5) {
-                                      _focusNodes[index + 1].requestFocus();
-                                    } else if (value.isEmpty && index > 0) {
-                                      _focusNodes[index - 1].requestFocus();
-                                    }
-                                  },
-                                ),
-                              );
-                            }),
-                          ),
-
-                          const SizedBox(height: DonySpacing.xl),
-
-                          // Resend
-                          GestureDetector(
-                            onTap: secondsLeft <= 0 ? _resend : null,
-                            child: Text(
-                              secondsLeft > 0
-                                  ? 'Renvoyer le code ($secondsLeft s)'
-                                  : 'Renvoyer le code',
-                              style: tt.bodyMedium?.copyWith(
-                                color: secondsLeft > 0
-                                    ? cs.onSurfaceVariant
-                                    : cs.primary,
-                                fontWeight: FontWeight.w600,
+                                  );
+                                }),
                               ),
-                            ),
+
+                              const SizedBox(height: DonySpacing.xl),
+                              GestureDetector(
+                                onTap: secondsLeft <= 0 ? _resend : null,
+                                child: Text(
+                                  secondsLeft > 0
+                                      ? 'Renvoyer le code ($secondsLeft s)'
+                                      : 'Renvoyer le code',
+                                  style: tt.bodyMedium?.copyWith(
+                                    color: secondsLeft > 0
+                                        ? cs.onSurfaceVariant
+                                        : cs.primary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
-                ),
 
-                // ── Pinned CTA ───────────────────────────────────
-                Container(
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).scaffoldBackgroundColor,
-                    border: Border(top: BorderSide(color: cs.outline)),
-                  ),
-                  padding: EdgeInsets.fromLTRB(
-                    h,
-                    DonySpacing.base,
-                    h,
-                    DonySpacing.base + bottom,
-                  ),
-                  child: DonyButton(
-                    label: 'Vérifier',
-                    onPressed: isLoading ? null : _verify,
-                    isLoading: isLoading,
-                  ),
+                    // ── Pinned CTA ───────────────────────────────────
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Theme.of(
+                          context,
+                        ).scaffoldBackgroundColor.withValues(alpha: 0.96),
+                        border: Border(
+                          top: BorderSide(
+                            color: cs.outline.withValues(alpha: 0.64),
+                          ),
+                        ),
+                      ),
+                      padding: EdgeInsets.fromLTRB(
+                        h,
+                        DonySpacing.base,
+                        h,
+                        DonySpacing.base + bottom,
+                      ),
+                      child: DonyButton(
+                        label: 'Vérifier',
+                        onPressed: isLoading ? null : _verify,
+                        isLoading: isLoading,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           );
         },
       ),

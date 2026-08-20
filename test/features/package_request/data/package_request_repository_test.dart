@@ -328,6 +328,39 @@ void main() {
       expect(result.id, 'pr-1');
       expect(result.arrivalCity, 'Dakar');
     });
+
+    test('GETs public detail without auth when publicAccess is true', () async {
+      final publicJson = {
+        ..._prJson,
+        'senderId': null,
+        'status': null,
+        'createdAt': null,
+        'description': 'Cadeau fragile',
+      };
+      when(
+        () => mockDio.get<Map<String, dynamic>>(
+          '/public/package-requests/pr-1',
+          options: any(named: 'options'),
+        ),
+      ).thenAnswer(
+        (_) async => _ok(publicJson, '/public/package-requests/pr-1'),
+      );
+
+      final result = await repo.getById('pr-1', publicAccess: true);
+
+      expect(result.id, 'pr-1');
+      expect(result.senderId, '');
+      expect(result.status, PackageRequestStatus.open);
+      final options =
+          verify(
+                () => mockDio.get<Map<String, dynamic>>(
+                  '/public/package-requests/pr-1',
+                  options: captureAny(named: 'options'),
+                ),
+              ).captured.single
+              as Options;
+      expect(options.extra!['skipAuth'], true);
+    });
   });
 
   group('cancel', () {
@@ -466,6 +499,55 @@ void main() {
       expect(page.content.isNotEmpty, true);
       expect(page.content.first.departureLat, 48.85);
     });
+
+    test(
+      'GETs public package-requests with skipAuth for guest search',
+      () async {
+        final publicItemJson = {
+          ...searchItemJson,
+          'sender': null,
+          'senderDisplayName': 'Aminata D.',
+        };
+        when(
+          () => mockDio.get<Map<String, dynamic>>(
+            '/public/package-requests',
+            queryParameters: any(named: 'queryParameters'),
+            options: any(named: 'options'),
+          ),
+        ).thenAnswer(
+          (_) async => _ok({
+            'content': [publicItemJson],
+            'totalElements': 1,
+            'number': 0,
+            'size': 20,
+          }, '/public/package-requests'),
+        );
+
+        final page = await repo.search(
+          departure: 'Paris',
+          arrival: 'Dakar',
+          lat: 48.85,
+          lng: 2.35,
+          matchingMyTrips: true,
+          publicAccess: true,
+        );
+
+        expect(page.content.single.sender.displayName, 'Aminata D.');
+        final captured = verify(
+          () => mockDio.get<Map<String, dynamic>>(
+            '/public/package-requests',
+            queryParameters: captureAny(named: 'queryParameters'),
+            options: captureAny(named: 'options'),
+          ),
+        ).captured;
+        final query = captured[0] as Map<String, dynamic>;
+        final options = captured[1] as Options;
+        expect(query['departure'], 'Paris');
+        expect(query.containsKey('lat'), isFalse);
+        expect(query.containsKey('matchingMyTrips'), isFalse);
+        expect(options.extra!['skipAuth'], true);
+      },
+    );
 
     test('sends urgent=true when urgent: true', () async {
       when(

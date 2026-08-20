@@ -79,6 +79,7 @@ class CountryOnboardingCubit extends Cubit<CountryOnboardingState> {
       // Devise du serveur, jamais `CountryCatalog.byCode(...).currency` : la
       // table locale n'est qu'un miroir d'affichage, le backend tranche.
       await _prefs.put(HiveService.kCurrencyCode, saved.currencyCode);
+      await _prefs.put(HiveService.kTravelerCountryUnsupported, false);
       await _prefs.put(HiveService.kCountryOnboardingSeen, true);
       unawaited(_analytics.logEvent(AnalyticsEvents.countryOnboardingSelected));
       emit(const CountryOnboardingSuccess());
@@ -105,6 +106,24 @@ class CountryOnboardingCubit extends Cubit<CountryOnboardingState> {
       } catch (_) {
         // Ignoré volontairement : la devise sera posée à la première synchro.
       }
+      await _prefs.put(HiveService.kCountryOnboardingSeen, true);
+      unawaited(_analytics.logEvent(AnalyticsEvents.countryOnboardingSkipped));
+      emit(const CountryOnboardingSuccess());
+    } catch (_) {
+      emit(
+        const CountryOnboardingError(
+          'Impossible d’enregistrer ce choix. Réessayez.',
+        ),
+      );
+    }
+  }
+
+  Future<void> continueAsSenderOnly() async {
+    if (state is CountryOnboardingSaving) return;
+
+    emit(const CountryOnboardingSaving(null));
+    try {
+      await _prefs.put(HiveService.kTravelerCountryUnsupported, true);
       await _prefs.put(HiveService.kCountryOnboardingSeen, true);
       unawaited(_analytics.logEvent(AnalyticsEvents.countryOnboardingSkipped));
       emit(const CountryOnboardingSuccess());

@@ -3,6 +3,8 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/auth/presentation/widgets/auth_flow_chrome.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
@@ -22,84 +24,107 @@ class AnalyticsConsentScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: SafeArea(
-        child: DonyLayout.constrained(
-          context,
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: h),
-            child: Column(
-              children: [
-                const SizedBox(height: DonySpacing.md),
-                const Align(
-                  alignment: Alignment.centerRight,
-                  child: DonyStepPill(
-                    current: 4,
-                    total: 4,
-                    label: 'Préférences',
-                  ),
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          const AuthFlowBackground(),
+          SafeArea(
+            child: DonyLayout.constrained(
+              context,
+              Padding(
+                padding: EdgeInsets.fromLTRB(
+                  h,
+                  DonySpacing.base,
+                  h,
+                  DonySpacing.base + bottom,
                 ),
-                // Zone haute scrollable : header + points peuvent dépasser au
-                // gros text scale ; les boutons restent épinglés en bas.
-                Expanded(
-                  child: LayoutBuilder(
-                    builder: (context, constraints) => SingleChildScrollView(
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(
-                          minHeight: constraints.maxHeight,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const AuthFlowHeader(
+                      current: 1,
+                      total: 3,
+                      label: 'Confidentialité',
+                      showBack: false,
+                    ),
+                    const SizedBox(height: DonySpacing.md),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        keyboardDismissBehavior:
+                            ScrollViewKeyboardDismissBehavior.onDrag,
+                        padding: const EdgeInsets.only(
+                          bottom: DonySpacing.base,
                         ),
                         child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            _Header(cs: cs, tt: tt),
-                            const SizedBox(height: DonySpacing.xxl),
+                            const AuthIntroCard(
+                                  iconAsset: 'shield-check',
+                                  title: 'Une dernière chose',
+                                  body:
+                                      "Pour améliorer Yadony, on aimerait mesurer comment l'app est utilisée. C'est anonyme et facultatif.",
+                                  footnote:
+                                      'Jamais tes paiements, ton identité ou ton numéro. Tu peux changer d’avis dans Réglages.',
+                                )
+                                .animate()
+                                .fadeIn(duration: 300.ms)
+                                .slideY(
+                                  begin: 0.04,
+                                  curve: Curves.easeOutCubic,
+                                ),
+                            const SizedBox(height: DonySpacing.md),
                             _ConsentPoints(cs: cs, tt: tt),
                           ],
                         ),
                       ),
                     ),
-                  ),
+                    const SizedBox(height: DonySpacing.sm),
+                    const _Buttons(),
+                  ],
                 ),
-                _Buttons(bottom: bottom),
-              ],
+              ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
 }
 
-class _Header extends StatelessWidget {
-  const _Header({required this.cs, required this.tt});
-  final ColorScheme cs;
-  final TextTheme tt;
+class _GlassPanel extends StatelessWidget {
+  const _GlassPanel({required this.child});
+
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-          children: [
-            const DonyMascotteAnimated(type: DonyMascotteType.joyeux),
-            const SizedBox(height: DonySpacing.lg),
-            Text(
-              'Une dernière chose',
-              style: tt.headlineLarge?.copyWith(color: cs.onSurface),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: DonySpacing.sm),
-            Text(
-              "Pour améliorer Yadony, on aimerait mesurer comment\nl'app est utilisée. C'est anonyme et facultatif.",
-              style: tt.bodyMedium?.copyWith(
-                color: cs.onSurfaceVariant,
-                height: 1.45,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        )
-        .animate()
-        .fadeIn(duration: 300.ms)
-        .slideY(begin: 0.04, curve: Curves.easeOutCubic);
+    final cs = Theme.of(context).colorScheme;
+    final isLight = cs.brightness == Brightness.light;
+
+    return Container(
+      padding: const EdgeInsets.all(DonySpacing.base),
+      decoration: BoxDecoration(
+        color: isLight
+            ? cs.surface.withValues(alpha: 0.94)
+            : DonyColors.ink900.withValues(alpha: 0.54),
+        borderRadius: BorderRadius.circular(DonyRadius.sheet),
+        border: Border.all(
+          color: isLight
+              ? cs.outline.withValues(alpha: 0.42)
+              : DonyColors.neutral0.withValues(alpha: 0.18),
+        ),
+        boxShadow: DonyShadow.lg,
+      ),
+      child: child,
+    );
   }
+}
+
+class _ConsentPoint {
+  const _ConsentPoint(this.icon, this.text);
+
+  final String icon;
+  final String text;
 }
 
 class _ConsentPoints extends StatelessWidget {
@@ -109,32 +134,45 @@ class _ConsentPoints extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final points = [
-      ('📊', 'Écrans visités et fonctionnalités utilisées'),
-      ('👆', 'Gestes pour repérer ce qui bloque'),
-      ('🔒', 'Jamais tes paiements, identité ou numéro'),
-      ('↩️', 'Modifiable à tout moment dans Réglages'),
+    const points = [
+      _ConsentPoint(
+        'trending-up',
+        'Écrans visités et fonctionnalités utilisées',
+      ),
+      _ConsentPoint('search', 'Gestes pour repérer ce qui bloque'),
+      _ConsentPoint('lock', 'Jamais tes paiements, identité ou numéro'),
+      _ConsentPoint('refresh-cw', 'Modifiable à tout moment dans Réglages'),
     ];
 
-    return Container(
-          decoration: BoxDecoration(
-            color: cs.surface,
-            borderRadius: BorderRadius.circular(DonyRadius.card),
-            border: Border.all(color: cs.outline),
-          ),
-          padding: const EdgeInsets.all(DonySpacing.base),
+    return _GlassPanel(
           child: Column(
             children: [
               for (var i = 0; i < points.length; i++) ...[
-                if (i > 0) Divider(height: DonySpacing.lg, color: cs.outline),
+                if (i > 0)
+                  Divider(
+                    height: DonySpacing.lg,
+                    color: cs.outline.withValues(alpha: 0.5),
+                  ),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(points[i].$1, style: const TextStyle(fontSize: 18)),
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: cs.primaryContainer,
+                        borderRadius: BorderRadius.circular(DonyRadius.md),
+                      ),
+                      child: DonyIcon(
+                        points[i].icon,
+                        size: 18,
+                        color: cs.primary,
+                      ),
+                    ),
                     const SizedBox(width: DonySpacing.md),
                     Expanded(
                       child: Text(
-                        points[i].$2,
+                        points[i].text,
                         style: tt.bodyMedium?.copyWith(
                           color: cs.onSurface,
                           height: 1.35,
@@ -154,8 +192,7 @@ class _ConsentPoints extends StatelessWidget {
 }
 
 class _Buttons extends StatelessWidget {
-  const _Buttons({required this.bottom});
-  final double bottom;
+  const _Buttons();
 
   Future<void> _respond(BuildContext context, {required bool granted}) async {
     await getIt<AnalyticsService>().setConsent(granted: granted);
@@ -174,6 +211,7 @@ class _Buttons extends StatelessWidget {
           children: [
             DonyButton(
               label: 'Accepter',
+              iconAsset: 'shield-check',
               onPressed: () => _respond(context, granted: true),
             ),
             const SizedBox(height: DonySpacing.md),
@@ -182,7 +220,6 @@ class _Buttons extends StatelessWidget {
               variant: DonyButtonVariant.ghost,
               onPressed: () => _respond(context, granted: false),
             ),
-            SizedBox(height: DonySpacing.xxl + bottom),
           ],
         )
         .animate()

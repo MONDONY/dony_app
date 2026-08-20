@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
@@ -171,6 +172,7 @@ class AnnouncementRemoteDatasource {
     String sortDir = 'asc',
     int page = 0,
     bool? urgent,
+    bool publicAccess = false,
   }) async {
     final params = <String, dynamic>{
       'page': page,
@@ -197,10 +199,14 @@ class AnnouncementRemoteDatasource {
         urgent: urgent,
       ),
     };
-    final response = await _apiClient.dio.get(
-      '/announcements',
-      queryParameters: params,
-    );
+    final endpoint = publicAccess ? '/public/announcements' : '/announcements';
+    final response = publicAccess
+        ? await _apiClient.dio.get(
+            endpoint,
+            queryParameters: params,
+            options: Options(extra: {'skipAuth': true}),
+          )
+        : await _apiClient.dio.get(endpoint, queryParameters: params);
     return (response.data['content'] as List)
         .map((json) => AnnouncementModel.fromJson(json))
         .toList();

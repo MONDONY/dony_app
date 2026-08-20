@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
-import 'package:dony/core/design/widgets/dony_mascotte.dart';
+import 'package:dony/core/design/widgets/dony_logo.dart';
 import 'package:dony/core/design/widgets/dony_step_indicator.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
@@ -91,57 +91,51 @@ void main() {
   ) async {
     await _pump(tester, mockAuthBloc);
 
-    expect(find.text('Envoyez un colis'), findsOneWidget);
-    expect(find.textContaining('chez vous'), findsOneWidget);
+    expect(find.byType(DonyLogo), findsOneWidget);
+    expect(find.text('Préparez votre envoi.'), findsOneWidget);
+    expect(find.text('Créer l’annonce'), findsOneWidget);
+    expect(find.text('Choisir un voyageur'), findsOneWidget);
+    expect(find.text('Remettre le colis'), findsOneWidget);
     expect(find.text('Suivant'), findsOneWidget);
     expect(find.text('Passer'), findsOneWidget);
     expect(find.byType(DonyButton), findsOneWidget);
     expect(_currentStep(tester), 0);
-
-    final mascotte = tester.widget<DonyMascotteAnimated>(
-      find.byType(DonyMascotteAnimated),
-    );
-    expect(mascotte.type, DonyMascotteType.bienvenue);
   });
 
-  testWidgets('les CTA Suivant progressent vers les pages 2 puis 3', (
+  testWidgets('les CTA Suivant progressent vers les quatre pages', (
     tester,
   ) async {
     await _pump(tester, mockAuthBloc);
 
     await tester.tap(find.text('Suivant'));
     await tester.pumpAndSettle();
-    expect(find.text('Pourquoi voyager en confiance ?'), findsOneWidget);
-    expect(find.text('Vérifié'), findsOneWidget);
-    expect(find.text('Tracé'), findsOneWidget);
-    expect(find.text('Garanti'), findsOneWidget);
+    expect(find.byType(DonyLogo), findsOneWidget);
+    expect(find.text('Chaque remise est encadrée.'), findsOneWidget);
+    expect(find.text('Identité vérifiée'), findsOneWidget);
+    expect(find.text('Paiement bloqué'), findsOneWidget);
+    expect(find.text('QR de suivi'), findsOneWidget);
+    expect(find.text('Preuve de remise'), findsOneWidget);
     expect(_currentStep(tester), 1);
-    expect(
-      tester
-          .widget<DonyMascotteAnimated>(
-            find.byType(DonyMascotteAnimated).hitTestable(),
-          )
-          .type,
-      DonyMascotteType.securise,
-    );
+
+    await tester.tap(find.text('Suivant'));
+    await tester.pumpAndSettle();
+    expect(find.text('Gardez le fil du colis.'), findsOneWidget);
+    expect(find.text('Remis'), findsWidgets);
+    expect(find.text('Départ, transit, arrivée'), findsOneWidget);
+    expect(find.text('Livraison'), findsWidgets);
+    expect(_currentStep(tester), 2);
 
     await tester.tap(find.text('Suivant'));
     await tester.pumpAndSettle();
     expect(find.text('Commencer'), findsOneWidget);
     expect(find.text('Passer'), findsNothing);
+    expect(find.text('Vos colis voyagent plus loin.'), findsOneWidget);
+    expect(find.text('Remettre à l’arrivée'), findsOneWidget);
+    expect(find.text('Libérer le paiement'), findsOneWidget);
     expect(find.textContaining('CGU'), findsOneWidget);
     expect(find.textContaining('politique de confidentialité'), findsOneWidget);
-    expect(find.textContaining('Yadony vous accompagne'), findsOneWidget);
-    expect(find.textContaining('Dony vous accompagne'), findsNothing);
-    expect(_currentStep(tester), 2);
-    expect(
-      tester
-          .widget<DonyMascotteAnimated>(
-            find.byType(DonyMascotteAnimated).hitTestable(),
-          )
-          .type,
-      DonyMascotteType.confiant,
-    );
+    expect(find.textContaining('Dony'), findsNothing);
+    expect(_currentStep(tester), 3);
   });
 
   testWidgets('le swipe horizontal fonctionne dans les deux sens', (
@@ -184,6 +178,8 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Suivant'));
     await tester.pumpAndSettle();
+    await tester.tap(find.text('Suivant'));
+    await tester.pumpAndSettle();
 
     await tester.tap(find.text('Commencer'));
     await tester.pumpAndSettle();
@@ -192,7 +188,7 @@ void main() {
     expect(find.text('Auth Method'), findsOneWidget);
   });
 
-  testWidgets('les trois cartes restent visibles sur un petit écran', (
+  testWidgets('les étapes du parcours restent visibles sur un petit écran', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(320, 568));
@@ -202,9 +198,10 @@ void main() {
     await tester.tap(find.text('Suivant'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Vérifié').hitTestable(), findsOneWidget);
-    expect(find.text('Tracé').hitTestable(), findsOneWidget);
-    expect(find.text('Garanti').hitTestable(), findsOneWidget);
+    expect(find.text('Identité vérifiée').hitTestable(), findsOneWidget);
+    expect(find.text('Paiement bloqué').hitTestable(), findsOneWidget);
+    expect(find.text('QR de suivi').hitTestable(), findsOneWidget);
+    expect(find.text('Preuve de remise').hitTestable(), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

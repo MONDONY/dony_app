@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/features/auth/presentation/widgets/auth_flow_chrome.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -51,23 +52,33 @@ class _ReferralCodeScreenState extends State<ReferralCodeScreen> {
       },
       builder: (context, state) => Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        body: SafeArea(
-          child: DonyLayout.constrained(
-            context,
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: h),
-              child: state is ReferralRedeemed
-                  ? _SuccessView(onContinue: () => context.go('/home'))
-                  : _FormView(
-                      ctrl: _ctrl,
-                      isNotEmpty: _isNotEmpty,
-                      isLoading: state is ReferralRedeemLoading,
-                      onApply: _apply,
-                      onSkip: () => context.go('/home'),
-                      bottom: bottom,
-                    ),
+        body: Stack(
+          fit: StackFit.expand,
+          children: [
+            const AuthFlowBackground(),
+            SafeArea(
+              child: DonyLayout.constrained(
+                context,
+                Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    h,
+                    DonySpacing.base,
+                    h,
+                    DonySpacing.base + bottom,
+                  ),
+                  child: state is ReferralRedeemed
+                      ? _SuccessView(onContinue: () => context.go('/home'))
+                      : _FormView(
+                          ctrl: _ctrl,
+                          isNotEmpty: _isNotEmpty,
+                          isLoading: state is ReferralRedeemLoading,
+                          onApply: _apply,
+                          onSkip: () => context.go('/home'),
+                        ),
+                ),
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -83,7 +94,6 @@ class _FormView extends StatelessWidget {
     required this.isLoading,
     required this.onApply,
     required this.onSkip,
-    required this.bottom,
   });
 
   final TextEditingController ctrl;
@@ -91,7 +101,6 @@ class _FormView extends StatelessWidget {
   final bool isLoading;
   final VoidCallback onApply;
   final VoidCallback onSkip;
-  final double bottom;
 
   @override
   Widget build(BuildContext context) {
@@ -99,68 +108,97 @@ class _FormView extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SizedBox(height: DonySpacing.md),
-        const Align(
-          alignment: Alignment.centerRight,
-          child: DonyStepPill(current: 4, total: 4, label: 'Parrainage'),
+        const AuthFlowHeader(
+          current: 3,
+          total: 3,
+          label: 'Parrainage',
+          showBack: false,
         ),
-        // Zone haute scrollable : mascotte + textes se centrent ou scrollent
-        // (clavier ouvert / gros text scale) ; le champ + boutons restent en bas.
+        const SizedBox(height: DonySpacing.md),
         Expanded(
-          child: LayoutBuilder(
-            builder: (context, constraints) => SingleChildScrollView(
-              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const DonyMascotteAnimated(type: DonyMascotteType.joyeux),
-                    const SizedBox(height: DonySpacing.lg),
-                    Text(
-                      'Tu as été invité par un ami ?',
-                      style: tt.headlineLarge?.copyWith(color: cs.onSurface),
-                      textAlign: TextAlign.center,
-                    ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04),
-                    const SizedBox(height: DonySpacing.sm),
-                    Text(
-                      'Entre son code pour qu\'il soit récompensé à ta première livraison.',
-                      style: tt.bodyMedium?.copyWith(
-                        color: cs.onSurfaceVariant,
+          child: SingleChildScrollView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            padding: const EdgeInsets.only(bottom: DonySpacing.base),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const AuthIntroCard(
+                  iconAsset: 'gift',
+                  title: 'Tu as été invité par un ami ?',
+                  body:
+                      'Entre son code pour qu’il soit récompensé à ta première livraison.',
+                  footnote:
+                      'Cette étape est facultative. Tu peux entrer dans Yadony sans code.',
+                ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04),
+                const SizedBox(height: DonySpacing.md),
+                _ReferralActionPanel(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      DonyTextField(
+                        controller: ctrl,
+                        label: 'Code parrain',
+                        hint: 'Ex : JEAN0234',
                       ),
-                      textAlign: TextAlign.center,
-                    ).animate().fadeIn(delay: 60.ms, duration: 300.ms),
-                  ],
-                ),
-              ),
+                      const SizedBox(height: DonySpacing.lg),
+                      ValueListenableBuilder<bool>(
+                        valueListenable: isNotEmpty,
+                        builder: (context, hasText, _) => DonyButton(
+                          label: 'Appliquer le code',
+                          iconAsset: 'gift',
+                          isLoading: isLoading,
+                          onPressed: hasText && !isLoading ? onApply : null,
+                        ),
+                      ),
+                      const SizedBox(height: DonySpacing.sm),
+                      TextButton(
+                        onPressed: isLoading ? null : onSkip,
+                        child: Text(
+                          'Passer pour l\'instant',
+                          style: tt.bodyMedium?.copyWith(
+                            color: cs.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ).animate().fadeIn(delay: 120.ms, duration: 300.ms),
+              ],
             ),
           ),
         ),
-        DonyTextField(
-          controller: ctrl,
-          label: 'Code parrain',
-          hint: 'Ex : JEAN0234',
-        ).animate().fadeIn(delay: 120.ms, duration: 300.ms),
-        const SizedBox(height: DonySpacing.xl),
-        ValueListenableBuilder<bool>(
-          valueListenable: isNotEmpty,
-          builder: (context, hasText, _) => DonyButton(
-            label: 'Appliquer le code',
-            isLoading: isLoading,
-            onPressed: hasText && !isLoading ? onApply : null,
-          ),
-        ),
-        const SizedBox(height: DonySpacing.base),
-        TextButton(
-          onPressed: isLoading ? null : onSkip,
-          child: Text(
-            'Passer pour l\'instant',
-            style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-          ),
-        ),
-        SizedBox(height: DonySpacing.xl + bottom),
       ],
+    );
+  }
+}
+
+class _ReferralActionPanel extends StatelessWidget {
+  const _ReferralActionPanel({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final isLight = cs.brightness == Brightness.light;
+
+    return Container(
+      padding: const EdgeInsets.all(DonySpacing.base),
+      decoration: BoxDecoration(
+        color: isLight
+            ? cs.surface.withValues(alpha: 0.94)
+            : DonyColors.ink900.withValues(alpha: 0.54),
+        borderRadius: BorderRadius.circular(DonyRadius.sheet),
+        border: Border.all(
+          color: isLight
+              ? cs.outline.withValues(alpha: 0.42)
+              : DonyColors.neutral0.withValues(alpha: 0.18),
+        ),
+        boxShadow: DonyShadow.lg,
+      ),
+      child: child,
     );
   }
 }
@@ -173,58 +211,45 @@ class _SuccessView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        const AuthFlowHeader(
+          current: 3,
+          total: 3,
+          label: 'Parrainage',
+          showBack: false,
+        ),
+        const SizedBox(height: DonySpacing.md),
         Expanded(
-          child: LayoutBuilder(
-            builder: (context, constraints) => SingleChildScrollView(
-              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const DonyMascotteAnimated(
-                      type: DonyMascotteType.joyeux,
-                      size: DonyMascotteSize.lg,
-                      withGlow: true,
-                    ).animate().scale(
-                      duration: 400.ms,
-                      curve: Curves.elasticOut,
-                      begin: const Offset(0.5, 0.5),
+          child: SingleChildScrollView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            padding: const EdgeInsets.only(bottom: DonySpacing.base),
+            child:
+                const AuthIntroCard(
+                      iconAsset: 'circle-check',
+                      title: 'Code appliqué !',
+                      body:
+                          'Ton ami sera récompensé dès que tu complètes ta première livraison.',
+                      footnote:
+                          'Ton compte Yadony est prêt. Tu peux commencer à rechercher, envoyer ou suivre tes colis.',
+                    )
+                    .animate()
+                    .fadeIn(duration: 300.ms)
+                    .scale(
+                      duration: 300.ms,
+                      curve: Curves.easeOutCubic,
+                      begin: const Offset(0.96, 0.96),
                     ),
-                    const SizedBox(height: DonySpacing.lg),
-                    Text(
-                      'Code appliqué !',
-                      style: tt.headlineLarge?.copyWith(
-                        color: cs.success,
-                        fontWeight: FontWeight.w800,
-                      ),
-                      textAlign: TextAlign.center,
-                    ).animate().fadeIn(delay: 200.ms, duration: 300.ms),
-                    const SizedBox(height: DonySpacing.sm),
-                    Text(
-                      'Ton ami sera récompensé dès que tu complètes ta première livraison.',
-                      style: tt.bodyMedium?.copyWith(
-                        color: cs.onSurfaceVariant,
-                      ),
-                      textAlign: TextAlign.center,
-                    ).animate().fadeIn(delay: 300.ms, duration: 300.ms),
-                  ],
-                ),
-              ),
-            ),
           ),
         ),
+        const SizedBox(height: DonySpacing.sm),
         DonyButton(
           label: 'Continuer vers l\'accueil',
+          iconAsset: 'arrow-right',
           onPressed: onContinue,
           variant: DonyButtonVariant.success,
         ).animate().fadeIn(delay: 400.ms, duration: 300.ms),
-        const SizedBox(height: DonySpacing.xl),
       ],
     );
   }

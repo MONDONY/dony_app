@@ -38,6 +38,14 @@ void main() {
     home: Scaffold(body: PackageRequestPublicDetailBody(request: r)),
   );
 
+  Widget wrapLogged(PackageRequest r, {String uid = 'traveler-1'}) =>
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: Scaffold(
+          body: PackageRequestPublicDetailBody(request: r, currentUserId: uid),
+        ),
+      );
+
   testWidgets('identité colis-first + chip statut Ouverte + CTA', (
     tester,
   ) async {
@@ -74,7 +82,7 @@ void main() {
   testWidgets('offre en cours (négociable) → bouton « Voir ma négociation »', (
     tester,
   ) async {
-    await tester.pumpWidget(wrap(_req(viewerThreadId: 'thread-1')));
+    await tester.pumpWidget(wrapLogged(_req(viewerThreadId: 'thread-1')));
     await tester.pumpAndSettle();
     expect(find.text('Voir ma négociation'), findsOneWidget);
     expect(find.text('Proposer mon trajet'), findsNothing);
@@ -84,7 +92,7 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      wrap(_req(viewerThreadId: 'thread-1', negotiable: false)),
+      wrapLogged(_req(viewerThreadId: 'thread-1', negotiable: false)),
     );
     await tester.pumpAndSettle();
     expect(find.text('Proposer mon trajet'), findsOneWidget);
@@ -100,6 +108,7 @@ void main() {
           builder: (_, _) => Scaffold(
             body: PackageRequestPublicDetailBody(
               request: _req(viewerThreadId: 't-9'),
+              currentUserId: 'traveler-1',
             ),
           ),
         ),
@@ -117,6 +126,19 @@ void main() {
     await tester.tap(find.text('Voir ma négociation'));
     await tester.pumpAndSettle();
     expect(find.text('NEGO t-9'), findsOneWidget);
+  });
+
+  testWidgets('invité : tap CTA ouvre la sheet de connexion', (tester) async {
+    await tester.pumpWidget(wrap(_req()));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Proposer mon trajet'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Connexion requise'), findsOneWidget);
+    expect(find.text('Se connecter'), findsOneWidget);
+    expect(find.text('Continuer à explorer'), findsOneWidget);
+    expect(find.text('Recherche libre'), findsOneWidget);
   });
 
   // ── Vue propriétaire ─────────────────────────────────────────────────────

@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/design/widgets/dony_logo.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -96,6 +97,21 @@ void main() {
     testWidgets('affiche le widget PhoneAuthScreen', (tester) async {
       await _pump(tester, mockAuthBloc);
       expect(find.byType(PhoneAuthScreen), findsOneWidget);
+    });
+
+    testWidgets('affiche le visuel sécurité Yadony du tunnel auth', (
+      tester,
+    ) async {
+      await _pump(tester, mockAuthBloc);
+
+      expect(find.byType(DonyLogo), findsOneWidget);
+      expect(
+        find.image(
+          const AssetImage('assets/illustrations/auth-login-security.png'),
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Connexion protégée'), findsOneWidget);
     });
 
     testWidgets('bouton Apple absent sur plateforme non-iOS', (tester) async {
@@ -198,6 +214,9 @@ void main() {
       await _pump(tester, mockAuthBloc);
       // Le sélecteur est un GestureDetector autour du drapeau et code
       final flagSelector = find.text('+33');
+      // La carte d'intro (AuthIntroCard) pousse le champ sous le pli du
+      // viewport de test — le rendre visible avant de taper dessus.
+      await tester.ensureVisible(flagSelector);
       await tester.tap(flagSelector);
       await tester.pumpAndSettle();
       // Le bottom sheet affiche "Indicatif pays"
@@ -212,6 +231,7 @@ void main() {
         );
         await _pump(tester, mockAuthBloc);
         // Ouvrir le bottom sheet
+        await tester.ensureVisible(find.text('+33'));
         await tester.tap(find.text('+33'));
         await tester.pumpAndSettle();
         // Appuyer sur Sénégal

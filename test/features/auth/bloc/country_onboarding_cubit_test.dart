@@ -295,6 +295,26 @@ void main() {
   );
 
   blocTest<CountryOnboardingCubit, CountryOnboardingState>(
+    'continueAsSenderOnly memorise le passage et bloque le parcours voyageur',
+    build: build,
+    act: (cubit) => cubit.continueAsSenderOnly(),
+    expect: () => const [
+      CountryOnboardingSaving(null),
+      CountryOnboardingSuccess(),
+    ],
+    verify: (_) {
+      verifyNever(() => repository.updatePrefs(any()));
+      verifyNever(() => prefs.put(HiveService.kCountryCode, any()));
+      verify(
+        () => prefs.put(HiveService.kTravelerCountryUnsupported, true),
+      ).called(1);
+      verify(
+        () => prefs.put(HiveService.kCountryOnboardingSeen, true),
+      ).called(1);
+    },
+  );
+
+  blocTest<CountryOnboardingCubit, CountryOnboardingState>(
     'skip tolère un échec réseau : le passage est mémorisé quand même',
     setUp: () {
       when(() => repository.fetchPrefs()).thenThrow(Exception('offline'));

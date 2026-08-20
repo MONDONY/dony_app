@@ -9,6 +9,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/auth/presentation/widgets/auth_flow_chrome.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -134,247 +135,223 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
           final h = DonyLayout.hPadding(context);
           final bottom = MediaQuery.paddingOf(context).bottom;
 
-          return SafeArea(
-            bottom: false,
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // ── Top bar ────────────────────────────────────
-                  if (!widget.fromProfile)
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(h, DonySpacing.md, h, 0),
-                      child: const Row(
-                        children: [
-                          DonyAppBarBackButton(),
-                          Spacer(),
-                          DonyStepPill(
-                            current: 1,
-                            total: 3,
-                            label: 'Téléphone',
-                          ),
-                        ],
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              const AuthFlowBackground(),
+              SafeArea(
+                bottom: false,
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(h, DonySpacing.md, h, 0),
+                        child: AuthFlowHeader(
+                          current: 1,
+                          total: 3,
+                          label: 'Téléphone',
+                          showBack: !widget.fromProfile,
+                        ),
                       ),
-                    ),
 
-                  // ── Scrollable content ─────────────────────────
-                  Expanded(
-                    child: SingleChildScrollView(
-                      keyboardDismissBehavior:
-                          ScrollViewKeyboardDismissBehavior.onDrag,
-                      physics: const ClampingScrollPhysics(),
-                      padding: EdgeInsets.fromLTRB(
-                        h,
-                        DonySpacing.xl,
-                        h,
-                        DonySpacing.xl,
-                      ),
-                      child: DonyLayout.constrained(
-                        context,
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Center(
-                              child: DonyHeroAvatar(emoji: '📱', size: 72),
-                            ),
-                            const SizedBox(height: DonySpacing.xl),
-                            Text(
-                              'Ton numéro',
-                              style: tt.displayLarge?.copyWith(
-                                color: cs.onSurface,
-                                letterSpacing: -0.8,
-                              ),
-                            ),
-                            const SizedBox(height: DonySpacing.sm),
-                            Text(
-                              'On t\'envoie un code à 6 chiffres par SMS pour vérifier que c\'est bien toi.',
-                              style: tt.bodyLarge?.copyWith(
-                                color: cs.onSurfaceVariant,
-                                height: 1.55,
-                              ),
-                            ),
-                            const SizedBox(height: DonySpacing.xxl),
-                            Text(
-                              'NUMÉRO DE TÉLÉPHONE',
-                              style: tt.labelMedium?.copyWith(
-                                color: cs.onSurfaceVariant,
-                                letterSpacing: 0.8,
-                              ),
-                            ),
-                            const SizedBox(height: DonySpacing.sm),
-                            // Phone input row
-                            Container(
-                              decoration: BoxDecoration(
-                                border: Border.all(color: cs.outline),
-                                borderRadius: BorderRadius.circular(
-                                  DonyRadius.md,
+                      // ── Scrollable content ─────────────────────────
+                      Expanded(
+                        child: SingleChildScrollView(
+                          keyboardDismissBehavior:
+                              ScrollViewKeyboardDismissBehavior.onDrag,
+                          physics: const ClampingScrollPhysics(),
+                          padding: EdgeInsets.fromLTRB(
+                            h,
+                            DonySpacing.xl,
+                            h,
+                            DonySpacing.xl,
+                          ),
+                          child: DonyLayout.constrained(
+                            context,
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const AuthIntroCard(
+                                  iconAsset: 'smartphone',
+                                  title: 'Ton numéro',
+                                  body:
+                                      'On t’envoie un code à 6 chiffres par SMS pour vérifier que c’est bien toi.',
+                                  footnote:
+                                      'Ton numéro sert uniquement à sécuriser ton compte et tes échanges Yadony.',
                                 ),
-                                color: cs.surface,
-                              ),
-                              child: Row(
-                                children: [
-                                  GestureDetector(
-                                    onTap: _showCodePicker,
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: DonySpacing.base,
-                                        vertical: DonySpacing.md,
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Text(
-                                            dialFlag,
-                                            style: const TextStyle(
-                                              fontSize: 20,
-                                            ),
-                                          ),
-                                          const SizedBox(width: DonySpacing.sm),
-                                          Text(
-                                            dialCode,
-                                            style: tt.titleLarge?.copyWith(
-                                              color: cs.onSurface,
-                                            ),
-                                          ),
-                                          const SizedBox(
-                                            width: DonySpacing.xxs,
-                                          ),
-                                          DonyIcon(
-                                            'chevron-down',
-                                            size: 16,
-                                            color: cs.onSurfaceVariant,
-                                          ),
-                                        ],
-                                      ),
+                                const SizedBox(height: DonySpacing.xxl),
+                                Text(
+                                  'NUMÉRO DE TÉLÉPHONE',
+                                  style: tt.labelMedium?.copyWith(
+                                    color: cs.onSurfaceVariant,
+                                    letterSpacing: 0.8,
+                                  ),
+                                ),
+                                const SizedBox(height: DonySpacing.sm),
+                                Container(
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: cs.outline),
+                                    borderRadius: BorderRadius.circular(
+                                      DonyRadius.md,
                                     ),
+                                    color: cs.surface,
                                   ),
-                                  Container(
-                                    width: 1,
-                                    height: 28,
-                                    color: cs.outline,
-                                  ),
-                                  Expanded(
-                                    child: TextFormField(
-                                      controller: _phoneController,
-                                      keyboardType: TextInputType.phone,
-                                      scrollPadding: const EdgeInsets.only(
-                                        bottom: 120,
-                                      ),
-                                      inputFormatters: [
-                                        FilteringTextInputFormatter.digitsOnly,
-                                      ],
-                                      style: tt.titleLarge?.copyWith(
-                                        color: cs.onSurface,
-                                      ),
-                                      decoration: InputDecoration(
-                                        hintText: '06 12 34 56 78',
-                                        hintStyle: tt.bodyLarge?.copyWith(
-                                          color: cs.onSurfaceVariant,
+                                  child: Row(
+                                    children: [
+                                      GestureDetector(
+                                        onTap: _showCodePicker,
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: DonySpacing.base,
+                                            vertical: DonySpacing.md,
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Text(
+                                                dialFlag,
+                                                style: const TextStyle(
+                                                  fontSize: 20,
+                                                ),
+                                              ),
+                                              const SizedBox(
+                                                width: DonySpacing.sm,
+                                              ),
+                                              Text(
+                                                dialCode,
+                                                style: tt.titleLarge?.copyWith(
+                                                  color: cs.onSurface,
+                                                ),
+                                              ),
+                                              const SizedBox(
+                                                width: DonySpacing.xxs,
+                                              ),
+                                              DonyIcon(
+                                                'chevron-down',
+                                                size: 16,
+                                                color: cs.onSurfaceVariant,
+                                              ),
+                                            ],
+                                          ),
                                         ),
-                                        border: InputBorder.none,
-                                        enabledBorder: InputBorder.none,
-                                        focusedBorder: InputBorder.none,
-                                        errorBorder: InputBorder.none,
-                                        focusedErrorBorder: InputBorder.none,
-                                        contentPadding:
-                                            const EdgeInsets.symmetric(
-                                              horizontal: DonySpacing.base,
-                                              vertical: DonySpacing.md,
-                                            ),
                                       ),
-                                      validator: (v) {
-                                        if (v == null || v.trim().isEmpty) {
-                                          return 'Entrez votre numéro';
-                                        }
-                                        final digits = v.trim().replaceAll(
-                                          RegExp(r'[^0-9]'),
-                                          '',
-                                        );
-                                        if (digits.length < 6) {
-                                          return 'Numéro trop court';
-                                        }
-                                        return null;
-                                      },
-                                    ),
+                                      Container(
+                                        width: 1,
+                                        height: 28,
+                                        color: cs.outline,
+                                      ),
+                                      Expanded(
+                                        child: TextFormField(
+                                          controller: _phoneController,
+                                          keyboardType: TextInputType.phone,
+                                          scrollPadding: const EdgeInsets.only(
+                                            bottom: 120,
+                                          ),
+                                          inputFormatters: [
+                                            FilteringTextInputFormatter
+                                                .digitsOnly,
+                                          ],
+                                          style: tt.titleLarge?.copyWith(
+                                            color: cs.onSurface,
+                                          ),
+                                          decoration: InputDecoration(
+                                            hintText: '06 12 34 56 78',
+                                            hintStyle: tt.bodyLarge?.copyWith(
+                                              color: cs.onSurfaceVariant,
+                                            ),
+                                            border: InputBorder.none,
+                                            enabledBorder: InputBorder.none,
+                                            focusedBorder: InputBorder.none,
+                                            errorBorder: InputBorder.none,
+                                            focusedErrorBorder:
+                                                InputBorder.none,
+                                            contentPadding:
+                                                const EdgeInsets.symmetric(
+                                                  horizontal: DonySpacing.base,
+                                                  vertical: DonySpacing.md,
+                                                ),
+                                          ),
+                                          validator: (v) {
+                                            if (v == null || v.trim().isEmpty) {
+                                              return 'Entrez votre numéro';
+                                            }
+                                            final digits = v.trim().replaceAll(
+                                              RegExp(r'[^0-9]'),
+                                              '',
+                                            );
+                                            if (digits.length < 6) {
+                                              return 'Numéro trop court';
+                                            }
+                                            return null;
+                                          },
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
+                                ),
+                                const SizedBox(height: DonySpacing.base),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      // ── Pinned bottom CTA ───────────────────────────
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Theme.of(
+                            context,
+                          ).scaffoldBackgroundColor.withValues(alpha: 0.96),
+                          border: Border(
+                            top: BorderSide(
+                              color: cs.outline.withValues(alpha: 0.64),
+                            ),
+                          ),
+                        ),
+                        padding: EdgeInsets.fromLTRB(
+                          h,
+                          DonySpacing.base,
+                          h,
+                          DonySpacing.base + bottom,
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            DonyButton(
+                              label: 'Recevoir le code SMS',
+                              onPressed: isLoading ? null : _submit,
+                              isLoading: isLoading,
                             ),
                             const SizedBox(height: DonySpacing.sm),
-                            Center(
-                              child: TextButton(
-                                onPressed: () => context.push('/auth/email'),
-                                style: TextButton.styleFrom(
-                                  foregroundColor: cs.primary,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: DonySpacing.base,
-                                    vertical: DonySpacing.sm,
-                                  ),
+                            TextButton(
+                              onPressed: () => context.push('/auth/email'),
+                              style: TextButton.styleFrom(
+                                foregroundColor: cs.primary,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: DonySpacing.base,
+                                  vertical: DonySpacing.sm,
                                 ),
-                                child: Text(
-                                  'Continuer avec une adresse email',
-                                  style: tt.bodyMedium?.copyWith(
-                                    color: cs.primary,
-                                    fontWeight: FontWeight.w600,
-                                    decoration: TextDecoration.underline,
-                                    decorationColor: cs.primary,
-                                  ),
+                              ),
+                              child: Text(
+                                'Continuer avec une adresse email',
+                                style: tt.bodyMedium?.copyWith(
+                                  color: cs.primary,
+                                  fontWeight: FontWeight.w600,
+                                  decoration: TextDecoration.underline,
+                                  decorationColor: cs.primary,
                                 ),
                               ),
                             ),
-                            const SizedBox(height: DonySpacing.base),
                           ],
                         ),
                       ),
-                    ),
+                    ],
                   ),
-
-                  // ── Pinned bottom CTA ───────────────────────────
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).scaffoldBackgroundColor,
-                      border: Border(top: BorderSide(color: cs.outline)),
-                    ),
-                    padding: EdgeInsets.fromLTRB(
-                      h,
-                      DonySpacing.base,
-                      h,
-                      DonySpacing.base + bottom,
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        DonyButton(
-                          label: 'Recevoir le code SMS',
-                          onPressed: isLoading ? null : _submit,
-                          isLoading: isLoading,
-                        ),
-                        const SizedBox(height: DonySpacing.sm),
-                        TextButton(
-                          onPressed: () => context.push('/auth/email'),
-                          style: TextButton.styleFrom(
-                            foregroundColor: cs.primary,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: DonySpacing.base,
-                              vertical: DonySpacing.sm,
-                            ),
-                          ),
-                          child: Text(
-                            'Le SMS n\'arrive pas ? Essaie par email',
-                            style: tt.bodySmall?.copyWith(
-                              color: cs.onSurfaceVariant,
-                              decoration: TextDecoration.underline,
-                              decorationColor: cs.onSurfaceVariant,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
+            ],
           );
         },
       ),

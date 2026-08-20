@@ -10,6 +10,8 @@ import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/auth/guest_access_guard.dart';
+import 'package:dony/features/auth/presentation/widgets/auth_required_sheet.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
@@ -58,6 +60,7 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isGuest = context.read<AuthBloc>().state.currentUser == null;
     return MultiBlocProvider(
       providers: [
         BlocProvider<PackageRequestSearchBloc>(
@@ -66,7 +69,13 @@ class HomeScreen extends StatelessWidget {
         // Résumé d'activité : seul son `activeTrips` sert ici, il pilote le
         // filtre « Pour mes trajets » (pastille et en-tête de liste).
         BlocProvider<TripsSummaryCubit>(
-          create: (_) => getIt<TripsSummaryCubit>()..load(),
+          create: (_) {
+            final cubit = getIt<TripsSummaryCubit>();
+            if (!isGuest) {
+              cubit.load();
+            }
+            return cubit;
+          },
         ),
       ],
       child: const _MapSenderView(),
@@ -109,7 +118,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
   /// Mode de recherche courant. Deux valeurs exclusives : il n'existe plus de
   /// vue mixte. Le mode pilote la liste, les marqueurs de carte, les chips
   /// spécifiques et la feuille de filtres.
-  SearchMode _mode = SearchMode.trips;
+  late SearchMode _mode;
 
   /// Filtres de recherche, communs et spécifiques réunis. Un seul porteur pour
   /// les deux modes : c'est ce qui fait survivre le corridor et la date à la
@@ -152,6 +161,9 @@ class _MapSenderViewState extends State<_MapSenderView> {
   @override
   void initState() {
     super.initState();
+    _mode = GuestAccessGuard.initialSearchMode(
+      isAuthenticated: context.read<AuthBloc>().state.currentUser != null,
+    );
     if (getIt.isRegistered<PendingSearchNotifier>()) {
       _pendingSearchNotifier = getIt<PendingSearchNotifier>();
       _pendingSearchNotifier!.addListener(_consumePendingSearch);
@@ -170,13 +182,18 @@ class _MapSenderViewState extends State<_MapSenderView> {
       // AutoRefresh (non forcé) : silencieux si la liste est déjà en cache et
       // fraîche — BidMyListRequested émettrait BidLoading et écraserait l'état
       // partagé à chaque retour sur l'accueil.
-      context.read<BidBloc>().add(const BidMyListAutoRefreshRequested());
+      final isGuest = context.read<AuthBloc>().state.currentUser == null;
+      if (!isGuest) {
+        context.read<BidBloc>().add(const BidMyListAutoRefreshRequested());
+      }
       // Réaligne la carte d'onboarding « première publication » sur l'état réel
       // du serveur : si l'utilisateur a déjà un trajet ou une demande, la carte
       // ne doit plus s'afficher (le flag Hive local pouvait être absent —
       // trajet créé sur un autre appareil, avant ce mécanisme, ou après
       // réinstallation).
-      unawaited(_syncGuidanceFlags());
+      if (!isGuest) {
+        unawaited(_syncGuidanceFlags());
+      }
     });
   }
 
@@ -331,6 +348,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
 
   void _dispatchSearch() {
     if (!mounted) return;
+    final publicAccess = context.read<AuthBloc>().state.currentUser == null;
     // `toAnnouncementQuery` (et non `toSearchParams`) : c'est elle qui porte le
     // vrai payload serveur — corridor neutralisé par « près de moi », booléens
     // jamais envoyés à false.
@@ -354,6 +372,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
         userLng: q.userLng,
         radiusKm: q.radiusKm,
         urgent: q.urgent,
+        publicAccess: publicAccess,
       ),
     );
   }
@@ -374,6 +393,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
         radiusKm: q.radiusKm,
         urgent: q.urgent,
         matchingMyTrips: q.matchingMyTrips,
+        publicAccess: context.read<AuthBloc>().state.currentUser == null,
       ),
     );
   }
@@ -400,6 +420,12 @@ class _MapSenderViewState extends State<_MapSenderView> {
   /// bascule produira. Lire `_filters` directement laisserait tomber la
   /// neutralisation du corridor par « près de moi », la position et le rayon.
   Future<void> _dispatchOtherModeCount() async {
+    if (context.read<AuthBloc>().state.currentUser == null) {
+      if (mounted) {
+        setState(() => _otherModeCount = null);
+      }
+      return;
+    }
     if (!_filters.otherModeCountIsMeaningful) {
       if (mounted) {
         setState(() => _otherModeCount = null);
@@ -488,6 +514,14 @@ class _MapSenderViewState extends State<_MapSenderView> {
 
   void _onModeChanged(SearchMode mode) {
     if (mode == _mode) {
+      return;
+    }
+    final isAuthenticated = context.read<AuthBloc>().state.currentUser != null;
+    if (!GuestAccessGuard.canUseSearchMode(
+      mode,
+      isAuthenticated: isAuthenticated,
+    )) {
+      unawaited(AuthRequiredSheet.show(context));
       return;
     }
     setState(() {
@@ -921,12 +955,15 @@ class _MapSenderViewState extends State<_MapSenderView> {
           .copyWith(weightMin: result.weightKg);
     }
 
+    final isAuthenticated = context.read<AuthBloc>().state.currentUser != null;
     setState(() {
-      _mode = SearchMode.trips;
+      _mode = GuestAccessGuard.initialSearchMode(
+        isAuthenticated: isAuthenticated,
+      );
       _filters = next;
       _otherModeCount = null;
     });
-    _dispatchSearch();
+    _dispatchForMode();
     unawaited(_dispatchOtherModeCount());
   }
 
@@ -2800,7 +2837,13 @@ class _FavoritesButton extends StatelessWidget {
         final count = state.count;
         return GestureDetector(
           key: const Key('favorites-button'),
-          onTap: () => context.push('/favoris'),
+          onTap: () {
+            if (context.read<AuthBloc>().state.currentUser == null) {
+              AuthRequiredSheet.show(context);
+              return;
+            }
+            context.push('/favoris');
+          },
           behavior: HitTestBehavior.opaque,
           child: Stack(
             clipBehavior: Clip.none,
@@ -2877,7 +2920,13 @@ class _NotificationBell extends StatelessWidget {
         final cs = Theme.of(context).colorScheme;
         final unreadCount = state is NotificationLoaded ? state.unreadCount : 0;
         return GestureDetector(
-          onTap: () => showNotificationBottomSheet(context),
+          onTap: () {
+            if (context.read<AuthBloc>().state.currentUser == null) {
+              AuthRequiredSheet.show(context);
+              return;
+            }
+            showNotificationBottomSheet(context);
+          },
           behavior: HitTestBehavior.opaque,
           child: Stack(
             clipBehavior: Clip.none,

@@ -139,7 +139,12 @@ void main() {
   group('PackageRequestPublicDetailBody — firm price (negotiable=false)', () {
     Widget wrap(PackageRequest request) => MaterialApp(
       theme: AppTheme.light(),
-      home: Scaffold(body: PackageRequestPublicDetailBody(request: request)),
+      home: Scaffold(
+        body: PackageRequestPublicDetailBody(
+          request: request,
+          currentUserId: 'traveler-1',
+        ),
+      ),
     );
 
     testWidgets('negotiable=false → bouton Key("take-firm-price") visible', (

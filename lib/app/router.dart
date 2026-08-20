@@ -1,11 +1,13 @@
 import 'package:dony/app/main_shell.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/app_update/presentation/screens/force_update_screen.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/bloc/country_onboarding_cubit.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
+import 'package:dony/features/auth/guest_access_guard.dart';
 import 'package:dony/features/auth/presentation/screens/analytics_consent_screen.dart';
 import 'package:dony/features/auth/presentation/screens/auth_method_screen.dart';
 import 'package:dony/features/auth/presentation/screens/country_selection_screen.dart';
@@ -209,7 +211,19 @@ const _publicRoutes = {
   '/auth/analytics-consent',
   '/auth/country-selection',
   '/auth/local',
+  '/home',
+  '/recherche/composer',
+  '/package-requests/search',
 };
+
+bool _isPublicRoute(GoRouterState state) {
+  if (_publicRoutes.any((r) => state.matchedLocation.startsWith(r))) {
+    return true;
+  }
+
+  final path = state.uri.path;
+  return GuestAccessGuard.isPublicGuestPath(path);
+}
 
 /// Route d'entrée, calculée par `resolveInitialLocation()` avant `runApp`
 /// (cf. `lib/app/initial_location.dart`).
@@ -243,15 +257,23 @@ final appRouter = GoRouter(
 
     final user = FirebaseAuth.instance.currentUser;
     final isAuthenticated = user != null;
-    final isPublic = _publicRoutes.any(
-      (r) => state.matchedLocation.startsWith(r),
-    );
+    final isPublic = _isPublicRoute(state);
     if (!isAuthenticated && !isPublic) {
       return '/auth/method';
     }
 
     const guardedRoutes = {'/trips/create'};
     if (guardedRoutes.contains(state.matchedLocation)) {
+      final travelerCountryUnsupported =
+          getIt.isRegistered<HiveService>() &&
+          getIt<HiveService>().userPrefs.get(
+                HiveService.kTravelerCountryUnsupported,
+                defaultValue: false,
+              ) ==
+              true;
+      if (travelerCountryUnsupported) {
+        return '/auth/country-selection';
+      }
       final accountState = context.read<StripeAccountBloc>().state;
       if (accountState is StripeAccountReady) {
         if (accountState.accountStatus.isDisabled) return '/account/disabled';

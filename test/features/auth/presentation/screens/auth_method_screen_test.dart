@@ -24,6 +24,10 @@ Widget _app(AuthBloc bloc) => MaterialApp.router(
           child: const AuthMethodScreen(),
         ),
       ),
+      GoRoute(
+        path: '/home',
+        builder: (_, _) => const Scaffold(body: Text('Recherche avec carte')),
+      ),
     ],
   ),
 );
@@ -32,7 +36,7 @@ void main() {
   setUp(() => setSmsAuthEnabled(kSmsAuthEnabledDefault));
   tearDown(() => setSmsAuthEnabled(kSmsAuthEnabledDefault));
 
-  testWidgets('affiche la mascotte Yadony joyeuse à la place du papillon', (
+  testWidgets('affiche le logo Yadony et les messages rassurants', (
     tester,
   ) async {
     final bloc = MockAuthBloc();
@@ -42,13 +46,47 @@ void main() {
     await tester.pumpWidget(_app(bloc));
     await tester.pump(const Duration(milliseconds: 600));
 
-    final animated = tester.widget<DonyMascotteAnimated>(
-      find.byType(DonyMascotteAnimated),
+    expect(find.byType(DonyLogo), findsOneWidget);
+    expect(find.text('Sécurisé'), findsOneWidget);
+    expect(find.text('Connecte-toi en toute confiance'), findsOneWidget);
+    expect(
+      find.text(
+        'Tes échanges, ton paiement et ton suivi colis sont protégés à chaque étape.',
+      ),
+      findsOneWidget,
     );
-    expect(animated.type, DonyMascotteType.joyeux);
-    expect(animated.size, DonyMascotteSize.md);
+    expect(find.text('Parcourir sans compte'), findsOneWidget);
+    expect(
+      find.text(
+        'Accès limité : recherche uniquement. Connexion requise pour publier, contacter, réserver ou payer.',
+      ),
+      findsOneWidget,
+    );
     expect(find.byType(DonyHeroAvatar), findsNothing);
     expect(find.text('🦋'), findsNothing);
+
+    await bloc.close();
+  });
+
+  testWidgets('respecte le theme clair Yadony blanc et bleu', (tester) async {
+    final bloc = MockAuthBloc();
+    when(() => bloc.state).thenReturn(const AuthInitial());
+    when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
+    final theme = AppTheme.light();
+
+    await tester.pumpWidget(_app(bloc));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    final scaffold = tester.widget<Scaffold>(find.byType(Scaffold));
+    expect(scaffold.backgroundColor, theme.scaffoldBackgroundColor);
+
+    final title = tester.widget<Text>(
+      find.text('Connecte-toi en toute confiance'),
+    );
+    expect(title.style?.color, theme.colorScheme.onSurface);
+
+    final badge = tester.widget<Text>(find.text('Sécurisé'));
+    expect(badge.style?.color, theme.colorScheme.primary);
 
     await bloc.close();
   });
@@ -65,6 +103,8 @@ void main() {
 
       expect(find.text('Continuer avec mon téléphone'), findsNothing);
       expect(find.text('Continuer avec Google'), findsOneWidget);
+      expect(find.text('Continuer avec mon email'), findsOneWidget);
+      expect(find.text('Parcourir sans compte'), findsOneWidget);
 
       await bloc.close();
     },
@@ -86,4 +126,22 @@ void main() {
       await bloc.close();
     },
   );
+
+  testWidgets('Parcourir sans compte ouvre la vraie recherche avec carte', (
+    tester,
+  ) async {
+    final bloc = MockAuthBloc();
+    when(() => bloc.state).thenReturn(const AuthInitial());
+    when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
+
+    await tester.pumpWidget(_app(bloc));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    await tester.tap(find.text('Parcourir sans compte'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Recherche avec carte'), findsOneWidget);
+
+    await bloc.close();
+  });
 }
