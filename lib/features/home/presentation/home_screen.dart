@@ -10,6 +10,7 @@ import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/auth/guest_access_guard.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_required_sheet.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
@@ -118,7 +119,9 @@ class _MapSenderViewState extends State<_MapSenderView> {
   /// Mode de recherche courant. Deux valeurs exclusives : il n'existe plus de
   /// vue mixte. Le mode pilote la liste, les marqueurs de carte, les chips
   /// spécifiques et la feuille de filtres.
-  SearchMode _mode = SearchMode.trips;
+  SearchMode _mode = GuestAccessGuard.initialSearchMode(
+    isAuthenticated: FirebaseAuth.instance.currentUser != null,
+  );
 
   /// Filtres de recherche, communs et spécifiques réunis. Un seul porteur pour
   /// les deux modes : c'est ce qui fait survivre le corridor et la date à la
@@ -345,6 +348,10 @@ class _MapSenderViewState extends State<_MapSenderView> {
 
   void _dispatchSearch() {
     if (!mounted) return;
+    if (FirebaseAuth.instance.currentUser == null) {
+      unawaited(AuthRequiredSheet.show(context));
+      return;
+    }
     // `toAnnouncementQuery` (et non `toSearchParams`) : c'est elle qui porte le
     // vrai payload serveur — corridor neutralisé par « près de moi », booléens
     // jamais envoyés à false.
@@ -414,6 +421,12 @@ class _MapSenderViewState extends State<_MapSenderView> {
   /// bascule produira. Lire `_filters` directement laisserait tomber la
   /// neutralisation du corridor par « près de moi », la position et le rayon.
   Future<void> _dispatchOtherModeCount() async {
+    if (FirebaseAuth.instance.currentUser == null) {
+      if (mounted) {
+        setState(() => _otherModeCount = null);
+      }
+      return;
+    }
     if (!_filters.otherModeCountIsMeaningful) {
       if (mounted) {
         setState(() => _otherModeCount = null);
@@ -502,6 +515,14 @@ class _MapSenderViewState extends State<_MapSenderView> {
 
   void _onModeChanged(SearchMode mode) {
     if (mode == _mode) {
+      return;
+    }
+    final isAuthenticated = FirebaseAuth.instance.currentUser != null;
+    if (!GuestAccessGuard.canUseSearchMode(
+      mode,
+      isAuthenticated: isAuthenticated,
+    )) {
+      unawaited(AuthRequiredSheet.show(context));
       return;
     }
     setState(() {
@@ -935,12 +956,15 @@ class _MapSenderViewState extends State<_MapSenderView> {
           .copyWith(weightMin: result.weightKg);
     }
 
+    final isAuthenticated = FirebaseAuth.instance.currentUser != null;
     setState(() {
-      _mode = SearchMode.trips;
+      _mode = GuestAccessGuard.initialSearchMode(
+        isAuthenticated: isAuthenticated,
+      );
       _filters = next;
       _otherModeCount = null;
     });
-    _dispatchSearch();
+    _dispatchForMode();
     unawaited(_dispatchOtherModeCount());
   }
 
