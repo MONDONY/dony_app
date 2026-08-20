@@ -442,6 +442,11 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `trip_poster_opened` | TripPosterScreen.initState — ouverture de l'affiche partageable d'un trajet |
 | `trip_poster_shared` | TripPosterScreen — partage de l'image via la feuille système (`action: share`) ou enregistrement galerie (`action: save`) ; non émis si le partage est annulé |
 | `trip_poster_link_copied` | TripPosterScreen — tap sur « Copier le lien » ou « Copier la légende ». Le canal réel est porté par le lien lui-même (`?c=lien` / `?c=post` / `?c=partage`), pas par une propriété : il doit survivre au partage hors de l'app |
+| `search_composer_opened` | SearchComposerBloc._onStarted() — déclenché par `SearchComposerStarted`, émis depuis `SearchComposerScreen.initState` (`addPostFrameCallback`) à l'ouverture de l'écran de composition de recherche, avant le premier comptage sur les filtres hérités de l'onglet (propriété `mode`) |
+| `search_phrase_parsed` | SearchComposerBloc._onPhraseSubmitted() — après un appel réussi au parseur serveur (`SearchParseRepository.parse`), que la phrase soit reconnue ou non (propriétés `recognized_count`, `unresolved_count`, `used_voice`). La phrase elle-même n'est jamais envoyée |
+| `search_voice_used` | SearchComposerScreen._onMicPressed() — la feuille de dictée (`VoiceDictationSheet.show`) renvoie un texte non vide au relâchement du micro, avant la soumission au parseur. Événement tiré depuis le widget (`getIt<AnalyticsService>()` direct, pas le BLoC), sans propriété |
+| `search_parse_failed` | SearchComposerBloc._onPhraseSubmitted() — la phrase parsée par le serveur ne reconnaît aucun champ (`result.recognized` vide), sous-cas de `search_phrase_parsed` (propriété `unresolved_kinds`) |
+| `search_submitted` | HomeScreen._onFiltersChanged() — à chaque application de filtres sur l'écran Rechercher (retour de l'écran de composition, mais aussi tout autre changement de filtre : chips, sheets de date/prix/poids/note, bascule « Pour mes trajets »), seul point de sortie de tout changement de filtre (propriétés `mode`, `filter_count`, `came_from_phrase` — cette dernière mesure la part des recherches qui passent par la phrase plutôt que par les filtres au doigt, elle décidera du sort du bloc « En une phrase ») |
 | `bloc_error` | AnalyticsBlocObserver.onError() — global |
 
 ---
