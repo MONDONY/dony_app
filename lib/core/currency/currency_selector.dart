@@ -4,20 +4,11 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:flutter/material.dart';
 
-/// Table de correspondance JSON pour [BidPaymentMethod] — même mapping que
-/// les `@JsonValue` de l'enum, dupliqué ici volontairement : ce fichier ne
-/// dépend pas du code généré (`bid_model.g.dart`), seulement du type public.
-const Map<BidPaymentMethod, String> _paymentMethodWireValues = {
-  BidPaymentMethod.stripe: 'STRIPE',
-  BidPaymentMethod.cash: 'CASH',
-  BidPaymentMethod.wave: 'WAVE',
-  BidPaymentMethod.orangeMoney: 'ORANGE_MONEY',
-};
-
 Set<BidPaymentMethod> _paymentMethodsFromJson(List<dynamic>? values) {
+  // Sens décodage dérivé de [BidPaymentMethodApi.apiValue], la seule source
+  // publique du mapping @JsonValue — jamais de littéraux dupliqués ici.
   final byWireValue = {
-    for (final entry in _paymentMethodWireValues.entries)
-      entry.value: entry.key,
+    for (final method in BidPaymentMethod.values) method.apiValue: method,
   };
   return (values ?? const [])
       .map((value) => byWireValue[value as String])
