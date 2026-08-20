@@ -222,7 +222,9 @@ void main() {
       expect(find.text('Relâchez pour valider'), findsOneWidget);
 
       // Résultat partiel : rendu, mais pas encore ce qui sera renvoyé.
-      fakePlatform.onTextRecognition?.call(_resultJson('paris', isFinal: false));
+      fakePlatform.onTextRecognition?.call(
+        _resultJson('paris', isFinal: false),
+      );
       await tester.pump();
       expect(find.text('paris'), findsOneWidget);
 
@@ -328,7 +330,9 @@ void main() {
     (tester) async {
       tester.platformDispatcher.accessibilityFeaturesTestValue =
           const FakeAccessibilityFeatures(disableAnimations: true);
-      addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
+      addTearDown(
+        tester.platformDispatcher.clearAccessibilityFeaturesTestValue,
+      );
 
       final holder = await _openSheet(tester);
 

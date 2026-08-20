@@ -539,7 +539,8 @@ void main() {
       expect(
         bloc.state.filters.weightMax,
         isNull,
-        reason: 'régression C2 : maxWeight (colis) ne doit jamais polluer '
+        reason:
+            'régression C2 : maxWeight (colis) ne doit jamais polluer '
             'weightMax (trajets)',
       );
       verify(

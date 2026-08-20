@@ -19,12 +19,12 @@ enum UnresolvedKind {
   /// Renvoie null pour une valeur inconnue : un backend plus récent ne doit
   /// jamais faire planter une version d'app plus ancienne.
   static UnresolvedKind? fromWire(String? wire) => switch (wire) {
-        'PRICE_VAGUE' => UnresolvedKind.priceVague,
-        'DATE_VAGUE' => UnresolvedKind.dateVague,
-        'CITY_UNKNOWN' => UnresolvedKind.cityUnknown,
-        'CITY_AMBIGUOUS' => UnresolvedKind.cityAmbiguous,
-        _ => null,
-      };
+    'PRICE_VAGUE' => UnresolvedKind.priceVague,
+    'DATE_VAGUE' => UnresolvedKind.dateVague,
+    'CITY_UNKNOWN' => UnresolvedKind.cityUnknown,
+    'CITY_AMBIGUOUS' => UnresolvedKind.cityAmbiguous,
+    _ => null,
+  };
 }
 
 class RecognizedField {
@@ -33,7 +33,8 @@ class RecognizedField {
   final String field;
   final String value;
 
-  factory RecognizedField.fromJson(Map<String, dynamic> json) => RecognizedField(
+  factory RecognizedField.fromJson(Map<String, dynamic> json) =>
+      RecognizedField(
         field: json['field'] as String? ?? '',
         value: '${json['value'] ?? ''}',
       );
@@ -158,8 +159,8 @@ class SearchParseResult {
       raw is String ? DateTime.tryParse(raw) : null;
 
   static double? _number(Object? raw) => switch (raw) {
-        final num n => n.toDouble(),
-        final String s => double.tryParse(s),
-        _ => null,
-      };
+    final num n => n.toDouble(),
+    final String s => double.tryParse(s),
+    _ => null,
+  };
 }

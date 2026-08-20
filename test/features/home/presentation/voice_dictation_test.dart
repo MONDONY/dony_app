@@ -86,29 +86,32 @@ void main() {
     unregisterFakeRecentCityStore();
   });
 
-  testWidgets('sans reconnaissance disponible, le micro disparaît et le champ reste',
-      (tester) async {
-    // Le test monte l'écran avec un service de dictée déclaré indisponible.
-    await tester.pumpWidget(const _HarnessWithoutSpeech());
-    await tester.pumpAndSettle();
+  testWidgets(
+    'sans reconnaissance disponible, le micro disparaît et le champ reste',
+    (tester) async {
+      // Le test monte l'écran avec un service de dictée déclaré indisponible.
+      await tester.pumpWidget(const _HarnessWithoutSpeech());
+      await tester.pumpAndSettle();
 
-    expect(find.byIcon(Icons.mic_rounded), findsNothing);
-    // `find.byType(TextField)` matcherait aussi les champs ville du bloc OÙ
-    // (le squelette imposé de la Task 3) : la clé du champ de phrase cible
-    // précisément la saisie au clavier que ce test protège.
-    expect(find.byKey(const Key('search-phrase-textfield')), findsOneWidget,
-        reason: 'la saisie au clavier doit rester possible');
-  });
+      expect(find.byIcon(Icons.mic_rounded), findsNothing);
+      // `find.byType(TextField)` matcherait aussi les champs ville du bloc OÙ
+      // (le squelette imposé de la Task 3) : la clé du champ de phrase cible
+      // précisément la saisie au clavier que ce test protège.
+      expect(
+        find.byKey(const Key('search-phrase-textfield')),
+        findsOneWidget,
+        reason: 'la saisie au clavier doit rester possible',
+      );
+    },
+  );
 
-  testWidgets('le bouton de dictée porte un libellé d accessibilité',
-      (tester) async {
+  testWidgets('le bouton de dictée porte un libellé d accessibilité', (
+    tester,
+  ) async {
     await tester.pumpWidget(const _HarnessWithSpeech());
     await tester.pumpAndSettle();
 
-    expect(
-      find.bySemanticsLabel('Dicter votre recherche'),
-      findsOneWidget,
-    );
+    expect(find.bySemanticsLabel('Dicter votre recherche'), findsOneWidget);
   });
 }
 

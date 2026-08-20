@@ -52,7 +52,10 @@ void main() {
     });
 
     test('expose text et fromVoice', () {
-      const event = SearchComposerPhraseSubmitted('pas trop cher', fromVoice: true);
+      const event = SearchComposerPhraseSubmitted(
+        'pas trop cher',
+        fromVoice: true,
+      );
       expect(event.text, 'pas trop cher');
       expect(event.fromVoice, isTrue);
     });

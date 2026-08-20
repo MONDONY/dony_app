@@ -39,21 +39,26 @@ class SearchComposerState extends Equatable {
     bool? isCounting,
     AppException? error,
     bool clearError = false,
-  }) =>
-      SearchComposerState(
-        filters: filters ?? this.filters,
-        phrase: phrase ?? this.phrase,
-        recognized: recognized ?? this.recognized,
-        unresolved: unresolved ?? this.unresolved,
-        resultCount: clearResultCount ? null : (resultCount ?? this.resultCount),
-        isParsing: isParsing ?? this.isParsing,
-        isCounting: isCounting ?? this.isCounting,
-        error: clearError ? null : (error ?? this.error),
-      );
+  }) => SearchComposerState(
+    filters: filters ?? this.filters,
+    phrase: phrase ?? this.phrase,
+    recognized: recognized ?? this.recognized,
+    unresolved: unresolved ?? this.unresolved,
+    resultCount: clearResultCount ? null : (resultCount ?? this.resultCount),
+    isParsing: isParsing ?? this.isParsing,
+    isCounting: isCounting ?? this.isCounting,
+    error: clearError ? null : (error ?? this.error),
+  );
 
   @override
   List<Object?> get props => [
-        filters, phrase, recognized, unresolved,
-        resultCount, isParsing, isCounting, error,
-      ];
+    filters,
+    phrase,
+    recognized,
+    unresolved,
+    resultCount,
+    isParsing,
+    isCounting,
+    error,
+  ];
 }

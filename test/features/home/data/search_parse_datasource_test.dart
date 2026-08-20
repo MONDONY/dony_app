@@ -16,40 +16,43 @@ void main() {
   });
 
   group('SearchParseDatasource.parse', () {
-    test('poste le texte et le mode wireifié, désérialise la réponse', () async {
-      when(
-        () => mockDio.post<dynamic>(
-          '/search/parse',
-          data: {'text': 'colis 10kg vers Dakar', 'mode': 'PACKAGES'},
-        ),
-      ).thenAnswer(
-        (_) async => Response(
-          data: {
-            'filters': {'arrivalCity': 'Dakar', 'maxWeight': 10},
-            'recognized': [
-              {'field': 'arrivalCity', 'value': 'Dakar'},
-            ],
-            'unresolved': [],
-          },
-          statusCode: 200,
-          requestOptions: RequestOptions(),
-        ),
-      );
+    test(
+      'poste le texte et le mode wireifié, désérialise la réponse',
+      () async {
+        when(
+          () => mockDio.post<dynamic>(
+            '/search/parse',
+            data: {'text': 'colis 10kg vers Dakar', 'mode': 'PACKAGES'},
+          ),
+        ).thenAnswer(
+          (_) async => Response(
+            data: {
+              'filters': {'arrivalCity': 'Dakar', 'maxWeight': 10},
+              'recognized': [
+                {'field': 'arrivalCity', 'value': 'Dakar'},
+              ],
+              'unresolved': [],
+            },
+            statusCode: 200,
+            requestOptions: RequestOptions(),
+          ),
+        );
 
-      final result = await datasource.parse(
-        'colis 10kg vers Dakar',
-        SearchMode.parcels,
-      );
+        final result = await datasource.parse(
+          'colis 10kg vers Dakar',
+          SearchMode.parcels,
+        );
 
-      expect(result.filters['arrivalCity'], 'Dakar');
-      expect(result.recognized, hasLength(1));
-      verify(
-        () => mockDio.post<dynamic>(
-          '/search/parse',
-          data: {'text': 'colis 10kg vers Dakar', 'mode': 'PACKAGES'},
-        ),
-      ).called(1);
-    });
+        expect(result.filters['arrivalCity'], 'Dakar');
+        expect(result.recognized, hasLength(1));
+        verify(
+          () => mockDio.post<dynamic>(
+            '/search/parse',
+            data: {'text': 'colis 10kg vers Dakar', 'mode': 'PACKAGES'},
+          ),
+        ).called(1);
+      },
+    );
 
     test('mode trips est wireifié en TRIPS, jamais TRIP ni PARCELS', () async {
       when(
@@ -77,10 +80,7 @@ void main() {
 
     test('propage l\'erreur réseau sans l\'avaler', () async {
       when(
-        () => mockDio.post<dynamic>(
-          '/search/parse',
-          data: any(named: 'data'),
-        ),
+        () => mockDio.post<dynamic>('/search/parse', data: any(named: 'data')),
       ).thenThrow(DioException(requestOptions: RequestOptions()));
 
       expect(

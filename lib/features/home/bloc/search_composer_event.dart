@@ -47,7 +47,10 @@ class SearchComposerFiltersChanged extends SearchComposerEvent {
 
 /// L'utilisateur tranche une ambiguïté que le parseur a refusé de deviner.
 class SearchComposerUnresolvedAnswered extends SearchComposerEvent {
-  const SearchComposerUnresolvedAnswered({required this.kind, required this.value});
+  const SearchComposerUnresolvedAnswered({
+    required this.kind,
+    required this.value,
+  });
 
   final UnresolvedKind kind;
   final String value;

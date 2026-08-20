@@ -1400,28 +1400,27 @@ void main() {
   // (régression du bug corrigé : avant, `_onFiltersChanged` le traçait à
   // chaque changement, faussant complètement le ratio phrase/filtres).
   group('search_submitted', () {
-    testWidgets(
-      'un changement direct au doigt (hors composer) ne trace rien',
-      (tester) async {
-        await pumpHome(tester);
+    testWidgets('un changement direct au doigt (hors composer) ne trace rien', (
+      tester,
+    ) async {
+      await pumpHome(tester);
 
-        await tester.tap(find.text('🔥 Urgent'));
-        await tester.pumpAndSettle();
-        await tester.tap(find.byKey(const Key('chip-date')));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text("Aujourd'hui").last);
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Appliquer'));
-        await tester.pumpAndSettle();
+      await tester.tap(find.text('🔥 Urgent'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('chip-date')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text("Aujourd'hui").last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Appliquer'));
+      await tester.pumpAndSettle();
 
-        verifyNever(
-          () => analytics.logEvent(
-            AnalyticsEvents.searchSubmitted,
-            properties: any(named: 'properties'),
-          ),
-        );
-      },
-    );
+      verifyNever(
+        () => analytics.logEvent(
+          AnalyticsEvents.searchSubmitted,
+          properties: any(named: 'properties'),
+        ),
+      );
+    });
 
     testWidgets(
       'valider depuis l\'écran de composition trace came_from_phrase: false '

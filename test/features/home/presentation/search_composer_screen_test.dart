@@ -409,22 +409,19 @@ void main() {
       },
     );
 
-    testWidgets(
-      'permission accordée : active le filtre, affiche le rayon par '
-      'défaut (25 km)',
-      (tester) async {
-        GeolocatorPlatform.instance = _FakeGeolocatorPlatform();
+    testWidgets('permission accordée : active le filtre, affiche le rayon par '
+        'défaut (25 km)', (tester) async {
+      GeolocatorPlatform.instance = _FakeGeolocatorPlatform();
 
-        await tester.pumpWidget(const _Harness());
-        await tester.pumpAndSettle();
+      await tester.pumpWidget(const _Harness());
+      await tester.pumpAndSettle();
 
-        await _scrollTo(tester, find.text('Autour de moi'));
-        await tester.tap(find.text('Autour de moi'));
-        await _settleFilterChange(tester);
+      await _scrollTo(tester, find.text('Autour de moi'));
+      await tester.tap(find.text('Autour de moi'));
+      await _settleFilterChange(tester);
 
-        expect(find.textContaining('Rayon · 25 km'), findsOneWidget);
-      },
-    );
+      expect(find.textContaining('Rayon · 25 km'), findsOneWidget);
+    });
 
     testWidgets(
       'permission refusée (denied puis denied) : ouvre la feuille refusée, '
@@ -485,59 +482,55 @@ void main() {
       },
     );
 
-    testWidgets(
-      'un second tap désactive le filtre : le rayon disparaît',
-      (tester) async {
-        GeolocatorPlatform.instance = _FakeGeolocatorPlatform();
+    testWidgets('un second tap désactive le filtre : le rayon disparaît', (
+      tester,
+    ) async {
+      GeolocatorPlatform.instance = _FakeGeolocatorPlatform();
 
-        await tester.pumpWidget(const _Harness());
-        await tester.pumpAndSettle();
+      await tester.pumpWidget(const _Harness());
+      await tester.pumpAndSettle();
 
-        await _scrollTo(tester, find.text('Autour de moi'));
-        await tester.tap(find.text('Autour de moi'));
-        await _settleFilterChange(tester);
-        expect(find.textContaining('Rayon · 25 km'), findsOneWidget);
+      await _scrollTo(tester, find.text('Autour de moi'));
+      await tester.tap(find.text('Autour de moi'));
+      await _settleFilterChange(tester);
+      expect(find.textContaining('Rayon · 25 km'), findsOneWidget);
 
-        await tester.tap(find.text('Autour de moi'));
-        await _settleFilterChange(tester);
-        expect(find.textContaining('Rayon ·'), findsNothing);
-      },
-    );
+      await tester.tap(find.text('Autour de moi'));
+      await _settleFilterChange(tester);
+      expect(find.textContaining('Rayon ·'), findsNothing);
+    });
 
-    testWidgets(
-      'tap sur la pastille de rayon ouvre la feuille et applique la '
-      'nouvelle valeur',
-      (tester) async {
-        GeolocatorPlatform.instance = _FakeGeolocatorPlatform();
+    testWidgets('tap sur la pastille de rayon ouvre la feuille et applique la '
+        'nouvelle valeur', (tester) async {
+      GeolocatorPlatform.instance = _FakeGeolocatorPlatform();
 
-        await tester.pumpWidget(const _Harness());
-        await tester.pumpAndSettle();
+      await tester.pumpWidget(const _Harness());
+      await tester.pumpAndSettle();
 
-        await _scrollTo(tester, find.text('Autour de moi'));
-        await tester.tap(find.text('Autour de moi'));
-        await _settleFilterChange(tester);
-        expect(find.textContaining('Rayon · 25 km'), findsOneWidget);
+      await _scrollTo(tester, find.text('Autour de moi'));
+      await tester.tap(find.text('Autour de moi'));
+      await _settleFilterChange(tester);
+      expect(find.textContaining('Rayon · 25 km'), findsOneWidget);
 
-        // La pastille apparaît sous le chip, une fois le filtre actif : sans
-        // ce second scroll, elle peut se retrouver masquée par la barre de
-        // navigation basse persistante (« Rechercher »), hors de portée d'un
-        // tap.
-        await _scrollTo(tester, find.textContaining('Rayon · 25 km'));
-        await tester.tap(find.textContaining('Rayon · 25 km'));
-        await tester.pumpAndSettle();
-        expect(find.text('Près de moi'), findsOneWidget);
+      // La pastille apparaît sous le chip, une fois le filtre actif : sans
+      // ce second scroll, elle peut se retrouver masquée par la barre de
+      // navigation basse persistante (« Rechercher »), hors de portée d'un
+      // tap.
+      await _scrollTo(tester, find.textContaining('Rayon · 25 km'));
+      await tester.tap(find.textContaining('Rayon · 25 km'));
+      await tester.pumpAndSettle();
+      expect(find.text('Près de moi'), findsOneWidget);
 
-        // Fait glisser le slider vers la droite : la valeur affichée doit
-        // dépasser 25 km.
-        await tester.drag(find.byType(Slider), const Offset(120, 0));
-        await tester.pumpAndSettle();
+      // Fait glisser le slider vers la droite : la valeur affichée doit
+      // dépasser 25 km.
+      await tester.drag(find.byType(Slider), const Offset(120, 0));
+      await tester.pumpAndSettle();
 
-        await tester.tap(find.text('Appliquer'));
-        await _settleFilterChange(tester);
+      await tester.tap(find.text('Appliquer'));
+      await _settleFilterChange(tester);
 
-        expect(find.textContaining('Rayon · 25 km'), findsNothing);
-      },
-    );
+      expect(find.textContaining('Rayon · 25 km'), findsNothing);
+    });
   });
 }
 
