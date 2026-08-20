@@ -447,6 +447,45 @@ void main() {
     });
   });
 
+  group('AnnouncementModel.convertedPricePerKg / convertedCurrency', () {
+    test(
+      'parses the server-computed conversion into the reader\'s currency',
+      () {
+        final json = baseAnnouncementJson()
+          ..['currency'] = 'EUR'
+          ..['convertedPricePerKg'] = 3279.79
+          ..['convertedCurrency'] = 'XOF';
+        final model = AnnouncementModel.fromJson(json);
+
+        expect(model.convertedPricePerKg, 3279.79);
+        expect(model.convertedCurrency, 'XOF');
+      },
+    );
+
+    test('defaults both to null when the server has nothing to convert', () {
+      final model = AnnouncementModel.fromJson(baseAnnouncementJson());
+      expect(model.convertedPricePerKg, isNull);
+      expect(model.convertedCurrency, isNull);
+    });
+
+    test('parses an integer convertedPricePerKg as a double', () {
+      final json = baseAnnouncementJson()
+        ..['convertedPricePerKg'] = 5
+        ..['convertedCurrency'] = 'USD';
+      final model = AnnouncementModel.fromJson(json);
+      expect(model.convertedPricePerKg, 5.0);
+    });
+
+    test('round-trips the conversion fields through toJson', () {
+      final json = baseAnnouncementJson()
+        ..['convertedPricePerKg'] = 42.0
+        ..['convertedCurrency'] = 'USD';
+      final out = AnnouncementModel.fromJson(json).toJson();
+      expect(out['convertedPricePerKg'], 42.0);
+      expect(out['convertedCurrency'], 'USD');
+    });
+  });
+
   group('AnnouncementModel.arrivalInstructions', () {
     test('fromJson parses arrivalInstructions', () {
       final json = baseAnnouncementJson()

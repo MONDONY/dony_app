@@ -25,6 +25,9 @@ AnnouncementModel _makeAnn({
   DateTime? departureDate,
   List<String>? acceptedContentTypes,
   String currency = 'EUR',
+  String pricingMode = 'KG',
+  double? convertedPricePerKg,
+  String? convertedCurrency,
 }) => AnnouncementModel(
   id: 'a1',
   travelerId: 't1',
@@ -37,6 +40,9 @@ AnnouncementModel _makeAnn({
   totalKg: 8,
   pricePerKg: 12,
   currency: currency,
+  pricingMode: pricingMode,
+  convertedPricePerKg: convertedPricePerKg,
+  convertedCurrency: convertedCurrency,
   status: 'ACTIVE',
   createdAt: DateTime(2026, 5),
   updatedAt: DateTime(2026, 5),
@@ -109,6 +115,92 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.textContaining('CA\$'), findsOneWidget);
         expect(find.textContaining('€/kg'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'affiche l\'équivalent converti comme une estimation quand le serveur en fournit un',
+      (tester) async {
+        await tester.pumpWidget(
+          _wrap(
+            TravelerCard(
+              announcement: _makeAnn(
+                convertedPricePerKg: 3279.79,
+                convertedCurrency: 'XOF',
+              ),
+              index: 0,
+              isOwnAnnouncement: false,
+              onTap: () {},
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        // Le montant d'origine reste affiché dans la devise de l'annonce.
+        expect(find.textContaining('€/kg'), findsOneWidget);
+        // L'équivalent converti est présenté comme une estimation.
+        expect(find.textContaining('environ'), findsOneWidget);
+        expect(find.textContaining('F CFA'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'n\'affiche aucune conversion quand le lecteur est dans la même devise que le trajet',
+      (tester) async {
+        await tester.pumpWidget(
+          _wrap(
+            TravelerCard(
+              announcement: _makeAnn(
+                convertedPricePerKg: 12,
+                convertedCurrency: 'EUR',
+              ),
+              index: 0,
+              isOwnAnnouncement: false,
+              onTap: () {},
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(find.textContaining('environ'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'n\'affiche aucune conversion quand le serveur n\'en fournit pas',
+      (tester) async {
+        await tester.pumpWidget(
+          _wrap(
+            TravelerCard(
+              announcement: _makeAnn(),
+              index: 0,
+              isOwnAnnouncement: false,
+              onTap: () {},
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(find.textContaining('environ'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'n\'affiche aucune conversion en mode grille tarifaire (MIXED)',
+      (tester) async {
+        await tester.pumpWidget(
+          _wrap(
+            TravelerCard(
+              announcement: _makeAnn(
+                pricingMode: 'MIXED',
+                convertedPricePerKg: 3279.79,
+                convertedCurrency: 'XOF',
+              ),
+              index: 0,
+              isOwnAnnouncement: false,
+              onTap: () {},
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(find.textContaining('environ'), findsNothing);
       },
     );
 

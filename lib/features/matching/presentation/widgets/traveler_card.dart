@@ -1,3 +1,4 @@
+import 'package:dony/core/currency/converted_price.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
@@ -260,15 +261,30 @@ class TravelerCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: DonySpacing.sm),
-                    Text(
-                      priceLabel,
-                      style: tt.titleLarge?.copyWith(
-                        color: cs.success,
-                        fontWeight: FontWeight.w700,
-                        fontFeatures: const [FontFeature.tabularFigures()],
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          priceLabel,
+                          style: tt.titleLarge?.copyWith(
+                            color: cs.success,
+                            fontWeight: FontWeight.w700,
+                            fontFeatures: const [FontFeature.tabularFigures()],
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                        // Mode MIXED : le prix est une grille, pas un montant
+                        // unique au kilo, donc pas d'équivalent converti ici.
+                        if (announcement.pricingMode != 'MIXED')
+                          ConvertedPriceLabel(
+                            originalCurrency: announcement.currency,
+                            convertedPricePerKg:
+                                announcement.convertedPricePerKg,
+                            convertedCurrency: announcement.convertedCurrency,
+                          ),
+                      ],
                     ),
                   ],
                 ),
