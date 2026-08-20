@@ -1,11 +1,16 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/auth/presentation/post_signup_route.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -17,16 +22,28 @@ class AuthMethodScreen extends StatelessWidget {
 
   bool get _showAppleButton => defaultTargetPlatform == TargetPlatform.iOS;
 
+  Future<void> _continueAfterNewAccount(BuildContext context) async {
+    final route = await resolvePostSignupRoute(
+      getIt<AnalyticsService>(),
+      getIt<HiveService>().userPrefs,
+    );
+    if (context.mounted) {
+      context.go(route);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final h = DonyLayout.hPadding(context);
     final media = MediaQuery.of(context);
 
     return Scaffold(
-      backgroundColor: DonyColors.ink900,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
-          if (state is AuthAuthenticated) {
+          if (state is AuthNewAccountAuthenticated) {
+            unawaited(_continueAfterNewAccount(context));
+          } else if (state is AuthAuthenticated) {
             context.go('/auth/local');
           } else if (state is AuthOAuthNewUser) {
             // OAuth user not yet registered → auto-register (backend forces SENDER)
@@ -102,6 +119,9 @@ class _LoginBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final isLight = cs.brightness == Brightness.light;
+
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -109,18 +129,37 @@ class _LoginBackground extends StatelessWidget {
           'assets/illustrations/auth-login-security.png',
           fit: BoxFit.cover,
           semanticLabel: 'Voyageur Yadony tenant un colis sécurisé',
+          opacity: AlwaysStoppedAnimation(isLight ? 0.32 : 1),
+        ),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            color: isLight
+                ? Theme.of(
+                    context,
+                  ).scaffoldBackgroundColor.withValues(alpha: 0.30)
+                : null,
+          ),
         ),
         DecoratedBox(
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [
-                DonyColors.ink900.withValues(alpha: 0.36),
-                DonyColors.ink900.withValues(alpha: 0.10),
-                DonyColors.ink900.withValues(alpha: 0.62),
-                DonyColors.ink900.withValues(alpha: 0.94),
-              ],
+              colors: isLight
+                  ? [
+                      cs.surface.withValues(alpha: 0.90),
+                      cs.primaryContainer.withValues(alpha: 0.62),
+                      cs.surface.withValues(alpha: 0.86),
+                      Theme.of(
+                        context,
+                      ).scaffoldBackgroundColor.withValues(alpha: 0.98),
+                    ]
+                  : [
+                      DonyColors.ink900.withValues(alpha: 0.36),
+                      DonyColors.ink900.withValues(alpha: 0.10),
+                      DonyColors.ink900.withValues(alpha: 0.62),
+                      DonyColors.ink900.withValues(alpha: 0.94),
+                    ],
               stops: const [0, 0.32, 0.58, 1],
             ),
           ),
@@ -135,6 +174,7 @@ class _LoginTopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Row(
       children: [
         ClipRRect(
@@ -145,10 +185,14 @@ class _LoginTopBar extends StatelessWidget {
               height: 52,
               padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md),
               decoration: BoxDecoration(
-                color: DonyColors.neutral0.withValues(alpha: 0.82),
+                color: cs.surface.withValues(
+                  alpha: cs.brightness == Brightness.light ? 0.92 : 0.82,
+                ),
                 borderRadius: BorderRadius.circular(DonyRadius.full),
                 border: Border.all(
-                  color: DonyColors.neutral0.withValues(alpha: 0.28),
+                  color: cs.outline.withValues(
+                    alpha: cs.brightness == Brightness.light ? 0.42 : 0.28,
+                  ),
                 ),
               ),
               child: const Center(child: DonyLogo(fontSize: 28)),
@@ -167,7 +211,9 @@ class _SecureBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final isLight = cs.brightness == Brightness.light;
     return ClipRRect(
       borderRadius: BorderRadius.circular(DonyRadius.full),
       child: BackdropFilter(
@@ -176,25 +222,25 @@ class _SecureBadge extends StatelessWidget {
           height: 44,
           padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md),
           decoration: BoxDecoration(
-            color: DonyColors.ink900.withValues(alpha: 0.42),
+            color: isLight
+                ? cs.primaryContainer.withValues(alpha: 0.92)
+                : DonyColors.ink900.withValues(alpha: 0.42),
             borderRadius: BorderRadius.circular(DonyRadius.full),
             border: Border.all(
-              color: DonyColors.neutral0.withValues(alpha: 0.18),
+              color: isLight
+                  ? cs.primary.withValues(alpha: 0.18)
+                  : DonyColors.neutral0.withValues(alpha: 0.18),
             ),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const DonyIcon(
-                'shield-check',
-                size: 18,
-                color: DonyColors.successDark500,
-              ),
+              DonyIcon('shield-check', size: 18, color: cs.success),
               const SizedBox(width: DonySpacing.xs),
               Text(
                 'Sécurisé',
                 style: tt.labelLarge?.copyWith(
-                  color: DonyColors.neutral0,
+                  color: isLight ? cs.primary : DonyColors.neutral0,
                   fontWeight: FontWeight.w800,
                 ),
               ),
@@ -211,14 +257,16 @@ class _LoginIntro extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final isLight = cs.brightness == Brightness.light;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Connecte-toi en toute confiance',
           style: tt.displayLarge?.copyWith(
-            color: DonyColors.neutral0,
+            color: isLight ? cs.onSurface : DonyColors.neutral0,
             fontWeight: FontWeight.w900,
             height: 1.05,
           ),
@@ -227,7 +275,9 @@ class _LoginIntro extends StatelessWidget {
         Text(
           'Tes échanges, ton paiement et ton suivi colis sont protégés à chaque étape.',
           style: tt.bodyLarge?.copyWith(
-            color: DonyColors.neutral0.withValues(alpha: 0.84),
+            color: isLight
+                ? cs.onSurfaceVariant
+                : DonyColors.neutral0.withValues(alpha: 0.84),
             height: 1.45,
           ),
         ),
@@ -243,6 +293,8 @@ class _AuthActionsPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final isLight = cs.brightness == Brightness.light;
     return ClipRRect(
       borderRadius: BorderRadius.circular(DonyRadius.sheet),
       child: BackdropFilter(
@@ -250,10 +302,14 @@ class _AuthActionsPanel extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(DonySpacing.base),
           decoration: BoxDecoration(
-            color: DonyColors.ink900.withValues(alpha: 0.54),
+            color: isLight
+                ? cs.surface.withValues(alpha: 0.94)
+                : DonyColors.ink900.withValues(alpha: 0.54),
             borderRadius: BorderRadius.circular(DonyRadius.sheet),
             border: Border.all(
-              color: DonyColors.neutral0.withValues(alpha: 0.18),
+              color: isLight
+                  ? cs.outline.withValues(alpha: 0.42)
+                  : DonyColors.neutral0.withValues(alpha: 0.18),
             ),
             boxShadow: DonyShadow.lg,
           ),
@@ -335,16 +391,17 @@ class _SocialCta extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return SizedBox(
       height: 52,
       child: OutlinedButton.icon(
         onPressed: onTap,
-        icon: DonyIcon(iconAsset, size: 20, color: DonyColors.neutral0),
+        icon: DonyIcon(iconAsset, size: 20, color: cs.onSurface),
         label: Text(label),
         style: OutlinedButton.styleFrom(
-          backgroundColor: DonyColors.neutral0.withValues(alpha: 0.08),
-          foregroundColor: DonyColors.neutral0,
-          side: BorderSide(color: DonyColors.neutral0.withValues(alpha: 0.18)),
+          backgroundColor: cs.surface,
+          foregroundColor: cs.onSurface,
+          side: BorderSide(color: cs.outline.withValues(alpha: 0.72)),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(DonyRadius.lg),
           ),
@@ -360,14 +417,15 @@ class _GoogleCta extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return SizedBox(
       height: 52,
       child: OutlinedButton(
         onPressed: onTap,
         style: OutlinedButton.styleFrom(
-          backgroundColor: DonyColors.neutral0.withValues(alpha: 0.08),
-          foregroundColor: DonyColors.neutral0,
-          side: BorderSide(color: DonyColors.neutral0.withValues(alpha: 0.18)),
+          backgroundColor: cs.surface,
+          foregroundColor: cs.onSurface,
+          side: BorderSide(color: cs.outline.withValues(alpha: 0.72)),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(DonyRadius.lg),
           ),
@@ -452,31 +510,26 @@ class _OrDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     return Row(
       children: [
         Expanded(
-          child: Divider(
-            color: DonyColors.neutral0.withValues(alpha: 0.20),
-            height: 1,
-          ),
+          child: Divider(color: cs.outline.withValues(alpha: 0.52), height: 1),
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md),
           child: Text(
             'OU',
             style: tt.labelSmall?.copyWith(
-              color: DonyColors.neutral0.withValues(alpha: 0.70),
+              color: cs.onSurfaceVariant,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.8,
             ),
           ),
         ),
         Expanded(
-          child: Divider(
-            color: DonyColors.neutral0.withValues(alpha: 0.20),
-            height: 1,
-          ),
+          child: Divider(color: cs.outline.withValues(alpha: 0.52), height: 1),
         ),
       ],
     );
@@ -490,6 +543,7 @@ class _GuestCta extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     return Semantics(
       button: true,
@@ -498,10 +552,14 @@ class _GuestCta extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(DonySpacing.md),
         decoration: BoxDecoration(
-          color: DonyColors.neutral0.withValues(alpha: 0.06),
+          color: cs.primaryContainer.withValues(
+            alpha: cs.brightness == Brightness.light ? 0.62 : 0.10,
+          ),
           borderRadius: BorderRadius.circular(DonyRadius.xl),
           border: Border.all(
-            color: DonyColors.neutral0.withValues(alpha: 0.22),
+            color: cs.primary.withValues(
+              alpha: cs.brightness == Brightness.light ? 0.18 : 0.28,
+            ),
           ),
         ),
         child: Column(
@@ -518,7 +576,7 @@ class _GuestCta extends StatelessWidget {
               'Accès limité : recherche uniquement. Connexion requise pour publier, contacter, réserver ou payer.',
               textAlign: TextAlign.center,
               style: tt.bodySmall?.copyWith(
-                color: DonyColors.neutral0.withValues(alpha: 0.72),
+                color: cs.onSurfaceVariant,
                 height: 1.35,
               ),
             ),
@@ -534,30 +592,28 @@ class _CguFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     return Text.rich(
       TextSpan(
-        style: tt.bodySmall?.copyWith(
-          color: DonyColors.neutral0.withValues(alpha: 0.68),
-          height: 1.5,
-        ),
+        style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant, height: 1.5),
         children: [
           const TextSpan(text: 'En continuant tu acceptes nos '),
           TextSpan(
             text: 'CGU',
             style: tt.bodySmall?.copyWith(
-              color: DonyColors.neutral0,
+              color: cs.primary,
               decoration: TextDecoration.underline,
-              decorationColor: DonyColors.neutral0,
+              decorationColor: cs.primary,
             ),
           ),
           const TextSpan(text: ' et notre '),
           TextSpan(
             text: 'politique de confidentialité',
             style: tt.bodySmall?.copyWith(
-              color: DonyColors.neutral0,
+              color: cs.primary,
               decoration: TextDecoration.underline,
-              decorationColor: DonyColors.neutral0,
+              decorationColor: cs.primary,
             ),
           ),
           const TextSpan(text: '.'),

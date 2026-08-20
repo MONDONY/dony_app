@@ -16,6 +16,12 @@ void main() {
     mockHive = MockHiveService();
     mockBox = MockBox();
     when(() => mockHive.userPrefs).thenReturn(mockBox);
+    when(
+      () => mockBox.get(
+        HiveService.kTravelerCountryUnsupported,
+        defaultValue: false,
+      ),
+    ).thenReturn(false);
   });
 
   group('ActiveRoleCubit — état initial', () {
@@ -32,6 +38,23 @@ void main() {
       expect(cubit.state, ActiveRole.traveler);
       cubit.close();
     });
+
+    test(
+      'démarre en mode Expéditeur quand TRAVELER est sauvegardé mais indisponible',
+      () {
+        when(() => mockBox.get('active_role')).thenReturn('TRAVELER');
+        when(
+          () => mockBox.get(
+            HiveService.kTravelerCountryUnsupported,
+            defaultValue: false,
+          ),
+        ).thenReturn(true);
+
+        final cubit = ActiveRoleCubit(hiveService: mockHive);
+        expect(cubit.state, ActiveRole.sender);
+        cubit.close();
+      },
+    );
 
     test('démarre en mode Expéditeur quand SENDER est sauvegardé', () {
       when(() => mockBox.get('active_role')).thenReturn('SENDER');
@@ -51,6 +74,28 @@ void main() {
       verify(() => mockBox.put('active_role', 'TRAVELER')).called(1);
       cubit.close();
     });
+
+    test(
+      'reste expéditeur quand le pays ne permet pas le parcours voyageur',
+      () {
+        when(() => mockBox.get('active_role')).thenReturn(null);
+        when(
+          () => mockBox.get(
+            HiveService.kTravelerCountryUnsupported,
+            defaultValue: false,
+          ),
+        ).thenReturn(true);
+        when(() => mockBox.put(any(), any())).thenAnswer((_) async {});
+
+        final cubit = ActiveRoleCubit(hiveService: mockHive);
+        cubit.switchToTraveler();
+
+        expect(cubit.state, ActiveRole.sender);
+        verifyNever(() => mockBox.put('active_role', 'TRAVELER'));
+        verify(() => mockBox.put('active_role', 'SENDER')).called(1);
+        cubit.close();
+      },
+    );
   });
 
   group('ActiveRoleCubit — switchToSender', () {

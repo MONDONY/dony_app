@@ -9,7 +9,7 @@ abstract final class GuestAccessGuard {
   static bool canUseSearchMode(
     SearchMode mode, {
     required bool isAuthenticated,
-  }) => isAuthenticated || mode.isParcels;
+  }) => isAuthenticated || mode.isParcels || mode.isTrips;
 
   static bool isPublicGuestPath(String path) =>
       path == '/home' ||

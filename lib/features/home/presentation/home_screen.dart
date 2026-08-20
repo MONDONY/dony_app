@@ -348,10 +348,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
 
   void _dispatchSearch() {
     if (!mounted) return;
-    if (FirebaseAuth.instance.currentUser == null) {
-      unawaited(AuthRequiredSheet.show(context));
-      return;
-    }
+    final publicAccess = FirebaseAuth.instance.currentUser == null;
     // `toAnnouncementQuery` (et non `toSearchParams`) : c'est elle qui porte le
     // vrai payload serveur — corridor neutralisé par « près de moi », booléens
     // jamais envoyés à false.
@@ -375,6 +372,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
         userLng: q.userLng,
         radiusKm: q.radiusKm,
         urgent: q.urgent,
+        publicAccess: publicAccess,
       ),
     );
   }

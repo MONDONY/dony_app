@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -89,6 +90,7 @@ void main() {
     tempDir = await Directory.systemTemp.createTemp('hive_auth_bloc_test');
     Hive.init(p.join(tempDir.path));
     await Hive.openBox('user_prefs');
+    await Hive.openBox<Map>(HiveService.offlineQueueBox);
   });
 
   tearDownAll(() async {
@@ -96,14 +98,35 @@ void main() {
     await tempDir.delete(recursive: true);
   });
 
-  setUp(() {
+  setUp(() async {
     mockRepo = MockAuthRepository();
     mockLocalAuth = MockLocalAuthService();
     mockFirebaseAuth = MockFirebaseAuth();
+    await Hive.box('user_prefs').clear();
+    await Hive.box<Map>(HiveService.offlineQueueBox).clear();
   });
 
   AuthBloc buildBloc() =>
       AuthBloc(mockRepo, mockLocalAuth, firebaseAuth: mockFirebaseAuth);
+
+  Future<void> seedHiveUserData() async {
+    await Hive.box('user_prefs').putAll({
+      HiveService.kAnalyticsConsent: true,
+      HiveService.kCountryOnboardingSeen: true,
+      HiveService.kCountryCode: 'FR',
+      HiveService.kCurrencyCode: 'EUR',
+      HiveService.kThemeMode: 'dark',
+      HiveService.kBiometricEnabled: true,
+    });
+    await Hive.box<Map>(
+      HiveService.offlineQueueBox,
+    ).add({'scanId': 'offline-scan-1', 'bidId': 'bid-123'});
+  }
+
+  void expectHiveUserDataCleared() {
+    expect(Hive.box('user_prefs').isEmpty, isTrue);
+    expect(Hive.box<Map>(HiveService.offlineQueueBox).isEmpty, isTrue);
+  }
 
   // ─── AuthCheckRequested ──────────────────────────────────────────────────────
 
@@ -238,12 +261,43 @@ void main() {
         return buildBloc();
       },
       act: (bloc) => bloc.add(const AuthRegisterRequested()),
+      wait: const Duration(milliseconds: 50),
       expect: () => [isA<AuthLoading>(), isA<AuthAuthenticated>()],
       verify: (bloc) {
         verify(
           () => mockRepo.register(phoneNumber: any(named: 'phoneNumber')),
         ).called(1);
         verify(() => mockLocalAuth.clearPin()).called(1);
+      },
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'nouvelle inscription nettoie les flags onboarding hérités du compte précédent',
+      setUp: () async {
+        final prefs = Hive.box('user_prefs');
+        await prefs.put(HiveService.kAnalyticsConsent, true);
+        await prefs.put(HiveService.kCountryOnboardingSeen, true);
+        await prefs.put(HiveService.kTravelerCountryUnsupported, true);
+        await prefs.put(HiveService.kCountryCode, 'FR');
+        await prefs.put(HiveService.kCurrencyCode, 'EUR');
+      },
+      build: () {
+        when(
+          () => mockRepo.register(phoneNumber: any(named: 'phoneNumber')),
+        ).thenAnswer((_) async => testUser);
+        when(() => mockLocalAuth.clearPin()).thenAnswer((_) async {});
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const AuthRegisterRequested()),
+      wait: const Duration(milliseconds: 50),
+      expect: () => [isA<AuthLoading>(), isA<AuthNewAccountAuthenticated>()],
+      verify: (_) {
+        final prefs = Hive.box('user_prefs');
+        expect(prefs.get(HiveService.kAnalyticsConsent), isNull);
+        expect(prefs.get(HiveService.kCountryOnboardingSeen), isNull);
+        expect(prefs.get(HiveService.kTravelerCountryUnsupported), isNull);
+        expect(prefs.get(HiveService.kCountryCode), isNull);
+        expect(prefs.get(HiveService.kCurrencyCode), isNull);
       },
     );
 
@@ -289,12 +343,26 @@ void main() {
         return buildBloc();
       },
       act: (bloc) => bloc.add(const AuthLogoutRequested()),
+      wait: const Duration(milliseconds: 50),
       expect: () => [isA<AuthInitial>()],
       verify: (bloc) {
         verify(() => mockFirebaseAuth.signOut()).called(1);
         // clearPin() ne doit PAS être appelé lors d'un logout simple
         verifyNever(() => mockLocalAuth.clearPin());
       },
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'déconnexion → vide les données Hive du compte',
+      setUp: seedHiveUserData,
+      build: () {
+        when(() => mockFirebaseAuth.signOut()).thenAnswer((_) async {});
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const AuthLogoutRequested()),
+      wait: const Duration(milliseconds: 50),
+      expect: () => [isA<AuthInitial>()],
+      verify: (_) => expectHiveUserDataCleared(),
     );
   });
 
@@ -309,6 +377,7 @@ void main() {
         return buildBloc();
       },
       act: (bloc) => bloc.add(const AuthSwitchAccountRequested()),
+      wait: const Duration(milliseconds: 50),
       expect: () => [isA<AuthInitial>()],
       verify: (bloc) {
         // Contrairement au logout simple, le PIN DOIT être effacé : le nouveau
@@ -316,6 +385,20 @@ void main() {
         verify(() => mockLocalAuth.clearPin()).called(1);
         verify(() => mockFirebaseAuth.signOut()).called(1);
       },
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'changement de compte → vide les données Hive du compte précédent',
+      setUp: seedHiveUserData,
+      build: () {
+        when(() => mockLocalAuth.clearPin()).thenAnswer((_) async {});
+        when(() => mockFirebaseAuth.signOut()).thenAnswer((_) async {});
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const AuthSwitchAccountRequested()),
+      wait: const Duration(milliseconds: 50),
+      expect: () => [isA<AuthInitial>()],
+      verify: (_) => expectHiveUserDataCleared(),
     );
   });
 
@@ -331,12 +414,28 @@ void main() {
         return buildBloc();
       },
       act: (bloc) => bloc.add(const AuthDeleteAccountRequested()),
+      wait: const Duration(milliseconds: 50),
       expect: () => [isA<AuthLoading>(), isA<AuthAccountDeleted>()],
       verify: (bloc) {
         verify(() => mockRepo.deleteAccount()).called(1);
         verify(() => mockLocalAuth.clearPin()).called(1);
         verify(() => mockFirebaseAuth.signOut()).called(1);
       },
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'suppression réussie → vide les données Hive du compte',
+      setUp: seedHiveUserData,
+      build: () {
+        when(() => mockRepo.deleteAccount()).thenAnswer((_) async {});
+        when(() => mockLocalAuth.clearPin()).thenAnswer((_) async {});
+        when(() => mockFirebaseAuth.signOut()).thenAnswer((_) async {});
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const AuthDeleteAccountRequested()),
+      wait: const Duration(milliseconds: 50),
+      expect: () => [isA<AuthLoading>(), isA<AuthAccountDeleted>()],
+      verify: (_) => expectHiveUserDataCleared(),
     );
 
     blocTest<AuthBloc, AuthState>(
@@ -1059,9 +1158,41 @@ void main() {
       },
       act: (bloc) =>
           bloc.add(const AuthRegisterWithEmailRequested(email: 'a@b.com')),
+      wait: const Duration(milliseconds: 50),
       expect: () => [const AuthLoading(), isA<AuthAuthenticated>()],
       verify: (_) {
         verify(() => mockLocalAuth.clearPin()).called(1);
+      },
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'inscription email nettoie les flags onboarding hérités du compte précédent',
+      setUp: () async {
+        final prefs = Hive.box('user_prefs');
+        await prefs.put(HiveService.kAnalyticsConsent, false);
+        await prefs.put(HiveService.kCountryOnboardingSeen, true);
+        await prefs.put(HiveService.kTravelerCountryUnsupported, true);
+        await prefs.put(HiveService.kCountryCode, 'FR');
+        await prefs.put(HiveService.kCurrencyCode, 'EUR');
+      },
+      build: () {
+        when(
+          () => mockRepo.registerWithEmail(email: 'a@b.com'),
+        ).thenAnswer((_) async => testUser);
+        when(() => mockLocalAuth.clearPin()).thenAnswer((_) async {});
+        return buildBloc();
+      },
+      act: (bloc) =>
+          bloc.add(const AuthRegisterWithEmailRequested(email: 'a@b.com')),
+      wait: const Duration(milliseconds: 50),
+      expect: () => [const AuthLoading(), isA<AuthNewAccountAuthenticated>()],
+      verify: (_) {
+        final prefs = Hive.box('user_prefs');
+        expect(prefs.get(HiveService.kAnalyticsConsent), isNull);
+        expect(prefs.get(HiveService.kCountryOnboardingSeen), isNull);
+        expect(prefs.get(HiveService.kTravelerCountryUnsupported), isNull);
+        expect(prefs.get(HiveService.kCountryCode), isNull);
+        expect(prefs.get(HiveService.kCurrencyCode), isNull);
       },
     );
 
@@ -1497,6 +1628,7 @@ void main() {
       },
       act: (bloc) =>
           bloc.add(const AuthRegisterWithEmailRequested(email: 'a@b.com')),
+      wait: const Duration(milliseconds: 50),
       expect: () => [const AuthLoading(), isA<AuthAuthenticated>()],
       verify: (_) {
         verify(() => mockLocalAuth.clearPin()).called(1);

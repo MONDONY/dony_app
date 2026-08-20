@@ -18,6 +18,13 @@ import '../../../../helpers/mock_analytics_backend.dart';
 
 class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
 
+const _testUser = UserModel(
+  id: 'u1',
+  roles: ['ROLE_TRAVELER', 'ROLE_SENDER'],
+  kycStatus: 'NOT_STARTED',
+  status: 'ACTIVE',
+);
+
 Widget _buildEmail({
   required AuthBloc bloc,
   String contact = 'user@example.com',
@@ -35,6 +42,10 @@ Widget _buildEmail({
         GoRoute(
           path: '/auth/country-selection',
           builder: (_, _) => const Scaffold(body: Text('Country selection')),
+        ),
+        GoRoute(
+          path: '/home',
+          builder: (_, _) => const Scaffold(body: Text('Home')),
         ),
       ],
     ),
@@ -144,6 +155,46 @@ void main() {
     },
   );
 
+  testWidgets(
+    'mode email — compte nouvellement créé poursuit vers la sélection du pays',
+    (tester) async {
+      tester.view.physicalSize = const Size(1080, 1920);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      whenListen(
+        mockBloc,
+        Stream.fromIterable([const AuthNewAccountAuthenticated(_testUser)]),
+        initialState: const AuthEmailOtpSent('user@example.com'),
+      );
+
+      await tester.pumpWidget(_buildEmail(bloc: mockBloc));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Country selection'), findsOneWidget);
+    },
+  );
+
+  testWidgets('mode email — compte existant va à l’accueil', (tester) async {
+    tester.view.physicalSize = const Size(1080, 1920);
+    tester.view.devicePixelRatio = 3.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    whenListen(
+      mockBloc,
+      Stream.fromIterable([const AuthAuthenticated(_testUser)]),
+      initialState: const AuthEmailOtpSent('user@example.com'),
+    );
+
+    await tester.pumpWidget(_buildEmail(bloc: mockBloc));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Home'), findsOneWidget);
+    expect(find.text('Country selection'), findsNothing);
+  });
+
   testWidgets('mode email — affiche le timer du state AuthEmailOtpSent', (
     tester,
   ) async {
@@ -222,7 +273,7 @@ void main() {
   });
 
   testWidgets(
-    'mode email — poursuit vers la sélection du pays, aucune étape code PIN quand AuthAuthenticated émis',
+    'mode email — poursuit vers la sélection du pays, aucune étape code PIN quand nouveau compte authentifié',
     (tester) async {
       tester.view.physicalSize = const Size(1080, 1920);
       tester.view.devicePixelRatio = 3.0;
@@ -233,7 +284,7 @@ void main() {
         mockBloc,
         Stream.fromIterable([
           const AuthLoading(),
-          const AuthAuthenticated(
+          const AuthNewAccountAuthenticated(
             UserModel(
               id: 'u1',
               roles: ['SENDER'],

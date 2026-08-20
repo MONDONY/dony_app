@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
+import 'package:dony/core/design/widgets/dony_logo.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -49,6 +50,22 @@ void main() {
     expect(find.text('Envoyer le code'), findsOneWidget);
     final btn = tester.widget<DonyButton>(find.byType(DonyButton));
     expect(btn.onPressed, isNull);
+  });
+
+  testWidgets('affiche le visuel sécurité Yadony du tunnel auth', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_wrap(const EmailAuthScreen(), bloc: mockBloc));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(DonyLogo), findsOneWidget);
+    expect(
+      find.image(
+        const AssetImage('assets/illustrations/auth-login-security.png'),
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Connexion protégée'), findsOneWidget);
   });
 
   testWidgets('active le bouton quand un email valide est saisi', (

@@ -12,6 +12,16 @@ class ActiveRoleCubit extends Cubit<ActiveRole> {
   static const _key = 'active_role';
 
   static ActiveRole _load(HiveService hive) {
+    final travelerCountryUnsupported =
+        hive.userPrefs.get(
+          HiveService.kTravelerCountryUnsupported,
+          defaultValue: false,
+        ) ==
+        true;
+    if (travelerCountryUnsupported) {
+      return ActiveRole.sender;
+    }
+
     final saved = hive.userPrefs.get(_key) as String?;
     if (saved == 'TRAVELER') {
       return ActiveRole.traveler;
@@ -20,6 +30,16 @@ class ActiveRoleCubit extends Cubit<ActiveRole> {
   }
 
   void switchToTraveler() {
+    final travelerCountryUnsupported =
+        _hive.userPrefs.get(
+          HiveService.kTravelerCountryUnsupported,
+          defaultValue: false,
+        ) ==
+        true;
+    if (travelerCountryUnsupported) {
+      switchToSender();
+      return;
+    }
     _hive.userPrefs.put(_key, 'TRAVELER');
     emit(ActiveRole.traveler);
   }

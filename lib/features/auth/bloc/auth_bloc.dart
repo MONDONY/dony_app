@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/repositories/auth_repository.dart';
@@ -71,6 +72,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   Future<void> close() {
     _otpTimer?.cancel();
     return super.close();
+  }
+
+  Future<void> _clearHiveAccountData() async {
+    await Hive.box(HiveService.userPrefsBox).clear();
+    await Hive.box<Map>(HiveService.offlineQueueBox).clear();
   }
 
   // ─── Vérification au démarrage (splash) ────────────────────────────────────
@@ -207,7 +213,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       // Nouveau compte → effacer tout PIN résiduel d'un compte précédent
       // (le PIN est lié à l'appareil, pas à l'utilisateur Firebase)
       await _localAuthService.clearPin();
-      emit(AuthAuthenticated(user));
+      await _clearHiveAccountData();
+      emit(AuthNewAccountAuthenticated(user));
     } catch (e) {
       emit(AuthError(_friendlyError(e)));
     }
@@ -215,7 +222,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   // ─── Déconnexion → retour à /auth/method ─────────────────────────────────
   //
-  // On déconnecte Firebase seulement. Le PIN est CONSERVÉ. AuthInitial
+  // On déconnecte Firebase et on vide les données Hive du compte. Le PIN est
+  // CONSERVÉ. AuthInitial
   // renvoie vers le choix des méthodes de connexion (téléphone/email/
   // Google/Apple), pas vers une méthode figée. Si l'utilisateur repasse
   // par le téléphone :
@@ -228,6 +236,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     // ⚠️ NE PAS clearPin() — le PIN doit survivre au logout
     await _firebaseAuth.signOut();
+    await _clearHiveAccountData();
     _pendingPhoneNumber = null;
     emit(const AuthInitial());
   }
@@ -244,6 +253,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     await _localAuthService.clearPin();
     await _firebaseAuth.signOut();
+    await _clearHiveAccountData();
     _pendingPhoneNumber = null;
     emit(const AuthInitial());
   }
@@ -258,6 +268,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       await _authRepository.deleteAccount();
       await _localAuthService.clearPin();
+      await _clearHiveAccountData();
       await _firebaseAuth.signOut();
       _pendingPhoneNumber = null;
       emit(const AuthAccountDeleted());
@@ -397,7 +408,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       final user = await _authRepository.registerWithEmail(email: event.email);
       await _localAuthService.clearPin();
-      emit(AuthAuthenticated(user));
+      await _clearHiveAccountData();
+      emit(AuthNewAccountAuthenticated(user));
     } catch (e) {
       emit(AuthError(_friendlyError(e)));
     }

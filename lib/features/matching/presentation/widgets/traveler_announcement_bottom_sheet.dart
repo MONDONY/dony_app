@@ -4,6 +4,7 @@ import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/auth/presentation/widgets/auth_required_sheet.dart';
 import 'package:dony/features/incident_report/data/repositories/incident_report_repository.dart';
 import 'package:dony/features/kyc/presentation/widgets/kyc_status_bottom_sheet.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
@@ -122,6 +123,13 @@ void showTravelerAnnouncementSheet(
           final navigator = Navigator.of(innerCtx, rootNavigator: true);
           final rootCtx = navigator.context;
           navigator.pop();
+          if (authState.currentUser == null) {
+            await AuthRequiredSheet.show(
+              rootCtx,
+              reason: AuthRequiredReason.offer,
+            );
+            return;
+          }
           if (canSendRequest) {
             await CreateBidBottomSheet.show(
               rootCtx,

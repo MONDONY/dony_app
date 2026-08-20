@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/design/widgets/dony_logo.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -96,6 +97,21 @@ void main() {
     testWidgets('affiche le widget PhoneAuthScreen', (tester) async {
       await _pump(tester, mockAuthBloc);
       expect(find.byType(PhoneAuthScreen), findsOneWidget);
+    });
+
+    testWidgets('affiche le visuel sécurité Yadony du tunnel auth', (
+      tester,
+    ) async {
+      await _pump(tester, mockAuthBloc);
+
+      expect(find.byType(DonyLogo), findsOneWidget);
+      expect(
+        find.image(
+          const AssetImage('assets/illustrations/auth-login-security.png'),
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Connexion protégée'), findsOneWidget);
     });
 
     testWidgets('bouton Apple absent sur plateforme non-iOS', (tester) async {

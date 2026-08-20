@@ -1,6 +1,7 @@
 import 'package:dony/app/main_shell.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/app_update/presentation/screens/force_update_screen.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -260,6 +261,16 @@ final appRouter = GoRouter(
 
     const guardedRoutes = {'/trips/create'};
     if (guardedRoutes.contains(state.matchedLocation)) {
+      final travelerCountryUnsupported =
+          getIt.isRegistered<HiveService>() &&
+          getIt<HiveService>().userPrefs.get(
+                HiveService.kTravelerCountryUnsupported,
+                defaultValue: false,
+              ) ==
+              true;
+      if (travelerCountryUnsupported) {
+        return '/auth/country-selection';
+      }
       final accountState = context.read<StripeAccountBloc>().state;
       if (accountState is StripeAccountReady) {
         if (accountState.accountStatus.isDisabled) return '/account/disabled';

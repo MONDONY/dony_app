@@ -36,7 +36,7 @@ void main() {
       );
     });
 
-    test('bloque la recherche trajets pour un invité', () {
+    test('autorise la recherche trajets et colis pour un invité', () {
       expect(
         GuestAccessGuard.canUseSearchMode(
           SearchMode.parcels,
@@ -49,7 +49,7 @@ void main() {
           SearchMode.trips,
           isAuthenticated: false,
         ),
-        isFalse,
+        isTrue,
       );
       expect(
         GuestAccessGuard.canUseSearchMode(

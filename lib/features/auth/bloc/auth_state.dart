@@ -60,6 +60,10 @@ class AuthAuthenticated extends AuthState {
   List<Object?> get props => [user];
 }
 
+class AuthNewAccountAuthenticated extends AuthAuthenticated {
+  const AuthNewAccountAuthenticated(super.user);
+}
+
 class AuthError extends AuthState {
   final AppException error;
 

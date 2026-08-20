@@ -68,6 +68,29 @@ void main() {
     await bloc.close();
   });
 
+  testWidgets('respecte le theme clair Yadony blanc et bleu', (tester) async {
+    final bloc = MockAuthBloc();
+    when(() => bloc.state).thenReturn(const AuthInitial());
+    when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
+    final theme = AppTheme.light();
+
+    await tester.pumpWidget(_app(bloc));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    final scaffold = tester.widget<Scaffold>(find.byType(Scaffold));
+    expect(scaffold.backgroundColor, theme.scaffoldBackgroundColor);
+
+    final title = tester.widget<Text>(
+      find.text('Connecte-toi en toute confiance'),
+    );
+    expect(title.style?.color, theme.colorScheme.onSurface);
+
+    final badge = tester.widget<Text>(find.text('Sécurisé'));
+    expect(badge.style?.color, theme.colorScheme.primary);
+
+    await bloc.close();
+  });
+
   testWidgets(
     'masque le bouton téléphone tant que le SMS OTP backend n\'est pas confirmé',
     (tester) async {

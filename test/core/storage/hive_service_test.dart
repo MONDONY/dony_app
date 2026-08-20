@@ -5,4 +5,11 @@ void main() {
   test('expose la clé Hive du flag onboarding pays', () {
     expect(HiveService.kCountryOnboardingSeen, 'country_onboarding_seen');
   });
+
+  test('expose la clé Hive du blocage voyageur pays non disponible', () {
+    expect(
+      HiveService.kTravelerCountryUnsupported,
+      'traveler_country_unsupported',
+    );
+  });
 }
