@@ -17,6 +17,9 @@ void main() {
     const exemptions = <String, String>{
       'lib/features/matching/presentation/widgets/create_announcement/capacity_control.dart':
           'enveloppé dans Semantics(label: semanticLabel, button: true)',
+      'lib/features/home/presentation/widgets/search_phrase_field.dart':
+          "enveloppé dans Semantics(button: true, label: 'Dicter votre "
+          "recherche') — micro de dictée, Task 4",
     };
 
     final defauts = <String>[];
