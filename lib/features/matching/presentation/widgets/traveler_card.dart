@@ -280,8 +280,13 @@ class TravelerCard extends StatelessWidget {
                         if (announcement.pricingMode != 'MIXED')
                           ConvertedPriceLabel(
                             originalCurrency: announcement.currency,
+                            // Le prix d'origine affiché ci-dessus
+                            // (priceLabel) est le BRUT expéditeur
+                            // (senderPricePerKg) : l'estimation doit être sur
+                            // la même base, pas le net voyageur converti tel
+                            // quel par le serveur.
                             convertedPricePerKg:
-                                announcement.convertedPricePerKg,
+                                announcement.convertedSenderPricePerKg,
                             convertedCurrency: announcement.convertedCurrency,
                           ),
                       ],

@@ -187,6 +187,30 @@ extension AnnouncementSenderPricing on AnnouncementModel {
   double get senderPricePerKg =>
       pricePerKgDisplay ?? netToSenderPrice(pricePerKg);
 
+  /// Équivalent, dans la devise convertie par le serveur
+  /// ([AnnouncementModel.convertedCurrency]), du prix affiché à l'expéditeur
+  /// ([senderPricePerKg]) — donc majoré de la commission Yadony, pas le net
+  /// voyageur brut.
+  ///
+  /// Le backend (`AnnouncementService`) convertit [pricePerKg] (le NET) vers
+  /// [convertedPricePerKg], indépendamment de [pricePerKgDisplay]. Afficher
+  /// ce net converti à côté de [senderPricePerKg] (le BRUT, net + commission)
+  /// mélangerait deux bases différentes et sous-évaluerait systématiquement
+  /// l'estimation d'environ le taux de commission. On réapplique donc ici, au
+  /// résultat déjà converti par le serveur, exactement le même ratio net→brut
+  /// que celui qui produit [senderPricePerKg] — jamais un nouveau calcul de
+  /// taux de change, seulement la majoration commission déjà appliquée au
+  /// montant d'origine.
+  ///
+  /// `null` si le serveur n'a rien converti, ou si [pricePerKg] est nul (mode
+  /// `MIXED` sans tarif au kilo : pas de ratio net→brut exploitable).
+  double? get convertedSenderPricePerKg {
+    final converted = convertedPricePerKg;
+    if (converted == null || pricePerKg <= 0) return null;
+    final markupRatio = senderPricePerKg / pricePerKg;
+    return converted * markupRatio;
+  }
+
   /// Le trajet porte-t-il un tarif au kilo exploitable ?
   ///
   /// En mode `MIXED` le prix au kilo est facultatif, mais la colonne backend est

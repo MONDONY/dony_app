@@ -144,6 +144,38 @@ void main() {
     );
 
     testWidgets(
+      'l\'estimation reflète le montant majoré (brut), pas le net converti tel quel',
+      (tester) async {
+        // pricePerKg net = 12, commission de test = 12 % → senderPricePerKg
+        // (prix d'origine affiché) = 13,44. Le serveur convertit le NET
+        // (100 XOF pour 12 € net) ; l'estimation affichée doit appliquer la
+        // même majoration que le prix d'origine (ratio 13,44/12 = 1,12),
+        // soit 112 XOF — jamais 100 XOF (le net converti brut, sans
+        // commission, qui sous-évaluerait l'estimation).
+        await tester.pumpWidget(
+          _wrap(
+            TravelerCard(
+              announcement: _makeAnn(
+                convertedPricePerKg: 100,
+                convertedCurrency: 'XOF',
+              ),
+              index: 0,
+              isOwnAnnouncement: false,
+              onTap: () {},
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(find.textContaining('13,44'), findsOneWidget);
+        // NumberFormat insère une espace insécable entre le montant et le
+        // symbole ; on vérifie donc le contenu plutôt que la chaîne exacte.
+        expect(find.textContaining('environ'), findsOneWidget);
+        expect(find.textContaining('112'), findsOneWidget);
+        expect(find.textContaining('F CFA'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
       'n\'affiche aucune conversion quand le lecteur est dans la même devise que le trajet',
       (tester) async {
         await tester.pumpWidget(
