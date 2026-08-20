@@ -187,6 +187,13 @@ void main() {
       expect(a.props, equals(['lbs']));
     });
 
+    test('CurrencyChanged props are correct', () {
+      const a = CurrencyChanged('XOF');
+      const b = CurrencyChanged('XOF');
+      expect(a, equals(b));
+      expect(a.props, equals(['XOF']));
+    });
+
     test('CountryChanged props are correct', () {
       const a = CountryChanged('CA');
       const b = CountryChanged('CA');

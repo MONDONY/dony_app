@@ -14,6 +14,16 @@ class WeightUnitChanged extends BusinessPrefsEvent {
   List<Object?> get props => [unit];
 }
 
+/// La devise choisie est envoyée au serveur, verrouillée par le seul solde
+/// du portefeuille (`currencyLocked`, `CurrencyLockService` côté backend) —
+/// indépendamment du verrou pays (`countryLocked`, compte Connect créé).
+class CurrencyChanged extends BusinessPrefsEvent {
+  final String code;
+  const CurrencyChanged(this.code);
+  @override
+  List<Object?> get props => [code];
+}
+
 /// Le pays choisi est envoyé au serveur ; la devise qui en dérive revient
 /// dans la réponse (`_onCountry`), jamais recalculée côté client.
 class CountryChanged extends BusinessPrefsEvent {
