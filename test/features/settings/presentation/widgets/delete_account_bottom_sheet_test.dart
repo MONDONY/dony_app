@@ -314,10 +314,7 @@ void main() {
       await tester.tap(find.text('Open'));
       await tester.pumpAndSettle();
 
-      expect(
-        find.text('Demander le remboursement de mon solde'),
-        findsNothing,
-      );
+      expect(find.text('Demander le remboursement de mon solde'), findsNothing);
     },
   );
 
@@ -325,7 +322,10 @@ void main() {
     'solde wallet positif → CTA remboursement optionnel visible, tap déclenche requestWalletRefund()',
     (tester) async {
       when(() => mockEligibilityCubit.state).thenReturn(
-        const DeletionEligibilityState(isLoading: false, hasWalletBalance: true),
+        const DeletionEligibilityState(
+          isLoading: false,
+          hasWalletBalance: true,
+        ),
       );
       when(
         () => mockEligibilityCubit.requestWalletRefund(),
@@ -335,10 +335,7 @@ void main() {
       await tester.tap(find.text('Open'));
       await tester.pumpAndSettle();
 
-      expect(
-        find.text('Demander le remboursement maintenant'),
-        findsOneWidget,
-      );
+      expect(find.text('Demander le remboursement maintenant'), findsOneWidget);
 
       await tester.tap(find.text('Demander le remboursement maintenant'));
       await tester.pump();
@@ -364,10 +361,7 @@ void main() {
       await tester.tap(find.text('Open'));
       await tester.pumpAndSettle();
 
-      expect(
-        find.text('Demander le remboursement maintenant'),
-        findsNothing,
-      );
+      expect(find.text('Demander le remboursement maintenant'), findsNothing);
       expect(find.textContaining('Demande envoyée'), findsOneWidget);
     },
   );
@@ -376,7 +370,10 @@ void main() {
     'solde wallet positif → suppression jamais bloquée (Apple 5.1.1(v)) : bouton actif',
     (tester) async {
       when(() => mockEligibilityCubit.state).thenReturn(
-        const DeletionEligibilityState(isLoading: false, hasWalletBalance: true),
+        const DeletionEligibilityState(
+          isLoading: false,
+          hasWalletBalance: true,
+        ),
       );
 
       await tester.pumpWidget(buildWidget());

@@ -232,11 +232,7 @@ void main() {
               'walletRefundRequested',
               isFalse,
             )
-            .having(
-              (s) => s.walletRefundError,
-              'walletRefundError',
-              isNotNull,
-            ),
+            .having((s) => s.walletRefundError, 'walletRefundError', isNotNull),
       ],
       verify: (_) {
         verifyNever(

@@ -309,8 +309,9 @@ class _WalletRefundRequestCta extends StatelessWidget {
               isLoading: state.isRequestingWalletRefund,
               onPressed: state.isRequestingWalletRefund
                   ? null
-                  : () =>
-                        context.read<DeletionEligibilityCubit>().requestWalletRefund(),
+                  : () => context
+                        .read<DeletionEligibilityCubit>()
+                        .requestWalletRefund(),
             ),
           ],
         );

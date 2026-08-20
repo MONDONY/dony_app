@@ -109,7 +109,10 @@ class DeletionEligibilityCubit extends Cubit<DeletionEligibilityState> {
   /// ticket après avoir remboursé via Stripe hors-app.
   Future<void> requestWalletRefund() async {
     emit(
-      state.copyWith(isRequestingWalletRefund: true, clearWalletRefundError: true),
+      state.copyWith(
+        isRequestingWalletRefund: true,
+        clearWalletRefundError: true,
+      ),
     );
     try {
       final requests = await _repository.requestWalletRefund();
