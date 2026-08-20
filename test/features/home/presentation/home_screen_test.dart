@@ -1394,17 +1394,44 @@ void main() {
   //
   // La mesure qui décidera du sort du bloc « En une phrase » : si les
   // recherches passent par les filtres dans plus de 90 % des cas, il se
-  // retire sans rien casser. `_onFiltersChanged` est le seul point de sortie,
-  // qu'un changement vienne d'une chip directe ou de l'écran de composition.
+  // retire sans rien casser. `_openComposer` est le SEUL point de sortie —
+  // un réglage direct au doigt (chip, sheet) ajuste un filtre mais ne
+  // « soumet » jamais de recherche, il ne doit donc jamais tracer cet event
+  // (régression du bug corrigé : avant, `_onFiltersChanged` le traçait à
+  // chaque changement, faussant complètement le ratio phrase/filtres).
   group('search_submitted', () {
     testWidgets(
-      'un changement direct (hors composer) trace came_from_phrase: false',
+      'un changement direct au doigt (hors composer) ne trace rien',
       (tester) async {
         await pumpHome(tester);
 
         await tester.tap(find.text('🔥 Urgent'));
         await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('chip-date')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text("Aujourd'hui").last);
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Appliquer'));
+        await tester.pumpAndSettle();
 
+        verifyNever(
+          () => analytics.logEvent(
+            AnalyticsEvents.searchSubmitted,
+            properties: any(named: 'properties'),
+          ),
+        );
+      },
+    );
+
+    testWidgets(
+      'valider depuis l\'écran de composition trace came_from_phrase: false '
+      'et le bon nombre de filtres actifs',
+      (tester) async {
+        await pumpHome(tester);
+
+        await ouvrirSheetEtSaisirCorridor(tester, 'Lyon', 'Bamako');
+
+        // Le corridor (départ + arrivée) compte pour un seul filtre actif.
         verify(
           () => analytics.logEvent(
             AnalyticsEvents.searchSubmitted,
@@ -1417,33 +1444,6 @@ void main() {
         ).called(1);
       },
     );
-
-    testWidgets('filter_count reflète le nombre réel de filtres actifs', (
-      tester,
-    ) async {
-      await pumpHome(tester);
-
-      await tester.tap(find.text('🔥 Urgent'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('chip-date')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text("Aujourd'hui").last);
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Appliquer'));
-      await tester.pumpAndSettle();
-
-      // Urgent + date = 2 filtres actifs à ce stade.
-      verify(
-        () => analytics.logEvent(
-          AnalyticsEvents.searchSubmitted,
-          properties: {
-            'mode': 'trips',
-            'filter_count': 2,
-            'came_from_phrase': false,
-          },
-        ),
-      ).called(1);
-    });
   });
 
   group('modes de recherche', () {

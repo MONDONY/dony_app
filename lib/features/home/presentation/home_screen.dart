@@ -464,28 +464,16 @@ class _MapSenderViewState extends State<_MapSenderView> {
   /// Applique un changement de filtres : relance la recherche du mode courant
   /// et rafraîchit le compteur de l'autre mode.
   ///
-  /// [cameFromPhrase] : la mesure qui décidera du sort du bloc « En une
-  /// phrase » (voir `search_submitted`) — si les recherches passent par les
-  /// filtres dans plus de 90 % des cas après un mois, il se retire sans rien
-  /// casser. `false` par défaut : seul l'écran de composition, quand une
-  /// phrase a réellement été soumise avant la validation, le passe à `true`.
-  void _onFiltersChanged(
-    HomeSearchFilters next, {
-    bool cameFromPhrase = false,
-  }) {
+  /// Ne trace PAS `search_submitted` : ce n'est pas ici qu'une recherche est
+  /// réellement « soumise », c'est le seul point de sortie de TOUT réglage de
+  /// filtre (chips, sheets de date/prix/poids/note, bascule « Pour mes
+  /// trajets », retour de l'écran de composition…). Le tracking vit dans
+  /// [_openComposer], seul endroit où l'utilisateur valide vraiment une
+  /// recherche via le bouton « Rechercher ».
+  void _onFiltersChanged(HomeSearchFilters next) {
     setState(() => _filters = next);
     _dispatchForMode();
     unawaited(_dispatchOtherModeCount());
-    unawaited(
-      getIt<AnalyticsService>().logEvent(
-        AnalyticsEvents.searchSubmitted,
-        properties: {
-          'mode': _mode.name,
-          'filter_count': next.activeCount,
-          'came_from_phrase': cameFromPhrase,
-        },
-      ),
-    );
   }
 
   /// Nombre de trajets actifs, source unique du filtre « Pour mes trajets ».
@@ -849,7 +837,23 @@ class _MapSenderViewState extends State<_MapSenderView> {
         ),
       );
     }
-    _onFiltersChanged(result.filters, cameFromPhrase: result.cameFromPhrase);
+    _onFiltersChanged(result.filters);
+    // Seul point de sortie de `search_submitted` : c'est ici, et nulle part
+    // ailleurs (voir `_onFiltersChanged`), qu'une recherche est réellement
+    // « soumise ». `came_from_phrase` mesure la part des recherches qui
+    // passent par la phrase plutôt que par les filtres au doigt — si elle
+    // dépasse 90 % des cas après un mois, le bloc « En une phrase » se
+    // retire sans rien casser.
+    unawaited(
+      getIt<AnalyticsService>().logEvent(
+        AnalyticsEvents.searchSubmitted,
+        properties: {
+          'mode': _mode.name,
+          'filter_count': result.filters.activeCount,
+          'came_from_phrase': result.cameFromPhrase,
+        },
+      ),
+    );
   }
 
   /// « Publier un trajet » depuis le garde-fou de la pastille « Pour mes
