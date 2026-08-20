@@ -209,6 +209,15 @@ const _publicRoutes = {
   '/package-requests/search',
 };
 
+bool _isPublicRoute(GoRouterState state) {
+  if (_publicRoutes.any((r) => state.matchedLocation.startsWith(r))) {
+    return true;
+  }
+
+  final path = state.uri.path;
+  return RegExp(r'^/package-requests/[^/]+/public$').hasMatch(path);
+}
+
 /// Route d'entrée, calculée par `resolveInitialLocation()` avant `runApp`
 /// (cf. `lib/app/initial_location.dart`).
 ///
@@ -241,9 +250,7 @@ final appRouter = GoRouter(
 
     final user = FirebaseAuth.instance.currentUser;
     final isAuthenticated = user != null;
-    final isPublic = _publicRoutes.any(
-      (r) => state.matchedLocation.startsWith(r),
-    );
+    final isPublic = _isPublicRoute(state);
     if (!isAuthenticated && !isPublic) {
       return '/auth/method';
     }

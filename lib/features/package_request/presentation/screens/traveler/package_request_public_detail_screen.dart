@@ -9,6 +9,7 @@ import 'package:dony/core/urgency/dony_urgency.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/auth/presentation/widgets/auth_required_sheet.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/utils/city_flags.dart';
@@ -107,6 +108,16 @@ class _PackageRequestPublicDetailScreenState
   }
 
   void _showReportSheet() {
+    final authState = context.read<AuthBloc>().state;
+    final isAuthenticated =
+        authState is AuthAuthenticated || authState is AuthProfileUpdated;
+    if (!isAuthenticated) {
+      unawaited(
+        AuthRequiredSheet.show(context, reason: AuthRequiredReason.report),
+      );
+      return;
+    }
+
     showModalBottomSheet<void>(
       context: context,
       useRootNavigator: true,
@@ -247,6 +258,7 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
     // pas ici) — repli local sur le seuil d'urgence, comme documenté dans
     // dony_urgency.dart.
     final isUrgent = isUrgentDate(r.desiredDate);
+    final isGuest = currentUserId == null;
     return Stack(
       children: [
         SingleChildScrollView(
@@ -449,7 +461,15 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
           left: 20,
           right: 20,
           bottom: MediaQuery.of(context).padding.bottom + 20,
-          child: currentUserId != null && currentUserId == r.senderId
+          child: isGuest
+              ? _GuestLockedCta(
+                  label: r.negotiable
+                      ? 'Proposer mon trajet'
+                      : r.targetPriceEur != null
+                      ? 'Prendre à ${PriceDisplay.money(r.targetPriceEur!, r.currency)} · Prix ferme'
+                      : 'Prendre ce colis',
+                )
+              : currentUserId == r.senderId
               ? _OwnerCta(request: r, onChanged: onChanged)
               : r.viewerThreadId != null
               ? DonyButton(
@@ -745,6 +765,22 @@ class _PhotoCarouselState extends State<_PhotoCarousel> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _GuestLockedCta extends StatelessWidget {
+  const _GuestLockedCta({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return DonyButton(
+      key: const Key('guest-auth-required'),
+      label: label,
+      onPressed: () =>
+          AuthRequiredSheet.show(context, reason: AuthRequiredReason.offer),
     );
   }
 }
