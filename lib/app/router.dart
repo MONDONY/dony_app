@@ -206,6 +206,7 @@ const _publicRoutes = {
   '/auth/analytics-consent',
   '/auth/country-selection',
   '/auth/local',
+  '/package-requests/search',
 };
 
 /// Route d'entrée, calculée par `resolveInitialLocation()` avant `runApp`
