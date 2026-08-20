@@ -72,13 +72,26 @@ class _DictationController {
   final isListening = ValueNotifier<bool>(false);
   final result = ValueNotifier<_DictationResult>(const _DictationResult());
 
+  // Filet contre une course entre la fermeture de la feuille (le filet de
+  // sécurité de `VoiceDictationSheet.show().whenComplete()` dispose CE
+  // contrôleur dès que la route se dépile) et un geste encore en vol sur le
+  // bouton micro (ex : un doigt tient le micro pendant qu'un AUTRE doigt tape
+  // le fond pour fermer la feuille — `isDismissible` par défaut). Sans ce
+  // garde, le framework envoie un `PointerCancelEvent` synthétique au widget
+  // en train d'être démonté, qui appelle `abandon()` APRÈS que `dispose()`
+  // a déjà libéré les `ValueNotifier` : `isListening.value = false` levait
+  // alors « used after being disposed ».
+  bool _disposed = false;
+
   void dispose() {
+    _disposed = true;
     isListening.dispose();
     result.dispose();
   }
 
   /// Doigt posé sur le micro : démarre l'écoute.
   Future<void> start() async {
+    if (_disposed) return;
     result.value = const _DictationResult();
     isListening.value = true;
     await _speech.listen(
@@ -93,6 +106,7 @@ class _DictationController {
   }
 
   void _onResult(SpeechRecognitionResult r) {
+    if (_disposed) return;
     result.value = _DictationResult(
       text: r.recognizedWords,
       isFinal: r.finalResult,
@@ -102,8 +116,9 @@ class _DictationController {
   /// Relâchement du micro : arrête l'écoute et renvoie le texte reconnu
   /// jusque-là, ou `null` si rien n'a été dit.
   Future<String?> release() async {
-    if (!isListening.value) return null;
+    if (_disposed || !isListening.value) return null;
     await _speech.stop();
+    if (_disposed) return null;
     isListening.value = false;
     final text = result.value.text.trim();
     return text.isEmpty ? null : text;
@@ -112,8 +127,9 @@ class _DictationController {
   /// Appui interrompu sans relâchement propre (ex : la feuille se ferme
   /// autrement) : on annule sans qu'aucun texte ne remonte.
   Future<void> abandon() async {
-    if (!isListening.value) return;
+    if (_disposed || !isListening.value) return;
     await _speech.cancel();
+    if (_disposed) return;
     isListening.value = false;
     result.value = const _DictationResult();
   }

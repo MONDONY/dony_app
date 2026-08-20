@@ -30,9 +30,12 @@ import 'package:dony/features/package_request/data/package_request_repository.da
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geolocator_platform_interface/geolocator_platform_interface.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 import '../../../helpers/mock_recent_city_store.dart';
 
@@ -49,6 +52,63 @@ class _MockCityRepository extends Mock implements CityRepository {}
 class _FakeContentCategoryRepository implements IContentCategoryRepository {
   @override
   Future<List<ContentCategory>> getCategories() async => fallbackCatalog;
+}
+
+/// Faux platform-level Geolocator — même mécanisme que `_MockGeolocatorPlatform`
+/// dans `home_screen_test.dart` (le FAB « Près de moi » de la carte, dont
+/// `_AroundMeBlock` est la contrepartie sur cet écran), mais avec des champs
+/// configurables pour couvrir aussi les chemins refusés/désactivés, jamais
+/// exercés côté `home_screen_test.dart`. `_AroundMeBlock` instancie
+/// `GeolocatorLocationService` en dur (non injecté) : c'est cette substitution
+/// du singleton `GeolocatorPlatform.instance`, pas une injection de
+/// dépendance, qui la rend testable sans toucher au widget de production.
+class _FakeGeolocatorPlatform extends Mock
+    with MockPlatformInterfaceMixin
+    implements GeolocatorPlatform {
+  bool serviceEnabled = true;
+  LocationPermission checkPermissionResult = LocationPermission.always;
+  LocationPermission requestPermissionResult = LocationPermission.denied;
+  // Délai artificiel pour laisser le temps à un pump intermédiaire
+  // d'observer l'état « en cours » (`_isLocating`) avant résolution — nos
+  // autres tests le laissent à zéro pour rester rapides.
+  Duration getCurrentPositionDelay = Duration.zero;
+
+  @override
+  Future<bool> isLocationServiceEnabled() async => serviceEnabled;
+
+  @override
+  Future<LocationPermission> checkPermission() async => checkPermissionResult;
+
+  @override
+  Future<LocationPermission> requestPermission() async =>
+      requestPermissionResult;
+
+  @override
+  Future<Position> getCurrentPosition({
+    LocationSettings? locationSettings,
+  }) async {
+    if (getCurrentPositionDelay > Duration.zero) {
+      await Future<void>.delayed(getCurrentPositionDelay);
+    }
+    return Position(
+      latitude: 48.8566,
+      longitude: 2.3522,
+      timestamp: DateTime.now(),
+      accuracy: 5,
+      altitude: 0,
+      altitudeAccuracy: 0,
+      heading: 0,
+      headingAccuracy: 0,
+      speed: 0,
+      speedAccuracy: 0,
+    );
+  }
+
+  @override
+  Future<bool> openAppSettings() async => true;
+
+  @override
+  Future<bool> openLocationSettings() async => true;
 }
 
 /// `scrollUntilVisible` sans `scrollable:` cherche l'unique `Scrollable` de
@@ -68,6 +128,22 @@ Future<void> _scrollTo(WidgetTester tester, Finder finder) async {
     200,
     scrollable: find.byType(Scrollable).first,
   );
+  await tester.pumpAndSettle();
+}
+
+/// Après un tap qui dispatche `SearchComposerFiltersChanged` (ex : le chip
+/// « Autour de moi »), `pumpAndSettle()` seul peut rendre la main trop tôt :
+/// son `do { pump(100ms) } while (hasScheduledFrame)` s'arrête dès qu'aucune
+/// NOUVELLE frame n'est programmée après un pump, alors que
+/// `SearchComposerBloc._onFiltersChanged` retarde volontairement son
+/// comptage réseau de 400 ms (`Future.delayed`) APRÈS avoir déjà appliqué le
+/// filtre (donc déjà stoppé de programmer des frames). Le minuteur de 400 ms
+/// reste alors en vol et fait échouer l'assertion « A Timer is still
+/// pending » en fin de test. Avancer explicitement de 500 ms avant de
+/// laisser `pumpAndSettle()` finir le reste (dismiss de sheet, etc.) force
+/// ce minuteur à s'écouler dans le même appel.
+Future<void> _settleFilterChange(WidgetTester tester) async {
+  await tester.pump(const Duration(milliseconds: 500));
   await tester.pumpAndSettle();
 }
 
@@ -307,6 +383,161 @@ void main() {
 
     await _scrollTo(tester, find.text('Autour de moi'));
     expect(find.text('Autour de moi'), findsOneWidget);
+  });
+
+  group('_AroundMeBlock — géolocalisation', () {
+    testWidgets(
+      'pendant la récupération de la position : affiche l\'indicateur '
+      '« Localisation en cours… »',
+      (tester) async {
+        GeolocatorPlatform.instance = _FakeGeolocatorPlatform()
+          ..getCurrentPositionDelay = const Duration(milliseconds: 200);
+
+        await tester.pumpWidget(const _Harness());
+        await tester.pumpAndSettle();
+
+        await _scrollTo(tester, find.text('Autour de moi'));
+        await tester.tap(find.text('Autour de moi'));
+        // Un seul pump (pas settle) : capture l'état intermédiaire pendant
+        // que `getCurrentPosition()` est encore en vol.
+        await tester.pump();
+        expect(find.text('Localisation en cours…'), findsOneWidget);
+
+        await _settleFilterChange(tester);
+        expect(find.text('Localisation en cours…'), findsNothing);
+        expect(find.textContaining('Rayon · 25 km'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'permission accordée : active le filtre, affiche le rayon par '
+      'défaut (25 km)',
+      (tester) async {
+        GeolocatorPlatform.instance = _FakeGeolocatorPlatform();
+
+        await tester.pumpWidget(const _Harness());
+        await tester.pumpAndSettle();
+
+        await _scrollTo(tester, find.text('Autour de moi'));
+        await tester.tap(find.text('Autour de moi'));
+        await _settleFilterChange(tester);
+
+        expect(find.textContaining('Rayon · 25 km'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'permission refusée (denied puis denied) : ouvre la feuille refusée, '
+      'le filtre reste inactif',
+      (tester) async {
+        GeolocatorPlatform.instance = _FakeGeolocatorPlatform()
+          ..checkPermissionResult = LocationPermission.denied
+          ..requestPermissionResult = LocationPermission.denied;
+
+        await tester.pumpWidget(const _Harness());
+        await tester.pumpAndSettle();
+
+        await _scrollTo(tester, find.text('Autour de moi'));
+        await tester.tap(find.text('Autour de moi'));
+        await _settleFilterChange(tester);
+
+        expect(find.text('Accès à la position refusé'), findsOneWidget);
+        // La feuille de refus reste ouverte : referme-la avant d'asserter le
+        // reste, sinon le texte du bouton derrière est masqué.
+        await tester.tapAt(const Offset(20, 20));
+        await tester.pumpAndSettle();
+        expect(find.textContaining('Rayon ·'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'permission refusée définitivement (deniedForever) : ouvre la feuille '
+      'refusée sans jamais appeler requestPermission',
+      (tester) async {
+        GeolocatorPlatform.instance = _FakeGeolocatorPlatform()
+          ..checkPermissionResult = LocationPermission.deniedForever;
+
+        await tester.pumpWidget(const _Harness());
+        await tester.pumpAndSettle();
+
+        await _scrollTo(tester, find.text('Autour de moi'));
+        await tester.tap(find.text('Autour de moi'));
+        await _settleFilterChange(tester);
+
+        expect(find.text('Accès à la position refusé'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'service de localisation désactivé : ouvre la feuille « désactivée »',
+      (tester) async {
+        GeolocatorPlatform.instance = _FakeGeolocatorPlatform()
+          ..serviceEnabled = false;
+
+        await tester.pumpWidget(const _Harness());
+        await tester.pumpAndSettle();
+
+        await _scrollTo(tester, find.text('Autour de moi'));
+        await tester.tap(find.text('Autour de moi'));
+        await _settleFilterChange(tester);
+
+        expect(find.text('Localisation désactivée'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'un second tap désactive le filtre : le rayon disparaît',
+      (tester) async {
+        GeolocatorPlatform.instance = _FakeGeolocatorPlatform();
+
+        await tester.pumpWidget(const _Harness());
+        await tester.pumpAndSettle();
+
+        await _scrollTo(tester, find.text('Autour de moi'));
+        await tester.tap(find.text('Autour de moi'));
+        await _settleFilterChange(tester);
+        expect(find.textContaining('Rayon · 25 km'), findsOneWidget);
+
+        await tester.tap(find.text('Autour de moi'));
+        await _settleFilterChange(tester);
+        expect(find.textContaining('Rayon ·'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'tap sur la pastille de rayon ouvre la feuille et applique la '
+      'nouvelle valeur',
+      (tester) async {
+        GeolocatorPlatform.instance = _FakeGeolocatorPlatform();
+
+        await tester.pumpWidget(const _Harness());
+        await tester.pumpAndSettle();
+
+        await _scrollTo(tester, find.text('Autour de moi'));
+        await tester.tap(find.text('Autour de moi'));
+        await _settleFilterChange(tester);
+        expect(find.textContaining('Rayon · 25 km'), findsOneWidget);
+
+        // La pastille apparaît sous le chip, une fois le filtre actif : sans
+        // ce second scroll, elle peut se retrouver masquée par la barre de
+        // navigation basse persistante (« Rechercher »), hors de portée d'un
+        // tap.
+        await _scrollTo(tester, find.textContaining('Rayon · 25 km'));
+        await tester.tap(find.textContaining('Rayon · 25 km'));
+        await tester.pumpAndSettle();
+        expect(find.text('Près de moi'), findsOneWidget);
+
+        // Fait glisser le slider vers la droite : la valeur affichée doit
+        // dépasser 25 km.
+        await tester.drag(find.byType(Slider), const Offset(120, 0));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Appliquer'));
+        await _settleFilterChange(tester);
+
+        expect(find.textContaining('Rayon · 25 km'), findsNothing);
+      },
+    );
   });
 }
 

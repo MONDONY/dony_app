@@ -158,6 +158,7 @@ dev_dependencies:
   path: ^1.9.1
   plugin_platform_interface: ^2.1.8
   geolocator_platform_interface: ^4.2.6
+  speech_to_text_platform_interface: ^2.4.0
   connectivity_plus_platform_interface: ^2.1.0
   webview_flutter_platform_interface: ^2.15.1
 
