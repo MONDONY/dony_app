@@ -135,6 +135,59 @@ void main() {
       expect(canContinue.value, isTrue);
     });
 
+    // Fix post-revue Tâche 13 : les bornes de budget reproduisaient
+    // exactement le bug corrigé côté trajet (maxUnitPriceFor) — une
+    // constante figée en euros, comparée telle quelle à un montant saisi
+    // dans N'IMPORTE QUELLE devise. Pendant, côté demande de colis, des
+    // tests `dony_pricing_currency_test.dart` / `maxUnitPriceFor`.
+    testWidgets(
+      '700 refusé en EUR devient valide en XOF (bornes mises à l\'échelle)',
+      (tester) async {
+        const seedEur = PackageRequestFormState(
+          currency: SupportedCurrency.eur,
+          totalBudgetEur: 700,
+        );
+        final canContinueEur = ValueNotifier<bool>(true);
+        addTearDown(canContinueEur.dispose);
+        await tester.pumpWidget(
+          wrap(
+            Step3RecapBudget(canContinueNotifier: canContinueEur),
+            seed: seedEur,
+            useMock: true,
+          ),
+        );
+        await tester.pump();
+        expect(
+          canContinueEur.value,
+          isFalse,
+          reason: '700 dépasse le plafond EUR de 560',
+        );
+
+        const seedXof = PackageRequestFormState(
+          currency: SupportedCurrency.xof,
+          totalBudgetEur: 700,
+        );
+        final canContinueXof = ValueNotifier<bool>(false);
+        addTearDown(canContinueXof.dispose);
+        await tester.pumpWidget(
+          wrap(
+            Step3RecapBudget(canContinueNotifier: canContinueXof),
+            seed: seedXof,
+            useMock: true,
+          ),
+        );
+        await tester.pump();
+        expect(
+          canContinueXof.value,
+          isTrue,
+          reason:
+              '700 XOF est au-dessus du plancher XOF mis à l\'échelle (655) '
+              'et très en-deçà du plafond (367335) : la même saisie, '
+              'refusée en EUR, devient valide en XOF',
+        );
+      },
+    );
+
     testWidgets('affiche le suffixe et le détail du budget en CAD', (
       tester,
     ) async {
@@ -245,6 +298,65 @@ void main() {
         // Champ vidé après saisie : l'autovalidation à l'interaction rend le
         // message sans qu'il faille tenter la publication.
         expect(find.text('Indiquez un budget'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'tap sur la ligne devise ouvre le sélecteur avec l\'avertissement sur '
+      'les moyens de paiement, et le choix se répercute',
+      (tester) async {
+        await tester.pumpWidget(
+          wrap(const Step3RecapBudget(currency: SupportedCurrency.eur)),
+        );
+        await tester.pump();
+
+        expect(
+          find.byKey(const Key('package-request-currency-selector-row')),
+          findsOneWidget,
+        );
+        expect(find.text('Euro (EUR)'), findsOneWidget);
+
+        await tester.tap(
+          find.byKey(const Key('package-request-currency-selector-row')),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Choisir une devise'), findsOneWidget);
+        expect(
+          find.byKey(const Key('currency-payment-methods-notice')),
+          findsOneWidget,
+        );
+
+        await tester.tap(find.text('Dollar canadien (CAD)'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('currency-selector-confirm')));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Dollar canadien (CAD)'), findsOneWidget);
+        expect(find.text('Euro (EUR)'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'devise verrouillée en édition : aucune ligne devise affichée',
+      (tester) async {
+        const seed = PackageRequestFormState(
+          editingRequestId: 'pr-1',
+          totalBudgetEur: 40,
+        );
+        await tester.pumpWidget(
+          wrap(
+            const Step3RecapBudget(currency: SupportedCurrency.eur),
+            seed: seed,
+            useMock: true,
+          ),
+        );
+        await tester.pump();
+
+        expect(
+          find.byKey(const Key('package-request-currency-selector-row')),
+          findsNothing,
+        );
       },
     );
 

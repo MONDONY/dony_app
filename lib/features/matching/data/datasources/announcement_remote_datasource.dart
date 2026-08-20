@@ -33,6 +33,7 @@ class AnnouncementRemoteDatasource {
     required DateTime handoverDeadline,
     bool negotiable = false,
     bool saveAsDraft = false,
+    String? currency,
   }) async {
     final response = await _apiClient.dio.post(
       '/announcements',
@@ -59,6 +60,9 @@ class AnnouncementRemoteDatasource {
         'handoverDeadline': handoverDeadline.toUtc().toIso8601String(),
         'negotiable': negotiable,
         if (saveAsDraft) 'saveAsDraft': true,
+        // Optionnel : absente, l'API retombe sur la devise du portefeuille du
+        // créateur (cf. plan devise-par-annonce, tâche 5).
+        'currency': ?currency,
       },
     );
 

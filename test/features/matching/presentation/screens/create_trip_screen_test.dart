@@ -630,16 +630,23 @@ void main() {
 
       await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
 
-      expect(find.byKey(const Key('currency-publish-banner')), findsOneWidget);
+      expect(
+        find.byKey(const Key('trip-currency-selector-row')),
+        findsOneWidget,
+      );
       expect(find.text('Publié en Euro (EUR)'), findsOneWidget);
       expect(
         find.bySemanticsLabel(
-          'Publication en Euro, devise EUR. Les utilisateurs dans une autre devise ne verront pas cette annonce.',
+          'Devise de publication : Euro, EUR. Les utilisateurs dans une '
+          'autre devise ne verront pas cette annonce. Bouton, modifier la '
+          'devise.',
         ),
         findsOneWidget,
       );
       expect(
-        tester.getTopLeft(find.byKey(const Key('currency-publish-banner'))).dy,
+        tester
+            .getTopLeft(find.byKey(const Key('trip-currency-selector-row')))
+            .dy,
         lessThan(
           tester.getTopLeft(find.byKey(const Key('departureCityField'))).dy,
         ),
@@ -667,7 +674,7 @@ void main() {
         ),
       );
 
-      expect(find.byKey(const Key('currency-publish-banner')), findsNothing);
+      expect(find.byKey(const Key('trip-currency-selector-row')), findsNothing);
     });
 
     testWidgets('bandeau devise reste lisible avec texte agrandi', (
@@ -679,9 +686,44 @@ void main() {
 
       await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
 
-      expect(find.byKey(const Key('currency-publish-banner')), findsOneWidget);
+      expect(
+        find.byKey(const Key('trip-currency-selector-row')),
+        findsOneWidget,
+      );
       expect(tester.takeException(), isNull);
     });
+
+    testWidgets(
+      'tap sur le bandeau devise ouvre le sélecteur avec l\'avertissement '
+      'sur les moyens de paiement, et le choix se répercute sur le bandeau',
+      (tester) async {
+        setupViewport(tester);
+        registerCurrencyPreference('EUR');
+
+        await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
+
+        await tester.tap(find.byKey(const Key('trip-currency-selector-row')));
+        await tester.pumpAndSettle();
+
+        // Le sélecteur partagé (Tâche 12) s'ouvre, avec l'avertissement sur
+        // les moyens de paiement qui découlent de la devise.
+        expect(find.text('Choisir une devise'), findsOneWidget);
+        expect(
+          find.byKey(const Key('currency-payment-methods-notice')),
+          findsOneWidget,
+        );
+
+        // Choisir Dollar américain (USD) et confirmer.
+        await tester.tap(find.text('Dollar américain (USD)'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('currency-selector-confirm')));
+        await tester.pumpAndSettle();
+
+        // Le bandeau reflète la nouvelle devise choisie pour l'annonce.
+        expect(find.text('Publié en Dollar américain (USD)'), findsOneWidget);
+        expect(find.text('Publié en Euro (EUR)'), findsNothing);
+      },
+    );
 
     testWidgets('stepper header est présent à l\'étape 0', (tester) async {
       setupViewport(tester);

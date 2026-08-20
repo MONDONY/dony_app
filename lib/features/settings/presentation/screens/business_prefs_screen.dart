@@ -1,12 +1,14 @@
 import 'dart:async';
 
 import 'package:dony/core/currency/country_catalog.dart';
+import 'package:dony/core/currency/currency_selector.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:dony/features/settings/presentation/widgets/settings_flat_group.dart';
 import 'package:dony/features/settings/presentation/widgets/settings_section_header.dart';
@@ -99,15 +101,19 @@ class _BusinessPrefsScreenState extends State<BusinessPrefsScreen> {
                           iconColor: cs.primary,
                           iconBgColor: cs.primaryContainer,
                           label: 'Devise',
-                          subtitle: 'Définie par votre pays',
+                          subtitle: state.currencyLocked
+                              ? 'Verrouillée : videz votre portefeuille pour en changer'
+                              : null,
                           trailing: Text(
                             state.currencyCode,
                             style: tt.labelMedium?.copyWith(
                               color: cs.onSurfaceVariant,
                             ),
                           ),
-                          enabled: false,
+                          enabled: !state.currencyLocked,
                           showDivider: false,
+                          onTap: () =>
+                              unawaited(_openCurrencySelector(context, state)),
                         ),
                       ],
                     ),
@@ -200,6 +206,39 @@ Future<void> _openCountryPicker(
     return;
   }
   bloc.add(CountryChanged(selected));
+}
+
+// ── Sélecteur de devise ──────────────────────────────────────────────────────
+
+/// Ouvre le sélecteur de devise partagé et, si l'utilisateur en choisit une
+/// nouvelle, envoie [CurrencyChanged] au [BusinessPrefsBloc]. Aucun voyageur
+/// précis n'est engagé à ce stade des Réglages : le rail carte prévisualisé
+/// dépend seulement de [SupportedCurrency.isStripeEligible], pas d'un compte
+/// Connect (même approximation que le wizard de demande de colis). Le
+/// serveur reste seul décideur au paiement réel.
+Future<void> _openCurrencySelector(
+  BuildContext context,
+  BusinessPrefsState state,
+) async {
+  final bloc = context.read<BusinessPrefsBloc>();
+  final selected = await CurrencySelector.show(
+    context,
+    options: [
+      for (final currency in SupportedCurrency.values)
+        CurrencyPaymentOption(
+          currency: currency,
+          availablePaymentMethods: {
+            BidPaymentMethod.cash,
+            if (currency.isStripeEligible) BidPaymentMethod.stripe,
+          },
+        ),
+    ],
+    initialCurrency: SupportedCurrency.fromCodeOrDefault(state.currencyCode),
+  );
+  if (selected == null || !context.mounted) {
+    return;
+  }
+  bloc.add(CurrencyChanged(selected.code));
 }
 
 class _CountryPickerList extends StatefulWidget {

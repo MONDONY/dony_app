@@ -31,6 +31,7 @@ class AnnouncementRepository {
     required DateTime handoverDeadline,
     bool negotiable = false,
     bool saveAsDraft = false,
+    String? currency,
   }) async {
     return _remoteDatasource.createAnnouncement(
       departureCity: departureCity,
@@ -54,6 +55,7 @@ class AnnouncementRepository {
       handoverDeadline: handoverDeadline,
       negotiable: negotiable,
       saveAsDraft: saveAsDraft,
+      currency: currency,
     );
   }
 

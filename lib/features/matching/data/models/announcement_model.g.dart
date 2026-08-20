@@ -96,6 +96,8 @@ AnnouncementModel _$AnnouncementModelFromJson(
   urgent: json['urgent'] as bool?,
   currency: json['currency'] as String? ?? 'EUR',
   negotiable: json['negotiable'] as bool? ?? false,
+  convertedPricePerKg: (json['convertedPricePerKg'] as num?)?.toDouble(),
+  convertedCurrency: json['convertedCurrency'] as String?,
 );
 
 Map<String, dynamic> _$AnnouncementModelToJson(AnnouncementModel instance) =>
@@ -143,6 +145,8 @@ Map<String, dynamic> _$AnnouncementModelToJson(AnnouncementModel instance) =>
       'urgent': instance.urgent,
       'currency': instance.currency,
       'negotiable': instance.negotiable,
+      'convertedPricePerKg': instance.convertedPricePerKg,
+      'convertedCurrency': instance.convertedCurrency,
     };
 
 const _$BidPaymentMethodEnumMap = {

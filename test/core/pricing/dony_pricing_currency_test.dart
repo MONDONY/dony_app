@@ -1,3 +1,4 @@
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -65,6 +66,41 @@ void main() {
       expect(kMaxUnitPriceEur, 500);
     });
   });
+
+  group(
+    'maxUnitPriceFor — suit la devise DE L\'ANNONCE, pas celle du profil',
+    () {
+      // Cœur de la Tâche 13 : une annonce se publie désormais dans la devise
+      // choisie à la création, potentiellement distincte du portefeuille. La
+      // borne de saisie doit suivre ce choix, pas ActiveCurrency.current.
+      test('EUR : 500', () {
+        expect(maxUnitPriceFor(SupportedCurrency.eur), 500);
+      });
+
+      test('USD : mise à l\'échelle avec deux décimales', () {
+        expect(maxUnitPriceFor(SupportedCurrency.usd), 500 * 1.08);
+      });
+
+      test(
+        'XOF : mise à l\'échelle puis arrondie au franc (zéro décimale)',
+        () {
+          // 500 * 655.957 = 327978.5 → arrondi au franc inférieur.
+          expect(maxUnitPriceFor(SupportedCurrency.xof), 327978.0);
+        },
+      );
+
+      test(
+        'changer de devise change la borne, indépendamment de la devise active',
+        () {
+          // Deux devises, deux bornes très différentes — la même saisie (600)
+          // est refusée en EUR mais acceptée en XOF.
+          const price = 600.0;
+          expect(price, greaterThan(maxUnitPriceFor(SupportedCurrency.eur)));
+          expect(price, lessThan(maxUnitPriceFor(SupportedCurrency.xof)));
+        },
+      );
+    },
+  );
 
   group('formatPriceActive — repli quand aucune devise n\'est résolue', () {
     test('formate en euros sans lever d\'exception', () {

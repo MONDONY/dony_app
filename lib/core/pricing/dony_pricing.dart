@@ -126,8 +126,18 @@ const double kMaxUnitPriceEur = 500;
 /// ici et dans `CurrencyBounds` côté serveur) : le formulaire accepte donc
 /// exactement ce que l'API accepte. Les faire diverger rouvrirait l'écart entre
 /// ce que l'écran promet et ce que le serveur autorise.
-double get maxUnitPriceActive {
-  final currency = ActiveCurrency.current ?? SupportedCurrency.eur;
+double get maxUnitPriceActive =>
+    maxUnitPriceFor(ActiveCurrency.current ?? SupportedCurrency.eur);
+
+/// Plafond d'un prix unitaire dans [currency], quelle qu'elle soit — pas
+/// nécessairement la devise active du profil.
+///
+/// Extrait de [maxUnitPriceActive] : une annonce peut désormais se publier
+/// dans une devise choisie à la création, distincte de celle du portefeuille.
+/// Borner la saisie sur la devise active aurait laissé passer un prix
+/// absurde (ou refusé un prix valide) dès que l'annonce et le profil
+/// divergent.
+double maxUnitPriceFor(SupportedCurrency currency) {
   final scaled = kMaxUnitPriceEur * currency.unitsPerEur;
   return currency.minorUnit == 0 ? scaled.floorToDouble() : scaled;
 }
@@ -176,6 +186,30 @@ extension AnnouncementSenderPricing on AnnouncementModel {
   /// surfaces vues par l'expéditeur ; les surfaces voyageur gardent `pricePerKg`.
   double get senderPricePerKg =>
       pricePerKgDisplay ?? netToSenderPrice(pricePerKg);
+
+  /// Équivalent, dans la devise convertie par le serveur
+  /// ([AnnouncementModel.convertedCurrency]), du prix affiché à l'expéditeur
+  /// ([senderPricePerKg]) — donc majoré de la commission Yadony, pas le net
+  /// voyageur brut.
+  ///
+  /// Le backend (`AnnouncementService`) convertit [pricePerKg] (le NET) vers
+  /// [convertedPricePerKg], indépendamment de [pricePerKgDisplay]. Afficher
+  /// ce net converti à côté de [senderPricePerKg] (le BRUT, net + commission)
+  /// mélangerait deux bases différentes et sous-évaluerait systématiquement
+  /// l'estimation d'environ le taux de commission. On réapplique donc ici, au
+  /// résultat déjà converti par le serveur, exactement le même ratio net→brut
+  /// que celui qui produit [senderPricePerKg] — jamais un nouveau calcul de
+  /// taux de change, seulement la majoration commission déjà appliquée au
+  /// montant d'origine.
+  ///
+  /// `null` si le serveur n'a rien converti, ou si [pricePerKg] est nul (mode
+  /// `MIXED` sans tarif au kilo : pas de ratio net→brut exploitable).
+  double? get convertedSenderPricePerKg {
+    final converted = convertedPricePerKg;
+    if (converted == null || pricePerKg <= 0) return null;
+    final markupRatio = senderPricePerKg / pricePerKg;
+    return converted * markupRatio;
+  }
 
   /// Le trajet porte-t-il un tarif au kilo exploitable ?
   ///

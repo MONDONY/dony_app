@@ -149,6 +149,7 @@ void main() {
         photoKeys: any(named: 'photoKeys'),
         pickupNeighborhood: any(named: 'pickupNeighborhood'),
         deliveryNeighborhood: any(named: 'deliveryNeighborhood'),
+        currency: any(named: 'currency'),
       ),
     ).thenAnswer((_) async => fakeRequest);
 
@@ -174,6 +175,7 @@ void main() {
         pickupNeighborhood: any(named: 'pickupNeighborhood'),
         deliveryNeighborhood: any(named: 'deliveryNeighborhood'),
         saveAsDraft: true,
+        currency: any(named: 'currency'),
       ),
     ).thenAnswer((_) async => fakeDraftRequest);
 
@@ -390,6 +392,7 @@ void main() {
         pickupNeighborhood: any(named: 'pickupNeighborhood'),
         deliveryNeighborhood: any(named: 'deliveryNeighborhood'),
         saveAsDraft: saveAsDraft,
+        currency: any(named: 'currency'),
       );
 
   List<dynamic> captureSaveAsDraftCalls() => verify(
@@ -409,6 +412,7 @@ void main() {
       photoKeys: any(named: 'photoKeys'),
       pickupNeighborhood: any(named: 'pickupNeighborhood'),
       deliveryNeighborhood: any(named: 'deliveryNeighborhood'),
+      currency: any(named: 'currency'),
       saveAsDraft: captureAny(named: 'saveAsDraft'),
     ),
   ).captured;

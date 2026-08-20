@@ -28,7 +28,9 @@ void main() {
   late MockBusinessPrefsBloc mockPrefsBloc;
   late MockAuthBloc mockAuthBloc;
 
-  setUpAll(() {});
+  setUpAll(() {
+    registerFallbackValue(const CurrencyChanged('EUR'));
+  });
 
   setUp(() {
     mockPrefsBloc = MockBusinessPrefsBloc();
@@ -113,7 +115,7 @@ void main() {
     expect(find.text('Impossible de synchroniser. Réessayez.'), findsOneWidget);
   });
 
-  testWidgets('la tuile Pays affiche la devise derivee en lecture seule', (
+  testWidgets('la tuile Pays affiche le pays et la devise associée', (
     tester,
   ) async {
     mockPrefsBloc = stubBusinessPrefsBloc(
@@ -125,7 +127,6 @@ void main() {
 
     expect(find.text('Canada'), findsOneWidget);
     expect(find.textContaining('CAD'), findsOneWidget);
-    expect(find.textContaining('Définie par votre pays'), findsOneWidget);
   });
 
   testWidgets('la tuile Pays est grisee quand le pays est verrouille', (
@@ -257,4 +258,127 @@ void main() {
 
     expect(find.text('Rechercher un pays'), findsNothing);
   });
+
+  // ── Tuile Devise ────────────────────────────────────────────────────────
+
+  testWidgets(
+    'solde nul : la tuile Devise est active et le changement part au serveur',
+    (tester) async {
+      when(() => mockAuthBloc.state).thenReturn(const AuthInitial());
+      await tester.pumpWidget(buildScreen());
+      await tester.pumpAndSettle();
+
+      final tile = tester.widget<DonyListTile>(
+        find.ancestor(
+          of: find.text('Devise'),
+          matching: find.byType(DonyListTile),
+        ),
+      );
+      expect(tile.enabled, isTrue);
+      expect(tile.subtitle, isNull);
+
+      await tester.tap(find.text('Devise'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Choisir une devise'), findsOneWidget);
+      await tester.tap(find.text('Franc CFA Ouest (XOF)'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Confirmer XOF'));
+      await tester.pumpAndSettle();
+
+      verify(() => mockPrefsBloc.add(const CurrencyChanged('XOF'))).called(1);
+    },
+  );
+
+  testWidgets(
+    'solde non nul : la tuile Devise est grisée et explique que le solde '
+    'doit être vidé',
+    (tester) async {
+      mockPrefsBloc = stubBusinessPrefsBloc(
+        state: const BusinessPrefsState(currencyLocked: true),
+      );
+      when(() => mockAuthBloc.state).thenReturn(const AuthInitial());
+      await tester.pumpWidget(buildScreen());
+      await tester.pumpAndSettle();
+
+      final tile = tester.widget<DonyListTile>(
+        find.ancestor(
+          of: find.text('Devise'),
+          matching: find.byType(DonyListTile),
+        ),
+      );
+      expect(tile.enabled, isFalse);
+      expect(tile.subtitle, isNotNull);
+      expect(find.textContaining('videz votre portefeuille'), findsOneWidget);
+
+      await tester.tap(find.text('Devise'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Choisir une devise'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'les verrous Pays et Devise sont indépendants : pays verrouillé seul '
+    'laisse la tuile Devise active',
+    (tester) async {
+      mockPrefsBloc = stubBusinessPrefsBloc(
+        state: const BusinessPrefsState(
+          country: 'CA',
+          currencyCode: 'CAD',
+          countryLocked: true,
+        ),
+      );
+      when(() => mockAuthBloc.state).thenReturn(const AuthInitial());
+      await tester.pumpWidget(buildScreen());
+      await tester.pumpAndSettle();
+
+      final countryTile = tester.widget<DonyListTile>(
+        find.ancestor(
+          of: find.text('Canada'),
+          matching: find.byType(DonyListTile),
+        ),
+      );
+      final currencyTile = tester.widget<DonyListTile>(
+        find.ancestor(
+          of: find.text('Devise'),
+          matching: find.byType(DonyListTile),
+        ),
+      );
+      expect(countryTile.enabled, isFalse);
+      expect(currencyTile.enabled, isTrue);
+    },
+  );
+
+  testWidgets(
+    'les verrous Pays et Devise sont indépendants : devise verrouillée seule '
+    'laisse la tuile Pays active',
+    (tester) async {
+      mockPrefsBloc = stubBusinessPrefsBloc(
+        state: const BusinessPrefsState(
+          country: 'CA',
+          currencyCode: 'CAD',
+          currencyLocked: true,
+        ),
+      );
+      when(() => mockAuthBloc.state).thenReturn(const AuthInitial());
+      await tester.pumpWidget(buildScreen());
+      await tester.pumpAndSettle();
+
+      final countryTile = tester.widget<DonyListTile>(
+        find.ancestor(
+          of: find.text('Canada'),
+          matching: find.byType(DonyListTile),
+        ),
+      );
+      final currencyTile = tester.widget<DonyListTile>(
+        find.ancestor(
+          of: find.text('Devise'),
+          matching: find.byType(DonyListTile),
+        ),
+      );
+      expect(countryTile.enabled, isTrue);
+      expect(currencyTile.enabled, isFalse);
+    },
+  );
 }

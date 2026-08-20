@@ -5,6 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 AnnouncementModel _ann({
   required double pricePerKg,
   double? pricePerKgDisplay,
+  double? convertedPricePerKg,
+  String? convertedCurrency,
 }) => AnnouncementModel(
   id: 'a',
   travelerId: 't',
@@ -15,6 +17,8 @@ AnnouncementModel _ann({
   totalKg: 10,
   pricePerKg: pricePerKg,
   pricePerKgDisplay: pricePerKgDisplay,
+  convertedPricePerKg: convertedPricePerKg,
+  convertedCurrency: convertedCurrency,
   status: 'OPEN',
   createdAt: DateTime(2026, 6),
   updatedAt: DateTime(2026, 6),
@@ -112,6 +116,65 @@ void main() {
     test('retombe sur net × 1,05 quand le champ backend est absent', () {
       final a = _ann(pricePerKg: 10);
       expect(a.senderPricePerKg, closeTo(10.50, 1e-9));
+    });
+  });
+
+  group('AnnouncementSenderPricing.convertedSenderPricePerKg', () {
+    test(
+      'majore le net converti par le serveur, comme senderPricePerKg majore le net d\'origine',
+      () {
+        // Le backend convertit toujours le NET (pricePerKg), jamais le
+        // BRUT affiché (senderPricePerKg / pricePerKgDisplay). Avec une
+        // commission à 12 %, un net de 10 € converti "brut" (sans
+        // majoration) à 6560 XOF ne doit PAS être affiché tel quel à côté
+        // d'un prix d'origine qui, lui, est déjà majoré (senderPricePerKg
+        // = 11,20 €). L'estimation doit refléter la même majoration :
+        // 6560 × 1,12 = 7347,2.
+        setDonyCommissionRate(0.12);
+        final a = _ann(
+          pricePerKg: 10,
+          convertedPricePerKg: 6560,
+          convertedCurrency: 'XOF',
+        );
+
+        expect(a.senderPricePerKg, closeTo(11.2, 1e-9));
+        expect(a.convertedSenderPricePerKg, closeTo(7347.2, 1e-6));
+        // Preuve explicite que le brut converti diffère du net converti tel
+        // quel reçu du serveur (le bug corrigé).
+        expect(a.convertedSenderPricePerKg, isNot(closeTo(6560, 1e-6)));
+      },
+    );
+
+    test(
+      'respecte pricePerKgDisplay quand il diverge du net × multiplicateur',
+      () {
+        // pricePerKgDisplay peut différer légèrement de net × multiplicateur
+        // (arrondi backend) : le ratio réellement utilisé doit suivre
+        // pricePerKgDisplay, pas recalculer un multiplicateur générique.
+        final a = _ann(
+          pricePerKg: 10,
+          pricePerKgDisplay: 11.5,
+          convertedPricePerKg: 6560,
+          convertedCurrency: 'XOF',
+        );
+
+        // ratio = 11.5 / 10 = 1.15
+        expect(a.convertedSenderPricePerKg, closeTo(7544.0, 1e-6));
+      },
+    );
+
+    test('null quand le serveur n\'a rien converti', () {
+      final a = _ann(pricePerKg: 10);
+      expect(a.convertedSenderPricePerKg, isNull);
+    });
+
+    test('null quand pricePerKg est nul (mode MIXED sans tarif au kilo)', () {
+      final a = _ann(
+        pricePerKg: 0,
+        convertedPricePerKg: 100,
+        convertedCurrency: 'USD',
+      );
+      expect(a.convertedSenderPricePerKg, isNull);
     });
   });
 

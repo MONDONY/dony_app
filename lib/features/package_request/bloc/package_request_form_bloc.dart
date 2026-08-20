@@ -36,6 +36,9 @@ class PackageRequestFormBloc
       (e, emit) => emit(state.copyWith(negotiable: e.value)),
     );
     on<PackageRequestPaymentMethodToggled>(_onPaymentMethodToggled);
+    on<PackageRequestCurrencyChanged>(
+      (e, emit) => emit(state.copyWith(currency: e.currency)),
+    );
     on<PackageRequestTotalBudgetChanged>(
       (e, emit) => emit(
         state.copyWith(
@@ -190,6 +193,10 @@ class PackageRequestFormBloc
           deliveryNeighborhood: _blankToNull(state.deliveryNeighborhood),
           saveAsDraft: e.saveAsDraft,
           promoCode: _blankToNull(state.promoCode),
+          // Devise choisie à l'étape budget. Absente → l'API retombe sur la
+          // devise du portefeuille de l'expéditeur (jamais renvoyée en
+          // édition : une demande déjà créée garde sa devise d'origine).
+          currency: state.currency?.code,
         );
       }
       if (!e.saveAsDraft && saved.status == PackageRequestStatus.draft) {

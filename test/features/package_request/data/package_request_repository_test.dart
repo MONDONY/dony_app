@@ -128,6 +128,66 @@ void main() {
         );
       },
     );
+
+    test('sends the chosen currency in the payload', () async {
+      Map<String, dynamic>? capturedBody;
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/package-requests',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer((invocation) async {
+        capturedBody = invocation.namedArguments[#data] as Map<String, dynamic>;
+        return _ok(_prJson, '/package-requests');
+      });
+
+      await repo.create(
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        desiredDate: DateTime(2026, 6, 15),
+        dateToleranceDays: 2,
+        weightKg: 5.0,
+        parcelSize: ParcelSize.small,
+        transportMode: TransportMode.plane,
+        categories: const ['Vêtements'],
+        negotiable: true,
+        acceptedPaymentMethods: {PaymentMethod.stripe},
+        currency: 'XOF',
+      );
+
+      expect(capturedBody, isNotNull);
+      expect(capturedBody!['currency'], 'XOF');
+    });
+
+    test('omits currency from the payload when absent (server falls back to '
+        'the wallet currency)', () async {
+      Map<String, dynamic>? capturedBody;
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/package-requests',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer((invocation) async {
+        capturedBody = invocation.namedArguments[#data] as Map<String, dynamic>;
+        return _ok(_prJson, '/package-requests');
+      });
+
+      await repo.create(
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        desiredDate: DateTime(2026, 6, 15),
+        dateToleranceDays: 2,
+        weightKg: 5.0,
+        parcelSize: ParcelSize.small,
+        transportMode: TransportMode.plane,
+        categories: const ['Vêtements'],
+        negotiable: true,
+        acceptedPaymentMethods: {PaymentMethod.stripe},
+      );
+
+      expect(capturedBody, isNotNull);
+      expect(capturedBody!.containsKey('currency'), isFalse);
+    });
   });
 
   group('saveAsDraft', () {

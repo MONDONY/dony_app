@@ -67,6 +67,7 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
         handoverDeadline: event.handoverDeadline,
         negotiable: event.negotiable,
         saveAsDraft: event.saveAsDraft,
+        currency: event.currency,
       );
       // Un brouillon n'est pas une publication : le flag "premier pas voyageur"
       // ne doit être posé que lorsque le trajet est réellement actif/visible.

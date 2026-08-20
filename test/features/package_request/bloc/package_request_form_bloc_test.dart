@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dio/dio.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
@@ -176,6 +177,147 @@ void main() {
           totalBudgetEur: 25,
         ),
       ).called(1);
+    },
+  );
+
+  // ── Devise (Tâche 13) ────────────────────────────────────────────────────────
+
+  blocTest<PackageRequestFormBloc, PackageRequestFormState>(
+    'PackageRequestCurrencyChanged puis submit → repo.create reçoit le code '
+    'de la devise choisie',
+    build: () {
+      when(
+        () => repo.create(
+          departureCity: any(named: 'departureCity'),
+          arrivalCity: any(named: 'arrivalCity'),
+          desiredDate: any(named: 'desiredDate'),
+          dateToleranceDays: any(named: 'dateToleranceDays'),
+          weightKg: any(named: 'weightKg'),
+          parcelSize: any(named: 'parcelSize'),
+          transportMode: any(named: 'transportMode'),
+          categories: any(named: 'categories'),
+          negotiable: any(named: 'negotiable'),
+          acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
+          totalBudgetEur: any(named: 'totalBudgetEur'),
+          description: any(named: 'description'),
+          photoKeys: any(named: 'photoKeys'),
+          pickupNeighborhood: any(named: 'pickupNeighborhood'),
+          deliveryNeighborhood: any(named: 'deliveryNeighborhood'),
+          currency: any(named: 'currency'),
+        ),
+      ).thenAnswer((_) async => fakeRequest);
+      return makeBloc(repo);
+    },
+    act: (bloc) => bloc
+      ..add(
+        FormStep1Submitted(
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          desiredDate: DateTime(2026, 6, 15),
+          dateToleranceDays: 2,
+          transportMode: TransportMode.plane,
+        ),
+      )
+      ..add(
+        const FormStep2Submitted(
+          weightKg: 5,
+          parcelSize: ParcelSize.small,
+          categories: ['Vêtements'],
+        ),
+      )
+      ..add(const PackageRequestCurrencyChanged(SupportedCurrency.usd))
+      ..add(const FormStep3Submitted(targetPriceEur: 25)),
+    verify: (_) {
+      final captured = verify(
+        () => repo.create(
+          departureCity: any(named: 'departureCity'),
+          arrivalCity: any(named: 'arrivalCity'),
+          desiredDate: any(named: 'desiredDate'),
+          dateToleranceDays: any(named: 'dateToleranceDays'),
+          weightKg: any(named: 'weightKg'),
+          parcelSize: any(named: 'parcelSize'),
+          transportMode: any(named: 'transportMode'),
+          categories: any(named: 'categories'),
+          negotiable: any(named: 'negotiable'),
+          acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
+          totalBudgetEur: any(named: 'totalBudgetEur'),
+          description: any(named: 'description'),
+          photoKeys: any(named: 'photoKeys'),
+          pickupNeighborhood: any(named: 'pickupNeighborhood'),
+          deliveryNeighborhood: any(named: 'deliveryNeighborhood'),
+          currency: captureAny(named: 'currency'),
+        ),
+      ).captured;
+      expect(captured.single, 'USD');
+    },
+  );
+
+  blocTest<PackageRequestFormBloc, PackageRequestFormState>(
+    'sans PackageRequestCurrencyChanged, repo.create reçoit currency: null '
+    '(le serveur retombe sur la devise du portefeuille)',
+    build: () {
+      when(
+        () => repo.create(
+          departureCity: any(named: 'departureCity'),
+          arrivalCity: any(named: 'arrivalCity'),
+          desiredDate: any(named: 'desiredDate'),
+          dateToleranceDays: any(named: 'dateToleranceDays'),
+          weightKg: any(named: 'weightKg'),
+          parcelSize: any(named: 'parcelSize'),
+          transportMode: any(named: 'transportMode'),
+          categories: any(named: 'categories'),
+          negotiable: any(named: 'negotiable'),
+          acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
+          totalBudgetEur: any(named: 'totalBudgetEur'),
+          description: any(named: 'description'),
+          photoKeys: any(named: 'photoKeys'),
+          pickupNeighborhood: any(named: 'pickupNeighborhood'),
+          deliveryNeighborhood: any(named: 'deliveryNeighborhood'),
+          currency: any(named: 'currency'),
+        ),
+      ).thenAnswer((_) async => fakeRequest);
+      return makeBloc(repo);
+    },
+    act: (bloc) => bloc
+      ..add(
+        FormStep1Submitted(
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          desiredDate: DateTime(2026, 6, 15),
+          dateToleranceDays: 2,
+          transportMode: TransportMode.plane,
+        ),
+      )
+      ..add(
+        const FormStep2Submitted(
+          weightKg: 5,
+          parcelSize: ParcelSize.small,
+          categories: ['Vêtements'],
+        ),
+      )
+      ..add(const FormStep3Submitted(targetPriceEur: 25)),
+    verify: (_) {
+      final captured = verify(
+        () => repo.create(
+          departureCity: any(named: 'departureCity'),
+          arrivalCity: any(named: 'arrivalCity'),
+          desiredDate: any(named: 'desiredDate'),
+          dateToleranceDays: any(named: 'dateToleranceDays'),
+          weightKg: any(named: 'weightKg'),
+          parcelSize: any(named: 'parcelSize'),
+          transportMode: any(named: 'transportMode'),
+          categories: any(named: 'categories'),
+          negotiable: any(named: 'negotiable'),
+          acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
+          totalBudgetEur: any(named: 'totalBudgetEur'),
+          description: any(named: 'description'),
+          photoKeys: any(named: 'photoKeys'),
+          pickupNeighborhood: any(named: 'pickupNeighborhood'),
+          deliveryNeighborhood: any(named: 'deliveryNeighborhood'),
+          currency: captureAny(named: 'currency'),
+        ),
+      ).captured;
+      expect(captured.single, isNull);
     },
   );
 

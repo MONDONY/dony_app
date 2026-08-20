@@ -200,6 +200,16 @@ class AnnouncementModel {
   @JsonKey(defaultValue: false)
   final bool negotiable;
 
+  /// Équivalent de [pricePerKg] converti par le SERVEUR dans la devise du
+  /// lecteur courant (`ExchangeRateService.convert`). `null` quand le
+  /// backend n'a rien à convertir (lecteur anonyme, devise déjà identique,
+  /// ancien payload). Jamais recalculé côté client : le taux vit en base.
+  final double? convertedPricePerKg;
+
+  /// Devise cible de [convertedPricePerKg], celle du lecteur. `null` en
+  /// même temps que [convertedPricePerKg].
+  final String? convertedCurrency;
+
   const AnnouncementModel({
     required this.id,
     required this.travelerId,
@@ -242,6 +252,8 @@ class AnnouncementModel {
     this.urgent,
     this.currency = 'EUR',
     this.negotiable = false,
+    this.convertedPricePerKg,
+    this.convertedCurrency,
   });
 
   factory AnnouncementModel.fromJson(Map<String, dynamic> json) =>
