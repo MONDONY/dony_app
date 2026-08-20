@@ -148,6 +148,7 @@ abstract final class AnalyticsEvents {
   // Settings
   static const analyticsConsentChanged = 'analytics_consent_changed';
   static const accountDeletionRequested = 'account_deletion_requested';
+  static const walletRefundRequested = 'wallet_refund_requested';
   static const phoneVisibilityToggled = 'phone_visibility_toggled';
 
   // Envois

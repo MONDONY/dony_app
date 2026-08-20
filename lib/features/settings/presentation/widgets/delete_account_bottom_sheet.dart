@@ -1,7 +1,12 @@
 // dony_app/lib/features/settings/presentation/widgets/delete_account_bottom_sheet.dart
+import 'dart:async';
+
+import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:dony/features/settings/bloc/deletion_eligibility_cubit.dart';
@@ -28,7 +33,10 @@ class DeleteAccountBottomSheet extends StatefulWidget {
     final deletionBloc = context.read<AccountDeletionBloc>();
     final cubit =
         eligibilityCubit ??
-        DeletionEligibilityCubit(getIt<AccountDeletionRepository>());
+        DeletionEligibilityCubit(
+          getIt<AccountDeletionRepository>(),
+          getIt<AnalyticsService>(),
+        );
     cubit.check();
     final modeNotifier = ValueNotifier<DeleteMode?>(null);
     VoidCallback? submit;
@@ -201,6 +209,10 @@ class _DeleteActions extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.sm),
         ],
+        if (eligibility.hasWalletBalance) ...[
+          _WalletRefundRequestCta(),
+          const SizedBox(height: DonySpacing.sm),
+        ],
         ValueListenableBuilder<DeleteMode?>(
           valueListenable: modeNotifier,
           builder: (context, mode, _) {
@@ -238,6 +250,72 @@ class _DeleteActions extends StatelessWidget {
           },
         ),
       ],
+    );
+  }
+}
+
+/// CTA "Demander le remboursement de mon solde" — apparaît quand l'utilisateur
+/// a un solde wallet positif. Purement optionnel : la suppression de compte
+/// fonctionne dans tous les cas (Apple 5.1.1(v)) et ouvre déjà ce même ticket
+/// automatiquement si l'utilisateur ne le fait pas ici. Bascule en bannière
+/// de confirmation une fois le ticket ouvert ; un admin rembourse hors-app
+/// puis résout le ticket.
+class _WalletRefundRequestCta extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return BlocConsumer<DeletionEligibilityCubit, DeletionEligibilityState>(
+      listenWhen: (previous, current) =>
+          current.walletRefundError != null &&
+          current.walletRefundError != previous.walletRefundError,
+      listener: (context, state) {
+        if (state.walletRefundError != null) {
+          unawaited(ErrorPresenter.show(context, state.walletRefundError));
+        }
+      },
+      builder: (context, state) {
+        if (state.walletRefundRequested) {
+          final amounts = state.walletRefundRequests
+              .map(
+                (r) => CurrencyFormatter.format(
+                  r.amount,
+                  SupportedCurrency.fromCodeOrDefault(r.currency),
+                ),
+              )
+              .join(', ');
+          return DonyStatusBanner(
+            type: DonyStatusBannerType.success,
+            iconAsset: 'circle-check',
+            message:
+                'Demande envoyée pour $amounts. Un membre de l\'équipe vous '
+                'recontacte pour le remboursement.',
+          );
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const DonyStatusBanner(
+              type: DonyStatusBannerType.info,
+              iconAsset: 'wallet',
+              message:
+                  'Vous avez un solde disponible. Il sera automatiquement '
+                  'remboursé après la suppression de votre compte — vous '
+                  'pouvez aussi le demander dès maintenant.',
+            ),
+            const SizedBox(height: DonySpacing.sm),
+            DonyButton(
+              label: 'Demander le remboursement maintenant',
+              variant: DonyButtonVariant.secondary,
+              isLoading: state.isRequestingWalletRefund,
+              onPressed: state.isRequestingWalletRefund
+                  ? null
+                  : () => context
+                        .read<DeletionEligibilityCubit>()
+                        .requestWalletRefund(),
+            ),
+          ],
+        );
+      },
     );
   }
 }

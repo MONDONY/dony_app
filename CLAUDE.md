@@ -376,6 +376,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `analytics_consent_changed` | PrivacySettingsScreen.onChanged |
 | `phone_visibility_toggled` | PrivacySettingsBloc._onToggleHidePhone — bascule « Masquer mon numéro » confirmée par le serveur (propriété `hidden`) |
 | `account_deletion_requested` | AccountDeletionBloc._onRequestDeletion() |
+| `wallet_refund_requested` | DeletionEligibilityCubit.requestWalletRefund() — solde wallet bloquant la suppression, ticket de remboursement manuel ouvert (aucune propriété : ni montant ni devise, PII financière) |
 | `shipment_filter_applied` | ShipmentFilterCubit (statut/période/preset, sans PII) |
 | `shipment_new_request_opened` | ShipmentListScreen — pill « Envoyer » du header ouvre le wizard de demande d'envoi |
 | `publish_intro_stripe_reminder_tapped` | PublishIntroScreen (trajet) — tap sur le rappel « Activez les paiements par carte » → onboarding Stripe Connect |
