@@ -241,20 +241,28 @@ class _CountryListState extends State<_CountryList> {
                           ),
                           boxShadow: DonyShadow.lg,
                         ),
-                        child: ListView.separated(
-                          shrinkWrap: true,
-                          padding: const EdgeInsets.all(DonySpacing.xs),
-                          itemCount: countries.length,
-                          separatorBuilder: (_, _) =>
-                              const SizedBox(height: DonySpacing.xxs),
-                          itemBuilder: (context, index) {
-                            final country = countries[index];
-                            return _CountryOptionTile(
-                              country: country,
-                              isSelected: widget.selectedCode == country.code,
-                              onTap: () => onSelected(country),
-                            );
-                          },
+                        // Empêche le scroll de la liste de remonter jusqu'au
+                        // `SingleChildScrollView` de l'écran (keyboardDismissBehavior:
+                        // onDrag) : sans ça, l'`onDrag` extérieur unfocus le champ dès
+                        // qu'on drag pour scroller ici, ce qui referme l'Autocomplete
+                        // en plein geste — la liste semblait "se fermer au toucher".
+                        child: NotificationListener<ScrollNotification>(
+                          onNotification: (_) => true,
+                          child: ListView.separated(
+                            shrinkWrap: true,
+                            padding: const EdgeInsets.all(DonySpacing.xs),
+                            itemCount: countries.length,
+                            separatorBuilder: (_, _) =>
+                                const SizedBox(height: DonySpacing.xxs),
+                            itemBuilder: (context, index) {
+                              final country = countries[index];
+                              return _CountryOptionTile(
+                                country: country,
+                                isSelected: widget.selectedCode == country.code,
+                                onTap: () => onSelected(country),
+                              );
+                            },
+                          ),
                         ),
                       ),
                     ),
