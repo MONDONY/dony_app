@@ -135,6 +135,59 @@ void main() {
       expect(canContinue.value, isTrue);
     });
 
+    // Fix post-revue Tâche 13 : les bornes de budget reproduisaient
+    // exactement le bug corrigé côté trajet (maxUnitPriceFor) — une
+    // constante figée en euros, comparée telle quelle à un montant saisi
+    // dans N'IMPORTE QUELLE devise. Pendant, côté demande de colis, des
+    // tests `dony_pricing_currency_test.dart` / `maxUnitPriceFor`.
+    testWidgets(
+      '700 refusé en EUR devient valide en XOF (bornes mises à l\'échelle)',
+      (tester) async {
+        const seedEur = PackageRequestFormState(
+          currency: SupportedCurrency.eur,
+          totalBudgetEur: 700,
+        );
+        final canContinueEur = ValueNotifier<bool>(true);
+        addTearDown(canContinueEur.dispose);
+        await tester.pumpWidget(
+          wrap(
+            Step3RecapBudget(canContinueNotifier: canContinueEur),
+            seed: seedEur,
+            useMock: true,
+          ),
+        );
+        await tester.pump();
+        expect(
+          canContinueEur.value,
+          isFalse,
+          reason: '700 dépasse le plafond EUR de 560',
+        );
+
+        const seedXof = PackageRequestFormState(
+          currency: SupportedCurrency.xof,
+          totalBudgetEur: 700,
+        );
+        final canContinueXof = ValueNotifier<bool>(false);
+        addTearDown(canContinueXof.dispose);
+        await tester.pumpWidget(
+          wrap(
+            Step3RecapBudget(canContinueNotifier: canContinueXof),
+            seed: seedXof,
+            useMock: true,
+          ),
+        );
+        await tester.pump();
+        expect(
+          canContinueXof.value,
+          isTrue,
+          reason:
+              '700 XOF est au-dessus du plancher XOF mis à l\'échelle (655) '
+              'et très en-deçà du plafond (367335) : la même saisie, '
+              'refusée en EUR, devient valide en XOF',
+        );
+      },
+    );
+
     testWidgets('affiche le suffixe et le détail du budget en CAD', (
       tester,
     ) async {

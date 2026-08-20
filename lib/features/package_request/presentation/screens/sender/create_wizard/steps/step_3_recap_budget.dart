@@ -84,6 +84,21 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
     });
   }
 
+  /// Devise EFFECTIVE de cette demande — même résolution qu'en [build] :
+  /// celle du bloc une fois choisie, repli sur celle transmise par l'écran
+  /// parent tant que le sync post-frame de [initState] n'est pas encore
+  /// passé, puis sur la devise active, puis l'euro.
+  ///
+  /// Centralisée ici : [_sync] et [submit] tournent hors du `BlocBuilder` de
+  /// [build] et doivent donc résoudre la devise eux-mêmes plutôt que de
+  /// comparer un montant saisi dans N'IMPORTE QUELLE devise aux bornes
+  /// euros de [PackageRequestLimits] — précisément le bug corrigé ici.
+  SupportedCurrency _resolveCurrency(PackageRequestFormState s) =>
+      s.currency ??
+      widget.currency ??
+      ActiveCurrency.current ??
+      SupportedCurrency.eur;
+
   /// Le bouton ne doit être actif que si la publication peut réellement
   /// aboutir : il l'était dès qu'un montant était saisi, y compris hors
   /// bornes, et la publication échouait ensuite sans un mot.
@@ -92,6 +107,7 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
     final s = context.read<PackageRequestFormBloc>().state;
     widget.canContinueNotifier?.value = PackageRequestLimits.isBudgetValid(
       s.totalBudgetEur,
+      _resolveCurrency(s),
     );
   }
 
@@ -156,7 +172,10 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
   void submit({bool saveAsDraft = false}) {
     final state = context.read<PackageRequestFormBloc>().state;
     if (!_formKey.currentState!.validate() ||
-        !PackageRequestLimits.isBudgetValid(state.totalBudgetEur)) {
+        !PackageRequestLimits.isBudgetValid(
+          state.totalBudgetEur,
+          _resolveCurrency(state),
+        )) {
       // Backstop : le bouton « Aperçu » est déjà grisé dans ce cas. `validate()`
       // vient d'afficher le message sous le champ ; on y ramène l'utilisateur,
       // car l'aperçu qui se referme le laissait sinon devant un « Publier »
@@ -185,15 +204,7 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
         // (prix, mode, etc.) — le seul appel dans initState/toggle ratait
         // le cas "prix tapé après avoir choisi le mode ferme".
         WidgetsBinding.instance.addPostFrameCallback((_) => _sync());
-        // Devise EFFECTIVE de cette demande : celle du bloc une fois choisie
-        // (par défaut ou via le sélecteur), repli sur celle transmise par
-        // l'écran parent tant que le sync post-frame de initState n'est pas
-        // encore passé.
-        final currency =
-            state.currency ??
-            widget.currency ??
-            ActiveCurrency.current ??
-            SupportedCurrency.eur;
+        final currency = _resolveCurrency(state);
         return SingleChildScrollView(
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           padding: const EdgeInsets.fromLTRB(
@@ -642,13 +653,14 @@ class _BudgetTotalInput extends StatelessWidget {
           return 'Indiquez un budget';
         }
         final d = double.tryParse(v.replaceAll(',', '.'));
-        if (!PackageRequestLimits.isBudgetValid(d)) {
+        final effectiveCurrency = currency ?? SupportedCurrency.eur;
+        if (!PackageRequestLimits.isBudgetValid(d, effectiveCurrency)) {
           final min = CurrencyFormatter.formatOrPlain(
-            PackageRequestLimits.minBudget,
+            PackageRequestLimits.minBudgetFor(effectiveCurrency),
             currency,
           );
           final max = CurrencyFormatter.formatOrPlain(
-            PackageRequestLimits.maxBudget,
+            PackageRequestLimits.maxBudgetFor(effectiveCurrency),
             currency,
           );
           return 'Entre $min et $max';
