@@ -1,17 +1,17 @@
-// Champs de filtre partagés par les deux modes de l'écran Rechercher.
+// Champs de filtre partagés par l'écran de composition de recherche
+// (`SearchComposerScreen`) et, pour les deux sélecteurs modaux (prix,
+// transport), par son ancêtre `search_form_bottom_sheet.dart`.
 //
-// Ces widgets viennent de `search_form_bottom_sheet.dart` (feuille trajets) :
-// ils y étaient privés, ils sont ici publics pour que la feuille unique
-// (`search_filter_sheet.dart`) et l'ancienne feuille trajets s'appuient sur le
-// MÊME code. Le style est inchangé, seul le préfixe `_` a sauté. Les deux
-// sélecteurs modaux (prix, transport) suivent le même chemin : une seule
-// implémentation, consommée par les deux feuilles.
+// Le corridor (villes de départ/arrivée) n'est PAS partagé depuis ce fichier :
+// `SearchComposerScreen` construit son propre `CityCorridorFields` (clés
+// `composer-departure-city`/`composer-arrival-city`, sous deux étiquettes
+// distinctes OÙ/QUAND) plutôt que de réutiliser un bloc commun — voir
+// `SearchComposerScreen._clearDeparture`/`_clearArrival`, qui duplique
+// intentionnellement cette petite logique plutôt que de dépendre d'ici.
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
-import 'package:dony/features/city/data/city_model.dart';
-import 'package:dony/features/city/presentation/widgets/city_corridor_fields.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/urgency_filter.dart';
@@ -19,16 +19,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 
-// ── Bloc commun aux deux modes ────────────────────────────────────────────────
-
-/// Corridor (ville de départ, ville d'arrivée) et date : les seuls filtres que
-/// les deux modes partagent réellement côté serveur.
-///
-/// **Un seul widget, instancié à l'identique dans les deux branches de mode.**
-/// C'est ce partage, et non une duplication symétrique, qui garantit qu'un
-/// corridor saisi en mode trajets survit à la bascule vers le mode colis.
-class CommonFilterBlock extends StatelessWidget {
-  const CommonFilterBlock({
+/// Presets de date (Aujourd'hui / Cette semaine / Ce mois) + date précise,
+/// sans corridor ni en-tête propre : `SearchComposerScreen` le place sous sa
+/// propre étiquette « QUAND », distincte de « OÙ ».
+class DatePresetsField extends StatelessWidget {
+  const DatePresetsField({
     super.key,
     required this.value,
     required this.onChanged,
@@ -53,23 +48,6 @@ class CommonFilterBlock extends StatelessWidget {
     );
   }
 
-  /// Vider un champ de ville DOIT vider le filtre correspondant : sans ça le
-  /// champ paraît vide alors que la recherche applique toujours l'ancienne
-  /// ville. `copyWith` n'expose qu'un seul drapeau d'effacement pour le
-  /// corridor (`clearCorridor`), qui efface les deux villes d'un coup : on
-  /// l'applique puis on réinjecte celle qu'on garde.
-  void _clearDeparture() => onChanged(
-    value
-        .copyWith(clearCorridor: true)
-        .copyWith(arrivalCity: value.arrivalCity),
-  );
-
-  void _clearArrival() => onChanged(
-    value
-        .copyWith(clearCorridor: true)
-        .copyWith(departureCity: value.departureCity),
-  );
-
   void _onCustomDate(DateTime? date) {
     if (date == null) {
       onChanged(
@@ -84,8 +62,6 @@ class CommonFilterBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
     final customDate = value.datePreset == DonyDatePreset.custom
         ? value.customDate
         : null;
@@ -93,25 +69,6 @@ class CommonFilterBlock extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        CityCorridorFields(
-          departureValue: value.departureCity,
-          arrivalValue: value.arrivalCity,
-          departureFieldKey: const Key('filter-departure-city'),
-          arrivalFieldKey: const Key('filter-arrival-city'),
-          onDepartureSelected: (CityModel city) =>
-              onChanged(value.copyWith(departureCity: city.name)),
-          onArrivalSelected: (CityModel city) =>
-              onChanged(value.copyWith(arrivalCity: city.name)),
-          onDepartureCleared: _clearDeparture,
-          onArrivalCleared: _clearArrival,
-          onSwap: () => onChanged(value.swapCorridor()),
-        ).animate().fadeIn(duration: 250.ms),
-        const SizedBox(height: DonySpacing.base),
-        Text(
-          'QUAND',
-          style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
-        ),
-        const SizedBox(height: DonySpacing.md),
         Wrap(
           spacing: DonySpacing.sm,
           runSpacing: DonySpacing.sm,
@@ -138,7 +95,7 @@ class CommonFilterBlock extends StatelessWidget {
           ],
         ),
       ],
-    ).animate().fadeIn(duration: 250.ms);
+    );
   }
 }
 

@@ -16,7 +16,12 @@ import 'package:dony/features/city/data/city_repository.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
+import 'package:dony/features/home/bloc/search_composer_bloc.dart';
+import 'package:dony/features/home/data/repositories/search_parse_repository.dart';
+import 'package:dony/features/home/domain/home_search_filters.dart';
+import 'package:dony/features/home/domain/search_mode.dart';
 import 'package:dony/features/home/presentation/home_screen.dart';
+import 'package:dony/features/home/presentation/screens/search_composer_screen.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
@@ -141,6 +146,11 @@ class MockAnnouncementRepository extends Mock
 /// courant est « Trajets » (il compte alors les colis via `search(size: 1)`).
 class MockPackageRequestRepository extends Mock
     implements PackageRequestRepository {}
+
+/// Dépôt de parsing simulé, requis par `SearchComposerBloc` — voir
+/// `_composerRoute`. Jamais stubé ici : aucun test de ce fichier ne saisit de
+/// phrase, seule `search_composer_screen_test.dart` couvre ce chemin.
+class MockSearchParseRepository extends Mock implements SearchParseRepository {}
 
 class _FakeContentCategoryRepository implements IContentCategoryRepository {
   @override
@@ -324,6 +334,45 @@ MockFavoriteIdsCubit _makeFavCubit({int count = 0}) {
   return cubit;
 }
 
+/// Route `/recherche/composer` de test — même contrat que la route réelle de
+/// `lib/app/router.dart`, mais `SearchComposerBloc` est construit directement
+/// avec des mocks non stubés plutôt que résolu via `getIt` : les dépôts de
+/// comptage (`AnnouncementRepository`, `PackageRequestRepository`) sont déjà
+/// enregistrés dans `getIt` par certains tests de ce fichier au coup par
+/// coup (corridor, découverte croisée…), et une résolution `getIt` ici
+/// entrerait en conflit avec ces enregistrements.
+///
+/// Sans stub, un appel déclenche un `MissingStubError` — avalé sans effet de
+/// bord par `SearchComposerBloc._refreshCount`, dont c'est justement le
+/// contrat (le compteur est une aide, jamais un bloquant). Le bouton
+/// « Rechercher » reste donc actif, simplement sans le nombre entre
+/// parenthèses.
+GoRoute _composerRoute() => GoRoute(
+  path: '/recherche/composer',
+  builder: (context, state) {
+    final extra = state.extra as Map? ?? {};
+    final mode = (extra['mode'] as SearchMode?) ?? SearchMode.trips;
+    final filters =
+        (extra['filters'] as HomeSearchFilters?) ?? const HomeSearchFilters();
+    return BlocProvider(
+      create: (_) => SearchComposerBloc(
+        MockSearchParseRepository(),
+        MockAnnouncementRepository(),
+        MockPackageRequestRepository(),
+        getIt<AnalyticsService>(),
+        mode: mode,
+        initialFilters: filters,
+      ),
+      child: SearchComposerScreen(
+        mode: mode,
+        initialFilters: filters,
+        activeTrips: extra['activeTrips'] as int?,
+        onPublishTrip: extra['onPublishTrip'] as VoidCallback?,
+      ),
+    );
+  },
+);
+
 Widget _buildHome({
   AnnouncementState? announcementState,
   ActiveRole role = ActiveRole.sender,
@@ -356,7 +405,7 @@ Widget _buildHome({
   when(() => effectiveBidBloc.state).thenReturn(bidState ?? BidInitial());
   when(() => effectiveBidBloc.stream).thenAnswer((_) => const Stream.empty());
 
-  return MultiBlocProvider(
+  final providers = MultiBlocProvider(
     providers: [
       BlocProvider<AnnouncementBloc>.value(value: announcementBloc),
       BlocProvider<AuthBloc>.value(value: authBloc),
@@ -366,17 +415,27 @@ Widget _buildHome({
       BlocProvider<FavoriteIdsCubit>.value(value: effectiveFavCubit),
       _helpCenterProvider(helpConfigJson: helpConfigJson),
     ],
-    child: MaterialApp(
-      theme: AppTheme.light(),
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: const [Locale('fr'), Locale('en')],
-      locale: const Locale('fr'),
-      home: const HomeScreen(),
-    ),
+    child: const HomeScreen(),
+  );
+
+  final router = GoRouter(
+    initialLocation: '/',
+    routes: [
+      GoRoute(path: '/', builder: (_, _) => providers),
+      _composerRoute(),
+    ],
+  );
+
+  return MaterialApp.router(
+    routerConfig: router,
+    theme: AppTheme.light(),
+    localizationsDelegates: const [
+      GlobalMaterialLocalizations.delegate,
+      GlobalWidgetsLocalizations.delegate,
+      GlobalCupertinoLocalizations.delegate,
+    ],
+    supportedLocales: const [Locale('fr'), Locale('en')],
+    locale: const Locale('fr'),
   );
 }
 
@@ -479,8 +538,8 @@ Future<void> ouvrirSheetEtSaisirCorridor(
   await tester.tap(find.byKey(const Key('corridor-bar')));
   await tester.pumpAndSettle();
 
-  await _choisirVille(tester, const Key('filter-departure-city'), depart);
-  await _choisirVille(tester, const Key('filter-arrival-city'), arrivee);
+  await _choisirVille(tester, const Key('composer-departure-city'), depart);
+  await _choisirVille(tester, const Key('composer-arrival-city'), arrivee);
 
   await tester.tap(find.text('Rechercher'));
   await tester.pumpAndSettle();
@@ -615,6 +674,7 @@ Widget _buildHomeStubRoutes({
       GoRoute(path: '/', builder: (_, _) => providers),
       GoRoute(path: '/trips/create', builder: (_, _) => stub('/trips/create')),
       GoRoute(path: '/settings', builder: (_, _) => stub('/settings')),
+      _composerRoute(),
     ],
   );
 
@@ -1330,6 +1390,61 @@ void main() {
     );
   });
 
+  // ─── search_submitted (tracking « En une phrase » vs filtres) ─────────────
+  //
+  // La mesure qui décidera du sort du bloc « En une phrase » : si les
+  // recherches passent par les filtres dans plus de 90 % des cas, il se
+  // retire sans rien casser. `_openComposer` est le SEUL point de sortie —
+  // un réglage direct au doigt (chip, sheet) ajuste un filtre mais ne
+  // « soumet » jamais de recherche, il ne doit donc jamais tracer cet event
+  // (régression du bug corrigé : avant, `_onFiltersChanged` le traçait à
+  // chaque changement, faussant complètement le ratio phrase/filtres).
+  group('search_submitted', () {
+    testWidgets('un changement direct au doigt (hors composer) ne trace rien', (
+      tester,
+    ) async {
+      await pumpHome(tester);
+
+      await tester.tap(find.text('🔥 Urgent'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('chip-date')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text("Aujourd'hui").last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Appliquer'));
+      await tester.pumpAndSettle();
+
+      verifyNever(
+        () => analytics.logEvent(
+          AnalyticsEvents.searchSubmitted,
+          properties: any(named: 'properties'),
+        ),
+      );
+    });
+
+    testWidgets(
+      'valider depuis l\'écran de composition trace came_from_phrase: false '
+      'et le bon nombre de filtres actifs',
+      (tester) async {
+        await pumpHome(tester);
+
+        await ouvrirSheetEtSaisirCorridor(tester, 'Lyon', 'Bamako');
+
+        // Le corridor (départ + arrivée) compte pour un seul filtre actif.
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.searchSubmitted,
+            properties: {
+              'mode': 'trips',
+              'filter_count': 1,
+              'came_from_phrase': false,
+            },
+          ),
+        ).called(1);
+      },
+    );
+  });
+
   group('modes de recherche', () {
     testWidgets('ouvre en mode Trajets', (tester) async {
       await pumpHome(tester);
@@ -1570,7 +1685,7 @@ void main() {
         await tester.pumpAndSettle();
         await tester.dragUntilVisible(
           find.byKey(const Key('chip-matching-my-trips')),
-          find.byType(SingleChildScrollView).last,
+          find.byType(Scrollable).first,
           const Offset(0, -100),
         );
         await tester.pumpAndSettle();
@@ -1602,7 +1717,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.dragUntilVisible(
         find.byKey(const Key('chip-matching-my-trips')),
-        find.byType(SingleChildScrollView).last,
+        find.byType(Scrollable).first,
         const Offset(0, -100),
       );
       await tester.pumpAndSettle();
@@ -1957,7 +2072,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.dragUntilVisible(
         find.byKey(const Key('chip-matching-my-trips')),
-        find.byType(SingleChildScrollView).last,
+        find.byType(Scrollable).first,
         const Offset(0, -100),
       );
       await tester.pumpAndSettle();
@@ -1997,7 +2112,7 @@ void main() {
         await tester.pumpAndSettle();
         await tester.dragUntilVisible(
           find.byKey(const Key('chip-matching-my-trips')),
-          find.byType(SingleChildScrollView).last,
+          find.byType(Scrollable).first,
           const Offset(0, -100),
         );
         await tester.pumpAndSettle();
@@ -2142,7 +2257,7 @@ void main() {
 
       await tester.tap(find.byKey(const Key('corridor-bar')));
       await tester.pumpAndSettle();
-      await _choisirVille(tester, const Key('filter-departure-city'), 'Lyon');
+      await _choisirVille(tester, const Key('composer-departure-city'), 'Lyon');
       await tester.tap(find.text('Rechercher'));
       await tester.pumpAndSettle();
 
@@ -2162,7 +2277,7 @@ void main() {
 
       await tester.tap(find.byKey(const Key('corridor-bar')));
       await tester.pumpAndSettle();
-      await _choisirVille(tester, const Key('filter-arrival-city'), 'Bamako');
+      await _choisirVille(tester, const Key('composer-arrival-city'), 'Bamako');
       await tester.tap(find.text('Rechercher'));
       await tester.pumpAndSettle();
 
