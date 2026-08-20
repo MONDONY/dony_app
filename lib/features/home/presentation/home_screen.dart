@@ -10,6 +10,7 @@ import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/auth/presentation/widgets/auth_required_sheet.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
@@ -43,6 +44,7 @@ import 'package:dony/features/package_request/data/package_request_repository.da
 import 'package:dony/features/package_request/presentation/widgets/near_me_package_request_carousel.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_list_card.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_preview_bottom_sheet.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -58,6 +60,7 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isGuest = FirebaseAuth.instance.currentUser == null;
     return MultiBlocProvider(
       providers: [
         BlocProvider<PackageRequestSearchBloc>(
@@ -66,7 +69,13 @@ class HomeScreen extends StatelessWidget {
         // Résumé d'activité : seul son `activeTrips` sert ici, il pilote le
         // filtre « Pour mes trajets » (pastille et en-tête de liste).
         BlocProvider<TripsSummaryCubit>(
-          create: (_) => getIt<TripsSummaryCubit>()..load(),
+          create: (_) {
+            final cubit = getIt<TripsSummaryCubit>();
+            if (!isGuest) {
+              cubit.load();
+            }
+            return cubit;
+          },
         ),
       ],
       child: const _MapSenderView(),
@@ -170,13 +179,18 @@ class _MapSenderViewState extends State<_MapSenderView> {
       // AutoRefresh (non forcé) : silencieux si la liste est déjà en cache et
       // fraîche — BidMyListRequested émettrait BidLoading et écraserait l'état
       // partagé à chaque retour sur l'accueil.
-      context.read<BidBloc>().add(const BidMyListAutoRefreshRequested());
+      final isGuest = FirebaseAuth.instance.currentUser == null;
+      if (!isGuest) {
+        context.read<BidBloc>().add(const BidMyListAutoRefreshRequested());
+      }
       // Réaligne la carte d'onboarding « première publication » sur l'état réel
       // du serveur : si l'utilisateur a déjà un trajet ou une demande, la carte
       // ne doit plus s'afficher (le flag Hive local pouvait être absent —
       // trajet créé sur un autre appareil, avant ce mécanisme, ou après
       // réinstallation).
-      unawaited(_syncGuidanceFlags());
+      if (!isGuest) {
+        unawaited(_syncGuidanceFlags());
+      }
     });
   }
 
@@ -2800,7 +2814,13 @@ class _FavoritesButton extends StatelessWidget {
         final count = state.count;
         return GestureDetector(
           key: const Key('favorites-button'),
-          onTap: () => context.push('/favoris'),
+          onTap: () {
+            if (FirebaseAuth.instance.currentUser == null) {
+              AuthRequiredSheet.show(context);
+              return;
+            }
+            context.push('/favoris');
+          },
           behavior: HitTestBehavior.opaque,
           child: Stack(
             clipBehavior: Clip.none,
@@ -2877,7 +2897,13 @@ class _NotificationBell extends StatelessWidget {
         final cs = Theme.of(context).colorScheme;
         final unreadCount = state is NotificationLoaded ? state.unreadCount : 0;
         return GestureDetector(
-          onTap: () => showNotificationBottomSheet(context),
+          onTap: () {
+            if (FirebaseAuth.instance.currentUser == null) {
+              AuthRequiredSheet.show(context);
+              return;
+            }
+            showNotificationBottomSheet(context);
+          },
           behavior: HitTestBehavior.opaque,
           child: Stack(
             clipBehavior: Clip.none,

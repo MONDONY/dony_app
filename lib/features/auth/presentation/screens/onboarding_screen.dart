@@ -124,8 +124,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: DonyColors.ink900,
+      backgroundColor: cs.surface,
       body: ValueListenableBuilder<int>(
         valueListenable: _currentPage,
         builder: (context, page, _) => Stack(
@@ -237,16 +238,18 @@ class _ImageScrim extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return DecoratedBox(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            DonyColors.neutral900.withValues(alpha: 0.46),
-            DonyColors.neutral900.withValues(alpha: 0.08),
-            DonyColors.neutral900.withValues(alpha: 0.26),
-            DonyColors.neutral900.withValues(alpha: 0.82),
+            cs.scrim.withValues(alpha: isDark ? 0.58 : 0.44),
+            cs.scrim.withValues(alpha: isDark ? 0.16 : 0.08),
+            cs.scrim.withValues(alpha: isDark ? 0.34 : 0.24),
+            cs.scrim.withValues(alpha: isDark ? 0.88 : 0.76),
           ],
           stops: const [0, 0.34, 0.58, 1],
         ),
@@ -257,7 +260,7 @@ class _ImageScrim extends StatelessWidget {
             center: Alignment.bottomCenter,
             radius: 0.9,
             colors: [
-              DonyColors.primary.withValues(alpha: 0.34),
+              cs.primary.withValues(alpha: isDark ? 0.28 : 0.22),
               Colors.transparent,
             ],
           ),
@@ -276,6 +279,7 @@ class _OnboardingTopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context);
+    final cs = Theme.of(context).colorScheme;
     final h = DonyLayout.hPadding(
       context,
     ).clamp(DonySpacing.base, DonySpacing.xl);
@@ -294,11 +298,9 @@ class _OnboardingTopBar extends StatelessWidget {
                 height: 44,
                 padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md),
                 decoration: BoxDecoration(
-                  color: DonyColors.neutral0.withValues(alpha: 0.88),
+                  color: cs.surface.withValues(alpha: 0.88),
                   borderRadius: BorderRadius.circular(DonyRadius.lg),
-                  border: Border.all(
-                    color: DonyColors.neutral0.withValues(alpha: 0.28),
-                  ),
+                  border: Border.all(color: cs.outline.withValues(alpha: 0.24)),
                 ),
                 child: const Center(child: DonyLogo(fontSize: 24)),
               ),
@@ -323,6 +325,7 @@ class _GlassButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return ClipRRect(
       borderRadius: BorderRadius.circular(DonyRadius.full),
       child: BackdropFilter(
@@ -331,20 +334,18 @@ class _GlassButton extends StatelessWidget {
           onPressed: onPressed,
           style: TextButton.styleFrom(
             minimumSize: const Size(72, 44),
-            foregroundColor: DonyColors.neutral0,
-            backgroundColor: DonyColors.neutral0.withValues(alpha: 0.16),
+            foregroundColor: cs.onPrimary,
+            backgroundColor: cs.primary.withValues(alpha: 0.72),
             padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(DonyRadius.full),
-              side: BorderSide(
-                color: DonyColors.neutral0.withValues(alpha: 0.20),
-              ),
+              side: BorderSide(color: cs.onPrimary.withValues(alpha: 0.18)),
             ),
           ),
           child: Text(
             label,
             style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: DonyColors.neutral0,
+              color: cs.onPrimary,
               fontWeight: FontWeight.w800,
             ),
           ),
@@ -363,6 +364,7 @@ class _HeroCopy extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     final titleSize = compact ? 26.0 : 31.0;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -375,7 +377,7 @@ class _HeroCopy extends StatelessWidget {
           child: Text(
             data.title,
             style: tt.displayLarge?.copyWith(
-              color: DonyColors.neutral0,
+              color: cs.onPrimary,
               fontSize: titleSize,
               height: 1.04,
               fontWeight: FontWeight.w900,
@@ -396,7 +398,7 @@ class _HeroCopy extends StatelessWidget {
           child: Text(
             data.subtitle,
             style: tt.bodyLarge?.copyWith(
-              color: DonyColors.neutral0.withValues(alpha: 0.86),
+              color: cs.onPrimary.withValues(alpha: 0.88),
               fontSize: compact ? 13 : 14,
               height: 1.38,
               fontWeight: FontWeight.w600,
@@ -422,6 +424,7 @@ class _Eyebrow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return ClipRRect(
       borderRadius: BorderRadius.circular(DonyRadius.full),
       child: BackdropFilter(
@@ -432,16 +435,14 @@ class _Eyebrow extends StatelessWidget {
             vertical: DonySpacing.sm,
           ),
           decoration: BoxDecoration(
-            color: DonyColors.neutral0.withValues(alpha: 0.16),
+            color: cs.primary.withValues(alpha: 0.70),
             borderRadius: BorderRadius.circular(DonyRadius.full),
-            border: Border.all(
-              color: DonyColors.neutral0.withValues(alpha: 0.20),
-            ),
+            border: Border.all(color: cs.onPrimary.withValues(alpha: 0.20)),
           ),
           child: Text(
             label,
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: DonyColors.neutral0,
+              color: cs.onPrimary,
               fontWeight: FontWeight.w900,
             ),
           ),
@@ -459,6 +460,8 @@ class _JourneyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return ClipRRect(
       borderRadius: BorderRadius.circular(DonyRadius.xl),
       child: BackdropFilter(
@@ -466,12 +469,14 @@ class _JourneyCard extends StatelessWidget {
         child: Container(
           padding: EdgeInsets.all(compact ? DonySpacing.md : DonySpacing.base),
           decoration: BoxDecoration(
-            color: DonyColors.ink900.withValues(alpha: 0.48),
+            color: isDark
+                ? cs.surface.withValues(alpha: 0.72)
+                : cs.surface.withValues(alpha: 0.86),
             borderRadius: BorderRadius.circular(DonyRadius.xl),
             border: Border.all(
-              color: DonyColors.neutral0.withValues(alpha: 0.20),
+              color: cs.outline.withValues(alpha: isDark ? 0.20 : 0.28),
             ),
-            boxShadow: DonyShadow.lg,
+            boxShadow: isDark ? DonyShadow.md : DonyShadow.lg,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -500,6 +505,7 @@ class _RouteProgress extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Column(
       children: [
         Row(
@@ -513,8 +519,8 @@ class _RouteProgress extends StatelessWidget {
                     Expanded(
                       child: Container(
                         height: 2,
-                        color: DonyColors.neutral0.withValues(
-                          alpha: index < 2 ? 0.82 : 0.30,
+                        color: (index < 2 ? cs.primary : cs.outline).withValues(
+                          alpha: index < 2 ? 0.86 : 0.42,
                         ),
                       ),
                     ),
@@ -545,7 +551,8 @@ class _RoutePin extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = active ? DonyColors.urgencyGreen : DonyColors.neutral0;
+    final cs = Theme.of(context).colorScheme;
+    final color = active ? cs.success : cs.surface;
     return Container(
       width: 14,
       height: 14,
@@ -568,13 +575,14 @@ class _RouteLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Text(
       label,
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
       textAlign: align,
       style: Theme.of(context).textTheme.labelMedium?.copyWith(
-        color: DonyColors.neutral0.withValues(alpha: 0.82),
+        color: cs.onSurfaceVariant,
         fontWeight: FontWeight.w800,
       ),
     );
@@ -613,6 +621,7 @@ class _JourneyStepRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -620,14 +629,14 @@ class _JourneyStepRow extends StatelessWidget {
           width: compact ? 24 : 28,
           height: compact ? 24 : 28,
           decoration: BoxDecoration(
-            color: DonyColors.neutral0,
+            color: cs.primaryContainer,
             borderRadius: BorderRadius.circular(DonyRadius.sm),
           ),
           child: Center(
             child: Text(
               step.number,
               style: tt.labelMedium?.copyWith(
-                color: DonyColors.primaryPress,
+                color: cs.primary,
                 fontWeight: FontWeight.w900,
               ),
             ),
@@ -641,7 +650,7 @@ class _JourneyStepRow extends StatelessWidget {
               Text(
                 step.title,
                 style: tt.titleMedium?.copyWith(
-                  color: DonyColors.neutral0,
+                  color: cs.onSurface,
                   fontSize: compact ? 13 : null,
                   fontWeight: FontWeight.w900,
                   height: 1.12,
@@ -651,7 +660,7 @@ class _JourneyStepRow extends StatelessWidget {
               Text(
                 step.subtitle,
                 style: tt.bodySmall?.copyWith(
-                  color: DonyColors.neutral0.withValues(alpha: 0.76),
+                  color: cs.onSurfaceVariant,
                   fontSize: compact ? 11 : 12,
                   height: 1.22,
                 ),
@@ -689,20 +698,21 @@ class _OnboardingChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       constraints: const BoxConstraints(minHeight: 30),
       padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md),
       decoration: BoxDecoration(
-        color: DonyColors.neutral0.withValues(alpha: 0.16),
+        color: cs.primaryContainer.withValues(alpha: 0.72),
         borderRadius: BorderRadius.circular(DonyRadius.full),
-        border: Border.all(color: DonyColors.neutral0.withValues(alpha: 0.22)),
+        border: Border.all(color: cs.primary.withValues(alpha: 0.18)),
       ),
       child: Center(
         widthFactor: 1,
         child: Text(
           label,
           style: Theme.of(context).textTheme.labelMedium?.copyWith(
-            color: DonyColors.neutral0,
+            color: cs.primary,
             fontWeight: FontWeight.w800,
           ),
         ),
@@ -767,29 +777,30 @@ class _LegalFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     return Text.rich(
       TextSpan(
         text: 'En continuant, vous acceptez nos ',
         style: tt.bodySmall?.copyWith(
-          color: DonyColors.neutral0.withValues(alpha: 0.74),
+          color: cs.onPrimary.withValues(alpha: 0.78),
           height: 1.3,
         ),
         children: [
           TextSpan(
             text: 'CGU',
             style: tt.bodySmall?.copyWith(
-              color: DonyColors.neutral0,
+              color: cs.onPrimary,
               decoration: TextDecoration.underline,
-              decorationColor: DonyColors.neutral0,
+              decorationColor: cs.onPrimary,
             ),
           ),
           const TextSpan(text: ' et notre '),
           TextSpan(
             text: 'politique de confidentialité',
             style: tt.bodySmall?.copyWith(
-              color: DonyColors.neutral0,
+              color: cs.onPrimary,
               decoration: TextDecoration.underline,
-              decorationColor: DonyColors.neutral0,
+              decorationColor: cs.onPrimary,
             ),
           ),
           const TextSpan(text: '.'),

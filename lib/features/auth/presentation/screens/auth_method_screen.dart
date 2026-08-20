@@ -298,7 +298,7 @@ class _AuthActionsPanel extends StatelessWidget {
               const SizedBox(height: DonySpacing.md),
               const _OrDivider(),
               const SizedBox(height: DonySpacing.md),
-              _GuestCta(onTap: () => context.go('/package-requests/search')),
+              _GuestCta(onTap: () => context.go('/home')),
             ],
           ),
         ),

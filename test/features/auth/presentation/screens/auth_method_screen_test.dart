@@ -25,8 +25,8 @@ Widget _app(AuthBloc bloc) => MaterialApp.router(
         ),
       ),
       GoRoute(
-        path: '/package-requests/search',
-        builder: (_, _) => const Scaffold(body: Text('Recherche publique')),
+        path: '/home',
+        builder: (_, _) => const Scaffold(body: Text('Recherche avec carte')),
       ),
     ],
   ),
@@ -104,7 +104,7 @@ void main() {
     },
   );
 
-  testWidgets('Parcourir sans compte ouvre la recherche publique', (
+  testWidgets('Parcourir sans compte ouvre la vraie recherche avec carte', (
     tester,
   ) async {
     final bloc = MockAuthBloc();
@@ -117,7 +117,7 @@ void main() {
     await tester.tap(find.text('Parcourir sans compte'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Recherche publique'), findsOneWidget);
+    expect(find.text('Recherche avec carte'), findsOneWidget);
 
     await bloc.close();
   });

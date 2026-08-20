@@ -10,6 +10,8 @@ import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
+import 'package:dony/features/auth/guest_access_guard.dart';
+import 'package:dony/features/auth/presentation/widgets/auth_required_sheet.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/traveler_bids_bloc.dart';
@@ -104,6 +106,11 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
 
   void _onTap(int index) {
     HapticFeedback.selectionClick();
+    final isGuest = FirebaseAuth.instance.currentUser == null;
+    if (isGuest && !GuestAccessGuard.isAllowedShellTab(index)) {
+      unawaited(AuthRequiredSheet.show(context));
+      return;
+    }
     _logTabScreen(index);
     if (index == 1) {
       getIt<EnvoisRefreshNotifier>().requestRefresh();
@@ -141,6 +148,10 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
       if (!mounted) {
         return;
       }
+      if (FirebaseAuth.instance.currentUser == null) {
+        _logTabScreen(widget.navigationShell.currentIndex);
+        return;
+      }
       context.read<NotificationBloc>().add(const NotificationsLoadRequested());
       context.read<RatingBloc>().add(const PendingRatingChecked());
       context.read<StripeAccountBloc>().add(const StripeAccountStatusLoaded());
@@ -166,6 +177,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed || !mounted) return;
+    if (FirebaseAuth.instance.currentUser == null) return;
     // Le bloc est un singleton DI : il peut être fermé (ex. logout) alors
     // que ce shell est encore mounted — mounted seul ne protège pas contre
     // ce cas, d'où le check isClosed avant le add().

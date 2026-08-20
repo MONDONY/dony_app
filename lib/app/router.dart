@@ -6,6 +6,7 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/bloc/country_onboarding_cubit.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
+import 'package:dony/features/auth/guest_access_guard.dart';
 import 'package:dony/features/auth/presentation/screens/analytics_consent_screen.dart';
 import 'package:dony/features/auth/presentation/screens/auth_method_screen.dart';
 import 'package:dony/features/auth/presentation/screens/country_selection_screen.dart';
@@ -206,6 +207,8 @@ const _publicRoutes = {
   '/auth/analytics-consent',
   '/auth/country-selection',
   '/auth/local',
+  '/home',
+  '/recherche/composer',
   '/package-requests/search',
 };
 
@@ -215,7 +218,7 @@ bool _isPublicRoute(GoRouterState state) {
   }
 
   final path = state.uri.path;
-  return RegExp(r'^/package-requests/[^/]+/public$').hasMatch(path);
+  return GuestAccessGuard.isPublicGuestPath(path);
 }
 
 /// Route d'entrée, calculée par `resolveInitialLocation()` avant `runApp`
