@@ -209,7 +209,7 @@ class _DeleteActions extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.sm),
         ],
-        if (eligibility.isWalletBalanceBlocked) ...[
+        if (eligibility.hasWalletBalance) ...[
           _WalletRefundRequestCta(),
           const SizedBox(height: DonySpacing.sm),
         ],
@@ -254,11 +254,12 @@ class _DeleteActions extends StatelessWidget {
   }
 }
 
-/// CTA "Demander le remboursement de mon solde" — n'apparaît que quand la
-/// suppression est bloquée par `wallet-balance-not-empty` (aucun autre motif
-/// n'a de parcours de déblocage self-service). Bascule en bannière de
-/// confirmation une fois le ticket ouvert : ne débloque jamais la suppression
-/// elle-même, un admin doit rembourser hors-app puis résoudre le ticket.
+/// CTA "Demander le remboursement de mon solde" — apparaît quand l'utilisateur
+/// a un solde wallet positif. Purement optionnel : la suppression de compte
+/// fonctionne dans tous les cas (Apple 5.1.1(v)) et ouvre déjà ce même ticket
+/// automatiquement si l'utilisateur ne le fait pas ici. Bascule en bannière
+/// de confirmation une fois le ticket ouvert ; un admin rembourse hors-app
+/// puis résout le ticket.
 class _WalletRefundRequestCta extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -290,13 +291,29 @@ class _WalletRefundRequestCta extends StatelessWidget {
           );
         }
 
-        return DonyButton(
-          label: 'Demander le remboursement de mon solde',
-          variant: DonyButtonVariant.secondary,
-          isLoading: state.isRequestingWalletRefund,
-          onPressed: state.isRequestingWalletRefund
-              ? null
-              : () => context.read<DeletionEligibilityCubit>().requestWalletRefund(),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const DonyStatusBanner(
+              type: DonyStatusBannerType.info,
+              iconAsset: 'wallet',
+              message:
+                  'Vous avez un solde disponible. Il sera automatiquement '
+                  'remboursé après la suppression de votre compte — vous '
+                  'pouvez aussi le demander dès maintenant.',
+            ),
+            const SizedBox(height: DonySpacing.sm),
+            DonyButton(
+              label: 'Demander le remboursement maintenant',
+              variant: DonyButtonVariant.secondary,
+              isLoading: state.isRequestingWalletRefund,
+              onPressed: state.isRequestingWalletRefund
+                  ? null
+                  : () => context
+                        .read<DeletionEligibilityCubit>()
+                        .requestWalletRefund(),
+            ),
+          ],
         );
       },
     );

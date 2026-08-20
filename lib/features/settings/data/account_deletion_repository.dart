@@ -6,7 +6,17 @@ class DeletionEligibility {
   final bool canDelete;
   final String? blockedReasonCode;
 
-  const DeletionEligibility({required this.canDelete, this.blockedReasonCode});
+  /// Informatif uniquement — un solde wallet positif ne bloque plus jamais
+  /// [canDelete] (Apple 5.1.1(v) : la suppression de compte doit toujours
+  /// rester possible en self-service). Sert juste à prévenir l'utilisateur
+  /// qu'un ticket de remboursement sera ouvert automatiquement.
+  final bool hasWalletBalance;
+
+  const DeletionEligibility({
+    required this.canDelete,
+    this.blockedReasonCode,
+    this.hasWalletBalance = false,
+  });
 }
 
 class WalletRefundRequest {
@@ -37,6 +47,7 @@ class AccountDeletionRepository {
       return DeletionEligibility(
         canDelete: data['canDelete'] as bool,
         blockedReasonCode: data['blockedReasonCode'] as String?,
+        hasWalletBalance: data['hasWalletBalance'] as bool? ?? false,
       );
     } catch (e) {
       throw unwrapDioError(e);
@@ -44,10 +55,10 @@ class AccountDeletionRepository {
   }
 
   /// Ouvre un ticket de remboursement manuel pour chaque devise en solde
-  /// wallet positif — parcours de déblocage de `wallet-balance-not-empty`
-  /// (aucun remboursement automatique n'existe côté Stripe pour le wallet).
-  /// Ne débloque pas la suppression elle-même : un admin doit résoudre le
-  /// ticket après remboursement Stripe hors-app.
+  /// wallet positif (aucun remboursement automatique n'existe côté Stripe
+  /// pour le wallet) — optionnel, la suppression de compte ouvre déjà ce
+  /// même ticket automatiquement si besoin. Utile pour qui veut être
+  /// remboursé sans attendre ou sans supprimer son compte.
   Future<List<WalletRefundRequest>> requestWalletRefund() async {
     try {
       final response = await _client.dio.post('/auth/me/wallet-refund-request');

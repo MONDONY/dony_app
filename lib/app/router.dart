@@ -109,6 +109,9 @@ import 'package:dony/features/payments/cash/presentation/screens/commission_meth
 import 'package:dony/features/payments/presentation/screens/payment_screen.dart';
 import 'package:dony/features/payments/presentation/screens/payout_onboarding_screen.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
+import 'package:dony/features/payments/wallet/bloc/wallet_refund_request_cubit.dart';
+import 'package:dony/features/payments/wallet/bloc/wallet_refund_requests_list_cubit.dart';
+import 'package:dony/features/payments/wallet/presentation/screens/wallet_refund_requests_screen.dart';
 import 'package:dony/features/payments/wallet/presentation/screens/wallet_screen.dart';
 import 'package:dony/features/payments/wallet/presentation/screens/wallet_topup_amount_screen.dart';
 import 'package:dony/features/payments/wallet/presentation/screens/wallet_topup_method_screen.dart';
@@ -682,8 +685,16 @@ final appRouter = GoRouter(
           BlocProvider(
             create: (_) => getIt<WalletBloc>()..add(WalletLoadRequested()),
           ),
+          BlocProvider(create: (_) => getIt<WalletRefundRequestCubit>()),
         ],
         child: const WalletScreen(),
+      ),
+    ),
+    GoRoute(
+      path: '/payments/wallet/refunds',
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<WalletRefundRequestsListCubit>(),
+        child: const WalletRefundRequestsScreen(),
       ),
     ),
     GoRoute(

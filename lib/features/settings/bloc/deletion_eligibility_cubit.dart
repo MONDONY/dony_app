@@ -20,6 +20,7 @@ class DeletionEligibilityState {
     this.isLoading = true,
     this.blockedReasonCode,
     this.blockedReasonMessage,
+    this.hasWalletBalance = false,
     this.walletRefundRequests = const [],
     this.isRequestingWalletRefund = false,
     this.walletRefundError,
@@ -28,6 +29,12 @@ class DeletionEligibilityState {
   final bool isLoading;
   final String? blockedReasonCode;
   final String? blockedReasonMessage;
+
+  /// Informatif uniquement — un solde wallet positif n'a plus jamais bloqué
+  /// [canDelete] côté backend depuis Apple 5.1.1(v). Sert seulement à
+  /// prévenir l'utilisateur qu'un ticket de remboursement sera ouvert
+  /// automatiquement à la suppression.
+  final bool hasWalletBalance;
 
   /// Non vide dès que le ticket de remboursement a été ouvert côté serveur
   /// (une entrée par devise en solde positif) — sert de source de vérité pour
@@ -39,17 +46,13 @@ class DeletionEligibilityState {
 
   bool get canDelete => blockedReasonMessage == null;
 
-  /// Seul ce motif de blocage a un parcours de déblocage self-service — les
-  /// autres (ex. `active-transactions`) n'ont qu'à attendre.
-  bool get isWalletBalanceBlocked =>
-      blockedReasonCode == 'wallet-balance-not-empty';
-
   bool get walletRefundRequested => walletRefundRequests.isNotEmpty;
 
   DeletionEligibilityState copyWith({
     bool? isLoading,
     String? blockedReasonCode,
     String? blockedReasonMessage,
+    bool? hasWalletBalance,
     List<WalletRefundRequest>? walletRefundRequests,
     bool? isRequestingWalletRefund,
     AppException? walletRefundError,
@@ -59,6 +62,7 @@ class DeletionEligibilityState {
       isLoading: isLoading ?? this.isLoading,
       blockedReasonCode: blockedReasonCode ?? this.blockedReasonCode,
       blockedReasonMessage: blockedReasonMessage ?? this.blockedReasonMessage,
+      hasWalletBalance: hasWalletBalance ?? this.hasWalletBalance,
       walletRefundRequests: walletRefundRequests ?? this.walletRefundRequests,
       isRequestingWalletRefund:
           isRequestingWalletRefund ?? this.isRequestingWalletRefund,
@@ -87,6 +91,7 @@ class DeletionEligibilityCubit extends Cubit<DeletionEligibilityState> {
             blockedReasonMessage: eligibility.canDelete
                 ? null
                 : _messageFor(eligibility.blockedReasonCode),
+            hasWalletBalance: eligibility.hasWalletBalance,
           ),
         );
       }
@@ -104,7 +109,10 @@ class DeletionEligibilityCubit extends Cubit<DeletionEligibilityState> {
   /// ticket après avoir remboursé via Stripe hors-app.
   Future<void> requestWalletRefund() async {
     emit(
-      state.copyWith(isRequestingWalletRefund: true, clearWalletRefundError: true),
+      state.copyWith(
+        isRequestingWalletRefund: true,
+        clearWalletRefundError: true,
+      ),
     );
     try {
       final requests = await _repository.requestWalletRefund();
@@ -129,15 +137,16 @@ class DeletionEligibilityCubit extends Cubit<DeletionEligibilityState> {
     }
   }
 
+  // 'wallet-balance-not-empty' n'est plus un blockedReasonCode possible côté
+  // backend depuis Apple 5.1.1(v) : un solde wallet ne bloque plus jamais la
+  // suppression (cf. hasWalletBalance, informatif). Seul 'active-transactions'
+  // atteint encore ce switch.
   String _messageFor(String? code) {
     switch (code) {
       case 'active-transactions':
         return 'Vous avez un envoi en cours de livraison, avec des fonds '
             'bloqués en séquestre. Vous pourrez supprimer votre compte dès '
             'que la livraison sera confirmée.';
-      case 'wallet-balance-not-empty':
-        return 'Vous avez un solde disponible sur votre wallet. '
-            'Demandez son remboursement avant de supprimer votre compte.';
       default:
         return 'La suppression n\'est pas possible pour l\'instant.';
     }

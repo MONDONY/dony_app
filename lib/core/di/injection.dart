@@ -117,6 +117,8 @@ import 'package:dony/features/payments/data/datasources/payment_remote_datasourc
 import 'package:dony/features/payments/data/payment_gateway.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
+import 'package:dony/features/payments/wallet/bloc/wallet_refund_request_cubit.dart';
+import 'package:dony/features/payments/wallet/bloc/wallet_refund_requests_list_cubit.dart';
 import 'package:dony/features/payments/wallet/data/datasources/wallet_remote_datasource.dart';
 import 'package:dony/features/payments/wallet/data/repositories/wallet_repository.dart';
 import 'package:dony/features/pickup_addresses/bloc/pickup_address_bloc.dart';
@@ -436,6 +438,12 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<WalletBloc>(
     () => WalletBloc(getIt<WalletRepository>(), getIt<AnalyticsService>()),
+  );
+  getIt.registerFactory<WalletRefundRequestCubit>(
+    () => WalletRefundRequestCubit(getIt<WalletRepository>()),
+  );
+  getIt.registerFactory<WalletRefundRequestsListCubit>(
+    () => WalletRefundRequestsListCubit(getIt<WalletRepository>()),
   );
 
   // Cancellation

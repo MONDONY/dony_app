@@ -79,13 +79,13 @@ void main() {
     );
 
     blocTest<DeletionEligibilityCubit, DeletionEligibilityState>(
-      'solde wallet positif → canDelete=false avec message explicite, '
-      'isWalletBalanceBlocked=true (seul motif avec parcours self-service)',
+      'solde wallet positif → canDelete=true (Apple 5.1.1(v), jamais bloquant), '
+      'hasWalletBalance=true (informatif)',
       build: () {
         when(() => mockRepo.checkEligibility()).thenAnswer(
           (_) async => const DeletionEligibility(
-            canDelete: false,
-            blockedReasonCode: 'wallet-balance-not-empty',
+            canDelete: true,
+            hasWalletBalance: true,
           ),
         );
         return cubit;
@@ -93,22 +93,18 @@ void main() {
       act: (c) => c.check(),
       expect: () => [
         isA<DeletionEligibilityState>()
-            .having((s) => s.canDelete, 'canDelete', isFalse)
+            .having((s) => s.canDelete, 'canDelete', isTrue)
             .having(
               (s) => s.blockedReasonMessage,
               'blockedReasonMessage',
-              contains('wallet'),
+              isNull,
             )
-            .having(
-              (s) => s.isWalletBalanceBlocked,
-              'isWalletBalanceBlocked',
-              isTrue,
-            ),
+            .having((s) => s.hasWalletBalance, 'hasWalletBalance', isTrue),
       ],
     );
 
     blocTest<DeletionEligibilityCubit, DeletionEligibilityState>(
-      'escrow actif → isWalletBalanceBlocked=false (aucun parcours self-service pour ce motif)',
+      'escrow actif → hasWalletBalance=false quand le backend ne le signale pas',
       build: () {
         when(() => mockRepo.checkEligibility()).thenAnswer(
           (_) async => const DeletionEligibility(
@@ -121,8 +117,8 @@ void main() {
       act: (c) => c.check(),
       expect: () => [
         isA<DeletionEligibilityState>().having(
-          (s) => s.isWalletBalanceBlocked,
-          'isWalletBalanceBlocked',
+          (s) => s.hasWalletBalance,
+          'hasWalletBalance',
           isFalse,
         ),
       ],
@@ -236,11 +232,7 @@ void main() {
               'walletRefundRequested',
               isFalse,
             )
-            .having(
-              (s) => s.walletRefundError,
-              'walletRefundError',
-              isNotNull,
-            ),
+            .having((s) => s.walletRefundError, 'walletRefundError', isNotNull),
       ],
       verify: (_) {
         verifyNever(

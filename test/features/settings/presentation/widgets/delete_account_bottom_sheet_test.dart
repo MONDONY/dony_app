@@ -314,21 +314,17 @@ void main() {
       await tester.tap(find.text('Open'));
       await tester.pumpAndSettle();
 
-      expect(
-        find.text('Demander le remboursement de mon solde'),
-        findsNothing,
-      );
+      expect(find.text('Demander le remboursement de mon solde'), findsNothing);
     },
   );
 
   testWidgets(
-    'bloqué wallet → CTA remboursement visible, tap déclenche requestWalletRefund()',
+    'solde wallet positif → CTA remboursement optionnel visible, tap déclenche requestWalletRefund()',
     (tester) async {
       when(() => mockEligibilityCubit.state).thenReturn(
         const DeletionEligibilityState(
           isLoading: false,
-          blockedReasonCode: 'wallet-balance-not-empty',
-          blockedReasonMessage: 'Vous avez un solde disponible sur votre wallet.',
+          hasWalletBalance: true,
         ),
       );
       when(
@@ -339,12 +335,9 @@ void main() {
       await tester.tap(find.text('Open'));
       await tester.pumpAndSettle();
 
-      expect(
-        find.text('Demander le remboursement de mon solde'),
-        findsOneWidget,
-      );
+      expect(find.text('Demander le remboursement maintenant'), findsOneWidget);
 
-      await tester.tap(find.text('Demander le remboursement de mon solde'));
+      await tester.tap(find.text('Demander le remboursement maintenant'));
       await tester.pump();
 
       verify(() => mockEligibilityCubit.requestWalletRefund()).called(1);
@@ -357,8 +350,7 @@ void main() {
       when(() => mockEligibilityCubit.state).thenReturn(
         const DeletionEligibilityState(
           isLoading: false,
-          blockedReasonCode: 'wallet-balance-not-empty',
-          blockedReasonMessage: 'Vous avez un solde disponible sur votre wallet.',
+          hasWalletBalance: true,
           walletRefundRequests: [
             WalletRefundRequest(currency: 'CAD', amount: 45.00),
           ],
@@ -369,11 +361,40 @@ void main() {
       await tester.tap(find.text('Open'));
       await tester.pumpAndSettle();
 
-      expect(
-        find.text('Demander le remboursement de mon solde'),
-        findsNothing,
-      );
+      expect(find.text('Demander le remboursement maintenant'), findsNothing);
       expect(find.textContaining('Demande envoyée'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'solde wallet positif → suppression jamais bloquée (Apple 5.1.1(v)) : bouton actif',
+    (tester) async {
+      when(() => mockEligibilityCubit.state).thenReturn(
+        const DeletionEligibilityState(
+          isLoading: false,
+          hasWalletBalance: true,
+        ),
+      );
+
+      await tester.pumpWidget(buildWidget());
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      // Aucun message de blocage, même avec un solde wallet positif.
+      expect(find.textContaining('Impossible'), findsNothing);
+
+      await tester.tap(find.text('Supprimer définitivement'));
+      await tester.pumpAndSettle();
+
+      final submitInkWells = tester
+          .widgetList<InkWell>(
+            find.descendant(
+              of: find.widgetWithText(DonyButton, 'Continuer →'),
+              matching: find.byType(InkWell),
+            ),
+          )
+          .toList();
+      expect(submitInkWells.any((w) => w.onTap != null), isTrue);
     },
   );
 }
