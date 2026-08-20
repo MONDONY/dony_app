@@ -6,12 +6,14 @@ class WalletModel {
   final String currency;
   final List<WalletTransactionModel> transactions;
   final List<WalletCurrencyBalanceModel> balances;
+  final bool refundEligible;
 
   const WalletModel({
     required this.balance,
     required this.currency,
     required this.transactions,
     this.balances = const [],
+    this.refundEligible = false,
   });
 
   factory WalletModel.fromJson(Map<String, dynamic> json) => WalletModel(
@@ -25,5 +27,6 @@ class WalletModel {
           (e) => WalletCurrencyBalanceModel.fromJson(e as Map<String, dynamic>),
         )
         .toList(),
+    refundEligible: json['refundEligible'] as bool? ?? false,
   );
 }
