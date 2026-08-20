@@ -120,7 +120,7 @@ class PackageRequest extends Equatable {
     final (urls, keys) = _photosFromJson(json['photos'] as List<dynamic>?);
     return PackageRequest(
       id: json['id'] as String,
-      senderId: json['senderId'] as String,
+      senderId: json['senderId'] as String? ?? '',
       departureCity: json['departureCity'] as String,
       arrivalCity: json['arrivalCity'] as String,
       desiredDate: DateTime.parse(json['desiredDate'] as String),
@@ -140,8 +140,13 @@ class PackageRequest extends Equatable {
       photoKeys: keys,
       pickupNeighborhood: json['pickupNeighborhood'] as String?,
       deliveryNeighborhood: json['deliveryNeighborhood'] as String?,
-      status: PackageRequestStatus.fromJson(json['status'] as String),
-      createdAt: DateTime.parse(json['createdAt'] as String),
+      status: PackageRequestStatus.fromJson(
+        json['status'] as String? ?? 'OPEN',
+      ),
+      createdAt: switch (json['createdAt']) {
+        final String value => DateTime.parse(value),
+        _ => DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
+      },
       negotiable: json['negotiable'] as bool? ?? true,
       acceptedPaymentMethods: PaymentMethod.setFromJson(
         json['acceptedPaymentMethods'] as List<dynamic>?,

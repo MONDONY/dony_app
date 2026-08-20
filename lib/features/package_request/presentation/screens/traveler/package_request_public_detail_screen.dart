@@ -60,8 +60,10 @@ class _PackageRequestPublicDetailScreenState
       _error = null;
     });
     try {
+      final isGuest = context.read<AuthBloc>().state.currentUser == null;
       final r = await getIt<PackageRequestRepository>().getById(
         widget.requestId,
+        publicAccess: isGuest,
       );
       if (mounted) {
         setState(() => _request = r);

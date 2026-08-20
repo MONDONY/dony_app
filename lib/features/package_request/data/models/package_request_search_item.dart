@@ -129,9 +129,14 @@ class PackageRequestSearchItem extends Equatable {
         acceptedPaymentMethods: PaymentMethod.setFromJson(
           json['acceptedPaymentMethods'] as List<dynamic>?,
         ),
-        sender: SenderPublicProfile.fromJson(
-          json['sender'] as Map<String, dynamic>,
-        ),
+        sender: switch (json['sender']) {
+          final Map<String, dynamic> senderJson => SenderPublicProfile.fromJson(
+            senderJson,
+          ),
+          _ => SenderPublicProfile.guest(
+            json['senderDisplayName'] as String? ?? 'Utilisateur Yadony',
+          ),
+        },
         isFavorite: json['isFavorite'] as bool? ?? false,
         urgent: json['urgent'] as bool?,
         matchScore: (json['matchScore'] as num?)?.toInt(),
@@ -202,6 +207,14 @@ class SenderPublicProfile extends Equatable {
         kycVerified: json['kycVerified'] as bool,
         avatarUrl: json['avatarUrl'] as String?,
       );
+
+  factory SenderPublicProfile.guest(String displayName) => SenderPublicProfile(
+    id: '',
+    displayName: displayName,
+    averageRating: 0,
+    totalRatings: 0,
+    kycVerified: false,
+  );
 
   @override
   List<Object?> get props => [

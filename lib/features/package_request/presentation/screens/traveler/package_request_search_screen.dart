@@ -6,6 +6,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/package_request/bloc/package_request_search_bloc.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -16,9 +17,11 @@ class PackageRequestSearchScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isGuest = FirebaseAuth.instance.currentUser == null;
     return BlocProvider(
       create: (_) =>
-          getIt<PackageRequestSearchBloc>()..add(const SearchFiltersChanged()),
+          getIt<PackageRequestSearchBloc>()
+            ..add(SearchFiltersChanged(publicAccess: isGuest)),
       child: const _SearchView(),
     );
   }
@@ -40,6 +43,7 @@ class _SearchViewState extends State<_SearchView> {
       SearchFiltersChanged(
         departure: _depCtrl.text.trim().isEmpty ? null : _depCtrl.text.trim(),
         arrival: _arrCtrl.text.trim().isEmpty ? null : _arrCtrl.text.trim(),
+        publicAccess: FirebaseAuth.instance.currentUser == null,
       ),
     );
   }

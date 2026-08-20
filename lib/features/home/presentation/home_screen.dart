@@ -395,6 +395,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
         radiusKm: q.radiusKm,
         urgent: q.urgent,
         matchingMyTrips: q.matchingMyTrips,
+        publicAccess: FirebaseAuth.instance.currentUser == null,
       ),
     );
   }
