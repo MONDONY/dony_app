@@ -143,13 +143,12 @@ void main() {
 
   // ── Vue propriétaire ─────────────────────────────────────────────────────
 
-  Widget wrapOwner(PackageRequest r, {String? uid = 'sender-1'}) =>
-      MaterialApp(
-        theme: AppTheme.light(),
-        home: Scaffold(
-          body: PackageRequestPublicDetailBody(request: r, currentUserId: uid),
-        ),
-      );
+  Widget wrapOwner(PackageRequest r, {String? uid = 'sender-1'}) => MaterialApp(
+    theme: AppTheme.light(),
+    home: Scaffold(
+      body: PackageRequestPublicDetailBody(request: r, currentUserId: uid),
+    ),
+  );
 
   testWidgets('propriétaire + demande éditable → Modifier + Offres reçues', (
     tester,
