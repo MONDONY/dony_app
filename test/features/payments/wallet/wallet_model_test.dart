@@ -31,5 +31,26 @@ void main() {
 
       expect(wallet.balances, isEmpty);
     });
+
+    test('parses refundEligible flag', () {
+      final wallet = WalletModel.fromJson({
+        'balance': 40.00,
+        'currency': 'EUR',
+        'transactions': [],
+        'refundEligible': true,
+      });
+
+      expect(wallet.refundEligible, isTrue);
+    });
+
+    test('defaults refundEligible to false when absent', () {
+      final wallet = WalletModel.fromJson({
+        'balance': 0,
+        'currency': 'EUR',
+        'transactions': [],
+      });
+
+      expect(wallet.refundEligible, isFalse);
+    });
   });
 }

@@ -2,11 +2,13 @@ class WalletCurrencyBalanceModel {
   final String currency;
   final double balance;
   final bool active;
+  final bool refundEligible;
 
   const WalletCurrencyBalanceModel({
     required this.currency,
     required this.balance,
     required this.active,
+    this.refundEligible = false,
   });
 
   factory WalletCurrencyBalanceModel.fromJson(Map<String, dynamic> json) =>
@@ -14,5 +16,6 @@ class WalletCurrencyBalanceModel {
         currency: json['currency'] as String,
         balance: (json['balance'] as num).toDouble(),
         active: json['active'] as bool,
+        refundEligible: json['refundEligible'] as bool? ?? false,
       );
 }

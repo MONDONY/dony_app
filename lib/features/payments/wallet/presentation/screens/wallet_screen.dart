@@ -3,7 +3,9 @@ import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
+import 'package:dony/features/payments/wallet/bloc/wallet_refund_request_cubit.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_currency_balance_model.dart';
+import 'package:dony/features/payments/wallet/data/models/wallet_model.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_transaction_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -145,17 +147,13 @@ class _ErrorView extends StatelessWidget {
 class _LoadedView extends StatelessWidget {
   const _LoadedView({required this.wallet});
 
-  final dynamic wallet;
+  final WalletModel wallet;
 
   @override
   Widget build(BuildContext context) {
-    final transactions = wallet.transactions as List<WalletTransactionModel>;
-    final activeCurrency = SupportedCurrency.fromCodeOrDefault(
-      wallet.currency as String,
-    );
-    final lockedBalances = (wallet.balances as List<WalletCurrencyBalanceModel>)
-        .where((b) => !b.active)
-        .toList();
+    final transactions = wallet.transactions;
+    final activeCurrency = SupportedCurrency.fromCodeOrDefault(wallet.currency);
+    final lockedBalances = wallet.balances.where((b) => !b.active).toList();
 
     return RefreshIndicator(
       color: Theme.of(context).colorScheme.primary,
@@ -188,8 +186,9 @@ class _LoadedView extends StatelessWidget {
             flexibleSpace: FlexibleSpaceBar(
               collapseMode: CollapseMode.pin,
               background: _HeroHeader(
-                balance: wallet.balance as double,
+                balance: wallet.balance,
                 currency: activeCurrency,
+                refundEligible: wallet.refundEligible,
               ),
             ),
           ),
@@ -281,10 +280,15 @@ class _LoadedView extends StatelessWidget {
 // ─── Hero Header ──────────────────────────────────────────────────────────────
 
 class _HeroHeader extends StatelessWidget {
-  const _HeroHeader({required this.balance, required this.currency});
+  const _HeroHeader({
+    required this.balance,
+    required this.currency,
+    required this.refundEligible,
+  });
 
   final double balance;
   final SupportedCurrency currency;
+  final bool refundEligible;
 
   @override
   Widget build(BuildContext context) {
@@ -330,40 +334,90 @@ class _HeroHeader extends StatelessWidget {
                   .fadeIn(duration: 300.ms)
                   .slideY(begin: 0.1, curve: Curves.easeOutCubic),
               const SizedBox(height: DonySpacing.base),
-              Row(
-                children: [
-                  _HeroAction(
-                    iconAsset: 'plus',
-                    label: 'Recharger',
-                    onTap: () async {
-                      // Solde avant la recharge : sert de référence au polling
-                      // post-recharge (on s'arrête dès qu'il augmente).
-                      final previousBalance = balance;
-                      final ok = await context.push<bool>(
-                        '/payments/wallet/topup/method',
+              if (refundEligible)
+                BlocConsumer<
+                  WalletRefundRequestCubit,
+                  WalletRefundRequestState
+                >(
+                  listenWhen: (previous, current) =>
+                      previous.result != current.result ||
+                      previous.error != current.error,
+                  listener: (context, state) {
+                    if (state.result != null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Demande de remboursement envoyée.'),
+                        ),
                       );
-                      if (ok != true || !context.mounted) {
-                        return;
-                      }
-                      // Le crédit Stripe arrive de façon asynchrone via webhook :
-                      // on poll le solde jusqu'à ce qu'il dépasse l'ancien.
-                      context.read<WalletBloc>().add(
-                        WalletRefreshAfterTopupRequested(previousBalance),
+                      context.read<WalletBloc>().add(WalletRefreshRequested());
+                    }
+                    if (state.error != null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(state.error!.message)),
                       );
-                    },
-                  ),
-                  const SizedBox(width: DonySpacing.sm),
-                  _HeroAction(
-                    iconAsset: 'history',
-                    label: 'Utiliser',
-                    onTap: () => context.pop(),
-                  ),
-                ],
-              ),
+                    }
+                  },
+                  builder: (context, refundState) =>
+                      _buildActions(context, refundState),
+                )
+              else
+                _buildActions(context, null),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildActions(
+    BuildContext context,
+    WalletRefundRequestState? refundState,
+  ) {
+    return Wrap(
+      spacing: DonySpacing.sm,
+      runSpacing: DonySpacing.sm,
+      children: [
+        _HeroAction(
+          iconAsset: 'plus',
+          label: 'Recharger',
+          onTap: () async {
+            // Solde avant la recharge : sert de référence au polling
+            // post-recharge (on s'arrête dès qu'il augmente).
+            final previousBalance = balance;
+            final ok = await context.push<bool>(
+              '/payments/wallet/topup/method',
+            );
+            if (ok != true || !context.mounted) {
+              return;
+            }
+            // Le crédit Stripe arrive de façon asynchrone via webhook :
+            // on poll le solde jusqu'à ce qu'il dépasse l'ancien.
+            context.read<WalletBloc>().add(
+              WalletRefreshAfterTopupRequested(previousBalance),
+            );
+          },
+        ),
+        if (refundEligible)
+          _HeroAction(
+            iconAsset: 'arrow-up',
+            label: refundState?.isSubmitting == true
+                ? 'Envoi...'
+                : 'Rembourser',
+            enabled: refundState?.isSubmitting != true,
+            onTap: () =>
+                context.read<WalletRefundRequestCubit>().submit(currency.code),
+          ),
+        _HeroAction(
+          iconAsset: 'history',
+          label: 'Demandes',
+          onTap: () => context.push('/payments/wallet/refunds'),
+        ),
+        _HeroAction(
+          iconAsset: 'arrow-up',
+          label: 'Utiliser',
+          onTap: () => context.pop(),
+        ),
+      ],
     );
   }
 }
@@ -371,48 +425,59 @@ class _HeroHeader extends StatelessWidget {
 // ─── Hero action button ────────────────────────────────────────────────────────
 
 class _HeroAction extends StatelessWidget {
-  const _HeroAction({required this.label, required this.onTap, this.iconAsset})
-    : icon = null;
+  const _HeroAction({
+    required this.label,
+    required this.onTap,
+    this.iconAsset,
+    this.enabled = true,
+  }) : icon = null;
 
   final IconData? icon;
   final String? iconAsset;
   final String label;
   final VoidCallback onTap;
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
+      enabled: enabled,
       label: label,
       child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: DonySpacing.base,
-            vertical: DonySpacing.sm,
-          ),
-          decoration: BoxDecoration(
-            color: DonyColors.neutral0.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(DonyRadius.xl),
-            border: Border.all(
-              color: DonyColors.neutral0.withValues(alpha: 0.3),
+        onTap: enabled ? onTap : null,
+        child: AnimatedOpacity(
+          duration: const Duration(milliseconds: 150),
+          opacity: enabled ? 1 : 0.65,
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 40),
+            padding: const EdgeInsets.symmetric(
+              horizontal: DonySpacing.base,
+              vertical: DonySpacing.sm,
             ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              iconAsset != null
-                  ? DonyIcon(iconAsset!, color: DonyColors.neutral0, size: 16)
-                  : Icon(icon, color: DonyColors.neutral0, size: 16),
-              const SizedBox(width: DonySpacing.xs),
-              Text(
-                label,
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: DonyColors.neutral0,
-                  fontWeight: FontWeight.w600,
-                ),
+            decoration: BoxDecoration(
+              color: DonyColors.neutral0.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(DonyRadius.xl),
+              border: Border.all(
+                color: DonyColors.neutral0.withValues(alpha: 0.3),
               ),
-            ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                iconAsset != null
+                    ? DonyIcon(iconAsset!, color: DonyColors.neutral0, size: 16)
+                    : Icon(icon, color: DonyColors.neutral0, size: 16),
+                const SizedBox(width: DonySpacing.xs),
+                Text(
+                  label,
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    color: DonyColors.neutral0,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
