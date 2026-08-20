@@ -86,10 +86,6 @@
 	<string>Yadony utilise ta position pour trouver les trajets depuis ta ville.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Yadony utilise ta position pour trouver les trajets depuis ta ville.</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>Yadony utilise le micro pour que vous puissiez dicter votre recherche.</string>
-	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>Yadony transcrit votre voix sur cet appareil pour remplir votre recherche.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Yadony enregistre le QR code de ton colis dans tes photos pour que tu puisses le retrouver hors ligne.</string>
 	<key>NSPhotoLibraryUsageDescription</key>

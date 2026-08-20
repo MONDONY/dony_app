@@ -6,7 +6,6 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-    <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <application
         android:label="Yadony"
         android:name="${applicationName}"
@@ -95,10 +94,6 @@
         <intent>
             <action android:name="android.intent.action.VIEW"/>
             <data android:scheme="https"/>
-        </intent>
-        <!-- Reconnaissance vocale sur l'appareil (dictée de la recherche). -->
-        <intent>
-            <action android:name="android.speech.RecognitionService" />
         </intent>
     </queries>
 </manifest>

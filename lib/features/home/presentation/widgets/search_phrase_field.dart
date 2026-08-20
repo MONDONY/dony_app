@@ -1,23 +1,16 @@
 import 'package:flutter/material.dart';
 
 /// Champ de saisie du bloc « En une phrase ».
-///
-/// [onMicPressed] ouvre `VoiceDictationSheet` (câblé par
-/// `SearchComposerScreen`). Il reste `null` quand la dictée est indisponible
-/// sur l'appareil (`speechAvailable: false`), ce qui masque l'icône plutôt
-/// que d'afficher un bouton mort.
 class SearchPhraseField extends StatelessWidget {
   const SearchPhraseField({
     super.key,
     required this.controller,
     required this.onSubmitted,
-    this.onMicPressed,
     this.isParsing = false,
   });
 
   final TextEditingController controller;
   final ValueChanged<String> onSubmitted;
-  final VoidCallback? onMicPressed;
   final bool isParsing;
 
   @override
@@ -43,24 +36,7 @@ class SearchPhraseField extends StatelessWidget {
                   child: CircularProgressIndicator(strokeWidth: 2),
                 ),
               )
-            : (onMicPressed == null
-                  ? null
-                  : Semantics(
-                      button: true,
-                      label: 'Dicter votre recherche',
-                      child: IconButton(
-                        // 44 pt minimum : la cible tactile prime sur la compacité.
-                        constraints: const BoxConstraints(
-                          minWidth: 44,
-                          minHeight: 44,
-                        ),
-                        icon: Icon(
-                          Icons.mic_rounded,
-                          color: cs.onTertiaryContainer,
-                        ),
-                        onPressed: onMicPressed,
-                      ),
-                    )),
+            : null,
         filled: true,
         fillColor: cs.surface,
         border: OutlineInputBorder(

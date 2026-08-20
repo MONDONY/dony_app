@@ -303,7 +303,6 @@ abstract final class AnalyticsEvents {
   // Recherche en langage naturel — écran de composition
   static const searchComposerOpened = 'search_composer_opened';
   static const searchPhraseParsed = 'search_phrase_parsed';
-  static const searchVoiceUsed = 'search_voice_used';
   static const searchParseFailed = 'search_parse_failed';
   static const searchSubmitted = 'search_submitted';
 }

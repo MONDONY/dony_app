@@ -438,55 +438,6 @@ void main() {
     },
   );
 
-  // ─── I3 : `search_voice_used` se tire dans le BLoC, jamais le widget ──────
-  group('search_voice_used', () {
-    blocTest<SearchComposerBloc, SearchComposerState>(
-      'une phrase dictée trace search_voice_used avec duration_ms',
-      build: () {
-        when(() => parseRepo.parse(any(), any())).thenAnswer(
-          (_) async => _result(filters: const {'arrivalCity': 'Bamako'}),
-        );
-        return build();
-      },
-      act: (bloc) => bloc.add(
-        const SearchComposerPhraseSubmitted(
-          'à Bamako',
-          fromVoice: true,
-          voiceDurationMs: 2400,
-        ),
-      ),
-      wait: const Duration(milliseconds: 600),
-      verify: (_) {
-        verify(
-          () => analytics.logEvent(
-            AnalyticsEvents.searchVoiceUsed,
-            properties: {'duration_ms': 2400},
-          ),
-        ).called(1);
-      },
-    );
-
-    blocTest<SearchComposerBloc, SearchComposerState>(
-      'une phrase tapée au clavier ne trace jamais search_voice_used',
-      build: () {
-        when(() => parseRepo.parse(any(), any())).thenAnswer(
-          (_) async => _result(filters: const {'arrivalCity': 'Bamako'}),
-        );
-        return build();
-      },
-      act: (bloc) => bloc.add(const SearchComposerPhraseSubmitted('à Bamako')),
-      wait: const Duration(milliseconds: 600),
-      verify: (_) {
-        verifyNever(
-          () => analytics.logEvent(
-            AnalyticsEvents.searchVoiceUsed,
-            properties: any(named: 'properties'),
-          ),
-        );
-      },
-    );
-  });
-
   // ─── I4 : le chemin mode Colis de `_refreshCount` (branche `else`, celle où
   // vivait le bug C2) n'était exercé par aucun test — tous les tests
   // ci-dessus construisent le BLoC en `SearchMode.trips`.

@@ -98,26 +98,9 @@ class SearchComposerBloc
           properties: {
             'recognized_count': result.recognized.length,
             'unresolved_count': result.unresolved.length,
-            'used_voice': event.fromVoice,
           },
         ),
       );
-
-      // Règle projet : les events métier se tirent dans le BLoC, jamais le
-      // widget. `duration_ms` est calculé par l'appelant (`SearchComposerScreen`,
-      // seul point qui voit l'ouverture et la fermeture de la feuille de
-      // dictée) et transmis via l'event plutôt que mesuré ici.
-      if (event.fromVoice) {
-        unawaited(
-          _analytics.logEvent(
-            AnalyticsEvents.searchVoiceUsed,
-            properties: {
-              if (event.voiceDurationMs != null)
-                'duration_ms': event.voiceDurationMs!,
-            },
-          ),
-        );
-      }
 
       if (result.recognized.isEmpty) {
         unawaited(

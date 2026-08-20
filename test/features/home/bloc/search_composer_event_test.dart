@@ -23,17 +23,10 @@ void main() {
   });
 
   group('SearchComposerPhraseSubmitted', () {
-    test('égal avec le même texte et fromVoice par défaut (false)', () {
+    test('égal avec le même texte', () {
       expect(
         const SearchComposerPhraseSubmitted('à Bamako'),
         const SearchComposerPhraseSubmitted('à Bamako'),
-      );
-    });
-
-    test('égal avec le même texte et fromVoice explicite', () {
-      expect(
-        const SearchComposerPhraseSubmitted('à Bamako', fromVoice: true),
-        const SearchComposerPhraseSubmitted('à Bamako', fromVoice: true),
       );
     });
 
@@ -44,20 +37,9 @@ void main() {
       );
     });
 
-    test('différent si fromVoice diffère (même texte)', () {
-      expect(
-        const SearchComposerPhraseSubmitted('à Bamako'),
-        isNot(const SearchComposerPhraseSubmitted('à Bamako', fromVoice: true)),
-      );
-    });
-
-    test('expose text et fromVoice', () {
-      const event = SearchComposerPhraseSubmitted(
-        'pas trop cher',
-        fromVoice: true,
-      );
+    test('expose text', () {
+      const event = SearchComposerPhraseSubmitted('pas trop cher');
       expect(event.text, 'pas trop cher');
-      expect(event.fromVoice, isTrue);
     });
   });
 

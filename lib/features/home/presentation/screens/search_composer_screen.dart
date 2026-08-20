@@ -33,7 +33,6 @@ import 'package:dony/features/home/presentation/widgets/search_filter_fields.dar
 import 'package:dony/features/home/presentation/widgets/search_phrase_field.dart';
 import 'package:dony/features/home/presentation/widgets/search_section_label.dart';
 import 'package:dony/features/home/presentation/widgets/unresolved_question.dart';
-import 'package:dony/features/home/presentation/widgets/voice_dictation_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/location_permission.dart';
 import 'package:dony/features/matching/presentation/widgets/near_me_radius_sheet.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
@@ -50,7 +49,6 @@ class SearchComposerScreen extends StatefulWidget {
     required this.initialFilters,
     this.activeTrips,
     this.onPublishTrip,
-    this.speechAvailable = true,
   });
 
   final SearchMode mode;
@@ -63,14 +61,6 @@ class SearchComposerScreen extends StatefulWidget {
 
   /// Publication d'un trajet demandée depuis le garde-fou « Pour mes trajets ».
   final VoidCallback? onPublishTrip;
-
-  /// Disponibilité de la dictée vocale, injectée pour la rendre testable sans
-  /// plateforme. `true` par défaut : l'appelant réel n'a rien à faire tant
-  /// que `VoiceDictationSheet.show` gère lui-même l'indisponibilité
-  /// (`initialize()` en échec ou permission refusée) en renvoyant `null`, ce
-  /// qui masque déjà le micro à la prochaine ouverture. Ce paramètre sert
-  /// surtout aux tests, qui n'ont pas de plateforme de reconnaissance vocale.
-  final bool speechAvailable;
 
   @override
   State<SearchComposerScreen> createState() => _SearchComposerScreenState();
@@ -109,30 +99,6 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
   void _submitPhrase(String text) {
     if (text.trim().isEmpty) return;
     context.read<SearchComposerBloc>().add(SearchComposerPhraseSubmitted(text));
-  }
-
-  /// Ouvre la feuille de dictée. Au relâchement du micro, le texte reconnu
-  /// remplit le champ visible puis déclenche le même parsing qu'une saisie
-  /// au clavier, marqué `fromVoice: true` pour l'entonnoir analytics du BLoC.
-  ///
-  /// L'event `search_voice_used` (et son `duration_ms`) se tire dans le BLoC,
-  /// jamais ici : règle projet (events métier hors du widget). La durée est
-  /// mesurée entre l'ouverture de la feuille et le texte renvoyé — seule
-  /// mesure disponible côté appelant, `VoiceDictationSheet` n'exposant pas
-  /// les timestamps internes d'écoute.
-  Future<void> _onMicPressed() async {
-    final startedAt = DateTime.now();
-    final text = await VoiceDictationSheet.show(context);
-    if (text == null || !mounted) return;
-
-    _phraseController.text = text;
-    context.read<SearchComposerBloc>().add(
-      SearchComposerPhraseSubmitted(
-        text,
-        fromVoice: true,
-        voiceDurationMs: DateTime.now().difference(startedAt).inMilliseconds,
-      ),
-    );
   }
 
   // Vider un champ de ville DOIT vider le filtre correspondant : sans ça le
@@ -196,9 +162,6 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
               SearchPhraseField(
                 controller: _phraseController,
                 onSubmitted: _submitPhrase,
-                onMicPressed: widget.speechAvailable
-                    ? () => unawaited(_onMicPressed())
-                    : null,
                 isParsing: state.isParsing,
               ).animate().fadeIn(duration: 250.ms),
               if (state.recognized.isNotEmpty)

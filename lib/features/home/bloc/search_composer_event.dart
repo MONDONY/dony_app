@@ -14,25 +14,14 @@ class SearchComposerStarted extends SearchComposerEvent {
   const SearchComposerStarted();
 }
 
-/// L'utilisateur valide une phrase, tapée ou dictée.
+/// L'utilisateur valide une phrase tapée.
 class SearchComposerPhraseSubmitted extends SearchComposerEvent {
-  const SearchComposerPhraseSubmitted(
-    this.text, {
-    this.fromVoice = false,
-    this.voiceDurationMs,
-  });
+  const SearchComposerPhraseSubmitted(this.text);
 
   final String text;
-  final bool fromVoice;
-
-  /// Durée de la dictée en millisecondes, mesurée par l'appelant (l'écran,
-  /// seul point qui voit l'ouverture et la fermeture de la feuille de
-  /// dictée). `null` quand [fromVoice] est `false`, ou si la mesure n'a pas
-  /// pu être prise.
-  final int? voiceDurationMs;
 
   @override
-  List<Object?> get props => [text, fromVoice, voiceDurationMs];
+  List<Object?> get props => [text];
 }
 
 /// L'utilisateur règle un filtre au doigt.
