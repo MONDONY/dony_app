@@ -45,7 +45,6 @@ import 'package:dony/features/package_request/data/package_request_repository.da
 import 'package:dony/features/package_request/presentation/widgets/near_me_package_request_carousel.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_list_card.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_preview_bottom_sheet.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -61,7 +60,7 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isGuest = FirebaseAuth.instance.currentUser == null;
+    final isGuest = context.read<AuthBloc>().state.currentUser == null;
     return MultiBlocProvider(
       providers: [
         BlocProvider<PackageRequestSearchBloc>(
@@ -119,9 +118,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
   /// Mode de recherche courant. Deux valeurs exclusives : il n'existe plus de
   /// vue mixte. Le mode pilote la liste, les marqueurs de carte, les chips
   /// spécifiques et la feuille de filtres.
-  SearchMode _mode = GuestAccessGuard.initialSearchMode(
-    isAuthenticated: FirebaseAuth.instance.currentUser != null,
-  );
+  late SearchMode _mode;
 
   /// Filtres de recherche, communs et spécifiques réunis. Un seul porteur pour
   /// les deux modes : c'est ce qui fait survivre le corridor et la date à la
@@ -164,6 +161,9 @@ class _MapSenderViewState extends State<_MapSenderView> {
   @override
   void initState() {
     super.initState();
+    _mode = GuestAccessGuard.initialSearchMode(
+      isAuthenticated: context.read<AuthBloc>().state.currentUser != null,
+    );
     if (getIt.isRegistered<PendingSearchNotifier>()) {
       _pendingSearchNotifier = getIt<PendingSearchNotifier>();
       _pendingSearchNotifier!.addListener(_consumePendingSearch);
@@ -182,7 +182,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
       // AutoRefresh (non forcé) : silencieux si la liste est déjà en cache et
       // fraîche — BidMyListRequested émettrait BidLoading et écraserait l'état
       // partagé à chaque retour sur l'accueil.
-      final isGuest = FirebaseAuth.instance.currentUser == null;
+      final isGuest = context.read<AuthBloc>().state.currentUser == null;
       if (!isGuest) {
         context.read<BidBloc>().add(const BidMyListAutoRefreshRequested());
       }
@@ -348,7 +348,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
 
   void _dispatchSearch() {
     if (!mounted) return;
-    final publicAccess = FirebaseAuth.instance.currentUser == null;
+    final publicAccess = context.read<AuthBloc>().state.currentUser == null;
     // `toAnnouncementQuery` (et non `toSearchParams`) : c'est elle qui porte le
     // vrai payload serveur — corridor neutralisé par « près de moi », booléens
     // jamais envoyés à false.
@@ -393,7 +393,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
         radiusKm: q.radiusKm,
         urgent: q.urgent,
         matchingMyTrips: q.matchingMyTrips,
-        publicAccess: FirebaseAuth.instance.currentUser == null,
+        publicAccess: context.read<AuthBloc>().state.currentUser == null,
       ),
     );
   }
@@ -420,7 +420,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
   /// bascule produira. Lire `_filters` directement laisserait tomber la
   /// neutralisation du corridor par « près de moi », la position et le rayon.
   Future<void> _dispatchOtherModeCount() async {
-    if (FirebaseAuth.instance.currentUser == null) {
+    if (context.read<AuthBloc>().state.currentUser == null) {
       if (mounted) {
         setState(() => _otherModeCount = null);
       }
@@ -516,7 +516,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
     if (mode == _mode) {
       return;
     }
-    final isAuthenticated = FirebaseAuth.instance.currentUser != null;
+    final isAuthenticated = context.read<AuthBloc>().state.currentUser != null;
     if (!GuestAccessGuard.canUseSearchMode(
       mode,
       isAuthenticated: isAuthenticated,
@@ -955,7 +955,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
           .copyWith(weightMin: result.weightKg);
     }
 
-    final isAuthenticated = FirebaseAuth.instance.currentUser != null;
+    final isAuthenticated = context.read<AuthBloc>().state.currentUser != null;
     setState(() {
       _mode = GuestAccessGuard.initialSearchMode(
         isAuthenticated: isAuthenticated,
@@ -2838,7 +2838,7 @@ class _FavoritesButton extends StatelessWidget {
         return GestureDetector(
           key: const Key('favorites-button'),
           onTap: () {
-            if (FirebaseAuth.instance.currentUser == null) {
+            if (context.read<AuthBloc>().state.currentUser == null) {
               AuthRequiredSheet.show(context);
               return;
             }
@@ -2921,7 +2921,7 @@ class _NotificationBell extends StatelessWidget {
         final unreadCount = state is NotificationLoaded ? state.unreadCount : 0;
         return GestureDetector(
           onTap: () {
-            if (FirebaseAuth.instance.currentUser == null) {
+            if (context.read<AuthBloc>().state.currentUser == null) {
               AuthRequiredSheet.show(context);
               return;
             }

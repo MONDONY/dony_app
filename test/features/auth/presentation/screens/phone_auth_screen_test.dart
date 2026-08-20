@@ -214,6 +214,9 @@ void main() {
       await _pump(tester, mockAuthBloc);
       // Le sélecteur est un GestureDetector autour du drapeau et code
       final flagSelector = find.text('+33');
+      // La carte d'intro (AuthIntroCard) pousse le champ sous le pli du
+      // viewport de test — le rendre visible avant de taper dessus.
+      await tester.ensureVisible(flagSelector);
       await tester.tap(flagSelector);
       await tester.pumpAndSettle();
       // Le bottom sheet affiche "Indicatif pays"
@@ -228,6 +231,7 @@ void main() {
         );
         await _pump(tester, mockAuthBloc);
         // Ouvrir le bottom sheet
+        await tester.ensureVisible(find.text('+33'));
         await tester.tap(find.text('+33'));
         await tester.pumpAndSettle();
         // Appuyer sur Sénégal
