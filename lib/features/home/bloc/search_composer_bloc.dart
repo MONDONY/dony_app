@@ -103,6 +103,22 @@ class SearchComposerBloc
         ),
       );
 
+      // Règle projet : les events métier se tirent dans le BLoC, jamais le
+      // widget. `duration_ms` est calculé par l'appelant (`SearchComposerScreen`,
+      // seul point qui voit l'ouverture et la fermeture de la feuille de
+      // dictée) et transmis via l'event plutôt que mesuré ici.
+      if (event.fromVoice) {
+        unawaited(
+          _analytics.logEvent(
+            AnalyticsEvents.searchVoiceUsed,
+            properties: {
+              if (event.voiceDurationMs != null)
+                'duration_ms': event.voiceDurationMs!,
+            },
+          ),
+        );
+      }
+
       if (result.recognized.isEmpty) {
         unawaited(
           _analytics.logEvent(
@@ -166,7 +182,23 @@ class SearchComposerBloc
             datePreset: DonyDatePreset.none,
             clearCustomDate: true,
           );
+        } else if (value == 'thisWeek') {
+          // `unresolved_question.dart` propose des noms de `DonyDatePreset`
+          // pour cette question, pas des dates ISO : `DateTime.tryParse` y
+          // échouerait toujours en silence (aucun filtre posé, la question
+          // disparaît quand même de l'écran).
+          filters = filters.copyWith(
+            datePreset: DonyDatePreset.thisWeek,
+            clearCustomDate: true,
+          );
+        } else if (value == 'thisMonth') {
+          filters = filters.copyWith(
+            datePreset: DonyDatePreset.thisMonth,
+            clearCustomDate: true,
+          );
         } else {
+          // Filet de sécurité au cas où une vraie date ISO arriverait un jour
+          // depuis une autre source de valeurs pour cette question.
           final date = DateTime.tryParse(value);
           if (date != null) filters = filters.copyWith(customDate: date);
         }

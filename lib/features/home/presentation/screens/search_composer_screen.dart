@@ -18,8 +18,6 @@ import 'dart:async';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
-import 'package:dony/core/services/analytics_events.dart';
-import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/city/data/city_model.dart';
 import 'package:dony/features/city/presentation/widgets/city_corridor_fields.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
@@ -116,16 +114,24 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
   /// Ouvre la feuille de dictée. Au relâchement du micro, le texte reconnu
   /// remplit le champ visible puis déclenche le même parsing qu'une saisie
   /// au clavier, marqué `fromVoice: true` pour l'entonnoir analytics du BLoC.
+  ///
+  /// L'event `search_voice_used` (et son `duration_ms`) se tire dans le BLoC,
+  /// jamais ici : règle projet (events métier hors du widget). La durée est
+  /// mesurée entre l'ouverture de la feuille et le texte renvoyé — seule
+  /// mesure disponible côté appelant, `VoiceDictationSheet` n'exposant pas
+  /// les timestamps internes d'écoute.
   Future<void> _onMicPressed() async {
+    final startedAt = DateTime.now();
     final text = await VoiceDictationSheet.show(context);
     if (text == null || !mounted) return;
 
     _phraseController.text = text;
     context.read<SearchComposerBloc>().add(
-      SearchComposerPhraseSubmitted(text, fromVoice: true),
-    );
-    unawaited(
-      getIt<AnalyticsService>().logEvent(AnalyticsEvents.searchVoiceUsed),
+      SearchComposerPhraseSubmitted(
+        text,
+        fromVoice: true,
+        voiceDurationMs: DateTime.now().difference(startedAt).inMilliseconds,
+      ),
     );
   }
 

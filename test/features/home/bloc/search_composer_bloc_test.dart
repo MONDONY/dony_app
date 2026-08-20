@@ -228,6 +228,61 @@ void main() {
     },
   );
 
+  // ─── I1 : « Cette semaine »/« Ce mois » sont des DonyDatePreset, pas des
+  // dates ISO — `unresolved_question.dart` propose ces deux valeurs pour
+  // `dateVague`, `DateTime.tryParse` échouait toujours en silence dessus.
+  blocTest<SearchComposerBloc, SearchComposerState>(
+    '"cette semaine" pose DonyDatePreset.thisWeek plutôt que de ne rien faire',
+    build: build,
+    seed: () => const SearchComposerState(
+      filters: HomeSearchFilters(),
+      unresolved: [
+        UnresolvedItem(
+          kind: UnresolvedKind.dateVague,
+          phrase: 'bientôt',
+          options: [],
+        ),
+      ],
+    ),
+    act: (bloc) => bloc.add(
+      const SearchComposerUnresolvedAnswered(
+        kind: UnresolvedKind.dateVague,
+        value: 'thisWeek',
+      ),
+    ),
+    wait: const Duration(milliseconds: 600),
+    verify: (bloc) {
+      expect(bloc.state.filters.datePreset, DonyDatePreset.thisWeek);
+      expect(bloc.state.unresolved, isEmpty);
+    },
+  );
+
+  blocTest<SearchComposerBloc, SearchComposerState>(
+    '"ce mois" pose DonyDatePreset.thisMonth plutôt que de ne rien faire',
+    build: build,
+    seed: () => const SearchComposerState(
+      filters: HomeSearchFilters(),
+      unresolved: [
+        UnresolvedItem(
+          kind: UnresolvedKind.dateVague,
+          phrase: 'bientôt',
+          options: [],
+        ),
+      ],
+    ),
+    act: (bloc) => bloc.add(
+      const SearchComposerUnresolvedAnswered(
+        kind: UnresolvedKind.dateVague,
+        value: 'thisMonth',
+      ),
+    ),
+    wait: const Duration(milliseconds: 600),
+    verify: (bloc) {
+      expect(bloc.state.filters.datePreset, DonyDatePreset.thisMonth);
+      expect(bloc.state.unresolved, isEmpty);
+    },
+  );
+
   blocTest<SearchComposerBloc, SearchComposerState>(
     'un échec réseau laisse les filtres intacts et n efface pas la saisie',
     build: () {
@@ -380,6 +435,131 @@ void main() {
             'un filtre du mode colis ne doit pas disparaître silencieusement '
             'quand on efface depuis le mode trips',
       );
+    },
+  );
+
+  // ─── I3 : `search_voice_used` se tire dans le BLoC, jamais le widget ──────
+  group('search_voice_used', () {
+    blocTest<SearchComposerBloc, SearchComposerState>(
+      'une phrase dictée trace search_voice_used avec duration_ms',
+      build: () {
+        when(() => parseRepo.parse(any(), any())).thenAnswer(
+          (_) async => _result(filters: const {'arrivalCity': 'Bamako'}),
+        );
+        return build();
+      },
+      act: (bloc) => bloc.add(
+        const SearchComposerPhraseSubmitted(
+          'à Bamako',
+          fromVoice: true,
+          voiceDurationMs: 2400,
+        ),
+      ),
+      wait: const Duration(milliseconds: 600),
+      verify: (_) {
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.searchVoiceUsed,
+            properties: {'duration_ms': 2400},
+          ),
+        ).called(1);
+      },
+    );
+
+    blocTest<SearchComposerBloc, SearchComposerState>(
+      'une phrase tapée au clavier ne trace jamais search_voice_used',
+      build: () {
+        when(() => parseRepo.parse(any(), any())).thenAnswer(
+          (_) async => _result(filters: const {'arrivalCity': 'Bamako'}),
+        );
+        return build();
+      },
+      act: (bloc) => bloc.add(const SearchComposerPhraseSubmitted('à Bamako')),
+      wait: const Duration(milliseconds: 600),
+      verify: (_) {
+        verifyNever(
+          () => analytics.logEvent(
+            AnalyticsEvents.searchVoiceUsed,
+            properties: any(named: 'properties'),
+          ),
+        );
+      },
+    );
+  });
+
+  // ─── I4 : le chemin mode Colis de `_refreshCount` (branche `else`, celle où
+  // vivait le bug C2) n'était exercé par aucun test — tous les tests
+  // ci-dessus construisent le BLoC en `SearchMode.trips`.
+  blocTest<SearchComposerBloc, SearchComposerState>(
+    'mode colis : le compteur reflète totalElements du dépôt colis, y '
+    'compris avec un filtre maxWeight (couvre aussi la régression C2 : '
+    'maxWeight ne doit jamais atterrir sur weightMax)',
+    build: () {
+      when(
+        () => packageRepo.search(
+          departure: any(named: 'departure'),
+          arrival: any(named: 'arrival'),
+          dateFrom: any(named: 'dateFrom'),
+          dateTo: any(named: 'dateTo'),
+          maxWeight: any(named: 'maxWeight'),
+          parcelSize: any(named: 'parcelSize'),
+          lat: any(named: 'lat'),
+          lng: any(named: 'lng'),
+          radiusKm: any(named: 'radiusKm'),
+          urgent: any(named: 'urgent'),
+          matchingMyTrips: any(named: 'matchingMyTrips'),
+          // ignore: avoid_redundant_argument_values
+          page: 0,
+          size: 1,
+        ),
+      ).thenAnswer(
+        (_) async => const PackageRequestSearchPage(
+          content: [],
+          totalElements: 7,
+          page: 0,
+          size: 1,
+        ),
+      );
+      return SearchComposerBloc(
+        parseRepo,
+        announcementRepo,
+        packageRepo,
+        analytics,
+        mode: SearchMode.parcels,
+        initialFilters: const HomeSearchFilters(),
+      );
+    },
+    act: (bloc) => bloc.add(
+      const SearchComposerFiltersChanged(HomeSearchFilters(maxWeight: 20)),
+    ),
+    wait: const Duration(milliseconds: 600),
+    verify: (bloc) {
+      expect(bloc.state.resultCount, 7);
+      expect(bloc.state.filters.maxWeight, 20);
+      expect(
+        bloc.state.filters.weightMax,
+        isNull,
+        reason: 'régression C2 : maxWeight (colis) ne doit jamais polluer '
+            'weightMax (trajets)',
+      );
+      verify(
+        () => packageRepo.search(
+          departure: any(named: 'departure'),
+          arrival: any(named: 'arrival'),
+          dateFrom: any(named: 'dateFrom'),
+          dateTo: any(named: 'dateTo'),
+          maxWeight: 20,
+          parcelSize: any(named: 'parcelSize'),
+          lat: any(named: 'lat'),
+          lng: any(named: 'lng'),
+          radiusKm: any(named: 'radiusKm'),
+          urgent: any(named: 'urgent'),
+          matchingMyTrips: any(named: 'matchingMyTrips'),
+          // ignore: avoid_redundant_argument_values
+          page: 0,
+          size: 1,
+        ),
+      ).called(1);
     },
   );
 }
