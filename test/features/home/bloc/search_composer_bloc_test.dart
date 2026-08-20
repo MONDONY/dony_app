@@ -258,6 +258,38 @@ void main() {
   );
 
   blocTest<SearchComposerBloc, SearchComposerState>(
+    'deux réglages rapprochés appliquent les DEUX filtres immédiatement, '
+    'sans attendre le débounce du comptage réseau',
+    build: build,
+    act: (bloc) async {
+      // Régression : avant le correctif, `debounceTime` portait sur
+      // L'ÉVÉNEMENT ENTIER (pas seulement le comptage), retardant l'`emit`
+      // des filtres eux-mêmes. Un utilisateur qui pose le départ PUIS
+      // l'arrivée PUIS valide, plus vite que les 400 ms de debounce, perdait
+      // silencieusement le départ. Un écart de 50 ms (bien en-deçà de
+      // 400 ms) reproduit exactement ce scénario.
+      bloc.add(
+        const SearchComposerFiltersChanged(
+          HomeSearchFilters(departureCity: 'Paris'),
+        ),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      bloc.add(
+        const SearchComposerFiltersChanged(
+          HomeSearchFilters(departureCity: 'Paris', arrivalCity: 'Dakar'),
+        ),
+      );
+    },
+    // Volontairement court : la preuve porte sur ce qui est déjà vrai AVANT
+    // que le débounce de 400 ms ait eu le temps de courir.
+    wait: const Duration(milliseconds: 50),
+    verify: (bloc) {
+      expect(bloc.state.filters.departureCity, 'Paris');
+      expect(bloc.state.filters.arrivalCity, 'Dakar');
+    },
+  );
+
+  blocTest<SearchComposerBloc, SearchComposerState>(
     'un échec du comptage masque le nombre sans casser l écran',
     build: () {
       when(

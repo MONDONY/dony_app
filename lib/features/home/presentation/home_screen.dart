@@ -15,7 +15,7 @@ import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
 import 'package:dony/features/home/presentation/widgets/evergreen_guidance_carousel.dart';
 import 'package:dony/features/home/presentation/widgets/home_filter_chips_row.dart';
-import 'package:dony/features/home/presentation/widgets/search_filter_sheet.dart';
+import 'package:dony/features/home/presentation/widgets/no_active_trip_sheet.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
@@ -463,10 +463,29 @@ class _MapSenderViewState extends State<_MapSenderView> {
 
   /// Applique un changement de filtres : relance la recherche du mode courant
   /// et rafraîchit le compteur de l'autre mode.
-  void _onFiltersChanged(HomeSearchFilters next) {
+  ///
+  /// [cameFromPhrase] : la mesure qui décidera du sort du bloc « En une
+  /// phrase » (voir `search_submitted`) — si les recherches passent par les
+  /// filtres dans plus de 90 % des cas après un mois, il se retire sans rien
+  /// casser. `false` par défaut : seul l'écran de composition, quand une
+  /// phrase a réellement été soumise avant la validation, le passe à `true`.
+  void _onFiltersChanged(
+    HomeSearchFilters next, {
+    bool cameFromPhrase = false,
+  }) {
     setState(() => _filters = next);
     _dispatchForMode();
     unawaited(_dispatchOtherModeCount());
+    unawaited(
+      getIt<AnalyticsService>().logEvent(
+        AnalyticsEvents.searchSubmitted,
+        properties: {
+          'mode': _mode.name,
+          'filter_count': next.activeCount,
+          'came_from_phrase': cameFromPhrase,
+        },
+      ),
+    );
   }
 
   /// Nombre de trajets actifs, source unique du filtre « Pour mes trajets ».
@@ -796,26 +815,33 @@ class _MapSenderViewState extends State<_MapSenderView> {
     );
   }
 
-  /// Une seule feuille dans les deux modes : c'est elle qui porte le bloc
-  /// corridor + date partagé.
-  Future<void> _showFilterSheet(BuildContext ctx) async {
+  /// Ouvre l'écran de composition et applique ce qui en revient.
+  ///
+  /// L'écran remplace la feuille de filtres : la hauteur d'une feuille ne
+  /// permettait pas de faire tenir la barre de recherche, le micro et les
+  /// dix-huit filtres. Conserve intégralement le bloc analytics de la
+  /// pastille « Pour mes trajets », qui compare l'avant et l'après : sa
+  /// bascule ne se constate qu'au retour.
+  Future<void> _openComposer(BuildContext ctx) async {
     final activeTrips = _activeTrips;
-    final result = await SearchFilterSheet.show(
-      ctx,
-      mode: _mode,
-      initial: _filters,
-      activeTrips: activeTrips,
-      onPublishTrip: _onPublishTripRequested,
-    );
+    final result = await ctx
+        .push<({HomeSearchFilters filters, bool cameFromPhrase})>(
+          '/recherche/composer',
+          extra: {
+            'mode': _mode,
+            'filters': _filters,
+            'activeTrips': activeTrips,
+            'onPublishTrip': _onPublishTripRequested,
+          },
+        );
     if (result == null || !mounted) return;
-    // La pastille « Pour mes trajets » vit dans la feuille : sa bascule ne se
-    // constate qu'au retour, en comparant l'avant et l'après.
-    if (result.matchingMyTrips != _filters.matchingMyTrips) {
+
+    if (result.filters.matchingMyTrips != _filters.matchingMyTrips) {
       unawaited(
         getIt<AnalyticsService>().logEvent(
           AnalyticsEvents.homeMatchingTripsFilterToggled,
           properties: {
-            'active': result.matchingMyTrips,
+            'active': result.filters.matchingMyTrips,
             // Nombre inconnu : la propriété est absente plutôt que remplie
             // d'un zéro qui fausserait l'analyse.
             'active_trips': ?activeTrips,
@@ -823,7 +849,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
         ),
       );
     }
-    _onFiltersChanged(result);
+    _onFiltersChanged(result.filters, cameFromPhrase: result.cameFromPhrase);
   }
 
   /// « Publier un trajet » depuis le garde-fou de la pastille « Pour mes
@@ -1047,7 +1073,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                         key: const Key('corridor-bar'),
                                         label: _corridorLabel,
                                         activeFilterCount: _activeFilterCount,
-                                        onTap: () => _showFilterSheet(context),
+                                        onTap: () => _openComposer(context),
                                       ),
                                     ),
                                     const SizedBox(width: DonySpacing.sm),
@@ -1500,7 +1526,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                 key: const Key('corridor-bar-sheet'),
                 label: _corridorLabel,
                 activeFilterCount: _activeFilterCount,
-                onTap: () => _showFilterSheet(ctx),
+                onTap: () => _openComposer(ctx),
               ),
             ),
             Padding(
@@ -1571,7 +1597,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                 ),
                 if (_mode.isTrips && count > 0)
                   GestureDetector(
-                    onTap: () => _showFilterSheet(ctx),
+                    onTap: () => _openComposer(ctx),
                     child: Text(
                       'Trier',
                       style: tt.labelMedium?.copyWith(

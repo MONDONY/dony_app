@@ -29,10 +29,9 @@ import 'package:dony/features/home/bloc/search_composer_event.dart';
 import 'package:dony/features/home/bloc/search_composer_state.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
+import 'package:dony/features/home/presentation/widgets/no_active_trip_sheet.dart';
 import 'package:dony/features/home/presentation/widgets/parsed_recap_card.dart';
 import 'package:dony/features/home/presentation/widgets/search_filter_fields.dart';
-import 'package:dony/features/home/presentation/widgets/search_filter_sheet.dart'
-    show showNoActiveTripSheet;
 import 'package:dony/features/home/presentation/widgets/search_phrase_field.dart';
 import 'package:dony/features/home/presentation/widgets/search_section_label.dart';
 import 'package:dony/features/home/presentation/widgets/unresolved_question.dart';
@@ -59,9 +58,9 @@ class SearchComposerScreen extends StatefulWidget {
   final SearchMode mode;
   final HomeSearchFilters initialFilters;
 
-  /// Nombre de trajets actifs de l'utilisateur — voir `SearchFilterSheet.show`.
-  /// `null` : nombre inconnu, la pastille « Pour mes trajets » reste
-  /// utilisable, le serveur tranchera.
+  /// Nombre de trajets actifs de l'utilisateur, transmis par la route
+  /// `/recherche/composer` (`lib/app/router.dart`). `null` : nombre inconnu,
+  /// la pastille « Pour mes trajets » reste utilisable, le serveur tranchera.
   final int? activeTrips;
 
   /// Publication d'un trajet demandée depuis le garde-fou « Pour mes trajets ».
@@ -130,10 +129,11 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
     );
   }
 
-  // Voir `CommonFilterBlock._clearDeparture`/`_clearArrival` dans
-  // search_filter_fields.dart : même logique, dupliquée ici parce que l'écran
-  // n'utilise pas ce widget composite (il sépare OÙ et QUAND sous deux
-  // étiquettes distinctes, voir le squelette imposé de la Task 3).
+  // Vider un champ de ville DOIT vider le filtre correspondant : sans ça le
+  // champ paraît vide alors que la recherche applique toujours l'ancienne
+  // ville. `copyWith` n'expose qu'un seul drapeau d'effacement pour le
+  // corridor (`clearCorridor`), qui efface les deux villes d'un coup : on
+  // l'applique puis on réinjecte celle qu'on garde.
   void _clearDeparture(HomeSearchFilters f) => _update(
     f.copyWith(clearCorridor: true).copyWith(arrivalCity: f.arrivalCity),
   );
@@ -246,9 +246,25 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
                   : 'Rechercher (${state.resultCount})';
               return DonyButton(
                 label: label,
-                onPressed: () => context.pop(
-                  context.read<SearchComposerBloc>().state.filters,
-                ),
+                // `context.read` et non le `state` capturé par ce
+                // `BlocBuilder` : son `buildWhen` ne rebuild que sur
+                // `resultCount`, qui peut ne jamais changer (comptage en
+                // échec, resté `null` du début à la fin) alors que les
+                // filtres, eux, ont bougé. Lire l'état au tap plutôt que celui
+                // du dernier rebuild garantit que ce sont les VRAIS derniers
+                // filtres qui reviennent, pas une capture périmée.
+                //
+                // `phrase` retombe à '' dès « Tout effacer » (nouvel état
+                // repartant de zéro) : un `cameFromPhrase` calculé ici, plutôt
+                // que suivi par un flag séparé, épouse donc naturellement une
+                // recherche recommencée au doigt après une phrase abandonnée.
+                onPressed: () {
+                  final latest = context.read<SearchComposerBloc>().state;
+                  context.pop((
+                    filters: latest.filters,
+                    cameFromPhrase: latest.phrase.isNotEmpty,
+                  ));
+                },
               );
             },
           ),

@@ -273,9 +273,7 @@ class HomeSearchFilters {
     );
   }
 
-  /// Nombre de filtres actifs pour le badge de la barre corridor : communs
-  /// plus ceux du mode courant. Un filtre spécifique à l'autre mode ne compte pas.
-  int activeCountFor(SearchMode mode) {
+  int get _commonActiveCount {
     var n = 0;
     if (departureCity != null || arrivalCity != null) {
       n++;
@@ -289,48 +287,68 @@ class HomeSearchFilters {
     if (nearMeActive) {
       n++;
     }
+    return n;
+  }
 
-    if (mode.isTrips) {
-      if (kiloProOnly) {
-        n++;
-      }
-      if (minRating != null) {
-        n++;
-      }
-      if (weightMin != null || weightMax != null) {
-        n++;
-      }
-      if (maxPricePerKg != null) {
-        n++;
-      }
-      if (weekendOnly) {
-        n++;
-      }
-      if (transportMode != null) {
-        n++;
-      }
-      if (kycVerifiedOnly) {
-        n++;
-      }
-      if (contentType != null) {
-        n++;
-      }
-      if (urgencyFilter != null) {
-        n++;
-      }
-    } else {
-      if (maxWeight != null) {
-        n++;
-      }
-      if (parcelSize != null) {
-        n++;
-      }
-      if (matchingMyTrips) {
-        n++;
-      }
+  int get _tripsOnlyActiveCount {
+    var n = 0;
+    if (kiloProOnly) {
+      n++;
+    }
+    if (minRating != null) {
+      n++;
+    }
+    if (weightMin != null || weightMax != null) {
+      n++;
+    }
+    if (maxPricePerKg != null) {
+      n++;
+    }
+    if (weekendOnly) {
+      n++;
+    }
+    if (transportMode != null) {
+      n++;
+    }
+    if (kycVerifiedOnly) {
+      n++;
+    }
+    if (contentType != null) {
+      n++;
+    }
+    if (urgencyFilter != null) {
+      n++;
     }
     return n;
   }
+
+  int get _parcelsOnlyActiveCount {
+    var n = 0;
+    if (maxWeight != null) {
+      n++;
+    }
+    if (parcelSize != null) {
+      n++;
+    }
+    if (matchingMyTrips) {
+      n++;
+    }
+    return n;
+  }
+
+  /// Nombre de filtres actifs pour le badge de la barre corridor : communs
+  /// plus ceux du mode courant. Un filtre spécifique à l'autre mode ne compte pas.
+  int activeCountFor(SearchMode mode) =>
+      _commonActiveCount +
+      (mode.isTrips ? _tripsOnlyActiveCount : _parcelsOnlyActiveCount);
+
+  /// Nombre total de filtres actifs, tous modes confondus — sert au tracking
+  /// `search_submitted`, qui ne connaît pas de mode « consommateur » au moment
+  /// de compter (contrairement à [activeCountFor], utilisé par le badge visible
+  /// de la barre corridor, qui exclut volontairement les filtres de l'autre
+  /// mode).
+  int get activeCount =>
+      _commonActiveCount + _tripsOnlyActiveCount + _parcelsOnlyActiveCount;
 
   /// Échange départ et arrivée.
   ///

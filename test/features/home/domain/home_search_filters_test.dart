@@ -76,6 +76,26 @@ void main() {
       expect(f.activeCountFor(SearchMode.parcels), 1);
     });
 
+    test('activeCount additionne commun + trajets + colis, contrairement à '
+        'activeCountFor qui exclut les filtres de l\'autre mode (tracking '
+        '`search_submitted`)', () {
+      const f = HomeSearchFilters(
+        departureCity: 'Paris', // commun
+        kiloProOnly: true, // trajets
+        minRating: 4.5, // trajets
+        parcelSize: ParcelSize.medium, // colis
+      );
+
+      expect(f.activeCountFor(SearchMode.trips), 3); // commun + 2 trajets
+      expect(f.activeCountFor(SearchMode.parcels), 2); // commun + 1 colis
+      expect(f.activeCount, 4); // commun + 2 trajets + 1 colis, une fois
+    });
+
+    test('activeCount vide vaut zéro', () {
+      const f = HomeSearchFilters();
+      expect(f.activeCount, 0);
+    });
+
     test('les filtres communs comptent dans les deux modes', () {
       const f = HomeSearchFilters(departureCity: 'Paris', urgentOnly: true);
 

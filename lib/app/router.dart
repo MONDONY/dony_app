@@ -36,7 +36,12 @@ import 'package:dony/features/disputes/presentation/dispute_list_screen.dart';
 import 'package:dony/features/favorites/bloc/favorite_requests_cubit.dart';
 import 'package:dony/features/favorites/bloc/favorite_trips_cubit.dart';
 import 'package:dony/features/favorites/presentation/favorites_screen.dart';
+import 'package:dony/features/home/bloc/search_composer_bloc.dart';
+import 'package:dony/features/home/data/repositories/search_parse_repository.dart';
+import 'package:dony/features/home/domain/home_search_filters.dart';
+import 'package:dony/features/home/domain/search_mode.dart';
 import 'package:dony/features/home/presentation/home_screen.dart';
+import 'package:dony/features/home/presentation/screens/search_composer_screen.dart';
 import 'package:dony/features/incident_report/bloc/incident_photos_cubit.dart';
 import 'package:dony/features/incident_report/bloc/incident_report_cubit.dart';
 import 'package:dony/features/incident_report/data/repositories/incident_report_repository.dart';
@@ -56,6 +61,7 @@ import 'package:dony/features/matching/bloc/trip_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/matching/presentation/screens/activites_hub_screen.dart';
 import 'package:dony/features/matching/presentation/screens/announcement_list_screen.dart';
 import 'package:dony/features/matching/presentation/screens/bid_detail_screen.dart';
@@ -83,6 +89,7 @@ import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
+import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/complete_details_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/package_request_create_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/envoyer_hub_screen.dart';
@@ -1238,6 +1245,39 @@ final appRouter = GoRouter(
         ],
         child: const FavoritesScreen(),
       ),
+    ),
+
+    // ── Écran de composition de recherche (hors shell — plein écran) ─────
+    // Remplace l'ancienne `SearchFilterSheet` comme point d'entrée « Filtrer »
+    // de l'onglet Rechercher (`HomeScreen._openComposer`). `activeTrips` et
+    // `onPublishTrip` sont facultatifs dans `extra` : absents, le garde-fou
+    // « Pour mes trajets » reste utilisable (nombre inconnu) mais son CTA
+    // « Publier un trajet » ne fait rien, aucun appelant réel n'omet ces clés.
+    GoRoute(
+      path: '/recherche/composer',
+      builder: (context, state) {
+        final extra = state.extra as Map? ?? {};
+        final mode = (extra['mode'] as SearchMode?) ?? SearchMode.trips;
+        final filters =
+            (extra['filters'] as HomeSearchFilters?) ??
+            const HomeSearchFilters();
+        return BlocProvider(
+          create: (_) => SearchComposerBloc(
+            getIt<SearchParseRepository>(),
+            getIt<AnnouncementRepository>(),
+            getIt<PackageRequestRepository>(),
+            getIt<AnalyticsService>(),
+            mode: mode,
+            initialFilters: filters,
+          ),
+          child: SearchComposerScreen(
+            mode: mode,
+            initialFilters: filters,
+            activeTrips: extra['activeTrips'] as int?,
+            onPublishTrip: extra['onPublishTrip'] as VoidCallback?,
+          ),
+        );
+      },
     ),
 
     // ── Shell principal avec Bottom Navigation ───────────────────────────
