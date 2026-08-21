@@ -224,6 +224,67 @@ void main() {
   });
 
   testWidgets(
+    'ne montre pas une devise non active à solde 0 comme verrouillée',
+    (tester) async {
+      const wallet = WalletModel(
+        balance: 47.50,
+        currency: 'EUR',
+        transactions: [],
+        balances: [
+          WalletCurrencyBalanceModel(
+            currency: 'EUR',
+            balance: 47.50,
+            active: true,
+          ),
+          WalletCurrencyBalanceModel(
+            currency: 'CAD',
+            balance: 0,
+            active: false,
+          ),
+        ],
+      );
+      whenListen(
+        bloc,
+        Stream.value(WalletLoaded(wallet)),
+        initialState: WalletInitial(),
+      );
+
+      await tester.pumpWidget(buildSubject(bloc, prefsBloc));
+      await tester.pumpAndSettle();
+
+      // Rien n'est réellement bloqué à 0 : pas de tuile "verrouillé".
+      expect(find.textContaining('verrouillé'), findsNothing);
+      expect(find.textContaining('Dollar canadien'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'tap sur l\'icône info ouvre la sheet expliquant le portefeuille',
+    (tester) async {
+      const wallet = WalletModel(
+        balance: 47.50,
+        currency: 'EUR',
+        transactions: [],
+      );
+      whenListen(
+        bloc,
+        Stream.value(WalletLoaded(wallet)),
+        initialState: WalletInitial(),
+      );
+
+      await tester.pumpWidget(buildSubject(bloc, prefsBloc));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip('Comment ça marche'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Comment fonctionne le portefeuille'), findsOneWidget);
+      expect(find.text('Changer de devise'), findsOneWidget);
+      expect(find.text('Devise à 0 €'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
     'ne montre aucune section verrouillée si une seule devise possédée',
     (tester) async {
       const wallet = WalletModel(

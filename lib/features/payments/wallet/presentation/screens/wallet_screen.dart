@@ -153,7 +153,11 @@ class _LoadedView extends StatelessWidget {
   Widget build(BuildContext context) {
     final transactions = wallet.transactions;
     final activeCurrency = SupportedCurrency.fromCodeOrDefault(wallet.currency);
-    final lockedBalances = wallet.balances.where((b) => !b.active).toList();
+    // Une devise non active à solde 0 ne bloque rien : on ne l'affiche pas
+    // comme "verrouillée", ça n'a rien de réel à protéger.
+    final lockedBalances = wallet.balances
+        .where((b) => !b.active && b.balance != 0)
+        .toList();
 
     return RefreshIndicator(
       color: Theme.of(context).colorScheme.primary,
@@ -183,6 +187,21 @@ class _LoadedView extends StatelessWidget {
                 fontSize: 17,
               ),
             ),
+            actions: [
+              IconButton(
+                tooltip: 'Comment ça marche',
+                onPressed: () => DonyBottomSheet.show(
+                  context,
+                  title: 'Comment fonctionne le portefeuille',
+                  child: const _WalletInfoContent(),
+                ),
+                icon: const DonyIcon(
+                  'circle-alert',
+                  color: DonyColors.neutral0,
+                  size: 22,
+                ),
+              ),
+            ],
             flexibleSpace: FlexibleSpaceBar(
               collapseMode: CollapseMode.pin,
               background: _HeroHeader(
@@ -381,9 +400,7 @@ class _HeroHeader extends StatelessWidget {
           // Solde avant la recharge : sert de référence au polling
           // post-recharge (on s'arrête dès qu'il augmente).
           final previousBalance = balance;
-          final ok = await context.push<bool>(
-            '/payments/wallet/topup/method',
-          );
+          final ok = await context.push<bool>('/payments/wallet/topup/method');
           if (ok != true || !context.mounted) {
             return;
           }
@@ -668,6 +685,116 @@ class _LockedBalanceTile extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ─── Info sheet — fonctionnement du portefeuille ───────────────────────────────
+
+class _WalletInfoContent extends StatelessWidget {
+  const _WalletInfoContent();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Column(
+      children: [
+        _WalletInfoRow(
+          iconAsset: 'wallet',
+          title: 'Solde disponible',
+          description:
+              'Le montant utilisable pour payer un envoi ou demander un '
+              'remboursement.',
+        ),
+        _WalletInfoRow(
+          iconAsset: 'plus',
+          title: 'Recharger',
+          description:
+              'Ajoutez des fonds par carte bancaire. Le crédit apparaît dès '
+              'la validation du paiement.',
+        ),
+        _WalletInfoRow(
+          iconAsset: 'arrow-up',
+          title: 'Rembourser',
+          description:
+              'Demandez le remboursement de votre solde vers votre moyen de '
+              'paiement d\'origine.',
+        ),
+        _WalletInfoRow(
+          iconAsset: 'history',
+          title: 'Demandes',
+          description:
+              'Retrouvez le suivi de vos demandes de remboursement envoyées.',
+        ),
+        _WalletInfoRow(
+          iconAsset: 'lock',
+          title: 'Changer de devise',
+          description:
+              'Impossible une fois que votre solde total dépasse 0 €. '
+              'Verrouillée : videz votre portefeuille pour en changer.',
+        ),
+        _WalletInfoRow(
+          iconAsset: 'circle-alert',
+          title: 'Devise à 0 €',
+          description:
+              'N\'est jamais considérée comme verrouillée : elle n\'apparaît '
+              'que si vous y détenez réellement des fonds.',
+        ),
+      ],
+    );
+  }
+}
+
+class _WalletInfoRow extends StatelessWidget {
+  const _WalletInfoRow({
+    required this.iconAsset,
+    required this.title,
+    required this.description,
+  });
+
+  final String iconAsset;
+  final String title;
+  final String description;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: DonySpacing.lg),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: cs.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(DonyRadius.md),
+            ),
+            child: DonyIcon(iconAsset, color: cs.onSurfaceVariant, size: 18),
+          ),
+          const SizedBox(width: DonySpacing.base),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontSize: 14),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  description,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
