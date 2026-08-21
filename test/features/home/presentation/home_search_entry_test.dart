@@ -15,6 +15,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -116,6 +117,12 @@ class MockSearchParseRepository extends Mock implements SearchParseRepository {}
 class _FakeContentCategoryRepository implements IContentCategoryRepository {
   @override
   Future<List<ContentCategory>> getCategories() async => fallbackCatalog;
+}
+
+class _StubSessionProbe implements FirebaseSessionProbe {
+  const _StubSessionProbe(this.hasSession);
+  @override
+  final bool hasSession;
 }
 
 class _FakeBidEvent extends Fake implements BidEvent {}
@@ -244,6 +251,10 @@ void main() {
   });
 
   setUp(() {
+    getIt.registerSingleton<FirebaseSessionProbe>(
+      const _StubSessionProbe(true),
+    );
+
     final hive = MockHiveService();
     final box = _FakeBox();
     when(() => hive.userPrefs).thenReturn(box);

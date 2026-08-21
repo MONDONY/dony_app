@@ -6,6 +6,7 @@ import 'package:dony/core/di/pending_search_notifier.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -161,8 +162,14 @@ class _MapSenderViewState extends State<_MapSenderView> {
   @override
   void initState() {
     super.initState();
+    // FirebaseSessionProbe (session persistée, disponible synchronement) et
+    // non AuthBloc.state.currentUser : au tout premier frame après un cold
+    // start, AuthBloc est encore à AuthInitial — le GET /auth/me n'a pas eu
+    // le temps de répondre — et un utilisateur bel et bien connecté
+    // retombait sur le mode invité (onglet Colis) au lieu de Trajets. Même
+    // source que le redirect du routeur (router.dart).
     _mode = GuestAccessGuard.initialSearchMode(
-      isAuthenticated: context.read<AuthBloc>().state.currentUser != null,
+      isAuthenticated: getIt<FirebaseSessionProbe>().hasSession,
     );
     if (getIt.isRegistered<PendingSearchNotifier>()) {
       _pendingSearchNotifier = getIt<PendingSearchNotifier>();

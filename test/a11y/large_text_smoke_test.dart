@@ -4,6 +4,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -219,7 +220,15 @@ AnnouncementModel _homeMakeAnn(String id) => AnnouncementModel(
   updatedAt: DateTime(2026, 5),
 );
 
+class _StubSessionProbe implements FirebaseSessionProbe {
+  const _StubSessionProbe(this.hasSession);
+  @override
+  final bool hasSession;
+}
+
 Widget _buildHomeHarness() {
+  getIt.registerSingleton<FirebaseSessionProbe>(const _StubSessionProbe(true));
+
   final hive = _HomeMockHiveService();
   final box = _HomeFakeBox();
   when(() => hive.userPrefs).thenReturn(box);

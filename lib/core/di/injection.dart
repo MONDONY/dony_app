@@ -10,6 +10,7 @@ import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/contact_picker_service.dart';
 import 'package:dony/core/services/device_id_service.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
+import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/services/media_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/app_update/data/datasources/app_update_remote_config_datasource.dart';
@@ -212,6 +213,9 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => ActiveRoleCubit(hiveService: getIt<HiveService>()),
   );
   getIt.registerLazySingleton<DeviceIdService>(() => DeviceIdService());
+  getIt.registerLazySingleton<FirebaseSessionProbe>(
+    () => const FirebaseSessionProbe(),
+  );
   getIt.registerLazySingleton<DonyMediaService>(() => DonyMediaService());
   getIt.registerLazySingleton<ContactPickerService>(
     () => ContactPickerService(),
