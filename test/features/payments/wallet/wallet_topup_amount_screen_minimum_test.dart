@@ -3,6 +3,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
+import 'package:dony/features/payments/wallet/data/models/wallet_model.dart';
 import 'package:dony/features/payments/wallet/data/repositories/wallet_repository.dart';
 import 'package:dony/features/payments/wallet/presentation/screens/wallet_topup_amount_screen.dart';
 import 'package:flutter/material.dart';
@@ -208,4 +209,51 @@ void main() {
       expect(find.textContaining('Une erreur est survenue'), findsWidgets);
     },
   );
+
+  group('Devise réelle du wallet (pas la préférence Hive en cache)', () {
+    setUp(() {
+      if (getIt.isRegistered<WalletRepository>()) {
+        getIt.unregister<WalletRepository>();
+      }
+    });
+
+    tearDown(() {
+      if (getIt.isRegistered<WalletRepository>()) {
+        getIt.unregister<WalletRepository>();
+      }
+    });
+
+    testWidgets(
+      'aucune préférence de devise en cache (défaut EUR) mais wallet.currency '
+      '= XOF → l\'écran adopte XOF, pas le repli EUR',
+      (tester) async {
+        when(() => walletRepository.getBalance()).thenAnswer(
+          (_) async => const WalletModel(
+            balance: 1500,
+            currency: 'XOF',
+            transactions: [],
+          ),
+        );
+        getIt.registerSingleton<WalletRepository>(walletRepository);
+
+        final bloc = WalletBloc(
+          walletRepository,
+          makeEnabledAnalytics(MockAnalyticsBackend()),
+        );
+        addTearDown(bloc.close);
+
+        await tester.pumpWidget(buildSubject(bloc));
+        // Laisse le temps à _loadWalletCurrency() (async, appel réseau
+        // simulé) de résoudre et déclencher son setState.
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('CFA'), findsWidgets);
+        expect(find.textContaining('€'), findsNothing);
+        expect(
+          find.text('Le solde Yadony sera crédité en XOF après confirmation.'),
+          findsOneWidget,
+        );
+      },
+    );
+  });
 }

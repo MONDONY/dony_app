@@ -12,6 +12,7 @@ import 'package:dony/core/widgets/dony_keypad.dart';
 import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
 import 'package:dony/features/payments/presentation/widgets/dony_payment_sheet.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
+import 'package:dony/features/payments/wallet/data/repositories/wallet_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -35,8 +36,15 @@ class WalletTopupAmountScreen extends StatefulWidget {
 }
 
 class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
-  // setState toléré ici : état UI local (saisie montant uniquement).
+  // setState toléré ici : état UI local (saisie montant + devise résolue).
   String _rawAmount = '';
+
+  /// Devise réelle du wallet (source de vérité serveur), chargée à
+  /// l'ouverture. `ActiveCurrency.current` (cache Hive d'une préférence
+  /// générale, jamais synchronisée avec `wallet.currency`) sert uniquement
+  /// de repli le temps du chargement — jamais figée sur EUR par défaut pour
+  /// un utilisateur dont le wallet est dans une autre devise.
+  SupportedCurrency? _walletCurrency;
 
   static const _quickAmounts = [10, 20, 50, 100];
 
@@ -51,6 +59,22 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
         getIt<AnalyticsService>().logEvent(AnalyticsEvents.walletTopupStarted),
       );
     });
+    unawaited(_loadWalletCurrency());
+  }
+
+  Future<void> _loadWalletCurrency() async {
+    try {
+      final wallet = await getIt<WalletRepository>().getBalance();
+      if (!mounted) return;
+      setState(() {
+        _walletCurrency = SupportedCurrency.fromCodeOrDefault(wallet.currency);
+      });
+    } catch (_) {
+      // Échec silencieux : le repli (ActiveCurrency.current ?? EUR) reste
+      // affiché plutôt que de bloquer l'écran de recharge pour une info
+      // secondaire — la devise réelle sera revalidée côté serveur à la
+      // soumission.
+    }
   }
 
   double get _amount =>
@@ -62,7 +86,7 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
   };
 
   SupportedCurrency get _currency =>
-      ActiveCurrency.current ?? SupportedCurrency.eur;
+      _walletCurrency ?? ActiveCurrency.current ?? SupportedCurrency.eur;
 
   void _onDigit(String d) {
     // Max 6 chiffres, pas de 0 en tête
