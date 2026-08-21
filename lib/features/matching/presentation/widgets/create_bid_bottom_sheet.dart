@@ -229,10 +229,10 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     };
   }
 
-  String get _contentCategoryValue => (_isGridOnly
-          ? _gridDerivedCategories
-          : _categoriesNotifier.value)
-      .join(', ');
+  String get _contentCategoryValue =>
+      (_isGridOnly ? _gridDerivedCategories : _categoriesNotifier.value).join(
+        ', ',
+      );
 
   List<String> get _acceptedCategories {
     final accepted = widget.announcement.acceptedContentTypes;
