@@ -248,7 +248,7 @@ void main() {
       expect(find.text('Kilo libre : choisissez votre poids'), findsOneWidget);
     });
 
-    testWidgets('poids initial = 5 (pas 1, malgré availableKg = 1)', (
+    testWidgets('poids initial = 0 (obligatoire, jamais pré-rempli)', (
       tester,
     ) async {
       await openSheet(
@@ -256,7 +256,7 @@ void main() {
         _announcement(capacityUnit: 'KG_FREE', availableKg: 1),
       );
 
-      expect(displayedWeight(tester), '5');
+      expect(displayedWeight(tester), '0');
     });
 
     testWidgets('le « + » dépasse 10 kg → aucun plafond 30/availableKg', (
@@ -267,14 +267,14 @@ void main() {
         _announcement(capacityUnit: 'KG_FREE', availableKg: 1),
       );
 
-      // Départ à 5, +1 répété → on franchit largement 10.
-      for (var i = 0; i < 8; i++) {
+      // Départ à 0, +1 répété → on franchit largement 10.
+      for (var i = 0; i < 12; i++) {
         await tester.tap(find.byKey(const Key('weight-increment')));
         await tester.pump();
       }
 
       expect(int.parse(displayedWeight(tester)), greaterThan(10));
-      expect(displayedWeight(tester), '13');
+      expect(displayedWeight(tester), '12');
     });
 
     testWidgets('saisie directe "42" → poids = 42', (tester) async {
@@ -310,13 +310,18 @@ void main() {
       expect(displayedWeight(tester), '99');
     });
 
-    testWidgets('champ vidé puis perte de focus → retombe au minimum (1 kg)', (
+    testWidgets('champ vidé puis perte de focus → retombe au minimum (0 kg)', (
       tester,
     ) async {
       await openSheet(
         tester,
         _announcement(capacityUnit: 'KG_FREE', availableKg: 1),
       );
+
+      // Amener le champ à une valeur non nulle d'abord, sinon vider un champ
+      // déjà à "0" ne prouve rien sur la coercition.
+      await tester.enterText(find.byKey(const Key('weight-field')), '7');
+      await tester.pump();
 
       // Champ vidé : reste vide tant que le focus est dans le champ.
       await tester.enterText(find.byKey(const Key('weight-field')), '');
@@ -327,7 +332,7 @@ void main() {
       FocusManager.instance.primaryFocus?.unfocus();
       await tester.pumpAndSettle();
 
-      expect(displayedWeight(tester), '1');
+      expect(displayedWeight(tester), '0');
     });
 
     testWidgets(
@@ -338,19 +343,19 @@ void main() {
           _announcement(capacityUnit: 'KG_FREE', availableKg: 1),
         );
 
-        // Le récap de prix reflète le poids porté par le _weightNotifier parent
-        // (pricePerKg = 12 → ligne « N kg × 12€ »). À l'ouverture : 5 kg.
-        expect(displayedWeight(tester), '5');
-        expect(find.textContaining('5 kg ×'), findsOneWidget);
+        // À l'ouverture, poids = 0 → total local = 0 → le récap de prix ne
+        // s'affiche pas du tout (cf. `if (total <= 0) return SizedBox.shrink()`).
+        expect(displayedWeight(tester), '0');
+        expect(find.textContaining('kg ×'), findsNothing);
 
         await tester.tap(find.byKey(const Key('weight-increment')));
         await tester.pump();
 
         // Affichage incrémenté de 1…
-        expect(displayedWeight(tester), '6');
-        // …et le parent (_weightNotifier) a bien reçu 6 → récap mis à jour.
-        expect(find.textContaining('6 kg ×'), findsOneWidget);
-        expect(find.textContaining('5 kg ×'), findsNothing);
+        expect(displayedWeight(tester), '1');
+        // …et le parent (_weightNotifier) a bien reçu 1 → récap enfin affiché
+        // (pricePerKg = 12 → ligne « 1 kg × 12€ »).
+        expect(find.textContaining('1 kg ×'), findsOneWidget);
       },
     );
 

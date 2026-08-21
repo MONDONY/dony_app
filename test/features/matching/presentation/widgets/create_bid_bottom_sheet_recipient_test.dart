@@ -169,6 +169,14 @@ Future<void> _openSheet(
 }
 
 Future<void> _enableSubmitButton(WidgetTester tester) async {
+  // Trajet kilo pur (fixture `_announcement()`) : le poids part à 0 depuis
+  // le fix "poids obligatoire" — il faut le régler pour que le CTA
+  // s'active.
+  final slider = find.byType(Slider);
+  if (slider.evaluate().isNotEmpty) {
+    tester.widget<Slider>(slider).onChanged!(5);
+    await tester.pump();
+  }
   await tester.tap(find.byKey(const Key('bid-content-field')));
   await tester.pumpAndSettle();
   await tester.tap(

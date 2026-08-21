@@ -3,6 +3,7 @@ import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
@@ -122,6 +123,15 @@ class MockAnnouncementBloc
     implements AnnouncementBloc {}
 
 class MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
+
+/// Ces tests ne montent jamais Firebase : `_mode` par défaut dépend de
+/// `FirebaseSessionProbe`, dont le fake par défaut ci-dessous (`true`) suit
+/// les mocks `AuthAuthenticated` déjà utilisés partout dans ce fichier.
+class _StubSessionProbe implements FirebaseSessionProbe {
+  const _StubSessionProbe(this.hasSession);
+  @override
+  final bool hasSession;
+}
 
 class _FakeBidEvent extends Fake implements BidEvent {}
 
@@ -716,6 +726,10 @@ void main() {
   });
 
   setUp(() {
+    getIt.registerSingleton<FirebaseSessionProbe>(
+      const _StubSessionProbe(true),
+    );
+
     final hive = MockHiveService();
     final box = _FakeBox();
     when(() => hive.userPrefs).thenReturn(box);

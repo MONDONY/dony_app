@@ -109,4 +109,42 @@ void main() {
       expect(response.statusCode, 200);
     },
   );
+
+  test(
+    'none puis wifi au ré-essai (cold start) → laisse passer la requête',
+    () async {
+      final d = buildDio();
+      var callCount = 0;
+      when(() => connectivity.checkConnectivity()).thenAnswer((_) async {
+        callCount++;
+        // 1er appel : plugin pas encore stabilisé après relance de l'app.
+        // 2e appel (après le 1er ré-essai) : l'interface est bien là.
+        return callCount == 1
+            ? [ConnectivityResult.none]
+            : [ConnectivityResult.wifi];
+      });
+
+      final response = await d.get<Map<String, dynamic>>('/x');
+
+      expect(response.statusCode, 200);
+      expect(callCount, 2);
+    },
+  );
+
+  test(
+    'none à chaque ré-essai → échoue quand même, sans hameçon transitoire',
+    () async {
+      final d = buildDio();
+      when(
+        () => connectivity.checkConnectivity(),
+      ).thenAnswer((_) async => [ConnectivityResult.none]);
+
+      await expectLater(
+        () => d.get<Map<String, dynamic>>('/x'),
+        throwsA(isA<DioException>()),
+      );
+      expect(adapter.callCount, 0);
+      verify(() => connectivity.checkConnectivity()).called(3);
+    },
+  );
 }

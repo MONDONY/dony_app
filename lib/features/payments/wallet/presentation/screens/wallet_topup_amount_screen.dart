@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dony/core/currency/active_currency.dart';
+import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
@@ -14,6 +15,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+
+/// Minimum de recharge, exprimé en EUR quelle que soit la devise active : en
+/// dessous, Stripe refuse le PaymentIntent (montant minimum par devise). On
+/// convertit systématiquement vers l'EUR via `unitsPerEur` pour bloquer côté
+/// client avant l'appel réseau, plutôt que de laisser Stripe renvoyer une
+/// erreur.
+const double _minTopupEur = 5.0;
 
 class WalletTopupAmountScreen extends StatefulWidget {
   final String paymentMethod;
@@ -380,12 +388,16 @@ class _StickyButton extends StatelessWidget {
     return BlocBuilder<WalletBloc, WalletState>(
       builder: (context, state) {
         final isLoading = state is WalletLoading;
-        final canSubmit = amount >= 1 && !isLoading;
+        final amountInEur = amount / currency.unitsPerEur;
+        final belowMinimum = amount > 0 && amountInEur < _minTopupEur;
+        final canSubmit = amount > 0 && !belowMinimum && !isLoading;
 
         final label = isLoading
             ? 'Traitement en cours…'
-            : amount < 1
+            : amount <= 0
             ? 'Entrez un montant'
+            : belowMinimum
+            ? 'Minimum ${CurrencyFormatter.format(_minTopupEur * currency.unitsPerEur, currency)}'
             : 'Recharger ${amount.toInt()} ${currency.symbol} via $methodLabel';
 
         return Padding(

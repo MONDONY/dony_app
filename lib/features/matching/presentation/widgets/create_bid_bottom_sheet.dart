@@ -214,6 +214,26 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   double get _maxKg => widget.announcement.availableKg;
   double get _pricePerKg => widget.announcement.pricePerKg;
 
+  /// Grille pure (pas de prix/kg) : le contenu se déduit des articles
+  /// choisis, l'expéditeur ne saisit plus de catégorie à la main.
+  bool get _isGridOnly =>
+      widget.announcement.priceGridItems.isNotEmpty && _pricePerKg <= 0;
+
+  /// Libellés des articles de grille sélectionnés (quantité > 0), utilisés
+  /// comme `contentCategory` en grille pure — remplace le combobox masqué.
+  Set<String> get _gridDerivedCategories {
+    final q = _gridQuantitiesNotifier.value;
+    return {
+      for (final item in widget.announcement.priceGridItems)
+        if ((q[item.id] ?? 0) > 0) item.label,
+    };
+  }
+
+  String get _contentCategoryValue =>
+      (_isGridOnly ? _gridDerivedCategories : _categoriesNotifier.value).join(
+        ', ',
+      );
+
   List<String> get _acceptedCategories {
     final accepted = widget.announcement.acceptedContentTypes;
     if (accepted != null && accepted.isNotEmpty) return accepted;
@@ -246,13 +266,12 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       _isStripeAvailable ? BidPaymentMethod.stripe : BidPaymentMethod.cash,
     );
 
-    final hasKgPricing = widget.announcement.pricePerKg > 0;
-    final cap = _maxKg;
-    _weightNotifier = ValueNotifier<double>(
-      hasKgPricing
-          ? (widget.announcement.isKgFree ? 5.0 : (cap >= 5 ? 5 : cap))
-          : 0.0,
-    );
+    // Toujours 0 au départ, y compris en tarification kilo pure : la
+    // grille et le kilo-libre partent aussi de 0 désormais. Sur un trajet
+    // sans grille (kilo pur), le CTA reste désactivé tant que le poids n'est
+    // pas > 0 — cf. `_syncFormButtonState` (weightOk = hasKgPricing &&
+    // weight > 0) qui ne dépend pas de cette valeur de départ.
+    _weightNotifier = ValueNotifier<double>(0.0);
 
     _weightNotifier.addListener(_syncFormButtonState);
     _categoriesNotifier.addListener(_syncFormButtonState);
@@ -408,10 +427,11 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     final hasGridPricing = widget.announcement.priceGridItems.isNotEmpty;
     final weightOk = hasKgPricing && _weightNotifier.value > 0;
     final gridOk = hasGridPricing && _gridQuantitiesNotifier.value.isNotEmpty;
+    // En grille pure, le contenu se déduit des articles choisis (gridOk le
+    // couvre déjà) — pas de combobox à remplir séparément.
+    final categoriesOk = _isGridOnly || _categoriesNotifier.value.isNotEmpty;
     final canSubmit =
-        (weightOk || gridOk) &&
-        _categoriesNotifier.value.isNotEmpty &&
-        _disclaimerNotifier.value;
+        (weightOk || gridOk) && categoriesOk && _disclaimerNotifier.value;
 
     if (widget.negotiation) {
       _btnConfigNotifier.value = _BtnConfig(
@@ -524,7 +544,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         announcementId: widget.announcement.id,
         weightKg: weight > 0 ? weight : null,
         description: _descCtrl.text.trim(),
-        contentCategory: _categoriesNotifier.value.join(', '),
+        contentCategory: _contentCategoryValue,
         recipientName: _recipientNameCtrl.text.trim(),
         recipientPhone: _recipientPhoneCtrl.text.trim(),
         proposedTotalEur: proposed,
@@ -642,7 +662,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _formData = _CollectedFormData(
       weightKg: _weightNotifier.value,
       description: _descCtrl.text.trim(),
-      contentCategory: _categoriesNotifier.value.join(', '),
+      contentCategory: _contentCategoryValue,
       recipientName: _recipientNameCtrl.text.trim(),
       recipientPhone: _recipientPhoneCtrl.text.trim(),
       gridItems: _selectedGridItems(),
@@ -1054,15 +1074,20 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
             ],
 
             // ── Contenu ───────────────────────────────────────────────────
-            ListenableBuilder(
-              listenable: Listenable.merge([
-                _categoriesNotifier,
-                _catalogNotifier,
-              ]),
-              builder: (_, _) =>
-                  _buildContentSection(context, _categoriesNotifier.value),
-            ),
-            const SizedBox(height: DonySpacing.xxl),
+            // Masqué en grille pure : le contenu se déduit des articles
+            // choisis ci-dessus (cf. `_contentCategoryValue`), pas besoin de
+            // le ressaisir dans un combobox séparé.
+            if (!_isGridOnly) ...[
+              ListenableBuilder(
+                listenable: Listenable.merge([
+                  _categoriesNotifier,
+                  _catalogNotifier,
+                ]),
+                builder: (_, _) =>
+                    _buildContentSection(context, _categoriesNotifier.value),
+              ),
+              const SizedBox(height: DonySpacing.xxl),
+            ],
 
             // ── Photos ────────────────────────────────────────────────────
             const _SectionLabel(label: 'PHOTOS DU COLIS (OPTIONNEL)'),
@@ -1645,7 +1670,11 @@ class _WeightSectionState extends State<_WeightSection> {
   TextEditingController? _kgCtrl;
   FocusNode? _kgFocus;
 
-  double get _min => widget.isMixed ? 0.0 : 1.0;
+  // Le plancher de saisie est toujours 0 : sur un trajet kilo pur (non
+  // mixte), le poids reste obligatoire pour envoyer (cf. `weightOk` dans
+  // `_syncFormButtonState`), mais c'est le CTA qui l'impose, pas le champ —
+  // l'utilisateur doit pouvoir revenir à 0 en le vidant/décrémentant.
+  double get _min => 0.0;
 
   @override
   void initState() {
@@ -1799,7 +1828,10 @@ class _WeightSectionState extends State<_WeightSection> {
     final maxKg = widget.maxKg;
     final weightKg = widget.weightKg;
     final onChanged = widget.onChanged;
-    final sliderMin = isMixed ? 0.0 : 1.0;
+    // Toujours 0 : sur un trajet kilo pur (non mixte), le poids reste
+    // obligatoire pour envoyer (le CTA l'impose, cf. `_syncFormButtonState`),
+    // mais le slider doit pouvoir afficher sa valeur de départ à 0.
+    const sliderMin = 0.0;
 
     if (maxKg <= sliderMin) {
       return Column(
@@ -1875,7 +1907,6 @@ class _WeightSectionState extends State<_WeightSection> {
           ),
           child: Slider(
             value: weightKg,
-            min: sliderMin,
             max: maxKg,
             divisions: divisions > 0 ? divisions : null,
             onChanged: onChanged,
@@ -1885,7 +1916,7 @@ class _WeightSectionState extends State<_WeightSection> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              isMixed ? '0 kg' : '1 kg',
+              '0 kg',
               style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             ),
             Text(
