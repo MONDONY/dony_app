@@ -514,7 +514,7 @@ class _TxTile extends StatelessWidget {
     'TOP_UP' => 'Recharge',
     'BID_PAYMENT' => 'Paiement colis',
     'COMMISSION_DEDUCTED' => 'Commission',
-    'REFUND' => 'Remboursement',
+    'REFUND' || 'SELF_REFUND_OUT' => 'Remboursement',
     'REFERRAL_REWARD' => 'Parrainage',
     _ => tx.type,
   };
@@ -523,6 +523,7 @@ class _TxTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final isCredit = tx.isCredit;
+    final isRefundProcessing = tx.isRefundProcessing;
     final amountColor = isCredit ? DonyColors.success500 : DonyColors.terra600;
     final amountPrefix = isCredit ? '+' : '';
 
@@ -539,12 +540,18 @@ class _TxTile extends StatelessWidget {
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: isCredit ? DonyColors.blue50 : DonyColors.terra50,
+                    color: isRefundProcessing
+                        ? cs.warningLight
+                        : (isCredit ? DonyColors.blue50 : DonyColors.terra50),
                     borderRadius: BorderRadius.circular(DonyRadius.md),
                   ),
                   child: DonyIcon(
-                    isCredit ? 'arrow-down' : 'arrow-up',
-                    color: isCredit ? cs.primary : DonyColors.terra500,
+                    isRefundProcessing
+                        ? 'hourglass'
+                        : (isCredit ? 'arrow-down' : 'arrow-up'),
+                    color: isRefundProcessing
+                        ? cs.warning
+                        : (isCredit ? cs.primary : DonyColors.terra500),
                     size: 20,
                   ),
                 ),
@@ -562,12 +569,19 @@ class _TxTile extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        DateFormat(
-                          'dd MMM · HH:mm',
-                          'fr_FR',
-                        ).format(tx.createdAt),
+                        isRefundProcessing
+                            ? 'Remboursement en cours · sous 5 à 10 jours ouvrés'
+                            : DateFormat(
+                                'dd MMM · HH:mm',
+                                'fr_FR',
+                              ).format(tx.createdAt),
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: cs.onSurfaceVariant,
+                          color: isRefundProcessing
+                              ? cs.warning
+                              : cs.onSurfaceVariant,
+                          fontWeight: isRefundProcessing
+                              ? FontWeight.w600
+                              : null,
                         ),
                       ),
                     ],

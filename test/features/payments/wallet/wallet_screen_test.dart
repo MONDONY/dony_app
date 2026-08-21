@@ -163,6 +163,65 @@ void main() {
     },
   );
 
+  testWidgets(
+    'affiche le label Remboursement pour une transaction SELF_REFUND_OUT',
+    (tester) async {
+      final tx = WalletTransactionModel(
+        type: 'SELF_REFUND_OUT',
+        amount: -10.0,
+        balanceAfter: 10.0,
+        createdAt: DateTime(2026, 8, 21, 8, 41),
+      );
+      final wallet = WalletModel(
+        balance: 10.0,
+        currency: 'EUR',
+        transactions: [tx],
+      );
+      whenListen(
+        bloc,
+        Stream.value(WalletLoaded(wallet)),
+        initialState: WalletInitial(),
+      );
+
+      await tester.pumpWidget(buildSubject(bloc, prefsBloc));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Remboursement'), findsOneWidget);
+      expect(find.text('SELF_REFUND_OUT'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'affiche l\'icône sablier et le délai pour une recharge en cours de remboursement',
+    (tester) async {
+      final tx = WalletTransactionModel(
+        type: 'TOP_UP',
+        amount: 10.0,
+        balanceAfter: 20.0,
+        createdAt: DateTime(2026, 8, 21, 7, 53),
+        refundStatus: 'PROCESSING',
+      );
+      final wallet = WalletModel(
+        balance: 20.0,
+        currency: 'EUR',
+        transactions: [tx],
+      );
+      whenListen(
+        bloc,
+        Stream.value(WalletLoaded(wallet)),
+        initialState: WalletInitial(),
+      );
+
+      await tester.pumpWidget(buildSubject(bloc, prefsBloc));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Remboursement en cours · sous 5 à 10 jours ouvrés'),
+        findsOneWidget,
+      );
+    },
+  );
+
   testWidgets('affiche le solde dans la devise active, pas toujours en EUR', (
     tester,
   ) async {
