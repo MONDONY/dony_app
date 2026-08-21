@@ -483,6 +483,38 @@ abstract final class ErrorCatalog {
       icon: Icons.credit_card_outlined,
     ),
 
+    // ─── Devises et rechargement du portefeuille ─────────────────────
+    // Sans ces entrées, ces codes retombaient sur le générique « Données
+    // invalides » : le message du serveur, qui disait pourtant quoi faire,
+    // n'atteignait jamais l'utilisateur.
+    //
+    // Seul `wallet-topup-stripe-error` appartient au rechargement. Les deux
+    // autres viennent des parcours de paiement d'un colis :
+    // `payment-method-unavailable-for-currency` est levé par
+    // `BidService.resolvePaymentMethodFor` et `PaymentService.createEscrow`,
+    // `unsupported-currency` par `CurrencyCatalog.resolve`.
+    'wallet-topup-stripe-error': ErrorPresentation(
+      title: 'Rechargement indisponible',
+      message:
+          'Le rechargement n\'a pas pu être préparé. Réessaie dans un instant.',
+      severity: ErrorSeverity.error,
+      icon: Icons.account_balance_wallet_outlined,
+    ),
+    'payment-method-unavailable-for-currency': ErrorPresentation(
+      title: 'Paiement par carte indisponible',
+      message:
+          'La carte bancaire n\'est pas acceptée pour un colis dans cette devise. Choisis le paiement en espèces.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.credit_card_off_outlined,
+    ),
+    'unsupported-currency': ErrorPresentation(
+      title: 'Devise non prise en charge',
+      message:
+          'Cette devise n\'est pas encore disponible. Vérifie la devise de ton compte dans les réglages.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.currency_exchange_outlined,
+    ),
+
     // ─── Externes (Stripe, Google) ───────────────────────────────────
     'stripe-error': ErrorPresentation(
       title: 'Paiement refusé',

@@ -148,11 +148,6 @@ class BidTravelerDismissRequested extends BidEvent {
   BidTravelerDismissRequested(this.bidId);
 }
 
-/// Synchronously confirms with the backend that the Stripe PaymentIntent
-/// has been authorized. Promotes the bid from AWAITING_PAYMENT to PENDING
-/// without waiting for the Stripe webhook (safety net for local dev and
-/// network failures).
-class BidConfirmPaymentRequested extends BidEvent {
-  final String bidId;
-  BidConfirmPaymentRequested(this.bidId);
-}
+// La confirmation du paiement ne passe plus par un event : elle doit survivre
+// à la fermeture de l'écran qui la déclenche (et donc du BLoC qu'il détient).
+// Voir `matching/data/confirm_bid_payment.dart`.

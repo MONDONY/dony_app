@@ -7,11 +7,10 @@ import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
-import 'package:dony/features/matching/bloc/bid_bloc.dart';
-import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_negotiation_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_negotiation_event.dart';
 import 'package:dony/features/matching/bloc/bid_negotiation_state.dart';
+import 'package:dony/features/matching/data/confirm_bid_payment.dart';
 import 'package:dony/features/matching/data/models/bid_negotiation.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
@@ -41,16 +40,16 @@ class _BidNegotiationThreadScreenState
     extends State<BidNegotiationThreadScreen> {
   /// Le paiement d'un accord carte emprunte EXACTEMENT le parcours du checkout
   /// direct : `PaymentBloc` transforme le `clientSecret` en feuille prête, la
-  /// `DonyPaymentSheet` encaisse, puis `BidBloc` confirme côté serveur. Les
-  /// deux blocs appartiennent à l'écran, comme dans `CreateBidScreen`.
+  /// `DonyPaymentSheet` encaisse, puis `confirmBidPaymentSafely` confirme côté
+  /// serveur. La confirmation ne passe volontairement PAS par un BLoC détenu
+  /// par l'écran : celui-ci se ferme dans `dispose()` au moment même où l'on
+  /// quitte l'écran après paiement, et emportait la requête avec lui.
   late final PaymentBloc _paymentBloc;
-  late final BidBloc _bidBloc;
 
   @override
   void initState() {
     super.initState();
     _paymentBloc = getIt<PaymentBloc>();
-    _bidBloc = getIt<BidBloc>();
     // L'accusé de lecture éteint la pastille de non-lus. Il ne dépend pas du
     // chargement du fil : arriver sur l'écran suffit.
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -64,7 +63,6 @@ class _BidNegotiationThreadScreenState
   @override
   void dispose() {
     unawaited(_paymentBloc.close());
-    unawaited(_bidBloc.close());
     super.dispose();
   }
 
@@ -143,9 +141,14 @@ class _BidNegotiationThreadScreenState
         paymentMethodTypes: state.paymentMethodTypes,
       ),
       contextLabel: 'Prix négocié de votre colis',
-      onSuccess: () {
+      onSuccess: () async {
+        // AUCUNE garde `context.mounted` avant la confirmation : elle ne
+        // dépend d'aucun BuildContext, et la subordonner au montage de l'écran
+        // rejouerait le bug corrigé ici (bid resté AWAITING_PAYMENT côté
+        // serveur alors que l'escrow Stripe est actif, expéditeur bloqué sur
+        // « à payer »). Seul le `pop` est conditionné au montage, plus bas.
+        await confirmBidPaymentSafely(state.bidId);
         if (!context.mounted) return;
-        _bidBloc.add(BidConfirmPaymentRequested(state.bidId));
         // Le fil n'a plus rien à montrer : l'appelant recharge sa liste et y
         // verra le colis passé en payé.
         context.pop(true);
@@ -169,11 +172,8 @@ class _BidNegotiationThreadScreenState
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider<PaymentBloc>.value(value: _paymentBloc),
-        BlocProvider<BidBloc>.value(value: _bidBloc),
-      ],
+    return BlocProvider<PaymentBloc>.value(
+      value: _paymentBloc,
       child: BlocListener<PaymentBloc, PaymentState>(
         listener: (ctx, state) => unawaited(_onPaymentState(ctx, state)),
         // Le `BlocConsumer` est AU-DESSUS du scaffold : la barre d'actions

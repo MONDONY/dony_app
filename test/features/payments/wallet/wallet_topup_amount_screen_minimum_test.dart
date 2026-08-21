@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_model.dart';
@@ -179,7 +180,7 @@ void main() {
   );
 
   testWidgets(
-    'WalletError en devise XOF → message générique via ErrorPresenter, '
+    'WalletError en devise XOF → message dédié au code via ErrorPresenter, '
     'jamais le detail backend brut (le message anglais de Stripe mentionne '
     'toujours l\'euro, ex. "20 Fr converts to approximately €0.03", même '
     'pour un utilisateur en franc CFA)',
@@ -191,8 +192,13 @@ void main() {
         bloc,
         Stream.value(
           WalletError(
-            'Amount must convert to at least 50 cents. 20 Fr converts to '
-            'approximately €0.03.',
+            // Code réel du serveur : c'est lui qui doit piloter le message
+            // affiché, pas le detail brut de Stripe qui l'accompagne.
+            const ValidationException(
+              'Amount must convert to at least 50 cents. 20 Fr converts to '
+              'approximately €0.03.',
+              code: 'wallet-topup-stripe-error',
+            ),
           ),
         ),
         initialState: WalletInitial(),
@@ -206,7 +212,10 @@ void main() {
       // test peut donc balayer tout l'arbre de widgets sans faux positif.
       expect(find.textContaining('€'), findsNothing);
       expect(find.textContaining('convert'), findsNothing);
-      expect(find.textContaining('Une erreur est survenue'), findsWidgets);
+      // Message DÉDIÉ au code, pas le générique : c'est ce que garantit le
+      // passage de l'AppException entière (et non de son seul `message`) à
+      // ErrorPresenter — sans quoi le code était perdu en route.
+      expect(find.textContaining('Rechargement indisponible'), findsWidgets);
     },
   );
 

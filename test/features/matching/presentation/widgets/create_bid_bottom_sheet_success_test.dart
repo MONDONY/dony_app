@@ -14,6 +14,7 @@ import 'package:dony/features/matching/bloc/bid_photos_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/data/payment_gateway.dart';
@@ -65,6 +66,12 @@ class _MockBox extends Mock implements Box {}
 class _MockPaymentGateway extends Mock implements PaymentGateway {}
 
 class _MockPaymentRepository extends Mock implements PaymentRepository {}
+
+class _MockBidRepository extends Mock implements BidRepository {}
+
+/// La confirmation serveur est un effet de bord : l'écran ignore le bid
+/// renvoyé, un double suffit à satisfaire la signature.
+class _FakeBidModel extends Mock implements BidModel {}
 
 class _FakeRecipientEvent extends Fake implements RecipientEvent {}
 
@@ -155,11 +162,11 @@ void main() {
   late _MockBox userPrefsBox;
   late _MockPaymentGateway paymentGateway;
   late _MockPaymentRepository paymentRepository;
+  late _MockBidRepository bidRepository;
 
   setUpAll(() async {
     await initializeDateFormatting('fr');
     registerFallbackValue(BidInitial());
-    registerFallbackValue(BidConfirmPaymentRequested(''));
     registerFallbackValue(const PaymentInitial());
     registerFallbackValue(_FakeRecipientEvent());
   });
@@ -236,6 +243,15 @@ void main() {
     register<HiveService>(() => _FakeHiveService(userPrefsBox));
     register<PaymentGateway>(() => paymentGateway);
     register<PaymentRepository>(() => paymentRepository);
+
+    // La confirmation du paiement passe par le repository (et non plus par
+    // BidBloc) : posté sur le bloc, l'event partait au moment où `pop()`
+    // fermait ce même bloc, et le bid restait AWAITING_PAYMENT côté serveur.
+    bidRepository = _MockBidRepository();
+    when(
+      () => bidRepository.confirmPayment(any()),
+    ).thenAnswer((_) async => _FakeBidModel());
+    register<BidRepository>(() => bidRepository);
   });
 
   tearDown(() {
@@ -255,75 +271,66 @@ void main() {
     unregister<HiveService>();
     unregister<PaymentGateway>();
     unregister<PaymentRepository>();
+    unregister<BidRepository>();
   });
 
-  testWidgets(
-    'CheckoutPaymentSheetReady + paiement PayPal réussi → écran fermé, '
-    'DonySuccessScreen, navigation seulement après le CTA',
-    (tester) async {
-      final paymentStates = StreamController<PaymentState>.broadcast();
-      addTearDown(paymentStates.close);
-      when(() => paymentBloc.stream).thenAnswer((_) => paymentStates.stream);
+  testWidgets('CheckoutPaymentSheetReady + paiement PayPal réussi → écran fermé, '
+      'DonySuccessScreen, navigation seulement après le CTA', (tester) async {
+    final paymentStates = StreamController<PaymentState>.broadcast();
+    addTearDown(paymentStates.close);
+    when(() => paymentBloc.stream).thenAnswer((_) => paymentStates.stream);
 
-      tester.view.physicalSize = const Size(800, 1400);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.reset);
-      await tester.pumpWidget(_buildHarness(_announcement()));
-      await tester.tap(find.text('Ouvrir'));
-      await tester.pumpAndSettle();
+    tester.view.physicalSize = const Size(800, 1400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(_buildHarness(_announcement()));
+    await tester.tap(find.text('Ouvrir'));
+    await tester.pumpAndSettle();
 
-      // Le vrai CreateBidScreen (widgets/) est affiché.
-      expect(find.text('Publier un colis'), findsOneWidget);
+    // Le vrai CreateBidScreen (widgets/) est affiché.
+    expect(find.text('Publier un colis'), findsOneWidget);
 
-      paymentStates.add(
-        const CheckoutPaymentSheetReady(
-          clientSecret: 'pi_test_secret',
-          publishableKey: 'pk_test',
-          bidId: 'bid-77',
-          amountEur: 56.0,
-          paymentMethodTypes: ['paypal'],
-        ),
-      );
-      await tester.pumpAndSettle();
+    paymentStates.add(
+      const CheckoutPaymentSheetReady(
+        clientSecret: 'pi_test_secret',
+        publishableKey: 'pk_test',
+        bidId: 'bid-77',
+        amountEur: 56.0,
+        paymentMethodTypes: ['paypal'],
+      ),
+    );
+    await tester.pumpAndSettle();
 
-      // La DonyPaymentSheet est ouverte (PayPal dispo, aucune carte
-      // enregistrée) → on paie via le bouton PayPal.
-      await tester.tap(find.byKey(const Key('paymentSheetPayPalButton')));
-      await tester.pump(); // PaymentSheetProcessing
-      await tester.pump(); // PaymentSheetSuccess (résolution async du gateway)
-      await tester.pump(
-        const Duration(milliseconds: 900),
-      ); // déclenchement onSuccess
-      await tester.pumpAndSettle();
+    // La DonyPaymentSheet est ouverte (PayPal dispo, aucune carte
+    // enregistrée) → on paie via le bouton PayPal.
+    await tester.tap(find.byKey(const Key('paymentSheetPayPalButton')));
+    await tester.pump(); // PaymentSheetProcessing
+    await tester.pump(); // PaymentSheetSuccess (résolution async du gateway)
+    await tester.pump(
+      const Duration(milliseconds: 900),
+    ); // déclenchement onSuccess
+    await tester.pumpAndSettle();
 
-      // 1. Confirmation synchrone du paiement côté backend.
-      verify(
-        () => bidBloc.add(
-          any(
-            that: isA<BidConfirmPaymentRequested>().having(
-              (e) => e.bidId,
-              'bidId',
-              'bid-77',
-            ),
-          ),
-        ),
-      ).called(1);
+    // 1. Confirmation du paiement côté backend, ATTENDUE avant la fermeture
+    //    de l'écran : postée sur `bidBloc` puis suivie de `pop()`, elle
+    //    partait au moment où le bloc (propriété de l'écran) se fermait, et
+    //    le bid restait AWAITING_PAYMENT alors que l'escrow Stripe était actif.
+    verify(() => bidRepository.confirmPayment('bid-77')).called(1);
 
-      // 2. L'écran de création est fermé (pop) et DonySuccessScreen affiché —
-      //    SANS navigation vers le détail du bid à ce stade.
-      expect(find.text('Publier un colis'), findsNothing);
-      expect(find.byType(DonySuccessScreen), findsOneWidget);
-      expect(find.text('Offre payée !'), findsOneWidget);
-      expect(find.textContaining('Bid détail'), findsNothing);
+    // 2. L'écran de création est fermé (pop) et DonySuccessScreen affiché —
+    //    SANS navigation vers le détail du bid à ce stade.
+    expect(find.text('Publier un colis'), findsNothing);
+    expect(find.byType(DonySuccessScreen), findsOneWidget);
+    expect(find.text('Offre payée !'), findsOneWidget);
+    expect(find.textContaining('Bid détail'), findsNothing);
 
-      // 3. La navigation vers /bids/{id}?from=payment n'arrive qu'au tap CTA.
-      await tester.tap(find.text('Voir mon envoi'));
-      await tester.pumpAndSettle();
+    // 3. La navigation vers /bids/{id}?from=payment n'arrive qu'au tap CTA.
+    await tester.tap(find.text('Voir mon envoi'));
+    await tester.pumpAndSettle();
 
-      expect(find.textContaining('Bid détail'), findsOneWidget);
-      expect(find.textContaining('from=payment'), findsOneWidget);
-    },
-  );
+    expect(find.textContaining('Bid détail'), findsOneWidget);
+    expect(find.textContaining('from=payment'), findsOneWidget);
+  });
 
   // ── BidCreated — offre hors-QR (cash / mobile money) ────────────────────────
   //
