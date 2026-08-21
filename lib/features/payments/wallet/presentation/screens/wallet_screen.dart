@@ -420,11 +420,6 @@ class _HeroHeader extends StatelessWidget {
         label: 'Demandes',
         onTap: () => context.push('/payments/wallet/refunds'),
       ),
-      _HeroAction(
-        iconAsset: 'check',
-        label: 'Utiliser',
-        onTap: () => context.pop(),
-      ),
     ];
     // Row scrollable horizontalement (jamais de retour à la ligne) : un
     // Wrap ici passerait sur 2 lignes sur les écrans étroits ou avec une

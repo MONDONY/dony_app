@@ -425,7 +425,7 @@ void main() {
         findsNothing,
       );
       // Témoin : le prédicat trouve bien des boutons ailleurs (Recharger,
-      // Utiliser), les deux `findsNothing` ci-dessus ne sont donc pas vides
+      // Demandes), les deux `findsNothing` ci-dessus ne sont donc pas vides
       // de sens.
       expect(semanticsButton, findsWidgets);
       // 1 seul appel : celui de l'initState, aucun déclenché par le tap.
