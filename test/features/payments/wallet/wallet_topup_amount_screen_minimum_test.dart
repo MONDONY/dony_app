@@ -1,7 +1,9 @@
+import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
+import 'package:dony/features/payments/wallet/data/models/wallet_model.dart';
 import 'package:dony/features/payments/wallet/data/repositories/wallet_repository.dart';
 import 'package:dony/features/payments/wallet/presentation/screens/wallet_topup_amount_screen.dart';
 import 'package:flutter/material.dart';
@@ -17,6 +19,9 @@ import '../../../helpers/mock_analytics_backend.dart';
 /// refuserait — quelle que soit la devise active, comparée à l'EUR via
 /// `SupportedCurrency.unitsPerEur`.
 class _MockWalletRepository extends Mock implements WalletRepository {}
+
+class _MockWalletBloc extends MockBloc<WalletEvent, WalletState>
+    implements WalletBloc {}
 
 void main() {
   late _MockWalletRepository walletRepository;
@@ -145,4 +150,110 @@ void main() {
       expect(find.text('Recharger 9 \$ via Carte bancaire'), findsOneWidget);
     },
   );
+
+  testWidgets(
+    'devise USD sous le seuil → le libellé "Minimum" est en dollars, jamais en euro',
+    (tester) async {
+      registerCurrencyPreference('USD');
+      final bloc = WalletBloc(
+        walletRepository,
+        makeEnabledAnalytics(MockAnalyticsBackend()),
+      );
+      addTearDown(bloc.close);
+
+      await tester.pumpWidget(buildSubject(bloc));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('3'));
+      await tester.pump();
+
+      final minimumLabel = find.byWidgetPredicate(
+        (w) =>
+            w is Text &&
+            (w.data ?? '').startsWith('Minimum') &&
+            (w.data ?? '').contains('\$'),
+      );
+      expect(minimumLabel, findsOneWidget);
+      expect(find.textContaining('€'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'WalletError en devise XOF → message générique via ErrorPresenter, '
+    'jamais le detail backend brut (le message anglais de Stripe mentionne '
+    'toujours l\'euro, ex. "20 Fr converts to approximately €0.03", même '
+    'pour un utilisateur en franc CFA)',
+    (tester) async {
+      registerCurrencyPreference('XOF');
+      final bloc = _MockWalletBloc();
+      addTearDown(bloc.close);
+      whenListen(
+        bloc,
+        Stream.value(
+          WalletError(
+            'Amount must convert to at least 50 cents. 20 Fr converts to '
+            'approximately €0.03.',
+          ),
+        ),
+        initialState: WalletInitial(),
+      );
+
+      await tester.pumpWidget(buildSubject(bloc));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // La devise active (XOF) n'affiche jamais "€" ailleurs à l'écran : ce
+      // test peut donc balayer tout l'arbre de widgets sans faux positif.
+      expect(find.textContaining('€'), findsNothing);
+      expect(find.textContaining('convert'), findsNothing);
+      expect(find.textContaining('Une erreur est survenue'), findsWidgets);
+    },
+  );
+
+  group('Devise réelle du wallet (pas la préférence Hive en cache)', () {
+    setUp(() {
+      if (getIt.isRegistered<WalletRepository>()) {
+        getIt.unregister<WalletRepository>();
+      }
+    });
+
+    tearDown(() {
+      if (getIt.isRegistered<WalletRepository>()) {
+        getIt.unregister<WalletRepository>();
+      }
+    });
+
+    testWidgets(
+      'aucune préférence de devise en cache (défaut EUR) mais wallet.currency '
+      '= XOF → l\'écran adopte XOF, pas le repli EUR',
+      (tester) async {
+        when(() => walletRepository.getBalance()).thenAnswer(
+          (_) async => const WalletModel(
+            balance: 1500,
+            currency: 'XOF',
+            transactions: [],
+          ),
+        );
+        getIt.registerSingleton<WalletRepository>(walletRepository);
+
+        final bloc = WalletBloc(
+          walletRepository,
+          makeEnabledAnalytics(MockAnalyticsBackend()),
+        );
+        addTearDown(bloc.close);
+
+        await tester.pumpWidget(buildSubject(bloc));
+        // Laisse le temps à _loadWalletCurrency() (async, appel réseau
+        // simulé) de résoudre et déclencher son setState.
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('CFA'), findsWidgets);
+        expect(find.textContaining('€'), findsNothing);
+        expect(
+          find.text('Le solde Yadony sera crédité en XOF après confirmation.'),
+          findsOneWidget,
+        );
+      },
+    );
+  });
 }

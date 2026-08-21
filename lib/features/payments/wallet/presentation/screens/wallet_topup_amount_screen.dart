@@ -5,12 +5,14 @@ import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_keypad.dart';
 import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
 import 'package:dony/features/payments/presentation/widgets/dony_payment_sheet.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
+import 'package:dony/features/payments/wallet/data/repositories/wallet_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -34,8 +36,15 @@ class WalletTopupAmountScreen extends StatefulWidget {
 }
 
 class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
-  // setState toléré ici : état UI local (saisie montant uniquement).
+  // setState toléré ici : état UI local (saisie montant + devise résolue).
   String _rawAmount = '';
+
+  /// Devise réelle du wallet (source de vérité serveur), chargée à
+  /// l'ouverture. `ActiveCurrency.current` (cache Hive d'une préférence
+  /// générale, jamais synchronisée avec `wallet.currency`) sert uniquement
+  /// de repli le temps du chargement — jamais figée sur EUR par défaut pour
+  /// un utilisateur dont le wallet est dans une autre devise.
+  SupportedCurrency? _walletCurrency;
 
   static const _quickAmounts = [10, 20, 50, 100];
 
@@ -50,6 +59,22 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
         getIt<AnalyticsService>().logEvent(AnalyticsEvents.walletTopupStarted),
       );
     });
+    unawaited(_loadWalletCurrency());
+  }
+
+  Future<void> _loadWalletCurrency() async {
+    try {
+      final wallet = await getIt<WalletRepository>().getBalance();
+      if (!mounted) return;
+      setState(() {
+        _walletCurrency = SupportedCurrency.fromCodeOrDefault(wallet.currency);
+      });
+    } catch (_) {
+      // Échec silencieux : le repli (ActiveCurrency.current ?? EUR) reste
+      // affiché plutôt que de bloquer l'écran de recharge pour une info
+      // secondaire — la devise réelle sera revalidée côté serveur à la
+      // soumission.
+    }
   }
 
   double get _amount =>
@@ -61,7 +86,7 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
   };
 
   SupportedCurrency get _currency =>
-      ActiveCurrency.current ?? SupportedCurrency.eur;
+      _walletCurrency ?? ActiveCurrency.current ?? SupportedCurrency.eur;
 
   void _onDigit(String d) {
     // Max 6 chiffres, pas de 0 en tête
@@ -158,11 +183,12 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
         if (state is WalletTopupStripeReady) {
           _presentStripePaymentSheet(context, state.clientSecret);
         } else if (state is WalletError) {
-          DonySnackbar.show(
-            context,
-            message: state.message,
-            type: DonySnackbarType.error,
-          );
+          // Jamais state.message brut : c'est le detail backend, qui peut
+          // relayer le message anglais brut de Stripe (ex. "20 Fr converts
+          // to approximately €0.03") — toujours en euro, quelle que soit la
+          // devise active de l'utilisateur. ErrorPresenter retombe sur un
+          // message générique français, sans référence à une devise.
+          unawaited(ErrorPresenter.show(context, state.message));
         } else if (state is WalletLoaded) {
           // Rechargement réussi → retour au wallet
           context.pop(true);
