@@ -34,10 +34,10 @@ class WalletRefundRequestCubit extends Cubit<WalletRefundRequestState> {
 
   final WalletRepository _repository;
 
-  Future<void> submit(String currency) async {
+  Future<void> submit(String currency, List<String> transactionIds) async {
     emit(state.copyWith(isSubmitting: true, clearError: true));
     try {
-      final result = await _repository.requestRefund(currency);
+      final result = await _repository.requestRefund(currency, transactionIds);
       if (!isClosed) {
         emit(state.copyWith(isSubmitting: false, result: result));
       }

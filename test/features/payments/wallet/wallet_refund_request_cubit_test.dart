@@ -30,10 +30,12 @@ void main() {
   blocTest<WalletRefundRequestCubit, WalletRefundRequestState>(
     'submit() succès',
     build: () {
-      when(() => repo.requestRefund('EUR')).thenAnswer((_) async => result);
+      when(
+        () => repo.requestRefund('EUR', ['tx-1']),
+      ).thenAnswer((_) async => result);
       return cubit;
     },
-    act: (c) => c.submit('EUR'),
+    act: (c) => c.submit('EUR', ['tx-1']),
     expect: () => [
       isA<WalletRefundRequestState>().having(
         (s) => s.isSubmitting,
@@ -49,10 +51,12 @@ void main() {
   blocTest<WalletRefundRequestCubit, WalletRefundRequestState>(
     'submit() échec',
     build: () {
-      when(() => repo.requestRefund('EUR')).thenThrow(Exception('network'));
+      when(
+        () => repo.requestRefund('EUR', ['tx-1']),
+      ).thenThrow(Exception('network'));
       return cubit;
     },
-    act: (c) => c.submit('EUR'),
+    act: (c) => c.submit('EUR', ['tx-1']),
     expect: () => [
       isA<WalletRefundRequestState>().having(
         (s) => s.isSubmitting,

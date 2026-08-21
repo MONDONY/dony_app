@@ -117,6 +117,7 @@ import 'package:dony/features/payments/data/datasources/payment_remote_datasourc
 import 'package:dony/features/payments/data/payment_gateway.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
+import 'package:dony/features/payments/wallet/bloc/wallet_eligible_topups_cubit.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_refund_request_cubit.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_refund_requests_list_cubit.dart';
 import 'package:dony/features/payments/wallet/data/datasources/wallet_remote_datasource.dart';
@@ -441,6 +442,9 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<WalletRefundRequestCubit>(
     () => WalletRefundRequestCubit(getIt<WalletRepository>()),
+  );
+  getIt.registerFactory<WalletEligibleTopupsCubit>(
+    () => WalletEligibleTopupsCubit(getIt<WalletRepository>()),
   );
   getIt.registerFactory<WalletRefundRequestsListCubit>(
     () => WalletRefundRequestsListCubit(getIt<WalletRepository>()),

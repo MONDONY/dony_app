@@ -7,6 +7,7 @@ import 'package:dony/features/payments/wallet/bloc/wallet_refund_request_cubit.d
 import 'package:dony/features/payments/wallet/data/models/wallet_currency_balance_model.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_model.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_transaction_model.dart';
+import 'package:dony/features/payments/wallet/presentation/widgets/wallet_refund_selection_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -376,11 +377,10 @@ class _HeroHeader extends StatelessWidget {
                       );
                     }
                   },
-                  builder: (context, refundState) =>
-                      _buildActions(context, refundState),
+                  builder: (context, refundState) => _buildActions(context),
                 )
               else
-                _buildActions(context, null),
+                _buildActions(context),
             ],
           ),
         ),
@@ -388,10 +388,7 @@ class _HeroHeader extends StatelessWidget {
     );
   }
 
-  Widget _buildActions(
-    BuildContext context,
-    WalletRefundRequestState? refundState,
-  ) {
+  Widget _buildActions(BuildContext context) {
     final actions = [
       _HeroAction(
         iconAsset: 'plus',
@@ -414,10 +411,9 @@ class _HeroHeader extends StatelessWidget {
       if (refundEligible)
         _HeroAction(
           iconAsset: 'arrow-up',
-          label: refundState?.isSubmitting == true ? 'Envoi...' : 'Rembourser',
-          enabled: refundState?.isSubmitting != true,
+          label: 'Rembourser',
           onTap: () =>
-              context.read<WalletRefundRequestCubit>().submit(currency.code),
+              WalletRefundSelectionSheet.show(context, currency: currency.code),
         ),
       _HeroAction(
         iconAsset: 'history',
@@ -451,59 +447,49 @@ class _HeroHeader extends StatelessWidget {
 // ─── Hero action button ────────────────────────────────────────────────────────
 
 class _HeroAction extends StatelessWidget {
-  const _HeroAction({
-    required this.label,
-    required this.onTap,
-    this.iconAsset,
-    this.enabled = true,
-  }) : icon = null;
+  const _HeroAction({required this.label, required this.onTap, this.iconAsset})
+    : icon = null;
 
   final IconData? icon;
   final String? iconAsset;
   final String label;
   final VoidCallback onTap;
-  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      enabled: enabled,
       label: label,
       child: GestureDetector(
-        onTap: enabled ? onTap : null,
-        child: AnimatedOpacity(
-          duration: const Duration(milliseconds: 150),
-          opacity: enabled ? 1 : 0.65,
-          child: Container(
-            constraints: const BoxConstraints(minHeight: 40),
-            padding: const EdgeInsets.symmetric(
-              horizontal: DonySpacing.base,
-              vertical: DonySpacing.sm,
+        onTap: onTap,
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 40),
+          padding: const EdgeInsets.symmetric(
+            horizontal: DonySpacing.base,
+            vertical: DonySpacing.sm,
+          ),
+          decoration: BoxDecoration(
+            color: DonyColors.neutral0.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(DonyRadius.xl),
+            border: Border.all(
+              color: DonyColors.neutral0.withValues(alpha: 0.3),
             ),
-            decoration: BoxDecoration(
-              color: DonyColors.neutral0.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(DonyRadius.xl),
-              border: Border.all(
-                color: DonyColors.neutral0.withValues(alpha: 0.3),
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                iconAsset != null
-                    ? DonyIcon(iconAsset!, color: DonyColors.neutral0, size: 16)
-                    : Icon(icon, color: DonyColors.neutral0, size: 16),
-                const SizedBox(width: DonySpacing.xs),
-                Text(
-                  label,
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: DonyColors.neutral0,
-                    fontWeight: FontWeight.w600,
-                  ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              iconAsset != null
+                  ? DonyIcon(iconAsset!, color: DonyColors.neutral0, size: 16)
+                  : Icon(icon, color: DonyColors.neutral0, size: 16),
+              const SizedBox(width: DonySpacing.xs),
+              Text(
+                label,
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  color: DonyColors.neutral0,
+                  fontWeight: FontWeight.w600,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
