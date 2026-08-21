@@ -163,6 +163,65 @@ void main() {
     },
   );
 
+  testWidgets(
+    'affiche le label Remboursement pour une transaction SELF_REFUND_OUT',
+    (tester) async {
+      final tx = WalletTransactionModel(
+        type: 'SELF_REFUND_OUT',
+        amount: -10.0,
+        balanceAfter: 10.0,
+        createdAt: DateTime(2026, 8, 21, 8, 41),
+      );
+      final wallet = WalletModel(
+        balance: 10.0,
+        currency: 'EUR',
+        transactions: [tx],
+      );
+      whenListen(
+        bloc,
+        Stream.value(WalletLoaded(wallet)),
+        initialState: WalletInitial(),
+      );
+
+      await tester.pumpWidget(buildSubject(bloc, prefsBloc));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Remboursement'), findsOneWidget);
+      expect(find.text('SELF_REFUND_OUT'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'affiche l\'icône sablier et le délai pour une recharge en cours de remboursement',
+    (tester) async {
+      final tx = WalletTransactionModel(
+        type: 'TOP_UP',
+        amount: 10.0,
+        balanceAfter: 20.0,
+        createdAt: DateTime(2026, 8, 21, 7, 53),
+        refundStatus: 'PROCESSING',
+      );
+      final wallet = WalletModel(
+        balance: 20.0,
+        currency: 'EUR',
+        transactions: [tx],
+      );
+      whenListen(
+        bloc,
+        Stream.value(WalletLoaded(wallet)),
+        initialState: WalletInitial(),
+      );
+
+      await tester.pumpWidget(buildSubject(bloc, prefsBloc));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Remboursement en cours · sous 5 à 10 jours ouvrés'),
+        findsOneWidget,
+      );
+    },
+  );
+
   testWidgets('affiche le solde dans la devise active, pas toujours en EUR', (
     tester,
   ) async {
@@ -222,6 +281,67 @@ void main() {
     expect(find.textContaining('verrouillé'), findsOneWidget);
     expect(find.textContaining('Dollar canadien'), findsOneWidget);
   });
+
+  testWidgets(
+    'ne montre pas une devise non active à solde 0 comme verrouillée',
+    (tester) async {
+      const wallet = WalletModel(
+        balance: 47.50,
+        currency: 'EUR',
+        transactions: [],
+        balances: [
+          WalletCurrencyBalanceModel(
+            currency: 'EUR',
+            balance: 47.50,
+            active: true,
+          ),
+          WalletCurrencyBalanceModel(
+            currency: 'CAD',
+            balance: 0,
+            active: false,
+          ),
+        ],
+      );
+      whenListen(
+        bloc,
+        Stream.value(WalletLoaded(wallet)),
+        initialState: WalletInitial(),
+      );
+
+      await tester.pumpWidget(buildSubject(bloc, prefsBloc));
+      await tester.pumpAndSettle();
+
+      // Rien n'est réellement bloqué à 0 : pas de tuile "verrouillé".
+      expect(find.textContaining('verrouillé'), findsNothing);
+      expect(find.textContaining('Dollar canadien'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'tap sur l\'icône info ouvre la sheet expliquant le portefeuille',
+    (tester) async {
+      const wallet = WalletModel(
+        balance: 47.50,
+        currency: 'EUR',
+        transactions: [],
+      );
+      whenListen(
+        bloc,
+        Stream.value(WalletLoaded(wallet)),
+        initialState: WalletInitial(),
+      );
+
+      await tester.pumpWidget(buildSubject(bloc, prefsBloc));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip('Comment ça marche'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Comment fonctionne le portefeuille'), findsOneWidget);
+      expect(find.text('Changer de devise'), findsOneWidget);
+      expect(find.text('Devise à 0 €'), findsOneWidget);
+    },
+  );
 
   testWidgets(
     'ne montre aucune section verrouillée si une seule devise possédée',
@@ -305,7 +425,7 @@ void main() {
         findsNothing,
       );
       // Témoin : le prédicat trouve bien des boutons ailleurs (Recharger,
-      // Utiliser), les deux `findsNothing` ci-dessus ne sont donc pas vides
+      // Demandes), les deux `findsNothing` ci-dessus ne sont donc pas vides
       // de sens.
       expect(semanticsButton, findsWidgets);
       // 1 seul appel : celui de l'initState, aucun déclenché par le tap.

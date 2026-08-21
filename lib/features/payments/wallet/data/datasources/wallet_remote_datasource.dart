@@ -27,9 +27,20 @@ class WalletRemoteDatasource {
     return response.data as Map<String, dynamic>;
   }
 
-  Future<Map<String, dynamic>> requestRefund(String currency) async {
+  Future<List<dynamic>> getRefundEligibleTopups(String currency) async {
+    final response = await _client.dio.get(
+      '/wallet/${currency.toUpperCase()}/refund-eligible-topups',
+    );
+    return response.data as List<dynamic>;
+  }
+
+  Future<Map<String, dynamic>> requestRefund(
+    String currency,
+    List<String> transactionIds,
+  ) async {
     final response = await _client.dio.post(
       '/wallet/${currency.toUpperCase()}/refund-request',
+      data: {'transactionIds': transactionIds},
     );
     return response.data as Map<String, dynamic>;
   }

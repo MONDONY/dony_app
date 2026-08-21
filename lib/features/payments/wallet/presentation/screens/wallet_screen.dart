@@ -7,6 +7,7 @@ import 'package:dony/features/payments/wallet/bloc/wallet_refund_request_cubit.d
 import 'package:dony/features/payments/wallet/data/models/wallet_currency_balance_model.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_model.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_transaction_model.dart';
+import 'package:dony/features/payments/wallet/presentation/widgets/wallet_refund_selection_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -153,7 +154,11 @@ class _LoadedView extends StatelessWidget {
   Widget build(BuildContext context) {
     final transactions = wallet.transactions;
     final activeCurrency = SupportedCurrency.fromCodeOrDefault(wallet.currency);
-    final lockedBalances = wallet.balances.where((b) => !b.active).toList();
+    // Une devise non active à solde 0 ne bloque rien : on ne l'affiche pas
+    // comme "verrouillée", ça n'a rien de réel à protéger.
+    final lockedBalances = wallet.balances
+        .where((b) => !b.active && b.balance != 0)
+        .toList();
 
     return RefreshIndicator(
       color: Theme.of(context).colorScheme.primary,
@@ -183,6 +188,21 @@ class _LoadedView extends StatelessWidget {
                 fontSize: 17,
               ),
             ),
+            actions: [
+              IconButton(
+                tooltip: 'Comment ça marche',
+                onPressed: () => DonyBottomSheet.show(
+                  context,
+                  title: 'Comment fonctionne le portefeuille',
+                  child: const _WalletInfoContent(),
+                ),
+                icon: const DonyIcon(
+                  'circle-alert',
+                  color: DonyColors.neutral0,
+                  size: 22,
+                ),
+              ),
+            ],
             flexibleSpace: FlexibleSpaceBar(
               collapseMode: CollapseMode.pin,
               background: _HeroHeader(
@@ -357,11 +377,10 @@ class _HeroHeader extends StatelessWidget {
                       );
                     }
                   },
-                  builder: (context, refundState) =>
-                      _buildActions(context, refundState),
+                  builder: (context, refundState) => _buildActions(context),
                 )
               else
-                _buildActions(context, null),
+                _buildActions(context),
             ],
           ),
         ),
@@ -369,55 +388,53 @@ class _HeroHeader extends StatelessWidget {
     );
   }
 
-  Widget _buildActions(
-    BuildContext context,
-    WalletRefundRequestState? refundState,
-  ) {
-    return Wrap(
-      spacing: DonySpacing.sm,
-      runSpacing: DonySpacing.sm,
-      children: [
-        _HeroAction(
-          iconAsset: 'plus',
-          label: 'Recharger',
-          onTap: () async {
-            // Solde avant la recharge : sert de référence au polling
-            // post-recharge (on s'arrête dès qu'il augmente).
-            final previousBalance = balance;
-            final ok = await context.push<bool>(
-              '/payments/wallet/topup/method',
-            );
-            if (ok != true || !context.mounted) {
-              return;
-            }
-            // Le crédit Stripe arrive de façon asynchrone via webhook :
-            // on poll le solde jusqu'à ce qu'il dépasse l'ancien.
-            context.read<WalletBloc>().add(
-              WalletRefreshAfterTopupRequested(previousBalance),
-            );
-          },
-        ),
-        if (refundEligible)
-          _HeroAction(
-            iconAsset: 'arrow-up',
-            label: refundState?.isSubmitting == true
-                ? 'Envoi...'
-                : 'Rembourser',
-            enabled: refundState?.isSubmitting != true,
-            onTap: () =>
-                context.read<WalletRefundRequestCubit>().submit(currency.code),
-          ),
-        _HeroAction(
-          iconAsset: 'history',
-          label: 'Demandes',
-          onTap: () => context.push('/payments/wallet/refunds'),
-        ),
+  Widget _buildActions(BuildContext context) {
+    final actions = [
+      _HeroAction(
+        iconAsset: 'plus',
+        label: 'Recharger',
+        onTap: () async {
+          // Solde avant la recharge : sert de référence au polling
+          // post-recharge (on s'arrête dès qu'il augmente).
+          final previousBalance = balance;
+          final ok = await context.push<bool>('/payments/wallet/topup/method');
+          if (ok != true || !context.mounted) {
+            return;
+          }
+          // Le crédit Stripe arrive de façon asynchrone via webhook :
+          // on poll le solde jusqu'à ce qu'il dépasse l'ancien.
+          context.read<WalletBloc>().add(
+            WalletRefreshAfterTopupRequested(previousBalance),
+          );
+        },
+      ),
+      if (refundEligible)
         _HeroAction(
           iconAsset: 'arrow-up',
-          label: 'Utiliser',
-          onTap: () => context.pop(),
+          label: 'Rembourser',
+          onTap: () =>
+              WalletRefundSelectionSheet.show(context, currency: currency.code),
         ),
-      ],
+      _HeroAction(
+        iconAsset: 'history',
+        label: 'Demandes',
+        onTap: () => context.push('/payments/wallet/refunds'),
+      ),
+    ];
+    // Row scrollable horizontalement (jamais de retour à la ligne) : un
+    // Wrap ici passerait sur 2 lignes sur les écrans étroits ou avec une
+    // police système agrandie, ce qui dépasse la hauteur fixe du
+    // SliverAppBar (expandedHeight) et provoque un overflow visible.
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          for (var i = 0; i < actions.length; i++) ...[
+            if (i > 0) const SizedBox(width: DonySpacing.sm),
+            actions[i],
+          ],
+        ],
+      ),
     );
   }
 }
@@ -425,59 +442,49 @@ class _HeroHeader extends StatelessWidget {
 // ─── Hero action button ────────────────────────────────────────────────────────
 
 class _HeroAction extends StatelessWidget {
-  const _HeroAction({
-    required this.label,
-    required this.onTap,
-    this.iconAsset,
-    this.enabled = true,
-  }) : icon = null;
+  const _HeroAction({required this.label, required this.onTap, this.iconAsset})
+    : icon = null;
 
   final IconData? icon;
   final String? iconAsset;
   final String label;
   final VoidCallback onTap;
-  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      enabled: enabled,
       label: label,
       child: GestureDetector(
-        onTap: enabled ? onTap : null,
-        child: AnimatedOpacity(
-          duration: const Duration(milliseconds: 150),
-          opacity: enabled ? 1 : 0.65,
-          child: Container(
-            constraints: const BoxConstraints(minHeight: 40),
-            padding: const EdgeInsets.symmetric(
-              horizontal: DonySpacing.base,
-              vertical: DonySpacing.sm,
+        onTap: onTap,
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 40),
+          padding: const EdgeInsets.symmetric(
+            horizontal: DonySpacing.base,
+            vertical: DonySpacing.sm,
+          ),
+          decoration: BoxDecoration(
+            color: DonyColors.neutral0.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(DonyRadius.xl),
+            border: Border.all(
+              color: DonyColors.neutral0.withValues(alpha: 0.3),
             ),
-            decoration: BoxDecoration(
-              color: DonyColors.neutral0.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(DonyRadius.xl),
-              border: Border.all(
-                color: DonyColors.neutral0.withValues(alpha: 0.3),
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                iconAsset != null
-                    ? DonyIcon(iconAsset!, color: DonyColors.neutral0, size: 16)
-                    : Icon(icon, color: DonyColors.neutral0, size: 16),
-                const SizedBox(width: DonySpacing.xs),
-                Text(
-                  label,
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: DonyColors.neutral0,
-                    fontWeight: FontWeight.w600,
-                  ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              iconAsset != null
+                  ? DonyIcon(iconAsset!, color: DonyColors.neutral0, size: 16)
+                  : Icon(icon, color: DonyColors.neutral0, size: 16),
+              const SizedBox(width: DonySpacing.xs),
+              Text(
+                label,
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  color: DonyColors.neutral0,
+                  fontWeight: FontWeight.w600,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -502,7 +509,7 @@ class _TxTile extends StatelessWidget {
     'TOP_UP' => 'Recharge',
     'BID_PAYMENT' => 'Paiement colis',
     'COMMISSION_DEDUCTED' => 'Commission',
-    'REFUND' => 'Remboursement',
+    'REFUND' || 'SELF_REFUND_OUT' => 'Remboursement',
     'REFERRAL_REWARD' => 'Parrainage',
     _ => tx.type,
   };
@@ -511,6 +518,7 @@ class _TxTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final isCredit = tx.isCredit;
+    final isRefundProcessing = tx.isRefundProcessing;
     final amountColor = isCredit ? DonyColors.success500 : DonyColors.terra600;
     final amountPrefix = isCredit ? '+' : '';
 
@@ -527,12 +535,18 @@ class _TxTile extends StatelessWidget {
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: isCredit ? DonyColors.blue50 : DonyColors.terra50,
+                    color: isRefundProcessing
+                        ? cs.warningLight
+                        : (isCredit ? DonyColors.blue50 : DonyColors.terra50),
                     borderRadius: BorderRadius.circular(DonyRadius.md),
                   ),
                   child: DonyIcon(
-                    isCredit ? 'arrow-down' : 'arrow-up',
-                    color: isCredit ? cs.primary : DonyColors.terra500,
+                    isRefundProcessing
+                        ? 'hourglass'
+                        : (isCredit ? 'arrow-down' : 'arrow-up'),
+                    color: isRefundProcessing
+                        ? cs.warning
+                        : (isCredit ? cs.primary : DonyColors.terra500),
                     size: 20,
                   ),
                 ),
@@ -550,12 +564,19 @@ class _TxTile extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        DateFormat(
-                          'dd MMM · HH:mm',
-                          'fr_FR',
-                        ).format(tx.createdAt),
+                        isRefundProcessing
+                            ? 'Remboursement en cours · sous 5 à 10 jours ouvrés'
+                            : DateFormat(
+                                'dd MMM · HH:mm',
+                                'fr_FR',
+                              ).format(tx.createdAt),
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: cs.onSurfaceVariant,
+                          color: isRefundProcessing
+                              ? cs.warning
+                              : cs.onSurfaceVariant,
+                          fontWeight: isRefundProcessing
+                              ? FontWeight.w600
+                              : null,
                         ),
                       ),
                     ],
@@ -659,6 +680,116 @@ class _LockedBalanceTile extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ─── Info sheet — fonctionnement du portefeuille ───────────────────────────────
+
+class _WalletInfoContent extends StatelessWidget {
+  const _WalletInfoContent();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Column(
+      children: [
+        _WalletInfoRow(
+          iconAsset: 'wallet',
+          title: 'Solde disponible',
+          description:
+              'Le montant utilisable pour payer un envoi ou demander un '
+              'remboursement.',
+        ),
+        _WalletInfoRow(
+          iconAsset: 'plus',
+          title: 'Recharger',
+          description:
+              'Ajoutez des fonds par carte bancaire. Le crédit apparaît dès '
+              'la validation du paiement.',
+        ),
+        _WalletInfoRow(
+          iconAsset: 'arrow-up',
+          title: 'Rembourser',
+          description:
+              'Demandez le remboursement de votre solde vers votre moyen de '
+              'paiement d\'origine.',
+        ),
+        _WalletInfoRow(
+          iconAsset: 'history',
+          title: 'Demandes',
+          description:
+              'Retrouvez le suivi de vos demandes de remboursement envoyées.',
+        ),
+        _WalletInfoRow(
+          iconAsset: 'lock',
+          title: 'Changer de devise',
+          description:
+              'Impossible une fois que votre solde total dépasse 0 €. '
+              'Verrouillée : videz votre portefeuille pour en changer.',
+        ),
+        _WalletInfoRow(
+          iconAsset: 'circle-alert',
+          title: 'Devise à 0 €',
+          description:
+              'N\'est jamais considérée comme verrouillée : elle n\'apparaît '
+              'que si vous y détenez réellement des fonds.',
+        ),
+      ],
+    );
+  }
+}
+
+class _WalletInfoRow extends StatelessWidget {
+  const _WalletInfoRow({
+    required this.iconAsset,
+    required this.title,
+    required this.description,
+  });
+
+  final String iconAsset;
+  final String title;
+  final String description;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: DonySpacing.lg),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: cs.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(DonyRadius.md),
+            ),
+            child: DonyIcon(iconAsset, color: cs.onSurfaceVariant, size: 18),
+          ),
+          const SizedBox(width: DonySpacing.base),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontSize: 14),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  description,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
