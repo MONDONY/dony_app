@@ -29,20 +29,7 @@ class BidBloc extends Bloc<BidEvent, BidState> {
     on<BidHideRequested>(_onHideRequested);
     on<BidDeleteRequested>(_onDeleteRequested);
     on<BidTravelerDismissRequested>(_onTravelerDismissRequested);
-    on<BidConfirmPaymentRequested>(_onConfirmPaymentRequested);
     on<BidQuoteRequested>(_onQuoteRequested);
-  }
-
-  Future<void> _onConfirmPaymentRequested(
-    BidConfirmPaymentRequested event,
-    Emitter<BidState> emit,
-  ) async {
-    try {
-      final bid = await _repository.confirmPayment(event.bidId);
-      emit(BidPaymentConfirmed(bid));
-    } catch (e) {
-      emit(BidError(unwrapDioError(e)));
-    }
   }
 
   Future<void> _onCheckoutRequested(

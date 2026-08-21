@@ -297,4 +297,51 @@ void main() {
       expect(p.severity, isNot(ErrorSeverity.critical));
     });
   });
+
+  // Regression : ces codes n avaient aucune entree et retombaient sur le
+  // generique « Donnees invalides ». Le message du serveur, qui disait
+  // pourtant quoi faire, n atteignait jamais l utilisateur.
+  group('ErrorCatalog — rechargement du portefeuille', () {
+    const codes = [
+      'wallet-topup-stripe-error',
+      'payment-method-unavailable-for-currency',
+      'unsupported-currency',
+    ];
+
+    test('chaque code a une entree dediee, jamais le generique', () {
+      for (final code in codes) {
+        final error = ValidationException('detail brut backend', code: code);
+
+        expect(
+          ErrorCatalog.isKnown(error),
+          isTrue,
+          reason: '$code doit avoir une entree dediee',
+        );
+
+        final p = ErrorCatalog.lookup(error);
+        // Titre generique compare AVEC ses accents : sans eux l assertion
+        // etait vacante et n aurait jamais pu echouer.
+        expect(
+          p.title,
+          isNot(ErrorCatalog.lookup(const ValidationException('x')).title),
+          reason: '$code ne doit plus afficher le titre generique',
+        );
+        // Le detail brut du backend ne doit jamais atteindre l utilisateur.
+        expect(p.message, isNot(contains('detail brut backend')));
+        expect(p.message, isNot(contains('—')));
+      }
+    });
+
+    test('carte refusee par la devise oriente vers les especes', () {
+      final p = ErrorCatalog.lookup(
+        const ValidationException(
+          'x',
+          code: 'payment-method-unavailable-for-currency',
+        ),
+      );
+
+      expect(p.message, contains('espèces'));
+      expect(p.severity, isNot(ErrorSeverity.critical));
+    });
+  });
 }

@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/widgets/dony_skeleton.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_model.dart';
 import 'package:dony/features/profile/presentation/widgets/wallet_balance_card.dart';
@@ -218,7 +219,7 @@ void main() {
     whenListen<WalletState>(
       bloc,
       const Stream.empty(),
-      initialState: WalletError('Erreur réseau'),
+      initialState: WalletError(const NetworkException('Erreur réseau')),
     );
 
     await tester.pumpWidget(_wrap(bloc, prefsBloc));

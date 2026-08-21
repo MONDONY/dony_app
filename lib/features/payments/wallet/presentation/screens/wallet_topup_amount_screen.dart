@@ -188,7 +188,11 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
           // to approximately €0.03") — toujours en euro, quelle que soit la
           // devise active de l'utilisateur. ErrorPresenter retombe sur un
           // message générique français, sans référence à une devise.
-          unawaited(ErrorPresenter.show(context, state.message));
+          // `state.error` et non `state.message` : passer la String perdait le
+          // code métier (ErrorPresenter re-wrappe alors en NetworkException
+          // sans code), et l'ErrorCatalog retombait toujours sur son message
+          // générique — les entrées dédiées ne servaient à rien.
+          unawaited(ErrorPresenter.show(context, state.error));
         } else if (state is WalletLoaded) {
           // Rechargement réussi → retour au wallet
           context.pop(true);

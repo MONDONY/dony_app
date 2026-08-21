@@ -39,7 +39,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
       // Seul un échec sans aucune donnée préalable (1er chargement) affiche
       // vraiment l'erreur.
       if (previous is WalletLoaded) return;
-      emit(WalletError(unwrapDioError(e).message));
+      emit(WalletError(unwrapDioError(e)));
     }
   }
 
@@ -58,7 +58,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
       final wallet = await _repository.getBalance();
       emit(WalletLoaded(wallet));
     } catch (e) {
-      emit(WalletError(unwrapDioError(e).message));
+      emit(WalletError(unwrapDioError(e)));
     }
   }
 
@@ -110,11 +110,13 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
               ),
             );
           } else {
-            emit(WalletError('Réponse vide du serveur'));
+            emit(
+              WalletError(const NetworkException('Réponse vide du serveur')),
+            );
           }
       }
     } catch (e) {
-      emit(WalletError(unwrapDioError(e).message));
+      emit(WalletError(unwrapDioError(e)));
     }
   }
 }

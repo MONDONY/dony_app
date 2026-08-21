@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/widgets/dony_skeleton.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_currency_balance_model.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_model.dart';
@@ -99,7 +100,7 @@ void main() {
   testWidgets('affiche un message erreur quand WalletError', (tester) async {
     whenListen(
       bloc,
-      Stream.value(WalletError('Erreur réseau')),
+      Stream.value(WalletError(const NetworkException('Erreur réseau'))),
       initialState: WalletInitial(),
     );
 

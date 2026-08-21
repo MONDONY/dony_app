@@ -95,11 +95,6 @@ class BidError extends BidState {
 
 class BidNotFound extends BidState {}
 
-class BidPaymentConfirmed extends BidState {
-  final BidModel bid;
-  BidPaymentConfirmed(this.bid);
-}
-
 /// Devis calculé avec succès — affichage total + promo.
 class BidQuoteLoaded extends BidState {
   final BidQuoteResponse quote;

@@ -13,7 +13,9 @@ import 'package:dony/features/matching/bloc/bid_negotiation_event.dart';
 import 'package:dony/features/matching/bloc/bid_negotiation_state.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_checkout_response_model.dart';
+import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_negotiation.dart';
+import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:dony/features/matching/presentation/screens/bid_negotiation_thread_screen.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/data/payment_gateway.dart';
@@ -45,6 +47,12 @@ class _MockBox extends Mock implements Box {}
 class _MockPaymentGateway extends Mock implements PaymentGateway {}
 
 class _MockPaymentRepository extends Mock implements PaymentRepository {}
+
+class _MockBidRepository extends Mock implements BidRepository {}
+
+/// La confirmation serveur est un effet de bord : l'écran ignore le bid
+/// renvoyé, un double suffit à satisfaire la signature.
+class _FakeBidModel extends Mock implements BidModel {}
 
 /// [HiveService.userPrefs] ouvre une vraie box Hive, remplacée ici pour que
 /// `requirePaymentAuth` lise un mock sans toucher au disque.
@@ -121,6 +129,7 @@ void main() {
   late _MockLocalAuthService authService;
   late _MockBox userPrefsBox;
   late _MockPaymentGateway paymentGateway;
+  late _MockBidRepository bidRepository;
 
   void register<T extends Object>(T Function() factory) {
     if (getIt.isRegistered<T>()) getIt.unregister<T>();
@@ -140,7 +149,6 @@ void main() {
         amountEur: 0,
       ),
     );
-    registerFallbackValue(BidConfirmPaymentRequested(''));
   });
 
   setUp(() {
@@ -189,6 +197,15 @@ void main() {
     register<HiveService>(() => _FakeHiveService(userPrefsBox));
     register<PaymentGateway>(() => paymentGateway);
     register<PaymentRepository>(_MockPaymentRepository.new);
+
+    // La confirmation du paiement passe par le repository (et non plus par
+    // BidBloc) : posté sur le bloc, l'event partait au moment où `pop()`
+    // fermait ce même bloc, et le bid restait AWAITING_PAYMENT côté serveur.
+    bidRepository = _MockBidRepository();
+    when(
+      () => bidRepository.confirmPayment(any()),
+    ).thenAnswer((_) async => _FakeBidModel());
+    register<BidRepository>(() => bidRepository);
   });
 
   tearDown(() {
@@ -199,6 +216,7 @@ void main() {
       () => getIt.unregister<HiveService>(),
       () => getIt.unregister<PaymentGateway>(),
       () => getIt.unregister<PaymentRepository>(),
+      () => getIt.unregister<BidRepository>(),
     ]) {
       unregister();
     }
@@ -730,17 +748,11 @@ void main() {
         await tester.pump(const Duration(milliseconds: 900));
         await tester.pump(_kSettle);
 
-        verify(
-          () => bidBloc.add(
-            any(
-              that: isA<BidConfirmPaymentRequested>().having(
-                (e) => e.bidId,
-                'bidId',
-                'bid1',
-              ),
-            ),
-          ),
-        ).called(1);
+        // Confirmation adressée au repository, et ATTENDUE avant que l'écran
+        // ne se ferme : la poster sur `bidBloc` puis popper fermait le bloc
+        // (dispose) à l'instant où la requête devait partir, laissant le bid
+        // en AWAITING_PAYMENT côté serveur alors que l'escrow était actif.
+        verify(() => bidRepository.confirmPayment('bid1')).called(1);
       },
     );
 

@@ -20,6 +20,7 @@ import 'package:dony/features/matching/bloc/bid_negotiation_event.dart';
 import 'package:dony/features/matching/bloc/bid_negotiation_state.dart';
 import 'package:dony/features/matching/bloc/bid_photos_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
+import 'package:dony/features/matching/data/confirm_bid_payment.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_quote_response.dart';
@@ -1515,27 +1516,36 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         paymentMethodTypes: state.paymentMethodTypes,
       ),
       contextLabel: 'Envoi vers ${widget.announcement.arrivalCity}',
-      onSuccess: () {
+      onSuccess: () async {
+        // AUCUNE garde `context.mounted` avant la confirmation : elle ne
+        // dépend d'aucun BuildContext, et la subordonner au montage de l'écran
+        // rejouerait le bug corrigé ici (bid resté AWAITING_PAYMENT côté
+        // serveur alors que l'escrow Stripe est actif). Seul le `pop` est
+        // conditionné au montage, juste en dessous.
+        await confirmBidPaymentSafely(state.bidId);
         if (!context.mounted) return;
-        context.read<BidBloc>().add(BidConfirmPaymentRequested(state.bidId));
         context.pop();
         if (context.mounted) {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              // Le contexte de CreateBidScreen vient d'être poppé — au moment
-              // du tap CTA son element est désactivé et GoRouter.of(context)
-              // jetterait « Looking up a deactivated widget's ancestor is
-              // unsafe ». On navigue donc via le contexte de la route succès,
-              // toujours monté sous le Navigator racine.
-              builder: (routeContext) => DonySuccessScreen(
-                mascotteType: DonyMascotteType.securise,
-                title: 'Offre payée !',
-                subtitle:
-                    'Ton paiement est bloqué et sécurisé jusqu\'à la livraison confirmée. Le voyageur est notifié de ta demande.',
-                ctaLabel: 'Voir mon envoi',
-                onCta: () =>
-                    routeContext.go('/bids/${state.bidId}?from=payment'),
-                analyticsContext: 'bid_payment',
+          // unawaited : l'écran de succès vit sa propre vie, on ne bloque pas
+          // la fermeture de la feuille de paiement sur sa durée d'affichage.
+          unawaited(
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                // Le contexte de CreateBidScreen vient d'être poppé — au moment
+                // du tap CTA son element est désactivé et GoRouter.of(context)
+                // jetterait « Looking up a deactivated widget's ancestor is
+                // unsafe ». On navigue donc via le contexte de la route succès,
+                // toujours monté sous le Navigator racine.
+                builder: (routeContext) => DonySuccessScreen(
+                  mascotteType: DonyMascotteType.securise,
+                  title: 'Offre payée !',
+                  subtitle:
+                      'Ton paiement est bloqué et sécurisé jusqu\'à la livraison confirmée. Le voyageur est notifié de ta demande.',
+                  ctaLabel: 'Voir mon envoi',
+                  onCta: () =>
+                      routeContext.go('/bids/${state.bidId}?from=payment'),
+                  analyticsContext: 'bid_payment',
+                ),
               ),
             ),
           );
