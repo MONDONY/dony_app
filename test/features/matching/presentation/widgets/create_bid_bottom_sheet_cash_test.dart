@@ -1073,16 +1073,8 @@ void main() {
     testWidgets('canSubmit = false sans articles sélectionnés', (tester) async {
       await _openSheet(tester, _mixedGridOnlyAnnouncement());
 
-      // Select a category and accept disclaimer — but no grid articles chosen.
-      await tester.tap(find.byKey(const Key('bid-content-field')));
-      await tester.pumpAndSettle();
-      await tester.tap(
-        find.byKey(const Key('bid-content-item-Vêtements & tissus')),
-      );
-      await tester.pumpAndSettle();
-      FocusManager.instance.primaryFocus?.unfocus();
-      await tester.pumpAndSettle();
-      await tester.pump();
+      // Grille pure : pas de combobox contenu à remplir (déduit des
+      // articles). Accepter le disclaimer — mais aucun article choisi.
       await tester.tap(find.byType(Checkbox).first);
       await tester.pump();
 
@@ -1098,5 +1090,41 @@ void main() {
         expect(btn.onPressed, isNull);
       }
     });
+
+    testWidgets(
+      'CONTENU DU COLIS masqué en grille pure (hasGridPricing && !hasKgPricing)',
+      (tester) async {
+        await _openSheet(tester, _mixedGridOnlyAnnouncement());
+
+        expect(find.text('CONTENU DU COLIS'), findsNothing);
+        expect(find.byKey(const Key('bid-content-field')), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'canSubmit = true avec un article choisi, sans catégorie manuelle (déduite)',
+      (tester) async {
+        await _openSheet(tester, _mixedGridOnlyAnnouncement());
+
+        await tester.tap(find.text('Choisir mes articles'));
+        await tester.pump();
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('grid-item-add-item-1')));
+        await tester.pump();
+        await tester.tap(find.byKey(const Key('grid-sheet-confirm')));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byType(Checkbox).first);
+        await tester.pump();
+
+        final submitFinder = find.text('Envoyer');
+        final donyBtnFinder = find.ancestor(
+          of: submitFinder,
+          matching: find.byType(DonyButton),
+        );
+        final btn = tester.widget<DonyButton>(donyBtnFinder.first);
+        expect(btn.onPressed, isNotNull);
+      },
+    );
   });
 }

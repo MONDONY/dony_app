@@ -214,6 +214,26 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   double get _maxKg => widget.announcement.availableKg;
   double get _pricePerKg => widget.announcement.pricePerKg;
 
+  /// Grille pure (pas de prix/kg) : le contenu se déduit des articles
+  /// choisis, l'expéditeur ne saisit plus de catégorie à la main.
+  bool get _isGridOnly =>
+      widget.announcement.priceGridItems.isNotEmpty && _pricePerKg <= 0;
+
+  /// Libellés des articles de grille sélectionnés (quantité > 0), utilisés
+  /// comme `contentCategory` en grille pure — remplace le combobox masqué.
+  Set<String> get _gridDerivedCategories {
+    final q = _gridQuantitiesNotifier.value;
+    return {
+      for (final item in widget.announcement.priceGridItems)
+        if ((q[item.id] ?? 0) > 0) item.label,
+    };
+  }
+
+  String get _contentCategoryValue => (_isGridOnly
+          ? _gridDerivedCategories
+          : _categoriesNotifier.value)
+      .join(', ');
+
   List<String> get _acceptedCategories {
     final accepted = widget.announcement.acceptedContentTypes;
     if (accepted != null && accepted.isNotEmpty) return accepted;
@@ -407,10 +427,11 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     final hasGridPricing = widget.announcement.priceGridItems.isNotEmpty;
     final weightOk = hasKgPricing && _weightNotifier.value > 0;
     final gridOk = hasGridPricing && _gridQuantitiesNotifier.value.isNotEmpty;
+    // En grille pure, le contenu se déduit des articles choisis (gridOk le
+    // couvre déjà) — pas de combobox à remplir séparément.
+    final categoriesOk = _isGridOnly || _categoriesNotifier.value.isNotEmpty;
     final canSubmit =
-        (weightOk || gridOk) &&
-        _categoriesNotifier.value.isNotEmpty &&
-        _disclaimerNotifier.value;
+        (weightOk || gridOk) && categoriesOk && _disclaimerNotifier.value;
 
     if (widget.negotiation) {
       _btnConfigNotifier.value = _BtnConfig(
@@ -523,7 +544,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         announcementId: widget.announcement.id,
         weightKg: weight > 0 ? weight : null,
         description: _descCtrl.text.trim(),
-        contentCategory: _categoriesNotifier.value.join(', '),
+        contentCategory: _contentCategoryValue,
         recipientName: _recipientNameCtrl.text.trim(),
         recipientPhone: _recipientPhoneCtrl.text.trim(),
         proposedTotalEur: proposed,
@@ -641,7 +662,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _formData = _CollectedFormData(
       weightKg: _weightNotifier.value,
       description: _descCtrl.text.trim(),
-      contentCategory: _categoriesNotifier.value.join(', '),
+      contentCategory: _contentCategoryValue,
       recipientName: _recipientNameCtrl.text.trim(),
       recipientPhone: _recipientPhoneCtrl.text.trim(),
       gridItems: _selectedGridItems(),
@@ -1053,15 +1074,20 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
             ],
 
             // ── Contenu ───────────────────────────────────────────────────
-            ListenableBuilder(
-              listenable: Listenable.merge([
-                _categoriesNotifier,
-                _catalogNotifier,
-              ]),
-              builder: (_, _) =>
-                  _buildContentSection(context, _categoriesNotifier.value),
-            ),
-            const SizedBox(height: DonySpacing.xxl),
+            // Masqué en grille pure : le contenu se déduit des articles
+            // choisis ci-dessus (cf. `_contentCategoryValue`), pas besoin de
+            // le ressaisir dans un combobox séparé.
+            if (!_isGridOnly) ...[
+              ListenableBuilder(
+                listenable: Listenable.merge([
+                  _categoriesNotifier,
+                  _catalogNotifier,
+                ]),
+                builder: (_, _) =>
+                    _buildContentSection(context, _categoriesNotifier.value),
+              ),
+              const SizedBox(height: DonySpacing.xxl),
+            ],
 
             // ── Photos ────────────────────────────────────────────────────
             const _SectionLabel(label: 'PHOTOS DU COLIS (OPTIONNEL)'),
