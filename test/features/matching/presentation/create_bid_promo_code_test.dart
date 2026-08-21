@@ -230,6 +230,15 @@ void main() {
     );
   }
 
+  /// Poids par défaut = 0 depuis le fix "poids obligatoire" — ces tests
+  /// vérifient des montants calculés à 5 kg précis, donc on invoque le
+  /// callback du Slider directement plutôt que de simuler un drag (imprécis
+  /// en pixels sur un widget à divisions).
+  Future<void> setWeight(WidgetTester tester, double kg) async {
+    tester.widget<Slider>(find.byType(Slider)).onChanged!(kg);
+    await tester.pump();
+  }
+
   // ── 1. Affichage initial du champ ─────────────────────────────────────────
 
   testWidgets('la section CODE PROMO est présente dans le sheet', (
@@ -428,6 +437,7 @@ void main() {
     tester,
   ) async {
     await openSheet(tester);
+    await setWeight(tester, 5);
     await scrollTo(tester, find.text('CODE PROMO (OPTIONNEL)'));
 
     final promoField = find.ancestor(
@@ -471,6 +481,7 @@ void main() {
     'promo à taux réduit → ligne commission ET ligne réduction affichées',
     (tester) async {
       await openSheet(tester);
+      await setWeight(tester, 5);
       await scrollTo(tester, find.text('CODE PROMO (OPTIONNEL)'));
 
       final promoField = find.ancestor(
@@ -576,10 +587,11 @@ void main() {
   testWidgets('ligne "X kg × Yprix€" affiche le tarif EXPÉDITEUR, commission '
       'comprise — jamais le net du voyageur', (tester) async {
     await openSheet(tester);
+    await setWeight(tester, 5);
 
-    // Poids par défaut à l'ouverture = 5 kg, prix/kg net voyageur = 12 €
-    // (fixture du fichier), commission 12 % → l'expéditeur paie 13,44 €/kg,
-    // soit 67,20 € au total. Calcul 100 % local, sans promo.
+    // Poids choisi = 5 kg, prix/kg net voyageur = 12 € (fixture du fichier),
+    // commission 12 % → l'expéditeur paie 13,44 €/kg, soit 67,20 € au total.
+    // Calcul 100 % local, sans promo.
     await scrollTo(tester, find.textContaining('5 kg × 13,44'));
     expect(find.textContaining('5 kg × 13,44'), findsOneWidget);
     // Le net du voyageur ne doit apparaître nulle part : ni son tarif au kilo

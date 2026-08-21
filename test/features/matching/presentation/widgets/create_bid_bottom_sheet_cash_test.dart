@@ -239,9 +239,17 @@ Future<void> _openSheet(
   await tester.pumpAndSettle();
 }
 
-// Selects a category + checks disclaimer so canSubmit becomes true.
+// Selects a category + checks disclaimer so canSubmit becomes true. Also
+// sets a weight when a Slider is rendered: on a kg-priced trip weight now
+// starts at 0 (mandatory field), so leaving it untouched keeps the submit
+// button disabled on any non-grid announcement.
 // Label issu du catalogue unifié (PR #139) : 'Vêtements & tissus'.
 Future<void> _enableSubmitButton(WidgetTester tester) async {
+  final slider = find.byType(Slider);
+  if (slider.evaluate().isNotEmpty) {
+    tester.widget<Slider>(slider).onChanged!(5);
+    await tester.pump();
+  }
   await tester.tap(find.byKey(const Key('bid-content-field')));
   await tester.pumpAndSettle();
   await tester.tap(
@@ -667,11 +675,17 @@ void main() {
     });
 
     testWidgets(
-      'annonce MIXED + poids > 0 (slider défaut 5 kg) → soumission possible',
+      'annonce MIXED + poids > 0 (slider réglé à 5 kg) → soumission possible',
       (tester) async {
         await _openSheet(tester, _mixedAnnouncement());
 
-        // Select a category and accept disclaimer; slider starts at 5 → hasWeight = true.
+        // Poids obligatoirement choisi (part à 0 depuis le fix "poids
+        // obligatoire" — y compris en mode mixte, où il reste optionnel pour
+        // la soumission mais plus pré-rempli).
+        tester.widget<Slider>(find.byType(Slider)).onChanged!(5);
+        await tester.pump();
+
+        // Select a category and accept disclaimer; hasWeight = true.
         await tester.tap(find.byKey(const Key('bid-content-field')));
         await tester.pumpAndSettle();
         await tester.tap(
@@ -701,7 +715,11 @@ void main() {
       (tester) async {
         await _openSheet(tester, _mixedAnnouncement());
 
-        // Select a category and accept disclaimer; slider starts at 5 (weight > 0).
+        // Poids réglé explicitement (part à 0 par défaut désormais).
+        tester.widget<Slider>(find.byType(Slider)).onChanged!(5);
+        await tester.pump();
+
+        // Select a category and accept disclaimer; weight > 0.
         await tester.tap(find.byKey(const Key('bid-content-field')));
         await tester.pumpAndSettle();
         await tester.tap(
@@ -886,11 +904,35 @@ void main() {
 
   group('Capacité initiale', () {
     testWidgets(
-      'availableKg = 1 (KG mode) → affiche "Aucune capacité disponible"',
+      'availableKg = 0 (KG mode) → affiche "Aucune capacité disponible"',
       (tester) async {
-        // sliderMin = 1.0 (KG mode), maxKg = 1 → maxKg <= sliderMin → no-capacity path
+        // sliderMin = 0.0 désormais (poids obligatoirement à 0 au départ,
+        // même en mode kilo pur) : le seul cas restant sans capacité
+        // exploitable est maxKg <= 0.
         final noCapAnnouncement = AnnouncementModel(
           id: 'ann-nocap',
+          travelerId: 'trav-1',
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          departureDate: DateTime(2026, 8, 15),
+          availableKg: 0,
+          totalKg: 10,
+          pricePerKg: 8,
+          status: 'ACTIVE',
+          createdAt: DateTime(2026),
+          updatedAt: DateTime(2026),
+        );
+        await _openSheet(tester, noCapAnnouncement);
+        expect(find.text('Aucune capacité disponible'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'availableKg = 1 (KG mode) → slider fonctionnel de 0 à 1 kg (plus '
+      'bloqué)',
+      (tester) async {
+        final oneKgAnnouncement = AnnouncementModel(
+          id: 'ann-1kg',
           travelerId: 'trav-1',
           departureCity: 'Paris',
           arrivalCity: 'Dakar',
@@ -902,8 +944,10 @@ void main() {
           createdAt: DateTime(2026),
           updatedAt: DateTime(2026),
         );
-        await _openSheet(tester, noCapAnnouncement);
-        expect(find.text('Aucune capacité disponible'), findsOneWidget);
+        await _openSheet(tester, oneKgAnnouncement);
+
+        expect(find.text('Aucune capacité disponible'), findsNothing);
+        expect(find.byType(Slider), findsOneWidget);
       },
     );
 

@@ -246,13 +246,12 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       _isStripeAvailable ? BidPaymentMethod.stripe : BidPaymentMethod.cash,
     );
 
-    final hasKgPricing = widget.announcement.pricePerKg > 0;
-    final cap = _maxKg;
-    _weightNotifier = ValueNotifier<double>(
-      hasKgPricing
-          ? (widget.announcement.isKgFree ? 5.0 : (cap >= 5 ? 5 : cap))
-          : 0.0,
-    );
+    // Toujours 0 au départ, y compris en tarification kilo pure : la
+    // grille et le kilo-libre partent aussi de 0 désormais. Sur un trajet
+    // sans grille (kilo pur), le CTA reste désactivé tant que le poids n'est
+    // pas > 0 — cf. `_syncFormButtonState` (weightOk = hasKgPricing &&
+    // weight > 0) qui ne dépend pas de cette valeur de départ.
+    _weightNotifier = ValueNotifier<double>(0.0);
 
     _weightNotifier.addListener(_syncFormButtonState);
     _categoriesNotifier.addListener(_syncFormButtonState);
@@ -1645,7 +1644,11 @@ class _WeightSectionState extends State<_WeightSection> {
   TextEditingController? _kgCtrl;
   FocusNode? _kgFocus;
 
-  double get _min => widget.isMixed ? 0.0 : 1.0;
+  // Le plancher de saisie est toujours 0 : sur un trajet kilo pur (non
+  // mixte), le poids reste obligatoire pour envoyer (cf. `weightOk` dans
+  // `_syncFormButtonState`), mais c'est le CTA qui l'impose, pas le champ —
+  // l'utilisateur doit pouvoir revenir à 0 en le vidant/décrémentant.
+  double get _min => 0.0;
 
   @override
   void initState() {
@@ -1799,7 +1802,10 @@ class _WeightSectionState extends State<_WeightSection> {
     final maxKg = widget.maxKg;
     final weightKg = widget.weightKg;
     final onChanged = widget.onChanged;
-    final sliderMin = isMixed ? 0.0 : 1.0;
+    // Toujours 0 : sur un trajet kilo pur (non mixte), le poids reste
+    // obligatoire pour envoyer (le CTA l'impose, cf. `_syncFormButtonState`),
+    // mais le slider doit pouvoir afficher sa valeur de départ à 0.
+    const sliderMin = 0.0;
 
     if (maxKg <= sliderMin) {
       return Column(
@@ -1875,7 +1881,6 @@ class _WeightSectionState extends State<_WeightSection> {
           ),
           child: Slider(
             value: weightKg,
-            min: sliderMin,
             max: maxKg,
             divisions: divisions > 0 ? divisions : null,
             onChanged: onChanged,
@@ -1885,7 +1890,7 @@ class _WeightSectionState extends State<_WeightSection> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              isMixed ? '0 kg' : '1 kg',
+              '0 kg',
               style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             ),
             Text(

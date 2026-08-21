@@ -316,6 +316,11 @@ void main() {
   ) async {
     await openBid(tester, negotiation: true);
 
+    // Trajet kilo pur (pas de grille) : le poids part à 0 et doit être
+    // choisi explicitement avant qu'un total suggéré positif existe.
+    await tester.drag(find.byType(Slider), const Offset(200, 0));
+    await tester.pump(_kSettle);
+
     final initial = double.parse(proposalText(tester).replaceAll(',', '.'));
     expect(initial, greaterThan(0));
   });
@@ -349,6 +354,11 @@ void main() {
     tester,
   ) async {
     await openBid(tester, negotiation: true);
+
+    // Trajet kilo pur (pas de grille) : le poids est obligatoire pour
+    // pouvoir soumettre (cf. `_syncFormButtonState`).
+    await tester.drag(find.byType(Slider), const Offset(200, 0));
+    await tester.pump(_kSettle);
 
     // Contenu du colis
     await tester.ensureVisible(find.byKey(const Key('bid-content-field')));
