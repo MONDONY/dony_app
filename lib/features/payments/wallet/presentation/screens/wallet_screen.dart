@@ -373,51 +373,60 @@ class _HeroHeader extends StatelessWidget {
     BuildContext context,
     WalletRefundRequestState? refundState,
   ) {
-    return Wrap(
-      spacing: DonySpacing.sm,
-      runSpacing: DonySpacing.sm,
-      children: [
-        _HeroAction(
-          iconAsset: 'plus',
-          label: 'Recharger',
-          onTap: () async {
-            // Solde avant la recharge : sert de référence au polling
-            // post-recharge (on s'arrête dès qu'il augmente).
-            final previousBalance = balance;
-            final ok = await context.push<bool>(
-              '/payments/wallet/topup/method',
-            );
-            if (ok != true || !context.mounted) {
-              return;
-            }
-            // Le crédit Stripe arrive de façon asynchrone via webhook :
-            // on poll le solde jusqu'à ce qu'il dépasse l'ancien.
-            context.read<WalletBloc>().add(
-              WalletRefreshAfterTopupRequested(previousBalance),
-            );
-          },
-        ),
-        if (refundEligible)
-          _HeroAction(
-            iconAsset: 'arrow-up',
-            label: refundState?.isSubmitting == true
-                ? 'Envoi...'
-                : 'Rembourser',
-            enabled: refundState?.isSubmitting != true,
-            onTap: () =>
-                context.read<WalletRefundRequestCubit>().submit(currency.code),
-          ),
-        _HeroAction(
-          iconAsset: 'history',
-          label: 'Demandes',
-          onTap: () => context.push('/payments/wallet/refunds'),
-        ),
+    final actions = [
+      _HeroAction(
+        iconAsset: 'plus',
+        label: 'Recharger',
+        onTap: () async {
+          // Solde avant la recharge : sert de référence au polling
+          // post-recharge (on s'arrête dès qu'il augmente).
+          final previousBalance = balance;
+          final ok = await context.push<bool>(
+            '/payments/wallet/topup/method',
+          );
+          if (ok != true || !context.mounted) {
+            return;
+          }
+          // Le crédit Stripe arrive de façon asynchrone via webhook :
+          // on poll le solde jusqu'à ce qu'il dépasse l'ancien.
+          context.read<WalletBloc>().add(
+            WalletRefreshAfterTopupRequested(previousBalance),
+          );
+        },
+      ),
+      if (refundEligible)
         _HeroAction(
           iconAsset: 'arrow-up',
-          label: 'Utiliser',
-          onTap: () => context.pop(),
+          label: refundState?.isSubmitting == true ? 'Envoi...' : 'Rembourser',
+          enabled: refundState?.isSubmitting != true,
+          onTap: () =>
+              context.read<WalletRefundRequestCubit>().submit(currency.code),
         ),
-      ],
+      _HeroAction(
+        iconAsset: 'history',
+        label: 'Demandes',
+        onTap: () => context.push('/payments/wallet/refunds'),
+      ),
+      _HeroAction(
+        iconAsset: 'check',
+        label: 'Utiliser',
+        onTap: () => context.pop(),
+      ),
+    ];
+    // Row scrollable horizontalement (jamais de retour à la ligne) : un
+    // Wrap ici passerait sur 2 lignes sur les écrans étroits ou avec une
+    // police système agrandie, ce qui dépasse la hauteur fixe du
+    // SliverAppBar (expandedHeight) et provoque un overflow visible.
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          for (var i = 0; i < actions.length; i++) ...[
+            if (i > 0) const SizedBox(width: DonySpacing.sm),
+            actions[i],
+          ],
+        ],
+      ),
     );
   }
 }
