@@ -5,6 +5,7 @@ import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_keypad.dart';
@@ -158,11 +159,12 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
         if (state is WalletTopupStripeReady) {
           _presentStripePaymentSheet(context, state.clientSecret);
         } else if (state is WalletError) {
-          DonySnackbar.show(
-            context,
-            message: state.message,
-            type: DonySnackbarType.error,
-          );
+          // Jamais state.message brut : c'est le detail backend, qui peut
+          // relayer le message anglais brut de Stripe (ex. "20 Fr converts
+          // to approximately €0.03") — toujours en euro, quelle que soit la
+          // devise active de l'utilisateur. ErrorPresenter retombe sur un
+          // message générique français, sans référence à une devise.
+          unawaited(ErrorPresenter.show(context, state.message));
         } else if (state is WalletLoaded) {
           // Rechargement réussi → retour au wallet
           context.pop(true);
