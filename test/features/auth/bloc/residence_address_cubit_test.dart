@@ -36,7 +36,6 @@ void main() {
     },
     act: (c) => c.submit(
       street: '12 rue des Lilas',
-      line2: null,
       postalCode: '75011',
       city: 'Paris',
     ),
@@ -59,7 +58,7 @@ void main() {
       ).thenThrow(Exception('boom'));
       return ResidenceAddressCubit(repo, analytics);
     },
-    act: (c) => c.submit(street: 'x', line2: null, postalCode: 'y', city: 'z'),
+    act: (c) => c.submit(street: 'x', postalCode: 'y', city: 'z'),
     expect: () => [isA<ResidenceAddressSaving>(), isA<ResidenceAddressError>()],
   );
 
@@ -88,7 +87,6 @@ void main() {
 
     await ResidenceAddressCubit(repo, analytics).submit(
       street: '12 rue des Lilas',
-      line2: null,
       postalCode: '75011',
       city: 'Paris',
     );

@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   group('UserModel — adresse de résidence', () {
     test('parse les champs quand ils sont présents', () {
-      final u = UserModel.fromJson({
+      final u = UserModel.fromJson(const {
         'id': 'u1',
         'residenceStreet': '12 rue des Lilas',
         'residenceLine2': 'Bat. B',
@@ -19,7 +19,7 @@ void main() {
     });
 
     test('tolère leur absence — un backend antérieur ne doit rien casser', () {
-      final u = UserModel.fromJson({'id': 'u1'});
+      final u = UserModel.fromJson(const {'id': 'u1'});
 
       expect(u.residenceStreet, isNull);
       expect(u.residenceLine2, isNull);

@@ -86,7 +86,6 @@ void main() {
     verify(
       () => cubit.submit(
         street: '12 rue des Lilas',
-        line2: null,
         postalCode: '75011',
         city: 'Paris',
       ),
