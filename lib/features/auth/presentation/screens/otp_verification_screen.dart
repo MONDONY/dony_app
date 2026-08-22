@@ -5,12 +5,14 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
-import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/auth/presentation/post_signup_route.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_flow_chrome.dart';
+import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
+import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -112,13 +114,22 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   /// L'étape « code PIN » a quitté ce parcours, le verrouillage étant devenu un
   /// réglage facultatif (Réglages › Sécurité). C'est donc ici que l'inscription
   /// est considérée comme terminée.
-  Future<void> _continueAfterSignup(BuildContext context) async {
+  Future<void> _continueAfterSignup(
+    BuildContext context,
+    UserModel user,
+  ) async {
     unawaited(
       getIt<AnalyticsService>().logEvent(AnalyticsEvents.signupCompleted),
     );
+    // Lus avant l'await : après, le contexte peut être démonté.
+    final stripe = context.read<StripeAccountBloc>().state;
+    final country = context.read<BusinessPrefsBloc>().state.country;
+
     final route = await resolvePostSignupRoute(
-      getIt<AnalyticsService>(),
-      getIt<HiveService>().userPrefs,
+      analytics: getIt<AnalyticsService>(),
+      user: user,
+      stripe: stripe,
+      countryFallback: country,
     );
     if (context.mounted) {
       context.go(route);
@@ -169,7 +180,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                 AuthRegisterWithEmailRequested(email: state.email),
               );
             } else if (state is AuthNewAccountAuthenticated) {
-              unawaited(_continueAfterSignup(context));
+              unawaited(_continueAfterSignup(context, state.user));
             } else if (state is AuthAuthenticated) {
               context.go('/home');
             } else if (state is AuthError) {
@@ -179,7 +190,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
             if (state is AuthOtpVerified) {
               context.read<AuthBloc>().add(const AuthRegisterRequested());
             } else if (state is AuthNewAccountAuthenticated) {
-              unawaited(_continueAfterSignup(context));
+              unawaited(_continueAfterSignup(context, state.user));
             } else if (state is AuthAuthenticated) {
               context.go('/home');
             } else if (state is AuthError) {
