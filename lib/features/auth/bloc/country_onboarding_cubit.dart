@@ -52,7 +52,9 @@ class CountryOnboardingError extends CountryOnboardingState {
 /// encore renseigné », complétable plus tard dans les Réglages. [skip] ne
 /// bloque donc jamais sur le réseau : il relit les préférences au mieux, pour
 /// poser la devise par défaut du serveur en cache, sans échouer si cette
-/// lecture échoue.
+/// lecture échoue. Contrairement à [select] et [continueAsSenderOnly],
+/// [skip] n'émet donc jamais [CountryOnboardingError] : il n'y a rien
+/// d'autre à écrire après la tentative de cache, avalée volontairement.
 ///
 /// Les deux chemins écrivent [HiveService.kCurrencyCode] avec la devise
 /// **renvoyée par le serveur** : sans ce cache, `ActiveCurrency.current` rend
@@ -101,31 +103,24 @@ class CountryOnboardingCubit extends Cubit<CountryOnboardingState> {
     if (state is CountryOnboardingSaving) return;
 
     emit(const CountryOnboardingSaving(null));
+    // Au mieux : poser en cache la devise par défaut du serveur. Un échec
+    // réseau ne doit pas empêcher de passer l'étape, l'utilisateur n'a rien
+    // à enregistrer ici. Rien d'autre ci-dessous ne peut échouer : pas de
+    // try/catch externe, skip() ne rend jamais CountryOnboardingError.
     try {
-      // Au mieux : poser en cache la devise par défaut du serveur. Un échec
-      // réseau ne doit pas empêcher de passer l'étape, l'utilisateur n'a rien
-      // à enregistrer ici.
-      try {
-        final current = await _repository.fetchPrefs();
-        await _prefs.put(HiveService.kCurrencyCode, current.currencyCode);
-      } catch (_) {
-        // Ignoré volontairement : la devise sera posée à la première synchro.
-      }
-      unawaited(_analytics.logEvent(AnalyticsEvents.countryOnboardingSkipped));
-      unawaited(
-        _analytics.logEvent(
-          AnalyticsEvents.onboardingStepSkipped,
-          properties: {'step': 'country'},
-        ),
-      );
-      emit(const CountryOnboardingSuccess());
+      final current = await _repository.fetchPrefs();
+      await _prefs.put(HiveService.kCurrencyCode, current.currencyCode);
     } catch (_) {
-      emit(
-        const CountryOnboardingError(
-          'Impossible d’enregistrer ce choix. Réessayez.',
-        ),
-      );
+      // Ignoré volontairement : la devise sera posée à la première synchro.
     }
+    unawaited(_analytics.logEvent(AnalyticsEvents.countryOnboardingSkipped));
+    unawaited(
+      _analytics.logEvent(
+        AnalyticsEvents.onboardingStepSkipped,
+        properties: {'step': 'country'},
+      ),
+    );
+    emit(const CountryOnboardingSuccess());
   }
 
   Future<void> continueAsSenderOnly() async {
