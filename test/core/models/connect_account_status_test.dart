@@ -78,6 +78,25 @@ void main() {
       expect(s.country, isNull);
       expect(s.reason, isNull);
       expect(s.isProAccount, isFalse);
+      // Un backend anterieur ne doit pas masquer l'activation carte pour tout
+      // le monde : l'absence du champ vaut « disponible ».
+      expect(s.connectAvailableInCountry, isTrue);
+    });
+
+    test('fromJson parses connectAvailableInCountry: false', () {
+      final json = {
+        'stripeAccountStatus': 'NOT_CREATED',
+        'connectAvailableInCountry': false,
+      };
+      expect(
+        ConnectAccountStatus.fromJson(json).connectAvailableInCountry,
+        isFalse,
+      );
+    });
+
+    test('connectAvailableInCountry defaults to true on the constructor', () {
+      const s = ConnectAccountStatus(status: 'NOT_CREATED');
+      expect(s.connectAvailableInCountry, isTrue);
     });
   });
 }

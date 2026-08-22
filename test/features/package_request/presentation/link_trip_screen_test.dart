@@ -14,12 +14,15 @@ import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/package_request/presentation/screens/traveler/link_trip_screen.dart';
+import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../../helpers/stripe_account_test_doubles.dart';
 
 class MockNegotiationBloc extends MockBloc<NegotiationEvent, NegotiationState>
     implements NegotiationBloc {}
@@ -105,8 +108,16 @@ Widget _harness(NegotiationThread thread) {
     routes: [
       GoRoute(
         path: '/',
-        builder: (ctx, _) => BlocProvider<NegotiationBloc>.value(
-          value: negotiationBloc,
+        builder: (ctx, _) => MultiBlocProvider(
+          providers: [
+            BlocProvider<NegotiationBloc>.value(value: negotiationBloc),
+            // Fourni à l'échelle de l'app dans `app.dart` : la sheet de
+            // blocage 422 le lit pour distinguer « activation à faire » de
+            // « pays que Stripe ne couvre pas ».
+            BlocProvider<StripeAccountBloc>.value(
+              value: stubStripeAccountBloc(),
+            ),
+          ],
           child: LinkTripScreen(thread: thread),
         ),
       ),
@@ -394,8 +405,13 @@ void main() {
           ),
           GoRoute(
             path: '/link-trip',
-            builder: (ctx, _) => BlocProvider<NegotiationBloc>.value(
-              value: negotiationBloc,
+            builder: (ctx, _) => MultiBlocProvider(
+              providers: [
+                BlocProvider<NegotiationBloc>.value(value: negotiationBloc),
+                BlocProvider<StripeAccountBloc>.value(
+                  value: stubStripeAccountBloc(),
+                ),
+              ],
               child: LinkTripScreen(
                 thread: _fakeThread(status: NegotiationThreadStatus.open),
               ),

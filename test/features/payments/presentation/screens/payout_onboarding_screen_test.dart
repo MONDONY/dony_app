@@ -16,6 +16,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+// `MockStripeAccountBloc` est déjà déclaré localement ci-dessous : on n'importe
+// que la constante d'état pour éviter la collision de noms.
+import '../../../../helpers/stripe_account_test_doubles.dart'
+    show stripeCountryUnavailableState;
+
 class MockPaymentBloc extends MockBloc<PaymentEvent, PaymentState>
     implements PaymentBloc {}
 
@@ -159,6 +164,25 @@ void main() {
 
       expect(find.textContaining('pas terminée'), findsNothing);
       expect(find.text('Connecter mon compte bancaire'), findsOneWidget);
+    });
+
+    testWidgets('pays non couvert par Stripe : explique au lieu de proposer '
+        'l\'inscription', (tester) async {
+      // Second parcours d'onboarding Connect de l'app, distinct de
+      // ConnectOnboardingIntroScreen : la même impasse doit y donner le
+      // même écran, sinon le trou se rouvre par cette porte.
+      when(
+        () => mockStripeBloc.state,
+      ).thenReturn(stripeCountryUnavailableState);
+
+      await tester.pumpWidget(_wrap(mockBloc, stripeBloc: mockStripeBloc));
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(
+        find.text('Pas encore disponible\ndans votre pays'),
+        findsOneWidget,
+      );
+      expect(find.text('Connecter mon compte bancaire'), findsNothing);
     });
 
     testWidgets('resynchronise le statut à l\'ouverture de l\'écran', (

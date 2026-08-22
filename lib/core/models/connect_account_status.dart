@@ -5,12 +5,23 @@ class ConnectAccountStatus {
   final bool isProAccount;
   final String? reason;
 
+  /// Stripe ouvre-t-il un compte connecté dans le pays de l'utilisateur ?
+  ///
+  /// yadony dessert plus de pays que Stripe n'en couvre : les zones XOF et
+  /// XAF, les États-Unis et le Canada n'y ont pas droit. Ces voyageurs
+  /// encaissent en espèces, et on ne leur propose pas d'activer la carte.
+  ///
+  /// Vaut `true` quand le serveur ne renvoie pas le champ : un backend
+  /// antérieur ne doit pas masquer l'activation pour tout le monde.
+  final bool connectAvailableInCountry;
+
   const ConnectAccountStatus({
     this.accountId,
     required this.status,
     this.country,
     this.isProAccount = false,
     this.reason,
+    this.connectAvailableInCountry = true,
   });
 
   factory ConnectAccountStatus.fromJson(Map<String, dynamic> json) {
@@ -20,6 +31,8 @@ class ConnectAccountStatus {
       country: json['country'] as String?,
       isProAccount: json['isProAccount'] as bool? ?? false,
       reason: json['reason'] as String?,
+      connectAvailableInCountry:
+          json['connectAvailableInCountry'] as bool? ?? true,
     );
   }
 

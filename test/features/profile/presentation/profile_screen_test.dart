@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/widgets/dony_avatar.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/models/connect_account_status.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -18,6 +19,7 @@ import 'package:dony/features/profile/presentation/widgets/pending_deletion_bann
 import 'package:dony/features/profile/presentation/widgets/wallet_balance_card.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
+import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -43,6 +45,13 @@ class MockReferralBloc extends MockBloc<ReferralEvent, ReferralState>
 
 class MockWalletBloc extends MockBloc<WalletEvent, WalletState>
     implements WalletBloc {}
+
+/// Fourni à l'échelle de l'application dans `app.dart` : la section ARGENT le
+/// lit pour savoir si Stripe couvre le pays avant de proposer l'activation
+/// carte.
+class MockStripeAccountBloc
+    extends MockBloc<StripeAccountEvent, StripeAccountState>
+    implements StripeAccountBloc {}
 
 // ── Fallback values ───────────────────────────────────────────────────────────
 
@@ -109,6 +118,7 @@ Widget _buildTestHarness({
   required MockAnnouncementBloc announcementBloc,
   required MockReferralBloc referralBloc,
   required MockWalletBloc walletBloc,
+  required MockStripeAccountBloc stripeAccountBloc,
 }) {
   Widget stub(String label) => Scaffold(body: Text(label));
 
@@ -123,6 +133,7 @@ Widget _buildTestHarness({
           BlocProvider<AnnouncementBloc>.value(value: announcementBloc),
           BlocProvider<ReferralBloc>.value(value: referralBloc),
           BlocProvider<WalletBloc>.value(value: walletBloc),
+          BlocProvider<StripeAccountBloc>.value(value: stripeAccountBloc),
         ],
         child: const ProfileScreen(),
       ),
@@ -219,6 +230,7 @@ void main() {
   late MockAnnouncementBloc announcementBloc;
   late MockReferralBloc referralBloc;
   late MockWalletBloc walletBloc;
+  late MockStripeAccountBloc stripeAccountBloc;
 
   setUp(() {
     authBloc = MockAuthBloc();
@@ -227,6 +239,17 @@ void main() {
     announcementBloc = MockAnnouncementBloc();
     referralBloc = MockReferralBloc();
     walletBloc = MockWalletBloc();
+    stripeAccountBloc = MockStripeAccountBloc();
+
+    // Pays couvert par Stripe : comportement de reference des tests de cette
+    // page, le CTA d'activation carte reste donc propose.
+    whenListen<StripeAccountState>(
+      stripeAccountBloc,
+      const Stream.empty(),
+      initialState: const StripeAccountReady(
+        ConnectAccountStatus(status: 'NOT_CREATED'),
+      ),
+    );
 
     whenListen<BidState>(
       bidBloc,
@@ -276,6 +299,7 @@ void main() {
         announcementBloc: announcementBloc,
         referralBloc: referralBloc,
         walletBloc: walletBloc,
+        stripeAccountBloc: stripeAccountBloc,
       ),
     );
     if (settle) {
@@ -357,6 +381,33 @@ void main() {
           expect(find.text(label), findsOneWidget, reason: label);
         }
       });
+
+      testWidgets(
+        '${entry.key} : pays non couvert — plus d\'entrée « Recevoir mes '
+        'paiements »',
+        (tester) async {
+          // Cette entrée mène au même onboarding Connect que le CTA carte.
+          // La masquer d'un côté sans l'autre laissait la porte ouverte
+          // douze lignes plus bas, dans la même section.
+          whenListen<StripeAccountState>(
+            stripeAccountBloc,
+            const Stream.empty(),
+            initialState: const StripeAccountReady(
+              ConnectAccountStatus(
+                status: 'NOT_CREATED',
+                connectAvailableInCountry: false,
+              ),
+            ),
+          );
+
+          await pumpWith(tester, entry.value);
+
+          expect(find.text('Recevoir mes paiements'), findsNothing);
+          // Le reste de la section ARGENT n'est pas concerné.
+          await _scrollTo(tester, find.text('Ma grille de prix'));
+          expect(find.text('Ma grille de prix'), findsOneWidget);
+        },
+      );
 
       testWidgets('${entry.key} : peut passer en compte PRO', (tester) async {
         await pumpWith(tester, entry.value);
@@ -541,6 +592,7 @@ void main() {
           announcementBloc: announcementBloc,
           referralBloc: referralBloc,
           walletBloc: walletBloc,
+          stripeAccountBloc: stripeAccountBloc,
         ),
       );
       await tester.pump();
@@ -598,6 +650,7 @@ void main() {
           announcementBloc: announcementBloc,
           referralBloc: referralBloc,
           walletBloc: walletBloc,
+          stripeAccountBloc: stripeAccountBloc,
         ),
       );
       await tester.pumpAndSettle();
@@ -636,6 +689,7 @@ void main() {
           announcementBloc: announcementBloc,
           referralBloc: referralBloc,
           walletBloc: walletBloc,
+          stripeAccountBloc: stripeAccountBloc,
         ),
       );
       await tester.pump(const Duration(milliseconds: 600));

@@ -6,10 +6,14 @@ import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_detail_body.dart';
+import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
+
+import '../../../../helpers/stripe_account_test_doubles.dart';
 
 AnnouncementModel _full() => AnnouncementModel(
   id: 'ann-1',
@@ -73,8 +77,11 @@ void main() {
       GlobalCupertinoLocalizations.delegate,
     ],
     supportedLocales: const [Locale('fr', 'FR'), Locale('en')],
-    home: Scaffold(
-      body: SingleChildScrollView(child: AnnouncementDetailBody(a: a)),
+    home: BlocProvider<StripeAccountBloc>.value(
+      value: stubStripeAccountBloc(),
+      child: Scaffold(
+        body: SingleChildScrollView(child: AnnouncementDetailBody(a: a)),
+      ),
     ),
   );
 

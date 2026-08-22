@@ -21,12 +21,15 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/screens/trip_owner_detail_screen.dart';
+import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../../../helpers/stripe_account_test_doubles.dart';
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
@@ -105,6 +108,11 @@ Future<void> _pump(
             BlocProvider<BidBloc>.value(value: bidBloc),
             BlocProvider<CancellationBloc>.value(value: cancelBloc),
             BlocProvider<AuthBloc>.value(value: authBloc),
+            // Fourni à l'échelle de l'app dans `app.dart` : le corps de détail
+            // le lit pour savoir si Stripe couvre le pays du voyageur.
+            BlocProvider<StripeAccountBloc>.value(
+              value: stubStripeAccountBloc(),
+            ),
           ],
           child: const TripOwnerDetailScreen(announcementId: 'ann-trip-001'),
         ),

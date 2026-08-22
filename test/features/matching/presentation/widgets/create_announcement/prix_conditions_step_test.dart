@@ -59,6 +59,16 @@ const _stripeConfiguredState = StripeAccountReady(
 /// StripeAccountState quand Stripe n'est pas encore configuré.
 const _stripeNotConfiguredState = StripeAccountInitial();
 
+/// Statut chargé, onboarding à terminer, dans un pays que Stripe couvre.
+const _stripeReadyCoveredState = StripeAccountReady(
+  ConnectAccountStatus(status: 'NOT_CREATED'),
+);
+
+/// Statut chargé dans un pays où Stripe n'ouvre pas de compte connecté.
+const _stripeCountryUnavailableState = StripeAccountReady(
+  ConnectAccountStatus(status: 'NOT_CREATED', connectAvailableInCountry: false),
+);
+
 const _validCard = CommissionMethod(
   brand: 'visa',
   last4: '4242',
@@ -460,6 +470,42 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text('stripe-onboarding-intro'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'pays non couvert par Stripe : explique, sans proposer l\'activation',
+      (tester) async {
+        await _pump(tester, stripeState: _stripeCountryUnavailableState);
+
+        expect(
+          find.textContaining(
+            'Le paiement par carte n\'est pas encore disponible',
+          ),
+          findsOneWidget,
+        );
+        // Rien à activer dans ce pays : le CTA doit disparaître, sinon il
+        // mène à un refus serveur.
+        expect(
+          find.byKey(const Key('activate-card-payments-cta')),
+          findsNothing,
+        );
+      },
+    );
+
+    testWidgets(
+      'onboarding incomplet mais pays couvert : invite bien à activer',
+      (tester) async {
+        await _pump(tester, stripeState: _stripeReadyCoveredState);
+
+        expect(
+          find.textContaining('Publiez en espèces dès maintenant'),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const Key('activate-card-payments-cta')),
+          findsOneWidget,
+        );
       },
     );
 

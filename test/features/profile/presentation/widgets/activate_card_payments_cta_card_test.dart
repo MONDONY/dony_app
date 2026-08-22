@@ -7,14 +7,21 @@ import 'package:go_router/go_router.dart';
 
 /// Wrappe la carte dans un GoRouter minimal — nécessaire car
 /// `ActivateCardPaymentsCtaCard` appelle `context.push('/payments/onboarding')`.
-Widget _wrap(String? stripeStatus, {VoidCallback? onOnboardingPushed}) {
+Widget _wrap(
+  String? stripeStatus, {
+  VoidCallback? onOnboardingPushed,
+  bool connectAvailable = true,
+}) {
   final router = GoRouter(
     initialLocation: '/',
     routes: [
       GoRoute(
         path: '/',
         builder: (context, state) => Scaffold(
-          body: ActivateCardPaymentsCtaCard(stripeStatus: stripeStatus),
+          body: ActivateCardPaymentsCtaCard(
+            stripeStatus: stripeStatus,
+            connectAvailable: connectAvailable,
+          ),
         ),
       ),
       GoRoute(
@@ -67,5 +74,14 @@ void main() {
     // La carte se réduit à un widget de taille nulle (SizedBox.shrink()).
     final size = tester.getSize(find.byType(ActivateCardPaymentsCtaCard));
     expect(size, Size.zero);
+  });
+
+  testWidgets('masquée quand Stripe ne couvre pas le pays', (tester) async {
+    // Onboarding incomplet, donc la carte s'afficherait normalement — c'est
+    // bien le pays qui la masque, pas le statut.
+    await tester.pumpWidget(_wrap('NOT_CREATED', connectAvailable: false));
+
+    expect(find.text('Activer les paiements par carte'), findsNothing);
+    expect(tester.getSize(find.byType(ActivateCardPaymentsCtaCard)), Size.zero);
   });
 }

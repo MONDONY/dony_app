@@ -4,6 +4,7 @@ import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
+import 'package:dony/features/stripe_account/presentation/widgets/connect_unavailable_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -42,6 +43,13 @@ class _PayoutOnboardingScreenState extends State<PayoutOnboardingScreen> {
         if (stripeState is StripeAccountReady &&
             stripeState.accountStatus.isComplete) {
           return const _ActiveAccountView();
+        }
+
+        // Stripe n'ouvre pas de compte connecté dans tous les pays desservis
+        // par yadony. Laisser dérouler l'inscription pour finir sur un refus
+        // serveur, au fond d'une WebView, n'apporte rien.
+        if (!stripeState.connectAvailableInCountry) {
+          return const ConnectUnavailableView(title: 'Recevoir mes paiements');
         }
 
         // Le statut serveur, et non l'état du PaymentBloc, décide si une

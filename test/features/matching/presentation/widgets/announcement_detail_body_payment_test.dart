@@ -1,10 +1,14 @@
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_detail_body.dart';
+import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
+
+import '../../../../helpers/stripe_account_test_doubles.dart';
 
 AnnouncementModel _announcement({
   required Set<BidPaymentMethod> acceptedPaymentMethods,
@@ -26,14 +30,19 @@ AnnouncementModel _announcement({
   );
 }
 
-Widget _wrap(AnnouncementModel a) {
+Widget _wrap(AnnouncementModel a, {StripeAccountState? stripeState}) {
   final router = GoRouter(
     initialLocation: '/detail',
     routes: [
       GoRoute(
         path: '/detail',
-        builder: (context, state) => Scaffold(
-          body: SingleChildScrollView(child: AnnouncementDetailBody(a: a)),
+        builder: (context, state) => BlocProvider<StripeAccountBloc>.value(
+          value: stripeState == null
+              ? stubStripeAccountBloc()
+              : stubStripeAccountBloc(state: stripeState),
+          child: Scaffold(
+            body: SingleChildScrollView(child: AnnouncementDetailBody(a: a)),
+          ),
         ),
       ),
       GoRoute(
@@ -103,6 +112,26 @@ void main() {
       await tester.pumpWidget(_wrap(a));
       await tester.pumpAndSettle();
 
+      expect(find.text('Activer les paiements par carte'), findsNothing);
+    });
+
+    testWidgets('pays non couvert par Stripe — pas de nudge', (tester) async {
+      // Trajet cash-only, donc le nudge s'afficherait normalement. Là où
+      // Stripe n'ouvre pas de compte, tous les trajets le sont : la bannière
+      // s'afficherait sur chacun, pour un reproche impossible à lever.
+      final a = _announcement(acceptedPaymentMethods: {BidPaymentMethod.cash});
+
+      await tester.pumpWidget(
+        _wrap(a, stripeState: stripeCountryUnavailableState),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.textContaining(
+          'Beaucoup d\'expéditeurs préfèrent payer par carte',
+        ),
+        findsNothing,
+      );
       expect(find.text('Activer les paiements par carte'), findsNothing);
     });
   });

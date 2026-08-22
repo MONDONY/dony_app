@@ -37,6 +37,7 @@ Future<void> _pump(
   required PublishIntroRole role,
   required String kycStatus,
   String stripeStatus = 'ONBOARDING_COMPLETE',
+  bool connectAvailable = true,
 }) async {
   tester.view.physicalSize = const Size(900, 1800);
   tester.view.devicePixelRatio = 1.0;
@@ -60,7 +61,10 @@ Future<void> _pump(
   final stripeBloc = _MockStripeAccountBloc();
   when(() => stripeBloc.state).thenReturn(
     StripeAccountReady(
-      ConnectAccountStatus.fromJson({'stripeAccountStatus': stripeStatus}),
+      ConnectAccountStatus.fromJson({
+        'stripeAccountStatus': stripeStatus,
+        'connectAvailableInCountry': connectAvailable,
+      }),
     ),
   );
 
@@ -173,6 +177,22 @@ void main() {
       tester,
     ) async {
       await _pump(tester, role: PublishIntroRole.trip, kycStatus: 'VERIFIED');
+
+      expect(find.text('Activez les paiements par carte'), findsNothing);
+    });
+
+    testWidgets('rappel Stripe masqué si Stripe ne couvre pas le pays', (
+      tester,
+    ) async {
+      // Compte non configuré, donc le rappel s'afficherait normalement : c'est
+      // bien le pays qui le masque. Un tap ne pourrait jamais convertir.
+      await _pump(
+        tester,
+        role: PublishIntroRole.trip,
+        kycStatus: 'VERIFIED',
+        stripeStatus: 'NOT_CREATED',
+        connectAvailable: false,
+      );
 
       expect(find.text('Activez les paiements par carte'), findsNothing);
     });

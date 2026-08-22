@@ -4,8 +4,10 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
@@ -223,23 +225,40 @@ class AnnouncementDetailBody extends StatelessWidget {
         ],
 
         // ── Nudge cash-only (voyageur) — active la carte pour plus de colis ──
+        //
+        // Muet là où Stripe n'ouvre pas de compte connecté : tous les trajets
+        // y sont en espèces par construction, la bannière s'afficherait donc
+        // sur chacun d'eux, indéfiniment, pour un reproche que le voyageur
+        // n'a aucun moyen de lever.
         if (a.acceptedPaymentMethods.length == 1 &&
-            a.acceptedPaymentMethods.contains(BidPaymentMethod.cash)) ...[
-          DonyStatusBanner(
-            type: DonyStatusBannerType.warning,
-            iconAsset: 'triangle-alert',
-            message:
-                'Trajet en espèces uniquement. Beaucoup d\'expéditeurs '
-                'préfèrent payer par carte, activez cette option pour '
-                'augmenter vos chances de recevoir des colis.',
-            action: TextButton(
-              key: const Key('activate-card-payments-cta'),
-              onPressed: () => context.push('/connect/onboarding/intro'),
-              child: const Text('Activer les paiements par carte'),
-            ),
-          ).animate().fadeIn(delay: 120.ms),
-          const SizedBox(height: DonySpacing.md),
-        ],
+            a.acceptedPaymentMethods.contains(BidPaymentMethod.cash))
+          BlocBuilder<StripeAccountBloc, StripeAccountState>(
+            builder: (context, stripeState) {
+              if (!stripeState.connectAvailableInCountry) {
+                return const SizedBox.shrink();
+              }
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  DonyStatusBanner(
+                    type: DonyStatusBannerType.warning,
+                    iconAsset: 'triangle-alert',
+                    message:
+                        'Trajet en espèces uniquement. Beaucoup d\'expéditeurs '
+                        'préfèrent payer par carte, activez cette option pour '
+                        'augmenter vos chances de recevoir des colis.',
+                    action: TextButton(
+                      key: const Key('activate-card-payments-cta'),
+                      onPressed: () =>
+                          context.push('/connect/onboarding/intro'),
+                      child: const Text('Activer les paiements par carte'),
+                    ),
+                  ).animate().fadeIn(delay: 120.ms),
+                  const SizedBox(height: DonySpacing.md),
+                ],
+              );
+            },
+          ),
 
         // ── Ce que j'accepte (vert) ──────────────────────────────────────────
         if (a.acceptedContentTypes?.isNotEmpty ?? false) ...[

@@ -4,6 +4,7 @@ import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.dart';
 import 'package:dony/features/connect_onboarding/presentation/widgets/connect_pending_bottom_sheet.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
+import 'package:dony/features/stripe_account/presentation/widgets/connect_unavailable_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -55,6 +56,13 @@ class _ConnectOnboardingIntroScreenState
 
   @override
   Widget build(BuildContext context) {
+    // Stripe n'ouvre pas de compte connecté dans tous les pays desservis par
+    // yadony. Laisser l'utilisateur dérouler l'onboarding pour finir sur un
+    // refus serveur n'apporte rien : on l'annonce ici.
+    if (!context.watch<StripeAccountBloc>().state.connectAvailableInCountry) {
+      return const ConnectUnavailableView(title: 'Compte Stripe Connect');
+    }
+
     return BlocConsumer<ConnectOnboardingBloc, ConnectOnboardingState>(
       listener: (context, state) async {
         if (state is ConnectOnboardingUrlReady) {

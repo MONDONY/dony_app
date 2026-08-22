@@ -10,6 +10,7 @@ import 'package:dony/features/profile/presentation/widgets/add_contact_sheets.da
 import 'package:dony/features/profile/presentation/widgets/wallet_balance_card.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
 import 'package:dony/features/referral/presentation/widgets/redeem_code_bottom_sheet.dart';
+import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -102,46 +103,62 @@ class ProfileMoneySection extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        ProfileSectionLabel(label: 'ARGENT', cs: cs),
-        // Le CTA d'activation Stripe vit au-dessus de la section qu'il
-        // concerne, et non en tête de page : il y est contextuel, et trois
-        // bannières empilées en haut d'écran noyaient le reste.
-        ActivateCardPaymentsCtaCard(stripeStatus: user?.stripeAccountStatus),
-        if (user?.stripeAccountStatus != 'ONBOARDING_COMPLETE')
-          const SizedBox(height: DonySpacing.sm),
-        const WalletBalanceCard(),
-        const SizedBox(height: DonySpacing.sm),
-        ProfileListSection(
-          tiles: [
-            DonyListTile(
-              iconAsset: 'piggy-bank',
-              iconColor: cs.success,
-              iconBgColor: cs.successLight,
-              label: 'Recevoir mes paiements',
-              onTap: () => context.push('/payments/onboarding'),
+    // La section entière dépend de la couverture Stripe : le CTA d'activation
+    // comme l'entrée « Recevoir mes paiements » mènent au même onboarding.
+    // Un seul BlocBuilder, donc une seule lecture de la règle.
+    //
+    // Le pays vient du StripeAccountBloc et non de UserModel : le backend ne
+    // l'expose que sur /payments/connect/account.
+    return BlocBuilder<StripeAccountBloc, StripeAccountState>(
+      builder: (context, stripeState) {
+        final connectAvailable = stripeState.connectAvailableInCountry;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ProfileSectionLabel(label: 'ARGENT', cs: cs),
+            // Le CTA d'activation Stripe vit au-dessus de la section qu'il
+            // concerne, et non en tête de page : il y est contextuel, et trois
+            // bannières empilées en haut d'écran noyaient le reste.
+            ActivateCardPaymentsCtaCard(
+              stripeStatus: user?.stripeAccountStatus,
+              connectAvailable: connectAvailable,
             ),
-            DonyListTile(
-              iconAsset: 'credit-card',
-              iconColor: DonyColors.purple,
-              iconBgColor: DonyColors.violetLight,
-              label: 'Carte commission espèces',
-              onTap: () => context.push('/payments/commission-method'),
-            ),
-            DonyListTile(
-              iconAsset: 'layout-grid',
-              iconColor: cs.primary,
-              iconBgColor: cs.primaryContainer,
-              label: 'Ma grille de prix',
-              subtitle: 'Tarifs par article pour vos trajets',
-              showDivider: false,
-              onTap: () => context.push('/profile/price-grid'),
+            const WalletBalanceCard(),
+            const SizedBox(height: DonySpacing.sm),
+            ProfileListSection(
+              tiles: [
+                // Sans compte connecté possible dans ce pays, cette entrée ne
+                // mène qu'à un refus : on ne la propose pas.
+                if (connectAvailable)
+                  DonyListTile(
+                    iconAsset: 'piggy-bank',
+                    iconColor: cs.success,
+                    iconBgColor: cs.successLight,
+                    label: 'Recevoir mes paiements',
+                    onTap: () => context.push('/payments/onboarding'),
+                  ),
+                DonyListTile(
+                  iconAsset: 'credit-card',
+                  iconColor: DonyColors.purple,
+                  iconBgColor: DonyColors.violetLight,
+                  label: 'Carte commission espèces',
+                  onTap: () => context.push('/payments/commission-method'),
+                ),
+                DonyListTile(
+                  iconAsset: 'layout-grid',
+                  iconColor: cs.primary,
+                  iconBgColor: cs.primaryContainer,
+                  label: 'Ma grille de prix',
+                  subtitle: 'Tarifs par article pour vos trajets',
+                  showDivider: false,
+                  onTap: () => context.push('/profile/price-grid'),
+                ),
+              ],
             ),
           ],
-        ),
-      ],
+        );
+      },
     );
   }
 }
