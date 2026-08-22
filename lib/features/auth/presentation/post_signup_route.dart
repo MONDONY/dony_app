@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/auth/presentation/onboarding_step.dart';
@@ -39,6 +42,29 @@ Future<String> resolvePostSignupRoute({
     analyticsAnswered: !analytics.isConfigured || analytics.hasAnswered,
     countryFallback: countryFallback,
   );
+
+  // Seul endroit qui connaît l'étape retenue : c'est ici, pas dans un widget,
+  // qu'elle est tracée (sans PII, énumération fermée).
+  final steps = onboardingSteps(stripe);
+  if (step == null) {
+    unawaited(
+      analytics.logEvent(
+        AnalyticsEvents.onboardingCompleted,
+        properties: {'steps_total': steps.length},
+      ),
+    );
+  } else {
+    unawaited(
+      analytics.logEvent(
+        AnalyticsEvents.onboardingStepViewed,
+        properties: {
+          'step': step.wireName,
+          'index': steps.indexOf(step) + 1,
+          'total': steps.length,
+        },
+      ),
+    );
+  }
 
   // Rien à compléter : le parrainage clôt le parcours, et c'est lui qui pose
   // `onboarding_seen_at` (`referral_code_screen.dart:44`).

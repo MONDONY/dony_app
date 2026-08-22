@@ -1,4 +1,5 @@
 import 'package:dony/core/models/connect_account_status.dart';
+import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
@@ -69,6 +70,7 @@ void main() {
 
     when(() => backend.optIn()).thenAnswer((_) async {});
     when(() => backend.optOut()).thenAnswer((_) async {});
+    when(() => backend.capture(any(), any())).thenAnswer((_) async {});
 
     when(() => remote.fetch()).thenAnswer((_) async => null);
     when(
@@ -311,5 +313,57 @@ void main() {
 
       expect(route, '/auth/referral-code');
     });
+  });
+
+  group('resolvePostSignupRoute — analytics de l\'étape retenue', () {
+    test('l\'étape retenue est tracée, sans PII', () async {
+      storedConsent = true;
+      await service.onConfigured();
+
+      await resolvePostSignupRoute(
+        analytics: service,
+        user: _user(country: 'FR'),
+        stripe: const StripeAccountInitial(),
+      );
+
+      // 5 étapes (payouts inclus, StripeAccountInitial est optimiste) ;
+      // consent + country faits, identity manquante en premier → index 3/5.
+      final captured = verify(
+        () => backend.capture(captureAny(), captureAny()),
+      ).captured;
+      expect(captured[0], AnalyticsEvents.onboardingStepViewed);
+      expect(captured[1], {'step': 'identity', 'index': 3, 'total': 5});
+      expect(captured.toString(), isNot(contains('u1')));
+    });
+
+    test(
+      'le compte complet est tracé sans PII, avec le total d\'étapes',
+      () async {
+        storedConsent = true;
+        await service.onConfigured();
+
+        await resolvePostSignupRoute(
+          analytics: service,
+          user: _user(
+            country: 'FR',
+            kycStatus: 'VERIFIED',
+            residenceStreet: '12 rue des Lilas',
+            stripeAccountStatus: 'ONBOARDING_COMPLETE',
+          ),
+          stripe: const StripeAccountReady(
+            ConnectAccountStatus(status: 'ONBOARDING_COMPLETE'),
+          ),
+        );
+
+        verify(
+          () => backend.capture(AnalyticsEvents.onboardingCompleted, {
+            'steps_total': 5,
+          }),
+        ).called(1);
+        verifyNever(
+          () => backend.capture(AnalyticsEvents.onboardingStepViewed, any()),
+        );
+      },
+    );
   });
 }

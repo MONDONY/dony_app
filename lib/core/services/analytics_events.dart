@@ -329,4 +329,9 @@ abstract final class AnalyticsEvents {
   // Onboarding progressif — lot 1
   static const residenceAddressSaved = 'residence_address_saved';
   static const onboardingStepSkipped = 'onboarding_step_skipped';
+
+  // Onboarding progressif — lot 2
+  static const onboardingStepViewed = 'onboarding_step_viewed';
+  static const onboardingStepCompleted = 'onboarding_step_completed';
+  static const onboardingCompleted = 'onboarding_completed';
 }

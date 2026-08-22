@@ -82,6 +82,12 @@ class CountryOnboardingCubit extends Cubit<CountryOnboardingState> {
       await _prefs.put(HiveService.kTravelerCountryUnsupported, false);
       await _prefs.put(HiveService.kCountryOnboardingSeen, true);
       unawaited(_analytics.logEvent(AnalyticsEvents.countryOnboardingSelected));
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.onboardingStepCompleted,
+          properties: {'step': 'country'},
+        ),
+      );
       emit(const CountryOnboardingSuccess());
     } catch (_) {
       emit(
@@ -108,6 +114,12 @@ class CountryOnboardingCubit extends Cubit<CountryOnboardingState> {
       }
       await _prefs.put(HiveService.kCountryOnboardingSeen, true);
       unawaited(_analytics.logEvent(AnalyticsEvents.countryOnboardingSkipped));
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.onboardingStepSkipped,
+          properties: {'step': 'country'},
+        ),
+      );
       emit(const CountryOnboardingSuccess());
     } catch (_) {
       emit(
@@ -126,6 +138,12 @@ class CountryOnboardingCubit extends Cubit<CountryOnboardingState> {
       await _prefs.put(HiveService.kTravelerCountryUnsupported, true);
       await _prefs.put(HiveService.kCountryOnboardingSeen, true);
       unawaited(_analytics.logEvent(AnalyticsEvents.countryOnboardingSkipped));
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.onboardingStepSkipped,
+          properties: {'step': 'country'},
+        ),
+      );
       emit(const CountryOnboardingSuccess());
     } catch (_) {
       emit(

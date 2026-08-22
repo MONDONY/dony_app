@@ -203,6 +203,12 @@ class _Buttons extends StatelessWidget {
         properties: {'granted': granted},
       ),
     );
+    unawaited(
+      getIt<AnalyticsService>().logEvent(
+        AnalyticsEvents.onboardingStepCompleted,
+        properties: {'step': 'consent'},
+      ),
+    );
     if (context.mounted) context.go('/auth/country-selection');
   }
 

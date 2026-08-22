@@ -49,6 +49,9 @@ void main() {
     when(() => repository.updatePrefs(any())).thenAnswer((_) async => _prefs);
     when(() => prefs.put(any(), any())).thenAnswer((_) async {});
     when(() => analytics.logEvent(any())).thenAnswer((_) async {});
+    when(
+      () => analytics.logEvent(any(), properties: any(named: 'properties')),
+    ).thenAnswer((_) async {});
   });
 
   blocTest<CountryOnboardingCubit, CountryOnboardingState>(
@@ -76,6 +79,12 @@ void main() {
         () => prefs.put(HiveService.kCountryOnboardingSeen, true),
         () => analytics.logEvent(AnalyticsEvents.countryOnboardingSelected),
       ]);
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.onboardingStepCompleted,
+          properties: {'step': 'country'},
+        ),
+      ).called(1);
     },
   );
 
@@ -291,6 +300,12 @@ void main() {
       verify(
         () => analytics.logEvent(AnalyticsEvents.countryOnboardingSkipped),
       ).called(1);
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.onboardingStepSkipped,
+          properties: {'step': 'country'},
+        ),
+      ).called(1);
     },
   );
 
@@ -310,6 +325,15 @@ void main() {
       ).called(1);
       verify(
         () => prefs.put(HiveService.kCountryOnboardingSeen, true),
+      ).called(1);
+      verify(
+        () => analytics.logEvent(AnalyticsEvents.countryOnboardingSkipped),
+      ).called(1);
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.onboardingStepSkipped,
+          properties: {'step': 'country'},
+        ),
       ).called(1);
     },
   );

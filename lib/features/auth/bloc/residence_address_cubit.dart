@@ -65,6 +65,12 @@ class ResidenceAddressCubit extends Cubit<ResidenceAddressState> {
           properties: {'has_line2': line2 != null && line2.isNotEmpty},
         ),
       );
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.onboardingStepCompleted,
+          properties: {'step': 'address'},
+        ),
+      );
       emit(const ResidenceAddressSuccess());
     } catch (_) {
       emit(
