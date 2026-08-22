@@ -1,3 +1,4 @@
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 
@@ -71,19 +72,98 @@ OnboardingStep? nextStep({
   if (user?.onboardingSeenAt != null) return null;
 
   for (final step in onboardingSteps(stripe)) {
-    final done = switch (step) {
-      OnboardingStep.consent => analyticsAnswered,
-      OnboardingStep.country =>
-        _hasText(user?.country) || _hasText(countryFallback),
-      OnboardingStep.identity => user?.isKycVerified ?? false,
-      OnboardingStep.address => _hasText(user?.residenceStreet),
-      OnboardingStep.payouts =>
-        _stripeStatus(user, stripe) == 'ONBOARDING_COMPLETE',
-    };
-    if (!done) return step;
+    if (!_isDone(
+      step,
+      user: user,
+      stripe: stripe,
+      analyticsAnswered: analyticsAnswered,
+      countryFallback: countryFallback,
+    )) {
+      return step;
+    }
   }
   return null;
 }
+
+/// L'état de l'onboarding tel que la jauge doit le montrer : lesquelles sont
+/// faites, laquelle est en cours, combien il en reste.
+class OnboardingProgress {
+  const OnboardingProgress({
+    required this.steps,
+    required this.done,
+    this.current,
+  });
+
+  /// Les étapes comptées, dans l'ordre. Quatre ou cinq selon la couverture
+  /// Stripe du pays.
+  final List<OnboardingStep> steps;
+
+  /// Celles dont le fait serveur existe.
+  final Set<OnboardingStep> done;
+
+  /// L'étape que l'écran courant remplit, ou `null` sur un écran hors décompte
+  /// (parrainage).
+  final OnboardingStep? current;
+
+  int get total => steps.length;
+  int get doneCount => done.length;
+
+  /// Traduction pour `DonyOnboardingGauge`, qui ne connaît aucune étape métier.
+  ///
+  /// Une étape **passée reste vide** : passer n'est pas terminer (spec §4.2).
+  List<DonyGaugeSegment> get segments => [
+    for (final step in steps)
+      if (done.contains(step))
+        DonyGaugeSegment.done
+      else if (step == current)
+        DonyGaugeSegment.current
+      else
+        DonyGaugeSegment.todo,
+  ];
+}
+
+/// Même déduction que [nextStep], mais rendue en entier plutôt qu'arrêtée à la
+/// première étape manquante. Pure, mêmes arguments.
+OnboardingProgress onboardingProgress({
+  required UserModel? user,
+  required StripeAccountState stripe,
+  required bool analyticsAnswered,
+  String? countryFallback,
+  OnboardingStep? current,
+}) {
+  final steps = onboardingSteps(stripe);
+  return OnboardingProgress(
+    steps: steps,
+    done: {
+      for (final step in steps)
+        if (_isDone(
+          step,
+          user: user,
+          stripe: stripe,
+          analyticsAnswered: analyticsAnswered,
+          countryFallback: countryFallback,
+        ))
+          step,
+    },
+    current: current,
+  );
+}
+
+bool _isDone(
+  OnboardingStep step, {
+  required UserModel? user,
+  required StripeAccountState stripe,
+  required bool analyticsAnswered,
+  String? countryFallback,
+}) => switch (step) {
+  OnboardingStep.consent => analyticsAnswered,
+  OnboardingStep.country =>
+    _hasText(user?.country) || _hasText(countryFallback),
+  OnboardingStep.identity => user?.isKycVerified ?? false,
+  OnboardingStep.address => _hasText(user?.residenceStreet),
+  OnboardingStep.payouts =>
+    _stripeStatus(user, stripe) == 'ONBOARDING_COMPLETE',
+};
 
 /// Le statut du bloc fait foi quand il est chargé ; sinon celui porté par le
 /// profil. Sans ce repli, le résolveur serait aveugle pendant tout le parcours

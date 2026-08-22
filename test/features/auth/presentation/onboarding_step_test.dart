@@ -1,3 +1,4 @@
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/models/connect_account_status.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/auth/presentation/onboarding_step.dart';
@@ -245,6 +246,93 @@ void main() {
       expect(OnboardingStep.identity.route, '/kyc/verify');
       expect(OnboardingStep.address.route, '/auth/residence-address');
       expect(OnboardingStep.payouts.route, '/payments/onboarding');
+    });
+  });
+
+  group('onboardingProgress — ce que la jauge doit montrer', () {
+    test('une étape faite est pleine, l\'étape en cours est à moitié, '
+        'le reste est vide', () {
+      final p = onboardingProgress(
+        user: _user(country: 'FR'),
+        stripe: _connectOk,
+        analyticsAnswered: true,
+        current: OnboardingStep.identity,
+      );
+
+      expect(p.total, 5);
+      expect(p.doneCount, 2);
+      expect(p.segments, const [
+        DonyGaugeSegment.done, // consentement
+        DonyGaugeSegment.done, // pays
+        DonyGaugeSegment.current, // identité
+        DonyGaugeSegment.todo, // adresse
+        DonyGaugeSegment.todo, // paiements
+      ]);
+    });
+
+    test('une étape passée reste vide — passer n\'est pas terminer', () {
+      // L'utilisateur a passé le pays (skip) et se trouve sur l'adresse :
+      // le segment « pays » ne doit pas se remplir pour autant.
+      final p = onboardingProgress(
+        user: _user(),
+        stripe: _connectOk,
+        analyticsAnswered: true,
+        current: OnboardingStep.address,
+      );
+
+      expect(p.segments, const [
+        DonyGaugeSegment.done,
+        DonyGaugeSegment.todo, // pays passé, donc vide
+        DonyGaugeSegment.todo,
+        DonyGaugeSegment.current,
+        DonyGaugeSegment.todo,
+      ]);
+    });
+
+    test('sans étape en cours (écran parrainage, hors décompte) aucun segment '
+        'n\'est à moitié', () {
+      final p = onboardingProgress(
+        user: _user(country: 'FR'),
+        stripe: _connectOk,
+        analyticsAnswered: true,
+      );
+
+      expect(p.current, isNull);
+      expect(p.segments.contains(DonyGaugeSegment.current), isFalse);
+      expect(p.doneCount, 2);
+    });
+
+    test('pays hors couverture Stripe → quatre segments', () {
+      final p = onboardingProgress(
+        user: _user(
+          country: 'SN',
+          kycStatus: 'VERIFIED',
+          residenceStreet: '12 rue des Lilas',
+        ),
+        stripe: _connectUnavailable,
+        analyticsAnswered: true,
+      );
+
+      expect(p.total, 4);
+      expect(p.doneCount, 4);
+      expect(p.segments, const [
+        DonyGaugeSegment.done,
+        DonyGaugeSegment.done,
+        DonyGaugeSegment.done,
+        DonyGaugeSegment.done,
+      ]);
+    });
+
+    test('une étape déjà faite reste pleine même si elle est l\'étape '
+        'en cours', () {
+      final p = onboardingProgress(
+        user: _user(country: 'FR'),
+        stripe: _connectOk,
+        analyticsAnswered: true,
+        current: OnboardingStep.country,
+      );
+
+      expect(p.segments[1], DonyGaugeSegment.done);
     });
   });
 }
