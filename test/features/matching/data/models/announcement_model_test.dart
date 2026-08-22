@@ -486,6 +486,28 @@ void main() {
     });
   });
 
+  group('AnnouncementModel.pricePerKg (net masqué pour un invité)', () {
+    test('tolère un pricePerKg absent (net masqué pour un invité)', () {
+      // Le backend masque le net voyageur aux sessions anonymes (décision
+      // produit A15 : le net révélerait le taux de commission). Le modèle
+      // doit survivre à son absence, sinon toute la recherche plante à la
+      // désérialisation.
+      final json = baseAnnouncementJson()
+        ..remove('pricePerKg')
+        ..['pricePerKgDisplay'] = 12.0;
+
+      final model = AnnouncementModel.fromJson(json);
+
+      expect(model.pricePerKg, isNull);
+      expect(model.pricePerKgDisplay, 12.0);
+    });
+
+    test('lit pricePerKg quand il est présent (compte inscrit)', () {
+      final model = AnnouncementModel.fromJson(baseAnnouncementJson());
+      expect(model.pricePerKg, 5.0);
+    });
+  });
+
   group('AnnouncementModel.arrivalInstructions', () {
     test('fromJson parses arrivalInstructions', () {
       final json = baseAnnouncementJson()

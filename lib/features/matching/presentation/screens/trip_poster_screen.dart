@@ -213,12 +213,15 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
   /// l'article ne peut pas annoncer « 0 € le kilo » d'un côté et sa grille de
   /// l'autre.
   static String _priceSentence(AnnouncementModel a) {
-    final kilo = '${formatPriceIn(a.senderPricePerKg, a.currency)} le kilo';
+    final senderPricePerKg = a.senderPricePerKg;
+    final kilo = senderPricePerKg == null
+        ? null
+        : '${formatPriceIn(senderPricePerKg, a.currency)} le kilo';
     final grid = a.cheapestGridPrice;
-    if (grid == null) return kilo;
+    if (grid == null) return kilo ?? 'Prix indisponible';
 
     final article = "dès ${formatPriceIn(grid, a.currency)} l'article";
-    return a.hasKgPrice ? '$article et $kilo' : article;
+    return (a.hasKgPrice && kilo != null) ? '$article et $kilo' : article;
   }
 
   /// Capture l'affiche en PNG, une seule fois par écran.

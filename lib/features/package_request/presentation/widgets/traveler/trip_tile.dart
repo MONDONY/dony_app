@@ -35,6 +35,12 @@ class TripTile extends StatelessWidget {
     final cashOn = announcement.acceptedPaymentMethods.contains(
       BidPaymentMethod.cash,
     );
+    // Net voyageur : jamais null en pratique ici (écran de liaison d'un
+    // trajet à SOI, donc toujours connecté), mais le type suit le modèle.
+    final kgPrice = announcement.pricePerKg;
+    final kgPriceLabel = kgPrice == null
+        ? 'Indisponible'
+        : '${formatPriceIn(kgPrice, announcement.currency)}/kg';
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Material(
@@ -86,8 +92,8 @@ class TripTile extends StatelessWidget {
                             ),
                             Text(
                               announcement.isKgFree
-                                  ? 'Kg libre · ${formatPriceIn(announcement.pricePerKg, announcement.currency)}/kg'
-                                  : '${announcement.availableKg} kg dispo · ${formatPriceIn(announcement.pricePerKg, announcement.currency)}/kg',
+                                  ? 'Kg libre · $kgPriceLabel'
+                                  : '${announcement.availableKg} kg dispo · $kgPriceLabel',
                               style: Theme.of(context).textTheme.bodyMedium!
                                   .copyWith(
                                     fontSize: 12,

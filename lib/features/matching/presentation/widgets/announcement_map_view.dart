@@ -222,7 +222,9 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
       buf
         ..write(a.id)
         ..write(':')
-        ..write((a.pricePerKg * 100).round()) // cents → stable integer key
+        // cents → clé entière stable ; net absent (lecteur anonyme) → jeton
+        // dédié, jamais confondu avec un vrai montant à 0.
+        ..write(a.pricePerKg == null ? 'null' : (a.pricePerKg! * 100).round())
         ..write(':')
         ..write(a.departureDate.millisecondsSinceEpoch)
         ..write(';');
@@ -271,13 +273,17 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
         // Same address: stacked pill with count badge.
         // Show cheapest price and most urgent (earliest) departure.
         // Prix affiché à l'expéditeur (net + commission) — cohérent avec les cartes/sheets.
+        // Absent (grille pure, ou net masqué pour un lecteur anonyme) → même
+        // sentinelle `<= 0` que le mode MIXED : `_renderStackedPricePill`
+        // affiche déjà « Grille » plutôt qu'un faux montant dans ce cas.
         final cheapestItem = cluster.items.reduce(
           (a, b) =>
-              a.announcement.senderPricePerKg < b.announcement.senderPricePerKg
+              (a.announcement.senderPricePerKg ?? 0) <
+                  (b.announcement.senderPricePerKg ?? 0)
               ? a
               : b,
         );
-        final cheapest = cheapestItem.announcement.senderPricePerKg;
+        final cheapest = cheapestItem.announcement.senderPricePerKg ?? 0;
         final earliest = cluster.items
             .map((it) => it.announcement.departureDate)
             .reduce((a, b) => a.isBefore(b) ? a : b);
@@ -328,7 +334,8 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
     );
     final isSelected = item.announcement.id == widget.selectedAnnouncementId;
     final icon = await MarkerBitmapFactory.pricePill(
-      pricePerKg: item.announcement.senderPricePerKg,
+      // Idem : absent → sentinelle `<= 0`, déjà rendue comme « Grille ».
+      pricePerKg: item.announcement.senderPricePerKg ?? 0,
       dotColor: urgencyColor,
       isSelected: isSelected,
       brightness: _brightness,

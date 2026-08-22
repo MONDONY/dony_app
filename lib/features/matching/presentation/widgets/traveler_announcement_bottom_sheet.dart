@@ -349,7 +349,9 @@ class _TravelerAnnouncementContent extends StatelessWidget {
           iconAsset: 'euro',
           label: announcement.pricingMode == 'MIXED'
               ? 'Grille tarifaire'
-              : '${formatPriceIn(announcement.senderPricePerKg, announcement.currency)}/kg',
+              : announcement.senderPricePerKg == null
+              ? 'Prix indisponible'
+              : '${formatPriceIn(announcement.senderPricePerKg!, announcement.currency)}/kg',
           labelStyle: TextStyle(color: cs.primary, fontWeight: FontWeight.w700),
         ),
 

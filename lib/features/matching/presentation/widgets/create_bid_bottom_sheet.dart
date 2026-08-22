@@ -213,12 +213,20 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   late final ValueNotifier<BidPaymentMethod> _methodNotifier;
 
   double get _maxKg => widget.announcement.availableKg;
-  double get _pricePerKg => widget.announcement.pricePerKg;
+
+  /// Net voyageur. `null` seulement pour un lecteur anonyme (le backend
+  /// masque le net) ; cet écran de création d'offre exige d'être connecté,
+  /// donc `null` n'arrive pas en pratique, mais le type suit le modèle.
+  double? get _pricePerKg => widget.announcement.pricePerKg;
 
   /// Grille pure (pas de prix/kg) : le contenu se déduit des articles
-  /// choisis, l'expéditeur ne saisit plus de catégorie à la main.
-  bool get _isGridOnly =>
-      widget.announcement.priceGridItems.isNotEmpty && _pricePerKg <= 0;
+  /// choisis, l'expéditeur ne saisit plus de catégorie à la main. Un net
+  /// absent compte comme « pas de tarif au kilo », même bucket que `0.0`.
+  bool get _isGridOnly {
+    final price = _pricePerKg;
+    return widget.announcement.priceGridItems.isNotEmpty &&
+        (price == null || price <= 0);
+  }
 
   /// Libellés des articles de grille sélectionnés (quantité > 0), utilisés
   /// comme `contentCategory` en grille pure — remplace le combobox masqué.
@@ -424,7 +432,8 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
 
   void _syncFormButtonState() {
     if (_stepNotifier.value != _FormStep.form) return;
-    final hasKgPricing = widget.announcement.pricePerKg > 0;
+    final kgPrice = widget.announcement.pricePerKg;
+    final hasKgPricing = kgPrice != null && kgPrice > 0;
     final hasGridPricing = widget.announcement.priceGridItems.isNotEmpty;
     final weightOk = hasKgPricing && _weightNotifier.value > 0;
     final gridOk = hasGridPricing && _gridQuantitiesNotifier.value.isNotEmpty;
@@ -483,8 +492,9 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
 
   /// Total expéditeur calculé localement, sans attendre le devis serveur.
   double _localSenderTotal() {
-    final kg = widget.announcement.pricePerKg > 0
-        ? netToSenderPrice(_weightNotifier.value * _pricePerKg)
+    final price = _pricePerKg;
+    final kg = (price != null && price > 0)
+        ? netToSenderPrice(_weightNotifier.value * price)
         : 0.0;
     return kg + _gridDisplayTotal();
   }
@@ -577,7 +587,9 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     if (quote is BidQuoteResponse) return quote.totalEur;
     final data = _formData;
     if (data == null) return 0.0;
-    return netToSenderPrice(data.weightKg * _pricePerKg) + _gridDisplayTotal();
+    final price = _pricePerKg;
+    final kg = price == null ? 0.0 : data.weightKg * price;
+    return netToSenderPrice(kg) + _gridDisplayTotal();
   }
 
   // ── Content helpers ─────────────────────────────────────────────────────────
@@ -926,7 +938,8 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         final disclaimerAccepted = _disclaimerNotifier.value;
         final gridQuantities = _gridQuantitiesNotifier.value;
         final hasGridPricing = widget.announcement.priceGridItems.isNotEmpty;
-        final hasKgPricing = widget.announcement.pricePerKg > 0;
+        final kgPrice = widget.announcement.pricePerKg;
+        final hasKgPricing = kgPrice != null && kgPrice > 0;
 
         final gridTotal = hasGridPricing
             ? widget.announcement.priceGridItems.fold<double>(
@@ -1262,7 +1275,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
               builder: (_, quoteVal, _) {
                 final quote = quoteVal is BidQuoteResponse ? quoteVal : null;
                 final kgDisplayLocal = hasKgPricing
-                    ? netToSenderPrice(weightKg * _pricePerKg)
+                    ? netToSenderPrice(weightKg * kgPrice)
                     : 0.0;
                 final localTotal = kgDisplayLocal + gridTotal;
 
@@ -1273,7 +1286,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                 // solde duquel Yadony prélève ensuite sa commission. Le net du
                 // voyageur ne doit apparaître nulle part ici — il n'appartient
                 // qu'au voyageur.
-                double kgNet = hasKgPricing ? weightKg * _pricePerKg : 0.0;
+                double kgNet = hasKgPricing ? weightKg * kgPrice : 0.0;
                 double gridNet = hasGridPricing
                     ? gridTotal / donyCommissionMultiplier
                     : 0.0;
@@ -1304,9 +1317,12 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                   // l'annonce : sous promo le taux diffère du taux global, et
                   // « 5 kg × tarif » doit toujours valoir la ligne affichée.
                   // Miroir de pricePerKgSenderEur côté backend (brut / poids).
+                  // Repli jamais rendu : `_PriceBreakdown` n'affiche cette
+                  // valeur que si `weightKg > 0` (cf. sa méthode `build`), donc
+                  // `0` ici ne mentira jamais à l'écran.
                   pricePerKg: weightKg > 0
                       ? kgLine / weightKg
-                      : widget.announcement.senderPricePerKg,
+                      : (widget.announcement.senderPricePerKg ?? 0),
                   kgDisplay: kgLine,
                   gridDisplay: gridLine,
                   totalPrice: total,

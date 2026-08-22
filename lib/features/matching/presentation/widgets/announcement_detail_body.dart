@@ -133,7 +133,9 @@ class AnnouncementDetailBody extends StatelessWidget {
                 child: _InfoPill(
                   value: a.pricingMode == 'MIXED'
                       ? 'Grille'
-                      : '${formatPriceIn(a.pricePerKg, a.currency)}/kg',
+                      : a.pricePerKg == null
+                      ? 'Indisponible'
+                      : '${formatPriceIn(a.pricePerKg!, a.currency)}/kg',
                   label: a.pricingMode == 'MIXED' ? 'tarifaire' : 'prix',
                 ),
               ),

@@ -56,7 +56,7 @@ AnnouncementModel _$AnnouncementModelFromJson(
       : AddressData.fromJson(json['deliveryAddress'] as Map<String, dynamic>),
   availableKg: (json['availableKg'] as num).toDouble(),
   totalKg: (json['totalKg'] as num).toDouble(),
-  pricePerKg: (json['pricePerKg'] as num).toDouble(),
+  pricePerKg: (json['pricePerKg'] as num?)?.toDouble(),
   pricePerKgDisplay: (json['pricePerKgDisplay'] as num?)?.toDouble(),
   transportMode: transportModeFromWire(json['transportMode'] as String?),
   status: json['status'] as String,

@@ -292,6 +292,7 @@ class TripPosterCard extends StatelessWidget {
   Widget _priceBlock(TextTheme text) {
     final currency = announcement.currency;
     final grid = announcement.cheapestGridPrice;
+    final senderPricePerKg = announcement.senderPricePerKg;
     final hasKg = announcement.hasKgPrice;
 
     final String amount;
@@ -303,12 +304,14 @@ class TripPosterCard extends StatelessWidget {
       // l'article le moins cher, pas le tarif de tous les articles.
       amount = 'dès ${formatPriceIn(grid, currency)}';
       unit = "l'article";
-      if (hasKg) {
-        secondary =
-            '${formatPriceIn(announcement.senderPricePerKg, currency)} le kilo';
+      if (hasKg && senderPricePerKg != null) {
+        secondary = '${formatPriceIn(senderPricePerKg, currency)} le kilo';
       }
     } else {
-      amount = formatPriceIn(announcement.senderPricePerKg, currency);
+      // Net masqué (lecteur anonyme) ou absent : jamais de faux « 0 € ».
+      amount = senderPricePerKg == null
+          ? 'Prix indisponible'
+          : formatPriceIn(senderPricePerKg, currency);
       unit = 'le kilo';
     }
 

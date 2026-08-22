@@ -401,7 +401,9 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                         : 'Prix par kg',
                     value: a.pricingMode == 'MIXED'
                         ? 'Grille'
-                        : '${formatPriceIn(a.pricePerKg, a.currency)}/kg',
+                        : a.pricePerKg == null
+                        ? 'Indisponible'
+                        : '${formatPriceIn(a.pricePerKg!, a.currency)}/kg',
                     color: cs.primary,
                     cs: cs,
                     tt: tt,

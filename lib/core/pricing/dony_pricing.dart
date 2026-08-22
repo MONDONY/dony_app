@@ -184,8 +184,17 @@ extension AnnouncementSenderPricing on AnnouncementModel {
   /// champ backend [AnnouncementModel.pricePerKgDisplay] s'il est présent, sinon
   /// recalcule via [donyCommissionMultiplier]. À utiliser sur toutes les
   /// surfaces vues par l'expéditeur ; les surfaces voyageur gardent `pricePerKg`.
-  double get senderPricePerKg =>
-      pricePerKgDisplay ?? netToSenderPrice(pricePerKg);
+  ///
+  /// `null` quand ni [pricePerKgDisplay] ni [pricePerKg] ne sont exploitables :
+  /// mode `MIXED` sans grille de prix au kilo, ou (net masqué pour un
+  /// lecteur anonyme) absence des deux champs. Ne jamais retomber sur `0` :
+  /// un net à zéro s'afficherait comme un vrai prix.
+  double? get senderPricePerKg {
+    final display = pricePerKgDisplay;
+    if (display != null) return display;
+    final net = pricePerKg;
+    return net == null ? null : netToSenderPrice(net);
+  }
 
   /// Équivalent, dans la devise convertie par le serveur
   /// ([AnnouncementModel.convertedCurrency]), du prix affiché à l'expéditeur
@@ -202,23 +211,34 @@ extension AnnouncementSenderPricing on AnnouncementModel {
   /// taux de change, seulement la majoration commission déjà appliquée au
   /// montant d'origine.
   ///
-  /// `null` si le serveur n'a rien converti, ou si [pricePerKg] est nul (mode
-  /// `MIXED` sans tarif au kilo : pas de ratio net→brut exploitable).
+  /// `null` si le serveur n'a rien converti, si [pricePerKg] est nul (mode
+  /// `MIXED` sans tarif au kilo, ou net masqué pour un lecteur anonyme : pas
+  /// de ratio net→brut exploitable), ou si [senderPricePerKg] est absent.
   double? get convertedSenderPricePerKg {
     final converted = convertedPricePerKg;
-    if (converted == null || pricePerKg <= 0) return null;
-    final markupRatio = senderPricePerKg / pricePerKg;
+    final net = pricePerKg;
+    final sender = senderPricePerKg;
+    if (converted == null || net == null || net <= 0 || sender == null) {
+      return null;
+    }
+    final markupRatio = sender / net;
     return converted * markupRatio;
   }
 
-  /// Le trajet porte-t-il un tarif au kilo exploitable ?
+  /// Le trajet porte-t-il un tarif au kilo exploitable **à afficher à
+  /// l'expéditeur** ?
   ///
-  /// En mode `MIXED` le prix au kilo est facultatif, mais la colonne backend est
-  /// `NOT NULL` et le formulaire de création la remplit avec `0.0`. Ni
-  /// `pricePerKg` ni `pricePerKgDisplay` ne valent donc jamais `null` : un test
-  /// de nullité laisse passer un « 0 € le kilo » parfaitement faux. C'est la
-  /// valeur, pas la présence, qui tranche.
-  bool get hasKgPrice => pricePerKg > 0;
+  /// Dérivé de [senderPricePerKg] (pas du net brut [pricePerKg], qui peut être
+  /// masqué pour un lecteur anonyme sans que le prix affiché le soit). En mode
+  /// `MIXED` le prix au kilo est facultatif : la colonne backend `pricePerKg`
+  /// étant `NOT NULL`, le formulaire de création la remplit avec `0.0`, ce que
+  /// [senderPricePerKg] répercute à `0.0` plutôt qu'à `null`. C'est donc la
+  /// valeur strictement positive de [senderPricePerKg], pas sa seule présence,
+  /// qui tranche.
+  bool get hasKgPrice {
+    final sender = senderPricePerKg;
+    return sender != null && sender > 0;
+  }
 
   /// Le trajet est-il vendu à l'article ? Le backend garantit une grille non
   /// vide en mode `MIXED` (422 `price-grid-empty` sinon), mais on vérifie

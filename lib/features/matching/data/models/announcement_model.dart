@@ -124,7 +124,12 @@ class AnnouncementModel {
   final AddressData? deliveryAddress;
   final double availableKg;
   final double totalKg;
-  final double pricePerKg;
+
+  /// Net voyageur. `null` pour une session anonyme : le backend masque le
+  /// net aux invités (il révélerait le taux de commission, parfois négocié
+  /// par voyageur). Utiliser [pricePerKgDisplay] pour l'affichage côté
+  /// expéditeur, qui reste fourni.
+  final double? pricePerKg;
 
   /// Prix au kilo affiché à l'EXPÉDITEUR = `pricePerKg` (net voyageur) + commission Yadony.
   /// Fourni par le backend (symétrique de `unitPriceDisplay` du mode MIXED) ; null si
@@ -226,7 +231,7 @@ class AnnouncementModel {
     this.deliveryAddress,
     required this.availableKg,
     required this.totalKg,
-    required this.pricePerKg,
+    this.pricePerKg,
     this.pricePerKgDisplay,
     this.transportMode,
     required this.status,
