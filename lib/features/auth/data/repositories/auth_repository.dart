@@ -9,6 +9,12 @@ class AuthRepository {
   Future<UserModel> register({required String phoneNumber}) =>
       _datasource.register(phoneNumber: phoneNumber);
 
+  /// Rattache les données du visiteur au compte appelant. À appeler APRÈS la
+  /// création du compte serveur : sans la ligne de l'appelant, l'endpoint
+  /// répond 404.
+  Future<void> claimGuestData(String guestIdToken) =>
+      _datasource.claimGuestData(guestIdToken);
+
   Future<UserModel> getProfile() => _datasource.getProfile();
 
   Future<void> deleteAccount() => _datasource.deleteAccount();

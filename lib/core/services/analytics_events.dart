@@ -18,6 +18,16 @@ abstract final class AnalyticsEvents {
   /// échéant, `unknown` sinon.
   static const guestSessionFailed = 'guest_session_failed';
 
+  /// Données posées en session visiteur (favoris, alertes) rattachées avec
+  /// succès au compte créé à l'inscription. Mesure la sortie de l'entonnoir
+  /// invité → inscription, c'est-à-dire la promesse tenue du mode visiteur.
+  static const guestDataClaimed = 'guest_data_claimed';
+
+  /// Échec du rattachement : le compte est bien créé, mais le visiteur perd
+  /// ses favoris. Propriété `reason` : code métier du backend
+  /// (`guest-claim-invalid-token`, `guest-claim-self`, …) ou `unknown`.
+  static const guestDataClaimFailed = 'guest_data_claim_failed';
+
   // KYC
   static const kycStarted = 'kyc_started';
   static const kycCompleted = 'kyc_completed';

@@ -31,6 +31,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   String? _pendingPhoneNumber;
   Timer? _otpTimer;
 
+  /// Jeton de la session visiteur en cours, capturé juste avant la bascule
+  /// vers le compte réel.
+  ///
+  /// Le parcours téléphone passe par un custom token : l'UID du visiteur n'est
+  /// jamais conservé, et les favoris posés en session anonyme appartiennent
+  /// donc à un autre compte que celui créé à l'inscription. Ce jeton est le
+  /// seul moyen de les réclamer ensuite.
+  String? _pendingGuestIdToken;
+
   AuthBloc(
     this._authRepository,
     this._localAuthService, {
@@ -173,6 +182,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         _pendingPhoneNumber ?? '',
         event.smsCode,
       );
+      // Capture AVANT la bascule : après `signInWithCustomToken`, l'utilisateur
+      // courant est le nouveau compte et la session anonyme est perdue à
+      // jamais. C'est le seul instant où son jeton est encore lisible.
+      await _captureGuestIdToken();
       await _firebaseAuth.signInWithCustomToken(customToken);
 
       // 2. Vérifier si l'utilisateur est déjà inscrit en backend
@@ -215,6 +228,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final user = await _authRepository.register(
         phoneNumber: _pendingPhoneNumber ?? '',
       );
+      await _refreshIdTokenAfterRegistration();
+      await _claimGuestData();
       // Nouveau compte → effacer tout PIN résiduel d'un compte précédent
       // (le PIN est lié à l'appareil, pas à l'utilisateur Firebase)
       await _localAuthService.clearPin();
@@ -382,6 +397,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         event.email,
         event.code,
       );
+      // Même contrainte que sur le parcours téléphone : le jeton du visiteur
+      // ne survit pas à la bascule de session.
+      await _captureGuestIdToken();
       await _firebaseAuth.signInWithCustomToken(customToken);
       // User existant → Home directement ; nouveau → RoleSelection
       final user = await _authRepository.getProfile();
@@ -412,6 +430,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(const AuthLoading());
     try {
       final user = await _authRepository.registerWithEmail(email: event.email);
+      await _refreshIdTokenAfterRegistration();
+      await _claimGuestData();
       await _localAuthService.clearPin();
       await _clearHiveAccountData();
       emit(AuthNewAccountAuthenticated(user));
@@ -438,6 +458,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
+      // Un visiteur peut s'inscrire par Google : capturer son jeton avant que
+      // la session anonyme ne cède la place au compte réel.
+      await _captureGuestIdToken();
       await _firebaseAuth.signInWithCredential(credential);
       _pendingPhoneNumber = _firebaseAuth.currentUser?.email ?? '';
       await _checkProfileAfterOAuth(emit);
@@ -461,6 +484,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         idToken: appleCredential.identityToken,
         accessToken: appleCredential.authorizationCode,
       );
+      // Un visiteur peut s'inscrire par Apple : même capture préalable.
+      await _captureGuestIdToken();
       await _firebaseAuth.signInWithCredential(oauthCredential);
       _pendingPhoneNumber = _firebaseAuth.currentUser?.email ?? '';
       await _checkProfileAfterOAuth(emit);
@@ -585,6 +610,73 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           },
         ),
       );
+    }
+  }
+
+  // ─── Reprise des données du visiteur ──────────────────────────────────────
+  //
+  // Le mode visiteur ne vaut que si ce qu'un visiteur met de côté survit à son
+  // inscription. Comme l'UID n'est pas conservé (custom token), la seule voie
+  // est de présenter le jeton anonyme à `POST /auth/guest/claim`. L'ordre est
+  // impératif : capture avant la bascule de session, réclamation après la
+  // création du compte serveur.
+
+  /// Lit le jeton de la session visiteur en cours, s'il y en a une.
+  ///
+  /// À appeler juste AVANT toute bascule d'authentification : ensuite,
+  /// `currentUser` est le nouveau compte et le jeton du visiteur est perdu.
+  /// Toute erreur de lecture est absorbée : on renonce aux favoris, jamais à
+  /// la connexion.
+  Future<void> _captureGuestIdToken() async {
+    _pendingGuestIdToken = null;
+    try {
+      final previous = _firebaseAuth.currentUser;
+      if (previous != null && previous.isAnonymous) {
+        _pendingGuestIdToken = await previous.getIdToken();
+      }
+    } catch (_) {
+      _pendingGuestIdToken = null;
+    }
+  }
+
+  /// Rattache au compte fraîchement créé les données posées en visiteur.
+  ///
+  /// À appeler APRÈS `POST /auth/register` : tant que la ligne de l'appelant
+  /// n'existe pas, l'endpoint répond 404.
+  ///
+  /// Un échec ne doit JAMAIS faire échouer l'inscription. Perdre ses favoris
+  /// est regrettable ; être bloqué à la porte d'un compte tout neuf serait
+  /// bien pire. On mesure l'échec et on continue.
+  Future<void> _claimGuestData() async {
+    final guestToken = _pendingGuestIdToken;
+    _pendingGuestIdToken = null;
+    if (guestToken == null) return;
+    try {
+      await _authRepository.claimGuestData(guestToken);
+      unawaited(_analytics?.logEvent(AnalyticsEvents.guestDataClaimed));
+    } catch (e) {
+      unawaited(
+        _analytics?.logEvent(
+          AnalyticsEvents.guestDataClaimFailed,
+          properties: {'reason': unwrapDioError(e).code ?? 'unknown'},
+        ),
+      );
+    }
+  }
+
+  /// Force l'émission d'un jeton à jour après une inscription réussie.
+  ///
+  /// Le jeton en cache peut encore annoncer une session anonyme pendant une
+  /// heure : le backend refuserait alors paiement et publication, avec un
+  /// message que l'utilisateur ne pourrait pas comprendre. `api_client` force
+  /// déjà ce rafraîchissement sur les endpoints critiques, mais jamais après
+  /// une inscription — c'est ce trou que l'on comble ici.
+  Future<void> _refreshIdTokenAfterRegistration() async {
+    try {
+      await _firebaseAuth.currentUser?.getIdToken(true);
+    } catch (_) {
+      // Hors ligne ou Firebase indisponible : les endpoints critiques
+      // forceront de nouveau le rafraîchissement au prochain appel.
     }
   }
 
