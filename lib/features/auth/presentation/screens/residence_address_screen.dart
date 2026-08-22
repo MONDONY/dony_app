@@ -1,3 +1,4 @@
+import 'package:dony/core/currency/country_catalog.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/address/address_section_label.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -12,8 +13,9 @@ import 'package:go_router/go_router.dart';
 /// sélection du pays (`/auth/country-selection`) et le code de parrainage
 /// (`/auth/referral-code`).
 ///
-/// [country] est le pays verrouillé à l'inscription (`UserModel.country`),
-/// injecté par le routeur — jamais lu directement ici via `AuthBloc` pour que
+/// [country] est le code pays ISO 3166-1 alpha-2 (ex. `FR`) choisi à l'étape
+/// précédente (`CountryOnboardingCubit`) et exposé par `BusinessPrefsBloc`,
+/// injecté par le routeur — jamais lu directement ici via ce Bloc pour que
 /// cet écran reste testable sans provider ambiant.
 class ResidenceAddressScreen extends StatefulWidget {
   const ResidenceAddressScreen({super.key, this.country});
@@ -25,8 +27,12 @@ class ResidenceAddressScreen extends StatefulWidget {
 }
 
 class _ResidenceAddressScreenState extends State<ResidenceAddressScreen> {
+  // Le champ verrouillé affiche le nom lisible ('France'), jamais le code
+  // ISO brut ('FR') que porte `widget.country`.
+  String? get _countryName => CountryCatalog.byCode(widget.country)?.name;
+
   late final _countryCtrl = TextEditingController(
-    text: widget.country ?? 'Non renseigné',
+    text: _countryName ?? 'Non renseigné',
   );
   final _streetCtrl = TextEditingController();
   final _line2Ctrl = TextEditingController();
@@ -135,7 +141,7 @@ class _ResidenceAddressScreenState extends State<ResidenceAddressScreen> {
                                     .slideY(begin: 0.04),
                                 const SizedBox(height: DonySpacing.md),
                                 _ResidenceFieldsPanel(
-                                  country: widget.country,
+                                  country: _countryName,
                                   countryCtrl: _countryCtrl,
                                   streetCtrl: _streetCtrl,
                                   line2Ctrl: _line2Ctrl,

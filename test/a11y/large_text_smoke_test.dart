@@ -806,7 +806,10 @@ Widget _wrapResidenceAddress(ResidenceAddressCubit cubit) => MaterialApp.router(
         path: '/',
         builder: (_, _) => BlocProvider<ResidenceAddressCubit>.value(
           value: cubit,
-          child: const ResidenceAddressScreen(country: 'Sénégal'),
+          // Code ISO, comme le fournit `BusinessPrefsBloc.state.country`
+          // depuis la correction du lot 1 (le widget résout lui-même le nom
+          // lisible via `CountryCatalog.byCode`) — pas le nom affiché.
+          child: const ResidenceAddressScreen(country: 'SN'),
         ),
       ),
       GoRoute(

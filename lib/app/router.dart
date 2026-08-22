@@ -150,6 +150,7 @@ import 'package:dony/features/settings/bloc/accessibility_bloc.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:dony/features/settings/bloc/app_preferences_bloc.dart';
 import 'package:dony/features/settings/bloc/blocked_users_bloc.dart';
+import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:dony/features/settings/bloc/connected_devices_bloc.dart';
 import 'package:dony/features/settings/bloc/data_export_bloc.dart';
 import 'package:dony/features/settings/bloc/diagnostics_bloc.dart';
@@ -348,7 +349,11 @@ final appRouter = GoRouter(
       builder: (context, state) => BlocProvider(
         create: (_) => getIt<ResidenceAddressCubit>(),
         child: ResidenceAddressScreen(
-          country: context.read<AuthBloc>().state.currentUser?.country,
+          // `AuthBloc.state.currentUser?.country` n'est jamais renseigné :
+          // `POST /auth/register` n'écrit pas `users.country`. Le vrai pays
+          // choisi à l'étape précédente (`CountryOnboardingCubit`) est écrit
+          // dans Hive et exposé par `BusinessPrefsBloc`, fourni app-wide.
+          country: context.read<BusinessPrefsBloc>().state.country,
         ),
       ),
     ),

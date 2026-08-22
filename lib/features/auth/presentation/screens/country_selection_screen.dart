@@ -10,8 +10,24 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-class CountrySelectionScreen extends StatelessWidget {
+class CountrySelectionScreen extends StatefulWidget {
   const CountrySelectionScreen({super.key});
+
+  @override
+  State<CountrySelectionScreen> createState() => _CountrySelectionScreenState();
+}
+
+class _CountrySelectionScreenState extends State<CountrySelectionScreen> {
+  // Cet écran a trois sorties : `select` (un pays choisi), `skip` et
+  // `continueAsSenderOnly` (aucun pays). Les deux dernières n'ont rien à
+  // faire préparer sur `/auth/residence-address` (adresse de résidence
+  // = préparer le compte de paiement voyageur) : elles doivent filer
+  // directement au parrainage. `CountryOnboardingSuccess` ne porte aucune
+  // information permettant de distinguer ces trois chemins, mais
+  // `CountryOnboardingSaving.countryCode` — toujours émis juste avant — si :
+  // non nul pour `select`, nul pour les deux autres. `listenWhen` capture ce
+  // code à chaque transition, avant que `listener` ne route sur le succès.
+  String? _lastAttemptedCountryCode;
 
   @override
   Widget build(BuildContext context) {
@@ -20,9 +36,19 @@ class CountrySelectionScreen extends StatelessWidget {
     final media = MediaQuery.of(context);
 
     return BlocConsumer<CountryOnboardingCubit, CountryOnboardingState>(
+      listenWhen: (previous, current) {
+        if (current is CountryOnboardingSaving) {
+          _lastAttemptedCountryCode = current.countryCode;
+        }
+        return true;
+      },
       listener: (context, state) {
         if (state is CountryOnboardingSuccess) {
-          context.go('/auth/residence-address');
+          context.go(
+            _lastAttemptedCountryCode != null
+                ? '/auth/residence-address'
+                : '/auth/referral-code',
+          );
         } else if (state is CountryOnboardingError) {
           DonySnackbar.show(
             context,

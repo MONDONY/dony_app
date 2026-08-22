@@ -1,5 +1,9 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/features/auth/data/repositories/auth_repository.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_flow_chrome.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
 import 'package:flutter/material.dart';
@@ -29,6 +33,16 @@ class _ReferralCodeScreenState extends State<ReferralCodeScreen> {
     _ctrl.dispose();
     _isNotEmpty.dispose();
     super.dispose();
+  }
+
+  /// Écran terminal réel du parcours d'onboarding : c'est ici, pas dans
+  /// [ResidenceAddressCubit.submit], que l'on pose `onboarding_seen_at`. Cet
+  /// écran n'a pas accès au cubit de l'étape adresse (hors de son arbre de
+  /// providers) — on passe donc directement par le repository. Jamais
+  /// awaité, jamais bloquant : un échec réseau ne doit pas retenir
+  /// l'utilisateur sur cet écran, et l'appel est idempotent côté serveur.
+  void _markOnboardingSeen() {
+    unawaited(getIt<AuthRepository>().markOnboardingSeen().catchError((_) {}));
   }
 
   void _apply() {
@@ -67,13 +81,21 @@ class _ReferralCodeScreenState extends State<ReferralCodeScreen> {
                     DonySpacing.base + bottom,
                   ),
                   child: state is ReferralRedeemed
-                      ? _SuccessView(onContinue: () => context.go('/home'))
+                      ? _SuccessView(
+                          onContinue: () {
+                            _markOnboardingSeen();
+                            context.go('/home');
+                          },
+                        )
                       : _FormView(
                           ctrl: _ctrl,
                           isNotEmpty: _isNotEmpty,
                           isLoading: state is ReferralRedeemLoading,
                           onApply: _apply,
-                          onSkip: () => context.go('/home'),
+                          onSkip: () {
+                            _markOnboardingSeen();
+                            context.go('/home');
+                          },
                         ),
                 ),
               ),

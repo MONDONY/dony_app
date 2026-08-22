@@ -16,6 +16,16 @@ import 'package:hive/hive.dart';
 ///   utilisateur au 1er lancement, quel que soit le pays. Le choix reste
 ///   modifiable ensuite dans Réglages › Confidentialité.
 ///
+/// Le parcours complet est en 4 étapes : `analytics_consent` →
+/// `country_selection` → `residence_address` → `referral_code` → `/home`.
+/// Ce résolveur ne renvoie jamais vers `/auth/residence-address` : le flag
+/// `HiveService.kCountryOnboardingSeen` (posé par `CountryOnboardingCubit`,
+/// que l'utilisateur ait choisi un pays ou non) ne distingue pas ces deux
+/// étapes, et `/auth/referral-code` reste le fallback une fois l'onboarding
+/// pays vu. En pratique ce résolveur ne rejoue quasiment jamais l'onboarding
+/// : le compte se réinitialise à chaque inscription. Documentation seulement,
+/// pas un comportement corrigé par le lot adresse de résidence.
+///
 /// [prefs] fournit le flag local de fin d'onboarding pays ; le pays n'est
 /// plus discriminant depuis qu'on affiche l'écran de consentement partout.
 ///
@@ -35,5 +45,7 @@ Future<String> resolvePostSignupRoute(
       true) {
     return '/auth/country-selection';
   }
+  // Fallback terminal : ne renvoie jamais vers `/auth/residence-address`,
+  // voir la doc de fonction ci-dessus.
   return '/auth/referral-code';
 }
