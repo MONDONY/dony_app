@@ -247,6 +247,12 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
     _ => 'Taille',
   };
 
+  /// Prix réellement payé par l'expéditeur. `targetPriceEur` seul est un
+  /// NET (PR #219) : jamais afficher les deux montants côte à côte, ça
+  /// révélerait le taux de commission par soustraction. Repli sur le net
+  /// uniquement si le serveur ne sert pas encore le brut.
+  double? get _displayPrice => request.grossPriceEur ?? request.targetPriceEur;
+
   @override
   Widget build(BuildContext context) {
     final r = request;
@@ -424,14 +430,14 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
                 ]),
               ],
 
-              if (r.targetPriceEur != null) ...[
+              if (_displayPrice != null) ...[
                 const SizedBox(height: DonySpacing.md),
                 _detailCard(context, 'Budget', [
                   _kv(
                     context,
                     'banknote',
                     r.negotiable ? 'Budget' : 'Prix ferme',
-                    PriceDisplay.money(r.targetPriceEur!, r.currency),
+                    PriceDisplay.money(_displayPrice!, r.currency),
                   ),
                 ]),
               ],
@@ -465,8 +471,8 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
               ? _GuestLockedCta(
                   label: r.negotiable
                       ? 'Proposer mon trajet'
-                      : r.targetPriceEur != null
-                      ? 'Prendre à ${PriceDisplay.money(r.targetPriceEur!, r.currency)} · Prix ferme'
+                      : _displayPrice != null
+                      ? 'Prendre à ${PriceDisplay.money(_displayPrice!, r.currency)} · Prix ferme'
                       : 'Prendre ce colis',
                 )
               : currentUserId == r.senderId

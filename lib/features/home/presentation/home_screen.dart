@@ -974,7 +974,11 @@ class _MapSenderViewState extends State<_MapSenderView> {
     for (final item in items) {
       if (uid != null && item.sender.id == uid) continue;
       if (item.departureLat == null || item.departureLng == null) continue;
-      final price = item.targetPriceEur ?? 0;
+      // grossPriceEur (PR #219) est le brut réellement payé ; targetPriceEur
+      // seul est un NET. Les marqueurs de trajets affichent déjà le brut
+      // (senderPricePerKg) : sans ce repli, un invité voyait deux bases de
+      // prix différentes selon qu'il regardait un trajet ou une demande.
+      final price = item.grossPriceEur ?? item.targetPriceEur ?? 0;
       final icon = await MarkerBitmapFactory.pricePill(
         pricePerKg: price,
         dotColor: DonyColors.terra500,

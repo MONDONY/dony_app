@@ -124,6 +124,12 @@ class _PhotoHero extends StatelessWidget {
   final ColorScheme cs;
   final TextTheme tt;
 
+  /// Prix réellement payé par l'expéditeur. `targetPriceEur` seul est un
+  /// NET (PR #219) : jamais afficher les deux montants côte à côte, ça
+  /// révélerait le taux de commission par soustraction. Repli sur le net
+  /// uniquement si le serveur ne sert pas encore le brut.
+  double? get _displayPrice => item.grossPriceEur ?? item.targetPriceEur;
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -180,10 +186,10 @@ class _PhotoHero extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  if (item.targetPriceEur != null) ...[
+                  if (_displayPrice != null) ...[
                     const SizedBox(width: 6),
                     Text(
-                      formatPriceIn(item.targetPriceEur!, item.currency),
+                      formatPriceIn(_displayPrice!, item.currency),
                       style: tt.bodySmall?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.w800,

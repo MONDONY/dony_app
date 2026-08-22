@@ -61,6 +61,51 @@ void main() {
     });
   });
 
+  group('PackageRequest.grossPriceEur (brut pour un invité)', () {
+    Map<String, dynamic> baseJson() => {
+      'id': 'aaa-111',
+      'senderId': 'sender-1',
+      'departureCity': 'Paris',
+      'arrivalCity': 'Dakar',
+      'desiredDate': '2026-06-15',
+      'dateToleranceDays': 2,
+      'weightKg': 5.0,
+      'parcelSize': 'SMALL',
+      'contentCategory': 'Vêtements',
+      'targetPriceEur': 25.5,
+      'status': 'OPEN',
+      'createdAt': '2026-05-10T10:00:00Z',
+    };
+
+    test('grossPriceEur est lu quand le serveur le fournit', () {
+      final json = baseJson()..['grossPriceEur'] = 28.0;
+
+      final pr = PackageRequest.fromJson(json);
+
+      expect(pr.grossPriceEur, 28.0);
+    });
+
+    test('grossPriceEur absent : nul, aucune exception', () {
+      final json = baseJson();
+
+      expect(PackageRequest.fromJson(json).grossPriceEur, isNull);
+    });
+
+    test('parses an integer grossPriceEur as a double', () {
+      final json = baseJson()..['grossPriceEur'] = 28;
+
+      final pr = PackageRequest.fromJson(json);
+
+      expect(pr.grossPriceEur, 28.0);
+    });
+
+    test('grossPriceEur participates in equality (props)', () {
+      final avec = PackageRequest.fromJson(baseJson()..['grossPriceEur'] = 28.0);
+      final sans = PackageRequest.fromJson(baseJson());
+      expect(avec, isNot(equals(sans)));
+    });
+  });
+
   test('PackageRequest equality via Equatable', () {
     final json = {
       'id': 'a',

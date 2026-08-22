@@ -120,11 +120,7 @@ void main() {
       'affiche le brut (grossPriceEur) au lieu du net quand le serveur le fournit',
       (tester) async {
         await tester.pumpWidget(
-          wrap(
-            PackageRequestListCard(
-              item: _item(targetPrice: 35, grossPrice: 40),
-            ),
-          ),
+          wrap(PackageRequestListCard(item: _item(grossPrice: 40))),
         );
         await tester.pumpAndSettle();
         expect(find.textContaining('40'), findsWidgets);
@@ -136,11 +132,7 @@ void main() {
     testWidgets(
       'retombe sur le net (targetPriceEur) quand grossPriceEur est absent (ancien payload)',
       (tester) async {
-        await tester.pumpWidget(
-          wrap(
-            PackageRequestListCard(item: _item(targetPrice: 35, grossPrice: null)),
-          ),
-        );
+        await tester.pumpWidget(wrap(PackageRequestListCard(item: _item())));
         await tester.pumpAndSettle();
         expect(find.textContaining('35'), findsWidgets);
       },
