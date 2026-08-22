@@ -191,24 +191,21 @@ void main() {
       ],
     );
 
-    test(
-      'appelée directement (hors blocTest) : le state ne porte plus le pays '
-      'du compte précédent après une purge Hive',
-      () async {
-        when(() => mockBox.get(HiveService.kCountryCode)).thenReturn('SN');
-        final bloc = build();
-        expect(bloc.state.country, 'SN');
+    test('appelée directement (hors blocTest) : le state ne porte plus le pays '
+        'du compte précédent après une purge Hive', () async {
+      when(() => mockBox.get(HiveService.kCountryCode)).thenReturn('SN');
+      final bloc = build();
+      expect(bloc.state.country, 'SN');
 
-        // La purge Hive elle-même (`AuthBloc._clearHiveAccountData`) :
-        // `_box.clear()` vide la case, mais ne notifie jamais le bloc.
-        when(() => mockBox.get(HiveService.kCountryCode)).thenReturn(null);
-        bloc.add(const BusinessPrefsReset());
-        await Future<void>.delayed(Duration.zero);
+      // La purge Hive elle-même (`AuthBloc._clearHiveAccountData`) :
+      // `_box.clear()` vide la case, mais ne notifie jamais le bloc.
+      when(() => mockBox.get(HiveService.kCountryCode)).thenReturn(null);
+      bloc.add(const BusinessPrefsReset());
+      await Future<void>.delayed(Duration.zero);
 
-        expect(bloc.state.country, isNull);
-        await bloc.close();
-      },
-    );
+      expect(bloc.state.country, isNull);
+      await bloc.close();
+    });
   });
 
   group('DefaultWeightChanged', () {

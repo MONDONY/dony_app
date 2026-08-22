@@ -191,38 +191,9 @@ void main() {
       );
     });
 
-    test('le statut Stripe du UserModel sert tant que le bloc n\'a pas chargé',
-        () {
-      expect(
-        nextStep(
-          user: _user(
-            country: 'FR',
-            kycStatus: 'VERIFIED',
-            residenceStreet: '12 rue des Lilas',
-            stripeAccountStatus: 'ONBOARDING_COMPLETE',
-          ),
-          stripe: const StripeAccountInitial(),
-          analyticsAnswered: true,
-        ),
-        isNull,
-      );
-    });
-
     test(
-      'onboardingSeenAt ne court-circuite jamais nextStep : ce garde-fou '
-      'anti-boucle vit uniquement dans resolvePostSignupRoute '
-      '(post_signup_route_test.dart), jamais ici — sinon nextStep '
-      'contredirait onboardingProgress et la carte de reprise (lot 4) ne '
-      'disparaîtrait jamais',
+      'le statut Stripe du UserModel sert tant que le bloc n\'a pas chargé',
       () {
-        expect(
-          nextStep(
-            user: _user(onboardingSeenAt: DateTime(2026, 8, 22)),
-            stripe: _connectOk,
-            analyticsAnswered: true,
-          ),
-          OnboardingStep.country,
-        );
         expect(
           nextStep(
             user: _user(
@@ -230,32 +201,63 @@ void main() {
               kycStatus: 'VERIFIED',
               residenceStreet: '12 rue des Lilas',
               stripeAccountStatus: 'ONBOARDING_COMPLETE',
-              onboardingSeenAt: DateTime(2026, 8, 22),
             ),
-            stripe: _connectDone,
+            stripe: const StripeAccountInitial(),
             analyticsAnswered: true,
           ),
-          isNull, // ici, null parce que tout est réellement fait — pas parce
-          // que onboardingSeenAt est posé.
+          isNull,
         );
       },
     );
+
+    test('onboardingSeenAt ne court-circuite jamais nextStep : ce garde-fou '
+        'anti-boucle vit uniquement dans resolvePostSignupRoute '
+        '(post_signup_route_test.dart), jamais ici — sinon nextStep '
+        'contredirait onboardingProgress et la carte de reprise (lot 4) ne '
+        'disparaîtrait jamais', () {
+      expect(
+        nextStep(
+          user: _user(onboardingSeenAt: DateTime(2026, 8, 22)),
+          stripe: _connectOk,
+          analyticsAnswered: true,
+        ),
+        OnboardingStep.country,
+      );
+      expect(
+        nextStep(
+          user: _user(
+            country: 'FR',
+            kycStatus: 'VERIFIED',
+            residenceStreet: '12 rue des Lilas',
+            stripeAccountStatus: 'ONBOARDING_COMPLETE',
+            onboardingSeenAt: DateTime(2026, 8, 22),
+          ),
+          stripe: _connectDone,
+          analyticsAnswered: true,
+        ),
+        isNull, // ici, null parce que tout est réellement fait — pas parce
+        // que onboardingSeenAt est posé.
+      );
+    });
   });
 
   group('OnboardingStep — énumération fermée', () {
-    test('chaque étape porte un wireName snake_case et une route existante', () {
-      expect(OnboardingStep.consent.wireName, 'consent');
-      expect(OnboardingStep.country.wireName, 'country');
-      expect(OnboardingStep.identity.wireName, 'identity');
-      expect(OnboardingStep.address.wireName, 'address');
-      expect(OnboardingStep.payouts.wireName, 'payouts');
+    test(
+      'chaque étape porte un wireName snake_case et une route existante',
+      () {
+        expect(OnboardingStep.consent.wireName, 'consent');
+        expect(OnboardingStep.country.wireName, 'country');
+        expect(OnboardingStep.identity.wireName, 'identity');
+        expect(OnboardingStep.address.wireName, 'address');
+        expect(OnboardingStep.payouts.wireName, 'payouts');
 
-      expect(OnboardingStep.consent.route, '/auth/analytics-consent');
-      expect(OnboardingStep.country.route, '/auth/country-selection');
-      expect(OnboardingStep.identity.route, '/kyc/verify');
-      expect(OnboardingStep.address.route, '/auth/residence-address');
-      expect(OnboardingStep.payouts.route, '/payments/onboarding');
-    });
+        expect(OnboardingStep.consent.route, '/auth/analytics-consent');
+        expect(OnboardingStep.country.route, '/auth/country-selection');
+        expect(OnboardingStep.identity.route, '/kyc/verify');
+        expect(OnboardingStep.address.route, '/auth/residence-address');
+        expect(OnboardingStep.payouts.route, '/payments/onboarding');
+      },
+    );
   });
 
   group('onboardingProgress — ce que la jauge doit montrer', () {
@@ -344,22 +346,19 @@ void main() {
       expect(p.segments[1], DonyGaugeSegment.done);
     });
 
-    test(
-      'onboardingSeenAt posé n\'efface pas la progression réelle — la carte '
-      'de reprise (lot 4) doit pouvoir compter dessus pour disparaître '
-      'exactement quand nextStep rend null',
-      () {
-        final p = onboardingProgress(
-          user: _user(country: 'FR', onboardingSeenAt: DateTime(2026, 8, 22)),
-          stripe: _connectOk,
-          analyticsAnswered: true,
-          current: OnboardingStep.identity,
-        );
+    test('onboardingSeenAt posé n\'efface pas la progression réelle — la carte '
+        'de reprise (lot 4) doit pouvoir compter dessus pour disparaître '
+        'exactement quand nextStep rend null', () {
+      final p = onboardingProgress(
+        user: _user(country: 'FR', onboardingSeenAt: DateTime(2026, 8, 22)),
+        stripe: _connectOk,
+        analyticsAnswered: true,
+        current: OnboardingStep.identity,
+      );
 
-        expect(p.doneCount, 2);
-        expect(p.segments[0], DonyGaugeSegment.done);
-        expect(p.segments[1], DonyGaugeSegment.done);
-      },
-    );
+      expect(p.doneCount, 2);
+      expect(p.segments[0], DonyGaugeSegment.done);
+      expect(p.segments[1], DonyGaugeSegment.done);
+    });
   });
 }

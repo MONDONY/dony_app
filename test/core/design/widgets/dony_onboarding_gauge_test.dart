@@ -84,10 +84,7 @@ void main() {
       // correction 5). Le label du `Text` visible se fusionne en dessous
       // (comportement standard de `Semantics(container: true)`), d'où le
       // `startsWith` plutôt qu'une égalité stricte.
-      expect(
-        semantics.label,
-        startsWith('Progression de l\'inscription'),
-      );
+      expect(semantics.label, startsWith('Progression de l\'inscription'));
     });
 
     testWidgets('sans étape en cours, la lecture porte sur le total atteint', (

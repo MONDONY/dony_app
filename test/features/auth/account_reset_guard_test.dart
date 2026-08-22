@@ -13,59 +13,45 @@ UserModel _makeUser() => const UserModel(
 
 void main() {
   group('AccountResetGuard.shouldResetAccountScopedBlocs', () {
-    test(
-      'AuthNewAccountAuthenticated → true (nouvelle inscription, '
-      'AuthBloc._clearHiveAccountData déjà appelé)',
-      () {
-        expect(
-          AccountResetGuard.shouldResetAccountScopedBlocs(
-            AuthNewAccountAuthenticated(_makeUser()),
-          ),
-          isTrue,
-        );
-      },
-    );
+    test('AuthNewAccountAuthenticated → true (nouvelle inscription, '
+        'AuthBloc._clearHiveAccountData déjà appelé)', () {
+      expect(
+        AccountResetGuard.shouldResetAccountScopedBlocs(
+          AuthNewAccountAuthenticated(_makeUser()),
+        ),
+        isTrue,
+      );
+    });
 
-    test(
-      'AuthAccountDeleted → true (suppression de compte, '
-      'AuthBloc._clearHiveAccountData déjà appelé)',
-      () {
-        expect(
-          AccountResetGuard.shouldResetAccountScopedBlocs(
-            const AuthAccountDeleted(),
-          ),
-          isTrue,
-        );
-      },
-    );
+    test('AuthAccountDeleted → true (suppression de compte, '
+        'AuthBloc._clearHiveAccountData déjà appelé)', () {
+      expect(
+        AccountResetGuard.shouldResetAccountScopedBlocs(
+          const AuthAccountDeleted(),
+        ),
+        isTrue,
+      );
+    });
 
-    test(
-      'AuthInitial → true (déconnexion ou changement de compte — aussi '
-      'l\'état de démarrage, mais réagir y est sans risque : le reset est '
-      'idempotent)',
-      () {
-        expect(
-          AccountResetGuard.shouldResetAccountScopedBlocs(
-            const AuthInitial(),
-          ),
-          isTrue,
-        );
-      },
-    );
+    test('AuthInitial → true (déconnexion ou changement de compte — aussi '
+        'l\'état de démarrage, mais réagir y est sans risque : le reset est '
+        'idempotent)', () {
+      expect(
+        AccountResetGuard.shouldResetAccountScopedBlocs(const AuthInitial()),
+        isTrue,
+      );
+    });
 
-    test(
-      'AuthAuthenticated (compte existant, pas nouveau) → false — ce '
-      'n\'est pas une purge, un simple login ne doit pas jeter les données '
-      'déjà chargées',
-      () {
-        expect(
-          AccountResetGuard.shouldResetAccountScopedBlocs(
-            AuthAuthenticated(_makeUser()),
-          ),
-          isFalse,
-        );
-      },
-    );
+    test('AuthAuthenticated (compte existant, pas nouveau) → false — ce '
+        'n\'est pas une purge, un simple login ne doit pas jeter les données '
+        'déjà chargées', () {
+      expect(
+        AccountResetGuard.shouldResetAccountScopedBlocs(
+          AuthAuthenticated(_makeUser()),
+        ),
+        isFalse,
+      );
+    });
 
     test('AuthLoading → false', () {
       expect(

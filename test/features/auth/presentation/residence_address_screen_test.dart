@@ -156,65 +156,68 @@ void main() {
     expect(find.text('2 / 5 · Adresse'), findsOneWidget);
   });
 
-  group('ResidenceAddressSuccess (correction 1 de la revue finale du lot 2)', () {
-    testWidgets(
-      'rafraîchit le profil et propage le pays en extra vers le parrainage — '
-      'sans ce double repli, l\'étape « pays » ET l\'étape « adresse » '
-      'regressaient sur /auth/referral-code (0/5 → 1/5 → 2/5 → 1/5)',
-      (tester) async {
-        whenListen<ResidenceAddressState>(
-          cubit,
-          Stream.fromIterable([
-            const ResidenceAddressSaving(),
-            const ResidenceAddressSuccess(),
-          ]),
-          initialState: const ResidenceAddressInitial(),
-        );
+  group(
+    'ResidenceAddressSuccess (correction 1 de la revue finale du lot 2)',
+    () {
+      testWidgets(
+        'rafraîchit le profil et propage le pays en extra vers le parrainage — '
+        'sans ce double repli, l\'étape « pays » ET l\'étape « adresse » '
+        'regressaient sur /auth/referral-code (0/5 → 1/5 → 2/5 → 1/5)',
+        (tester) async {
+          whenListen<ResidenceAddressState>(
+            cubit,
+            Stream.fromIterable([
+              const ResidenceAddressSaving(),
+              const ResidenceAddressSuccess(),
+            ]),
+            initialState: const ResidenceAddressInitial(),
+          );
 
-        await tester.pumpWidget(_wrap(cubit, authBloc, country: 'FR'));
-        await tester.pumpAndSettle();
+          await tester.pumpWidget(_wrap(cubit, authBloc, country: 'FR'));
+          await tester.pumpAndSettle();
 
-        verify(
-          () => authBloc.add(const AuthProfileRefreshRequested()),
-        ).called(1);
-        expect(find.text('Parrainage extra=FR'), findsOneWidget);
-      },
-    );
+          verify(
+            () => authBloc.add(const AuthProfileRefreshRequested()),
+          ).called(1);
+          expect(find.text('Parrainage extra=FR'), findsOneWidget);
+        },
+      );
 
-    testWidgets(
-      'skip() aboutit au même state que submit() (ResidenceAddressSuccess) '
-      'et déclenche donc le même refresh + le même repli extra — skip() '
-      'pose aussi onboarding_seen_at côté serveur (ResidenceAddressCubit)',
-      (tester) async {
-        // `StreamController` plutôt que `Stream.fromIterable` : ce dernier
-        // émet ses valeurs dès le premier pump, avant même le tap — le
-        // widget aurait déjà navigué au moment d'appuyer sur le bouton. Ici,
-        // c'est `skip()` lui-même qui pilote la transition d'état, comme le
-        // ferait le vrai cubit.
-        final controller = StreamController<ResidenceAddressState>();
-        addTearDown(controller.close);
-        whenListen<ResidenceAddressState>(
-          cubit,
-          controller.stream,
-          initialState: const ResidenceAddressInitial(),
-        );
-        when(() => cubit.skip()).thenAnswer((_) async {
-          controller
-            ..add(const ResidenceAddressSaving())
-            ..add(const ResidenceAddressSuccess());
-        });
+      testWidgets(
+        'skip() aboutit au même state que submit() (ResidenceAddressSuccess) '
+        'et déclenche donc le même refresh + le même repli extra — skip() '
+        'pose aussi onboarding_seen_at côté serveur (ResidenceAddressCubit)',
+        (tester) async {
+          // `StreamController` plutôt que `Stream.fromIterable` : ce dernier
+          // émet ses valeurs dès le premier pump, avant même le tap — le
+          // widget aurait déjà navigué au moment d'appuyer sur le bouton. Ici,
+          // c'est `skip()` lui-même qui pilote la transition d'état, comme le
+          // ferait le vrai cubit.
+          final controller = StreamController<ResidenceAddressState>();
+          addTearDown(controller.close);
+          whenListen<ResidenceAddressState>(
+            cubit,
+            controller.stream,
+            initialState: const ResidenceAddressInitial(),
+          );
+          when(() => cubit.skip()).thenAnswer((_) async {
+            controller
+              ..add(const ResidenceAddressSaving())
+              ..add(const ResidenceAddressSuccess());
+          });
 
-        await tester.pumpWidget(_wrap(cubit, authBloc, country: 'SN'));
-        await tester.pump(const Duration(milliseconds: 400));
-        await tester.tap(find.text('Passer pour l\'instant'));
-        await tester.pumpAndSettle();
+          await tester.pumpWidget(_wrap(cubit, authBloc, country: 'SN'));
+          await tester.pump(const Duration(milliseconds: 400));
+          await tester.tap(find.text('Passer pour l\'instant'));
+          await tester.pumpAndSettle();
 
-        verify(() => cubit.skip()).called(1);
-        verify(
-          () => authBloc.add(const AuthProfileRefreshRequested()),
-        ).called(1);
-        expect(find.text('Parrainage extra=SN'), findsOneWidget);
-      },
-    );
-  });
+          verify(() => cubit.skip()).called(1);
+          verify(
+            () => authBloc.add(const AuthProfileRefreshRequested()),
+          ).called(1);
+          expect(find.text('Parrainage extra=SN'), findsOneWidget);
+        },
+      );
+    },
+  );
 }

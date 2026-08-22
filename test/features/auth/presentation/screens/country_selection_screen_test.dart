@@ -265,9 +265,7 @@ void main() {
       // `BusinessPrefsBloc`, dont le singleton app-wide ne se resynchronise
       // pas automatiquement quand ce cubit écrit directement dans Hive.
       expect(find.text('Residence route extra=CA'), findsOneWidget);
-      verify(
-        () => authBloc.add(const AuthProfileRefreshRequested()),
-      ).called(1);
+      verify(() => authBloc.add(const AuthProfileRefreshRequested())).called(1);
     },
   );
 
