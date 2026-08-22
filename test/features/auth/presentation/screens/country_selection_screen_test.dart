@@ -41,9 +41,8 @@ Future<void> _wrap(
       ),
       GoRoute(
         path: '/auth/residence-address',
-        builder: (_, state) => Scaffold(
-          body: Text('Residence route extra=${state.extra}'),
-        ),
+        builder: (_, state) =>
+            Scaffold(body: Text('Residence route extra=${state.extra}')),
       ),
       GoRoute(
         path: '/auth/referral-code',

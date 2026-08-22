@@ -85,11 +85,10 @@ void main() {
       ),
     ).thenAnswer((_) async {});
 
-    await ResidenceAddressCubit(repo, analytics).submit(
-      street: '12 rue des Lilas',
-      postalCode: '75011',
-      city: 'Paris',
-    );
+    await ResidenceAddressCubit(
+      repo,
+      analytics,
+    ).submit(street: '12 rue des Lilas', postalCode: '75011', city: 'Paris');
 
     final captured = verify(
       () => analytics.logEvent(
