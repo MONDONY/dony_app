@@ -155,6 +155,62 @@ void main() {
     );
   });
 
+  group('BusinessPrefsReset', () {
+    // Scénario de la régression trouvée en revue finale du lot 2 :
+    // `BusinessPrefsBloc` est un `lazySingleton` GetIt jamais recréé par
+    // `AuthBloc`. Une synchro serveur pose `country: 'SN'` dans le state en
+    // mémoire pour un premier compte ; `AuthBloc._clearHiveAccountData()`
+    // vide ensuite la case Hive (déconnexion / nouvelle inscription), mais
+    // sans `BusinessPrefsReset`, le state en mémoire continuerait de porter
+    // 'SN' pour le compte suivant.
+    blocTest<BusinessPrefsBloc, BusinessPrefsState>(
+      'efface le pays (et les autres préférences) du compte précédent, '
+      'relit Hive comme un bloc tout neuf',
+      setUp: () {
+        // `AuthBloc._clearHiveAccountData()` a déjà vidé la case Hive au
+        // moment où l'app dispatche `BusinessPrefsReset` : `_onReset` doit
+        // donc relire des valeurs vierges, pas celles du compte précédent —
+        // aucun appel réseau n'a lieu ici, `mockRepo` reste muet à dessein.
+        when(() => mockBox.get(HiveService.kCountryCode)).thenReturn(null);
+      },
+      build: build,
+      // Simule l'état d'un compte déjà synchronisé, avant la purge.
+      seed: () => const BusinessPrefsState(
+        weightUnit: 'lbs',
+        currencyCode: 'XOF',
+        country: 'SN',
+        countryLocked: true,
+      ),
+      act: (bloc) => bloc.add(const BusinessPrefsReset()),
+      expect: () => [
+        isA<BusinessPrefsState>()
+            .having((s) => s.country, 'country', isNull)
+            .having((s) => s.countryLocked, 'countryLocked', isFalse)
+            .having((s) => s.weightUnit, 'weightUnit', 'kg')
+            .having((s) => s.currencyCode, 'currencyCode', 'EUR'),
+      ],
+    );
+
+    test(
+      'appelée directement (hors blocTest) : le state ne porte plus le pays '
+      'du compte précédent après une purge Hive',
+      () async {
+        when(() => mockBox.get(HiveService.kCountryCode)).thenReturn('SN');
+        final bloc = build();
+        expect(bloc.state.country, 'SN');
+
+        // La purge Hive elle-même (`AuthBloc._clearHiveAccountData`) :
+        // `_box.clear()` vide la case, mais ne notifie jamais le bloc.
+        when(() => mockBox.get(HiveService.kCountryCode)).thenReturn(null);
+        bloc.add(const BusinessPrefsReset());
+        await Future<void>.delayed(Duration.zero);
+
+        expect(bloc.state.country, isNull);
+        await bloc.close();
+      },
+    );
+  });
+
   group('DefaultWeightChanged', () {
     blocTest<BusinessPrefsBloc, BusinessPrefsState>(
       'met à jour le poids + écrit Hive + appelle PUT',

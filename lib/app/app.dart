@@ -10,6 +10,7 @@ import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/analytics_consent_gate.dart';
+import 'package:dony/features/auth/account_reset_guard.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
@@ -317,6 +318,21 @@ class _DonyAppState extends State<DonyApp> {
               ],
               child: BlocListener<AuthBloc, AuthState>(
                 listener: (context, state) {
+                  if (AccountResetGuard.shouldResetAccountScopedBlocs(state)) {
+                    // `BusinessPrefsBloc`/`StripeAccountBloc` sont des
+                    // `lazySingleton` GetIt jamais recréés par `AuthBloc` —
+                    // sans ce reset, ils continueraient de porter le pays /
+                    // le statut Stripe du compte précédent après une
+                    // déconnexion, un changement de compte ou une nouvelle
+                    // inscription (régression trouvée en revue finale du lot
+                    // 2, voir `AccountResetGuard`).
+                    context.read<BusinessPrefsBloc>().add(
+                      const BusinessPrefsReset(),
+                    );
+                    context.read<StripeAccountBloc>().add(
+                      const StripeAccountReset(),
+                    );
+                  }
                   // Garde-fou de démarrage : session Firebase valide mais
                   // compte absent côté backend (404 → AuthInitial). On ne peut
                   // pas rester sur /home avec un compte inexistant. Une erreur
