@@ -111,8 +111,8 @@ class _FormView extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const AuthFlowHeader(
-          current: 3,
-          total: 3,
+          current: 4,
+          total: 4,
           label: 'Parrainage',
           showBack: false,
         ),
@@ -215,8 +215,8 @@ class _SuccessView extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const AuthFlowHeader(
-          current: 3,
-          total: 3,
+          current: 4,
+          total: 4,
           label: 'Parrainage',
           showBack: false,
         ),

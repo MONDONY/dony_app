@@ -43,7 +43,7 @@ class AnalyticsConsentScreen extends StatelessWidget {
                   children: [
                     const AuthFlowHeader(
                       current: 1,
-                      total: 3,
+                      total: 4,
                       label: 'Confidentialité',
                       showBack: false,
                     ),

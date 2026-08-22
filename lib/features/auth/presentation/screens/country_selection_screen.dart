@@ -56,7 +56,7 @@ class CountrySelectionScreen extends StatelessWidget {
                       children: [
                         const AuthFlowHeader(
                           current: 2,
-                          total: 3,
+                          total: 4,
                           label: 'Pays',
                           showBack: false,
                         ),
