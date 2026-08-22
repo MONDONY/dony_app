@@ -42,96 +42,105 @@ class TripTile extends StatelessWidget {
         ? 'Indisponible'
         : '${formatPriceIn(kgPrice, announcement.currency)}/kg';
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Material(
-        color: isSelected ? cs.primaryContainer : cs.surface,
-        borderRadius: BorderRadius.circular(DonyRadius.md),
-        child: Container(
-          decoration: BoxDecoration(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: Material(
+            color: isSelected ? cs.primaryContainer : cs.surface,
             borderRadius: BorderRadius.circular(DonyRadius.md),
-            border: Border.all(
-              color: isSelected ? cs.primary : cs.outline,
-              width: isSelected ? 2 : 1,
-            ),
-          ),
-          child: Column(
-            children: [
-              InkWell(
-                key: const Key('trip-tile-select-inkwell'),
+            child: Container(
+              decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(DonyRadius.md),
-                onTap: onTap,
-                child: Padding(
-                  padding: const EdgeInsets.all(14),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: isSelected ? cs.primary : cs.primaryContainer,
-                          shape: BoxShape.circle,
-                        ),
-                        child: isSelected
-                            ? DonyIcon('check', color: cs.onPrimary, size: 20)
-                            : const DonyEmoji.planeTakeoff(size: 20),
+                border: Border.all(
+                  color: isSelected ? cs.primary : cs.outline,
+                  width: isSelected ? 2 : 1,
+                ),
+              ),
+              child: Column(
+                children: [
+                  InkWell(
+                    key: const Key('trip-tile-select-inkwell'),
+                    borderRadius: BorderRadius.circular(DonyRadius.md),
+                    onTap: onTap,
+                    child: Padding(
+                      padding: const EdgeInsets.all(14),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? cs.primary
+                                  : cs.primaryContainer,
+                              shape: BoxShape.circle,
+                            ),
+                            child: isSelected
+                                ? DonyIcon(
+                                    'check',
+                                    color: cs.onPrimary,
+                                    size: 20,
+                                  )
+                                : const DonyEmoji.planeTakeoff(size: 20),
+                          ),
+                          const SizedBox(width: DonySpacing.md),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  DateFormat(
+                                    'EEE d MMM',
+                                    'fr',
+                                  ).format(announcement.departureDate),
+                                  style: Theme.of(context).textTheme.bodyMedium!
+                                      .copyWith(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                ),
+                                Text(
+                                  announcement.isKgFree
+                                      ? 'Kg libre · $kgPriceLabel'
+                                      : '${announcement.availableKg} kg dispo · $kgPriceLabel',
+                                  style: Theme.of(context).textTheme.bodyMedium!
+                                      .copyWith(
+                                        fontSize: 12,
+                                        color: cs.onSurfaceVariant,
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          DonyIcon(
+                            isSelected ? 'circle-dot' : 'circle',
+                            color: isSelected ? cs.primary : kTextHint,
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: DonySpacing.md),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+                    child: Column(
+                      children: [
+                        Divider(height: 1, color: cs.outline),
+                        const SizedBox(height: 10),
+                        Row(
                           children: [
-                            Text(
-                              DateFormat(
-                                'EEE d MMM',
-                                'fr',
-                              ).format(announcement.departureDate),
-                              style: Theme.of(context).textTheme.bodyMedium!
-                                  .copyWith(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                            ),
-                            Text(
-                              announcement.isKgFree
-                                  ? 'Kg libre · $kgPriceLabel'
-                                  : '${announcement.availableKg} kg dispo · $kgPriceLabel',
-                              style: Theme.of(context).textTheme.bodyMedium!
-                                  .copyWith(
-                                    fontSize: 12,
-                                    color: cs.onSurfaceVariant,
-                                  ),
-                            ),
+                            _ModifyButton(onTap: onModify),
+                            const Spacer(),
+                            _CashChip(enabled: cashOn),
                           ],
                         ),
-                      ),
-                      DonyIcon(
-                        isSelected ? 'circle-dot' : 'circle',
-                        color: isSelected ? cs.primary : kTextHint,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
-                child: Column(
-                  children: [
-                    Divider(height: 1, color: cs.outline),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        _ModifyButton(onTap: onModify),
-                        const Spacer(),
-                        _CashChip(enabled: cashOn),
                       ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
-    ).animate().fadeIn(duration: 220.ms, delay: (40 * index).ms).slideY(begin: 0.04);
+        )
+        .animate()
+        .fadeIn(duration: 220.ms, delay: (40 * index).ms)
+        .slideY(begin: 0.04);
   }
 }
 

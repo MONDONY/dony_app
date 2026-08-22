@@ -2637,84 +2637,81 @@ void main() {
       expect(find.text('STUB_FAVORIS'), findsOneWidget);
     });
 
-    testWidgets(
-      'un invité accède aux favoris sans feuille d\'inscription',
-      (tester) async {
-        // Les favoris sont le seul contenu qu'un visiteur peut conserver :
-        // le bouton ne doit plus présenter d'`AuthRequiredSheet` (Task 7).
-        final visited = <String>[];
-        final favCubit = _makeFavCubit(count: 1);
-        final announcementBloc = MockAnnouncementBloc();
-        final authBloc = MockAuthBloc();
-        final roleCubit = MockActiveRoleCubit();
-        final notifBloc = MockNotificationBloc();
-        final bidBloc = MockBidBloc();
+    testWidgets('un invité accède aux favoris sans feuille d\'inscription', (
+      tester,
+    ) async {
+      // Les favoris sont le seul contenu qu'un visiteur peut conserver :
+      // le bouton ne doit plus présenter d'`AuthRequiredSheet` (Task 7).
+      final visited = <String>[];
+      final favCubit = _makeFavCubit(count: 1);
+      final announcementBloc = MockAnnouncementBloc();
+      final authBloc = MockAuthBloc();
+      final roleCubit = MockActiveRoleCubit();
+      final notifBloc = MockNotificationBloc();
+      final bidBloc = MockBidBloc();
 
-        when(() => announcementBloc.state).thenReturn(AnnouncementInitial());
-        when(
-          () => announcementBloc.stream,
-        ).thenAnswer((_) => const Stream.empty());
-        when(
-          () => authBloc.state,
-        ).thenReturn(const AuthGuestSessionReady());
-        when(() => authBloc.stream).thenAnswer((_) => const Stream.empty());
-        when(() => roleCubit.state).thenReturn(ActiveRole.sender);
-        when(() => roleCubit.stream).thenAnswer((_) => const Stream.empty());
-        when(() => notifBloc.state).thenReturn(const NotificationInitial());
-        when(() => notifBloc.stream).thenAnswer((_) => const Stream.empty());
-        when(() => bidBloc.state).thenReturn(BidInitial());
-        when(() => bidBloc.stream).thenAnswer((_) => const Stream.empty());
+      when(() => announcementBloc.state).thenReturn(AnnouncementInitial());
+      when(
+        () => announcementBloc.stream,
+      ).thenAnswer((_) => const Stream.empty());
+      when(() => authBloc.state).thenReturn(const AuthGuestSessionReady());
+      when(() => authBloc.stream).thenAnswer((_) => const Stream.empty());
+      when(() => roleCubit.state).thenReturn(ActiveRole.sender);
+      when(() => roleCubit.stream).thenAnswer((_) => const Stream.empty());
+      when(() => notifBloc.state).thenReturn(const NotificationInitial());
+      when(() => notifBloc.stream).thenAnswer((_) => const Stream.empty());
+      when(() => bidBloc.state).thenReturn(BidInitial());
+      when(() => bidBloc.stream).thenAnswer((_) => const Stream.empty());
 
-        final providers = MultiBlocProvider(
-          providers: [
-            BlocProvider<AnnouncementBloc>.value(value: announcementBloc),
-            BlocProvider<AuthBloc>.value(value: authBloc),
-            BlocProvider<ActiveRoleCubit>.value(value: roleCubit),
-            BlocProvider<NotificationBloc>.value(value: notifBloc),
-            BlocProvider<BidBloc>.value(value: bidBloc),
-            BlocProvider<FavoriteIdsCubit>.value(value: favCubit),
-            _helpCenterProvider(),
-          ],
-          child: const HomeScreen(),
-        );
+      final providers = MultiBlocProvider(
+        providers: [
+          BlocProvider<AnnouncementBloc>.value(value: announcementBloc),
+          BlocProvider<AuthBloc>.value(value: authBloc),
+          BlocProvider<ActiveRoleCubit>.value(value: roleCubit),
+          BlocProvider<NotificationBloc>.value(value: notifBloc),
+          BlocProvider<BidBloc>.value(value: bidBloc),
+          BlocProvider<FavoriteIdsCubit>.value(value: favCubit),
+          _helpCenterProvider(),
+        ],
+        child: const HomeScreen(),
+      );
 
-        final router = GoRouter(
-          initialLocation: '/',
-          routes: [
-            GoRoute(path: '/', builder: (_, _) => providers),
-            GoRoute(
-              path: '/favoris',
-              builder: (_, _) {
-                visited.add('/favoris');
-                return const Scaffold(body: Text('STUB_FAVORIS'));
-              },
-            ),
-          ],
-        );
-
-        await tester.pumpWidget(
-          MaterialApp.router(
-            routerConfig: router,
-            theme: AppTheme.light(),
-            localizationsDelegates: const [
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-            ],
-            supportedLocales: const [Locale('fr'), Locale('en')],
-            locale: const Locale('fr'),
+      final router = GoRouter(
+        initialLocation: '/',
+        routes: [
+          GoRoute(path: '/', builder: (_, _) => providers),
+          GoRoute(
+            path: '/favoris',
+            builder: (_, _) {
+              visited.add('/favoris');
+              return const Scaffold(body: Text('STUB_FAVORIS'));
+            },
           ),
-        );
-        await tester.pumpAndSettle();
+        ],
+      );
 
-        await tester.tap(find.byKey(const Key('favorites-button')));
-        await tester.pumpAndSettle();
+      await tester.pumpWidget(
+        MaterialApp.router(
+          routerConfig: router,
+          theme: AppTheme.light(),
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('fr'), Locale('en')],
+          locale: const Locale('fr'),
+        ),
+      );
+      await tester.pumpAndSettle();
 
-        expect(find.text('Connexion requise'), findsNothing);
-        expect(visited, contains('/favoris'));
-        expect(find.text('STUB_FAVORIS'), findsOneWidget);
-      },
-    );
+      await tester.tap(find.byKey(const Key('favorites-button')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Connexion requise'), findsNothing);
+      expect(visited, contains('/favoris'));
+      expect(find.text('STUB_FAVORIS'), findsOneWidget);
+    });
   });
 
   group('HomeScreen — Traveler view', () {

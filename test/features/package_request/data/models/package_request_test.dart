@@ -100,7 +100,9 @@ void main() {
     });
 
     test('grossPriceEur participates in equality (props)', () {
-      final avec = PackageRequest.fromJson(baseJson()..['grossPriceEur'] = 28.0);
+      final avec = PackageRequest.fromJson(
+        baseJson()..['grossPriceEur'] = 28.0,
+      );
       final sans = PackageRequest.fromJson(baseJson());
       expect(avec, isNot(equals(sans)));
     });

@@ -35,23 +35,20 @@ void main() {
       expect(GuestAccessGuard.isAllowedShellTab(4), isFalse);
     });
 
-    test(
-      'autorise les routes publiques de recherche, détail et favoris',
-      () {
-        expect(GuestAccessGuard.isPublicGuestPath('/home'), isTrue);
-        expect(
-          GuestAccessGuard.isPublicGuestPath('/package-requests/abc/public'),
-          isTrue,
-        );
-        // Les favoris sont le seul contenu qu'un visiteur peut conserver :
-        // le backend et le routeur les autorisent déjà à un invité.
-        expect(GuestAccessGuard.isPublicGuestPath('/favoris'), isTrue);
-        expect(GuestAccessGuard.isPublicGuestPath('/messages'), isFalse);
-        expect(GuestAccessGuard.isPublicGuestPath('/profile'), isFalse);
-        expect(GuestAccessGuard.isPublicGuestPath('/announcements'), isFalse);
-        expect(GuestAccessGuard.isPublicGuestPath('/tracking'), isFalse);
-      },
-    );
+    test('autorise les routes publiques de recherche, détail et favoris', () {
+      expect(GuestAccessGuard.isPublicGuestPath('/home'), isTrue);
+      expect(
+        GuestAccessGuard.isPublicGuestPath('/package-requests/abc/public'),
+        isTrue,
+      );
+      // Les favoris sont le seul contenu qu'un visiteur peut conserver :
+      // le backend et le routeur les autorisent déjà à un invité.
+      expect(GuestAccessGuard.isPublicGuestPath('/favoris'), isTrue);
+      expect(GuestAccessGuard.isPublicGuestPath('/messages'), isFalse);
+      expect(GuestAccessGuard.isPublicGuestPath('/profile'), isFalse);
+      expect(GuestAccessGuard.isPublicGuestPath('/announcements'), isFalse);
+      expect(GuestAccessGuard.isPublicGuestPath('/tracking'), isFalse);
+    });
 
     group('shouldLoadGuestFavorites', () {
       test(
@@ -75,17 +72,14 @@ void main() {
         );
       });
 
-      test(
-        'aucune session → false (aucun jeton à présenter à /favorites)',
-        () {
-          expect(
-            GuestAccessGuard.shouldLoadGuestFavorites(
-              const _StubProbe(hasSession: false, hasRealSession: false),
-            ),
-            isFalse,
-          );
-        },
-      );
+      test('aucune session → false (aucun jeton à présenter à /favorites)', () {
+        expect(
+          GuestAccessGuard.shouldLoadGuestFavorites(
+            const _StubProbe(hasSession: false, hasRealSession: false),
+          ),
+          isFalse,
+        );
+      });
     });
 
     group('isFreshGuestSession', () {

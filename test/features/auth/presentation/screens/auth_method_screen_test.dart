@@ -172,32 +172,31 @@ void main() {
     },
   );
 
-  testWidgets(
-    'echec de la session invitee affiche une erreur sans naviguer',
-    (tester) async {
-      final bloc = MockAuthBloc();
-      whenListen(
-        bloc,
-        Stream.fromIterable(<AuthState>[
-          const AuthLoading(),
-          const AuthError(
-            NetworkException(
-              'Impossible de démarrer la navigation sans compte. '
-              'Vérifiez votre connexion.',
-              code: 'guest-session-failed',
-            ),
+  testWidgets('echec de la session invitee affiche une erreur sans naviguer', (
+    tester,
+  ) async {
+    final bloc = MockAuthBloc();
+    whenListen(
+      bloc,
+      Stream.fromIterable(<AuthState>[
+        const AuthLoading(),
+        const AuthError(
+          NetworkException(
+            'Impossible de démarrer la navigation sans compte. '
+            'Vérifiez votre connexion.',
+            code: 'guest-session-failed',
           ),
-        ]),
-        initialState: const AuthInitial(),
-      );
+        ),
+      ]),
+      initialState: const AuthInitial(),
+    );
 
-      await tester.pumpWidget(_app(bloc));
-      await tester.pump(const Duration(milliseconds: 600));
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(_app(bloc));
+    await tester.pump(const Duration(milliseconds: 600));
+    await tester.pumpAndSettle();
 
-      expect(find.text('Recherche avec carte'), findsNothing);
+    expect(find.text('Recherche avec carte'), findsNothing);
 
-      await bloc.close();
-    },
-  );
+    await bloc.close();
+  });
 }

@@ -20,14 +20,12 @@ class _StubSessionProbe implements FirebaseSessionProbe {
 /// la fonction pure qu'il applique, pour la vérifier sans monter Firebase ni
 /// l'application entière.
 void main() {
-  String? redirectFor(
-    String location, {
-    required bool hasRealSession,
-  }) => resolveAuthRedirect(
-    matchedLocation: location,
-    path: location,
-    hasRealSession: hasRealSession,
-  );
+  String? redirectFor(String location, {required bool hasRealSession}) =>
+      resolveAuthRedirect(
+        matchedLocation: location,
+        path: location,
+        hasRealSession: hasRealSession,
+      );
 
   group('visiteur (session anonyme ou aucune session)', () {
     // Ces routes n'ont pas de garde propre : elles ne comptent que sur ce
@@ -69,10 +67,7 @@ void main() {
 
     test('le détail public d\'une demande reste accessible', () {
       expect(
-        redirectFor(
-          '/package-requests/abc-123/public',
-          hasRealSession: false,
-        ),
+        redirectFor('/package-requests/abc-123/public', hasRealSession: false),
         isNull,
       );
     });
@@ -149,10 +144,7 @@ void main() {
     });
 
     testWidgets('un invité garde l\'accueil', (tester) async {
-      expect(
-        await redirectVia(tester, '/home', hasRealSession: false),
-        isNull,
-      );
+      expect(await redirectVia(tester, '/home', hasRealSession: false), isNull);
     });
 
     testWidgets('un utilisateur réel atteint le paiement', (tester) async {

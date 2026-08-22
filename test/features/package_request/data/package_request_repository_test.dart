@@ -494,52 +494,49 @@ void main() {
       expect(page.content.first.departureLat, 48.85);
     });
 
-    test(
-      'GETs /package-requests avec geo et matchingMyTrips, sans distinction '
-      'visiteur : plus de /public/package-requests, un visiteur porte '
-      'desormais un token Firebase anonyme (Tache 3)',
-      () async {
-        final guestItemJson = {
-          ...searchItemJson,
-          'sender': null,
-          'senderDisplayName': 'Aminata D.',
-        };
-        when(
-          () => mockDio.get<Map<String, dynamic>>(
-            '/package-requests',
-            queryParameters: any(named: 'queryParameters'),
-          ),
-        ).thenAnswer(
-          (_) async => _ok({
-            'content': [guestItemJson],
-            'totalElements': 1,
-            'number': 0,
-            'size': 20,
-          }, '/package-requests'),
-        );
+    test('GETs /package-requests avec geo et matchingMyTrips, sans distinction '
+        'visiteur : plus de /public/package-requests, un visiteur porte '
+        'desormais un token Firebase anonyme (Tache 3)', () async {
+      final guestItemJson = {
+        ...searchItemJson,
+        'sender': null,
+        'senderDisplayName': 'Aminata D.',
+      };
+      when(
+        () => mockDio.get<Map<String, dynamic>>(
+          '/package-requests',
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenAnswer(
+        (_) async => _ok({
+          'content': [guestItemJson],
+          'totalElements': 1,
+          'number': 0,
+          'size': 20,
+        }, '/package-requests'),
+      );
 
-        final page = await repo.search(
-          departure: 'Paris',
-          arrival: 'Dakar',
-          lat: 48.85,
-          lng: 2.35,
-          matchingMyTrips: true,
-        );
+      final page = await repo.search(
+        departure: 'Paris',
+        arrival: 'Dakar',
+        lat: 48.85,
+        lng: 2.35,
+        matchingMyTrips: true,
+      );
 
-        expect(page.content.single.sender.displayName, 'Aminata D.');
-        final query =
-            verify(
-                  () => mockDio.get<Map<String, dynamic>>(
-                    '/package-requests',
-                    queryParameters: captureAny(named: 'queryParameters'),
-                  ),
-                ).captured.single
-                as Map<String, dynamic>;
-        expect(query['departure'], 'Paris');
-        expect(query['lat'], 48.85);
-        expect(query['matchingMyTrips'], true);
-      },
-    );
+      expect(page.content.single.sender.displayName, 'Aminata D.');
+      final query =
+          verify(
+                () => mockDio.get<Map<String, dynamic>>(
+                  '/package-requests',
+                  queryParameters: captureAny(named: 'queryParameters'),
+                ),
+              ).captured.single
+              as Map<String, dynamic>;
+      expect(query['departure'], 'Paris');
+      expect(query['lat'], 48.85);
+      expect(query['matchingMyTrips'], true);
+    });
 
     test('sends urgent=true when urgent: true', () async {
       when(

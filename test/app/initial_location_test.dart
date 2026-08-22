@@ -81,13 +81,16 @@ void main() {
     },
   );
 
-  test('session anonyme : ne compte pas comme un utilisateur connecté', () async {
-    givenSession(anonymous: true);
+  test(
+    'session anonyme : ne compte pas comme un utilisateur connecté',
+    () async {
+      givenSession(anonymous: true);
 
-    // Un visiteur qui relance l'application doit revoir l'onboarding ou
-    // l'écran de connexion, exactement comme avant sa session anonyme.
-    expect(await resolve(), isNot('/home'));
-  });
+      // Un visiteur qui relance l'application doit revoir l'onboarding ou
+      // l'écran de connexion, exactement comme avant sa session anonyme.
+      expect(await resolve(), isNot('/home'));
+    },
+  );
 
   test('session anonyme sans onboarding vu → /onboarding', () async {
     givenSession(anonymous: true);

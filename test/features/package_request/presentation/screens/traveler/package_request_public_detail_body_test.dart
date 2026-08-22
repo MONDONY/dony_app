@@ -246,16 +246,15 @@ void main() {
     },
   );
 
-  testWidgets(
-    'CTA invité prix ferme annonce le brut, pas le net',
-    (tester) async {
-      await tester.pumpWidget(wrap(_req(negotiable: false, grossPriceEur: 40)));
-      await tester.pumpAndSettle();
-      expect(find.textContaining('Prendre à'), findsOneWidget);
-      expect(find.textContaining('40'), findsWidgets);
-      expect(find.textContaining('35'), findsNothing);
-    },
-  );
+  testWidgets('CTA invité prix ferme annonce le brut, pas le net', (
+    tester,
+  ) async {
+    await tester.pumpWidget(wrap(_req(negotiable: false, grossPriceEur: 40)));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Prendre à'), findsOneWidget);
+    expect(find.textContaining('40'), findsWidgets);
+    expect(find.textContaining('35'), findsNothing);
+  });
 
   // ── Badge urgent (repli local — PackageRequest n'expose pas `urgent`) ───────
 

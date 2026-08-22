@@ -140,10 +140,13 @@ void main() {
       expect(a.senderPricePerKg, 12.0);
     });
 
-    test('faux quand net et display sont tous deux absents (invité, MIXED)', () {
-      final a = _ann(pricePerKg: null);
-      expect(a.hasKgPrice, isFalse);
-    });
+    test(
+      'faux quand net et display sont tous deux absents (invité, MIXED)',
+      () {
+        final a = _ann(pricePerKg: null);
+        expect(a.hasKgPrice, isFalse);
+      },
+    );
 
     test('faux en mode MIXED sans tarif au kilo (compte inscrit)', () {
       final a = _ann(pricePerKg: 0);
@@ -239,10 +242,7 @@ void main() {
         // net→brut n'est calculable ici. Le serveur sert directement le brut
         // déjà converti dans pricePerKgDisplayConverted : c'est lui qu'il
         // faut afficher, pas null.
-        final a = _ann(
-          pricePerKg: null,
-          pricePerKgDisplayConverted: 7347.2,
-        );
+        final a = _ann(pricePerKg: null, pricePerKgDisplayConverted: 7347.2);
         expect(a.convertedSenderPricePerKg, closeTo(7347.2, 1e-6));
       },
     );

@@ -506,38 +506,35 @@ void main() {
       },
     );
 
-    test(
-      'appelle toujours l\'endpoint authentifie, meme pour un visiteur : '
-      'plus de /public/announcements, un visiteur porte desormais un token '
-      'Firebase anonyme (Tache 3)',
-      () async {
-        when(
-          () => mockDio.get(
-            '/announcements',
-            queryParameters: any(named: 'queryParameters'),
-          ),
-        ).thenAnswer(
-          (_) async => _ok({
-            'content': [_announcementJson],
-          }, '/announcements'),
-        );
+    test('appelle toujours l\'endpoint authentifie, meme pour un visiteur : '
+        'plus de /public/announcements, un visiteur porte desormais un token '
+        'Firebase anonyme (Tache 3)', () async {
+      when(
+        () => mockDio.get(
+          '/announcements',
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenAnswer(
+        (_) async => _ok({
+          'content': [_announcementJson],
+        }, '/announcements'),
+      );
 
-        final results = await datasource.searchAnnouncements(
-          departureCity: 'Paris',
-        );
+      final results = await datasource.searchAnnouncements(
+        departureCity: 'Paris',
+      );
 
-        expect(results, hasLength(1));
-        final captured =
-            verify(
-                  () => mockDio.get(
-                    '/announcements',
-                    queryParameters: captureAny(named: 'queryParameters'),
-                  ),
-                ).captured.single
-                as Map<String, dynamic>;
-        expect(captured['departureCity'], 'Paris');
-      },
-    );
+      expect(results, hasLength(1));
+      final captured =
+          verify(
+                () => mockDio.get(
+                  '/announcements',
+                  queryParameters: captureAny(named: 'queryParameters'),
+                ),
+              ).captured.single
+              as Map<String, dynamic>;
+      expect(captured['departureCity'], 'Paris');
+    });
   });
 
   // ── countAnnouncements ───────────────────────────────────────────────────────
