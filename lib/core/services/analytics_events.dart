@@ -9,6 +9,15 @@ abstract final class AnalyticsEvents {
   static const loginSuccess = 'login_success';
   static const loginFailed = 'login_failed';
 
+  /// Session Firebase anonyme ouverte avec succès depuis le CTA "Parcourir
+  /// sans compte". Mesure l'entrée de l'entonnoir invité → inscription.
+  static const guestSessionStarted = 'guest_session_started';
+
+  /// Échec de l'ouverture de la session anonyme (hors ligne, Firebase
+  /// indisponible). Propriété `reason` : code d'erreur Firebase le cas
+  /// échéant, `unknown` sinon.
+  static const guestSessionFailed = 'guest_session_failed';
+
   // KYC
   static const kycStarted = 'kyc_started';
   static const kycCompleted = 'kyc_completed';

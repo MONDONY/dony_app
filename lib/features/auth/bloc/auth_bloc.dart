@@ -562,7 +562,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       await _firebaseAuth.signInAnonymously();
       emit(const AuthGuestSessionReady());
-    } catch (_) {
+      unawaited(_analytics?.logEvent(AnalyticsEvents.guestSessionStarted));
+    } catch (e) {
       emit(
         const AuthError(
           NetworkException(
@@ -570,6 +571,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
             'Vérifiez votre connexion.',
             code: 'guest-session-failed',
           ),
+        ),
+      );
+      unawaited(
+        _analytics?.logEvent(
+          AnalyticsEvents.guestSessionFailed,
+          properties: {
+            'reason': e is FirebaseAuthException ? e.code : 'unknown',
+          },
         ),
       );
     }

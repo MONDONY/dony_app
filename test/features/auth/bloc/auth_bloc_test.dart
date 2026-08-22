@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
@@ -27,6 +29,8 @@ class MockLocalAuthService extends Mock implements LocalAuthService {}
 class MockFirebaseAuth extends Mock implements FirebaseAuth {}
 
 class MockUser extends Mock implements User {}
+
+class MockAnalyticsService extends Mock implements AnalyticsService {}
 
 class MockUserCredential extends Mock implements UserCredential {}
 
@@ -2030,15 +2034,105 @@ void main() {
     blocTest<AuthBloc, AuthState>(
       'échec de signInAnonymously (hors ligne) → émet [Loading, AuthError], sans navigation optimiste',
       build: () {
-        when(() => mockFirebaseAuth.signInAnonymously()).thenThrow(
-          FirebaseAuthException(code: 'network-request-failed'),
-        );
+        when(
+          () => mockFirebaseAuth.signInAnonymously(),
+        ).thenThrow(FirebaseAuthException(code: 'network-request-failed'));
         return buildBloc();
       },
       act: (bloc) => bloc.add(const AuthGuestSessionRequested()),
       expect: () => [isA<AuthLoading>(), isA<AuthError>()],
       verify: (_) {
         verify(() => mockFirebaseAuth.signInAnonymously()).called(1);
+      },
+    );
+  });
+
+  // ─── AuthGuestSessionRequested — analytics (correction ronde 1) ────────────
+  //
+  // Sans cet event, l'entonnoir invité → inscription n'est pas mesurable
+  // (cf. CLAUDE.md « Analytics — PostHog (OBLIGATOIRE) »).
+
+  group('AuthGuestSessionRequested — analytics', () {
+    late MockAnalyticsService mockAnalytics;
+
+    setUp(() {
+      mockAnalytics = MockAnalyticsService();
+      when(
+        () =>
+            mockAnalytics.logEvent(any(), properties: any(named: 'properties')),
+      ).thenAnswer((_) async {});
+    });
+
+    AuthBloc buildBlocWithAnalytics() => AuthBloc(
+      mockRepo,
+      mockLocalAuth,
+      firebaseAuth: mockFirebaseAuth,
+      analytics: mockAnalytics,
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'succès → logEvent(guest_session_started)',
+      build: () {
+        when(
+          () => mockFirebaseAuth.signInAnonymously(),
+        ).thenAnswer((_) async => MockUserCredential());
+        return buildBlocWithAnalytics();
+      },
+      act: (bloc) => bloc.add(const AuthGuestSessionRequested()),
+      wait: const Duration(milliseconds: 50),
+      expect: () => [isA<AuthLoading>(), isA<AuthGuestSessionReady>()],
+      verify: (_) {
+        verify(
+          () => mockAnalytics.logEvent(AnalyticsEvents.guestSessionStarted),
+        ).called(1);
+        verifyNever(
+          () => mockAnalytics.logEvent(AnalyticsEvents.guestSessionFailed),
+        );
+      },
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'échec (code Firebase connu) → logEvent(guest_session_failed, reason: code)',
+      build: () {
+        when(
+          () => mockFirebaseAuth.signInAnonymously(),
+        ).thenThrow(FirebaseAuthException(code: 'network-request-failed'));
+        return buildBlocWithAnalytics();
+      },
+      act: (bloc) => bloc.add(const AuthGuestSessionRequested()),
+      wait: const Duration(milliseconds: 50),
+      expect: () => [isA<AuthLoading>(), isA<AuthError>()],
+      verify: (_) {
+        verify(
+          () => mockAnalytics.logEvent(
+            AnalyticsEvents.guestSessionFailed,
+            properties: {'reason': 'network-request-failed'},
+          ),
+        ).called(1);
+        verifyNever(
+          () => mockAnalytics.logEvent(AnalyticsEvents.guestSessionStarted),
+        );
+      },
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'échec (exception générique, pas de code Firebase) → reason: unknown',
+      build: () {
+        when(
+          () => mockFirebaseAuth.signInAnonymously(),
+        ).thenThrow(Exception('erreur inattendue'));
+        return buildBlocWithAnalytics();
+      },
+      act: (bloc) => bloc.add(const AuthGuestSessionRequested()),
+      wait: const Duration(milliseconds: 50),
+      expect: () => [isA<AuthLoading>(), isA<AuthError>()],
+      verify: (_) {
+        verify(
+          () => mockAnalytics.logEvent(
+            AnalyticsEvents.guestSessionFailed,
+            properties: {'reason': 'unknown'},
+          ),
+        ).called(1);
       },
     );
   });

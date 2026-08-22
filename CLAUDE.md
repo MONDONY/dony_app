@@ -309,6 +309,8 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `analytics_consent_answered` | AnalyticsConsentScreen._respond() |
 | `login_success` | AuthBloc (check / phone / social / email) |
 | `login_failed` | AuthBloc._onCheckRequested() |
+| `guest_session_started` | AuthBloc._onGuestSessionRequested() — session Firebase anonyme ouverte avec succès depuis « Parcourir sans compte » |
+| `guest_session_failed` | AuthBloc._onGuestSessionRequested() — échec de l'ouverture (hors ligne, Firebase indisponible), propriété `reason` (code Firebase ou `unknown`) |
 | `kyc_started` | KycBloc._onSessionRequested() |
 | `kyc_completed` | KycBloc._onStatusRefreshed() |
 | `kyc_failed` | KycBloc._onSessionRequested() |
