@@ -1,0 +1,122 @@
+import 'package:dony/core/design/design_system.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+Widget _wrap(Widget child) => MaterialApp(
+  theme: AppTheme.light(),
+  home: Scaffold(body: Center(child: child)),
+);
+
+void main() {
+  group('DonyOnboardingGauge', () {
+    testWidgets('le compteur ne compte que les étapes terminées', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(
+          const DonyOnboardingGauge(
+            segments: [
+              DonyGaugeSegment.done,
+              DonyGaugeSegment.done,
+              DonyGaugeSegment.current,
+              DonyGaugeSegment.todo,
+              DonyGaugeSegment.todo,
+            ],
+            label: 'Identité',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('2 / 5 · Identité'), findsOneWidget);
+    });
+
+    testWidgets('un segment par étape', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          const DonyOnboardingGauge(
+            segments: [
+              DonyGaugeSegment.done,
+              DonyGaugeSegment.current,
+              DonyGaugeSegment.todo,
+              DonyGaugeSegment.todo,
+            ],
+            label: 'Pays',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(TweenAnimationBuilder<double>), findsNWidgets(4));
+    });
+
+    testWidgets('l\'information ne passe pas que par la couleur', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(
+          const DonyOnboardingGauge(
+            segments: [
+              DonyGaugeSegment.done,
+              DonyGaugeSegment.done,
+              DonyGaugeSegment.current,
+              DonyGaugeSegment.todo,
+              DonyGaugeSegment.todo,
+            ],
+            label: 'Identité',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final semantics = tester.getSemantics(find.byType(DonyOnboardingGauge));
+      expect(semantics.value, 'Étape 3 sur 5, 2 terminées');
+    });
+
+    testWidgets('sans étape en cours, la lecture porte sur le total atteint', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(
+          const DonyOnboardingGauge(
+            segments: [DonyGaugeSegment.done, DonyGaugeSegment.todo],
+            label: 'Parrainage',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final semantics = tester.getSemantics(find.byType(DonyOnboardingGauge));
+      expect(semantics.value, '1 étape sur 2 terminée');
+    });
+
+    testWidgets('tient à 200 % de taille de texte sans déborder', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        MediaQuery(
+          data: const MediaQueryData(textScaler: TextScaler.linear(2)),
+          child: _wrap(
+            const DonyOnboardingGauge(
+              segments: [
+                DonyGaugeSegment.done,
+                DonyGaugeSegment.current,
+                DonyGaugeSegment.todo,
+                DonyGaugeSegment.todo,
+                DonyGaugeSegment.todo,
+              ],
+              label: 'Confidentialité',
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+    });
+  });
+}
