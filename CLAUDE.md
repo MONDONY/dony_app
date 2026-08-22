@@ -311,8 +311,8 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `login_failed` | AuthBloc._onCheckRequested() |
 | `guest_session_started` | AuthBloc._onGuestSessionRequested() — session Firebase anonyme ouverte avec succès depuis « Parcourir sans compte » |
 | `guest_session_failed` | AuthBloc._onGuestSessionRequested() — échec de l'ouverture (hors ligne, Firebase indisponible), propriété `reason` (code Firebase ou `unknown`) |
-| `guest_data_claimed` | AuthBloc._claimGuestData() — favoris posés en session visiteur rattachés au compte créé à l'inscription (`POST /auth/guest/claim` accepté). Sortie de l'entonnoir invité → inscription |
-| `guest_data_claim_failed` | AuthBloc._claimGuestData() — rattachement refusé ou impossible, propriété `reason` (code métier backend `guest-claim-*` / `user-not-found`, ou `unknown`). L'inscription réussit malgré tout : le visiteur perd ses favoris, jamais son compte |
+| `guest_data_claimed` | AuthBloc._claimGuestData() — favoris posés en session visiteur rattachés au compte (`POST /auth/guest/claim` accepté), aussi bien à l'inscription qu'à la connexion à un compte existant (téléphone, e-mail, Google, Apple). Sortie de l'entonnoir invité |
+| `guest_data_claim_failed` | AuthBloc._claimGuestData() — rattachement refusé ou impossible, propriété `reason` (code métier backend `guest-claim-*` / `user-not-found`, ou `unknown`). L'inscription ou la connexion aboutit malgré tout : le visiteur perd ses favoris, jamais son compte. Doublé d'un `AppLog.warn` car l'analytics se tait si le consentement est refusé |
 | `kyc_started` | KycBloc._onSessionRequested() |
 | `kyc_completed` | KycBloc._onStatusRefreshed() |
 | `kyc_failed` | KycBloc._onSessionRequested() |

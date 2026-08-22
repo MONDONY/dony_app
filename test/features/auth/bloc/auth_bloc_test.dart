@@ -2046,26 +2046,52 @@ void main() {
 
   group('Reprise des données du visiteur', () {
     late MockUser anonUser;
+    late MockUser signedInUser;
+    late bool switched;
 
-    /// Session visiteur en cours au moment où l'utilisateur s'inscrit.
+    /// Simule la bascule réelle : `currentUser` renvoie le visiteur AVANT
+    /// `signInWithCustomToken`, puis le compte réel APRÈS. Un simulacre qui
+    /// renverrait le visiteur des deux côtés ferait passer le test du
+    /// rafraîchissement pour la mauvaise raison : il interrogerait encore le
+    /// visiteur, jamais le compte neuf.
     void stubGuestSession() {
       anonUser = MockUser();
+      signedInUser = MockUser();
+      switched = false;
       when(() => anonUser.isAnonymous).thenReturn(true);
       when(() => anonUser.getIdToken()).thenAnswer((_) async => 'token-anon');
       when(
         () => anonUser.getIdToken(true),
+      ).thenAnswer((_) async => 'token-anon-frais');
+      when(() => signedInUser.isAnonymous).thenReturn(false);
+      when(
+        () => signedInUser.getIdToken(),
+      ).thenAnswer((_) async => 'token-compte');
+      when(
+        () => signedInUser.getIdToken(true),
       ).thenAnswer((_) async => 'token-frais');
-      when(() => mockFirebaseAuth.currentUser).thenReturn(anonUser);
+      when(
+        () => mockFirebaseAuth.currentUser,
+      ).thenAnswer((_) => switched ? signedInUser : anonUser);
     }
 
-    /// OTP validé côté backend, numéro inconnu (404) → flux d'inscription.
-    void stubPhoneSignInForNewAccount() {
-      when(
-        () => mockRepo.verifyPhoneOtp(any(), any()),
-      ).thenAnswer((_) async => 'custom_token_fake');
-      when(
-        () => mockFirebaseAuth.signInWithCustomToken('custom_token_fake'),
-      ).thenAnswer((_) async => MockUserCredential());
+    /// Bascule de session : bascule le simulacre de `currentUser`.
+    void stubSignIn() {
+      when(() => mockFirebaseAuth.signInWithCustomToken(any())).thenAnswer((
+        _,
+      ) async {
+        switched = true;
+        return MockUserCredential();
+      });
+      when(() => mockFirebaseAuth.signInWithCredential(any())).thenAnswer((
+        _,
+      ) async {
+        switched = true;
+        return MockUserCredential();
+      });
+    }
+
+    void stubProfileNotFound() {
       when(() => mockRepo.getProfile()).thenThrow(
         DioException(
           requestOptions: RequestOptions(path: '/auth/me'),
@@ -2075,6 +2101,15 @@ void main() {
           ),
         ),
       );
+    }
+
+    /// OTP validé côté backend, numéro inconnu (404) → flux d'inscription.
+    void stubPhoneSignInForNewAccount() {
+      when(
+        () => mockRepo.verifyPhoneOtp(any(), any()),
+      ).thenAnswer((_) async => 'custom_token_fake');
+      stubSignIn();
+      stubProfileNotFound();
     }
 
     void stubRegister() {
@@ -2206,12 +2241,12 @@ void main() {
     blocTest<AuthBloc, AuthState>(
       'session Firebase non anonyme : aucune réclamation',
       build: () {
-        final signedInUser = MockUser();
-        when(() => signedInUser.isAnonymous).thenReturn(false);
+        final existingUser = MockUser();
+        when(() => existingUser.isAnonymous).thenReturn(false);
         when(
-          () => signedInUser.getIdToken(true),
+          () => existingUser.getIdToken(true),
         ).thenAnswer((_) async => 'token-frais');
-        when(() => mockFirebaseAuth.currentUser).thenReturn(signedInUser);
+        when(() => mockFirebaseAuth.currentUser).thenReturn(existingUser);
         stubPhoneSignInForNewAccount();
         stubRegister();
         return buildBloc();
@@ -2246,11 +2281,10 @@ void main() {
     );
 
     blocTest<AuthBloc, AuthState>(
-      'force le rafraîchissement du jeton après inscription',
+      'force le rafraîchissement du jeton du COMPTE NEUF après inscription',
       build: () {
-        // Sans ce forçage, le jeton en cache peut annoncer une session anonyme
-        // pendant une heure : paiement et publication seraient refusés sans
-        // explication lisible.
+        // Défense en profondeur : le rafraîchissement doit porter sur le
+        // compte créé, jamais sur le visiteur qu'on vient de quitter.
         stubGuestSession();
         stubPhoneSignInForNewAccount();
         stubRegister();
@@ -2260,7 +2294,8 @@ void main() {
       act: runSignupFlow,
       wait: const Duration(milliseconds: 50),
       verify: (_) {
-        verify(() => anonUser.getIdToken(true)).called(1);
+        verify(() => signedInUser.getIdToken(true)).called(1);
+        verifyNever(() => anonUser.getIdToken(true));
       },
     );
 
@@ -2271,18 +2306,8 @@ void main() {
         when(
           () => mockRepo.verifyEmailOtp(any(), any()),
         ).thenAnswer((_) async => 'custom_token_email');
-        when(
-          () => mockFirebaseAuth.signInWithCustomToken('custom_token_email'),
-        ).thenAnswer((_) async => MockUserCredential());
-        when(() => mockRepo.getProfile()).thenThrow(
-          DioException(
-            requestOptions: RequestOptions(path: '/auth/me'),
-            response: Response(
-              requestOptions: RequestOptions(path: '/auth/me'),
-              statusCode: 404,
-            ),
-          ),
-        );
+        stubSignIn();
+        stubProfileNotFound();
         when(
           () => mockRepo.registerWithEmail(email: any(named: 'email')),
         ).thenAnswer((_) async => testUser);
@@ -2300,6 +2325,179 @@ void main() {
       wait: const Duration(milliseconds: 50),
       verify: (_) {
         verify(() => mockRepo.claimGuestData('token-anon')).called(1);
+      },
+    );
+
+    // ── Le visiteur qui se connecte à un compte EXISTANT ────────────────────
+    //
+    // C'est la sortie normale du mode visiteur pour quelqu'un qui avait déjà
+    // un compte : il parcourt sans se connecter, met des trajets en favori,
+    // puis se connecte. Sans réclamation ici, ses favoris sont perdus.
+
+    blocTest<AuthBloc, AuthState>(
+      'connexion à un compte existant (téléphone) : réclame les favoris',
+      build: () {
+        stubGuestSession();
+        when(
+          () => mockRepo.verifyPhoneOtp(any(), any()),
+        ).thenAnswer((_) async => 'custom_token_fake');
+        stubSignIn();
+        when(() => mockRepo.getProfile()).thenAnswer((_) async => testUser);
+        when(() => mockRepo.claimGuestData(any())).thenAnswer((_) async {});
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(
+        const AuthPhoneVerified(verificationId: 'ver-abc', smsCode: '123456'),
+      ),
+      wait: const Duration(milliseconds: 50),
+      expect: () => [isA<AuthLoading>(), isA<AuthAuthenticated>()],
+      verify: (_) {
+        verify(() => mockRepo.claimGuestData('token-anon')).called(1);
+      },
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'connexion à un compte existant (email) : réclame les favoris',
+      build: () {
+        stubGuestSession();
+        when(
+          () => mockRepo.verifyEmailOtp(any(), any()),
+        ).thenAnswer((_) async => 'custom_token_email');
+        stubSignIn();
+        when(() => mockRepo.getProfile()).thenAnswer((_) async => testUser);
+        when(() => mockRepo.claimGuestData(any())).thenAnswer((_) async {});
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(
+        const AuthEmailOtpVerifyRequested(email: 'a@b.com', code: '123456'),
+      ),
+      wait: const Duration(milliseconds: 50),
+      expect: () => [isA<AuthLoading>(), isA<AuthAuthenticated>()],
+      verify: (_) {
+        verify(() => mockRepo.claimGuestData('token-anon')).called(1);
+      },
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'connexion à un compte existant (Google) : réclame les favoris',
+      build: () {
+        stubGuestSession();
+        stubSignIn();
+        final googleSignIn = MockGoogleSignIn();
+        final googleAccount = MockGoogleSignInAccount();
+        final googleAuth = MockGoogleSignInAuthentication();
+        when(
+          () => googleSignIn.signIn(),
+        ).thenAnswer((_) async => googleAccount);
+        when(
+          () => googleAccount.authentication,
+        ).thenAnswer((_) async => googleAuth);
+        when(() => googleAuth.accessToken).thenReturn('access');
+        when(() => googleAuth.idToken).thenReturn('id');
+        when(() => signedInUser.email).thenReturn('user@gmail.com');
+        when(() => mockRepo.getProfile()).thenAnswer((_) async => testUser);
+        when(() => mockRepo.claimGuestData(any())).thenAnswer((_) async {});
+        return AuthBloc(
+          mockRepo,
+          mockLocalAuth,
+          firebaseAuth: mockFirebaseAuth,
+          googleSignIn: googleSignIn,
+        );
+      },
+      act: (bloc) => bloc.add(const AuthGoogleSignInRequested()),
+      wait: const Duration(milliseconds: 50),
+      expect: () => [isA<AuthLoading>(), isA<AuthAuthenticated>()],
+      verify: (_) {
+        verify(() => mockRepo.claimGuestData('token-anon')).called(1);
+      },
+    );
+
+    // ── Capture sur les parcours OAuth ──────────────────────────────────────
+
+    blocTest<AuthBloc, AuthState>(
+      'capture le jeton anonyme AVANT signInWithCredential (Google)',
+      build: () {
+        stubGuestSession();
+        stubSignIn();
+        final googleSignIn = MockGoogleSignIn();
+        final googleAccount = MockGoogleSignInAccount();
+        final googleAuth = MockGoogleSignInAuthentication();
+        when(
+          () => googleSignIn.signIn(),
+        ).thenAnswer((_) async => googleAccount);
+        when(
+          () => googleAccount.authentication,
+        ).thenAnswer((_) async => googleAuth);
+        when(() => googleAuth.accessToken).thenReturn('access');
+        when(() => googleAuth.idToken).thenReturn('id');
+        when(() => signedInUser.email).thenReturn('user@gmail.com');
+        stubProfileNotFound();
+        return AuthBloc(
+          mockRepo,
+          mockLocalAuth,
+          firebaseAuth: mockFirebaseAuth,
+          googleSignIn: googleSignIn,
+        );
+      },
+      act: (bloc) => bloc.add(const AuthGoogleSignInRequested()),
+      wait: const Duration(milliseconds: 50),
+      verify: (_) {
+        verifyInOrder([
+          () => anonUser.getIdToken(),
+          () => mockFirebaseAuth.signInWithCredential(any()),
+        ]);
+      },
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'capture le jeton anonyme AVANT signInWithCredential (Apple)',
+      build: () {
+        stubGuestSession();
+        stubSignIn();
+        when(() => signedInUser.email).thenReturn('user@icloud.com');
+        stubProfileNotFound();
+        return AuthBloc(
+          mockRepo,
+          mockLocalAuth,
+          firebaseAuth: mockFirebaseAuth,
+          appleSignIn: (_) async => FakeAppleCredential(),
+        );
+      },
+      act: (bloc) => bloc.add(const AuthAppleSignInRequested()),
+      wait: const Duration(milliseconds: 50),
+      verify: (_) {
+        verifyInOrder([
+          () => anonUser.getIdToken(),
+          () => mockFirebaseAuth.signInWithCredential(any()),
+        ]);
+      },
+    );
+
+    // ── Le jeton ne survit pas à la fin de session ──────────────────────────
+
+    blocTest<AuthBloc, AuthState>(
+      'déconnexion : le jeton invité capturé est oublié',
+      build: () {
+        // Le garder l'exposerait à une réclamation par le compte suivant.
+        stubGuestSession();
+        stubPhoneSignInForNewAccount();
+        stubRegister();
+        when(() => mockFirebaseAuth.signOut()).thenAnswer((_) async {});
+        when(() => mockRepo.claimGuestData(any())).thenAnswer((_) async {});
+        return buildBloc();
+      },
+      act: (bloc) async {
+        bloc.add(
+          const AuthPhoneVerified(verificationId: 'ver-abc', smsCode: '123456'),
+        );
+        await bloc.stream.firstWhere((s) => s is AuthOtpVerified);
+        bloc.add(const AuthLogoutRequested());
+        await bloc.stream.firstWhere((s) => s is AuthInitial);
+        bloc.add(const AuthRegisterRequested());
+      },
+      wait: const Duration(milliseconds: 50),
+      verify: (_) {
+        verifyNever(() => mockRepo.claimGuestData(any()));
       },
     );
   });
