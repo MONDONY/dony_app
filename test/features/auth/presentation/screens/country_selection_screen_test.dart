@@ -40,6 +40,11 @@ Future<void> _wrap(
         ),
       ),
       GoRoute(
+        path: '/auth/residence-address',
+        builder: (_, state) =>
+            Scaffold(body: Text('Residence route extra=${state.extra}')),
+      ),
+      GoRoute(
         path: '/auth/referral-code',
         builder: (_, _) => const Scaffold(body: Text('Referral route')),
       ),
@@ -222,21 +227,73 @@ void main() {
     );
   });
 
-  testWidgets('état Success navigue vers le code de parrainage', (
-    tester,
-  ) async {
-    whenListen<CountryOnboardingState>(
-      cubit,
-      Stream.fromIterable([
-        const CountryOnboardingSaving('CA'),
-        const CountryOnboardingSuccess(),
-      ]),
-      initialState: const CountryOnboardingInitial(),
-    );
+  testWidgets(
+    'état Success navigue vers l\'étape adresse de résidence en passant le '
+    'code pays fraîchement choisi en extra',
+    (tester) async {
+      whenListen<CountryOnboardingState>(
+        cubit,
+        Stream.fromIterable([
+          const CountryOnboardingSaving('CA'),
+          const CountryOnboardingSuccess(),
+        ]),
+        initialState: const CountryOnboardingInitial(),
+      );
 
-    await _wrap(tester, cubit);
-    await tester.pumpAndSettle();
+      await _wrap(tester, cubit);
+      await tester.pumpAndSettle();
 
-    expect(find.text('Referral route'), findsOneWidget);
-  });
+      // `extra` porte le code choisi par l'utilisateur, la valeur la plus
+      // fraîche possible — plus fraîche qu'une relecture de
+      // `BusinessPrefsBloc`, dont le singleton app-wide ne se resynchronise
+      // pas automatiquement quand ce cubit écrit directement dans Hive.
+      expect(find.text('Residence route extra=CA'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'passer la sélection de pays (skip) navigue directement vers le parrainage, '
+    'pas vers l\'adresse de résidence',
+    (tester) async {
+      // `skip()` émet `CountryOnboardingSaving(null)` : aucun code pays, donc
+      // rien à préparer sur l'étape adresse (compte de paiement voyageur).
+      whenListen<CountryOnboardingState>(
+        cubit,
+        Stream.fromIterable([
+          const CountryOnboardingSaving(null),
+          const CountryOnboardingSuccess(),
+        ]),
+        initialState: const CountryOnboardingInitial(),
+      );
+
+      await _wrap(tester, cubit);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Referral route'), findsOneWidget);
+      expect(find.text('Residence route'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'continuer sans pays disponible (continueAsSenderOnly) navigue directement '
+    'vers le parrainage, pas vers l\'adresse de résidence',
+    (tester) async {
+      // `continueAsSenderOnly()` émet lui aussi `CountryOnboardingSaving(null)` :
+      // même contrat de navigation que `skip()`.
+      whenListen<CountryOnboardingState>(
+        cubit,
+        Stream.fromIterable([
+          const CountryOnboardingSaving(null),
+          const CountryOnboardingSuccess(),
+        ]),
+        initialState: const CountryOnboardingInitial(),
+      );
+
+      await _wrap(tester, cubit);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Referral route'), findsOneWidget);
+      expect(find.text('Residence route'), findsNothing);
+    },
+  );
 }

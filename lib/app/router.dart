@@ -6,6 +6,7 @@ import 'package:dony/features/app_update/presentation/screens/force_update_scree
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/bloc/country_onboarding_cubit.dart';
+import 'package:dony/features/auth/bloc/residence_address_cubit.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/auth/guest_access_guard.dart';
 import 'package:dony/features/auth/presentation/screens/analytics_consent_screen.dart';
@@ -17,6 +18,7 @@ import 'package:dony/features/auth/presentation/screens/onboarding_screen.dart';
 import 'package:dony/features/auth/presentation/screens/otp_verification_screen.dart';
 import 'package:dony/features/auth/presentation/screens/phone_auth_screen.dart';
 import 'package:dony/features/auth/presentation/screens/referral_code_screen.dart';
+import 'package:dony/features/auth/presentation/screens/residence_address_screen.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
 import 'package:dony/features/cancellation/presentation/screens/rematch_search_screen.dart';
@@ -148,6 +150,7 @@ import 'package:dony/features/settings/bloc/accessibility_bloc.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:dony/features/settings/bloc/app_preferences_bloc.dart';
 import 'package:dony/features/settings/bloc/blocked_users_bloc.dart';
+import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:dony/features/settings/bloc/connected_devices_bloc.dart';
 import 'package:dony/features/settings/bloc/data_export_bloc.dart';
 import 'package:dony/features/settings/bloc/diagnostics_bloc.dart';
@@ -210,6 +213,7 @@ const _publicRoutes = {
   '/auth/referral-code',
   '/auth/analytics-consent',
   '/auth/country-selection',
+  '/auth/residence-address',
   '/auth/local',
   '/home',
   '/recherche/composer',
@@ -338,6 +342,27 @@ final appRouter = GoRouter(
       builder: (context, state) => BlocProvider(
         create: (_) => getIt<CountryOnboardingCubit>(),
         child: const CountrySelectionScreen(),
+      ),
+    ),
+    GoRoute(
+      path: '/auth/residence-address',
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<ResidenceAddressCubit>(),
+        child: ResidenceAddressScreen(
+          // `AuthBloc.state.currentUser?.country` n'est jamais renseigné :
+          // `POST /auth/register` n'écrit pas `users.country`. Le pays choisi
+          // à l'étape précédente est prioritairement lu dans `extra` — passé
+          // par `country_selection_screen.dart` juste après un `select()`
+          // réussi, donc garanti frais. `BusinessPrefsBloc.state.country`
+          // reste le repli : ce singleton app-wide est construit avant cet
+          // écran et ne se resynchronise pas automatiquement quand
+          // `CountryOnboardingCubit` écrit directement dans Hive, mais il
+          // reste utile pour toute navigation qui ne passerait pas par
+          // `country_selection_screen` (deep link, retour arrière...).
+          country:
+              (state.extra as String?) ??
+              context.read<BusinessPrefsBloc>().state.country,
+        ),
       ),
     ),
     GoRoute(

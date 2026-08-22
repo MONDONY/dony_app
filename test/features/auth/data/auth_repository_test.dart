@@ -134,4 +134,41 @@ void main() {
     expect(result.id, 'u1');
     verify(() => mockDs.registerWithEmail(email: 'user@example.com')).called(1);
   });
+
+  test('updateResidenceAddress delegates to datasource', () async {
+    when(
+      () => mockDs.updateResidenceAddress(
+        street: any(named: 'street'),
+        line2: any(named: 'line2'),
+        postalCode: any(named: 'postalCode'),
+        city: any(named: 'city'),
+      ),
+    ).thenAnswer((_) async {});
+
+    await expectLater(
+      repo.updateResidenceAddress(
+        street: '12 rue des Lilas',
+        line2: 'Bat. B',
+        postalCode: '75011',
+        city: 'Paris',
+      ),
+      completes,
+    );
+
+    verify(
+      () => mockDs.updateResidenceAddress(
+        street: '12 rue des Lilas',
+        line2: 'Bat. B',
+        postalCode: '75011',
+        city: 'Paris',
+      ),
+    ).called(1);
+  });
+
+  test('markOnboardingSeen delegates to datasource', () async {
+    when(() => mockDs.markOnboardingSeen()).thenAnswer((_) async {});
+
+    await expectLater(repo.markOnboardingSeen(), completes);
+    verify(() => mockDs.markOnboardingSeen()).called(1);
+  });
 }

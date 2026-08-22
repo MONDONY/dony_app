@@ -306,4 +306,8 @@ abstract final class AnalyticsEvents {
   static const searchPhraseParsed = 'search_phrase_parsed';
   static const searchParseFailed = 'search_parse_failed';
   static const searchSubmitted = 'search_submitted';
+
+  // Onboarding progressif — lot 1
+  static const residenceAddressSaved = 'residence_address_saved';
+  static const onboardingStepSkipped = 'onboarding_step_skipped';
 }

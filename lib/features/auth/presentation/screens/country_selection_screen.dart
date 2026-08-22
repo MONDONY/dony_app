@@ -10,8 +10,24 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-class CountrySelectionScreen extends StatelessWidget {
+class CountrySelectionScreen extends StatefulWidget {
   const CountrySelectionScreen({super.key});
+
+  @override
+  State<CountrySelectionScreen> createState() => _CountrySelectionScreenState();
+}
+
+class _CountrySelectionScreenState extends State<CountrySelectionScreen> {
+  // Cet écran a trois sorties : `select` (un pays choisi), `skip` et
+  // `continueAsSenderOnly` (aucun pays). Les deux dernières n'ont rien à
+  // faire préparer sur `/auth/residence-address` (adresse de résidence
+  // = préparer le compte de paiement voyageur) : elles doivent filer
+  // directement au parrainage. `CountryOnboardingSuccess` ne porte aucune
+  // information permettant de distinguer ces trois chemins, mais
+  // `CountryOnboardingSaving.countryCode` — toujours émis juste avant — si :
+  // non nul pour `select`, nul pour les deux autres. `listenWhen` capture ce
+  // code à chaque transition, avant que `listener` ne route sur le succès.
+  String? _lastAttemptedCountryCode;
 
   @override
   Widget build(BuildContext context) {
@@ -20,9 +36,28 @@ class CountrySelectionScreen extends StatelessWidget {
     final media = MediaQuery.of(context);
 
     return BlocConsumer<CountryOnboardingCubit, CountryOnboardingState>(
+      listenWhen: (previous, current) {
+        if (current is CountryOnboardingSaving) {
+          _lastAttemptedCountryCode = current.countryCode;
+        }
+        return true;
+      },
       listener: (context, state) {
         if (state is CountryOnboardingSuccess) {
-          context.go('/auth/referral-code');
+          if (_lastAttemptedCountryCode != null) {
+            // Passe le code fraîchement choisi en `extra` : c'est la valeur
+            // la plus à jour possible, celle que l'utilisateur vient de
+            // sélectionner — plus fraîche qu'une relecture de
+            // `BusinessPrefsBloc`, dont le singleton app-wide est construit
+            // avant cet écran et ne se resynchronise pas automatiquement
+            // quand ce cubit écrit directement dans Hive (voir router.dart).
+            context.go(
+              '/auth/residence-address',
+              extra: _lastAttemptedCountryCode,
+            );
+          } else {
+            context.go('/auth/referral-code');
+          }
         } else if (state is CountryOnboardingError) {
           DonySnackbar.show(
             context,
@@ -56,7 +91,7 @@ class CountrySelectionScreen extends StatelessWidget {
                       children: [
                         const AuthFlowHeader(
                           current: 2,
-                          total: 3,
+                          total: 4,
                           label: 'Pays',
                           showBack: false,
                         ),
