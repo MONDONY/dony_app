@@ -30,10 +30,20 @@ Future<String> resolvePostSignupRoute({
     await analytics.syncFromBackend();
   }
 
-  // Le parcours ne s'impose plus jamais une fois l'accueil atteint : on n'y
-  // entre alors que par la carte de reprise. C'est aussi ce qui empêche de
-  // renvoyer indéfiniment vers le pays un utilisateur qui l'a passé —
-  // `CountryOnboardingCubit.skip()` laisse volontairement `country` à null.
+  // Cette garde ferme UN SEUL des trois points d'entrée du parcours : elle
+  // empêche `resolvePostSignupRoute` lui-même de renvoyer indéfiniment vers
+  // le pays un utilisateur qui l'a passé (`CountryOnboardingCubit.skip()`
+  // laisse volontairement `country` à null). Deux autres chemins y entrent
+  // sans jamais passer par ici ni par cette garde :
+  // `AnalyticsConsentGate._onLogin` (`core/widgets/analytics_consent_gate.dart`)
+  // renvoie vers `/auth/analytics-consent` à chaque login dont le
+  // consentement analytics n'est pas répondu, quel que soit
+  // `onboarding_seen_at` ; et le `redirect` de `router.dart` renvoie
+  // `/trips/create` vers `/auth/country-selection` dès que
+  // `kTravelerCountryUnsupported` est posé. Rouvrir ces deux chemins-là après
+  // que l'utilisateur a atteint l'accueil est une décision produit qui
+  // dépasse ce lot — signalé, pas corrigé ici (revue finale du lot 2,
+  // correction 4).
   if (user?.onboardingSeenAt != null) return '/home';
 
   final step = nextStep(
