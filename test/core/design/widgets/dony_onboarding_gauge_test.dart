@@ -48,6 +48,14 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(TweenAnimationBuilder<double>), findsNWidgets(4));
+
+      // Verrouille le mapping état → remplissage : une étape passée doit
+      // rester vide (0.0), pas se confondre avec « terminée » (1.0).
+      final factors = tester
+          .widgetList<FractionallySizedBox>(find.byType(FractionallySizedBox))
+          .map((w) => w.widthFactor)
+          .toList();
+      expect(factors, [1.0, 0.5, 0.0, 0.0]);
     });
 
     testWidgets('l\'information ne passe pas que par la couleur', (
