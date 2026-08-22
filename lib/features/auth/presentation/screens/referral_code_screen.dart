@@ -4,6 +4,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/auth/data/repositories/auth_repository.dart';
+import 'package:dony/features/auth/presentation/onboarding_step.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_flow_chrome.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
 import 'package:flutter/material.dart';
@@ -12,7 +13,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 class ReferralCodeScreen extends StatefulWidget {
-  const ReferralCodeScreen({super.key});
+  const ReferralCodeScreen({super.key, required this.progress});
+
+  /// Le parrainage est hors décompte (spec §4.2) : `progress.current` y vaut
+  /// toujours `null`, aucun segment n'est donc jamais à moitié rempli ici.
+  final OnboardingProgress progress;
 
   @override
   State<ReferralCodeScreen> createState() => _ReferralCodeScreenState();
@@ -82,12 +87,14 @@ class _ReferralCodeScreenState extends State<ReferralCodeScreen> {
                   ),
                   child: state is ReferralRedeemed
                       ? _SuccessView(
+                          progress: widget.progress,
                           onContinue: () {
                             _markOnboardingSeen();
                             context.go('/home');
                           },
                         )
                       : _FormView(
+                          progress: widget.progress,
                           ctrl: _ctrl,
                           isNotEmpty: _isNotEmpty,
                           isLoading: state is ReferralRedeemLoading,
@@ -111,6 +118,7 @@ class _ReferralCodeScreenState extends State<ReferralCodeScreen> {
 
 class _FormView extends StatelessWidget {
   const _FormView({
+    required this.progress,
     required this.ctrl,
     required this.isNotEmpty,
     required this.isLoading,
@@ -118,6 +126,7 @@ class _FormView extends StatelessWidget {
     required this.onSkip,
   });
 
+  final OnboardingProgress progress;
   final TextEditingController ctrl;
   final ValueNotifier<bool> isNotEmpty;
   final bool isLoading;
@@ -132,12 +141,7 @@ class _FormView extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const AuthFlowHeader(
-          current: 4,
-          total: 4,
-          label: 'Parrainage',
-          showBack: false,
-        ),
+        AuthFlowHeader.gauge(segments: progress.segments, label: 'Parrainage'),
         const SizedBox(height: DonySpacing.md),
         Expanded(
           child: SingleChildScrollView(
@@ -228,7 +232,8 @@ class _ReferralActionPanel extends StatelessWidget {
 // ── Success view ──────────────────────────────────────────────────────────────
 
 class _SuccessView extends StatelessWidget {
-  const _SuccessView({required this.onContinue});
+  const _SuccessView({required this.progress, required this.onContinue});
+  final OnboardingProgress progress;
   final VoidCallback onContinue;
 
   @override
@@ -236,12 +241,7 @@ class _SuccessView extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const AuthFlowHeader(
-          current: 4,
-          total: 4,
-          label: 'Parrainage',
-          showBack: false,
-        ),
+        AuthFlowHeader.gauge(segments: progress.segments, label: 'Parrainage'),
         const SizedBox(height: DonySpacing.md),
         Expanded(
           child: SingleChildScrollView(

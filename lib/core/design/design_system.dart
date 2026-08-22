@@ -42,6 +42,7 @@ export 'package:dony/core/design/widgets/dony_list_tile.dart';
 // Foundation components
 export 'package:dony/core/design/widgets/dony_logo.dart';
 export 'package:dony/core/design/widgets/dony_mascotte.dart';
+export 'package:dony/core/design/widgets/dony_onboarding_gauge.dart';
 export 'package:dony/core/design/widgets/dony_page_scaffold.dart';
 export 'package:dony/core/design/widgets/dony_pressable.dart';
 export 'package:dony/core/design/widgets/dony_price_tag.dart';

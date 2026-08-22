@@ -6,13 +6,33 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/presentation/screens/auth_method_screen.dart';
+import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
+import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/stripe_account_test_doubles.dart';
+
 class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
+
+// Cet écran ne dispatche pas encore `AuthNewAccountAuthenticated` dans ces
+// tests, mais `_continueAfterNewAccount` lit `StripeAccountBloc` et
+// `BusinessPrefsBloc` (fournis à l'échelle de l'app dans `app.dart`) dès que
+// cet état arrive : les provisionner ici évite qu'un futur test qui l'émet
+// casse sans raison apparente (`ProviderNotFoundException`).
+class _MockBusinessPrefsBloc
+    extends MockBloc<BusinessPrefsEvent, BusinessPrefsState>
+    implements BusinessPrefsBloc {}
+
+_MockBusinessPrefsBloc _stubBusinessPrefsBloc() {
+  final bloc = _MockBusinessPrefsBloc();
+  when(() => bloc.state).thenReturn(const BusinessPrefsState());
+  when(() => bloc.stream).thenAnswer((_) => Stream.value(bloc.state));
+  return bloc;
+}
 
 Widget _app(AuthBloc bloc) => MaterialApp.router(
   theme: AppTheme.light(),
@@ -20,8 +40,16 @@ Widget _app(AuthBloc bloc) => MaterialApp.router(
     routes: [
       GoRoute(
         path: '/',
-        builder: (_, _) => BlocProvider<AuthBloc>.value(
-          value: bloc,
+        builder: (_, _) => MultiBlocProvider(
+          providers: [
+            BlocProvider<AuthBloc>.value(value: bloc),
+            BlocProvider<StripeAccountBloc>.value(
+              value: stubStripeAccountBloc(),
+            ),
+            BlocProvider<BusinessPrefsBloc>.value(
+              value: _stubBusinessPrefsBloc(),
+            ),
+          ],
           child: const AuthMethodScreen(),
         ),
       ),

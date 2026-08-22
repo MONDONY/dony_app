@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/auth/bloc/residence_address_cubit.dart';
 import 'package:dony/features/auth/data/repositories/auth_repository.dart';
@@ -99,5 +100,9 @@ void main() {
     expect(captured.toString(), isNot(contains('Lilas')));
     expect(captured.toString(), isNot(contains('75011')));
     expect(captured.toString(), isNot(contains('Paris')));
+    expect(
+      captured.toString(),
+      contains(AnalyticsEvents.onboardingStepCompleted),
+    );
   });
 }

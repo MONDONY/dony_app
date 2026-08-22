@@ -174,6 +174,35 @@ void main() {
     );
   });
 
+  group('StripeAccountReset', () {
+    // Scénario de la régression trouvée en revue finale du lot 2 :
+    // `StripeAccountBloc` est un `lazySingleton` GetIt jamais recréé par
+    // `AuthBloc`. Sans `StripeAccountReset`, un compte dont le statut Connect
+    // était `ONBOARDING_COMPLETE` laisserait ce statut en mémoire pour le
+    // compte suivant (déconnexion / nouvelle inscription) — `nextStep`
+    // croirait alors à tort que l'étape « paiements » du nouveau compte est
+    // déjà faite.
+    blocTest<StripeAccountBloc, StripeAccountState>(
+      'efface le statut Connect du compte précédent, revient à Initial',
+      build: buildBloc,
+      seed: () => const StripeAccountReady(_complete),
+      act: (b) => b.add(const StripeAccountReset()),
+      expect: () => [isA<StripeAccountInitial>()],
+      verify: (_) {
+        verifyNever(() => mockRepo.getAccountStatus());
+        verifyNever(() => mockRepo.refreshAccountStatus());
+      },
+    );
+
+    blocTest<StripeAccountBloc, StripeAccountState>(
+      'efface aussi un état d\'erreur périmé du compte précédent',
+      build: buildBloc,
+      seed: () => const StripeAccountLoadError(),
+      act: (b) => b.add(const StripeAccountReset()),
+      expect: () => [isA<StripeAccountInitial>()],
+    );
+  });
+
   group('StripeAccountAvailability', () {
     test('reflète le statut chargé', () {
       expect(

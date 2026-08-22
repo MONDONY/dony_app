@@ -10,6 +10,7 @@ import 'package:dony/features/auth/bloc/country_onboarding_cubit.dart';
 import 'package:dony/features/auth/bloc/residence_address_cubit.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/auth/guest_access_guard.dart';
+import 'package:dony/features/auth/presentation/onboarding_step.dart';
 import 'package:dony/features/auth/presentation/screens/analytics_consent_screen.dart';
 import 'package:dony/features/auth/presentation/screens/auth_method_screen.dart';
 import 'package:dony/features/auth/presentation/screens/country_selection_screen.dart';
@@ -360,29 +361,45 @@ final appRouter = GoRouter(
       path: '/auth/country-selection',
       builder: (context, state) => BlocProvider(
         create: (_) => getIt<CountryOnboardingCubit>(),
-        child: const CountrySelectionScreen(),
+        child: CountrySelectionScreen(
+          progress: readOnboardingProgress(
+            context,
+            current: OnboardingStep.country,
+          ),
+        ),
       ),
     ),
     GoRoute(
       path: '/auth/residence-address',
-      builder: (context, state) => BlocProvider(
-        create: (_) => getIt<ResidenceAddressCubit>(),
-        child: ResidenceAddressScreen(
-          // `AuthBloc.state.currentUser?.country` n'est jamais renseigné :
-          // `POST /auth/register` n'écrit pas `users.country`. Le pays choisi
-          // à l'étape précédente est prioritairement lu dans `extra` — passé
-          // par `country_selection_screen.dart` juste après un `select()`
-          // réussi, donc garanti frais. `BusinessPrefsBloc.state.country`
-          // reste le repli : ce singleton app-wide est construit avant cet
-          // écran et ne se resynchronise pas automatiquement quand
-          // `CountryOnboardingCubit` écrit directement dans Hive, mais il
-          // reste utile pour toute navigation qui ne passerait pas par
-          // `country_selection_screen` (deep link, retour arrière...).
-          country:
-              (state.extra as String?) ??
-              context.read<BusinessPrefsBloc>().state.country,
-        ),
-      ),
+      builder: (context, state) {
+        // `AuthBloc.state.currentUser?.country` n'est jamais renseigné :
+        // `POST /auth/register` n'écrit pas `users.country`. Le pays choisi
+        // à l'étape précédente est prioritairement lu dans `extra` — passé
+        // par `country_selection_screen.dart` juste après un `select()`
+        // réussi, donc garanti frais. `BusinessPrefsBloc.state.country`
+        // reste le repli : ce singleton app-wide est construit avant cet
+        // écran et ne se resynchronise pas automatiquement quand
+        // `CountryOnboardingCubit` écrit directement dans Hive, mais il
+        // reste utile pour toute navigation qui ne passerait pas par
+        // `country_selection_screen` (deep link, retour arrière...). Même
+        // repli réutilisé pour `countryFallback` : sans lui, la jauge
+        // afficherait l'étape « Pays » comme non faite juste après l'avoir
+        // choisie (`readOnboardingProgress` ne le déduit pas seul).
+        final country =
+            (state.extra as String?) ??
+            context.read<BusinessPrefsBloc>().state.country;
+        return BlocProvider(
+          create: (_) => getIt<ResidenceAddressCubit>(),
+          child: ResidenceAddressScreen(
+            country: country,
+            progress: readOnboardingProgress(
+              context,
+              current: OnboardingStep.address,
+              countryFallback: country,
+            ),
+          ),
+        );
+      },
     ),
     GoRoute(
       path: '/auth/referral-code',
@@ -391,12 +408,31 @@ final appRouter = GoRouter(
           getIt<ReferralRepository>(),
           getIt<AnalyticsService>(),
         ),
-        child: const ReferralCodeScreen(),
+        // Aucune étape en cours : le parrainage est hors décompte (spec §4.2).
+        // Même repli `extra ?? BusinessPrefsBloc` que `residence-address`
+        // pour `countryFallback` : `residence_address_screen.dart` transmet
+        // le pays en `extra` (repli immédiat, le temps que le
+        // `AuthProfileRefreshRequested` déclenché juste avant revienne) —
+        // sans lui, l'étape « Pays » regresserait sur cet écran (correction 1
+        // de la revue finale du lot 2).
+        child: ReferralCodeScreen(
+          progress: readOnboardingProgress(
+            context,
+            countryFallback:
+                (state.extra as String?) ??
+                context.read<BusinessPrefsBloc>().state.country,
+          ),
+        ),
       ),
     ),
     GoRoute(
       path: '/auth/analytics-consent',
-      builder: (context, state) => const AnalyticsConsentScreen(),
+      builder: (context, state) => AnalyticsConsentScreen(
+        progress: readOnboardingProgress(
+          context,
+          current: OnboardingStep.consent,
+        ),
+      ),
     ),
     GoRoute(
       path: '/auth/local',

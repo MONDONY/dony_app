@@ -72,3 +72,17 @@ class ResponseDelayChanged extends BusinessPrefsEvent {
 class BusinessPrefsSyncRequested extends BusinessPrefsEvent {
   const BusinessPrefsSyncRequested();
 }
+
+/// Reconstruit l'état depuis Hive, comme au tout premier `BusinessPrefsBloc`.
+///
+/// `BusinessPrefsBloc` est un `lazySingleton` GetIt : `AuthBloc` ne le
+/// recrée jamais. Sans cet event, le bloc continuerait de porter le pays
+/// (et les autres préférences) du compte précédent après une déconnexion,
+/// un changement de compte ou une nouvelle inscription — alors même que
+/// `AuthBloc._clearHiveAccountData` a déjà vidé la case Hive dont ce bloc
+/// dérive son état. Dispatché depuis `app.dart`
+/// (`AccountResetGuard.shouldResetAccountScopedBlocs`), jamais depuis un
+/// autre bloc (cf. `lib/features/auth/account_reset_guard.dart`).
+class BusinessPrefsReset extends BusinessPrefsEvent {
+  const BusinessPrefsReset();
+}

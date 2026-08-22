@@ -10,6 +10,8 @@ import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/auth/presentation/screens/otp_verification_screen.dart';
+import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
+import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -17,8 +19,24 @@ import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 import '../../../../helpers/mock_analytics_backend.dart';
+import '../../../../helpers/stripe_account_test_doubles.dart';
 
 class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
+
+// `AuthNewAccountAuthenticated` fait lire `StripeAccountBloc` et
+// `BusinessPrefsBloc` (fournis à l'échelle de l'app dans `app.dart`) par
+// `_continueAfterSignup`. Tout harnais qui monte cet écran sans eux tombe en
+// `ProviderNotFoundException` — voir `stripe_account_test_doubles.dart`.
+class _MockBusinessPrefsBloc
+    extends MockBloc<BusinessPrefsEvent, BusinessPrefsState>
+    implements BusinessPrefsBloc {}
+
+_MockBusinessPrefsBloc _stubBusinessPrefsBloc() {
+  final bloc = _MockBusinessPrefsBloc();
+  when(() => bloc.state).thenReturn(const BusinessPrefsState());
+  when(() => bloc.stream).thenAnswer((_) => Stream.value(bloc.state));
+  return bloc;
+}
 
 const _testUser = UserModel(
   id: 'u1',
@@ -74,8 +92,16 @@ void main() {
       routes: [
         GoRoute(
           path: '/auth/otp',
-          builder: (_, _) => BlocProvider<AuthBloc>.value(
-            value: mockBloc,
+          builder: (_, _) => MultiBlocProvider(
+            providers: [
+              BlocProvider<AuthBloc>.value(value: mockBloc),
+              BlocProvider<StripeAccountBloc>.value(
+                value: stubStripeAccountBloc(),
+              ),
+              BlocProvider<BusinessPrefsBloc>.value(
+                value: _stubBusinessPrefsBloc(),
+              ),
+            ],
             child: const OtpVerificationScreen(),
           ),
         ),
@@ -159,8 +185,16 @@ void main() {
         routes: [
           GoRoute(
             path: '/auth/otp',
-            builder: (_, _) => BlocProvider<AuthBloc>.value(
-              value: mockBloc,
+            builder: (_, _) => MultiBlocProvider(
+              providers: [
+                BlocProvider<AuthBloc>.value(value: mockBloc),
+                BlocProvider<StripeAccountBloc>.value(
+                  value: stubStripeAccountBloc(),
+                ),
+                BlocProvider<BusinessPrefsBloc>.value(
+                  value: _stubBusinessPrefsBloc(),
+                ),
+              ],
               child: const OtpVerificationScreen(),
             ),
           ),
@@ -332,8 +366,16 @@ void main() {
             routes: [
               GoRoute(
                 path: '/auth/otp',
-                builder: (_, _) => BlocProvider<AuthBloc>.value(
-                  value: mockBloc,
+                builder: (_, _) => MultiBlocProvider(
+                  providers: [
+                    BlocProvider<AuthBloc>.value(value: mockBloc),
+                    BlocProvider<StripeAccountBloc>.value(
+                      value: stubStripeAccountBloc(),
+                    ),
+                    BlocProvider<BusinessPrefsBloc>.value(
+                      value: _stubBusinessPrefsBloc(),
+                    ),
+                  ],
                   child: const OtpVerificationScreen(),
                 ),
               ),
@@ -371,8 +413,16 @@ void main() {
         ),
         GoRoute(
           path: '/auth/otp',
-          builder: (_, _) => BlocProvider<AuthBloc>.value(
-            value: mockBloc,
+          builder: (_, _) => MultiBlocProvider(
+            providers: [
+              BlocProvider<AuthBloc>.value(value: mockBloc),
+              BlocProvider<StripeAccountBloc>.value(
+                value: stubStripeAccountBloc(),
+              ),
+              BlocProvider<BusinessPrefsBloc>.value(
+                value: _stubBusinessPrefsBloc(),
+              ),
+            ],
             child: const OtpVerificationScreen(),
           ),
         ),

@@ -50,7 +50,6 @@ class HiveService {
   static const String kCurrencyCode = 'currency_code';
   static const String kCountryCode =
       'country_code'; // ISO 3166-1 alpha-2, ou absent
-  static const String kCountryOnboardingSeen = 'country_onboarding_seen';
   static const String kTravelerCountryUnsupported =
       'traveler_country_unsupported';
   static const String kPickupRadiusKm = 'pickup_radius_km'; // int

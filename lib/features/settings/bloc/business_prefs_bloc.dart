@@ -16,6 +16,7 @@ class BusinessPrefsBloc extends Bloc<BusinessPrefsEvent, BusinessPrefsState> {
 
   BusinessPrefsBloc(this._repo, this._box) : super(_initialState(_box)) {
     on<BusinessPrefsSyncRequested>(_onSync);
+    on<BusinessPrefsReset>(_onReset);
     on<WeightUnitChanged>(_onWeightUnit);
     on<CurrencyChanged>(_onCurrency);
     on<CountryChanged>(_onCountry);
@@ -54,6 +55,18 @@ class BusinessPrefsBloc extends Bloc<BusinessPrefsEvent, BusinessPrefsState> {
     } catch (_) {
       emit(state.copyWith(isSyncing: false));
     }
+  }
+
+  // ── Reset (déconnexion / changement de compte / nouvelle inscription) ─────
+
+  /// `AuthBloc._clearHiveAccountData()` a déjà vidé `_box` : relire Hive ici
+  /// rend donc les valeurs par défaut (ou celles d'un tout nouveau compte),
+  /// jamais celles du compte précédent. Voir `BusinessPrefsReset`.
+  Future<void> _onReset(
+    BusinessPrefsReset event,
+    Emitter<BusinessPrefsState> emit,
+  ) async {
+    emit(_initialState(_box));
   }
 
   // ── Handlers existants (+ sync API en arrière-plan) ───────────────────────

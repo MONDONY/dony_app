@@ -116,7 +116,6 @@ void main() {
   Future<void> seedHiveUserData() async {
     await Hive.box('user_prefs').putAll({
       HiveService.kAnalyticsConsent: true,
-      HiveService.kCountryOnboardingSeen: true,
       HiveService.kCountryCode: 'FR',
       HiveService.kCurrencyCode: 'EUR',
       HiveService.kThemeMode: 'dark',
@@ -303,7 +302,6 @@ void main() {
       setUp: () async {
         final prefs = Hive.box('user_prefs');
         await prefs.put(HiveService.kAnalyticsConsent, true);
-        await prefs.put(HiveService.kCountryOnboardingSeen, true);
         await prefs.put(HiveService.kTravelerCountryUnsupported, true);
         await prefs.put(HiveService.kCountryCode, 'FR');
         await prefs.put(HiveService.kCurrencyCode, 'EUR');
@@ -321,7 +319,6 @@ void main() {
       verify: (_) {
         final prefs = Hive.box('user_prefs');
         expect(prefs.get(HiveService.kAnalyticsConsent), isNull);
-        expect(prefs.get(HiveService.kCountryOnboardingSeen), isNull);
         expect(prefs.get(HiveService.kTravelerCountryUnsupported), isNull);
         expect(prefs.get(HiveService.kCountryCode), isNull);
         expect(prefs.get(HiveService.kCurrencyCode), isNull);
@@ -1198,7 +1195,6 @@ void main() {
       setUp: () async {
         final prefs = Hive.box('user_prefs');
         await prefs.put(HiveService.kAnalyticsConsent, false);
-        await prefs.put(HiveService.kCountryOnboardingSeen, true);
         await prefs.put(HiveService.kTravelerCountryUnsupported, true);
         await prefs.put(HiveService.kCountryCode, 'FR');
         await prefs.put(HiveService.kCurrencyCode, 'EUR');
@@ -1217,7 +1213,6 @@ void main() {
       verify: (_) {
         final prefs = Hive.box('user_prefs');
         expect(prefs.get(HiveService.kAnalyticsConsent), isNull);
-        expect(prefs.get(HiveService.kCountryOnboardingSeen), isNull);
         expect(prefs.get(HiveService.kTravelerCountryUnsupported), isNull);
         expect(prefs.get(HiveService.kCountryCode), isNull);
         expect(prefs.get(HiveService.kCurrencyCode), isNull);

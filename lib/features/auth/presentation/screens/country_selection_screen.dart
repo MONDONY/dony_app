@@ -4,6 +4,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/country_onboarding_cubit.dart';
+import 'package:dony/features/auth/presentation/onboarding_step.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_flow_chrome.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -11,7 +12,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 class CountrySelectionScreen extends StatefulWidget {
-  const CountrySelectionScreen({super.key});
+  const CountrySelectionScreen({super.key, required this.progress});
+
+  final OnboardingProgress progress;
 
   @override
   State<CountrySelectionScreen> createState() => _CountrySelectionScreenState();
@@ -45,6 +48,15 @@ class _CountrySelectionScreenState extends State<CountrySelectionScreen> {
       listener: (context, state) {
         if (state is CountryOnboardingSuccess) {
           if (_lastAttemptedCountryCode != null) {
+            // Le backend vient d'écrire `users.country` (`select()`) : sans
+            // ce refresh, le `UserModel` mis en cache par `AuthBloc` reste
+            // périmé jusqu'au prochain `AuthCheckRequested`, et l'étape
+            // « pays » regresserait sur `/auth/referral-code`, plusieurs
+            // écrans plus loin, faute de source fraîche (`nextStep`,
+            // correction 1 de la revue finale). `skip()` et
+            // `continueAsSenderOnly()` n'écrivent rien côté serveur : pas de
+            // refresh à déclencher pour eux.
+            context.read<AuthBloc>().add(const AuthProfileRefreshRequested());
             // Passe le code fraîchement choisi en `extra` : c'est la valeur
             // la plus à jour possible, celle que l'utilisateur vient de
             // sélectionner — plus fraîche qu'une relecture de
@@ -89,11 +101,9 @@ class _CountrySelectionScreenState extends State<CountrySelectionScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const AuthFlowHeader(
-                          current: 2,
-                          total: 4,
+                        AuthFlowHeader.gauge(
+                          segments: widget.progress.segments,
                           label: 'Pays',
-                          showBack: false,
                         ),
                         SizedBox(
                           height: (media.size.height * 0.018).clamp(

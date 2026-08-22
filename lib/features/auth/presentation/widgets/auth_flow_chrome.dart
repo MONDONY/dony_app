@@ -53,16 +53,36 @@ class AuthFlowBackground extends StatelessWidget {
 }
 
 class AuthFlowHeader extends StatelessWidget {
+  /// Tunnel pré-compte (téléphone, e-mail, code) : une pastille « n / total ».
   const AuthFlowHeader({
     super.key,
-    required this.current,
-    required this.total,
+    required int this.current,
+    required int this.total,
     required this.label,
     this.showBack = true,
-  });
+  }) : segments = null;
 
-  final int current;
-  final int total;
+  /// Parcours d'onboarding progressif : la jauge remplace la pastille.
+  ///
+  /// Les deux ne comptent pas la même chose. La pastille compte les écrans du
+  /// tunnel d'inscription ; la jauge compte les étapes du compte (quatre ou
+  /// cinq selon la couverture Stripe du pays, parrainage exclu).
+  ///
+  /// Pas de `showBack` ici : aucun des quatre écrans du parcours (pays,
+  /// adresse, parrainage, consentement) n'affiche de retour, et aucun
+  /// appelant ne l'a jamais demandé (vérifié par grep) — toujours `false`,
+  /// sans paramètre pour l'exposer.
+  const AuthFlowHeader.gauge({
+    super.key,
+    required List<DonyGaugeSegment> this.segments,
+    required this.label,
+  }) : current = null,
+       total = null,
+       showBack = false;
+
+  final int? current;
+  final int? total;
+  final List<DonyGaugeSegment>? segments;
   final String label;
   final bool showBack;
 
@@ -102,10 +122,16 @@ class AuthFlowHeader extends StatelessWidget {
           ],
         ),
         const SizedBox(height: DonySpacing.sm),
-        Align(
-          alignment: Alignment.centerRight,
-          child: DonyStepPill(current: current, total: total, label: label),
-        ),
+        if (segments == null)
+          Align(
+            alignment: Alignment.centerRight,
+            child: DonyStepPill(current: current!, total: total!, label: label),
+          )
+        else
+          // Le `Column` parent est en `CrossAxisAlignment.stretch` : la jauge
+          // prend la largeur, son propre `Column` aligne le compteur à droite
+          // comme le faisait la pastille.
+          DonyOnboardingGauge(segments: segments!, label: label),
       ],
     );
   }

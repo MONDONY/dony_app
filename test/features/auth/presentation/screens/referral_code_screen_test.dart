@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/auth/data/repositories/auth_repository.dart';
+import 'package:dony/features/auth/presentation/onboarding_step.dart';
 import 'package:dony/features/auth/presentation/screens/referral_code_screen.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +17,23 @@ class _MockAuthRepository extends Mock implements AuthRepository {}
 
 class _FakeReferralEvent extends Fake implements ReferralEvent {}
 
+const _progress = OnboardingProgress(
+  steps: [
+    OnboardingStep.consent,
+    OnboardingStep.country,
+    OnboardingStep.identity,
+    OnboardingStep.address,
+    OnboardingStep.payouts,
+  ],
+  done: {
+    OnboardingStep.consent,
+    OnboardingStep.country,
+    OnboardingStep.identity,
+    OnboardingStep.address,
+    OnboardingStep.payouts,
+  },
+);
+
 Future<void> _wrap(WidgetTester tester, ReferralBloc bloc) async {
   final router = GoRouter(
     routes: [
@@ -23,7 +41,7 @@ Future<void> _wrap(WidgetTester tester, ReferralBloc bloc) async {
         path: '/',
         builder: (_, _) => BlocProvider<ReferralBloc>.value(
           value: bloc,
-          child: const ReferralCodeScreen(),
+          child: const ReferralCodeScreen(progress: _progress),
         ),
       ),
       GoRoute(

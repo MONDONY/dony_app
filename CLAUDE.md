@@ -308,7 +308,10 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `signup_completed` | PinSetupScreen._handleComplete() |
 | `analytics_consent_answered` | AnalyticsConsentScreen._respond() |
 | `residence_address_saved` | ResidenceAddressCubit.submit() — adresse de résidence enregistrée à l'onboarding (propriété `has_line2`, aucune PII : ni rue, ni code postal, ni ville) |
-| `onboarding_step_skipped` | ResidenceAddressCubit.skip() — étape adresse de résidence passée (propriété `step: 'address'`) |
+| `onboarding_step_skipped` | ResidenceAddressCubit.skip() (`step: 'address'`) · CountryOnboardingCubit.skip()/continueAsSenderOnly() (`step: 'country'`) — étape du parcours d'onboarding progressif passée |
+| `onboarding_step_viewed` | `resolvePostSignupRoute` — étape retenue à l'entrée du parcours d'onboarding progressif (propriétés `step` énumération fermée, `index`, `total`) |
+| `onboarding_step_completed` | CountryOnboardingCubit.select() (`step: 'country'`) · ResidenceAddressCubit.submit() (`step: 'address'`) · AnalyticsConsentScreen._respond() (`step: 'consent'`) — étape du parcours d'onboarding progressif complétée |
+| `onboarding_completed` | `resolvePostSignupRoute` — `nextStep` rend `null`, le compte est complet (propriété `steps_total`) |
 | `login_success` | AuthBloc (check / phone / social / email) |
 | `login_failed` | AuthBloc._onCheckRequested() |
 | `guest_session_started` | AuthBloc._onGuestSessionRequested() — session Firebase anonyme ouverte avec succès depuis « Parcourir sans compte » |

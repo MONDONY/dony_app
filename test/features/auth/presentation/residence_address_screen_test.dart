@@ -1,6 +1,12 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
-import 'package:dony/core/design/widgets/dony_button.dart';
+import 'package:dony/core/design/design_system.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_event.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/bloc/residence_address_cubit.dart';
+import 'package:dony/features/auth/presentation/onboarding_step.dart';
 import 'package:dony/features/auth/presentation/screens/residence_address_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -11,20 +17,48 @@ import 'package:mocktail/mocktail.dart';
 class _MockCubit extends MockCubit<ResidenceAddressState>
     implements ResidenceAddressCubit {}
 
-Widget _wrap(ResidenceAddressCubit cubit) {
+class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
+    implements AuthBloc {}
+
+class _FakeAuthEvent extends Fake implements AuthEvent {}
+
+const _progress = OnboardingProgress(
+  steps: [
+    OnboardingStep.consent,
+    OnboardingStep.country,
+    OnboardingStep.identity,
+    OnboardingStep.address,
+    OnboardingStep.payouts,
+  ],
+  done: {OnboardingStep.consent, OnboardingStep.country},
+  current: OnboardingStep.address,
+);
+
+Widget _wrap(
+  ResidenceAddressCubit cubit,
+  AuthBloc authBloc, {
+  String? country,
+}) {
   return MaterialApp.router(
     routerConfig: GoRouter(
       routes: [
         GoRoute(
           path: '/',
-          builder: (_, _) => BlocProvider<ResidenceAddressCubit>.value(
-            value: cubit,
-            child: const ResidenceAddressScreen(),
+          builder: (_, _) => MultiBlocProvider(
+            providers: [
+              BlocProvider<ResidenceAddressCubit>.value(value: cubit),
+              BlocProvider<AuthBloc>.value(value: authBloc),
+            ],
+            child: ResidenceAddressScreen(
+              country: country,
+              progress: _progress,
+            ),
           ),
         ),
         GoRoute(
           path: '/auth/referral-code',
-          builder: (_, _) => const Scaffold(body: Text('Parrainage')),
+          builder: (_, state) =>
+              Scaffold(body: Text('Parrainage extra=${state.extra}')),
         ),
       ],
     ),
@@ -33,21 +67,30 @@ Widget _wrap(ResidenceAddressCubit cubit) {
 
 void main() {
   late _MockCubit cubit;
+  late _MockAuthBloc authBloc;
+
+  setUpAll(() {
+    registerFallbackValue(_FakeAuthEvent());
+  });
 
   setUp(() {
     cubit = _MockCubit();
+    authBloc = _MockAuthBloc();
     when(() => cubit.state).thenReturn(const ResidenceAddressInitial());
     whenListen(
       cubit,
       const Stream<ResidenceAddressState>.empty(),
       initialState: const ResidenceAddressInitial(),
     );
+    when(() => authBloc.state).thenReturn(const AuthInitial());
+    when(() => authBloc.stream).thenAnswer((_) => const Stream.empty());
+    when(() => authBloc.add(any())).thenReturn(null);
   });
 
   testWidgets(
     'le bouton Continuer est désactivé tant que le formulaire est vide',
     (tester) async {
-      await tester.pumpWidget(_wrap(cubit));
+      await tester.pumpWidget(_wrap(cubit, authBloc));
       await tester.pump(const Duration(milliseconds: 400));
 
       final btn = tester.widget<DonyButton>(
@@ -69,7 +112,7 @@ void main() {
       ),
     ).thenAnswer((_) async {});
 
-    await tester.pumpWidget(_wrap(cubit));
+    await tester.pumpWidget(_wrap(cubit, authBloc));
     await tester.pump(const Duration(milliseconds: 400));
 
     await tester.enterText(
@@ -95,7 +138,7 @@ void main() {
   testWidgets('« Passer pour l\'instant » appelle skip', (tester) async {
     when(() => cubit.skip()).thenAnswer((_) async {});
 
-    await tester.pumpWidget(_wrap(cubit));
+    await tester.pumpWidget(_wrap(cubit, authBloc));
     await tester.pump(const Duration(milliseconds: 400));
 
     await tester.tap(find.text('Passer pour l\'instant'));
@@ -103,4 +146,78 @@ void main() {
 
     verify(() => cubit.skip()).called(1);
   });
+
+  testWidgets('la jauge remplace le compteur en dur du tunnel', (tester) async {
+    await tester.pumpWidget(_wrap(cubit, authBloc));
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.byType(DonyOnboardingGauge), findsOneWidget);
+    expect(find.byType(DonyStepPill), findsNothing);
+    expect(find.text('2 / 5 · Adresse'), findsOneWidget);
+  });
+
+  group(
+    'ResidenceAddressSuccess (correction 1 de la revue finale du lot 2)',
+    () {
+      testWidgets(
+        'rafraîchit le profil et propage le pays en extra vers le parrainage — '
+        'sans ce double repli, l\'étape « pays » ET l\'étape « adresse » '
+        'regressaient sur /auth/referral-code (0/5 → 1/5 → 2/5 → 1/5)',
+        (tester) async {
+          whenListen<ResidenceAddressState>(
+            cubit,
+            Stream.fromIterable([
+              const ResidenceAddressSaving(),
+              const ResidenceAddressSuccess(),
+            ]),
+            initialState: const ResidenceAddressInitial(),
+          );
+
+          await tester.pumpWidget(_wrap(cubit, authBloc, country: 'FR'));
+          await tester.pumpAndSettle();
+
+          verify(
+            () => authBloc.add(const AuthProfileRefreshRequested()),
+          ).called(1);
+          expect(find.text('Parrainage extra=FR'), findsOneWidget);
+        },
+      );
+
+      testWidgets(
+        'skip() aboutit au même state que submit() (ResidenceAddressSuccess) '
+        'et déclenche donc le même refresh + le même repli extra — skip() '
+        'pose aussi onboarding_seen_at côté serveur (ResidenceAddressCubit)',
+        (tester) async {
+          // `StreamController` plutôt que `Stream.fromIterable` : ce dernier
+          // émet ses valeurs dès le premier pump, avant même le tap — le
+          // widget aurait déjà navigué au moment d'appuyer sur le bouton. Ici,
+          // c'est `skip()` lui-même qui pilote la transition d'état, comme le
+          // ferait le vrai cubit.
+          final controller = StreamController<ResidenceAddressState>();
+          addTearDown(controller.close);
+          whenListen<ResidenceAddressState>(
+            cubit,
+            controller.stream,
+            initialState: const ResidenceAddressInitial(),
+          );
+          when(() => cubit.skip()).thenAnswer((_) async {
+            controller
+              ..add(const ResidenceAddressSaving())
+              ..add(const ResidenceAddressSuccess());
+          });
+
+          await tester.pumpWidget(_wrap(cubit, authBloc, country: 'SN'));
+          await tester.pump(const Duration(milliseconds: 400));
+          await tester.tap(find.text('Passer pour l\'instant'));
+          await tester.pumpAndSettle();
+
+          verify(() => cubit.skip()).called(1);
+          verify(
+            () => authBloc.add(const AuthProfileRefreshRequested()),
+          ).called(1);
+          expect(find.text('Parrainage extra=SN'), findsOneWidget);
+        },
+      );
+    },
+  );
 }

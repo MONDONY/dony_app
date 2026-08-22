@@ -5,12 +5,14 @@ import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
-import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/auth/presentation/post_signup_route.dart';
+import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
+import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -22,10 +24,19 @@ class AuthMethodScreen extends StatelessWidget {
 
   bool get _showAppleButton => defaultTargetPlatform == TargetPlatform.iOS;
 
-  Future<void> _continueAfterNewAccount(BuildContext context) async {
+  Future<void> _continueAfterNewAccount(
+    BuildContext context,
+    UserModel user,
+  ) async {
+    // Lus avant l'await : après, le contexte peut être démonté.
+    final stripe = context.read<StripeAccountBloc>().state;
+    final country = context.read<BusinessPrefsBloc>().state.country;
+
     final route = await resolvePostSignupRoute(
-      getIt<AnalyticsService>(),
-      getIt<HiveService>().userPrefs,
+      analytics: getIt<AnalyticsService>(),
+      user: user,
+      stripe: stripe,
+      countryFallback: country,
     );
     if (context.mounted) {
       context.go(route);
@@ -42,7 +53,7 @@ class AuthMethodScreen extends StatelessWidget {
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthNewAccountAuthenticated) {
-            unawaited(_continueAfterNewAccount(context));
+            unawaited(_continueAfterNewAccount(context, state.user));
           } else if (state is AuthAuthenticated) {
             context.go('/auth/local');
           } else if (state is AuthOAuthNewUser) {
