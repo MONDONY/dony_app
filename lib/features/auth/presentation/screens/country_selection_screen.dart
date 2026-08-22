@@ -4,6 +4,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/country_onboarding_cubit.dart';
+import 'package:dony/features/auth/presentation/onboarding_step.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_flow_chrome.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -11,7 +12,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 class CountrySelectionScreen extends StatefulWidget {
-  const CountrySelectionScreen({super.key});
+  const CountrySelectionScreen({super.key, required this.progress});
+
+  final OnboardingProgress progress;
 
   @override
   State<CountrySelectionScreen> createState() => _CountrySelectionScreenState();
@@ -89,11 +92,9 @@ class _CountrySelectionScreenState extends State<CountrySelectionScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const AuthFlowHeader(
-                          current: 2,
-                          total: 4,
+                        AuthFlowHeader.gauge(
+                          segments: widget.progress.segments,
                           label: 'Pays',
-                          showBack: false,
                         ),
                         SizedBox(
                           height: (media.size.height * 0.018).clamp(

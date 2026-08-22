@@ -4,6 +4,7 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/bloc/country_onboarding_cubit.dart';
+import 'package:dony/features/auth/presentation/onboarding_step.dart';
 import 'package:dony/features/auth/presentation/screens/country_selection_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -17,6 +18,18 @@ class MockCountryOnboardingCubit extends MockCubit<CountryOnboardingState>
 class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
 
 class FakeAuthEvent extends Fake implements AuthEvent {}
+
+const _progress = OnboardingProgress(
+  steps: [
+    OnboardingStep.consent,
+    OnboardingStep.country,
+    OnboardingStep.identity,
+    OnboardingStep.address,
+    OnboardingStep.payouts,
+  ],
+  done: {OnboardingStep.consent},
+  current: OnboardingStep.country,
+);
 
 Future<void> _wrap(
   WidgetTester tester,
@@ -36,7 +49,7 @@ Future<void> _wrap(
             BlocProvider<CountryOnboardingCubit>.value(value: cubit),
             BlocProvider<AuthBloc>.value(value: auth),
           ],
-          child: const CountrySelectionScreen(),
+          child: const CountrySelectionScreen(progress: _progress),
         ),
       ),
       GoRoute(

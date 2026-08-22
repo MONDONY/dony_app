@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
-import 'package:dony/core/design/widgets/dony_button.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/auth/bloc/residence_address_cubit.dart';
+import 'package:dony/features/auth/presentation/onboarding_step.dart';
 import 'package:dony/features/auth/presentation/screens/residence_address_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -11,6 +12,18 @@ import 'package:mocktail/mocktail.dart';
 class _MockCubit extends MockCubit<ResidenceAddressState>
     implements ResidenceAddressCubit {}
 
+const _progress = OnboardingProgress(
+  steps: [
+    OnboardingStep.consent,
+    OnboardingStep.country,
+    OnboardingStep.identity,
+    OnboardingStep.address,
+    OnboardingStep.payouts,
+  ],
+  done: {OnboardingStep.consent, OnboardingStep.country},
+  current: OnboardingStep.address,
+);
+
 Widget _wrap(ResidenceAddressCubit cubit) {
   return MaterialApp.router(
     routerConfig: GoRouter(
@@ -19,7 +32,7 @@ Widget _wrap(ResidenceAddressCubit cubit) {
           path: '/',
           builder: (_, _) => BlocProvider<ResidenceAddressCubit>.value(
             value: cubit,
-            child: const ResidenceAddressScreen(),
+            child: const ResidenceAddressScreen(progress: _progress),
           ),
         ),
         GoRoute(
@@ -102,5 +115,14 @@ void main() {
     await tester.pump();
 
     verify(() => cubit.skip()).called(1);
+  });
+
+  testWidgets('la jauge remplace le compteur en dur du tunnel', (tester) async {
+    await tester.pumpWidget(_wrap(cubit));
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.byType(DonyOnboardingGauge), findsOneWidget);
+    expect(find.byType(DonyStepPill), findsNothing);
+    expect(find.text('2 / 5 · Adresse'), findsOneWidget);
   });
 }

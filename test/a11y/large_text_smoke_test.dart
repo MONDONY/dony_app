@@ -13,6 +13,7 @@ import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/bloc/residence_address_cubit.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
+import 'package:dony/features/auth/presentation/onboarding_step.dart';
 import 'package:dony/features/auth/presentation/screens/residence_address_screen.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/bloc/city_search_event.dart';
@@ -809,6 +810,19 @@ Widget _wrapScanHub(ScanHubCubit cubit) =>
 class _ResidenceMockCubit extends MockCubit<ResidenceAddressState>
     implements ResidenceAddressCubit {}
 
+// Pays hors couverture Stripe : quatre segments, sans `OnboardingStep.payouts`
+// — couvre la variante réduite de la jauge (spec §4.1, correction 4).
+const _residenceProgress = OnboardingProgress(
+  steps: [
+    OnboardingStep.consent,
+    OnboardingStep.country,
+    OnboardingStep.identity,
+    OnboardingStep.address,
+  ],
+  done: {OnboardingStep.consent, OnboardingStep.country},
+  current: OnboardingStep.address,
+);
+
 Widget _wrapResidenceAddress(ResidenceAddressCubit cubit) => MaterialApp.router(
   routerConfig: GoRouter(
     routes: [
@@ -819,7 +833,10 @@ Widget _wrapResidenceAddress(ResidenceAddressCubit cubit) => MaterialApp.router(
           // Code ISO, comme le fournit `BusinessPrefsBloc.state.country`
           // depuis la correction du lot 1 (le widget résout lui-même le nom
           // lisible via `CountryCatalog.byCode`) — pas le nom affiché.
-          child: const ResidenceAddressScreen(country: 'SN'),
+          child: const ResidenceAddressScreen(
+            country: 'SN',
+            progress: _residenceProgress,
+          ),
         ),
       ),
       GoRoute(

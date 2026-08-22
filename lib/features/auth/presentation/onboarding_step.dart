@@ -1,6 +1,13 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
+import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Étapes **comptées** de l'onboarding progressif.
 ///
@@ -176,3 +183,27 @@ String _stripeStatus(UserModel? user, StripeAccountState stripe) =>
     };
 
 bool _hasText(String? value) => value != null && value.trim().isNotEmpty;
+
+// ─── Lecture de l'état ambiant ───────────────────────────────────────────────
+//
+// Seul point impur du fichier. Il vit ici plutôt que dans `router.dart` pour
+// rester à côté de la règle qu'il applique, et il n'est appelé que par les
+// builders du routeur : les écrans du parcours restent montables sans provider
+// ambiant (cf. `residence_address_screen.dart`).
+
+/// Lit les blocs fournis à l'échelle de l'application et rend la progression.
+OnboardingProgress readOnboardingProgress(
+  BuildContext context, {
+  OnboardingStep? current,
+}) => onboardingProgress(
+  user: context.read<AuthBloc>().state.currentUser,
+  stripe: context.read<StripeAccountBloc>().state,
+  analyticsAnswered:
+      !getIt<AnalyticsService>().isConfigured ||
+      getIt<AnalyticsService>().hasAnswered,
+  // `POST /auth/register` n'écrit pas `users.country` et le profil en cache
+  // n'est pas rafraîchi après l'étape pays : même repli que `router.dart` pour
+  // l'écran d'adresse.
+  countryFallback: context.read<BusinessPrefsBloc>().state.country,
+  current: current,
+);

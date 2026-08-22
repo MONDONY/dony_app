@@ -10,6 +10,7 @@ import 'package:dony/features/auth/bloc/country_onboarding_cubit.dart';
 import 'package:dony/features/auth/bloc/residence_address_cubit.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/auth/guest_access_guard.dart';
+import 'package:dony/features/auth/presentation/onboarding_step.dart';
 import 'package:dony/features/auth/presentation/screens/analytics_consent_screen.dart';
 import 'package:dony/features/auth/presentation/screens/auth_method_screen.dart';
 import 'package:dony/features/auth/presentation/screens/country_selection_screen.dart';
@@ -360,7 +361,12 @@ final appRouter = GoRouter(
       path: '/auth/country-selection',
       builder: (context, state) => BlocProvider(
         create: (_) => getIt<CountryOnboardingCubit>(),
-        child: const CountrySelectionScreen(),
+        child: CountrySelectionScreen(
+          progress: readOnboardingProgress(
+            context,
+            current: OnboardingStep.country,
+          ),
+        ),
       ),
     ),
     GoRoute(
@@ -381,6 +387,10 @@ final appRouter = GoRouter(
           country:
               (state.extra as String?) ??
               context.read<BusinessPrefsBloc>().state.country,
+          progress: readOnboardingProgress(
+            context,
+            current: OnboardingStep.address,
+          ),
         ),
       ),
     ),
@@ -391,12 +401,18 @@ final appRouter = GoRouter(
           getIt<ReferralRepository>(),
           getIt<AnalyticsService>(),
         ),
-        child: const ReferralCodeScreen(),
+        // Aucune étape en cours : le parrainage est hors décompte (spec §4.2).
+        child: ReferralCodeScreen(progress: readOnboardingProgress(context)),
       ),
     ),
     GoRoute(
       path: '/auth/analytics-consent',
-      builder: (context, state) => const AnalyticsConsentScreen(),
+      builder: (context, state) => AnalyticsConsentScreen(
+        progress: readOnboardingProgress(
+          context,
+          current: OnboardingStep.consent,
+        ),
+      ),
     ),
     GoRoute(
       path: '/auth/local',

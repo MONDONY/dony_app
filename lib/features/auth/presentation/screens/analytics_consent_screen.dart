@@ -4,16 +4,19 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/auth/presentation/onboarding_step.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_flow_chrome.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 
-/// Écran de consentement analytics affiché une seule fois,
-/// après le PIN setup lors de l'inscription.
-/// Les deux choix (accepter / refuser) naviguent vers /home.
+/// Première étape du parcours d'onboarding progressif, affichée juste après
+/// l'inscription. `_respond` navigue vers `/auth/country-selection` : ce
+/// n'est ni un écran terminal, ni un écran qui va vers `/home`.
 class AnalyticsConsentScreen extends StatelessWidget {
-  const AnalyticsConsentScreen({super.key});
+  const AnalyticsConsentScreen({super.key, required this.progress});
+
+  final OnboardingProgress progress;
 
   @override
   Widget build(BuildContext context) {
@@ -41,11 +44,9 @@ class AnalyticsConsentScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const AuthFlowHeader(
-                      current: 1,
-                      total: 4,
+                    AuthFlowHeader.gauge(
+                      segments: progress.segments,
                       label: 'Confidentialité',
-                      showBack: false,
                     ),
                     const SizedBox(height: DonySpacing.md),
                     Expanded(
