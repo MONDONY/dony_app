@@ -1,3 +1,4 @@
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/urgency/dony_urgency.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
@@ -177,6 +178,22 @@ void main() {
       expect(restored.label, original.label);
       expect(restored.unitPriceNet, original.unitPriceNet);
       expect(restored.unitPriceDisplay, original.unitPriceDisplay);
+    });
+
+    test('fromJson tolère un unitPriceNet absent (net masqué pour un invité)', () {
+      // Même masquage backend que pricePerKg (PriceGridService.travelerNetOrNull,
+      // appelé depuis AnnouncementSearchMapper/AnnouncementService) : le net
+      // d'un article de grille ne doit pas fuir vers une session anonyme, et son
+      // absence ne doit pas planter la désérialisation.
+      final json = {
+        'id': 'item-5',
+        'label': 'Sac de riz',
+        'unitPriceDisplay': 12.0,
+      };
+      final item = AnnouncementGridItemModel.fromJson(json);
+
+      expect(item.unitPriceNet, isNull);
+      expect(item.unitPriceDisplay, 12.0);
     });
   });
 
@@ -483,6 +500,65 @@ void main() {
       final out = AnnouncementModel.fromJson(json).toJson();
       expect(out['convertedPricePerKg'], 42.0);
       expect(out['convertedCurrency'], 'USD');
+    });
+  });
+
+  group(
+    'AnnouncementModel.pricePerKgDisplayConverted (brut converti pour un invité)',
+    () {
+      test('pricePerKgDisplayConverted est lu quand le serveur le fournit', () {
+        final json = baseAnnouncementJson()
+          ..['pricePerKgDisplayConverted'] = 8200.0;
+
+        final model = AnnouncementModel.fromJson(json);
+
+        expect(model.pricePerKgDisplayConverted, 8200.0);
+      });
+
+      test('pricePerKgDisplayConverted absent : nul, aucune exception', () {
+        final json = baseAnnouncementJson()
+          ..remove('pricePerKgDisplayConverted');
+
+        expect(
+          AnnouncementModel.fromJson(json).pricePerKgDisplayConverted,
+          isNull,
+        );
+      });
+
+      test('parses an integer pricePerKgDisplayConverted as a double', () {
+        final json = baseAnnouncementJson()
+          ..['pricePerKgDisplayConverted'] = 8200;
+
+        final model = AnnouncementModel.fromJson(json);
+
+        expect(model.pricePerKgDisplayConverted, 8200.0);
+      });
+    },
+  );
+
+  group('AnnouncementModel.pricePerKg (net masqué pour un invité)', () {
+    test('tolère un pricePerKg absent (net masqué pour un invité)', () {
+      // Le backend masque le net voyageur aux sessions anonymes (décision
+      // produit A15 : le net révélerait le taux de commission). Le modèle
+      // doit survivre à son absence, sinon toute la recherche plante à la
+      // désérialisation.
+      final json = baseAnnouncementJson()
+        ..remove('pricePerKg')
+        ..['pricePerKgDisplay'] = 12.0;
+
+      final model = AnnouncementModel.fromJson(json);
+
+      expect(model.pricePerKg, isNull);
+      // Pas de model.pricePerKgDisplay ici : ce serait tautologique (on vient
+      // de le poser dans le JSON). senderPricePerKg est le getter réellement
+      // consommé par l'affichage expéditeur, et c'est lui qui doit rester
+      // exploitable quand le net est masqué.
+      expect(model.senderPricePerKg, 12.0);
+    });
+
+    test('lit pricePerKg quand il est présent (compte inscrit)', () {
+      final model = AnnouncementModel.fromJson(baseAnnouncementJson());
+      expect(model.pricePerKg, 5.0);
     });
   });
 

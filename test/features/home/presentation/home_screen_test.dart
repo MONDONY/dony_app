@@ -17,6 +17,7 @@ import 'package:dony/features/city/data/city_repository.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
+import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
 import 'package:dony/features/home/bloc/search_composer_bloc.dart';
 import 'package:dony/features/home/data/repositories/search_parse_repository.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
@@ -127,10 +128,23 @@ class MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
 /// Ces tests ne montent jamais Firebase : `_mode` par défaut dépend de
 /// `FirebaseSessionProbe`, dont le fake par défaut ci-dessous (`true`) suit
 /// les mocks `AuthAuthenticated` déjà utilisés partout dans ce fichier.
+/// Les deux prédicats doivent pouvoir diverger : c'est précisément le cas
+/// d'une session invitée (`hasSession` vrai, `hasRealSession` faux). Un stub
+/// qui les confond rend le test aveugle au bug qu'il est censé attraper.
 class _StubSessionProbe implements FirebaseSessionProbe {
-  const _StubSessionProbe(this.hasSession);
+  const _StubSessionProbe(this.hasSession, {bool? hasRealSession})
+    : _hasRealSession = hasRealSession;
+
+  /// Session invitée : le SDK a bien une session, mais sans compte derrière.
+  const _StubSessionProbe.guest() : hasSession = true, _hasRealSession = false;
+
   @override
   final bool hasSession;
+  final bool? _hasRealSession;
+  @override
+  bool get hasRealSession => _hasRealSession ?? hasSession;
+  @override
+  bool get isAnonymous => hasSession && !hasRealSession;
 }
 
 class _FakeBidEvent extends Fake implements BidEvent {}
@@ -387,6 +401,7 @@ Widget _buildHome({
   AnnouncementState? announcementState,
   ActiveRole role = ActiveRole.sender,
   UserModel? user,
+  AuthState? authState,
   BidState? bidState,
   NotificationState? notificationState,
   MockBidBloc? bidBloc,
@@ -404,7 +419,9 @@ Widget _buildHome({
     () => announcementBloc.state,
   ).thenReturn(announcementState ?? AnnouncementInitial());
   when(() => announcementBloc.stream).thenAnswer((_) => const Stream.empty());
-  when(() => authBloc.state).thenReturn(AuthAuthenticated(user ?? _makeUser()));
+  when(
+    () => authBloc.state,
+  ).thenReturn(authState ?? AuthAuthenticated(user ?? _makeUser()));
   when(() => authBloc.stream).thenAnswer((_) => const Stream.empty());
   when(() => roleCubit.state).thenReturn(role);
   when(() => roleCubit.stream).thenAnswer((_) => const Stream.empty());
@@ -470,6 +487,8 @@ Future<void> pumpHome(
   int? otherModeCount,
   int activeTrips = 2,
   TripsSummaryState? summaryState,
+  AuthState? authState,
+  MockFavoriteIdsCubit? favCubit,
 }) async {
   if (summaryState != null) {
     _registerTripsSummaryState(summaryState);
@@ -521,6 +540,8 @@ Future<void> pumpHome(
       user: _makeUser(
         roles: isTraveler ? const ['SENDER', 'TRAVELER'] : const ['SENDER'],
       ),
+      authState: authState,
+      favCubit: favCubit,
     ),
   );
   await tester.pump(const Duration(milliseconds: 1000));
@@ -1466,6 +1487,52 @@ void main() {
       expect(find.text('Trajets'), findsOneWidget);
       expect(find.text('VOYAGEURS DISPONIBLES'), findsOneWidget);
     });
+
+    testWidgets(
+      'une session invitée ouvre aussi en mode Trajets, comme un inscrit',
+      (tester) async {
+        // La recherche de trajets fonctionne désormais pour un visiteur
+        // (Task 7) : `initialSearchMode` n'a plus de raison de le distinguer
+        // d'un inscrit à l'ouverture de l'écran, la méthode a été supprimée.
+        getIt.unregister<FirebaseSessionProbe>();
+        getIt.registerSingleton<FirebaseSessionProbe>(
+          const _StubSessionProbe.guest(),
+        );
+
+        await pumpHome(tester, authState: const AuthGuestSessionReady());
+
+        expect(find.text('Trajets'), findsOneWidget);
+        expect(find.text('VOYAGEURS DISPONIBLES'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'un invité voit le cœur sur une carte de trajet et peut le basculer',
+      (tester) async {
+        final favCubit = _makeFavCubit();
+        getIt.unregister<FirebaseSessionProbe>();
+        getIt.registerSingleton<FirebaseSessionProbe>(
+          const _StubSessionProbe.guest(),
+        );
+
+        await pumpHome(
+          tester,
+          tripResults: troisTrajets,
+          authState: const AuthGuestSessionReady(),
+          favCubit: favCubit,
+        );
+
+        // Les favoris sont le seul contenu qu'un visiteur peut conserver :
+        // le cœur doit apparaître sur les cartes trajet (FavoriteIdsCubit est
+        // fourni globalement) et rester déclenchable.
+        expect(find.byType(FavoriteHeartButton), findsWidgets);
+
+        await tester.tap(find.byType(FavoriteHeartButton).first);
+        await tester.pump();
+
+        verify(() => favCubit.toggleTrip(any())).called(1);
+      },
+    );
 
     testWidgets('le mode Colis est proposé à tout utilisateur', (tester) async {
       // Anciennement conditionné à isTraveler. Le rôle voyageur est universel.
@@ -2566,6 +2633,82 @@ void main() {
       await tester.tap(find.byKey(const Key('favorites-button')));
       await tester.pumpAndSettle();
 
+      expect(visited, contains('/favoris'));
+      expect(find.text('STUB_FAVORIS'), findsOneWidget);
+    });
+
+    testWidgets('un invité accède aux favoris sans feuille d\'inscription', (
+      tester,
+    ) async {
+      // Les favoris sont le seul contenu qu'un visiteur peut conserver :
+      // le bouton ne doit plus présenter d'`AuthRequiredSheet` (Task 7).
+      final visited = <String>[];
+      final favCubit = _makeFavCubit(count: 1);
+      final announcementBloc = MockAnnouncementBloc();
+      final authBloc = MockAuthBloc();
+      final roleCubit = MockActiveRoleCubit();
+      final notifBloc = MockNotificationBloc();
+      final bidBloc = MockBidBloc();
+
+      when(() => announcementBloc.state).thenReturn(AnnouncementInitial());
+      when(
+        () => announcementBloc.stream,
+      ).thenAnswer((_) => const Stream.empty());
+      when(() => authBloc.state).thenReturn(const AuthGuestSessionReady());
+      when(() => authBloc.stream).thenAnswer((_) => const Stream.empty());
+      when(() => roleCubit.state).thenReturn(ActiveRole.sender);
+      when(() => roleCubit.stream).thenAnswer((_) => const Stream.empty());
+      when(() => notifBloc.state).thenReturn(const NotificationInitial());
+      when(() => notifBloc.stream).thenAnswer((_) => const Stream.empty());
+      when(() => bidBloc.state).thenReturn(BidInitial());
+      when(() => bidBloc.stream).thenAnswer((_) => const Stream.empty());
+
+      final providers = MultiBlocProvider(
+        providers: [
+          BlocProvider<AnnouncementBloc>.value(value: announcementBloc),
+          BlocProvider<AuthBloc>.value(value: authBloc),
+          BlocProvider<ActiveRoleCubit>.value(value: roleCubit),
+          BlocProvider<NotificationBloc>.value(value: notifBloc),
+          BlocProvider<BidBloc>.value(value: bidBloc),
+          BlocProvider<FavoriteIdsCubit>.value(value: favCubit),
+          _helpCenterProvider(),
+        ],
+        child: const HomeScreen(),
+      );
+
+      final router = GoRouter(
+        initialLocation: '/',
+        routes: [
+          GoRoute(path: '/', builder: (_, _) => providers),
+          GoRoute(
+            path: '/favoris',
+            builder: (_, _) {
+              visited.add('/favoris');
+              return const Scaffold(body: Text('STUB_FAVORIS'));
+            },
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        MaterialApp.router(
+          routerConfig: router,
+          theme: AppTheme.light(),
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('fr'), Locale('en')],
+          locale: const Locale('fr'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('favorites-button')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Connexion requise'), findsNothing);
       expect(visited, contains('/favoris'));
       expect(find.text('STUB_FAVORIS'), findsOneWidget);
     });

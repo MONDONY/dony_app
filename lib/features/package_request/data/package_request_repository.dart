@@ -210,15 +210,10 @@ class PackageRequestRepository {
     return PackageRequestPage.fromJson(response.data!);
   }
 
-  Future<PackageRequest> getById(String id, {bool publicAccess = false}) async {
-    final response = publicAccess
-        ? await _apiClient.dio.get<Map<String, dynamic>>(
-            '/public/package-requests/$id',
-            options: Options(extra: const {'skipAuth': true}),
-          )
-        : await _apiClient.dio.get<Map<String, dynamic>>(
-            '/package-requests/$id',
-          );
+  Future<PackageRequest> getById(String id) async {
+    final response = await _apiClient.dio.get<Map<String, dynamic>>(
+      '/package-requests/$id',
+    );
     return PackageRequest.fromJson(response.data!);
   }
 
@@ -336,7 +331,6 @@ class PackageRequestRepository {
     int size = 20,
     bool? urgent,
     bool? matchingMyTrips,
-    bool publicAccess = false,
   }) async {
     final query = <String, dynamic>{
       'page': page,
@@ -348,9 +342,9 @@ class PackageRequestRepository {
       if (dateTo != null) 'dateTo': dateTo.toIso8601String().substring(0, 10),
       'maxWeight': ?maxWeight,
       if (parcelSize != null) 'parcelSize': parcelSize.wireName,
-      if (!publicAccess && lat != null) 'lat': lat,
-      if (!publicAccess && lng != null) 'lng': lng,
-      if (!publicAccess && radiusKm != null) 'radiusKm': radiusKm,
+      'lat': ?lat,
+      'lng': ?lng,
+      'radiusKm': ?radiusKm,
       // Filtre serveur « demandes urgentes » — jamais envoyer urgent=false,
       // seulement présent quand le chip est actif (cf. PR back #112).
       if (urgent == true) 'urgent': true,
@@ -358,18 +352,12 @@ class PackageRequestRepository {
       // (`GET /package-requests?matchingMyTrips=true`) : restreint aux
       // demandes matchant un trajet du voyageur et trie par score. Même
       // convention que `urgent` : jamais envoyé à false, présent ou absent.
-      if (!publicAccess && matchingMyTrips == true) 'matchingMyTrips': true,
+      if (matchingMyTrips == true) 'matchingMyTrips': true,
     };
-    final response = publicAccess
-        ? await _apiClient.dio.get<Map<String, dynamic>>(
-            '/public/package-requests',
-            queryParameters: query,
-            options: Options(extra: const {'skipAuth': true}),
-          )
-        : await _apiClient.dio.get<Map<String, dynamic>>(
-            '/package-requests',
-            queryParameters: query,
-          );
+    final response = await _apiClient.dio.get<Map<String, dynamic>>(
+      '/package-requests',
+      queryParameters: query,
+    );
     return PackageRequestSearchPage.fromJson(response.data!);
   }
 }

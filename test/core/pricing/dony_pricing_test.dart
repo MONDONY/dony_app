@@ -3,10 +3,11 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 AnnouncementModel _ann({
-  required double pricePerKg,
+  required double? pricePerKg,
   double? pricePerKgDisplay,
   double? convertedPricePerKg,
   String? convertedCurrency,
+  double? pricePerKgDisplayConverted,
 }) => AnnouncementModel(
   id: 'a',
   travelerId: 't',
@@ -19,6 +20,7 @@ AnnouncementModel _ann({
   pricePerKgDisplay: pricePerKgDisplay,
   convertedPricePerKg: convertedPricePerKg,
   convertedCurrency: convertedCurrency,
+  pricePerKgDisplayConverted: pricePerKgDisplayConverted,
   status: 'OPEN',
   createdAt: DateTime(2026, 6),
   updatedAt: DateTime(2026, 6),
@@ -117,6 +119,44 @@ void main() {
       final a = _ann(pricePerKg: 10);
       expect(a.senderPricePerKg, closeTo(10.50, 1e-9));
     });
+
+    test(
+      'null quand ni pricePerKgDisplay ni pricePerKg ne sont exploitables (invité)',
+      () {
+        // Net masqué pour une session anonyme (pricePerKg absent) et pas de
+        // champ display : aucun prix à afficher, jamais un faux 0.
+        final a = _ann(pricePerKg: null);
+        expect(a.senderPricePerKg, isNull);
+      },
+    );
+  });
+
+  group('AnnouncementSenderPricing.hasKgPrice', () {
+    test('vrai avec le net masqué (invité) tant que pricePerKgDisplay > 0', () {
+      // Le net est masqué mais pricePerKgDisplay reste toujours servi : le
+      // prix au kilo reste exploitable pour l'expéditeur, invité ou non.
+      final a = _ann(pricePerKg: null, pricePerKgDisplay: 12.0);
+      expect(a.hasKgPrice, isTrue);
+      expect(a.senderPricePerKg, 12.0);
+    });
+
+    test(
+      'faux quand net et display sont tous deux absents (invité, MIXED)',
+      () {
+        final a = _ann(pricePerKg: null);
+        expect(a.hasKgPrice, isFalse);
+      },
+    );
+
+    test('faux en mode MIXED sans tarif au kilo (compte inscrit)', () {
+      final a = _ann(pricePerKg: 0);
+      expect(a.hasKgPrice, isFalse);
+    });
+
+    test('vrai avec un net positif et pas de display (ancien payload)', () {
+      final a = _ann(pricePerKg: 10);
+      expect(a.hasKgPrice, isTrue);
+    });
   });
 
   group('AnnouncementSenderPricing.convertedSenderPricePerKg', () {
@@ -176,6 +216,36 @@ void main() {
       );
       expect(a.convertedSenderPricePerKg, isNull);
     });
+
+    test(
+      'null quand pricePerKg est absent et sans repli backend (ancien payload)',
+      () {
+        // pricePerKg null (invité) : impossible de reconstituer le ratio
+        // net→brut, même si convertedPricePerKg était renseigné (en pratique
+        // le backend masque les deux ensemble, cf. commit ff8107c1). Sans
+        // pricePerKgDisplayConverted (payload antérieur à la PR #219), rien
+        // à afficher.
+        final a = _ann(
+          pricePerKg: null,
+          pricePerKgDisplay: 11.5,
+          convertedPricePerKg: 6560,
+          convertedCurrency: 'XOF',
+        );
+        expect(a.convertedSenderPricePerKg, isNull);
+      },
+    );
+
+    test(
+      'retombe sur pricePerKgDisplayConverted quand pricePerKg est absent (invité, PR #219)',
+      () {
+        // Lecteur anonyme : le net (pricePerKg) est masqué donc aucun ratio
+        // net→brut n'est calculable ici. Le serveur sert directement le brut
+        // déjà converti dans pricePerKgDisplayConverted : c'est lui qu'il
+        // faut afficher, pas null.
+        final a = _ann(pricePerKg: null, pricePerKgDisplayConverted: 7347.2);
+        expect(a.convertedSenderPricePerKg, closeTo(7347.2, 1e-6));
+      },
+    );
   });
 
   group('parsePriceInput', () {

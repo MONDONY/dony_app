@@ -35,6 +35,7 @@ class PackageRequestSearchItem extends Equatable {
     this.matchedTripId,
     this.matchedTripDepartureDate,
     this.currency = 'EUR',
+    this.grossPriceEur,
   });
 
   final String id;
@@ -53,6 +54,14 @@ class PackageRequestSearchItem extends Equatable {
   /// 1ère catégorie pour les affichages compacts (titre, emoji). Null si vide.
   String? get primaryCategory => categories.isEmpty ? null : categories.first;
   final double? targetPriceEur;
+
+  /// Prix brut de la demande (ce que l'expéditeur paierait réellement),
+  /// ajouté (PR #219) en compensation : [targetPriceEur] seul est un NET,
+  /// un tarif que personne ne paie. Ne jamais afficher les deux côte à côte
+  /// (révélerait le taux de commission par soustraction) : à l'affichage,
+  /// préférer ce champ à [targetPriceEur] avec repli sur ce dernier si le
+  /// serveur ne le sert pas encore (ancien payload/cache).
+  final double? grossPriceEur;
 
   /// URL présignée de la 1ère photo (rétro-compat). Préférer [photoUrls].
   final String? photoUrl;
@@ -146,6 +155,7 @@ class PackageRequestSearchItem extends Equatable {
           _ => null,
         },
         currency: json['currency'] as String? ?? 'EUR',
+        grossPriceEur: (json['grossPriceEur'] as num?)?.toDouble(),
       );
 
   @override
@@ -176,6 +186,7 @@ class PackageRequestSearchItem extends Equatable {
     matchedTripId,
     matchedTripDepartureDate,
     currency,
+    grossPriceEur,
   ];
 }
 

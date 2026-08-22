@@ -16,6 +16,17 @@ class AuthRemoteDatasource {
     return UserModel.fromJson(response.data!);
   }
 
+  /// Rattache au compte appelant les données posées pendant une session
+  /// visiteur (favoris, alertes). Le jeton anonyme prouve la possession de la
+  /// session invitée : il doit avoir été capturé AVANT la bascule
+  /// d'authentification, seul instant où il est encore lisible. Réponse 204.
+  Future<void> claimGuestData(String guestIdToken) async {
+    await _apiClient.dio.post<void>(
+      '/auth/guest/claim',
+      data: {'guestIdToken': guestIdToken},
+    );
+  }
+
   Future<UserModel> getProfile() async {
     final response = await _apiClient.dio.get<Map<String, dynamic>>('/auth/me');
     return UserModel.fromJson(response.data!);

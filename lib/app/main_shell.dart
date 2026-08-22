@@ -6,6 +6,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -106,7 +107,9 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
 
   void _onTap(int index) {
     HapticFeedback.selectionClick();
-    final isGuest = FirebaseAuth.instance.currentUser == null;
+    // Un visiteur porte désormais une session anonyme : c'est `hasRealSession`,
+    // pas la présence d'une session, qui distingue un inscrit d'un invité.
+    final isGuest = !getIt<FirebaseSessionProbe>().hasRealSession;
     if (isGuest && !GuestAccessGuard.isAllowedShellTab(index)) {
       unawaited(AuthRequiredSheet.show(context));
       return;
@@ -148,7 +151,9 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
       if (!mounted) {
         return;
       }
-      if (FirebaseAuth.instance.currentUser == null) {
+      // Notifications, note en attente, compte Stripe, compteurs d'activité :
+      // tout cela suppose un compte serveur. Un visiteur n'en a pas.
+      if (!getIt<FirebaseSessionProbe>().hasRealSession) {
         _logTabScreen(widget.navigationShell.currentIndex);
         return;
       }
@@ -177,7 +182,8 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed || !mounted) return;
-    if (FirebaseAuth.instance.currentUser == null) return;
+    // Un visiteur n'a pas de compte Stripe à rafraîchir.
+    if (!getIt<FirebaseSessionProbe>().hasRealSession) return;
     // Le bloc est un singleton DI : il peut être fermé (ex. logout) alors
     // que ce shell est encore mounted — mounted seul ne protège pas contre
     // ce cas, d'où le check isClosed avant le add().
@@ -407,11 +413,20 @@ class _DonyBottomNav extends StatelessWidget {
                             Expanded(
                               child: Builder(
                                 builder: (context) {
+                                  // `hasRealSession` : un visiteur a un uid
+                                  // anonyme parfaitement valide, mais aucune
+                                  // conversation. Ouvrir le stream sur cet uid
+                                  // n'apporterait qu'une écoute Firestore
+                                  // inutile, refusée par les règles d'accès.
                                   final uid =
-                                      FirebaseAuth.instance.currentUser?.uid;
+                                      getIt<FirebaseSessionProbe>()
+                                          .hasRealSession
+                                      ? FirebaseAuth.instance.currentUser?.uid
+                                      : null;
                                   if (uid == null || uid.isEmpty) {
-                                    // Pendant le sign-out : pas de stream
-                                    // Firestore (path vide invalide).
+                                    // Pendant le sign-out, ou pour un
+                                    // visiteur : pas de stream Firestore
+                                    // (path vide invalide).
                                     return DonyNavItem(
                                       iconAsset: 'message-circle',
                                       label: 'Messages',

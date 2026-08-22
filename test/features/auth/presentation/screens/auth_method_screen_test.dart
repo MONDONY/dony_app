@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -127,20 +128,74 @@ void main() {
     },
   );
 
-  testWidgets('Parcourir sans compte ouvre la vraie recherche avec carte', (
+  testWidgets(
+    'Parcourir sans compte declenche AuthGuestSessionRequested sans naviguer',
+    (tester) async {
+      final bloc = MockAuthBloc();
+      when(() => bloc.state).thenReturn(const AuthInitial());
+      when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
+
+      await tester.pumpWidget(_app(bloc));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      await tester.tap(find.text('Parcourir sans compte'));
+      await tester.pumpAndSettle();
+
+      verify(() => bloc.add(const AuthGuestSessionRequested())).called(1);
+      // Pas de navigation optimiste : on attend la confirmation du succès.
+      expect(find.text('Recherche avec carte'), findsNothing);
+
+      await bloc.close();
+    },
+  );
+
+  testWidgets(
+    'session invitee ouverte avec succes ouvre la vraie recherche avec carte',
+    (tester) async {
+      final bloc = MockAuthBloc();
+      whenListen(
+        bloc,
+        Stream.fromIterable(<AuthState>[
+          const AuthLoading(),
+          const AuthGuestSessionReady(),
+        ]),
+        initialState: const AuthInitial(),
+      );
+
+      await tester.pumpWidget(_app(bloc));
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Recherche avec carte'), findsOneWidget);
+
+      await bloc.close();
+    },
+  );
+
+  testWidgets('echec de la session invitee affiche une erreur sans naviguer', (
     tester,
   ) async {
     final bloc = MockAuthBloc();
-    when(() => bloc.state).thenReturn(const AuthInitial());
-    when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
+    whenListen(
+      bloc,
+      Stream.fromIterable(<AuthState>[
+        const AuthLoading(),
+        const AuthError(
+          NetworkException(
+            'Impossible de démarrer la navigation sans compte. '
+            'Vérifiez votre connexion.',
+            code: 'guest-session-failed',
+          ),
+        ),
+      ]),
+      initialState: const AuthInitial(),
+    );
 
     await tester.pumpWidget(_app(bloc));
     await tester.pump(const Duration(milliseconds: 600));
-
-    await tester.tap(find.text('Parcourir sans compte'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Recherche avec carte'), findsOneWidget);
+    expect(find.text('Recherche avec carte'), findsNothing);
 
     await bloc.close();
   });

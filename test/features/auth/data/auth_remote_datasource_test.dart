@@ -50,6 +50,28 @@ void main() {
     });
   });
 
+  group('claimGuestData', () {
+    test('POST /auth/guest/claim avec le jeton anonyme', () async {
+      when(
+        () => mockDio.post<void>('/auth/guest/claim', data: any(named: 'data')),
+      ).thenAnswer(
+        (_) async => Response<void>(
+          statusCode: 204,
+          requestOptions: RequestOptions(path: '/auth/guest/claim'),
+        ),
+      );
+
+      await expectLater(datasource.claimGuestData('token-anon'), completes);
+
+      verify(
+        () => mockDio.post<void>(
+          '/auth/guest/claim',
+          data: {'guestIdToken': 'token-anon'},
+        ),
+      ).called(1);
+    });
+  });
+
   group('getProfile', () {
     test('returns UserModel for current user', () async {
       when(() => mockDio.get<Map<String, dynamic>>('/auth/me')).thenAnswer(

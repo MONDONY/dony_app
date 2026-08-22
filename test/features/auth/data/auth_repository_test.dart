@@ -39,6 +39,13 @@ void main() {
     expect(result.phoneNumber, '+33612345678');
   });
 
+  test('claimGuestData delegates to datasource', () async {
+    when(() => mockDs.claimGuestData('token-anon')).thenAnswer((_) async {});
+
+    await expectLater(repo.claimGuestData('token-anon'), completes);
+    verify(() => mockDs.claimGuestData('token-anon')).called(1);
+  });
+
   test('deleteAccount delegates to datasource', () async {
     when(() => mockDs.deleteAccount()).thenAnswer((_) async {});
 

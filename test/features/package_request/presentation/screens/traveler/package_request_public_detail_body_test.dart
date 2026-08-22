@@ -13,6 +13,8 @@ PackageRequest _req({
   bool negotiable = true,
   String? viewerThreadId,
   DateTime? desiredDate,
+  double? targetPriceEur = 35,
+  double? grossPriceEur,
 }) => PackageRequest(
   id: 'pr-1',
   senderId: 'sender-1',
@@ -27,7 +29,8 @@ PackageRequest _req({
   status: status,
   createdAt: DateTime(2026, 6),
   negotiable: negotiable,
-  targetPriceEur: 35,
+  targetPriceEur: targetPriceEur,
+  grossPriceEur: grossPriceEur,
   photoUrls: photoUrls,
   viewerThreadId: viewerThreadId,
 );
@@ -219,6 +222,38 @@ void main() {
     await tester.tap(find.text('Offres reçues'));
     await tester.pumpAndSettle();
     expect(find.text('OWNER pr-1'), findsOneWidget);
+  });
+
+  // ── Budget (brut vs net, PR #219) ───────────────────────────────────────────
+
+  testWidgets(
+    'carte Budget affiche le brut (grossPriceEur) quand le serveur le fournit',
+    (tester) async {
+      await tester.pumpWidget(wrap(_req(grossPriceEur: 40)));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('40'), findsWidgets);
+      // Jamais les deux montants côte à côte (révélerait la commission).
+      expect(find.textContaining('35'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'carte Budget retombe sur le net (targetPriceEur) quand grossPriceEur est absent',
+    (tester) async {
+      await tester.pumpWidget(wrap(_req()));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('35'), findsWidgets);
+    },
+  );
+
+  testWidgets('CTA invité prix ferme annonce le brut, pas le net', (
+    tester,
+  ) async {
+    await tester.pumpWidget(wrap(_req(negotiable: false, grossPriceEur: 40)));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Prendre à'), findsOneWidget);
+    expect(find.textContaining('40'), findsWidgets);
+    expect(find.textContaining('35'), findsNothing);
   });
 
   // ── Badge urgent (repli local — PackageRequest n'expose pas `urgent`) ───────

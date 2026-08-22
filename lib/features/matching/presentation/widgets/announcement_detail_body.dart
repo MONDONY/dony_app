@@ -133,9 +133,15 @@ class AnnouncementDetailBody extends StatelessWidget {
               const SizedBox(width: DonySpacing.sm),
               Expanded(
                 child: _InfoPill(
+                  // Garde sur hasKgPrice (valeur > 0), pas sur la seule
+                  // nullité : voir announcement_detail_screen.dart pour le
+                  // même raisonnement (écran propriétaire, 0 est la valeur
+                  // trompeuse à écarter, pas l'absence).
                   value: a.pricingMode == 'MIXED'
                       ? 'Grille'
-                      : '${formatPriceIn(a.pricePerKg, a.currency)}/kg',
+                      : (a.hasKgPrice && a.pricePerKg != null)
+                      ? '${formatPriceIn(a.pricePerKg!, a.currency)}/kg'
+                      : 'Indisponible',
                   label: a.pricingMode == 'MIXED' ? 'tarifaire' : 'prix',
                 ),
               ),

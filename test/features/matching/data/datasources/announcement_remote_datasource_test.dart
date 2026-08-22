@@ -506,38 +506,35 @@ void main() {
       },
     );
 
-    test(
-      'uses public announcements endpoint without auth in public access',
-      () async {
-        when(
-          () => mockDio.get(
-            '/public/announcements',
-            queryParameters: any(named: 'queryParameters'),
-            options: any(named: 'options'),
-          ),
-        ).thenAnswer(
-          (_) async => _ok({
-            'content': [_announcementJson],
-          }, '/public/announcements'),
-        );
+    test('appelle toujours l\'endpoint authentifie, meme pour un visiteur : '
+        'plus de /public/announcements, un visiteur porte desormais un token '
+        'Firebase anonyme (Tache 3)', () async {
+      when(
+        () => mockDio.get(
+          '/announcements',
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenAnswer(
+        (_) async => _ok({
+          'content': [_announcementJson],
+        }, '/announcements'),
+      );
 
-        final results = await datasource.searchAnnouncements(
-          departureCity: 'Paris',
-          publicAccess: true,
-        );
+      final results = await datasource.searchAnnouncements(
+        departureCity: 'Paris',
+      );
 
-        expect(results, hasLength(1));
-        final captured = verify(
-          () => mockDio.get(
-            '/public/announcements',
-            queryParameters: captureAny(named: 'queryParameters'),
-            options: captureAny(named: 'options'),
-          ),
-        ).captured;
-        expect((captured[0] as Map<String, dynamic>)['departureCity'], 'Paris');
-        expect((captured[1] as Options).extra?['skipAuth'], isTrue);
-      },
-    );
+      expect(results, hasLength(1));
+      final captured =
+          verify(
+                () => mockDio.get(
+                  '/announcements',
+                  queryParameters: captureAny(named: 'queryParameters'),
+                ),
+              ).captured.single
+              as Map<String, dynamic>;
+      expect(captured['departureCity'], 'Paris');
+    });
   });
 
   // ── countAnnouncements ───────────────────────────────────────────────────────

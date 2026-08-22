@@ -50,6 +50,10 @@ void main() {
 
     when(() => firebaseAuth.currentUser).thenReturn(firebaseUser);
     when(() => firebaseUser.phoneNumber).thenReturn('+33600000000');
+    // Ces scénarios mesurent un utilisateur connecté, pas un visiteur.
+    // `_onCheckRequested` interroge `isAnonymous` pour écarter les sessions
+    // anonymes : sans ce stub, le mock renvoie null et le handler casse.
+    when(() => firebaseUser.isAnonymous).thenReturn(false);
   });
 
   AuthBloc makeBloc({bool analyticsEnabled = true}) {

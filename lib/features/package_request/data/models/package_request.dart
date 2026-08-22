@@ -47,6 +47,7 @@ class PackageRequest extends Equatable {
     this.viewerThreadStatus,
     this.promoCode,
     this.currency = 'EUR',
+    this.grossPriceEur,
   });
 
   final String id;
@@ -66,6 +67,14 @@ class PackageRequest extends Equatable {
   String? get primaryCategory => categories.isEmpty ? null : categories.first;
   final String? description;
   final double? targetPriceEur;
+
+  /// Prix brut de la demande (ce que l'expéditeur paierait réellement),
+  /// ajouté (PR #219) en compensation : [targetPriceEur] seul est un NET,
+  /// un tarif que personne ne paie. Ne jamais afficher les deux côte à côte
+  /// (révélerait le taux de commission par soustraction) : à l'affichage,
+  /// préférer ce champ à [targetPriceEur] avec repli sur ce dernier si le
+  /// serveur ne le sert pas encore (ancien payload/cache).
+  final double? grossPriceEur;
   final String? photoUrl;
 
   /// Toutes les photos colis présignées (max 4, ordonnées). Vide si aucune.
@@ -155,6 +164,7 @@ class PackageRequest extends Equatable {
       viewerThreadStatus: json['viewerThreadStatus'] as String?,
       promoCode: json['promoCode'] as String?,
       currency: json['currency'] as String? ?? 'EUR',
+      grossPriceEur: (json['grossPriceEur'] as num?)?.toDouble(),
     );
   }
 
@@ -185,5 +195,6 @@ class PackageRequest extends Equatable {
     viewerThreadStatus,
     promoCode,
     currency,
+    grossPriceEur,
   ];
 }

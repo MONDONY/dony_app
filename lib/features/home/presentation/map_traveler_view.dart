@@ -11,7 +11,6 @@ import 'package:dony/features/package_request/data/models/package_request_search
 import 'package:dony/features/package_request/presentation/widgets/near_me_package_request_carousel.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_list_card.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_preview_bottom_sheet.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
@@ -26,11 +25,9 @@ class MapTravelerView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isGuest = FirebaseAuth.instance.currentUser == null;
     return BlocProvider<PackageRequestSearchBloc>(
       create: (_) =>
-          getIt<PackageRequestSearchBloc>()
-            ..add(SearchFiltersChanged(publicAccess: isGuest)),
+          getIt<PackageRequestSearchBloc>()..add(const SearchFiltersChanged()),
       child: const _MapTravelerViewContent(),
     );
   }
@@ -106,7 +103,6 @@ class _MapTravelerViewContentState extends State<_MapTravelerViewContent> {
         userLat: position.latitude,
         userLng: position.longitude,
         radiusKm: selectedRadius,
-        publicAccess: FirebaseAuth.instance.currentUser == null,
       ),
     );
   }
@@ -116,11 +112,7 @@ class _MapTravelerViewContentState extends State<_MapTravelerViewContent> {
       _userPosition = null;
       _radiusKm = null;
     });
-    context.read<PackageRequestSearchBloc>().add(
-      SearchFiltersChanged(
-        publicAccess: FirebaseAuth.instance.currentUser == null,
-      ),
-    );
+    context.read<PackageRequestSearchBloc>().add(const SearchFiltersChanged());
   }
 
   Set<Marker> _markersFor(List<PackageRequestSearchItem> items) {

@@ -6,12 +6,10 @@ import 'package:dony/core/di/pending_search_notifier.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
-import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
-import 'package:dony/features/auth/guest_access_guard.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_required_sheet.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
@@ -162,15 +160,10 @@ class _MapSenderViewState extends State<_MapSenderView> {
   @override
   void initState() {
     super.initState();
-    // FirebaseSessionProbe (session persistée, disponible synchronement) et
-    // non AuthBloc.state.currentUser : au tout premier frame après un cold
-    // start, AuthBloc est encore à AuthInitial — le GET /auth/me n'a pas eu
-    // le temps de répondre — et un utilisateur bel et bien connecté
-    // retombait sur le mode invité (onglet Colis) au lieu de Trajets. Même
-    // source que le redirect du routeur (router.dart).
-    _mode = GuestAccessGuard.initialSearchMode(
-      isAuthenticated: getIt<FirebaseSessionProbe>().hasSession,
-    );
+    // Mode par défaut identique pour tout le monde : la recherche de trajets
+    // fonctionne désormais pour un visiteur (Task 7), il n'y a plus de raison
+    // de le distinguer d'un inscrit à l'ouverture de l'écran.
+    _mode = SearchMode.trips;
     if (getIt.isRegistered<PendingSearchNotifier>()) {
       _pendingSearchNotifier = getIt<PendingSearchNotifier>();
       _pendingSearchNotifier!.addListener(_consumePendingSearch);
@@ -355,7 +348,6 @@ class _MapSenderViewState extends State<_MapSenderView> {
 
   void _dispatchSearch() {
     if (!mounted) return;
-    final publicAccess = context.read<AuthBloc>().state.currentUser == null;
     // `toAnnouncementQuery` (et non `toSearchParams`) : c'est elle qui porte le
     // vrai payload serveur — corridor neutralisé par « près de moi », booléens
     // jamais envoyés à false.
@@ -379,7 +371,6 @@ class _MapSenderViewState extends State<_MapSenderView> {
         userLng: q.userLng,
         radiusKm: q.radiusKm,
         urgent: q.urgent,
-        publicAccess: publicAccess,
       ),
     );
   }
@@ -400,7 +391,6 @@ class _MapSenderViewState extends State<_MapSenderView> {
         radiusKm: q.radiusKm,
         urgent: q.urgent,
         matchingMyTrips: q.matchingMyTrips,
-        publicAccess: context.read<AuthBloc>().state.currentUser == null,
       ),
     );
   }
@@ -523,14 +513,6 @@ class _MapSenderViewState extends State<_MapSenderView> {
     if (mode == _mode) {
       return;
     }
-    final isAuthenticated = context.read<AuthBloc>().state.currentUser != null;
-    if (!GuestAccessGuard.canUseSearchMode(
-      mode,
-      isAuthenticated: isAuthenticated,
-    )) {
-      unawaited(AuthRequiredSheet.show(context));
-      return;
-    }
     setState(() {
       _mode = mode;
       // Le compteur affiché portait sur l'ancien « autre mode » : il devient
@@ -628,8 +610,16 @@ class _MapSenderViewState extends State<_MapSenderView> {
 
   /// Capacité réelle de l'utilisateur (pas le rôle actif sélectionné). Tout
   /// compte porte les deux rôles dès l'inscription et ne peut jamais les
-  /// perdre — utilisé pour du gating de fonctionnalité (ex. favoris), pas
-  /// pour bloquer l'accès à un mode de recherche.
+  /// perdre.
+  ///
+  /// Sert aussi, de facto, de garde anti-invité pour un usage précis :
+  /// `showFavorite` sur `PackageRequestListCard` plus bas, qui ferme la mise
+  /// en favori d'une demande de colis à qui n'a ni `AuthAuthenticated` ni
+  /// `AuthProfileUpdated` — donc toujours `false` pour un visiteur. C'est
+  /// assumé : contrairement à `canUseSearchMode` (tautologie supprimée en
+  /// Task 7), ce gate a été posé à la revue produit et tranché « on garde
+  /// fermé ». Ne pas le retirer au prétexte qu'il ressemble à un garde-fou
+  /// invité oublié.
   bool get _isTraveler {
     final s = context.read<AuthBloc>().state;
     return switch (s) {
@@ -962,11 +952,8 @@ class _MapSenderViewState extends State<_MapSenderView> {
           .copyWith(weightMin: result.weightKg);
     }
 
-    final isAuthenticated = context.read<AuthBloc>().state.currentUser != null;
     setState(() {
-      _mode = GuestAccessGuard.initialSearchMode(
-        isAuthenticated: isAuthenticated,
-      );
+      _mode = SearchMode.trips;
       _filters = next;
       _otherModeCount = null;
     });
@@ -987,7 +974,11 @@ class _MapSenderViewState extends State<_MapSenderView> {
     for (final item in items) {
       if (uid != null && item.sender.id == uid) continue;
       if (item.departureLat == null || item.departureLng == null) continue;
-      final price = item.targetPriceEur ?? 0;
+      // grossPriceEur (PR #219) est le brut réellement payé ; targetPriceEur
+      // seul est un NET. Les marqueurs de trajets affichent déjà le brut
+      // (senderPricePerKg) : sans ce repli, un invité voyait deux bases de
+      // prix différentes selon qu'il regardait un trajet ou une demande.
+      final price = item.grossPriceEur ?? item.targetPriceEur ?? 0;
       final icon = await MarkerBitmapFactory.pricePill(
         pricePerKg: price,
         dotColor: DonyColors.terra500,
@@ -2844,13 +2835,10 @@ class _FavoritesButton extends StatelessWidget {
         final count = state.count;
         return GestureDetector(
           key: const Key('favorites-button'),
-          onTap: () {
-            if (context.read<AuthBloc>().state.currentUser == null) {
-              AuthRequiredSheet.show(context);
-              return;
-            }
-            context.push('/favoris');
-          },
+          // Les favoris sont accessibles à un visiteur : c'est le seul
+          // contenu qu'une session invitée peut conserver (backend et
+          // routeur les autorisent déjà — `GuestAccessGuard.isPublicGuestPath`).
+          onTap: () => context.push('/favoris'),
           behavior: HitTestBehavior.opaque,
           child: Stack(
             clipBehavior: Clip.none,

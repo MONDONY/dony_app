@@ -6,7 +6,6 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/package_request/bloc/package_request_search_bloc.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -17,11 +16,9 @@ class PackageRequestSearchScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isGuest = FirebaseAuth.instance.currentUser == null;
     return BlocProvider(
       create: (_) =>
-          getIt<PackageRequestSearchBloc>()
-            ..add(SearchFiltersChanged(publicAccess: isGuest)),
+          getIt<PackageRequestSearchBloc>()..add(const SearchFiltersChanged()),
       child: const _SearchView(),
     );
   }
@@ -43,7 +40,6 @@ class _SearchViewState extends State<_SearchView> {
       SearchFiltersChanged(
         departure: _depCtrl.text.trim().isEmpty ? null : _depCtrl.text.trim(),
         arrival: _arrCtrl.text.trim().isEmpty ? null : _arrCtrl.text.trim(),
-        publicAccess: FirebaseAuth.instance.currentUser == null,
       ),
     );
   }
@@ -234,6 +230,12 @@ class _PublicRequestCard extends StatelessWidget {
   const _PublicRequestCard({required this.request});
   final PackageRequestSearchItem request;
 
+  /// Prix réellement payé par l'expéditeur. `targetPriceEur` seul est un
+  /// NET (PR #219) : jamais afficher les deux montants côte à côte, ça
+  /// révélerait le taux de commission par soustraction. Repli sur le net
+  /// uniquement si le serveur ne sert pas encore le brut.
+  double? get _displayPrice => request.grossPriceEur ?? request.targetPriceEur;
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -298,10 +300,10 @@ class _PublicRequestCard extends StatelessWidget {
                     _Pill(iconAsset: 'tag', label: request.categories.first),
                 ],
               ),
-              if (request.targetPriceEur != null) ...[
+              if (_displayPrice != null) ...[
                 const SizedBox(height: DonySpacing.md),
                 Text(
-                  'Budget: ${formatPriceIn(request.targetPriceEur!, request.currency)}',
+                  'Budget: ${formatPriceIn(_displayPrice!, request.currency)}',
                   style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,

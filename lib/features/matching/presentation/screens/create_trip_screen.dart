@@ -708,15 +708,21 @@ class _TripFormContentState extends State<_TripFormContent> {
       // modifier le refermerait en silence à l'enregistrement.
       _negotiableNotifier.value = a.negotiable;
 
+      // pricePerKg est le net voyageur : absent uniquement pour un lecteur
+      // anonyme, jamais pour le propriétaire du trajet qui l'édite ici. On
+      // laisse les notifiers de prix à leur valeur initiale si, malgré tout,
+      // il manquait.
       final price = a.pricePerKg;
-      final presetIdx = kPriceOptions.indexOf(price);
-      if (presetIdx != -1) {
-        _priceOptionNotifier.value = presetIdx;
-      } else {
-        // Prix custom — sélectionner "Autre" et pré-remplir le champ
-        _priceOptionNotifier.value = kPriceOptions.length;
-        _customPriceNotifier.value = price;
-        _customPriceCtrl.text = price.toStringAsFixed(0);
+      if (price != null) {
+        final presetIdx = kPriceOptions.indexOf(price);
+        if (presetIdx != -1) {
+          _priceOptionNotifier.value = presetIdx;
+        } else {
+          // Prix custom — sélectionner "Autre" et pré-remplir le champ
+          _priceOptionNotifier.value = kPriceOptions.length;
+          _customPriceNotifier.value = price;
+          _customPriceCtrl.text = price.toStringAsFixed(0);
+        }
       }
 
       // Sync capacityUnit et pricingMode vers le BLoC (requiert context → postFrame)

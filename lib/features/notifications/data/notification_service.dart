@@ -8,6 +8,7 @@ import 'package:dony/core/firebase/firebase_options.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/core/services/device_id_service.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
+import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/features/notifications/data/notification_repository.dart';
 import 'package:dony/features/notifications/notification_route_resolver.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -101,6 +102,12 @@ class NotificationService {
   final NotificationRepository _repository;
   final DeviceIdService _deviceIdService;
   final ErrorReportingService? _errorReporter;
+
+  /// Distingue un utilisateur réel d'un visiteur en session anonyme. Injecté
+  /// pour que les tests n'aient pas à initialiser Firebase ; la valeur par
+  /// défaut ne touche le SDK qu'à la première lecture.
+  final FirebaseSessionProbe _sessionProbe;
+
   Future<void>? _inFlightUpload;
   Future<void>? _inFlightTokenUpload;
   bool _permissionDeniedReported = false;
@@ -110,6 +117,7 @@ class NotificationService {
     this._repository,
     this._deviceIdService, [
     this._errorReporter,
+    this._sessionProbe = const FirebaseSessionProbe(),
   ]);
 
   // late: deferred until initialize() so tests can instantiate this class without Firebase
@@ -192,7 +200,7 @@ class NotificationService {
     // appelé, et rien ne rattrapait cette première tentative perdue. On relance
     // ici, une fois l'autorisation connue.
     if (settings.authorizationStatus != AuthorizationStatus.denied &&
-        FirebaseAuth.instance.currentUser != null) {
+        _sessionProbe.hasRealSession) {
       _scheduleTokenUpload();
     }
   }
@@ -201,6 +209,11 @@ class NotificationService {
   /// réentrance de [uploadCurrentToken] ferait sinon ignorer l'appel, et la
   /// tentative déclenchée par un événement plus récent serait perdue.
   void _scheduleTokenUpload() {
+    // Entonnoir commun à `onTokenRefresh` et à la relance de `initialize` :
+    // la garde est ici pour couvrir les deux. Un visiteur n'a pas de compte
+    // serveur — `PUT /users/me/fcm-token` échouerait, et aucune notification
+    // ne lui est destinée tant qu'il ne s'est pas inscrit.
+    if (!_sessionProbe.hasRealSession) return;
     final activeUpload = _inFlightUpload;
     if (activeUpload == null) {
       unawaited(uploadCurrentToken());
@@ -278,7 +291,9 @@ class NotificationService {
   /// Réévalue l'autorisation et réenregistre le jeton après un retour depuis
   /// Réglages iOS ou après une reprise réseau.
   Future<void> onAppResumed() async {
-    if (FirebaseAuth.instance.currentUser == null) return;
+    // Un visiteur n'a rien à réenregistrer : sans compte serveur, aucune
+    // notification ne lui est adressée.
+    if (!_sessionProbe.hasRealSession) return;
     await resumeNotifications(
       getAuthorizationStatus: () async =>
           (await _fcm.getNotificationSettings()).authorizationStatus,

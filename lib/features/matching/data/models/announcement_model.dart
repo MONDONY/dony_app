@@ -12,13 +12,18 @@ part 'announcement_model.g.dart';
 class AnnouncementGridItemModel {
   final String id;
   final String label;
-  final double unitPriceNet;
+
+  /// Net voyageur de cet article de grille. `null` pour une session
+  /// anonyme : masqué exactement comme `AnnouncementModel.pricePerKg`
+  /// (`GuestSession.travelerNetOrNull` appelé depuis `PriceGridService`
+  /// côté backend). `unitPriceDisplay` reste toujours servi.
+  final double? unitPriceNet;
   final double unitPriceDisplay;
 
   const AnnouncementGridItemModel({
     required this.id,
     required this.label,
-    required this.unitPriceNet,
+    this.unitPriceNet,
     required this.unitPriceDisplay,
   });
 
@@ -26,7 +31,7 @@ class AnnouncementGridItemModel {
       AnnouncementGridItemModel(
         id: json['id'] as String,
         label: json['label'] as String,
-        unitPriceNet: (json['unitPriceNet'] as num).toDouble(),
+        unitPriceNet: (json['unitPriceNet'] as num?)?.toDouble(),
         unitPriceDisplay: (json['unitPriceDisplay'] as num).toDouble(),
       );
 
@@ -124,7 +129,12 @@ class AnnouncementModel {
   final AddressData? deliveryAddress;
   final double availableKg;
   final double totalKg;
-  final double pricePerKg;
+
+  /// Net voyageur. `null` pour une session anonyme : le backend masque le
+  /// net aux invités (il révélerait le taux de commission, parfois négocié
+  /// par voyageur). Utiliser [pricePerKgDisplay] pour l'affichage côté
+  /// expéditeur, qui reste fourni.
+  final double? pricePerKg;
 
   /// Prix au kilo affiché à l'EXPÉDITEUR = `pricePerKg` (net voyageur) + commission Yadony.
   /// Fourni par le backend (symétrique de `unitPriceDisplay` du mode MIXED) ; null si
@@ -210,6 +220,15 @@ class AnnouncementModel {
   /// même temps que [convertedPricePerKg].
   final String? convertedCurrency;
 
+  /// Prix au kilo **affiché à l'expéditeur** ([pricePerKgDisplay], le BRUT),
+  /// converti par le SERVEUR dans la devise du lecteur courant. Ajouté (PR
+  /// #219) pour compenser le masquage de [pricePerKg] (le net) aux lecteurs
+  /// anonymes : sans lui, un invité perdait toute conversion de devise sur le
+  /// prix au kilo. Servi à tous les lecteurs, jamais retiré à un inscrit.
+  /// `null` quand le backend n'a rien à convertir (devise déjà identique,
+  /// ancien payload, ou trajet sans tarif au kilo exploitable).
+  final double? pricePerKgDisplayConverted;
+
   const AnnouncementModel({
     required this.id,
     required this.travelerId,
@@ -226,7 +245,7 @@ class AnnouncementModel {
     this.deliveryAddress,
     required this.availableKg,
     required this.totalKg,
-    required this.pricePerKg,
+    this.pricePerKg,
     this.pricePerKgDisplay,
     this.transportMode,
     required this.status,
@@ -254,6 +273,7 @@ class AnnouncementModel {
     this.negotiable = false,
     this.convertedPricePerKg,
     this.convertedCurrency,
+    this.pricePerKgDisplayConverted,
   });
 
   factory AnnouncementModel.fromJson(Map<String, dynamic> json) =>

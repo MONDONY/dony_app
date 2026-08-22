@@ -56,7 +56,7 @@ AnnouncementModel _$AnnouncementModelFromJson(
       : AddressData.fromJson(json['deliveryAddress'] as Map<String, dynamic>),
   availableKg: (json['availableKg'] as num).toDouble(),
   totalKg: (json['totalKg'] as num).toDouble(),
-  pricePerKg: (json['pricePerKg'] as num).toDouble(),
+  pricePerKg: (json['pricePerKg'] as num?)?.toDouble(),
   pricePerKgDisplay: (json['pricePerKgDisplay'] as num?)?.toDouble(),
   transportMode: transportModeFromWire(json['transportMode'] as String?),
   status: json['status'] as String,
@@ -98,6 +98,8 @@ AnnouncementModel _$AnnouncementModelFromJson(
   negotiable: json['negotiable'] as bool? ?? false,
   convertedPricePerKg: (json['convertedPricePerKg'] as num?)?.toDouble(),
   convertedCurrency: json['convertedCurrency'] as String?,
+  pricePerKgDisplayConverted: (json['pricePerKgDisplayConverted'] as num?)
+      ?.toDouble(),
 );
 
 Map<String, dynamic> _$AnnouncementModelToJson(AnnouncementModel instance) =>
@@ -147,6 +149,7 @@ Map<String, dynamic> _$AnnouncementModelToJson(AnnouncementModel instance) =>
       'negotiable': instance.negotiable,
       'convertedPricePerKg': instance.convertedPricePerKg,
       'convertedCurrency': instance.convertedCurrency,
+      'pricePerKgDisplayConverted': instance.pricePerKgDisplayConverted,
     };
 
 const _$BidPaymentMethodEnumMap = {

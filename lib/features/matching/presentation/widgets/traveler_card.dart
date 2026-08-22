@@ -133,9 +133,15 @@ class TravelerCard extends StatelessWidget {
     final arrFlag =
         announcement.arrivalFlag ?? cityFlag(announcement.arrivalCity);
 
+    // Garde sur hasKgPrice (valeur > 0) : senderPricePerKg n'est en pratique
+    // jamais null (pricePerKgDisplay est toujours servi, y compris à un
+    // invité), c'est 0 la valeur trompeuse à écarter en mode MIXED.
+    final senderPricePerKg = announcement.senderPricePerKg;
     final priceLabel = announcement.pricingMode == 'MIXED'
         ? 'Grille tarifaire'
-        : '${formatPriceIn(announcement.senderPricePerKg, announcement.currency)}/kg';
+        : !announcement.hasKgPrice
+        ? 'Prix indisponible'
+        : '${formatPriceIn(senderPricePerKg!, announcement.currency)}/kg';
 
     return _PressableCard(
           onTap: onTap,

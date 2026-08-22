@@ -211,11 +211,6 @@ class _AuthInterceptor extends Interceptor {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    // Skip auth for public endpoints (e.g. health check before Firebase is ready)
-    if (options.extra['skipAuth'] == true) {
-      handler.next(options);
-      return;
-    }
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {

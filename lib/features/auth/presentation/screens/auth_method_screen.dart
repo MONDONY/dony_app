@@ -50,6 +50,8 @@ class AuthMethodScreen extends StatelessWidget {
             context.read<AuthBloc>().add(
               AuthRegisterWithEmailRequested(email: state.email),
             );
+          } else if (state is AuthGuestSessionReady) {
+            context.go('/home');
           } else if (state is AuthError) {
             DonySnackbar.show(
               context,
@@ -354,7 +356,11 @@ class _AuthActionsPanel extends StatelessWidget {
               const SizedBox(height: DonySpacing.md),
               const _OrDivider(),
               const SizedBox(height: DonySpacing.md),
-              _GuestCta(onTap: () => context.go('/home')),
+              _GuestCta(
+                onTap: () => context.read<AuthBloc>().add(
+                  const AuthGuestSessionRequested(),
+                ),
+              ),
             ],
           ),
         ),

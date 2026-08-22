@@ -427,17 +427,25 @@ class _ActiveCardContent extends StatelessWidget {
 /// « 0 € / kg » : on montre « dès X € » (item de grille le moins cher) ou
 /// « Grille tarifaire » à défaut.
 String _activePriceLabel(AnnouncementModel a, String Function(double) price) {
-  final usesGrid = a.pricingMode == 'MIXED' || a.pricePerKg <= 0;
+  final kgPrice = a.pricePerKg;
+  final usesGrid = a.pricingMode == 'MIXED' || kgPrice == null || kgPrice <= 0;
   if (usesGrid && a.priceGridItems.isNotEmpty) {
-    final minNet = a.priceGridItems
+    // unitPriceNet masqué pour un lecteur anonyme (même mécanisme que
+    // pricePerKg) : on filtre plutôt que de laisser un `null` planter le
+    // `reduce`, ou de le confondre avec un vrai montant à 0.
+    final nets = a.priceGridItems
         .map((e) => e.unitPriceNet)
-        .reduce((x, y) => x < y ? x : y);
-    return 'dès ${price(minNet)}';
+        .whereType<double>()
+        .toList();
+    if (nets.isNotEmpty) {
+      final minNet = nets.reduce((x, y) => x < y ? x : y);
+      return 'dès ${price(minNet)}';
+    }
   }
   if (usesGrid) {
     return 'Grille tarifaire';
   }
-  return '${price(a.pricePerKg)} / kg';
+  return '${price(kgPrice)} / kg';
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -469,7 +477,8 @@ class _PastCardContent extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
 
     final isCompleted = announcement.status == 'COMPLETED';
-    final earned = soldKg * announcement.pricePerKg;
+    final kgPrice = announcement.pricePerKg;
+    final earned = kgPrice == null ? null : soldKg * kgPrice;
 
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -507,7 +516,8 @@ class _PastCardContent extends StatelessWidget {
                     ),
                     if (!announcement.isKgFree &&
                         isCompleted &&
-                        soldKg > 0) ...[
+                        soldKg > 0 &&
+                        earned != null) ...[
                       Text(
                         ' · ',
                         style: tt.bodySmall?.copyWith(

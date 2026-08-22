@@ -99,7 +99,6 @@ class AnnouncementSearchRequested extends AnnouncementEvent {
   /// Filtre serveur « annonces urgentes » (`urgent=true`) — jamais `false`
   /// envoyé explicitement, seulement présent ou absent côté datasource.
   final bool? urgent;
-  final bool publicAccess;
 
   AnnouncementSearchRequested({
     this.departureCity,
@@ -121,7 +120,6 @@ class AnnouncementSearchRequested extends AnnouncementEvent {
     this.sortBy = 'date',
     this.sortDir = 'asc',
     this.urgent,
-    this.publicAccess = false,
   });
 }
 

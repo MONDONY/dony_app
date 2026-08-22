@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/app_log.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -30,6 +31,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   String? _pendingPhoneNumber;
   Timer? _otpTimer;
+
+  /// Jeton de la session visiteur en cours, capturé juste avant la bascule
+  /// vers le compte réel.
+  ///
+  /// Le parcours téléphone passe par un custom token : l'UID du visiteur n'est
+  /// jamais conservé, et les favoris posés en session anonyme appartiennent
+  /// donc à un autre compte que celui créé à l'inscription. Ce jeton est le
+  /// seul moyen de les réclamer ensuite.
+  String? _pendingGuestIdToken;
 
   AuthBloc(
     this._authRepository,
@@ -66,6 +76,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthUserSynced>(_onUserSynced);
     on<AuthAvatarUploadRequested>(_onAvatarUploadRequested);
     on<AuthProfileRefreshRequested>(_onProfileRefreshRequested);
+    on<AuthGuestSessionRequested>(_onGuestSessionRequested);
   }
 
   @override
@@ -86,7 +97,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     final firebaseUser = _firebaseAuth.currentUser;
-    if (firebaseUser == null) {
+    // Une session anonyme n'a pas de compte serveur : `GET /auth/me` lui
+    // répondrait 404. Le garde-fou d'`app.dart` évite déjà de dispatcher
+    // l'événement dans ce cas, mais la garde doit tenir ici aussi — c'est le
+    // seul endroit qui reste juste si un autre chemin d'appel apparaît.
+    if (firebaseUser == null || firebaseUser.isAnonymous) {
       emit(const AuthInitial());
       return;
     }
@@ -168,12 +183,20 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         _pendingPhoneNumber ?? '',
         event.smsCode,
       );
+      // Capture AVANT la bascule : après `signInWithCustomToken`, l'utilisateur
+      // courant est le nouveau compte et la session anonyme est perdue à
+      // jamais. C'est le seul instant où son jeton est encore lisible.
+      await _captureGuestIdToken();
       await _firebaseAuth.signInWithCustomToken(customToken);
 
       // 2. Vérifier si l'utilisateur est déjà inscrit en backend
       try {
         final user = await _authRepository.getProfile();
-        // Compte existant → déjà authentifié, écran PIN suffira
+        // Compte existant → déjà authentifié, écran PIN suffira.
+        // La réclamation vaut aussi ici : c'est la sortie normale du mode
+        // visiteur pour quelqu'un qui avait déjà un compte. Il a parcouru
+        // sans se connecter, mis des trajets en favori, puis s'est connecté.
+        await _claimGuestData();
         emit(AuthAuthenticated(user));
         unawaited(
           _analytics?.logEvent(
@@ -210,6 +233,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final user = await _authRepository.register(
         phoneNumber: _pendingPhoneNumber ?? '',
       );
+      await _refreshIdTokenAfterRegistration();
+      await _claimGuestData();
       // Nouveau compte → effacer tout PIN résiduel d'un compte précédent
       // (le PIN est lié à l'appareil, pas à l'utilisateur Firebase)
       await _localAuthService.clearPin();
@@ -238,6 +263,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     await _firebaseAuth.signOut();
     await _clearHiveAccountData();
     _pendingPhoneNumber = null;
+    // Le jeton invité appartenait à la session qu'on vient de quitter : le
+    // garder l'exposerait à une réclamation par le compte suivant.
+    _pendingGuestIdToken = null;
     emit(const AuthInitial());
   }
 
@@ -255,6 +283,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     await _firebaseAuth.signOut();
     await _clearHiveAccountData();
     _pendingPhoneNumber = null;
+    _pendingGuestIdToken = null;
     emit(const AuthInitial());
   }
 
@@ -271,6 +300,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       await _clearHiveAccountData();
       await _firebaseAuth.signOut();
       _pendingPhoneNumber = null;
+      _pendingGuestIdToken = null;
       emit(const AuthAccountDeleted());
     } catch (e) {
       emit(AuthError(_friendlyError(e)));
@@ -377,9 +407,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         event.email,
         event.code,
       );
+      // Même contrainte que sur le parcours téléphone : le jeton du visiteur
+      // ne survit pas à la bascule de session.
+      await _captureGuestIdToken();
       await _firebaseAuth.signInWithCustomToken(customToken);
       // User existant → Home directement ; nouveau → RoleSelection
       final user = await _authRepository.getProfile();
+      // Compte existant : le visiteur récupère aussi ses favoris ici.
+      await _claimGuestData();
       emit(AuthAuthenticated(user));
       unawaited(
         _analytics?.logEvent(
@@ -407,6 +442,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(const AuthLoading());
     try {
       final user = await _authRepository.registerWithEmail(email: event.email);
+      await _refreshIdTokenAfterRegistration();
+      await _claimGuestData();
       await _localAuthService.clearPin();
       await _clearHiveAccountData();
       emit(AuthNewAccountAuthenticated(user));
@@ -433,6 +470,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
+      // Un visiteur peut s'inscrire par Google : capturer son jeton avant que
+      // la session anonyme ne cède la place au compte réel.
+      await _captureGuestIdToken();
       await _firebaseAuth.signInWithCredential(credential);
       _pendingPhoneNumber = _firebaseAuth.currentUser?.email ?? '';
       await _checkProfileAfterOAuth(emit);
@@ -456,6 +496,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         idToken: appleCredential.identityToken,
         accessToken: appleCredential.authorizationCode,
       );
+      // Un visiteur peut s'inscrire par Apple : même capture préalable.
+      await _captureGuestIdToken();
       await _firebaseAuth.signInWithCredential(oauthCredential);
       _pendingPhoneNumber = _firebaseAuth.currentUser?.email ?? '';
       await _checkProfileAfterOAuth(emit);
@@ -525,6 +567,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   Future<void> _checkProfileAfterOAuth(Emitter<AuthState> emit) async {
     try {
       final user = await _authRepository.getProfile();
+      // Compte existant (Google/Apple) : même sortie du mode visiteur.
+      await _claimGuestData();
       emit(AuthAuthenticated(user));
       unawaited(
         _analytics?.logEvent(
@@ -541,6 +585,130 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       }
     } catch (e) {
       emit(AuthError(_friendlyError(e)));
+    }
+  }
+
+  // ─── Session invitée (navigation sans compte) ─────────────────────────────
+  //
+  // Déclenché uniquement par le CTA "Parcourir sans compte" (jamais au
+  // démarrage de l'app). En cas d'échec (hors ligne, Firebase indisponible),
+  // on N'AVANCE JAMAIS de façon optimiste vers l'accueil : l'utilisateur
+  // resterait sur un écran vide sans comprendre la panne. Il reste sur
+  // l'écran de connexion avec un message clair ; seul le succès déclenche la
+  // navigation, via le BlocListener de l'écran.
+
+  Future<void> _onGuestSessionRequested(
+    AuthGuestSessionRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    try {
+      await _firebaseAuth.signInAnonymously();
+      emit(const AuthGuestSessionReady());
+      unawaited(_analytics?.logEvent(AnalyticsEvents.guestSessionStarted));
+    } catch (e) {
+      emit(
+        const AuthError(
+          NetworkException(
+            'Impossible de démarrer la navigation sans compte. '
+            'Vérifiez votre connexion.',
+            code: 'guest-session-failed',
+          ),
+        ),
+      );
+      unawaited(
+        _analytics?.logEvent(
+          AnalyticsEvents.guestSessionFailed,
+          properties: {
+            'reason': e is FirebaseAuthException ? e.code : 'unknown',
+          },
+        ),
+      );
+    }
+  }
+
+  // ─── Reprise des données du visiteur ──────────────────────────────────────
+  //
+  // Le mode visiteur ne vaut que si ce qu'un visiteur met de côté survit à son
+  // arrivée sur un compte — qu'il s'inscrive ou qu'il se connecte à un compte
+  // existant. Comme l'UID n'est pas conservé (custom token), la seule voie est
+  // de présenter le jeton anonyme à `POST /auth/guest/claim`. L'ordre est
+  // impératif : capture avant la bascule de session, réclamation une fois la
+  // ligne de l'appelant présente en base.
+
+  /// Lit le jeton de la session visiteur en cours, s'il y en a une.
+  ///
+  /// À appeler juste AVANT toute bascule d'authentification : ensuite,
+  /// `currentUser` est le nouveau compte et le jeton du visiteur est perdu.
+  /// Toute erreur de lecture est absorbée : on renonce aux favoris, jamais à
+  /// la connexion.
+  Future<void> _captureGuestIdToken() async {
+    _pendingGuestIdToken = null;
+    try {
+      final previous = _firebaseAuth.currentUser;
+      if (previous != null && previous.isAnonymous) {
+        _pendingGuestIdToken = await previous.getIdToken();
+      }
+    } catch (_) {
+      _pendingGuestIdToken = null;
+    }
+  }
+
+  /// Rattache au compte de l'appelant les données posées en visiteur.
+  ///
+  /// Appelée sur les deux sorties du mode visiteur :
+  /// - inscription, APRÈS `POST /auth/register` — tant que la ligne de
+  ///   l'appelant n'existe pas, l'endpoint répond 404 ;
+  /// - connexion à un compte existant, où cette ligne est déjà là.
+  ///
+  /// Un échec ne doit JAMAIS faire échouer l'inscription ni la connexion.
+  /// Perdre ses favoris est regrettable ; être bloqué à la porte de son compte
+  /// serait bien pire. On mesure l'échec, on le journalise, et on continue.
+  Future<void> _claimGuestData() async {
+    final guestToken = _pendingGuestIdToken;
+    _pendingGuestIdToken = null;
+    if (guestToken == null) return;
+    try {
+      await _authRepository.claimGuestData(guestToken);
+      unawaited(_analytics?.logEvent(AnalyticsEvents.guestDataClaimed));
+    } catch (e) {
+      final reason = unwrapDioError(e).code ?? 'unknown';
+      // L'analytics ne suffit pas : l'envoi d'événements s'arrête net si le
+      // consentement est refusé, et l'échec deviendrait invisible pour ces
+      // utilisateurs. `AppLog` reste no-op sans DSN Sentry et ne lève jamais.
+      // Ni jeton ni identifiant : seul le code métier est journalisé.
+      AppLog.warn(
+        'Réclamation des données invité impossible',
+        data: {'reason': reason},
+      );
+      unawaited(
+        _analytics?.logEvent(
+          AnalyticsEvents.guestDataClaimFailed,
+          properties: {'reason': reason},
+        ),
+      );
+    }
+  }
+
+  /// Force l'émission d'un jeton à jour après une inscription réussie.
+  ///
+  /// **Défense en profondeur, pas une condition de fonctionnement.** Dans
+  /// l'état actuel de l'application, le jeton ne peut pas être resté anonyme
+  /// à ce stade : `POST /auth/register` refuse un jeton anonyme en 422, et
+  /// l'intercepteur sert l'inscription et la réclamation avec le même jeton —
+  /// une inscription qui réussit prouve donc que le jeton ne l'est plus. Les
+  /// autorisations viennent par ailleurs de la base, pas de claims à
+  /// rafraîchir.
+  ///
+  /// L'appel est conservé parce qu'il ne coûte rien et qu'il redevient un
+  /// vrai prérequis le jour où l'app adopterait `linkWithCredential`, qui
+  /// conserve l'UID et donc un jeton en cache encore marqué anonyme.
+  Future<void> _refreshIdTokenAfterRegistration() async {
+    try {
+      await _firebaseAuth.currentUser?.getIdToken(true);
+    } catch (_) {
+      // Hors ligne ou Firebase indisponible : les endpoints critiques
+      // forceront de nouveau le rafraîchissement au prochain appel.
     }
   }
 

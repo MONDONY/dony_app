@@ -98,7 +98,6 @@ class AnnouncementRepository {
     String sortBy = 'date',
     String sortDir = 'asc',
     bool? urgent,
-    bool publicAccess = false,
   }) {
     return _remoteDatasource.searchAnnouncements(
       departureCity: departureCity,
@@ -120,7 +119,6 @@ class AnnouncementRepository {
       sortBy: sortBy,
       sortDir: sortDir,
       urgent: urgent,
-      publicAccess: publicAccess,
     );
   }
 

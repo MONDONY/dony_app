@@ -1,4 +1,5 @@
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -16,12 +17,17 @@ Future<String> resolveInitialLocation({
   LocalAuthService? localAuthService,
   HiveService? hiveService,
 }) async {
-  final auth = firebaseAuth ?? FirebaseAuth.instance;
+  final session = FirebaseSessionProbe(auth: firebaseAuth);
   final prefs = (hiveService ?? getIt<HiveService>()).userPrefs;
   final onboardingDone =
       prefs.get('onboarding_done', defaultValue: false) as bool;
 
-  if (auth.currentUser == null) {
+  // `hasRealSession`, et non « une session existe » : un visiteur porte une
+  // session anonyme dès son premier « Parcourir sans compte », et cette
+  // session survit aux relances. La tester par simple nullité ferait sauter
+  // l'onboarding à quiconque a un jour appuyé sur ce bouton, et enverrait sur
+  // /home un appareil sans aucun compte.
+  if (!session.hasRealSession) {
     return onboardingDone ? '/auth/method' : '/onboarding';
   }
 

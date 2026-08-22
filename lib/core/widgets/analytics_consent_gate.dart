@@ -24,10 +24,34 @@ import 'package:hive_flutter/hive_flutter.dart';
 ///   lancement d'app) : un consentement donné après coup resterait rattaché
 ///   à un `distinct_id` anonyme jusqu'au prochain redémarrage.
 /// - Logout → [AnalyticsService.reset]
+/// - Session invitée (Firebase anonyme, "Parcourir sans compte") → AUCUN des
+///   comportements ci-dessus. Un visiteur n'a pas de ligne côté backend
+///   (`/auth/me/analytics-consent` répondrait 404) et son UID Firebase
+///   anonyme ne doit jamais devenir un `distinct_id` PostHog : l'outil gère
+///   déjà son propre identifiant anonyme, l'identifier créerait un
+///   utilisateur identifié fantôme. Le consentement reste donc à sa valeur
+///   par défaut (non répondu) tant que la session est anonyme.
 class AnalyticsConsentGate extends StatefulWidget {
-  const AnalyticsConsentGate({required this.child, super.key});
+  const AnalyticsConsentGate({
+    required this.child,
+    this.firebaseAuth,
+    this.navigate,
+    super.key,
+  });
 
   final Widget child;
+
+  /// Overridable en test uniquement. En production, reste `null` et retombe
+  /// sur [FirebaseAuth.instance] (même pattern que `AuthBloc`/
+  /// `FirebaseSessionProbe`).
+  final FirebaseAuth? firebaseAuth;
+
+  /// Overridable en test uniquement. En production, reste `null` et retombe
+  /// sur `appRouter.go` (le routeur global de l'app, `lib/app/router.dart`).
+  /// Permet de verrouiller par un test direct qu'une session invitée ne
+  /// déclenche JAMAIS de navigation vers l'entonnoir de consentement/
+  /// inscription — le vrai risque produit de cette classe.
+  final void Function(String location)? navigate;
 
   @override
   State<AnalyticsConsentGate> createState() => _AnalyticsConsentGateState();
@@ -37,12 +61,16 @@ class _AnalyticsConsentGateState extends State<AnalyticsConsentGate> {
   StreamSubscription<User?>? _authSub;
   late final ValueListenable<Box> _consentListenable;
 
+  FirebaseAuth get _firebaseAuth =>
+      widget.firebaseAuth ?? FirebaseAuth.instance;
   AnalyticsService get _analytics => getIt<AnalyticsService>();
+  void Function(String location) get _navigate =>
+      widget.navigate ?? appRouter.go;
 
   @override
   void initState() {
     super.initState();
-    _authSub = FirebaseAuth.instance.authStateChanges().listen(_onAuthChanged);
+    _authSub = _firebaseAuth.authStateChanges().listen(_onAuthChanged);
 
     _consentListenable = getIt<HiveService>().userPrefs.listenable(
       keys: [HiveService.kAnalyticsConsent],
@@ -53,7 +81,7 @@ class _AnalyticsConsentGateState extends State<AnalyticsConsentGate> {
     // connecté au mount, le stream ne rejoue pas l'état courant.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      final user = FirebaseAuth.instance.currentUser;
+      final user = _firebaseAuth.currentUser;
       if (user != null) _onAuthChanged(user);
     });
   }
@@ -69,9 +97,14 @@ class _AnalyticsConsentGateState extends State<AnalyticsConsentGate> {
   /// `true`, peu importe le chemin (écran RGPD, sheet, réglages, auto-octroi
   /// hors RGPD). Pas d'effet sur un octroi `false` (déconnexion du tracking,
   /// rien à identifier).
+  ///
+  /// `!user.isAnonymous` : un visiteur ne doit jamais être identifié avec son
+  /// UID Firebase anonyme, même si son consentement venait à changer par un
+  /// autre chemin que [_onLogin] (qui ne le laisse de toute façon jamais
+  /// passer).
   void _onConsentChanged() {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null && _analytics.isEnabled) {
+    final user = _firebaseAuth.currentUser;
+    if (user != null && !user.isAnonymous && _analytics.isEnabled) {
       unawaited(_analytics.identify(user.uid));
     }
   }
@@ -90,6 +123,18 @@ class _AnalyticsConsentGateState extends State<AnalyticsConsentGate> {
   /// utilisateur réinstallé ayant déjà consenti côté backend voit
   /// `hasAnswered` redevenir `true` et n'est donc pas redemandé.
   Future<void> _onLogin(User user) async {
+    if (user.isAnonymous) {
+      // Session invitée ("Parcourir sans compte") : ni identify() (UID
+      // Firebase anonyme → utilisateur identifié fantôme dans PostHog, qui a
+      // déjà son propre identifiant anonyme), ni syncFromBackend() (appelle
+      // `/auth/me/analytics-consent`, un visiteur n'a pas de ligne backend et
+      // recevrait un 404). Le consentement reste à sa valeur par défaut (non
+      // répondu) : `AnalyticsService.isEnabled` reste `false` tant que rien
+      // n'a été configuré/répondu, donc aucun tracking nominatif ici. Un vrai
+      // login ultérieur (inscription) repasse par ce handler avec
+      // `isAnonymous == false` et retrouve le comportement normal.
+      return;
+    }
     unawaited(_analytics.identify(user.uid));
     await _analytics.syncFromBackend();
     if (!mounted) return;
@@ -106,7 +151,7 @@ class _AnalyticsConsentGateState extends State<AnalyticsConsentGate> {
 
     switch (action) {
       case AnalyticsConsentAction.askConsent:
-        appRouter.go('/auth/analytics-consent');
+        _navigate('/auth/analytics-consent');
       case AnalyticsConsentAction.autoGrantNonGdpr:
         await _analytics.setConsent(granted: true, source: 'auto_non_gdpr');
       case AnalyticsConsentAction.none:

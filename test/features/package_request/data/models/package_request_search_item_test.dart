@@ -179,6 +179,40 @@ void main() {
   });
 
   // ─── Champs de match (filtre « Pour mes trajets ») ─────────────────────────
+  group('PackageRequestSearchItem.grossPriceEur (brut pour un invité)', () {
+    test('grossPriceEur est lu quand le serveur le fournit', () {
+      final json = _baseJson()..['grossPriceEur'] = 60.0;
+
+      final item = PackageRequestSearchItem.fromJson(json);
+
+      expect(item.grossPriceEur, 60.0);
+    });
+
+    test('grossPriceEur absent : nul, aucune exception', () {
+      final json = _baseJson();
+
+      final item = PackageRequestSearchItem.fromJson(json);
+
+      expect(item.grossPriceEur, isNull);
+    });
+
+    test('parses an integer grossPriceEur as a double', () {
+      final json = _baseJson()..['grossPriceEur'] = 60;
+
+      final item = PackageRequestSearchItem.fromJson(json);
+
+      expect(item.grossPriceEur, 60.0);
+    });
+
+    test('grossPriceEur participates in equality (props)', () {
+      final avec = PackageRequestSearchItem.fromJson(
+        _baseJson()..['grossPriceEur'] = 60.0,
+      );
+      final sans = PackageRequestSearchItem.fromJson(_baseJson());
+      expect(avec, isNot(equals(sans)));
+    });
+  });
+
   group('matchingMyTrips', () {
     test('fromJson lit les trois champs de match', () {
       final item = PackageRequestSearchItem.fromJson({

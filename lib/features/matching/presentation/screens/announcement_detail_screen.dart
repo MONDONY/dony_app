@@ -399,9 +399,15 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                     label: a.pricingMode == 'MIXED'
                         ? 'Tarification'
                         : 'Prix par kg',
+                    // Garde sur hasKgPrice (valeur > 0), pas sur la seule
+                    // nullité de pricePerKg : en mode KG celui-ci n'est en
+                    // pratique jamais null (écran propriétaire, authentifié),
+                    // c'est bien 0 qui serait la valeur trompeuse à écarter.
                     value: a.pricingMode == 'MIXED'
                         ? 'Grille'
-                        : '${formatPriceIn(a.pricePerKg, a.currency)}/kg',
+                        : (a.hasKgPrice && a.pricePerKg != null)
+                        ? '${formatPriceIn(a.pricePerKg!, a.currency)}/kg'
+                        : 'Indisponible',
                     color: cs.primary,
                     cs: cs,
                     tt: tt,

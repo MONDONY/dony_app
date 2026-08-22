@@ -118,6 +118,16 @@ class AuthOAuthNewUser extends AuthState {
   List<Object?> get props => [email];
 }
 
+/// Session Firebase anonyme ouverte avec succès.
+///
+/// Émis uniquement après un choix explicite de navigation sans compte (CTA
+/// "Parcourir sans compte"), jamais au démarrage de l'application. Aucun
+/// profil backend n'existe pour cette session : la navigation se limite à
+/// l'accès public (recherche).
+class AuthGuestSessionReady extends AuthState {
+  const AuthGuestSessionReady();
+}
+
 /// Accès uniforme à l'utilisateur courant quel que soit l'état "connecté".
 ///
 /// IMPORTANT : tester `state is AuthAuthenticated` rate [AuthProfileUpdated],

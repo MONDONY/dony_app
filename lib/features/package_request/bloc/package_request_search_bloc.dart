@@ -27,7 +27,6 @@ class SearchFiltersChanged extends PackageRequestSearchEvent {
     this.radiusKm,
     this.urgent,
     this.matchingMyTrips,
-    this.publicAccess = false,
   });
   final String? departure;
   final String? arrival;
@@ -47,7 +46,6 @@ class SearchFiltersChanged extends PackageRequestSearchEvent {
   /// (`matchingMyTrips=true`) — jamais `false` envoyé explicitement, même
   /// convention que [urgent].
   final bool? matchingMyTrips;
-  final bool publicAccess;
   @override
   List<Object?> get props => [
     departure,
@@ -61,7 +59,6 @@ class SearchFiltersChanged extends PackageRequestSearchEvent {
     radiusKm,
     urgent,
     matchingMyTrips,
-    publicAccess,
   ];
 }
 
@@ -93,7 +90,6 @@ class PackageRequestSearchState extends Equatable {
     this.radiusKm,
     this.urgent,
     this.matchingMyTrips,
-    this.publicAccess = false,
   });
 
   final SearchStatus status;
@@ -112,7 +108,6 @@ class PackageRequestSearchState extends Equatable {
   final double? radiusKm;
   final bool? urgent;
   final bool? matchingMyTrips;
-  final bool publicAccess;
 
   bool get isNearMeActive => userLat != null && userLng != null;
 
@@ -133,7 +128,6 @@ class PackageRequestSearchState extends Equatable {
     double? radiusKm,
     bool? urgent,
     bool? matchingMyTrips,
-    bool? publicAccess,
   }) => PackageRequestSearchState(
     status: status ?? this.status,
     results: results ?? this.results,
@@ -151,7 +145,6 @@ class PackageRequestSearchState extends Equatable {
     radiusKm: radiusKm ?? this.radiusKm,
     urgent: urgent ?? this.urgent,
     matchingMyTrips: matchingMyTrips ?? this.matchingMyTrips,
-    publicAccess: publicAccess ?? this.publicAccess,
   );
 
   @override
@@ -172,7 +165,6 @@ class PackageRequestSearchState extends Equatable {
     radiusKm,
     urgent,
     matchingMyTrips,
-    publicAccess,
   ];
 }
 
@@ -206,7 +198,6 @@ class PackageRequestSearchBloc
         radiusKm: e.radiusKm,
         urgent: e.urgent,
         matchingMyTrips: e.matchingMyTrips,
-        publicAccess: e.publicAccess,
       ),
     );
     try {
@@ -222,7 +213,6 @@ class PackageRequestSearchBloc
         radiusKm: e.radiusKm,
         urgent: e.urgent,
         matchingMyTrips: e.matchingMyTrips,
-        publicAccess: e.publicAccess,
       );
       emit(
         state.copyWith(
@@ -281,7 +271,6 @@ class PackageRequestSearchBloc
         radiusKm: state.radiusKm,
         urgent: state.urgent,
         matchingMyTrips: state.matchingMyTrips,
-        publicAccess: state.publicAccess,
         page: next,
       );
       emit(
@@ -318,7 +307,6 @@ class PackageRequestSearchBloc
       radiusKm: state.radiusKm,
       urgent: state.urgent,
       matchingMyTrips: state.matchingMyTrips,
-      publicAccess: state.publicAccess,
     ),
     emit,
   );

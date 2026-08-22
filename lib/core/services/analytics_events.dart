@@ -9,6 +9,25 @@ abstract final class AnalyticsEvents {
   static const loginSuccess = 'login_success';
   static const loginFailed = 'login_failed';
 
+  /// Session Firebase anonyme ouverte avec succès depuis le CTA "Parcourir
+  /// sans compte". Mesure l'entrée de l'entonnoir invité → inscription.
+  static const guestSessionStarted = 'guest_session_started';
+
+  /// Échec de l'ouverture de la session anonyme (hors ligne, Firebase
+  /// indisponible). Propriété `reason` : code d'erreur Firebase le cas
+  /// échéant, `unknown` sinon.
+  static const guestSessionFailed = 'guest_session_failed';
+
+  /// Données posées en session visiteur (favoris, alertes) rattachées avec
+  /// succès au compte créé à l'inscription. Mesure la sortie de l'entonnoir
+  /// invité → inscription, c'est-à-dire la promesse tenue du mode visiteur.
+  static const guestDataClaimed = 'guest_data_claimed';
+
+  /// Échec du rattachement : le compte est bien créé, mais le visiteur perd
+  /// ses favoris. Propriété `reason` : code métier du backend
+  /// (`guest-claim-invalid-token`, `guest-claim-self`, …) ou `unknown`.
+  static const guestDataClaimFailed = 'guest_data_claim_failed';
+
   // KYC
   static const kycStarted = 'kyc_started';
   static const kycCompleted = 'kyc_completed';

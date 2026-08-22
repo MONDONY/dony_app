@@ -7,6 +7,7 @@ import 'package:dony/app/router.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
+import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/analytics_consent_gate.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
@@ -14,6 +15,7 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/bloc/local_auth_bloc.dart';
+import 'package:dony/features/auth/guest_access_guard.dart';
 import 'package:dony/features/connectivity/bloc/connectivity_cubit.dart';
 import 'package:dony/features/connectivity/presentation/widgets/connectivity_banner.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
@@ -80,7 +82,10 @@ class _DonyAppState extends State<DonyApp> {
       _navigateToRoute(route);
     });
     _authSub = FirebaseAuth.instance.authStateChanges().listen((user) {
-      if (user != null) {
+      // `!user.isAnonymous` : l'ouverture d'une session visiteur déclenche
+      // aussi cet événement, et un visiteur n'a pas de compte serveur où
+      // enregistrer un jeton FCM.
+      if (user != null && !user.isAnonymous) {
         getIt<NotificationService>().uploadCurrentToken();
       }
     });
@@ -245,8 +250,24 @@ class _DonyAppState extends State<DonyApp> {
                   lazy: false,
                   create: (_) {
                     final bloc = getIt<AuthBloc>();
-                    if (FirebaseAuth.instance.currentUser != null) {
+                    final probe = getIt<FirebaseSessionProbe>();
+                    // `hasRealSession` : un visiteur porte une session anonyme
+                    // sans compte serveur. `GET /auth/me` lui répondrait 404 à
+                    // chaque démarrage, pour rien.
+                    if (probe.hasRealSession) {
                       bloc.add(const AuthCheckRequested());
+                    }
+                    // Décision extraite et testée isolément
+                    // (`GuestAccessGuard.shouldLoadGuestFavorites`) plutôt
+                    // qu'un `else if` inline : c'est le seul endroit qui
+                    // décide si un visiteur qui rouvre l'app doit voir ses
+                    // favoris rechargés, un `!` inversé ici passerait
+                    // silencieusement au vert sans test dédié. Ce provider
+                    // n'a pas accès à `FavoriteIdsCubit` via `context`
+                    // (déclaré plus loin dans ce même `MultiBlocProvider`) :
+                    // on passe par `getIt`, comme pour `AuthBloc` lui-même.
+                    if (GuestAccessGuard.shouldLoadGuestFavorites(probe)) {
+                      getIt<FavoriteIdsCubit>().load();
                     }
                     return bloc;
                   },
@@ -303,8 +324,12 @@ class _DonyAppState extends State<DonyApp> {
                   // l'écran affiche son état d'erreur avec réessai.
                   if (!_startupAuthResolved && state is! AuthLoading) {
                     _startupAuthResolved = true;
+                    // Un visiteur reste légitimement en AuthInitial : sa
+                    // session anonyme n'a pas de compte serveur, et le
+                    // renvoyer sur /auth/method interdirait la navigation
+                    // publique que le mode visiteur est censé ouvrir.
                     if (state is AuthInitial &&
-                        FirebaseAuth.instance.currentUser != null) {
+                        getIt<FirebaseSessionProbe>().hasRealSession) {
                       appRouter.go('/auth/method');
                       return;
                     }
@@ -346,6 +371,16 @@ class _DonyAppState extends State<DonyApp> {
                     context.read<ActiveRoleCubit>().syncWithRoles(
                       state.user.roles,
                     );
+                  } else if (GuestAccessGuard.isFreshGuestSession(state)) {
+                    // Session anonyme fraîchement ouverte ("Parcourir sans
+                    // compte") : les favoris sont le seul contenu qu'un
+                    // visiteur peut conserver, autant les charger tout de
+                    // suite (idempotent, erreurs avalées silencieusement).
+                    // Prédicat extrait et testé isolément
+                    // (`GuestAccessGuard.isFreshGuestSession`) : un mauvais
+                    // état dans cette chaîne de `else if` ne doit pas pouvoir
+                    // passer inaperçu.
+                    context.read<FavoriteIdsCubit>().load();
                   }
                 },
                 child: AnnotatedRegion<SystemUiOverlayStyle>(

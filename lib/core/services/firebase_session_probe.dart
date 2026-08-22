@@ -11,8 +11,33 @@ import 'package:firebase_auth/firebase_auth.dart';
 /// redirections d'auth ; passer par GetIt (plutôt que l'appel statique
 /// direct) permet aux écrans qui en dépendent de rester testables sans
 /// initialiser Firebase dans les widget tests.
+///
+/// Source unique du statut invité dans l'application. Le statut vient du SDK
+/// Firebase, jamais d'un état applicatif : après l'inscription, l'utilisateur
+/// change d'UID et de provider, et ce probe suit automatiquement.
+///
+/// Ne pas confondre avec `AuthBloc.state.currentUser`, qui répond à une autre
+/// question : « ai-je un compte côté serveur ? ». Un invité peut avoir une
+/// session Firebase (anonyme) sans aucun compte serveur.
 class FirebaseSessionProbe {
-  const FirebaseSessionProbe();
+  const FirebaseSessionProbe({FirebaseAuth? auth}) : _auth = auth;
 
-  bool get hasSession => FirebaseAuth.instance.currentUser != null;
+  final FirebaseAuth? _auth;
+
+  FirebaseAuth get _instance => _auth ?? FirebaseAuth.instance;
+
+  /// Une session Firebase existe, anonyme comprise.
+  bool get hasSession => _instance.currentUser != null;
+
+  /// La session courante est anonyme.
+  bool get isAnonymous => _instance.currentUser?.isAnonymous ?? false;
+
+  /// Une session existe et appartient à un utilisateur réel.
+  ///
+  /// C'est ce prédicat qui remplace les anciens `currentUser != null` dont
+  /// l'intention était « un vrai utilisateur est connecté ».
+  bool get hasRealSession {
+    final user = _instance.currentUser;
+    return user != null && !user.isAnonymous;
+  }
 }

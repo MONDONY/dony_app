@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
@@ -27,6 +29,8 @@ class MockLocalAuthService extends Mock implements LocalAuthService {}
 class MockFirebaseAuth extends Mock implements FirebaseAuth {}
 
 class MockUser extends Mock implements User {}
+
+class MockAnalyticsService extends Mock implements AnalyticsService {}
 
 class MockUserCredential extends Mock implements UserCredential {}
 
@@ -142,9 +146,28 @@ void main() {
     );
 
     blocTest<AuthBloc, AuthState>(
+      'session anonyme → émet AuthInitial sans appeler GET /auth/me',
+      build: () {
+        // Un visiteur a bien un `currentUser`, mais aucun compte serveur :
+        // `/auth/me` lui répondrait 404 à chaque démarrage. Seule l'absence
+        // de session ne suffit plus à s'en garder.
+        final mockUser = MockUser();
+        when(() => mockUser.isAnonymous).thenReturn(true);
+        when(() => mockFirebaseAuth.currentUser).thenReturn(mockUser);
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const AuthCheckRequested()),
+      expect: () => [isA<AuthInitial>()],
+      verify: (bloc) {
+        verifyNever(() => mockRepo.getProfile());
+      },
+    );
+
+    blocTest<AuthBloc, AuthState>(
       'utilisateur Firebase connecté + profil backend OK → émet AuthAuthenticated',
       build: () {
         final mockUser = MockUser();
+        when(() => mockUser.isAnonymous).thenReturn(false);
         when(() => mockFirebaseAuth.currentUser).thenReturn(mockUser);
         when(() => mockUser.phoneNumber).thenReturn('+33612345678');
         when(() => mockRepo.getProfile()).thenAnswer((_) async => testUser);
@@ -161,6 +184,7 @@ void main() {
       'utilisateur Firebase connecté + backend 404 → émet AuthInitial',
       build: () {
         final mockUser = MockUser();
+        when(() => mockUser.isAnonymous).thenReturn(false);
         when(() => mockFirebaseAuth.currentUser).thenReturn(mockUser);
         when(() => mockUser.phoneNumber).thenReturn('+33612345678');
         when(() => mockRepo.getProfile()).thenThrow(
@@ -182,6 +206,7 @@ void main() {
       'utilisateur Firebase connecté + erreur réseau → émet AuthError',
       build: () {
         final mockUser = MockUser();
+        when(() => mockUser.isAnonymous).thenReturn(false);
         when(() => mockFirebaseAuth.currentUser).thenReturn(mockUser);
         when(() => mockUser.phoneNumber).thenReturn('+33612345678');
         when(() => mockRepo.getProfile()).thenThrow(
@@ -203,6 +228,7 @@ void main() {
       '401 sur le check initial → AuthError SANS signOut (peut être transitoire, cold start backend)',
       build: () {
         final mockUser = MockUser();
+        when(() => mockUser.isAnonymous).thenReturn(false);
         when(() => mockFirebaseAuth.currentUser).thenReturn(mockUser);
         when(() => mockUser.phoneNumber).thenReturn('+33612345678');
         when(() => mockRepo.getProfile()).thenThrow(
@@ -227,6 +253,7 @@ void main() {
       '403 sur le check initial → AuthError SANS signOut (peut être transitoire, cold start backend)',
       build: () {
         final mockUser = MockUser();
+        when(() => mockUser.isAnonymous).thenReturn(false);
         when(() => mockFirebaseAuth.currentUser).thenReturn(mockUser);
         when(() => mockUser.phoneNumber).thenReturn('+33612345678');
         when(() => mockRepo.getProfile()).thenThrow(
@@ -655,6 +682,7 @@ void main() {
       'exception non-Dio → émet [Loading, AuthInitial]',
       build: () {
         final mockUser = MockUser();
+        when(() => mockUser.isAnonymous).thenReturn(false);
         when(() => mockFirebaseAuth.currentUser).thenReturn(mockUser);
         when(() => mockUser.phoneNumber).thenReturn('+33699999999');
         when(() => mockRepo.getProfile()).thenThrow(Exception('timeout'));
@@ -2006,6 +2034,727 @@ void main() {
       },
       act: (b) => b.add(const AuthAvatarUploadRequested('/tmp/a.jpg')),
       expect: () => [isA<AuthLoading>(), isA<AuthError>()],
+    );
+  });
+
+  // ─── Reprise des données du visiteur à l'inscription ─────────────────────────
+  //
+  // Le parcours téléphone passe par un custom token : l'UID du visiteur n'est
+  // jamais conservé. Sans réclamation explicite, les favoris posés en mode
+  // visiteur resteraient sur un compte que plus personne n'atteindrait — c'est
+  // toute la promesse du mode visiteur qui tombe.
+
+  group('Reprise des données du visiteur', () {
+    late MockUser anonUser;
+    late MockUser signedInUser;
+    late bool switched;
+
+    /// Simule la bascule réelle : `currentUser` renvoie le visiteur AVANT
+    /// `signInWithCustomToken`, puis le compte réel APRÈS. Un simulacre qui
+    /// renverrait le visiteur des deux côtés ferait passer le test du
+    /// rafraîchissement pour la mauvaise raison : il interrogerait encore le
+    /// visiteur, jamais le compte neuf.
+    void stubGuestSession() {
+      anonUser = MockUser();
+      signedInUser = MockUser();
+      switched = false;
+      when(() => anonUser.isAnonymous).thenReturn(true);
+      when(() => anonUser.getIdToken()).thenAnswer((_) async => 'token-anon');
+      when(
+        () => anonUser.getIdToken(true),
+      ).thenAnswer((_) async => 'token-anon-frais');
+      when(() => signedInUser.isAnonymous).thenReturn(false);
+      when(
+        () => signedInUser.getIdToken(),
+      ).thenAnswer((_) async => 'token-compte');
+      when(
+        () => signedInUser.getIdToken(true),
+      ).thenAnswer((_) async => 'token-frais');
+      when(
+        () => mockFirebaseAuth.currentUser,
+      ).thenAnswer((_) => switched ? signedInUser : anonUser);
+    }
+
+    /// Bascule de session : bascule le simulacre de `currentUser`.
+    void stubSignIn() {
+      when(() => mockFirebaseAuth.signInWithCustomToken(any())).thenAnswer((
+        _,
+      ) async {
+        switched = true;
+        return MockUserCredential();
+      });
+      when(() => mockFirebaseAuth.signInWithCredential(any())).thenAnswer((
+        _,
+      ) async {
+        switched = true;
+        return MockUserCredential();
+      });
+    }
+
+    void stubProfileNotFound() {
+      when(() => mockRepo.getProfile()).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(path: '/auth/me'),
+          response: Response(
+            requestOptions: RequestOptions(path: '/auth/me'),
+            statusCode: 404,
+          ),
+        ),
+      );
+    }
+
+    /// OTP validé côté backend, numéro inconnu (404) → flux d'inscription.
+    void stubPhoneSignInForNewAccount() {
+      when(
+        () => mockRepo.verifyPhoneOtp(any(), any()),
+      ).thenAnswer((_) async => 'custom_token_fake');
+      stubSignIn();
+      stubProfileNotFound();
+    }
+
+    void stubRegister() {
+      when(
+        () => mockRepo.register(phoneNumber: any(named: 'phoneNumber')),
+      ).thenAnswer((_) async => testUser);
+      when(() => mockLocalAuth.clearPin()).thenAnswer((_) async {});
+    }
+
+    /// Chaîne réelle : OTP vérifié (404 → nouveau compte) puis inscription.
+    Future<void> runSignupFlow(AuthBloc bloc) async {
+      bloc.add(
+        const AuthPhoneVerified(verificationId: 'ver-abc', smsCode: '123456'),
+      );
+      await bloc.stream.firstWhere((s) => s is AuthOtpVerified);
+      bloc.add(const AuthRegisterRequested());
+    }
+
+    blocTest<AuthBloc, AuthState>(
+      'capture le jeton anonyme AVANT signInWithCustomToken',
+      build: () {
+        // Après la bascule, `currentUser` est le nouveau compte : c'est le
+        // seul instant où le jeton du visiteur est encore lisible.
+        stubGuestSession();
+        stubPhoneSignInForNewAccount();
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(
+        const AuthPhoneVerified(verificationId: 'ver-abc', smsCode: '123456'),
+      ),
+      expect: () => [isA<AuthLoading>(), isA<AuthOtpVerified>()],
+      verify: (_) {
+        verifyInOrder([
+          () => anonUser.getIdToken(),
+          () => mockFirebaseAuth.signInWithCustomToken('custom_token_fake'),
+        ]);
+      },
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'inscription depuis une session visiteur : réclame les favoris avec le jeton capturé',
+      build: () {
+        stubGuestSession();
+        stubPhoneSignInForNewAccount();
+        stubRegister();
+        when(() => mockRepo.claimGuestData(any())).thenAnswer((_) async {});
+        return buildBloc();
+      },
+      act: runSignupFlow,
+      wait: const Duration(milliseconds: 50),
+      expect: () => [
+        isA<AuthLoading>(),
+        isA<AuthOtpVerified>(),
+        isA<AuthLoading>(),
+        isA<AuthNewAccountAuthenticated>(),
+      ],
+      verify: (_) {
+        verify(() => mockRepo.claimGuestData('token-anon')).called(1);
+      },
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'réclame APRÈS la création du compte serveur (sinon 404 user-not-found)',
+      build: () {
+        stubGuestSession();
+        stubPhoneSignInForNewAccount();
+        stubRegister();
+        when(() => mockRepo.claimGuestData(any())).thenAnswer((_) async {});
+        return buildBloc();
+      },
+      act: runSignupFlow,
+      wait: const Duration(milliseconds: 50),
+      verify: (_) {
+        verifyInOrder([
+          () => mockRepo.register(phoneNumber: any(named: 'phoneNumber')),
+          () => mockRepo.claimGuestData('token-anon'),
+        ]);
+      },
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'échec de réclamation : l\'inscription réussit quand même',
+      build: () {
+        // Perdre ses favoris est regrettable ; être bloqué à la porte de son
+        // compte tout neuf serait bien pire.
+        stubGuestSession();
+        stubPhoneSignInForNewAccount();
+        stubRegister();
+        when(() => mockRepo.claimGuestData(any())).thenThrow(Exception('boom'));
+        return buildBloc();
+      },
+      act: runSignupFlow,
+      wait: const Duration(milliseconds: 50),
+      expect: () => [
+        isA<AuthLoading>(),
+        isA<AuthOtpVerified>(),
+        isA<AuthLoading>(),
+        isA<AuthNewAccountAuthenticated>(),
+      ],
+      verify: (_) {
+        verify(() => mockRepo.claimGuestData('token-anon')).called(1);
+        // L'inscription va au bout malgré l'échec.
+        verify(() => mockLocalAuth.clearPin()).called(1);
+      },
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'inscription sans session visiteur préalable : aucune réclamation',
+      build: () {
+        // La grande majorité des inscriptions ne viennent pas d'un visiteur.
+        when(() => mockFirebaseAuth.currentUser).thenReturn(null);
+        stubPhoneSignInForNewAccount();
+        stubRegister();
+        return buildBloc();
+      },
+      act: runSignupFlow,
+      wait: const Duration(milliseconds: 50),
+      expect: () => [
+        isA<AuthLoading>(),
+        isA<AuthOtpVerified>(),
+        isA<AuthLoading>(),
+        isA<AuthNewAccountAuthenticated>(),
+      ],
+      verify: (_) {
+        verifyNever(() => mockRepo.claimGuestData(any()));
+      },
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'session Firebase non anonyme : aucune réclamation',
+      build: () {
+        final existingUser = MockUser();
+        when(() => existingUser.isAnonymous).thenReturn(false);
+        when(
+          () => existingUser.getIdToken(true),
+        ).thenAnswer((_) async => 'token-frais');
+        when(() => mockFirebaseAuth.currentUser).thenReturn(existingUser);
+        stubPhoneSignInForNewAccount();
+        stubRegister();
+        return buildBloc();
+      },
+      act: runSignupFlow,
+      wait: const Duration(milliseconds: 50),
+      verify: (_) {
+        verifyNever(() => mockRepo.claimGuestData(any()));
+      },
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'le jeton capturé n\'est réclamé qu\'une fois',
+      build: () {
+        stubGuestSession();
+        stubPhoneSignInForNewAccount();
+        stubRegister();
+        when(() => mockRepo.claimGuestData(any())).thenAnswer((_) async {});
+        return buildBloc();
+      },
+      act: (bloc) async {
+        await runSignupFlow(bloc);
+        await bloc.stream.firstWhere((s) => s is AuthNewAccountAuthenticated);
+        // Une seconde inscription (retry utilisateur) ne doit pas rejouer une
+        // réclamation avec un jeton déjà consommé.
+        bloc.add(const AuthRegisterRequested());
+      },
+      wait: const Duration(milliseconds: 50),
+      verify: (_) {
+        verify(() => mockRepo.claimGuestData('token-anon')).called(1);
+      },
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'force le rafraîchissement du jeton du COMPTE NEUF après inscription',
+      build: () {
+        // Défense en profondeur : le rafraîchissement doit porter sur le
+        // compte créé, jamais sur le visiteur qu'on vient de quitter.
+        stubGuestSession();
+        stubPhoneSignInForNewAccount();
+        stubRegister();
+        when(() => mockRepo.claimGuestData(any())).thenAnswer((_) async {});
+        return buildBloc();
+      },
+      act: runSignupFlow,
+      wait: const Duration(milliseconds: 50),
+      verify: (_) {
+        verify(() => signedInUser.getIdToken(true)).called(1);
+        verifyNever(() => anonUser.getIdToken(true));
+      },
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'inscription par email : réclame aussi les favoris du visiteur',
+      build: () {
+        stubGuestSession();
+        when(
+          () => mockRepo.verifyEmailOtp(any(), any()),
+        ).thenAnswer((_) async => 'custom_token_email');
+        stubSignIn();
+        stubProfileNotFound();
+        when(
+          () => mockRepo.registerWithEmail(email: any(named: 'email')),
+        ).thenAnswer((_) async => testUser);
+        when(() => mockLocalAuth.clearPin()).thenAnswer((_) async {});
+        when(() => mockRepo.claimGuestData(any())).thenAnswer((_) async {});
+        return buildBloc();
+      },
+      act: (bloc) async {
+        bloc.add(
+          const AuthEmailOtpVerifyRequested(email: 'a@b.com', code: '123456'),
+        );
+        await bloc.stream.firstWhere((s) => s is AuthEmailOtpVerified);
+        bloc.add(const AuthRegisterWithEmailRequested(email: 'a@b.com'));
+      },
+      wait: const Duration(milliseconds: 50),
+      verify: (_) {
+        verify(() => mockRepo.claimGuestData('token-anon')).called(1);
+      },
+    );
+
+    // ── Le visiteur qui se connecte à un compte EXISTANT ────────────────────
+    //
+    // C'est la sortie normale du mode visiteur pour quelqu'un qui avait déjà
+    // un compte : il parcourt sans se connecter, met des trajets en favori,
+    // puis se connecte. Sans réclamation ici, ses favoris sont perdus.
+
+    blocTest<AuthBloc, AuthState>(
+      'connexion à un compte existant (téléphone) : réclame les favoris',
+      build: () {
+        stubGuestSession();
+        when(
+          () => mockRepo.verifyPhoneOtp(any(), any()),
+        ).thenAnswer((_) async => 'custom_token_fake');
+        stubSignIn();
+        when(() => mockRepo.getProfile()).thenAnswer((_) async => testUser);
+        when(() => mockRepo.claimGuestData(any())).thenAnswer((_) async {});
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(
+        const AuthPhoneVerified(verificationId: 'ver-abc', smsCode: '123456'),
+      ),
+      wait: const Duration(milliseconds: 50),
+      expect: () => [isA<AuthLoading>(), isA<AuthAuthenticated>()],
+      verify: (_) {
+        verify(() => mockRepo.claimGuestData('token-anon')).called(1);
+      },
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'connexion à un compte existant (email) : réclame les favoris',
+      build: () {
+        stubGuestSession();
+        when(
+          () => mockRepo.verifyEmailOtp(any(), any()),
+        ).thenAnswer((_) async => 'custom_token_email');
+        stubSignIn();
+        when(() => mockRepo.getProfile()).thenAnswer((_) async => testUser);
+        when(() => mockRepo.claimGuestData(any())).thenAnswer((_) async {});
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(
+        const AuthEmailOtpVerifyRequested(email: 'a@b.com', code: '123456'),
+      ),
+      wait: const Duration(milliseconds: 50),
+      expect: () => [isA<AuthLoading>(), isA<AuthAuthenticated>()],
+      verify: (_) {
+        verify(() => mockRepo.claimGuestData('token-anon')).called(1);
+      },
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'connexion à un compte existant (Google) : réclame les favoris',
+      build: () {
+        stubGuestSession();
+        stubSignIn();
+        final googleSignIn = MockGoogleSignIn();
+        final googleAccount = MockGoogleSignInAccount();
+        final googleAuth = MockGoogleSignInAuthentication();
+        when(
+          () => googleSignIn.signIn(),
+        ).thenAnswer((_) async => googleAccount);
+        when(
+          () => googleAccount.authentication,
+        ).thenAnswer((_) async => googleAuth);
+        when(() => googleAuth.accessToken).thenReturn('access');
+        when(() => googleAuth.idToken).thenReturn('id');
+        when(() => signedInUser.email).thenReturn('user@gmail.com');
+        when(() => mockRepo.getProfile()).thenAnswer((_) async => testUser);
+        when(() => mockRepo.claimGuestData(any())).thenAnswer((_) async {});
+        return AuthBloc(
+          mockRepo,
+          mockLocalAuth,
+          firebaseAuth: mockFirebaseAuth,
+          googleSignIn: googleSignIn,
+        );
+      },
+      act: (bloc) => bloc.add(const AuthGoogleSignInRequested()),
+      wait: const Duration(milliseconds: 50),
+      expect: () => [isA<AuthLoading>(), isA<AuthAuthenticated>()],
+      verify: (_) {
+        verify(() => mockRepo.claimGuestData('token-anon')).called(1);
+      },
+    );
+
+    // ── Capture sur les parcours OAuth ──────────────────────────────────────
+
+    blocTest<AuthBloc, AuthState>(
+      'capture le jeton anonyme AVANT signInWithCredential (Google)',
+      build: () {
+        stubGuestSession();
+        stubSignIn();
+        final googleSignIn = MockGoogleSignIn();
+        final googleAccount = MockGoogleSignInAccount();
+        final googleAuth = MockGoogleSignInAuthentication();
+        when(
+          () => googleSignIn.signIn(),
+        ).thenAnswer((_) async => googleAccount);
+        when(
+          () => googleAccount.authentication,
+        ).thenAnswer((_) async => googleAuth);
+        when(() => googleAuth.accessToken).thenReturn('access');
+        when(() => googleAuth.idToken).thenReturn('id');
+        when(() => signedInUser.email).thenReturn('user@gmail.com');
+        stubProfileNotFound();
+        return AuthBloc(
+          mockRepo,
+          mockLocalAuth,
+          firebaseAuth: mockFirebaseAuth,
+          googleSignIn: googleSignIn,
+        );
+      },
+      act: (bloc) => bloc.add(const AuthGoogleSignInRequested()),
+      wait: const Duration(milliseconds: 50),
+      verify: (_) {
+        verifyInOrder([
+          () => anonUser.getIdToken(),
+          () => mockFirebaseAuth.signInWithCredential(any()),
+        ]);
+      },
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'capture le jeton anonyme AVANT signInWithCredential (Apple)',
+      build: () {
+        stubGuestSession();
+        stubSignIn();
+        when(() => signedInUser.email).thenReturn('user@icloud.com');
+        stubProfileNotFound();
+        return AuthBloc(
+          mockRepo,
+          mockLocalAuth,
+          firebaseAuth: mockFirebaseAuth,
+          appleSignIn: (_) async => FakeAppleCredential(),
+        );
+      },
+      act: (bloc) => bloc.add(const AuthAppleSignInRequested()),
+      wait: const Duration(milliseconds: 50),
+      verify: (_) {
+        verifyInOrder([
+          () => anonUser.getIdToken(),
+          () => mockFirebaseAuth.signInWithCredential(any()),
+        ]);
+      },
+    );
+
+    // ── Le jeton ne survit pas à la fin de session ──────────────────────────
+
+    blocTest<AuthBloc, AuthState>(
+      'déconnexion : le jeton invité capturé est oublié',
+      build: () {
+        // Le garder l'exposerait à une réclamation par le compte suivant.
+        stubGuestSession();
+        stubPhoneSignInForNewAccount();
+        stubRegister();
+        when(() => mockFirebaseAuth.signOut()).thenAnswer((_) async {});
+        when(() => mockRepo.claimGuestData(any())).thenAnswer((_) async {});
+        return buildBloc();
+      },
+      act: (bloc) async {
+        bloc.add(
+          const AuthPhoneVerified(verificationId: 'ver-abc', smsCode: '123456'),
+        );
+        await bloc.stream.firstWhere((s) => s is AuthOtpVerified);
+        bloc.add(const AuthLogoutRequested());
+        await bloc.stream.firstWhere((s) => s is AuthInitial);
+        bloc.add(const AuthRegisterRequested());
+      },
+      wait: const Duration(milliseconds: 50),
+      verify: (_) {
+        verifyNever(() => mockRepo.claimGuestData(any()));
+      },
+    );
+  });
+
+  // ─── Reprise des données du visiteur — analytics ─────────────────────────────
+
+  group('Reprise des données du visiteur — analytics', () {
+    late MockAnalyticsService mockAnalytics;
+    late MockUser anonUser;
+
+    setUp(() {
+      mockAnalytics = MockAnalyticsService();
+      when(
+        () =>
+            mockAnalytics.logEvent(any(), properties: any(named: 'properties')),
+      ).thenAnswer((_) async {});
+
+      anonUser = MockUser();
+      when(() => anonUser.isAnonymous).thenReturn(true);
+      when(() => anonUser.getIdToken()).thenAnswer((_) async => 'token-anon');
+      when(
+        () => anonUser.getIdToken(true),
+      ).thenAnswer((_) async => 'token-frais');
+      when(() => mockFirebaseAuth.currentUser).thenReturn(anonUser);
+
+      when(
+        () => mockRepo.verifyPhoneOtp(any(), any()),
+      ).thenAnswer((_) async => 'custom_token_fake');
+      when(
+        () => mockFirebaseAuth.signInWithCustomToken('custom_token_fake'),
+      ).thenAnswer((_) async => MockUserCredential());
+      when(() => mockRepo.getProfile()).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(path: '/auth/me'),
+          response: Response(
+            requestOptions: RequestOptions(path: '/auth/me'),
+            statusCode: 404,
+          ),
+        ),
+      );
+      when(
+        () => mockRepo.register(phoneNumber: any(named: 'phoneNumber')),
+      ).thenAnswer((_) async => testUser);
+      when(() => mockLocalAuth.clearPin()).thenAnswer((_) async {});
+    });
+
+    AuthBloc buildBlocWithAnalytics() => AuthBloc(
+      mockRepo,
+      mockLocalAuth,
+      firebaseAuth: mockFirebaseAuth,
+      analytics: mockAnalytics,
+    );
+
+    Future<void> runSignupFlow(AuthBloc bloc) async {
+      bloc.add(
+        const AuthPhoneVerified(verificationId: 'ver-abc', smsCode: '123456'),
+      );
+      await bloc.stream.firstWhere((s) => s is AuthOtpVerified);
+      bloc.add(const AuthRegisterRequested());
+    }
+
+    blocTest<AuthBloc, AuthState>(
+      'succès → logEvent(guest_data_claimed)',
+      build: () {
+        when(() => mockRepo.claimGuestData(any())).thenAnswer((_) async {});
+        return buildBlocWithAnalytics();
+      },
+      act: runSignupFlow,
+      wait: const Duration(milliseconds: 50),
+      verify: (_) {
+        verify(
+          () => mockAnalytics.logEvent(AnalyticsEvents.guestDataClaimed),
+        ).called(1);
+        verifyNever(
+          () => mockAnalytics.logEvent(
+            AnalyticsEvents.guestDataClaimFailed,
+            properties: any(named: 'properties'),
+          ),
+        );
+      },
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'échec métier → logEvent(guest_data_claim_failed) avec le code backend',
+      build: () {
+        when(() => mockRepo.claimGuestData(any())).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/auth/guest/claim'),
+            response: Response(
+              requestOptions: RequestOptions(path: '/auth/guest/claim'),
+              statusCode: 401,
+            ),
+            error: const UnauthorizedException(
+              'Jeton invité invalide',
+              'guest-claim-invalid-token',
+            ),
+          ),
+        );
+        return buildBlocWithAnalytics();
+      },
+      act: runSignupFlow,
+      wait: const Duration(milliseconds: 50),
+      verify: (_) {
+        verify(
+          () => mockAnalytics.logEvent(
+            AnalyticsEvents.guestDataClaimFailed,
+            properties: {'reason': 'guest-claim-invalid-token'},
+          ),
+        ).called(1);
+        verifyNever(
+          () => mockAnalytics.logEvent(AnalyticsEvents.guestDataClaimed),
+        );
+      },
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'échec sans code métier → reason: unknown',
+      build: () {
+        when(
+          () => mockRepo.claimGuestData(any()),
+        ).thenThrow(Exception('erreur inattendue'));
+        return buildBlocWithAnalytics();
+      },
+      act: runSignupFlow,
+      wait: const Duration(milliseconds: 50),
+      verify: (_) {
+        verify(
+          () => mockAnalytics.logEvent(
+            AnalyticsEvents.guestDataClaimFailed,
+            properties: {'reason': 'unknown'},
+          ),
+        ).called(1);
+      },
+    );
+  });
+
+  // ─── AuthGuestSessionRequested ────────────────────────────────────────────────
+
+  group('AuthGuestSessionRequested', () {
+    blocTest<AuthBloc, AuthState>(
+      'ouvre une session anonyme → émet [Loading, AuthGuestSessionReady]',
+      build: () {
+        when(
+          () => mockFirebaseAuth.signInAnonymously(),
+        ).thenAnswer((_) async => MockUserCredential());
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const AuthGuestSessionRequested()),
+      expect: () => [isA<AuthLoading>(), isA<AuthGuestSessionReady>()],
+      verify: (_) {
+        verify(() => mockFirebaseAuth.signInAnonymously()).called(1);
+      },
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'échec de signInAnonymously (hors ligne) → émet [Loading, AuthError], sans navigation optimiste',
+      build: () {
+        when(
+          () => mockFirebaseAuth.signInAnonymously(),
+        ).thenThrow(FirebaseAuthException(code: 'network-request-failed'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const AuthGuestSessionRequested()),
+      expect: () => [isA<AuthLoading>(), isA<AuthError>()],
+      verify: (_) {
+        verify(() => mockFirebaseAuth.signInAnonymously()).called(1);
+      },
+    );
+  });
+
+  // ─── AuthGuestSessionRequested — analytics (correction ronde 1) ────────────
+  //
+  // Sans cet event, l'entonnoir invité → inscription n'est pas mesurable
+  // (cf. CLAUDE.md « Analytics — PostHog (OBLIGATOIRE) »).
+
+  group('AuthGuestSessionRequested — analytics', () {
+    late MockAnalyticsService mockAnalytics;
+
+    setUp(() {
+      mockAnalytics = MockAnalyticsService();
+      when(
+        () =>
+            mockAnalytics.logEvent(any(), properties: any(named: 'properties')),
+      ).thenAnswer((_) async {});
+    });
+
+    AuthBloc buildBlocWithAnalytics() => AuthBloc(
+      mockRepo,
+      mockLocalAuth,
+      firebaseAuth: mockFirebaseAuth,
+      analytics: mockAnalytics,
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'succès → logEvent(guest_session_started)',
+      build: () {
+        when(
+          () => mockFirebaseAuth.signInAnonymously(),
+        ).thenAnswer((_) async => MockUserCredential());
+        return buildBlocWithAnalytics();
+      },
+      act: (bloc) => bloc.add(const AuthGuestSessionRequested()),
+      wait: const Duration(milliseconds: 50),
+      expect: () => [isA<AuthLoading>(), isA<AuthGuestSessionReady>()],
+      verify: (_) {
+        verify(
+          () => mockAnalytics.logEvent(AnalyticsEvents.guestSessionStarted),
+        ).called(1);
+        verifyNever(
+          () => mockAnalytics.logEvent(AnalyticsEvents.guestSessionFailed),
+        );
+      },
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'échec (code Firebase connu) → logEvent(guest_session_failed, reason: code)',
+      build: () {
+        when(
+          () => mockFirebaseAuth.signInAnonymously(),
+        ).thenThrow(FirebaseAuthException(code: 'network-request-failed'));
+        return buildBlocWithAnalytics();
+      },
+      act: (bloc) => bloc.add(const AuthGuestSessionRequested()),
+      wait: const Duration(milliseconds: 50),
+      expect: () => [isA<AuthLoading>(), isA<AuthError>()],
+      verify: (_) {
+        verify(
+          () => mockAnalytics.logEvent(
+            AnalyticsEvents.guestSessionFailed,
+            properties: {'reason': 'network-request-failed'},
+          ),
+        ).called(1);
+        verifyNever(
+          () => mockAnalytics.logEvent(AnalyticsEvents.guestSessionStarted),
+        );
+      },
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'échec (exception générique, pas de code Firebase) → reason: unknown',
+      build: () {
+        when(
+          () => mockFirebaseAuth.signInAnonymously(),
+        ).thenThrow(Exception('erreur inattendue'));
+        return buildBlocWithAnalytics();
+      },
+      act: (bloc) => bloc.add(const AuthGuestSessionRequested()),
+      wait: const Duration(milliseconds: 50),
+      expect: () => [isA<AuthLoading>(), isA<AuthError>()],
+      verify: (_) {
+        verify(
+          () => mockAnalytics.logEvent(
+            AnalyticsEvents.guestSessionFailed,
+            properties: {'reason': 'unknown'},
+          ),
+        ).called(1);
+      },
     );
   });
 }
