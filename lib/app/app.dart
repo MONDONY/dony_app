@@ -15,6 +15,7 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/bloc/local_auth_bloc.dart';
+import 'package:dony/features/auth/guest_access_guard.dart';
 import 'package:dony/features/connectivity/bloc/connectivity_cubit.dart';
 import 'package:dony/features/connectivity/presentation/widgets/connectivity_banner.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
@@ -255,16 +256,17 @@ class _DonyAppState extends State<DonyApp> {
                     // chaque démarrage, pour rien.
                     if (probe.hasRealSession) {
                       bloc.add(const AuthCheckRequested());
-                    } else if (probe.hasSession) {
-                      // Session anonyme déjà ouverte avant ce démarrage
-                      // (visiteur qui rouvre l'app) : elle ne déclenche ni
-                      // `AuthCheckRequested` ni aucune transition d'AuthBloc
-                      // (il reste en `AuthInitial`), donc rien d'autre ne
-                      // charge les favoris déjà posés par ce visiteur. Ce
-                      // provider n'a pas accès à `FavoriteIdsCubit` via
-                      // `context` (déclaré plus loin dans ce même
-                      // `MultiBlocProvider`) : on passe par `getIt`, comme
-                      // pour `AuthBloc` lui-même.
+                    }
+                    // Décision extraite et testée isolément
+                    // (`GuestAccessGuard.shouldLoadGuestFavorites`) plutôt
+                    // qu'un `else if` inline : c'est le seul endroit qui
+                    // décide si un visiteur qui rouvre l'app doit voir ses
+                    // favoris rechargés, un `!` inversé ici passerait
+                    // silencieusement au vert sans test dédié. Ce provider
+                    // n'a pas accès à `FavoriteIdsCubit` via `context`
+                    // (déclaré plus loin dans ce même `MultiBlocProvider`) :
+                    // on passe par `getIt`, comme pour `AuthBloc` lui-même.
+                    if (GuestAccessGuard.shouldLoadGuestFavorites(probe)) {
                       getIt<FavoriteIdsCubit>().load();
                     }
                     return bloc;
@@ -369,11 +371,15 @@ class _DonyAppState extends State<DonyApp> {
                     context.read<ActiveRoleCubit>().syncWithRoles(
                       state.user.roles,
                     );
-                  } else if (state is AuthGuestSessionReady) {
+                  } else if (GuestAccessGuard.isFreshGuestSession(state)) {
                     // Session anonyme fraîchement ouverte ("Parcourir sans
                     // compte") : les favoris sont le seul contenu qu'un
                     // visiteur peut conserver, autant les charger tout de
                     // suite (idempotent, erreurs avalées silencieusement).
+                    // Prédicat extrait et testé isolément
+                    // (`GuestAccessGuard.isFreshGuestSession`) : un mauvais
+                    // état dans cette chaîne de `else if` ne doit pas pouvoir
+                    // passer inaperçu.
                     context.read<FavoriteIdsCubit>().load();
                   }
                 },

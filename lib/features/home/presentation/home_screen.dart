@@ -610,8 +610,16 @@ class _MapSenderViewState extends State<_MapSenderView> {
 
   /// Capacité réelle de l'utilisateur (pas le rôle actif sélectionné). Tout
   /// compte porte les deux rôles dès l'inscription et ne peut jamais les
-  /// perdre — utilisé pour du gating de fonctionnalité (ex. favoris), pas
-  /// pour bloquer l'accès à un mode de recherche.
+  /// perdre.
+  ///
+  /// Sert aussi, de facto, de garde anti-invité pour un usage précis :
+  /// `showFavorite` sur `PackageRequestListCard` plus bas, qui ferme la mise
+  /// en favori d'une demande de colis à qui n'a ni `AuthAuthenticated` ni
+  /// `AuthProfileUpdated` — donc toujours `false` pour un visiteur. C'est
+  /// assumé : contrairement à `canUseSearchMode` (tautologie supprimée en
+  /// Task 7), ce gate a été posé à la revue produit et tranché « on garde
+  /// fermé ». Ne pas le retirer au prétexte qu'il ressemble à un garde-fou
+  /// invité oublié.
   bool get _isTraveler {
     final s = context.read<AuthBloc>().state;
     return switch (s) {
