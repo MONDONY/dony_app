@@ -48,6 +48,15 @@ class _CountrySelectionScreenState extends State<CountrySelectionScreen> {
       listener: (context, state) {
         if (state is CountryOnboardingSuccess) {
           if (_lastAttemptedCountryCode != null) {
+            // Le backend vient d'écrire `users.country` (`select()`) : sans
+            // ce refresh, le `UserModel` mis en cache par `AuthBloc` reste
+            // périmé jusqu'au prochain `AuthCheckRequested`, et l'étape
+            // « pays » regresserait sur `/auth/referral-code`, plusieurs
+            // écrans plus loin, faute de source fraîche (`nextStep`,
+            // correction 1 de la revue finale). `skip()` et
+            // `continueAsSenderOnly()` n'écrivent rien côté serveur : pas de
+            // refresh à déclencher pour eux.
+            context.read<AuthBloc>().add(const AuthProfileRefreshRequested());
             // Passe le code fraîchement choisi en `extra` : c'est la valeur
             // la plus à jour possible, celle que l'utilisateur vient de
             // sélectionner — plus fraîche qu'une relecture de

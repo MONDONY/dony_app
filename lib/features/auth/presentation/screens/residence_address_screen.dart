@@ -2,6 +2,8 @@ import 'package:dony/core/currency/country_catalog.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/address/address_section_label.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/residence_address_cubit.dart';
 import 'package:dony/features/auth/presentation/onboarding_step.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_flow_chrome.dart';
@@ -90,7 +92,20 @@ class _ResidenceAddressScreenState extends State<ResidenceAddressScreen> {
     return BlocConsumer<ResidenceAddressCubit, ResidenceAddressState>(
       listener: (context, state) {
         if (state is ResidenceAddressSuccess) {
-          context.go('/auth/referral-code');
+          // `submit()` vient d'écrire `users.residence_street` ; `skip()`
+          // pose `onboarding_seen_at` (les deux mènent ici). Sans ce refresh,
+          // le `UserModel` en cache reste périmé et l'étape « adresse »
+          // regresserait sur `/auth/referral-code`, faute de source fraîche
+          // (`nextStep`, correction 1 de la revue finale).
+          context.read<AuthBloc>().add(const AuthProfileRefreshRequested());
+          // Repli immédiat pour l'étape « pays » : ce refresh est un GET
+          // asynchrone non attendu (ne jamais bloquer cette navigation
+          // dessus), et `/auth/referral-code` peut se construire avant qu'il
+          // ne revienne. `widget.country` — déjà connu de cet écran — comble
+          // ce trou exactement comme `country_selection_screen.dart` le fait
+          // pour celui-ci (voir `router.dart`, route
+          // `/auth/referral-code`).
+          context.go('/auth/referral-code', extra: widget.country);
         } else if (state is ResidenceAddressError) {
           DonySnackbar.show(
             context,

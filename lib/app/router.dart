@@ -410,10 +410,11 @@ final appRouter = GoRouter(
         ),
         // Aucune étape en cours : le parrainage est hors décompte (spec §4.2).
         // Même repli `extra ?? BusinessPrefsBloc` que `residence-address`
-        // pour `countryFallback` : cet écran n'a normalement pas d'`extra`
-        // (rien ne le lui transmet aujourd'hui), mais garder le même motif
-        // évite qu'un futur appelant qui en passerait un régresse en
-        // silence sur l'étape « Pays » de la jauge.
+        // pour `countryFallback` : `residence_address_screen.dart` transmet
+        // le pays en `extra` (repli immédiat, le temps que le
+        // `AuthProfileRefreshRequested` déclenché juste avant revienne) —
+        // sans lui, l'étape « Pays » regresserait sur cet écran (correction 1
+        // de la revue finale du lot 2).
         child: ReferralCodeScreen(
           progress: readOnboardingProgress(
             context,
