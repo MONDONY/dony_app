@@ -82,20 +82,6 @@ void main() {
     await tester.pumpWidget(_wrap('NOT_CREATED', connectAvailable: false));
 
     expect(find.text('Activer les paiements par carte'), findsNothing);
-    expect(
-      tester.getSize(find.byType(ActivateCardPaymentsCtaCard)),
-      Size.zero,
-    );
-  });
-
-  testWidgets('affichée par défaut quand la couverture est inconnue', (
-    tester,
-  ) async {
-    // connectAvailable n'est pas fourni : la carte doit rester visible plutôt
-    // que de disparaître tant que le statut n'est pas connu.
-    await tester.pumpWidget(_wrap('NOT_CREATED'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Activer les paiements par carte'), findsOneWidget);
+    expect(tester.getSize(find.byType(ActivateCardPaymentsCtaCard)), Size.zero);
   });
 }

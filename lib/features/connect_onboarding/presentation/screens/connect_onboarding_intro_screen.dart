@@ -4,6 +4,7 @@ import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.dart';
 import 'package:dony/features/connect_onboarding/presentation/widgets/connect_pending_bottom_sheet.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
+import 'package:dony/features/stripe_account/presentation/widgets/connect_unavailable_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -58,11 +59,8 @@ class _ConnectOnboardingIntroScreenState
     // Stripe n'ouvre pas de compte connecté dans tous les pays desservis par
     // yadony. Laisser l'utilisateur dérouler l'onboarding pour finir sur un
     // refus serveur n'apporte rien : on l'annonce ici.
-    final stripeState = context.watch<StripeAccountBloc>().state;
-    final connectAvailable = stripeState is! StripeAccountReady ||
-        stripeState.accountStatus.connectAvailableInCountry;
-    if (!connectAvailable) {
-      return const _CountryUnavailableView();
+    if (!context.watch<StripeAccountBloc>().state.connectAvailableInCountry) {
+      return const ConnectUnavailableView(title: 'Compte Stripe Connect');
     }
 
     return BlocConsumer<ConnectOnboardingBloc, ConnectOnboardingState>(
@@ -208,59 +206,6 @@ class _IntroView extends StatelessWidget {
             isLoading: isLoading,
           ),
         ),
-      ),
-    );
-  }
-}
-
-/// Pays que Stripe ne couvre pas : le voyageur encaisse en espèces, et rien
-/// dans l'application ne peut débloquer la carte. On l'explique plutôt que de
-/// proposer un parcours qui échouerait au bout.
-class _CountryUnavailableView extends StatelessWidget {
-  const _CountryUnavailableView();
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-
-    return Scaffold(
-      appBar: const DonyAppBar(title: 'Compte Stripe Connect'),
-      body: Builder(
-        builder: (context) {
-          final h = DonyLayout.hPadding(context);
-          return SingleChildScrollView(
-            padding: EdgeInsets.fromLTRB(h, DonySpacing.xxl, h, DonySpacing.xxl),
-            child: DonyLayout.constrained(
-              context,
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const DonyMascotteAnimated(
-                    type: DonyMascotteType.securise,
-                    size: DonyMascotteSize.lg,
-                  ),
-                  const SizedBox(height: DonySpacing.xl),
-                  Text(
-                    'Pas encore disponible\ndans votre pays',
-                    style: tt.headlineSmall,
-                  ),
-                  const SizedBox(height: DonySpacing.md),
-                  Text(
-                    'Stripe ne permet pas encore d\'ouvrir un compte de '
-                    'paiement depuis votre pays. Vous pouvez continuer à '
-                    'transporter des colis et à être payé en espèces, à la '
-                    'remise.',
-                    style: tt.bodyMedium?.copyWith(
-                      color: cs.onSurfaceVariant,
-                      height: 1.5,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
       ),
     );
   }

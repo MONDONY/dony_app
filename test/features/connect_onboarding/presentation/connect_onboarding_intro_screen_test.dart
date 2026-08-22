@@ -162,7 +162,10 @@ void main() {
         );
         await tester.pump(_kSettle);
 
-        expect(find.text('Pas encore disponible\ndans votre pays'), findsOneWidget);
+        expect(
+          find.text('Pas encore disponible\ndans votre pays'),
+          findsOneWidget,
+        );
         expect(find.text('Compléter mon compte'), findsNothing);
         expect(find.byType(DonyButton), findsNothing);
       },

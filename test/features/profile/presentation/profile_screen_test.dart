@@ -382,6 +382,33 @@ void main() {
         }
       });
 
+      testWidgets(
+        '${entry.key} : pays non couvert — plus d\'entrée « Recevoir mes '
+        'paiements »',
+        (tester) async {
+          // Cette entrée mène au même onboarding Connect que le CTA carte.
+          // La masquer d'un côté sans l'autre laissait la porte ouverte
+          // douze lignes plus bas, dans la même section.
+          whenListen<StripeAccountState>(
+            stripeAccountBloc,
+            const Stream.empty(),
+            initialState: const StripeAccountReady(
+              ConnectAccountStatus(
+                status: 'NOT_CREATED',
+                connectAvailableInCountry: false,
+              ),
+            ),
+          );
+
+          await pumpWith(tester, entry.value);
+
+          expect(find.text('Recevoir mes paiements'), findsNothing);
+          // Le reste de la section ARGENT n'est pas concerné.
+          await _scrollTo(tester, find.text('Ma grille de prix'));
+          expect(find.text('Ma grille de prix'), findsOneWidget);
+        },
+      );
+
       testWidgets('${entry.key} : peut passer en compte PRO', (tester) async {
         await pumpWith(tester, entry.value);
         await _scrollTo(tester, find.text('Passer en compte PRO'));

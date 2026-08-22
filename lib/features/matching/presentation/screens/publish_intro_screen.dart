@@ -418,8 +418,13 @@ class _StripeReminder extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<StripeAccountBloc, StripeAccountState>(
       builder: (context, state) {
+        // Un onboarding à terminer se règle ; un pays que Stripe ne couvre
+        // pas, non. Promettre l'activation là-bas ne fait que polluer le
+        // funnel de taps qui ne peuvent jamais convertir.
         final show =
-            state is StripeAccountReady && state.accountStatus.needsOnboarding;
+            state is StripeAccountReady &&
+            state.accountStatus.needsOnboarding &&
+            state.connectAvailableInCountry;
         if (!show) {
           return const SizedBox.shrink();
         }

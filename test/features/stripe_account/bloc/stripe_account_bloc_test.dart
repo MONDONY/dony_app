@@ -173,4 +173,38 @@ void main() {
       expect: () => [isA<StripeAccountLoadError>()],
     );
   });
+
+  group('StripeAccountAvailability', () {
+    test('reflète le statut chargé', () {
+      expect(
+        const StripeAccountReady(
+          ConnectAccountStatus(
+            status: 'NOT_CREATED',
+            connectAvailableInCountry: false,
+          ),
+        ).connectAvailableInCountry,
+        isFalse,
+      );
+      expect(
+        const StripeAccountReady(_complete).connectAvailableInCountry,
+        isTrue,
+      );
+    });
+
+    test('reste optimiste tant que le statut n\'est pas chargé', () {
+      // Sans ce repli, un chargement lent ou en échec masquerait l'activation
+      // carte pour tout le monde.
+      for (final state in const <StripeAccountState>[
+        StripeAccountInitial(),
+        StripeAccountLoading(),
+        StripeAccountLoadError(),
+      ]) {
+        expect(
+          state.connectAvailableInCountry,
+          isTrue,
+          reason: '$state doit laisser passer',
+        );
+      }
+    });
+  });
 }

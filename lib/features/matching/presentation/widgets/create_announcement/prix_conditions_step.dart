@@ -505,13 +505,11 @@ class PrixConditionsStep extends StatelessWidget {
                 // seulement » : un onboarding à terminer, ou un pays que
                 // Stripe ne couvre pas. Le second ne se règle pas, inutile
                 // d'inviter à l'activation.
-                final connectAvailable = stripeState is! StripeAccountReady ||
-                    stripeState.accountStatus.connectAvailableInCountry;
                 return _buildStripeNotConfiguredPaymentSection(
                   tt,
                   cs,
                   ctx,
-                  connectAvailable: connectAvailable,
+                  connectAvailable: stripeState.connectAvailableInCountry,
                 );
               }
 
@@ -784,7 +782,7 @@ class PrixConditionsStep extends StatelessWidget {
     TextTheme tt,
     ColorScheme cs,
     BuildContext ctx, {
-    bool connectAvailable = true,
+    required bool connectAvailable,
   }) {
     return CaSectionCard(
       child: Column(
@@ -839,10 +837,6 @@ class PrixConditionsStep extends StatelessWidget {
             // jamais après.
             child: Builder(
               builder: (bannerCtx) {
-                final textScale =
-                    MediaQuery.textScalerOf(bannerCtx).scale(14) / 14;
-                final stacked = textScale > 1.0;
-
                 final icon = DonyIcon(
                   'circle-check',
                   color: cs.success,
@@ -859,6 +853,34 @@ class PrixConditionsStep extends StatelessWidget {
                     style: tt.bodySmall?.copyWith(color: cs.onSurface),
                   ),
                 );
+
+                // Une seule écriture de la ligne icône + texte : la variante
+                // avec CTA n'ajoute que le bouton en fin de ligne, et hérite
+                // du centrage vertical (défaut de Row) qu'elle avait déjà.
+                Row bannerLine({Widget? trailing}) => Row(
+                  crossAxisAlignment: trailing == null
+                      ? CrossAxisAlignment.start
+                      : CrossAxisAlignment.center,
+                  children: [
+                    icon,
+                    const SizedBox(width: DonySpacing.xs),
+                    explanation,
+                    if (trailing != null) ...[
+                      const SizedBox(width: DonySpacing.sm),
+                      trailing,
+                    ],
+                  ],
+                );
+
+                // Pays non couvert par Stripe : rien à activer, donc pas de
+                // CTA — ni le calcul d'échelle qui ne sert qu'à lui trouver une
+                // place. Le texte occupe toute la bannière.
+                if (!connectAvailable) return bannerLine();
+
+                final textScale =
+                    MediaQuery.textScalerOf(bannerCtx).scale(14) / 14;
+                final stacked = textScale > 1.0;
+
                 final cta = GestureDetector(
                   key: const Key('activate-card-payments-cta'),
                   onTap: () => ctx.push('/connect/onboarding/intro'),
@@ -894,46 +916,14 @@ class PrixConditionsStep extends StatelessWidget {
                   ),
                 );
 
-                // Pays non couvert par Stripe : rien à activer, donc pas de
-                // CTA. Sans lui, la question de la place qu'il prend ne se
-                // pose plus et le texte occupe toute la bannière.
-                if (!connectAvailable) {
-                  return Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      icon,
-                      const SizedBox(width: DonySpacing.xs),
-                      explanation,
-                    ],
-                  );
-                }
-
-                if (!stacked) {
-                  // Identique à la disposition d'origine, avant ce lot
-                  // (crossAxisAlignment.center est la valeur par défaut de
-                  // Row, inutile de la répéter).
-                  return Row(
-                    children: [
-                      icon,
-                      const SizedBox(width: DonySpacing.xs),
-                      explanation,
-                      const SizedBox(width: DonySpacing.sm),
-                      cta,
-                    ],
-                  );
-                }
+                // Disposition d'origine, avant ce lot : le CTA tient sur la
+                // même ligne tant que l'échelle de texte est celle par défaut.
+                if (!stacked) return bannerLine(trailing: cta);
 
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        icon,
-                        const SizedBox(width: DonySpacing.xs),
-                        explanation,
-                      ],
-                    ),
+                    bannerLine(),
                     const SizedBox(height: DonySpacing.sm),
                     Align(alignment: Alignment.centerLeft, child: cta),
                   ],
