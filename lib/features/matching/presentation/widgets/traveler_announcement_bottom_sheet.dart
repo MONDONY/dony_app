@@ -347,9 +347,12 @@ class _TravelerAnnouncementContent extends StatelessWidget {
         const SizedBox(height: DonySpacing.sm),
         _InfoRow(
           iconAsset: 'euro',
+          // Garde sur hasKgPrice (valeur > 0), pas sur la seule nullité :
+          // senderPricePerKg n'est en pratique jamais null (pricePerKgDisplay
+          // toujours servi), 0 est la vraie valeur trompeuse en mode MIXED.
           label: announcement.pricingMode == 'MIXED'
               ? 'Grille tarifaire'
-              : announcement.senderPricePerKg == null
+              : !announcement.hasKgPrice
               ? 'Prix indisponible'
               : '${formatPriceIn(announcement.senderPricePerKg!, announcement.currency)}/kg',
           labelStyle: TextStyle(color: cs.primary, fontWeight: FontWeight.w700),

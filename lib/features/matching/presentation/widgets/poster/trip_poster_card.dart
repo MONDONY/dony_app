@@ -308,10 +308,12 @@ class TripPosterCard extends StatelessWidget {
         secondary = '${formatPriceIn(senderPricePerKg, currency)} le kilo';
       }
     } else {
-      // Net masqué (lecteur anonyme) ou absent : jamais de faux « 0 € ».
-      amount = senderPricePerKg == null
-          ? 'Prix indisponible'
-          : formatPriceIn(senderPricePerKg, currency);
+      // Garde sur hasKg (valeur > 0), pas sur la seule nullité :
+      // senderPricePerKg n'est en pratique jamais null, c'est 0 la valeur
+      // trompeuse à écarter (jamais de faux « 0 € »).
+      amount = hasKg
+          ? formatPriceIn(senderPricePerKg!, currency)
+          : 'Prix indisponible';
       unit = 'le kilo';
     }
 

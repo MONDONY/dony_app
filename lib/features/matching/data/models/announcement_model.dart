@@ -12,13 +12,18 @@ part 'announcement_model.g.dart';
 class AnnouncementGridItemModel {
   final String id;
   final String label;
-  final double unitPriceNet;
+
+  /// Net voyageur de cet article de grille. `null` pour une session
+  /// anonyme : masqué exactement comme `AnnouncementModel.pricePerKg`
+  /// (`GuestSession.travelerNetOrNull` appelé depuis `PriceGridService`
+  /// côté backend). `unitPriceDisplay` reste toujours servi.
+  final double? unitPriceNet;
   final double unitPriceDisplay;
 
   const AnnouncementGridItemModel({
     required this.id,
     required this.label,
-    required this.unitPriceNet,
+    this.unitPriceNet,
     required this.unitPriceDisplay,
   });
 
@@ -26,7 +31,7 @@ class AnnouncementGridItemModel {
       AnnouncementGridItemModel(
         id: json['id'] as String,
         label: json['label'] as String,
-        unitPriceNet: (json['unitPriceNet'] as num).toDouble(),
+        unitPriceNet: (json['unitPriceNet'] as num?)?.toDouble(),
         unitPriceDisplay: (json['unitPriceDisplay'] as num).toDouble(),
       );
 

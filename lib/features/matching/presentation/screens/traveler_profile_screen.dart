@@ -411,10 +411,12 @@ class _CorridorBanner extends StatelessWidget {
                     '${announcement.availableKg.toStringAsFixed(0)} kg dispo',
                 cs: cs,
               ),
-              // Pas de prix au kilo exploitable (grille pure, ou net masqué
-              // pour un lecteur anonyme) : on masque la pastille plutôt que
-              // d'afficher un faux « 0 €/kg ».
-              if (announcement.senderPricePerKg != null) ...[
+              // Pas de prix au kilo exploitable (grille pure, mode MIXED sans
+              // tarif au kilo) : on masque la pastille plutôt que d'afficher
+              // un faux « 0 €/kg ». Garde sur hasKgPrice (valeur > 0), pas
+              // sur la seule nullité : senderPricePerKg n'est en pratique
+              // jamais null, la valeur trompeuse qui subsisterait est 0.
+              if (announcement.hasKgPrice) ...[
                 const SizedBox(width: DonySpacing.sm),
                 _StatPill(
                   iconAsset: 'euro',

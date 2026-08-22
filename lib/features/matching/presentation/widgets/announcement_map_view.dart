@@ -219,12 +219,17 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
       if (a.pickupAddress == null) {
         continue;
       }
+      // Le marqueur rend senderPricePerKg (prix expéditeur), pas pricePerKg
+      // (net voyageur, masqué pour un invité) : la clé de cache doit suivre
+      // la valeur réellement affichée, sinon un changement de ce qui compte
+      // pour le rendu ne casserait jamais le cache pour un invité.
+      final renderedPrice = a.senderPricePerKg;
       buf
         ..write(a.id)
         ..write(':')
-        // cents → clé entière stable ; net absent (lecteur anonyme) → jeton
-        // dédié, jamais confondu avec un vrai montant à 0.
-        ..write(a.pricePerKg == null ? 'null' : (a.pricePerKg! * 100).round())
+        // cents → clé entière stable ; absent → jeton dédié, jamais confondu
+        // avec un vrai montant à 0.
+        ..write(renderedPrice == null ? 'null' : (renderedPrice * 100).round())
         ..write(':')
         ..write(a.departureDate.millisecondsSinceEpoch)
         ..write(';');
@@ -273,17 +278,25 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
         // Same address: stacked pill with count badge.
         // Show cheapest price and most urgent (earliest) departure.
         // Prix affiché à l'expéditeur (net + commission) — cohérent avec les cartes/sheets.
-        // Absent (grille pure, ou net masqué pour un lecteur anonyme) → même
-        // sentinelle `<= 0` que le mode MIXED : `_renderStackedPricePill`
-        // affiche déjà « Grille » plutôt qu'un faux montant dans ce cas.
-        final cheapestItem = cluster.items.reduce(
-          (a, b) =>
-              (a.announcement.senderPricePerKg ?? 0) <
-                  (b.announcement.senderPricePerKg ?? 0)
-              ? a
-              : b,
+        // On ne compare que les prix réellement présents : un `?? 0` par
+        // élément ferait gagner « le moins cher » à une annonce sans prix
+        // face à une annonce qui en a un, et ferait basculer tout le cluster
+        // en affichage « Grille » à tort. Seule l'absence de TOUT prix dans
+        // le cluster retombe sur la sentinelle `<= 0` (`_renderStackedPricePill`
+        // affiche alors « Grille » plutôt qu'un faux montant).
+        final itemsWithPrice = cluster.items.where(
+          (it) => it.announcement.senderPricePerKg != null,
         );
-        final cheapest = cheapestItem.announcement.senderPricePerKg ?? 0;
+        final cheapestItem = itemsWithPrice.isEmpty
+            ? cluster.items.first
+            : itemsWithPrice.reduce(
+                (a, b) =>
+                    a.announcement.senderPricePerKg! <
+                        b.announcement.senderPricePerKg!
+                    ? a
+                    : b,
+              );
+        final cheapest = cheapestItem.announcement.senderPricePerKg ?? 0.0;
         final earliest = cluster.items
             .map((it) => it.announcement.departureDate)
             .reduce((a, b) => a.isBefore(b) ? a : b);

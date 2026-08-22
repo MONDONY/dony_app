@@ -1,3 +1,4 @@
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/urgency/dony_urgency.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
@@ -177,6 +178,22 @@ void main() {
       expect(restored.label, original.label);
       expect(restored.unitPriceNet, original.unitPriceNet);
       expect(restored.unitPriceDisplay, original.unitPriceDisplay);
+    });
+
+    test('fromJson tolère un unitPriceNet absent (net masqué pour un invité)', () {
+      // Même masquage backend que pricePerKg (PriceGridService.travelerNetOrNull,
+      // appelé depuis AnnouncementSearchMapper/AnnouncementService) : le net
+      // d'un article de grille ne doit pas fuir vers une session anonyme, et son
+      // absence ne doit pas planter la désérialisation.
+      final json = {
+        'id': 'item-5',
+        'label': 'Sac de riz',
+        'unitPriceDisplay': 12.0,
+      };
+      final item = AnnouncementGridItemModel.fromJson(json);
+
+      expect(item.unitPriceNet, isNull);
+      expect(item.unitPriceDisplay, 12.0);
     });
   });
 
@@ -499,7 +516,11 @@ void main() {
       final model = AnnouncementModel.fromJson(json);
 
       expect(model.pricePerKg, isNull);
-      expect(model.pricePerKgDisplay, 12.0);
+      // Pas de model.pricePerKgDisplay ici : ce serait tautologique (on vient
+      // de le poser dans le JSON). senderPricePerKg est le getter réellement
+      // consommé par l'affichage expéditeur, et c'est lui qui doit rester
+      // exploitable quand le net est masqué.
+      expect(model.senderPricePerKg, 12.0);
     });
 
     test('lit pricePerKg quand il est présent (compte inscrit)', () {

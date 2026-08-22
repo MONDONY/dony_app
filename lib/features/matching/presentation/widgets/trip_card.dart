@@ -430,10 +430,17 @@ String _activePriceLabel(AnnouncementModel a, String Function(double) price) {
   final kgPrice = a.pricePerKg;
   final usesGrid = a.pricingMode == 'MIXED' || kgPrice == null || kgPrice <= 0;
   if (usesGrid && a.priceGridItems.isNotEmpty) {
-    final minNet = a.priceGridItems
+    // unitPriceNet masqué pour un lecteur anonyme (même mécanisme que
+    // pricePerKg) : on filtre plutôt que de laisser un `null` planter le
+    // `reduce`, ou de le confondre avec un vrai montant à 0.
+    final nets = a.priceGridItems
         .map((e) => e.unitPriceNet)
-        .reduce((x, y) => x < y ? x : y);
-    return 'dès ${price(minNet)}';
+        .whereType<double>()
+        .toList();
+    if (nets.isNotEmpty) {
+      final minNet = nets.reduce((x, y) => x < y ? x : y);
+      return 'dès ${price(minNet)}';
+    }
   }
   if (usesGrid) {
     return 'Grille tarifaire';
