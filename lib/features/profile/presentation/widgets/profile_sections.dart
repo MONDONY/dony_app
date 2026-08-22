@@ -10,6 +10,7 @@ import 'package:dony/features/profile/presentation/widgets/add_contact_sheets.da
 import 'package:dony/features/profile/presentation/widgets/wallet_balance_card.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
 import 'package:dony/features/referral/presentation/widgets/redeem_code_bottom_sheet.dart';
+import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -109,9 +110,27 @@ class ProfileMoneySection extends StatelessWidget {
         // Le CTA d'activation Stripe vit au-dessus de la section qu'il
         // concerne, et non en tête de page : il y est contextuel, et trois
         // bannières empilées en haut d'écran noyaient le reste.
-        ActivateCardPaymentsCtaCard(stripeStatus: user?.stripeAccountStatus),
-        if (user?.stripeAccountStatus != 'ONBOARDING_COMPLETE')
-          const SizedBox(height: DonySpacing.sm),
+        //
+        // Le pays vient du StripeAccountBloc et non de UserModel : le backend
+        // ne l'expose que sur /payments/connect/account.
+        BlocBuilder<StripeAccountBloc, StripeAccountState>(
+          builder: (context, stripeState) {
+            final connectAvailable = stripeState is StripeAccountReady
+                ? stripeState.accountStatus.connectAvailableInCountry
+                : true;
+            if (!connectAvailable) return const SizedBox.shrink();
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                ActivateCardPaymentsCtaCard(
+                  stripeStatus: user?.stripeAccountStatus,
+                ),
+                if (user?.stripeAccountStatus != 'ONBOARDING_COMPLETE')
+                  const SizedBox(height: DonySpacing.sm),
+              ],
+            );
+          },
+        ),
         const WalletBalanceCard(),
         const SizedBox(height: DonySpacing.sm),
         ProfileListSection(

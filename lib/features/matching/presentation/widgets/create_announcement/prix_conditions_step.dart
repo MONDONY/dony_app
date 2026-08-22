@@ -501,7 +501,18 @@ class PrixConditionsStep extends StatelessWidget {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   cashEnabledNotifier.value = true;
                 });
-                return _buildStripeNotConfiguredPaymentSection(tt, cs, ctx);
+                // Deux causes très différentes au même écran « espèces
+                // seulement » : un onboarding à terminer, ou un pays que
+                // Stripe ne couvre pas. Le second ne se règle pas, inutile
+                // d'inviter à l'activation.
+                final connectAvailable = stripeState is! StripeAccountReady ||
+                    stripeState.accountStatus.connectAvailableInCountry;
+                return _buildStripeNotConfiguredPaymentSection(
+                  tt,
+                  cs,
+                  ctx,
+                  connectAvailable: connectAvailable,
+                );
               }
 
               return CaSectionCard(
@@ -772,8 +783,9 @@ class PrixConditionsStep extends StatelessWidget {
   Widget _buildStripeNotConfiguredPaymentSection(
     TextTheme tt,
     ColorScheme cs,
-    BuildContext ctx,
-  ) {
+    BuildContext ctx, {
+    bool connectAvailable = true,
+  }) {
     return CaSectionCard(
       child: Column(
         children: [
@@ -838,8 +850,12 @@ class PrixConditionsStep extends StatelessWidget {
                 );
                 final explanation = Expanded(
                   child: Text(
-                    'Publiez en espèces dès maintenant. Connectez Stripe '
-                    'pour accepter aussi la carte.',
+                    connectAvailable
+                        ? 'Publiez en espèces dès maintenant. Connectez Stripe '
+                              'pour accepter aussi la carte.'
+                        : 'Le paiement par carte n\'est pas encore disponible '
+                              'dans votre pays. Vos trajets sont publiés en '
+                              'espèces.',
                     style: tt.bodySmall?.copyWith(color: cs.onSurface),
                   ),
                 );
@@ -877,6 +893,20 @@ class PrixConditionsStep extends StatelessWidget {
                     ),
                   ),
                 );
+
+                // Pays non couvert par Stripe : rien à activer, donc pas de
+                // CTA. Sans lui, la question de la place qu'il prend ne se
+                // pose plus et le texte occupe toute la bannière.
+                if (!connectAvailable) {
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      icon,
+                      const SizedBox(width: DonySpacing.xs),
+                      explanation,
+                    ],
+                  );
+                }
 
                 if (!stacked) {
                   // Identique à la disposition d'origine, avant ce lot

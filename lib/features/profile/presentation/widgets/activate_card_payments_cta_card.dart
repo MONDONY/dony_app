@@ -13,13 +13,25 @@ import 'package:go_router/go_router.dart';
 /// `'ONBOARDING_COMPLETE'`. Placement : haut de `_AccountTab` (avant
 /// IDENTITÉ & CONTACT), comme l'ancienne carte.
 class ActivateCardPaymentsCtaCard extends StatelessWidget {
-  const ActivateCardPaymentsCtaCard({super.key, required this.stripeStatus});
+  const ActivateCardPaymentsCtaCard({
+    super.key,
+    required this.stripeStatus,
+    this.connectAvailable = true,
+  });
 
   final String? stripeStatus;
 
+  /// Stripe couvre-t-il le pays de l'utilisateur ? Faux pour les zones XOF et
+  /// XAF, les États-Unis et le Canada : proposer l'activation y mènerait à un
+  /// refus, autant ne rien proposer.
+  ///
+  /// Par défaut `true`, pour que le CTA reste visible tant que le statut n'est
+  /// pas chargé plutôt que de disparaître par accident.
+  final bool connectAvailable;
+
   @override
   Widget build(BuildContext context) {
-    if (stripeStatus == 'ONBOARDING_COMPLETE') {
+    if (stripeStatus == 'ONBOARDING_COMPLETE' || !connectAvailable) {
       return const SizedBox.shrink();
     }
 

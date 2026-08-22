@@ -463,6 +463,59 @@ void main() {
       },
     );
 
+    testWidgets(
+      'pays non couvert par Stripe : explique, sans proposer l\'activation',
+      (tester) async {
+        await tester.pumpWidget(
+          _host(
+            stripeState: const StripeAccountReady(
+              ConnectAccountStatus(
+                status: 'NOT_CREATED',
+                connectAvailableInCountry: false,
+              ),
+            ),
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 200));
+
+        expect(
+          find.textContaining(
+            'Le paiement par carte n\'est pas encore disponible',
+          ),
+          findsOneWidget,
+        );
+        // Rien à activer dans ce pays : le CTA doit disparaître, sinon il
+        // mène à un refus serveur.
+        expect(
+          find.byKey(const Key('activate-card-payments-cta')),
+          findsNothing,
+        );
+      },
+    );
+
+    testWidgets(
+      'onboarding incomplet mais pays couvert : invite bien à activer',
+      (tester) async {
+        await tester.pumpWidget(
+          _host(
+            stripeState: const StripeAccountReady(
+              ConnectAccountStatus(status: 'NOT_CREATED'),
+            ),
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 200));
+
+        expect(
+          find.textContaining('Publiez en espèces dès maintenant'),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const Key('activate-card-payments-cta')),
+          findsOneWidget,
+        );
+      },
+    );
+
     // ── Section CE QUE J'ACCEPTE ──────────────────────────────────────────────
 
     testWidgets("label de section Ce que j'accepte est affiché", (
