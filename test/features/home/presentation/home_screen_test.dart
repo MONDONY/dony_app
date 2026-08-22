@@ -127,14 +127,23 @@ class MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
 /// Ces tests ne montent jamais Firebase : `_mode` par défaut dépend de
 /// `FirebaseSessionProbe`, dont le fake par défaut ci-dessous (`true`) suit
 /// les mocks `AuthAuthenticated` déjà utilisés partout dans ce fichier.
+/// Les deux prédicats doivent pouvoir diverger : c'est précisément le cas
+/// d'une session invitée (`hasSession` vrai, `hasRealSession` faux). Un stub
+/// qui les confond rend le test aveugle au bug qu'il est censé attraper.
 class _StubSessionProbe implements FirebaseSessionProbe {
-  const _StubSessionProbe(this.hasSession);
+  const _StubSessionProbe(this.hasSession, {bool? hasRealSession})
+    : _hasRealSession = hasRealSession;
+
+  /// Session invitée : le SDK a bien une session, mais sans compte derrière.
+  const _StubSessionProbe.guest() : hasSession = true, _hasRealSession = false;
+
   @override
   final bool hasSession;
+  final bool? _hasRealSession;
   @override
-  bool get isAnonymous => false;
+  bool get hasRealSession => _hasRealSession ?? hasSession;
   @override
-  bool get hasRealSession => hasSession;
+  bool get isAnonymous => hasSession && !hasRealSession;
 }
 
 class _FakeBidEvent extends Fake implements BidEvent {}
@@ -1469,6 +1478,23 @@ void main() {
 
       expect(find.text('Trajets'), findsOneWidget);
       expect(find.text('VOYAGEURS DISPONIBLES'), findsOneWidget);
+    });
+
+    testWidgets('une session invitée ouvre en mode Colis, pas Trajets', (
+      tester,
+    ) async {
+      // `hasSession` est vrai pour un invité (session anonyme) : c'est le
+      // prédicat qui le confondait avec un inscrit et lui ouvrait Trajets.
+      // Seul `hasRealSession` distingue les deux.
+      getIt.unregister<FirebaseSessionProbe>();
+      getIt.registerSingleton<FirebaseSessionProbe>(
+        const _StubSessionProbe.guest(),
+      );
+
+      await pumpHome(tester);
+
+      expect(find.text("DEMANDES D'ENVOI"), findsOneWidget);
+      expect(find.text('VOYAGEURS DISPONIBLES'), findsNothing);
     });
 
     testWidgets('le mode Colis est proposé à tout utilisateur', (tester) async {

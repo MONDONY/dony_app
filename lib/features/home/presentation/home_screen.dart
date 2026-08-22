@@ -168,8 +168,12 @@ class _MapSenderViewState extends State<_MapSenderView> {
     // le temps de répondre — et un utilisateur bel et bien connecté
     // retombait sur le mode invité (onglet Colis) au lieu de Trajets. Même
     // source que le redirect du routeur (router.dart).
+    // `hasRealSession` et non `hasSession` : un visiteur porte lui aussi une
+    // session (anonyme), et `hasSession` le faisait ouvrir sur Trajets au lieu
+    // de Colis. Le probe reste la bonne source — c'est le prédicat qui était
+    // trop large.
     _mode = GuestAccessGuard.initialSearchMode(
-      isAuthenticated: getIt<FirebaseSessionProbe>().hasSession,
+      isAuthenticated: getIt<FirebaseSessionProbe>().hasRealSession,
     );
     if (getIt.isRegistered<PendingSearchNotifier>()) {
       _pendingSearchNotifier = getIt<PendingSearchNotifier>();

@@ -26,10 +26,12 @@ class MapTravelerView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // `isAnonymous` : depuis l'ouverture de session visiteur, l'absence de
-    // session ne signale plus un invité. C'est le caractère anonyme de la
-    // session qui le fait.
-    final isGuest = getIt<FirebaseSessionProbe>().isAnonymous;
+    // `!hasRealSession` et non `isAnonymous` : est visiteur aussi bien celui
+    // qui porte une session anonyme que celui qui n'a aucune session (arrivée
+    // par lien profond avant tout démarrage). `isAnonymous` déclarerait ce
+    // dernier inscrit, et il repartirait sur l'endpoint authentifié pour un
+    // 401 et une liste vide au lieu des résultats publics.
+    final isGuest = !getIt<FirebaseSessionProbe>().hasRealSession;
     return BlocProvider<PackageRequestSearchBloc>(
       create: (_) =>
           getIt<PackageRequestSearchBloc>()
@@ -109,7 +111,7 @@ class _MapTravelerViewContentState extends State<_MapTravelerViewContent> {
         userLat: position.latitude,
         userLng: position.longitude,
         radiusKm: selectedRadius,
-        publicAccess: getIt<FirebaseSessionProbe>().isAnonymous,
+        publicAccess: !getIt<FirebaseSessionProbe>().hasRealSession,
       ),
     );
   }
@@ -121,7 +123,7 @@ class _MapTravelerViewContentState extends State<_MapTravelerViewContent> {
     });
     context.read<PackageRequestSearchBloc>().add(
       SearchFiltersChanged(
-        publicAccess: getIt<FirebaseSessionProbe>().isAnonymous,
+        publicAccess: !getIt<FirebaseSessionProbe>().hasRealSession,
       ),
     );
   }

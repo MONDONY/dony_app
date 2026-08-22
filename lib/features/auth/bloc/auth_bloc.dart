@@ -87,7 +87,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     final firebaseUser = _firebaseAuth.currentUser;
-    if (firebaseUser == null) {
+    // Une session anonyme n'a pas de compte serveur : `GET /auth/me` lui
+    // répondrait 404. Le garde-fou d'`app.dart` évite déjà de dispatcher
+    // l'événement dans ce cas, mais la garde doit tenir ici aussi — c'est le
+    // seul endroit qui reste juste si un autre chemin d'appel apparaît.
+    if (firebaseUser == null || firebaseUser.isAnonymous) {
       emit(const AuthInitial());
       return;
     }

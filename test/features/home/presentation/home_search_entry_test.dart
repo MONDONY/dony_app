@@ -119,14 +119,20 @@ class _FakeContentCategoryRepository implements IContentCategoryRepository {
   Future<List<ContentCategory>> getCategories() async => fallbackCatalog;
 }
 
+/// Les deux prédicats doivent pouvoir diverger : c'est précisément le cas
+/// d'une session invitée (`hasSession` vrai, `hasRealSession` faux). Un stub
+/// qui les confond rend le test aveugle au bug qu'il est censé attraper.
 class _StubSessionProbe implements FirebaseSessionProbe {
-  const _StubSessionProbe(this.hasSession);
+  const _StubSessionProbe(this.hasSession, {bool? hasRealSession})
+    : _hasRealSession = hasRealSession;
+
   @override
   final bool hasSession;
+  final bool? _hasRealSession;
   @override
-  bool get isAnonymous => false;
+  bool get hasRealSession => _hasRealSession ?? hasSession;
   @override
-  bool get hasRealSession => hasSession;
+  bool get isAnonymous => hasSession && !hasRealSession;
 }
 
 class _FakeBidEvent extends Fake implements BidEvent {}

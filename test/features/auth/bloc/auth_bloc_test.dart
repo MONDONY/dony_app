@@ -146,9 +146,28 @@ void main() {
     );
 
     blocTest<AuthBloc, AuthState>(
+      'session anonyme → émet AuthInitial sans appeler GET /auth/me',
+      build: () {
+        // Un visiteur a bien un `currentUser`, mais aucun compte serveur :
+        // `/auth/me` lui répondrait 404 à chaque démarrage. Seule l'absence
+        // de session ne suffit plus à s'en garder.
+        final mockUser = MockUser();
+        when(() => mockUser.isAnonymous).thenReturn(true);
+        when(() => mockFirebaseAuth.currentUser).thenReturn(mockUser);
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const AuthCheckRequested()),
+      expect: () => [isA<AuthInitial>()],
+      verify: (bloc) {
+        verifyNever(() => mockRepo.getProfile());
+      },
+    );
+
+    blocTest<AuthBloc, AuthState>(
       'utilisateur Firebase connecté + profil backend OK → émet AuthAuthenticated',
       build: () {
         final mockUser = MockUser();
+        when(() => mockUser.isAnonymous).thenReturn(false);
         when(() => mockFirebaseAuth.currentUser).thenReturn(mockUser);
         when(() => mockUser.phoneNumber).thenReturn('+33612345678');
         when(() => mockRepo.getProfile()).thenAnswer((_) async => testUser);
@@ -165,6 +184,7 @@ void main() {
       'utilisateur Firebase connecté + backend 404 → émet AuthInitial',
       build: () {
         final mockUser = MockUser();
+        when(() => mockUser.isAnonymous).thenReturn(false);
         when(() => mockFirebaseAuth.currentUser).thenReturn(mockUser);
         when(() => mockUser.phoneNumber).thenReturn('+33612345678');
         when(() => mockRepo.getProfile()).thenThrow(
@@ -186,6 +206,7 @@ void main() {
       'utilisateur Firebase connecté + erreur réseau → émet AuthError',
       build: () {
         final mockUser = MockUser();
+        when(() => mockUser.isAnonymous).thenReturn(false);
         when(() => mockFirebaseAuth.currentUser).thenReturn(mockUser);
         when(() => mockUser.phoneNumber).thenReturn('+33612345678');
         when(() => mockRepo.getProfile()).thenThrow(
@@ -207,6 +228,7 @@ void main() {
       '401 sur le check initial → AuthError SANS signOut (peut être transitoire, cold start backend)',
       build: () {
         final mockUser = MockUser();
+        when(() => mockUser.isAnonymous).thenReturn(false);
         when(() => mockFirebaseAuth.currentUser).thenReturn(mockUser);
         when(() => mockUser.phoneNumber).thenReturn('+33612345678');
         when(() => mockRepo.getProfile()).thenThrow(
@@ -231,6 +253,7 @@ void main() {
       '403 sur le check initial → AuthError SANS signOut (peut être transitoire, cold start backend)',
       build: () {
         final mockUser = MockUser();
+        when(() => mockUser.isAnonymous).thenReturn(false);
         when(() => mockFirebaseAuth.currentUser).thenReturn(mockUser);
         when(() => mockUser.phoneNumber).thenReturn('+33612345678');
         when(() => mockRepo.getProfile()).thenThrow(
@@ -659,6 +682,7 @@ void main() {
       'exception non-Dio → émet [Loading, AuthInitial]',
       build: () {
         final mockUser = MockUser();
+        when(() => mockUser.isAnonymous).thenReturn(false);
         when(() => mockFirebaseAuth.currentUser).thenReturn(mockUser);
         when(() => mockUser.phoneNumber).thenReturn('+33699999999');
         when(() => mockRepo.getProfile()).thenThrow(Exception('timeout'));

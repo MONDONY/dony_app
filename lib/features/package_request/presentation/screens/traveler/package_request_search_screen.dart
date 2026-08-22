@@ -17,9 +17,10 @@ class PackageRequestSearchScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // `isAnonymous` : un visiteur porte une session anonyme, l'absence de
-    // session ne le signale plus.
-    final isGuest = getIt<FirebaseSessionProbe>().isAnonymous;
+    // `!hasRealSession` et non `isAnonymous` : sans aucune session, on est
+    // tout autant un visiteur. `isAnonymous` y serait faux et l'écran taperait
+    // l'endpoint authentifié — 401, liste vide.
+    final isGuest = !getIt<FirebaseSessionProbe>().hasRealSession;
     return BlocProvider(
       create: (_) =>
           getIt<PackageRequestSearchBloc>()
@@ -45,7 +46,7 @@ class _SearchViewState extends State<_SearchView> {
       SearchFiltersChanged(
         departure: _depCtrl.text.trim().isEmpty ? null : _depCtrl.text.trim(),
         arrival: _arrCtrl.text.trim().isEmpty ? null : _arrCtrl.text.trim(),
-        publicAccess: getIt<FirebaseSessionProbe>().isAnonymous,
+        publicAccess: !getIt<FirebaseSessionProbe>().hasRealSession,
       ),
     );
   }

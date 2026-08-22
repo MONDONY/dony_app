@@ -32,6 +32,22 @@ void main() {
     expect(probe.hasRealSession, isFalse);
   });
 
+  test(
+    'un visiteur sans aucune session n\'est PAS isAnonymous : seul '
+    '!hasRealSession le couvre',
+    () {
+      // Piège : `isAnonymous` ne repere que le visiteur QUI A une session
+      // anonyme. Celui qui arrive par lien profond avant toute session est
+      // tout autant un visiteur, et `isAnonymous` le declare inscrit.
+      // C'est `!hasRealSession` qui designe « visiteur », jamais `isAnonymous`.
+      when(() => auth.currentUser).thenReturn(null);
+      final probe = FirebaseSessionProbe(auth: auth);
+
+      expect(probe.isAnonymous, isFalse);
+      expect(probe.hasRealSession, isFalse);
+    },
+  );
+
   test('session reelle : session presente, pas invite', () {
     final user = _MockUser();
     when(() => user.isAnonymous).thenReturn(false);
