@@ -19,6 +19,7 @@ import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/country_onboarding_cubit.dart';
 import 'package:dony/features/auth/bloc/local_auth_bloc.dart';
+import 'package:dony/features/auth/bloc/residence_address_cubit.dart';
 import 'package:dony/features/auth/data/datasources/auth_remote_datasource.dart';
 import 'package:dony/features/auth/data/repositories/auth_repository.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
@@ -287,6 +288,9 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<HiveService>().userPrefs,
       getIt<AnalyticsService>(),
     ),
+  );
+  getIt.registerFactory<ResidenceAddressCubit>(
+    () => ResidenceAddressCubit(getIt<AuthRepository>(), getIt<AnalyticsService>()),
   );
 
   // Local auth (biometric + PIN)
