@@ -350,10 +350,18 @@ final appRouter = GoRouter(
         create: (_) => getIt<ResidenceAddressCubit>(),
         child: ResidenceAddressScreen(
           // `AuthBloc.state.currentUser?.country` n'est jamais renseigné :
-          // `POST /auth/register` n'écrit pas `users.country`. Le vrai pays
-          // choisi à l'étape précédente (`CountryOnboardingCubit`) est écrit
-          // dans Hive et exposé par `BusinessPrefsBloc`, fourni app-wide.
-          country: context.read<BusinessPrefsBloc>().state.country,
+          // `POST /auth/register` n'écrit pas `users.country`. Le pays choisi
+          // à l'étape précédente est prioritairement lu dans `extra` — passé
+          // par `country_selection_screen.dart` juste après un `select()`
+          // réussi, donc garanti frais. `BusinessPrefsBloc.state.country`
+          // reste le repli : ce singleton app-wide est construit avant cet
+          // écran et ne se resynchronise pas automatiquement quand
+          // `CountryOnboardingCubit` écrit directement dans Hive, mais il
+          // reste utile pour toute navigation qui ne passerait pas par
+          // `country_selection_screen` (deep link, retour arrière...).
+          country:
+              (state.extra as String?) ??
+              context.read<BusinessPrefsBloc>().state.country,
         ),
       ),
     ),

@@ -44,11 +44,20 @@ class _CountrySelectionScreenState extends State<CountrySelectionScreen> {
       },
       listener: (context, state) {
         if (state is CountryOnboardingSuccess) {
-          context.go(
-            _lastAttemptedCountryCode != null
-                ? '/auth/residence-address'
-                : '/auth/referral-code',
-          );
+          if (_lastAttemptedCountryCode != null) {
+            // Passe le code fraîchement choisi en `extra` : c'est la valeur
+            // la plus à jour possible, celle que l'utilisateur vient de
+            // sélectionner — plus fraîche qu'une relecture de
+            // `BusinessPrefsBloc`, dont le singleton app-wide est construit
+            // avant cet écran et ne se resynchronise pas automatiquement
+            // quand ce cubit écrit directement dans Hive (voir router.dart).
+            context.go(
+              '/auth/residence-address',
+              extra: _lastAttemptedCountryCode,
+            );
+          } else {
+            context.go('/auth/referral-code');
+          }
         } else if (state is CountryOnboardingError) {
           DonySnackbar.show(
             context,

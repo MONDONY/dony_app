@@ -41,7 +41,9 @@ Future<void> _wrap(
       ),
       GoRoute(
         path: '/auth/residence-address',
-        builder: (_, _) => const Scaffold(body: Text('Residence route')),
+        builder: (_, state) => Scaffold(
+          body: Text('Residence route extra=${state.extra}'),
+        ),
       ),
       GoRoute(
         path: '/auth/referral-code',
@@ -226,23 +228,29 @@ void main() {
     );
   });
 
-  testWidgets('état Success navigue vers l\'étape adresse de résidence', (
-    tester,
-  ) async {
-    whenListen<CountryOnboardingState>(
-      cubit,
-      Stream.fromIterable([
-        const CountryOnboardingSaving('CA'),
-        const CountryOnboardingSuccess(),
-      ]),
-      initialState: const CountryOnboardingInitial(),
-    );
+  testWidgets(
+    'état Success navigue vers l\'étape adresse de résidence en passant le '
+    'code pays fraîchement choisi en extra',
+    (tester) async {
+      whenListen<CountryOnboardingState>(
+        cubit,
+        Stream.fromIterable([
+          const CountryOnboardingSaving('CA'),
+          const CountryOnboardingSuccess(),
+        ]),
+        initialState: const CountryOnboardingInitial(),
+      );
 
-    await _wrap(tester, cubit);
-    await tester.pumpAndSettle();
+      await _wrap(tester, cubit);
+      await tester.pumpAndSettle();
 
-    expect(find.text('Residence route'), findsOneWidget);
-  });
+      // `extra` porte le code choisi par l'utilisateur, la valeur la plus
+      // fraîche possible — plus fraîche qu'une relecture de
+      // `BusinessPrefsBloc`, dont le singleton app-wide ne se resynchronise
+      // pas automatiquement quand ce cubit écrit directement dans Hive.
+      expect(find.text('Residence route extra=CA'), findsOneWidget);
+    },
+  );
 
   testWidgets(
     'passer la sélection de pays (skip) navigue directement vers le parrainage, '
