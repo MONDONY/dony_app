@@ -65,19 +65,23 @@ List<OnboardingStep> onboardingSteps(StripeAccountState stripe) => [
 /// cache n'est jamais rafraîchi après l'étape pays. Le routeur applique déjà
 /// ce même repli (`BusinessPrefsBloc.state.country`) pour l'écran d'adresse.
 ///
-/// `onboardingSeenAt != null` est testé **avant** toute étape : `skip()` et
-/// `continueAsSenderOnly()` (`CountryOnboardingCubit`) laissent volontairement
-/// `country` à `null`, donc router uniquement sur les faits ci-dessous
-/// renverrait indéfiniment un utilisateur qui a explicitement quitté le
-/// parcours vers cet écran (spec §2, correction 3).
+/// Ne teste **jamais** `onboardingSeenAt` : cette fonction ne fait que
+/// traduire les faits serveur en étape manquante, elle ne décide pas si le
+/// parcours doit s'imposer. Ce court-circuit anti-boucle (un utilisateur qui
+/// a explicitement quitté le parcours ne doit pas y être renvoyé) vit
+/// uniquement dans [resolvePostSignupRoute], le seul appelant qui route
+/// réellement une navigation. Le mettre ici aussi le rendrait mort (le
+/// résolveur court-circuite déjà avant d'appeler cette fonction) tout en
+/// mettant [nextStep] en contradiction avec [onboardingProgress] — cette
+/// dernière doit continuer de refléter les étapes faites même après
+/// `onboarding_seen_at`, pour que la carte de reprise (lot 4) sache quand
+/// elle doit disparaître.
 OnboardingStep? nextStep({
   required UserModel? user,
   required StripeAccountState stripe,
   required bool analyticsAnswered,
   String? countryFallback,
 }) {
-  if (user?.onboardingSeenAt != null) return null;
-
   for (final step in onboardingSteps(stripe)) {
     if (!_isDone(
       step,
