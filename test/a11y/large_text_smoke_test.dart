@@ -10,8 +10,10 @@ import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/auth/bloc/residence_address_cubit.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
+import 'package:dony/features/auth/presentation/screens/residence_address_screen.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/bloc/city_search_event.dart';
 import 'package:dony/features/city/bloc/city_search_state.dart';
@@ -789,6 +791,32 @@ GoRouter _scanRouter(ScanHubCubit cubit) => GoRouter(
 Widget _wrapScanHub(ScanHubCubit cubit) =>
     MaterialApp.router(routerConfig: _scanRouter(cubit));
 
+// ═══════════════════════════════════════════════════════════════════════════
+// Adresse de résidence — harnais recopié de
+// test/features/auth/presentation/residence_address_screen_test.dart
+// ═══════════════════════════════════════════════════════════════════════════
+
+class _ResidenceMockCubit extends MockCubit<ResidenceAddressState>
+    implements ResidenceAddressCubit {}
+
+Widget _wrapResidenceAddress(ResidenceAddressCubit cubit) => MaterialApp.router(
+  routerConfig: GoRouter(
+    routes: [
+      GoRoute(
+        path: '/',
+        builder: (_, _) => BlocProvider<ResidenceAddressCubit>.value(
+          value: cubit,
+          child: const ResidenceAddressScreen(country: 'Sénégal'),
+        ),
+      ),
+      GoRoute(
+        path: '/auth/referral-code',
+        builder: (_, _) => const Scaffold(body: Text('Parrainage')),
+      ),
+    ],
+  ),
+);
+
 void main() {
   setUpAll(() async {
     // Requis par MockTripsSummaryCubit.load(period: any(named: 'period'))
@@ -1001,6 +1029,19 @@ void main() {
 
       await pumpAt200(tester, _wrapScanHub(cubit));
 
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('adresse de résidence', (tester) async {
+      final cubit = _ResidenceMockCubit();
+      when(() => cubit.state).thenReturn(const ResidenceAddressInitial());
+      whenListen(
+        cubit,
+        const Stream<ResidenceAddressState>.empty(),
+        initialState: const ResidenceAddressInitial(),
+      );
+
+      await pumpAt200(tester, _wrapResidenceAddress(cubit));
       expect(tester.takeException(), isNull);
     });
   });

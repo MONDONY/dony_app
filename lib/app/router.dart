@@ -6,6 +6,7 @@ import 'package:dony/features/app_update/presentation/screens/force_update_scree
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/bloc/country_onboarding_cubit.dart';
+import 'package:dony/features/auth/bloc/residence_address_cubit.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/auth/guest_access_guard.dart';
 import 'package:dony/features/auth/presentation/screens/analytics_consent_screen.dart';
@@ -17,6 +18,7 @@ import 'package:dony/features/auth/presentation/screens/onboarding_screen.dart';
 import 'package:dony/features/auth/presentation/screens/otp_verification_screen.dart';
 import 'package:dony/features/auth/presentation/screens/phone_auth_screen.dart';
 import 'package:dony/features/auth/presentation/screens/referral_code_screen.dart';
+import 'package:dony/features/auth/presentation/screens/residence_address_screen.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
 import 'package:dony/features/cancellation/presentation/screens/rematch_search_screen.dart';
@@ -210,6 +212,7 @@ const _publicRoutes = {
   '/auth/referral-code',
   '/auth/analytics-consent',
   '/auth/country-selection',
+  '/auth/residence-address',
   '/auth/local',
   '/home',
   '/recherche/composer',
@@ -338,6 +341,15 @@ final appRouter = GoRouter(
       builder: (context, state) => BlocProvider(
         create: (_) => getIt<CountryOnboardingCubit>(),
         child: const CountrySelectionScreen(),
+      ),
+    ),
+    GoRoute(
+      path: '/auth/residence-address',
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<ResidenceAddressCubit>(),
+        child: ResidenceAddressScreen(
+          country: context.read<AuthBloc>().state.currentUser?.country,
+        ),
       ),
     ),
     GoRoute(

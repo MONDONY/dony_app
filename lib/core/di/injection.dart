@@ -290,7 +290,10 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     ),
   );
   getIt.registerFactory<ResidenceAddressCubit>(
-    () => ResidenceAddressCubit(getIt<AuthRepository>(), getIt<AnalyticsService>()),
+    () => ResidenceAddressCubit(
+      getIt<AuthRepository>(),
+      getIt<AnalyticsService>(),
+    ),
   );
 
   // Local auth (biometric + PIN)

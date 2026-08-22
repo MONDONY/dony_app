@@ -40,8 +40,8 @@ Future<void> _wrap(
         ),
       ),
       GoRoute(
-        path: '/auth/referral-code',
-        builder: (_, _) => const Scaffold(body: Text('Referral route')),
+        path: '/auth/residence-address',
+        builder: (_, _) => const Scaffold(body: Text('Residence route')),
       ),
     ],
   );
@@ -222,7 +222,7 @@ void main() {
     );
   });
 
-  testWidgets('état Success navigue vers le code de parrainage', (
+  testWidgets('état Success navigue vers l\'étape adresse de résidence', (
     tester,
   ) async {
     whenListen<CountryOnboardingState>(
@@ -237,6 +237,6 @@ void main() {
     await _wrap(tester, cubit);
     await tester.pumpAndSettle();
 
-    expect(find.text('Referral route'), findsOneWidget);
+    expect(find.text('Residence route'), findsOneWidget);
   });
 }

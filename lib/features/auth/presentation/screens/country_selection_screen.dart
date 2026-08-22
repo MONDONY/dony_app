@@ -22,7 +22,7 @@ class CountrySelectionScreen extends StatelessWidget {
     return BlocConsumer<CountryOnboardingCubit, CountryOnboardingState>(
       listener: (context, state) {
         if (state is CountryOnboardingSuccess) {
-          context.go('/auth/referral-code');
+          context.go('/auth/residence-address');
         } else if (state is CountryOnboardingError) {
           DonySnackbar.show(
             context,

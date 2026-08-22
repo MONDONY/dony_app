@@ -372,9 +372,7 @@ void main() {
         ).thenAnswer(
           (_) async => Response(
             statusCode: 204,
-            requestOptions: RequestOptions(
-              path: '/auth/me/residence-address',
-            ),
+            requestOptions: RequestOptions(path: '/auth/me/residence-address'),
           ),
         );
 
@@ -403,9 +401,7 @@ void main() {
 
   group('markOnboardingSeen', () {
     test('PUT /auth/me/onboarding-seen sans corps', () async {
-      when(
-        () => mockDio.put<void>('/auth/me/onboarding-seen'),
-      ).thenAnswer(
+      when(() => mockDio.put<void>('/auth/me/onboarding-seen')).thenAnswer(
         (_) async => Response(
           statusCode: 204,
           requestOptions: RequestOptions(path: '/auth/me/onboarding-seen'),
