@@ -1,12 +1,12 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/package_request/bloc/package_request_search_bloc.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -17,7 +17,9 @@ class PackageRequestSearchScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isGuest = FirebaseAuth.instance.currentUser == null;
+    // `isAnonymous` : un visiteur porte une session anonyme, l'absence de
+    // session ne le signale plus.
+    final isGuest = getIt<FirebaseSessionProbe>().isAnonymous;
     return BlocProvider(
       create: (_) =>
           getIt<PackageRequestSearchBloc>()
@@ -43,7 +45,7 @@ class _SearchViewState extends State<_SearchView> {
       SearchFiltersChanged(
         departure: _depCtrl.text.trim().isEmpty ? null : _depCtrl.text.trim(),
         arrival: _arrCtrl.text.trim().isEmpty ? null : _arrCtrl.text.trim(),
-        publicAccess: FirebaseAuth.instance.currentUser == null,
+        publicAccess: getIt<FirebaseSessionProbe>().isAnonymous,
       ),
     );
   }

@@ -7,6 +7,7 @@ import 'package:dony/app/router.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
+import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/analytics_consent_gate.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
@@ -80,7 +81,10 @@ class _DonyAppState extends State<DonyApp> {
       _navigateToRoute(route);
     });
     _authSub = FirebaseAuth.instance.authStateChanges().listen((user) {
-      if (user != null) {
+      // `!user.isAnonymous` : l'ouverture d'une session visiteur déclenche
+      // aussi cet événement, et un visiteur n'a pas de compte serveur où
+      // enregistrer un jeton FCM.
+      if (user != null && !user.isAnonymous) {
         getIt<NotificationService>().uploadCurrentToken();
       }
     });
@@ -245,7 +249,10 @@ class _DonyAppState extends State<DonyApp> {
                   lazy: false,
                   create: (_) {
                     final bloc = getIt<AuthBloc>();
-                    if (FirebaseAuth.instance.currentUser != null) {
+                    // `hasRealSession` : un visiteur porte une session anonyme
+                    // sans compte serveur. `GET /auth/me` lui répondrait 404 à
+                    // chaque démarrage, pour rien.
+                    if (getIt<FirebaseSessionProbe>().hasRealSession) {
                       bloc.add(const AuthCheckRequested());
                     }
                     return bloc;
@@ -303,8 +310,12 @@ class _DonyAppState extends State<DonyApp> {
                   // l'écran affiche son état d'erreur avec réessai.
                   if (!_startupAuthResolved && state is! AuthLoading) {
                     _startupAuthResolved = true;
+                    // Un visiteur reste légitimement en AuthInitial : sa
+                    // session anonyme n'a pas de compte serveur, et le
+                    // renvoyer sur /auth/method interdirait la navigation
+                    // publique que le mode visiteur est censé ouvrir.
                     if (state is AuthInitial &&
-                        FirebaseAuth.instance.currentUser != null) {
+                        getIt<FirebaseSessionProbe>().hasRealSession) {
                       appRouter.go('/auth/method');
                       return;
                     }

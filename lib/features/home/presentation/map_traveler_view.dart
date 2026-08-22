@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_map_view.dart';
@@ -11,7 +12,6 @@ import 'package:dony/features/package_request/data/models/package_request_search
 import 'package:dony/features/package_request/presentation/widgets/near_me_package_request_carousel.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_list_card.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_preview_bottom_sheet.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
@@ -26,7 +26,10 @@ class MapTravelerView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isGuest = FirebaseAuth.instance.currentUser == null;
+    // `isAnonymous` : depuis l'ouverture de session visiteur, l'absence de
+    // session ne signale plus un invité. C'est le caractère anonyme de la
+    // session qui le fait.
+    final isGuest = getIt<FirebaseSessionProbe>().isAnonymous;
     return BlocProvider<PackageRequestSearchBloc>(
       create: (_) =>
           getIt<PackageRequestSearchBloc>()
@@ -106,7 +109,7 @@ class _MapTravelerViewContentState extends State<_MapTravelerViewContent> {
         userLat: position.latitude,
         userLng: position.longitude,
         radiusKm: selectedRadius,
-        publicAccess: FirebaseAuth.instance.currentUser == null,
+        publicAccess: getIt<FirebaseSessionProbe>().isAnonymous,
       ),
     );
   }
@@ -118,7 +121,7 @@ class _MapTravelerViewContentState extends State<_MapTravelerViewContent> {
     });
     context.read<PackageRequestSearchBloc>().add(
       SearchFiltersChanged(
-        publicAccess: FirebaseAuth.instance.currentUser == null,
+        publicAccess: getIt<FirebaseSessionProbe>().isAnonymous,
       ),
     );
   }

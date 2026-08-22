@@ -1,6 +1,7 @@
 import 'package:dony/app/main_shell.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/app_update/presentation/screens/force_update_screen.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -193,7 +194,6 @@ import 'package:dony/features/trip_templates/data/models/trip_template.dart';
 import 'package:dony/features/trip_templates/presentation/screens/trip_recurrence_edit_screen.dart';
 import 'package:dony/features/trip_templates/presentation/screens/trip_template_edit_screen.dart';
 import 'package:dony/features/trip_templates/presentation/screens/trip_templates_screen.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -216,13 +216,30 @@ const _publicRoutes = {
   '/package-requests/search',
 };
 
-bool _isPublicRoute(GoRouterState state) {
-  if (_publicRoutes.any((r) => state.matchedLocation.startsWith(r))) {
-    return true;
-  }
-
-  final path = state.uri.path;
-  return GuestAccessGuard.isPublicGuestPath(path);
+/// Décide si une navigation doit être détournée vers l'écran de connexion, et
+/// renvoie `null` si elle peut aboutir.
+///
+/// C'est le seul rempart de l'application contre la navigation directe et les
+/// liens profonds : la plupart des écrans protégés (paiement, KYC,
+/// portefeuille) n'ont pas de garde propre et ne comptent que sur celui-ci.
+///
+/// [hasRealSession] : une session Firebase existe **et** appartient à un
+/// utilisateur réel. Une session anonyme vaut `false`. Un simple
+/// `currentUser != null` serait toujours vrai depuis l'ouverture de session
+/// anonyme, et ce redirect ne bloquerait plus jamais rien.
+///
+/// Extrait du `redirect` du routeur pour rester vérifiable sans Firebase ni
+/// montage de l'application (cf. `test/app/router_auth_redirect_test.dart`).
+@visibleForTesting
+String? resolveAuthRedirect({
+  required String matchedLocation,
+  required String path,
+  required bool hasRealSession,
+}) {
+  if (hasRealSession) return null;
+  if (_publicRoutes.any(matchedLocation.startsWith)) return null;
+  if (GuestAccessGuard.isPublicGuestPath(path)) return null;
+  return '/auth/method';
 }
 
 /// Route d'entrée, calculée par `resolveInitialLocation()` avant `runApp`
@@ -255,11 +272,13 @@ final appRouter = GoRouter(
       return '/force-update';
     }
 
-    final user = FirebaseAuth.instance.currentUser;
-    final isAuthenticated = user != null;
-    final isPublic = _isPublicRoute(state);
-    if (!isAuthenticated && !isPublic) {
-      return '/auth/method';
+    final authRedirect = resolveAuthRedirect(
+      matchedLocation: state.matchedLocation,
+      path: state.uri.path,
+      hasRealSession: getIt<FirebaseSessionProbe>().hasRealSession,
+    );
+    if (authRedirect != null) {
+      return authRedirect;
     }
 
     const guardedRoutes = {'/trips/create'};
