@@ -51,8 +51,8 @@ class CountryOnboardingError extends CountryOnboardingState {
 /// Le pays a le droit de rester vide : c'est un état normal signifiant « pas
 /// encore renseigné », complétable plus tard dans les Réglages. [skip] ne
 /// bloque donc jamais sur le réseau : il relit les préférences au mieux, pour
-/// poser la devise par défaut du serveur en cache, mais mémorise le passage
-/// même si cette lecture échoue.
+/// poser la devise par défaut du serveur en cache, sans échouer si cette
+/// lecture échoue.
 ///
 /// Les deux chemins écrivent [HiveService.kCurrencyCode] avec la devise
 /// **renvoyée par le serveur** : sans ce cache, `ActiveCurrency.current` rend
@@ -80,7 +80,6 @@ class CountryOnboardingCubit extends Cubit<CountryOnboardingState> {
       // table locale n'est qu'un miroir d'affichage, le backend tranche.
       await _prefs.put(HiveService.kCurrencyCode, saved.currencyCode);
       await _prefs.put(HiveService.kTravelerCountryUnsupported, false);
-      await _prefs.put(HiveService.kCountryOnboardingSeen, true);
       unawaited(_analytics.logEvent(AnalyticsEvents.countryOnboardingSelected));
       unawaited(
         _analytics.logEvent(
@@ -112,7 +111,6 @@ class CountryOnboardingCubit extends Cubit<CountryOnboardingState> {
       } catch (_) {
         // Ignoré volontairement : la devise sera posée à la première synchro.
       }
-      await _prefs.put(HiveService.kCountryOnboardingSeen, true);
       unawaited(_analytics.logEvent(AnalyticsEvents.countryOnboardingSkipped));
       unawaited(
         _analytics.logEvent(
@@ -136,7 +134,6 @@ class CountryOnboardingCubit extends Cubit<CountryOnboardingState> {
     emit(const CountryOnboardingSaving(null));
     try {
       await _prefs.put(HiveService.kTravelerCountryUnsupported, true);
-      await _prefs.put(HiveService.kCountryOnboardingSeen, true);
       unawaited(_analytics.logEvent(AnalyticsEvents.countryOnboardingSkipped));
       unawaited(
         _analytics.logEvent(

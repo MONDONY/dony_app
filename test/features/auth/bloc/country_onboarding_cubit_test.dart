@@ -55,7 +55,7 @@ void main() {
   });
 
   blocTest<CountryOnboardingCubit, CountryOnboardingState>(
-    'select enregistre le pays et memorise le passage',
+    'select enregistre le pays',
     build: build,
     act: (cubit) => cubit.select('CA'),
     expect: () => const [
@@ -76,7 +76,6 @@ void main() {
         ),
         () => prefs.put(HiveService.kCountryCode, 'CA'),
         () => prefs.put(HiveService.kCurrencyCode, 'EUR'),
-        () => prefs.put(HiveService.kCountryOnboardingSeen, true),
         () => analytics.logEvent(AnalyticsEvents.countryOnboardingSelected),
       ]);
       verify(
@@ -151,7 +150,7 @@ void main() {
   );
 
   test(
-    'échec Hive sur le pays : émet erreur sans flag ni succès et permet retry',
+    'échec Hive sur le pays : émet erreur sans succès et permet retry',
     () async {
       var countryWriteAttempts = 0;
       when(() => prefs.put(HiveService.kCountryCode, 'CA')).thenAnswer((
@@ -184,7 +183,6 @@ void main() {
           'Impossible d’enregistrer le pays. Réessayez.',
         ),
       );
-      verifyNever(() => prefs.put(HiveService.kCountryOnboardingSeen, true));
       verifyNever(
         () => analytics.logEvent(AnalyticsEvents.countryOnboardingSelected),
       );
@@ -202,58 +200,6 @@ void main() {
 
       expect(cubit.state, const CountryOnboardingSuccess());
       expect(countryWriteAttempts, 2);
-      verify(
-        () => analytics.logEvent(AnalyticsEvents.countryOnboardingSelected),
-      ).called(1);
-    },
-  );
-
-  test(
-    'échec Hive sur le flag vu : émet erreur sans succès et permet retry',
-    () async {
-      var seenWriteAttempts = 0;
-      when(
-        () => prefs.put(HiveService.kCountryOnboardingSeen, true),
-      ).thenAnswer((_) async {
-        seenWriteAttempts += 1;
-        if (seenWriteAttempts == 1) {
-          throw StateError('hive unavailable');
-        }
-      });
-      final cubit = build();
-      addTearDown(cubit.close);
-      final failedStates = expectLater(
-        cubit.stream.take(2),
-        emitsInOrder(const [
-          CountryOnboardingSaving('CM'),
-          CountryOnboardingError(
-            'Impossible d’enregistrer le pays. Réessayez.',
-          ),
-        ]),
-      );
-
-      await cubit.select('CM');
-
-      await failedStates;
-
-      expect(seenWriteAttempts, 1);
-      verifyNever(
-        () => analytics.logEvent(AnalyticsEvents.countryOnboardingSelected),
-      );
-
-      final retriedStates = expectLater(
-        cubit.stream.take(2),
-        emitsInOrder(const [
-          CountryOnboardingSaving('CM'),
-          CountryOnboardingSuccess(),
-        ]),
-      );
-      await cubit.select('CM');
-
-      await retriedStates;
-
-      expect(cubit.state, const CountryOnboardingSuccess());
-      expect(seenWriteAttempts, 2);
       verify(
         () => analytics.logEvent(AnalyticsEvents.countryOnboardingSelected),
       ).called(1);
@@ -280,7 +226,7 @@ void main() {
   });
 
   blocTest<CountryOnboardingCubit, CountryOnboardingState>(
-    'skip memorise le passage sans ecrire de pays',
+    'skip met en cache la devise sans écrire de pays',
     build: build,
     act: (cubit) => cubit.skip(),
     expect: () => const [
@@ -295,9 +241,6 @@ void main() {
       verifyNever(() => prefs.put(HiveService.kCountryCode, any()));
       verify(() => prefs.put(HiveService.kCurrencyCode, 'EUR')).called(1);
       verify(
-        () => prefs.put(HiveService.kCountryOnboardingSeen, true),
-      ).called(1);
-      verify(
         () => analytics.logEvent(AnalyticsEvents.countryOnboardingSkipped),
       ).called(1);
       verify(
@@ -310,7 +253,7 @@ void main() {
   );
 
   blocTest<CountryOnboardingCubit, CountryOnboardingState>(
-    'continueAsSenderOnly memorise le passage et bloque le parcours voyageur',
+    'continueAsSenderOnly bloque le parcours voyageur',
     build: build,
     act: (cubit) => cubit.continueAsSenderOnly(),
     expect: () => const [
@@ -324,9 +267,6 @@ void main() {
         () => prefs.put(HiveService.kTravelerCountryUnsupported, true),
       ).called(1);
       verify(
-        () => prefs.put(HiveService.kCountryOnboardingSeen, true),
-      ).called(1);
-      verify(
         () => analytics.logEvent(AnalyticsEvents.countryOnboardingSkipped),
       ).called(1);
       verify(
@@ -339,7 +279,7 @@ void main() {
   );
 
   blocTest<CountryOnboardingCubit, CountryOnboardingState>(
-    'skip tolère un échec réseau : le passage est mémorisé quand même',
+    'skip tolère un échec réseau : le succès est émis quand même',
     setUp: () {
       when(() => repository.fetchPrefs()).thenThrow(Exception('offline'));
     },
@@ -352,83 +292,26 @@ void main() {
     verify: (_) {
       verifyNever(() => prefs.put(HiveService.kCurrencyCode, any()));
       verify(
-        () => prefs.put(HiveService.kCountryOnboardingSeen, true),
-      ).called(1);
-    },
-  );
-
-  test(
-    'échec Hive du skip : émet erreur sans succès et permet retry',
-    () async {
-      var seenWriteAttempts = 0;
-      when(
-        () => prefs.put(HiveService.kCountryOnboardingSeen, true),
-      ).thenAnswer((_) async {
-        seenWriteAttempts += 1;
-        if (seenWriteAttempts == 1) {
-          throw StateError('hive unavailable');
-        }
-      });
-      final cubit = build();
-      addTearDown(cubit.close);
-      final failedStates = expectLater(
-        cubit.stream.take(2),
-        emitsInOrder(const [
-          CountryOnboardingSaving(null),
-          CountryOnboardingError(
-            'Impossible d’enregistrer ce choix. Réessayez.',
-          ),
-        ]),
-      );
-
-      await cubit.skip();
-
-      await failedStates;
-
-      expect(
-        cubit.state,
-        const CountryOnboardingError(
-          'Impossible d’enregistrer ce choix. Réessayez.',
-        ),
-      );
-      verifyNever(
-        () => analytics.logEvent(AnalyticsEvents.countryOnboardingSkipped),
-      );
-
-      final retriedStates = expectLater(
-        cubit.stream.take(2),
-        emitsInOrder(const [
-          CountryOnboardingSaving(null),
-          CountryOnboardingSuccess(),
-        ]),
-      );
-      await cubit.skip();
-
-      await retriedStates;
-
-      expect(cubit.state, const CountryOnboardingSuccess());
-      expect(seenWriteAttempts, 2);
-      verify(
         () => analytics.logEvent(AnalyticsEvents.countryOnboardingSkipped),
       ).called(1);
     },
   );
 
   test('skip ignore le second tap pendant la sauvegarde', () async {
-    final putCompleter = Completer<void>();
+    final fetchCompleter = Completer<UserBusinessPrefsDto>();
     when(
-      () => prefs.put(HiveService.kCountryOnboardingSeen, true),
-    ).thenAnswer((_) => putCompleter.future);
+      () => repository.fetchPrefs(),
+    ).thenAnswer((_) => fetchCompleter.future);
     final cubit = build();
     addTearDown(cubit.close);
 
     final first = cubit.skip();
     await Future<void>.delayed(Duration.zero);
     final second = cubit.skip();
-    putCompleter.complete();
+    fetchCompleter.complete(_prefs);
     await Future.wait([first, second]);
 
-    verify(() => prefs.put(HiveService.kCountryOnboardingSeen, true)).called(1);
+    verify(() => repository.fetchPrefs()).called(1);
     verify(
       () => analytics.logEvent(AnalyticsEvents.countryOnboardingSkipped),
     ).called(1);
