@@ -55,6 +55,7 @@ class DonyOnboardingGauge extends StatelessWidget {
 
     return Semantics(
       container: true,
+      label: 'Progression de l\'inscription',
       value: _semanticsValue(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,
@@ -118,9 +119,12 @@ class _GaugeSegment extends StatelessWidget {
       builder: (context, value, _) => Container(
         height: 6,
         decoration: BoxDecoration(
-          // Le fond reste visible pour que le nombre total de segments se lise
-          // même quand rien n'est fait.
-          color: cs.outline,
+          // Le fond reste visible pour que le nombre total de segments se
+          // lise même quand rien n'est fait — mais en alpha, comme toute
+          // piste de progression voisine (`edit_profile_screen.dart`,
+          // `pro_stats_bottom_sheet.dart`), jamais `cs.outline` plein, trop
+          // lourd à côté des autres composants du parcours.
+          color: cs.outline.withValues(alpha: 0.3),
           borderRadius: BorderRadius.circular(DonyRadius.full),
         ),
         child: FractionallySizedBox(

@@ -79,6 +79,15 @@ void main() {
 
       final semantics = tester.getSemantics(find.byType(DonyOnboardingGauge));
       expect(semantics.value, 'Étape 3 sur 5, 2 terminées');
+      // Sans label, le lecteur d'écran annonce juste « 0 étape sur 5
+      // terminée » sans dire de quoi il s'agit (revue finale du lot 2,
+      // correction 5). Le label du `Text` visible se fusionne en dessous
+      // (comportement standard de `Semantics(container: true)`), d'où le
+      // `startsWith` plutôt qu'une égalité stricte.
+      expect(
+        semantics.label,
+        startsWith('Progression de l\'inscription'),
+      );
     });
 
     testWidgets('sans étape en cours, la lecture porte sur le total atteint', (
@@ -96,6 +105,7 @@ void main() {
 
       final semantics = tester.getSemantics(find.byType(DonyOnboardingGauge));
       expect(semantics.value, '1 étape sur 2 terminée');
+      expect(semantics.label, startsWith('Progression de l\'inscription'));
     });
 
     testWidgets('tient à 200 % de taille de texte sans déborder', (
