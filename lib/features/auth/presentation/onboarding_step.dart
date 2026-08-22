@@ -192,9 +192,20 @@ bool _hasText(String? value) => value != null && value.trim().isNotEmpty;
 // ambiant (cf. `residence_address_screen.dart`).
 
 /// Lit les blocs fournis à l'échelle de l'application et rend la progression.
+///
+/// [countryFallback] permet à l'appelant de fournir une source plus fraîche
+/// que `BusinessPrefsBloc.state.country` (repli par défaut ci-dessous) : ce
+/// singleton app-wide n'est jamais resynchronisé quand
+/// `CountryOnboardingCubit.select()` écrit directement dans Hive, sans jamais
+/// dispatcher `CountryChanged`. `router.dart` passe donc explicitement
+/// `(state.extra as String?) ?? BusinessPrefsBloc.state.country` sur les
+/// routes atteintes juste après le choix du pays — sans ce paramètre, la
+/// jauge afficherait l'étape « Pays » comme non faite juste après l'avoir
+/// choisie, et ce jusqu'à un redémarrage à froid de l'app.
 OnboardingProgress readOnboardingProgress(
   BuildContext context, {
   OnboardingStep? current,
+  String? countryFallback,
 }) => onboardingProgress(
   user: context.read<AuthBloc>().state.currentUser,
   stripe: context.read<StripeAccountBloc>().state,
@@ -204,6 +215,7 @@ OnboardingProgress readOnboardingProgress(
   // `POST /auth/register` n'écrit pas `users.country` et le profil en cache
   // n'est pas rafraîchi après l'étape pays : même repli que `router.dart` pour
   // l'écran d'adresse.
-  countryFallback: context.read<BusinessPrefsBloc>().state.country,
+  countryFallback:
+      countryFallback ?? context.read<BusinessPrefsBloc>().state.country,
   current: current,
 );

@@ -371,28 +371,35 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/auth/residence-address',
-      builder: (context, state) => BlocProvider(
-        create: (_) => getIt<ResidenceAddressCubit>(),
-        child: ResidenceAddressScreen(
-          // `AuthBloc.state.currentUser?.country` n'est jamais renseigné :
-          // `POST /auth/register` n'écrit pas `users.country`. Le pays choisi
-          // à l'étape précédente est prioritairement lu dans `extra` — passé
-          // par `country_selection_screen.dart` juste après un `select()`
-          // réussi, donc garanti frais. `BusinessPrefsBloc.state.country`
-          // reste le repli : ce singleton app-wide est construit avant cet
-          // écran et ne se resynchronise pas automatiquement quand
-          // `CountryOnboardingCubit` écrit directement dans Hive, mais il
-          // reste utile pour toute navigation qui ne passerait pas par
-          // `country_selection_screen` (deep link, retour arrière...).
-          country:
-              (state.extra as String?) ??
-              context.read<BusinessPrefsBloc>().state.country,
-          progress: readOnboardingProgress(
-            context,
-            current: OnboardingStep.address,
+      builder: (context, state) {
+        // `AuthBloc.state.currentUser?.country` n'est jamais renseigné :
+        // `POST /auth/register` n'écrit pas `users.country`. Le pays choisi
+        // à l'étape précédente est prioritairement lu dans `extra` — passé
+        // par `country_selection_screen.dart` juste après un `select()`
+        // réussi, donc garanti frais. `BusinessPrefsBloc.state.country`
+        // reste le repli : ce singleton app-wide est construit avant cet
+        // écran et ne se resynchronise pas automatiquement quand
+        // `CountryOnboardingCubit` écrit directement dans Hive, mais il
+        // reste utile pour toute navigation qui ne passerait pas par
+        // `country_selection_screen` (deep link, retour arrière...). Même
+        // repli réutilisé pour `countryFallback` : sans lui, la jauge
+        // afficherait l'étape « Pays » comme non faite juste après l'avoir
+        // choisie (`readOnboardingProgress` ne le déduit pas seul).
+        final country =
+            (state.extra as String?) ??
+            context.read<BusinessPrefsBloc>().state.country;
+        return BlocProvider(
+          create: (_) => getIt<ResidenceAddressCubit>(),
+          child: ResidenceAddressScreen(
+            country: country,
+            progress: readOnboardingProgress(
+              context,
+              current: OnboardingStep.address,
+              countryFallback: country,
+            ),
           ),
-        ),
-      ),
+        );
+      },
     ),
     GoRoute(
       path: '/auth/referral-code',
@@ -402,7 +409,19 @@ final appRouter = GoRouter(
           getIt<AnalyticsService>(),
         ),
         // Aucune étape en cours : le parrainage est hors décompte (spec §4.2).
-        child: ReferralCodeScreen(progress: readOnboardingProgress(context)),
+        // Même repli `extra ?? BusinessPrefsBloc` que `residence-address`
+        // pour `countryFallback` : cet écran n'a normalement pas d'`extra`
+        // (rien ne le lui transmet aujourd'hui), mais garder le même motif
+        // évite qu'un futur appelant qui en passerait un régresse en
+        // silence sur l'étape « Pays » de la jauge.
+        child: ReferralCodeScreen(
+          progress: readOnboardingProgress(
+            context,
+            countryFallback:
+                (state.extra as String?) ??
+                context.read<BusinessPrefsBloc>().state.country,
+          ),
+        ),
       ),
     ),
     GoRoute(
