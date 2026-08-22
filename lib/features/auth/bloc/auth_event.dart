@@ -180,3 +180,13 @@ class AuthUserSynced extends AuthEvent {
 class AuthProfileRefreshRequested extends AuthEvent {
   const AuthProfileRefreshRequested();
 }
+
+/// Ouvre une session Firebase anonyme pour naviguer sans compte.
+///
+/// Déclenché UNIQUEMENT par un choix explicite de l'utilisateur (CTA
+/// "Parcourir sans compte" de l'écran de connexion), jamais au lancement de
+/// l'application : on évite ainsi de créer un compte Firebase pour la
+/// majorité des visiteurs qui ne resteront pas anonymes.
+class AuthGuestSessionRequested extends AuthEvent {
+  const AuthGuestSessionRequested();
+}

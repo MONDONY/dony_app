@@ -2008,4 +2008,38 @@ void main() {
       expect: () => [isA<AuthLoading>(), isA<AuthError>()],
     );
   });
+
+  // ─── AuthGuestSessionRequested ────────────────────────────────────────────────
+
+  group('AuthGuestSessionRequested', () {
+    blocTest<AuthBloc, AuthState>(
+      'ouvre une session anonyme → émet [Loading, AuthGuestSessionReady]',
+      build: () {
+        when(
+          () => mockFirebaseAuth.signInAnonymously(),
+        ).thenAnswer((_) async => MockUserCredential());
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const AuthGuestSessionRequested()),
+      expect: () => [isA<AuthLoading>(), isA<AuthGuestSessionReady>()],
+      verify: (_) {
+        verify(() => mockFirebaseAuth.signInAnonymously()).called(1);
+      },
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'échec de signInAnonymously (hors ligne) → émet [Loading, AuthError], sans navigation optimiste',
+      build: () {
+        when(() => mockFirebaseAuth.signInAnonymously()).thenThrow(
+          FirebaseAuthException(code: 'network-request-failed'),
+        );
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const AuthGuestSessionRequested()),
+      expect: () => [isA<AuthLoading>(), isA<AuthError>()],
+      verify: (_) {
+        verify(() => mockFirebaseAuth.signInAnonymously()).called(1);
+      },
+    );
+  });
 }

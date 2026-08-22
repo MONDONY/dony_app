@@ -66,6 +66,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthUserSynced>(_onUserSynced);
     on<AuthAvatarUploadRequested>(_onAvatarUploadRequested);
     on<AuthProfileRefreshRequested>(_onProfileRefreshRequested);
+    on<AuthGuestSessionRequested>(_onGuestSessionRequested);
   }
 
   @override
@@ -541,6 +542,36 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       }
     } catch (e) {
       emit(AuthError(_friendlyError(e)));
+    }
+  }
+
+  // ─── Session invitée (navigation sans compte) ─────────────────────────────
+  //
+  // Déclenché uniquement par le CTA "Parcourir sans compte" (jamais au
+  // démarrage de l'app). En cas d'échec (hors ligne, Firebase indisponible),
+  // on N'AVANCE JAMAIS de façon optimiste vers l'accueil : l'utilisateur
+  // resterait sur un écran vide sans comprendre la panne. Il reste sur
+  // l'écran de connexion avec un message clair ; seul le succès déclenche la
+  // navigation, via le BlocListener de l'écran.
+
+  Future<void> _onGuestSessionRequested(
+    AuthGuestSessionRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    try {
+      await _firebaseAuth.signInAnonymously();
+      emit(const AuthGuestSessionReady());
+    } catch (_) {
+      emit(
+        const AuthError(
+          NetworkException(
+            'Impossible de démarrer la navigation sans compte. '
+            'Vérifiez votre connexion.',
+            code: 'guest-session-failed',
+          ),
+        ),
+      );
     }
   }
 
