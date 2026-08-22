@@ -15,6 +15,15 @@ class UserModel extends Equatable {
   final String? lastName;
   final DateTime? birthDate;
   final String? city;
+  final String? country;
+  final String? residenceStreet;
+  final String? residenceLine2;
+  final String? residencePostalCode;
+
+  /// Date à laquelle l'utilisateur a atteint l'accueil depuis le parcours
+  /// d'onboarding, qu'il l'ait terminé ou passé. `null` = le parcours
+  /// s'impose encore.
+  final DateTime? onboardingSeenAt;
   final List<String> roles;
   final String kycStatus;
   final String status;
@@ -40,6 +49,11 @@ class UserModel extends Equatable {
     this.lastName,
     this.birthDate,
     this.city,
+    this.country,
+    this.residenceStreet,
+    this.residenceLine2,
+    this.residencePostalCode,
+    this.onboardingSeenAt,
     required this.roles,
     required this.kycStatus,
     required this.status,
@@ -68,6 +82,13 @@ class UserModel extends Equatable {
         ? DateTime.tryParse(json['birthDate'] as String)
         : null,
     city: json['city'] as String?,
+    country: json['country'] as String?,
+    residenceStreet: json['residenceStreet'] as String?,
+    residenceLine2: json['residenceLine2'] as String?,
+    residencePostalCode: json['residencePostalCode'] as String?,
+    onboardingSeenAt: json['onboardingSeenAt'] == null
+        ? null
+        : DateTime.parse(json['onboardingSeenAt'] as String),
     roles: List<String>.from(json['roles'] as List? ?? []),
     kycStatus: json['kycStatus'] as String? ?? 'NOT_STARTED',
     status: json['status'] as String? ?? 'ACTIVE',
@@ -101,6 +122,11 @@ class UserModel extends Equatable {
     'lastName': lastName,
     'birthDate': birthDate?.toIso8601String(),
     'city': city,
+    'country': country,
+    'residenceStreet': residenceStreet,
+    'residenceLine2': residenceLine2,
+    'residencePostalCode': residencePostalCode,
+    'onboardingSeenAt': onboardingSeenAt?.toIso8601String(),
     'roles': roles,
     'kycStatus': kycStatus,
     'status': status,
@@ -127,6 +153,11 @@ class UserModel extends Equatable {
     String? lastName,
     DateTime? birthDate,
     String? city,
+    String? country,
+    String? residenceStreet,
+    String? residenceLine2,
+    String? residencePostalCode,
+    DateTime? onboardingSeenAt,
     List<String>? roles,
     String? kycStatus,
     String? status,
@@ -151,6 +182,11 @@ class UserModel extends Equatable {
     lastName: lastName ?? this.lastName,
     birthDate: birthDate ?? this.birthDate,
     city: city ?? this.city,
+    country: country ?? this.country,
+    residenceStreet: residenceStreet ?? this.residenceStreet,
+    residenceLine2: residenceLine2 ?? this.residenceLine2,
+    residencePostalCode: residencePostalCode ?? this.residencePostalCode,
+    onboardingSeenAt: onboardingSeenAt ?? this.onboardingSeenAt,
     roles: roles ?? this.roles,
     kycStatus: kycStatus ?? this.kycStatus,
     status: status ?? this.status,
@@ -253,6 +289,11 @@ class UserModel extends Equatable {
     lastName,
     birthDate,
     city,
+    country,
+    residenceStreet,
+    residenceLine2,
+    residencePostalCode,
+    onboardingSeenAt,
     roles,
     kycStatus,
     status,

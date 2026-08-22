@@ -59,4 +59,18 @@ class AuthRepository {
     required String phoneNumber,
     required String code,
   }) => _datasource.attachPhone(phoneNumber: phoneNumber, code: code);
+
+  Future<void> updateResidenceAddress({
+    required String street,
+    String? line2,
+    required String postalCode,
+    required String city,
+  }) => _datasource.updateResidenceAddress(
+    street: street,
+    line2: line2,
+    postalCode: postalCode,
+    city: city,
+  );
+
+  Future<void> markOnboardingSeen() => _datasource.markOnboardingSeen();
 }

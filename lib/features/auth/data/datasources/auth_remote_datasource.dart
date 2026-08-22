@@ -128,4 +128,25 @@ class AuthRemoteDatasource {
     );
     return UserModel.fromJson(response.data!);
   }
+
+  Future<void> updateResidenceAddress({
+    required String street,
+    String? line2,
+    required String postalCode,
+    required String city,
+  }) async {
+    await _apiClient.dio.put<void>(
+      '/auth/me/residence-address',
+      data: {
+        'street': street,
+        'line2': ?line2,
+        'postalCode': postalCode,
+        'city': city,
+      },
+    );
+  }
+
+  Future<void> markOnboardingSeen() async {
+    await _apiClient.dio.put<void>('/auth/me/onboarding-seen');
+  }
 }
