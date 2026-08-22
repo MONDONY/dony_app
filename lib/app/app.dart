@@ -249,11 +249,23 @@ class _DonyAppState extends State<DonyApp> {
                   lazy: false,
                   create: (_) {
                     final bloc = getIt<AuthBloc>();
+                    final probe = getIt<FirebaseSessionProbe>();
                     // `hasRealSession` : un visiteur porte une session anonyme
                     // sans compte serveur. `GET /auth/me` lui répondrait 404 à
                     // chaque démarrage, pour rien.
-                    if (getIt<FirebaseSessionProbe>().hasRealSession) {
+                    if (probe.hasRealSession) {
                       bloc.add(const AuthCheckRequested());
+                    } else if (probe.hasSession) {
+                      // Session anonyme déjà ouverte avant ce démarrage
+                      // (visiteur qui rouvre l'app) : elle ne déclenche ni
+                      // `AuthCheckRequested` ni aucune transition d'AuthBloc
+                      // (il reste en `AuthInitial`), donc rien d'autre ne
+                      // charge les favoris déjà posés par ce visiteur. Ce
+                      // provider n'a pas accès à `FavoriteIdsCubit` via
+                      // `context` (déclaré plus loin dans ce même
+                      // `MultiBlocProvider`) : on passe par `getIt`, comme
+                      // pour `AuthBloc` lui-même.
+                      getIt<FavoriteIdsCubit>().load();
                     }
                     return bloc;
                   },
@@ -357,6 +369,12 @@ class _DonyAppState extends State<DonyApp> {
                     context.read<ActiveRoleCubit>().syncWithRoles(
                       state.user.roles,
                     );
+                  } else if (state is AuthGuestSessionReady) {
+                    // Session anonyme fraîchement ouverte ("Parcourir sans
+                    // compte") : les favoris sont le seul contenu qu'un
+                    // visiteur peut conserver, autant les charger tout de
+                    // suite (idempotent, erreurs avalées silencieusement).
+                    context.read<FavoriteIdsCubit>().load();
                   }
                 },
                 child: AnnotatedRegion<SystemUiOverlayStyle>(

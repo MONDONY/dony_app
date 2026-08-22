@@ -1,5 +1,4 @@
 import 'package:dony/features/auth/guest_access_guard.dart';
-import 'package:dony/features/home/domain/search_mode.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -12,52 +11,22 @@ void main() {
       expect(GuestAccessGuard.isAllowedShellTab(4), isFalse);
     });
 
-    test('autorise seulement les routes publiques de recherche et détail', () {
-      expect(GuestAccessGuard.isPublicGuestPath('/home'), isTrue);
-      expect(
-        GuestAccessGuard.isPublicGuestPath('/package-requests/abc/public'),
-        isTrue,
-      );
-      expect(GuestAccessGuard.isPublicGuestPath('/favoris'), isFalse);
-      expect(GuestAccessGuard.isPublicGuestPath('/messages'), isFalse);
-      expect(GuestAccessGuard.isPublicGuestPath('/profile'), isFalse);
-      expect(GuestAccessGuard.isPublicGuestPath('/announcements'), isFalse);
-      expect(GuestAccessGuard.isPublicGuestPath('/tracking'), isFalse);
-    });
-
-    test('démarre les invités sur la recherche colis publique', () {
-      expect(
-        GuestAccessGuard.initialSearchMode(isAuthenticated: false),
-        SearchMode.parcels,
-      );
-      expect(
-        GuestAccessGuard.initialSearchMode(isAuthenticated: true),
-        SearchMode.trips,
-      );
-    });
-
-    test('autorise la recherche trajets et colis pour un invité', () {
-      expect(
-        GuestAccessGuard.canUseSearchMode(
-          SearchMode.parcels,
-          isAuthenticated: false,
-        ),
-        isTrue,
-      );
-      expect(
-        GuestAccessGuard.canUseSearchMode(
-          SearchMode.trips,
-          isAuthenticated: false,
-        ),
-        isTrue,
-      );
-      expect(
-        GuestAccessGuard.canUseSearchMode(
-          SearchMode.trips,
-          isAuthenticated: true,
-        ),
-        isTrue,
-      );
-    });
+    test(
+      'autorise les routes publiques de recherche, détail et favoris',
+      () {
+        expect(GuestAccessGuard.isPublicGuestPath('/home'), isTrue);
+        expect(
+          GuestAccessGuard.isPublicGuestPath('/package-requests/abc/public'),
+          isTrue,
+        );
+        // Les favoris sont le seul contenu qu'un visiteur peut conserver :
+        // le backend et le routeur les autorisent déjà à un invité.
+        expect(GuestAccessGuard.isPublicGuestPath('/favoris'), isTrue);
+        expect(GuestAccessGuard.isPublicGuestPath('/messages'), isFalse);
+        expect(GuestAccessGuard.isPublicGuestPath('/profile'), isFalse);
+        expect(GuestAccessGuard.isPublicGuestPath('/announcements'), isFalse);
+        expect(GuestAccessGuard.isPublicGuestPath('/tracking'), isFalse);
+      },
+    );
   });
 }

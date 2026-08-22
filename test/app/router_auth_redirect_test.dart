@@ -83,6 +83,12 @@ void main() {
         '/auth/method',
       );
     });
+
+    // Task 7 : les favoris sont le seul contenu qu'un visiteur peut
+    // conserver, donc le seul que la réclamation aura à transférer.
+    test('l\'accès aux favoris reste ouvert à un visiteur', () {
+      expect(redirectFor('/favoris', hasRealSession: false), isNull);
+    });
   });
 
   // La fonction pure ci-dessus peut être juste et le `redirect` réel câblé à

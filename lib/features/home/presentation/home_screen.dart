@@ -6,12 +6,10 @@ import 'package:dony/core/di/pending_search_notifier.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
-import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
-import 'package:dony/features/auth/guest_access_guard.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_required_sheet.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
@@ -162,19 +160,10 @@ class _MapSenderViewState extends State<_MapSenderView> {
   @override
   void initState() {
     super.initState();
-    // FirebaseSessionProbe (session persistée, disponible synchronement) et
-    // non AuthBloc.state.currentUser : au tout premier frame après un cold
-    // start, AuthBloc est encore à AuthInitial — le GET /auth/me n'a pas eu
-    // le temps de répondre — et un utilisateur bel et bien connecté
-    // retombait sur le mode invité (onglet Colis) au lieu de Trajets. Même
-    // source que le redirect du routeur (router.dart).
-    // `hasRealSession` et non `hasSession` : un visiteur porte lui aussi une
-    // session (anonyme), et `hasSession` le faisait ouvrir sur Trajets au lieu
-    // de Colis. Le probe reste la bonne source — c'est le prédicat qui était
-    // trop large.
-    _mode = GuestAccessGuard.initialSearchMode(
-      isAuthenticated: getIt<FirebaseSessionProbe>().hasRealSession,
-    );
+    // Mode par défaut identique pour tout le monde : la recherche de trajets
+    // fonctionne désormais pour un visiteur (Task 7), il n'y a plus de raison
+    // de le distinguer d'un inscrit à l'ouverture de l'écran.
+    _mode = SearchMode.trips;
     if (getIt.isRegistered<PendingSearchNotifier>()) {
       _pendingSearchNotifier = getIt<PendingSearchNotifier>();
       _pendingSearchNotifier!.addListener(_consumePendingSearch);
@@ -522,14 +511,6 @@ class _MapSenderViewState extends State<_MapSenderView> {
 
   void _onModeChanged(SearchMode mode) {
     if (mode == _mode) {
-      return;
-    }
-    final isAuthenticated = context.read<AuthBloc>().state.currentUser != null;
-    if (!GuestAccessGuard.canUseSearchMode(
-      mode,
-      isAuthenticated: isAuthenticated,
-    )) {
-      unawaited(AuthRequiredSheet.show(context));
       return;
     }
     setState(() {
@@ -963,11 +944,8 @@ class _MapSenderViewState extends State<_MapSenderView> {
           .copyWith(weightMin: result.weightKg);
     }
 
-    final isAuthenticated = context.read<AuthBloc>().state.currentUser != null;
     setState(() {
-      _mode = GuestAccessGuard.initialSearchMode(
-        isAuthenticated: isAuthenticated,
-      );
+      _mode = SearchMode.trips;
       _filters = next;
       _otherModeCount = null;
     });
@@ -2845,13 +2823,10 @@ class _FavoritesButton extends StatelessWidget {
         final count = state.count;
         return GestureDetector(
           key: const Key('favorites-button'),
-          onTap: () {
-            if (context.read<AuthBloc>().state.currentUser == null) {
-              AuthRequiredSheet.show(context);
-              return;
-            }
-            context.push('/favoris');
-          },
+          // Les favoris sont accessibles à un visiteur : c'est le seul
+          // contenu qu'une session invitée peut conserver (backend et
+          // routeur les autorisent déjà — `GuestAccessGuard.isPublicGuestPath`).
+          onTap: () => context.push('/favoris'),
           behavior: HitTestBehavior.opaque,
           child: Stack(
             clipBehavior: Clip.none,
