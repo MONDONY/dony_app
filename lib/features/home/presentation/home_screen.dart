@@ -359,7 +359,6 @@ class _MapSenderViewState extends State<_MapSenderView> {
 
   void _dispatchSearch() {
     if (!mounted) return;
-    final publicAccess = context.read<AuthBloc>().state.currentUser == null;
     // `toAnnouncementQuery` (et non `toSearchParams`) : c'est elle qui porte le
     // vrai payload serveur — corridor neutralisé par « près de moi », booléens
     // jamais envoyés à false.
@@ -383,7 +382,6 @@ class _MapSenderViewState extends State<_MapSenderView> {
         userLng: q.userLng,
         radiusKm: q.radiusKm,
         urgent: q.urgent,
-        publicAccess: publicAccess,
       ),
     );
   }
@@ -404,7 +402,6 @@ class _MapSenderViewState extends State<_MapSenderView> {
         radiusKm: q.radiusKm,
         urgent: q.urgent,
         matchingMyTrips: q.matchingMyTrips,
-        publicAccess: context.read<AuthBloc>().state.currentUser == null,
       ),
     );
   }

@@ -1,7 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
-import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_map_view.dart';
@@ -26,16 +25,9 @@ class MapTravelerView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // `!hasRealSession` et non `isAnonymous` : est visiteur aussi bien celui
-    // qui porte une session anonyme que celui qui n'a aucune session (arrivée
-    // par lien profond avant tout démarrage). `isAnonymous` déclarerait ce
-    // dernier inscrit, et il repartirait sur l'endpoint authentifié pour un
-    // 401 et une liste vide au lieu des résultats publics.
-    final isGuest = !getIt<FirebaseSessionProbe>().hasRealSession;
     return BlocProvider<PackageRequestSearchBloc>(
       create: (_) =>
-          getIt<PackageRequestSearchBloc>()
-            ..add(SearchFiltersChanged(publicAccess: isGuest)),
+          getIt<PackageRequestSearchBloc>()..add(const SearchFiltersChanged()),
       child: const _MapTravelerViewContent(),
     );
   }
@@ -111,7 +103,6 @@ class _MapTravelerViewContentState extends State<_MapTravelerViewContent> {
         userLat: position.latitude,
         userLng: position.longitude,
         radiusKm: selectedRadius,
-        publicAccess: !getIt<FirebaseSessionProbe>().hasRealSession,
       ),
     );
   }
@@ -121,11 +112,7 @@ class _MapTravelerViewContentState extends State<_MapTravelerViewContent> {
       _userPosition = null;
       _radiusKm = null;
     });
-    context.read<PackageRequestSearchBloc>().add(
-      SearchFiltersChanged(
-        publicAccess: !getIt<FirebaseSessionProbe>().hasRealSession,
-      ),
-    );
+    context.read<PackageRequestSearchBloc>().add(const SearchFiltersChanged());
   }
 
   Set<Marker> _markersFor(List<PackageRequestSearchItem> items) {

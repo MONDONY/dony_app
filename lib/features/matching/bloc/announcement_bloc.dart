@@ -218,7 +218,6 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
         sortBy: event.sortBy,
         sortDir: event.sortDir,
         urgent: event.urgent,
-        publicAccess: event.publicAccess,
       );
       emit(AnnouncementSearchLoaded(results));
     } catch (e, stacktrace) {

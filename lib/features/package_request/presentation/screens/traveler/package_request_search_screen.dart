@@ -1,7 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
-import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/package_request/bloc/package_request_search_bloc.dart';
@@ -17,14 +16,9 @@ class PackageRequestSearchScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // `!hasRealSession` et non `isAnonymous` : sans aucune session, on est
-    // tout autant un visiteur. `isAnonymous` y serait faux et l'écran taperait
-    // l'endpoint authentifié — 401, liste vide.
-    final isGuest = !getIt<FirebaseSessionProbe>().hasRealSession;
     return BlocProvider(
       create: (_) =>
-          getIt<PackageRequestSearchBloc>()
-            ..add(SearchFiltersChanged(publicAccess: isGuest)),
+          getIt<PackageRequestSearchBloc>()..add(const SearchFiltersChanged()),
       child: const _SearchView(),
     );
   }
@@ -46,7 +40,6 @@ class _SearchViewState extends State<_SearchView> {
       SearchFiltersChanged(
         departure: _depCtrl.text.trim().isEmpty ? null : _depCtrl.text.trim(),
         arrival: _arrCtrl.text.trim().isEmpty ? null : _arrCtrl.text.trim(),
-        publicAccess: !getIt<FirebaseSessionProbe>().hasRealSession,
       ),
     );
   }
