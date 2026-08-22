@@ -224,6 +224,10 @@ class _StubSessionProbe implements FirebaseSessionProbe {
   const _StubSessionProbe(this.hasSession);
   @override
   final bool hasSession;
+  @override
+  bool get isAnonymous => false;
+  @override
+  bool get hasRealSession => hasSession;
 }
 
 Widget _buildHomeHarness() {
