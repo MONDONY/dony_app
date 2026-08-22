@@ -230,6 +230,12 @@ class _PublicRequestCard extends StatelessWidget {
   const _PublicRequestCard({required this.request});
   final PackageRequestSearchItem request;
 
+  /// Prix réellement payé par l'expéditeur. `targetPriceEur` seul est un
+  /// NET (PR #219) : jamais afficher les deux montants côte à côte, ça
+  /// révélerait le taux de commission par soustraction. Repli sur le net
+  /// uniquement si le serveur ne sert pas encore le brut.
+  double? get _displayPrice => request.grossPriceEur ?? request.targetPriceEur;
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -294,10 +300,10 @@ class _PublicRequestCard extends StatelessWidget {
                     _Pill(iconAsset: 'tag', label: request.categories.first),
                 ],
               ),
-              if (request.targetPriceEur != null) ...[
+              if (_displayPrice != null) ...[
                 const SizedBox(height: DonySpacing.md),
                 Text(
-                  'Budget: ${formatPriceIn(request.targetPriceEur!, request.currency)}',
+                  'Budget: ${formatPriceIn(_displayPrice!, request.currency)}',
                   style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,

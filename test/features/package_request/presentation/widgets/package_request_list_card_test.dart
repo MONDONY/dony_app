@@ -12,6 +12,7 @@ PackageRequestSearchItem _item({
   String categoryLabel = 'Vêtements & tissus',
   ParcelSize size = ParcelSize.medium,
   double? targetPrice = 35,
+  double? grossPrice,
   String? photoUrl,
   List<String> photoUrls = const [],
   bool kycVerified = true,
@@ -32,6 +33,7 @@ PackageRequestSearchItem _item({
   parcelSize: size,
   categories: [categoryLabel],
   targetPriceEur: targetPrice,
+  grossPriceEur: grossPrice,
   photoUrl: photoUrl,
   photoUrls: photoUrls,
   urgent: urgent,
@@ -113,6 +115,36 @@ void main() {
       expect(find.text('Budget libre'), findsOneWidget);
       expect(find.text('35 €'), findsNothing);
     });
+
+    testWidgets(
+      'affiche le brut (grossPriceEur) au lieu du net quand le serveur le fournit',
+      (tester) async {
+        await tester.pumpWidget(
+          wrap(
+            PackageRequestListCard(
+              item: _item(targetPrice: 35, grossPrice: 40),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(find.textContaining('40'), findsWidgets);
+        // Jamais les deux montants côte à côte (révélerait la commission).
+        expect(find.textContaining('35'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'retombe sur le net (targetPriceEur) quand grossPriceEur est absent (ancien payload)',
+      (tester) async {
+        await tester.pumpWidget(
+          wrap(
+            PackageRequestListCard(item: _item(targetPrice: 35, grossPrice: null)),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(find.textContaining('35'), findsWidgets);
+      },
+    );
 
     testWidgets('badge compteur photos quand plusieurs photos', (tester) async {
       await tester.pumpWidget(

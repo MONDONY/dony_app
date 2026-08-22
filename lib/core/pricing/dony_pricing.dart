@@ -211,15 +211,19 @@ extension AnnouncementSenderPricing on AnnouncementModel {
   /// taux de change, seulement la majoration commission déjà appliquée au
   /// montant d'origine.
   ///
-  /// `null` si le serveur n'a rien converti, si [pricePerKg] est nul (mode
-  /// `MIXED` sans tarif au kilo, ou net masqué pour un lecteur anonyme : pas
-  /// de ratio net→brut exploitable), ou si [senderPricePerKg] est absent.
+  /// Pour un lecteur anonyme (net masqué, [pricePerKg] absent), aucun ratio
+  /// net→brut n'est calculable ici : on retombe alors sur
+  /// [AnnouncementModel.pricePerKgDisplayConverted], que le serveur sert
+  /// déjà comme le brut converti (PR #219, compense justement ce trou).
+  /// `null` si le serveur n'a rien converti non plus, si [pricePerKg] est nul
+  /// pour une autre raison (mode `MIXED` sans tarif au kilo), ou si
+  /// [senderPricePerKg] est absent.
   double? get convertedSenderPricePerKg {
     final converted = convertedPricePerKg;
     final net = pricePerKg;
     final sender = senderPricePerKg;
     if (converted == null || net == null || net <= 0 || sender == null) {
-      return null;
+      return pricePerKgDisplayConverted;
     }
     final markupRatio = sender / net;
     return converted * markupRatio;

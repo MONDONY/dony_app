@@ -220,6 +220,15 @@ class AnnouncementModel {
   /// même temps que [convertedPricePerKg].
   final String? convertedCurrency;
 
+  /// Prix au kilo **affiché à l'expéditeur** ([pricePerKgDisplay], le BRUT),
+  /// converti par le SERVEUR dans la devise du lecteur courant. Ajouté (PR
+  /// #219) pour compenser le masquage de [pricePerKg] (le net) aux lecteurs
+  /// anonymes : sans lui, un invité perdait toute conversion de devise sur le
+  /// prix au kilo. Servi à tous les lecteurs, jamais retiré à un inscrit.
+  /// `null` quand le backend n'a rien à convertir (devise déjà identique,
+  /// ancien payload, ou trajet sans tarif au kilo exploitable).
+  final double? pricePerKgDisplayConverted;
+
   const AnnouncementModel({
     required this.id,
     required this.travelerId,
@@ -264,6 +273,7 @@ class AnnouncementModel {
     this.negotiable = false,
     this.convertedPricePerKg,
     this.convertedCurrency,
+    this.pricePerKgDisplayConverted,
   });
 
   factory AnnouncementModel.fromJson(Map<String, dynamic> json) =>

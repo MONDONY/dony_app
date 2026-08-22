@@ -503,6 +503,39 @@ void main() {
     });
   });
 
+  group(
+    'AnnouncementModel.pricePerKgDisplayConverted (brut converti pour un invité)',
+    () {
+      test('pricePerKgDisplayConverted est lu quand le serveur le fournit', () {
+        final json = baseAnnouncementJson()
+          ..['pricePerKgDisplayConverted'] = 8200.0;
+
+        final model = AnnouncementModel.fromJson(json);
+
+        expect(model.pricePerKgDisplayConverted, 8200.0);
+      });
+
+      test('pricePerKgDisplayConverted absent : nul, aucune exception', () {
+        final json = baseAnnouncementJson()
+          ..remove('pricePerKgDisplayConverted');
+
+        expect(
+          AnnouncementModel.fromJson(json).pricePerKgDisplayConverted,
+          isNull,
+        );
+      });
+
+      test('parses an integer pricePerKgDisplayConverted as a double', () {
+        final json = baseAnnouncementJson()
+          ..['pricePerKgDisplayConverted'] = 8200;
+
+        final model = AnnouncementModel.fromJson(json);
+
+        expect(model.pricePerKgDisplayConverted, 8200.0);
+      });
+    },
+  );
+
   group('AnnouncementModel.pricePerKg (net masqué pour un invité)', () {
     test('tolère un pricePerKg absent (net masqué pour un invité)', () {
       // Le backend masque le net voyageur aux sessions anonymes (décision

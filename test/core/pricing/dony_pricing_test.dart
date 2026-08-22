@@ -7,6 +7,7 @@ AnnouncementModel _ann({
   double? pricePerKgDisplay,
   double? convertedPricePerKg,
   String? convertedCurrency,
+  double? pricePerKgDisplayConverted,
 }) => AnnouncementModel(
   id: 'a',
   travelerId: 't',
@@ -19,6 +20,7 @@ AnnouncementModel _ann({
   pricePerKgDisplay: pricePerKgDisplay,
   convertedPricePerKg: convertedPricePerKg,
   convertedCurrency: convertedCurrency,
+  pricePerKgDisplayConverted: pricePerKgDisplayConverted,
   status: 'OPEN',
   createdAt: DateTime(2026, 6),
   updatedAt: DateTime(2026, 6),
@@ -212,18 +214,38 @@ void main() {
       expect(a.convertedSenderPricePerKg, isNull);
     });
 
-    test('null quand pricePerKg est absent (net masqué pour un invité)', () {
-      // pricePerKg null (invité) : impossible de reconstituer le ratio
-      // net→brut, même si convertedPricePerKg était renseigné (en pratique
-      // le backend masque les deux ensemble, cf. commit ff8107c1).
-      final a = _ann(
-        pricePerKg: null,
-        pricePerKgDisplay: 11.5,
-        convertedPricePerKg: 6560,
-        convertedCurrency: 'XOF',
-      );
-      expect(a.convertedSenderPricePerKg, isNull);
-    });
+    test(
+      'null quand pricePerKg est absent et sans repli backend (ancien payload)',
+      () {
+        // pricePerKg null (invité) : impossible de reconstituer le ratio
+        // net→brut, même si convertedPricePerKg était renseigné (en pratique
+        // le backend masque les deux ensemble, cf. commit ff8107c1). Sans
+        // pricePerKgDisplayConverted (payload antérieur à la PR #219), rien
+        // à afficher.
+        final a = _ann(
+          pricePerKg: null,
+          pricePerKgDisplay: 11.5,
+          convertedPricePerKg: 6560,
+          convertedCurrency: 'XOF',
+        );
+        expect(a.convertedSenderPricePerKg, isNull);
+      },
+    );
+
+    test(
+      'retombe sur pricePerKgDisplayConverted quand pricePerKg est absent (invité, PR #219)',
+      () {
+        // Lecteur anonyme : le net (pricePerKg) est masqué donc aucun ratio
+        // net→brut n'est calculable ici. Le serveur sert directement le brut
+        // déjà converti dans pricePerKgDisplayConverted : c'est lui qu'il
+        // faut afficher, pas null.
+        final a = _ann(
+          pricePerKg: null,
+          pricePerKgDisplayConverted: 7347.2,
+        );
+        expect(a.convertedSenderPricePerKg, closeTo(7347.2, 1e-6));
+      },
+    );
   });
 
   group('parsePriceInput', () {

@@ -346,7 +346,13 @@ class _Budget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (item.targetPriceEur == null) {
+    // grossPriceEur (PR #219) est le prix réellement payé par l'expéditeur ;
+    // targetPriceEur seul est un NET, un tarif que personne ne paie. Repli
+    // sur ce dernier uniquement si le serveur ne sert pas encore le brut
+    // (ancien payload/cache). Jamais les deux affichés ensemble : ça
+    // révélerait le taux de commission par soustraction.
+    final displayPrice = item.grossPriceEur ?? item.targetPriceEur;
+    if (displayPrice == null) {
       return Text(
         'Budget libre',
         style: tt.bodySmall?.copyWith(
@@ -364,7 +370,7 @@ class _Budget extends StatelessWidget {
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),
         Text(
-          formatPriceIn(item.targetPriceEur!, item.currency),
+          formatPriceIn(displayPrice, item.currency),
           style: tt.titleMedium?.copyWith(
             fontWeight: FontWeight.w800,
             color: cs.primary,
