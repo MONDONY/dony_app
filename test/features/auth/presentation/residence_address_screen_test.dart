@@ -185,8 +185,8 @@ void main() {
 
       testWidgets(
         'skip() aboutit au même state que submit() (ResidenceAddressSuccess) '
-        'et déclenche donc le même refresh + le même repli extra — skip() '
-        'pose aussi onboarding_seen_at côté serveur (ResidenceAddressCubit)',
+        'et déclenche donc le même refresh + le même repli extra — skip() ne '
+        'pose PAS onboarding_seen_at, il reste identité et paiements',
         (tester) async {
           // `StreamController` plutôt que `Stream.fromIterable` : ce dernier
           // émet ses valeurs dès le premier pump, avant même le tap — le

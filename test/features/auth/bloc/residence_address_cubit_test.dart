@@ -64,16 +64,16 @@ void main() {
   );
 
   blocTest<ResidenceAddressCubit, ResidenceAddressState>(
-    'skip marque l\'onboarding vu et n\'échoue jamais',
-    build: () {
-      when(() => repo.markOnboardingSeen()).thenThrow(Exception('hors ligne'));
-      return ResidenceAddressCubit(repo, analytics);
-    },
+    'skip n\'échoue jamais et ne pose pas onboarding_seen_at',
+    build: () => ResidenceAddressCubit(repo, analytics),
     act: (c) => c.skip(),
     expect: () => [
       isA<ResidenceAddressSaving>(),
       isA<ResidenceAddressSuccess>(),
     ],
+    // Il reste l'identité et les paiements après cette étape : poser la date
+    // ici empêcherait le parcours de se réimposer au prochain lancement.
+    verify: (_) => verifyNever(() => repo.markOnboardingSeen()),
   );
 
   test('aucune PII dans les properties analytics', () async {

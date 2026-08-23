@@ -83,14 +83,14 @@ class ResidenceAddressCubit extends Cubit<ResidenceAddressState> {
 
   /// Passer l'étape ne doit jamais échouer : l'utilisateur n'a rien à
   /// enregistrer ici, et un problème réseau ne peut pas le retenir.
+  ///
+  /// Ne pose PAS `onboarding_seen_at` : à cette étape il reste l'identité et
+  /// les paiements, et poser la date ici empêcherait le parcours de se
+  /// réimposer au prochain lancement. Le champ n'est posé qu'à l'arrivée
+  /// réelle sur l'accueil, quel que soit le point de sortie du parcours.
   Future<void> skip() async {
     if (state is ResidenceAddressSaving) return;
     emit(const ResidenceAddressSaving());
-    try {
-      await _repository.markOnboardingSeen();
-    } catch (_) {
-      // Ignoré volontairement : la date sera posée à la prochaine occasion.
-    }
     unawaited(
       _analytics.logEvent(
         AnalyticsEvents.onboardingStepSkipped,
