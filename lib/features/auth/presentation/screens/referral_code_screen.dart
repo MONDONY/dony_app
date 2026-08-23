@@ -42,9 +42,11 @@ class _ReferralCodeScreenState extends State<ReferralCodeScreen> {
 
   /// Le parrainage n'est plus systématiquement l'écran terminal : il ne
   /// l'est que si aucune étape (identité, paiements) n'est encore à faire.
-  /// [OnboardingProgress.next] tranche — sans lui, un utilisateur à qui il
-  /// reste l'identité ou les paiements filerait droit sur `/home` sans
-  /// jamais les voir (le bug de bout en bout corrigé ici).
+  /// [OnboardingProgress.nextAfter] tranche, en partant de l'adresse : sans
+  /// lui, un utilisateur à qui il reste l'identité ou les paiements filerait
+  /// droit sur `/home` sans jamais les voir. `nextAfter` plutôt que `next`
+  /// parce qu'une étape *passée* n'entre pas dans `done` — `next` la
+  /// redésignerait et le parcours boucleraient sur elle sans fin.
   ///
   /// `onboarding_seen_at` ne se pose donc plus qu'ici, quand la destination
   /// est réellement `/home` — jamais quand le parcours continue. Cet écran
@@ -53,7 +55,8 @@ class _ReferralCodeScreenState extends State<ReferralCodeScreen> {
   /// awaité, jamais bloquant : un échec réseau ne doit pas retenir
   /// l'utilisateur sur cet écran, et l'appel est idempotent côté serveur.
   void _continue(BuildContext context) {
-    final destination = widget.progress.next?.route ?? '/home';
+    final destination =
+        widget.progress.nextAfter(OnboardingStep.address)?.route ?? '/home';
     if (destination == '/home') {
       unawaited(
         getIt<AuthRepository>().markOnboardingSeen().catchError((_) {}),

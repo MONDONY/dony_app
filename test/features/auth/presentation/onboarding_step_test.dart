@@ -411,6 +411,65 @@ void main() {
     });
   });
 
+  group('OnboardingProgress.nextAfter — le parcours ne revient jamais en '
+      'arrière sur une étape passée', () {
+    // Régression trouvée en test de bout en bout sur device : l'utilisateur
+    // passe l'étape adresse, arrive au parrainage, et `next` le renvoyait sur
+    // l'adresse — qu'il venait justement de passer. Boucle sans fin, le
+    // parcours ne pouvait plus se terminer.
+    test('adresse passée → identity, jamais un retour sur address', () {
+      const progress = OnboardingProgress(
+        steps: [
+          OnboardingStep.consent,
+          OnboardingStep.country,
+          OnboardingStep.address,
+          OnboardingStep.identity,
+          OnboardingStep.payouts,
+        ],
+        // L'adresse est absente de `done` : passée, pas remplie.
+        done: {OnboardingStep.consent, OnboardingStep.country},
+      );
+
+      expect(progress.next, OnboardingStep.address, reason: 'next boucle');
+      expect(
+        progress.nextAfter(OnboardingStep.address),
+        OnboardingStep.identity,
+      );
+    });
+
+    test('adresse et identité passées → payouts', () {
+      const progress = OnboardingProgress(
+        steps: [
+          OnboardingStep.consent,
+          OnboardingStep.country,
+          OnboardingStep.address,
+          OnboardingStep.identity,
+          OnboardingStep.payouts,
+        ],
+        done: {OnboardingStep.consent, OnboardingStep.country},
+      );
+
+      expect(
+        progress.nextAfter(OnboardingStep.identity),
+        OnboardingStep.payouts,
+      );
+    });
+
+    test('plus rien après l\'adresse → null, le parcours se termine', () {
+      const progress = OnboardingProgress(
+        steps: [
+          OnboardingStep.consent,
+          OnboardingStep.country,
+          OnboardingStep.address,
+          OnboardingStep.identity,
+        ],
+        done: {OnboardingStep.identity},
+      );
+
+      expect(progress.nextAfter(OnboardingStep.identity), isNull);
+    });
+  });
+
   group('OnboardingProgress.routeAfter — navigation positionnelle des '
       'écrans identité et paiements (terminer ou passer mène au même '
       'endroit)', () {

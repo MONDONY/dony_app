@@ -156,6 +156,22 @@ class OnboardingProgress {
     return null;
   }
 
+  /// Première étape non faite située **après** [step] dans [steps], ou `null`
+  /// si plus rien ne reste au-delà.
+  ///
+  /// Contrairement à [next], ne revient jamais en arrière. Une étape *passée*
+  /// n'entre pas dans [done] par construction (« passer n'est pas terminer ») :
+  /// la redésigner ferait boucler le parcours indéfiniment sur elle. Le
+  /// parrainage s'en sert en partant de l'adresse, l'écran qui le précède.
+  OnboardingStep? nextAfter(OnboardingStep step) {
+    final index = steps.indexOf(step);
+    if (index == -1) return next;
+    for (final candidate in steps.skip(index + 1)) {
+      if (!done.contains(candidate)) return candidate;
+    }
+    return null;
+  }
+
   /// Route de l'écran qui suit [step] dans [steps], ou `/home` si [step] est
   /// la dernière (ou absente, ce qui ne devrait jamais arriver pour un écran
   /// qui s'y trouve).
