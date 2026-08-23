@@ -1,8 +1,7 @@
-import 'dart:async';
-
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/address_autocomplete_service.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/storage/hive_service.dart';
@@ -77,8 +76,8 @@ import 'package:hive/hive.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
-
 import '../helpers/mock_analytics_backend.dart';
+import 'dart:async';
 
 // Fournit un HelpCenterBloc minimal (catalogue vide) aux 4 harnais de ce
 // fichier dont l'écran embarque désormais une ContextualTutorialCard
@@ -823,6 +822,17 @@ const _residenceProgress = OnboardingProgress(
   current: OnboardingStep.address,
 );
 
+/// Autocomplétion inerte : ce test mesure la tenue de la mise en page à 200 %
+/// de taille de texte, pas les suggestions Google.
+class _StubAddressService implements AddressAutocompleteService {
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      switch (invocation.memberName.toString()) {
+        'Symbol("search")' => Future.value(const []),
+        _ => super.noSuchMethod(invocation),
+      };
+}
+
 Widget _wrapResidenceAddress(ResidenceAddressCubit cubit) => MaterialApp.router(
   routerConfig: GoRouter(
     routes: [
@@ -833,8 +843,9 @@ Widget _wrapResidenceAddress(ResidenceAddressCubit cubit) => MaterialApp.router(
           // Code ISO, comme le fournit `BusinessPrefsBloc.state.country`
           // depuis la correction du lot 1 (le widget résout lui-même le nom
           // lisible via `CountryCatalog.byCode`) — pas le nom affiché.
-          child: const ResidenceAddressScreen(
+          child: ResidenceAddressScreen(
             country: 'SN',
+            addressService: _StubAddressService(),
             progress: _residenceProgress,
           ),
         ),
