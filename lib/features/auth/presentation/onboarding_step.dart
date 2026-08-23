@@ -56,6 +56,15 @@ enum OnboardingStep {
     payouts => '$route${onboardingEntrySuffix(fromOnboarding: true)}',
     _ => route,
   };
+
+  /// Nom montré à l'utilisateur (jauge du parcours, carte de reprise).
+  String get displayLabel => switch (this) {
+    consent => 'Confidentialité',
+    country => 'Pays',
+    identity => 'Identité',
+    address => 'Adresse',
+    payouts => 'Paiements',
+  };
 }
 
 /// `/kyc/verify` et `/payments/onboarding` ont deux entrées possibles : le
@@ -147,6 +156,7 @@ class OnboardingProgress {
     required this.steps,
     required this.done,
     this.current,
+    this.reachedPast,
   });
 
   /// Les étapes comptées, dans l'ordre. Quatre ou cinq selon la couverture
@@ -159,6 +169,11 @@ class OnboardingProgress {
   /// L'étape que l'écran courant remplit, ou `null` sur un écran hors décompte
   /// (parrainage).
   final OnboardingStep? current;
+
+  /// Sur un écran hors décompte, la dernière étape comptée située **avant**
+  /// lui dans le parcours (l'adresse, pour le parrainage). Sert uniquement à
+  /// l'affichage : elle ancre la position quand [current] est `null`.
+  final OnboardingStep? reachedPast;
 
   int get total => steps.length;
   int get doneCount => done.length;
@@ -239,18 +254,50 @@ class OnboardingProgress {
     return _reachable(follower) ? follower.onboardingRoute : '/home';
   }
 
+  /// Nombre d'étapes franchies **positionnellement** — l'index de l'écran
+  /// courant dans le parcours, que les étapes derrière soient remplies ou
+  /// passées. C'est le sens du compteur pendant le parcours : « étape 4 sur
+  /// 5 », pas « 2 remplies sur 5 » (retour utilisateur : un compteur qui
+  /// stagne à 2/5 sur l'identité après avoir passé l'adresse se lit comme un
+  /// parcours cassé, pas comme un état de compte).
+  ///
+  /// `-1` quand aucune position n'est connue ([current] et [reachedPast]
+  /// `null`) : hors parcours (carte de reprise du profil), l'affichage
+  /// retombe sur les faits accomplis, seuls pertinents là-bas.
+  int get _positionIndex {
+    if (current != null) return steps.indexOf(current!);
+    if (reachedPast != null) return steps.indexOf(reachedPast!) + 1;
+    return -1;
+  }
+
   /// Traduction pour `DonyOnboardingGauge`, qui ne connaît aucune étape métier.
   ///
-  /// Une étape **passée reste vide** : passer n'est pas terminer (spec §4.2).
-  List<DonyGaugeSegment> get segments => [
-    for (final step in steps)
-      if (done.contains(step))
-        DonyGaugeSegment.done
-      else if (step == current)
-        DonyGaugeSegment.current
-      else
-        DonyGaugeSegment.todo,
-  ];
+  /// **Dans le parcours** ([current] ou [reachedPast] posé) : position — tout
+  /// ce qui est derrière l'écran courant est plein, y compris une étape
+  /// passée ; l'étape en cours est à demi remplie. Le libellé de la jauge
+  /// (plein + en cours) donne alors « 4 / 5 · Identité » sur le 4e écran.
+  ///
+  /// **Hors parcours** (profil) : faits accomplis — une étape passée reste
+  /// vide, car ici la jauge répond « qu'est-ce qui manque à ce compte », pas
+  /// « où en suis-je dans le parcours ».
+  List<DonyGaugeSegment> get segments {
+    final position = _positionIndex;
+    if (position < 0) {
+      return [
+        for (final step in steps)
+          done.contains(step) ? DonyGaugeSegment.done : DonyGaugeSegment.todo,
+      ];
+    }
+    return [
+      for (var i = 0; i < steps.length; i++)
+        if (i < position)
+          DonyGaugeSegment.done
+        else if (i == position && current != null)
+          DonyGaugeSegment.current
+        else
+          DonyGaugeSegment.todo,
+    ];
+  }
 }
 
 /// Même déduction que [nextStep], mais rendue en entier plutôt qu'arrêtée à la
@@ -261,10 +308,12 @@ OnboardingProgress onboardingProgress({
   required bool analyticsAnswered,
   String? countryFallback,
   OnboardingStep? current,
+  OnboardingStep? reachedPast,
 }) {
   final steps = onboardingSteps(stripe);
   return OnboardingProgress(
     steps: steps,
+    reachedPast: reachedPast,
     done: {
       for (final step in steps)
         if (_isDone(
@@ -329,10 +378,12 @@ bool _hasText(String? value) => value != null && value.trim().isNotEmpty;
 OnboardingProgress readOnboardingProgress(
   BuildContext context, {
   OnboardingStep? current,
+  OnboardingStep? reachedPast,
   String? countryFallback,
 }) => onboardingProgress(
   user: context.read<AuthBloc>().state.currentUser,
   stripe: context.read<StripeAccountBloc>().state,
+  reachedPast: reachedPast,
   analyticsAnswered:
       !getIt<AnalyticsService>().isConfigured ||
       getIt<AnalyticsService>().hasAnswered,

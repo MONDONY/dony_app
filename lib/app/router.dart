@@ -418,6 +418,10 @@ final appRouter = GoRouter(
         child: ReferralCodeScreen(
           progress: readOnboardingProgress(
             context,
+            // Hors décompte mais pas hors position : le parrainage vient
+            // juste après l'adresse, la jauge doit donc afficher « 3 / 5 »
+            // et non retomber sur les seuls faits accomplis.
+            reachedPast: OnboardingStep.address,
             countryFallback:
                 (state.extra as String?) ??
                 context.read<BusinessPrefsBloc>().state.country,

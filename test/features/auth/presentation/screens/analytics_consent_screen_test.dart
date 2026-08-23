@@ -61,7 +61,8 @@ void main() {
 
     expect(find.byType(DonyOnboardingGauge), findsOneWidget);
     expect(find.byType(DonyStepPill), findsNothing);
-    expect(find.text('0 / 5 · Confidentialité'), findsOneWidget);
+    // Position, pas remplissage : premier écran du parcours = « 1 / 5 ».
+    expect(find.text('1 / 5 · Confidentialité'), findsOneWidget);
   });
 
   testWidgets('« Accepter » navigue vers la sélection de pays', (tester) async {

@@ -153,7 +153,8 @@ void main() {
 
     expect(find.byType(DonyOnboardingGauge), findsOneWidget);
     expect(find.byType(DonyStepPill), findsNothing);
-    expect(find.text('2 / 5 · Adresse'), findsOneWidget);
+    // Position : l'adresse est le 3e écran du parcours, donc « 3 / 5 ».
+    expect(find.text('3 / 5 · Adresse'), findsOneWidget);
   });
 
   group(

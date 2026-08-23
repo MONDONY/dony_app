@@ -9,7 +9,8 @@ enum DonyGaugeSegment {
   /// Étape en cours : segment à demi rempli.
   current,
 
-  /// Reste à faire — y compris une étape **passée** : passer n'est pas terminer.
+  /// Reste à faire, ou (hors parcours) une étape passée : passer n'est pas
+  /// terminer.
   todo,
 }
 
@@ -34,17 +35,21 @@ class DonyOnboardingGauge extends StatelessWidget {
   /// Nom de l'étape en cours, ou du contexte quand aucune ne l'est.
   final String label;
 
-  int get _doneCount =>
-      segments.where((s) => s == DonyGaugeSegment.done).length;
+  /// Position affichée : segments pleins + l'étape en cours. Sur le 4e écran
+  /// d'un parcours de 5, le compteur dit « 4 / 5 » — le numéro de l'étape où
+  /// l'on se trouve, pas le nombre d'étapes remplies (un compteur qui stagne
+  /// pendant qu'on avance se lit comme un parcours cassé).
+  int get _reachedCount =>
+      segments.where((s) => s != DonyGaugeSegment.todo).length;
 
   String _semanticsValue() {
     final total = segments.length;
     final index = segments.indexOf(DonyGaugeSegment.current);
-    final plural = _doneCount > 1 ? 's' : '';
     if (index >= 0) {
-      return 'Étape ${index + 1} sur $total, $_doneCount terminée$plural';
+      return 'Étape ${index + 1} sur $total';
     }
-    return '$_doneCount étape$plural sur $total terminée$plural';
+    final plural = _reachedCount > 1 ? 's' : '';
+    return '$_reachedCount étape$plural sur $total';
   }
 
   @override
@@ -62,7 +67,7 @@ class DonyOnboardingGauge extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            '$_doneCount / $total · $label',
+            '$_reachedCount / $total · $label',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: tt.labelSmall?.copyWith(

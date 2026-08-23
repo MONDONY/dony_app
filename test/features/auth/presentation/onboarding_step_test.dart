@@ -267,8 +267,8 @@ void main() {
   });
 
   group('onboardingProgress — ce que la jauge doit montrer', () {
-    test('une étape faite est pleine, l\'étape en cours est à moitié, '
-        'le reste est vide', () {
+    test('dans le parcours, la jauge donne la position : tout ce qui est '
+        'derrière l\'écran courant est plein, l\'étape en cours à moitié', () {
       final p = onboardingProgress(
         user: _user(country: 'FR'),
         stripe: _connectOk,
@@ -277,19 +277,20 @@ void main() {
       );
 
       expect(p.total, 5);
-      expect(p.doneCount, 2);
       expect(p.segments, const [
         DonyGaugeSegment.done, // consentement
         DonyGaugeSegment.done, // pays
-        DonyGaugeSegment.todo, // adresse
+        DonyGaugeSegment.done, // adresse — derrière l'écran courant
         DonyGaugeSegment.current, // identité
         DonyGaugeSegment.todo, // paiements
       ]);
     });
 
-    test('une étape passée reste vide — passer n\'est pas terminer', () {
-      // L'utilisateur a passé le pays (skip) et se trouve sur l'adresse :
-      // le segment « pays » ne doit pas se remplir pour autant.
+    test('une étape passée compte comme franchie dans le parcours — le '
+        'compteur suit la position, pas le remplissage', () {
+      // Retour utilisateur : un compteur qui stagne à 2/5 sur l'identité
+      // après avoir passé l'adresse se lit comme un parcours cassé. La
+      // position avance même quand une étape a été passée.
       final p = onboardingProgress(
         user: _user(),
         stripe: _connectOk,
@@ -299,15 +300,36 @@ void main() {
 
       expect(p.segments, const [
         DonyGaugeSegment.done,
-        DonyGaugeSegment.todo, // pays passé, donc vide
+        DonyGaugeSegment.done, // pays passé : franchi positionnellement
         DonyGaugeSegment.current,
         DonyGaugeSegment.todo,
         DonyGaugeSegment.todo,
       ]);
     });
 
-    test('sans étape en cours (écran parrainage, hors décompte) aucun segment '
-        'n\'est à moitié', () {
+    test('parrainage (hors décompte) : position ancrée après l\'adresse, '
+        'aucun segment à moitié', () {
+      final p = onboardingProgress(
+        user: _user(country: 'FR'),
+        stripe: _connectOk,
+        analyticsAnswered: true,
+        reachedPast: OnboardingStep.address,
+      );
+
+      expect(p.current, isNull);
+      // Trois segments pleins (consentement, pays, adresse franchis), soit
+      // « 3 / 5 · Parrainage » au libellé de la jauge.
+      expect(p.segments, const [
+        DonyGaugeSegment.done,
+        DonyGaugeSegment.done,
+        DonyGaugeSegment.done,
+        DonyGaugeSegment.todo,
+        DonyGaugeSegment.todo,
+      ]);
+    });
+
+    test('hors parcours (carte de reprise du profil) : faits accomplis — une '
+        'étape passée reste vide, passer n\'est pas terminer', () {
       final p = onboardingProgress(
         user: _user(country: 'FR'),
         stripe: _connectOk,
@@ -315,8 +337,14 @@ void main() {
       );
 
       expect(p.current, isNull);
-      expect(p.segments.contains(DonyGaugeSegment.current), isFalse);
       expect(p.doneCount, 2);
+      expect(p.segments, const [
+        DonyGaugeSegment.done,
+        DonyGaugeSegment.done,
+        DonyGaugeSegment.todo, // adresse jamais remplie : vide au profil
+        DonyGaugeSegment.todo,
+        DonyGaugeSegment.todo,
+      ]);
     });
 
     test('pays hors couverture Stripe → quatre segments', () {
@@ -340,8 +368,8 @@ void main() {
       ]);
     });
 
-    test('une étape déjà faite reste pleine même si elle est l\'étape '
-        'en cours', () {
+    test('l\'écran courant est toujours « en cours », même si son fait '
+        'serveur existe déjà — la position prime dans le parcours', () {
       final p = onboardingProgress(
         user: _user(country: 'FR'),
         stripe: _connectOk,
@@ -349,7 +377,7 @@ void main() {
         current: OnboardingStep.country,
       );
 
-      expect(p.segments[1], DonyGaugeSegment.done);
+      expect(p.segments[1], DonyGaugeSegment.current);
     });
 
     test('onboardingSeenAt posé n\'efface pas la progression réelle — la carte '
@@ -365,6 +393,16 @@ void main() {
       expect(p.doneCount, 2);
       expect(p.segments[0], DonyGaugeSegment.done);
       expect(p.segments[1], DonyGaugeSegment.done);
+    });
+  });
+
+  group('OnboardingStep.displayLabel — noms montrés à l\'utilisateur', () {
+    test('chaque étape a un nom, fermé et en français', () {
+      expect(OnboardingStep.consent.displayLabel, 'Confidentialité');
+      expect(OnboardingStep.country.displayLabel, 'Pays');
+      expect(OnboardingStep.address.displayLabel, 'Adresse');
+      expect(OnboardingStep.identity.displayLabel, 'Identité');
+      expect(OnboardingStep.payouts.displayLabel, 'Paiements');
     });
   });
 

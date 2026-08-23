@@ -6,6 +6,7 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
+import 'package:dony/features/profile/presentation/widgets/account_setup_card.dart';
 import 'package:dony/features/profile/presentation/widgets/pending_deletion_banner.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_header.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_sections.dart';
@@ -333,6 +334,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         const SizedBox(height: DonySpacing.lg),
       ],
+      // Configuration du compte (identité, paiements) au-dessus des champs de
+      // profil : tant qu'il reste une étape du parcours, c'est elle qui
+      // conditionne ce que l'utilisateur peut faire dans l'app — la photo de
+      // profil attendra. La carte s'escamote seule à parcours complet.
+      if (user != null) AccountSetupCard(user: user).animate().fadeIn(),
       if (user != null &&
           !user.isProfileComplete(
             countPhone: smsAuthEnabledListenable.value,

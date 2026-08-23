@@ -9,9 +9,12 @@ Widget _wrap(Widget child) => MaterialApp(
 
 void main() {
   group('DonyOnboardingGauge', () {
-    testWidgets('le compteur ne compte que les étapes terminées', (
+    testWidgets('le compteur donne la position : pleins + étape en cours', (
       tester,
     ) async {
+      // 2 franchies + 1 en cours = « 3 / 5 » : le numéro de l'écran où l'on
+      // se trouve, pas le nombre d'étapes remplies (un compteur qui stagne
+      // pendant qu'on avance se lit comme un parcours cassé).
       await tester.pumpWidget(
         _wrap(
           const DonyOnboardingGauge(
@@ -28,7 +31,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('2 / 5 · Identité'), findsOneWidget);
+      expect(find.text('3 / 5 · Identité'), findsOneWidget);
     });
 
     testWidgets('un segment par étape', (tester) async {
@@ -78,7 +81,7 @@ void main() {
       await tester.pumpAndSettle();
 
       final semantics = tester.getSemantics(find.byType(DonyOnboardingGauge));
-      expect(semantics.value, 'Étape 3 sur 5, 2 terminées');
+      expect(semantics.value, 'Étape 3 sur 5');
       // Sans label, le lecteur d'écran annonce juste « 0 étape sur 5
       // terminée » sans dire de quoi il s'agit (revue finale du lot 2,
       // correction 5). Le label du `Text` visible se fusionne en dessous
@@ -101,7 +104,7 @@ void main() {
       await tester.pumpAndSettle();
 
       final semantics = tester.getSemantics(find.byType(DonyOnboardingGauge));
-      expect(semantics.value, '1 étape sur 2 terminée');
+      expect(semantics.value, '1 étape sur 2');
       expect(semantics.label, startsWith('Progression de l\'inscription'));
     });
 

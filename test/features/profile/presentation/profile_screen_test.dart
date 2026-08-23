@@ -1,7 +1,9 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/widgets/dony_avatar.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/models/connect_account_status.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -19,12 +21,14 @@ import 'package:dony/features/profile/presentation/widgets/pending_deletion_bann
 import 'package:dony/features/profile/presentation/widgets/wallet_balance_card.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
+import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
+import '../../../helpers/currency_test_doubles.dart';
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
@@ -119,6 +123,7 @@ Widget _buildTestHarness({
   required MockReferralBloc referralBloc,
   required MockWalletBloc walletBloc,
   required MockStripeAccountBloc stripeAccountBloc,
+  required MockBusinessPrefsBloc businessPrefsBloc,
 }) {
   Widget stub(String label) => Scaffold(body: Text(label));
 
@@ -134,6 +139,7 @@ Widget _buildTestHarness({
           BlocProvider<ReferralBloc>.value(value: referralBloc),
           BlocProvider<WalletBloc>.value(value: walletBloc),
           BlocProvider<StripeAccountBloc>.value(value: stripeAccountBloc),
+          BlocProvider<BusinessPrefsBloc>.value(value: businessPrefsBloc),
         ],
         child: const ProfileScreen(),
       ),
@@ -214,6 +220,8 @@ Future<void> _scrollTo(
   }
 }
 
+class _MockAnalyticsService extends Mock implements AnalyticsService {}
+
 void main() {
   setUpAll(() {
     registerFallbackValue(FakeAuthEvent());
@@ -226,6 +234,7 @@ void main() {
 
   late MockAuthBloc authBloc;
   late MockAccountDeletionBloc deletionBloc;
+  late MockBusinessPrefsBloc businessPrefsBloc;
   late MockBidBloc bidBloc;
   late MockAnnouncementBloc announcementBloc;
   late MockReferralBloc referralBloc;
@@ -235,6 +244,17 @@ void main() {
   setUp(() {
     authBloc = MockAuthBloc();
     deletionBloc = MockAccountDeletionBloc();
+    businessPrefsBloc = stubBusinessPrefsBloc();
+    // AccountSetupCard lit le consentement analytics via getIt : un service
+    // non configure compte comme « repondu », l'etape consentement est donc
+    // consideree faite — les fixtures de cette page testent le reste.
+    final analytics = _MockAnalyticsService();
+    when(() => analytics.isConfigured).thenReturn(false);
+    if (getIt.isRegistered<AnalyticsService>()) {
+      getIt.unregister<AnalyticsService>();
+    }
+    getIt.registerSingleton<AnalyticsService>(analytics);
+    addTearDown(() => getIt.unregister<AnalyticsService>());
     bidBloc = MockBidBloc();
     announcementBloc = MockAnnouncementBloc();
     referralBloc = MockReferralBloc();
@@ -300,6 +320,7 @@ void main() {
         referralBloc: referralBloc,
         walletBloc: walletBloc,
         stripeAccountBloc: stripeAccountBloc,
+        businessPrefsBloc: businessPrefsBloc,
       ),
     );
     if (settle) {
@@ -628,6 +649,7 @@ void main() {
           referralBloc: referralBloc,
           walletBloc: walletBloc,
           stripeAccountBloc: stripeAccountBloc,
+          businessPrefsBloc: businessPrefsBloc,
         ),
       );
       await tester.pump();
@@ -686,6 +708,7 @@ void main() {
           referralBloc: referralBloc,
           walletBloc: walletBloc,
           stripeAccountBloc: stripeAccountBloc,
+          businessPrefsBloc: businessPrefsBloc,
         ),
       );
       await tester.pumpAndSettle();
@@ -725,6 +748,7 @@ void main() {
           referralBloc: referralBloc,
           walletBloc: walletBloc,
           stripeAccountBloc: stripeAccountBloc,
+          businessPrefsBloc: businessPrefsBloc,
         ),
       );
       await tester.pump(const Duration(milliseconds: 600));
