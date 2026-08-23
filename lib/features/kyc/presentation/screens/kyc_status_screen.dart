@@ -212,6 +212,7 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
                             ),
                       ).animate().fadeIn(duration: 300.ms),
                     ),
+                    _actionsFor(context, state),
                   ],
                 ),
               ),
@@ -220,6 +221,71 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
         },
       ),
     );
+  }
+
+  /// Zone d'action commune du parcours, ancrée en bas quel que soit l'état.
+  ///
+  /// Les boutons vivaient au milieu de chaque contenu, à une hauteur qui
+  /// changeait avec la longueur du texte : sur cet écran très aéré ils
+  /// flottaient loin du pouce, et le lien « Passer » se retrouvait parfois
+  /// hors de vue (retour utilisateur). Ils sont désormais construits ici, à
+  /// l'écart du contenu défilant.
+  Widget _actionsFor(BuildContext context, KycState state) {
+    void startSession() =>
+        context.read<KycBloc>().add(const KycSessionRequested());
+
+    // Depuis le profil (progress null), il n'y a pas d'étape à passer.
+    final skip = widget.progress != null ? _leaveIdentityStep : null;
+
+    if (state is KycError) {
+      return AuthFlowActions(
+        primary: DonyButton(
+          label: 'Réessayer',
+          onPressed: _loadStatus,
+          variant: DonyButtonVariant.ghost,
+        ),
+        onSkip: skip,
+      );
+    }
+    if (state is! KycStatusLoaded) {
+      // Chargement : la place reste réservée pour que la zone ne saute pas
+      // quand l'état arrive.
+      return const AuthFlowActions();
+    }
+
+    return switch (state.kycStatus) {
+      // Vérifiée : l'auto-navigation part dans 1,5 s, aucune action à offrir.
+      'VERIFIED' => const AuthFlowActions(),
+      'REJECTED' => AuthFlowActions(
+        primary: DonyButton(
+          label: 'Réessayer la vérification',
+          onPressed: startSession,
+        ),
+        onSkip: skip,
+      ),
+      'NOT_STARTED' => AuthFlowActions(
+        primary: DonyButton(
+          label: 'Commencer la vérification',
+          onPressed: startSession,
+        ),
+        onSkip: skip,
+      ),
+      _ when _timedOut => AuthFlowActions(
+        primary: DonyButton(
+          label: "Retour à l'app",
+          onPressed: _leaveIdentityStep,
+        ),
+      ),
+      // En cours : rien à valider, seulement quitter — le lien porte donc
+      // « Continuer plus tard » plutôt que « Passer pour l'instant ».
+      _ => AuthFlowActions(
+        skipLabel: 'Continuer plus tard',
+        onSkip: () {
+          _stopPolling();
+          _leaveIdentityStep();
+        },
+      ),
+    };
   }
 
   Widget _buildStatusContent(
@@ -251,48 +317,29 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: 96,
-          height: 96,
+          width: 72,
+          height: 72,
           decoration: BoxDecoration(
             color: cs.primaryContainer,
             shape: BoxShape.circle,
           ),
-          child: Center(child: DonyIcon('user', color: cs.primary, size: 48)),
+          child: Center(child: DonyIcon('user', color: cs.primary, size: 34)),
         ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
-        const SizedBox(height: DonySpacing.xxl),
+        const SizedBox(height: DonySpacing.lg),
         Text(
           'Vérification non démarrée',
-          style: tt.headlineLarge,
+          style: tt.headlineSmall,
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: DonySpacing.md),
+        const SizedBox(height: DonySpacing.sm),
         Text(
           'Vous devez vérifier votre identité pour utiliser toutes les fonctionnalités de Yadony.',
-          style: tt.bodyLarge?.copyWith(
+          style: tt.bodyMedium?.copyWith(
             color: cs.onSurfaceVariant,
-            height: 1.5,
+            height: 1.45,
           ),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: DonySpacing.huge),
-        DonyButton(
-          label: 'Commencer la vérification',
-          onPressed: () =>
-              context.read<KycBloc>().add(const KycSessionRequested()),
-        ),
-        // La vérification d'identité est lourde : personne ne doit être
-        // bloqué pour l'avoir remise à plus tard. Uniquement depuis
-        // l'onboarding — depuis le profil, il n'y a rien à « passer ».
-        if (widget.progress != null) ...[
-          const SizedBox(height: DonySpacing.sm),
-          TextButton(
-            onPressed: _leaveIdentityStep,
-            child: Text(
-              'Passer pour l\'instant',
-              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-            ),
-          ),
-        ],
       ],
     );
   }
@@ -307,7 +354,7 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
           size: DonyMascotteSize.lg,
           withGlow: true,
         ),
-        const SizedBox(height: DonySpacing.xxl),
+        const SizedBox(height: DonySpacing.lg),
         Text(
           'Identité vérifiée ✓',
           style: tt.headlineLarge?.copyWith(color: cs.primary),
@@ -351,7 +398,7 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
             child: DonyIcon('hourglass', color: cs.warning, size: 48),
           ),
         ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
-        const SizedBox(height: DonySpacing.xxl),
+        const SizedBox(height: DonySpacing.lg),
         Text(
           'Vérification en cours',
           style: tt.headlineLarge,
@@ -367,19 +414,8 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
           ),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: DonySpacing.xl),
+        const SizedBox(height: DonySpacing.lg),
         const _PollingIndicator(),
-        const SizedBox(height: DonySpacing.xxl),
-        TextButton(
-          onPressed: () {
-            _stopPolling();
-            _leaveIdentityStep();
-          },
-          child: Text(
-            'Continuer plus tard',
-            style: tt.labelLarge?.copyWith(color: cs.onSurfaceVariant),
-          ),
-        ),
       ],
     );
   }
@@ -401,7 +437,7 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
           ),
           child: Center(child: DonyIcon('clock', color: cs.warning, size: 48)),
         ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
-        const SizedBox(height: DonySpacing.xxl),
+        const SizedBox(height: DonySpacing.lg),
         Text(
           'La vérification prend plus de temps que prévu',
           style: tt.headlineLarge,
@@ -417,8 +453,6 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
           ),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: DonySpacing.huge),
-        DonyButton(label: "Retour à l'app", onPressed: _leaveIdentityStep),
       ],
     );
   }
@@ -441,7 +475,7 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
           ),
           child: Center(child: DonyIcon('circle-x', color: cs.error, size: 48)),
         ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
-        const SizedBox(height: DonySpacing.xxl),
+        const SizedBox(height: DonySpacing.lg),
         Text(
           'Vérification échouée',
           style: tt.headlineLarge,
@@ -456,24 +490,6 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
           ),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: DonySpacing.huge),
-        DonyButton(
-          label: 'Réessayer la vérification',
-          onPressed: () =>
-              context.read<KycBloc>().add(const KycSessionRequested()),
-        ),
-        // Un rejet ne doit jamais bloquer le parcours d'inscription :
-        // l'utilisateur pourra réessayer plus tard, depuis le profil.
-        if (widget.progress != null) ...[
-          const SizedBox(height: DonySpacing.sm),
-          TextButton(
-            onPressed: _leaveIdentityStep,
-            child: Text(
-              'Passer pour l\'instant',
-              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-            ),
-          ),
-        ],
       ],
     );
   }
@@ -488,12 +504,6 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
           message,
           style: tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant),
           textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: DonySpacing.xl),
-        DonyButton(
-          label: 'Réessayer',
-          onPressed: _loadStatus,
-          variant: DonyButtonVariant.ghost,
         ),
       ],
     );

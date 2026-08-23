@@ -123,11 +123,15 @@ class _CountrySelectionScreenState extends State<CountrySelectionScreen> {
                             selectedCode: selectedCode,
                           ),
                         ),
-                        SizedBox(
-                          height:
-                              DonySpacing.base +
-                              MediaQuery.paddingOf(context).bottom,
+                        // Aucune action principale : choisir une suggestion
+                        // navigue immédiatement. Le lien passer reste seul,
+                        // exactement à la hauteur qu'il occupe ailleurs.
+                        AuthFlowActions(
+                          skipEnabled: !isSaving,
+                          onSkip: () =>
+                              context.read<CountryOnboardingCubit>().skip(),
                         ),
+                        SizedBox(height: MediaQuery.paddingOf(context).bottom),
                       ],
                     ),
                   ),
@@ -357,15 +361,6 @@ class _CountryListState extends State<_CountryList> {
                 child: _EmptyCountryResults(),
               );
             },
-          ),
-          const SizedBox(height: DonySpacing.md),
-          DonyButton(
-            label: 'Passer pour l’instant',
-            variant: DonyButtonVariant.ghost,
-            isLoading: widget.isSaving && widget.selectedCode == null,
-            onPressed: widget.isSaving
-                ? null
-                : () => context.read<CountryOnboardingCubit>().skip(),
           ),
         ],
       ),

@@ -145,9 +145,6 @@ class _FormView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -160,7 +157,7 @@ class _FormView extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const AuthIntroCard(
+                const AuthIntroCard.compact(
                   iconAsset: 'gift',
                   title: 'Tu as été invité par un ami ?',
                   body:
@@ -170,40 +167,30 @@ class _FormView extends StatelessWidget {
                 ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04),
                 const SizedBox(height: DonySpacing.md),
                 _ReferralActionPanel(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      DonyTextField(
-                        controller: ctrl,
-                        label: 'Code parrain',
-                        hint: 'Ex : JEAN0234',
-                      ),
-                      const SizedBox(height: DonySpacing.lg),
-                      ValueListenableBuilder<bool>(
-                        valueListenable: isNotEmpty,
-                        builder: (context, hasText, _) => DonyButton(
-                          label: 'Appliquer le code',
-                          iconAsset: 'gift',
-                          isLoading: isLoading,
-                          onPressed: hasText && !isLoading ? onApply : null,
-                        ),
-                      ),
-                      const SizedBox(height: DonySpacing.sm),
-                      TextButton(
-                        onPressed: isLoading ? null : onSkip,
-                        child: Text(
-                          'Passer pour l\'instant',
-                          style: tt.bodyMedium?.copyWith(
-                            color: cs.onSurfaceVariant,
-                          ),
-                        ),
-                      ),
-                    ],
+                  child: DonyTextField(
+                    controller: ctrl,
+                    label: 'Code parrain',
+                    hint: 'Ex : JEAN0234',
                   ),
                 ).animate().fadeIn(delay: 120.ms, duration: 300.ms),
               ],
             ),
           ),
+        ),
+        // Le bouton et le lien vivaient dans le panneau, au milieu de l'écran :
+        // ils rejoignent la zone d'action commune, en bas comme partout.
+        AuthFlowActions(
+          primary: ValueListenableBuilder<bool>(
+            valueListenable: isNotEmpty,
+            builder: (context, hasText, _) => DonyButton(
+              label: 'Appliquer le code',
+              iconAsset: 'gift',
+              isLoading: isLoading,
+              onPressed: hasText && !isLoading ? onApply : null,
+            ),
+          ),
+          skipEnabled: !isLoading,
+          onSkip: onSkip,
         ),
       ],
     );
@@ -275,12 +262,13 @@ class _SuccessView extends StatelessWidget {
                     ),
           ),
         ),
-        const SizedBox(height: DonySpacing.sm),
-        DonyButton(
-          label: 'Continuer vers l\'accueil',
-          iconAsset: 'arrow-right',
-          onPressed: onContinue,
-          variant: DonyButtonVariant.success,
+        AuthFlowActions(
+          primary: DonyButton(
+            label: 'Continuer vers l\'accueil',
+            iconAsset: 'arrow-right',
+            onPressed: onContinue,
+            variant: DonyButtonVariant.success,
+          ),
         ).animate().fadeIn(delay: 400.ms, duration: 300.ms),
       ],
     );

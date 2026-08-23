@@ -2,10 +2,10 @@ import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
+import 'package:dony/features/auth/presentation/onboarding_step.dart';
 import 'package:dony/features/kyc/presentation/widgets/kyc_onboarding_bottom_sheet.dart';
 import 'package:dony/features/kyc/presentation/widgets/kyc_status_bottom_sheet.dart';
 import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
-import 'package:dony/features/profile/presentation/widgets/activate_card_payments_cta_card.dart';
 import 'package:dony/features/profile/presentation/widgets/add_contact_sheets.dart';
 import 'package:dony/features/profile/presentation/widgets/wallet_balance_card.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
@@ -118,26 +118,27 @@ class ProfileMoneySection extends StatelessWidget {
         // laisserait le voyageur chercher une activation qui a simplement
         // disparu de son profil.
         final identityVerified = user?.kycStatus == 'VERIFIED';
+        // Compte actif : plus aucune option de paiement à proposer. Tout est
+        // fait, il n'y a plus rien à activer ni à reprendre.
+        final payoutsDone =
+            effectiveStripeStatus(user, stripeState) == 'ONBOARDING_COMPLETE';
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             ProfileSectionLabel(label: 'ARGENT', cs: cs),
-            // Le CTA d'activation Stripe vit au-dessus de la section qu'il
-            // concerne, et non en tête de page : il y est contextuel, et trois
-            // bannières empilées en haut d'écran noyaient le reste.
-            ActivateCardPaymentsCtaCard(
-              stripeStatus: user?.stripeAccountStatus,
-              connectAvailable: connectAvailable,
-              identityVerified: identityVerified,
-            ),
+            // Plus de CTA d'activation ici : la bannière de complétion, en
+            // tête de page, porte désormais « Activer les paiements » comme
+            // une case à cocher parmi les autres. Deux appels à la même
+            // action sur le même écran se concurrençaient.
             const WalletBalanceCard(),
             const SizedBox(height: DonySpacing.sm),
             ProfileListSection(
               tiles: [
                 // Sans compte connecté possible dans ce pays, cette entrée ne
-                // mène qu'à un refus : on ne la propose pas.
-                if (connectAvailable)
+                // mène qu'à un refus : on ne la propose pas. Une fois le
+                // compte actif non plus — il n'y a plus rien à y faire.
+                if (connectAvailable && !payoutsDone)
                   DonyListTile(
                     iconAsset: 'piggy-bank',
                     iconColor: identityVerified ? cs.success : cs.outline,
@@ -670,6 +671,19 @@ DonyListTile kycTile(BuildContext context, UserModel? user) {
   return (base: cs.info, light: cs.infoLight);
 }
 
+/// Une case à cocher de la bannière de complétion : ce qu'il manque, et où
+/// aller pour le remplir.
+class _MissingItem {
+  const _MissingItem(this.label, {this.route, this.iconAsset = 'plus'});
+
+  final String label;
+
+  /// Route propre à cette case. `null` pour les champs de profil, qui mènent
+  /// tous à l'écran d'édition via le tap global de la bannière.
+  final String? route;
+  final String iconAsset;
+}
+
 class ProfileCompletionBanner extends StatelessWidget {
   const ProfileCompletionBanner({
     super.key,
@@ -682,36 +696,101 @@ class ProfileCompletionBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<bool>(
-      valueListenable: smsAuthEnabledListenable,
-      builder: (context, phoneAuthEnabled, _) =>
-          _build(context, phoneAuthEnabled),
+    // La configuration du compte (identité, paiements) fait partie de la même
+    // question que les champs de profil — « qu'est-ce qui manque encore ? » —
+    // et vit donc dans cette bannière plutôt que dans une carte concurrente.
+    // Le statut Connect vient du bloc, seul à porter la couverture Stripe du
+    // pays.
+    return BlocBuilder<StripeAccountBloc, StripeAccountState>(
+      builder: (context, stripe) => ValueListenableBuilder<bool>(
+        valueListenable: smsAuthEnabledListenable,
+        builder: (context, phoneAuthEnabled, _) =>
+            _build(context, phoneAuthEnabled, stripe),
+      ),
     );
   }
 
-  Widget _build(BuildContext context, bool phoneAuthEnabled) {
+  Widget _build(
+    BuildContext context,
+    bool phoneAuthEnabled,
+    StripeAccountState stripe,
+  ) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final completed = user.profileCompletionSteps(countPhone: phoneAuthEnabled);
-    final total = UserModel.profileTotalSteps(countPhone: phoneAuthEnabled);
+
+    final identityVerified = user.kycStatus == 'VERIFIED';
+    final payoutsCounted = stripe.connectAvailableInCountry;
+    final payoutsDone =
+        effectiveStripeStatus(user, stripe) == 'ONBOARDING_COMPLETE';
+
+    var completed = user.profileCompletionSteps(countPhone: phoneAuthEnabled);
+    var total = UserModel.profileTotalSteps(countPhone: phoneAuthEnabled) + 1;
+    if (identityVerified) completed++;
+    if (payoutsCounted) {
+      total++;
+      if (payoutsDone) completed++;
+    }
+    // Visibilité décidée ici et non par l'appelant : la bannière compte
+    // désormais l'identité et les paiements, que `isProfileComplete` ignore.
+    // Un profil aux champs remplis mais sans identité vérifiée doit continuer
+    // de la voir. Elle porte son propre écart bas pour qu'effacée, elle
+    // n'occupe exactement aucune place.
+    if (completed >= total) return const SizedBox.shrink();
+
     final pct = completed / total;
     final tier = profileCompletionTierColor(cs, pct);
 
-    final missing = <String>[];
-    if (!(user.avatarUrl?.isNotEmpty ?? false)) missing.add('Photo');
-    if (!(user.firstName?.isNotEmpty ?? false)) missing.add('Prénom');
-    if (!(user.lastName?.isNotEmpty ?? false)) missing.add('Nom');
-    if (!(user.email?.isNotEmpty ?? false)) missing.add('Email');
-    if (phoneAuthEnabled && !(user.phoneNumber?.isNotEmpty ?? false)) {
-      missing.add('Téléphone');
+    final missing = <_MissingItem>[];
+    // La configuration du compte d'abord : elle conditionne ce que
+    // l'utilisateur peut faire dans l'app, la photo de profil non.
+    if (!identityVerified) {
+      missing.add(
+        const _MissingItem(
+          'Vérifier mon identité',
+          route: '/kyc/verify',
+          iconAsset: 'shield-check',
+        ),
+      );
+    } else if (payoutsCounted && !payoutsDone) {
+      // Jamais proposé avant l'identité : Stripe Connect la refuse (422
+      // `kyc-required`). Une case qui ne mène qu'à un refus n'en est pas une.
+      missing.add(
+        const _MissingItem(
+          'Activer les paiements',
+          route: '/payments/onboarding',
+          iconAsset: 'landmark',
+        ),
+      );
     }
-    if (user.birthDate == null) missing.add('Date de naissance');
-    if (!(user.city?.isNotEmpty ?? false)) missing.add('Ville');
-    if (!(user.bio?.isNotEmpty ?? false)) missing.add('À propos');
+    if (!(user.avatarUrl?.isNotEmpty ?? false)) {
+      missing.add(const _MissingItem('Photo'));
+    }
+    if (!(user.firstName?.isNotEmpty ?? false)) {
+      missing.add(const _MissingItem('Prénom'));
+    }
+    if (!(user.lastName?.isNotEmpty ?? false)) {
+      missing.add(const _MissingItem('Nom'));
+    }
+    if (!(user.email?.isNotEmpty ?? false)) {
+      missing.add(const _MissingItem('Email'));
+    }
+    if (phoneAuthEnabled && !(user.phoneNumber?.isNotEmpty ?? false)) {
+      missing.add(const _MissingItem('Téléphone'));
+    }
+    if (user.birthDate == null) {
+      missing.add(const _MissingItem('Date de naissance'));
+    }
+    if (!(user.city?.isNotEmpty ?? false)) {
+      missing.add(const _MissingItem('Ville'));
+    }
+    if (!(user.bio?.isNotEmpty ?? false)) {
+      missing.add(const _MissingItem('À propos'));
+    }
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
+        margin: const EdgeInsets.only(bottom: DonySpacing.lg),
         padding: const EdgeInsets.all(DonySpacing.base),
         decoration: BoxDecoration(
           color: tier.light,
@@ -737,7 +816,7 @@ class ProfileCompletionBanner extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Profil incomplet',
+                        'Complétez votre compte',
                         style: tt.bodyMedium?.copyWith(
                           fontWeight: FontWeight.w700,
                           color: cs.onSurface,
@@ -772,7 +851,15 @@ class ProfileCompletionBanner extends StatelessWidget {
                 spacing: DonySpacing.xs,
                 runSpacing: DonySpacing.xs,
                 children: missing
-                    .map((m) => _MissingChip(label: m, color: tier.base))
+                    .map(
+                      (m) => _MissingChip(
+                        item: m,
+                        color: tier.base,
+                        onTap: m.route == null
+                            ? onTap
+                            : () => context.push(m.route!),
+                      ),
+                    )
                     .toList(),
               ),
             ],
@@ -784,36 +871,57 @@ class ProfileCompletionBanner extends StatelessWidget {
 }
 
 class _MissingChip extends StatelessWidget {
-  const _MissingChip({required this.label, required this.color});
-  final String label;
+  const _MissingChip({
+    required this.item,
+    required this.color,
+    required this.onTap,
+  });
+
+  final _MissingItem item;
   final Color color;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: DonySpacing.sm,
-        vertical: DonySpacing.xs,
-      ),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(DonyRadius.sm),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          DonyIcon('plus', color: color, size: 12),
-          const SizedBox(width: DonySpacing.xs),
-          Text(
-            label,
-            style: tt.labelSmall?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: color,
+    // Chaque case mène quelque part : les champs de profil vers l'édition,
+    // l'identité et les paiements vers leur propre écran. Chacune est donc un
+    // vrai bouton, avec sa hauteur de cible tactile minimale.
+    return Semantics(
+      button: true,
+      label: '${item.label}, à compléter',
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(DonyRadius.sm),
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 32),
+            padding: const EdgeInsets.symmetric(
+              horizontal: DonySpacing.sm,
+              vertical: DonySpacing.xs,
+            ),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(DonyRadius.sm),
+              border: Border.all(color: color.withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                DonyIcon(item.iconAsset, color: color, size: 12),
+                const SizedBox(width: DonySpacing.xs),
+                Text(
+                  item.label,
+                  style: tt.labelSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: color,
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }

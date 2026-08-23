@@ -342,14 +342,18 @@ bool _isDone(
   OnboardingStep.identity => user?.isKycVerified ?? false,
   OnboardingStep.address => _hasText(user?.residenceStreet),
   OnboardingStep.payouts =>
-    _stripeStatus(user, stripe) == 'ONBOARDING_COMPLETE',
+    effectiveStripeStatus(user, stripe) == 'ONBOARDING_COMPLETE',
 };
 
 /// Le statut du bloc fait foi quand il est chargé ; sinon celui porté par le
 /// profil. Sans ce repli, le résolveur serait aveugle pendant tout le parcours
 /// post-inscription : `StripeAccountBloc` n'est chargé que par
 /// `MainShell.initState`, et les routes `/auth/*` sont hors shell.
-String _stripeStatus(UserModel? user, StripeAccountState stripe) =>
+///
+/// Public parce que la bannière de complétion du profil doit trancher
+/// exactement de la même façon : deux règles divergentes afficheraient
+/// « paiements à faire » sur un compte que le résolveur considère complet.
+String effectiveStripeStatus(UserModel? user, StripeAccountState stripe) =>
     switch (stripe) {
       StripeAccountReady(:final accountStatus) => accountStatus.status,
       _ => user?.stripeAccountStatus ?? 'NOT_CREATED',

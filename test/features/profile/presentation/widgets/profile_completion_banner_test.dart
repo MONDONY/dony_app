@@ -1,8 +1,12 @@
+import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/models/connect_account_status.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_sections.dart';
+import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 const _empty = UserModel(
@@ -12,11 +16,40 @@ const _empty = UserModel(
   status: 'ACTIVE',
 );
 
-Widget _app(UserModel user, {VoidCallback? onTap}) => MaterialApp(
-  home: Scaffold(
-    body: ProfileCompletionBanner(user: user, onTap: onTap ?? () {}),
-  ),
-);
+class _MockStripeAccountBloc
+    extends MockBloc<StripeAccountEvent, StripeAccountState>
+    implements StripeAccountBloc {}
+
+/// La bannière compte deux étapes de compte en plus des champs de profil :
+/// l'identité (toujours) et les paiements (là où Stripe couvre le pays). Le
+/// total de référence de ces tests est donc **8 champs + identité +
+/// paiements = 10**.
+Widget _app(
+  UserModel user, {
+  VoidCallback? onTap,
+  String stripeStatus = 'NOT_CREATED',
+  bool connectAvailable = true,
+}) {
+  final bloc = _MockStripeAccountBloc();
+  whenListen<StripeAccountState>(
+    bloc,
+    const Stream.empty(),
+    initialState: StripeAccountReady(
+      ConnectAccountStatus(
+        status: stripeStatus,
+        connectAvailableInCountry: connectAvailable,
+      ),
+    ),
+  );
+  return MaterialApp(
+    home: BlocProvider<StripeAccountBloc>.value(
+      value: bloc,
+      child: Scaffold(
+        body: ProfileCompletionBanner(user: user, onTap: onTap ?? () {}),
+      ),
+    ),
+  );
+}
 
 /// Couleur de percent-text/icônes affichée pour un [user] donné — lit
 /// directement le thème résolu au lieu de dupliquer la logique de palier
@@ -33,6 +66,18 @@ Color _renderedTierColor(WidgetTester tester) {
   return cs.info;
 }
 
+/// Les 8 champs de profil renseignés.
+final _allProfileFields = _empty.copyWith(
+  avatarUrl: 'https://cdn.example.com/avatar.jpg',
+  firstName: 'Amadou',
+  lastName: 'Diallo',
+  email: 'amadou@example.com',
+  phoneNumber: '+221701234567',
+  city: 'Dakar',
+  bio: 'Voyageur régulier.',
+  birthDate: DateTime(1995, 3, 12),
+);
+
 void main() {
   // Le SMS OTP backend confirmé est l'état par défaut de ces tests (8
   // champs, téléphone inclus) : le groupe dédié plus bas couvre le cas
@@ -40,13 +85,17 @@ void main() {
   setUp(() => setSmsAuthEnabled(true));
   tearDown(() => setSmsAuthEnabled(kSmsAuthEnabledDefault));
 
-  testWidgets('0/8 champs → 0 %, les 8 chips manquants affichés', (
+  testWidgets('0/10 → 0 %, les 8 champs plus la case identité sont affichés', (
     tester,
   ) async {
     await tester.pumpWidget(_app(_empty));
     await tester.pump();
 
     expect(find.text('0% complété · Compléter maintenant'), findsOneWidget);
+    expect(find.text('Vérifier mon identité'), findsOneWidget);
+    // Les paiements ne sont jamais proposés avant l'identité : Stripe les
+    // refuserait (422 `kyc-required`).
+    expect(find.text('Activer les paiements'), findsNothing);
     for (final label in const [
       'Photo',
       'Prénom',
@@ -61,23 +110,56 @@ void main() {
     }
   });
 
-  testWidgets('8/8 champs → 100 %, aucun chip manquant', (tester) async {
-    final user = _empty.copyWith(
-      avatarUrl: 'https://cdn.example.com/avatar.jpg',
-      firstName: 'Amadou',
-      lastName: 'Diallo',
-      email: 'amadou@example.com',
-      phoneNumber: '+221701234567',
-      city: 'Dakar',
-      bio: 'Voyageur régulier.',
-      birthDate: DateTime(1995, 3, 12),
-    );
-    await tester.pumpWidget(_app(user));
+  testWidgets('8/10 : profil rempli mais identité manquante → 80 %, la '
+      'bannière reste et réclame l\'identité', (tester) async {
+    await tester.pumpWidget(_app(_allProfileFields));
     await tester.pump();
 
-    expect(find.text('100% complété · Compléter maintenant'), findsOneWidget);
+    expect(find.text('80% complété · Compléter maintenant'), findsOneWidget);
     expect(find.text('Photo'), findsNothing);
-    expect(find.text('À propos'), findsNothing);
+    expect(find.text('Vérifier mon identité'), findsOneWidget);
+  });
+
+  testWidgets('9/10 : identité vérifiée → les paiements prennent le relais', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _app(_allProfileFields.copyWith(kycStatus: 'VERIFIED')),
+    );
+    await tester.pump();
+
+    expect(find.text('90% complété · Compléter maintenant'), findsOneWidget);
+    expect(find.text('Vérifier mon identité'), findsNothing);
+    expect(find.text('Activer les paiements'), findsOneWidget);
+  });
+
+  testWidgets('10/10 : tout est fait → la bannière disparaît entièrement', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _app(
+        _allProfileFields.copyWith(kycStatus: 'VERIFIED'),
+        stripeStatus: 'ONBOARDING_COMPLETE',
+      ),
+    );
+    await tester.pump();
+
+    expect(find.textContaining('% complété'), findsNothing);
+    expect(tester.getSize(find.byType(ProfileCompletionBanner)), Size.zero);
+  });
+
+  testWidgets('pays hors couverture Stripe : 9 étapes, pas 10 — les '
+      'paiements ne sont jamais réclamés', (tester) async {
+    await tester.pumpWidget(
+      _app(
+        _allProfileFields.copyWith(kycStatus: 'VERIFIED'),
+        connectAvailable: false,
+      ),
+    );
+    await tester.pump();
+
+    // 9 sur 9 : la bannière s'efface sans jamais avoir parlé de paiements.
+    expect(find.textContaining('% complété'), findsNothing);
   });
 
   testWidgets('tap déclenche le callback onTap', (tester) async {
@@ -99,24 +181,25 @@ void main() {
       expect(_renderedTierColor(tester), cs.error);
     });
 
-    testWidgets('3/8 (37,5 %, entre 1/3 et 2/3) → orange (cs.warning)', (
+    testWidgets('4/10 (40 %, entre 1/3 et 2/3) → orange (cs.warning)', (
       tester,
     ) async {
       final user = _empty.copyWith(
         firstName: 'Amadou',
         lastName: 'Diallo',
         email: 'amadou@example.com',
+        city: 'Dakar',
       );
       await tester.pumpWidget(_app(user));
       await tester.pump();
 
       final context = tester.element(find.byType(ProfileCompletionBanner));
       final cs = Theme.of(context).colorScheme;
-      expect(find.text('38% complété · Compléter maintenant'), findsOneWidget);
+      expect(find.text('40% complété · Compléter maintenant'), findsOneWidget);
       expect(_renderedTierColor(tester), cs.warning);
     });
 
-    testWidgets('7/8 (87,5 %, >= 2/3) → bleu (cs.info)', (tester) async {
+    testWidgets('7/10 (70 %, >= 2/3) → bleu (cs.info)', (tester) async {
       final user = _empty.copyWith(
         avatarUrl: 'https://cdn.example.com/avatar.jpg',
         firstName: 'Amadou',
@@ -131,7 +214,7 @@ void main() {
 
       final context = tester.element(find.byType(ProfileCompletionBanner));
       final cs = Theme.of(context).colorScheme;
-      expect(find.text('88% complété · Compléter maintenant'), findsOneWidget);
+      expect(find.text('70% complété · Compléter maintenant'), findsOneWidget);
       expect(_renderedTierColor(tester), cs.info);
     });
   });
@@ -162,8 +245,8 @@ void main() {
     );
 
     testWidgets(
-      '7/7 champs (sans téléphone) → 100 %, la bannière disparaît côté '
-      'ProfileScreen (isProfileComplete atteint sans numéro)',
+      '7 champs sur 7 (sans téléphone) mais identité et paiements à faire → '
+      'la bannière reste : `isProfileComplete` ne connaît pas ces étapes',
       (tester) async {
         final user = _empty.copyWith(
           avatarUrl: 'https://cdn.example.com/avatar.jpg',
@@ -179,10 +262,12 @@ void main() {
 
         expect(user.phoneNumber, isNull);
         expect(user.isProfileComplete(countPhone: false), isTrue);
+        // 7 champs sur 7 + identité + paiements = 7 sur 9.
         expect(
-          find.text('100% complété · Compléter maintenant'),
+          find.text('78% complété · Compléter maintenant'),
           findsOneWidget,
         );
+        expect(find.text('Vérifier mon identité'), findsOneWidget);
       },
     );
   });

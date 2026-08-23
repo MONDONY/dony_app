@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/services/address_autocomplete_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -11,6 +12,7 @@ import 'package:dony/features/auth/presentation/screens/residence_address_screen
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -51,6 +53,7 @@ Widget _wrap(
             ],
             child: ResidenceAddressScreen(
               country: country,
+              addressService: _StubAddressService(),
               progress: _progress,
             ),
           ),
@@ -65,7 +68,23 @@ Widget _wrap(
   );
 }
 
+/// Service d'autocomplétion inerte : les tests de cet écran portent sur le
+/// formulaire et la navigation, jamais sur les suggestions Google. Une
+/// doublure qui ne rend rien évite toute requête réseau.
+class _StubAddressService implements AddressAutocompleteService {
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      switch (invocation.memberName.toString()) {
+        'Symbol("search")' => Future.value(const []),
+        _ => super.noSuchMethod(invocation),
+      };
+}
+
 void main() {
+  // Le champ de date affiche « 12 avril 1990 » : comme `main.dart`, les
+  // données de locale doivent être initialisées avant tout formatage.
+  setUpAll(() => initializeDateFormatting('fr'));
+
   late _MockCubit cubit;
   late _MockAuthBloc authBloc;
 
@@ -109,11 +128,30 @@ void main() {
         line2: any(named: 'line2'),
         postalCode: any(named: 'postalCode'),
         city: any(named: 'city'),
+        firstName: any(named: 'firstName'),
+        lastName: any(named: 'lastName'),
+        birthDate: any(named: 'birthDate'),
       ),
     ).thenAnswer((_) async {});
 
     await tester.pumpWidget(_wrap(cubit, authBloc));
     await tester.pump(const Duration(milliseconds: 400));
+
+    // L'identité déclarée fait partie du même écran depuis le lot 3 : sans
+    // elle, le bouton reste inerte.
+    await tester.enterText(find.byKey(const Key('identity-first-name')), 'Awa');
+    await tester.enterText(
+      find.byKey(const Key('identity-last-name')),
+      'Diallo',
+    );
+    // Le formulaire dépasse la fenêtre de test : sans ce défilement, le tap
+    // tombe hors du champ et le sélecteur ne s'ouvre jamais.
+    await tester.ensureVisible(find.byKey(const Key('identity-birth-date')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('identity-birth-date')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('OK'));
+    await tester.pumpAndSettle();
 
     await tester.enterText(
       find.byKey(const Key('residence-street')),
@@ -131,6 +169,9 @@ void main() {
         street: '12 rue des Lilas',
         postalCode: '75011',
         city: 'Paris',
+        firstName: 'Awa',
+        lastName: 'Diallo',
+        birthDate: any(named: 'birthDate'),
       ),
     ).called(1);
   });
@@ -154,7 +195,7 @@ void main() {
     expect(find.byType(DonyOnboardingGauge), findsOneWidget);
     expect(find.byType(DonyStepPill), findsNothing);
     // Position : l'adresse est le 3e écran du parcours, donc « 3 / 5 ».
-    expect(find.text('3 / 5 · Adresse'), findsOneWidget);
+    expect(find.text('3 / 5 · Informations'), findsOneWidget);
   });
 
   group(

@@ -334,4 +334,11 @@ abstract final class AnalyticsEvents {
   static const onboardingStepViewed = 'onboarding_step_viewed';
   static const onboardingStepCompleted = 'onboarding_step_completed';
   static const onboardingCompleted = 'onboarding_completed';
+
+  // Onboarding progressif — lot 3
+  //
+  // Identité *déclarée* par l'utilisateur (nom, date de naissance), à ne pas
+  // confondre avec l'identité *vérifiée* par Stripe Identity. Ne porte que
+  // des booléens de présence — jamais les valeurs.
+  static const onboardingIdentityDeclared = 'onboarding_identity_declared';
 }

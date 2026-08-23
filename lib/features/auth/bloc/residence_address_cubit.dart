@@ -31,7 +31,14 @@ class ResidenceAddressError extends ResidenceAddressState {
   List<Object?> get props => [message];
 }
 
-/// Étape « adresse » du parcours d'onboarding.
+/// Étape « Vos informations » du parcours d'onboarding : identité déclarée
+/// (prénom, nom, date de naissance) et adresse de résidence.
+///
+/// Les deux sont collectées ensemble parce qu'elles servent la même chose :
+/// préremplir l'onboarding Stripe Connect, pour que le voyageur n'ait pas à
+/// ressaisir chez Stripe ce qu'il vient de donner à yadony. Le téléphone en
+/// est volontairement absent : Stripe le redemande de toute façon, c'est son
+/// propre canal d'authentification.
 ///
 /// L'adresse n'est jamais reprise de la pièce d'identité : celle du document
 /// peut être périmée, alors que Stripe Connect demande la résidence actuelle.
@@ -43,15 +50,43 @@ class ResidenceAddressCubit extends Cubit<ResidenceAddressState> {
   final AuthRepository _repository;
   final AnalyticsService _analytics;
 
+  /// [firstName], [lastName] et [birthDate] sont facultatifs : l'écran laisse
+  /// avancer sans eux (l'étape entière est passable). Ils ne partent que
+  /// renseignés — un PATCH avec des champs vides écraserait un profil déjà
+  /// rempli par ailleurs.
   Future<void> submit({
     required String street,
     String? line2,
     required String postalCode,
     required String city,
+    String? firstName,
+    String? lastName,
+    DateTime? birthDate,
   }) async {
     if (state is ResidenceAddressSaving) return;
     emit(const ResidenceAddressSaving());
     try {
+      // L'identité déclarée d'abord : l'adresse est l'écriture qui fait
+      // basculer l'étape « adresse » à faite (`nextStep` lit
+      // `residence_street`). L'ordre inverse laisserait une étape marquée
+      // faite alors que le profil n'a pas reçu ses champs.
+      if (firstName != null || lastName != null || birthDate != null) {
+        await _repository.updateProfile(
+          firstName: firstName,
+          lastName: lastName,
+          birthDate: birthDate,
+          city: city,
+        );
+        unawaited(
+          _analytics.logEvent(
+            AnalyticsEvents.onboardingIdentityDeclared,
+            properties: {
+              'has_name': firstName != null || lastName != null,
+              'has_birth_date': birthDate != null,
+            },
+          ),
+        );
+      }
       await _repository.updateResidenceAddress(
         street: street,
         line2: line2,

@@ -203,7 +203,7 @@ void main() {
   testWidgets('passer appelle le cubit sans imposer de pays', (tester) async {
     await _wrap(tester, cubit);
 
-    await tester.tap(find.text('Passer pour l’instant'));
+    await tester.tap(find.text('Passer pour l\'instant'));
     await tester.pump();
 
     verify(() => cubit.skip()).called(1);

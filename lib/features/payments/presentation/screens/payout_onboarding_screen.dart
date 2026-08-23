@@ -195,105 +195,103 @@ class _OnboardingView extends StatelessWidget {
       body: Builder(
         builder: (context) {
           final h = DonyLayout.hPadding(context);
-          return SingleChildScrollView(
-            padding: EdgeInsets.fromLTRB(
-              h,
-              DonySpacing.xxl,
-              h,
-              DonySpacing.huge,
-            ),
-            child: DonyLayout.constrained(
-              context,
-              Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (progress != null) ...[
-                        AuthFlowHeader.gauge(
-                          segments: progress!.segments,
-                          label: 'Paiements',
-                        ),
-                        const SizedBox(height: DonySpacing.xxl),
-                      ],
-                      const _HeroSection(),
-                      const SizedBox(height: DonySpacing.xxl),
-                      const _BenefitsSection(),
-                      const SizedBox(height: DonySpacing.xxl),
-                      if (isPending) ...[
-                        // Ne plus dire « Stripe finalise votre compte » : dans
-                        // le cas courant Stripe n'attend rien, il manque des
-                        // informations que l'utilisateur seul peut fournir.
-                        // Laisser croire à une attente le décourageait de
-                        // reprendre.
-                        const DonyStatusBanner(
-                          type: DonyStatusBannerType.warning,
-                          iconAsset: 'clock',
-                          message:
-                              'Inscription commencée mais pas terminée. '
-                              'Reprenez-la pour pouvoir être payé, vous '
-                              'retrouverez vos informations déjà saisies.',
-                        ),
-                        const SizedBox(height: DonySpacing.md),
-                        DonyButton(
-                          label: 'Rafraîchir le statut',
-                          variant: DonyButtonVariant.secondary,
-                          onPressed: isLoading
-                              ? null
-                              : () => context.read<PaymentBloc>().add(
-                                  const PaymentOnboardingRefreshRequested(),
-                                ),
-                          iconAsset: 'refresh-cw',
-                        ),
-                        const SizedBox(height: DonySpacing.xl),
-                      ],
-                      if (error != null) ...[
-                        DonyStatusBanner(
-                          type: DonyStatusBannerType.error,
-                          message: error,
-                        ),
-                        const SizedBox(height: DonySpacing.xl),
-                      ],
-                      DonyButton(
-                        // « Connecter » sous-entend un premier pas ; quand
-                        // l'inscription est déjà entamée, c'est bien d'une
-                        // reprise qu'il s'agit.
-                        label: isPending
-                            ? 'Reprendre mon inscription'
-                            : 'Connecter mon compte bancaire',
-                        onPressed: isLoading
-                            ? null
-                            : () => context.read<PaymentBloc>().add(
-                                const PaymentConnectAccountRequested(),
-                              ),
-                        isLoading: isLoading,
-                        iconAsset: 'landmark',
-                      ),
-                      // Configurer un compte bancaire est lourd (identité,
-                      // IBAN) : personne ne doit être bloqué pour l'avoir
-                      // remis à plus tard. Uniquement depuis l'onboarding.
-                      if (progress != null) ...[
-                        const SizedBox(height: DonySpacing.sm),
-                        Center(
-                          child: TextButton(
-                            onPressed: isLoading
-                                ? null
-                                : () => _leavePayoutsStep(context, progress),
-                            child: Text(
-                              'Passer pour l\'instant',
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onSurfaceVariant,
-                                  ),
+          // Contenu défilant d'un côté, actions ancrées de l'autre : le bouton
+          // « Connecter mon compte bancaire » se trouvait sous la ligne de
+          // flottaison, il fallait scroller pour le découvrir (retour
+          // utilisateur). Il ne bouge plus.
+          return DonyLayout.constrained(
+            context,
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                h,
+                DonySpacing.base,
+                h,
+                DonySpacing.base + MediaQuery.paddingOf(context).bottom,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (progress != null) ...[
+                    AuthFlowHeader.gauge(
+                      segments: progress!.segments,
+                      label: 'Paiements',
+                    ),
+                    const SizedBox(height: DonySpacing.md),
+                  ],
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const _HeroSection(),
+                          const SizedBox(height: DonySpacing.lg),
+                          const _BenefitsSection(),
+                          const SizedBox(height: DonySpacing.lg),
+                          if (isPending) ...[
+                            // Ne plus dire « Stripe finalise votre compte » : dans
+                            // le cas courant Stripe n'attend rien, il manque des
+                            // informations que l'utilisateur seul peut fournir.
+                            // Laisser croire à une attente le décourageait de
+                            // reprendre.
+                            const DonyStatusBanner(
+                              type: DonyStatusBannerType.warning,
+                              iconAsset: 'clock',
+                              message:
+                                  'Inscription commencée mais pas terminée. '
+                                  'Reprenez-la pour pouvoir être payé, vous '
+                                  'retrouverez vos informations déjà saisies.',
                             ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  )
-                  .animate()
-                  .fadeIn(duration: 300.ms)
-                  .slideY(begin: 0.04, curve: Curves.easeOutCubic),
+                            const SizedBox(height: DonySpacing.md),
+                            DonyButton(
+                              label: 'Rafraîchir le statut',
+                              variant: DonyButtonVariant.secondary,
+                              onPressed: isLoading
+                                  ? null
+                                  : () => context.read<PaymentBloc>().add(
+                                      const PaymentOnboardingRefreshRequested(),
+                                    ),
+                              iconAsset: 'refresh-cw',
+                            ),
+                            const SizedBox(height: DonySpacing.md),
+                          ],
+                          if (error != null) ...[
+                            DonyStatusBanner(
+                              type: DonyStatusBannerType.error,
+                              message: error,
+                            ),
+                            const SizedBox(height: DonySpacing.md),
+                          ],
+                        ],
+                      ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
+                    ),
+                  ),
+                  AuthFlowActions(
+                    primary: DonyButton(
+                      // « Connecter » sous-entend un premier pas ; quand
+                      // l'inscription est déjà entamée, c'est bien d'une
+                      // reprise qu'il s'agit.
+                      label: isPending
+                          ? 'Reprendre mon inscription'
+                          : 'Connecter mon compte bancaire',
+                      onPressed: isLoading
+                          ? null
+                          : () => context.read<PaymentBloc>().add(
+                              const PaymentConnectAccountRequested(),
+                            ),
+                      isLoading: isLoading,
+                      iconAsset: 'landmark',
+                    ),
+                    // Configurer un compte bancaire est lourd (identité,
+                    // IBAN) : personne ne doit être bloqué pour l'avoir remis
+                    // à plus tard. Uniquement depuis l'onboarding — depuis le
+                    // profil, il n'y a pas d'étape à passer.
+                    skipEnabled: !isLoading,
+                    onSkip: progress == null
+                        ? null
+                        : () => _leavePayoutsStep(context, progress),
+                  ),
+                ],
+              ),
             ),
           );
         },
@@ -428,81 +426,98 @@ class _ActiveAccountView extends StatelessWidget {
 
     return Scaffold(
       appBar: const DonyAppBar(title: 'Recevoir mes paiements'),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.fromLTRB(h, DonySpacing.xxl, h, DonySpacing.huge),
-        child: DonyLayout.constrained(
-          context,
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      body: DonyLayout.constrained(
+        context,
+        Padding(
+          padding: EdgeInsets.fromLTRB(
+            h,
+            DonySpacing.base,
+            h,
+            DonySpacing.base + MediaQuery.paddingOf(context).bottom,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               if (progress != null) ...[
                 AuthFlowHeader.gauge(
                   segments: progress!.segments,
                   label: 'Paiements',
                 ),
-                const SizedBox(height: DonySpacing.xl),
+                const SizedBox(height: DonySpacing.md),
               ],
-              DonyIconContainer(
-                iconAsset: 'circle-check',
-                size: DonyIconContainerSize.xl,
-                borderRadius: DonyRadius.xl,
-                backgroundColor: cs.success.withValues(alpha: 0.1),
-                iconColor: cs.success,
-              ),
-              const SizedBox(height: DonySpacing.lg),
-              Text(
-                'Compte bancaire connecté',
-                style: tt.displayLarge?.copyWith(height: 1.2),
-              ),
-              const SizedBox(height: DonySpacing.md),
-              Text(
-                'Votre compte Stripe est actif. Après chaque livraison confirmée, '
-                'le paiement est automatiquement viré sur votre compte bancaire '
-                'sous 1 à 2 jours ouvrés.',
-                style: tt.bodyLarge?.copyWith(
-                  color: cs.onSurfaceVariant,
-                  height: 1.5,
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      DonyIconContainer(
+                        iconAsset: 'circle-check',
+                        size: DonyIconContainerSize.xl,
+                        borderRadius: DonyRadius.xl,
+                        backgroundColor: cs.success.withValues(alpha: 0.1),
+                        iconColor: cs.success,
+                      ),
+                      const SizedBox(height: DonySpacing.md),
+                      Text(
+                        'Compte bancaire connecté',
+                        style: tt.headlineMedium?.copyWith(height: 1.2),
+                      ),
+                      const SizedBox(height: DonySpacing.sm),
+                      Text(
+                        'Votre compte Stripe est actif. Après chaque livraison confirmée, '
+                        'le paiement est automatiquement viré sur votre compte bancaire '
+                        'sous 1 à 2 jours ouvrés.',
+                        style: tt.bodyMedium?.copyWith(
+                          color: cs.onSurfaceVariant,
+                          height: 1.45,
+                        ),
+                      ),
+                      const SizedBox(height: DonySpacing.lg),
+                      const DonyCard(
+                        padding: EdgeInsets.zero,
+                        child: Column(
+                          children: [
+                            _InfoRow(
+                              iconAsset: 'lock',
+                              title: 'Paiement sécurisé',
+                              subtitle:
+                                  "L'argent est retenu jusqu'à confirmation de livraison.",
+                            ),
+                            Divider(height: 1, indent: 70),
+                            _InfoRow(
+                              iconAsset: 'zap',
+                              title: 'Virement automatique',
+                              subtitle:
+                                  'Aucune action requise, Stripe vire directement sur votre RIB.',
+                            ),
+                            Divider(height: 1, indent: 70),
+                            _InfoRow(
+                              iconAsset: 'landmark',
+                              title: 'Sur votre compte bancaire',
+                              subtitle:
+                                  "Vous recevez l'argent sur le compte lié à votre RIB/IBAN, pas dans un portefeuille Stripe.",
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
                 ),
               ),
-              const SizedBox(height: DonySpacing.xxl),
-              const DonyCard(
-                padding: EdgeInsets.zero,
-                child: Column(
-                  children: [
-                    _InfoRow(
-                      iconAsset: 'lock',
-                      title: 'Paiement sécurisé',
-                      subtitle:
-                          "L'argent est retenu jusqu'à confirmation de livraison.",
-                    ),
-                    Divider(height: 1, indent: 70),
-                    _InfoRow(
-                      iconAsset: 'zap',
-                      title: 'Virement automatique',
-                      subtitle:
-                          'Aucune action requise, Stripe vire directement sur votre RIB.',
-                    ),
-                    Divider(height: 1, indent: 70),
-                    _InfoRow(
-                      iconAsset: 'landmark',
-                      title: 'Sur votre compte bancaire',
-                      subtitle:
-                          "Vous recevez l'argent sur le compte lié à votre RIB/IBAN, pas dans un portefeuille Stripe.",
-                    ),
-                  ],
+              // Le compte est actif : plus rien à passer, seulement à sortir.
+              // Depuis le profil (progress null), l'écran est purement
+              // informatif — aucune zone d'action.
+              if (progress != null)
+                AuthFlowActions(
+                  primary: DonyButton(
+                    label: 'Continuer vers l\'accueil',
+                    iconAsset: 'arrow-right',
+                    onPressed: () => _leavePayoutsStep(context, progress),
+                    variant: DonyButtonVariant.success,
+                  ),
                 ),
-              ),
-              if (progress != null) ...[
-                const SizedBox(height: DonySpacing.xxl),
-                DonyButton(
-                  label: 'Continuer vers l\'accueil',
-                  iconAsset: 'arrow-right',
-                  onPressed: () => _leavePayoutsStep(context, progress),
-                  variant: DonyButtonVariant.success,
-                ),
-              ],
             ],
-          ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
+          ),
         ),
       ),
     );
@@ -573,61 +588,79 @@ class _SuccessView extends StatelessWidget {
 
     return Scaffold(
       appBar: const DonyAppBar(title: 'Recevoir mes paiements'),
-      body: Center(
-        child: Builder(
-          builder: (context) {
-            return Padding(
-              padding: EdgeInsets.all(DonyLayout.hPadding(context)),
-              child: DonyLayout.constrained(
-                context,
-                Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (progress != null) ...[
-                          AuthFlowHeader.gauge(
-                            segments: progress!.segments,
-                            label: 'Paiements',
-                          ),
-                          const SizedBox(height: DonySpacing.xl),
-                        ],
-                        const DonyMascotteAnimated(
-                          type: DonyMascotteType.securise,
-                          size: DonyMascotteSize.lg,
-                          withGlow: true,
-                        ),
-                        const SizedBox(height: DonySpacing.xl),
-                        Text('Paiements activés ✓', style: tt.displayLarge),
-                        const SizedBox(height: DonySpacing.md),
-                        Text(
-                          'Votre compte bancaire est connecté. Vous recevrez vos paiements automatiquement après chaque livraison.',
-                          textAlign: TextAlign.center,
-                          style: tt.bodyLarge?.copyWith(
-                            color: cs.onSurfaceVariant,
-                            height: 1.5,
-                          ),
-                        ),
-                        if (progress != null) ...[
-                          const SizedBox(height: DonySpacing.xl),
-                          DonyButton(
-                            label: 'Continuer vers l\'accueil',
-                            iconAsset: 'arrow-right',
-                            onPressed: () =>
-                                _leavePayoutsStep(context, progress),
-                            variant: DonyButtonVariant.success,
-                          ),
-                        ],
-                      ],
-                    )
-                    .animate()
-                    .fadeIn(duration: 400.ms)
-                    .scale(
-                      begin: const Offset(0.9, 0.9),
-                      curve: Curves.easeOutCubic,
-                    ),
+      body: Builder(
+        builder: (context) {
+          final h = DonyLayout.hPadding(context);
+          return DonyLayout.constrained(
+            context,
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                h,
+                DonySpacing.base,
+                h,
+                DonySpacing.base + MediaQuery.paddingOf(context).bottom,
               ),
-            );
-          },
-        ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (progress != null) ...[
+                    AuthFlowHeader.gauge(
+                      segments: progress!.segments,
+                      label: 'Paiements',
+                    ),
+                    const SizedBox(height: DonySpacing.md),
+                  ],
+                  Expanded(
+                    child: Center(
+                      child: SingleChildScrollView(
+                        child:
+                            Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const DonyMascotteAnimated(
+                                      type: DonyMascotteType.securise,
+                                      size: DonyMascotteSize.lg,
+                                      withGlow: true,
+                                    ),
+                                    const SizedBox(height: DonySpacing.lg),
+                                    Text(
+                                      'Paiements activés ✓',
+                                      style: tt.headlineMedium,
+                                    ),
+                                    const SizedBox(height: DonySpacing.sm),
+                                    Text(
+                                      'Votre compte bancaire est connecté. Vous recevrez vos paiements automatiquement après chaque livraison.',
+                                      textAlign: TextAlign.center,
+                                      style: tt.bodyMedium?.copyWith(
+                                        color: cs.onSurfaceVariant,
+                                        height: 1.45,
+                                      ),
+                                    ),
+                                  ],
+                                )
+                                .animate()
+                                .fadeIn(duration: 400.ms)
+                                .scale(
+                                  begin: const Offset(0.9, 0.9),
+                                  curve: Curves.easeOutCubic,
+                                ),
+                      ),
+                    ),
+                  ),
+                  if (progress != null)
+                    AuthFlowActions(
+                      primary: DonyButton(
+                        label: 'Continuer vers l\'accueil',
+                        iconAsset: 'arrow-right',
+                        onPressed: () => _leavePayoutsStep(context, progress),
+                        variant: DonyButtonVariant.success,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }

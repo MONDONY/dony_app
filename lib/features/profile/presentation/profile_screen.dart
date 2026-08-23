@@ -1,4 +1,3 @@
-import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -6,7 +5,6 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
-import 'package:dony/features/profile/presentation/widgets/account_setup_card.dart';
 import 'package:dony/features/profile/presentation/widgets/pending_deletion_banner.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_header.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_sections.dart';
@@ -334,21 +332,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         const SizedBox(height: DonySpacing.lg),
       ],
-      // Configuration du compte (identité, paiements) au-dessus des champs de
-      // profil : tant qu'il reste une étape du parcours, c'est elle qui
-      // conditionne ce que l'utilisateur peut faire dans l'app — la photo de
-      // profil attendra. La carte s'escamote seule à parcours complet.
-      if (user != null) AccountSetupCard(user: user).animate().fadeIn(),
-      if (user != null &&
-          !user.isProfileComplete(
-            countPhone: smsAuthEnabledListenable.value,
-          )) ...[
+      // La bannière porte désormais aussi l'identité et les paiements : une
+      // seule question posée à l'utilisateur (« qu'est-ce qui manque ? »),
+      // une seule carte pour y répondre. Elle décide seule de s'afficher —
+      // `isProfileComplete` ne connaît pas ces deux étapes-là — et porte son
+      // propre écart bas pour ne rien occuper une fois tout complété.
+      if (user != null)
         ProfileCompletionBanner(
           user: user,
           onTap: () => context.push('/profile/edit'),
         ).animate().fadeIn(delay: 40.ms),
-        const SizedBox(height: DonySpacing.lg),
-      ],
 
       animated(ProfileAccountSection(user: user)),
       // Compte entièrement vérifié → la section se réduit à SizedBox.shrink :

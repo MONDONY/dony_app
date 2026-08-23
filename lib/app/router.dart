@@ -1,5 +1,6 @@
 import 'package:dony/app/main_shell.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/address_autocomplete_service.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/storage/hive_service.dart';
@@ -392,6 +393,11 @@ final appRouter = GoRouter(
           create: (_) => getIt<ResidenceAddressCubit>(),
           child: ResidenceAddressScreen(
             country: country,
+            // Préremplit ce que le profil sait déjà (retour sur l'étape
+            // depuis le profil, second passage) — lu ici comme le reste de
+            // l'état ambiant, jamais dans l'écran.
+            user: context.read<AuthBloc>().state.currentUser,
+            addressService: getIt<AddressAutocompleteService>(),
             progress: readOnboardingProgress(
               context,
               current: OnboardingStep.address,

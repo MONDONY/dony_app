@@ -59,7 +59,7 @@ class AnalyticsConsentScreen extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            const AuthIntroCard(
+                            const AuthIntroCard.compact(
                                   iconAsset: 'shield-check',
                                   title: 'Une dernière chose',
                                   body:
@@ -79,7 +79,6 @@ class AnalyticsConsentScreen extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(height: DonySpacing.sm),
                     const _Buttons(),
                   ],
                 ),
@@ -214,20 +213,18 @@ class _Buttons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-          children: [
-            DonyButton(
-              label: 'Accepter',
-              iconAsset: 'shield-check',
-              onPressed: () => _respond(context, granted: true),
-            ),
-            const SizedBox(height: DonySpacing.md),
-            DonyButton(
-              label: 'Non merci',
-              variant: DonyButtonVariant.ghost,
-              onPressed: () => _respond(context, granted: false),
-            ),
-          ],
+    // Même zone d'action que les autres écrans du parcours : « Non merci »
+    // occupe la place du lien « Passer pour l'instant » — refuser le suivi et
+    // passer une étape sont la même intention, et le pouce les retrouve à la
+    // même hauteur d'un écran à l'autre.
+    return AuthFlowActions(
+          primary: DonyButton(
+            label: 'Accepter',
+            iconAsset: 'shield-check',
+            onPressed: () => _respond(context, granted: true),
+          ),
+          skipLabel: 'Non merci',
+          onSkip: () => _respond(context, granted: false),
         )
         .animate()
         .fadeIn(duration: 300.ms, delay: 150.ms)
