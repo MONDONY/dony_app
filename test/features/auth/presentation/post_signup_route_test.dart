@@ -295,7 +295,9 @@ void main() {
         stripe: const StripeAccountInitial(),
       );
 
-      expect(route, '/kyc/verify');
+      // Marqueur d'entrée obligatoire : sans lui, l'écran d'identité s'ouvre
+      // en mode « depuis le profil », sans jauge et sans suite.
+      expect(route, '/kyc/verify?from=onboarding');
     });
 
     test('plus rien à compléter → le parrainage clôt le parcours', () async {

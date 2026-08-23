@@ -102,7 +102,15 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
   /// Pose `onboarding_seen_at` seulement quand la destination est vraiment
   /// l'accueil — jamais quand il reste l'étape paiements à faire.
   void _leaveIdentityStep() {
-    final progress = widget.progress;
+    // L'instantané `widget.progress` a été pris à l'ouverture de l'écran,
+    // avant toute vérification. Quand l'identité vient d'aboutir, il faut le
+    // corriger : sans ça `payoutsUnlocked` resterait faux et l'étape paiements
+    // serait considérée comme verrouillée juste après l'avoir déverrouillée.
+    final kyc = context.read<KycBloc>().state;
+    final justVerified = kyc is KycStatusLoaded && kyc.kycStatus == 'VERIFIED';
+    final progress = justVerified
+        ? widget.progress?.completing(OnboardingStep.identity)
+        : widget.progress;
     final destination =
         progress?.routeAfter(OnboardingStep.identity) ?? '/home';
     if (progress != null && destination == '/home') {

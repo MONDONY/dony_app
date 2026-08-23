@@ -56,7 +56,8 @@ class _ReferralCodeScreenState extends State<ReferralCodeScreen> {
   /// l'utilisateur sur cet écran, et l'appel est idempotent côté serveur.
   void _continue(BuildContext context) {
     final destination =
-        widget.progress.nextAfter(OnboardingStep.address)?.route ?? '/home';
+        widget.progress.nextAfter(OnboardingStep.address)?.onboardingRoute ??
+        '/home';
     if (destination == '/home') {
       unawaited(
         getIt<AuthRepository>().markOnboardingSeen().catchError((_) {}),

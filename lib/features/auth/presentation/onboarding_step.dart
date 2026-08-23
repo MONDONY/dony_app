@@ -34,7 +34,28 @@ enum OnboardingStep {
   final String wireName;
 
   /// Route GoRouter de l'écran qui remplit l'étape.
+  ///
+  /// Route **brute**, sans marqueur d'entrée : à n'utiliser que pour comparer
+  /// ou pour construire une entrée hors parcours. Toute navigation interne au
+  /// parcours passe par [onboardingRoute].
   final String route;
+
+  /// Route à emprunter **depuis le parcours**, marqueur d'entrée compris.
+  ///
+  /// [identity] et [payouts] ont une seconde entrée par le profil. Sans
+  /// `?from=onboarding`, le routeur les construit avec `progress: null` : ni
+  /// jauge, ni enchaînement vers l'étape suivante. Le parcours s'arrêtait donc
+  /// en silence dès qu'on y entrait par [route], et l'utilisateur retombait à
+  /// l'accueil sans jamais voir les paiements.
+  ///
+  /// Les autres étapes n'existent que dans le parcours : leur route brute
+  /// suffit. Ce getter est l'unique point de construction, pour qu'un nouveau
+  /// call site ne puisse plus oublier le marqueur.
+  String get onboardingRoute => switch (this) {
+    identity ||
+    payouts => '$route${onboardingEntrySuffix(fromOnboarding: true)}',
+    _ => route,
+  };
 }
 
 /// `/kyc/verify` et `/payments/onboarding` ont deux entrées possibles : le
@@ -142,7 +163,30 @@ class OnboardingProgress {
   int get total => steps.length;
   int get doneCount => done.length;
 
-  /// Première étape de [steps] absente de [done], ou `null` si tout est fait.
+  /// Les paiements sont-ils ouverts à ce compte ?
+  ///
+  /// Stripe Connect n'ouvre jamais de compte à une identité non vérifiée
+  /// (règle produit ; le serveur refuse aussi par un 422 `kyc-required`).
+  /// Une étape identité **passée** verrouille donc les paiements : le parcours
+  /// se termine à l'accueil plutôt que de mener à un refus, et la carte de
+  /// reprise reproposera l'identité d'abord.
+  bool get payoutsUnlocked => done.contains(OnboardingStep.identity);
+
+  bool _reachable(OnboardingStep step) =>
+      step != OnboardingStep.payouts || payoutsUnlocked;
+
+  /// Copie de cette progression où [step] compte comme faite.
+  ///
+  /// [done] est un instantané pris à la construction de l'écran. Quand cet
+  /// écran vient précisément de faire aboutir son étape, il doit corriger
+  /// l'instantané avant de demander la suite : sans ça, une identité tout
+  /// juste vérifiée laisserait [payoutsUnlocked] à faux et enverrait à
+  /// l'accueil au lieu des paiements.
+  OnboardingProgress completing(OnboardingStep step) =>
+      OnboardingProgress(steps: steps, done: {...done, step}, current: current);
+
+  /// Première étape de [steps] absente de [done] et atteignable, ou `null` si
+  /// plus rien n'est à faire.
   ///
   /// Sert à l'écran de parrainage, seul écran hors décompte : c'est le
   /// premier point du parcours où plusieurs étapes (identité, paiements)
@@ -151,7 +195,7 @@ class OnboardingProgress {
   /// [routeAfter] pour tous les autres écrans).
   OnboardingStep? get next {
     for (final step in steps) {
-      if (!done.contains(step)) return step;
+      if (!done.contains(step)) return _reachable(step) ? step : null;
     }
     return null;
   }
@@ -167,7 +211,9 @@ class OnboardingProgress {
     final index = steps.indexOf(step);
     if (index == -1) return next;
     for (final candidate in steps.skip(index + 1)) {
-      if (!done.contains(candidate)) return candidate;
+      if (!done.contains(candidate)) {
+        return _reachable(candidate) ? candidate : null;
+      }
     }
     return null;
   }
@@ -179,11 +225,18 @@ class OnboardingProgress {
   /// Positionnelle, volontairement indifférente à [done] : les écrans
   /// identité et paiements enchaînent sur le suivant qu'ils viennent de
   /// compléter l'étape ou de la passer — contrairement à [next], passer une
-  /// étape ne doit jamais y faire boucler dessus.
+  /// étape ne doit jamais y faire boucler dessus. Seule exception, une étape
+  /// **verrouillée** (voir [payoutsUnlocked]) clôt le parcours : y conduire
+  /// n'offrirait qu'un refus.
+  ///
+  /// Rend [OnboardingStep.onboardingRoute] et non [OnboardingStep.route] :
+  /// l'écran suivant doit hériter du marqueur d'entrée, sinon il s'affiche
+  /// sans jauge et le parcours s'y arrête.
   String routeAfter(OnboardingStep step) {
     final index = steps.indexOf(step);
     if (index == -1 || index + 1 >= steps.length) return '/home';
-    return steps[index + 1].route;
+    final follower = steps[index + 1];
+    return _reachable(follower) ? follower.onboardingRoute : '/home';
   }
 
   /// Traduction pour `DonyOnboardingGauge`, qui ne connaît aucune étape métier.

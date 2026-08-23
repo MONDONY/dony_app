@@ -10,8 +10,9 @@ import 'package:go_router/go_router.dart';
 /// désormais universel, seule la capacité carte reste à activer.
 ///
 /// Visible uniquement tant que [stripeStatus] n'est pas
-/// `'ONBOARDING_COMPLETE'` et que [connectAvailable] est vrai. Placement : haut
-/// de `_AccountTab` (avant IDENTITÉ & CONTACT), comme l'ancienne carte.
+/// `'ONBOARDING_COMPLETE'`, que [connectAvailable] est vrai et que
+/// [identityVerified] l'est aussi. Placement : haut de `_AccountTab` (avant
+/// IDENTITÉ & CONTACT), comme l'ancienne carte.
 ///
 /// La carte porte son propre écart bas : masquée, elle occupe exactement zéro
 /// place, et l'appelant n'a pas à rejouer sa règle de visibilité pour décider
@@ -21,6 +22,7 @@ class ActivateCardPaymentsCtaCard extends StatelessWidget {
     super.key,
     required this.stripeStatus,
     required this.connectAvailable,
+    required this.identityVerified,
   });
 
   final String? stripeStatus;
@@ -33,9 +35,18 @@ class ActivateCardPaymentsCtaCard extends StatelessWidget {
   /// repli « disponible tant que le statut n'est pas chargé ».
   final bool connectAvailable;
 
+  /// L'identité est-elle vérifiée ? Stripe Connect n'ouvre pas de compte sans
+  /// elle (le serveur refuse par un 422 `kyc-required`). Tant qu'elle manque,
+  /// cette carte laisse la place au CTA de vérification d'identité, qui est la
+  /// vraie prochaine action : deux bannières concurrentes en tête de profil
+  /// n'apprendraient à personne laquelle vient d'abord.
+  final bool identityVerified;
+
   @override
   Widget build(BuildContext context) {
-    if (stripeStatus == 'ONBOARDING_COMPLETE' || !connectAvailable) {
+    if (stripeStatus == 'ONBOARDING_COMPLETE' ||
+        !connectAvailable ||
+        !identityVerified) {
       return const SizedBox.shrink();
     }
 

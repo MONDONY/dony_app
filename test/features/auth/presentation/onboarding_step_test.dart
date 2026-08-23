@@ -437,7 +437,7 @@ void main() {
       );
     });
 
-    test('adresse et identité passées → payouts', () {
+    test('identité passée → null : les paiements restent verrouillés', () {
       const progress = OnboardingProgress(
         steps: [
           OnboardingStep.consent,
@@ -447,6 +447,27 @@ void main() {
           OnboardingStep.payouts,
         ],
         done: {OnboardingStep.consent, OnboardingStep.country},
+      );
+
+      // Stripe Connect refuse un compte non vérifié : y conduire n'offrirait
+      // qu'un 422. Le parcours s'arrête là, l'accueil prend la suite.
+      expect(progress.nextAfter(OnboardingStep.identity), isNull);
+    });
+
+    test('identité vérifiée → payouts devient atteignable', () {
+      const progress = OnboardingProgress(
+        steps: [
+          OnboardingStep.consent,
+          OnboardingStep.country,
+          OnboardingStep.address,
+          OnboardingStep.identity,
+          OnboardingStep.payouts,
+        ],
+        done: {
+          OnboardingStep.consent,
+          OnboardingStep.country,
+          OnboardingStep.identity,
+        },
       );
 
       expect(
@@ -481,14 +502,35 @@ void main() {
         OnboardingStep.identity,
         OnboardingStep.payouts,
       ],
-      done: {},
+      done: {OnboardingStep.identity},
     );
 
-    test('après identité, paiements applicable → /payments/onboarding', () {
-      expect(
-        fiveSteps.routeAfter(OnboardingStep.identity),
-        '/payments/onboarding',
+    test(
+      'après identité vérifiée → /payments/onboarding, marqueur compris',
+      () {
+        // Sans `?from=onboarding`, le routeur construit l'écran des paiements
+        // avec `progress: null` : ni jauge, ni suite. Le parcours s'arrêtait là
+        // en silence (régression trouvée en test sur device).
+        expect(
+          fiveSteps.routeAfter(OnboardingStep.identity),
+          '/payments/onboarding?from=onboarding',
+        );
+      },
+    );
+
+    test('après identité passée → /home : les paiements sont verrouillés', () {
+      const skipped = OnboardingProgress(
+        steps: [
+          OnboardingStep.consent,
+          OnboardingStep.country,
+          OnboardingStep.address,
+          OnboardingStep.identity,
+          OnboardingStep.payouts,
+        ],
+        done: {},
       );
+
+      expect(skipped.routeAfter(OnboardingStep.identity), '/home');
     });
 
     test('après identité, paiements non applicable (pays hors couverture '
@@ -500,7 +542,7 @@ void main() {
           OnboardingStep.address,
           OnboardingStep.identity,
         ],
-        done: {},
+        done: {OnboardingStep.identity},
       );
 
       expect(fourSteps.routeAfter(OnboardingStep.identity), '/home');
@@ -508,6 +550,71 @@ void main() {
 
     test('après paiements (dernière étape) → /home', () {
       expect(fiveSteps.routeAfter(OnboardingStep.payouts), '/home');
+    });
+
+    test('après le pays → adresse, route brute (écran sans double entrée)', () {
+      expect(
+        fiveSteps.routeAfter(OnboardingStep.country),
+        '/auth/residence-address',
+      );
+    });
+  });
+
+  group('OnboardingStep.onboardingRoute — marqueur d\'entrée du parcours', () {
+    test('identité et paiements portent ?from=onboarding', () {
+      expect(
+        OnboardingStep.identity.onboardingRoute,
+        '/kyc/verify?from=onboarding',
+      );
+      expect(
+        OnboardingStep.payouts.onboardingRoute,
+        '/payments/onboarding?from=onboarding',
+      );
+    });
+
+    test('les étapes sans double entrée gardent leur route brute', () {
+      for (final step in [
+        OnboardingStep.consent,
+        OnboardingStep.country,
+        OnboardingStep.address,
+      ]) {
+        expect(step.onboardingRoute, step.route, reason: step.wireName);
+      }
+    });
+  });
+
+  group('OnboardingProgress.completing — corrige un instantané périmé', () {
+    // `done` est figé à la construction de l'écran. L'écran d'identité, lui,
+    // navigue APRÈS avoir fait vérifier l'identité : sans cette correction, il
+    // se croirait encore verrouillé et enverrait à l'accueil.
+    const beforeVerification = OnboardingProgress(
+      steps: [
+        OnboardingStep.consent,
+        OnboardingStep.country,
+        OnboardingStep.address,
+        OnboardingStep.identity,
+        OnboardingStep.payouts,
+      ],
+      done: {OnboardingStep.consent},
+    );
+
+    test('déverrouille les paiements juste après la vérification', () {
+      expect(beforeVerification.payoutsUnlocked, isFalse);
+      expect(beforeVerification.routeAfter(OnboardingStep.identity), '/home');
+
+      final after = beforeVerification.completing(OnboardingStep.identity);
+
+      expect(after.payoutsUnlocked, isTrue);
+      expect(
+        after.routeAfter(OnboardingStep.identity),
+        '/payments/onboarding?from=onboarding',
+      );
+    });
+
+    test('ne touche pas à l\'original', () {
+      beforeVerification.completing(OnboardingStep.identity);
+
+      expect(beforeVerification.done, {OnboardingStep.consent});
     });
   });
 }

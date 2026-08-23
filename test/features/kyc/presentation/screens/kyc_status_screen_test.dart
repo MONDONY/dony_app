@@ -164,9 +164,8 @@ void main() {
     },
   );
 
-  testWidgets('« Passer pour l\'instant » avec les paiements restants va vers '
-      '/payments/onboarding, sans marquer l\'onboarding vu — la vérification '
-      'lourde ne doit jamais bloquer personne', (tester) async {
+  testWidgets('« Passer pour l\'instant » va vers /home même s\'il reste les '
+      'paiements : Stripe Connect exige une identité vérifiée', (tester) async {
     when(() => kycBloc.state).thenReturn(
       const KycStatusLoaded(
         kycStatus: 'NOT_STARTED',
@@ -185,8 +184,12 @@ void main() {
     await tester.tap(find.text('Passer pour l\'instant'));
     await tester.pumpAndSettle();
 
-    verifyNever(() => authRepository.markOnboardingSeen());
-    expect(find.text('Payouts route'), findsOneWidget);
+    // Conduire aux paiements n'offrirait qu'un refus serveur (422
+    // `kyc-required`). Le parcours s'arrête donc là, et `onboarding_seen_at`
+    // est bien posé : l'utilisateur a atteint l'accueil.
+    verify(() => authRepository.markOnboardingSeen()).called(1);
+    expect(find.text('Home route'), findsOneWidget);
+    expect(find.text('Payouts route'), findsNothing);
   });
 
   testWidgets(
@@ -240,7 +243,9 @@ void main() {
       await tester.tap(find.text('Passer pour l\'instant'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Payouts route'), findsOneWidget);
+      // Un rejet laisse l'identité non vérifiée : les paiements restent
+      // verrouillés, le parcours se termine à l'accueil.
+      expect(find.text('Home route'), findsOneWidget);
     },
   );
 

@@ -78,5 +78,9 @@ Future<String> resolvePostSignupRoute({
 
   // Rien à compléter : le parrainage clôt le parcours, et c'est lui qui pose
   // `onboarding_seen_at` (`referral_code_screen.dart:44`).
-  return step?.route ?? '/auth/referral-code';
+  // `onboardingRoute` et non `route` : reprendre le parcours directement sur
+  // l'identité ou les paiements (réinstallation, second login avant la fin)
+  // doit porter le marqueur d'entrée, sinon ces deux écrans s'affichent sans
+  // jauge et n'enchaînent sur rien.
+  return step?.onboardingRoute ?? '/auth/referral-code';
 }

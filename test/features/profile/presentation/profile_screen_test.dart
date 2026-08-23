@@ -449,7 +449,6 @@ void main() {
       ('Contacter le support', 'Contact'),
       ('Mes litiges', 'Disputes'),
       ('Mes abonnements', 'Subscriptions'),
-      ('Recevoir mes paiements', 'PaymentsOnboarding'),
       ('Ma grille de prix', 'PriceGrid'),
       ('Mon profil public', 'PublicProfile'),
       ('Mes avis reçus', 'Reviews'),
@@ -465,6 +464,42 @@ void main() {
         expect(find.text(nav.$2), findsOneWidget);
       });
     }
+
+    // « Recevoir mes paiements » est hors du tableau ci-dessus : c'est la
+    // seule entrée conditionnée à l'identité vérifiée. Stripe Connect n'ouvre
+    // pas de compte sans elle (422 `kyc-required` côté serveur), et une entrée
+    // qui ne mène qu'à un refus vaut moins qu'une entrée qui dit pourquoi.
+    testWidgets(
+      '« Recevoir mes paiements » ouvre PaymentsOnboarding, identité vérifiée',
+      (tester) async {
+        await pumpWith(tester, _verifiedUser);
+        await _scrollTo(tester, find.text('Recevoir mes paiements'));
+
+        await tester.tap(find.text('Recevoir mes paiements'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('PaymentsOnboarding'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      '« Recevoir mes paiements » reste visible mais inerte sans identité '
+      'vérifiée, et dit ce qu\'il manque',
+      (tester) async {
+        await pumpWith(tester, _dualRoleUser);
+        await _scrollTo(tester, find.text('Recevoir mes paiements'));
+
+        expect(
+          find.text('Vérifiez votre identité pour activer'),
+          findsOneWidget,
+        );
+
+        await tester.tap(find.text('Recevoir mes paiements'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('PaymentsOnboarding'), findsNothing);
+      },
+    );
 
     testWidgets('« Solde » (carte portefeuille) ouvre Wallet', (tester) async {
       await pumpWith(tester, _dualRoleUser);

@@ -112,6 +112,12 @@ class ProfileMoneySection extends StatelessWidget {
     return BlocBuilder<StripeAccountBloc, StripeAccountState>(
       builder: (context, stripeState) {
         final connectAvailable = stripeState.connectAvailableInCountry;
+        // Stripe Connect n'ouvre pas de compte à une identité non vérifiée :
+        // le serveur refuse par un 422 `kyc-required`. On ne masque pas
+        // l'entrée pour autant, on la désactive en disant pourquoi — masquer
+        // laisserait le voyageur chercher une activation qui a simplement
+        // disparu de son profil.
+        final identityVerified = user?.kycStatus == 'VERIFIED';
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -123,6 +129,7 @@ class ProfileMoneySection extends StatelessWidget {
             ActivateCardPaymentsCtaCard(
               stripeStatus: user?.stripeAccountStatus,
               connectAvailable: connectAvailable,
+              identityVerified: identityVerified,
             ),
             const WalletBalanceCard(),
             const SizedBox(height: DonySpacing.sm),
@@ -133,10 +140,18 @@ class ProfileMoneySection extends StatelessWidget {
                 if (connectAvailable)
                   DonyListTile(
                     iconAsset: 'piggy-bank',
-                    iconColor: cs.success,
-                    iconBgColor: cs.successLight,
+                    iconColor: identityVerified ? cs.success : cs.outline,
+                    iconBgColor: identityVerified
+                        ? cs.successLight
+                        : cs.surfaceContainerHighest,
                     label: 'Recevoir mes paiements',
-                    onTap: () => context.push('/payments/onboarding'),
+                    subtitle: identityVerified
+                        ? null
+                        : 'Vérifiez votre identité pour activer',
+                    enabled: identityVerified,
+                    onTap: identityVerified
+                        ? () => context.push('/payments/onboarding')
+                        : null,
                   ),
                 DonyListTile(
                   iconAsset: 'credit-card',

@@ -11,6 +11,7 @@ Widget _wrap(
   String? stripeStatus, {
   VoidCallback? onOnboardingPushed,
   bool connectAvailable = true,
+  bool identityVerified = true,
 }) {
   final router = GoRouter(
     initialLocation: '/',
@@ -21,6 +22,7 @@ Widget _wrap(
           body: ActivateCardPaymentsCtaCard(
             stripeStatus: stripeStatus,
             connectAvailable: connectAvailable,
+            identityVerified: identityVerified,
           ),
         ),
       ),
@@ -74,6 +76,19 @@ void main() {
     // La carte se réduit à un widget de taille nulle (SizedBox.shrink()).
     final size = tester.getSize(find.byType(ActivateCardPaymentsCtaCard));
     expect(size, Size.zero);
+  });
+
+  testWidgets('masquée tant que l\'identité n\'est pas vérifiée', (
+    tester,
+  ) async {
+    // Onboarding incomplet et pays couvert : seule l'identité manquante peut
+    // masquer la carte ici. Stripe Connect refuserait l'activation (422
+    // `kyc-required`), et le CTA de vérification d'identité doit rester la
+    // seule prochaine action lisible en tête de profil.
+    await tester.pumpWidget(_wrap('NOT_CREATED', identityVerified: false));
+
+    expect(find.text('Activer les paiements par carte'), findsNothing);
+    expect(tester.getSize(find.byType(ActivateCardPaymentsCtaCard)), Size.zero);
   });
 
   testWidgets('masquée quand Stripe ne couvre pas le pays', (tester) async {
