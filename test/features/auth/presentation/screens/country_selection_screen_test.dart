@@ -23,8 +23,8 @@ const _progress = OnboardingProgress(
   steps: [
     OnboardingStep.consent,
     OnboardingStep.country,
-    OnboardingStep.identity,
     OnboardingStep.address,
+    OnboardingStep.identity,
     OnboardingStep.payouts,
   ],
   done: {OnboardingStep.consent},

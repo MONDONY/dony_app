@@ -37,7 +37,30 @@ enum OnboardingStep {
   final String route;
 }
 
+/// `/kyc/verify` et `/payments/onboarding` ont deux entrées possibles : le
+/// parcours d'onboarding, et le profil (vérifier son identité ou activer les
+/// paiements à tout moment, hors inscription). Ce query param est l'unique
+/// signal qui les distingue — c'est lui qui décide si la jauge s'affiche et
+/// si l'écran, une fois terminé ou passé, enchaîne sur l'étape suivante
+/// plutôt que de rester sur place comme depuis le profil.
+const String onboardingEntryParam = 'from';
+const String onboardingEntryValue = 'onboarding';
+
+/// Query string à coller à `OnboardingStep.identity.route` /
+/// `OnboardingStep.payouts.route` pour marquer une navigation comme faisant
+/// partie du parcours. `''` si [fromOnboarding] est faux, pour rester
+/// concaténable sans condition au call site.
+String onboardingEntrySuffix({required bool fromOnboarding}) =>
+    fromOnboarding ? '?$onboardingEntryParam=$onboardingEntryValue' : '';
+
 /// Les étapes comptées pour cet utilisateur, dans l'ordre.
+///
+/// L'ordre suit le parcours réel des écrans (`referral_code_screen.dart`
+/// enchaîne adresse → parrainage → identité/paiements), pas l'ordre de la
+/// spec §2 : l'adresse est remplie avant l'identité, donc elle doit être
+/// numérotée avant elle — sans quoi la jauge annoncerait « 4/5 » sur un
+/// écran atteint en 3e position (revue de bout en bout, correction du trou
+/// du parcours).
 ///
 /// « Paiements » disparaît quand Stripe n'ouvre pas de compte connecté dans le
 /// pays : la jauge passe à quatre segments et l'utilisateur atteint réellement
@@ -47,8 +70,8 @@ enum OnboardingStep {
 List<OnboardingStep> onboardingSteps(StripeAccountState stripe) => [
   OnboardingStep.consent,
   OnboardingStep.country,
-  OnboardingStep.identity,
   OnboardingStep.address,
+  OnboardingStep.identity,
   if (stripe.connectAvailableInCountry) OnboardingStep.payouts,
 ];
 
@@ -118,6 +141,34 @@ class OnboardingProgress {
 
   int get total => steps.length;
   int get doneCount => done.length;
+
+  /// Première étape de [steps] absente de [done], ou `null` si tout est fait.
+  ///
+  /// Sert à l'écran de parrainage, seul écran hors décompte : c'est le
+  /// premier point du parcours où plusieurs étapes (identité, paiements)
+  /// peuvent rester à faire en même temps, donc le seul où « l'étape
+  /// suivante » ne peut pas être déduite de la position dans [steps] (voir
+  /// [routeAfter] pour tous les autres écrans).
+  OnboardingStep? get next {
+    for (final step in steps) {
+      if (!done.contains(step)) return step;
+    }
+    return null;
+  }
+
+  /// Route de l'écran qui suit [step] dans [steps], ou `/home` si [step] est
+  /// la dernière (ou absente, ce qui ne devrait jamais arriver pour un écran
+  /// qui s'y trouve).
+  ///
+  /// Positionnelle, volontairement indifférente à [done] : les écrans
+  /// identité et paiements enchaînent sur le suivant qu'ils viennent de
+  /// compléter l'étape ou de la passer — contrairement à [next], passer une
+  /// étape ne doit jamais y faire boucler dessus.
+  String routeAfter(OnboardingStep step) {
+    final index = steps.indexOf(step);
+    if (index == -1 || index + 1 >= steps.length) return '/home';
+    return steps[index + 1].route;
+  }
 
   /// Traduction pour `DonyOnboardingGauge`, qui ne connaît aucune étape métier.
   ///

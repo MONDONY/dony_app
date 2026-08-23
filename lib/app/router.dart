@@ -445,9 +445,22 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/kyc/verify',
       builder: (context, state) {
+        // `/kyc/verify` a deux entrées : le parcours d'onboarding (identité,
+        // spec §2) et le profil (vérifier son identité à tout moment). Seul
+        // ce query param les distingue — c'est lui qui décide si la jauge
+        // s'affiche et si l'écran enchaîne sur l'étape suivante une fois
+        // terminé ou passé, plutôt que de renvoyer droit à l'accueil comme
+        // depuis le profil.
+        final fromOnboarding =
+            state.uri.queryParameters[onboardingEntryParam] ==
+            onboardingEntryValue;
+        final progress = fromOnboarding
+            ? readOnboardingProgress(context, current: OnboardingStep.identity)
+            : null;
+
         final raw = state.extra;
         if (raw is! String) {
-          return const KycStatusScreen();
+          return KycStatusScreen(progress: progress);
         }
         final uri = Uri.tryParse(raw);
         final host = uri?.host ?? '';
@@ -455,11 +468,11 @@ final appRouter = GoRouter(
             uri?.scheme == 'https' &&
             (host == 'verify.stripe.com' || host.endsWith('.stripe.com'));
         if (!isStripe) {
-          return const KycStatusScreen();
+          return KycStatusScreen(progress: progress);
         }
         return BlocProvider(
           create: (_) => getIt<KycBloc>(),
-          child: KycWebViewScreen(stripeUrl: raw),
+          child: KycWebViewScreen(stripeUrl: raw, progress: progress),
         );
       },
     ),
@@ -735,10 +748,25 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/payments/onboarding',
-      builder: (context, state) => BlocProvider(
-        create: (_) => getIt<PaymentBloc>(),
-        child: const PayoutOnboardingScreen(),
-      ),
+      builder: (context, state) {
+        // Même double entrée que `/kyc/verify` : onboarding (paiements,
+        // dernière étape comptée) ou profil (« Recevoir mes paiements »
+        // dans Réglages, à tout moment).
+        final fromOnboarding =
+            state.uri.queryParameters[onboardingEntryParam] ==
+            onboardingEntryValue;
+        return BlocProvider(
+          create: (_) => getIt<PaymentBloc>(),
+          child: PayoutOnboardingScreen(
+            progress: fromOnboarding
+                ? readOnboardingProgress(
+                    context,
+                    current: OnboardingStep.payouts,
+                  )
+                : null,
+          ),
+        );
+      },
     ),
     GoRoute(
       path: '/payments/pay',

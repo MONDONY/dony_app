@@ -40,14 +40,26 @@ class _ReferralCodeScreenState extends State<ReferralCodeScreen> {
     super.dispose();
   }
 
-  /// Écran terminal réel du parcours d'onboarding : c'est ici, pas dans
-  /// [ResidenceAddressCubit.submit], que l'on pose `onboarding_seen_at`. Cet
-  /// écran n'a pas accès au cubit de l'étape adresse (hors de son arbre de
+  /// Le parrainage n'est plus systématiquement l'écran terminal : il ne
+  /// l'est que si aucune étape (identité, paiements) n'est encore à faire.
+  /// [OnboardingProgress.next] tranche — sans lui, un utilisateur à qui il
+  /// reste l'identité ou les paiements filerait droit sur `/home` sans
+  /// jamais les voir (le bug de bout en bout corrigé ici).
+  ///
+  /// `onboarding_seen_at` ne se pose donc plus qu'ici, quand la destination
+  /// est réellement `/home` — jamais quand le parcours continue. Cet écran
+  /// n'a pas accès au cubit de l'étape adresse (hors de son arbre de
   /// providers) — on passe donc directement par le repository. Jamais
   /// awaité, jamais bloquant : un échec réseau ne doit pas retenir
   /// l'utilisateur sur cet écran, et l'appel est idempotent côté serveur.
-  void _markOnboardingSeen() {
-    unawaited(getIt<AuthRepository>().markOnboardingSeen().catchError((_) {}));
+  void _continue(BuildContext context) {
+    final destination = widget.progress.next?.route ?? '/home';
+    if (destination == '/home') {
+      unawaited(
+        getIt<AuthRepository>().markOnboardingSeen().catchError((_) {}),
+      );
+    }
+    context.go(destination);
   }
 
   void _apply() {
@@ -88,10 +100,7 @@ class _ReferralCodeScreenState extends State<ReferralCodeScreen> {
                   child: state is ReferralRedeemed
                       ? _SuccessView(
                           progress: widget.progress,
-                          onContinue: () {
-                            _markOnboardingSeen();
-                            context.go('/home');
-                          },
+                          onContinue: () => _continue(context),
                         )
                       : _FormView(
                           progress: widget.progress,
@@ -99,10 +108,7 @@ class _ReferralCodeScreenState extends State<ReferralCodeScreen> {
                           isNotEmpty: _isNotEmpty,
                           isLoading: state is ReferralRedeemLoading,
                           onApply: _apply,
-                          onSkip: () {
-                            _markOnboardingSeen();
-                            context.go('/home');
-                          },
+                          onSkip: () => _continue(context),
                         ),
                 ),
               ),

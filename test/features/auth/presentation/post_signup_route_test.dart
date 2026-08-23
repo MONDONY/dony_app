@@ -288,7 +288,10 @@ void main() {
 
       final route = await resolvePostSignupRoute(
         analytics: service,
-        user: _user(country: 'FR'),
+        // Adresse déjà connue : sinon, avec l'ordre du parcours réel
+        // (adresse avant identité), c'est /auth/residence-address qui
+        // serait retenue en premier.
+        user: _user(country: 'FR', residenceStreet: '12 rue des Lilas'),
         stripe: const StripeAccountInitial(),
       );
 
@@ -327,12 +330,13 @@ void main() {
       );
 
       // 5 étapes (payouts inclus, StripeAccountInitial est optimiste) ;
-      // consent + country faits, identity manquante en premier → index 3/5.
+      // consent + country faits, adresse manquante en premier (ordre du
+      // parcours réel : adresse avant identité) → index 3/5.
       final captured = verify(
         () => backend.capture(captureAny(), captureAny()),
       ).captured;
       expect(captured[0], AnalyticsEvents.onboardingStepViewed);
-      expect(captured[1], {'step': 'identity', 'index': 3, 'total': 5});
+      expect(captured[1], {'step': 'address', 'index': 3, 'total': 5});
       expect(captured.toString(), isNot(contains('u1')));
     });
 

@@ -1,10 +1,14 @@
 import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
+import 'package:dony/features/auth/data/repositories/auth_repository.dart';
+import 'package:dony/features/auth/presentation/onboarding_step.dart';
+import 'package:dony/features/auth/presentation/widgets/auth_flow_chrome.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/bloc/kyc_event.dart';
 import 'package:dony/features/kyc/bloc/kyc_state.dart';
@@ -14,8 +18,16 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+/// Écran de statut KYC, à double entrée : le parcours d'onboarding (étape
+/// identité, spec §2) et le profil (vérifier son identité à tout moment,
+/// hors inscription). [progress] distingue les deux — non `null` seulement
+/// depuis l'onboarding, jamais lu ici via un provider ambiant : c'est
+/// `router.dart` qui le construit (`readOnboardingProgress`), pour que cet
+/// écran reste montable en test sans `AuthBloc`/`StripeAccountBloc` fournis.
 class KycStatusScreen extends StatefulWidget {
-  const KycStatusScreen({super.key});
+  const KycStatusScreen({super.key, this.progress});
+
+  final OnboardingProgress? progress;
 
   @override
   State<KycStatusScreen> createState() => _KycStatusScreenState();
@@ -78,7 +90,27 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
   void _navigateHome() {
     if (!mounted) return;
     context.read<AuthBloc>().add(const AuthCheckRequested());
-    context.go('/home');
+    _leaveIdentityStep();
+  }
+
+  /// Étape suivante depuis l'identité : paiements si applicable, sinon
+  /// l'accueil (`OnboardingProgress.routeAfter` — positionnel, pas de
+  /// distinction terminée/passée : dans les deux cas l'écran suivant du
+  /// parcours est le même). Hors onboarding ([widget.progress] `null`),
+  /// toujours l'accueil, comme avant cette étape.
+  ///
+  /// Pose `onboarding_seen_at` seulement quand la destination est vraiment
+  /// l'accueil — jamais quand il reste l'étape paiements à faire.
+  void _leaveIdentityStep() {
+    final progress = widget.progress;
+    final destination =
+        progress?.routeAfter(OnboardingStep.identity) ?? '/home';
+    if (progress != null && destination == '/home') {
+      unawaited(
+        getIt<AuthRepository>().markOnboardingSeen().catchError((_) {}),
+      );
+    }
+    context.go(destination);
   }
 
   @override
@@ -89,7 +121,13 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
       body: BlocConsumer<KycBloc, KycState>(
         listener: (context, state) {
           if (state is KycSessionCreated) {
-            context.go('/kyc/verify', extra: state.stripeUrl);
+            // Préserve le marqueur d'onboarding : sans lui, le retour du
+            // webview (`KycWebViewScreen`) perdrait `widget.progress` et
+            // rendrait l'écran de statut suivant amnésique du parcours.
+            context.go(
+              '/kyc/verify${onboardingEntrySuffix(fromOnboarding: widget.progress != null)}',
+              extra: state.stripeUrl,
+            );
             return;
           }
           if (state is! KycStatusLoaded) return;
@@ -111,35 +149,63 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
         },
         builder: (context, state) {
           final h = DonyLayout.hPadding(context);
+          final progress = widget.progress;
           return SafeArea(
             child: DonyLayout.constrained(
               context,
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: h),
-                child: LayoutBuilder(
-                  builder: (context, constraints) => SingleChildScrollView(
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        minHeight: constraints.maxHeight,
+                padding: EdgeInsets.fromLTRB(h, DonySpacing.base, h, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Uniquement depuis l'onboarding : depuis le profil, une
+                    // jauge d'inscription n'aurait aucun sens.
+                    if (progress != null) ...[
+                      AuthFlowHeader.gauge(
+                        segments: progress.segments,
+                        label: 'Identité',
                       ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          if (state is KycLoading || state is KycInitial)
-                            CircularProgressIndicator(color: cs.primary)
-                          else if (state is KycStatusLoaded)
-                            _buildStatusContent(context, cs, tt, state)
-                          else if (state is KycError)
-                            _buildErrorContent(
-                              cs,
-                              tt,
-                              ErrorPresenter.resolve(state.error).message,
+                      const SizedBox(height: DonySpacing.md),
+                    ],
+                    Expanded(
+                      child: LayoutBuilder(
+                        builder: (context, constraints) =>
+                            SingleChildScrollView(
+                              child: ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  minHeight: constraints.maxHeight,
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    if (state is KycLoading ||
+                                        state is KycInitial)
+                                      CircularProgressIndicator(
+                                        color: cs.primary,
+                                      )
+                                    else if (state is KycStatusLoaded)
+                                      _buildStatusContent(
+                                        context,
+                                        cs,
+                                        tt,
+                                        state,
+                                      )
+                                    else if (state is KycError)
+                                      _buildErrorContent(
+                                        cs,
+                                        tt,
+                                        ErrorPresenter.resolve(
+                                          state.error,
+                                        ).message,
+                                      ),
+                                  ],
+                                ),
+                              ),
                             ),
-                        ],
-                      ),
+                      ).animate().fadeIn(duration: 300.ms),
                     ),
-                  ),
-                ).animate().fadeIn(duration: 300.ms),
+                  ],
+                ),
               ),
             ),
           );
@@ -206,6 +272,19 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
           onPressed: () =>
               context.read<KycBloc>().add(const KycSessionRequested()),
         ),
+        // La vérification d'identité est lourde : personne ne doit être
+        // bloqué pour l'avoir remise à plus tard. Uniquement depuis
+        // l'onboarding — depuis le profil, il n'y a rien à « passer ».
+        if (widget.progress != null) ...[
+          const SizedBox(height: DonySpacing.sm),
+          TextButton(
+            onPressed: _leaveIdentityStep,
+            child: Text(
+              'Passer pour l\'instant',
+              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -286,7 +365,7 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
         TextButton(
           onPressed: () {
             _stopPolling();
-            context.go('/home');
+            _leaveIdentityStep();
           },
           child: Text(
             'Continuer plus tard',
@@ -331,10 +410,7 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: DonySpacing.huge),
-        DonyButton(
-          label: "Retour à l'app",
-          onPressed: () => context.go('/home'),
-        ),
+        DonyButton(label: "Retour à l'app", onPressed: _leaveIdentityStep),
       ],
     );
   }
@@ -378,6 +454,18 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
           onPressed: () =>
               context.read<KycBloc>().add(const KycSessionRequested()),
         ),
+        // Un rejet ne doit jamais bloquer le parcours d'inscription :
+        // l'utilisateur pourra réessayer plus tard, depuis le profil.
+        if (widget.progress != null) ...[
+          const SizedBox(height: DonySpacing.sm),
+          TextButton(
+            onPressed: _leaveIdentityStep,
+            child: Text(
+              'Passer pour l\'instant',
+              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+            ),
+          ),
+        ],
       ],
     );
   }

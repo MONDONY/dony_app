@@ -68,10 +68,10 @@ class AuthFlowHeader extends StatelessWidget {
   /// tunnel d'inscription ; la jauge compte les étapes du compte (quatre ou
   /// cinq selon la couverture Stripe du pays, parrainage exclu).
   ///
-  /// Pas de `showBack` ici : aucun des quatre écrans du parcours (pays,
-  /// adresse, parrainage, consentement) n'affiche de retour, et aucun
-  /// appelant ne l'a jamais demandé (vérifié par grep) — toujours `false`,
-  /// sans paramètre pour l'exposer.
+  /// Pas de `showBack` ici : aucun écran du parcours (pays, adresse,
+  /// parrainage, consentement, identité, paiements) n'affiche de retour, et
+  /// aucun appelant ne l'a jamais demandé (vérifié par grep) — toujours
+  /// `false`, sans paramètre pour l'exposer.
   const AuthFlowHeader.gauge({
     super.key,
     required List<DonyGaugeSegment> this.segments,

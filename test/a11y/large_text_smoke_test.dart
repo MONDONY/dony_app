@@ -816,8 +816,8 @@ const _residenceProgress = OnboardingProgress(
   steps: [
     OnboardingStep.consent,
     OnboardingStep.country,
-    OnboardingStep.identity,
     OnboardingStep.address,
+    OnboardingStep.identity,
   ],
   done: {OnboardingStep.consent, OnboardingStep.country},
   current: OnboardingStep.address,

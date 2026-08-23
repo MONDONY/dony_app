@@ -40,12 +40,13 @@ const _connectDone = StripeAccountReady(
 
 void main() {
   group('onboardingSteps — le parrainage n\'entre jamais dans le décompte', () {
-    test('pays couvert par Stripe → cinq étapes', () {
+    test('pays couvert par Stripe → cinq étapes, adresse avant identité (ordre '
+        'du parcours réel, pas celui de la spec §2)', () {
       expect(onboardingSteps(_connectOk), const [
         OnboardingStep.consent,
         OnboardingStep.country,
-        OnboardingStep.identity,
         OnboardingStep.address,
+        OnboardingStep.identity,
         OnboardingStep.payouts,
       ]);
     });
@@ -54,8 +55,8 @@ void main() {
       expect(onboardingSteps(_connectUnavailable), const [
         OnboardingStep.consent,
         OnboardingStep.country,
-        OnboardingStep.identity,
         OnboardingStep.address,
+        OnboardingStep.identity,
       ]);
     });
 
@@ -86,25 +87,30 @@ void main() {
       );
     });
 
-    test('3. identité non vérifiée → identity', () {
+    test('3. adresse de résidence absente → address (avant identité, ordre '
+        'du parcours réel)', () {
       expect(
         nextStep(
           user: _user(country: 'FR', kycStatus: 'PENDING'),
           stripe: _connectOk,
           analyticsAnswered: true,
         ),
-        OnboardingStep.identity,
+        OnboardingStep.address,
       );
     });
 
-    test('4. adresse de résidence absente → address', () {
+    test('4. identité non vérifiée → identity', () {
       expect(
         nextStep(
-          user: _user(country: 'FR', kycStatus: 'VERIFIED'),
+          user: _user(
+            country: 'FR',
+            kycStatus: 'PENDING',
+            residenceStreet: '12 rue des Lilas',
+          ),
           stripe: _connectOk,
           analyticsAnswered: true,
         ),
-        OnboardingStep.address,
+        OnboardingStep.identity,
       );
     });
 
@@ -275,8 +281,8 @@ void main() {
       expect(p.segments, const [
         DonyGaugeSegment.done, // consentement
         DonyGaugeSegment.done, // pays
-        DonyGaugeSegment.current, // identité
         DonyGaugeSegment.todo, // adresse
+        DonyGaugeSegment.current, // identité
         DonyGaugeSegment.todo, // paiements
       ]);
     });
@@ -294,8 +300,8 @@ void main() {
       expect(p.segments, const [
         DonyGaugeSegment.done,
         DonyGaugeSegment.todo, // pays passé, donc vide
-        DonyGaugeSegment.todo,
         DonyGaugeSegment.current,
+        DonyGaugeSegment.todo,
         DonyGaugeSegment.todo,
       ]);
     });
@@ -359,6 +365,90 @@ void main() {
       expect(p.doneCount, 2);
       expect(p.segments[0], DonyGaugeSegment.done);
       expect(p.segments[1], DonyGaugeSegment.done);
+    });
+  });
+
+  group('OnboardingProgress.next — écran de parrainage, seul point '
+      'du parcours où plusieurs étapes peuvent rester à faire', () {
+    test('identité et paiements restants → identity (le premier des deux)', () {
+      const progress = OnboardingProgress(
+        steps: [
+          OnboardingStep.consent,
+          OnboardingStep.country,
+          OnboardingStep.address,
+          OnboardingStep.identity,
+          OnboardingStep.payouts,
+        ],
+        done: {
+          OnboardingStep.consent,
+          OnboardingStep.country,
+          OnboardingStep.address,
+        },
+      );
+
+      expect(progress.next, OnboardingStep.identity);
+    });
+
+    test('tout est fait → null, le parrainage clôt réellement le parcours', () {
+      const progress = OnboardingProgress(
+        steps: [
+          OnboardingStep.consent,
+          OnboardingStep.country,
+          OnboardingStep.address,
+          OnboardingStep.identity,
+          OnboardingStep.payouts,
+        ],
+        done: {
+          OnboardingStep.consent,
+          OnboardingStep.country,
+          OnboardingStep.address,
+          OnboardingStep.identity,
+          OnboardingStep.payouts,
+        },
+      );
+
+      expect(progress.next, isNull);
+    });
+  });
+
+  group('OnboardingProgress.routeAfter — navigation positionnelle des '
+      'écrans identité et paiements (terminer ou passer mène au même '
+      'endroit)', () {
+    const fiveSteps = OnboardingProgress(
+      steps: [
+        OnboardingStep.consent,
+        OnboardingStep.country,
+        OnboardingStep.address,
+        OnboardingStep.identity,
+        OnboardingStep.payouts,
+      ],
+      done: {},
+    );
+
+    test('après identité, paiements applicable → /payments/onboarding', () {
+      expect(
+        fiveSteps.routeAfter(OnboardingStep.identity),
+        '/payments/onboarding',
+      );
+    });
+
+    test('après identité, paiements non applicable (pays hors couverture '
+        'Stripe) → /home', () {
+      const fourSteps = OnboardingProgress(
+        steps: [
+          OnboardingStep.consent,
+          OnboardingStep.country,
+          OnboardingStep.address,
+          OnboardingStep.identity,
+        ],
+        done: {},
+      );
+
+      expect(fourSteps.routeAfter(OnboardingStep.identity), '/home');
+    });
+
+    test('après paiements (dernière étape) → /home', () {
+      expect(fiveSteps.routeAfter(OnboardingStep.payouts), '/home');
     });
   });
 }
