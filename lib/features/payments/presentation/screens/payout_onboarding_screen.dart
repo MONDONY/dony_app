@@ -1,15 +1,17 @@
 import 'dart:async';
-
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/repositories/auth_repository.dart';
 import 'package:dony/features/auth/presentation/onboarding_step.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_flow_chrome.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/stripe_account/presentation/widgets/connect_unavailable_view.dart';
+import 'package:dony/features/stripe_account/presentation/widgets/identity_required_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -87,6 +89,16 @@ class _PayoutOnboardingScreenState extends State<PayoutOnboardingScreen> {
             return _AutoLeavePayoutsStep(progress: progress);
           }
           return const ConnectUnavailableView(title: 'Recevoir mes paiements');
+        }
+
+        // Deuxième porte vers Stripe Connect, et donc deuxième garde : le
+        // serveur refuse une identité non vérifiée (422 `kyc-required`).
+        // Depuis le parcours, `OnboardingProgress` verrouille déjà l'étape ;
+        // hors parcours, seule cette garde empêche l'écran de lancer une
+        // création de compte vouée au refus.
+        if (context.watch<AuthBloc>().state.currentUser?.kycStatus !=
+            'VERIFIED') {
+          return const IdentityRequiredView(title: 'Recevoir mes paiements');
         }
 
         // Le statut serveur, et non l'état du PaymentBloc, décide si une
