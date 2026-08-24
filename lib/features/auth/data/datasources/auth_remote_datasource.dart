@@ -1,7 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
-import 'package:intl/intl.dart';
 
 class AuthRemoteDatasource {
   final ApiClient _apiClient;
@@ -39,25 +38,20 @@ class AuthRemoteDatasource {
   Future<UserModel> updateProfile({
     String? firstName,
     String? lastName,
-    DateTime? birthDate,
     String? city,
     String? phoneNumber,
     String? bio,
     List<String>? languages,
-    String? transportMode,
   }) async {
     final response = await _apiClient.dio.patch<Map<String, dynamic>>(
       '/auth/me',
       data: {
         'firstName': ?firstName,
         'lastName': ?lastName,
-        if (birthDate != null)
-          'birthDate': DateFormat('yyyy-MM-dd').format(birthDate),
         'city': ?city,
         'phoneNumber': ?phoneNumber,
         'bio': ?bio,
         'languages': ?languages,
-        'transportMode': ?transportMode,
       },
     );
     return UserModel.fromJson(response.data!);
@@ -138,23 +132,6 @@ class AuthRemoteDatasource {
       data: {'phoneNumber': phoneNumber, 'code': code},
     );
     return UserModel.fromJson(response.data!);
-  }
-
-  Future<void> updateResidenceAddress({
-    required String street,
-    String? line2,
-    required String postalCode,
-    required String city,
-  }) async {
-    await _apiClient.dio.put<void>(
-      '/auth/me/residence-address',
-      data: {
-        'street': street,
-        'line2': ?line2,
-        'postalCode': postalCode,
-        'city': city,
-      },
-    );
   }
 
   Future<void> markOnboardingSeen() async {

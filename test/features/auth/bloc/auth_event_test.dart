@@ -61,45 +61,31 @@ void main() {
 
   group('AuthUpdateProfileRequested', () {
     test('props contains all fields', () {
-      final date = DateTime(1990, 5, 15);
       final e = AuthUpdateProfileRequested(
         firstName: 'Amadou',
         lastName: 'Diallo',
-        birthDate: date,
         city: 'Paris',
       );
-      expect(e.props, [
-        'Amadou',
-        'Diallo',
-        date,
-        'Paris',
-        null,
-        null,
-        null,
-        null,
-      ]);
+      expect(e.props, ['Amadou', 'Diallo', 'Paris', null, null, null]);
     });
 
     test('props with null fields', () {
       final e = AuthUpdateProfileRequested();
-      expect(e.props, [null, null, null, null, null, null, null, null]);
+      expect(e.props, [null, null, null, null, null, null]);
     });
 
-    test('props with bio/languages/transportMode', () {
+    test('props with bio/languages', () {
       final e = AuthUpdateProfileRequested(
         bio: 'Voyageur régulier',
         languages: const ['FR', 'EN'],
-        transportMode: 'AVION',
       );
       expect(e.props, [
-        null,
         null,
         null,
         null,
         null,
         'Voyageur régulier',
         ['FR', 'EN'],
-        'AVION',
       ]);
     });
   });

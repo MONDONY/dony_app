@@ -493,7 +493,6 @@ void main() {
           () => mockRepo.updateProfile(
             firstName: any(named: 'firstName'),
             lastName: any(named: 'lastName'),
-            birthDate: any(named: 'birthDate'),
             city: any(named: 'city'),
           ),
         ).thenAnswer((_) async => updatedUser);
@@ -520,7 +519,6 @@ void main() {
           () => mockRepo.updateProfile(
             firstName: any(named: 'firstName'),
             lastName: any(named: 'lastName'),
-            birthDate: any(named: 'birthDate'),
             city: any(named: 'city'),
           ),
         ).thenThrow(Exception('Erreur serveur'));
@@ -1964,31 +1962,20 @@ void main() {
           () => mockRepo.updateProfile(
             bio: any(named: 'bio'),
             languages: any(named: 'languages'),
-            transportMode: any(named: 'transportMode'),
             firstName: any(named: 'firstName'),
             lastName: any(named: 'lastName'),
-            birthDate: any(named: 'birthDate'),
             city: any(named: 'city'),
             phoneNumber: any(named: 'phoneNumber'),
           ),
         ).thenAnswer((_) async => updatedUser);
         return buildBloc();
       },
-      act: (b) => b.add(
-        const AuthUpdateProfileRequested(
-          bio: 'X',
-          languages: ['FR'],
-          transportMode: 'AVION',
-        ),
-      ),
+      act: (b) =>
+          b.add(const AuthUpdateProfileRequested(bio: 'X', languages: ['FR'])),
       expect: () => [isA<AuthLoading>(), isA<AuthProfileUpdated>()],
       verify: (bloc) {
         verify(
-          () => mockRepo.updateProfile(
-            bio: 'X',
-            languages: ['FR'],
-            transportMode: 'AVION',
-          ),
+          () => mockRepo.updateProfile(bio: 'X', languages: ['FR']),
         ).called(1);
       },
     );

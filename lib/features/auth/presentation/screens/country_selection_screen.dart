@@ -23,8 +23,8 @@ class CountrySelectionScreen extends StatefulWidget {
 class _CountrySelectionScreenState extends State<CountrySelectionScreen> {
   // Cet écran a trois sorties : `select` (un pays choisi), `skip` et
   // `continueAsSenderOnly` (aucun pays). Les deux dernières n'ont rien à
-  // faire préparer sur `/auth/residence-address` (adresse de résidence
-  // = préparer le compte de paiement voyageur) : elles doivent filer
+  // faire préparer sur `/auth/personal-info` (le nom légal ne sert qu'à
+  // ouvrir le compte de paiement voyageur) : elles doivent filer
   // directement au parrainage. `CountryOnboardingSuccess` ne porte aucune
   // information permettant de distinguer ces trois chemins, mais
   // `CountryOnboardingSaving.countryCode` — toujours émis juste avant — si :
@@ -63,10 +63,7 @@ class _CountrySelectionScreenState extends State<CountrySelectionScreen> {
             // `BusinessPrefsBloc`, dont le singleton app-wide est construit
             // avant cet écran et ne se resynchronise pas automatiquement
             // quand ce cubit écrit directement dans Hive (voir router.dart).
-            context.go(
-              '/auth/residence-address',
-              extra: _lastAttemptedCountryCode,
-            );
+            context.go('/auth/personal-info', extra: _lastAttemptedCountryCode);
           } else {
             context.go('/auth/referral-code');
           }

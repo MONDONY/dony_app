@@ -23,8 +23,9 @@ class _MockStripeAccountBloc
 
 /// La bannière compte deux étapes de compte en plus des champs de profil :
 /// l'identité (toujours) et les paiements (là où Stripe couvre le pays). Le
-/// total de référence de ces tests est donc **8 champs + identité +
-/// paiements = 10**.
+/// total de référence de ces tests est donc **7 champs + identité +
+/// paiements = 9**. La date de naissance n'en fait plus partie : Stripe la
+/// demande dans son propre formulaire, l'application ne la stocke plus.
 Widget _app(
   UserModel user, {
   VoidCallback? onTap,
@@ -92,7 +93,7 @@ Color _renderedTierColor(WidgetTester tester) {
   return cs.info;
 }
 
-/// Les 8 champs de profil renseignés.
+/// Les 7 champs de profil renseignés.
 final _allProfileFields = _empty.copyWith(
   avatarUrl: 'https://cdn.example.com/avatar.jpg',
   firstName: 'Amadou',
@@ -101,17 +102,16 @@ final _allProfileFields = _empty.copyWith(
   phoneNumber: '+221701234567',
   city: 'Dakar',
   bio: 'Voyageur régulier.',
-  birthDate: DateTime(1995, 3, 12),
 );
 
 void main() {
-  // Le SMS OTP backend confirmé est l'état par défaut de ces tests (8
+  // Le SMS OTP backend confirmé est l'état par défaut de ces tests (7
   // champs, téléphone inclus) : le groupe dédié plus bas couvre le cas
-  // désactivé (7 champs) séparément.
+  // désactivé (6 champs) séparément.
   setUp(() => setSmsAuthEnabled(true));
   tearDown(() => setSmsAuthEnabled(kSmsAuthEnabledDefault));
 
-  testWidgets('0/10 → 0 %, les 8 champs plus la case identité sont affichés', (
+  testWidgets('0/9 → 0 %, les 7 champs plus la case identité sont affichés', (
     tester,
   ) async {
     await tester.pumpWidget(_app(_empty));
@@ -128,7 +128,6 @@ void main() {
       'Nom',
       'Email',
       'Téléphone',
-      'Date de naissance',
       'Ville',
       'À propos',
     ]) {
@@ -136,17 +135,17 @@ void main() {
     }
   });
 
-  testWidgets('8/10 : profil rempli mais identité manquante → 80 %, la '
+  testWidgets('7/9 : profil rempli mais identité manquante → 78 %, la '
       'bannière reste et réclame l\'identité', (tester) async {
     await tester.pumpWidget(_app(_allProfileFields));
     await tester.pump();
 
-    expect(find.text('80% complété · Compléter maintenant'), findsOneWidget);
+    expect(find.text('78% complété · Compléter maintenant'), findsOneWidget);
     expect(find.text('Photo'), findsNothing);
     expect(find.text('Vérifier mon identité'), findsOneWidget);
   });
 
-  testWidgets('9/10 : identité vérifiée → les paiements prennent le relais', (
+  testWidgets('8/9 : identité vérifiée → les paiements prennent le relais', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -154,12 +153,12 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.text('90% complété · Compléter maintenant'), findsOneWidget);
+    expect(find.text('89% complété · Compléter maintenant'), findsOneWidget);
     expect(find.text('Vérifier mon identité'), findsNothing);
     expect(find.text('Activer les paiements'), findsOneWidget);
   });
 
-  testWidgets('10/10 : tout est fait → la bannière disparaît entièrement', (
+  testWidgets('9/9 : tout est fait → la bannière disparaît entièrement', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -174,7 +173,7 @@ void main() {
     expect(tester.getSize(find.byType(ProfileCompletionBanner)), Size.zero);
   });
 
-  testWidgets('pays hors couverture Stripe : 9 étapes, pas 10 — les '
+  testWidgets('pays hors couverture Stripe : 8 étapes, pas 9 — les '
       'paiements ne sont jamais réclamés', (tester) async {
     await tester.pumpWidget(
       _app(
@@ -184,7 +183,7 @@ void main() {
     );
     await tester.pump();
 
-    // 9 sur 9 : la bannière s'efface sans jamais avoir parlé de paiements.
+    // 8 sur 8 : la bannière s'efface sans jamais avoir parlé de paiements.
     expect(find.textContaining('% complété'), findsNothing);
   });
 
@@ -227,7 +226,7 @@ void main() {
   });
 
   group('palier de couleur selon le pourcentage', () {
-    testWidgets('0/8 (0 %, < 1/3) → rouge (cs.error)', (tester) async {
+    testWidgets('0/9 (0 %, < 1/3) → rouge (cs.error)', (tester) async {
       await tester.pumpWidget(_app(_empty));
       await tester.pump();
 
@@ -236,7 +235,7 @@ void main() {
       expect(_renderedTierColor(tester), cs.error);
     });
 
-    testWidgets('4/10 (40 %, entre 1/3 et 2/3) → orange (cs.warning)', (
+    testWidgets('4/9 (44 %, entre 1/3 et 2/3) → orange (cs.warning)', (
       tester,
     ) async {
       final user = _empty.copyWith(
@@ -250,11 +249,11 @@ void main() {
 
       final context = tester.element(find.byType(ProfileCompletionBanner));
       final cs = Theme.of(context).colorScheme;
-      expect(find.text('40% complété · Compléter maintenant'), findsOneWidget);
+      expect(find.text('44% complété · Compléter maintenant'), findsOneWidget);
       expect(_renderedTierColor(tester), cs.warning);
     });
 
-    testWidgets('7/10 (70 %, >= 2/3) → bleu (cs.info)', (tester) async {
+    testWidgets('7/9 (78 %, >= 2/3) → bleu (cs.info)', (tester) async {
       final user = _empty.copyWith(
         avatarUrl: 'https://cdn.example.com/avatar.jpg',
         firstName: 'Amadou',
@@ -269,7 +268,7 @@ void main() {
 
       final context = tester.element(find.byType(ProfileCompletionBanner));
       final cs = Theme.of(context).colorScheme;
-      expect(find.text('70% complété · Compléter maintenant'), findsOneWidget);
+      expect(find.text('78% complété · Compléter maintenant'), findsOneWidget);
       expect(_renderedTierColor(tester), cs.info);
     });
   });
@@ -278,7 +277,7 @@ void main() {
     setUp(() => setSmsAuthEnabled(false));
 
     testWidgets(
-      '0/7 champs → 0 %, la croix Téléphone est absente (rien à réclamer)',
+      '0/6 champs → 0 %, la croix Téléphone est absente (rien à réclamer)',
       (tester) async {
         await tester.pumpWidget(_app(_empty));
         await tester.pump();
@@ -290,7 +289,6 @@ void main() {
           'Prénom',
           'Nom',
           'Email',
-          'Date de naissance',
           'Ville',
           'À propos',
         ]) {
@@ -300,7 +298,7 @@ void main() {
     );
 
     testWidgets(
-      '7 champs sur 7 (sans téléphone) mais identité et paiements à faire → '
+      '6 champs sur 6 (sans téléphone) mais identité et paiements à faire → '
       'la bannière reste : `isProfileComplete` ne connaît pas ces étapes',
       (tester) async {
         final user = _empty.copyWith(
@@ -310,16 +308,15 @@ void main() {
           email: 'amadou@example.com',
           city: 'Dakar',
           bio: 'Voyageur régulier.',
-          birthDate: DateTime(1995, 3, 12),
         );
         await tester.pumpWidget(_app(user));
         await tester.pump();
 
         expect(user.phoneNumber, isNull);
         expect(user.isProfileComplete(countPhone: false), isTrue);
-        // 7 champs sur 7 + identité + paiements = 7 sur 9.
+        // 6 champs sur 6 + identité + paiements = 6 sur 8.
         expect(
-          find.text('78% complété · Compléter maintenant'),
+          find.text('75% complété · Compléter maintenant'),
           findsOneWidget,
         );
         expect(find.text('Vérifier mon identité'), findsOneWidget);

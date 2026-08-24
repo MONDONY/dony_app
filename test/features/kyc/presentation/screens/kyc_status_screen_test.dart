@@ -32,14 +32,14 @@ const _progressPayoutsLeft = OnboardingProgress(
   steps: [
     OnboardingStep.consent,
     OnboardingStep.country,
-    OnboardingStep.address,
+    OnboardingStep.personalInfo,
     OnboardingStep.identity,
     OnboardingStep.payouts,
   ],
   done: {
     OnboardingStep.consent,
     OnboardingStep.country,
-    OnboardingStep.address,
+    OnboardingStep.personalInfo,
   },
   current: OnboardingStep.identity,
 );
@@ -50,13 +50,13 @@ const _progressNoPayouts = OnboardingProgress(
   steps: [
     OnboardingStep.consent,
     OnboardingStep.country,
-    OnboardingStep.address,
+    OnboardingStep.personalInfo,
     OnboardingStep.identity,
   ],
   done: {
     OnboardingStep.consent,
     OnboardingStep.country,
-    OnboardingStep.address,
+    OnboardingStep.personalInfo,
   },
   current: OnboardingStep.identity,
 );

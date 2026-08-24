@@ -23,7 +23,7 @@ const _progress = OnboardingProgress(
   steps: [
     OnboardingStep.consent,
     OnboardingStep.country,
-    OnboardingStep.address,
+    OnboardingStep.personalInfo,
     OnboardingStep.identity,
     OnboardingStep.payouts,
   ],
@@ -54,9 +54,9 @@ Future<void> _wrap(
         ),
       ),
       GoRoute(
-        path: '/auth/residence-address',
+        path: '/auth/personal-info',
         builder: (_, state) =>
-            Scaffold(body: Text('Residence route extra=${state.extra}')),
+            Scaffold(body: Text('Personal info route extra=${state.extra}')),
       ),
       GoRoute(
         path: '/auth/referral-code',
@@ -242,7 +242,7 @@ void main() {
   });
 
   testWidgets(
-    'état Success navigue vers l\'étape adresse de résidence en passant le '
+    'état Success navigue vers l\'étape « Vos informations » en passant le '
     'code pays fraîchement choisi en extra, et rafraîchit le profil '
     '(correction 1 de la revue finale du lot 2 : sans ce refresh, l\'étape '
     '« pays » regressait sur /auth/referral-code, plusieurs écrans plus loin)',
@@ -264,7 +264,7 @@ void main() {
       // fraîche possible — plus fraîche qu'une relecture de
       // `BusinessPrefsBloc`, dont le singleton app-wide ne se resynchronise
       // pas automatiquement quand ce cubit écrit directement dans Hive.
-      expect(find.text('Residence route extra=CA'), findsOneWidget);
+      expect(find.text('Personal info route extra=CA'), findsOneWidget);
       verify(() => authBloc.add(const AuthProfileRefreshRequested())).called(1);
     },
   );

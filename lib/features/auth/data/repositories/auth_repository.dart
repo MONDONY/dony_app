@@ -22,21 +22,17 @@ class AuthRepository {
   Future<UserModel> updateProfile({
     String? firstName,
     String? lastName,
-    DateTime? birthDate,
     String? city,
     String? phoneNumber,
     String? bio,
     List<String>? languages,
-    String? transportMode,
   }) => _datasource.updateProfile(
     firstName: firstName,
     lastName: lastName,
-    birthDate: birthDate,
     city: city,
     phoneNumber: phoneNumber,
     bio: bio,
     languages: languages,
-    transportMode: transportMode,
   );
 
   Future<UserModel> uploadAvatar(String filePath) =>
@@ -65,18 +61,6 @@ class AuthRepository {
     required String phoneNumber,
     required String code,
   }) => _datasource.attachPhone(phoneNumber: phoneNumber, code: code);
-
-  Future<void> updateResidenceAddress({
-    required String street,
-    String? line2,
-    required String postalCode,
-    required String city,
-  }) => _datasource.updateResidenceAddress(
-    street: street,
-    line2: line2,
-    postalCode: postalCode,
-    city: city,
-  );
 
   Future<void> markOnboardingSeen() => _datasource.markOnboardingSeen();
 }

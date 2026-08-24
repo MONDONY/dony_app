@@ -88,7 +88,7 @@ void main() {
             builder: (context) {
               result = readOnboardingProgress(
                 context,
-                current: OnboardingStep.address,
+                current: OnboardingStep.personalInfo,
                 countryFallback: countryFallback,
               );
               return const SizedBox.shrink();

@@ -58,34 +58,28 @@ class AuthDeleteAccountRequested extends AuthEvent {
 class AuthUpdateProfileRequested extends AuthEvent {
   final String? firstName;
   final String? lastName;
-  final DateTime? birthDate;
   final String? city;
   final String? phoneNumber;
   final String? bio;
   final List<String>? languages;
-  final String? transportMode;
 
   const AuthUpdateProfileRequested({
     this.firstName,
     this.lastName,
-    this.birthDate,
     this.city,
     this.phoneNumber,
     this.bio,
     this.languages,
-    this.transportMode,
   });
 
   @override
   List<Object?> get props => [
     firstName,
     lastName,
-    birthDate,
     city,
     phoneNumber,
     bio,
     languages,
-    transportMode,
   ];
 }
 

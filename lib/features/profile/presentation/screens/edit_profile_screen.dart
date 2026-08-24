@@ -1,19 +1,13 @@
-import 'dart:async';
-
 import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
-import 'package:dony/core/services/address_autocomplete_service.dart';
 import 'package:dony/core/services/media_service.dart';
-import 'package:dony/core/widgets/address/residence_address_fields.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
-import 'package:dony/features/auth/data/repositories/auth_repository.dart';
-import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_sections.dart'
     show profileCompletionTierColor;
 import 'package:flutter/material.dart';
@@ -21,7 +15,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:intl/intl.dart';
 
 /// EditProfileScreen — s'ouvre en lecture (présentation du profil), pas en
 /// édition : le bouton du bas dit « Modifier » et fait basculer les champs
@@ -31,24 +24,22 @@ import 'package:intl/intl.dart';
 /// `add_contact_sheets.dart` → `EditEmailScreen`/`EditPhoneScreen`).
 ///
 /// Uses StatefulWidget only for TextEditingController lifecycle and local
-/// picker state (birth date, languages, transport mode, vue/édition). All
-/// business state (loading, error, success) is driven by AuthBloc — no
-/// setState for business logic.
+/// picker state (languages, vue/édition). All business state (loading, error,
+/// success) is driven by AuthBloc — no setState for business logic.
+///
+/// Ne collecte aucun état civil au-delà du nom : date de naissance et adresse
+/// de résidence sont demandées par Stripe Connect, seul point de vérité pour
+/// ces champs. Les recueillir ici doublait la saisie et exposait à des écarts
+/// de format que Stripe finissait par refuser.
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({
     super.key,
     @visibleForTesting DonyMediaService? mediaService,
-    @visibleForTesting AddressAutocompleteService? addressService,
-  }) : _mediaService = mediaService,
-       _addressService = addressService;
+  }) : _mediaService = mediaService;
 
   /// Seam for widget-testing: inject a mock [DonyMediaService] to avoid
   /// hitting platform channels. Defaults to the GetIt singleton.
   final DonyMediaService? _mediaService;
-
-  /// Même couture que [_mediaService] : l'autocomplétion d'adresse part sur le
-  /// réseau, un test widget doit pouvoir la neutraliser.
-  final AddressAutocompleteService? _addressService;
 
   @override
   State<EditProfileScreen> createState() => _EditProfileScreenState();
@@ -59,17 +50,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final _lastNameCtrl = TextEditingController();
   final _bioCtrl = TextEditingController();
   final _cityCtrl = TextEditingController();
-  // Adresse de résidence : mêmes champs que l'étape « Vos informations » du
-  // parcours d'inscription. L'écran ne demandait qu'une ville en texte libre,
-  // dont Stripe Connect ne peut rien faire — il exige une rue et un code
-  // postal. Un voyageur qui complétait son profil ici se retrouvait donc avec
-  // une activation de paiement impossible, sans explication.
-  final _streetCtrl = TextEditingController();
-  final _postalCtrl = TextEditingController();
 
-  DateTime? _birthDate;
   List<String> _selectedLanguages = [];
-  String? _selectedTransport;
   bool _initialized = false;
   // Keeps the last known user so the form stays visible during AuthLoading.
   UserModel? _lastUser;
@@ -87,9 +69,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   DonyMediaService get _mediaService =>
       widget._mediaService ?? getIt<DonyMediaService>();
 
-  AddressAutocompleteService get _addressService =>
-      widget._addressService ?? getIt<AddressAutocompleteService>();
-
   static const _kAvailableLanguages = [
     'Français',
     'Wolof',
@@ -99,22 +78,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     'Arabe',
   ];
 
-  static const _kTransportModes = ['AVION', 'VOITURE', 'TRAIN'];
-
-  static const _kTransportLabels = {
-    'AVION': 'Avion',
-    'VOITURE': 'Voiture',
-    'TRAIN': 'Train',
-  };
-
   @override
   void dispose() {
     _firstNameCtrl.dispose();
     _lastNameCtrl.dispose();
     _bioCtrl.dispose();
     _cityCtrl.dispose();
-    _streetCtrl.dispose();
-    _postalCtrl.dispose();
     super.dispose();
   }
 
@@ -127,37 +96,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _lastNameCtrl.text = user.lastName ?? '';
     _bioCtrl.text = user.bio ?? '';
     _cityCtrl.text = user.city ?? '';
-    _streetCtrl.text = user.residenceStreet ?? '';
-    _postalCtrl.text = user.residencePostalCode ?? '';
-    _birthDate = user.birthDate;
     _selectedLanguages = List<String>.from(user.languages);
-    _selectedTransport = user.transportMode;
-  }
-
-  /// Une suggestion Google résolue remplit code postal et ville : c'est tout
-  /// l'intérêt de l'autocomplétion, ne pas faire retaper ce que l'adresse
-  /// contient déjà.
-  void _onAddressResolved(AddressData address) {
-    if (address.postalCode != null && address.postalCode!.isNotEmpty) {
-      _postalCtrl.text = address.postalCode!;
-    }
-    if (address.city != null && address.city!.isNotEmpty) {
-      _cityCtrl.text = address.city!;
-    }
-  }
-
-  Future<void> _pickBirthDate() async {
-    final now = DateTime.now();
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _birthDate ?? DateTime(now.year - 25),
-      firstDate: DateTime(1920),
-      lastDate: DateTime(now.year - 16),
-    );
-    if (picked != null && mounted) {
-      // setState is intentional here: pure local picker state, not business state
-      setState(() => _birthDate = picked);
-    }
   }
 
   void _toggleLanguage(String lang) {
@@ -170,46 +109,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     });
   }
 
-  void _selectTransport(String mode) {
-    setState(() => _selectedTransport = mode);
-  }
-
   void _save(bool isTraveler) {
     final firstName = _firstNameCtrl.text.trim();
     final lastName = _lastNameCtrl.text.trim();
     final bio = _bioCtrl.text.trim();
     final city = _cityCtrl.text.trim();
-    final street = _streetCtrl.text.trim();
-    final postal = _postalCtrl.text.trim();
-
-    // L'adresse de résidence a son propre point d'entrée serveur
-    // (`PUT /auth/me/residence-address`), distinct du PATCH de profil : elle
-    // part donc à part. Jamais awaitée et jamais bloquante — le profil doit
-    // s'enregistrer même si cet appel échoue —, et seulement quand rue, code
-    // postal et ville sont tous les trois là : le serveur les exige ensemble,
-    // et une adresse partielle ne servirait de toute façon à rien à Stripe.
-    if (street.isNotEmpty && postal.isNotEmpty && city.isNotEmpty) {
-      unawaited(
-        getIt<AuthRepository>()
-            .updateResidenceAddress(
-              street: street,
-              postalCode: postal,
-              city: city,
-            )
-            .catchError((_) {}),
-      );
-    }
 
     setState(() => _saving = true);
     context.read<AuthBloc>().add(
       AuthUpdateProfileRequested(
         firstName: firstName.isNotEmpty ? firstName : null,
         lastName: lastName.isNotEmpty ? lastName : null,
-        birthDate: _birthDate,
         city: city.isNotEmpty ? city : null,
         bio: bio.isEmpty ? null : bio,
         languages: isTraveler ? _selectedLanguages : null,
-        transportMode: isTraveler ? _selectedTransport : null,
       ),
     );
   }
@@ -543,42 +456,33 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       // ── Section Informations personnelles ────────────────────
                       const _SectionLabel(label: 'Informations personnelles'),
                       const SizedBox(height: DonySpacing.md),
-                      if (!_editing) ...[
-                        _StaticInfoRow(
-                          label: 'DATE DE NAISSANCE',
-                          value: _birthDate != null
-                              ? DateFormat('dd/MM/yyyy').format(_birthDate!)
-                              : null,
-                          placeholder: 'Non renseignée',
-                        ),
-                        const SizedBox(height: DonySpacing.md),
+                      // La ville seule, et rien de plus : elle situe le
+                      // membre pour les autres, alors que l'adresse postale
+                      // et la date de naissance n'existent que pour Stripe,
+                      // qui les demande lui-même.
+                      if (!_editing)
                         _StaticInfoRow(
                           label: 'VILLE',
                           value: user.city,
                           placeholder: 'Non renseignée',
-                        ),
-                      ] else ...[
-                        _BirthDatePicker(
-                          birthDate: _birthDate,
-                          isLoading: isSaving,
-                          onTap: _pickBirthDate,
-                        ),
-                        const SizedBox(height: DonySpacing.md),
-                        // Adresse complète et non plus une simple ville : c'est
-                        // ce que Stripe Connect réclame pour ouvrir un compte
-                        // de paiement. Même composant que l'étape « Vos
-                        // informations » du parcours, pour que les deux
-                        // formulaires ne divergent plus.
-                        ResidenceAddressFields(
-                          streetCtrl: _streetCtrl,
-                          postalCtrl: _postalCtrl,
-                          cityCtrl: _cityCtrl,
-                          addressService: _addressService,
-                          onAddressResolved: _onAddressResolved,
+                        )
+                      else
+                        DonyTextField(
+                          key: const Key('profile-city'),
+                          // Dernier champ de saisie de l'écran : le clavier
+                          // doit conclure, pas proposer d'avancer vers rien.
+                          textInputAction: TextInputAction.done,
+                          controller: _cityCtrl,
+                          label: 'Ville',
+                          prefixWidget: DonyIcon(
+                            'map-pin',
+                            size: 20,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                          ),
                           enabled: !isSaving,
-                          showSectionLabel: false,
                         ),
-                      ],
                       const SizedBox(height: DonySpacing.xxl),
 
                       // ── Section Préférences (voyageurs uniquement) ───────────
@@ -586,23 +490,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         const _SectionLabel(label: 'Préférences'),
                         const SizedBox(height: DonySpacing.md),
 
-                        if (!_editing) ...[
+                        if (!_editing)
                           _StaticInfoRow(
                             label: 'LANGUES PARLÉES',
                             value: _selectedLanguages.isEmpty
                                 ? null
                                 : _selectedLanguages.join(', '),
                             placeholder: 'Non renseignées',
-                          ),
-                          const SizedBox(height: DonySpacing.md),
-                          _StaticInfoRow(
-                            label: 'MODE DE TRANSPORT',
-                            value: _selectedTransport != null
-                                ? _kTransportLabels[_selectedTransport]
-                                : null,
-                            placeholder: 'Non renseigné',
-                          ),
-                        ] else ...[
+                          )
+                        else ...[
                           // Langues parlées
                           Text(
                             'Langues parlées',
@@ -630,27 +526,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                     : (_) => _toggleLanguage(lang),
                               );
                             }).toList(),
-                          ),
-                          const SizedBox(height: DonySpacing.xl),
-
-                          // Mode de transport
-                          Text(
-                            'Mode de transport',
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurfaceVariant,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                          ),
-                          const SizedBox(height: DonySpacing.sm),
-                          _TransportModeSelector(
-                            modes: _kTransportModes,
-                            labels: _kTransportLabels,
-                            selected: _selectedTransport,
-                            isLoading: isSaving,
-                            onSelect: _selectTransport,
                           ),
                         ],
                         const SizedBox(height: DonySpacing.xxl),
@@ -963,120 +838,6 @@ class _SectionLabel extends StatelessWidget {
         color: Theme.of(context).colorScheme.onSurfaceVariant,
         letterSpacing: 0.8,
       ),
-    );
-  }
-}
-
-class _BirthDatePicker extends StatelessWidget {
-  const _BirthDatePicker({
-    required this.birthDate,
-    required this.isLoading,
-    required this.onTap,
-  });
-
-  final DateTime? birthDate;
-  final bool isLoading;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
-    return GestureDetector(
-      onTap: isLoading ? null : onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: DonySpacing.base,
-          vertical: DonySpacing.base,
-        ),
-        decoration: BoxDecoration(
-          color: cs.surface,
-          borderRadius: BorderRadius.circular(DonyRadius.md),
-          border: Border.all(color: cs.outline),
-        ),
-        child: Row(
-          children: [
-            DonyIcon('cake', color: cs.onSurfaceVariant, size: 20),
-            const SizedBox(width: DonySpacing.md),
-            Expanded(
-              child: Text(
-                birthDate != null
-                    ? DateFormat('dd/MM/yyyy').format(birthDate!)
-                    : 'Date de naissance',
-                style: tt.bodyLarge?.copyWith(
-                  color: birthDate != null ? cs.onSurface : cs.onSurfaceVariant,
-                  fontWeight: birthDate != null
-                      ? FontWeight.w500
-                      : FontWeight.w400,
-                ),
-              ),
-            ),
-            DonyIcon('chevron-right', color: cs.onSurfaceVariant, size: 18),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _TransportModeSelector extends StatelessWidget {
-  const _TransportModeSelector({
-    required this.modes,
-    required this.labels,
-    required this.selected,
-    required this.isLoading,
-    required this.onSelect,
-  });
-
-  final List<String> modes;
-  final Map<String, String> labels;
-  final String? selected;
-  final bool isLoading;
-  final void Function(String) onSelect;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: modes.map((mode) {
-        final isSelected = selected == mode;
-        final cs = Theme.of(context).colorScheme;
-        return Expanded(
-          child: Padding(
-            padding: EdgeInsets.only(
-              right: mode != modes.last ? DonySpacing.sm : 0,
-            ),
-            child: GestureDetector(
-              onTap: isLoading ? null : () => onSelect(mode),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  vertical: DonySpacing.sm,
-                  horizontal: DonySpacing.xs,
-                ),
-                decoration: BoxDecoration(
-                  color: isSelected ? cs.primaryContainer : cs.surface,
-                  borderRadius: BorderRadius.circular(DonyRadius.md),
-                  border: Border.all(
-                    color: isSelected ? cs.primary : cs.outline,
-                    width: isSelected ? 2 : 1,
-                  ),
-                ),
-                child: Center(
-                  child: Text(
-                    labels[mode] ?? mode,
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: isSelected ? cs.primary : cs.onSurfaceVariant,
-                      fontWeight: isSelected
-                          ? FontWeight.w700
-                          : FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      }).toList(),
     );
   }
 }

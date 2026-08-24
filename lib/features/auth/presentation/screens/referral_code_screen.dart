@@ -50,13 +50,15 @@ class _ReferralCodeScreenState extends State<ReferralCodeScreen> {
   ///
   /// `onboarding_seen_at` ne se pose donc plus qu'ici, quand la destination
   /// est réellement `/home` — jamais quand le parcours continue. Cet écran
-  /// n'a pas accès au cubit de l'étape adresse (hors de son arbre de
+  /// n'a pas accès au cubit de l'étape informations (hors de son arbre de
   /// providers) — on passe donc directement par le repository. Jamais
   /// awaité, jamais bloquant : un échec réseau ne doit pas retenir
   /// l'utilisateur sur cet écran, et l'appel est idempotent côté serveur.
   void _continue(BuildContext context) {
     final destination =
-        widget.progress.nextAfter(OnboardingStep.address)?.onboardingRoute ??
+        widget.progress
+            .nextAfter(OnboardingStep.personalInfo)
+            ?.onboardingRoute ??
         '/home';
     if (destination == '/home') {
       unawaited(

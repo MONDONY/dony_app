@@ -228,14 +228,11 @@ class _LoadedView extends StatelessWidget {
             ).animate().fadeIn(delay: 80.ms, duration: 300.ms),
           ),
 
-        // ── Langues / Transport section ───────────────────────────────────────
-        if (profile.languages.isNotEmpty || profile.transportMode != null)
+        // ── Langues section ───────────────────────────────────────────────────
+        if (profile.languages.isNotEmpty)
           SliverToBoxAdapter(
             child: _FlatSection(
-              child: _TravelerInfoSection(
-                languages: profile.languages,
-                transportMode: profile.transportMode,
-              ),
+              child: _TravelerInfoSection(languages: profile.languages),
             ).animate().fadeIn(delay: 120.ms, duration: 300.ms),
           ),
 
@@ -661,29 +658,12 @@ class _AboutSection extends StatelessWidget {
   }
 }
 
-// ─── Langues / Transport section ──────────────────────────────────────────────
+// ─── Langues section ──────────────────────────────────────────────────────────
 
 class _TravelerInfoSection extends StatelessWidget {
-  const _TravelerInfoSection({
-    required this.languages,
-    required this.transportMode,
-  });
+  const _TravelerInfoSection({required this.languages});
 
   final List<String> languages;
-  final String? transportMode;
-
-  static String _transportLabel(String mode) {
-    switch (mode) {
-      case 'AVION':
-        return '✈️ Avion';
-      case 'VOITURE':
-        return '🚗 Voiture';
-      case 'TRAIN':
-        return '🚆 Train';
-      default:
-        return mode;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -726,25 +706,6 @@ class _TravelerInfoSection extends StatelessWidget {
                         ),
                       )
                       .toList(),
-                ),
-              ],
-            ),
-          ),
-        if (languages.isNotEmpty && transportMode != null)
-          const SizedBox(width: DonySpacing.xl),
-        if (transportMode != null)
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const _SectionLabel('TRANSPORT'),
-                const SizedBox(height: DonySpacing.sm),
-                Text(
-                  _transportLabel(transportMode!),
-                  style: tt.bodyMedium?.copyWith(
-                    color: cs.onSurface,
-                    fontWeight: FontWeight.w700,
-                  ),
                 ),
               ],
             ),

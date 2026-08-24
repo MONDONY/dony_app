@@ -1,6 +1,5 @@
 import 'package:dony/app/main_shell.dart';
 import 'package:dony/core/di/injection.dart';
-import 'package:dony/core/services/address_autocomplete_service.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/storage/hive_service.dart';
@@ -8,7 +7,7 @@ import 'package:dony/features/app_update/presentation/screens/force_update_scree
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/bloc/country_onboarding_cubit.dart';
-import 'package:dony/features/auth/bloc/residence_address_cubit.dart';
+import 'package:dony/features/auth/bloc/personal_info_cubit.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/auth/guest_access_guard.dart';
 import 'package:dony/features/auth/presentation/onboarding_step.dart';
@@ -19,9 +18,9 @@ import 'package:dony/features/auth/presentation/screens/email_auth_screen.dart';
 import 'package:dony/features/auth/presentation/screens/local_auth_screen.dart';
 import 'package:dony/features/auth/presentation/screens/onboarding_screen.dart';
 import 'package:dony/features/auth/presentation/screens/otp_verification_screen.dart';
+import 'package:dony/features/auth/presentation/screens/personal_info_screen.dart';
 import 'package:dony/features/auth/presentation/screens/phone_auth_screen.dart';
 import 'package:dony/features/auth/presentation/screens/referral_code_screen.dart';
-import 'package:dony/features/auth/presentation/screens/residence_address_screen.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
 import 'package:dony/features/cancellation/presentation/screens/rematch_search_screen.dart';
@@ -215,7 +214,7 @@ const _publicRoutes = {
   '/auth/referral-code',
   '/auth/analytics-consent',
   '/auth/country-selection',
-  '/auth/residence-address',
+  '/auth/personal-info',
   '/auth/local',
   '/home',
   '/recherche/composer',
@@ -371,7 +370,7 @@ final appRouter = GoRouter(
       ),
     ),
     GoRoute(
-      path: '/auth/residence-address',
+      path: '/auth/personal-info',
       builder: (context, state) {
         // `AuthBloc.state.currentUser?.country` n'est jamais renseigné :
         // `POST /auth/register` n'écrit pas `users.country`. Le pays choisi
@@ -390,17 +389,16 @@ final appRouter = GoRouter(
             (state.extra as String?) ??
             context.read<BusinessPrefsBloc>().state.country;
         return BlocProvider(
-          create: (_) => getIt<ResidenceAddressCubit>(),
-          child: ResidenceAddressScreen(
+          create: (_) => getIt<PersonalInfoCubit>(),
+          child: PersonalInfoScreen(
             country: country,
             // Préremplit ce que le profil sait déjà (retour sur l'étape
             // depuis le profil, second passage) — lu ici comme le reste de
             // l'état ambiant, jamais dans l'écran.
             user: context.read<AuthBloc>().state.currentUser,
-            addressService: getIt<AddressAutocompleteService>(),
             progress: readOnboardingProgress(
               context,
-              current: OnboardingStep.address,
+              current: OnboardingStep.personalInfo,
               countryFallback: country,
             ),
           ),
@@ -415,8 +413,8 @@ final appRouter = GoRouter(
           getIt<AnalyticsService>(),
         ),
         // Aucune étape en cours : le parrainage est hors décompte (spec §4.2).
-        // Même repli `extra ?? BusinessPrefsBloc` que `residence-address`
-        // pour `countryFallback` : `residence_address_screen.dart` transmet
+        // Même repli `extra ?? BusinessPrefsBloc` que `personal-info`
+        // pour `countryFallback` : `personal_info_screen.dart` transmet
         // le pays en `extra` (repli immédiat, le temps que le
         // `AuthProfileRefreshRequested` déclenché juste avant revienne) —
         // sans lui, l'étape « Pays » regresserait sur cet écran (correction 1
@@ -425,9 +423,9 @@ final appRouter = GoRouter(
           progress: readOnboardingProgress(
             context,
             // Hors décompte mais pas hors position : le parrainage vient
-            // juste après l'adresse, la jauge doit donc afficher « 3 / 5 »
-            // et non retomber sur les seuls faits accomplis.
-            reachedPast: OnboardingStep.address,
+            // juste après les informations, la jauge doit donc afficher
+            // « 3 / 5 » et non retomber sur les seuls faits accomplis.
+            reachedPast: OnboardingStep.personalInfo,
             countryFallback:
                 (state.extra as String?) ??
                 context.read<BusinessPrefsBloc>().state.country,

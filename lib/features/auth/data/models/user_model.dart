@@ -13,12 +13,8 @@ class UserModel extends Equatable {
   final String? email;
   final String? firstName;
   final String? lastName;
-  final DateTime? birthDate;
   final String? city;
   final String? country;
-  final String? residenceStreet;
-  final String? residenceLine2;
-  final String? residencePostalCode;
 
   /// Date à laquelle l'utilisateur a atteint l'accueil depuis le parcours
   /// d'onboarding, qu'il l'ait terminé ou passé. `null` = le parcours
@@ -37,7 +33,6 @@ class UserModel extends Equatable {
   final String? bio;
   final String? avatarUrl;
   final List<String> languages;
-  final String? transportMode;
   final double? averageRating;
 
   const UserModel({
@@ -47,12 +42,8 @@ class UserModel extends Equatable {
     this.email,
     this.firstName,
     this.lastName,
-    this.birthDate,
     this.city,
     this.country,
-    this.residenceStreet,
-    this.residenceLine2,
-    this.residencePostalCode,
     this.onboardingSeenAt,
     required this.roles,
     required this.kycStatus,
@@ -67,7 +58,6 @@ class UserModel extends Equatable {
     this.bio,
     this.avatarUrl,
     this.languages = const [],
-    this.transportMode,
     this.averageRating,
   });
 
@@ -78,14 +68,8 @@ class UserModel extends Equatable {
     email: json['email'] as String?,
     firstName: json['firstName'] as String?,
     lastName: json['lastName'] as String?,
-    birthDate: json['birthDate'] != null
-        ? DateTime.tryParse(json['birthDate'] as String)
-        : null,
     city: json['city'] as String?,
     country: json['country'] as String?,
-    residenceStreet: json['residenceStreet'] as String?,
-    residenceLine2: json['residenceLine2'] as String?,
-    residencePostalCode: json['residencePostalCode'] as String?,
     onboardingSeenAt: json['onboardingSeenAt'] == null
         ? null
         : DateTime.parse(json['onboardingSeenAt'] as String),
@@ -109,7 +93,6 @@ class UserModel extends Equatable {
             ?.map((e) => e as String)
             .toList() ??
         const [],
-    transportMode: json['transportMode'] as String?,
     averageRating: (json['averageRating'] as num?)?.toDouble(),
   );
 
@@ -120,12 +103,8 @@ class UserModel extends Equatable {
     'email': email,
     'firstName': firstName,
     'lastName': lastName,
-    'birthDate': birthDate?.toIso8601String(),
     'city': city,
     'country': country,
-    'residenceStreet': residenceStreet,
-    'residenceLine2': residenceLine2,
-    'residencePostalCode': residencePostalCode,
     'onboardingSeenAt': onboardingSeenAt?.toIso8601String(),
     'roles': roles,
     'kycStatus': kycStatus,
@@ -140,7 +119,6 @@ class UserModel extends Equatable {
     'bio': bio,
     'avatarUrl': avatarUrl,
     'languages': languages,
-    'transportMode': transportMode,
     'averageRating': averageRating,
   };
 
@@ -151,12 +129,8 @@ class UserModel extends Equatable {
     String? email,
     String? firstName,
     String? lastName,
-    DateTime? birthDate,
     String? city,
     String? country,
-    String? residenceStreet,
-    String? residenceLine2,
-    String? residencePostalCode,
     DateTime? onboardingSeenAt,
     List<String>? roles,
     String? kycStatus,
@@ -171,7 +145,6 @@ class UserModel extends Equatable {
     String? bio,
     String? avatarUrl,
     List<String>? languages,
-    String? transportMode,
     double? averageRating,
   }) => UserModel(
     id: id ?? this.id,
@@ -180,12 +153,8 @@ class UserModel extends Equatable {
     email: email ?? this.email,
     firstName: firstName ?? this.firstName,
     lastName: lastName ?? this.lastName,
-    birthDate: birthDate ?? this.birthDate,
     city: city ?? this.city,
     country: country ?? this.country,
-    residenceStreet: residenceStreet ?? this.residenceStreet,
-    residenceLine2: residenceLine2 ?? this.residenceLine2,
-    residencePostalCode: residencePostalCode ?? this.residencePostalCode,
     onboardingSeenAt: onboardingSeenAt ?? this.onboardingSeenAt,
     roles: roles ?? this.roles,
     kycStatus: kycStatus ?? this.kycStatus,
@@ -200,7 +169,6 @@ class UserModel extends Equatable {
     bio: bio ?? this.bio,
     avatarUrl: avatarUrl ?? this.avatarUrl,
     languages: languages ?? this.languages,
-    transportMode: transportMode ?? this.transportMode,
     averageRating: averageRating ?? this.averageRating,
   );
 
@@ -234,25 +202,15 @@ class UserModel extends Equatable {
     return '?';
   }
 
-  int? get age {
-    if (birthDate == null) return null;
-    final now = DateTime.now();
-    int a = now.year - birthDate!.year;
-    if (now.month < birthDate!.month ||
-        (now.month == birthDate!.month && now.day < birthDate!.day)) {
-      a--;
-    }
-    return a;
-  }
-
-  // 8 champs d'identité : photo, prénom, nom, email, téléphone, date de
-  // naissance, ville, à propos. Reflète tout ce que « Modifier le profil »
-  // permet de renseigner (hors langues/mode de transport, des préférences
-  // plutôt que de l'identité).
+  // 7 champs d'identité : photo, prénom, nom, email, téléphone, ville, à
+  // propos. Reflète tout ce que « Modifier le profil » permet de renseigner
+  // (hors langues, une préférence plutôt que de l'identité). La date de
+  // naissance n'en fait plus partie : Stripe Connect la demande lui-même, et
+  // l'application ne la stocke plus.
   //
   // [countPhone] : tant que le SMS OTP backend n'est pas confirmé
   // (`smsAuthEnabledListenable`), personne ne peut ajouter/vérifier de
-  // numéro — l'appelant doit alors passer `false` pour retomber sur 7
+  // numéro — l'appelant doit alors passer `false` pour retomber sur 6
   // champs, sans quoi le profil ne pourrait jamais atteindre 100 %.
   bool isProfileComplete({bool countPhone = true}) =>
       profileCompletionSteps(countPhone: countPhone) >=
@@ -266,13 +224,12 @@ class UserModel extends Equatable {
     if (lastName?.isNotEmpty ?? false) steps++;
     if (email?.isNotEmpty ?? false) steps++;
     if (countPhone && (phoneNumber?.isNotEmpty ?? false)) steps++;
-    if (birthDate != null) steps++;
     if (city?.isNotEmpty ?? false) steps++;
     if (bio?.isNotEmpty ?? false) steps++;
     return steps;
   }
 
-  static int profileTotalSteps({bool countPhone = true}) => countPhone ? 8 : 7;
+  static int profileTotalSteps({bool countPhone = true}) => countPhone ? 7 : 6;
 
   bool get isKycVerified => kycStatus == 'VERIFIED';
   bool get isSender => roles.contains('SENDER');
@@ -287,12 +244,8 @@ class UserModel extends Equatable {
     email,
     firstName,
     lastName,
-    birthDate,
     city,
     country,
-    residenceStreet,
-    residenceLine2,
-    residencePostalCode,
     onboardingSeenAt,
     roles,
     kycStatus,
@@ -307,7 +260,6 @@ class UserModel extends Equatable {
     bio,
     avatarUrl,
     languages,
-    transportMode,
     averageRating,
   ];
 }

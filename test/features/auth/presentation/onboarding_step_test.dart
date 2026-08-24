@@ -14,7 +14,7 @@ import 'package:flutter_test/flutter_test.dart';
 UserModel _user({
   String? country,
   String kycStatus = 'NOT_STARTED',
-  String? residenceStreet,
+  bool hasName = false,
   String stripeAccountStatus = 'NOT_CREATED',
   DateTime? onboardingSeenAt,
 }) => UserModel(
@@ -23,7 +23,8 @@ UserModel _user({
   status: 'ACTIVE',
   country: country,
   kycStatus: kycStatus,
-  residenceStreet: residenceStreet,
+  firstName: hasName ? 'Awa' : null,
+  lastName: hasName ? 'Diallo' : null,
   stripeAccountStatus: stripeAccountStatus,
   onboardingSeenAt: onboardingSeenAt,
 );
@@ -45,7 +46,7 @@ void main() {
       expect(onboardingSteps(_connectOk), const [
         OnboardingStep.consent,
         OnboardingStep.country,
-        OnboardingStep.address,
+        OnboardingStep.personalInfo,
         OnboardingStep.identity,
         OnboardingStep.payouts,
       ]);
@@ -55,7 +56,7 @@ void main() {
       expect(onboardingSteps(_connectUnavailable), const [
         OnboardingStep.consent,
         OnboardingStep.country,
-        OnboardingStep.address,
+        OnboardingStep.personalInfo,
         OnboardingStep.identity,
       ]);
     });
@@ -95,18 +96,14 @@ void main() {
           stripe: _connectOk,
           analyticsAnswered: true,
         ),
-        OnboardingStep.address,
+        OnboardingStep.personalInfo,
       );
     });
 
     test('4. identité non vérifiée → identity', () {
       expect(
         nextStep(
-          user: _user(
-            country: 'FR',
-            kycStatus: 'PENDING',
-            residenceStreet: '12 rue des Lilas',
-          ),
+          user: _user(country: 'FR', kycStatus: 'PENDING', hasName: true),
           stripe: _connectOk,
           analyticsAnswered: true,
         ),
@@ -117,11 +114,7 @@ void main() {
     test('5. compte de paiement incomplet → payouts', () {
       expect(
         nextStep(
-          user: _user(
-            country: 'FR',
-            kycStatus: 'VERIFIED',
-            residenceStreet: '12 rue des Lilas',
-          ),
+          user: _user(country: 'FR', kycStatus: 'VERIFIED', hasName: true),
           stripe: _connectOk,
           analyticsAnswered: true,
         ),
@@ -133,11 +126,7 @@ void main() {
         'pas pour lui', () {
       expect(
         nextStep(
-          user: _user(
-            country: 'SN',
-            kycStatus: 'VERIFIED',
-            residenceStreet: '12 rue des Lilas',
-          ),
+          user: _user(country: 'SN', kycStatus: 'VERIFIED', hasName: true),
           stripe: _connectUnavailable,
           analyticsAnswered: true,
         ),
@@ -151,7 +140,7 @@ void main() {
           user: _user(
             country: 'FR',
             kycStatus: 'VERIFIED',
-            residenceStreet: '12 rue des Lilas',
+            hasName: true,
             stripeAccountStatus: 'ONBOARDING_COMPLETE',
           ),
           stripe: _connectDone,
@@ -181,7 +170,7 @@ void main() {
           analyticsAnswered: true,
           countryFallback: 'FR',
         ),
-        OnboardingStep.address,
+        OnboardingStep.personalInfo,
       );
     });
 
@@ -205,7 +194,7 @@ void main() {
             user: _user(
               country: 'FR',
               kycStatus: 'VERIFIED',
-              residenceStreet: '12 rue des Lilas',
+              hasName: true,
               stripeAccountStatus: 'ONBOARDING_COMPLETE',
             ),
             stripe: const StripeAccountInitial(),
@@ -234,7 +223,7 @@ void main() {
           user: _user(
             country: 'FR',
             kycStatus: 'VERIFIED',
-            residenceStreet: '12 rue des Lilas',
+            hasName: true,
             stripeAccountStatus: 'ONBOARDING_COMPLETE',
             onboardingSeenAt: DateTime(2026, 8, 22),
           ),
@@ -254,13 +243,13 @@ void main() {
         expect(OnboardingStep.consent.wireName, 'consent');
         expect(OnboardingStep.country.wireName, 'country');
         expect(OnboardingStep.identity.wireName, 'identity');
-        expect(OnboardingStep.address.wireName, 'address');
+        expect(OnboardingStep.personalInfo.wireName, 'personal_info');
         expect(OnboardingStep.payouts.wireName, 'payouts');
 
         expect(OnboardingStep.consent.route, '/auth/analytics-consent');
         expect(OnboardingStep.country.route, '/auth/country-selection');
         expect(OnboardingStep.identity.route, '/kyc/verify');
-        expect(OnboardingStep.address.route, '/auth/residence-address');
+        expect(OnboardingStep.personalInfo.route, '/auth/personal-info');
         expect(OnboardingStep.payouts.route, '/payments/onboarding');
       },
     );
@@ -295,7 +284,7 @@ void main() {
         user: _user(),
         stripe: _connectOk,
         analyticsAnswered: true,
-        current: OnboardingStep.address,
+        current: OnboardingStep.personalInfo,
       );
 
       expect(p.segments, const [
@@ -313,7 +302,7 @@ void main() {
         user: _user(country: 'FR'),
         stripe: _connectOk,
         analyticsAnswered: true,
-        reachedPast: OnboardingStep.address,
+        reachedPast: OnboardingStep.personalInfo,
       );
 
       expect(p.current, isNull);
@@ -349,11 +338,7 @@ void main() {
 
     test('pays hors couverture Stripe → quatre segments', () {
       final p = onboardingProgress(
-        user: _user(
-          country: 'SN',
-          kycStatus: 'VERIFIED',
-          residenceStreet: '12 rue des Lilas',
-        ),
+        user: _user(country: 'SN', kycStatus: 'VERIFIED', hasName: true),
         stripe: _connectUnavailable,
         analyticsAnswered: true,
       );
@@ -400,7 +385,7 @@ void main() {
     test('chaque étape a un nom, fermé et en français', () {
       expect(OnboardingStep.consent.displayLabel, 'Confidentialité');
       expect(OnboardingStep.country.displayLabel, 'Pays');
-      expect(OnboardingStep.address.displayLabel, 'Adresse');
+      expect(OnboardingStep.personalInfo.displayLabel, 'Vos infos');
       expect(OnboardingStep.identity.displayLabel, 'Identité');
       expect(OnboardingStep.payouts.displayLabel, 'Paiements');
     });
@@ -413,14 +398,14 @@ void main() {
         steps: [
           OnboardingStep.consent,
           OnboardingStep.country,
-          OnboardingStep.address,
+          OnboardingStep.personalInfo,
           OnboardingStep.identity,
           OnboardingStep.payouts,
         ],
         done: {
           OnboardingStep.consent,
           OnboardingStep.country,
-          OnboardingStep.address,
+          OnboardingStep.personalInfo,
         },
       );
 
@@ -432,14 +417,14 @@ void main() {
         steps: [
           OnboardingStep.consent,
           OnboardingStep.country,
-          OnboardingStep.address,
+          OnboardingStep.personalInfo,
           OnboardingStep.identity,
           OnboardingStep.payouts,
         ],
         done: {
           OnboardingStep.consent,
           OnboardingStep.country,
-          OnboardingStep.address,
+          OnboardingStep.personalInfo,
           OnboardingStep.identity,
           OnboardingStep.payouts,
         },
@@ -460,7 +445,7 @@ void main() {
         steps: [
           OnboardingStep.consent,
           OnboardingStep.country,
-          OnboardingStep.address,
+          OnboardingStep.personalInfo,
           OnboardingStep.identity,
           OnboardingStep.payouts,
         ],
@@ -468,9 +453,9 @@ void main() {
         done: {OnboardingStep.consent, OnboardingStep.country},
       );
 
-      expect(progress.next, OnboardingStep.address, reason: 'next boucle');
+      expect(progress.next, OnboardingStep.personalInfo, reason: 'next boucle');
       expect(
-        progress.nextAfter(OnboardingStep.address),
+        progress.nextAfter(OnboardingStep.personalInfo),
         OnboardingStep.identity,
       );
     });
@@ -480,7 +465,7 @@ void main() {
         steps: [
           OnboardingStep.consent,
           OnboardingStep.country,
-          OnboardingStep.address,
+          OnboardingStep.personalInfo,
           OnboardingStep.identity,
           OnboardingStep.payouts,
         ],
@@ -497,7 +482,7 @@ void main() {
         steps: [
           OnboardingStep.consent,
           OnboardingStep.country,
-          OnboardingStep.address,
+          OnboardingStep.personalInfo,
           OnboardingStep.identity,
           OnboardingStep.payouts,
         ],
@@ -519,7 +504,7 @@ void main() {
         steps: [
           OnboardingStep.consent,
           OnboardingStep.country,
-          OnboardingStep.address,
+          OnboardingStep.personalInfo,
           OnboardingStep.identity,
         ],
         done: {OnboardingStep.identity},
@@ -536,7 +521,7 @@ void main() {
       steps: [
         OnboardingStep.consent,
         OnboardingStep.country,
-        OnboardingStep.address,
+        OnboardingStep.personalInfo,
         OnboardingStep.identity,
         OnboardingStep.payouts,
       ],
@@ -561,7 +546,7 @@ void main() {
         steps: [
           OnboardingStep.consent,
           OnboardingStep.country,
-          OnboardingStep.address,
+          OnboardingStep.personalInfo,
           OnboardingStep.identity,
           OnboardingStep.payouts,
         ],
@@ -577,7 +562,7 @@ void main() {
         steps: [
           OnboardingStep.consent,
           OnboardingStep.country,
-          OnboardingStep.address,
+          OnboardingStep.personalInfo,
           OnboardingStep.identity,
         ],
         done: {OnboardingStep.identity},
@@ -590,10 +575,10 @@ void main() {
       expect(fiveSteps.routeAfter(OnboardingStep.payouts), '/home');
     });
 
-    test('après le pays → adresse, route brute (écran sans double entrée)', () {
+    test('après le pays → vos infos, route brute (écran sans double entrée)', () {
       expect(
         fiveSteps.routeAfter(OnboardingStep.country),
-        '/auth/residence-address',
+        '/auth/personal-info',
       );
     });
   });
@@ -614,7 +599,7 @@ void main() {
       for (final step in [
         OnboardingStep.consent,
         OnboardingStep.country,
-        OnboardingStep.address,
+        OnboardingStep.personalInfo,
       ]) {
         expect(step.onboardingRoute, step.route, reason: step.wireName);
       }
@@ -629,7 +614,7 @@ void main() {
       steps: [
         OnboardingStep.consent,
         OnboardingStep.country,
-        OnboardingStep.address,
+        OnboardingStep.personalInfo,
         OnboardingStep.identity,
         OnboardingStep.payouts,
       ],

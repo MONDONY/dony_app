@@ -17,11 +17,9 @@ void main() {
         'badges': [],
         'bio': 'Hi',
         'languages': ['FR'],
-        'transportMode': 'AVION',
       });
       expect(m.bio, 'Hi');
       expect(m.languages, ['FR']);
-      expect(m.transportMode, 'AVION');
     });
   });
 }

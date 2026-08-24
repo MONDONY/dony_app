@@ -24,7 +24,7 @@ enum OnboardingStep {
   consent('consent', '/auth/analytics-consent'),
   country('country', '/auth/country-selection'),
   identity('identity', '/kyc/verify'),
-  address('address', '/auth/residence-address'),
+  personalInfo('personal_info', '/auth/personal-info'),
   payouts('payouts', '/payments/onboarding');
 
   const OnboardingStep(this.wireName, this.route);
@@ -62,7 +62,7 @@ enum OnboardingStep {
     consent => 'Confidentialité',
     country => 'Pays',
     identity => 'Identité',
-    address => 'Adresse',
+    personalInfo => 'Vos infos',
     payouts => 'Paiements',
   };
 }
@@ -86,8 +86,8 @@ String onboardingEntrySuffix({required bool fromOnboarding}) =>
 /// Les étapes comptées pour cet utilisateur, dans l'ordre.
 ///
 /// L'ordre suit le parcours réel des écrans (`referral_code_screen.dart`
-/// enchaîne adresse → parrainage → identité/paiements), pas l'ordre de la
-/// spec §2 : l'adresse est remplie avant l'identité, donc elle doit être
+/// enchaîne informations → parrainage → identité/paiements), pas l'ordre de
+/// la spec §2 : le nom est donné avant l'identité, donc l'étape doit être
 /// numérotée avant elle — sans quoi la jauge annoncerait « 4/5 » sur un
 /// écran atteint en 3e position (revue de bout en bout, correction du trou
 /// du parcours).
@@ -100,7 +100,7 @@ String onboardingEntrySuffix({required bool fromOnboarding}) =>
 List<OnboardingStep> onboardingSteps(StripeAccountState stripe) => [
   OnboardingStep.consent,
   OnboardingStep.country,
-  OnboardingStep.address,
+  OnboardingStep.personalInfo,
   OnboardingStep.identity,
   if (stripe.connectAvailableInCountry) OnboardingStep.payouts,
 ];
@@ -116,7 +116,8 @@ List<OnboardingStep> onboardingSteps(StripeAccountState stripe) => [
 /// [countryFallback] est indispensable et non optionnel dans les faits :
 /// `POST /auth/register` n'écrit pas `users.country`, et le `UserModel` en
 /// cache n'est jamais rafraîchi après l'étape pays. Le routeur applique déjà
-/// ce même repli (`BusinessPrefsBloc.state.country`) pour l'écran d'adresse.
+/// ce même repli (`BusinessPrefsBloc.state.country`) pour l'écran
+/// d'informations.
 ///
 /// Ne teste **jamais** `onboardingSeenAt` : cette fonction ne fait que
 /// traduire les faits serveur en étape manquante, elle ne décide pas si le
@@ -171,7 +172,8 @@ class OnboardingProgress {
   final OnboardingStep? current;
 
   /// Sur un écran hors décompte, la dernière étape comptée située **avant**
-  /// lui dans le parcours (l'adresse, pour le parrainage). Sert uniquement à
+  /// lui dans le parcours (les informations, pour le parrainage). Sert
+  /// uniquement à
   /// l'affichage : elle ancre la position quand [current] est `null`.
   final OnboardingStep? reachedPast;
 
@@ -221,7 +223,8 @@ class OnboardingProgress {
   /// Contrairement à [next], ne revient jamais en arrière. Une étape *passée*
   /// n'entre pas dans [done] par construction (« passer n'est pas terminer ») :
   /// la redésigner ferait boucler le parcours indéfiniment sur elle. Le
-  /// parrainage s'en sert en partant de l'adresse, l'écran qui le précède.
+  /// parrainage s'en sert en partant des informations, l'écran qui le
+  /// précède.
   OnboardingStep? nextAfter(OnboardingStep step) {
     final index = steps.indexOf(step);
     if (index == -1) return next;
@@ -258,7 +261,8 @@ class OnboardingProgress {
   /// courant dans le parcours, que les étapes derrière soient remplies ou
   /// passées. C'est le sens du compteur pendant le parcours : « étape 4 sur
   /// 5 », pas « 2 remplies sur 5 » (retour utilisateur : un compteur qui
-  /// stagne à 2/5 sur l'identité après avoir passé l'adresse se lit comme un
+  /// stagne à 2/5 sur l'identité après avoir passé les informations se lit
+  /// comme un
   /// parcours cassé, pas comme un état de compte).
   ///
   /// `-1` quand aucune position n'est connue ([current] et [reachedPast]
@@ -340,7 +344,12 @@ bool _isDone(
   OnboardingStep.country =>
     _hasText(user?.country) || _hasText(countryFallback),
   OnboardingStep.identity => user?.isKycVerified ?? false,
-  OnboardingStep.address => _hasText(user?.residenceStreet),
+  // Prénom **et** nom : Stripe Connect ouvre un compte au nom légal complet,
+  // un seul des deux n'ouvre rien. Ni l'adresse ni la date de naissance ne
+  // comptent plus ici — Stripe les demande dans son propre formulaire, les
+  // recueillir avant ne faisait que doubler la saisie.
+  OnboardingStep.personalInfo =>
+    _hasText(user?.firstName) && _hasText(user?.lastName),
   OnboardingStep.payouts =>
     effectiveStripeStatus(user, stripe) == 'ONBOARDING_COMPLETE',
 };
@@ -366,7 +375,7 @@ bool _hasText(String? value) => value != null && value.trim().isNotEmpty;
 // Seul point impur du fichier. Il vit ici plutôt que dans `router.dart` pour
 // rester à côté de la règle qu'il applique, et il n'est appelé que par les
 // builders du routeur : les écrans du parcours restent montables sans provider
-// ambiant (cf. `residence_address_screen.dart`).
+// ambiant (cf. `personal_info_screen.dart`).
 
 /// Lit les blocs fournis à l'échelle de l'application et rend la progression.
 ///
@@ -393,7 +402,7 @@ OnboardingProgress readOnboardingProgress(
       getIt<AnalyticsService>().hasAnswered,
   // `POST /auth/register` n'écrit pas `users.country` et le profil en cache
   // n'est pas rafraîchi après l'étape pays : même repli que `router.dart` pour
-  // l'écran d'adresse.
+  // l'écran d'informations.
   countryFallback:
       countryFallback ?? context.read<BusinessPrefsBloc>().state.country,
   current: current,

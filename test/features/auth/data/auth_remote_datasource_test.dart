@@ -157,7 +157,6 @@ void main() {
       final result = await datasource.updateProfile(
         firstName: 'Amadou',
         lastName: 'Diallo',
-        birthDate: DateTime(1990, 5, 15),
         city: 'Paris',
       );
 
@@ -344,81 +343,6 @@ void main() {
         ),
       ).called(1);
     });
-  });
-
-  group('updateResidenceAddress', () {
-    test('PUT /auth/me/residence-address avec line2 renseigné', () async {
-      when(
-        () => mockDio.put<void>(
-          '/auth/me/residence-address',
-          data: any(named: 'data'),
-        ),
-      ).thenAnswer(
-        (_) async => Response(
-          statusCode: 204,
-          requestOptions: RequestOptions(path: '/auth/me/residence-address'),
-        ),
-      );
-
-      await expectLater(
-        datasource.updateResidenceAddress(
-          street: '12 rue des Lilas',
-          line2: 'Bat. B',
-          postalCode: '75011',
-          city: 'Paris',
-        ),
-        completes,
-      );
-
-      verify(
-        () => mockDio.put<void>(
-          '/auth/me/residence-address',
-          data: {
-            'street': '12 rue des Lilas',
-            'line2': 'Bat. B',
-            'postalCode': '75011',
-            'city': 'Paris',
-          },
-        ),
-      ).called(1);
-    });
-
-    test(
-      'PUT /auth/me/residence-address sans line2 — la clé est absente du payload, pas envoyée à null',
-      () async {
-        when(
-          () => mockDio.put<void>(
-            '/auth/me/residence-address',
-            data: any(named: 'data'),
-          ),
-        ).thenAnswer(
-          (_) async => Response(
-            statusCode: 204,
-            requestOptions: RequestOptions(path: '/auth/me/residence-address'),
-          ),
-        );
-
-        await expectLater(
-          datasource.updateResidenceAddress(
-            street: '12 rue des Lilas',
-            postalCode: '75011',
-            city: 'Paris',
-          ),
-          completes,
-        );
-
-        verify(
-          () => mockDio.put<void>(
-            '/auth/me/residence-address',
-            data: {
-              'street': '12 rue des Lilas',
-              'postalCode': '75011',
-              'city': 'Paris',
-            },
-          ),
-        ).called(1);
-      },
-    );
   });
 
   group('markOnboardingSeen', () {

@@ -16,7 +16,7 @@ import '../../../helpers/mock_analytics_backend.dart';
 UserModel _user({
   String? country,
   String kycStatus = 'NOT_STARTED',
-  String? residenceStreet,
+  bool hasName = false,
   String stripeAccountStatus = 'NOT_CREATED',
   DateTime? onboardingSeenAt,
 }) => UserModel(
@@ -25,7 +25,8 @@ UserModel _user({
   status: 'ACTIVE',
   country: country,
   kycStatus: kycStatus,
-  residenceStreet: residenceStreet,
+  firstName: hasName ? 'Awa' : null,
+  lastName: hasName ? 'Diallo' : null,
   stripeAccountStatus: stripeAccountStatus,
   onboardingSeenAt: onboardingSeenAt,
 );
@@ -219,7 +220,7 @@ void main() {
         user: _user(
           country: 'FR',
           kycStatus: 'VERIFIED',
-          residenceStreet: '12 rue des Lilas',
+          hasName: true,
           stripeAccountStatus: 'ONBOARDING_COMPLETE',
         ),
         stripe: const StripeAccountReady(
@@ -288,10 +289,10 @@ void main() {
 
       final route = await resolvePostSignupRoute(
         analytics: service,
-        // Adresse déjà connue : sinon, avec l'ordre du parcours réel
-        // (adresse avant identité), c'est /auth/residence-address qui
+        // Nom déjà connu : sinon, avec l'ordre du parcours réel (les
+        // informations avant l'identité), c'est /auth/personal-info qui
         // serait retenue en premier.
-        user: _user(country: 'FR', residenceStreet: '12 rue des Lilas'),
+        user: _user(country: 'FR', hasName: true),
         stripe: const StripeAccountInitial(),
       );
 
@@ -308,7 +309,7 @@ void main() {
         user: _user(
           country: 'FR',
           kycStatus: 'VERIFIED',
-          residenceStreet: '12 rue des Lilas',
+          hasName: true,
           stripeAccountStatus: 'ONBOARDING_COMPLETE',
         ),
         stripe: const StripeAccountReady(
@@ -338,7 +339,7 @@ void main() {
         () => backend.capture(captureAny(), captureAny()),
       ).captured;
       expect(captured[0], AnalyticsEvents.onboardingStepViewed);
-      expect(captured[1], {'step': 'address', 'index': 3, 'total': 5});
+      expect(captured[1], {'step': 'personal_info', 'index': 3, 'total': 5});
       expect(captured.toString(), isNot(contains('u1')));
     });
 
@@ -353,7 +354,7 @@ void main() {
           user: _user(
             country: 'FR',
             kycStatus: 'VERIFIED',
-            residenceStreet: '12 rue des Lilas',
+            hasName: true,
             stripeAccountStatus: 'ONBOARDING_COMPLETE',
           ),
           stripe: const StripeAccountReady(

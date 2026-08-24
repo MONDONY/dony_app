@@ -147,12 +147,10 @@ void main() {
         () => repo.updateProfile(
           firstName: any(named: 'firstName'),
           lastName: any(named: 'lastName'),
-          birthDate: any(named: 'birthDate'),
           city: any(named: 'city'),
           phoneNumber: any(named: 'phoneNumber'),
           bio: any(named: 'bio'),
           languages: any(named: 'languages'),
-          transportMode: any(named: 'transportMode'),
         ),
       ).thenAnswer((_) async => fakeUser);
 
@@ -173,12 +171,10 @@ void main() {
         () => repo.updateProfile(
           firstName: any(named: 'firstName'),
           lastName: any(named: 'lastName'),
-          birthDate: any(named: 'birthDate'),
           city: any(named: 'city'),
           phoneNumber: any(named: 'phoneNumber'),
           bio: any(named: 'bio'),
           languages: any(named: 'languages'),
-          transportMode: any(named: 'transportMode'),
         ),
       ).thenAnswer((_) async => fakeUser);
 
@@ -197,12 +193,10 @@ void main() {
         () => repo.updateProfile(
           firstName: any(named: 'firstName'),
           lastName: any(named: 'lastName'),
-          birthDate: any(named: 'birthDate'),
           city: any(named: 'city'),
           phoneNumber: any(named: 'phoneNumber'),
           bio: any(named: 'bio'),
           languages: any(named: 'languages'),
-          transportMode: any(named: 'transportMode'),
         ),
       ).thenAnswer((_) async => fakeUser);
 

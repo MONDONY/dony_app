@@ -1,43 +1,39 @@
 import 'package:dony/core/currency/country_catalog.dart';
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/services/address_autocomplete_service.dart';
 import 'package:dony/core/widgets/address/address_section_label.dart';
-import 'package:dony/core/widgets/address/residence_address_fields.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
-import 'package:dony/features/auth/bloc/residence_address_cubit.dart';
+import 'package:dony/features/auth/bloc/personal_info_cubit.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/auth/presentation/onboarding_step.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_flow_chrome.dart';
-import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 /// Étape « Vos informations » du parcours d'onboarding, entre la sélection du
 /// pays (`/auth/country-selection`) et le code de parrainage
 /// (`/auth/referral-code`).
 ///
-/// Collecte l'identité déclarée (prénom, nom, date de naissance) **et**
-/// l'adresse de résidence : ce sont exactement les champs que Stripe Connect
-/// redemanderait plus tard. Les recueillir ici, dans le parcours yadony,
-/// évite de les ressaisir dans le formulaire Stripe. Le téléphone n'y figure
-/// pas — Stripe le redemande de toute façon pour sa propre authentification.
+/// Ne collecte que le nom légal. Date de naissance et adresse de résidence
+/// appartiennent au formulaire Stripe Connect, qui les redemande et les
+/// revalide de toute façon : les recueillir ici doublait la saisie et
+/// exposait à des écarts de format que Stripe finissait par refuser. Le
+/// téléphone n'y figure pas non plus — c'est le canal d'authentification
+/// propre à Stripe.
 ///
 /// [country] est le code pays ISO 3166-1 alpha-2 (ex. `FR`) choisi à l'étape
 /// précédente (`CountryOnboardingCubit`) et exposé par `BusinessPrefsBloc`,
 /// injecté par le routeur — jamais lu directement ici via ce Bloc pour que
 /// cet écran reste testable sans provider ambiant. [progress] suit la même
 /// règle : lu par `readOnboardingProgress` dans le routeur, jamais ici.
-class ResidenceAddressScreen extends StatefulWidget {
-  const ResidenceAddressScreen({
+class PersonalInfoScreen extends StatefulWidget {
+  const PersonalInfoScreen({
     super.key,
     this.country,
     this.user,
-    required this.addressService,
     required this.progress,
   });
 
@@ -48,18 +44,13 @@ class ResidenceAddressScreen extends StatefulWidget {
   /// le profil n'est pas encore chargé — les champs restent vides.
   final UserModel? user;
 
-  /// Injecté par le routeur, jamais lu par `getIt` ici : cet écran doit
-  /// rester montable en test sans conteneur d'injection, au même titre qu'il
-  /// l'est sans provider ambiant.
-  final AddressAutocompleteService addressService;
-
   final OnboardingProgress progress;
 
   @override
-  State<ResidenceAddressScreen> createState() => _ResidenceAddressScreenState();
+  State<PersonalInfoScreen> createState() => _PersonalInfoScreenState();
 }
 
-class _ResidenceAddressScreenState extends State<ResidenceAddressScreen> {
+class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
   // Le champ verrouillé affiche le nom lisible ('France'), jamais le code
   // ISO brut ('FR') que porte `widget.country`.
   String? get _countryName => CountryCatalog.byCode(widget.country)?.name;
@@ -73,40 +64,19 @@ class _ResidenceAddressScreenState extends State<ResidenceAddressScreen> {
   late final _lastNameCtrl = TextEditingController(
     text: widget.user?.lastName ?? '',
   );
-  final _streetCtrl = TextEditingController();
-  final _line2Ctrl = TextEditingController();
-  final _postalCtrl = TextEditingController();
-  late final _cityCtrl = TextEditingController(text: widget.user?.city ?? '');
   final _isValid = ValueNotifier<bool>(false);
-
-  /// Date de naissance choisie. Portée par un [ValueNotifier] plutôt que par
-  /// `setState` : cet écran n'a aucun état local à reconstruire en dehors du
-  /// libellé du champ et de la validité du bouton.
-  late final _birthDate = ValueNotifier<DateTime?>(widget.user?.birthDate);
 
   void _revalidate() {
     _isValid.value =
         _firstNameCtrl.text.trim().isNotEmpty &&
-        _lastNameCtrl.text.trim().isNotEmpty &&
-        _birthDate.value != null &&
-        _streetCtrl.text.trim().isNotEmpty &&
-        _postalCtrl.text.trim().isNotEmpty &&
-        _cityCtrl.text.trim().isNotEmpty;
+        _lastNameCtrl.text.trim().isNotEmpty;
   }
 
   @override
   void initState() {
     super.initState();
-    for (final ctrl in [
-      _firstNameCtrl,
-      _lastNameCtrl,
-      _streetCtrl,
-      _postalCtrl,
-      _cityCtrl,
-    ]) {
-      ctrl.addListener(_revalidate);
-    }
-    _birthDate.addListener(_revalidate);
+    _firstNameCtrl.addListener(_revalidate);
+    _lastNameCtrl.addListener(_revalidate);
     _revalidate();
   }
 
@@ -115,55 +85,14 @@ class _ResidenceAddressScreenState extends State<ResidenceAddressScreen> {
     _countryCtrl.dispose();
     _firstNameCtrl.dispose();
     _lastNameCtrl.dispose();
-    _streetCtrl.dispose();
-    _line2Ctrl.dispose();
-    _postalCtrl.dispose();
-    _cityCtrl.dispose();
-    _birthDate.dispose();
     _isValid.dispose();
     super.dispose();
   }
 
-  /// Une suggestion Google résolue remplit le code postal et la ville : c'est
-  /// tout l'intérêt de l'autocomplétion, ne pas faire retaper ce que l'adresse
-  /// contient déjà. Le texte libre reste possible (quartiers mal couverts).
-  void _onAddressResolved(AddressData address) {
-    if (address.postalCode != null && address.postalCode!.isNotEmpty) {
-      _postalCtrl.text = address.postalCode!;
-    }
-    if (address.city != null && address.city!.isNotEmpty) {
-      _cityCtrl.text = address.city!;
-    }
-  }
-
-  Future<void> _pickBirthDate() async {
-    final now = DateTime.now();
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _birthDate.value ?? DateTime(now.year - 25),
-      firstDate: DateTime(1920),
-      // Stripe Connect exige 18 ans révolus pour un compte de paiement :
-      // proposer plus jeune ne mènerait qu'à un refus chez eux.
-      lastDate: DateTime(now.year - 18, now.month, now.day),
-      helpText: 'Votre date de naissance',
-    );
-    if (picked != null) _birthDate.value = picked;
-  }
-
-  String? _trimmedOrNull(TextEditingController ctrl) {
-    final value = ctrl.text.trim();
-    return value.isEmpty ? null : value;
-  }
-
   void _submit() {
-    context.read<ResidenceAddressCubit>().submit(
-      street: _streetCtrl.text.trim(),
-      line2: _trimmedOrNull(_line2Ctrl),
-      postalCode: _postalCtrl.text.trim(),
-      city: _cityCtrl.text.trim(),
-      firstName: _trimmedOrNull(_firstNameCtrl),
-      lastName: _trimmedOrNull(_lastNameCtrl),
-      birthDate: _birthDate.value,
+    context.read<PersonalInfoCubit>().submit(
+      firstName: _firstNameCtrl.text.trim(),
+      lastName: _lastNameCtrl.text.trim(),
     );
   }
 
@@ -172,14 +101,14 @@ class _ResidenceAddressScreenState extends State<ResidenceAddressScreen> {
     final h = DonyLayout.hPadding(context);
     final bottom = MediaQuery.paddingOf(context).bottom;
 
-    return BlocConsumer<ResidenceAddressCubit, ResidenceAddressState>(
+    return BlocConsumer<PersonalInfoCubit, PersonalInfoState>(
       listener: (context, state) {
-        if (state is ResidenceAddressSuccess) {
-          // `submit()` vient d'écrire `users.residence_street` ; `skip()`
-          // pose `onboarding_seen_at` (les deux mènent ici). Sans ce refresh,
-          // le `UserModel` en cache reste périmé et l'étape « adresse »
-          // regresserait sur `/auth/referral-code`, faute de source fraîche
-          // (`nextStep`, correction 1 de la revue finale).
+        if (state is PersonalInfoSuccess) {
+          // `submit()` vient d'écrire le nom ; `skip()` n'écrit rien (les deux
+          // mènent ici). Sans ce refresh, le `UserModel` en cache reste périmé
+          // et l'étape « informations » regresserait sur
+          // `/auth/referral-code`, faute de source fraîche (`nextStep`,
+          // correction 1 de la revue finale).
           context.read<AuthBloc>().add(const AuthProfileRefreshRequested());
           // Repli immédiat pour l'étape « pays » : ce refresh est un GET
           // asynchrone non attendu (ne jamais bloquer cette navigation
@@ -189,7 +118,7 @@ class _ResidenceAddressScreenState extends State<ResidenceAddressScreen> {
           // pour celui-ci (voir `router.dart`, route
           // `/auth/referral-code`).
           context.go('/auth/referral-code', extra: widget.country);
-        } else if (state is ResidenceAddressError) {
+        } else if (state is PersonalInfoError) {
           DonySnackbar.show(
             context,
             message: state.message,
@@ -198,7 +127,7 @@ class _ResidenceAddressScreenState extends State<ResidenceAddressScreen> {
         }
       },
       builder: (context, state) {
-        final isSaving = state is ResidenceAddressSaving;
+        final isSaving = state is PersonalInfoSaving;
 
         return Scaffold(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -235,7 +164,7 @@ class _ResidenceAddressScreenState extends State<ResidenceAddressScreen> {
                                       iconAsset: 'user',
                                       title: 'Vos informations',
                                       body:
-                                          'Elles préparent vos paiements Yadony et vous évitent de tout ressaisir chez Stripe.',
+                                          'Votre nom légal, tel qu’il figure sur votre pièce d’identité. Le reste vous sera demandé une seule fois, par Stripe.',
                                       footnote:
                                           'Jamais partagées avec les autres membres, jamais affichées publiquement.',
                                     )
@@ -243,19 +172,11 @@ class _ResidenceAddressScreenState extends State<ResidenceAddressScreen> {
                                     .fadeIn(duration: 300.ms)
                                     .slideY(begin: 0.04),
                                 const SizedBox(height: DonySpacing.md),
-                                _ResidenceFieldsPanel(
+                                _IdentityFieldsPanel(
                                   country: _countryName,
                                   countryCtrl: _countryCtrl,
                                   firstNameCtrl: _firstNameCtrl,
                                   lastNameCtrl: _lastNameCtrl,
-                                  birthDate: _birthDate,
-                                  onPickBirthDate: _pickBirthDate,
-                                  streetCtrl: _streetCtrl,
-                                  line2Ctrl: _line2Ctrl,
-                                  postalCtrl: _postalCtrl,
-                                  cityCtrl: _cityCtrl,
-                                  addressService: widget.addressService,
-                                  onAddressResolved: _onAddressResolved,
                                   isSaving: isSaving,
                                 ).animate().fadeIn(
                                   delay: 120.ms,
@@ -279,7 +200,7 @@ class _ResidenceAddressScreenState extends State<ResidenceAddressScreen> {
                           ),
                           skipEnabled: !isSaving,
                           onSkip: () =>
-                              context.read<ResidenceAddressCubit>().skip(),
+                              context.read<PersonalInfoCubit>().skip(),
                         ),
                       ],
                     ),
@@ -296,20 +217,12 @@ class _ResidenceAddressScreenState extends State<ResidenceAddressScreen> {
 
 // ── Champs du formulaire ─────────────────────────────────────────────────────
 
-class _ResidenceFieldsPanel extends StatelessWidget {
-  const _ResidenceFieldsPanel({
+class _IdentityFieldsPanel extends StatelessWidget {
+  const _IdentityFieldsPanel({
     required this.country,
     required this.countryCtrl,
     required this.firstNameCtrl,
     required this.lastNameCtrl,
-    required this.birthDate,
-    required this.onPickBirthDate,
-    required this.streetCtrl,
-    required this.line2Ctrl,
-    required this.postalCtrl,
-    required this.cityCtrl,
-    required this.addressService,
-    required this.onAddressResolved,
     required this.isSaving,
   });
 
@@ -317,14 +230,6 @@ class _ResidenceFieldsPanel extends StatelessWidget {
   final TextEditingController countryCtrl;
   final TextEditingController firstNameCtrl;
   final TextEditingController lastNameCtrl;
-  final ValueNotifier<DateTime?> birthDate;
-  final VoidCallback onPickBirthDate;
-  final TextEditingController streetCtrl;
-  final TextEditingController line2Ctrl;
-  final TextEditingController postalCtrl;
-  final TextEditingController cityCtrl;
-  final AddressAutocompleteService addressService;
-  final ValueChanged<AddressData> onAddressResolved;
   final bool isSaving;
 
   @override
@@ -366,7 +271,7 @@ class _ResidenceFieldsPanel extends StatelessWidget {
               Expanded(
                 child: DonyTextField(
                   key: const Key('identity-last-name'),
-                  textInputAction: TextInputAction.next,
+                  textInputAction: TextInputAction.done,
                   controller: lastNameCtrl,
                   enabled: !isSaving,
                   label: 'Nom',
@@ -374,28 +279,6 @@ class _ResidenceFieldsPanel extends StatelessWidget {
                 ),
               ),
             ],
-          ),
-          const SizedBox(height: DonySpacing.base),
-          // `DonyTextField.tappable` plutôt qu'un champ sur mesure : c'est la
-          // variante prévue par le design system pour un champ qui ouvre un
-          // sélecteur au lieu du clavier. Elle apporte le même cadre, le même
-          // label flottant et la même cible tactile que ses voisins — un
-          // composant fait main y aurait détonné.
-          ValueListenableBuilder<DateTime?>(
-            valueListenable: birthDate,
-            builder: (context, value, _) => DonyTextField.tappable(
-              key: const Key('identity-birth-date'),
-              label: 'Date de naissance',
-              value: value == null
-                  ? null
-                  : DateFormat('d MMMM yyyy', 'fr').format(value),
-              prefixWidget: DonyIcon(
-                'calendar',
-                size: 20,
-                color: isSaving ? cs.onSurfaceVariant : cs.primary,
-              ),
-              onTap: isSaving ? null : onPickBirthDate,
-            ),
           ),
           const SizedBox(height: DonySpacing.xl),
           const AddressSectionLabel('Pays'),
@@ -410,16 +293,6 @@ class _ResidenceFieldsPanel extends StatelessWidget {
               label: 'Pays',
               prefixWidget: DonyIcon('globe', size: 20, color: cs.primary),
             ),
-          ),
-          const SizedBox(height: DonySpacing.xl),
-          ResidenceAddressFields(
-            streetCtrl: streetCtrl,
-            postalCtrl: postalCtrl,
-            cityCtrl: cityCtrl,
-            line2Ctrl: line2Ctrl,
-            addressService: addressService,
-            onAddressResolved: onAddressResolved,
-            enabled: !isSaving,
           ),
         ],
       ),

@@ -318,12 +318,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final updatedUser = await _authRepository.updateProfile(
         firstName: event.firstName,
         lastName: event.lastName,
-        birthDate: event.birthDate,
         city: event.city,
         phoneNumber: event.phoneNumber,
         bio: event.bio,
         languages: event.languages,
-        transportMode: event.transportMode,
       );
       emit(AuthProfileUpdated(updatedUser));
       if (event.bio != null && event.bio!.trim().isNotEmpty) {

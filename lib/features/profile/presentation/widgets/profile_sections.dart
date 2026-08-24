@@ -777,9 +777,6 @@ class ProfileCompletionBanner extends StatelessWidget {
     if (phoneAuthEnabled && !(user.phoneNumber?.isNotEmpty ?? false)) {
       missing.add(const _MissingItem('Téléphone'));
     }
-    if (user.birthDate == null) {
-      missing.add(const _MissingItem('Date de naissance'));
-    }
     if (!(user.city?.isNotEmpty ?? false)) {
       missing.add(const _MissingItem('Ville'));
     }
