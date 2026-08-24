@@ -575,12 +575,15 @@ void main() {
       expect(fiveSteps.routeAfter(OnboardingStep.payouts), '/home');
     });
 
-    test('après le pays → vos infos, route brute (écran sans double entrée)', () {
-      expect(
-        fiveSteps.routeAfter(OnboardingStep.country),
-        '/auth/personal-info',
-      );
-    });
+    test(
+      'après le pays → vos infos, route brute (écran sans double entrée)',
+      () {
+        expect(
+          fiveSteps.routeAfter(OnboardingStep.country),
+          '/auth/personal-info',
+        );
+      },
+    );
   });
 
   group('OnboardingStep.onboardingRoute — marqueur d\'entrée du parcours', () {
