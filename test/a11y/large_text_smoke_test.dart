@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
@@ -76,8 +78,8 @@ import 'package:hive/hive.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
+
 import '../helpers/mock_analytics_backend.dart';
-import 'dart:async';
 
 // Fournit un HelpCenterBloc minimal (catalogue vide) aux 4 harnais de ce
 // fichier dont l'écran embarque désormais une ContextualTutorialCard
