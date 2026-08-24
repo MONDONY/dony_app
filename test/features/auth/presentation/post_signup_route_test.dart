@@ -333,8 +333,8 @@ void main() {
       );
 
       // 5 étapes (payouts inclus, StripeAccountInitial est optimiste) ;
-      // consent + country faits, adresse manquante en premier (ordre du
-      // parcours réel : adresse avant identité) → index 3/5.
+      // consent + country faits, nom manquant en premier (ordre du
+      // parcours réel : vos infos avant identité) → index 3/5.
       final captured = verify(
         () => backend.capture(captureAny(), captureAny()),
       ).captured;

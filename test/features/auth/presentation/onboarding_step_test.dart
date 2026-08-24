@@ -41,16 +41,19 @@ const _connectDone = StripeAccountReady(
 
 void main() {
   group('onboardingSteps — le parrainage n\'entre jamais dans le décompte', () {
-    test('pays couvert par Stripe → cinq étapes, adresse avant identité (ordre '
-        'du parcours réel, pas celui de la spec §2)', () {
-      expect(onboardingSteps(_connectOk), const [
-        OnboardingStep.consent,
-        OnboardingStep.country,
-        OnboardingStep.personalInfo,
-        OnboardingStep.identity,
-        OnboardingStep.payouts,
-      ]);
-    });
+    test(
+      'pays couvert par Stripe → cinq étapes, vos infos avant identité (ordre '
+      'du parcours réel, pas celui de la spec §2)',
+      () {
+        expect(onboardingSteps(_connectOk), const [
+          OnboardingStep.consent,
+          OnboardingStep.country,
+          OnboardingStep.personalInfo,
+          OnboardingStep.identity,
+          OnboardingStep.payouts,
+        ]);
+      },
+    );
 
     test('pays non couvert → quatre étapes, 4/4 réellement atteignable', () {
       expect(onboardingSteps(_connectUnavailable), const [
@@ -88,7 +91,7 @@ void main() {
       );
     });
 
-    test('3. adresse de résidence absente → address (avant identité, ordre '
+    test('3. nom absent → personalInfo (avant identité, ordre '
         'du parcours réel)', () {
       expect(
         nextStep(
@@ -269,7 +272,7 @@ void main() {
       expect(p.segments, const [
         DonyGaugeSegment.done, // consentement
         DonyGaugeSegment.done, // pays
-        DonyGaugeSegment.done, // adresse — derrière l'écran courant
+        DonyGaugeSegment.done, // vos infos — derrière l'écran courant
         DonyGaugeSegment.current, // identité
         DonyGaugeSegment.todo, // paiements
       ]);
@@ -278,7 +281,7 @@ void main() {
     test('une étape passée compte comme franchie dans le parcours — le '
         'compteur suit la position, pas le remplissage', () {
       // Retour utilisateur : un compteur qui stagne à 2/5 sur l'identité
-      // après avoir passé l'adresse se lit comme un parcours cassé. La
+      // après avoir passé ses infos se lit comme un parcours cassé. La
       // position avance même quand une étape a été passée.
       final p = onboardingProgress(
         user: _user(),
@@ -296,7 +299,7 @@ void main() {
       ]);
     });
 
-    test('parrainage (hors décompte) : position ancrée après l\'adresse, '
+    test('parrainage (hors décompte) : position ancrée après vos infos, '
         'aucun segment à moitié', () {
       final p = onboardingProgress(
         user: _user(country: 'FR'),
@@ -306,7 +309,7 @@ void main() {
       );
 
       expect(p.current, isNull);
-      // Trois segments pleins (consentement, pays, adresse franchis), soit
+      // Trois segments pleins (consentement, pays, vos infos franchis), soit
       // « 3 / 5 · Parrainage » au libellé de la jauge.
       expect(p.segments, const [
         DonyGaugeSegment.done,
@@ -330,7 +333,7 @@ void main() {
       expect(p.segments, const [
         DonyGaugeSegment.done,
         DonyGaugeSegment.done,
-        DonyGaugeSegment.todo, // adresse jamais remplie : vide au profil
+        DonyGaugeSegment.todo, // vos infos jamais remplies : vide au profil
         DonyGaugeSegment.todo,
         DonyGaugeSegment.todo,
       ]);
@@ -437,10 +440,10 @@ void main() {
   group('OnboardingProgress.nextAfter — le parcours ne revient jamais en '
       'arrière sur une étape passée', () {
     // Régression trouvée en test de bout en bout sur device : l'utilisateur
-    // passe l'étape adresse, arrive au parrainage, et `next` le renvoyait sur
-    // l'adresse — qu'il venait justement de passer. Boucle sans fin, le
+    // passe l'étape « Vos infos », arrive au parrainage, et `next` le
+    // renvoyait dessus — qu'il venait justement de passer. Boucle sans fin, le
     // parcours ne pouvait plus se terminer.
-    test('adresse passée → identity, jamais un retour sur address', () {
+    test('vos infos passées → identity, jamais un retour dessus', () {
       const progress = OnboardingProgress(
         steps: [
           OnboardingStep.consent,
@@ -449,7 +452,7 @@ void main() {
           OnboardingStep.identity,
           OnboardingStep.payouts,
         ],
-        // L'adresse est absente de `done` : passée, pas remplie.
+        // « Vos infos » est absente de `done` : passée, pas remplie.
         done: {OnboardingStep.consent, OnboardingStep.country},
       );
 
@@ -499,7 +502,7 @@ void main() {
       );
     });
 
-    test('plus rien après l\'adresse → null, le parcours se termine', () {
+    test('plus rien après vos infos → null, le parcours se termine', () {
       const progress = OnboardingProgress(
         steps: [
           OnboardingStep.consent,
