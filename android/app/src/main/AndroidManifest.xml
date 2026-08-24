@@ -41,6 +41,22 @@
               android:name="io.flutter.embedding.android.NormalTheme"
               android:resource="@style/NormalTheme"
               />
+            <!-- Routage des liens profonds : app_links, jamais le routeur natif
+                 de Flutter.
+
+                 Sans ce drapeau, Flutter passe l'URI BRUTE de l'intent — schéma
+                 compris — à GoRouter comme emplacement initial. GoRouter ne sait
+                 pas résoudre `dony://stripe/onboarding/refresh` et affiche
+                 « Page Not Found » : le retour depuis l'onboarding Stripe
+                 tombait sur une impasse.
+
+                 `_handleDeepLink` (app.dart) traite déjà les deux cas, démarrage
+                 à froid comme à chaud, et filtre par liste blanche. Le routeur
+                 natif court-circuitait ce filtre. -->
+            <meta-data
+              android:name="flutter_deeplinking_enabled"
+              android:value="false"
+              />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
