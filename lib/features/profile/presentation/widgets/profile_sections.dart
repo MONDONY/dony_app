@@ -787,84 +787,106 @@ class ProfileCompletionBanner extends StatelessWidget {
       missing.add(const _MissingItem('À propos'));
     }
 
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: DonySpacing.lg),
-        padding: const EdgeInsets.all(DonySpacing.base),
-        decoration: BoxDecoration(
-          color: tier.light,
-          borderRadius: BorderRadius.circular(DonyRadius.card),
-          border: Border.all(color: tier.base.withValues(alpha: 0.3)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(DonySpacing.sm),
-                  decoration: BoxDecoration(
-                    color: tier.base.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(DonyRadius.md),
-                  ),
-                  child: DonyIcon('notebook-pen', color: tier.base, size: 18),
-                ),
-                const SizedBox(width: DonySpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Complétez votre compte',
-                        style: tt.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: cs.onSurface,
-                        ),
+    // Pas de GestureDetector autour de la carte entière : il gagnait l'arène
+    // de gestes contre les cases qu'elle contient, si bien que « Vérifier mon
+    // identité » ouvrait l'édition du profil (constaté sur device). Seul
+    // l'en-tête est tappable ; chaque case garde sa propre destination.
+    return Container(
+      margin: const EdgeInsets.only(bottom: DonySpacing.lg),
+      padding: const EdgeInsets.all(DonySpacing.base),
+      decoration: BoxDecoration(
+        color: tier.light,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: tier.base.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Semantics(
+            button: true,
+            label:
+                'Compte complété à ${(pct * 100).round()} pour cent. '
+                'Compléter maintenant.',
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: onTap,
+                borderRadius: BorderRadius.circular(DonyRadius.sm),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(DonySpacing.sm),
+                      decoration: BoxDecoration(
+                        color: tier.base.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(DonyRadius.md),
                       ),
-                      Text(
-                        '${(pct * 100).round()}% complété · Compléter maintenant',
-                        style: tt.bodySmall?.copyWith(
-                          color: tier.base,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                DonyIcon('chevron-right', color: cs.onSurfaceVariant, size: 18),
-              ],
-            ),
-            const SizedBox(height: DonySpacing.md),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(DonyRadius.xs),
-              child: LinearProgressIndicator(
-                value: pct,
-                backgroundColor: cs.outline,
-                valueColor: AlwaysStoppedAnimation<Color>(tier.base),
-                minHeight: 5,
-              ),
-            ),
-            if (missing.isNotEmpty) ...[
-              const SizedBox(height: DonySpacing.md),
-              Wrap(
-                spacing: DonySpacing.xs,
-                runSpacing: DonySpacing.xs,
-                children: missing
-                    .map(
-                      (m) => _MissingChip(
-                        item: m,
+                      child: DonyIcon(
+                        'notebook-pen',
                         color: tier.base,
-                        onTap: m.route == null
-                            ? onTap
-                            : () => context.push(m.route!),
+                        size: 18,
                       ),
-                    )
-                    .toList(),
+                    ),
+                    const SizedBox(width: DonySpacing.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Complétez votre compte',
+                            style: tt.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: cs.onSurface,
+                            ),
+                          ),
+                          Text(
+                            '${(pct * 100).round()}% complété · Compléter maintenant',
+                            style: tt.bodySmall?.copyWith(
+                              color: tier.base,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    DonyIcon(
+                      'chevron-right',
+                      color: cs.onSurfaceVariant,
+                      size: 18,
+                    ),
+                  ],
+                ),
               ),
-            ],
+            ),
+          ),
+          const SizedBox(height: DonySpacing.md),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(DonyRadius.xs),
+            child: LinearProgressIndicator(
+              value: pct,
+              backgroundColor: cs.outline,
+              valueColor: AlwaysStoppedAnimation<Color>(tier.base),
+              minHeight: 5,
+            ),
+          ),
+          if (missing.isNotEmpty) ...[
+            const SizedBox(height: DonySpacing.md),
+            Wrap(
+              spacing: DonySpacing.xs,
+              runSpacing: DonySpacing.xs,
+              children: missing
+                  .map(
+                    (m) => _MissingChip(
+                      item: m,
+                      color: tier.base,
+                      onTap: m.route == null
+                          ? onTap
+                          : () => context.push(m.route!),
+                    ),
+                  )
+                  .toList(),
+            ),
           ],
-        ),
+        ],
       ),
     );
   }

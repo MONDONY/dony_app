@@ -376,12 +376,25 @@ class _ResidenceFieldsPanel extends StatelessWidget {
             ],
           ),
           const SizedBox(height: DonySpacing.base),
+          // `DonyTextField.tappable` plutôt qu'un champ sur mesure : c'est la
+          // variante prévue par le design system pour un champ qui ouvre un
+          // sélecteur au lieu du clavier. Elle apporte le même cadre, le même
+          // label flottant et la même cible tactile que ses voisins — un
+          // composant fait main y aurait détonné.
           ValueListenableBuilder<DateTime?>(
             valueListenable: birthDate,
-            builder: (context, value, _) => _BirthDateField(
-              value: value,
-              enabled: !isSaving,
-              onTap: onPickBirthDate,
+            builder: (context, value, _) => DonyTextField.tappable(
+              key: const Key('identity-birth-date'),
+              label: 'Date de naissance',
+              value: value == null
+                  ? null
+                  : DateFormat('d MMMM yyyy', 'fr').format(value),
+              prefixWidget: DonyIcon(
+                'calendar',
+                size: 20,
+                color: isSaving ? cs.onSurfaceVariant : cs.primary,
+              ),
+              onTap: isSaving ? null : onPickBirthDate,
             ),
           ),
           const SizedBox(height: DonySpacing.xl),
@@ -460,65 +473,6 @@ class _ResidenceFieldsPanel extends StatelessWidget {
             prefixWidget: DonyIcon('house', size: 20, color: cs.primary),
           ),
         ],
-      ),
-    );
-  }
-}
-
-/// Champ de date de naissance : un [DonyTextField] désactivé qui ouvre le
-/// sélecteur au tap.
-///
-/// Un `TextField` en lecture seule plutôt qu'un contrôle sur mesure, pour que
-/// le champ soit visuellement identique à ses voisins (même hauteur, même
-/// bordure, même libellé flottant) — un composant qui détonne au milieu d'un
-/// formulaire se lit comme un bug.
-class _BirthDateField extends StatelessWidget {
-  const _BirthDateField({
-    required this.value,
-    required this.enabled,
-    required this.onTap,
-  });
-
-  final DateTime? value;
-  final bool enabled;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final label = value == null
-        ? ''
-        // 'fr' et non 'fr_FR' : c'est la locale que `main.dart` initialise
-        // (`initializeDateFormatting('fr')`), et celle qu'emploient les autres
-        // écrans de l'app.
-        : DateFormat('d MMMM yyyy', 'fr').format(value!);
-
-    return Semantics(
-      button: true,
-      label: value == null
-          ? 'Date de naissance, non renseignée. Appuyez pour choisir.'
-          : 'Date de naissance : $label. Appuyez pour modifier.',
-      child: GestureDetector(
-        key: const Key('identity-birth-date'),
-        onTap: enabled ? onTap : null,
-        behavior: HitTestBehavior.opaque,
-        // `IgnorePointer` et non `AbsorbPointer` : le second est lui-même une
-        // cible de hit test et avalait le tap sans le transmettre au
-        // `GestureDetector` parent — le sélecteur ne s'ouvrait jamais. Ignorer
-        // le sous-arbre laisse le parent opaque le recevoir.
-        child: IgnorePointer(
-          child: DonyTextField(
-            controller: TextEditingController(text: label),
-            enabled: false,
-            label: 'Date de naissance',
-            hint: 'Choisir une date',
-            prefixWidget: DonyIcon(
-              'calendar',
-              size: 20,
-              color: enabled ? cs.primary : cs.onSurfaceVariant,
-            ),
-          ),
-        ),
       ),
     );
   }

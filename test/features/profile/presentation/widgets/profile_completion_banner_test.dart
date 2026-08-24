@@ -8,6 +8,7 @@ import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 
 const _empty = UserModel(
   id: 'u1',
@@ -41,15 +42,40 @@ Widget _app(
       ),
     ),
   );
-  return MaterialApp(
-    home: BlocProvider<StripeAccountBloc>.value(
-      value: bloc,
-      child: Scaffold(
-        body: ProfileCompletionBanner(user: user, onTap: onTap ?? () {}),
+  _pushedRoute = null;
+  final router = GoRouter(
+    initialLocation: '/',
+    routes: [
+      GoRoute(
+        path: '/',
+        builder: (_, _) => BlocProvider<StripeAccountBloc>.value(
+          value: bloc,
+          child: Scaffold(
+            body: ProfileCompletionBanner(user: user, onTap: onTap ?? () {}),
+          ),
+        ),
       ),
-    ),
+      GoRoute(
+        path: '/kyc/verify',
+        builder: (_, state) {
+          _pushedRoute = state.uri.path;
+          return const Scaffold(body: Text('KYC'));
+        },
+      ),
+      GoRoute(
+        path: '/payments/onboarding',
+        builder: (_, state) {
+          _pushedRoute = state.uri.path;
+          return const Scaffold(body: Text('Payouts'));
+        },
+      ),
+    ],
   );
+  return MaterialApp.router(routerConfig: router);
 }
+
+/// Dernière route atteinte par une case cliquable.
+String? _pushedRoute;
 
 /// Couleur de percent-text/icônes affichée pour un [user] donné — lit
 /// directement le thème résolu au lieu de dupliquer la logique de palier
@@ -162,13 +188,42 @@ void main() {
     expect(find.textContaining('% complété'), findsNothing);
   });
 
-  testWidgets('tap déclenche le callback onTap', (tester) async {
+  testWidgets('tap sur l\'en-tête déclenche le callback onTap', (tester) async {
     var tapped = false;
     await tester.pumpWidget(_app(_empty, onTap: () => tapped = true));
-    await tester.tap(find.byType(ProfileCompletionBanner));
+    await tester.tap(find.text('Complétez votre compte'));
     await tester.pump();
 
     expect(tapped, isTrue);
+  });
+
+  testWidgets('la case identité mène à la vérification, pas à l\'édition du '
+      'profil', (tester) async {
+    // Régression constatée sur device : un GestureDetector autour de la carte
+    // entière gagnait l'arène de gestes contre les cases, et « Vérifier mon
+    // identité » ouvrait l'édition du profil.
+    var editTapped = false;
+    await tester.pumpWidget(_app(_empty, onTap: () => editTapped = true));
+    await tester.pump();
+
+    await tester.tap(find.text('Vérifier mon identité'));
+    await tester.pumpAndSettle();
+
+    expect(editTapped, isFalse, reason: 'la carte a vole le tap');
+    expect(_pushedRoute, '/kyc/verify');
+  });
+
+  testWidgets('une case de champ de profil mène bien à l\'édition', (
+    tester,
+  ) async {
+    var editTapped = false;
+    await tester.pumpWidget(_app(_empty, onTap: () => editTapped = true));
+    await tester.pump();
+
+    await tester.tap(find.text('Photo'));
+    await tester.pump();
+
+    expect(editTapped, isTrue);
   });
 
   group('palier de couleur selon le pourcentage', () {
