@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
+import 'package:dony/core/services/address_autocomplete_service.dart';
 import 'package:dony/core/services/media_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
@@ -24,6 +25,18 @@ class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
 class FakeAuthEvent extends Fake implements AuthEvent {}
 
 class _MockImagePicker extends Mock implements ImagePicker {}
+
+/// Autocomplétion inerte : ces tests portent sur le formulaire et sa
+/// navigation, jamais sur les suggestions Google. Une doublure qui ne rend
+/// rien évite toute requête réseau.
+class _StubAddressService implements AddressAutocompleteService {
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      switch (invocation.memberName.toString()) {
+        'Symbol("search")' => Future.value(const []),
+        _ => super.noSuchMethod(invocation),
+      };
+}
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 
@@ -119,7 +132,12 @@ void main() {
         initialState: AuthAuthenticated(_senderUser),
       );
 
-      await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
+      await tester.pumpWidget(
+        _wrap(
+          EditProfileScreen(addressService: _StubAddressService()),
+          mockAuthBloc,
+        ),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('Modifier le profil'), findsOneWidget);
@@ -147,7 +165,12 @@ void main() {
         initialState: AuthAuthenticated(_senderUser),
       );
 
-      await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
+      await tester.pumpWidget(
+        _wrap(
+          EditProfileScreen(addressService: _StubAddressService()),
+          mockAuthBloc,
+        ),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('Expéditeur depuis 2022.'), findsOneWidget);
@@ -164,7 +187,12 @@ void main() {
         initialState: const AuthAuthenticated(_travelerUser),
       );
 
-      await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
+      await tester.pumpWidget(
+        _wrap(
+          EditProfileScreen(addressService: _StubAddressService()),
+          mockAuthBloc,
+        ),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('PRÉFÉRENCES'), findsOneWidget);
@@ -183,7 +211,12 @@ void main() {
         initialState: AuthAuthenticated(_senderUser),
       );
 
-      await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
+      await tester.pumpWidget(
+        _wrap(
+          EditProfileScreen(addressService: _StubAddressService()),
+          mockAuthBloc,
+        ),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('PRÉFÉRENCES'), findsNothing);
@@ -198,7 +231,12 @@ void main() {
           initialState: AuthAuthenticated(_senderUser),
         );
 
-        await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
+        await tester.pumpWidget(
+          _wrap(
+            EditProfileScreen(addressService: _StubAddressService()),
+            mockAuthBloc,
+          ),
+        );
         await tester.pumpAndSettle();
 
         expect(find.text('TÉLÉPHONE'), findsNothing);
@@ -218,7 +256,12 @@ void main() {
           initialState: AuthAuthenticated(_senderUser),
         );
 
-        await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
+        await tester.pumpWidget(
+          _wrap(
+            EditProfileScreen(addressService: _StubAddressService()),
+            mockAuthBloc,
+          ),
+        );
         await tester.pumpAndSettle();
         await _enterEditMode(tester);
 
@@ -249,7 +292,12 @@ void main() {
           initialState: const AuthAuthenticated(_travelerUser),
         );
 
-        await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
+        await tester.pumpWidget(
+          _wrap(
+            EditProfileScreen(addressService: _StubAddressService()),
+            mockAuthBloc,
+          ),
+        );
         await tester.pumpAndSettle();
         await _enterEditMode(tester);
 
@@ -277,7 +325,12 @@ void main() {
           initialState: AuthAuthenticated(_senderUser),
         );
 
-        await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
+        await tester.pumpWidget(
+          _wrap(
+            EditProfileScreen(addressService: _StubAddressService()),
+            mockAuthBloc,
+          ),
+        );
         await tester.pumpAndSettle();
         await _enterEditMode(tester);
 
@@ -308,7 +361,12 @@ void main() {
           initialState: AuthAuthenticated(userWithPhone),
         );
 
-        await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
+        await tester.pumpWidget(
+          _wrap(
+            EditProfileScreen(addressService: _StubAddressService()),
+            mockAuthBloc,
+          ),
+        );
         await tester.pumpAndSettle();
         await _enterEditMode(tester);
 
@@ -340,7 +398,12 @@ void main() {
         initialState: const AuthAuthenticated(userNoEmail),
       );
 
-      await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
+      await tester.pumpWidget(
+        _wrap(
+          EditProfileScreen(addressService: _StubAddressService()),
+          mockAuthBloc,
+        ),
+      );
       await tester.pumpAndSettle();
       await _enterEditMode(tester);
 
@@ -360,7 +423,12 @@ void main() {
       initialState: AuthAuthenticated(_senderUser),
     );
 
-    await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
+    await tester.pumpWidget(
+      _wrap(
+        EditProfileScreen(addressService: _StubAddressService()),
+        mockAuthBloc,
+      ),
+    );
     await tester.pumpAndSettle();
     await _enterEditMode(tester);
 
@@ -370,6 +438,38 @@ void main() {
     verify(
       () => mockAuthBloc.add(any(that: isA<AuthUpdateProfileRequested>())),
     ).called(1);
+  });
+
+  // ── L'adresse de résidence part vers son propre point d'entrée ────────────
+
+  testWidgets('les champs d\'adresse Stripe sont proposés en édition', (
+    tester,
+  ) async {
+    // Le formulaire ne demandait qu'une ville en texte libre : Stripe Connect
+    // exige une rue et un code postal, et l'activation du paiement échouait
+    // sans que rien ne l'explique.
+    whenListen<AuthState>(
+      mockAuthBloc,
+      const Stream.empty(),
+      initialState: AuthAuthenticated(_senderUser),
+    );
+
+    await tester.pumpWidget(
+      _wrap(
+        EditProfileScreen(addressService: _StubAddressService()),
+        mockAuthBloc,
+      ),
+    );
+    await tester.pumpAndSettle();
+    await _enterEditMode(tester);
+
+    for (final key in const [
+      'residence-street',
+      'residence-postal',
+      'residence-city',
+    ]) {
+      expect(find.byKey(Key(key)), findsOneWidget, reason: key);
+    }
   });
 
   // ── AuthProfileUpdated seul (sans save) ne pop PAS ────────────────────────
@@ -397,7 +497,7 @@ void main() {
           path: '/edit',
           builder: (context, _) => BlocProvider<AuthBloc>.value(
             value: mockAuthBloc,
-            child: const EditProfileScreen(),
+            child: EditProfileScreen(addressService: _StubAddressService()),
           ),
         ),
       ],
@@ -440,7 +540,7 @@ void main() {
           path: '/edit',
           builder: (context, _) => BlocProvider<AuthBloc>.value(
             value: mockAuthBloc,
-            child: const EditProfileScreen(),
+            child: EditProfileScreen(addressService: _StubAddressService()),
           ),
         ),
       ],
@@ -481,7 +581,12 @@ void main() {
         initialState: AuthAuthenticated(_senderUser),
       );
 
-      await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
+      await tester.pumpWidget(
+        _wrap(
+          EditProfileScreen(addressService: _StubAddressService()),
+          mockAuthBloc,
+        ),
+      );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
 
@@ -560,7 +665,12 @@ void main() {
       initialState: AuthAuthenticated(_senderUser),
     );
 
-    await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
+    await tester.pumpWidget(
+      _wrap(
+        EditProfileScreen(addressService: _StubAddressService()),
+        mockAuthBloc,
+      ),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Profil complet'), findsNothing);
@@ -583,7 +693,12 @@ void main() {
         initialState: const AuthAuthenticated(incompleteUser),
       );
 
-      await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
+      await tester.pumpWidget(
+        _wrap(
+          EditProfileScreen(addressService: _StubAddressService()),
+          mockAuthBloc,
+        ),
+      );
       await tester.pumpAndSettle();
 
       // SMS OTP non confirmé par défaut dans ces tests (setUp) : total = 7
@@ -622,7 +737,12 @@ void main() {
         initialState: AuthAuthenticated(userWithoutPhone),
       );
 
-      await tester.pumpWidget(_wrap(const EditProfileScreen(), mockAuthBloc));
+      await tester.pumpWidget(
+        _wrap(
+          EditProfileScreen(addressService: _StubAddressService()),
+          mockAuthBloc,
+        ),
+      );
       await tester.pumpAndSettle();
 
       // 7 champs sur 8 (téléphone manquant, désormais compté) : 7/8 = 87,5 %

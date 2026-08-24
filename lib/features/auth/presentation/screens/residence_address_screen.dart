@@ -2,6 +2,7 @@ import 'package:dony/core/currency/country_catalog.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/services/address_autocomplete_service.dart';
 import 'package:dony/core/widgets/address/address_section_label.dart';
+import 'package:dony/core/widgets/address/residence_address_fields.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
@@ -10,7 +11,6 @@ import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/auth/presentation/onboarding_step.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_flow_chrome.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
-import 'package:dony/features/matching/presentation/widgets/address_suggest_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -412,65 +412,14 @@ class _ResidenceFieldsPanel extends StatelessWidget {
             ),
           ),
           const SizedBox(height: DonySpacing.xl),
-          const AddressSectionLabel('Adresse'),
-          // Même autocomplétion Google que les adresses de retrait et de
-          // livraison (proxy backend `/addresses/autocomplete`, une session
-          // Google facturée par saisie complète). Choisir une suggestion
-          // remplit code postal et ville ; le texte libre reste accepté pour
-          // les quartiers que Google couvre mal.
-          AddressSuggestField(
-            key: const Key('residence-street'),
-            controller: streetCtrl,
-            service: addressService,
-            label: 'Rue et numéro',
-            hint: '12 rue de la Paix',
-            prefixIconAsset: 'map-pin',
-            prefixIconColor: cs.primary,
-            onResolved: onAddressResolved,
-          ),
-          const SizedBox(height: DonySpacing.base),
-          Row(
-            children: [
-              Expanded(
-                flex: 2,
-                child: DonyTextField(
-                  key: const Key('residence-postal'),
-                  textInputAction: TextInputAction.next,
-                  controller: postalCtrl,
-                  enabled: !isSaving,
-                  label: 'Code postal',
-                  hint: '75001',
-                  keyboardType: TextInputType.number,
-                ),
-              ),
-              const SizedBox(width: DonySpacing.sm),
-              Expanded(
-                flex: 3,
-                child: DonyTextField(
-                  key: const Key('residence-city'),
-                  textInputAction: TextInputAction.next,
-                  controller: cityCtrl,
-                  enabled: !isSaving,
-                  label: 'Ville',
-                  hint: 'Paris',
-                  prefixWidget: DonyIcon(
-                    'building-2',
-                    size: 20,
-                    color: cs.primary,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: DonySpacing.base),
-          DonyTextField(
-            key: const Key('residence-line2'),
-            textInputAction: TextInputAction.done,
-            controller: line2Ctrl,
+          ResidenceAddressFields(
+            streetCtrl: streetCtrl,
+            postalCtrl: postalCtrl,
+            cityCtrl: cityCtrl,
+            line2Ctrl: line2Ctrl,
+            addressService: addressService,
+            onAddressResolved: onAddressResolved,
             enabled: !isSaving,
-            label: 'Étage / Appartement',
-            hint: 'Optionnel (Ex : Bât. B, 3ème étage)',
-            prefixWidget: DonyIcon('house', size: 20, color: cs.primary),
           ),
         ],
       ),

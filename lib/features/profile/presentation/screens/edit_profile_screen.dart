@@ -1,13 +1,19 @@
+import 'dart:async';
+
 import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/services/address_autocomplete_service.dart';
 import 'package:dony/core/services/media_service.dart';
+import 'package:dony/core/widgets/address/residence_address_fields.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
+import 'package:dony/features/auth/data/repositories/auth_repository.dart';
+import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_sections.dart'
     show profileCompletionTierColor;
 import 'package:flutter/material.dart';
@@ -32,11 +38,17 @@ class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({
     super.key,
     @visibleForTesting DonyMediaService? mediaService,
-  }) : _mediaService = mediaService;
+    @visibleForTesting AddressAutocompleteService? addressService,
+  }) : _mediaService = mediaService,
+       _addressService = addressService;
 
   /// Seam for widget-testing: inject a mock [DonyMediaService] to avoid
   /// hitting platform channels. Defaults to the GetIt singleton.
   final DonyMediaService? _mediaService;
+
+  /// Même couture que [_mediaService] : l'autocomplétion d'adresse part sur le
+  /// réseau, un test widget doit pouvoir la neutraliser.
+  final AddressAutocompleteService? _addressService;
 
   @override
   State<EditProfileScreen> createState() => _EditProfileScreenState();
@@ -47,6 +59,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final _lastNameCtrl = TextEditingController();
   final _bioCtrl = TextEditingController();
   final _cityCtrl = TextEditingController();
+  // Adresse de résidence : mêmes champs que l'étape « Vos informations » du
+  // parcours d'inscription. L'écran ne demandait qu'une ville en texte libre,
+  // dont Stripe Connect ne peut rien faire — il exige une rue et un code
+  // postal. Un voyageur qui complétait son profil ici se retrouvait donc avec
+  // une activation de paiement impossible, sans explication.
+  final _streetCtrl = TextEditingController();
+  final _postalCtrl = TextEditingController();
 
   DateTime? _birthDate;
   List<String> _selectedLanguages = [];
@@ -67,6 +86,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   DonyMediaService get _mediaService =>
       widget._mediaService ?? getIt<DonyMediaService>();
+
+  AddressAutocompleteService get _addressService =>
+      widget._addressService ?? getIt<AddressAutocompleteService>();
 
   static const _kAvailableLanguages = [
     'Français',
@@ -91,6 +113,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _lastNameCtrl.dispose();
     _bioCtrl.dispose();
     _cityCtrl.dispose();
+    _streetCtrl.dispose();
+    _postalCtrl.dispose();
     super.dispose();
   }
 
@@ -103,9 +127,23 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _lastNameCtrl.text = user.lastName ?? '';
     _bioCtrl.text = user.bio ?? '';
     _cityCtrl.text = user.city ?? '';
+    _streetCtrl.text = user.residenceStreet ?? '';
+    _postalCtrl.text = user.residencePostalCode ?? '';
     _birthDate = user.birthDate;
     _selectedLanguages = List<String>.from(user.languages);
     _selectedTransport = user.transportMode;
+  }
+
+  /// Une suggestion Google résolue remplit code postal et ville : c'est tout
+  /// l'intérêt de l'autocomplétion, ne pas faire retaper ce que l'adresse
+  /// contient déjà.
+  void _onAddressResolved(AddressData address) {
+    if (address.postalCode != null && address.postalCode!.isNotEmpty) {
+      _postalCtrl.text = address.postalCode!;
+    }
+    if (address.city != null && address.city!.isNotEmpty) {
+      _cityCtrl.text = address.city!;
+    }
   }
 
   Future<void> _pickBirthDate() async {
@@ -141,6 +179,26 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final lastName = _lastNameCtrl.text.trim();
     final bio = _bioCtrl.text.trim();
     final city = _cityCtrl.text.trim();
+    final street = _streetCtrl.text.trim();
+    final postal = _postalCtrl.text.trim();
+
+    // L'adresse de résidence a son propre point d'entrée serveur
+    // (`PUT /auth/me/residence-address`), distinct du PATCH de profil : elle
+    // part donc à part. Jamais awaitée et jamais bloquante — le profil doit
+    // s'enregistrer même si cet appel échoue —, et seulement quand rue, code
+    // postal et ville sont tous les trois là : le serveur les exige ensemble,
+    // et une adresse partielle ne servirait de toute façon à rien à Stripe.
+    if (street.isNotEmpty && postal.isNotEmpty && city.isNotEmpty) {
+      unawaited(
+        getIt<AuthRepository>()
+            .updateResidenceAddress(
+              street: street,
+              postalCode: postal,
+              city: city,
+            )
+            .catchError((_) {}),
+      );
+    }
 
     setState(() => _saving = true);
     context.read<AuthBloc>().add(
@@ -506,18 +564,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           onTap: _pickBirthDate,
                         ),
                         const SizedBox(height: DonySpacing.md),
-                        DonyTextField(
-                          textInputAction: TextInputAction.done,
-                          controller: _cityCtrl,
-                          label: "Ville / lieu d'habitation",
-                          prefixWidget: DonyIcon(
-                            'building-2',
-                            size: 20,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurfaceVariant,
-                          ),
+                        // Adresse complète et non plus une simple ville : c'est
+                        // ce que Stripe Connect réclame pour ouvrir un compte
+                        // de paiement. Même composant que l'étape « Vos
+                        // informations » du parcours, pour que les deux
+                        // formulaires ne divergent plus.
+                        ResidenceAddressFields(
+                          streetCtrl: _streetCtrl,
+                          postalCtrl: _postalCtrl,
+                          cityCtrl: _cityCtrl,
+                          addressService: _addressService,
+                          onAddressResolved: _onAddressResolved,
                           enabled: !isSaving,
+                          showSectionLabel: false,
                         ),
                       ],
                       const SizedBox(height: DonySpacing.xxl),
