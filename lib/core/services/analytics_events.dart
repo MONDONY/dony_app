@@ -336,8 +336,9 @@ abstract final class AnalyticsEvents {
 
   // Onboarding progressif — lot 3
   //
-  // Identité *déclarée* par l'utilisateur (nom, date de naissance), à ne pas
-  // confondre avec l'identité *vérifiée* par Stripe Identity. Ne porte que
-  // des booléens de présence — jamais les valeurs.
+  // Nom légal *déclaré* par l'utilisateur, à ne pas confondre avec l'identité
+  // *vérifiée* par Stripe Identity. Émis sans aucune property par
+  // `PersonalInfoCubit.submit()` : le seul signal utile est que l'étape a
+  // abouti, et le nom lui-même ne doit jamais partir dans l'analytics.
   static const onboardingIdentityDeclared = 'onboarding_identity_declared';
 }

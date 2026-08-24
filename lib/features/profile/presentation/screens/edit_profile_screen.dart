@@ -474,8 +474,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           textInputAction: TextInputAction.done,
                           controller: _cityCtrl,
                           label: 'Ville',
+                          // `building-2`, comme les deux autres écrans qui
+                          // affichent une ville (adresses de retrait et de
+                          // livraison) — `map-pin` y désigne une adresse
+                          // postale complète, pas une ville.
                           prefixWidget: DonyIcon(
-                            'map-pin',
+                            'building-2',
                             size: 20,
                             color: Theme.of(
                               context,

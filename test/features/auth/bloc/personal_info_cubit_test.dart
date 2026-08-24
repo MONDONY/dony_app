@@ -4,6 +4,7 @@ import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/auth/bloc/personal_info_cubit.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/auth/data/repositories/auth_repository.dart';
+import 'package:dony/features/auth/presentation/onboarding_step.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -94,6 +95,33 @@ void main() {
     // ici empêcherait le parcours de se réimposer au prochain lancement.
     verify: (_) => verifyNever(() => repo.markOnboardingSeen()),
   );
+
+  // Le cubit écrit `'personal_info'` en dur plutôt que d'importer
+  // `OnboardingStep` : `bloc/` ne dépend jamais de `presentation/`, et aucun
+  // autre cubit du dossier ne le fait. Ce test est le garde-fou qui remplace
+  // la dépendance — renommer le wireName sans toucher au cubit casse ici, au
+  // lieu de produire en silence un `step` incohérent avec celui qu'émet
+  // `resolvePostSignupRoute` pour la même étape.
+  test('le step émis reste celui de l\'énumération', () async {
+    stubUpdate();
+    final cubit = PersonalInfoCubit(repo, analytics);
+
+    await cubit.submit(firstName: 'Awa', lastName: 'Diallo');
+    await cubit.skip();
+
+    final captured = verify(
+      () => analytics.logEvent(
+        any(),
+        properties: captureAny(named: 'properties'),
+      ),
+    ).captured.whereType<Map<String, dynamic>>();
+
+    final steps = captured
+        .where((p) => p.containsKey('step'))
+        .map((p) => p['step'])
+        .toSet();
+    expect(steps, {OnboardingStep.personalInfo.wireName});
+  });
 
   test('aucune PII dans les properties analytics', () async {
     stubUpdate();
