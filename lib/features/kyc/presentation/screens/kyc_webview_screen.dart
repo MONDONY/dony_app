@@ -1,7 +1,12 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
+import 'package:dony/features/auth/data/repositories/auth_repository.dart';
+import 'package:dony/features/auth/presentation/onboarding_step.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/bloc/kyc_event.dart';
 import 'package:flutter/material.dart';
@@ -10,8 +15,14 @@ import 'package:go_router/go_router.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 class KycWebViewScreen extends StatefulWidget {
-  const KycWebViewScreen({super.key, required this.stripeUrl});
+  const KycWebViewScreen({super.key, required this.stripeUrl, this.progress});
   final String stripeUrl;
+
+  /// Non `null` seulement quand cette webview a été ouverte depuis
+  /// l'onboarding — voir `KycStatusScreen`, seul point d'entrée qui la
+  /// construit avec cette valeur (`readOnboardingProgress` reste un point
+  /// impur du routeur, jamais lu ici directement).
+  final OnboardingProgress? progress;
 
   @override
   State<KycWebViewScreen> createState() => _KycWebViewScreenState();
@@ -64,7 +75,15 @@ class _KycWebViewScreenState extends State<KycWebViewScreen> {
                     request.url.startsWith('https://dony.store/kyc/complete') ||
                     request.url.startsWith('https://dony.app/kyc/complete')) {
                   if (mounted) {
-                    context.go('/kyc/status');
+                    // Depuis l'onboarding, `/kyc/status` ferait perdre
+                    // `widget.progress` (route distincte, sans query param) :
+                    // `/kyc/verify` avec le même marqueur reconstruit la même
+                    // progression et permet à l'écran de statut d'enchaîner
+                    // sur l'étape suivante une fois vérifié.
+                    context.go(
+                      '/kyc/verify'
+                      '${onboardingEntrySuffix(fromOnboarding: widget.progress != null)}',
+                    );
                   }
                   return NavigationDecision.prevent;
                 }
@@ -103,7 +122,20 @@ class _KycWebViewScreenState extends State<KycWebViewScreen> {
             onPressed: () {
               context.read<KycBloc>().add(const KycSessionAbandoned());
               context.read<AuthBloc>().add(const AuthCheckRequested());
-              context.go('/home');
+              // Abandonner l'identité ne la termine pas : positionnel, pas
+              // `progress.next`, pour ne jamais reboucler sur cette même
+              // étape (voir `OnboardingProgress.routeAfter`).
+              final progress = widget.progress;
+              final destination =
+                  progress?.routeAfter(OnboardingStep.identity) ?? '/home';
+              if (progress != null && destination == '/home') {
+                unawaited(
+                  getIt<AuthRepository>().markOnboardingSeen().catchError(
+                    (_) {},
+                  ),
+                );
+              }
+              context.go(destination);
             },
           ),
         ],

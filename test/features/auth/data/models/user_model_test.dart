@@ -157,46 +157,8 @@ void main() {
       });
     });
 
-    // ─── age ──────────────────────────────────────────────────────────────────
-
-    group('age', () {
-      test('pas de birthDate → retourne null', () {
-        expect(baseUser.age, isNull);
-      });
-
-      test('birthDate il y a 30 ans → retourne 30', () {
-        final now = DateTime.now();
-        final user = UserModel(
-          id: 'u1',
-          birthDate: DateTime(now.year - 30, now.month, now.day),
-          roles: const [],
-          kycStatus: 'PENDING',
-          status: 'ACTIVE',
-        );
-        expect(user.age, 30);
-      });
-
-      test('anniversaire non encore passé dans l\'année → âge - 1', () {
-        final now = DateTime.now();
-        // Birthday next month means not yet had this year's birthday
-        final nextMonth = now.month == 12 ? 1 : now.month + 1;
-        final nextMonthYear = now.month == 12
-            ? now.year - 30 + 1
-            : now.year - 30;
-        final user = UserModel(
-          id: 'u1',
-          birthDate: DateTime(nextMonthYear, nextMonth),
-          roles: const [],
-          kycStatus: 'PENDING',
-          status: 'ACTIVE',
-        );
-        expect(user.age, 29);
-      });
-    });
-
     // ─── isProfileComplete ────────────────────────────────────────────────────
 
-    final birthDate = DateTime(1995, 3, 12);
     const fullyComplete = UserModel(
       id: 'u1',
       avatarUrl: 'https://cdn.example.com/avatar.jpg',
@@ -213,10 +175,9 @@ void main() {
 
     group('isProfileComplete', () {
       test(
-        '8 champs remplis (photo, identité, contact, ville, à propos) → true',
+        '7 champs remplis (photo, identité, contact, ville, à propos) → true',
         () {
-          final user = fullyComplete.copyWith(birthDate: birthDate);
-          expect(user.isProfileComplete(), isTrue);
+          expect(fullyComplete.isProfileComplete(), isTrue);
         },
       );
 
@@ -236,22 +197,16 @@ void main() {
         },
       );
 
-      test('date de naissance manquante → false (requise désormais)', () {
-        expect(fullyComplete.birthDate, isNull);
-        expect(fullyComplete.isProfileComplete(), isFalse);
-      });
-
       test('photo manquante → false', () {
-        final user = UserModel(
+        const user = UserModel(
           id: 'u1',
           firstName: 'Amadou',
           lastName: 'Diallo',
           email: 'amadou@example.com',
           phoneNumber: '+221701234567',
-          birthDate: birthDate,
           city: 'Dakar',
           bio: 'Voyageur régulier Paris-Dakar.',
-          roles: const [],
+          roles: [],
           kycStatus: 'PENDING',
           status: 'ACTIVE',
         );
@@ -260,16 +215,15 @@ void main() {
       });
 
       test('email manquant → false', () {
-        final user = UserModel(
+        const user = UserModel(
           id: 'u1',
           avatarUrl: 'https://cdn.example.com/avatar.jpg',
           firstName: 'Amadou',
           lastName: 'Diallo',
           phoneNumber: '+221701234567',
-          birthDate: birthDate,
           city: 'Dakar',
           bio: 'Voyageur régulier Paris-Dakar.',
-          roles: const [],
+          roles: [],
           kycStatus: 'PENDING',
           status: 'ACTIVE',
         );
@@ -279,8 +233,8 @@ void main() {
 
       // ── countPhone: false (SMS OTP backend non confirmé) ──────────────────
       group('countPhone: false (flag SMS OTP désactivé)', () {
-        test('téléphone absent mais les 7 autres champs remplis → true', () {
-          final user = fullyComplete.copyWith(birthDate: birthDate);
+        test('téléphone absent mais les 6 autres champs remplis → true', () {
+          const user = fullyComplete;
           final userWithoutPhone = UserModel(
             id: user.id,
             avatarUrl: user.avatarUrl,
@@ -289,7 +243,6 @@ void main() {
             email: user.email,
             city: user.city,
             bio: user.bio,
-            birthDate: user.birthDate,
             roles: user.roles,
             kycStatus: user.kycStatus,
             status: user.status,
@@ -297,7 +250,7 @@ void main() {
           expect(userWithoutPhone.phoneNumber, isNull);
           expect(userWithoutPhone.isProfileComplete(countPhone: false), isTrue);
           // Le même utilisateur reste incomplet si le flag est actif (le
-          // total redevient 8 et le téléphone manque).
+          // total redevient 7 et le téléphone manque).
           expect(userWithoutPhone.isProfileComplete(), isFalse);
         });
       });
@@ -306,7 +259,7 @@ void main() {
     // ─── profileCompletionSteps ───────────────────────────────────────────────
 
     group('profileCompletionSteps', () {
-      test('aucun champ → 0 étape sur 8', () {
+      test('aucun champ → 0 étape sur 7', () {
         const user = UserModel(
           id: 'u1',
           roles: [],
@@ -314,11 +267,11 @@ void main() {
           status: 'ACTIVE',
         );
         expect(user.profileCompletionSteps(), 0);
-        expect(UserModel.profileTotalSteps(), 8);
+        expect(UserModel.profileTotalSteps(), 7);
       });
 
-      test('countPhone: false → total de 7', () {
-        expect(UserModel.profileTotalSteps(countPhone: false), 7);
+      test('countPhone: false → total de 6', () {
+        expect(UserModel.profileTotalSteps(countPhone: false), 6);
       });
 
       test('prénom seulement → 1 étape', () {
@@ -345,17 +298,15 @@ void main() {
         expect(user.profileCompletionSteps(), 3);
       });
 
-      test('les 8 champs remplis → 8 étapes', () {
-        final user = fullyComplete.copyWith(birthDate: birthDate);
-        expect(user.profileCompletionSteps(), 8);
+      test('les 7 champs remplis → 7 étapes', () {
+        expect(fullyComplete.profileCompletionSteps(), 7);
       });
 
       test(
         'téléphone rempli mais countPhone: false → il n\'est pas compté',
         () {
-          final user = fullyComplete.copyWith(birthDate: birthDate);
-          expect(user.phoneNumber, isNotNull);
-          expect(user.profileCompletionSteps(countPhone: false), 7);
+          expect(fullyComplete.phoneNumber, isNotNull);
+          expect(fullyComplete.profileCompletionSteps(countPhone: false), 6);
         },
       );
     });
@@ -429,7 +380,6 @@ void main() {
         expect(user.email, 'test@dony.app');
         expect(user.firstName, 'Amadou');
         expect(user.lastName, 'Diallo');
-        expect(user.birthDate, DateTime(1990, 5, 15));
         expect(user.city, 'Paris');
         expect(user.roles, containsAll(['SENDER', 'TRAVELER']));
         expect(user.kycStatus, 'VERIFIED');
@@ -449,17 +399,21 @@ void main() {
         expect(user.roles, isEmpty);
       });
 
-      test('JSON avec birthDate null → birthDate null', () {
+      test('un birthDate renvoyé par le serveur est ignoré sans casser', () {
+        // Le backend continue de porter le champ pour les comptes créés
+        // avant que Stripe ne prenne la date de naissance à sa charge :
+        // `fromJson` doit l'ignorer, jamais s'en étrangler.
         final json = {
           'id': 'u1',
-          'birthDate': null,
+          'birthDate': '1990-05-15',
           'roles': [],
           'kycStatus': 'PENDING',
           'status': 'ACTIVE',
         };
 
         final user = UserModel.fromJson(json);
-        expect(user.birthDate, isNull);
+        expect(user.id, 'u1');
+        expect(user.toJson().containsKey('birthDate'), isFalse);
       });
     });
 
@@ -511,12 +465,10 @@ void main() {
         'bio': 'Hello',
         'avatarUrl': 'https://cdn/a.jpg',
         'languages': ['FR', 'WO'],
-        'transportMode': 'AVION',
       });
       expect(u.bio, 'Hello');
       expect(u.avatarUrl, 'https://cdn/a.jpg');
       expect(u.languages, ['FR', 'WO']);
-      expect(u.transportMode, 'AVION');
       expect(u.toJson()['bio'], 'Hello');
     });
 

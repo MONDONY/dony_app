@@ -7,6 +7,8 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
+import 'package:dony/features/auth/data/repositories/auth_repository.dart';
+import 'package:dony/features/auth/presentation/onboarding_step.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/presentation/screens/payout_onboarding_screen.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
@@ -32,6 +34,8 @@ class MockStripeAccountBloc
 
 class FakeAuthEvent extends Fake implements AuthEvent {}
 
+class _MockAuthRepository extends Mock implements AuthRepository {}
+
 const _kUser = UserModel(
   id: 'uid-1',
   firstName: 'Ibrahima',
@@ -41,10 +45,30 @@ const _kUser = UserModel(
   status: 'ACTIVE',
 );
 
+/// Paiements est la dernière étape comptée : `routeAfter(payouts)` doit
+/// toujours pointer vers `/home`.
+const _progress = OnboardingProgress(
+  steps: [
+    OnboardingStep.consent,
+    OnboardingStep.country,
+    OnboardingStep.personalInfo,
+    OnboardingStep.identity,
+    OnboardingStep.payouts,
+  ],
+  done: {
+    OnboardingStep.consent,
+    OnboardingStep.country,
+    OnboardingStep.personalInfo,
+    OnboardingStep.identity,
+  },
+  current: OnboardingStep.payouts,
+);
+
 Widget _wrap(
   PaymentBloc bloc, {
   MockAuthBloc? authBloc,
   MockStripeAccountBloc? stripeBloc,
+  OnboardingProgress? progress,
 }) {
   final auth = authBloc ?? MockAuthBloc();
   if (authBloc == null) {
@@ -69,8 +93,12 @@ Widget _wrap(
               BlocProvider<PaymentBloc>.value(value: bloc),
               BlocProvider<StripeAccountBloc>.value(value: stripe),
             ],
-            child: const PayoutOnboardingScreen(),
+            child: PayoutOnboardingScreen(progress: progress),
           ),
+        ),
+        GoRoute(
+          path: '/home',
+          builder: (_, _) => const Scaffold(body: Text('Home route')),
         ),
       ],
     ),
@@ -84,6 +112,7 @@ void main() {
 
   late MockPaymentBloc mockBloc;
   late MockStripeAccountBloc mockStripeBloc;
+  late _MockAuthRepository mockAuthRepository;
 
   setUp(() {
     mockBloc = MockPaymentBloc();
@@ -105,11 +134,23 @@ void main() {
       getIt.unregister<StripeAccountBloc>();
     }
     getIt.registerSingleton<StripeAccountBloc>(mockStripeBloc);
+
+    mockAuthRepository = _MockAuthRepository();
+    when(
+      () => mockAuthRepository.markOnboardingSeen(),
+    ).thenAnswer((_) async {});
+    if (getIt.isRegistered<AuthRepository>()) {
+      getIt.unregister<AuthRepository>();
+    }
+    getIt.registerSingleton<AuthRepository>(mockAuthRepository);
   });
 
   tearDown(() {
     if (getIt.isRegistered<StripeAccountBloc>()) {
       getIt.unregister<StripeAccountBloc>();
+    }
+    if (getIt.isRegistered<AuthRepository>()) {
+      getIt.unregister<AuthRepository>();
     }
   });
 
@@ -232,6 +273,136 @@ void main() {
       verify(
         () => mockBloc.add(const PaymentConnectAccountRequested()),
       ).called(1);
+    });
+
+    group('depuis l\'onboarding (progress non null)', () {
+      testWidgets(
+        'état initial : affiche la jauge et « Passer pour l\'instant »',
+        (tester) async {
+          await tester.pumpWidget(_wrap(mockBloc, progress: _progress));
+          await tester.pump(const Duration(milliseconds: 500));
+
+          expect(find.text('Passer pour l\'instant'), findsOneWidget);
+        },
+      );
+
+      testWidgets(
+        '« Passer pour l\'instant » va vers /home et marque l\'onboarding '
+        'vu — paiements est la dernière étape, personne ne doit être bloqué '
+        'pour l\'avoir remise à plus tard',
+        (tester) async {
+          await tester.pumpWidget(_wrap(mockBloc, progress: _progress));
+          await tester.pump(const Duration(milliseconds: 500));
+
+          await tester.ensureVisible(find.text('Passer pour l\'instant'));
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('Passer pour l\'instant'));
+          await tester.pumpAndSettle();
+
+          verify(() => mockAuthRepository.markOnboardingSeen()).called(1);
+          expect(find.text('Home route'), findsOneWidget);
+        },
+      );
+
+      testWidgets(
+        'état complete : « Continuer vers l\'accueil » va vers /home et '
+        'marque l\'onboarding vu',
+        (tester) async {
+          // Contenu plus haut que la fenêtre de test par défaut (jauge +
+          // mascotte + texte + bouton) : cette vue n'est pas scrollable
+          // (`_SuccessView`, comme avant cette tâche), et sa mascotte anime
+          // en boucle (`withGlow: true`) — `pumpAndSettle()` n'y terminerait
+          // jamais. Agrandir la fenêtre plutôt que scroller.
+          await tester.binding.setSurfaceSize(const Size(400, 1000));
+          addTearDown(() => tester.binding.setSurfaceSize(null));
+
+          whenListen<PaymentState>(
+            mockBloc,
+            Stream.value(const PaymentOnboardingComplete()),
+            initialState: const PaymentOnboardingComplete(),
+          );
+          await tester.pumpWidget(_wrap(mockBloc, progress: _progress));
+          await tester.pump(const Duration(milliseconds: 500));
+
+          expect(find.text('Paiements activés ✓'), findsOneWidget);
+          await tester.tap(find.text('Continuer vers l\'accueil'));
+          // Pas de `pumpAndSettle()` : la mascotte de la page quittée anime
+          // en boucle. Des `pump()` bornés suffisent à laisser la transition
+          // GoRouter se terminer.
+          for (var i = 0; i < 10; i++) {
+            await tester.pump(const Duration(milliseconds: 100));
+          }
+
+          verify(() => mockAuthRepository.markOnboardingSeen()).called(1);
+          expect(find.text('Home route'), findsOneWidget);
+        },
+      );
+
+      testWidgets(
+        'compte déjà connecté : la jauge s\'affiche et « Continuer vers '
+        'l\'accueil » va vers /home',
+        (tester) async {
+          when(() => mockStripeBloc.state).thenReturn(
+            const StripeAccountReady(
+              ConnectAccountStatus(status: 'ONBOARDING_COMPLETE'),
+            ),
+          );
+
+          await tester.pumpWidget(
+            _wrap(mockBloc, stripeBloc: mockStripeBloc, progress: _progress),
+          );
+          await tester.pump(const Duration(milliseconds: 500));
+
+          expect(find.text('Compte bancaire connecté'), findsOneWidget);
+          await tester.ensureVisible(find.text('Continuer vers l\'accueil'));
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('Continuer vers l\'accueil'));
+          await tester.pumpAndSettle();
+
+          verify(() => mockAuthRepository.markOnboardingSeen()).called(1);
+          expect(find.text('Home route'), findsOneWidget);
+        },
+      );
+
+      testWidgets(
+        'pays non couvert par Stripe : continue silencieusement vers /home '
+        'sans montrer d\'impasse — onboardingSteps() exclut déjà les '
+        'paiements pour ces pays, arriver ici ne peut être qu\'une course',
+        (tester) async {
+          when(
+            () => mockStripeBloc.state,
+          ).thenReturn(stripeCountryUnavailableState);
+
+          await tester.pumpWidget(
+            _wrap(mockBloc, stripeBloc: mockStripeBloc, progress: _progress),
+          );
+          await tester.pump(const Duration(milliseconds: 500));
+          await tester.pumpAndSettle();
+
+          verify(() => mockAuthRepository.markOnboardingSeen()).called(1);
+          expect(find.text('Home route'), findsOneWidget);
+          expect(
+            find.text('Pas encore disponible\ndans votre pays'),
+            findsNothing,
+          );
+        },
+      );
+    });
+
+    testWidgets('pays non couvert par Stripe SANS onboarding (progress null) : '
+        'l\'impasse reste affichée, comportement inchangé', (tester) async {
+      when(
+        () => mockStripeBloc.state,
+      ).thenReturn(stripeCountryUnavailableState);
+
+      await tester.pumpWidget(_wrap(mockBloc, stripeBloc: mockStripeBloc));
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(
+        find.text('Pas encore disponible\ndans votre pays'),
+        findsOneWidget,
+      );
+      verifyNever(() => mockAuthRepository.markOnboardingSeen());
     });
   });
 }

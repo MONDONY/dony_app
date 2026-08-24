@@ -2,6 +2,10 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/models/connect_account_status.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_event.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.dart';
 import 'package:dony/features/connect_onboarding/presentation/screens/connect_onboarding_intro_screen.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
@@ -18,6 +22,24 @@ class MockConnectOnboardingBloc
 class MockStripeAccountBloc
     extends MockBloc<StripeAccountEvent, StripeAccountState>
     implements StripeAccountBloc {}
+
+class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
+
+/// L'écran lit aussi `AuthBloc` : Stripe Connect exige une identité vérifiée,
+/// et sans elle l'écran cède la place à `IdentityRequiredView`.
+AuthBloc _authBloc({String kycStatus = 'VERIFIED'}) {
+  final bloc = MockAuthBloc();
+  final state = AuthAuthenticated(
+    UserModel(
+      id: 'u1',
+      roles: const ['TRAVELER'],
+      kycStatus: kycStatus,
+      status: 'ACTIVE',
+    ),
+  );
+  whenListen<AuthState>(bloc, Stream.value(state), initialState: state);
+  return bloc;
+}
 
 /// Duration long enough to let all flutter_animate delays complete.
 const _kSettle = Duration(milliseconds: 600);
@@ -41,7 +63,11 @@ StripeAccountBloc _stripeBloc({bool connectAvailable = true}) {
   return bloc;
 }
 
-Widget _wrap(ConnectOnboardingBloc bloc, {StripeAccountBloc? stripeBloc}) {
+Widget _wrap(
+  ConnectOnboardingBloc bloc, {
+  StripeAccountBloc? stripeBloc,
+  AuthBloc? authBloc,
+}) {
   return MaterialApp.router(
     routerConfig: GoRouter(
       routes: [
@@ -53,6 +79,7 @@ Widget _wrap(ConnectOnboardingBloc bloc, {StripeAccountBloc? stripeBloc}) {
               BlocProvider<StripeAccountBloc>.value(
                 value: stripeBloc ?? _stripeBloc(),
               ),
+              BlocProvider<AuthBloc>.value(value: authBloc ?? _authBloc()),
             ],
             child: const ConnectOnboardingIntroScreen(),
           ),
@@ -180,6 +207,50 @@ void main() {
 
       expect(find.text('Compléter mon compte'), findsOneWidget);
       expect(find.text('Pas encore disponible\ndans votre pays'), findsNothing);
+    });
+  });
+
+  group('garde identité — Stripe Connect exige une identité vérifiée', () {
+    // Sept points d'entrée de l'app mènent à cet écran (publication, détail
+    // d'annonce, étape prix, feuilles de blocage, compte désactivé,
+    // notification push, retour de lien Stripe). Le serveur les refuse tous
+    // par un 422 `kyc-required` ; sans cette garde, l'utilisateur ne récolte
+    // qu'une erreur brute au lieu d'être conduit à la vérification.
+    for (final status in const ['NOT_STARTED', 'PENDING', 'REJECTED']) {
+      testWidgets('identité $status : l\'onboarding Connect est remplacé par '
+          'l\'invitation à vérifier son identité', (tester) async {
+        final bloc = MockConnectOnboardingBloc();
+        whenListen<ConnectOnboardingState>(
+          bloc,
+          const Stream<ConnectOnboardingState>.empty(),
+          initialState: const ConnectOnboardingInitial(),
+        );
+
+        await tester.pumpWidget(
+          _wrap(bloc, authBloc: _authBloc(kycStatus: status)),
+        );
+        await tester.pump(_kSettle);
+
+        expect(find.text('Vérifier mon identité'), findsOneWidget);
+        // Le bouton qui déclencherait la création du compte a disparu.
+        expect(find.text('Commencer'), findsNothing);
+      });
+    }
+
+    testWidgets('identité vérifiée : l\'onboarding Connect s\'affiche '
+        'normalement', (tester) async {
+      final bloc = MockConnectOnboardingBloc();
+      whenListen<ConnectOnboardingState>(
+        bloc,
+        const Stream<ConnectOnboardingState>.empty(),
+        initialState: const ConnectOnboardingInitial(),
+      );
+
+      await tester.pumpWidget(_wrap(bloc));
+      await tester.pump(_kSettle);
+
+      expect(find.text('Vérifier mon identité'), findsNothing);
+      expect(find.byType(DonyButton), findsWidgets);
     });
   });
 }

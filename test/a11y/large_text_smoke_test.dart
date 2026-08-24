@@ -10,10 +10,11 @@ import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
-import 'package:dony/features/auth/bloc/residence_address_cubit.dart';
+import 'package:dony/features/auth/bloc/personal_info_cubit.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
-import 'package:dony/features/auth/presentation/screens/residence_address_screen.dart';
+import 'package:dony/features/auth/presentation/onboarding_step.dart';
+import 'package:dony/features/auth/presentation/screens/personal_info_screen.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/bloc/city_search_event.dart';
 import 'package:dony/features/city/bloc/city_search_state.dart';
@@ -802,24 +803,40 @@ Widget _wrapScanHub(ScanHubCubit cubit) =>
     MaterialApp.router(routerConfig: _scanRouter(cubit));
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Adresse de résidence — harnais recopié de
-// test/features/auth/presentation/residence_address_screen_test.dart
+// Vos informations — harnais recopié de
+// test/features/auth/presentation/personal_info_screen_test.dart
 // ═══════════════════════════════════════════════════════════════════════════
 
-class _ResidenceMockCubit extends MockCubit<ResidenceAddressState>
-    implements ResidenceAddressCubit {}
+class _PersonalInfoMockCubit extends MockCubit<PersonalInfoState>
+    implements PersonalInfoCubit {}
 
-Widget _wrapResidenceAddress(ResidenceAddressCubit cubit) => MaterialApp.router(
+// Pays hors couverture Stripe : quatre segments, sans `OnboardingStep.payouts`
+// — couvre la variante réduite de la jauge (spec §4.1, correction 4).
+const _personalInfoProgress = OnboardingProgress(
+  steps: [
+    OnboardingStep.consent,
+    OnboardingStep.country,
+    OnboardingStep.personalInfo,
+    OnboardingStep.identity,
+  ],
+  done: {OnboardingStep.consent, OnboardingStep.country},
+  current: OnboardingStep.personalInfo,
+);
+
+Widget _wrapPersonalInfo(PersonalInfoCubit cubit) => MaterialApp.router(
   routerConfig: GoRouter(
     routes: [
       GoRoute(
         path: '/',
-        builder: (_, _) => BlocProvider<ResidenceAddressCubit>.value(
+        builder: (_, _) => BlocProvider<PersonalInfoCubit>.value(
           value: cubit,
           // Code ISO, comme le fournit `BusinessPrefsBloc.state.country`
           // depuis la correction du lot 1 (le widget résout lui-même le nom
           // lisible via `CountryCatalog.byCode`) — pas le nom affiché.
-          child: const ResidenceAddressScreen(country: 'SN'),
+          child: const PersonalInfoScreen(
+            country: 'SN',
+            progress: _personalInfoProgress,
+          ),
         ),
       ),
       GoRoute(
@@ -1045,16 +1062,16 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('adresse de résidence', (tester) async {
-      final cubit = _ResidenceMockCubit();
-      when(() => cubit.state).thenReturn(const ResidenceAddressInitial());
+    testWidgets('vos informations', (tester) async {
+      final cubit = _PersonalInfoMockCubit();
+      when(() => cubit.state).thenReturn(const PersonalInfoInitial());
       whenListen(
         cubit,
-        const Stream<ResidenceAddressState>.empty(),
-        initialState: const ResidenceAddressInitial(),
+        const Stream<PersonalInfoState>.empty(),
+        initialState: const PersonalInfoInitial(),
       );
 
-      await pumpAt200(tester, _wrapResidenceAddress(cubit));
+      await pumpAt200(tester, _wrapPersonalInfo(cubit));
       expect(tester.takeException(), isNull);
     });
   });

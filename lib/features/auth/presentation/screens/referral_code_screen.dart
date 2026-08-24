@@ -4,6 +4,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/auth/data/repositories/auth_repository.dart';
+import 'package:dony/features/auth/presentation/onboarding_step.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_flow_chrome.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
 import 'package:flutter/material.dart';
@@ -12,7 +13,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 class ReferralCodeScreen extends StatefulWidget {
-  const ReferralCodeScreen({super.key});
+  const ReferralCodeScreen({super.key, required this.progress});
+
+  /// Le parrainage est hors décompte (spec §4.2) : `progress.current` y vaut
+  /// toujours `null`, aucun segment n'est donc jamais à moitié rempli ici.
+  final OnboardingProgress progress;
 
   @override
   State<ReferralCodeScreen> createState() => _ReferralCodeScreenState();
@@ -35,14 +40,32 @@ class _ReferralCodeScreenState extends State<ReferralCodeScreen> {
     super.dispose();
   }
 
-  /// Écran terminal réel du parcours d'onboarding : c'est ici, pas dans
-  /// [ResidenceAddressCubit.submit], que l'on pose `onboarding_seen_at`. Cet
-  /// écran n'a pas accès au cubit de l'étape adresse (hors de son arbre de
+  /// Le parrainage n'est plus systématiquement l'écran terminal : il ne
+  /// l'est que si aucune étape (identité, paiements) n'est encore à faire.
+  /// [OnboardingProgress.nextAfter] tranche, en partant de l'adresse : sans
+  /// lui, un utilisateur à qui il reste l'identité ou les paiements filerait
+  /// droit sur `/home` sans jamais les voir. `nextAfter` plutôt que `next`
+  /// parce qu'une étape *passée* n'entre pas dans `done` — `next` la
+  /// redésignerait et le parcours boucleraient sur elle sans fin.
+  ///
+  /// `onboarding_seen_at` ne se pose donc plus qu'ici, quand la destination
+  /// est réellement `/home` — jamais quand le parcours continue. Cet écran
+  /// n'a pas accès au cubit de l'étape informations (hors de son arbre de
   /// providers) — on passe donc directement par le repository. Jamais
   /// awaité, jamais bloquant : un échec réseau ne doit pas retenir
   /// l'utilisateur sur cet écran, et l'appel est idempotent côté serveur.
-  void _markOnboardingSeen() {
-    unawaited(getIt<AuthRepository>().markOnboardingSeen().catchError((_) {}));
+  void _continue(BuildContext context) {
+    final destination =
+        widget.progress
+            .nextAfter(OnboardingStep.personalInfo)
+            ?.onboardingRoute ??
+        '/home';
+    if (destination == '/home') {
+      unawaited(
+        getIt<AuthRepository>().markOnboardingSeen().catchError((_) {}),
+      );
+    }
+    context.go(destination);
   }
 
   void _apply() {
@@ -82,20 +105,16 @@ class _ReferralCodeScreenState extends State<ReferralCodeScreen> {
                   ),
                   child: state is ReferralRedeemed
                       ? _SuccessView(
-                          onContinue: () {
-                            _markOnboardingSeen();
-                            context.go('/home');
-                          },
+                          progress: widget.progress,
+                          onContinue: () => _continue(context),
                         )
                       : _FormView(
+                          progress: widget.progress,
                           ctrl: _ctrl,
                           isNotEmpty: _isNotEmpty,
                           isLoading: state is ReferralRedeemLoading,
                           onApply: _apply,
-                          onSkip: () {
-                            _markOnboardingSeen();
-                            context.go('/home');
-                          },
+                          onSkip: () => _continue(context),
                         ),
                 ),
               ),
@@ -111,6 +130,7 @@ class _ReferralCodeScreenState extends State<ReferralCodeScreen> {
 
 class _FormView extends StatelessWidget {
   const _FormView({
+    required this.progress,
     required this.ctrl,
     required this.isNotEmpty,
     required this.isLoading,
@@ -118,6 +138,7 @@ class _FormView extends StatelessWidget {
     required this.onSkip,
   });
 
+  final OnboardingProgress progress;
   final TextEditingController ctrl;
   final ValueNotifier<bool> isNotEmpty;
   final bool isLoading;
@@ -126,18 +147,10 @@ class _FormView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const AuthFlowHeader(
-          current: 4,
-          total: 4,
-          label: 'Parrainage',
-          showBack: false,
-        ),
+        AuthFlowHeader.gauge(segments: progress.segments, label: 'Parrainage'),
         const SizedBox(height: DonySpacing.md),
         Expanded(
           child: SingleChildScrollView(
@@ -146,7 +159,7 @@ class _FormView extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const AuthIntroCard(
+                const AuthIntroCard.compact(
                   iconAsset: 'gift',
                   title: 'Tu as été invité par un ami ?',
                   body:
@@ -156,40 +169,30 @@ class _FormView extends StatelessWidget {
                 ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04),
                 const SizedBox(height: DonySpacing.md),
                 _ReferralActionPanel(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      DonyTextField(
-                        controller: ctrl,
-                        label: 'Code parrain',
-                        hint: 'Ex : JEAN0234',
-                      ),
-                      const SizedBox(height: DonySpacing.lg),
-                      ValueListenableBuilder<bool>(
-                        valueListenable: isNotEmpty,
-                        builder: (context, hasText, _) => DonyButton(
-                          label: 'Appliquer le code',
-                          iconAsset: 'gift',
-                          isLoading: isLoading,
-                          onPressed: hasText && !isLoading ? onApply : null,
-                        ),
-                      ),
-                      const SizedBox(height: DonySpacing.sm),
-                      TextButton(
-                        onPressed: isLoading ? null : onSkip,
-                        child: Text(
-                          'Passer pour l\'instant',
-                          style: tt.bodyMedium?.copyWith(
-                            color: cs.onSurfaceVariant,
-                          ),
-                        ),
-                      ),
-                    ],
+                  child: DonyTextField(
+                    controller: ctrl,
+                    label: 'Code parrain',
+                    hint: 'Ex : JEAN0234',
                   ),
                 ).animate().fadeIn(delay: 120.ms, duration: 300.ms),
               ],
             ),
           ),
+        ),
+        // Le bouton et le lien vivaient dans le panneau, au milieu de l'écran :
+        // ils rejoignent la zone d'action commune, en bas comme partout.
+        AuthFlowActions(
+          primary: ValueListenableBuilder<bool>(
+            valueListenable: isNotEmpty,
+            builder: (context, hasText, _) => DonyButton(
+              label: 'Appliquer le code',
+              iconAsset: 'gift',
+              isLoading: isLoading,
+              onPressed: hasText && !isLoading ? onApply : null,
+            ),
+          ),
+          skipEnabled: !isLoading,
+          onSkip: onSkip,
         ),
       ],
     );
@@ -228,7 +231,8 @@ class _ReferralActionPanel extends StatelessWidget {
 // ── Success view ──────────────────────────────────────────────────────────────
 
 class _SuccessView extends StatelessWidget {
-  const _SuccessView({required this.onContinue});
+  const _SuccessView({required this.progress, required this.onContinue});
+  final OnboardingProgress progress;
   final VoidCallback onContinue;
 
   @override
@@ -236,12 +240,7 @@ class _SuccessView extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const AuthFlowHeader(
-          current: 4,
-          total: 4,
-          label: 'Parrainage',
-          showBack: false,
-        ),
+        AuthFlowHeader.gauge(segments: progress.segments, label: 'Parrainage'),
         const SizedBox(height: DonySpacing.md),
         Expanded(
           child: SingleChildScrollView(
@@ -265,12 +264,13 @@ class _SuccessView extends StatelessWidget {
                     ),
           ),
         ),
-        const SizedBox(height: DonySpacing.sm),
-        DonyButton(
-          label: 'Continuer vers l\'accueil',
-          iconAsset: 'arrow-right',
-          onPressed: onContinue,
-          variant: DonyButtonVariant.success,
+        AuthFlowActions(
+          primary: DonyButton(
+            label: 'Continuer vers l\'accueil',
+            iconAsset: 'arrow-right',
+            onPressed: onContinue,
+            variant: DonyButtonVariant.success,
+          ),
         ).animate().fadeIn(delay: 400.ms, duration: 300.ms),
       ],
     );

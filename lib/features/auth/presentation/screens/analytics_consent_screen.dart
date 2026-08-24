@@ -4,16 +4,19 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/auth/presentation/onboarding_step.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_flow_chrome.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 
-/// Écran de consentement analytics affiché une seule fois,
-/// après le PIN setup lors de l'inscription.
-/// Les deux choix (accepter / refuser) naviguent vers /home.
+/// Première étape du parcours d'onboarding progressif, affichée juste après
+/// l'inscription. `_respond` navigue vers `/auth/country-selection` : ce
+/// n'est ni un écran terminal, ni un écran qui va vers `/home`.
 class AnalyticsConsentScreen extends StatelessWidget {
-  const AnalyticsConsentScreen({super.key});
+  const AnalyticsConsentScreen({super.key, required this.progress});
+
+  final OnboardingProgress progress;
 
   @override
   Widget build(BuildContext context) {
@@ -41,11 +44,9 @@ class AnalyticsConsentScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const AuthFlowHeader(
-                      current: 1,
-                      total: 4,
+                    AuthFlowHeader.gauge(
+                      segments: progress.segments,
                       label: 'Confidentialité',
-                      showBack: false,
                     ),
                     const SizedBox(height: DonySpacing.md),
                     Expanded(
@@ -58,7 +59,7 @@ class AnalyticsConsentScreen extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            const AuthIntroCard(
+                            const AuthIntroCard.compact(
                                   iconAsset: 'shield-check',
                                   title: 'Une dernière chose',
                                   body:
@@ -78,7 +79,6 @@ class AnalyticsConsentScreen extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(height: DonySpacing.sm),
                     const _Buttons(),
                   ],
                 ),
@@ -202,25 +202,29 @@ class _Buttons extends StatelessWidget {
         properties: {'granted': granted},
       ),
     );
+    unawaited(
+      getIt<AnalyticsService>().logEvent(
+        AnalyticsEvents.onboardingStepCompleted,
+        properties: {'step': 'consent'},
+      ),
+    );
     if (context.mounted) context.go('/auth/country-selection');
   }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-          children: [
-            DonyButton(
-              label: 'Accepter',
-              iconAsset: 'shield-check',
-              onPressed: () => _respond(context, granted: true),
-            ),
-            const SizedBox(height: DonySpacing.md),
-            DonyButton(
-              label: 'Non merci',
-              variant: DonyButtonVariant.ghost,
-              onPressed: () => _respond(context, granted: false),
-            ),
-          ],
+    // Même zone d'action que les autres écrans du parcours : « Non merci »
+    // occupe la place du lien « Passer pour l'instant » — refuser le suivi et
+    // passer une étape sont la même intention, et le pouce les retrouve à la
+    // même hauteur d'un écran à l'autre.
+    return AuthFlowActions(
+          primary: DonyButton(
+            label: 'Accepter',
+            iconAsset: 'shield-check',
+            onPressed: () => _respond(context, granted: true),
+          ),
+          skipLabel: 'Non merci',
+          onSkip: () => _respond(context, granted: false),
         )
         .animate()
         .fadeIn(duration: 300.ms, delay: 150.ms)

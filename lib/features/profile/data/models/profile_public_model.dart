@@ -15,7 +15,6 @@ class ProfilePublicModel {
     this.responseDelayHours,
     this.bio,
     this.languages = const [],
-    this.transportMode,
   });
 
   final String userId;
@@ -33,7 +32,6 @@ class ProfilePublicModel {
   final int? responseDelayHours;
   final String? bio;
   final List<String> languages;
-  final String? transportMode;
 
   factory ProfilePublicModel.fromJson(Map<String, dynamic> json) {
     return ProfilePublicModel(
@@ -60,7 +58,6 @@ class ProfilePublicModel {
               ?.map((e) => e as String)
               .toList() ??
           const [],
-      transportMode: json['transportMode'] as String?,
     );
   }
 }

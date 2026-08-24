@@ -327,6 +327,18 @@ abstract final class AnalyticsEvents {
   static const searchSubmitted = 'search_submitted';
 
   // Onboarding progressif — lot 1
-  static const residenceAddressSaved = 'residence_address_saved';
   static const onboardingStepSkipped = 'onboarding_step_skipped';
+
+  // Onboarding progressif — lot 2
+  static const onboardingStepViewed = 'onboarding_step_viewed';
+  static const onboardingStepCompleted = 'onboarding_step_completed';
+  static const onboardingCompleted = 'onboarding_completed';
+
+  // Onboarding progressif — lot 3
+  //
+  // Nom légal *déclaré* par l'utilisateur, à ne pas confondre avec l'identité
+  // *vérifiée* par Stripe Identity. Émis sans aucune property par
+  // `PersonalInfoCubit.submit()` : le seul signal utile est que l'étape a
+  // abouti, et le nom lui-même ne doit jamais partir dans l'analytics.
+  static const onboardingIdentityDeclared = 'onboarding_identity_declared';
 }

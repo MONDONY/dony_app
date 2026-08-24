@@ -59,7 +59,6 @@ const _profile = ProfilePublicModel(
 ProfilePublicModel profileWith({
   String? bio,
   List<String> languages = const [],
-  String? transportMode,
 }) {
   return ProfilePublicModel(
     userId: _userId,
@@ -74,7 +73,6 @@ ProfilePublicModel profileWith({
     badges: const [],
     bio: bio,
     languages: languages,
-    transportMode: transportMode,
   );
 }
 
@@ -401,11 +399,7 @@ void main() {
   ) async {
     await tester.pumpWidget(
       _wrapLoaded(
-        profile: profileWith(
-          bio: 'Hello',
-          languages: ['FR'],
-          transportMode: 'AVION',
-        ),
+        profile: profileWith(bio: 'Hello', languages: ['FR']),
       ),
     );
     await tester.pump(const Duration(milliseconds: 600));
@@ -423,23 +417,21 @@ void main() {
 
     expect(find.text('À PROPOS', skipOffstage: false), findsNothing);
     expect(find.text('LANGUES', skipOffstage: false), findsNothing);
-    expect(find.text('TRANSPORT', skipOffstage: false), findsNothing);
   });
 
-  testWidgets('profil public affiche le bon label de transport', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      _wrapLoaded(
-        profile: profileWith(languages: [], transportMode: 'VOITURE'),
-      ),
-    );
-    await tester.pump(const Duration(milliseconds: 600));
+  testWidgets(
+    'le mode de transport a quitté la fiche publique : il appartenait au '
+    'profil, pas au trajet, et n\'apprenait rien sur le voyageur',
+    (tester) async {
+      await tester.pumpWidget(
+        _wrapLoaded(profile: profileWith(languages: ['FR'])),
+      );
+      await tester.pump(const Duration(milliseconds: 600));
 
-    expect(find.text('🚗 Voiture', skipOffstage: false), findsOneWidget);
-    expect(find.text('TRANSPORT', skipOffstage: false), findsOneWidget);
-    expect(find.text('LANGUES', skipOffstage: false), findsNothing);
-  });
+      expect(find.text('TRANSPORT', skipOffstage: false), findsNothing);
+      expect(find.text('LANGUES', skipOffstage: false), findsOneWidget);
+    },
+  );
 
   // ── 7. Stats row: 2 cols, no "Répond en" / "Membre depuis" stat ──────────
 

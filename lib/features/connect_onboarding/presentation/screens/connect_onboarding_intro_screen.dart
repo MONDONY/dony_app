@@ -1,10 +1,13 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.dart';
 import 'package:dony/features/connect_onboarding/presentation/widgets/connect_pending_bottom_sheet.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/stripe_account/presentation/widgets/connect_unavailable_view.dart';
+import 'package:dony/features/stripe_account/presentation/widgets/identity_required_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -61,6 +64,16 @@ class _ConnectOnboardingIntroScreenState
     // refus serveur n'apporte rien : on l'annonce ici.
     if (!context.watch<StripeAccountBloc>().state.connectAvailableInCountry) {
       return const ConnectUnavailableView(title: 'Compte Stripe Connect');
+    }
+
+    // Stripe Connect exige une identité vérifiée : le serveur refuse sinon
+    // (422 `kyc-required`). Sept points d'entrée de l'app mènent ici — écran
+    // de publication, détail d'annonce, étape prix, feuilles de blocage,
+    // compte désactivé, notification push, retour de lien Stripe. Les fermer
+    // un par un serait vain : ils convergent tous sur cet écran, la garde y
+    // vit donc une seule fois.
+    if (context.watch<AuthBloc>().state.currentUser?.kycStatus != 'VERIFIED') {
+      return const IdentityRequiredView(title: 'Compte Stripe Connect');
     }
 
     return BlocConsumer<ConnectOnboardingBloc, ConnectOnboardingState>(

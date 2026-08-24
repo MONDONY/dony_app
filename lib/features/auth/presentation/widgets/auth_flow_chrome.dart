@@ -53,16 +53,36 @@ class AuthFlowBackground extends StatelessWidget {
 }
 
 class AuthFlowHeader extends StatelessWidget {
+  /// Tunnel pré-compte (téléphone, e-mail, code) : une pastille « n / total ».
   const AuthFlowHeader({
     super.key,
-    required this.current,
-    required this.total,
+    required int this.current,
+    required int this.total,
     required this.label,
     this.showBack = true,
-  });
+  }) : segments = null;
 
-  final int current;
-  final int total;
+  /// Parcours d'onboarding progressif : la jauge remplace la pastille.
+  ///
+  /// Les deux ne comptent pas la même chose. La pastille compte les écrans du
+  /// tunnel d'inscription ; la jauge compte les étapes du compte (quatre ou
+  /// cinq selon la couverture Stripe du pays, parrainage exclu).
+  ///
+  /// Pas de `showBack` ici : aucun écran du parcours (pays, adresse,
+  /// parrainage, consentement, identité, paiements) n'affiche de retour, et
+  /// aucun appelant ne l'a jamais demandé (vérifié par grep) — toujours
+  /// `false`, sans paramètre pour l'exposer.
+  const AuthFlowHeader.gauge({
+    super.key,
+    required List<DonyGaugeSegment> this.segments,
+    required this.label,
+  }) : current = null,
+       total = null,
+       showBack = false;
+
+  final int? current;
+  final int? total;
+  final List<DonyGaugeSegment>? segments;
   final String label;
   final bool showBack;
 
@@ -102,10 +122,16 @@ class AuthFlowHeader extends StatelessWidget {
           ],
         ),
         const SizedBox(height: DonySpacing.sm),
-        Align(
-          alignment: Alignment.centerRight,
-          child: DonyStepPill(current: current, total: total, label: label),
-        ),
+        if (segments == null)
+          Align(
+            alignment: Alignment.centerRight,
+            child: DonyStepPill(current: current!, total: total!, label: label),
+          )
+        else
+          // Le `Column` parent est en `CrossAxisAlignment.stretch` : la jauge
+          // prend la largeur, son propre `Column` aligne le compteur à droite
+          // comme le faisait la pastille.
+          DonyOnboardingGauge(segments: segments!, label: label),
       ],
     );
   }
@@ -161,12 +187,26 @@ class AuthIntroCard extends StatelessWidget {
     required this.title,
     required this.body,
     this.footnote,
-  });
+  }) : compact = false;
+
+  /// Variante du parcours d'onboarding : l'en-tête (icône + badge), le titre
+  /// géant et les grands espacements du tunnel y mangeaient l'écran au point
+  /// de repousser les boutons hors de vue (retour utilisateur). Icône et
+  /// titre partagent une ligne, corps resserré — la carte redevient une
+  /// introduction, pas un écran.
+  const AuthIntroCard.compact({
+    super.key,
+    required this.iconAsset,
+    required this.title,
+    required this.body,
+    this.footnote,
+  }) : compact = true;
 
   final String iconAsset;
   final String title;
   final String body;
   final String? footnote;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -174,7 +214,7 @@ class AuthIntroCard extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
 
     return Container(
-      padding: const EdgeInsets.all(DonySpacing.base),
+      padding: EdgeInsets.all(compact ? DonySpacing.md : DonySpacing.base),
       decoration: BoxDecoration(
         color: cs.surface.withValues(
           alpha: cs.brightness == Brightness.light ? 0.94 : 0.82,
@@ -183,65 +223,209 @@ class AuthIntroCard extends StatelessWidget {
         border: Border.all(color: cs.outline.withValues(alpha: 0.44)),
         boxShadow: DonyShadow.md,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+      child: compact ? _buildCompact(cs, tt) : _buildFull(cs, tt),
+    );
+  }
+
+  Widget _buildCompact(ColorScheme cs, TextTheme tt) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: cs.primaryContainer,
+                // Rayon concentrique : carte DonyRadius.sheet moins le
+                // padding md — un rayon interne plus petit que l'externe.
+                borderRadius: BorderRadius.circular(DonyRadius.md),
+              ),
+              child: Center(
+                child: DonyIcon(iconAsset, size: 20, color: cs.primary),
+              ),
+            ),
+            const SizedBox(width: DonySpacing.md),
+            Expanded(
+              child: Text(
+                title,
+                style: tt.titleLarge?.copyWith(
+                  color: cs.onSurface,
+                  fontWeight: FontWeight.w800,
+                  height: 1.12,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: DonySpacing.sm),
+        Text(
+          body,
+          style: tt.bodyMedium?.copyWith(
+            color: cs.onSurfaceVariant,
+            height: 1.4,
+          ),
+        ),
+        if (footnote != null) ...[
+          const SizedBox(height: DonySpacing.sm),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: cs.primaryContainer,
-                  borderRadius: BorderRadius.circular(DonyRadius.card),
-                ),
-                child: Center(
-                  child: DonyIcon(iconAsset, size: 26, color: cs.primary),
+              DonyIcon('lock', size: 14, color: cs.success),
+              const SizedBox(width: DonySpacing.xs),
+              Expanded(
+                child: Text(
+                  footnote!,
+                  style: tt.bodySmall?.copyWith(
+                    color: cs.onSurfaceVariant,
+                    height: 1.3,
+                  ),
                 ),
               ),
-              const SizedBox(width: DonySpacing.md),
-              const Expanded(child: AuthTrustBadge()),
             ],
           ),
-          const SizedBox(height: DonySpacing.lg),
-          Text(
-            title,
-            style: tt.displayLarge?.copyWith(
-              color: cs.onSurface,
-              fontWeight: FontWeight.w900,
-              height: 1.06,
+        ],
+      ],
+    );
+  }
+
+  Widget _buildFull(ColorScheme cs, TextTheme tt) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: cs.primaryContainer,
+                borderRadius: BorderRadius.circular(DonyRadius.card),
+              ),
+              child: Center(
+                child: DonyIcon(iconAsset, size: 26, color: cs.primary),
+              ),
             ),
+            const SizedBox(width: DonySpacing.md),
+            const Expanded(child: AuthTrustBadge()),
+          ],
+        ),
+        const SizedBox(height: DonySpacing.lg),
+        Text(
+          title,
+          style: tt.displayLarge?.copyWith(
+            color: cs.onSurface,
+            fontWeight: FontWeight.w900,
+            height: 1.06,
           ),
+        ),
+        const SizedBox(height: DonySpacing.sm),
+        Text(
+          body,
+          style: tt.bodyLarge?.copyWith(
+            color: cs.onSurfaceVariant,
+            height: 1.48,
+          ),
+        ),
+        if (footnote != null) ...[
+          const SizedBox(height: DonySpacing.md),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              DonyIcon('lock', size: 16, color: cs.success),
+              const SizedBox(width: DonySpacing.xs),
+              Expanded(
+                child: Text(
+                  footnote!,
+                  style: tt.bodySmall?.copyWith(
+                    color: cs.onSurfaceVariant,
+                    height: 1.35,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// Zone d'action du parcours d'onboarding : le bouton principal et le lien
+/// « Passer pour l'instant », ancrés en bas de l'écran, au même endroit sur
+/// tous les écrans.
+///
+/// C'est un contrat de position, pas un simple habillage (retour utilisateur :
+/// des boutons tantôt au milieu, tantôt hors de vue selon la taille du
+/// contenu). Chaque écran du parcours se structure en
+/// `en-tête / Expanded(contenu défilant) / AuthFlowActions` : le contenu
+/// défile, les actions ne bougent jamais.
+///
+/// [primary] est un slot et non un libellé : les écrans à état (identité,
+/// paiements, parrainage) y placent leur bouton construit sous BlocBuilder ou
+/// ValueListenableBuilder. `null` quand l'écran n'a pas d'action principale
+/// (pays : choisir une suggestion navigue immédiatement) — le lien passer
+/// reste alors seul, à la même hauteur que partout ailleurs.
+class AuthFlowActions extends StatelessWidget {
+  const AuthFlowActions({
+    super.key,
+    this.primary,
+    this.onSkip,
+    this.skipEnabled = true,
+    this.skipLabel = 'Passer pour l\'instant',
+  });
+
+  final Widget? primary;
+
+  /// `null` quand **aucune** étape n'est à passer sur cet écran (l'identité
+  /// ou les paiements ouverts depuis le profil, par exemple). La place reste
+  /// réservée pour que le bouton principal ne remonte pas, mais aucun libellé
+  /// n'est affiché : annoncer une action inexistante vaut moins que du vide.
+  final VoidCallback? onSkip;
+
+  /// Passer est-il possible **en ce moment** ? Distinct de [onSkip] `null` :
+  /// pendant un enregistrement l'action existe toujours, elle est seulement
+  /// inerte — le libellé reste donc visible, grisé, plutôt que de disparaître
+  /// et faire sauter la mise en page.
+  final bool skipEnabled;
+
+  final String skipLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (primary != null) ...[
           const SizedBox(height: DonySpacing.sm),
-          Text(
-            body,
-            style: tt.bodyLarge?.copyWith(
-              color: cs.onSurfaceVariant,
-              height: 1.48,
-            ),
-          ),
-          if (footnote != null) ...[
-            const SizedBox(height: DonySpacing.md),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                DonyIcon('lock', size: 16, color: cs.success),
-                const SizedBox(width: DonySpacing.xs),
-                Expanded(
+          primary!,
+        ],
+        // Hauteur réservée dans tous les cas : la zone d'action garde la même
+        // taille d'un écran à l'autre, le pouce retrouve le bouton principal
+        // exactement au même endroit.
+        SizedBox(
+          height: kDonyMinTapTarget,
+          child: onSkip == null
+              ? null
+              : TextButton(
+                  onPressed: skipEnabled ? onSkip : null,
                   child: Text(
-                    footnote!,
-                    style: tt.bodySmall?.copyWith(
-                      color: cs.onSurfaceVariant,
-                      height: 1.35,
+                    skipLabel,
+                    style: tt.bodyMedium?.copyWith(
+                      color: skipEnabled
+                          ? cs.onSurfaceVariant
+                          : cs.onSurfaceVariant.withValues(alpha: 0.4),
                     ),
                   ),
                 ),
-              ],
-            ),
-          ],
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/auth/data/repositories/auth_repository.dart';
+import 'package:dony/features/auth/presentation/onboarding_step.dart';
 import 'package:dony/features/auth/presentation/screens/referral_code_screen.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
 import 'package:flutter/material.dart';
@@ -16,19 +17,62 @@ class _MockAuthRepository extends Mock implements AuthRepository {}
 
 class _FakeReferralEvent extends Fake implements ReferralEvent {}
 
-Future<void> _wrap(WidgetTester tester, ReferralBloc bloc) async {
+const _progress = OnboardingProgress(
+  steps: [
+    OnboardingStep.consent,
+    OnboardingStep.country,
+    OnboardingStep.personalInfo,
+    OnboardingStep.identity,
+    OnboardingStep.payouts,
+  ],
+  done: {
+    OnboardingStep.consent,
+    OnboardingStep.country,
+    OnboardingStep.personalInfo,
+    OnboardingStep.identity,
+    OnboardingStep.payouts,
+  },
+);
+
+/// Il reste l'identité à faire : le parrainage ne doit plus filer droit sur
+/// `/home` dans ce cas — c'était exactement le bug de bout en bout que ce
+/// lot corrige.
+const _progressWithIdentityLeft = OnboardingProgress(
+  steps: [
+    OnboardingStep.consent,
+    OnboardingStep.country,
+    OnboardingStep.personalInfo,
+    OnboardingStep.identity,
+    OnboardingStep.payouts,
+  ],
+  done: {
+    OnboardingStep.consent,
+    OnboardingStep.country,
+    OnboardingStep.personalInfo,
+  },
+);
+
+Future<void> _wrap(
+  WidgetTester tester,
+  ReferralBloc bloc, {
+  OnboardingProgress progress = _progress,
+}) async {
   final router = GoRouter(
     routes: [
       GoRoute(
         path: '/',
         builder: (_, _) => BlocProvider<ReferralBloc>.value(
           value: bloc,
-          child: const ReferralCodeScreen(),
+          child: ReferralCodeScreen(progress: progress),
         ),
       ),
       GoRoute(
         path: '/home',
         builder: (_, _) => const Scaffold(body: Text('Home route')),
+      ),
+      GoRoute(
+        path: '/kyc/verify',
+        builder: (_, _) => const Scaffold(body: Text('KYC route')),
       ),
     ],
   );
@@ -117,6 +161,43 @@ void main() {
 
       expect(tester.takeException(), isNull);
       expect(find.text('Home route'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'il reste l\'identité à faire : « Passer pour l\'instant » va vers '
+    '/kyc/verify, pas vers /home, et ne marque pas l\'onboarding vu — le '
+    'trou de bout en bout corrigé par ce lot',
+    (tester) async {
+      when(() => bloc.state).thenReturn(const ReferralInitial());
+      when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
+
+      await _wrap(tester, bloc, progress: _progressWithIdentityLeft);
+
+      await tester.ensureVisible(find.text('Passer pour l\'instant'));
+      await tester.tap(find.text('Passer pour l\'instant'));
+      await tester.pumpAndSettle();
+
+      verifyNever(() => authRepository.markOnboardingSeen());
+      expect(find.text('KYC route'), findsOneWidget);
+      expect(find.text('Home route'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'il reste l\'identité à faire : code parrain appliqué puis « Continuer '
+    'vers l\'accueil » va aussi vers /kyc/verify, pas vers /home',
+    (tester) async {
+      when(() => bloc.state).thenReturn(const ReferralRedeemed());
+      when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
+
+      await _wrap(tester, bloc, progress: _progressWithIdentityLeft);
+
+      await tester.tap(find.text('Continuer vers l\'accueil'));
+      await tester.pumpAndSettle();
+
+      verifyNever(() => authRepository.markOnboardingSeen());
+      expect(find.text('KYC route'), findsOneWidget);
     },
   );
 }

@@ -1,51 +1,86 @@
-import 'package:dony/core/services/analytics_service.dart';
-import 'package:dony/core/storage/hive_service.dart';
-import 'package:hive/hive.dart';
+import 'dart:async';
 
-/// Détermine la route à suivre juste après la création du compte, selon l'état
-/// du consentement analytics.
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/features/auth/data/models/user_model.dart';
+import 'package:dony/features/auth/presentation/onboarding_step.dart';
+import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
+
+/// Route à suivre juste après la création du compte.
 ///
-/// Réconcilie d'abord avec le backend (source de vérité) si l'utilisateur n'a
-/// pas de réponse locale : sans ce sync, un utilisateur réinstallé (Hive vide,
-/// donc `hasAnswered` faux à tort) qui a déjà consenti côté backend serait
+/// Fine enveloppe **asynchrone** autour de [nextStep] : la seule chose qu'elle
+/// fait de plus est de réconcilier le consentement analytics avec le backend
+/// avant de le lire. Sans ce sync, un utilisateur réinstallé (Hive vide, donc
+/// `hasAnswered` faux à tort) qui a déjà consenti côté backend serait
 /// redemandé — exactement la régression que la persistance backend élimine.
 ///
-/// - Consentement résolu + pays non vu → `/auth/country-selection`.
-/// - Consentement résolu + pays vu → `/auth/referral-code`.
-/// - Jamais répondu → `/auth/analytics-consent`, affiché à TOUT nouvel
-///   utilisateur au 1er lancement, quel que soit le pays. Le choix reste
-///   modifiable ensuite dans Réglages › Confidentialité.
+/// Toute la décision elle-même est dans la fonction pure, pour que la carte de
+/// reprise (lot 4) ne puisse pas la contredire.
 ///
-/// Le parcours complet est en 4 étapes : `analytics_consent` →
-/// `country_selection` → `residence_address` → `referral_code` → `/home`.
-/// Ce résolveur ne renvoie jamais vers `/auth/residence-address` : le flag
-/// `HiveService.kCountryOnboardingSeen` (posé par `CountryOnboardingCubit`,
-/// que l'utilisateur ait choisi un pays ou non) ne distingue pas ces deux
-/// étapes, et `/auth/referral-code` reste le fallback une fois l'onboarding
-/// pays vu. En pratique ce résolveur ne rejoue quasiment jamais l'onboarding
-/// : le compte se réinitialise à chaque inscription. Documentation seulement,
-/// pas un comportement corrigé par le lot adresse de résidence.
-///
-/// [prefs] fournit le flag local de fin d'onboarding pays ; le pays n'est
-/// plus discriminant depuis qu'on affiche l'écran de consentement partout.
-///
-/// Anciennement `resolvePostPinSetupRoute` : la création du code PIN ne fait
-/// plus partie de l'inscription, elle est devenue un réglage facultatif.
-Future<String> resolvePostSignupRoute(
-  AnalyticsService analytics,
-  Box<dynamic> prefs,
-) async {
+/// Anciennement `resolvePostPinSetupRoute`, puis une cascade de `if` pilotée
+/// par le drapeau Hive `kCountryOnboardingSeen` : ce drapeau ne distinguait pas
+/// l'étape pays de l'étape adresse et faisait sauter cette dernière.
+Future<String> resolvePostSignupRoute({
+  required AnalyticsService analytics,
+  required UserModel? user,
+  required StripeAccountState stripe,
+  String? countryFallback,
+}) async {
   if (analytics.isConfigured && !analytics.hasAnswered) {
     await analytics.syncFromBackend();
   }
-  if (analytics.isConfigured && !analytics.hasAnswered) {
-    return '/auth/analytics-consent';
+
+  // Cette garde ferme UN SEUL des trois points d'entrée du parcours : elle
+  // empêche `resolvePostSignupRoute` lui-même de renvoyer indéfiniment vers
+  // le pays un utilisateur qui l'a passé (`CountryOnboardingCubit.skip()`
+  // laisse volontairement `country` à null). Deux autres chemins y entrent
+  // sans jamais passer par ici ni par cette garde :
+  // `AnalyticsConsentGate._onLogin` (`core/widgets/analytics_consent_gate.dart`)
+  // renvoie vers `/auth/analytics-consent` à chaque login dont le
+  // consentement analytics n'est pas répondu, quel que soit
+  // `onboarding_seen_at` ; et le `redirect` de `router.dart` renvoie
+  // `/trips/create` vers `/auth/country-selection` dès que
+  // `kTravelerCountryUnsupported` est posé. Rouvrir ces deux chemins-là après
+  // que l'utilisateur a atteint l'accueil est une décision produit qui
+  // dépasse ce lot — signalé, pas corrigé ici (revue finale du lot 2,
+  // correction 4).
+  if (user?.onboardingSeenAt != null) return '/home';
+
+  final step = nextStep(
+    user: user,
+    stripe: stripe,
+    analyticsAnswered: !analytics.isConfigured || analytics.hasAnswered,
+    countryFallback: countryFallback,
+  );
+
+  // Seul endroit qui connaît l'étape retenue : c'est ici, pas dans un widget,
+  // qu'elle est tracée (sans PII, énumération fermée).
+  final steps = onboardingSteps(stripe);
+  if (step == null) {
+    unawaited(
+      analytics.logEvent(
+        AnalyticsEvents.onboardingCompleted,
+        properties: {'steps_total': steps.length},
+      ),
+    );
+  } else {
+    unawaited(
+      analytics.logEvent(
+        AnalyticsEvents.onboardingStepViewed,
+        properties: {
+          'step': step.wireName,
+          'index': steps.indexOf(step) + 1,
+          'total': steps.length,
+        },
+      ),
+    );
   }
-  if (prefs.get(HiveService.kCountryOnboardingSeen, defaultValue: false) !=
-      true) {
-    return '/auth/country-selection';
-  }
-  // Fallback terminal : ne renvoie jamais vers `/auth/residence-address`,
-  // voir la doc de fonction ci-dessus.
-  return '/auth/referral-code';
+
+  // Rien à compléter : le parrainage clôt le parcours, et c'est lui qui pose
+  // `onboarding_seen_at` (`referral_code_screen.dart:44`).
+  // `onboardingRoute` et non `route` : reprendre le parcours directement sur
+  // l'identité ou les paiements (réinstallation, second login avant la fin)
+  // doit porter le marqueur d'entrée, sinon ces deux écrans s'affichent sans
+  // jauge et n'enchaînent sur rien.
+  return step?.onboardingRoute ?? '/auth/referral-code';
 }

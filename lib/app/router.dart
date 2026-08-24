@@ -7,9 +7,10 @@ import 'package:dony/features/app_update/presentation/screens/force_update_scree
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/bloc/country_onboarding_cubit.dart';
-import 'package:dony/features/auth/bloc/residence_address_cubit.dart';
+import 'package:dony/features/auth/bloc/personal_info_cubit.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/auth/guest_access_guard.dart';
+import 'package:dony/features/auth/presentation/onboarding_step.dart';
 import 'package:dony/features/auth/presentation/screens/analytics_consent_screen.dart';
 import 'package:dony/features/auth/presentation/screens/auth_method_screen.dart';
 import 'package:dony/features/auth/presentation/screens/country_selection_screen.dart';
@@ -17,9 +18,9 @@ import 'package:dony/features/auth/presentation/screens/email_auth_screen.dart';
 import 'package:dony/features/auth/presentation/screens/local_auth_screen.dart';
 import 'package:dony/features/auth/presentation/screens/onboarding_screen.dart';
 import 'package:dony/features/auth/presentation/screens/otp_verification_screen.dart';
+import 'package:dony/features/auth/presentation/screens/personal_info_screen.dart';
 import 'package:dony/features/auth/presentation/screens/phone_auth_screen.dart';
 import 'package:dony/features/auth/presentation/screens/referral_code_screen.dart';
-import 'package:dony/features/auth/presentation/screens/residence_address_screen.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
 import 'package:dony/features/cancellation/presentation/screens/rematch_search_screen.dart';
@@ -213,7 +214,7 @@ const _publicRoutes = {
   '/auth/referral-code',
   '/auth/analytics-consent',
   '/auth/country-selection',
-  '/auth/residence-address',
+  '/auth/personal-info',
   '/auth/local',
   '/home',
   '/recherche/composer',
@@ -360,29 +361,49 @@ final appRouter = GoRouter(
       path: '/auth/country-selection',
       builder: (context, state) => BlocProvider(
         create: (_) => getIt<CountryOnboardingCubit>(),
-        child: const CountrySelectionScreen(),
+        child: CountrySelectionScreen(
+          progress: readOnboardingProgress(
+            context,
+            current: OnboardingStep.country,
+          ),
+        ),
       ),
     ),
     GoRoute(
-      path: '/auth/residence-address',
-      builder: (context, state) => BlocProvider(
-        create: (_) => getIt<ResidenceAddressCubit>(),
-        child: ResidenceAddressScreen(
-          // `AuthBloc.state.currentUser?.country` n'est jamais renseigné :
-          // `POST /auth/register` n'écrit pas `users.country`. Le pays choisi
-          // à l'étape précédente est prioritairement lu dans `extra` — passé
-          // par `country_selection_screen.dart` juste après un `select()`
-          // réussi, donc garanti frais. `BusinessPrefsBloc.state.country`
-          // reste le repli : ce singleton app-wide est construit avant cet
-          // écran et ne se resynchronise pas automatiquement quand
-          // `CountryOnboardingCubit` écrit directement dans Hive, mais il
-          // reste utile pour toute navigation qui ne passerait pas par
-          // `country_selection_screen` (deep link, retour arrière...).
-          country:
-              (state.extra as String?) ??
-              context.read<BusinessPrefsBloc>().state.country,
-        ),
-      ),
+      path: '/auth/personal-info',
+      builder: (context, state) {
+        // `AuthBloc.state.currentUser?.country` n'est jamais renseigné :
+        // `POST /auth/register` n'écrit pas `users.country`. Le pays choisi
+        // à l'étape précédente est prioritairement lu dans `extra` — passé
+        // par `country_selection_screen.dart` juste après un `select()`
+        // réussi, donc garanti frais. `BusinessPrefsBloc.state.country`
+        // reste le repli : ce singleton app-wide est construit avant cet
+        // écran et ne se resynchronise pas automatiquement quand
+        // `CountryOnboardingCubit` écrit directement dans Hive, mais il
+        // reste utile pour toute navigation qui ne passerait pas par
+        // `country_selection_screen` (deep link, retour arrière...). Même
+        // repli réutilisé pour `countryFallback` : sans lui, la jauge
+        // afficherait l'étape « Pays » comme non faite juste après l'avoir
+        // choisie (`readOnboardingProgress` ne le déduit pas seul).
+        final country =
+            (state.extra as String?) ??
+            context.read<BusinessPrefsBloc>().state.country;
+        return BlocProvider(
+          create: (_) => getIt<PersonalInfoCubit>(),
+          child: PersonalInfoScreen(
+            country: country,
+            // Préremplit ce que le profil sait déjà (retour sur l'étape
+            // depuis le profil, second passage) — lu ici comme le reste de
+            // l'état ambiant, jamais dans l'écran.
+            user: context.read<AuthBloc>().state.currentUser,
+            progress: readOnboardingProgress(
+              context,
+              current: OnboardingStep.personalInfo,
+              countryFallback: country,
+            ),
+          ),
+        );
+      },
     ),
     GoRoute(
       path: '/auth/referral-code',
@@ -391,12 +412,35 @@ final appRouter = GoRouter(
           getIt<ReferralRepository>(),
           getIt<AnalyticsService>(),
         ),
-        child: const ReferralCodeScreen(),
+        // Aucune étape en cours : le parrainage est hors décompte (spec §4.2).
+        // Même repli `extra ?? BusinessPrefsBloc` que `personal-info`
+        // pour `countryFallback` : `personal_info_screen.dart` transmet
+        // le pays en `extra` (repli immédiat, le temps que le
+        // `AuthProfileRefreshRequested` déclenché juste avant revienne) —
+        // sans lui, l'étape « Pays » regresserait sur cet écran (correction 1
+        // de la revue finale du lot 2).
+        child: ReferralCodeScreen(
+          progress: readOnboardingProgress(
+            context,
+            // Hors décompte mais pas hors position : le parrainage vient
+            // juste après les informations, la jauge doit donc afficher
+            // « 3 / 5 » et non retomber sur les seuls faits accomplis.
+            reachedPast: OnboardingStep.personalInfo,
+            countryFallback:
+                (state.extra as String?) ??
+                context.read<BusinessPrefsBloc>().state.country,
+          ),
+        ),
       ),
     ),
     GoRoute(
       path: '/auth/analytics-consent',
-      builder: (context, state) => const AnalyticsConsentScreen(),
+      builder: (context, state) => AnalyticsConsentScreen(
+        progress: readOnboardingProgress(
+          context,
+          current: OnboardingStep.consent,
+        ),
+      ),
     ),
     GoRoute(
       path: '/auth/local',
@@ -409,9 +453,22 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/kyc/verify',
       builder: (context, state) {
+        // `/kyc/verify` a deux entrées : le parcours d'onboarding (identité,
+        // spec §2) et le profil (vérifier son identité à tout moment). Seul
+        // ce query param les distingue — c'est lui qui décide si la jauge
+        // s'affiche et si l'écran enchaîne sur l'étape suivante une fois
+        // terminé ou passé, plutôt que de renvoyer droit à l'accueil comme
+        // depuis le profil.
+        final fromOnboarding =
+            state.uri.queryParameters[onboardingEntryParam] ==
+            onboardingEntryValue;
+        final progress = fromOnboarding
+            ? readOnboardingProgress(context, current: OnboardingStep.identity)
+            : null;
+
         final raw = state.extra;
         if (raw is! String) {
-          return const KycStatusScreen();
+          return KycStatusScreen(progress: progress);
         }
         final uri = Uri.tryParse(raw);
         final host = uri?.host ?? '';
@@ -419,11 +476,11 @@ final appRouter = GoRouter(
             uri?.scheme == 'https' &&
             (host == 'verify.stripe.com' || host.endsWith('.stripe.com'));
         if (!isStripe) {
-          return const KycStatusScreen();
+          return KycStatusScreen(progress: progress);
         }
         return BlocProvider(
           create: (_) => getIt<KycBloc>(),
-          child: KycWebViewScreen(stripeUrl: raw),
+          child: KycWebViewScreen(stripeUrl: raw, progress: progress),
         );
       },
     ),
@@ -699,10 +756,25 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/payments/onboarding',
-      builder: (context, state) => BlocProvider(
-        create: (_) => getIt<PaymentBloc>(),
-        child: const PayoutOnboardingScreen(),
-      ),
+      builder: (context, state) {
+        // Même double entrée que `/kyc/verify` : onboarding (paiements,
+        // dernière étape comptée) ou profil (« Recevoir mes paiements »
+        // dans Réglages, à tout moment).
+        final fromOnboarding =
+            state.uri.queryParameters[onboardingEntryParam] ==
+            onboardingEntryValue;
+        return BlocProvider(
+          create: (_) => getIt<PaymentBloc>(),
+          child: PayoutOnboardingScreen(
+            progress: fromOnboarding
+                ? readOnboardingProgress(
+                    context,
+                    current: OnboardingStep.payouts,
+                  )
+                : null,
+          ),
+        );
+      },
     ),
     GoRoute(
       path: '/payments/pay',

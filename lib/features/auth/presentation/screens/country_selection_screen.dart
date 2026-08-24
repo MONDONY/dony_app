@@ -4,6 +4,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/country_onboarding_cubit.dart';
+import 'package:dony/features/auth/presentation/onboarding_step.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_flow_chrome.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -11,7 +12,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 class CountrySelectionScreen extends StatefulWidget {
-  const CountrySelectionScreen({super.key});
+  const CountrySelectionScreen({super.key, required this.progress});
+
+  final OnboardingProgress progress;
 
   @override
   State<CountrySelectionScreen> createState() => _CountrySelectionScreenState();
@@ -20,8 +23,8 @@ class CountrySelectionScreen extends StatefulWidget {
 class _CountrySelectionScreenState extends State<CountrySelectionScreen> {
   // Cet écran a trois sorties : `select` (un pays choisi), `skip` et
   // `continueAsSenderOnly` (aucun pays). Les deux dernières n'ont rien à
-  // faire préparer sur `/auth/residence-address` (adresse de résidence
-  // = préparer le compte de paiement voyageur) : elles doivent filer
+  // faire préparer sur `/auth/personal-info` (le nom légal ne sert qu'à
+  // ouvrir le compte de paiement voyageur) : elles doivent filer
   // directement au parrainage. `CountryOnboardingSuccess` ne porte aucune
   // information permettant de distinguer ces trois chemins, mais
   // `CountryOnboardingSaving.countryCode` — toujours émis juste avant — si :
@@ -45,16 +48,22 @@ class _CountrySelectionScreenState extends State<CountrySelectionScreen> {
       listener: (context, state) {
         if (state is CountryOnboardingSuccess) {
           if (_lastAttemptedCountryCode != null) {
+            // Le backend vient d'écrire `users.country` (`select()`) : sans
+            // ce refresh, le `UserModel` mis en cache par `AuthBloc` reste
+            // périmé jusqu'au prochain `AuthCheckRequested`, et l'étape
+            // « pays » regresserait sur `/auth/referral-code`, plusieurs
+            // écrans plus loin, faute de source fraîche (`nextStep`,
+            // correction 1 de la revue finale). `skip()` et
+            // `continueAsSenderOnly()` n'écrivent rien côté serveur : pas de
+            // refresh à déclencher pour eux.
+            context.read<AuthBloc>().add(const AuthProfileRefreshRequested());
             // Passe le code fraîchement choisi en `extra` : c'est la valeur
             // la plus à jour possible, celle que l'utilisateur vient de
             // sélectionner — plus fraîche qu'une relecture de
             // `BusinessPrefsBloc`, dont le singleton app-wide est construit
             // avant cet écran et ne se resynchronise pas automatiquement
             // quand ce cubit écrit directement dans Hive (voir router.dart).
-            context.go(
-              '/auth/residence-address',
-              extra: _lastAttemptedCountryCode,
-            );
+            context.go('/auth/personal-info', extra: _lastAttemptedCountryCode);
           } else {
             context.go('/auth/referral-code');
           }
@@ -89,11 +98,9 @@ class _CountrySelectionScreenState extends State<CountrySelectionScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const AuthFlowHeader(
-                          current: 2,
-                          total: 4,
+                        AuthFlowHeader.gauge(
+                          segments: widget.progress.segments,
                           label: 'Pays',
-                          showBack: false,
                         ),
                         SizedBox(
                           height: (media.size.height * 0.018).clamp(
@@ -113,11 +120,15 @@ class _CountrySelectionScreenState extends State<CountrySelectionScreen> {
                             selectedCode: selectedCode,
                           ),
                         ),
-                        SizedBox(
-                          height:
-                              DonySpacing.base +
-                              MediaQuery.paddingOf(context).bottom,
+                        // Aucune action principale : choisir une suggestion
+                        // navigue immédiatement. Le lien passer reste seul,
+                        // exactement à la hauteur qu'il occupe ailleurs.
+                        AuthFlowActions(
+                          skipEnabled: !isSaving,
+                          onSkip: () =>
+                              context.read<CountryOnboardingCubit>().skip(),
                         ),
+                        SizedBox(height: MediaQuery.paddingOf(context).bottom),
                       ],
                     ),
                   ),
@@ -347,15 +358,6 @@ class _CountryListState extends State<_CountryList> {
                 child: _EmptyCountryResults(),
               );
             },
-          ),
-          const SizedBox(height: DonySpacing.md),
-          DonyButton(
-            label: 'Passer pour l’instant',
-            variant: DonyButtonVariant.ghost,
-            isLoading: widget.isSaving && widget.selectedCode == null,
-            onPressed: widget.isSaving
-                ? null
-                : () => context.read<CountryOnboardingCubit>().skip(),
           ),
         ],
       ),

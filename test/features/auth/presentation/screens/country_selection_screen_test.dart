@@ -4,6 +4,7 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/bloc/country_onboarding_cubit.dart';
+import 'package:dony/features/auth/presentation/onboarding_step.dart';
 import 'package:dony/features/auth/presentation/screens/country_selection_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -18,6 +19,18 @@ class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
 
 class FakeAuthEvent extends Fake implements AuthEvent {}
 
+const _progress = OnboardingProgress(
+  steps: [
+    OnboardingStep.consent,
+    OnboardingStep.country,
+    OnboardingStep.personalInfo,
+    OnboardingStep.identity,
+    OnboardingStep.payouts,
+  ],
+  done: {OnboardingStep.consent},
+  current: OnboardingStep.country,
+);
+
 Future<void> _wrap(
   WidgetTester tester,
   CountryOnboardingCubit cubit, {
@@ -26,6 +39,7 @@ Future<void> _wrap(
   final auth = authBloc ?? MockAuthBloc();
   when(() => auth.state).thenReturn(const AuthInitial());
   when(() => auth.stream).thenAnswer((_) => const Stream.empty());
+  when(() => auth.add(any())).thenReturn(null);
 
   final router = GoRouter(
     routes: [
@@ -36,13 +50,13 @@ Future<void> _wrap(
             BlocProvider<CountryOnboardingCubit>.value(value: cubit),
             BlocProvider<AuthBloc>.value(value: auth),
           ],
-          child: const CountrySelectionScreen(),
+          child: const CountrySelectionScreen(progress: _progress),
         ),
       ),
       GoRoute(
-        path: '/auth/residence-address',
+        path: '/auth/personal-info',
         builder: (_, state) =>
-            Scaffold(body: Text('Residence route extra=${state.extra}')),
+            Scaffold(body: Text('Personal info route extra=${state.extra}')),
       ),
       GoRoute(
         path: '/auth/referral-code',
@@ -189,7 +203,7 @@ void main() {
   testWidgets('passer appelle le cubit sans imposer de pays', (tester) async {
     await _wrap(tester, cubit);
 
-    await tester.tap(find.text('Passer pour l’instant'));
+    await tester.tap(find.text('Passer pour l\'instant'));
     await tester.pump();
 
     verify(() => cubit.skip()).called(1);
@@ -228,8 +242,10 @@ void main() {
   });
 
   testWidgets(
-    'état Success navigue vers l\'étape adresse de résidence en passant le '
-    'code pays fraîchement choisi en extra',
+    'état Success navigue vers l\'étape « Vos informations » en passant le '
+    'code pays fraîchement choisi en extra, et rafraîchit le profil '
+    '(correction 1 de la revue finale du lot 2 : sans ce refresh, l\'étape '
+    '« pays » regressait sur /auth/referral-code, plusieurs écrans plus loin)',
     (tester) async {
       whenListen<CountryOnboardingState>(
         cubit,
@@ -240,20 +256,23 @@ void main() {
         initialState: const CountryOnboardingInitial(),
       );
 
-      await _wrap(tester, cubit);
+      final authBloc = MockAuthBloc();
+      await _wrap(tester, cubit, authBloc: authBloc);
       await tester.pumpAndSettle();
 
       // `extra` porte le code choisi par l'utilisateur, la valeur la plus
       // fraîche possible — plus fraîche qu'une relecture de
       // `BusinessPrefsBloc`, dont le singleton app-wide ne se resynchronise
       // pas automatiquement quand ce cubit écrit directement dans Hive.
-      expect(find.text('Residence route extra=CA'), findsOneWidget);
+      expect(find.text('Personal info route extra=CA'), findsOneWidget);
+      verify(() => authBloc.add(const AuthProfileRefreshRequested())).called(1);
     },
   );
 
   testWidgets(
     'passer la sélection de pays (skip) navigue directement vers le parrainage, '
-    'pas vers l\'adresse de résidence',
+    'pas vers l\'adresse de résidence, et ne rafraîchit pas le profil '
+    '(skip() n\'écrit rien côté serveur, rien à rafraîchir)',
     (tester) async {
       // `skip()` émet `CountryOnboardingSaving(null)` : aucun code pays, donc
       // rien à préparer sur l'étape adresse (compte de paiement voyageur).
@@ -266,17 +285,20 @@ void main() {
         initialState: const CountryOnboardingInitial(),
       );
 
-      await _wrap(tester, cubit);
+      final authBloc = MockAuthBloc();
+      await _wrap(tester, cubit, authBloc: authBloc);
       await tester.pumpAndSettle();
 
       expect(find.text('Referral route'), findsOneWidget);
       expect(find.text('Residence route'), findsNothing);
+      verifyNever(() => authBloc.add(const AuthProfileRefreshRequested()));
     },
   );
 
   testWidgets(
     'continuer sans pays disponible (continueAsSenderOnly) navigue directement '
-    'vers le parrainage, pas vers l\'adresse de résidence',
+    'vers le parrainage, pas vers l\'adresse de résidence, et ne rafraîchit '
+    'pas le profil (rien n\'est écrit côté serveur non plus)',
     (tester) async {
       // `continueAsSenderOnly()` émet lui aussi `CountryOnboardingSaving(null)` :
       // même contrat de navigation que `skip()`.
@@ -289,11 +311,13 @@ void main() {
         initialState: const CountryOnboardingInitial(),
       );
 
-      await _wrap(tester, cubit);
+      final authBloc = MockAuthBloc();
+      await _wrap(tester, cubit, authBloc: authBloc);
       await tester.pumpAndSettle();
 
       expect(find.text('Referral route'), findsOneWidget);
       expect(find.text('Residence route'), findsNothing);
+      verifyNever(() => authBloc.add(const AuthProfileRefreshRequested()));
     },
   );
 }

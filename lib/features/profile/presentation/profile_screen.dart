@@ -1,4 +1,3 @@
-import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -333,16 +332,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         const SizedBox(height: DonySpacing.lg),
       ],
-      if (user != null &&
-          !user.isProfileComplete(
-            countPhone: smsAuthEnabledListenable.value,
-          )) ...[
+      // La bannière porte désormais aussi l'identité et les paiements : une
+      // seule question posée à l'utilisateur (« qu'est-ce qui manque ? »),
+      // une seule carte pour y répondre. Elle décide seule de s'afficher —
+      // `isProfileComplete` ne connaît pas ces deux étapes-là — et porte son
+      // propre écart bas pour ne rien occuper une fois tout complété.
+      if (user != null)
         ProfileCompletionBanner(
           user: user,
           onTap: () => context.push('/profile/edit'),
         ).animate().fadeIn(delay: 40.ms),
-        const SizedBox(height: DonySpacing.lg),
-      ],
 
       animated(ProfileAccountSection(user: user)),
       // Compte entièrement vérifié → la section se réduit à SizedBox.shrink :

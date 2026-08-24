@@ -11,6 +11,7 @@ class StripeAccountBloc extends Bloc<StripeAccountEvent, StripeAccountState> {
   StripeAccountBloc(this._repository) : super(const StripeAccountInitial()) {
     on<StripeAccountStatusLoaded>(_onLoad);
     on<StripeAccountStatusRefreshed>(_onRefresh);
+    on<StripeAccountReset>(_onReset);
   }
 
   Future<void> _onLoad(
@@ -53,5 +54,11 @@ class StripeAccountBloc extends Bloc<StripeAccountEvent, StripeAccountState> {
     } catch (_) {
       emit(const StripeAccountLoadError());
     }
+  }
+
+  /// Voir `StripeAccountReset` : purge des données de compte, pas un simple
+  /// rechargement — aucun appel réseau ici, juste l'état initial.
+  void _onReset(StripeAccountReset event, Emitter<StripeAccountState> emit) {
+    emit(const StripeAccountInitial());
   }
 }
