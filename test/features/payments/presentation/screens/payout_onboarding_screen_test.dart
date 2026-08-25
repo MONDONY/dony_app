@@ -18,13 +18,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import 'package:webview_flutter_platform_interface/webview_flutter_platform_interface.dart';
 
+import '../../../../helpers/fake_web_view_platform.dart';
 // `MockStripeAccountBloc` est déjà déclaré localement ci-dessous : on n'importe
 // que la constante d'état pour éviter la collision de noms.
 import '../../../../helpers/stripe_account_test_doubles.dart'
     show stripeCountryUnavailableState;
-import '../../../../helpers/fake_web_view_platform.dart';
 
 class MockPaymentBloc extends MockBloc<PaymentEvent, PaymentState>
     implements PaymentBloc {}
