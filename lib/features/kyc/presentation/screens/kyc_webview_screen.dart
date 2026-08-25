@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/camera_permission_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
@@ -15,8 +16,17 @@ import 'package:go_router/go_router.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 class KycWebViewScreen extends StatefulWidget {
-  const KycWebViewScreen({super.key, required this.stripeUrl, this.progress});
+  const KycWebViewScreen({
+    super.key,
+    required this.stripeUrl,
+    this.progress,
+    this.cameraPermission = const CameraPermissionService(),
+  });
   final String stripeUrl;
+
+  /// Injectable pour les tests : la vraie implémentation passe par un
+  /// canal natif absent du binaire de test.
+  final CameraPermissionService cameraPermission;
 
   /// Non `null` seulement quand cette webview a été ouverte depuis
   /// l'onboarding — voir `KycStatusScreen`, seul point d'entrée qui la
@@ -41,15 +51,25 @@ class _KycWebViewScreenState extends State<KycWebViewScreen> {
   @override
   void initState() {
     super.initState();
-    // Only grant camera access — Stripe Identity needs it for the selfie step.
-    // Blanket grant() would also allow microphone/other sensors unnecessarily.
     _controller =
         WebViewController(
-            onPermissionRequest: (request) {
-              if (request.types.contains(
+            onPermissionRequest: (request) async {
+              // Only grant camera access — Stripe Identity needs it for the
+              // selfie step. Blanket grant() would also allow
+              // microphone/other sensors unnecessarily.
+              if (!request.types.contains(
                 WebViewPermissionResourceType.camera,
               )) {
-                request.grant();
+                return;
+              }
+              // La permission web ne vaut rien sans la permission système :
+              // le plugin Android relaie `grant()` sans jamais demander
+              // `android.permission.CAMERA`, si bien que la page se croit
+              // autorisée pendant que le système lui refuse l'objectif.
+              if (await widget.cameraPermission.request()) {
+                await request.grant();
+              } else {
+                await request.deny();
               }
             },
           )
@@ -140,16 +160,22 @@ class _KycWebViewScreenState extends State<KycWebViewScreen> {
           ),
         ],
       ),
-      body: Stack(
-        children: [
-          WebViewWidget(controller: _controller),
-          ValueListenableBuilder<bool>(
-            valueListenable: _isLoading,
-            builder: (_, loading, _) => loading
-                ? Center(child: CircularProgressIndicator(color: cs.primary))
-                : const SizedBox.shrink(),
-          ),
-        ],
+      body: SafeArea(
+        // Android 15 impose l'edge-to-edge : sans cette marge, la WebView
+        // s'étend sous la barre de navigation. Le bouton d'action de la page
+        // distante, ancré en bas, tombe alors entièrement dans la bande
+        // système et devient invisible autant qu'intouchable.
+        child: Stack(
+          children: [
+            WebViewWidget(controller: _controller),
+            ValueListenableBuilder<bool>(
+              valueListenable: _isLoading,
+              builder: (_, loading, _) => loading
+                  ? Center(child: CircularProgressIndicator(color: cs.primary))
+                  : const SizedBox.shrink(),
+            ),
+          ],
+        ),
       ),
     );
   }
