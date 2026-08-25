@@ -123,6 +123,33 @@ void main() {
     }
   });
 
+  // Régression : quand l'utilisateur quitte la page Stripe avant de valider,
+  // la session reste PENDING indéfiniment — Stripe n'a rien reçu, donc rien
+  // n'avancera jamais. L'écran n'offrait aucun retour vers le formulaire, ni
+  // tout de suite ni après le délai d'attente : le compte restait enfermé sur
+  // « Vérification en cours ».
+  testWidgets('PENDING offre de rouvrir le formulaire de vérification', (
+    tester,
+  ) async {
+    when(() => kycBloc.state).thenReturn(
+      const KycStatusLoaded(
+        kycStatus: 'PENDING',
+        verificationStatus: 'PENDING',
+      ),
+    );
+    when(() => kycBloc.stream).thenAnswer((_) => const Stream.empty());
+
+    await _wrap(tester, kycBloc: kycBloc, authBloc: authBloc);
+
+    expect(find.text('Vérification en cours'), findsOneWidget);
+    expect(find.text('Reprendre la vérification'), findsOneWidget);
+
+    await tester.tap(find.text('Reprendre la vérification'));
+    await tester.pump();
+
+    verify(() => kycBloc.add(const KycSessionRequested())).called(1);
+  });
+
   testWidgets('depuis le profil (progress null) : ni jauge, ni « Passer pour '
       'l\'instant » — une jauge d\'inscription n\'aurait aucun sens ici', (
     tester,

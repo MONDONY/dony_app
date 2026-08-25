@@ -270,15 +270,29 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
         ),
         onSkip: skip,
       ),
+      // Passé le délai d'attente, la reprise passe devant : une session que
+      // Stripe n'a jamais reçue ne bougera plus jamais d'elle-même.
       _ when _timedOut => AuthFlowActions(
         primary: DonyButton(
-          label: "Retour à l'app",
-          onPressed: _leaveIdentityStep,
+          label: 'Reprendre la vérification',
+          onPressed: startSession,
         ),
+        skipLabel: "Retour à l'app",
+        onSkip: _leaveIdentityStep,
       ),
-      // En cours : rien à valider, seulement quitter — le lien porte donc
-      // « Continuer plus tard » plutôt que « Passer pour l'instant ».
+      // En cours. La vérification peut être en examen chez Stripe, mais elle
+      // peut tout aussi bien n'avoir jamais été soumise, l'utilisateur ayant
+      // quitté la page avant de valider. Sans cette reprise, ce second cas
+      // enferme le compte ici pour toujours : le statut reste PENDING, Stripe
+      // n'a rien à examiner, et plus aucun chemin ne rouvre le formulaire.
+      // Rouvrir une session déjà soumise est sans effet, le backend renvoyant
+      // la session existante (`KycService.createSession` est idempotent).
       _ => AuthFlowActions(
+        primary: DonyButton(
+          label: 'Reprendre la vérification',
+          onPressed: startSession,
+          variant: DonyButtonVariant.ghost,
+        ),
         skipLabel: 'Continuer plus tard',
         onSkip: () {
           _stopPolling();

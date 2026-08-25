@@ -781,6 +781,22 @@ void main() {
     );
   });
 
+  // ─── Scopes Google ───────────────────────────────────────────────────────────
+
+  group('googleSignInScopes', () {
+    // Régression : avec une liste vide, le plugin Android réclamait le jeton
+    // d'accès sous le scope `oauth2:` seul. Google répondait MISSING_SCOPE /
+    // BAD_REQUEST, l'exception remontait de `authentication`, et la connexion
+    // Google échouait entièrement sur les builds réels.
+    test('ne doit jamais être vide', () {
+      expect(googleSignInScopes, isNotEmpty);
+    });
+
+    test('demande le scope email', () {
+      expect(googleSignInScopes, contains('email'));
+    });
+  });
+
   // ─── AuthGoogleSignInRequested ───────────────────────────────────────────────
 
   group('AuthGoogleSignInRequested', () {

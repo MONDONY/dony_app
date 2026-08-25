@@ -2,73 +2,9 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/settings/presentation/screens/legal_web_view_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:plugin_platform_interface/plugin_platform_interface.dart';
-import 'package:webview_flutter_platform_interface/webview_flutter_platform_interface.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
-// ---------------------------------------------------------------------------
-// Minimal WebView platform stubs (do not test WebView internals)
-// ---------------------------------------------------------------------------
-
-class _FakeWebViewPlatform extends WebViewPlatform
-    with MockPlatformInterfaceMixin {
-  @override
-  PlatformWebViewController createPlatformWebViewController(
-    PlatformWebViewControllerCreationParams params,
-  ) => _FakePlatformWebViewController(params);
-
-  @override
-  PlatformNavigationDelegate createPlatformNavigationDelegate(
-    PlatformNavigationDelegateCreationParams params,
-  ) => _FakePlatformNavigationDelegate(params);
-
-  @override
-  PlatformWebViewWidget createPlatformWebViewWidget(
-    PlatformWebViewWidgetCreationParams params,
-  ) => _FakePlatformWebViewWidget(params);
-}
-
-class _FakePlatformWebViewController extends PlatformWebViewController
-    with MockPlatformInterfaceMixin {
-  _FakePlatformWebViewController(super.params) : super.implementation();
-
-  @override
-  Future<void> setJavaScriptMode(JavaScriptMode javaScriptMode) async {}
-
-  @override
-  Future<void> setPlatformNavigationDelegate(
-    PlatformNavigationDelegate handler,
-  ) async {}
-
-  @override
-  Future<void> loadRequest(LoadRequestParams params) async {}
-
-  @override
-  Future<void> reload() async {}
-}
-
-class _FakePlatformNavigationDelegate extends PlatformNavigationDelegate
-    with MockPlatformInterfaceMixin {
-  _FakePlatformNavigationDelegate(super.params) : super.implementation();
-
-  @override
-  Future<void> setOnPageStarted(PageEventCallback onPageStarted) async {}
-
-  @override
-  Future<void> setOnPageFinished(PageEventCallback onPageFinished) async {}
-
-  @override
-  Future<void> setOnWebResourceError(
-    WebResourceErrorCallback onWebResourceError,
-  ) async {}
-}
-
-class _FakePlatformWebViewWidget extends PlatformWebViewWidget
-    with MockPlatformInterfaceMixin {
-  _FakePlatformWebViewWidget(super.params) : super.implementation();
-
-  @override
-  Widget build(BuildContext context) => const SizedBox.shrink();
-}
+import '../../../helpers/fake_web_view_platform.dart';
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -76,7 +12,7 @@ class _FakePlatformWebViewWidget extends PlatformWebViewWidget
 
 void main() {
   setUpAll(() {
-    WebViewPlatform.instance = _FakeWebViewPlatform();
+    WebViewPlatform.instance = FakeWebViewPlatform();
   });
 
   Widget wrap({
@@ -112,6 +48,23 @@ void main() {
         ),
         findsOneWidget,
       );
+    });
+
+    // Même garde que sur la WebView du KYC : l'edge-to-edge imposé par
+    // Android 15 fait passer le bas de la page sous la barre de navigation.
+    testWidgets('protège le bas de la WebView de la barre de navigation', (
+      tester,
+    ) async {
+      await tester.pumpWidget(wrap());
+
+      final protections = tester.widgetList<SafeArea>(
+        find.ancestor(
+          of: find.byType(WebViewWidget),
+          matching: find.byType(SafeArea),
+        ),
+      );
+
+      expect(protections.any((zone) => zone.bottom), isTrue);
     });
 
     testWidgets('dispose sans erreur', (tester) async {

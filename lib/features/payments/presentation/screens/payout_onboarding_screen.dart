@@ -797,16 +797,22 @@ class _StripeOnboardingWebViewState extends State<_StripeOnboardingWebView> {
         leadingIconAsset: 'x',
         onBack: _close,
       ),
-      body: Stack(
-        children: [
-          WebViewWidget(controller: _controller),
-          ValueListenableBuilder<bool>(
-            valueListenable: _isLoading,
-            builder: (_, loading, _) => loading
-                ? Center(child: CircularProgressIndicator(color: cs.primary))
-                : const SizedBox.shrink(),
-          ),
-        ],
+      body: SafeArea(
+        // Android 15 impose l'edge-to-edge : sans cette marge, la WebView
+        // s'étend sous la barre de navigation. Le bouton d'action de la page
+        // distante, ancré en bas, tombe alors entièrement dans la bande
+        // système et devient invisible autant qu'intouchable.
+        child: Stack(
+          children: [
+            WebViewWidget(controller: _controller),
+            ValueListenableBuilder<bool>(
+              valueListenable: _isLoading,
+              builder: (_, loading, _) => loading
+                  ? Center(child: CircularProgressIndicator(color: cs.primary))
+                  : const SizedBox.shrink(),
+            ),
+          ],
+        ),
       ),
     );
   }

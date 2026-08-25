@@ -68,62 +68,74 @@ class _LegalWebViewScreenState extends State<LegalWebViewScreen> {
           ),
         ],
       ),
-      body: ValueListenableBuilder<bool>(
-        valueListenable: _hasError,
-        builder: (context, hasError, _) {
-          if (hasError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(DonySpacing.lg),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    DonyIcon('wifi-off', size: 48, color: cs.onSurfaceVariant),
-                    const SizedBox(height: DonySpacing.base),
-                    Text(
-                      'Impossible de charger la page',
-                      style: tt.titleMedium,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: DonySpacing.sm),
-                    Text(
-                      'Vérifie ta connexion et réessaie.',
-                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: DonySpacing.xl),
-                    FilledButton.tonal(
-                      onPressed: () {
-                        _hasError.value = false;
-                        _isLoading.value = true;
-                        _controller.reload();
-                      },
-                      child: const Text('Réessayer'),
-                    ),
-                  ],
+      body: SafeArea(
+        // Android 15 impose l'edge-to-edge : sans cette marge, la WebView
+        // s'étend sous la barre de navigation. Le bouton d'action de la page
+        // distante, ancré en bas, tombe alors entièrement dans la bande
+        // système et devient invisible autant qu'intouchable.
+        child: ValueListenableBuilder<bool>(
+          valueListenable: _hasError,
+          builder: (context, hasError, _) {
+            if (hasError) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(DonySpacing.lg),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      DonyIcon(
+                        'wifi-off',
+                        size: 48,
+                        color: cs.onSurfaceVariant,
+                      ),
+                      const SizedBox(height: DonySpacing.base),
+                      Text(
+                        'Impossible de charger la page',
+                        style: tt.titleMedium,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: DonySpacing.sm),
+                      Text(
+                        'Vérifie ta connexion et réessaie.',
+                        style: tt.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: DonySpacing.xl),
+                      FilledButton.tonal(
+                        onPressed: () {
+                          _hasError.value = false;
+                          _isLoading.value = true;
+                          _controller.reload();
+                        },
+                        child: const Text('Réessayer'),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            );
-          }
+              );
+            }
 
-          return Stack(
-            children: [
-              WebViewWidget(controller: _controller),
-              ValueListenableBuilder<bool>(
-                valueListenable: _isLoading,
-                builder: (context, isLoading, _) {
-                  if (!isLoading) return const SizedBox.shrink();
-                  return Container(
-                    color: cs.surface,
-                    child: Center(
-                      child: CircularProgressIndicator(color: cs.primary),
-                    ),
-                  );
-                },
-              ),
-            ],
-          );
-        },
+            return Stack(
+              children: [
+                WebViewWidget(controller: _controller),
+                ValueListenableBuilder<bool>(
+                  valueListenable: _isLoading,
+                  builder: (context, isLoading, _) {
+                    if (!isLoading) return const SizedBox.shrink();
+                    return Container(
+                      color: cs.surface,
+                      child: Center(
+                        child: CircularProgressIndicator(color: cs.primary),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
