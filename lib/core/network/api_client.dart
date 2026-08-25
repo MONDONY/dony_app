@@ -1,8 +1,8 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:dony/core/error/app_exception.dart';
@@ -16,13 +16,21 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
-// PEM certificate for production TLS pinning.
+// SHA-256 fingerprint (hex, no colons) of the production TLS certificate,
+// for pinning. A full PEM certificate used to be passed instead — the iOS
+// build toolchain (flutter build ipa's Xcode Run Script → Dart kernel
+// compiler) chokes on a --dart-define that long ("File name too long"),
+// even though the Android/Gradle pipeline tolerates it fine. A hash is a
+// few dozen chars, well within any toolchain's limits either side.
+//
 // Populated at build time via --dart-define-from-file=env.prod.json:
-//   "TLS_CERT_PEM": "-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----\n"
-// How to obtain: openssl s_client -connect api.dony.app:443 -servername api.dony.app \
-//                  </dev/null 2>/dev/null | openssl x509 -outform PEM
-// Leave empty in env.dev.json — pinning is always skipped in debug mode.
-const _tlsCertPem = String.fromEnvironment('TLS_CERT_PEM');
+//   "TLS_CERT_PIN_SHA256": "ab12cd34..."
+// How to obtain: openssl s_client -connect api.yadony.com:443 -servername api.yadony.com \
+//                  </dev/null 2>/dev/null | openssl x509 -noout -fingerprint -sha256
+// Leave empty in env.dev.json / env.staging.json — pinning is skipped whenever
+// this is blank (also always skipped in debug mode), which is deliberate:
+// staging serves a different certificate than production.
+const _tlsCertPinSha256 = String.fromEnvironment('TLS_CERT_PIN_SHA256');
 
 class ApiClient {
   ApiClient({
@@ -108,20 +116,39 @@ class ApiClient {
 
   Dio get dio => _dio;
 
-  // Installs a custom SecurityContext that trusts ONLY the pinned server cert,
-  // rejecting any connection to a server presenting a different certificate —
-  // even if that certificate is signed by a trusted CA (MITM protection).
+  // Rejects any connection to a server whose certificate doesn't match the
+  // pinned SHA-256 fingerprint — even if that certificate is signed by a
+  // trusted CA (MITM protection). SecurityContext(withTrustedRoots: false)
+  // means the platform's normal CA trust check never short-circuits this:
+  // badCertificateCallback fires for every connection, not just untrusted
+  // ones, so the fingerprint comparison below is the only thing deciding
+  // trust.
   //
   // Pinning is intentionally skipped when:
   //   • running in debug mode (allows Charles/mitmproxy during dev)
-  //   • _tlsCertPem is empty (env.dev.json default — no pin configured)
+  //   • _tlsCertPinSha256 is empty (env.dev.json / env.staging.json default —
+  //     staging serves a different certificate, no pin configured there)
   //   • running on web (dart:io not available)
   void _configureCertificatePinning() {
-    if (kIsWeb || kDebugMode || _tlsCertPem.isEmpty) return;
+    if (kIsWeb || kDebugMode || _tlsCertPinSha256.isEmpty) return;
+    final expectedFingerprint = _tlsCertPinSha256
+        .replaceAll(':', '')
+        .toLowerCase();
     (_dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
-      final context = SecurityContext()
-        ..setTrustedCertificatesBytes(const Utf8Encoder().convert(_tlsCertPem));
-      return HttpClient(context: context);
+      final client = HttpClient(
+        // `false` est la valeur par défaut, mais on la garde écrite : c'est
+        // elle qui fait entrer chaque connexion dans badCertificateCallback,
+        // et donc l'empreinte ci-dessous qui décide seule de la confiance.
+        // La rendre implicite obligerait à connaître par cœur le défaut de
+        // Dart pour comprendre le contrôle de sécurité.
+        // ignore: avoid_redundant_argument_values
+        context: SecurityContext(withTrustedRoots: false),
+      );
+      client.badCertificateCallback = (cert, host, port) {
+        final actualFingerprint = sha256.convert(cert.der).toString();
+        return actualFingerprint == expectedFingerprint;
+      };
+      return client;
     };
   }
 }
