@@ -1,8 +1,8 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:dony/core/error/app_exception.dart';
@@ -10,27 +10,25 @@ import 'package:dony/core/network/metrics_interceptor.dart';
 import 'package:dony/core/network/offline_fast_fail_interceptor.dart';
 import 'package:dony/core/network/retry_on_rate_limit_interceptor.dart';
 import 'package:dony/core/network/retry_on_transient_error_interceptor.dart';
+import 'package:dony/core/network/tls_pinned_ca.dart';
 import 'package:dony/core/services/device_id_service.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
-// SHA-256 fingerprint (hex, no colons) of the production TLS certificate,
-// for pinning. A full PEM certificate used to be passed instead — the iOS
-// build toolchain (flutter build ipa's Xcode Run Script → Dart kernel
-// compiler) chokes on a --dart-define that long ("File name too long"),
-// even though the Android/Gradle pipeline tolerates it fine. A hash is a
-// few dozen chars, well within any toolchain's limits either side.
+// Épinglage TLS de l'API de production.
 //
-// Populated at build time via --dart-define-from-file=env.prod.json:
-//   "TLS_CERT_PIN_SHA256": "ab12cd34..."
-// How to obtain: openssl s_client -connect api.yadony.com:443 -servername api.yadony.com \
-//                  </dev/null 2>/dev/null | openssl x509 -noout -fingerprint -sha256
-// Leave empty in env.dev.json / env.staging.json — pinning is skipped whenever
-// this is blank (also always skipped in debug mode), which is deliberate:
-// staging serves a different certificate than production.
-const _tlsCertPinSha256 = String.fromEnvironment('TLS_CERT_PIN_SHA256');
+// Le certificat épinglé vit dans `tls_pinned_ca.dart` plutôt que dans un
+// `--dart-define` : passer un PEM entier par la ligne de commande faisait
+// échouer la chaîne iOS (« File name too long »), et le remplacer par une
+// empreinte avait introduit un défaut pire encore (voir plus bas).
+//
+// Activé au build via --dart-define-from-file=env.prod.json :
+//   "TLS_PINNING": "on"
+// Absent ou vide en dev et en staging, qui servent un autre certificat.
+// Toujours désactivé en debug, pour laisser passer Charles ou mitmproxy.
+const _tlsPinning = String.fromEnvironment('TLS_PINNING');
 
 class ApiClient {
   ApiClient({
@@ -130,25 +128,27 @@ class ApiClient {
   //     staging serves a different certificate, no pin configured there)
   //   • running on web (dart:io not available)
   void _configureCertificatePinning() {
-    if (kIsWeb || kDebugMode || _tlsCertPinSha256.isEmpty) return;
-    final expectedFingerprint = _tlsCertPinSha256
-        .replaceAll(':', '')
-        .toLowerCase();
+    if (kIsWeb || kDebugMode || _tlsPinning != 'on') return;
     (_dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
-      final client = HttpClient(
-        // `false` est la valeur par défaut, mais on la garde écrite : c'est
-        // elle qui fait entrer chaque connexion dans badCertificateCallback,
-        // et donc l'empreinte ci-dessous qui décide seule de la confiance.
-        // La rendre implicite obligerait à connaître par cœur le défaut de
-        // Dart pour comprendre le contrôle de sécurité.
+      // On ne compare pas une empreinte dans `badCertificateCallback` : ce
+      // rappel reçoit le certificat au niveau duquel la validation a échoué,
+      // c'est-à-dire le sommet de la chaîne présentée (mesuré : `ISRG Root
+      // X2`), et jamais celui du serveur. Une empreinte de feuille n'y
+      // correspond donc jamais, et tous les appels étaient refusés.
+      //
+      // À la place, l'intermédiaire émetteur devient la seule ancre de
+      // confiance : la chaîne du serveur ne valide que si elle remonte à lui.
+      // Les racines du système sont écartées, sinon n'importe quelle autorité
+      // reconnue suffirait et il n'y aurait plus d'épinglage du tout.
+      return HttpClient(
+        // `false` est le défaut de Dart, mais on l'écrit : c'est lui qui
+        // exclut les racines du système, et donc tout l'épinglage.
         // ignore: avoid_redundant_argument_values
-        context: SecurityContext(withTrustedRoots: false),
+        context: SecurityContext(withTrustedRoots: false)
+          ..setTrustedCertificatesBytes(
+            const Utf8Encoder().convert(tlsPinnedIssuerPem),
+          ),
       );
-      client.badCertificateCallback = (cert, host, port) {
-        final actualFingerprint = sha256.convert(cert.der).toString();
-        return actualFingerprint == expectedFingerprint;
-      };
-      return client;
     };
   }
 }
