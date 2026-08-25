@@ -16,6 +16,15 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:hive/hive.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
+/// Scopes demandés à Google lors de la connexion.
+///
+/// Doit rester non vide. Le plugin Android construit la chaîne du jeton
+/// d'accès en concaténant `oauth2:` et les scopes : une liste vide donne
+/// `oauth2:` tout court, que Google rejette (`MISSING_SCOPE`,
+/// `BAD_REQUEST`). L'échec remonte depuis `authentication` et fait tomber
+/// toute la connexion, alors même que Firebase ne consomme que l'`idToken`.
+const googleSignInScopes = <String>['email'];
+
 typedef AppleSignInCallback =
     Future<AuthorizationCredentialAppleID> Function(
       List<AppleIDAuthorizationScopes> scopes,
@@ -49,7 +58,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AppleSignInCallback? appleSignIn,
     AnalyticsService? analytics,
   }) : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance,
-       _googleSignIn = googleSignIn ?? GoogleSignIn(),
+       _googleSignIn = googleSignIn ?? GoogleSignIn(scopes: googleSignInScopes),
        _appleSignIn =
            appleSignIn ??
            ((scopes) => SignInWithApple.getAppleIDCredential(scopes: scopes)),
