@@ -7,7 +7,7 @@ import 'package:go_router/go_router.dart';
 void main() {
   _platformDeepLinkConfig();
 
-  group('Deep link routing — dony:// custom scheme', () {
+  group('Deep link routing — yadony:// custom scheme', () {
     /// Builds the GoRouter path exactly the same way [_DonyAppState._handleDeepLink]
     /// does, so the test stays in sync with the implementation.
     String deepLinkToPath(Uri uri) {
@@ -15,17 +15,17 @@ void main() {
     }
 
     test(
-      'dony://stripe/onboarding/complete maps to /stripe/onboarding/complete',
+      'yadony://stripe/onboarding/complete maps to /stripe/onboarding/complete',
       () {
-        final uri = Uri.parse('dony://stripe/onboarding/complete');
+        final uri = Uri.parse('yadony://stripe/onboarding/complete');
         expect(deepLinkToPath(uri), equals('/stripe/onboarding/complete'));
       },
     );
 
     test(
-      'dony://stripe/onboarding/refresh maps to /stripe/onboarding/refresh',
+      'yadony://stripe/onboarding/refresh maps to /stripe/onboarding/refresh',
       () {
-        final uri = Uri.parse('dony://stripe/onboarding/refresh');
+        final uri = Uri.parse('yadony://stripe/onboarding/refresh');
         expect(deepLinkToPath(uri), equals('/stripe/onboarding/refresh'));
       },
     );
@@ -88,7 +88,7 @@ void main() {
 /// Ce groupe teste la **configuration de plateforme** et non du code Dart :
 /// c'est le seul niveau où le défaut était visible. Quand Flutter route
 /// lui-même, il passe l'URI brute de l'intent — schéma compris — à GoRouter,
-/// qui répond `GoException: no routes for location: dony://stripe/onboarding/
+/// qui répond `GoException: no routes for location: yadony://stripe/onboarding/
 /// refresh` et affiche « Page Not Found ». Le retour depuis l'onboarding
 /// Stripe tombait sur cette impasse, à froid comme à chaud.
 ///
@@ -110,7 +110,7 @@ void _platformDeepLinkConfig() {
           'android:value="false" />',
         ),
         reason:
-            'Sans ce drapeau, Flutter passe dony://… brut à GoRouter et le '
+            'Sans ce drapeau, Flutter passe yadony://… brut à GoRouter et le '
             'retour depuis Stripe affiche « Page Not Found ». Le drapeau '
             'court-circuite aussi la liste blanche de app.dart.',
       );

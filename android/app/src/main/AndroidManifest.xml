@@ -46,7 +46,7 @@
 
                  Sans ce drapeau, Flutter passe l'URI BRUTE de l'intent — schéma
                  compris — à GoRouter comme emplacement initial. GoRouter ne sait
-                 pas résoudre `dony://stripe/onboarding/refresh` et affiche
+                 pas résoudre `yadony://stripe/onboarding/refresh` et affiche
                  « Page Not Found » : le retour depuis l'onboarding Stripe
                  tombait sur une impasse.
 
@@ -61,18 +61,18 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-            <!-- Deep links: custom scheme dony:// (dev/local) -->
+            <!-- Deep links: custom scheme yadony:// (dev/local) -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
-                <data android:scheme="dony" android:host="stripe" android:pathPrefix="/onboarding/complete"/>
+                <data android:scheme="yadony" android:host="stripe" android:pathPrefix="/onboarding/complete"/>
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
-                <data android:scheme="dony" android:host="stripe" android:pathPrefix="/onboarding/refresh"/>
+                <data android:scheme="yadony" android:host="stripe" android:pathPrefix="/onboarding/refresh"/>
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.

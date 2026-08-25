@@ -1,7 +1,7 @@
 import 'package:dony/app/announcement_deep_link.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// Le lien `dony://annonce/{uuid}` est imprimé sur des affiches publiées sur
+/// Le lien `yadony://annonce/{uuid}` est imprimé sur des affiches publiées sur
 /// Facebook et WhatsApp : il est donc atteignable par n'importe qui. La liste
 /// blanche de `app.dart` protège les autres liens par égalité stricte, ce que
 /// ne permet pas un chemin paramétré, d'où la validation dédiée testée ici.
@@ -11,7 +11,7 @@ void main() {
   group('resolveAnnouncementDeepLink', () {
     test('résout un UUID valide vers le détail du trajet', () {
       expect(
-        resolveAnnouncementDeepLink(Uri.parse('dony://annonce/$uuid')),
+        resolveAnnouncementDeepLink(Uri.parse('yadony://annonce/$uuid')),
         '/announcements/$uuid/trip',
       );
     });
@@ -19,7 +19,7 @@ void main() {
     test('accepte un UUID en majuscules', () {
       final upper = uuid.toUpperCase();
       expect(
-        resolveAnnouncementDeepLink(Uri.parse('dony://annonce/$upper')),
+        resolveAnnouncementDeepLink(Uri.parse('yadony://annonce/$upper')),
         '/announcements/$upper/trip',
       );
     });
@@ -33,34 +33,37 @@ void main() {
 
     test('rejette un autre hôte', () {
       expect(
-        resolveAnnouncementDeepLink(Uri.parse('dony://admin/$uuid')),
+        resolveAnnouncementDeepLink(Uri.parse('yadony://admin/$uuid')),
         isNull,
       );
     });
 
     test('rejette un identifiant qui n\'est pas un UUID', () {
       expect(
-        resolveAnnouncementDeepLink(Uri.parse('dony://annonce/42')),
+        resolveAnnouncementDeepLink(Uri.parse('yadony://annonce/42')),
         isNull,
       );
     });
 
     test('rejette un segment supplémentaire', () {
       expect(
-        resolveAnnouncementDeepLink(Uri.parse('dony://annonce/$uuid/edit')),
+        resolveAnnouncementDeepLink(Uri.parse('yadony://annonce/$uuid/edit')),
         isNull,
       );
     });
 
     test('rejette un chemin vide', () {
-      expect(resolveAnnouncementDeepLink(Uri.parse('dony://annonce')), isNull);
+      expect(
+        resolveAnnouncementDeepLink(Uri.parse('yadony://annonce')),
+        isNull,
+      );
     });
 
     /// Sans validation stricte du segment, une correspondance par préfixe
     /// laisserait ce lien atteindre une route non prévue.
     test('rejette une tentative de remontée de chemin', () {
       expect(
-        resolveAnnouncementDeepLink(Uri.parse('dony://annonce/../admin')),
+        resolveAnnouncementDeepLink(Uri.parse('yadony://annonce/../admin')),
         isNull,
       );
     });

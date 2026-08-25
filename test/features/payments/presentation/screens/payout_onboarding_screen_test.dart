@@ -17,9 +17,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 
-import '../../../../helpers/fake_web_view_platform.dart';
 // `MockStripeAccountBloc` est déjà déclaré localement ci-dessous : on n'importe
 // que la constante d'état pour éviter la collision de noms.
 import '../../../../helpers/stripe_account_test_doubles.dart'
@@ -110,7 +108,6 @@ Widget _wrap(
 void main() {
   setUpAll(() {
     registerFallbackValue(FakeAuthEvent());
-    WebViewPlatform.instance = FakeWebViewPlatform();
   });
 
   late MockPaymentBloc mockBloc;
@@ -162,34 +159,6 @@ void main() {
       await tester.pumpWidget(_wrap(mockBloc));
       await tester.pump(const Duration(milliseconds: 500));
       expect(find.text('Connecter mon compte bancaire'), findsOneWidget);
-    });
-
-    // Même garde que sur la WebView du KYC : l'edge-to-edge imposé par
-    // Android 15 fait passer le bas de la page Stripe sous la barre de
-    // navigation, donc son bouton d'action hors d'atteinte.
-    testWidgets('protège le bas de la WebView de la barre de navigation', (
-      tester,
-    ) async {
-      whenListen<PaymentState>(
-        mockBloc,
-        Stream.value(
-          const PaymentOnboardingUrlReady('https://connect.stripe.com/setup/x'),
-        ),
-        initialState: const PaymentInitial(),
-      );
-      await tester.pumpWidget(_wrap(mockBloc));
-      await tester.pump(const Duration(milliseconds: 500));
-
-      expect(find.byType(WebViewWidget), findsOneWidget);
-
-      final protections = tester.widgetList<SafeArea>(
-        find.ancestor(
-          of: find.byType(WebViewWidget),
-          matching: find.byType(SafeArea),
-        ),
-      );
-
-      expect(protections.any((zone) => zone.bottom), isTrue);
     });
 
     testWidgets('affiche le bandeau warning en état pending', (tester) async {

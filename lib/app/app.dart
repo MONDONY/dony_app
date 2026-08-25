@@ -143,8 +143,8 @@ class _DonyAppState extends State<DonyApp> {
     );
   }
 
-  // Allowlist par égalité stricte des chemins FIXES atteignables via dony://.
-  // Empêche un lien forgé (ex. dony://admin/…) d'atteindre un écran non prévu.
+  // Allowlist par égalité stricte des chemins FIXES atteignables via yadony://.
+  // Empêche un lien forgé (ex. yadony://admin/…) d'atteindre un écran non prévu.
   //
   // Ce n'est plus la seule porte du schéma : les chemins PARAMÉTRÉS, qu'une
   // table d'égalité ne peut pas décrire, sont résolus avant elle dans
@@ -159,7 +159,7 @@ class _DonyAppState extends State<DonyApp> {
   };
 
   void _handleDeepLink(Uri uri) {
-    if (uri.scheme != 'dony') {
+    if (uri.scheme != 'yadony') {
       return;
     }
 
