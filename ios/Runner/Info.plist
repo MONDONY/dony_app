@@ -41,7 +41,7 @@
 			<string>firebase-phone-auth</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>app-1-917070267063-ios-a7b83be04a9e3c19684332</string>
+				<string>$(FIREBASE_PHONE_AUTH_URL_SCHEME)</string>
 			</array>
 		</dict>
 		<dict>
@@ -51,7 +51,7 @@
 			<string>google-sign-in</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.googleusercontent.apps.917070267063-jvm2ivthdvajqtb5qd372ctd65sugh25</string>
+				<string>$(GID_REVERSED_CLIENT_ID)</string>
 			</array>
 		</dict>
 	</array>
@@ -60,7 +60,7 @@
 	<key>FirebaseAppDelegateProxyEnabled</key>
 	<false/>
 	<key>GIDClientID</key>
-	<string>917070267063-jvm2ivthdvajqtb5qd372ctd65sugh25.apps.googleusercontent.com</string>
+	<string>$(GID_CLIENT_ID)</string>
 	<key>GMSApiKey</key>
 	<string>$(GOOGLE_MAPS_API_KEY)</string>
 	<key>ITSAppUsesNonExemptEncryption</key>

@@ -1,3 +1,17 @@
 #include? "Pods/Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"
 #include "Generated.xcconfig"
 GOOGLE_MAPS_API_KEY=AIzaSyAY3Dfswv7-dClFCnoYYWcqwJ2pfJruISk
+
+// Paramétrées le 2026-08-22 : ces 3 valeurs étaient codées en dur dans
+// Info.plist (staging, projet yadony-f1f0f). Info.plist référence désormais
+// $(GID_CLIENT_ID) / $(GID_REVERSED_CLIENT_ID) / $(FIREBASE_PHONE_AUTH_URL_SCHEME),
+// résolus par Xcode au build — même mécanisme que GOOGLE_MAPS_API_KEY ci-dessus.
+// Pour un build prod (projet yadony-prod), voir la section 8.3 du runbook
+// docs-claude/docs/runbooks/configuration-google-prod.md : remplacer ces 3
+// lignes dans Release.xcconfig (jamais dans Debug.xcconfig) avant `flutter
+// build ipa`, puis les remettre en staging après build — Info.plist étant
+// un fichier unique partagé par toute l'équipe, ne jamais y committer les
+// valeurs prod en dur.
+GID_CLIENT_ID=917070267063-jvm2ivthdvajqtb5qd372ctd65sugh25.apps.googleusercontent.com
+GID_REVERSED_CLIENT_ID=com.googleusercontent.apps.917070267063-jvm2ivthdvajqtb5qd372ctd65sugh25
+FIREBASE_PHONE_AUTH_URL_SCHEME=app-1-917070267063-ios-a7b83be04a9e3c19684332
