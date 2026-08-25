@@ -22,6 +22,14 @@
 	<string>$(FLUTTER_BUILD_NAME)</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
+	<!-- Le moteur Flutter livre sinon l'URI brute au routeur, en doublon
+	     d'app_links : GoRouter recevait `yadony://stripe/onboarding/refresh`
+	     schéma compris, ne trouvait aucune route et affichait « Page Not
+	     Found ». Android posait déjà ce réglage à false ; iOS l'ignorait,
+	     d'où une asymétrie entre les deux plateformes. Les liens entrants
+	     passent tous par _handleDeepLink, qui filtre par liste blanche. -->
+	<key>FlutterDeepLinkingEnabled</key>
+	<false/>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
