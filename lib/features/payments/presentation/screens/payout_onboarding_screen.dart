@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
-import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/repositories/auth_repository.dart';
@@ -16,7 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:webview_flutter/webview_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// Étape suivante depuis les paiements : `routeAfter` reste appelé (plutôt
 /// que `/home` en dur) pour que l'écran suive automatiquement l'ordre réel
@@ -76,7 +75,7 @@ class _PayoutOnboardingScreenState extends State<PayoutOnboardingScreen> {
 
         // Stripe n'ouvre pas de compte connecté dans tous les pays desservis
         // par yadony. Laisser dérouler l'inscription pour finir sur un refus
-        // serveur, au fond d'une WebView, n'apporte rien.
+        // serveur, après un aller-retour par le navigateur, n'apporte rien.
         if (!stripeState.connectAvailableInCountry) {
           final progress = widget.progress;
           if (progress != null) {
@@ -112,20 +111,28 @@ class _PayoutOnboardingScreenState extends State<PayoutOnboardingScreen> {
         return BlocConsumer<PaymentBloc, PaymentState>(
           listener: (context, state) async {
             if (state is PaymentOnboardingUrlReady) {
-              await showGeneralDialog<void>(
-                context: context,
-                pageBuilder: (ctx, animation, secondaryAnimation) =>
-                    _StripeOnboardingWebView(
-                      url: state.url,
-                      onReturn: () {
-                        if (context.mounted) {
-                          context.read<PaymentBloc>().add(
-                            const PaymentOnboardingStatusChecked(),
-                          );
-                        }
-                      },
-                    ),
+              // Navigateur du système, jamais une webview : la documentation de
+              // Stripe exclut explicitement son onboarding hébergé des vues web
+              // embarquées. En webview, l'écran de connexion Express s'affichait
+              // puis la page restait blanche, sans erreur ni message.
+              //
+              // Le retour se fait par deep link `dony://stripe/onboarding/complete`,
+              // que le backend produit en redirigeant depuis son endpoint HTTPS
+              // (Stripe n'accepte pas de deep link comme URL de retour). Le
+              // routeur récupère ce lien et ramène ici, où le statut est relu.
+              final ouvert = await launchUrl(
+                Uri.parse(state.url),
+                mode: LaunchMode.externalApplication,
               );
+              if (!ouvert && context.mounted) {
+                DonySnackbar.show(
+                  context,
+                  message:
+                      "Impossible d'ouvrir la page de configuration. Vérifie "
+                      "qu'un navigateur est installé.",
+                  type: DonySnackbarType.error,
+                );
+              }
             } else if (state is PaymentOnboardingComplete) {
               getIt<StripeAccountBloc>().add(
                 const StripeAccountStatusRefreshed(),
@@ -673,146 +680,6 @@ class _SuccessView extends StatelessWidget {
             ),
           );
         },
-      ),
-    );
-  }
-}
-
-// ── WebView Stripe onboarding ─────────────────────────────────────────────────
-
-class _StripeOnboardingWebView extends StatefulWidget {
-  final String url;
-  final VoidCallback onReturn;
-
-  const _StripeOnboardingWebView({required this.url, required this.onReturn});
-
-  @override
-  State<_StripeOnboardingWebView> createState() =>
-      _StripeOnboardingWebViewState();
-}
-
-bool _isStripeUrl(String url) {
-  final uri = Uri.tryParse(url);
-  return uri != null &&
-      uri.scheme == 'https' &&
-      (uri.host == 'connect.stripe.com' || uri.host.endsWith('.stripe.com'));
-}
-
-class _StripeOnboardingWebViewState extends State<_StripeOnboardingWebView> {
-  late final WebViewController _controller;
-  final _isLoading = ValueNotifier<bool>(true);
-  bool _urlValid = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _urlValid = _isStripeUrl(widget.url);
-    if (!_urlValid) return;
-
-    _controller = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setNavigationDelegate(
-        NavigationDelegate(
-          onPageStarted: (_) => _isLoading.value = true,
-          onPageFinished: (_) => _isLoading.value = false,
-          onNavigationRequest: (req) {
-            final uri = Uri.tryParse(req.url);
-            // Seul le web chiffré a sa place dans une webview de configuration
-            // des paiements : tout autre schéma (javascript:, intent:, deep link
-            // applicatif) est un vecteur de détournement, jamais une étape de
-            // l'onboarding Stripe.
-            if (uri == null || uri.scheme != 'https') {
-              return NavigationDecision.prevent;
-            }
-            // Return/refresh URL Stripe : matché par le path pour couvrir tous
-            // les hôtes réels (yadony.com, api-staging.yadony.com/api/v1/…,
-            // legacy dony.store/dony.app) — un startsWith sur un seul domaine
-            // ratait l'interception et laissait la webview charger une page morte.
-            final path = uri.path;
-            if (path.endsWith('/payments/onboarding/return') ||
-                path.endsWith('/payments/onboarding/refresh')) {
-              Navigator.of(context).pop();
-              widget.onReturn();
-              return NavigationDecision.prevent;
-            }
-            return NavigationDecision.navigate;
-          },
-        ),
-      )
-      ..loadRequest(Uri.parse(widget.url));
-  }
-
-  @override
-  void dispose() {
-    _isLoading.dispose();
-    super.dispose();
-  }
-
-  void _close() {
-    Navigator.of(context).pop();
-    widget.onReturn();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
-    if (!_urlValid) {
-      return Scaffold(
-        appBar: DonyAppBar(
-          title: 'Configuration du compte',
-          leadingIconAsset: 'x',
-          onBack: _close,
-        ),
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(DonySpacing.base),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                DonyIcon('circle-alert', color: cs.error, size: 64),
-                const SizedBox(height: DonySpacing.lg),
-                Text(
-                  'URL invalide',
-                  style: tt.headlineMedium,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: DonySpacing.md),
-                Text(
-                  "L'URL de configuration n'est pas une URL Stripe valide.",
-                  style: tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-
-    return Scaffold(
-      appBar: DonyAppBar(
-        title: 'Configuration du compte',
-        leadingIconAsset: 'x',
-        onBack: _close,
-      ),
-      body: SafeArea(
-        // Android 15 impose l'edge-to-edge : sans cette marge, la WebView
-        // s'étend sous la barre de navigation. Le bouton d'action de la page
-        // distante, ancré en bas, tombe alors entièrement dans la bande
-        // système et devient invisible autant qu'intouchable.
-        child: Stack(
-          children: [
-            WebViewWidget(controller: _controller),
-            ValueListenableBuilder<bool>(
-              valueListenable: _isLoading,
-              builder: (_, loading, _) => loading
-                  ? Center(child: CircularProgressIndicator(color: cs.primary))
-                  : const SizedBox.shrink(),
-            ),
-          ],
-        ),
       ),
     );
   }
