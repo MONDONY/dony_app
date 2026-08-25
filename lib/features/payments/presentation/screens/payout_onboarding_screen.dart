@@ -116,7 +116,7 @@ class _PayoutOnboardingScreenState extends State<PayoutOnboardingScreen> {
               // embarquées. En webview, l'écran de connexion Express s'affichait
               // puis la page restait blanche, sans erreur ni message.
               //
-              // Le retour se fait par deep link `dony://stripe/onboarding/complete`,
+              // Le retour se fait par deep link `yadony://stripe/onboarding/complete`,
               // que le backend produit en redirigeant depuis son endpoint HTTPS
               // (Stripe n'accepte pas de deep link comme URL de retour). Le
               // routeur récupère ce lien et ramène ici, où le statut est relu.

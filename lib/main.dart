@@ -92,7 +92,7 @@ Future<void> _bootstrap() async {
   // Apple Pay : merchant ID Apple (effectif une fois le certificat Apple créé).
   Stripe.merchantIdentifier = 'merchant.app.yadony';
   // Retour de redirection PayPal vers l'app (scheme déjà déclaré natif).
-  Stripe.urlScheme = 'dony';
+  Stripe.urlScheme = 'yadony';
   await Stripe.instance.applySettings();
 
   await setupDependencies(apiBaseUrl: kApiBaseUrl);

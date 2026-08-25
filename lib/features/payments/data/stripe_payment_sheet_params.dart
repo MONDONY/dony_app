@@ -14,7 +14,7 @@ const _stripePublishableKeyDefault = String.fromEnvironment(
 /// `returnURL` est OBLIGATOIRE : les PaymentIntents incluent désormais des moyens
 /// « redirect-based » (PayPal) et le 3D Secure des cartes EU exigent une URL de
 /// retour vers l'app, sinon la PaymentSheet refuse de s'ouvrir. Le retour du
-/// scheme `dony://` est intercepté en interne par le SDK Stripe.
+/// scheme `yadony://` est intercepté en interne par le SDK Stripe.
 ///
 /// `testEnv` Google Pay est dérivé de la clé publiable (`pk_test` → sandbox),
 /// pour ne pas introduire un nouvel env. [stripePublishableKey] permet de
@@ -27,7 +27,7 @@ SetupPaymentSheetParameters donyPaymentSheetParams(
     merchantDisplayName: 'Yadony',
     paymentIntentClientSecret: clientSecret,
     style: ThemeMode.light,
-    returnURL: 'dony://stripe/payment-return',
+    returnURL: 'yadony://stripe/payment-return',
     applePay: const PaymentSheetApplePay(merchantCountryCode: 'FR'),
     googlePay: PaymentSheetGooglePay(
       merchantCountryCode: 'FR',
