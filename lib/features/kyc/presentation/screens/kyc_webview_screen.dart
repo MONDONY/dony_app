@@ -14,6 +14,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:webview_flutter_android/webview_flutter_android.dart';
+import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 
 class KycWebViewScreen extends StatefulWidget {
   const KycWebViewScreen({
@@ -38,6 +40,24 @@ class KycWebViewScreen extends StatefulWidget {
   State<KycWebViewScreen> createState() => _KycWebViewScreenState();
 }
 
+/// Sans ces paramètres, WKWebView applique `allowsInlineMediaPlayback: false`
+/// et éjecte le flux `getUserMedia` de Stripe Identity vers le lecteur vidéo
+/// plein écran d'iOS : la zone de capture reste noire et le parcours plante.
+/// `mediaTypesRequiringUserAction` vide laisse le flux démarrer seul, la page
+/// Stripe n'ayant aucun bouton « lecture » à proposer.
+PlatformWebViewControllerCreationParams _creationParams() {
+  if (WebViewPlatform.instance is WebKitWebViewPlatform) {
+    return WebKitWebViewControllerCreationParams(
+      allowsInlineMediaPlayback: true,
+      mediaTypesRequiringUserAction: const <PlaybackMediaTypes>{},
+    );
+  }
+  if (WebViewPlatform.instance is AndroidWebViewPlatform) {
+    return AndroidWebViewControllerCreationParams();
+  }
+  return const PlatformWebViewControllerCreationParams();
+}
+
 class _KycWebViewScreenState extends State<KycWebViewScreen> {
   late final WebViewController _controller;
   final _isLoading = ValueNotifier<bool>(true);
@@ -52,7 +72,8 @@ class _KycWebViewScreenState extends State<KycWebViewScreen> {
   void initState() {
     super.initState();
     _controller =
-        WebViewController(
+        WebViewController.fromPlatformCreationParams(
+            _creationParams(),
             onPermissionRequest: (request) async {
               // Only grant camera access — Stripe Identity needs it for the
               // selfie step. Blanket grant() would also allow
@@ -125,6 +146,13 @@ class _KycWebViewScreenState extends State<KycWebViewScreen> {
             ),
           )
           ..loadRequest(Uri.parse(widget.stripeUrl));
+
+    // Pendant Android de `mediaTypesRequiringUserAction` : sans cela le flux
+    // caméra attend un geste utilisateur que la page Stripe ne déclenche pas.
+    final platform = _controller.platform;
+    if (platform is AndroidWebViewController) {
+      platform.setMediaPlaybackRequiresUserGesture(false);
+    }
   }
 
   @override
