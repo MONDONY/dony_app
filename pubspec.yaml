@@ -1,7 +1,7 @@
 name: dony
 description: "P2P marketplace connecting travelers and senders for package delivery to Africa."
 publish_to: 'none'
-version: 1.0.0+39
+version: 1.0.0+40
 
 environment:
   sdk: ^3.11.5
@@ -91,6 +91,11 @@ dependencies:
 
   # WebView (Stripe Identity, KYC)
   webview_flutter: ^4.10.0
+  # Importés directement par KycWebViewScreen : la lecture média inline
+  # (caméra Stripe Identity) se configure par des paramètres propres à chaque
+  # plateforme, absents de l'API commune de webview_flutter.
+  webview_flutter_android: ^4.13.0
+  webview_flutter_wkwebview: ^3.26.0
   # 6.0.2 corrige la course setSize()/onReady de la 5.2.2 (crash JS silencieux
   # dans l'iframe qui bloquait le lecteur en chargement infini) et son bridge
   # JS a désormais un timeout natif de 30 s si le player ne devient jamais Ready.
