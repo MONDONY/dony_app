@@ -62,6 +62,11 @@ else
   MISSING=""
   for KEY in GID_CLIENT_ID GID_REVERSED_CLIENT_ID FIREBASE_PHONE_AUTH_URL_SCHEME GOOGLE_MAPS_API_KEY; do
     VALUE=$(sed -n "s/^[[:space:]]*${KEY}[[:space:]]*=[[:space:]]*//p" <<<"$FOUND")
+    # Rogner aussi l'espace de fin de ligne, jamais l'intérieur de la valeur :
+    # une valeur collée à la main traîne souvent un espace invisible en bout
+    # de ligne, et REMPLIR doit rester détectable même suivi d'un espace.
+    TRAIL="${VALUE##*[![:space:]]}"
+    VALUE="${VALUE%"$TRAIL"}"
     if [ -z "$VALUE" ] || [ "$VALUE" = "REMPLIR" ]; then
       MISSING="$MISSING $KEY"
     fi
