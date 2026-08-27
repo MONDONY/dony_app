@@ -1,4 +1,5 @@
 import 'package:dony/features/auth/data/apple_token_revoker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -122,6 +123,37 @@ void main() {
         expect(
           '$loggedMessage${loggedData ?? ''}',
           isNot(contains('code-secret-jamais-loggue')),
+        );
+      },
+    );
+
+    test(
+      'journalise le code Firebase sans jamais y inclure le message brut',
+      () async {
+        // Verrouille le correctif : sans le code (ex. requires-recent-login,
+        // operation-not-allowed si le fournisseur apple.com est mal
+        // configuré côté Firebase), error_type dit seulement « une
+        // FirebaseAuthException », ce qui ne permet pas de diagnostiquer une
+        // panne de configuration. Le message brut, lui, ne doit jamais fuiter
+        // : il pourrait contenir le code d'autorisation Apple.
+        Map<String, Object>? loggedData;
+        final revoker = AppleTokenRevoker(
+          providerIds: () => ['apple.com'],
+          isApplePlatform: () => true,
+          fetchAuthorizationCode: () async => 'code-secret-jamais-loggue',
+          revoke: (_) async => throw FirebaseAuthException(
+            code: 'internal-error',
+            message: 'message-brut-jamais-loggue',
+          ),
+          logFailure: (message, {data}) => loggedData = data,
+        );
+
+        await revoker.revokeIfAppleUser();
+
+        expect(loggedData?['firebase_error_code'], 'internal-error');
+        expect(
+          loggedData.toString(),
+          isNot(contains('message-brut-jamais-loggue')),
         );
       },
     );

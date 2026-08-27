@@ -103,7 +103,16 @@ class AppleTokenRevoker {
       try {
         _logFailure(
           'Échec de la révocation du jeton Sign in with Apple',
-          data: {'error_type': e.runtimeType.toString()},
+          data: {
+            'error_type': e.runtimeType.toString(),
+            // Identifiant technique Firebase (ex. requires-recent-login,
+            // internal-error, operation-not-allowed si le fournisseur
+            // apple.com est mal configuré côté console Firebase) — jamais de
+            // PII. Sans lui, `error_type` dit seulement « une
+            // FirebaseAuthException », ce qu'on savait déjà : impossible de
+            // distinguer une panne de configuration d'un abandon réseau.
+            if (e is FirebaseAuthException) 'firebase_error_code': e.code,
+          },
         );
       } catch (_) {
         // [_logFailure] est injectable : un journaliseur défaillant ne doit
