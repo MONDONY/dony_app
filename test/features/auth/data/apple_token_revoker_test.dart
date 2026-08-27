@@ -74,5 +74,29 @@ void main() {
       await expectLater(revoker.revokeIfAppleUser(), completes);
       expect(revokeCalled, isFalse);
     });
+
+    test('un providerIds() qui lève ne remonte jamais', () async {
+      // Verrouille la garde : _isApplePlatform()/_providerIds() doivent
+      // rester DANS le try. Leur implémentation par défaut lit
+      // FirebaseAuth.instance.currentUser, qui peut lever ([core/no-app]
+      // si Firebase n'est pas initialisé) avant même d'atteindre l'appel
+      // réseau. Si ces lectures ressortaient du bloc protégé, cette
+      // exception traverserait revokeIfAppleUser() et ferait échouer la
+      // suppression chez l'appelant — exactement ce que cette méthode ne
+      // doit jamais permettre.
+      var fetchCalled = false;
+      final revoker = AppleTokenRevoker(
+        providerIds: () => throw Exception('FirebaseAuth non initialisé'),
+        isApplePlatform: () => true,
+        fetchAuthorizationCode: () async {
+          fetchCalled = true;
+          return 'code';
+        },
+        revoke: (_) async {},
+      );
+
+      await expectLater(revoker.revokeIfAppleUser(), completes);
+      expect(fetchCalled, isFalse);
+    });
   });
 }

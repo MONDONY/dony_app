@@ -63,16 +63,25 @@ class AppleTokenRevoker {
   /// compte doit l'obtenir même si la révocation Apple tombe. L'appelant
   /// enchaîne donc toujours sur la suppression backend.
   Future<void> revokeIfAppleUser() async {
-    if (!_isApplePlatform()) return;
-    if (!_providerIds().contains('apple.com')) return;
-
     try {
+      if (!_isApplePlatform()) return;
+      if (!_providerIds().contains('apple.com')) return;
+
       final code = await _fetchAuthorizationCode();
       if (code == null || code.isEmpty) return;
       await _revoke(code);
     } catch (_) {
       // Abandon de la boîte Apple, réseau coupé, API indisponible : la
       // suppression du compte se poursuit. Ne pas journaliser le code.
+      //
+      // _isApplePlatform() et _providerIds() sont DANS ce bloc à dessein,
+      // pas seulement l'appel réseau final : leur implémentation par défaut
+      // lit FirebaseAuth.instance.currentUser, qui peut lever (ex.
+      // [core/no-app] si Firebase n'est pas encore initialisé). La garantie
+      // « ne bloque jamais la suppression » doit couvrir tout le corps de
+      // la méthode, pas seulement son chemin nominal — sinon ce n'est pas
+      // une garantie, c'est une coïncidence qui tient tant que ce chemin
+      // reste inatteignable.
     }
   }
 }

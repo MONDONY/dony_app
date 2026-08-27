@@ -111,6 +111,34 @@ void main() {
         isA<AccountDeletionError>(),
       ],
     );
+
+    blocTest<AccountDeletionBloc, AccountDeletionState>(
+      'emits [Loading, AccountDeletionRequested] even when Apple revocation throws',
+      build: () {
+        when(() => mockRepo.requestDeletion()).thenAnswer((_) async {});
+        final analytics = makeDisabledAnalytics(MockAnalyticsBackend())
+          ..onConfigured();
+        return AccountDeletionBloc(
+          mockRepo,
+          analytics,
+          AppleTokenRevoker(
+            // Compte Apple, revocation qui echoue : la garantie testee ici
+            // est que _onRequestDeletion() ne doit JAMAIS traiter un echec
+            // de revokeIfAppleUser() comme un echec de suppression.
+            providerIds: () => const ['apple.com'],
+            isApplePlatform: () => true,
+            fetchAuthorizationCode: () async => throw Exception('reseau coupe'),
+            revoke: (_) async {},
+          ),
+        );
+      },
+      act: (b) => b.add(const RequestDeletion()),
+      expect: () => [
+        isA<AccountDeletionLoading>(),
+        isA<AccountDeletionRequested>(),
+      ],
+      verify: (_) => verify(() => mockRepo.requestDeletion()).called(1),
+    );
   });
 
   group('ReactivateAccount', () {

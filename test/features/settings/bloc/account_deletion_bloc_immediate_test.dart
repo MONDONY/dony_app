@@ -86,5 +86,33 @@ void main() {
         ),
       ],
     );
+
+    blocTest<AccountDeletionBloc, AccountDeletionState>(
+      'émet [Loading, AccountDeletionImmediate] même si la révocation Apple échoue',
+      build: () {
+        when(() => mockRepo.deleteImmediately()).thenAnswer((_) async {});
+        final analytics = makeDisabledAnalytics(MockAnalyticsBackend())
+          ..onConfigured();
+        return AccountDeletionBloc(
+          mockRepo,
+          analytics,
+          AppleTokenRevoker(
+            // Compte Apple, révocation qui échoue : la garantie testée ici
+            // est que _onConfirmImmediateDeletion() ne doit JAMAIS traiter
+            // un échec de revokeIfAppleUser() comme un échec de suppression.
+            providerIds: () => const ['apple.com'],
+            isApplePlatform: () => true,
+            fetchAuthorizationCode: () async => throw Exception('réseau coupé'),
+            revoke: (_) async {},
+          ),
+        );
+      },
+      act: (b) => b.add(const ConfirmImmediateDeletion()),
+      expect: () => [
+        isA<AccountDeletionLoading>(),
+        isA<AccountDeletionImmediate>(),
+      ],
+      verify: (_) => verify(() => mockRepo.deleteImmediately()).called(1),
+    );
   });
 }
