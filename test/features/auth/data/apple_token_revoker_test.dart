@@ -126,25 +126,21 @@ void main() {
       },
     );
 
-    test(
-      'un journaliseur qui lève ne bloque jamais la suppression',
-      () async {
-        // Verrouille la garde du bloc catch interne : _logFailure est
-        // injectable, donc une implémentation défaillante (fournie par un
-        // appelant, ou en test) ne doit pas non plus faire remonter
-        // d'exception depuis revokeIfAppleUser(). Le contrat « ne bloque
-        // jamais la suppression » doit survivre même à un journaliseur cassé.
-        final revoker = AppleTokenRevoker(
-          providerIds: () => ['apple.com'],
-          isApplePlatform: () => true,
-          fetchAuthorizationCode: () async => 'code',
-          revoke: (_) async => throw Exception('réseau coupé'),
-          logFailure: (message, {data}) =>
-              throw Exception('journaliseur cassé'),
-        );
+    test('un journaliseur qui lève ne bloque jamais la suppression', () async {
+      // Verrouille la garde du bloc catch interne : _logFailure est
+      // injectable, donc une implémentation défaillante (fournie par un
+      // appelant, ou en test) ne doit pas non plus faire remonter
+      // d'exception depuis revokeIfAppleUser(). Le contrat « ne bloque
+      // jamais la suppression » doit survivre même à un journaliseur cassé.
+      final revoker = AppleTokenRevoker(
+        providerIds: () => ['apple.com'],
+        isApplePlatform: () => true,
+        fetchAuthorizationCode: () async => 'code',
+        revoke: (_) async => throw Exception('réseau coupé'),
+        logFailure: (message, {data}) => throw Exception('journaliseur cassé'),
+      );
 
-        await expectLater(revoker.revokeIfAppleUser(), completes);
-      },
-    );
+      await expectLater(revoker.revokeIfAppleUser(), completes);
+    });
   });
 }

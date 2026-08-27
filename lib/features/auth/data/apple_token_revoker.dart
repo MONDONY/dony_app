@@ -69,8 +69,7 @@ class AppleTokenRevoker {
   /// tant que `SENTRY_DSN` est absent et documenté comme ne levant jamais.
   /// Injectable pour les tests ; voir la garde dans [revokeIfAppleUser] qui
   /// protège l'appelant même si l'implémentation fournie, elle, lève.
-  final void Function(String message, {Map<String, Object>? data})
-  _logFailure;
+  final void Function(String message, {Map<String, Object>? data}) _logFailure;
 
   /// Ne fait rien si le compte n'a pas de fournisseur `apple.com`, ou si la
   /// plateforme n'expose pas l'API (Android, web).
