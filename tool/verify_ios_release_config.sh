@@ -28,23 +28,46 @@ if [ $# -ge 1 ]; then
   # identifiant Google. On lit donc l'index de l'archive, on y sélectionne la
   # seule entrée qui est l'Info.plist de l'application elle-même, et on
   # n'extrait que celle-là.
+  # Ne jamais ajouter -m1 à ce grep : sous pipefail, la fermeture anticipée du
+  # tube par grep envoie SIGPIPE à unzip tant qu'il n'a pas fini d'écrire tout
+  # son index, ce qui a fait échouer ce pipeline une fois sur trois environ.
   ENTRY=$(unzip -Z1 "$IPA" | grep -E '^Payload/[^/]+\.app/Info\.plist$')
   if [ -z "$ENTRY" ]; then
     echo "ÉCHEC : aucun Payload/<app>.app/Info.plist trouvé dans $IPA"
     exit 1
   fi
   TMP=$(mktemp -d)
+  trap 'rm -rf "$TMP"' EXIT
   unzip -q -o "$IPA" "$ENTRY" -d "$TMP"
   FOUND=$(plutil -convert xml1 -o - "$TMP/$ENTRY")
-  rm -rf "$TMP"
   WHERE="l'IPA $IPA"
 else
   CFG="ios/Flutter/Release-prod.xcconfig"
   if [ ! -f "$CFG" ]; then
     echo "ÉCHEC : $CFG absent. Le copier depuis $CFG.example et le remplir."; exit 1
   fi
-  FOUND=$(cat "$CFG")
+  # Ne garder que les lignes CLE=valeur : un commentaire du gabarit peut citer
+  # le bon numéro de projet en toutes lettres (Release-prod.xcconfig.example
+  # l.4) sans qu'aucune valeur ne soit réellement renseignée.
+  FOUND=$(grep -E '^[A-Z_][A-Z0-9_]*=' "$CFG" || true)
   WHERE="$CFG"
+
+  # Un gabarit copié tel quel doit échouer explicitement, jamais passer parce
+  # qu'un commentaire mentionne le bon projet ailleurs dans le fichier.
+  MISSING=""
+  for KEY in GID_CLIENT_ID GID_REVERSED_CLIENT_ID FIREBASE_PHONE_AUTH_URL_SCHEME GOOGLE_MAPS_API_KEY; do
+    VALUE=$(sed -n "s/^${KEY}=//p" <<<"$FOUND")
+    if [ -z "$VALUE" ] || [ "$VALUE" = "REMPLIR" ]; then
+      MISSING="$MISSING $KEY"
+    fi
+  done
+  if [ -n "$MISSING" ]; then
+    echo "ÉCHEC : $CFG incomplet, valeur manquante ou non renseignée pour :"
+    for KEY in $MISSING; do
+      echo "  $KEY"
+    done
+    exit 1
+  fi
 fi
 
 # Toute valeur Google native (client ID, schéma d'URL) porte le numéro de projet.
