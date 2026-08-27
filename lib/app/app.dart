@@ -87,6 +87,7 @@ class _DonyAppState extends State<DonyApp> {
       // aussi cet événement, et un visiteur n'a pas de compte serveur où
       // enregistrer un jeton FCM.
       if (user != null && !user.isAnonymous) {
+        unawaited(getIt<NotificationService>().requestPermission());
         getIt<NotificationService>().uploadCurrentToken();
       }
     });
