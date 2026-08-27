@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/core/services/device_id_service.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
+import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/features/notifications/data/notification_repository.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -19,6 +20,28 @@ class MockNotificationRepository extends Mock
 class MockDeviceIdService extends Mock implements DeviceIdService {}
 
 class MockDio extends Mock implements Dio {}
+
+class MockFirebaseMessaging extends Mock implements FirebaseMessaging {}
+
+class MockFirebaseSessionProbe extends Mock implements FirebaseSessionProbe {}
+
+/// Construit un [NotificationSettings] minimal : seul [authorizationStatus]
+/// varie dans ces tests, le reste de la charge Apple n'a pas de sens hors iOS.
+NotificationSettings _authSettings(AuthorizationStatus status) =>
+    NotificationSettings(
+      authorizationStatus: status,
+      alert: AppleNotificationSetting.notSupported,
+      announcement: AppleNotificationSetting.notSupported,
+      badge: AppleNotificationSetting.notSupported,
+      carPlay: AppleNotificationSetting.notSupported,
+      lockScreen: AppleNotificationSetting.notSupported,
+      notificationCenter: AppleNotificationSetting.notSupported,
+      showPreviews: AppleShowPreviewSetting.notSupported,
+      timeSensitive: AppleNotificationSetting.notSupported,
+      criticalAlert: AppleNotificationSetting.notSupported,
+      sound: AppleNotificationSetting.notSupported,
+      providesAppNotificationSettings: AppleNotificationSetting.notSupported,
+    );
 
 class _RecordingErrorSink implements ErrorReportingSink {
   final contexts = <Map<String, Object>>[];
@@ -139,6 +162,93 @@ void main() {
 
       expect(sink.contexts, isEmpty);
     });
+  });
+
+  // Régression : le découplage initialize()/requestPermission() (voir
+  // requestPermission ci-dessus dans le service) n'était verrouillé par aucun
+  // test. C'est justement le genre de condition qui régresse en silence : la
+  // relance de l'upload de jeton ne doit avoir lieu QUE si l'utilisateur n'a
+  // pas refusé la permission ET a une session réelle — jamais l'un sans
+  // l'autre.
+  group('NotificationService.requestPermission', () {
+    late MockFirebaseMessaging fcm;
+    late MockFirebaseSessionProbe sessionProbe;
+    late MockDio mockDio;
+    late NotificationService service;
+
+    setUp(() {
+      fcm = MockFirebaseMessaging();
+      sessionProbe = MockFirebaseSessionProbe();
+      mockDio = MockDio();
+      service = NotificationService(
+        apiClient,
+        repository,
+        deviceIdService,
+        null,
+        sessionProbe,
+        fcm,
+      );
+      when(() => apiClient.dio).thenReturn(mockDio);
+      when(
+        () => deviceIdService.getDeviceId(),
+      ).thenAnswer((_) async => 'test-device-id-uuid');
+      when(
+        () => mockDio.put('/auth/me/fcm-token', data: any(named: 'data')),
+      ).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(path: '/auth/me/fcm-token'),
+          statusCode: 200,
+        ),
+      );
+    });
+
+    test(
+      'statut accordé et session réelle : relance l\'upload du jeton',
+      () async {
+        when(() => fcm.requestPermission()).thenAnswer(
+          (_) async => _authSettings(AuthorizationStatus.authorized),
+        );
+        when(() => sessionProbe.hasRealSession).thenReturn(true);
+        when(() => fcm.getToken()).thenAnswer((_) async => 'fcm-token-xyz');
+
+        await service.requestPermission();
+        await Future<void>.delayed(Duration.zero);
+
+        verify(
+          () => mockDio.put('/auth/me/fcm-token', data: any(named: 'data')),
+        ).called(1);
+      },
+    );
+
+    test(
+      'statut refusé : ne relance pas l\'upload même avec une session réelle',
+      () async {
+        when(
+          () => fcm.requestPermission(),
+        ).thenAnswer((_) async => _authSettings(AuthorizationStatus.denied));
+        when(() => sessionProbe.hasRealSession).thenReturn(true);
+
+        await service.requestPermission();
+        await Future<void>.delayed(Duration.zero);
+
+        verifyNever(() => mockDio.put(any(), data: any(named: 'data')));
+      },
+    );
+
+    test(
+      'pas de session réelle : ne relance pas l\'upload même si le statut est accordé',
+      () async {
+        when(() => fcm.requestPermission()).thenAnswer(
+          (_) async => _authSettings(AuthorizationStatus.authorized),
+        );
+        when(() => sessionProbe.hasRealSession).thenReturn(false);
+
+        await service.requestPermission();
+        await Future<void>.delayed(Duration.zero);
+
+        verifyNever(() => mockDio.put(any(), data: any(named: 'data')));
+      },
+    );
   });
 
   group('NotificationService.retryOperation', () {

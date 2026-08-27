@@ -108,6 +108,13 @@ class NotificationService {
   /// défaut ne touche le SDK qu'à la première lecture.
   final FirebaseSessionProbe _sessionProbe;
 
+  /// Injecté en test uniquement. En production, laisser `null` : `_fcm` retombe
+  /// alors sur `FirebaseMessaging.instance`, résolu paresseusement au premier
+  /// usage. Ne jamais initialiser ce champ directement dans le constructeur :
+  /// `FirebaseMessaging.instance` lève tant qu'aucune app Firebase n'existe,
+  /// et le service est construit par GetIt avant cette initialisation.
+  final FirebaseMessaging? _fcmOverride;
+
   Future<void>? _inFlightUpload;
   Future<void>? _inFlightTokenUpload;
   bool _permissionDeniedReported = false;
@@ -118,10 +125,12 @@ class NotificationService {
     this._deviceIdService, [
     this._errorReporter,
     this._sessionProbe = const FirebaseSessionProbe(),
+    this._fcmOverride,
   ]);
 
   // late: deferred until initialize() so tests can instantiate this class without Firebase
-  late final FirebaseMessaging _fcm = FirebaseMessaging.instance;
+  late final FirebaseMessaging _fcm =
+      _fcmOverride ?? FirebaseMessaging.instance;
   final _localNotifications = FlutterLocalNotificationsPlugin();
 
   // Broadcasts the GoRouter path to navigate to when a notification is tapped
@@ -208,12 +217,14 @@ class NotificationService {
     }
 
     // `authStateChanges` (app.dart) déclenche `uploadCurrentToken` au même
-    // moment que cet appel, sans l'attendre : sur un tout premier lancement,
-    // cette tentative parallèle échoue le plus souvent faute de jeton APNs,
-    // tant que l'utilisateur n'a pas encore répondu à la boîte système
-    // ci-dessus. Accepter ne fait pas passer l'application en arrière-plan —
-    // `onAppResumed` n'est donc jamais appelé, et rien ne rattraperait cette
-    // tentative perdue. On relance ici, une fois l'autorisation connue.
+    // moment que cet appel, sans l'attendre — à chaque transition vers un
+    // utilisateur réel (connexion, reconnexion, ou session restaurée au
+    // démarrage), pas seulement la toute première. Cette tentative parallèle
+    // échoue le plus souvent faute de jeton APNs, tant que l'utilisateur n'a
+    // pas encore répondu à la boîte système ci-dessus. Accepter ne fait pas
+    // passer l'application en arrière-plan — `onAppResumed` n'est donc jamais
+    // appelé, et rien ne rattraperait cette tentative perdue. On relance ici,
+    // une fois l'autorisation connue.
     if (settings.authorizationStatus != AuthorizationStatus.denied &&
         _sessionProbe.hasRealSession) {
       _scheduleTokenUpload();
