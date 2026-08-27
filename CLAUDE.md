@@ -59,6 +59,8 @@ flutter run --dart-define-from-file=env.dev.json -d emulator-5554
 ```bash
 # Dev
 flutter run --dart-define-from-file=env.dev.json [-d <device-id>]
+# Avec le pont flutter_skill (contrôle par agent IA) — développement uniquement
+flutter run -t test_driver/main_dev.dart --dart-define-from-file=env.dev.json
 flutter clean && flutter pub get && flutter run --dart-define-from-file=env.dev.json
 
 # Qualité

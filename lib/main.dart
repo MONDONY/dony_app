@@ -23,7 +23,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
-import 'package:flutter_skill/flutter_skill.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:posthog_flutter/posthog_flutter.dart';
@@ -45,11 +44,17 @@ const _posthogHost = String.fromEnvironment(
   defaultValue: 'https://eu.i.posthog.com',
 );
 
+/// Point d'accroche des outils de développement, appelé juste après
+/// `WidgetsFlutterBinding.ensureInitialized()`.
+///
+/// Reste `null` en production : rien dans `lib/` ne le renseigne. Seul
+/// `test_driver/main_dev.dart` y branche le pont de télécommande pour agent
+/// IA (dépendance de développement, donc pas visible d'ici).
+void Function()? devBindingHook;
+
 Future<void> _bootstrap() async {
   final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
-  if (kDebugMode) {
-    FlutterSkillBinding.ensureInitialized();
-  }
+  devBindingHook?.call();
   // Edge-to-edge : l'app dessine derrière la barre nav Android.
   // systemNavigationBarColor transparent supprime le scrim noir par défaut.
   await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
