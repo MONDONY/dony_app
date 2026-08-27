@@ -35,6 +35,14 @@ jobs:
   build-apk:
     name: Build APK (${{ github.event.inputs.build_type }})
     runs-on: ubuntu-latest
+    # GOOGLE_MAPS_API_KEY doit être visible des étapes "Build APK"/"Build
+    # AppBundle" : android/app/build.gradle.kts:25 la lit via System.getenv
+    # au moment du build Gradle, pas via --dart-define. Déclarée seulement
+    # dans l'env de l'étape "Create env.prod.json from secrets" (plus bas),
+    # elle était invisible de ces deux étapes-là : manifestPlaceholders
+    # ["GOOGLE_MAPS_API_KEY"] vide, cartes blanches dans l'artefact publié.
+    env:
+      GOOGLE_MAPS_API_KEY: ${{ secrets.FLUTTER_GOOGLE_MAPS_API_KEY }}
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
