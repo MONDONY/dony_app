@@ -81,17 +81,10 @@
 	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<key>NSAppTransportSecurity</key>
-	<dict>
-		<key>NSAllowsLocalNetworking</key>
-		<true/>
-	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>Yadony utilise l'appareil photo pour scanner les QR codes et photographier les colis.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Yadony utilise Face ID pour sécuriser tes paiements.</string>
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>Yadony utilise ta position pour trouver les trajets depuis ta ville.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Yadony utilise ta position pour trouver les trajets depuis ta ville.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
