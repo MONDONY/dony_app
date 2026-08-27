@@ -97,6 +97,25 @@
 				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
 			</array>
 		</dict>
+		<!-- Carnet d'adresses de retrait et de livraison : adresses postales
+		     structurées (rue, code postal, ville, pays, étage), enregistrées
+		     par l'utilisateur et conservées côté serveur, rattachées à son
+		     compte (cf. features/pickup_addresses et features/delivery_addresses,
+		     endpoints /addressbook/*). Distinct de PreciseLocation ci-dessus,
+		     qui ne couvre que la position GPS ponctuelle relevée au moment de
+		     choisir un point sur la carte. -->
+		<dict>
+			<key>NSPrivacyCollectedDataType</key>
+			<string>NSPrivacyCollectedDataTypePhysicalAddress</string>
+			<key>NSPrivacyCollectedDataTypeLinked</key>
+			<true/>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+			</array>
+		</dict>
 		<!-- Photos de colis, photo de profil, preuves de remise. -->
 		<dict>
 			<key>NSPrivacyCollectedDataType</key>
