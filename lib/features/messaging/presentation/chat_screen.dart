@@ -10,9 +10,11 @@ import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/utils/phone_dialer.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/incident_report/data/repositories/incident_report_repository.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_event.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_state.dart';
+import 'package:dony/features/matching/presentation/widgets/block_user_action.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_event.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_state.dart';
@@ -30,7 +32,17 @@ import 'package:intl/intl.dart';
 
 class ChatScreen extends StatefulWidget {
   final ConversationModel conversation;
-  const ChatScreen({super.key, required this.conversation});
+
+  /// Détourne la navigation en test. En production, laisser `null` :
+  /// `_navigate` retombe alors sur `context.push`, conformément à la règle
+  /// GoRouter du projet.
+  final void Function(String path, Object? extra)? onNavigate;
+
+  const ChatScreen({
+    super.key,
+    required this.conversation,
+    this.onNavigate,
+  });
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -79,6 +91,15 @@ class _ChatScreenState extends State<ChatScreen> {
     _controller.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _navigate(String path, Object? extra) {
+    final override = widget.onNavigate;
+    if (override != null) {
+      override(path, extra);
+      return;
+    }
+    context.push(path, extra: extra);
   }
 
   void _confirmAndDelete() {
@@ -274,18 +295,67 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           PopupMenuButton<String>(
             onSelected: (value) {
-              if (value == 'delete') _confirmAndDelete();
+              switch (value) {
+                case 'report':
+                  _navigate('/settings/report-incident', {
+                    'targetType': IncidentTargetType.user,
+                    'targetId': participant.id,
+                  });
+                case 'block':
+                  showBlockMenu(
+                    context,
+                    userId: participant.id,
+                    displayName: participant.name,
+                  );
+                case 'delete':
+                  _confirmAndDelete();
+              }
             },
             itemBuilder: (_) => [
+              PopupMenuItem(
+                value: 'report',
+                child: Row(
+                  children: [
+                    DonyIcon('flag', size: 20, color: cs.onSurfaceVariant),
+                    const SizedBox(width: DonySpacing.sm),
+                    Flexible(
+                      child: Text(
+                        'Signaler ${participant.name}',
+                        style: tt.bodyMedium,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'block',
+                child: Row(
+                  children: [
+                    DonyIcon('ban', size: 20, color: cs.onSurfaceVariant),
+                    const SizedBox(width: DonySpacing.sm),
+                    Flexible(
+                      child: Text(
+                        'Bloquer ${participant.name}',
+                        style: tt.bodyMedium,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               PopupMenuItem(
                 value: 'delete',
                 child: Row(
                   children: [
                     DonyIcon('trash-2', size: 20, color: cs.error),
                     const SizedBox(width: DonySpacing.sm),
-                    Text(
-                      'Supprimer la conversation',
-                      style: tt.bodyMedium?.copyWith(color: cs.error),
+                    Flexible(
+                      child: Text(
+                        'Supprimer la conversation',
+                        style: tt.bodyMedium?.copyWith(color: cs.error),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ],
                 ),
