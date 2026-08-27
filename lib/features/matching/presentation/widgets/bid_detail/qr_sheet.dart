@@ -212,7 +212,29 @@ class _QrSheetStickyBottom extends StatelessWidget {
     Uint8List imageBytes,
   ) async {
     saving.value = true;
+    void notifyFailure() {
+      if (context.mounted) {
+        DonySnackbar.show(
+          context,
+          message: 'Impossible d\'enregistrer l\'image',
+          type: DonySnackbarType.error,
+        );
+      }
+    }
+
     try {
+      // gal expose hasAccess()/requestAccess() mais ne les appelle jamais
+      // lui-même avant d'écrire — putImageBytes écrit directement. Sans cette
+      // demande explicite, WRITE_EXTERNAL_STORAGE (permission dangereuse
+      // depuis l'API 23, déclarée avec maxSdkVersion=28) reste accordée
+      // nulle part sur Android 7-9 (API 24-28), et l'écriture y échoue
+      // toujours. requestAccess() ne réaffiche pas la boîte si l'accès est
+      // déjà accordé — no-op sur API 29+, où gal le considère de toute façon
+      // déjà acquis hors album.
+      if (!await Gal.requestAccess()) {
+        notifyFailure();
+        return;
+      }
       await Gal.putImageBytes(imageBytes, name: 'qr_dony.png');
       unawaited(
         getItSafe<AnalyticsService>()?.logEvent(
@@ -227,14 +249,8 @@ class _QrSheetStickyBottom extends StatelessWidget {
           type: DonySnackbarType.success,
         );
       }
-    } catch (e) {
-      if (context.mounted) {
-        DonySnackbar.show(
-          context,
-          message: 'Impossible d\'enregistrer l\'image',
-          type: DonySnackbarType.error,
-        );
-      }
+    } catch (_) {
+      notifyFailure();
     } finally {
       // Guard against use-after-dispose: the notifier is disposed when the
       // sheet closes; if the user dismissed while this await was in flight
