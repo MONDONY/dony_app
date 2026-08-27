@@ -46,17 +46,22 @@ else
   if [ ! -f "$CFG" ]; then
     echo "ÉCHEC : $CFG absent. Le copier depuis $CFG.example et le remplir."; exit 1
   fi
-  # Ne garder que les lignes CLE=valeur : un commentaire du gabarit peut citer
-  # le bon numéro de projet en toutes lettres (Release-prod.xcconfig.example
-  # l.4) sans qu'aucune valeur ne soit réellement renseignée.
-  FOUND=$(grep -E '^[A-Z_][A-Z0-9_]*=' "$CFG" || true)
+  # Ne garder que les lignes CLE=valeur. Espaces/tabulations tolérés en début
+  # de ligne et autour du = : la syntaxe xcconfig les admet, ne pas resserrer
+  # ce motif sous prétexte de simplicité. Sans ce filtre, un commentaire du
+  # gabarit pourrait citer le bon numéro de projet en toutes lettres
+  # (Release-prod.xcconfig.example l.4) sans qu'aucune valeur ne soit
+  # réellement renseignée.
+  FOUND=$(grep -E '^[[:space:]]*[A-Z_][A-Z0-9_]*[[:space:]]*=' "$CFG" || true)
   WHERE="$CFG"
 
   # Un gabarit copié tel quel doit échouer explicitement, jamais passer parce
-  # qu'un commentaire mentionne le bon projet ailleurs dans le fichier.
+  # qu'un commentaire mentionne le bon projet ailleurs dans le fichier. Le
+  # motif d'extraction tolère exactement les mêmes espaces que le filtre
+  # ci-dessus, pour que les deux voient toujours les mêmes lignes.
   MISSING=""
   for KEY in GID_CLIENT_ID GID_REVERSED_CLIENT_ID FIREBASE_PHONE_AUTH_URL_SCHEME GOOGLE_MAPS_API_KEY; do
-    VALUE=$(sed -n "s/^${KEY}=//p" <<<"$FOUND")
+    VALUE=$(sed -n "s/^[[:space:]]*${KEY}[[:space:]]*=[[:space:]]*//p" <<<"$FOUND")
     if [ -z "$VALUE" ] || [ "$VALUE" = "REMPLIR" ]; then
       MISSING="$MISSING $KEY"
     fi
