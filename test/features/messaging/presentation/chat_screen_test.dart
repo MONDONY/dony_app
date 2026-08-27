@@ -252,6 +252,28 @@ void main() {
       expect(find.text('Supprimer la conversation'), findsOneWidget);
     });
 
+    testWidgets(
+      // I4 : « Bloquer X » depuis le menu ⋯ du chat doit ouvrir directement
+      // le dialogue de confirmation (showBlockConfirmDialog), jamais un
+      // second menu ⋯ intermédiaire (showBlockMenu) qui redirait le même
+      // libellé une deuxième fois.
+      'bloquer depuis le menu du chat ouvre directement le dialogue de confirmation',
+      (tester) async {
+        when(() => bloc.state).thenReturn(const ChatLoaded([]));
+        await _pump(tester, bloc);
+
+        await tester.tap(find.byIcon(Icons.more_vert));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Bloquer Modibo Coulibaly'));
+        await tester.pumpAndSettle();
+
+        // Le dialogue de confirmation est là, sans passer par un second menu
+        // à une seule entrée qui répéterait « Bloquer Modibo Coulibaly ».
+        expect(find.text('Bloquer Modibo ?'), findsOneWidget);
+        expect(find.text('Bloquer Modibo Coulibaly'), findsNothing);
+      },
+    );
+
     testWidgets('signaler ouvre le formulaire avec la cible utilisateur', (
       tester,
     ) async {

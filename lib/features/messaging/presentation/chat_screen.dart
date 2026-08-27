@@ -298,7 +298,12 @@ class _ChatScreenState extends State<ChatScreen> {
                     'targetId': participant.id,
                   });
                 case 'block':
-                  showBlockMenu(
+                  // showBlockMenu ouvre le menu ⋯ à une seule entrée — déjà
+                  // le cas ici (PopupMenuItem « Bloquer $name »). L'appeler
+                  // depuis ce menu produirait un menu dans un menu, le même
+                  // libellé affiché deux fois de suite. showBlockConfirmDialog
+                  // va directement au dialogue de confirmation.
+                  showBlockConfirmDialog(
                     context,
                     userId: participant.id,
                     displayName: participant.name,
