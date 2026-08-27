@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# Vérifie que la configuration Google NATIVE d'iOS appartient au même projet
+# Firebase que la configuration DART lue par --dart-define-from-file.
+#
+# Une divergence ne casse rien à la compilation : elle produit un binaire qui
+# s'installe, se lance, et échoue à la connexion Google et à la vérification
+# par SMS. C'est exactement ce qui est arrivé à l'IPA 1.0.0+40.
+#
+# Usage :
+#   tool/verify_ios_release_config.sh                    # vérifie les sources
+#   tool/verify_ios_release_config.sh build/ios/ipa/Yadony.ipa   # vérifie l'artefact
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+SENDER=$(python3 -c "import json;print(json.load(open('env.prod.json'))['FIREBASE_MESSAGING_SENDER_ID'])")
+if [ -z "$SENDER" ]; then
+  echo "ÉCHEC : FIREBASE_MESSAGING_SENDER_ID absent de env.prod.json"; exit 1
+fi
+echo "Projet Firebase attendu (côté Dart) : $SENDER"
+
+if [ $# -ge 1 ]; then
+  IPA="$1"
+  # Le motif doit être ancré sur `Payload/<nom>.app/Info.plist`. Dans unzip, un
+  # `*` traverse les `/` : `Payload/*/Info.plist` attrape aussi les quelque 70
+  # Info.plist des frameworks et des bundles de confidentialité embarqués, et
+  # un `find | head -1` en choisit alors un au hasard, qui ne contient aucun
+  # identifiant Google. On lit donc l'index de l'archive, on y sélectionne la
+  # seule entrée qui est l'Info.plist de l'application elle-même, et on
+  # n'extrait que celle-là.
+  ENTRY=$(unzip -Z1 "$IPA" | grep -E '^Payload/[^/]+\.app/Info\.plist$')
+  if [ -z "$ENTRY" ]; then
+    echo "ÉCHEC : aucun Payload/<app>.app/Info.plist trouvé dans $IPA"
+    exit 1
+  fi
+  TMP=$(mktemp -d)
+  unzip -q -o "$IPA" "$ENTRY" -d "$TMP"
+  FOUND=$(plutil -convert xml1 -o - "$TMP/$ENTRY")
+  rm -rf "$TMP"
+  WHERE="l'IPA $IPA"
+else
+  CFG="ios/Flutter/Release-prod.xcconfig"
+  if [ ! -f "$CFG" ]; then
+    echo "ÉCHEC : $CFG absent. Le copier depuis $CFG.example et le remplir."; exit 1
+  fi
+  FOUND=$(cat "$CFG")
+  WHERE="$CFG"
+fi
+
+# Toute valeur Google native (client ID, schéma d'URL) porte le numéro de projet.
+if ! grep -q "$SENDER" <<<"$FOUND"; then
+  echo "ÉCHEC : $WHERE ne contient pas le projet $SENDER."
+  echo "Numéros de projet trouvés :"
+  grep -oE '[0-9]{11,13}' <<<"$FOUND" | sort -u | sed 's/^/  /'
+  exit 1
+fi
+
+# Un autre numéro de projet à onze chiffres ou plus signale un mélange.
+OTHERS=$(grep -oE '[0-9]{11,13}' <<<"$FOUND" | sort -u | grep -v "^$SENDER$" || true)
+if [ -n "$OTHERS" ]; then
+  echo "ÉCHEC : $WHERE mélange plusieurs projets Google."
+  echo "$OTHERS" | sed 's/^/  intrus : /'
+  exit 1
+fi
+
+echo "OK : $WHERE est bien sur le projet $SENDER."

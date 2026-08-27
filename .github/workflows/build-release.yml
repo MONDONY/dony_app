@@ -13,7 +13,10 @@ on:
           - staging
 
 env:
-  FLUTTER_VERSION: 3.24.x
+  # Alignée sur ci.yml et sur la contrainte sdk: ^3.11.5 du pubspec.
+  # La 3.24 ne peut plus résoudre les dépendances : ce workflow ne
+  # produisait plus aucun binaire, d'où les builds fabriqués à la main.
+  FLUTTER_VERSION: 3.44.x
 
 jobs:
   build-apk:
