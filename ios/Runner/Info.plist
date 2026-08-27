@@ -81,6 +81,17 @@
 	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<!-- Autorise le HTTP en clair vers le réseau local uniquement. Le backend
+	     de développement est joint sur une IP privée (cf. env.dev.json), qu'ATS
+	     bloquerait sinon. Contrairement à NSAllowsArbitraryLoads, cette clé
+	     n'appelle aucune justification auprès d'Apple. Info.plist étant unique
+	     et partagé entre Debug et Release, la retirer casserait le
+	     développement de toute l'équipe sans rien apporter à la revue. -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>Yadony utilise l'appareil photo pour scanner les QR codes et photographier les colis.</string>
 	<key>NSFaceIDUsageDescription</key>
