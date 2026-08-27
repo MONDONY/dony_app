@@ -9,7 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 P2P marketplace mobile pour la diaspora africaine (transport de colis vers l'Afrique).
 
 **Stack:** Flutter/Dart · flutter_bloc · GoRouter · Dio · Hive · Firebase Auth (Phone) · Stripe · FCM · Sentry  
-Min SDK: iOS 14+ / Android 8.0+ (API 26)
+Min SDK: iOS 15+ / Android 7.0+ (API 24)
 
 ---
 

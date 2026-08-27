@@ -36,6 +36,7 @@ class ChatScreen extends StatefulWidget {
   /// Détourne la navigation en test. En production, laisser `null` :
   /// `_navigate` retombe alors sur `context.push`, conformément à la règle
   /// GoRouter du projet.
+  @visibleForTesting
   final void Function(String path, Object? extra)? onNavigate;
 
   const ChatScreen({super.key, required this.conversation, this.onNavigate});
@@ -195,6 +196,12 @@ class _ChatScreenState extends State<ChatScreen> {
     final tt = Theme.of(context).textTheme;
     final conversation = widget.conversation;
     final participant = conversation.otherParticipant;
+    // Repli partagé par le titre de l'écran et le menu ⋯ (Signaler/Bloquer/
+    // dialogue de confirmation) : un participant sans nom ne doit jamais
+    // afficher un menu à moitié vide.
+    final displayName = participant.name.isNotEmpty
+        ? participant.name
+        : 'Conversation';
     // Le canal SMS OTP coupé n'empêche pas d'appeler (fonctionnalité
     // indépendante), mais tant qu'il l'est le concept même de "numéro" reste
     // masqué partout dans l'app — bouton retiré pour rester cohérent.
@@ -226,9 +233,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    participant.name.isNotEmpty
-                        ? participant.name
-                        : 'Conversation',
+                    displayName,
                     style: tt.titleLarge?.copyWith(
                       color: cs.onSurface,
                       fontWeight: FontWeight.w700,
@@ -306,7 +311,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   showBlockConfirmDialog(
                     context,
                     userId: participant.id,
-                    displayName: participant.name,
+                    displayName: displayName,
                   );
                 case 'delete':
                   _confirmAndDelete();
@@ -321,7 +326,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     const SizedBox(width: DonySpacing.sm),
                     Flexible(
                       child: Text(
-                        'Signaler ${participant.name}',
+                        'Signaler $displayName',
                         style: tt.bodyMedium,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -337,7 +342,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     const SizedBox(width: DonySpacing.sm),
                     Flexible(
                       child: Text(
-                        'Bloquer ${participant.name}',
+                        'Bloquer $displayName',
                         style: tt.bodyMedium,
                         overflow: TextOverflow.ellipsis,
                       ),

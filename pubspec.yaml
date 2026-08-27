@@ -164,7 +164,7 @@ dev_dependencies:
   # Pont de télécommande pour agent IA, développement uniquement.
   # En dev_dependencies pour ne pas figurer dans les dépendances du binaire
   # soumis aux stores. Importé par test_driver/main_dev.dart, jamais par
-  # lib/ — pub interdit à lib/ d'importer une dependance de developpement.
+  # lib/ — pub interdit à lib/ d'importer une dépendance de développement.
   flutter_skill: ^0.9.36
 
 # flutter_stripe 12.6 est requis pour le fix iOS (stripe_ios 12.6 contient la

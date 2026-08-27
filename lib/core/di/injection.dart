@@ -277,6 +277,10 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerLazySingleton<AuthRepository>(
     () => AuthRepository(getIt<AuthRemoteDatasource>()),
   );
+  // Consommée ici par AuthBloc et par AccountDeletionBloc (Settings —
+  // Account Deletion, plus bas) : c'est une dépendance d'auth/, pas de
+  // settings/.
+  getIt.registerLazySingleton<AppleTokenRevoker>(AppleTokenRevoker.new);
   getIt.registerFactory<AuthBloc>(
     () => AuthBloc(
       getIt<AuthRepository>(),
@@ -585,7 +589,6 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerLazySingleton<AccountDeletionRepository>(
     () => AccountDeletionRepository(getIt<ApiClient>()),
   );
-  getIt.registerLazySingleton<AppleTokenRevoker>(AppleTokenRevoker.new);
   getIt.registerFactory<AccountDeletionBloc>(
     () => AccountDeletionBloc(
       getIt<AccountDeletionRepository>(),
