@@ -282,6 +282,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<AuthRepository>(),
       getIt<LocalAuthService>(),
       analytics: getIt<AnalyticsService>(),
+      appleTokenRevoker: getIt<AppleTokenRevoker>(),
     ),
   );
   getIt.registerFactory<CountryOnboardingCubit>(

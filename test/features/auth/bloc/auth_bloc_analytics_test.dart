@@ -3,6 +3,7 @@ import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/auth/data/apple_token_revoker.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/auth/data/repositories/auth_repository.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
@@ -21,6 +22,16 @@ class _MockLocalAuth extends Mock implements LocalAuthService {}
 class _MockFirebaseAuth extends Mock implements FirebaseAuth {}
 
 class _MockFirebaseUser extends Mock implements User {}
+
+// Compte non Apple sur une plateforme non Apple : revokeIfAppleUser() sort
+// immédiatement, aucun appel Firebase ni boîte système dans ces tests qui ne
+// portent pas sur la révocation Apple.
+final _inertAppleTokenRevoker = AppleTokenRevoker(
+  providerIds: () => const ['phone'],
+  isApplePlatform: () => false,
+  fetchAuthorizationCode: () async => null,
+  revoke: (_) async {},
+);
 
 void main() {
   late _MockAuthRepo repo;
@@ -66,6 +77,7 @@ void main() {
       localAuth,
       firebaseAuth: firebaseAuth,
       analytics: analytics,
+      appleTokenRevoker: _inertAppleTokenRevoker,
     );
   }
 

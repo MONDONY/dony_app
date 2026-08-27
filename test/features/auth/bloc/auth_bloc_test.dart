@@ -9,6 +9,7 @@ import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/auth/data/apple_token_revoker.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/auth/data/repositories/auth_repository.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
@@ -73,6 +74,17 @@ class FakeAppleCredential extends Fake
   String? get state => null;
 }
 
+// Compte non Apple sur une plateforme non Apple : revokeIfAppleUser() sort
+// immédiatement, aucun appel Firebase ni boîte système dans les tests qui ne
+// portent pas spécifiquement sur la révocation Apple (cf. groupe
+// AuthDeleteAccountRequested pour ceux qui la couvrent).
+final _inertAppleTokenRevoker = AppleTokenRevoker(
+  providerIds: () => const ['phone'],
+  isApplePlatform: () => false,
+  fetchAuthorizationCode: () async => null,
+  revoke: (_) async {},
+);
+
 void main() {
   late MockAuthRepository mockRepo;
   late MockLocalAuthService mockLocalAuth;
@@ -110,8 +122,12 @@ void main() {
     await Hive.box<Map>(HiveService.offlineQueueBox).clear();
   });
 
-  AuthBloc buildBloc() =>
-      AuthBloc(mockRepo, mockLocalAuth, firebaseAuth: mockFirebaseAuth);
+  AuthBloc buildBloc() => AuthBloc(
+    mockRepo,
+    mockLocalAuth,
+    firebaseAuth: mockFirebaseAuth,
+    appleTokenRevoker: _inertAppleTokenRevoker,
+  );
 
   Future<void> seedHiveUserData() async {
     await Hive.box('user_prefs').putAll({
@@ -473,6 +489,73 @@ void main() {
       act: (bloc) => bloc.add(const AuthDeleteAccountRequested()),
       expect: () => [isA<AuthLoading>(), isA<AuthError>()],
     );
+
+    // Exigence Apple (2022) : révoquer le jeton Sign in with Apple au moment
+    // de la suppression, pas seulement les jetons Firebase. Les deux tests
+    // suivants couvrent ce chemin avec un vrai AppleTokenRevoker configuré
+    // en compte Apple (pas le révocateur inerte de buildBloc()) : l'ordre
+    // d'appel, puis — la propriété la plus importante de toute la tâche — la
+    // tolérance à l'échec de révocation.
+
+    final deleteAccountCallOrder = <String>[];
+    blocTest<AuthBloc, AuthState>(
+      'révoque le jeton Apple AVANT l\'appel à deleteAccount()',
+      build: () {
+        when(() => mockRepo.deleteAccount()).thenAnswer((_) async {
+          deleteAccountCallOrder.add('deleteAccount');
+        });
+        when(() => mockLocalAuth.clearPin()).thenAnswer((_) async {});
+        when(() => mockFirebaseAuth.signOut()).thenAnswer((_) async {});
+        return AuthBloc(
+          mockRepo,
+          mockLocalAuth,
+          firebaseAuth: mockFirebaseAuth,
+          appleTokenRevoker: AppleTokenRevoker(
+            providerIds: () => const ['apple.com'],
+            isApplePlatform: () => true,
+            fetchAuthorizationCode: () async {
+              deleteAccountCallOrder.add('revoke');
+              return 'code-frais';
+            },
+            revoke: (_) async {},
+          ),
+        );
+      },
+      act: (bloc) => bloc.add(const AuthDeleteAccountRequested()),
+      wait: const Duration(milliseconds: 50),
+      expect: () => [isA<AuthLoading>(), isA<AuthAccountDeleted>()],
+      verify: (_) {
+        expect(deleteAccountCallOrder, ['revoke', 'deleteAccount']);
+      },
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'échec de révocation Apple → la suppression aboutit quand même',
+      build: () {
+        when(() => mockRepo.deleteAccount()).thenAnswer((_) async {});
+        when(() => mockLocalAuth.clearPin()).thenAnswer((_) async {});
+        when(() => mockFirebaseAuth.signOut()).thenAnswer((_) async {});
+        return AuthBloc(
+          mockRepo,
+          mockLocalAuth,
+          firebaseAuth: mockFirebaseAuth,
+          appleTokenRevoker: AppleTokenRevoker(
+            providerIds: () => const ['apple.com'],
+            isApplePlatform: () => true,
+            fetchAuthorizationCode: () async => throw Exception('réseau coupé'),
+            revoke: (_) async {},
+          ),
+        );
+      },
+      act: (bloc) => bloc.add(const AuthDeleteAccountRequested()),
+      wait: const Duration(milliseconds: 50),
+      expect: () => [isA<AuthLoading>(), isA<AuthAccountDeleted>()],
+      verify: (bloc) {
+        verify(() => mockRepo.deleteAccount()).called(1);
+        verify(() => mockLocalAuth.clearPin()).called(1);
+        verify(() => mockFirebaseAuth.signOut()).called(1);
+      },
+    );
   });
 
   // ─── AuthUpdateProfileRequested ──────────────────────────────────────────────
@@ -824,6 +907,7 @@ void main() {
       mockLocalAuth,
       firebaseAuth: mockFirebaseAuth,
       googleSignIn: mockGoogleSignIn,
+      appleTokenRevoker: _inertAppleTokenRevoker,
     );
 
     blocTest<AuthBloc, AuthState>(
@@ -873,6 +957,7 @@ void main() {
           mockLocalAuth,
           firebaseAuth: mockFirebaseAuth,
           googleSignIn: mockGoogleSignIn,
+          appleTokenRevoker: _inertAppleTokenRevoker,
         );
       },
       act: (b) => b.add(const AuthGoogleSignInRequested()),
@@ -893,6 +978,7 @@ void main() {
         mockLocalAuth,
         firebaseAuth: mockFirebaseAuth,
         googleSignIn: mockGoogleSignIn,
+        appleTokenRevoker: _inertAppleTokenRevoker,
       ),
       setUp: () {
         when(() => mockGoogleSignIn.signIn()).thenAnswer((_) async => null);
@@ -933,6 +1019,7 @@ void main() {
         mockLocalAuth,
         firebaseAuth: mockFirebaseAuth,
         appleSignIn: (_) async => FakeAppleCredential(),
+        appleTokenRevoker: _inertAppleTokenRevoker,
       ),
       setUp: () {
         when(
@@ -967,6 +1054,7 @@ void main() {
           mockLocalAuth,
           firebaseAuth: mockFirebaseAuth,
           appleSignIn: (_) async => FakeAppleCredential(),
+          appleTokenRevoker: _inertAppleTokenRevoker,
         );
       },
       act: (b) => b.add(const AuthAppleSignInRequested()),
@@ -987,6 +1075,7 @@ void main() {
         mockLocalAuth,
         firebaseAuth: mockFirebaseAuth,
         appleSignIn: (_) async => FakeAppleCredential(),
+        appleTokenRevoker: _inertAppleTokenRevoker,
       ),
       setUp: () {
         when(
@@ -1285,6 +1374,7 @@ void main() {
           mockLocalAuth,
           firebaseAuth: mockFirebaseAuth,
           googleSignIn: mockGoogleSignIn,
+          appleTokenRevoker: _inertAppleTokenRevoker,
         );
       },
       act: (bloc) => bloc.add(const AuthGoogleSignInRequested()),
@@ -1366,6 +1456,7 @@ void main() {
           mockLocalAuth,
           firebaseAuth: mockFirebaseAuth,
           googleSignIn: mockGoogleSignIn,
+          appleTokenRevoker: _inertAppleTokenRevoker,
         );
       },
       act: (b) => b.add(const AuthGoogleSignInRequested()),
@@ -1389,6 +1480,7 @@ void main() {
           mockLocalAuth,
           firebaseAuth: mockFirebaseAuth,
           appleSignIn: (_) async => FakeAppleCredential(),
+          appleTokenRevoker: _inertAppleTokenRevoker,
         );
       },
       act: (b) => b.add(const AuthAppleSignInRequested()),
@@ -1425,6 +1517,7 @@ void main() {
           mockLocalAuth,
           firebaseAuth: mockFirebaseAuth,
           googleSignIn: mockGoogleSignIn,
+          appleTokenRevoker: _inertAppleTokenRevoker,
         );
       },
       act: (b) => b.add(const AuthGoogleSignInRequested()),
@@ -1448,6 +1541,7 @@ void main() {
           mockLocalAuth,
           firebaseAuth: mockFirebaseAuth,
           appleSignIn: (_) async => FakeAppleCredential(),
+          appleTokenRevoker: _inertAppleTokenRevoker,
         );
       },
       act: (b) => b.add(const AuthAppleSignInRequested()),
@@ -1470,6 +1564,7 @@ void main() {
           mockLocalAuth,
           firebaseAuth: mockFirebaseAuth,
           googleSignIn: mockGoogleSignIn,
+          appleTokenRevoker: _inertAppleTokenRevoker,
         );
       },
       act: (b) => b.add(const AuthGoogleSignInRequested()),
@@ -1483,6 +1578,7 @@ void main() {
         mockLocalAuth,
         firebaseAuth: mockFirebaseAuth,
         appleSignIn: (_) async => throw Exception('Apple auth unavailable'),
+        appleTokenRevoker: _inertAppleTokenRevoker,
       ),
       act: (b) => b.add(const AuthAppleSignInRequested()),
       expect: () => [const AuthLoading(), isA<AuthError>()],
@@ -1553,6 +1649,7 @@ void main() {
         mockLocalAuth,
         firebaseAuth: mockFirebaseAuth,
         appleSignIn: (_) async => FakeAppleCredential(),
+        appleTokenRevoker: _inertAppleTokenRevoker,
       ),
       setUp: () {
         when(
@@ -1724,6 +1821,7 @@ void main() {
           mockLocalAuth,
           firebaseAuth: mockFirebaseAuth,
           googleSignIn: mockGoogleSignIn,
+          appleTokenRevoker: _inertAppleTokenRevoker,
         );
       },
       act: (bloc) => bloc.add(const AuthGoogleSignInRequested()),
@@ -1805,6 +1903,7 @@ void main() {
           mockLocalAuth,
           firebaseAuth: mockFirebaseAuth,
           googleSignIn: mockGoogleSignIn,
+          appleTokenRevoker: _inertAppleTokenRevoker,
         );
       },
       act: (b) => b.add(const AuthGoogleSignInRequested()),
@@ -1828,6 +1927,7 @@ void main() {
           mockLocalAuth,
           firebaseAuth: mockFirebaseAuth,
           appleSignIn: (_) async => FakeAppleCredential(),
+          appleTokenRevoker: _inertAppleTokenRevoker,
         );
       },
       act: (b) => b.add(const AuthAppleSignInRequested()),
@@ -1864,6 +1964,7 @@ void main() {
           mockLocalAuth,
           firebaseAuth: mockFirebaseAuth,
           googleSignIn: mockGoogleSignIn,
+          appleTokenRevoker: _inertAppleTokenRevoker,
         );
       },
       act: (b) => b.add(const AuthGoogleSignInRequested()),
@@ -1887,6 +1988,7 @@ void main() {
           mockLocalAuth,
           firebaseAuth: mockFirebaseAuth,
           appleSignIn: (_) async => FakeAppleCredential(),
+          appleTokenRevoker: _inertAppleTokenRevoker,
         );
       },
       act: (b) => b.add(const AuthAppleSignInRequested()),
@@ -1909,6 +2011,7 @@ void main() {
           mockLocalAuth,
           firebaseAuth: mockFirebaseAuth,
           googleSignIn: mockGoogleSignIn,
+          appleTokenRevoker: _inertAppleTokenRevoker,
         );
       },
       act: (b) => b.add(const AuthGoogleSignInRequested()),
@@ -1922,6 +2025,7 @@ void main() {
         mockLocalAuth,
         firebaseAuth: mockFirebaseAuth,
         appleSignIn: (_) async => throw Exception('Apple auth unavailable'),
+        appleTokenRevoker: _inertAppleTokenRevoker,
       ),
       act: (b) => b.add(const AuthAppleSignInRequested()),
       expect: () => [const AuthLoading(), isA<AuthError>()],
@@ -2400,6 +2504,7 @@ void main() {
           mockLocalAuth,
           firebaseAuth: mockFirebaseAuth,
           googleSignIn: googleSignIn,
+          appleTokenRevoker: _inertAppleTokenRevoker,
         );
       },
       act: (bloc) => bloc.add(const AuthGoogleSignInRequested()),
@@ -2435,6 +2540,7 @@ void main() {
           mockLocalAuth,
           firebaseAuth: mockFirebaseAuth,
           googleSignIn: googleSignIn,
+          appleTokenRevoker: _inertAppleTokenRevoker,
         );
       },
       act: (bloc) => bloc.add(const AuthGoogleSignInRequested()),
@@ -2459,6 +2565,7 @@ void main() {
           mockLocalAuth,
           firebaseAuth: mockFirebaseAuth,
           appleSignIn: (_) async => FakeAppleCredential(),
+          appleTokenRevoker: _inertAppleTokenRevoker,
         );
       },
       act: (bloc) => bloc.add(const AuthAppleSignInRequested()),
@@ -2547,6 +2654,7 @@ void main() {
       mockLocalAuth,
       firebaseAuth: mockFirebaseAuth,
       analytics: mockAnalytics,
+      appleTokenRevoker: _inertAppleTokenRevoker,
     );
 
     Future<void> runSignupFlow(AuthBloc bloc) async {
@@ -2687,6 +2795,7 @@ void main() {
       mockLocalAuth,
       firebaseAuth: mockFirebaseAuth,
       analytics: mockAnalytics,
+      appleTokenRevoker: _inertAppleTokenRevoker,
     );
 
     blocTest<AuthBloc, AuthState>(
