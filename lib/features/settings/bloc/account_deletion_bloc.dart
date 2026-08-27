@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/features/auth/data/apple_token_revoker.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/settings/data/account_deletion_repository.dart';
 import 'package:equatable/equatable.dart';
@@ -15,8 +16,9 @@ class AccountDeletionBloc
     extends Bloc<AccountDeletionEvent, AccountDeletionState> {
   final AccountDeletionRepository _repository;
   final AnalyticsService _analytics;
+  final AppleTokenRevoker _appleTokenRevoker;
 
-  AccountDeletionBloc(this._repository, this._analytics)
+  AccountDeletionBloc(this._repository, this._analytics, this._appleTokenRevoker)
     : super(const AccountDeletionInitial()) {
     on<RequestDeletion>(_onRequestDeletion);
     on<ReactivateAccount>(_onReactivateAccount);
@@ -29,6 +31,11 @@ class AccountDeletionBloc
   ) async {
     emit(const AccountDeletionLoading());
     try {
+      // Apple impose de révoquer le jeton Sign in with Apple au moment de la
+      // suppression. L'appel est sans effet pour un compte non Apple et
+      // n'échoue jamais, donc il ne peut pas bloquer la suppression
+      // (cf. AppleTokenRevoker.revokeIfAppleUser).
+      await _appleTokenRevoker.revokeIfAppleUser();
       await _repository.requestDeletion();
       emit(const AccountDeletionRequested());
       unawaited(_analytics.logEvent(AnalyticsEvents.accountDeletionRequested));
@@ -66,6 +73,11 @@ class AccountDeletionBloc
   ) async {
     emit(const AccountDeletionLoading());
     try {
+      // Apple impose de révoquer le jeton Sign in with Apple au moment de la
+      // suppression. L'appel est sans effet pour un compte non Apple et
+      // n'échoue jamais, donc il ne peut pas bloquer la suppression
+      // (cf. AppleTokenRevoker.revokeIfAppleUser).
+      await _appleTokenRevoker.revokeIfAppleUser();
       await _repository.deleteImmediately();
       emit(const AccountDeletionImmediate());
     } on ValidationException catch (e) {

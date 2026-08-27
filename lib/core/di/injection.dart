@@ -20,6 +20,7 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/country_onboarding_cubit.dart';
 import 'package:dony/features/auth/bloc/local_auth_bloc.dart';
 import 'package:dony/features/auth/bloc/personal_info_cubit.dart';
+import 'package:dony/features/auth/data/apple_token_revoker.dart';
 import 'package:dony/features/auth/data/datasources/auth_remote_datasource.dart';
 import 'package:dony/features/auth/data/repositories/auth_repository.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
@@ -583,10 +584,12 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerLazySingleton<AccountDeletionRepository>(
     () => AccountDeletionRepository(getIt<ApiClient>()),
   );
+  getIt.registerLazySingleton<AppleTokenRevoker>(AppleTokenRevoker.new);
   getIt.registerFactory<AccountDeletionBloc>(
     () => AccountDeletionBloc(
       getIt<AccountDeletionRepository>(),
       getIt<AnalyticsService>(),
+      getIt<AppleTokenRevoker>(),
     ),
   );
 

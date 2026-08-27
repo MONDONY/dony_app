@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/features/auth/data/apple_token_revoker.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:dony/features/settings/data/account_deletion_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -17,7 +18,18 @@ void main() {
     mockRepo = MockAccountDeletionRepository();
     final analytics = makeDisabledAnalytics(MockAnalyticsBackend());
     analytics.onConfigured();
-    bloc = AccountDeletionBloc(mockRepo, analytics);
+    bloc = AccountDeletionBloc(
+      mockRepo,
+      analytics,
+      AppleTokenRevoker(
+        // Compte non Apple : revokeIfAppleUser sort immédiatement, aucun
+        // appel Firebase ni boîte système dans les tests.
+        providerIds: () => const ['phone'],
+        isApplePlatform: () => false,
+        fetchAuthorizationCode: () async => null,
+        revoke: (_) async {},
+      ),
+    );
   });
 
   tearDown(() => bloc.close());
