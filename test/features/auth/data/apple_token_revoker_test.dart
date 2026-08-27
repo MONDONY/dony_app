@@ -98,5 +98,53 @@ void main() {
       await expectLater(revoker.revokeIfAppleUser(), completes);
       expect(fetchCalled, isFalse);
     });
+
+    test(
+      'journalise l\'échec sans jamais y inclure le code d\'autorisation',
+      () async {
+        String? loggedMessage;
+        Map<String, Object>? loggedData;
+        final revoker = AppleTokenRevoker(
+          providerIds: () => ['apple.com'],
+          isApplePlatform: () => true,
+          fetchAuthorizationCode: () async => 'code-secret-jamais-loggue',
+          revoke: (_) async => throw Exception('réseau coupé'),
+          logFailure: (message, {data}) {
+            loggedMessage = message;
+            loggedData = data;
+          },
+        );
+
+        await revoker.revokeIfAppleUser();
+
+        expect(loggedMessage, isNotNull);
+        expect(loggedData, isNotNull);
+        expect(
+          '$loggedMessage${loggedData ?? ''}',
+          isNot(contains('code-secret-jamais-loggue')),
+        );
+      },
+    );
+
+    test(
+      'un journaliseur qui lève ne bloque jamais la suppression',
+      () async {
+        // Verrouille la garde du bloc catch interne : _logFailure est
+        // injectable, donc une implémentation défaillante (fournie par un
+        // appelant, ou en test) ne doit pas non plus faire remonter
+        // d'exception depuis revokeIfAppleUser(). Le contrat « ne bloque
+        // jamais la suppression » doit survivre même à un journaliseur cassé.
+        final revoker = AppleTokenRevoker(
+          providerIds: () => ['apple.com'],
+          isApplePlatform: () => true,
+          fetchAuthorizationCode: () async => 'code',
+          revoke: (_) async => throw Exception('réseau coupé'),
+          logFailure: (message, {data}) =>
+              throw Exception('journaliseur cassé'),
+        );
+
+        await expectLater(revoker.revokeIfAppleUser(), completes);
+      },
+    );
   });
 }
