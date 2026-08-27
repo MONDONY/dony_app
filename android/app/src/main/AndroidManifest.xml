@@ -14,7 +14,12 @@
          En écriture, en revanche, `gal` a besoin du stockage externe
          jusqu'à l'API 28 pour enregistrer le QR d'un colis dans la
          galerie. Le paquet ne déclare rien lui-même et minSdk vaut 24 :
-         sans cette ligne, l'enregistrement échoue sur Android 7 à 9. -->
+         sans cette ligne, l'enregistrement échoue sur Android 7 à 9.
+
+         Cette déclaration seule ne suffit pas : WRITE_EXTERNAL_STORAGE est
+         une permission dangereuse, donc aussi demandée à l'exécution, aux
+         deux endroits qui écrivent dans la galerie — `Gal.requestAccess()`
+         dans trip_poster_screen.dart et qr_sheet.dart. -->
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28" />
