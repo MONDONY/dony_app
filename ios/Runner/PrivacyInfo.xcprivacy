@@ -39,6 +39,25 @@
 				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
 			</array>
 		</dict>
+		<!-- Carnet de destinataires : nom et téléphone d'un tiers, importés
+		     depuis le sélecteur de contacts du système puis envoyés au serveur
+		     pour créer le destinataire (cf. ContactPickerService et
+		     RecipientPickerSheet). Le sélecteur n'exige aucune permission et ne
+		     restitue que le contact choisi par l'utilisateur, mais la donnée
+		     quitte l'appareil : au sens d'Apple elle est donc collectée, et
+		     l'exemption du sélecteur système ne s'applique pas. -->
+		<dict>
+			<key>NSPrivacyCollectedDataType</key>
+			<string>NSPrivacyCollectedDataTypeContacts</string>
+			<key>NSPrivacyCollectedDataTypeLinked</key>
+			<true/>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+			</array>
+		</dict>
 		<!-- Sign in with Apple, Google, connexion par code e-mail. -->
 		<dict>
 			<key>NSPrivacyCollectedDataType</key>
