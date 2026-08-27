@@ -227,6 +227,12 @@ void main() {
           () => fcm.requestPermission(),
         ).thenAnswer((_) async => _authSettings(AuthorizationStatus.denied));
         when(() => sessionProbe.hasRealSession).thenReturn(true);
+        // Stubbé même si aucun appel n'est attendu : si la garde cède, la
+        // chaîne doit produire un vrai appel Dio observable plutôt que
+        // mourir sur un mock non stubbé (qui renvoie null chez mocktail et
+        // se fait avaler par le catch de _uploadCurrentTokenOnce). Sinon
+        // verifyNever serait vrai que la garde fonctionne ou pas.
+        when(() => fcm.getToken()).thenAnswer((_) async => 'fcm-token-xyz');
 
         await service.requestPermission();
         await Future<void>.delayed(Duration.zero);
@@ -242,6 +248,8 @@ void main() {
           (_) async => _authSettings(AuthorizationStatus.authorized),
         );
         when(() => sessionProbe.hasRealSession).thenReturn(false);
+        // Même raison que ci-dessus : rendre une éventuelle fuite détectable.
+        when(() => fcm.getToken()).thenAnswer((_) async => 'fcm-token-xyz');
 
         await service.requestPermission();
         await Future<void>.delayed(Duration.zero);
