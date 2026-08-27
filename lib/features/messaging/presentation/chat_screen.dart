@@ -38,11 +38,7 @@ class ChatScreen extends StatefulWidget {
   /// GoRouter du projet.
   final void Function(String path, Object? extra)? onNavigate;
 
-  const ChatScreen({
-    super.key,
-    required this.conversation,
-    this.onNavigate,
-  });
+  const ChatScreen({super.key, required this.conversation, this.onNavigate});
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();

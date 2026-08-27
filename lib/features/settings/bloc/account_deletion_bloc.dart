@@ -18,8 +18,11 @@ class AccountDeletionBloc
   final AnalyticsService _analytics;
   final AppleTokenRevoker _appleTokenRevoker;
 
-  AccountDeletionBloc(this._repository, this._analytics, this._appleTokenRevoker)
-    : super(const AccountDeletionInitial()) {
+  AccountDeletionBloc(
+    this._repository,
+    this._analytics,
+    this._appleTokenRevoker,
+  ) : super(const AccountDeletionInitial()) {
     on<RequestDeletion>(_onRequestDeletion);
     on<ReactivateAccount>(_onReactivateAccount);
     on<ConfirmImmediateDeletion>(_onConfirmImmediateDeletion);

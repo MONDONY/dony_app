@@ -282,10 +282,10 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(pushedPath, '/settings/report-incident');
-      expect(
-        pushedExtra,
-        {'targetType': IncidentTargetType.user, 'targetId': 'uid-1'},
-      );
+      expect(pushedExtra, {
+        'targetType': IncidentTargetType.user,
+        'targetId': 'uid-1',
+      });
     });
   });
 }
