@@ -139,6 +139,68 @@ void main() {
       ],
       verify: (_) => verify(() => mockRepo.requestDeletion()).called(1),
     );
+
+    var codeRequestedOnEscrowRefusal = false;
+    blocTest<AccountDeletionBloc, AccountDeletionState>(
+      'does not revoke the Apple token when the pause is refused for an '
+      'active escrow',
+      build: () {
+        // Verrouille l'asymétrie I1 : requestDeletion() refusé ne doit
+        // jamais déclencher la révocation Apple, puisqu'elle vient
+        // maintenant APRÈS lui, dans le même try.
+        when(
+          () => mockRepo.requestDeletion(),
+        ).thenThrow(const ValidationException('active-transactions'));
+        return AccountDeletionBloc(
+          mockRepo,
+          makeDisabledAnalytics(MockAnalyticsBackend())..onConfigured(),
+          AppleTokenRevoker(
+            providerIds: () => const ['apple.com'],
+            isApplePlatform: () => true,
+            fetchAuthorizationCode: () async {
+              codeRequestedOnEscrowRefusal = true;
+              return 'code';
+            },
+            revoke: (_) async {},
+          ),
+        );
+      },
+      act: (b) => b.add(const RequestDeletion()),
+      expect: () => [
+        isA<AccountDeletionLoading>(),
+        isA<AccountDeletionError>().having(
+          (s) => s.isEscrowBlocked,
+          'isEscrowBlocked',
+          isTrue,
+        ),
+      ],
+      verify: (_) => expect(codeRequestedOnEscrowRefusal, isFalse),
+    );
+
+    var appleRevokedAfterSuccess = false;
+    blocTest<AccountDeletionBloc, AccountDeletionState>(
+      'revokes the Apple token after a successful pause request',
+      build: () {
+        when(() => mockRepo.requestDeletion()).thenAnswer((_) async {});
+        return AccountDeletionBloc(
+          mockRepo,
+          makeDisabledAnalytics(MockAnalyticsBackend())..onConfigured(),
+          AppleTokenRevoker(
+            providerIds: () => const ['apple.com'],
+            isApplePlatform: () => true,
+            fetchAuthorizationCode: () async => 'code-frais',
+            revoke: (code) async =>
+                appleRevokedAfterSuccess = code == 'code-frais',
+          ),
+        );
+      },
+      act: (b) => b.add(const RequestDeletion()),
+      expect: () => [
+        isA<AccountDeletionLoading>(),
+        isA<AccountDeletionRequested>(),
+      ],
+      verify: (_) => expect(appleRevokedAfterSuccess, isTrue),
+    );
   });
 
   group('ReactivateAccount', () {
