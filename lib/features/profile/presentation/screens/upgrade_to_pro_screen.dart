@@ -208,15 +208,25 @@ class _UpgradeToProViewState extends State<_UpgradeToProView> {
           },
         ),
       ],
-      // `buildWhen` filtre les états d'authentification qui ne portent PAS
-      // d'utilisateur. `AuthCheckRequested` émet `AuthLoading` avant l'état
-      // authentifié : le traiter comme « non PRO » ferait défiler la page de
-      // vente, tarifs compris, sous les yeux d'un abonné dont le profil se
-      // rafraîchit. Un état qui ne dit rien ne doit rien changer à ce qui est
-      // affiché, et c'est bien un filtre de reconstruction, pas un `watch`,
-      // qui exprime ça : la dernière décision connue reste en place.
+      // Ce qui est filtré ici, c'est le seul état de PASSAGE, pas l'absence
+      // d'utilisateur.
+      //
+      // `AuthCheckRequested` émet `AuthLoading` avant l'état authentifié
+      // (`AuthBloc._onCheckRequested`) : le traiter comme « non PRO » ferait
+      // défiler la page de vente, tarifs compris, sous les yeux d'un abonné
+      // dont le profil se rafraîchit. `AuthLoading` ne dit jamais rien du
+      // compte, il ne doit donc rien changer à ce qui est affiché.
+      //
+      // Tous les AUTRES états sans utilisateur sont terminaux et doivent
+      // provoquer un rendu : `AuthInitial` (déconnexion), `AuthAccountDeleted`,
+      // `AuthLocked`, `AuthError`, `AuthGuestSessionReady`, ainsi que les
+      // états de parcours de connexion. Les filtrer sur le seul critère
+      // « ne porte pas d'utilisateur » figerait l'écran sur la vue d'abonné,
+      // carte et bouton de résiliation compris, après la fermeture de la
+      // session — et le routeur ne redirige pas sur une déconnexion
+      // volontaire ultérieure, donc rien ne rattraperait le coup.
       child: BlocBuilder<AuthBloc, AuthState>(
-        buildWhen: (previous, current) => _userOf(current) != null,
+        buildWhen: (previous, current) => current is! AuthLoading,
         builder: (context, state) {
           final user = _userOf(state);
           if (user == null) {

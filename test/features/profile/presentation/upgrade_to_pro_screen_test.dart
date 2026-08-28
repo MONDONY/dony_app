@@ -743,6 +743,45 @@ void main() {
         },
       );
 
+      // Le revers du filtre de reconstruction : ignorer TOUS les états sans
+      // utilisateur figerait l'écran sur la vue d'abonné après la fermeture
+      // de la session. Le routeur ne redirige pas sur une déconnexion
+      // volontaire ultérieure (seulement au tout premier contrôle au
+      // démarrage), donc rien d'autre ne rattraperait le coup. Seul
+      // `AuthLoading` est un état de passage ; ceux-ci sont terminaux et
+      // doivent tous provoquer un rendu.
+      for (final (label, terminalState) in <(String, AuthState)>[
+        ('déconnexion', const AuthInitial()),
+        ('suppression de compte', const AuthAccountDeleted()),
+        ('verrouillage', const AuthLocked()),
+      ]) {
+        testWidgets(
+          "$label : l'écran quitte la vue d'abonné au lieu de rester figé",
+          (tester) async {
+            final authStates = StreamController<AuthState>.broadcast();
+            addTearDown(authStates.close);
+            whenListen<AuthState>(
+              mockAuthBloc,
+              authStates.stream,
+              initialState: AuthAuthenticated(_proUser()),
+            );
+            subscriptionState(const SubscriptionLoaded(_tAdminGrant));
+
+            await pumpScreen(tester);
+            expect(find.text(_kDowngradeButton), findsOneWidget);
+
+            authStates.add(terminalState);
+            await tester.pump();
+
+            // Proposer de résilier un abonnement sur une session fermée est
+            // au moins aussi trompeur que la page de vente que cette tâche
+            // supprime.
+            expect(find.text(_kDowngradeButton), findsNothing);
+            expect(find.byType(SubscriptionStatusCard), findsNothing);
+          },
+        );
+      }
+
       testWidgets(
         "au démarrage à froid, rien n'est affirmé : ni page de vente, ni vue "
         "d'abonné",
