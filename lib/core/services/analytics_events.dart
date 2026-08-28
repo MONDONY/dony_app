@@ -161,6 +161,15 @@ abstract final class AnalyticsEvents {
   static const helpYoutubeSubscribeTapped = 'help_youtube_subscribe_tapped';
   static const helpConfigLoadFailed = 'help_config_load_failed';
 
+  // Billing (abonnement PRO)
+  static const proSubscriptionViewed = 'pro_subscription_viewed';
+  static const proPortalOpened = 'pro_portal_opened';
+  static const proPortalOpenFailed = 'pro_portal_open_failed';
+
+  /// Sert à la tâche 6 (blocage du downgrade) : déclarée ici pour éviter un
+  /// second passage sur ce fichier.
+  static const proDowngradeBlocked = 'pro_downgrade_blocked';
+
   // Referral
   static const referralShared = 'referral_shared';
 
