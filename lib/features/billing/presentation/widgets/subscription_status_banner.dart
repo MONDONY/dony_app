@@ -28,11 +28,12 @@ int? daysUntil(DateTime? instant, {DateTime? now}) {
 /// Vrai quand [SubscriptionStatusBanner] rend autre chose qu'un
 /// `SizedBox.shrink()`.
 ///
-/// Miroir exact du `switch` de son `build` et de `_activeBanner` : si l'un
-/// évolue, mettre l'autre à jour. Vit ici, collé à ce qu'il reflète, parce
-/// que plusieurs écrans montent le bandeau (Profil, compte PRO) et qu'un
-/// bandeau muet doit aussi faire disparaître l'espacement qui le suit. Sans
-/// ce prédicat partagé, chaque appelant en réécrirait sa propre copie.
+/// Source UNIQUE de cette décision : `build` commence par une garde sur ce
+/// prédicat avant de choisir quoi rendre, il n'y a donc plus rien à
+/// maintenir en miroir. Vit ici, collé à ce qu'il gouverne, parce que
+/// plusieurs écrans montent le bandeau (Profil, compte PRO) et qu'un bandeau
+/// muet doit aussi faire disparaître l'espacement qui le suit. Sans ce
+/// prédicat partagé, chaque appelant en réécrirait sa propre copie.
 bool subscriptionHasVisibleAlert(ProSubscriptionModel subscription) =>
     switch (subscription.status) {
       ProSubscriptionStatus.pastDue ||
@@ -63,6 +64,13 @@ class SubscriptionStatusBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Garde unique : au-delà, `subscription.status` ne peut plus valoir
+    // `none`/`canceled`/`expired`/`unknown`, ni `active` sans résiliation
+    // programmée avec date connue. `_activeBanner` n'a donc plus besoin de
+    // revérifier cette dernière condition.
+    if (!subscriptionHasVisibleAlert(subscription)) {
+      return const SizedBox.shrink();
+    }
     return switch (subscription.status) {
       ProSubscriptionStatus.pastDue => DonyStatusBanner(
         type: DonyStatusBannerType.error,
@@ -76,11 +84,14 @@ class SubscriptionStatusBanner extends StatelessWidget {
         message: _legacyGraceMessage(),
         action: _actionButton(context, "S'abonner"),
       ),
-      ProSubscriptionStatus.active => _activeBanner(context),
-      ProSubscriptionStatus.none ||
-      ProSubscriptionStatus.canceled ||
-      ProSubscriptionStatus.expired ||
-      ProSubscriptionStatus.unknown => const SizedBox.shrink(),
+      // Seule valeur qui reste possible ici : la garde ci-dessus a déjà
+      // écarté `none`/`canceled`/`expired`/`unknown`, qui ne portent jamais
+      // d'alerte. Un joker plutôt qu'un `ProSubscriptionStatus.active =>`
+      // explicite suivi des quatre autres valeurs : ces dernières
+      // redeviendraient du code mort, jamais atteignable, donc jamais
+      // couvrable par un test — exactement la duplication que la garde
+      // existe pour supprimer.
+      _ => _activeBanner(context),
     };
   }
 
@@ -105,11 +116,13 @@ class SubscriptionStatusBanner extends StatelessWidget {
   }
 
   Widget _activeBanner(BuildContext context) {
-    final periodEnd = subscription.currentPeriodEnd;
-    if (!subscription.cancelAtPeriodEnd || periodEnd == null) {
-      return const SizedBox.shrink();
-    }
-    final dateStr = formatSubscriptionDate(periodEnd.toLocal());
+    // La garde de `build` a déjà établi `cancelAtPeriodEnd` vrai et
+    // `currentPeriodEnd` non nul pour atteindre ce point : la retester ici
+    // recréerait la copie que `subscriptionHasVisibleAlert` existe pour
+    // supprimer.
+    final dateStr = formatSubscriptionDate(
+      subscription.currentPeriodEnd!.toLocal(),
+    );
     return DonyStatusBanner(
       type: DonyStatusBannerType.info,
       message: 'Votre abonnement PRO prend fin le $dateStr.',

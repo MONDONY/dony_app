@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:dony/core/services/external_url_launcher.dart';
 import 'package:dony/features/profile/data/datasources/help_center_remote_config_datasource.dart';
 import 'package:dony/features/profile/data/models/help_center_config.dart';
 import 'package:flutter/services.dart' show rootBundle;
@@ -20,11 +21,11 @@ final class HelpCenterRepository {
     Future<String> Function()? fallbackJsonLoader,
     UrlLauncherPlatform? urlLauncher,
   }) : _fallbackJsonLoader = fallbackJsonLoader ?? _loadFallbackJson,
-       _urlLauncher = urlLauncher ?? UrlLauncherPlatform.instance;
+       _urlLauncher = ExternalUrlLauncher(launcher: urlLauncher);
 
   final HelpCenterConfigSource _source;
   final Future<String> Function() _fallbackJsonLoader;
-  final UrlLauncherPlatform _urlLauncher;
+  final ExternalUrlLauncher _urlLauncher;
   HelpCenterConfig _lastValid = HelpCenterConfig.empty;
   Future<void> _operationTail = Future.value();
 
@@ -84,20 +85,7 @@ final class HelpCenterRepository {
     }
   }
 
-  Future<bool> openExternal(Uri uri) async {
-    if (uri.scheme != 'https' || uri.host.isEmpty) {
-      return false;
-    }
-
-    try {
-      return await _urlLauncher.launchUrl(
-        uri.toString(),
-        const LaunchOptions(mode: PreferredLaunchMode.externalApplication),
-      );
-    } catch (_) {
-      return false;
-    }
-  }
+  Future<bool> openExternal(Uri uri) => _urlLauncher.open(uri);
 
   HelpCenterRepositoryResult _success(HelpCenterConfig config) {
     _lastValid = config;

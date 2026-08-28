@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/widgets/browser_return_refresh_mixin.dart';
 import 'package:dony/features/billing/bloc/subscription_bloc.dart';
 import 'package:dony/features/billing/presentation/pro_portal_copy.dart';
 import 'package:dony/features/billing/presentation/widgets/subscription_status_banner.dart';
@@ -28,38 +29,20 @@ class SubscriptionBannerHost extends StatefulWidget {
 }
 
 class _SubscriptionBannerHostState extends State<SubscriptionBannerHost>
-    with WidgetsBindingObserver {
-  /// Vrai entre le moment où ce bandeau envoie l'utilisateur dans le
-  /// navigateur et son retour. Même mécanique que l'écran « Compte PRO » :
-  /// ce bandeau ouvre lui aussi le portail (« Régler », « Gérer »,
-  /// « S'abonner »), et sans rechargement au retour, l'utilisateur qui vient
-  /// de régulariser depuis son Profil retrouve un bandeau inchangé.
-  bool _hasLaunchedBrowser = false;
-
-  /// Conservée pour pouvoir recharger depuis `didChangeAppLifecycleState`,
+    with
+        WidgetsBindingObserver,
+        BrowserReturnRefreshMixin<SubscriptionBannerHost> {
+  /// Conservée pour pouvoir recharger depuis `onResumedAfterBrowserLaunch`,
   /// où le `context` de ce State n'est plus sous le `BlocProvider` créé dans
   /// `build`.
   SubscriptionBloc? _bloc;
 
+  /// Même mécanique que l'écran « Compte PRO » : ce bandeau ouvre lui aussi
+  /// le portail (« Régler », « Gérer », « S'abonner »), et sans rechargement
+  /// au retour, l'utilisateur qui vient de régulariser depuis son Profil
+  /// retrouve un bandeau inchangé.
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state != AppLifecycleState.resumed || !_hasLaunchedBrowser) {
-      return;
-    }
-    _hasLaunchedBrowser = false;
-    if (!mounted) return;
+  void onResumedAfterBrowserLaunch() {
     _bloc?.add(const SubscriptionRequested());
   }
 
@@ -82,10 +65,7 @@ class _SubscriptionBannerHostState extends State<SubscriptionBannerHost>
           // (voir sa documentation) : traité ici, dans le listener, pas dans
           // le builder.
           if (state is SubscriptionPortalLaunchFailed) {
-            // Aucun navigateur n'a été ouvert : le drapeau de retour ne doit
-            // pas rester armé, sinon la prochaine reprise rechargerait sans
-            // raison.
-            _hasLaunchedBrowser = false;
+            clearBrowserLaunched();
             DonySnackbar.show(
               context,
               message: kProPortalOpenFailedMessage,
@@ -120,7 +100,7 @@ class _SubscriptionBannerHostState extends State<SubscriptionBannerHost>
                 // disparaît quand elle ne mènerait nulle part.
                 onAction: proPortalActionIsLegitimate(subscription)
                     ? () {
-                        _hasLaunchedBrowser = true;
+                        markBrowserLaunched();
                         context.read<SubscriptionBloc>().add(
                           ProPortalOpenRequested(
                             proPortalTargetFor(subscription.status),

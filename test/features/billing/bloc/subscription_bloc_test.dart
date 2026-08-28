@@ -156,11 +156,17 @@ void main() {
       },
       wait: const Duration(milliseconds: 100),
       verify: (_) {
-        // Le retour du portail émet une demande, et la bascule non-PRO → PRO
-        // qui suit le rafraîchissement de profil en émet une seconde. Sans
-        // transformateur, ce sont deux appels réseau ET surtout **deux
-        // événements `pro_subscription_viewed` comptés pour une seule
-        // ouverture** : un double comptage bien réel dans les statistiques.
+        // Ce doublement n'a plus de cause connue sur `UpgradeToProScreen` :
+        // `didChangeAppLifecycleState` et le `BlocListener<AuthBloc>` s'y
+        // partagent désormais la reprise sans jamais tirer tous les deux
+        // (le premier n'émet que si le compte est déjà PRO, l'autre
+        // seulement sur la bascule non-PRO → PRO). Le transformateur reste
+        // ici en défense en profondeur — un double appui rapide sur
+        // « Réessayer », ou un futur appelant qui redemanderait deux fois
+        // sans le savoir, ferait sinon deux appels réseau ET surtout
+        // **deux événements `pro_subscription_viewed` comptés pour une
+        // seule ouverture** : un double comptage bien réel dans les
+        // statistiques.
         verify(() => repository.getSubscription()).called(1);
         verify(
           () => analytics.logEvent(

@@ -166,8 +166,11 @@ abstract final class AnalyticsEvents {
   static const proPortalOpened = 'pro_portal_opened';
   static const proPortalOpenFailed = 'pro_portal_open_failed';
 
-  /// Sert à la tâche 6 (blocage du downgrade) : déclarée ici pour éviter un
-  /// second passage sur ce fichier.
+  /// `DELETE /auth/me/upgrade-to-pro` refusé en `409`
+  /// `active-stripe-subscription` : l'abonnement Stripe est encore actif, la
+  /// résiliation passe par le portail web. Câblé dans
+  /// `UpgradeToProBloc._onDowngrade`, aucune propriété (ni identifiant, ni
+  /// message serveur).
   static const proDowngradeBlocked = 'pro_downgrade_blocked';
 
   // Referral

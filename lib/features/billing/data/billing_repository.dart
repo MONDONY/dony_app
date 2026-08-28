@@ -1,21 +1,23 @@
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/core/services/external_url_launcher.dart';
 import 'package:dony/features/billing/data/models/pro_subscription_model.dart';
 import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
 
 /// Accès à l'abonnement PRO côté serveur et ouverture du portail web externe
 /// où il se vend et se gère.
 ///
-/// L'ouverture d'URL calque `HelpCenterRepository.openExternal` : le lanceur
-/// est injectable pour les tests, jamais appelé en dur, et l'ouverture se
-/// fait toujours en navigateur externe — jamais en webview, Stripe interdit
-/// ses parcours de paiement dans une vue intégrée.
+/// L'ouverture d'URL délègue à `ExternalUrlLauncher`, partagée avec
+/// `HelpCenterRepository` : le lanceur reste injectable pour les tests,
+/// jamais appelé en dur, et l'ouverture se fait toujours en navigateur
+/// externe — jamais en webview, Stripe interdit ses parcours de paiement
+/// dans une vue intégrée.
 class BillingRepository {
   BillingRepository(this._client, {UrlLauncherPlatform? launcher})
-    : _launcher = launcher ?? UrlLauncherPlatform.instance;
+    : _urlLauncher = ExternalUrlLauncher(launcher: launcher);
 
   final ApiClient _client;
-  final UrlLauncherPlatform _launcher;
+  final ExternalUrlLauncher _urlLauncher;
 
   /// `GET /billing/subscription` répond toujours 200, jamais 404 ni 204.
   /// L'absence d'abonnement (statut `NONE`) est un cas nominal, pas une
@@ -31,18 +33,5 @@ class BillingRepository {
     }
   }
 
-  Future<bool> openExternal(Uri uri) async {
-    if (uri.scheme != 'https' || uri.host.isEmpty) {
-      return false;
-    }
-
-    try {
-      return await _launcher.launchUrl(
-        uri.toString(),
-        const LaunchOptions(mode: PreferredLaunchMode.externalApplication),
-      );
-    } catch (_) {
-      return false;
-    }
-  }
+  Future<bool> openExternal(Uri uri) => _urlLauncher.open(uri);
 }

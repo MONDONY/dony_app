@@ -5,6 +5,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/widgets/browser_return_refresh_mixin.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
@@ -169,13 +170,7 @@ class _UpgradeToProView extends StatefulWidget {
 }
 
 class _UpgradeToProViewState extends State<_UpgradeToProView>
-    with WidgetsBindingObserver {
-  /// Vrai entre le moment où cet écran envoie l'utilisateur dans le
-  /// navigateur et son retour dans l'application. Sans ce drapeau, il
-  /// faudrait rafraîchir le profil à CHAQUE reprise, c'est-à-dire à chaque
-  /// bascule d'application, pour rien.
-  bool _hasLaunchedBrowser = false;
-
+    with WidgetsBindingObserver, BrowserReturnRefreshMixin<_UpgradeToProView> {
   /// Dernière PRO-ness **réellement connue**. `null` tant qu'aucun état
   /// d'authentification informatif n'est passé (démarrage à froid).
   bool? _lastKnownIsPro;
@@ -183,7 +178,6 @@ class _UpgradeToProViewState extends State<_UpgradeToProView>
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
     // Aligné sur ce que `create` a déjà décidé pour le BLoC d'abonnement :
     // si l'utilisateur est déjà PRO au montage, la demande est partie, et
     // l'écouteur ne doit pas la doubler au premier état reçu.
@@ -201,12 +195,6 @@ class _UpgradeToProViewState extends State<_UpgradeToProView>
     });
   }
 
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
-
   /// Le parcours nominal du lot se termine **hors de l'application** : on
   /// s'abonne sur le portail web, puis on revient. Rien dans l'app ne
   /// rafraîchit le profil à ce moment-là — l'observateur de cycle de vie
@@ -220,27 +208,38 @@ class _UpgradeToProViewState extends State<_UpgradeToProView>
   /// recharge le profil **sans émettre `AuthLoading`**, donc sans faire
   /// clignoter l'écran au retour.
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state != AppLifecycleState.resumed || !_hasLaunchedBrowser) {
-      return;
-    }
-    _hasLaunchedBrowser = false;
-    if (!mounted) return;
+  void onResumedAfterBrowserLaunch() {
     context.read<AuthBloc>().add(const AuthProfileRefreshRequested());
-    // Et l'abonnement lui-même, systématiquement. Le conditionner à l'état du
-    // BLoC (« ne recharger que si rien n'a jamais été chargé ») neutralisait
-    // ce rappel pour tout le monde sauf les non-abonnés : l'impayé qui vient
-    // de payer, l'accès fermé qui vient de se réabonner et la résiliation
-    // faite sur le portail restaient tous invisibles au retour. Ce qui
-    // justifie de recharger n'est pas « rien n'a été chargé », c'est « je
-    // reviens d'un portail où l'abonnement a pu changer ».
-    context.read<SubscriptionBloc>().add(const SubscriptionRequested());
+    // Et l'abonnement lui-même, mais seulement quand ce retour ne peut pas
+    // être détecté autrement. `_lastKnownIsPro` couvre l'impayé qui vient de
+    // payer, l'accès fermé qui vient de se réabonner et la résiliation faite
+    // sur le portail : ces trois retours partent d'un compte DÉJÀ PRO, et le
+    // rafraîchissement de profil demandé juste au-dessus ne fera basculer ni
+    // `isPro` ni `wasPro` dans le `BlocListener<AuthBloc>` ci-dessous (les
+    // deux restent vrais) — lui ne verra donc AUCUNE bascule et ne
+    // redemandera jamais l'abonnement à leur place. Sur ces trois chemins,
+    // c'est ici, et seulement ici, que la demande doit partir.
+    //
+    // Le chemin restant — un non-abonné qui vient de payer — prend la sortie
+    // opposée : `_lastKnownIsPro` y est encore faux à cet instant précis (le
+    // profil n'a pas fini de se rafraîchir), donc rien ne part d'ici. C'est
+    // le `BlocListener<AuthBloc>` qui s'en charge, dès que le
+    // rafraîchissement fait passer le compte à PRO : lui seul peut savoir
+    // que la bascule a eu lieu. Émettre inconditionnellement ici, comme
+    // avant, doublait l'appel réseau et l'événement `pro_subscription_viewed`
+    // sur ce chemin précisément : les deux émetteurs tiraient dans la même
+    // reprise, et le transformateur `exhaustMap` du BLoC n'absorbait le
+    // second que par course (seulement si le premier était encore en vol),
+    // jamais par garantie.
+    if (_lastKnownIsPro == true) {
+      context.read<SubscriptionBloc>().add(const SubscriptionRequested());
+    }
   }
 
   /// Point de passage unique de toutes les ouvertures du portail, pour que le
   /// drapeau de retour ne puisse pas être oublié sur un chemin.
   void _openPortal(BuildContext context, ProPortalTarget target) {
-    _hasLaunchedBrowser = true;
+    markBrowserLaunched();
     context.read<SubscriptionBloc>().add(ProPortalOpenRequested(target));
   }
 
@@ -328,10 +327,7 @@ class _UpgradeToProViewState extends State<_UpgradeToProView>
             // État transitoire de signalement (voir sa documentation) :
             // traité ici, jamais dans un builder.
             if (state is SubscriptionPortalLaunchFailed) {
-              // Aucun navigateur n'a été ouvert : le drapeau de retour ne doit
-              // pas rester armé, sinon la prochaine reprise déclencherait un
-              // rafraîchissement de profil sans raison.
-              _hasLaunchedBrowser = false;
+              clearBrowserLaunched();
               DonySnackbar.show(
                 context,
                 message: kProPortalOpenFailedMessage,
@@ -552,7 +548,17 @@ class _ProSubscriberView extends StatelessWidget {
                 if (subscription != null)
                   ..._loaded(context, subscription)
                 else if (state is SubscriptionError)
-                  ..._failed(context)
+                  // L'échec de chargement n'efface pas l'écran : le titre
+                  // reste, le message est explicite, et une seule action est
+                  // proposée. Masquer la page entière pour un appel raté
+                  // priverait l'abonné de tout repère.
+                  ..._retryableStatus(
+                    context,
+                    type: DonyStatusBannerType.error,
+                    message:
+                        "Impossible de charger l'état de votre abonnement "
+                        'pour le moment.',
+                  )
                 else if (state is SubscriptionLoading)
                   // Une demande est en vol : elle se résoudra en `Loaded` ou
                   // en `Error`, qui offrent tous deux une suite. Ce n'est
@@ -564,7 +570,20 @@ class _ProSubscriberView extends StatelessWidget {
                   // chaque bascule d'authentification), mais s'il survient,
                   // un indicateur seul enfermerait l'utilisateur sur un
                   // écran sans issue. Il porte donc sa propre sortie.
-                  ..._idle(context),
+                  //
+                  // **Aucune demande en vol.** Pas d'indicateur d'activité
+                  // ici : il dirait « attends » à côté d'un bouton qui dit
+                  // « agis », alors que rien n'est effectivement en train de
+                  // se charger. Même forme que la branche d'erreur, message
+                  // neutre plutôt qu'alarmiste : rien n'a échoué, l'état n'a
+                  // simplement pas encore été demandé.
+                  ..._retryableStatus(
+                    context,
+                    type: DonyStatusBannerType.info,
+                    message:
+                        "L'état de votre abonnement n'a pas encore été "
+                        'chargé.',
+                  ),
               ],
             ),
           );
@@ -579,29 +598,16 @@ class _ProSubscriberView extends StatelessWidget {
     SizedBox(height: DonySpacing.xxl),
   ];
 
-  /// **Aucune demande en vol.** Pas d'indicateur d'activité ici : il dirait
-  /// « attends » à côté d'un bouton qui dit « agis », alors que rien n'est
-  /// effectivement en train de se charger. Même forme que la branche
-  /// d'erreur, message neutre plutôt qu'alarmiste : rien n'a échoué, l'état
-  /// n'a simplement pas encore été demandé.
-  List<Widget> _idle(BuildContext context) => [
-    const DonyStatusBanner(
-      type: DonyStatusBannerType.info,
-      message: "L'état de votre abonnement n'a pas encore été chargé.",
-    ),
-    const SizedBox(height: DonySpacing.lg),
-    _retryButton(context),
-  ];
-
-  /// L'échec de chargement n'efface pas l'écran : le titre reste, le message
-  /// est explicite, et une seule action est proposée. Masquer la page entière
-  /// pour un appel raté priverait l'abonné de tout repère.
-  List<Widget> _failed(BuildContext context) => [
-    const DonyStatusBanner(
-      type: DonyStatusBannerType.error,
-      message:
-          "Impossible de charger l'état de votre abonnement pour le moment.",
-    ),
+  /// Forme commune à `SubscriptionInitial` (rien en vol) et
+  /// `SubscriptionError` (échec) : bandeau, espace, bouton de reprise. Les
+  /// deux ne diffèrent que par le ton du bandeau et son message — voir
+  /// leurs appelants respectifs dans `build`.
+  List<Widget> _retryableStatus(
+    BuildContext context, {
+    required DonyStatusBannerType type,
+    required String message,
+  }) => [
+    DonyStatusBanner(type: type, message: message),
     const SizedBox(height: DonySpacing.lg),
     _retryButton(context),
   ];
