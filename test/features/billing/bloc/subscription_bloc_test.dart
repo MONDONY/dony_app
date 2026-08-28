@@ -325,8 +325,9 @@ void main() {
         ).thenAnswer((_) async => false);
         return bloc();
       },
-      seed: () =>
-          const SubscriptionError(NetworkException('boom', code: 'SERVER_ERROR')),
+      seed: () => const SubscriptionError(
+        NetworkException('boom', code: 'SERVER_ERROR'),
+      ),
       act: (b) => b.add(const ProPortalOpenRequested(ProPortalTarget.upgrade)),
       // Discriminant : si le BLoC restaurait un état codé en dur (ex:
       // `SubscriptionInitial`) au lieu du `previous` capturé dynamiquement,

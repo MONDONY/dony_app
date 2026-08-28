@@ -75,7 +75,9 @@ void _registerMockBloc(MockSubscriptionBloc bloc) {
 void main() {
   setUpAll(() {
     registerFallbackValue(const SubscriptionRequested());
-    registerFallbackValue(const ProPortalOpenRequested(ProPortalTarget.upgrade));
+    registerFallbackValue(
+      const ProPortalOpenRequested(ProPortalTarget.upgrade),
+    );
     if (!getIt.isRegistered<AnalyticsService>()) {
       final analytics = makeEnabledAnalytics(MockAnalyticsBackend());
       getIt.registerSingleton<AnalyticsService>(analytics);
@@ -315,33 +317,29 @@ void main() {
       },
     );
 
-    testWidgets(
-      "tap sur l'action d'une grâce historique envoie "
-      'ProPortalOpenRequested(upgrade)',
-      (tester) async {
-        whenListen<SubscriptionState>(
-          mockBloc,
-          Stream.value(const SubscriptionLoaded(tLegacyGraceSubscription)),
-          initialState: const SubscriptionLoaded(tLegacyGraceSubscription),
-        );
+    testWidgets("tap sur l'action d'une grâce historique envoie "
+        'ProPortalOpenRequested(upgrade)', (tester) async {
+      whenListen<SubscriptionState>(
+        mockBloc,
+        Stream.value(const SubscriptionLoaded(tLegacyGraceSubscription)),
+        initialState: const SubscriptionLoaded(tLegacyGraceSubscription),
+      );
 
-        await tester.pumpWidget(
-          _wrap(const SubscriptionBannerHost(isProAccount: true)),
-        );
-        await tester.pump(_kSettle);
+      await tester.pumpWidget(
+        _wrap(const SubscriptionBannerHost(isProAccount: true)),
+      );
+      await tester.pump(_kSettle);
 
-        await tester.tap(find.text("S'abonner"));
-        await tester.pump();
+      await tester.tap(find.text("S'abonner"));
+      await tester.pump();
 
-        // Discriminant : symétrique du test ci-dessus ; les deux ensemble
-        // empêchent l'inversion des cibles dans les deux sens.
-        verify(
-          () => mockBloc.add(
-            const ProPortalOpenRequested(ProPortalTarget.upgrade),
-          ),
-        ).called(1);
-      },
-    );
+      // Discriminant : symétrique du test ci-dessus ; les deux ensemble
+      // empêchent l'inversion des cibles dans les deux sens.
+      verify(
+        () =>
+            mockBloc.add(const ProPortalOpenRequested(ProPortalTarget.upgrade)),
+      ).called(1);
+    });
 
     testWidgets(
       'deux SubscriptionPortalLaunchFailed distincts affichent chacun leur '

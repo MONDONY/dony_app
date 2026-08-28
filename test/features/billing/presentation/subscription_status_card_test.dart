@@ -35,32 +35,29 @@ void main() {
   setUpAll(() async => initializeDateFormatting('fr'));
 
   group('SubscriptionStatusCard', () {
-    testWidgets(
-      'abonnement mensuel actif : statut, rythme mensuel, date de '
-      'renouvellement locale',
-      (tester) async {
-        final currentPeriodEnd = DateTime.utc(2026, 9, 15, 8);
-        await _pump(
-          tester,
-          SubscriptionStatusCard(
-            subscription: _sub(
-              status: ProSubscriptionStatus.active,
-              source: ProSubscriptionSource.stripe,
-              billingCycle: 'MONTHLY',
-              currentPeriodEnd: currentPeriodEnd,
-            ),
+    testWidgets('abonnement mensuel actif : statut, rythme mensuel, date de '
+        'renouvellement locale', (tester) async {
+      final currentPeriodEnd = DateTime.utc(2026, 9, 15, 8);
+      await _pump(
+        tester,
+        SubscriptionStatusCard(
+          subscription: _sub(
+            status: ProSubscriptionStatus.active,
+            source: ProSubscriptionSource.stripe,
+            billingCycle: 'MONTHLY',
+            currentPeriodEnd: currentPeriodEnd,
           ),
-        );
+        ),
+      );
 
-        expect(find.textContaining('Actif'), findsOneWidget);
-        expect(find.textContaining('mensuel'), findsOneWidget);
-        final expectedDate = DateFormat(
-          'd MMMM yyyy',
-          'fr',
-        ).format(currentPeriodEnd.toLocal());
-        expect(find.textContaining(expectedDate), findsOneWidget);
-      },
-    );
+      expect(find.textContaining('Actif'), findsOneWidget);
+      expect(find.textContaining('mensuel'), findsOneWidget);
+      final expectedDate = DateFormat(
+        'd MMMM yyyy',
+        'fr',
+      ).format(currentPeriodEnd.toLocal());
+      expect(find.textContaining(expectedDate), findsOneWidget);
+    });
 
     testWidgets('abonnement annuel actif : le rythme annuel est affiché', (
       tester,
@@ -87,33 +84,31 @@ void main() {
       );
     });
 
-    testWidgets(
-      'octroi administrateur (billingCycle nul) : aucun rythme de '
-      'facturation, aucun prix',
-      (tester) async {
-        await _pump(
-          tester,
-          SubscriptionStatusCard(
-            subscription: _sub(
-              status: ProSubscriptionStatus.active,
-              source: ProSubscriptionSource.adminGrant,
-            ),
+    testWidgets('octroi administrateur (billingCycle nul) : aucun rythme de '
+        'facturation, aucun prix', (tester) async {
+      await _pump(
+        tester,
+        SubscriptionStatusCard(
+          subscription: _sub(
+            status: ProSubscriptionStatus.active,
+            source: ProSubscriptionSource.adminGrant,
           ),
-        );
+        ),
+      );
 
-        expect(find.textContaining('mensuel'), findsNothing);
-        expect(find.textContaining('annuel'), findsNothing);
-        final texts = tester.widgetList<Text>(find.byType(Text));
-        for (final t in texts) {
-          expect(
-            t.data ?? '',
-            isNot(contains('€')),
-            reason: 'un accès offert par un admin ne doit jamais afficher '
-                'de prix',
-          );
-        }
-      },
-    );
+      expect(find.textContaining('mensuel'), findsNothing);
+      expect(find.textContaining('annuel'), findsNothing);
+      final texts = tester.widgetList<Text>(find.byType(Text));
+      for (final t in texts) {
+        expect(
+          t.data ?? '',
+          isNot(contains('€')),
+          reason:
+              'un accès offert par un admin ne doit jamais afficher '
+              'de prix',
+        );
+      }
+    });
 
     testWidgets('grâce historique : accès gratuit et temporaire', (
       tester,
@@ -189,9 +184,7 @@ void main() {
       expect(tapped, isTrue);
     });
 
-    testWidgets('aucun tiret cadratin dans les textes rendus', (
-      tester,
-    ) async {
+    testWidgets('aucun tiret cadratin dans les textes rendus', (tester) async {
       for (final sub in [
         _sub(
           status: ProSubscriptionStatus.active,

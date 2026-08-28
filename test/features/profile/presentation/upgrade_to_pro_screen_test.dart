@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
@@ -44,6 +46,11 @@ const _kPortalButton = "S'abonner sur le site Yadony PRO";
 const _kManageButton = 'Gérer mon abonnement';
 const _kDowngradeButton = 'Revenir en compte standard';
 const _kRetryButton = 'Réessayer';
+
+/// Verbe explicite du dialogue destructif de résiliation. Un « Confirmer »
+/// générique laisserait l'utilisateur valider sans relire ce qu'il confirme.
+const _kDowngradeConfirmLabel = 'Désactiver';
+const _kDowngradeSuccessMessage = 'Compte PRO désactivé.';
 
 /// La formulation mensongère de l'ancien écran : elle promettait une
 /// activation immédiate depuis l'application, ce que le serveur n'accorde
@@ -96,12 +103,28 @@ const _tAdminGrant = ProSubscriptionModel(
   graceExpiresAt: null,
 );
 
-/// Réponse dégradée : l'abonnement est chargé, mais sa source est nulle. Ni
-/// gestion ni résiliation ne sont légitimes dans ce cas.
-const _tUnknownSource = ProSubscriptionModel(
+/// Réponse dégradée : l'abonnement est chargé, mais le serveur n'a rendu
+/// aucune source (`null`). Ni gestion ni résiliation ne sont légitimes.
+const _tNullSource = ProSubscriptionModel(
   active: true,
   status: ProSubscriptionStatus.unknown,
   source: null,
+  billingCycle: null,
+  currentPeriodEnd: null,
+  cancelAtPeriodEnd: false,
+  graceExpiresAt: null,
+);
+
+/// Cas réel de production, **distinct** de [_tNullSource] : le serveur a bien
+/// rendu une source, mais cette version de l'application ne la connaît pas,
+/// et `ProSubscriptionSource.fromWire` la replie sur
+/// [ProSubscriptionSource.unknown]. Une règle écrite
+/// `source != null && source != stripe` traiterait ce cas comme un octroi
+/// administrateur et offrirait une résiliation sans fondement.
+const _tUnknownSource = ProSubscriptionModel(
+  active: true,
+  status: ProSubscriptionStatus.active,
+  source: ProSubscriptionSource.unknown,
   billingCycle: null,
   currentPeriodEnd: null,
   cancelAtPeriodEnd: false,
@@ -202,12 +225,17 @@ void main() {
   });
 
   tearDown(() {
-    for (final unregister in [
-      () => getIt.unregister<ProfileRepository>(),
-      () => getIt.unregister<UpgradeToProBloc>(),
-      () => getIt.unregister<SubscriptionBloc>(),
-    ]) {
-      unregister();
+    // Conditionnel : un test qui échoue AVANT le montage n'a rien enregistré,
+    // et un `tearDown` qui lèverait à son tour masquerait l'échec réel
+    // derrière une erreur d'injection sans rapport.
+    if (getIt.isRegistered<ProfileRepository>()) {
+      getIt.unregister<ProfileRepository>();
+    }
+    if (getIt.isRegistered<UpgradeToProBloc>()) {
+      getIt.unregister<UpgradeToProBloc>();
+    }
+    if (getIt.isRegistered<SubscriptionBloc>()) {
+      getIt.unregister<SubscriptionBloc>();
     }
   });
 
@@ -348,6 +376,60 @@ void main() {
       },
     );
 
+    testWidgets('le bouton de gestion émet bien la cible de GESTION', (
+      tester,
+    ) async {
+      subscriptionState(const SubscriptionLoaded(_tStripeActive));
+      await pumpScreen(tester);
+
+      await tester.tap(find.text(_kManageButton));
+      await tester.pump();
+
+      // La présence du libellé ne prouve rien de la cible : une inversion
+      // enverrait un abonné payant sur la page de vente.
+      verify(
+        () => mockSubBloc.add(
+          const ProPortalOpenRequested(ProPortalTarget.manage),
+        ),
+      ).called(1);
+    });
+
+    testWidgets(
+      "l'action du bandeau d'impayé mène à la GESTION du moyen de paiement",
+      (tester) async {
+        subscriptionState(const SubscriptionLoaded(_tStripePastDue));
+        await pumpScreen(tester);
+
+        await tester.tap(find.text('Régler'));
+        await tester.pump();
+
+        verify(
+          () => mockSubBloc.add(
+            const ProPortalOpenRequested(ProPortalTarget.manage),
+          ),
+        ).called(1);
+      },
+    );
+
+    testWidgets("l'action du bandeau de grâce mène à la page de VENTE", (
+      tester,
+    ) async {
+      subscriptionState(const SubscriptionLoaded(_tLegacyFree));
+      await pumpScreen(tester);
+
+      await tester.tap(find.text("S'abonner"));
+      await tester.pump();
+
+      // Seule une grâce historique (jamais payé) doit atteindre la vente.
+      // L'inverser enverrait un bénéficiaire de grâce sur une page de
+      // gestion vide, faute d'abonnement à gérer.
+      verify(
+        () => mockSubBloc.add(
+          const ProPortalOpenRequested(ProPortalTarget.upgrade),
+        ),
+      ).called(1);
+    });
+
     testWidgets(
       'source adminGrant : gestion absente, retour au compte standard présent',
       (tester) async {
@@ -391,14 +473,31 @@ void main() {
     );
 
     testWidgets(
-      'source inconnue malgré un abonnement chargé : aucun des deux boutons',
+      'source absente (null) malgré un abonnement chargé : aucun des deux '
+      'boutons',
       (tester) async {
-        subscriptionState(const SubscriptionLoaded(_tUnknownSource));
+        subscriptionState(const SubscriptionLoaded(_tNullSource));
         await pumpScreen(tester);
 
         // Discriminant sur la règle elle-même : une visibilité écrite
         // « source != stripe » rendrait ici le retour au compte standard,
         // geste dont rien n'établit la légitimité.
+        expect(find.text(_kManageButton), findsNothing);
+        expect(find.text(_kDowngradeButton), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'source unknown (valeur serveur non reconnue) : aucun des deux boutons',
+      (tester) async {
+        subscriptionState(const SubscriptionLoaded(_tUnknownSource));
+        await pumpScreen(tester);
+
+        // Jumeau du test précédent, sur la valeur d'énumération réelle et non
+        // sur `null`. C'est lui qui ferme la porte au correctif « naturel »
+        // `source != null && source != stripe`, qui resterait vert partout
+        // ailleurs tout en offrant une résiliation à un abonné dont la source
+        // n'est pas connue de cette version de l'app.
         expect(find.text(_kManageButton), findsNothing);
         expect(find.text(_kDowngradeButton), findsNothing);
       },
@@ -454,6 +553,28 @@ void main() {
     );
 
     testWidgets(
+      'résiliation réussie : profil rafraîchi et confirmation affichée',
+      (tester) async {
+        when(() => mockRepo.downgradePro()).thenAnswer((_) async {});
+        subscriptionState(const SubscriptionLoaded(_tAdminGrant));
+        await pumpScreen(tester);
+
+        await tester.tap(find.text(_kDowngradeButton));
+        await tester.pumpAndSettle();
+        expect(find.text(_kDowngradeConfirmLabel), findsOneWidget);
+        await tester.tap(find.text(_kDowngradeConfirmLabel));
+        await tester.pumpAndSettle();
+
+        verify(() => mockRepo.downgradePro()).called(1);
+        // Le rafraîchissement du profil est le maillon dont l'absence ne se
+        // voit nulle part ailleurs : sans lui, l'utilisateur repasse en compte
+        // standard et le Profil continue d'afficher son badge PRO.
+        verify(() => mockAuthBloc.add(const AuthCheckRequested())).called(1);
+        expect(find.text(_kDowngradeSuccessMessage), findsOneWidget);
+      },
+    );
+
+    testWidgets(
       'downgrade refusé en 409 active-stripe-subscription : message renvoyant '
       'vers le web, jamais le message brut du serveur',
       (tester) async {
@@ -473,7 +594,7 @@ void main() {
 
         await tester.tap(find.text(_kDowngradeButton));
         await tester.pumpAndSettle();
-        await tester.tap(find.text('Confirmer'));
+        await tester.tap(find.text(_kDowngradeConfirmLabel));
         await tester.pumpAndSettle();
 
         expect(find.textContaining('site Yadony PRO'), findsWidgets);
@@ -484,6 +605,62 @@ void main() {
           find.text("L'état actuel ne permet pas cette action."),
           findsNothing,
         );
+      },
+    );
+  });
+
+  // ── Réaction au changement d'état d'authentification ──────────────────────
+
+  group('UpgradeToProScreen — le compte devient PRO écran ouvert', () {
+    testWidgets(
+      'le passage à PRO après la construction déclenche le chargement de '
+      "l'abonnement",
+      (tester) async {
+        // Parcours nominal de ce lot : l'utilisateur part s'abonner dans le
+        // navigateur, revient, et un rafraîchissement de profil le fait
+        // basculer en PRO alors que cet écran est toujours monté. Si la
+        // décision d'interroger l'abonnement reste figée à la construction,
+        // la demande n'est jamais émise.
+        final authStates = StreamController<AuthState>.broadcast();
+        addTearDown(authStates.close);
+        whenListen<AuthState>(
+          mockAuthBloc,
+          authStates.stream,
+          initialState: AuthAuthenticated(_nonProUser()),
+        );
+        subscriptionState(const SubscriptionInitial());
+
+        await pumpScreen(tester);
+        // À la construction, l'utilisateur n'est pas PRO : aucun appel.
+        verifyNever(() => mockSubBloc.add(const SubscriptionRequested()));
+
+        authStates.add(AuthAuthenticated(_proUser()));
+        await tester.pump();
+        await tester.pump(_kSettle);
+
+        verify(() => mockSubBloc.add(const SubscriptionRequested())).called(1);
+      },
+    );
+
+    testWidgets(
+      "un compte PRO dont l'abonnement n'a jamais été demandé garde une "
+      'sortie',
+      (tester) async {
+        // Filet de sécurité : même si, pour une raison quelconque, aucune
+        // demande n'est en vol, l'écran ne doit jamais se réduire à un
+        // indicateur de chargement définitif. Sans sortie, l'utilisateur est
+        // enfermé sur l'écran exactement là où il attend son abonnement.
+        authAs(_proUser());
+        subscriptionState(const SubscriptionInitial());
+        await pumpScreen(tester);
+
+        expect(find.text(_kRetryButton), findsOneWidget);
+
+        await tester.tap(find.text(_kRetryButton));
+        await tester.pump();
+
+        // Une fois au montage (le compte est déjà PRO), une fois au tap.
+        verify(() => mockSubBloc.add(const SubscriptionRequested())).called(2);
       },
     );
   });

@@ -1,7 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/billing/bloc/subscription_bloc.dart';
-import 'package:dony/features/billing/data/models/pro_subscription_model.dart';
 import 'package:dony/features/billing/presentation/widgets/subscription_status_banner.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -69,7 +68,9 @@ class SubscriptionBannerHost extends StatelessWidget {
               SubscriptionStatusBanner(
                 subscription: subscription,
                 onAction: () => context.read<SubscriptionBloc>().add(
-                  ProPortalOpenRequested(_targetFor(subscription.status)),
+                  ProPortalOpenRequested(
+                    proPortalTargetFor(subscription.status),
+                  ),
                 ),
               ),
               // Même espacement que celui utilisé entre les sections
@@ -86,13 +87,4 @@ class SubscriptionBannerHost extends StatelessWidget {
       ),
     );
   }
-
-  /// Seule une grâce historique (jamais payé) doit atteindre la page de
-  /// vente. Tous les autres statuts porteurs d'une action (impayé, ou
-  /// abonnement actif dont l'utilisateur gère la résiliation) mènent à la
-  /// gestion du moyen de paiement.
-  ProPortalTarget _targetFor(ProSubscriptionStatus status) =>
-      status == ProSubscriptionStatus.legacyGrace
-      ? ProPortalTarget.upgrade
-      : ProPortalTarget.manage;
 }

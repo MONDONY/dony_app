@@ -57,23 +57,20 @@ void main() {
       expect(model.graceExpiresAt, DateTime.parse('2026-09-15T00:00:00Z'));
     });
 
-    test(
-      'impayé : active est lu du JSON, pas dérivé du statut',
-      () {
-        final model = ProSubscriptionModel.fromJson(const {
-          'active': true,
-          'status': 'PAST_DUE',
-          'source': 'STRIPE',
-          'billingCycle': 'MONTHLY',
-          'currentPeriodEnd': '2026-09-01T00:00:00Z',
-          'cancelAtPeriodEnd': false,
-          'graceExpiresAt': null,
-        });
+    test('impayé : active est lu du JSON, pas dérivé du statut', () {
+      final model = ProSubscriptionModel.fromJson(const {
+        'active': true,
+        'status': 'PAST_DUE',
+        'source': 'STRIPE',
+        'billingCycle': 'MONTHLY',
+        'currentPeriodEnd': '2026-09-01T00:00:00Z',
+        'cancelAtPeriodEnd': false,
+        'graceExpiresAt': null,
+      });
 
-        expect(model.status, ProSubscriptionStatus.pastDue);
-        expect(model.active, isTrue);
-      },
-    );
+      expect(model.status, ProSubscriptionStatus.pastDue);
+      expect(model.active, isTrue);
+    });
 
     test('octroi administrateur', () {
       final model = ProSubscriptionModel.fromJson(const {
@@ -120,67 +117,56 @@ void main() {
       expect(model.graceExpiresAt, isNull);
     });
 
-    test(
-      'clé active absente ne lève pas et retombe sur false',
-      () {
-        // Réponse dégradée (bug backend, proxy qui tronque) : la clé
-        // `active` manque entièrement, contrairement au cas ci-dessus où
-        // elle valait explicitement `false`. `false` est le bon repli :
-        // il fait taire le bandeau PRO plutôt que d'affirmer un état non
-        // prouvé par le serveur.
-        final model = ProSubscriptionModel.fromJson(const {
-          'status': 'NONE',
-        });
+    test('clé active absente ne lève pas et retombe sur false', () {
+      // Réponse dégradée (bug backend, proxy qui tronque) : la clé
+      // `active` manque entièrement, contrairement au cas ci-dessus où
+      // elle valait explicitement `false`. `false` est le bon repli :
+      // il fait taire le bandeau PRO plutôt que d'affirmer un état non
+      // prouvé par le serveur.
+      final model = ProSubscriptionModel.fromJson(const {'status': 'NONE'});
 
-        expect(model.active, isFalse);
-        expect(model.status, ProSubscriptionStatus.none);
-      },
-    );
+      expect(model.active, isFalse);
+      expect(model.status, ProSubscriptionStatus.none);
+    });
 
-    test(
-      'active provient du JSON même quand le statut vaudrait ACTIVE : '
-      'payload volontairement incohérente pour exclure toute dérivation',
-      () {
-        // Ce payload ne décrit aucun état réel du serveur (status ACTIVE
-        // avec active=false n'arrive jamais en pratique). Il sert
-        // uniquement à prouver que le modèle transcrit `active` au lieu
-        // de le recalculer à partir de `status` (ex. une règle du type
-        // "actif si status ∈ {ACTIVE, PAST_DUE, LEGACY_GRACE}", qui
-        // passerait à tort le test "impayé" plus haut sans jamais lire
-        // le champ JSON). Ne pas "corriger" cette incohérence.
-        final model = ProSubscriptionModel.fromJson(const {
-          'active': false,
-          'status': 'ACTIVE',
-          'source': 'STRIPE',
-          'billingCycle': 'MONTHLY',
-          'currentPeriodEnd': '2026-09-28T00:00:00Z',
-          'cancelAtPeriodEnd': false,
-          'graceExpiresAt': null,
-        });
+    test('active provient du JSON même quand le statut vaudrait ACTIVE : '
+        'payload volontairement incohérente pour exclure toute dérivation', () {
+      // Ce payload ne décrit aucun état réel du serveur (status ACTIVE
+      // avec active=false n'arrive jamais en pratique). Il sert
+      // uniquement à prouver que le modèle transcrit `active` au lieu
+      // de le recalculer à partir de `status` (ex. une règle du type
+      // "actif si status ∈ {ACTIVE, PAST_DUE, LEGACY_GRACE}", qui
+      // passerait à tort le test "impayé" plus haut sans jamais lire
+      // le champ JSON). Ne pas "corriger" cette incohérence.
+      final model = ProSubscriptionModel.fromJson(const {
+        'active': false,
+        'status': 'ACTIVE',
+        'source': 'STRIPE',
+        'billingCycle': 'MONTHLY',
+        'currentPeriodEnd': '2026-09-28T00:00:00Z',
+        'cancelAtPeriodEnd': false,
+        'graceExpiresAt': null,
+      });
 
-        expect(model.active, isFalse);
-      },
-    );
+      expect(model.active, isFalse);
+    });
 
-    test(
-      'active provient du JSON même quand le statut vaudrait CANCELED : '
-      'payload volontairement incohérente pour exclure toute dérivation',
-      () {
-        // Symétrique du cas ci-dessus : status CANCELED avec active=true
-        // ne décrit pas non plus un état réel. Ne pas "corriger".
-        final model = ProSubscriptionModel.fromJson(const {
-          'active': true,
-          'status': 'CANCELED',
-          'source': 'STRIPE',
-          'billingCycle': 'MONTHLY',
-          'currentPeriodEnd': '2026-09-28T00:00:00Z',
-          'cancelAtPeriodEnd': false,
-          'graceExpiresAt': null,
-        });
+    test('active provient du JSON même quand le statut vaudrait CANCELED : '
+        'payload volontairement incohérente pour exclure toute dérivation', () {
+      // Symétrique du cas ci-dessus : status CANCELED avec active=true
+      // ne décrit pas non plus un état réel. Ne pas "corriger".
+      final model = ProSubscriptionModel.fromJson(const {
+        'active': true,
+        'status': 'CANCELED',
+        'source': 'STRIPE',
+        'billingCycle': 'MONTHLY',
+        'currentPeriodEnd': '2026-09-28T00:00:00Z',
+        'cancelAtPeriodEnd': false,
+        'graceExpiresAt': null,
+      });
 
-        expect(model.active, isTrue);
-      },
-    );
+      expect(model.active, isTrue);
+    });
   });
 
   group('ProSubscriptionModel Equatable', () {

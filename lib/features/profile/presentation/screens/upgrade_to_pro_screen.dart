@@ -57,10 +57,6 @@ class UpgradeToProScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Lecture ponctuelle, uniquement pour décider de l'appel réseau. Le rendu
-    // suit l'AuthBloc en continu plus bas, dans `_UpgradeToProView`.
-    final isProAccount = _userOf(context.read<AuthBloc>().state)?.isProAccount;
-
     return MultiBlocProvider(
       providers: [
         BlocProvider<UpgradeToProBloc>(
@@ -69,11 +65,17 @@ class UpgradeToProScreen extends StatelessWidget {
         BlocProvider<SubscriptionBloc>(
           create: (_) {
             final bloc = getIt<SubscriptionBloc>();
+            // Cas du compte déjà PRO au montage. La bascule ultérieure est
+            // couverte séparément, par le `BlocListener<AuthBloc>` de
+            // `_UpgradeToProView` : décider ici et seulement ici figerait la
+            // décision à la construction, alors que le rendu, lui, suit
+            // l'état d'authentification en continu.
+            //
             // `GET /billing/subscription` répond 200 même sans abonnement,
             // mais rien de ce qu'il rend n'est affiché à un non-abonné : la
             // vue de vente n'a aucun état à montrer. Interroger l'endpoint
             // pour eux serait une requête inutile.
-            if (isProAccount ?? false) {
+            if (_isPro(context.read<AuthBloc>().state)) {
               bloc.add(const SubscriptionRequested());
             }
             return bloc;
@@ -92,6 +94,8 @@ UserModel? _userOf(AuthState state) => switch (state) {
   AuthProfileUpdated(:final user) => user,
   _ => null,
 };
+
+bool _isPro(AuthState state) => _userOf(state)?.isProAccount ?? false;
 
 class _UpgradeToProView extends StatefulWidget {
   const _UpgradeToProView();
@@ -121,6 +125,10 @@ class _UpgradeToProViewState extends State<_UpgradeToProView> {
       message:
           'Votre badge PRO et vos avantages professionnels seront retirés de '
           'votre profil.',
+      // Verbe explicite plutôt que « Confirmer » : sur une action
+      // destructive, le bouton doit nommer ce qu'il déclenche, pas se
+      // contenter d'acquiescer.
+      confirmLabel: 'Désactiver',
       variant: DonyDialogVariant.destructive,
     );
     if (confirmed == true && context.mounted) {
@@ -130,10 +138,24 @@ class _UpgradeToProViewState extends State<_UpgradeToProView> {
 
   @override
   Widget build(BuildContext context) {
-    final isProAccount = _userOf(context.watch<AuthBloc>().state)?.isProAccount;
+    final isProAccount = _isPro(context.watch<AuthBloc>().state);
 
     return MultiBlocListener(
       listeners: [
+        // Le compte peut devenir PRO alors que cet écran est déjà monté :
+        // c'est le parcours nominal (l'utilisateur s'abonne sur le portail
+        // web puis revient), et c'est aussi le démarrage à froid, où le
+        // profil se résout après le premier rendu. Le rendu, lui, suit
+        // l'AuthBloc en continu. Sans ce listener, la vue basculerait sur la
+        // vue abonnée sans qu'aucune demande d'abonnement n'ait jamais été
+        // émise, et l'écran resterait sur son état de chargement.
+        BlocListener<AuthBloc, AuthState>(
+          listenWhen: (previous, current) =>
+              !_isPro(previous) && _isPro(current),
+          listener: (context, state) => context.read<SubscriptionBloc>().add(
+            const SubscriptionRequested(),
+          ),
+        ),
         BlocListener<UpgradeToProBloc, UpgradeToProState>(
           listener: (context, state) {
             if (state is DowngradeSuccess) {
@@ -178,7 +200,7 @@ class _UpgradeToProViewState extends State<_UpgradeToProView> {
           },
         ),
       ],
-      child: (isProAccount ?? false)
+      child: isProAccount
           ? _ProSubscriberView(onDowngrade: () => _confirmDowngrade(context))
           : const _ProPitchView(),
     );
@@ -308,14 +330,6 @@ class _ProSubscriberView extends StatelessWidget {
         _ => null,
       };
 
-  /// Même arbitrage que `SubscriptionBannerHost` : seule une grâce historique
-  /// (jamais payé) doit atteindre la page de vente ; tout le reste mène à la
-  /// gestion du moyen de paiement.
-  ProPortalTarget _targetFor(ProSubscriptionStatus status) =>
-      status == ProSubscriptionStatus.legacyGrace
-      ? ProPortalTarget.upgrade
-      : ProPortalTarget.manage;
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -338,8 +352,18 @@ class _ProSubscriberView extends StatelessWidget {
                   ..._loaded(context, subscription)
                 else if (state is SubscriptionError)
                   ..._failed(context)
+                else if (state is SubscriptionLoading)
+                  // Une demande est en vol : elle se résoudra en `Loaded` ou
+                  // en `Error`, qui offrent tous deux une suite. Ce n'est
+                  // donc jamais une impasse.
+                  ..._loading()
                 else
-                  ..._loading(),
+                  // `SubscriptionInitial` : aucune demande en vol. Cet état
+                  // ne devrait pas durer (il est traité au montage et à
+                  // chaque bascule d'authentification), mais s'il survient,
+                  // un indicateur seul enfermerait l'utilisateur sur un
+                  // écran sans issue. Il porte donc sa propre sortie.
+                  ..._idle(context),
               ],
             ),
           );
@@ -354,6 +378,13 @@ class _ProSubscriberView extends StatelessWidget {
     SizedBox(height: DonySpacing.xxl),
   ];
 
+  /// Chargement **sans demande en vol**. Même rendu que `_loading`, plus la
+  /// sortie de secours : sans elle, l'écran serait une impasse.
+  List<Widget> _idle(BuildContext context) => [
+    ..._loading(),
+    _retryButton(context),
+  ];
+
   /// L'échec de chargement n'efface pas l'écran : le titre reste, le message
   /// est explicite, et une seule action est proposée. Masquer la page entière
   /// pour un appel raté priverait l'abonné de tout repère.
@@ -364,13 +395,15 @@ class _ProSubscriberView extends StatelessWidget {
           "Impossible de charger l'état de votre abonnement pour le moment.",
     ),
     const SizedBox(height: DonySpacing.lg),
-    DonyButton(
-      label: 'Réessayer',
-      variant: DonyButtonVariant.secondary,
-      onPressed: () =>
-          context.read<SubscriptionBloc>().add(const SubscriptionRequested()),
-    ),
+    _retryButton(context),
   ];
+
+  Widget _retryButton(BuildContext context) => DonyButton(
+    label: 'Réessayer',
+    variant: DonyButtonVariant.secondary,
+    onPressed: () =>
+        context.read<SubscriptionBloc>().add(const SubscriptionRequested()),
+  );
 
   List<Widget> _loaded(
     BuildContext context,
@@ -400,7 +433,7 @@ class _ProSubscriberView extends StatelessWidget {
         SubscriptionStatusBanner(
           subscription: subscription,
           onAction: () => context.read<SubscriptionBloc>().add(
-            ProPortalOpenRequested(_targetFor(subscription.status)),
+            ProPortalOpenRequested(proPortalTargetFor(subscription.status)),
           ),
         ),
         const SizedBox(height: DonySpacing.lg),

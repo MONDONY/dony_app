@@ -64,76 +64,70 @@ void main() {
   });
 
   group('getSubscription', () {
-    test(
-      'une réponse active rend un ProSubscriptionModel correspondant '
-      'et appelle GET /billing/subscription',
-      () async {
-        when(
-          () => mockDio.get('/billing/subscription'),
-        ).thenAnswer((_) async => _ok(_activeSubscriptionJson, '/billing/subscription'));
-
-        final result = await repository.getSubscription();
-
-        expect(result, ProSubscriptionModel.fromJson(_activeSubscriptionJson));
-        expect(result.status, ProSubscriptionStatus.active);
-        verify(() => mockDio.get('/billing/subscription')).called(1);
-      },
-    );
-
-    test(
-      'la charge utile « aucun abonnement » rend un modèle de statut none, '
-      'sans lever',
-      () async {
-        when(
-          () => mockDio.get('/billing/subscription'),
-        ).thenAnswer((_) async => _ok(_noneSubscriptionJson, '/billing/subscription'));
-
-        final result = await repository.getSubscription();
-
-        expect(result.status, ProSubscriptionStatus.none);
-        expect(result.active, isFalse);
-      },
-    );
-
-    test('une DioException réseau est convertie en AppException et relancée', () async {
-      when(() => mockDio.get('/billing/subscription')).thenThrow(
-        DioException(
-          requestOptions: RequestOptions(path: '/billing/subscription'),
-          type: DioExceptionType.connectionError,
-        ),
+    test('une réponse active rend un ProSubscriptionModel correspondant '
+        'et appelle GET /billing/subscription', () async {
+      when(() => mockDio.get('/billing/subscription')).thenAnswer(
+        (_) async => _ok(_activeSubscriptionJson, '/billing/subscription'),
       );
 
-      expect(
-        () => repository.getSubscription(),
-        throwsA(isA<OfflineException>()),
-      );
+      final result = await repository.getSubscription();
+
+      expect(result, ProSubscriptionModel.fromJson(_activeSubscriptionJson));
+      expect(result.status, ProSubscriptionStatus.active);
+      verify(() => mockDio.get('/billing/subscription')).called(1);
     });
+
+    test('la charge utile « aucun abonnement » rend un modèle de statut none, '
+        'sans lever', () async {
+      when(() => mockDio.get('/billing/subscription')).thenAnswer(
+        (_) async => _ok(_noneSubscriptionJson, '/billing/subscription'),
+      );
+
+      final result = await repository.getSubscription();
+
+      expect(result.status, ProSubscriptionStatus.none);
+      expect(result.active, isFalse);
+    });
+
+    test(
+      'une DioException réseau est convertie en AppException et relancée',
+      () async {
+        when(() => mockDio.get('/billing/subscription')).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/billing/subscription'),
+            type: DioExceptionType.connectionError,
+          ),
+        );
+
+        expect(
+          () => repository.getSubscription(),
+          throwsA(isA<OfflineException>()),
+        );
+      },
+    );
   });
 
   group('openExternal', () {
-    test(
-      'une URI https valide déclenche l’ouverture en navigateur externe '
-      'et rend true',
-      () async {
-        when(
-          () => mockLauncher.launchUrl(any(), any()),
-        ).thenAnswer((_) async => true);
+    test('une URI https valide déclenche l’ouverture en navigateur externe '
+        'et rend true', () async {
+      when(
+        () => mockLauncher.launchUrl(any(), any()),
+      ).thenAnswer((_) async => true);
 
-        final result = await repository.openExternal(
-          Uri.parse('https://pro.yadony.com/upgrade'),
-        );
+      final result = await repository.openExternal(
+        Uri.parse('https://pro.yadony.com/upgrade'),
+      );
 
-        expect(result, isTrue);
-        final captured = verify(
-          () => mockLauncher.launchUrl(
-            'https://pro.yadony.com/upgrade',
-            captureAny(),
-          ),
-        ).captured;
-        final options = captured.single as LaunchOptions;
-        expect(options.mode, PreferredLaunchMode.externalApplication);
-      },
-    );
+      expect(result, isTrue);
+      final captured = verify(
+        () => mockLauncher.launchUrl(
+          'https://pro.yadony.com/upgrade',
+          captureAny(),
+        ),
+      ).captured;
+      final options = captured.single as LaunchOptions;
+      expect(options.mode, PreferredLaunchMode.externalApplication);
+    });
 
     test('un lanceur qui rend false fait rendre false au repository', () async {
       when(
@@ -147,21 +141,18 @@ void main() {
       expect(result, isFalse);
     });
 
-    test(
-      'un lanceur qui lève une PlatformException fait rendre false, '
-      'sans propager',
-      () async {
-        when(
-          () => mockLauncher.launchUrl(any(), any()),
-        ).thenThrow(PlatformException(code: 'launch_failed'));
+    test('un lanceur qui lève une PlatformException fait rendre false, '
+        'sans propager', () async {
+      when(
+        () => mockLauncher.launchUrl(any(), any()),
+      ).thenThrow(PlatformException(code: 'launch_failed'));
 
-        final result = await repository.openExternal(
-          Uri.parse('https://pro.yadony.com/upgrade'),
-        );
+      final result = await repository.openExternal(
+        Uri.parse('https://pro.yadony.com/upgrade'),
+      );
 
-        expect(result, isFalse);
-      },
-    );
+      expect(result, isFalse);
+    });
 
     test(
       'une URI de schéma non https rend false sans appeler le lanceur',
@@ -176,7 +167,9 @@ void main() {
     );
 
     test('une URI sans hôte rend false sans appeler le lanceur', () async {
-      final result = await repository.openExternal(Uri.parse('https:///upgrade'));
+      final result = await repository.openExternal(
+        Uri.parse('https:///upgrade'),
+      );
 
       expect(result, isFalse);
       verifyNever(() => mockLauncher.launchUrl(any(), any()));
