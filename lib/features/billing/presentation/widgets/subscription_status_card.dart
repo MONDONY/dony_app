@@ -1,10 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/billing/data/models/pro_subscription_model.dart';
+import 'package:dony/features/billing/presentation/widgets/subscription_date_format.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-
-String _formatLocalDate(DateTime local) =>
-    DateFormat('d MMMM yyyy', 'fr').format(local);
 
 /// Carte de statut de l'abonnement PRO : état courant, rythme de
 /// facturation quand il existe, date de prochain renouvellement ou de fin
@@ -38,12 +35,15 @@ class SubscriptionStatusCard extends StatelessWidget {
   /// administrateur) ou porte une valeur inconnue. Un accès offert n'est
   /// jamais facturé : dans ce cas, aucune mention de rythme ni de prix ne
   /// doit apparaître.
+  ///
+  /// Le backend ne produit que `MONTHLY` et `YEARLY` (comparés sans tenir
+  /// compte de la casse) ; toute autre valeur retombe silencieusement sur
+  /// l'absence de libellé plutôt que d'inventer un rythme non prouvé.
   String? get _cycleLabel {
     switch (subscription.billingCycle?.toUpperCase()) {
       case 'MONTHLY':
         return 'Facturation mensuelle';
       case 'YEARLY':
-      case 'ANNUAL':
         return 'Facturation annuelle';
       default:
         return null;
@@ -86,13 +86,13 @@ class SubscriptionStatusCard extends StatelessWidget {
             const SizedBox(height: DonySpacing.xs),
             Text(
               'Résiliation programmée pour le '
-              '${_formatLocalDate(periodEnd)}.',
+              '${formatSubscriptionDate(periodEnd)}.',
               style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
             ),
           ] else if (periodEnd != null) ...[
             const SizedBox(height: DonySpacing.xs),
             Text(
-              'Prochain renouvellement le ${_formatLocalDate(periodEnd)}.',
+              'Prochain renouvellement le ${formatSubscriptionDate(periodEnd)}.',
               style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
             ),
           ],

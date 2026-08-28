@@ -68,22 +68,26 @@ void main() {
     });
 
     test(
-      'échéance UTC comparée à un now local : une comparaison naïve par '
-      'jours calendaires se tromperait, la vraie durée écoulée donne le bon '
-      'résultat',
+      'échéance UTC vs now local : le résultat repose sur la durée réelle '
+      'écoulée, pas sur une soustraction de jours calendaires, et vaut '
+      'donc la même chose sous tous les fuseaux',
       () {
-        // now : minuit local pile, le 28 août 2026.
-        final now = DateTime(2026, 8, 28);
-        // instant : envoyé par le serveur en UTC, à 22h le 29 août soit
-        // exactement 48h après `now` (2 jours pleins).
+        // Les deux instants sont ancrés en absolu (`DateTime.utc`) : leur
+        // écart réel est fixé à 26h, quel que soit le fuseau de la machine
+        // qui exécute ce test. `.toLocal()` ne change pas l'instant que
+        // désigne `now`, seulement l'étiquette/les champs affichés : c'est
+        // exactement ce que fait `DateTime.now()` en production (une
+        // horloge locale qui désigne un instant réel).
         final instant = DateTime.utc(2026, 8, 29, 22);
+        final now = DateTime.utc(2026, 8, 28, 20).toLocal();
 
-        // Preuve que le piège est réel : une implémentation naïve qui
-        // reconstruit une date "jour calendaire" à partir des champs bruts
-        // de `instant` (29 août, alors que celui-ci est UTC) via un
-        // constructeur *local*, puis soustrait des jours calendaires plutôt
-        // que la durée réelle écoulée, ne compte qu'1 jour d'écart alors que
-        // 48 heures pleines séparent les deux instants.
+        // Preuve que le piège est réel, écrite pour rester vraie sous tout
+        // fuseau raisonnable (UTC-12 à UTC+14) : une implémentation naïve
+        // qui reconstruit une date "jour calendaire" à partir des champs
+        // bruts de `instant` (29 août, alors que ceux-ci sont UTC) via un
+        // constructeur *local*, puis soustrait des jours calendaires
+        // plutôt que la durée réelle écoulée, ne compte jamais les 2 jours
+        // pleins corrects : selon le fuseau, elle rend 0 ou 1, jamais 2.
         final naiveInstantDay = DateTime(
           instant.year,
           instant.month,
@@ -95,11 +99,25 @@ void main() {
           naiveDays,
           isNot(2),
           reason:
-              'ce calcul naïf doit être démontrablement faux pour que le '
-              'test soit discriminant',
+              'ce calcul naïf par jours calendaires sous-compte '
+              'systématiquement (0 ou 1 selon le fuseau) face aux 26h '
+              'réelles séparant les deux instants ; il ne rend jamais le '
+              'bon résultat, quel que soit le fuseau de la machine',
         );
 
         expect(daysUntil(instant, now: now), 2);
+      },
+    );
+
+    test(
+      'daysUntil est invariant à la représentation de now : now et '
+      'now.toUtc() désignent le même instant et doivent rendre le même '
+      'résultat',
+      () {
+        final now = DateTime.now();
+        final instant = now.add(const Duration(days: 5, hours: 8));
+
+        expect(daysUntil(instant, now: now.toUtc()), daysUntil(instant, now: now));
       },
     );
   });
@@ -177,6 +195,14 @@ void main() {
             isFalse,
             reason: 'aucun chiffre ne doit apparaître : "dans null jours" '
                 'serait pire que ne rien dire',
+          );
+          expect(
+            data.toLowerCase(),
+            isNot(contains('null')),
+            reason:
+                'un garde manquant sur `days == null` interpolerait '
+                'littéralement "dans null jours" ; aucun chiffre dans ce '
+                'texte ne suffit pas à l\'exclure',
           );
         }
       },

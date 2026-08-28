@@ -1,7 +1,7 @@
-import 'package:dony/core/design/widgets/dony_status_banner.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/billing/data/models/pro_subscription_model.dart';
+import 'package:dony/features/billing/presentation/widgets/subscription_date_format.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 /// Nombre de jours pleins restants avant [instant], arrondi vers le haut.
 ///
@@ -27,15 +27,6 @@ int? daysUntil(DateTime? instant, {DateTime? now}) {
   final days = (diffMinutes / 1440).ceil();
   return days < 0 ? 0 : days;
 }
-
-/// Formate une date locale en français, ex. « 24 décembre 2026 ».
-///
-/// `intl` est déjà une dépendance directe du projet (voir
-/// `lib/features/matching/presentation/widgets/trip_card.dart`) et déjà
-/// initialisée en `fr` au démarrage (`main.dart`) : on réutilise ce même
-/// utilitaire plutôt que d'ajouter une troisième liste de noms de mois
-/// écrite à la main dans le dépôt.
-String _formatLocalDate(DateTime local) => DateFormat('d MMMM yyyy', 'fr').format(local);
 
 /// Bandeau d'alerte pour l'abonnement PRO : impayé, fin de gratuité proche,
 /// ou résiliation programmée.
@@ -90,7 +81,7 @@ class SubscriptionStatusBanner extends StatelessWidget {
     if (!subscription.cancelAtPeriodEnd || periodEnd == null) {
       return const SizedBox.shrink();
     }
-    final dateStr = _formatLocalDate(periodEnd.toLocal());
+    final dateStr = formatSubscriptionDate(periodEnd.toLocal());
     return DonyStatusBanner(
       type: DonyStatusBannerType.info,
       message: 'Votre abonnement PRO prend fin le $dateStr.',
@@ -106,7 +97,7 @@ class SubscriptionStatusBanner extends StatelessWidget {
       onPressed: onAction,
       style: TextButton.styleFrom(
         minimumSize: const Size(44, 44),
-        padding: const EdgeInsets.symmetric(horizontal: 12),
+        padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md),
       ),
       child: Text(label),
     );
