@@ -29,3 +29,20 @@ const String posterShareBaseUrl = String.fromEnvironment(
   'POSTER_SHARE_BASE_URL',
   defaultValue: kApiBaseUrl,
 );
+
+/// Base du portail web Yadony PRO, où se souscrit et se gère l'abonnement.
+///
+/// Le portail sert ses routes sous un préfixe (`app.baseURL`) qui peut ou non
+/// être réécrit par le proxy inverse. Cette variable absorbe les deux cas :
+/// sans réécriture, la valeur devient `https://pro.yadony.com/pro`.
+const String kProPortalBaseUrl = String.fromEnvironment(
+  'PRO_PORTAL_URL',
+  defaultValue: 'https://pro.yadony.com',
+);
+
+/// Page de vente de l'abonnement PRO.
+String proPortalUpgradeUrl() => '$kProPortalBaseUrl/upgrade';
+
+/// Page de gestion de l'abonnement PRO.
+String proPortalSubscriptionUrl() =>
+    '$kProPortalBaseUrl/parametres/abonnement';
