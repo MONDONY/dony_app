@@ -63,7 +63,9 @@ l'écran de la seule source de vérité : `GET /billing/subscription`.
    `SubscriptionBloc`, qui résout `proPortalUpgradeUrl()` et ouvre le navigateur
    externe de l'appareil (jamais une webview).
 5. L'abonnement se souscrit entièrement hors de l'application, sur le portail web.
-6. **Le retour du navigateur est ce qui referme le parcours.** L'écran observe le
+6. **Le retour du navigateur est ce qui referme le parcours**, sur cet écran comme sur
+   le bandeau d'abonnement du Profil (`SubscriptionBannerHost`), qui ouvre lui aussi le
+   portail et applique désormais la même mécanique. L'écran observe le
    cycle de vie de l'application (`WidgetsBindingObserver`). Au passage à
    `AppLifecycleState.resumed`, **et seulement si cet écran a lui-même lancé le
    navigateur** (drapeau `_hasLaunchedBrowser`), il envoie
@@ -71,6 +73,20 @@ l'écran de la seule source de vérité : `GET /billing/subscription`.
    émettrait `AuthLoading` et ferait clignoter l'écran. Le profil rechargé rend
    `isProAccount` vrai, le `BlocListener<AuthBloc>` déclenche alors
    `SubscriptionRequested` et l'écran bascule sur la vue abonnée.
+
+   **La reprise recharge aussi l'abonnement lui-même, systématiquement**, sans
+   condition sur l'état du `SubscriptionBloc`. Une garde « ne recharger que si rien
+   n'a jamais été chargé » ne laisserait passer que les non-abonnés : l'état initial
+   n'existe que pour eux. Elle neutraliserait donc le rechargement pour les trois
+   parcours qui en ont le plus besoin — l'impayé qui vient de régulariser, l'accès
+   fermé qui vient de se réabonner, et la résiliation faite sur le portail — qui
+   reviendraient tous sur un écran inchangé.
+
+   Le `BlocListener<AuthBloc>` ne sert, lui, qu'à la PREMIÈRE connaissance du statut :
+   il compare la PRO-ness à `_lastKnownIsPro`, mémoire de la dernière valeur réellement
+   connue, et non à `previous`. Sans cette mémoire, un cycle
+   PRO → `AuthLoading` → PRO se lirait comme une bascule « non PRO vers PRO » et
+   redemanderait un abonnement déjà chargé.
 
    Rien d'autre dans l'application ne rafraîchit le profil à ce moment : les autres
    émetteurs sont le démarrage à froid, le parcours KYC, la réactivation de compte et
@@ -236,7 +252,13 @@ PreferredLaunchMode.externalApplication))`.
    rafraîchissement du profil (`AuthLoading`), mais figeait aussi l'écran sur la vue
    abonnée après une déconnexion, une suppression de compte ou un verrouillage — tous
    des états terminaux sans utilisateur qui doivent, eux, provoquer un nouveau rendu.
-   La version finale ne filtre que `AuthLoading`, seul état réellement transitoire.
+   La version finale filtre **deux** familles, via `_informsAboutSession` : `AuthLoading`,
+   état de passage, et `AuthError`, état *surchargé* que six handlers d'`AuthBloc`
+   émettent sur l'échec d'une action annexe (mise à jour de profil, envoi d'avatar,
+   ajout de téléphone ou d'e-mail, suppression de compte, rafraîchissement de profil)
+   alors que l'utilisateur reste pleinement authentifié. Le critère n'est donc pas
+   « cet état porte-t-il un utilisateur » mais « cet état renseigne-t-il sur la
+   session ». Le même critère gouverne l'écoute, pas seulement le rendu.
 
 ## Critères d'acceptation couverts
 

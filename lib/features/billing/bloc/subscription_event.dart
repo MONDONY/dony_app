@@ -40,6 +40,15 @@ ProPortalTarget proPortalTargetFor(ProSubscriptionStatus status) =>
 /// destination.
 bool proPortalActionIsLegitimate(ProSubscriptionModel subscription) =>
     proPortalTargetFor(subscription.status) == ProPortalTarget.upgrade ||
+    proPortalManageIsLegitimate(subscription);
+
+/// Vrai quand un espace de gestion existe pour [subscription], c'est-à-dire
+/// quand l'abonnement vient de Stripe.
+///
+/// Seule porte d'entrée de cette décision : tout appelant qui réécrirait
+/// `source == stripe` à la main recréerait la divergence que
+/// [proPortalActionIsLegitimate] existe pour supprimer.
+bool proPortalManageIsLegitimate(ProSubscriptionModel subscription) =>
     subscription.source == ProSubscriptionSource.stripe;
 
 sealed class SubscriptionEvent extends Equatable {

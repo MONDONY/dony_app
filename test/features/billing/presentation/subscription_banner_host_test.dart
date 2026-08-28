@@ -161,6 +161,11 @@ void main() {
     setUp(() {
       mockBloc = MockSubscriptionBloc();
       _registerMockBloc(mockBloc);
+      // `DonySnackbar` déduplique sur un état STATIQUE partagé, en horloge
+      // réelle : sans ce nettoyage, un test qui affiche un message le rend
+      // invisible au test suivant qui affiche le même, et l'échec tombe sur
+      // le second, loin de sa cause.
+      DonySnackbar.clearDedup();
     });
 
     tearDown(() {
@@ -288,6 +293,79 @@ void main() {
         expect(size, Size.zero);
       },
     );
+
+    testWidgets("le retour du portail recharge l'abonnement, comme sur "
+        "l'écran PRO", (tester) async {
+      // Même classe de défaut que B1 : ce bandeau ouvre lui aussi le portail
+      // (« Régler », « Gérer », « S'abonner »). Sans rechargement au retour,
+      // l'utilisateur qui régularise depuis son Profil revient sur un bandeau
+      // inchangé.
+      whenListen<SubscriptionState>(
+        mockBloc,
+        Stream.value(const SubscriptionLoaded(tPastDueSubscription)),
+        initialState: const SubscriptionLoaded(tPastDueSubscription),
+      );
+
+      await tester.pumpWidget(
+        _wrap(const SubscriptionBannerHost(isProAccount: true)),
+      );
+      await tester.pump(_kSettle);
+
+      await tester.tap(find.text('Régler'));
+      await tester.pump();
+
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pump();
+
+      // Une au montage, une au retour.
+      verify(() => mockBloc.add(const SubscriptionRequested())).called(2);
+    });
+
+    testWidgets('une reprise sans ouverture de portail ne recharge rien', (
+      tester,
+    ) async {
+      whenListen<SubscriptionState>(
+        mockBloc,
+        Stream.value(const SubscriptionLoaded(tPastDueSubscription)),
+        initialState: const SubscriptionLoaded(tPastDueSubscription),
+      );
+
+      await tester.pumpWidget(
+        _wrap(const SubscriptionBannerHost(isProAccount: true)),
+      );
+      await tester.pump(_kSettle);
+
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pump();
+
+      verify(() => mockBloc.add(const SubscriptionRequested())).called(1);
+    });
+
+    testWidgets("échec d'ouverture : le message n'accuse pas le réseau", (
+      tester,
+    ) async {
+      // La copie de cet hôte n'était couverte par aucune assertion, alors
+      // qu'elle doit rester identique à celle de l'écran PRO.
+      final states = StreamController<SubscriptionState>.broadcast();
+      addTearDown(states.close);
+      whenListen<SubscriptionState>(
+        mockBloc,
+        states.stream,
+        initialState: const SubscriptionLoaded(tPastDueSubscription),
+      );
+
+      await tester.pumpWidget(
+        _wrap(const SubscriptionBannerHost(isProAccount: true)),
+      );
+      await tester.pump(_kSettle);
+
+      states.add(const SubscriptionPortalLaunchFailed(tPastDueSubscription));
+      await tester.pump();
+      await tester.pump(_kSettle);
+
+      expect(find.textContaining('Vérifiez votre connexion'), findsNothing);
+      expect(find.textContaining("Impossible d'ouvrir"), findsOneWidget);
+    });
 
     testWidgets(
       "impayé de source inconnue : le bandeau s'affiche SANS action",

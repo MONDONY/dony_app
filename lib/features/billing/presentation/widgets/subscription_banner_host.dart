@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/billing/bloc/subscription_bloc.dart';
+import 'package:dony/features/billing/presentation/pro_portal_copy.dart';
 import 'package:dony/features/billing/presentation/widgets/subscription_status_banner.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -17,31 +18,77 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// Quand [isProAccount] est faux, on rend `SizedBox.shrink()` avant même de
 /// créer le BLoC — le créer puis s'abstenir de lui envoyer l'event ne ferait
 /// que retarder l'instanciation, pas l'éviter.
-class SubscriptionBannerHost extends StatelessWidget {
+class SubscriptionBannerHost extends StatefulWidget {
   const SubscriptionBannerHost({required this.isProAccount, super.key});
 
   final bool isProAccount;
 
   @override
+  State<SubscriptionBannerHost> createState() => _SubscriptionBannerHostState();
+}
+
+class _SubscriptionBannerHostState extends State<SubscriptionBannerHost>
+    with WidgetsBindingObserver {
+  /// Vrai entre le moment où ce bandeau envoie l'utilisateur dans le
+  /// navigateur et son retour. Même mécanique que l'écran « Compte PRO » :
+  /// ce bandeau ouvre lui aussi le portail (« Régler », « Gérer »,
+  /// « S'abonner »), et sans rechargement au retour, l'utilisateur qui vient
+  /// de régulariser depuis son Profil retrouve un bandeau inchangé.
+  bool _hasLaunchedBrowser = false;
+
+  /// Conservée pour pouvoir recharger depuis `didChangeAppLifecycleState`,
+  /// où le `context` de ce State n'est plus sous le `BlocProvider` créé dans
+  /// `build`.
+  SubscriptionBloc? _bloc;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed || !_hasLaunchedBrowser) {
+      return;
+    }
+    _hasLaunchedBrowser = false;
+    if (!mounted) return;
+    _bloc?.add(const SubscriptionRequested());
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (!isProAccount) {
+    if (!widget.isProAccount) {
       return const SizedBox.shrink();
     }
 
     return BlocProvider<SubscriptionBloc>(
-      create: (_) =>
-          getIt<SubscriptionBloc>()..add(const SubscriptionRequested()),
+      create: (_) {
+        final bloc = getIt<SubscriptionBloc>()
+          ..add(const SubscriptionRequested());
+        _bloc = bloc;
+        return bloc;
+      },
       child: BlocConsumer<SubscriptionBloc, SubscriptionState>(
         listener: (context, state) {
           // État transitoire, jamais un drapeau porté par SubscriptionLoaded
           // (voir sa documentation) : traité ici, dans le listener, pas dans
           // le builder.
           if (state is SubscriptionPortalLaunchFailed) {
+            // Aucun navigateur n'a été ouvert : le drapeau de retour ne doit
+            // pas rester armé, sinon la prochaine reprise rechargerait sans
+            // raison.
+            _hasLaunchedBrowser = false;
             DonySnackbar.show(
               context,
-              message:
-                  "Impossible d'ouvrir la page. Réessayez, ou rendez-vous "
-                  'sur le site Yadony PRO depuis votre navigateur.',
+              message: kProPortalOpenFailedMessage,
               type: DonySnackbarType.error,
             );
           }
@@ -72,11 +119,14 @@ class SubscriptionBannerHost extends StatelessWidget {
                 // affiché (l'alerte doit être dite), seule son action
                 // disparaît quand elle ne mènerait nulle part.
                 onAction: proPortalActionIsLegitimate(subscription)
-                    ? () => context.read<SubscriptionBloc>().add(
-                        ProPortalOpenRequested(
-                          proPortalTargetFor(subscription.status),
-                        ),
-                      )
+                    ? () {
+                        _hasLaunchedBrowser = true;
+                        context.read<SubscriptionBloc>().add(
+                          ProPortalOpenRequested(
+                            proPortalTargetFor(subscription.status),
+                          ),
+                        );
+                      }
                     : null,
               ),
               // Même espacement que celui utilisé entre les sections

@@ -39,6 +39,12 @@ class SubscriptionStatusCard extends StatelessWidget {
   /// compte de la casse) ; toute autre valeur retombe silencieusement sur
   /// l'absence de libellé plutôt que d'inventer un rythme non prouvé.
   String? get _cycleLabel {
+    // Un abonnement dont l'accès n'est plus accordé (résilié, expiré, ou
+    // inexistant) ne sera plus prélevé : annoncer « Facturation mensuelle »
+    // y décrirait un prélèvement qui n'aura pas lieu.
+    if (!subscription.active) {
+      return null;
+    }
     switch (subscription.billingCycle?.toUpperCase()) {
       case 'MONTHLY':
         return 'Facturation mensuelle';

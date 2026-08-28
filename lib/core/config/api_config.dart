@@ -44,5 +44,4 @@ const String kProPortalBaseUrl = String.fromEnvironment(
 String proPortalUpgradeUrl() => '$kProPortalBaseUrl/upgrade';
 
 /// Page de gestion de l'abonnement PRO.
-String proPortalSubscriptionUrl() =>
-    '$kProPortalBaseUrl/parametres/abonnement';
+String proPortalSubscriptionUrl() => '$kProPortalBaseUrl/parametres/abonnement';

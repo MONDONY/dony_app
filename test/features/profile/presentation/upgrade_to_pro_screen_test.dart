@@ -261,6 +261,11 @@ void main() {
     mockRepo = MockProfileRepository();
     mockAuthBloc = MockAuthBloc();
     mockSubBloc = MockSubscriptionBloc();
+    // `DonySnackbar` déduplique sur un état STATIQUE partagé, en horloge
+    // réelle : sans ce nettoyage, un test qui affiche un message le rend
+    // invisible au test suivant qui affiche le même, et l'échec tombe sur le
+    // second, loin de sa cause.
+    DonySnackbar.clearDedup();
   });
 
   tearDown(() {
@@ -585,6 +590,37 @@ void main() {
       },
     );
 
+    testWidgets(
+      'accès fermé : pas de gestion à côté de la souscription, et aucun '
+      'rythme de facturation annoncé',
+      (tester) async {
+        subscriptionState(const SubscriptionLoaded(_tCanceledStale));
+        await pumpScreen(tester);
+
+        // « Gérer mon abonnement » et « S'abonner » côte à côte, vers deux
+        // pages différentes, sur un abonnement résilié : deux boutons
+        // contradictoires.
+        expect(find.text(_kManageButton), findsNothing);
+        // Et une carte qui annonce « Facturation mensuelle » sur un
+        // abonnement résilié décrit un prélèvement qui n'aura pas lieu.
+        expect(find.text('Facturation mensuelle'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      "aucun abonnement : le message ne parle pas d'un accès qui aurait pris "
+      'fin',
+      (tester) async {
+        subscriptionState(const SubscriptionLoaded(_tNoneStale));
+        await pumpScreen(tester);
+
+        // `none` veut dire « aucun abonnement », pas « votre accès s'est
+        // terminé » : l'utilisateur n'en a peut-être jamais eu.
+        expect(find.textContaining("n'est plus actif"), findsNothing);
+        expect(find.textContaining("n'avez pas d'abonnement"), findsOneWidget);
+      },
+    );
+
     testWidgets('accès non accordé et aucune source : la page de vente reste '
         'atteignable', (tester) async {
       // Le cas le plus muet du lot : avant, cet écran affichait
@@ -810,18 +846,56 @@ void main() {
       },
     );
 
+    // Les trois parcours où l'utilisateur part CHANGER son abonnement depuis
+    // un état DÉJÀ CHARGÉ. Une garde « ne recharger que si rien n'a jamais été
+    // chargé » les neutralise tous les trois : l'état initial n'existe que
+    // pour un utilisateur dont l'abonnement n'a jamais été chargé, c'est-à-dire
+    // un non-abonné.
+    for (final (label, subscription, cta)
+        in <(String, ProSubscriptionModel, String)>[
+          ('impayé régularisé', _tStripePastDue, 'Régler'),
+          ('accès fermé puis repris', _tCanceledStale, _kPortalButton),
+          ('abonnement géré sur le portail', _tStripeActive, _kManageButton),
+        ]) {
+      testWidgets("$label : le retour du portail recharge l'abonnement", (
+        tester,
+      ) async {
+        authAs(_proUser());
+        subscriptionState(SubscriptionLoaded(subscription));
+        await pumpScreen(tester);
+
+        await tester.ensureVisible(find.text(cta));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text(cta));
+        await tester.pump();
+
+        tester.binding.handleAppLifecycleStateChanged(
+          AppLifecycleState.resumed,
+        );
+        await tester.pump();
+
+        // Une au montage, une au retour. Sans le rechargement, le bandeau ou
+        // la carte affichent encore l'état d'avant le paiement, et le bouton
+        // renvoie au portail que l'utilisateur vient tout juste de quitter.
+        verify(() => mockSubBloc.add(const SubscriptionRequested())).called(2);
+      });
+    }
+
     testWidgets('une reprise sans lancement de navigateur ne déclenche aucun '
         'rafraîchissement', (tester) async {
-      // Rafraîchir à chaque reprise ferait un appel réseau à chaque
-      // bascule d'application, pour rien.
-      authAs(_nonProUser());
-      subscriptionState(const SubscriptionInitial());
+      // Rafraîchir à chaque reprise ferait deux appels réseau à chaque
+      // bascule d'application, pour rien. Monté sur un abonné DÉJÀ chargé :
+      // c'est le seul montage où un rechargement superflu se verrait.
+      authAs(_proUser());
+      subscriptionState(const SubscriptionLoaded(_tStripeActive));
       await pumpScreen(tester);
 
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
       await tester.pump();
 
       verifyNever(() => mockAuthBloc.add(const AuthProfileRefreshRequested()));
+      // Une seule fois : celle du montage, pas celle de la reprise.
+      verify(() => mockSubBloc.add(const SubscriptionRequested())).called(1);
     });
   });
 
@@ -1045,8 +1119,10 @@ void main() {
           verifyNever(() => mockSubBloc.add(const SubscriptionRequested()));
           // Un indicateur nu se lit comme un plantage, en particulier après
           // une déconnexion écran ouvert, où plus rien ne charge.
+          // Ni affirmation de chargement (plus rien ne charge après une
+          // déconnexion), ni indicateur nu, qui se lit comme un plantage.
           expect(
-            find.textContaining('Vérification de votre compte'),
+            find.textContaining('pas disponible pour le moment'),
             findsOneWidget,
           );
         },

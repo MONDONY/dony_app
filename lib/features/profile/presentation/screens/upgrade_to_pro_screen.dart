@@ -12,6 +12,7 @@ import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/billing/bloc/subscription_bloc.dart';
 import 'package:dony/features/billing/data/models/pro_subscription_model.dart';
+import 'package:dony/features/billing/presentation/pro_portal_copy.dart';
 import 'package:dony/features/billing/presentation/widgets/subscription_status_banner.dart';
 import 'package:dony/features/billing/presentation/widgets/subscription_status_card.dart';
 import 'package:dony/features/profile/bloc/upgrade_to_pro_bloc.dart';
@@ -54,13 +55,12 @@ const String _kAccessEndedMessage =
     "Votre accès PRO n'est plus actif. Vous pouvez reprendre un abonnement "
     'sur le site Yadony PRO.';
 
-/// Échec d'ouverture du navigateur. N'accuse pas le réseau : ouvrir un
-/// navigateur n'en consomme pas, et l'échec vient d'une URL mal configurée ou
-/// de l'absence d'application capable de l'ouvrir. Envoyer l'utilisateur
-/// vérifier sa connexion l'enverrait chercher là où rien ne cloche.
-const String _kPortalOpenFailedMessage =
-    "Impossible d'ouvrir la page. Réessayez, ou rendez-vous sur le site "
-    'Yadony PRO depuis votre navigateur.';
+/// `none` ne dit pas « votre accès a pris fin », il dit « aucun abonnement ».
+/// L'utilisateur n'en a peut-être jamais eu : lui annoncer une fin lui
+/// raconterait un passé qui n'a pas eu lieu.
+const String _kNoSubscriptionMessage =
+    "Vous n'avez pas d'abonnement PRO. Vous pouvez en souscrire un sur le "
+    'site Yadony PRO.';
 
 /// Écran « compte PRO », en deux vues :
 ///
@@ -176,10 +176,21 @@ class _UpgradeToProViewState extends State<_UpgradeToProView>
   /// bascule d'application, pour rien.
   bool _hasLaunchedBrowser = false;
 
+  /// Dernière PRO-ness **réellement connue**. `null` tant qu'aucun état
+  /// d'authentification informatif n'est passé (démarrage à froid).
+  bool? _lastKnownIsPro;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // Aligné sur ce que `create` a déjà décidé pour le BLoC d'abonnement :
+    // si l'utilisateur est déjà PRO au montage, la demande est partie, et
+    // l'écouteur ne doit pas la doubler au premier état reçu.
+    final state = context.read<AuthBloc>().state;
+    if (_informsAboutSession(state)) {
+      _lastKnownIsPro = _isPro(state);
+    }
     // Event de vue : mesure toujours la même intention (« je regarde le
     // compte PRO »), que l'écran vende ou gère l'abonnement.
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -216,6 +227,14 @@ class _UpgradeToProViewState extends State<_UpgradeToProView>
     _hasLaunchedBrowser = false;
     if (!mounted) return;
     context.read<AuthBloc>().add(const AuthProfileRefreshRequested());
+    // Et l'abonnement lui-même, systématiquement. Le conditionner à l'état du
+    // BLoC (« ne recharger que si rien n'a jamais été chargé ») neutralisait
+    // ce rappel pour tout le monde sauf les non-abonnés : l'impayé qui vient
+    // de payer, l'accès fermé qui vient de se réabonner et la résiliation
+    // faite sur le portail restaient tous invisibles au retour. Ce qui
+    // justifie de recharger n'est pas « rien n'a été chargé », c'est « je
+    // reviens d'un portail où l'abonnement a pu changer ».
+    context.read<SubscriptionBloc>().add(const SubscriptionRequested());
   }
 
   /// Point de passage unique de toutes les ouvertures du portail, pour que le
@@ -254,19 +273,25 @@ class _UpgradeToProViewState extends State<_UpgradeToProView>
         // l'AuthBloc en continu. Sans ce listener, la vue basculerait sur la
         // vue abonnée sans qu'aucune demande d'abonnement n'ait jamais été
         // émise, et l'écran resterait sur son état de chargement.
+        // Le compte DEVIENT PRO alors que l'écran est monté : démarrage à
+        // froid dont le profil se résout après le premier rendu, ou compte
+        // qui bascule. La bascule se mesure sur la dernière PRO-ness
+        // réellement connue, mémorisée ici, et non sur `previous` : un cycle
+        // PRO → chargement → PRO se lirait sinon comme une bascule
+        // « non PRO vers PRO » et redemanderait un abonnement déjà chargé.
         BlocListener<AuthBloc, AuthState>(
-          listenWhen: (previous, current) => _isPro(current),
-          listener: (context, _) {
-            // La garde porte sur l'état du SubscriptionBloc, pas sur une
-            // comparaison d'états d'authentification. Comparer `previous` et
-            // `current` reviendrait à lire un cycle
-            // PRO → chargement → PRO comme une bascule « non PRO vers PRO »
-            // et à redemander un abonnement déjà chargé : second appel
-            // réseau pour rien, alors que le rendu, lui, filtre déjà cet
-            // état de passage.
-            final subscription = context.read<SubscriptionBloc>();
-            if (subscription.state is SubscriptionInitial) {
-              subscription.add(const SubscriptionRequested());
+          listenWhen: (previous, current) => _informsAboutSession(current),
+          listener: (context, state) {
+            final isPro = _isPro(state);
+            final wasPro = _lastKnownIsPro;
+            _lastKnownIsPro = isPro;
+            // `wasPro != true` couvre aussi le cas « jamais rien su »
+            // (`null`), c'est-à-dire le démarrage à froid, où le montage n'a
+            // rien pu demander.
+            if (isPro && wasPro != true) {
+              context.read<SubscriptionBloc>().add(
+                const SubscriptionRequested(),
+              );
             }
           },
         ),
@@ -309,7 +334,7 @@ class _UpgradeToProViewState extends State<_UpgradeToProView>
               _hasLaunchedBrowser = false;
               DonySnackbar.show(
                 context,
-                message: _kPortalOpenFailedMessage,
+                message: kProPortalOpenFailedMessage,
                 type: DonySnackbarType.error,
               );
             }
@@ -364,7 +389,7 @@ class _ProAuthPendingView extends StatelessWidget {
             // Un indicateur nu se lit comme un plantage, en particulier après
             // une déconnexion écran ouvert, où plus rien ne charge.
             Text(
-              'Vérification de votre compte en cours.',
+              "Votre compte PRO n'est pas disponible pour le moment.",
               style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
             ),
           ],
@@ -607,7 +632,13 @@ class _ProSubscriberView extends StatelessWidget {
     // dit où gérer et résilier, sans quoi ils n'auraient ni action ni
     // explication.
     final source = subscription.source;
-    final canManage = source == ProSubscriptionSource.stripe;
+    // `proPortalManageIsLegitimate` plutôt que `source == stripe` réécrit ici :
+    // c'est cette duplication qui avait fait diverger le bandeau de la carte.
+    // Et l'accès doit encore être accordé — sinon « Gérer mon abonnement » et
+    // « S'abonner » s'affichaient côte à côte, vers deux pages différentes,
+    // sur un abonnement résilié.
+    final canManage =
+        accessGranted && proPortalManageIsLegitimate(subscription);
     final canDowngrade =
         accessGranted &&
         (source == ProSubscriptionSource.adminGrant ||
@@ -639,9 +670,11 @@ class _ProSubscriberView extends StatelessWidget {
       ).animate().fadeIn(delay: 60.ms),
       if (!accessGranted) ...[
         const SizedBox(height: DonySpacing.lg),
-        const DonyStatusBanner(
+        DonyStatusBanner(
           type: DonyStatusBannerType.info,
-          message: _kAccessEndedMessage,
+          message: subscription.status == ProSubscriptionStatus.none
+              ? _kNoSubscriptionMessage
+              : _kAccessEndedMessage,
         ),
         const SizedBox(height: DonySpacing.lg),
         DonyButton(

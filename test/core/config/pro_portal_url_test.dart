@@ -8,21 +8,21 @@ void main() {
     });
 
     test('proPortalSubscriptionUrl se termine par /parametres/abonnement', () {
-      expect(
-        proPortalSubscriptionUrl(),
-        endsWith('/parametres/abonnement'),
-      );
+      expect(proPortalSubscriptionUrl(), endsWith('/parametres/abonnement'));
     });
 
-    test('les deux URLs commencent par kProPortalBaseUrl sans double barre', () {
-      final upgrade = proPortalUpgradeUrl();
-      final subscription = proPortalSubscriptionUrl();
+    test(
+      'les deux URLs commencent par kProPortalBaseUrl sans double barre',
+      () {
+        final upgrade = proPortalUpgradeUrl();
+        final subscription = proPortalSubscriptionUrl();
 
-      expect(upgrade.startsWith(kProPortalBaseUrl), isTrue);
-      expect(upgrade.startsWith('$kProPortalBaseUrl//'), isFalse);
+        expect(upgrade.startsWith(kProPortalBaseUrl), isTrue);
+        expect(upgrade.startsWith('$kProPortalBaseUrl//'), isFalse);
 
-      expect(subscription.startsWith(kProPortalBaseUrl), isTrue);
-      expect(subscription.startsWith('$kProPortalBaseUrl//'), isFalse);
-    });
+        expect(subscription.startsWith(kProPortalBaseUrl), isTrue);
+        expect(subscription.startsWith('$kProPortalBaseUrl//'), isFalse);
+      },
+    );
   });
 }
