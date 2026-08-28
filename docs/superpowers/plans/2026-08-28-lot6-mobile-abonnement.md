@@ -488,7 +488,9 @@ Créer `lib/features/billing/presentation/widgets/subscription_status_banner.dar
 
 Le bandeau s'appuie sur `DonyStatusBanner` et n'en réimplémente pas la mise en forme. Choisir le ton par le statut. Quand rien n'est à signaler, rendre `const SizedBox.shrink()`.
 
-Les dates affichées passent par `.toLocal()`. Formater en français sans dépendance nouvelle : `intl` n'est pas au projet, donc composer la date à la main, ou réutiliser un utilitaire de formatage déjà présent dans `lib/core/` si `grep` en trouve un. Chercher avant d'écrire.
+Les dates affichées passent par `.toLocal()`.
+
+> **Correction du 2026-08-28 :** ce plan affirmait initialement que `intl` n'était pas une dépendance du projet et demandait de composer les dates à la main. C'est **faux** : `intl: ^0.20.2` est déclaré dans `pubspec.yaml`, `flutter_localizations` aussi, et `DateFormat(..., 'fr')` est employé dans une douzaine d'écrans. Réutiliser `intl`, ne pas écrire une n-ième liste de mois en dur.
 
 Textes indicatifs, à ajuster au ton du dépôt, sans tiret cadratin et avec « Yadony » si la marque est nommée :
 - Impayé : « Votre dernier paiement n'a pas abouti. Sans régularisation, votre accès PRO sera suspendu. » Action : « Régler ».
