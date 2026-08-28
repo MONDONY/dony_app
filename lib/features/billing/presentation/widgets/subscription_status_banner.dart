@@ -20,13 +20,30 @@ int? daysUntil(DateTime? instant, {DateTime? now}) {
     return null;
   }
   final reference = now ?? DateTime.now();
-  final diffMinutes = instant
-      .toUtc()
-      .difference(reference.toUtc())
-      .inMinutes;
+  final diffMinutes = instant.toUtc().difference(reference.toUtc()).inMinutes;
   final days = (diffMinutes / 1440).ceil();
   return days < 0 ? 0 : days;
 }
+
+/// Vrai quand [SubscriptionStatusBanner] rend autre chose qu'un
+/// `SizedBox.shrink()`.
+///
+/// Miroir exact du `switch` de son `build` et de `_activeBanner` : si l'un
+/// évolue, mettre l'autre à jour. Vit ici, collé à ce qu'il reflète, parce
+/// que plusieurs écrans montent le bandeau (Profil, compte PRO) et qu'un
+/// bandeau muet doit aussi faire disparaître l'espacement qui le suit. Sans
+/// ce prédicat partagé, chaque appelant en réécrirait sa propre copie.
+bool subscriptionHasVisibleAlert(ProSubscriptionModel subscription) =>
+    switch (subscription.status) {
+      ProSubscriptionStatus.pastDue ||
+      ProSubscriptionStatus.legacyGrace => true,
+      ProSubscriptionStatus.active =>
+        subscription.cancelAtPeriodEnd && subscription.currentPeriodEnd != null,
+      ProSubscriptionStatus.none ||
+      ProSubscriptionStatus.canceled ||
+      ProSubscriptionStatus.expired ||
+      ProSubscriptionStatus.unknown => false,
+    };
 
 /// Bandeau d'alerte pour l'abonnement PRO : impayé, fin de gratuité proche,
 /// ou résiliation programmée.

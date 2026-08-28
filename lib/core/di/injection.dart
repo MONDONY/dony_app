@@ -137,6 +137,7 @@ import 'package:dony/features/profile/bloc/help_center_bloc.dart';
 import 'package:dony/features/profile/bloc/pro_stats_bloc.dart';
 import 'package:dony/features/profile/bloc/profile_public_bloc.dart';
 import 'package:dony/features/profile/bloc/support_contact_bloc.dart';
+import 'package:dony/features/profile/bloc/upgrade_to_pro_bloc.dart';
 import 'package:dony/features/profile/bloc/user_reviews_cubit.dart';
 import 'package:dony/features/profile/data/datasources/help_center_remote_config_datasource.dart';
 import 'package:dony/features/profile/data/pro_stats_repository.dart';
@@ -466,7 +467,8 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => BillingRepository(getIt<ApiClient>()),
   );
   getIt.registerFactory<SubscriptionBloc>(
-    () => SubscriptionBloc(getIt<BillingRepository>(), getIt<AnalyticsService>()),
+    () =>
+        SubscriptionBloc(getIt<BillingRepository>(), getIt<AnalyticsService>()),
   );
 
   // Cancellation
@@ -565,6 +567,10 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   // Profile (upgrade PRO + statistiques PRO)
   getIt.registerLazySingleton<ProfileRepository>(
     () => ProfileRepository(getIt<ApiClient>()),
+  );
+  getIt.registerFactory<UpgradeToProBloc>(
+    () =>
+        UpgradeToProBloc(getIt<ProfileRepository>(), getIt<AnalyticsService>()),
   );
   getIt.registerLazySingleton<ProStatsRepository>(
     () => ProStatsRepository(getIt<ApiClient>()),

@@ -55,7 +55,7 @@ class SubscriptionBannerHost extends StatelessWidget {
             return const SizedBox.shrink();
           }
           final subscription = state.subscription;
-          if (!_hasVisibleAlert(subscription)) {
+          if (!subscriptionHasVisibleAlert(subscription)) {
             // Rien à signaler : zéro hauteur, espacement de section compris.
             // Le composant porte lui-même son encombrement — l'écran hôte
             // (`profile_screen.dart`) ne doit jamais ajouter un espacement
@@ -95,22 +95,4 @@ class SubscriptionBannerHost extends StatelessWidget {
       status == ProSubscriptionStatus.legacyGrace
       ? ProPortalTarget.upgrade
       : ProPortalTarget.manage;
-
-  /// Reflète exactement les conditions sous lesquelles
-  /// [SubscriptionStatusBanner] rend autre chose qu'un `SizedBox.shrink()`
-  /// (voir son switch sur [ProSubscriptionStatus] et `_activeBanner`) : sert
-  /// uniquement à décider si l'espacement de section doit suivre le
-  /// bandeau. Si ce switch évolue là-bas, le mettre à jour ici.
-  bool _hasVisibleAlert(ProSubscriptionModel subscription) =>
-      switch (subscription.status) {
-        ProSubscriptionStatus.pastDue ||
-        ProSubscriptionStatus.legacyGrace => true,
-        ProSubscriptionStatus.active =>
-          subscription.cancelAtPeriodEnd &&
-              subscription.currentPeriodEnd != null,
-        ProSubscriptionStatus.none ||
-        ProSubscriptionStatus.canceled ||
-        ProSubscriptionStatus.expired ||
-        ProSubscriptionStatus.unknown => false,
-      };
 }

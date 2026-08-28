@@ -7,20 +7,14 @@ class ProfileRepository {
 
   ProfileRepository(this._client);
 
-  Future<void> upgradeToPro({
-    required String companyName,
-    required String siret,
-  }) async {
-    try {
-      await _client.dio.post(
-        '/auth/me/upgrade-to-pro',
-        data: {'companyName': companyName, 'siret': siret},
-      );
-    } catch (e) {
-      throw unwrapDioError(e);
-    }
-  }
-
+  /// Retour en compte standard.
+  ///
+  /// Le pendant `POST /auth/me/upgrade-to-pro` n'existe plus côté client :
+  /// il n'accorde plus le statut PRO côté serveur, la souscription se fait
+  /// désormais sur le portail web Yadony PRO.
+  ///
+  /// Peut échouer en `409` RFC 7807 avec `code` = `active-stripe-subscription`
+  /// (abonnement payant en cours) ou `not-pro-account`.
   Future<void> downgradePro() async {
     try {
       await _client.dio.delete('/auth/me/upgrade-to-pro');

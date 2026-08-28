@@ -20,9 +20,8 @@ class SubscriptionStatusCard extends StatelessWidget {
   final VoidCallback? onManage;
 
   String get _statusLabel => switch (subscription.status) {
-    ProSubscriptionStatus.active => subscription.cancelAtPeriodEnd
-        ? 'Résiliation programmée'
-        : 'Actif',
+    ProSubscriptionStatus.active =>
+      subscription.cancelAtPeriodEnd ? 'Résiliation programmée' : 'Actif',
     ProSubscriptionStatus.pastDue => 'Paiement en attente',
     ProSubscriptionStatus.legacyGrace => 'Accès gratuit temporaire',
     ProSubscriptionStatus.canceled => 'Résilié',
@@ -56,7 +55,8 @@ class SubscriptionStatusCard extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final cycleLabel = _cycleLabel;
     final periodEnd = subscription.currentPeriodEnd?.toLocal();
-    final isLegacyGrace = subscription.status == ProSubscriptionStatus.legacyGrace;
+    final isLegacyGrace =
+        subscription.status == ProSubscriptionStatus.legacyGrace;
     final isCanceling = subscription.cancelAtPeriodEnd && periodEnd != null;
 
     return DonyCard(
