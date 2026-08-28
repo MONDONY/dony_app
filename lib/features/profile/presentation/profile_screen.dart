@@ -5,6 +5,7 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
+import 'package:dony/features/billing/presentation/widgets/subscription_banner_host.dart';
 import 'package:dony/features/profile/presentation/widgets/pending_deletion_banner.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_header.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_sections.dart';
@@ -321,6 +322,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final showAccountSection = ProfileAccountSection.isVisible(user);
 
     return [
+      // Porte lui-même son espacement de section (voir
+      // `SubscriptionBannerHost`) : aucun `gap` ne doit suivre cette ligne,
+      // il s'additionnerait au padding déjà posé par le `SliverPadding` de
+      // cet écran quand rien n'est affiché.
+      SubscriptionBannerHost(isProAccount: isProAccount),
       if (user != null &&
           user.isPendingDeletion &&
           user.deletionRequestedAt != null) ...[

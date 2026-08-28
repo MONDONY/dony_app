@@ -11,17 +11,6 @@ class UpgradeToProInitial extends UpgradeToProState {}
 
 class UpgradeToProLoading extends UpgradeToProState {}
 
-class UpgradeToProSuccess extends UpgradeToProState {}
-
-class UpgradeToProError extends UpgradeToProState {
-  final AppException error;
-
-  const UpgradeToProError(this.error);
-
-  @override
-  List<Object?> get props => [error];
-}
-
 class DowngradeSuccess extends UpgradeToProState {}
 
 class DowngradeError extends UpgradeToProState {
