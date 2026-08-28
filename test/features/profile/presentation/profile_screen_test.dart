@@ -8,6 +8,9 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
+import 'package:dony/features/billing/bloc/subscription_bloc.dart';
+import 'package:dony/features/billing/data/billing_repository.dart';
+import 'package:dony/features/billing/data/models/pro_subscription_model.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
@@ -56,6 +59,12 @@ class MockWalletBloc extends MockBloc<WalletEvent, WalletState>
 class MockStripeAccountBloc
     extends MockBloc<StripeAccountEvent, StripeAccountState>
     implements StripeAccountBloc {}
+
+/// L'écran monte désormais `SubscriptionBannerHost` (isProAccount: true)
+/// pour un compte PRO, qui se fournit lui-même son `SubscriptionBloc` via
+/// GetIt : ce dépôt doit exister dans la registry de test, sinon le montage
+/// jette une exception qui casse le scroll de toute la page.
+class MockBillingRepository extends Mock implements BillingRepository {}
 
 // ── Fallback values ───────────────────────────────────────────────────────────
 
@@ -255,6 +264,47 @@ void main() {
     }
     getIt.registerSingleton<AnalyticsService>(analytics);
     addTearDown(() => getIt.unregister<AnalyticsService>());
+
+    // Inerte par défaut (abonnement actif, sans résiliation programmée) :
+    // aucune de ces fixtures ne teste le bandeau lui-même (voir
+    // subscription_banner_host_test.dart), seulement que sa présence ne
+    // casse pas le reste de l'écran pour un compte PRO.
+    final billingRepo = MockBillingRepository();
+    when(() => billingRepo.getSubscription()).thenAnswer(
+      (_) async => const ProSubscriptionModel(
+        active: true,
+        status: ProSubscriptionStatus.active,
+        source: ProSubscriptionSource.stripe,
+        billingCycle: 'monthly',
+        currentPeriodEnd: null,
+        cancelAtPeriodEnd: false,
+        graceExpiresAt: null,
+      ),
+    );
+    if (getIt.isRegistered<BillingRepository>()) {
+      getIt.unregister<BillingRepository>();
+    }
+    getIt.registerLazySingleton<BillingRepository>(() => billingRepo);
+    addTearDown(() {
+      if (getIt.isRegistered<BillingRepository>()) {
+        getIt.unregister<BillingRepository>();
+      }
+    });
+    if (getIt.isRegistered<SubscriptionBloc>()) {
+      getIt.unregister<SubscriptionBloc>();
+    }
+    getIt.registerFactory<SubscriptionBloc>(
+      () => SubscriptionBloc(
+        getIt<BillingRepository>(),
+        getIt<AnalyticsService>(),
+      ),
+    );
+    addTearDown(() {
+      if (getIt.isRegistered<SubscriptionBloc>()) {
+        getIt.unregister<SubscriptionBloc>();
+      }
+    });
+
     bidBloc = MockBidBloc();
     announcementBloc = MockAnnouncementBloc();
     referralBloc = MockReferralBloc();
