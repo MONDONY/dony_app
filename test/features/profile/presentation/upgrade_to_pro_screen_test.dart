@@ -743,6 +743,38 @@ void main() {
         },
       );
 
+      testWidgets(
+        "l'échec d'une action annexe ne fait pas disparaître la vue d'abonné",
+        (tester) async {
+          // `AuthError` est un état SURCHARGÉ : il ne signale pas une fin de
+          // session. Il est émis par `_onUpdateProfileRequested`,
+          // `_onAvatarUploadRequested`, `_onAddPhoneFromProfileRequested`,
+          // `_onAddEmailFromProfileRequested`, `_onDeleteAccountRequested` et
+          // `_onProfileRefreshRequested` — six chemins où l'utilisateur reste
+          // pleinement authentifié. Un envoi d'avatar qui échoue en réseau ne
+          // doit pas escamoter l'abonnement d'un abonné valide.
+          final authStates = StreamController<AuthState>.broadcast();
+          addTearDown(authStates.close);
+          whenListen<AuthState>(
+            mockAuthBloc,
+            authStates.stream,
+            initialState: AuthAuthenticated(_proUser()),
+          );
+          subscriptionState(const SubscriptionLoaded(_tAdminGrant));
+
+          await pumpScreen(tester);
+          expect(find.text(_kDowngradeButton), findsOneWidget);
+
+          authStates.add(const AuthError(NetworkException('upload failed')));
+          await tester.pump();
+
+          // La vue d'abonné RESTE : rien dans cet état ne dit quoi que ce
+          // soit de la session.
+          expect(find.text(_kDowngradeButton), findsOneWidget);
+          expect(find.byType(SubscriptionStatusCard), findsOneWidget);
+        },
+      );
+
       // Le revers du filtre de reconstruction : ignorer TOUS les états sans
       // utilisateur figerait l'écran sur la vue d'abonné après la fermeture
       // de la session. Le routeur ne redirige pas sur une déconnexion

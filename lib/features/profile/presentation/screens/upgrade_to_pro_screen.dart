@@ -107,6 +107,37 @@ UserModel? _userOf(AuthState state) => switch (state) {
 
 bool _isPro(AuthState state) => _userOf(state)?.isProAccount ?? false;
 
+/// Vrai quand [state] renseigne réellement sur la session, et doit donc être
+/// pris en compte pour décider quoi afficher.
+///
+/// Le critère n'est PAS « cet état porte-t-il un utilisateur ». Un état sans
+/// utilisateur peut être parfaitement informatif (`AuthInitial` après une
+/// déconnexion, `AuthAccountDeleted`, `AuthLocked`), et le filtrer figerait
+/// l'écran sur la vue d'abonné, carte et bouton de résiliation compris, alors
+/// que la session est fermée. Le routeur ne redirige pas sur une déconnexion
+/// volontaire survenant écran ouvert : rien d'autre ne rattraperait le coup.
+///
+/// Deux familles n'apprennent rien sur la session et ne doivent donc rien
+/// changer à l'affichage :
+///
+///  - [AuthLoading] : état de **passage**, émis par `AuthCheckRequested`
+///    entre la demande et la réponse. Le traiter comme « non PRO » ferait
+///    défiler la page de vente, tarifs compris, sous les yeux d'un abonné
+///    dont le profil se rafraîchit.
+///  - [AuthError] : état **surchargé**, qui rapporte l'échec d'une action
+///    annexe alors que l'utilisateur reste pleinement authentifié. Six
+///    émetteurs dans `AuthBloc` sont dans ce cas : mise à jour de profil,
+///    envoi d'avatar, ajout de téléphone, ajout d'e-mail, suppression de
+///    compte, et rafraîchissement de profil. Ce n'est jamais un signal de fin
+///    de session : même sur le tout premier contrôle, `_onCheckRequested`
+///    s'abstient délibérément de déconnecter sur un 401/403, qui peut être
+///    transitoire. Un envoi d'avatar qui échoue ne doit pas escamoter
+///    l'abonnement d'un abonné valide.
+///
+/// Tout le reste renseigne, avec ou sans utilisateur, et provoque un rendu.
+bool _informsAboutSession(AuthState state) =>
+    state is! AuthLoading && state is! AuthError;
+
 class _UpgradeToProView extends StatefulWidget {
   const _UpgradeToProView();
 
@@ -208,25 +239,10 @@ class _UpgradeToProViewState extends State<_UpgradeToProView> {
           },
         ),
       ],
-      // Ce qui est filtré ici, c'est le seul état de PASSAGE, pas l'absence
-      // d'utilisateur.
-      //
-      // `AuthCheckRequested` émet `AuthLoading` avant l'état authentifié
-      // (`AuthBloc._onCheckRequested`) : le traiter comme « non PRO » ferait
-      // défiler la page de vente, tarifs compris, sous les yeux d'un abonné
-      // dont le profil se rafraîchit. `AuthLoading` ne dit jamais rien du
-      // compte, il ne doit donc rien changer à ce qui est affiché.
-      //
-      // Tous les AUTRES états sans utilisateur sont terminaux et doivent
-      // provoquer un rendu : `AuthInitial` (déconnexion), `AuthAccountDeleted`,
-      // `AuthLocked`, `AuthError`, `AuthGuestSessionReady`, ainsi que les
-      // états de parcours de connexion. Les filtrer sur le seul critère
-      // « ne porte pas d'utilisateur » figerait l'écran sur la vue d'abonné,
-      // carte et bouton de résiliation compris, après la fermeture de la
-      // session — et le routeur ne redirige pas sur une déconnexion
-      // volontaire ultérieure, donc rien ne rattraperait le coup.
+      // Le critère est `_informsAboutSession`, et surtout PAS « cet état
+      // porte-t-il un utilisateur ». Voir sa documentation.
       child: BlocBuilder<AuthBloc, AuthState>(
-        buildWhen: (previous, current) => current is! AuthLoading,
+        buildWhen: (previous, current) => _informsAboutSession(current),
         builder: (context, state) {
           final user = _userOf(state);
           if (user == null) {
