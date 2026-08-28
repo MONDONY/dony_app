@@ -242,6 +242,46 @@ void main() {
     );
 
     blocTest<SubscriptionBloc, SubscriptionState>(
+      'two consecutive failed launches each emit their own '
+      'PortalLaunchFailed : the second is never swallowed by Equatable',
+      build: () {
+        when(
+          () => repository.openExternal(any()),
+        ).thenAnswer((_) async => false);
+        return bloc();
+      },
+      seed: () => const SubscriptionLoaded(tActiveSubscription),
+      act: (b) async {
+        b.add(const ProPortalOpenRequested(ProPortalTarget.upgrade));
+        // Laisse le premier cycle (échec → restauration) se terminer avant
+        // de déclencher le second : le transformateur `exhaustMap` du BLoC
+        // ignorerait sinon une seconde demande tant que la première est
+        // encore en vol, ce qui ne correspond pas au parcours réel (un
+        // second tap n'arrive qu'une fois le premier épisode terminé).
+        await Future<void>.delayed(Duration.zero);
+        b.add(const ProPortalOpenRequested(ProPortalTarget.upgrade));
+      },
+      // Discriminant réel (contrairement au test widget équivalent, qui
+      // pilote un stream brut sans filtrage) : ici, c'est le vrai
+      // `SubscriptionBloc.emit` qui ferait le tri. Si
+      // `SubscriptionPortalLaunchFailed` devenait un drapeau porté par
+      // `SubscriptionLoaded` plutôt qu'un état transitoire distinct, la
+      // séquence ci-dessous ne compterait que deux états, pas quatre — les
+      // deux `Loaded` intermédiaires empêchent par ailleurs deux
+      // `PortalLaunchFailed` consécutifs strictement identiques (ce qui,
+      // lui, serait légitimement fusionné par `emit`).
+      expect: () => [
+        const SubscriptionPortalLaunchFailed(tActiveSubscription),
+        const SubscriptionLoaded(tActiveSubscription),
+        const SubscriptionPortalLaunchFailed(tActiveSubscription),
+        const SubscriptionLoaded(tActiveSubscription),
+      ],
+      verify: (_) {
+        verify(() => repository.openExternal(any())).called(2);
+      },
+    );
+
+    blocTest<SubscriptionBloc, SubscriptionState>(
       'a failed launch logs proPortalOpenFailed',
       build: () {
         when(

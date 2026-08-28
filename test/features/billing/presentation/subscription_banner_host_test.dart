@@ -344,8 +344,8 @@ void main() {
     );
 
     testWidgets(
-      'deux échecs successifs affichent le message deux fois : la seconde '
-      'notification n\'est jamais avalée',
+      'deux SubscriptionPortalLaunchFailed distincts affichent chacun leur '
+      'message (le filtrage Equatable est prouvé côté BLoC)',
       (tester) async {
         final controller = StreamController<SubscriptionState>();
         addTearDown(controller.close);
@@ -399,12 +399,15 @@ void main() {
         controller.add(const SubscriptionLoaded(tPastDueSubscription));
         await tester.pump();
 
-        // Discriminant : un drapeau porté par `SubscriptionLoaded` (au lieu
-        // d'un état transitoire distinct) produirait ici, dans le vrai
-        // BLoC, un second `SubscriptionLoaded` strictement égal au premier
-        // pour Equatable — aucune nouvelle notification ne serait émise, le
-        // listener ne se redéclencherait pas, et le message ne
-        // réapparaîtrait jamais après un second tap sur le bouton.
+        // Ce test prouve que le widget répond bien à une seconde
+        // `SubscriptionPortalLaunchFailed` distincte (le listener n'a pas de
+        // filtrage propre qui l'empêcherait de ré-afficher un message
+        // identique) : il pilote un stream brut, qui délivre sans filtrage
+        // tout ce qu'on y pousse, et ne peut donc pas, à lui seul, démontrer
+        // que la seconde émission n'est pas avalée par Equatable dans le
+        // vrai BLoC. Cette garantie-là est prouvée côté BLoC, voir
+        // `subscription_bloc_test.dart` : « two consecutive failed launches
+        // each emit their own PortalLaunchFailed ».
         expect(find.byType(SnackBar), findsOneWidget);
       },
     );
