@@ -8,6 +8,7 @@ import 'package:dony/features/billing/data/billing_repository.dart';
 import 'package:dony/features/billing/data/models/pro_subscription_model.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:rxdart/rxdart.dart';
 
 part 'subscription_event.dart';
 part 'subscription_state.dart';
@@ -18,7 +19,16 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
   SubscriptionBloc(this._repository, this._analytics)
     : super(const SubscriptionInitial()) {
     on<SubscriptionRequested>(_onRequested);
-    on<ProPortalOpenRequested>(_onPortalOpenRequested);
+    on<ProPortalOpenRequested>(
+      _onPortalOpenRequested,
+      // Droppable : ignore toute nouvelle demande tant qu'une ouverture est
+      // encore en vol, plutôt que de la mettre en file (ce que ferait un
+      // transformateur "sequential" comme celui de `HelpCenterBloc`).
+      // Un double appui rapide sur le bouton du portail ne doit jamais
+      // ouvrir le navigateur une seconde fois : une demande mise en file
+      // finirait par le faire quand même, une fois la première terminée.
+      transformer: (events, mapper) => events.exhaustMap(mapper),
+    );
   }
 
   final BillingRepository _repository;
@@ -32,7 +42,7 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
     try {
       final subscription = await _repository.getSubscription();
       unawaited(
-        _analytics.logEvent(
+        _track(
           AnalyticsEvents.proSubscriptionViewed,
           properties: {'status': subscription.status.name},
         ),
@@ -59,7 +69,7 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
     final success = await _repository.openExternal(uri);
     if (success) {
       unawaited(
-        _analytics.logEvent(
+        _track(
           AnalyticsEvents.proPortalOpened,
           properties: {'target': event.target.name},
         ),
@@ -68,7 +78,7 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
     }
 
     unawaited(
-      _analytics.logEvent(
+      _track(
         AnalyticsEvents.proPortalOpenFailed,
         properties: {'target': event.target.name},
       ),
@@ -82,5 +92,19 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
       ),
     );
     emit(previous);
+  }
+
+  /// Enveloppe `AnalyticsService.logEvent` pour garantir que le tracking ne
+  /// remonte jamais comme exception non gérée. Appelé `unawaited` : sans ce
+  /// filet, une Future de tracking rejetée (backend PostHog en panne)
+  /// échapperait au `try/catch` du handler — celui-ci a déjà rendu la main
+  /// avant qu'elle ne s'exécute — et deviendrait une erreur de zone non
+  /// interceptée, un comportement que le tracking ne doit jamais produire.
+  Future<void> _track(String event, {Map<String, Object>? properties}) async {
+    try {
+      await _analytics.logEvent(event, properties: properties);
+    } catch (_) {
+      // Best-effort : voir la doc ci-dessus.
+    }
   }
 }

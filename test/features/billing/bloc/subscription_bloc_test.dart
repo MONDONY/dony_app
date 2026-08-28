@@ -88,6 +88,38 @@ void main() {
     );
 
     blocTest<SubscriptionBloc, SubscriptionState>(
+      'a tracking failure never blocks the load: [Loading, Loaded] still '
+      'reaches the screen',
+      build: () {
+        when(
+          () => repository.getSubscription(),
+        ).thenAnswer((_) async => tActiveSubscription);
+        // `async => throw` reproduit une vraie Future rejetée (rejet
+        // asynchrone), pas une exception synchrone que `unawaited` ne
+        // rencontrerait jamais en production.
+        when(
+          () => analytics.logEvent(any(), properties: any(named: 'properties')),
+        ).thenAnswer((_) async => throw Exception('tracking down'));
+        return bloc();
+      },
+      act: (b) => b.add(const SubscriptionRequested()),
+      // Discriminant : si `unawaited(...)` était retiré et l'appel
+      // analytics `await`é à la place, cette séquence resterait bloquée sur
+      // `SubscriptionLoading` (l'exception non interceptée remonterait au
+      // `catch` du repository et produirait un `SubscriptionError`, ou le
+      // test échouerait avec une exception non gérée) au lieu d'atteindre
+      // `SubscriptionLoaded`.
+      expect: () => [
+        isA<SubscriptionLoading>(),
+        isA<SubscriptionLoaded>().having(
+          (s) => s.subscription,
+          'subscription',
+          tActiveSubscription,
+        ),
+      ],
+    );
+
+    blocTest<SubscriptionBloc, SubscriptionState>(
       'emits [Loading, Error] with the exception thrown by the repository',
       build: () {
         when(
@@ -167,6 +199,28 @@ void main() {
     );
 
     blocTest<SubscriptionBloc, SubscriptionState>(
+      'a tracking failure never blocks opening the portal: openExternal is '
+      'called with the right URI regardless',
+      build: () {
+        when(
+          () => repository.openExternal(any()),
+        ).thenAnswer((_) async => true);
+        // `async => throw` : vraie Future rejetée, pas une exception
+        // synchrone que `unawaited` n'intercepterait jamais réellement.
+        when(
+          () => analytics.logEvent(any(), properties: any(named: 'properties')),
+        ).thenAnswer((_) async => throw Exception('tracking down'));
+        return bloc();
+      },
+      act: (b) => b.add(const ProPortalOpenRequested(ProPortalTarget.upgrade)),
+      verify: (_) {
+        verify(
+          () => repository.openExternal(Uri.parse(proPortalUpgradeUrl())),
+        ).called(1);
+      },
+    );
+
+    blocTest<SubscriptionBloc, SubscriptionState>(
       'a failed launch emits PortalLaunchFailed then restores the previous '
       'loaded state, so the screen stays displayed',
       build: () {
@@ -221,6 +275,71 @@ void main() {
         const SubscriptionPortalLaunchFailed(null),
         const SubscriptionInitial(),
       ],
+    );
+
+    blocTest<SubscriptionBloc, SubscriptionState>(
+      'a failed launch from SubscriptionError restores that same error state',
+      build: () {
+        when(
+          () => repository.openExternal(any()),
+        ).thenAnswer((_) async => false);
+        return bloc();
+      },
+      seed: () =>
+          const SubscriptionError(NetworkException('boom', code: 'SERVER_ERROR')),
+      act: (b) => b.add(const ProPortalOpenRequested(ProPortalTarget.upgrade)),
+      // Discriminant : si le BLoC restaurait un état codé en dur (ex:
+      // `SubscriptionInitial`) au lieu du `previous` capturé dynamiquement,
+      // ce test échouerait alors que le test symétrique depuis `Initial`
+      // continuerait de passer.
+      expect: () => [
+        const SubscriptionPortalLaunchFailed(null),
+        const SubscriptionError(NetworkException('boom', code: 'SERVER_ERROR')),
+      ],
+    );
+
+    blocTest<SubscriptionBloc, SubscriptionState>(
+      'a failed launch from SubscriptionLoading restores that same loading '
+      'state',
+      build: () {
+        when(
+          () => repository.openExternal(any()),
+        ).thenAnswer((_) async => false);
+        return bloc();
+      },
+      seed: () => const SubscriptionLoading(),
+      act: (b) => b.add(const ProPortalOpenRequested(ProPortalTarget.manage)),
+      expect: () => [
+        const SubscriptionPortalLaunchFailed(null),
+        const SubscriptionLoading(),
+      ],
+    );
+
+    blocTest<SubscriptionBloc, SubscriptionState>(
+      'two ProPortalOpenRequested fired back to back only open the portal '
+      'once (droppable while a launch is in flight)',
+      build: () {
+        when(() => repository.openExternal(any())).thenAnswer((_) async {
+          // Délai simulé : la seconde demande doit arriver PENDANT que la
+          // première est encore en vol pour prouver le comportement
+          // "droppable", pas juste une absence de rebond fortuite.
+          await Future<void>.delayed(const Duration(milliseconds: 50));
+          return true;
+        });
+        return bloc();
+      },
+      act: (b) {
+        b.add(const ProPortalOpenRequested(ProPortalTarget.upgrade));
+        b.add(const ProPortalOpenRequested(ProPortalTarget.upgrade));
+      },
+      wait: const Duration(milliseconds: 100),
+      // Discriminant : sans transformateur `droppable` (ou avec un
+      // transformateur `sequential`/par défaut qui mettrait la seconde
+      // demande en file), ce compte serait 2 — le navigateur s'ouvrirait
+      // deux fois pour un double appui.
+      verify: (_) {
+        verify(() => repository.openExternal(any())).called(1);
+      },
     );
   });
 }
