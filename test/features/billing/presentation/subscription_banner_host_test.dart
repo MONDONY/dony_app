@@ -290,6 +290,40 @@ void main() {
     );
 
     testWidgets(
+      "impayé de source inconnue : le bandeau s'affiche SANS action",
+      (tester) async {
+        // Même règle que sur l'écran PRO : une action qui mène à la gestion
+        // exige une source Stripe. Offrir « Régler » ici tout en masquant
+        // « Gérer mon abonnement » ailleurs, pour la même page de
+        // destination, c'est décider deux fois la même chose avec deux
+        // règles opposées.
+        const unknownSourcePastDue = ProSubscriptionModel(
+          active: true,
+          status: ProSubscriptionStatus.pastDue,
+          source: ProSubscriptionSource.unknown,
+          billingCycle: null,
+          currentPeriodEnd: null,
+          cancelAtPeriodEnd: false,
+          graceExpiresAt: null,
+        );
+        whenListen<SubscriptionState>(
+          mockBloc,
+          Stream.value(const SubscriptionLoaded(unknownSourcePastDue)),
+          initialState: const SubscriptionLoaded(unknownSourcePastDue),
+        );
+
+        await tester.pumpWidget(
+          _wrap(const SubscriptionBannerHost(isProAccount: true)),
+        );
+        await tester.pump(_kSettle);
+
+        // Le bandeau reste : l'impayé doit être signalé.
+        expect(find.byType(SubscriptionStatusBanner), findsOneWidget);
+        expect(find.text('Régler'), findsNothing);
+      },
+    );
+
+    testWidgets(
       "tap sur l'action d'un impayé envoie ProPortalOpenRequested(manage)",
       (tester) async {
         whenListen<SubscriptionState>(

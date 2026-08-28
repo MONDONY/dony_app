@@ -246,6 +246,55 @@ void main() {
     );
 
     testWidgets(
+      "legacyGrace dont l'échéance est imminente : jamais « 0 jour »",
+      (tester) async {
+        await _pump(
+          tester,
+          SubscriptionStatusBanner(
+            subscription: _sub(
+              active: true,
+              status: ProSubscriptionStatus.legacyGrace,
+              graceExpiresAt: DateTime.now().toUtc().add(
+                const Duration(hours: 2),
+              ),
+            ),
+          ),
+        );
+
+        // `daysUntil` arrondit vers le haut : une échéance strictement future
+        // compte toujours au moins 1 jour. « 0 jour » ne doit désormais
+        // désigner que le passé, et le passé se dit au passé.
+        expect(find.textContaining('dans 1 jour'), findsOneWidget);
+        expect(find.textContaining('0 jour'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'legacyGrace dont l\'échéance est passée : le passé, jamais « dans 0 '
+      'jour »',
+      (tester) async {
+        // Le cron de bascule est désactivé par défaut : un statut
+        // `legacyGrace` survit à son échéance, et « prend fin dans 0 jour »
+        // resterait affiché indéfiniment après coup.
+        await _pump(
+          tester,
+          SubscriptionStatusBanner(
+            subscription: _sub(
+              active: true,
+              status: ProSubscriptionStatus.legacyGrace,
+              graceExpiresAt: DateTime.now().toUtc().subtract(
+                const Duration(days: 3),
+              ),
+            ),
+          ),
+        );
+
+        expect(find.textContaining('a pris fin'), findsOneWidget);
+        expect(find.textContaining('0 jour'), findsNothing);
+      },
+    );
+
+    testWidgets(
       'legacyGrace sans graceExpiresAt : bandeau visible sans nombre de '
       'jours',
       (tester) async {

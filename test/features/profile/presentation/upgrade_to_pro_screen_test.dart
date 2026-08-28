@@ -131,6 +131,43 @@ const _tUnknownSource = ProSubscriptionModel(
   graceExpiresAt: null,
 );
 
+/// Impayé dont la source n'est pas reconnue. L'action du bandeau (« Régler »)
+/// mène à la GESTION, qui exige une source Stripe : elle ne doit donc pas être
+/// offerte, exactement comme le bouton de gestion de la carte.
+const _tPastDueUnknownSource = ProSubscriptionModel(
+  active: true,
+  status: ProSubscriptionStatus.pastDue,
+  source: ProSubscriptionSource.unknown,
+  billingCycle: null,
+  currentPeriodEnd: null,
+  cancelAtPeriodEnd: false,
+  graceExpiresAt: null,
+);
+
+/// Le drapeau PRO local est périmé : le serveur dit que l'accès n'est plus
+/// accordé (`active: false`) alors que l'application croit encore l'utilisateur
+/// abonné. Sans chemin vers la page de vente, l'écran est un cul-de-sac.
+const _tCanceledStale = ProSubscriptionModel(
+  active: false,
+  status: ProSubscriptionStatus.canceled,
+  source: ProSubscriptionSource.stripe,
+  billingCycle: 'MONTHLY',
+  currentPeriodEnd: null,
+  cancelAtPeriodEnd: false,
+  graceExpiresAt: null,
+);
+
+/// Variante la plus muette du même cas : aucun abonnement, aucune source.
+const _tNoneStale = ProSubscriptionModel(
+  active: false,
+  status: ProSubscriptionStatus.none,
+  source: null,
+  billingCycle: null,
+  currentPeriodEnd: null,
+  cancelAtPeriodEnd: false,
+  graceExpiresAt: null,
+);
+
 const _tLegacyFree = ProSubscriptionModel(
   active: true,
   status: ProSubscriptionStatus.legacyGrace,
@@ -498,6 +535,67 @@ void main() {
     );
 
     testWidgets(
+      "impayé de source inconnue : l'action du bandeau est retirée comme le "
+      'bouton de gestion',
+      (tester) async {
+        subscriptionState(const SubscriptionLoaded(_tPastDueUnknownSource));
+        await pumpScreen(tester);
+
+        // Le bandeau reste : l'impayé doit être signalé.
+        expect(find.textContaining("n'a pas abouti"), findsOneWidget);
+        // Mais « Régler » et « Gérer mon abonnement » ouvrent la MÊME page.
+        // Masquer l'un en offrant l'autre, c'est décider deux fois la même
+        // chose avec deux règles opposées.
+        expect(find.text('Régler'), findsNothing);
+        expect(find.text(_kManageButton), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'source inconnue : la phrase qui dit où gérer et résilier est affichée',
+      (tester) async {
+        subscriptionState(const SubscriptionLoaded(_tUnknownSource));
+        await pumpScreen(tester);
+
+        // Sans elle, cet abonné voit une carte et rien d'autre : aucune
+        // action, aucune explication.
+        expect(find.textContaining('site Yadony PRO'), findsOneWidget);
+        // Et il est prévenu que la page de gestion, contrairement à la page
+        // de vente, exige une connexion.
+        expect(
+          find.textContaining('connexion vous y sera demandée'),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'accès non accordé par le serveur : un chemin vers la page de vente '
+      'existe, et pas de résiliation',
+      (tester) async {
+        // `active: false` est le seul signal frais : le drapeau PRO local
+        // n'est rechargé qu'au démarrage à froid et reste vrai des jours
+        // après la fermeture d'un abonnement côté serveur.
+        subscriptionState(const SubscriptionLoaded(_tCanceledStale));
+        await pumpScreen(tester);
+
+        expect(find.text(_kPortalButton), findsOneWidget);
+        // Résilier un accès déjà fermé ne pourrait qu'échouer.
+        expect(find.text(_kDowngradeButton), findsNothing);
+      },
+    );
+
+    testWidgets('accès non accordé et aucune source : la page de vente reste '
+        'atteignable', (tester) async {
+      // Le cas le plus muet du lot : avant, cet écran affichait
+      // « Aucun abonnement » et zéro bouton.
+      subscriptionState(const SubscriptionLoaded(_tNoneStale));
+      await pumpScreen(tester);
+
+      expect(find.text(_kPortalButton), findsOneWidget);
+    });
+
+    testWidgets(
       'source unknown (valeur serveur non reconnue) : aucun des deux boutons',
       (tester) async {
         subscriptionState(const SubscriptionLoaded(_tUnknownSource));
@@ -648,6 +746,85 @@ void main() {
     );
   });
 
+  // ── Échec d'ouverture du portail ──────────────────────────────────────────
+
+  group("UpgradeToProScreen — échec d'ouverture du portail", () {
+    testWidgets(
+      "le message n'accuse pas le réseau, qui n'est jamais en cause",
+      (tester) async {
+        // Ouvrir un navigateur ne consomme pas de réseau : l'échec vient
+        // d'une URL mal configurée ou de l'absence de navigateur. Envoyer
+        // l'utilisateur vérifier sa connexion l'envoie chercher au mauvais
+        // endroit.
+        final subStates = StreamController<SubscriptionState>.broadcast();
+        addTearDown(subStates.close);
+        authAs(_nonProUser());
+        whenListen<SubscriptionState>(
+          mockSubBloc,
+          subStates.stream,
+          initialState: const SubscriptionInitial(),
+        );
+
+        await pumpScreen(tester);
+        subStates.add(const SubscriptionPortalLaunchFailed(null));
+        await tester.pump();
+        await tester.pump(_kSettle);
+
+        expect(find.textContaining('Vérifiez votre connexion'), findsNothing);
+        expect(find.textContaining("Impossible d'ouvrir"), findsOneWidget);
+      },
+    );
+  });
+
+  // ── Retour du navigateur ──────────────────────────────────────────────────
+
+  group('UpgradeToProScreen — retour du navigateur externe', () {
+    testWidgets(
+      'après un lancement de navigateur, la reprise rafraîchit le profil',
+      (tester) async {
+        // Le parcours nominal du lot se termine hors de l'application. Sans
+        // ce rafraîchissement, l'abonné qui revient du portail retrouve la
+        // page de vente et son unique bouton, qui le renvoie au portail qu'il
+        // vient de quitter : il boucle, et seul un redémarrage complet
+        // corrige l'affichage.
+        authAs(_nonProUser());
+        subscriptionState(const SubscriptionInitial());
+        await pumpScreen(tester);
+
+        await tester.ensureVisible(find.text(_kPortalButton));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text(_kPortalButton));
+        await tester.pump();
+
+        tester.binding.handleAppLifecycleStateChanged(
+          AppLifecycleState.resumed,
+        );
+        await tester.pump();
+
+        // `AuthProfileRefreshRequested` et non `AuthCheckRequested` :
+        // le premier recharge le profil SANS émettre `AuthLoading`, donc sans
+        // faire clignoter l'écran.
+        verify(
+          () => mockAuthBloc.add(const AuthProfileRefreshRequested()),
+        ).called(1);
+      },
+    );
+
+    testWidgets('une reprise sans lancement de navigateur ne déclenche aucun '
+        'rafraîchissement', (tester) async {
+      // Rafraîchir à chaque reprise ferait un appel réseau à chaque
+      // bascule d'application, pour rien.
+      authAs(_nonProUser());
+      subscriptionState(const SubscriptionInitial());
+      await pumpScreen(tester);
+
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pump();
+
+      verifyNever(() => mockAuthBloc.add(const AuthProfileRefreshRequested()));
+    });
+  });
+
   // ── Réaction au changement d'état d'authentification ──────────────────────
 
   group('UpgradeToProScreen — le compte devient PRO écran ouvert', () {
@@ -744,6 +921,37 @@ void main() {
       );
 
       testWidgets(
+        "un contrôle d'authentification écran ouvert ne relance pas de "
+        'requête inutile',
+        (tester) async {
+          // Le rendu filtre `AuthLoading` ; l'écoute doit appliquer le même
+          // critère, sans quoi le cycle PRO → chargement → PRO se lit comme
+          // une bascule « non PRO vers PRO » et redemande l'abonnement déjà
+          // chargé. Second appel réseau pour rien.
+          final authStates = StreamController<AuthState>.broadcast();
+          addTearDown(authStates.close);
+          whenListen<AuthState>(
+            mockAuthBloc,
+            authStates.stream,
+            initialState: AuthAuthenticated(_proUser()),
+          );
+          subscriptionState(const SubscriptionLoaded(_tStripeActive));
+
+          await pumpScreen(tester);
+
+          authStates.add(const AuthLoading());
+          await tester.pump();
+          authStates.add(AuthAuthenticated(_proUser()));
+          await tester.pump();
+
+          // Une seule fois : celle du montage.
+          verify(
+            () => mockSubBloc.add(const SubscriptionRequested()),
+          ).called(1);
+        },
+      );
+
+      testWidgets(
         "l'échec d'une action annexe ne fait pas disparaître la vue d'abonné",
         (tester) async {
           // `AuthError` est un état SURCHARGÉ : il ne signale pas une fin de
@@ -835,6 +1043,12 @@ void main() {
           expect(find.byType(SubscriptionStatusCard), findsNothing);
           // Et aucune requête d'abonnement n'est émise sur une supposition.
           verifyNever(() => mockSubBloc.add(const SubscriptionRequested()));
+          // Un indicateur nu se lit comme un plantage, en particulier après
+          // une déconnexion écran ouvert, où plus rien ne charge.
+          expect(
+            find.textContaining('Vérification de votre compte'),
+            findsOneWidget,
+          );
         },
       );
     },

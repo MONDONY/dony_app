@@ -63,9 +63,21 @@ l'écran de la seule source de vérité : `GET /billing/subscription`.
    `SubscriptionBloc`, qui résout `proPortalUpgradeUrl()` et ouvre le navigateur
    externe de l'appareil (jamais une webview).
 5. L'abonnement se souscrit entièrement hors de l'application, sur le portail web.
-   Au retour dans l'app, si le compte est passé PRO, le `BlocListener<AuthBloc>` de
-   l'écran (`listenWhen: !_isPro(previous) && _isPro(current)`) déclenche
-   automatiquement `SubscriptionRequested` et l'écran bascule sur la vue abonnée.
+6. **Le retour du navigateur est ce qui referme le parcours.** L'écran observe le
+   cycle de vie de l'application (`WidgetsBindingObserver`). Au passage à
+   `AppLifecycleState.resumed`, **et seulement si cet écran a lui-même lancé le
+   navigateur** (drapeau `_hasLaunchedBrowser`), il envoie
+   `AuthProfileRefreshRequested` à l'`AuthBloc` — jamais `AuthCheckRequested`, qui
+   émettrait `AuthLoading` et ferait clignoter l'écran. Le profil rechargé rend
+   `isProAccount` vrai, le `BlocListener<AuthBloc>` déclenche alors
+   `SubscriptionRequested` et l'écran bascule sur la vue abonnée.
+
+   Rien d'autre dans l'application ne rafraîchit le profil à ce moment : les autres
+   émetteurs sont le démarrage à froid, le parcours KYC, la réactivation de compte et
+   la résiliation réussie, et l'observateur de cycle de vie global ne recharge que le
+   compte Stripe Connect, sur un shell dont cette route ne fait pas partie. Sans ce
+   rappel, l'abonné qui revient du portail retrouvait la page de vente et son unique
+   bouton, qui le renvoyait au portail qu'il venait de quitter.
 
 ### Flux utilisateur — abonné consultant/gérant l'écran PRO
 

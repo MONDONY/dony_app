@@ -32,12 +32,35 @@ const String _kPortalHint =
     "L'abonnement se souscrit sur le site Yadony PRO, dans votre navigateur.";
 const String _kPortalButtonLabel = "S'abonner sur le site Yadony PRO";
 
+/// Où gérer et résilier un abonnement, et à quoi s'attendre en arrivant.
+///
+/// La mention de la connexion n'est pas du remplissage : la page de vente est
+/// publique, la page de gestion ne l'est pas. Sans cet avertissement,
+/// l'utilisateur tombe sur une demande de code sans y avoir été préparé.
+const String _kManageGuidance =
+    'La gestion et la résiliation de votre abonnement se font sur le site '
+    'Yadony PRO, dans votre navigateur. Une connexion vous y sera demandée.';
+
 /// Message opposé au refus `409 active-stripe-subscription`. Le serveur ne
 /// laisse pas résilier un abonnement Stripe encore actif depuis l'app : le
 /// dire, plutôt que de rendre l'erreur brute, est la seule sortie utile.
 const String _kDowngradeBlockedMessage =
-    'Votre abonnement PRO est toujours actif. Sa résiliation se fait sur le '
-    'site Yadony PRO, dans votre navigateur.';
+    'Votre abonnement PRO est toujours actif. $_kManageGuidance';
+
+/// Le serveur n'accorde plus l'accès, alors que le drapeau PRO local dit
+/// encore le contraire. Voir `_loaded` sur pourquoi c'est `active` qui fait
+/// foi ici.
+const String _kAccessEndedMessage =
+    "Votre accès PRO n'est plus actif. Vous pouvez reprendre un abonnement "
+    'sur le site Yadony PRO.';
+
+/// Échec d'ouverture du navigateur. N'accuse pas le réseau : ouvrir un
+/// navigateur n'en consomme pas, et l'échec vient d'une URL mal configurée ou
+/// de l'absence d'application capable de l'ouvrir. Envoyer l'utilisateur
+/// vérifier sa connexion l'enverrait chercher là où rien ne cloche.
+const String _kPortalOpenFailedMessage =
+    "Impossible d'ouvrir la page. Réessayez, ou rendez-vous sur le site "
+    'Yadony PRO depuis votre navigateur.';
 
 /// Écran « compte PRO », en deux vues :
 ///
@@ -145,10 +168,18 @@ class _UpgradeToProView extends StatefulWidget {
   State<_UpgradeToProView> createState() => _UpgradeToProViewState();
 }
 
-class _UpgradeToProViewState extends State<_UpgradeToProView> {
+class _UpgradeToProViewState extends State<_UpgradeToProView>
+    with WidgetsBindingObserver {
+  /// Vrai entre le moment où cet écran envoie l'utilisateur dans le
+  /// navigateur et son retour dans l'application. Sans ce drapeau, il
+  /// faudrait rafraîchir le profil à CHAQUE reprise, c'est-à-dire à chaque
+  /// bascule d'application, pour rien.
+  bool _hasLaunchedBrowser = false;
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     // Event de vue : mesure toujours la même intention (« je regarde le
     // compte PRO »), que l'écran vende ou gère l'abonnement.
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -157,6 +188,41 @@ class _UpgradeToProViewState extends State<_UpgradeToProView> {
         getIt<AnalyticsService>().logEvent(AnalyticsEvents.upgradeToProStarted),
       );
     });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  /// Le parcours nominal du lot se termine **hors de l'application** : on
+  /// s'abonne sur le portail web, puis on revient. Rien dans l'app ne
+  /// rafraîchit le profil à ce moment-là — l'observateur de cycle de vie
+  /// global ne recharge que le compte Stripe Connect, et cet écran est une
+  /// route hors du shell qui le porte. Sans ce rappel, l'abonné qui revient
+  /// retrouve la page de vente et son unique bouton, qui le renvoie au
+  /// portail qu'il vient de quitter : il boucle, et seul un redémarrage
+  /// complet corrige l'affichage.
+  ///
+  /// `AuthProfileRefreshRequested` et non `AuthCheckRequested` : le premier
+  /// recharge le profil **sans émettre `AuthLoading`**, donc sans faire
+  /// clignoter l'écran au retour.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed || !_hasLaunchedBrowser) {
+      return;
+    }
+    _hasLaunchedBrowser = false;
+    if (!mounted) return;
+    context.read<AuthBloc>().add(const AuthProfileRefreshRequested());
+  }
+
+  /// Point de passage unique de toutes les ouvertures du portail, pour que le
+  /// drapeau de retour ne puisse pas être oublié sur un chemin.
+  void _openPortal(BuildContext context, ProPortalTarget target) {
+    _hasLaunchedBrowser = true;
+    context.read<SubscriptionBloc>().add(ProPortalOpenRequested(target));
   }
 
   Future<void> _confirmDowngrade(BuildContext context) async {
@@ -189,11 +255,20 @@ class _UpgradeToProViewState extends State<_UpgradeToProView> {
         // vue abonnée sans qu'aucune demande d'abonnement n'ait jamais été
         // émise, et l'écran resterait sur son état de chargement.
         BlocListener<AuthBloc, AuthState>(
-          listenWhen: (previous, current) =>
-              !_isPro(previous) && _isPro(current),
-          listener: (context, state) => context.read<SubscriptionBloc>().add(
-            const SubscriptionRequested(),
-          ),
+          listenWhen: (previous, current) => _isPro(current),
+          listener: (context, _) {
+            // La garde porte sur l'état du SubscriptionBloc, pas sur une
+            // comparaison d'états d'authentification. Comparer `previous` et
+            // `current` reviendrait à lire un cycle
+            // PRO → chargement → PRO comme une bascule « non PRO vers PRO »
+            // et à redemander un abonnement déjà chargé : second appel
+            // réseau pour rien, alors que le rendu, lui, filtre déjà cet
+            // état de passage.
+            final subscription = context.read<SubscriptionBloc>();
+            if (subscription.state is SubscriptionInitial) {
+              subscription.add(const SubscriptionRequested());
+            }
+          },
         ),
         BlocListener<UpgradeToProBloc, UpgradeToProState>(
           listener: (context, state) {
@@ -228,11 +303,13 @@ class _UpgradeToProViewState extends State<_UpgradeToProView> {
             // État transitoire de signalement (voir sa documentation) :
             // traité ici, jamais dans un builder.
             if (state is SubscriptionPortalLaunchFailed) {
+              // Aucun navigateur n'a été ouvert : le drapeau de retour ne doit
+              // pas rester armé, sinon la prochaine reprise déclencherait un
+              // rafraîchissement de profil sans raison.
+              _hasLaunchedBrowser = false;
               DonySnackbar.show(
                 context,
-                message:
-                    "Impossible d'ouvrir la page. Vérifiez votre connexion et "
-                    'réessayez.',
+                message: _kPortalOpenFailedMessage,
                 type: DonySnackbarType.error,
               );
             }
@@ -254,8 +331,11 @@ class _UpgradeToProViewState extends State<_UpgradeToProView> {
           return user.isProAccount
               ? _ProSubscriberView(
                   onDowngrade: () => _confirmDowngrade(context),
+                  onOpenPortal: (target) => _openPortal(context, target),
                 )
-              : const _ProPitchView();
+              : _ProPitchView(
+                  onOpenPortal: (target) => _openPortal(context, target),
+                );
         },
       ),
     );
@@ -271,9 +351,25 @@ class _ProAuthPendingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      appBar: DonyAppBar(title: 'Compte PRO'),
-      body: Center(child: CircularProgressIndicator()),
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    return Scaffold(
+      appBar: const DonyAppBar(title: 'Compte PRO'),
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: DonySpacing.lg),
+            // Un indicateur nu se lit comme un plantage, en particulier après
+            // une déconnexion écran ouvert, où plus rien ne charge.
+            Text(
+              'Vérification de votre compte en cours.',
+              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -281,7 +377,9 @@ class _ProAuthPendingView extends StatelessWidget {
 // ── Vue non abonnée : page de vente ─────────────────────────────────────────
 
 class _ProPitchView extends StatelessWidget {
-  const _ProPitchView();
+  const _ProPitchView({required this.onOpenPortal});
+
+  final void Function(ProPortalTarget target) onOpenPortal;
 
   @override
   Widget build(BuildContext context) {
@@ -370,9 +468,7 @@ class _ProPitchView extends StatelessWidget {
             DonyButton(
               label: _kPortalButtonLabel,
               iconRightAsset: 'external-link',
-              onPressed: () => context.read<SubscriptionBloc>().add(
-                const ProPortalOpenRequested(ProPortalTarget.upgrade),
-              ),
+              onPressed: () => onOpenPortal(ProPortalTarget.upgrade),
             ).animate().fadeIn(delay: 260.ms),
           ],
         ),
@@ -384,9 +480,13 @@ class _ProPitchView extends StatelessWidget {
 // ── Vue abonnée : état réel de l'abonnement ─────────────────────────────────
 
 class _ProSubscriberView extends StatelessWidget {
-  const _ProSubscriberView({required this.onDowngrade});
+  const _ProSubscriberView({
+    required this.onDowngrade,
+    required this.onOpenPortal,
+  });
 
   final VoidCallback onDowngrade;
+  final void Function(ProPortalTarget target) onOpenPortal;
 
   /// L'abonnement porté par l'état, quand il est connu.
   ///
@@ -487,7 +587,15 @@ class _ProSubscriberView extends StatelessWidget {
     BuildContext context,
     ProSubscriptionModel subscription,
   ) {
-    // La visibilité des deux gestes se décide sur `source`, seul indice
+    // `active` est le seul signal FRAIS dont dispose cet écran. Le drapeau PRO
+    // local, lui, n'est rechargé qu'au démarrage à froid ou au retour du
+    // navigateur : il reste vrai des jours après la fermeture d'un abonnement
+    // côté serveur. Sans lui, un abonné résilié voyait « Résilié », aucun
+    // bandeau, et aucun chemin vers la page de vente, qui n'est gouvernée que
+    // par ce drapeau périmé.
+    final accessGranted = subscription.active;
+
+    // La visibilité des gestes se décide sur `source`, seul indice
     // disponible : le serveur n'expose délibérément aucun identifiant Stripe,
     // l'application ne peut donc pas savoir autrement si un espace de gestion
     // existe.
@@ -495,12 +603,16 @@ class _ProSubscriberView extends StatelessWidget {
     // `null` et `unknown` ne rendent AUCUN des deux boutons. Ne jamais
     // afficher un geste dont la légitimité n'est pas établie : proposer une
     // gestion inexistante, ou une résiliation vouée au 409, est pire que de
-    // ne rien proposer.
+    // ne rien proposer. Ces utilisateurs reçoivent en revanche la phrase qui
+    // dit où gérer et résilier, sans quoi ils n'auraient ni action ni
+    // explication.
     final source = subscription.source;
     final canManage = source == ProSubscriptionSource.stripe;
     final canDowngrade =
-        source == ProSubscriptionSource.adminGrant ||
-        source == ProSubscriptionSource.legacyFree;
+        accessGranted &&
+        (source == ProSubscriptionSource.adminGrant ||
+            source == ProSubscriptionSource.legacyFree);
+    final needsGuidance = accessGranted && !canManage && !canDowngrade;
 
     return [
       // Rend `SizedBox.shrink()` de lui-même quand il n'y a rien à signaler.
@@ -510,20 +622,41 @@ class _ProSubscriberView extends StatelessWidget {
       if (subscriptionHasVisibleAlert(subscription)) ...[
         SubscriptionStatusBanner(
           subscription: subscription,
-          onAction: () => context.read<SubscriptionBloc>().add(
-            ProPortalOpenRequested(proPortalTargetFor(subscription.status)),
-          ),
+          // Même règle que le bouton de gestion de la carte, dix lignes plus
+          // bas : une action qui mène à la gestion exige une source Stripe.
+          // Les deux ouvrent la même page ; les gouverner par deux règles
+          // opposées offrait « Régler » à un impayé de source inconnue tout
+          // en lui masquant « Gérer mon abonnement ».
+          onAction: proPortalActionIsLegitimate(subscription)
+              ? () => onOpenPortal(proPortalTargetFor(subscription.status))
+              : null,
         ),
         const SizedBox(height: DonySpacing.lg),
       ],
       SubscriptionStatusCard(
         subscription: subscription,
-        onManage: canManage
-            ? () => context.read<SubscriptionBloc>().add(
-                const ProPortalOpenRequested(ProPortalTarget.manage),
-              )
-            : null,
+        onManage: canManage ? () => onOpenPortal(ProPortalTarget.manage) : null,
       ).animate().fadeIn(delay: 60.ms),
+      if (!accessGranted) ...[
+        const SizedBox(height: DonySpacing.lg),
+        const DonyStatusBanner(
+          type: DonyStatusBannerType.info,
+          message: _kAccessEndedMessage,
+        ),
+        const SizedBox(height: DonySpacing.lg),
+        DonyButton(
+          label: _kPortalButtonLabel,
+          iconRightAsset: 'external-link',
+          onPressed: () => onOpenPortal(ProPortalTarget.upgrade),
+        ),
+      ],
+      if (needsGuidance) ...[
+        const SizedBox(height: DonySpacing.lg),
+        const DonyStatusBanner(
+          type: DonyStatusBannerType.info,
+          message: _kManageGuidance,
+        ),
+      ],
       if (canDowngrade) ...[
         const SizedBox(height: DonySpacing.xxl),
         BlocBuilder<UpgradeToProBloc, UpgradeToProState>(

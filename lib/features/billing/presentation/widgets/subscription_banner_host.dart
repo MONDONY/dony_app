@@ -40,8 +40,8 @@ class SubscriptionBannerHost extends StatelessWidget {
             DonySnackbar.show(
               context,
               message:
-                  "Impossible d'ouvrir la page. Vérifiez votre connexion et "
-                  'réessayez.',
+                  "Impossible d'ouvrir la page. Réessayez, ou rendez-vous "
+                  'sur le site Yadony PRO depuis votre navigateur.',
               type: DonySnackbarType.error,
             );
           }
@@ -67,11 +67,17 @@ class SubscriptionBannerHost extends StatelessWidget {
             children: [
               SubscriptionStatusBanner(
                 subscription: subscription,
-                onAction: () => context.read<SubscriptionBloc>().add(
-                  ProPortalOpenRequested(
-                    proPortalTargetFor(subscription.status),
-                  ),
-                ),
+                // Une action qui mène à la gestion exige une source Stripe :
+                // voir `proPortalActionIsLegitimate`. Le bandeau reste
+                // affiché (l'alerte doit être dite), seule son action
+                // disparaît quand elle ne mènerait nulle part.
+                onAction: proPortalActionIsLegitimate(subscription)
+                    ? () => context.read<SubscriptionBloc>().add(
+                        ProPortalOpenRequested(
+                          proPortalTargetFor(subscription.status),
+                        ),
+                      )
+                    : null,
               ),
               // Même espacement que celui utilisé entre les sections
               // voisines de l'écran Profil, porté ici plutôt que par

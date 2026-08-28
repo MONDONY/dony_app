@@ -20,6 +20,28 @@ ProPortalTarget proPortalTargetFor(ProSubscriptionStatus status) =>
     ? ProPortalTarget.upgrade
     : ProPortalTarget.manage;
 
+/// Vrai quand l'action portée par [subscription] mène réellement quelque part,
+/// et peut donc être proposée.
+///
+/// Le critère n'est pas « filtrer partout sur la source », il dépend de la
+/// destination :
+///
+///  - une action qui mène à la page de **vente** est toujours légitime, cette
+///    page étant publique ;
+///  - une action qui mène à la **gestion** exige une source Stripe. Sans
+///    abonnement Stripe il n'y a pas d'espace de gestion, et le serveur
+///    n'expose délibérément aucun identifiant qui permettrait d'en juger
+///    autrement.
+///
+/// Vit ici pour que les deux hôtes du bandeau (écran Profil et écran PRO)
+/// tranchent identiquement. Sans ce partage, un impayé de source inconnue se
+/// voyait offrir « Régler » sur un hôte tandis que « Gérer mon abonnement »
+/// lui était masqué sur l'autre — deux règles opposées pour la même page de
+/// destination.
+bool proPortalActionIsLegitimate(ProSubscriptionModel subscription) =>
+    proPortalTargetFor(subscription.status) == ProPortalTarget.upgrade ||
+    subscription.source == ProSubscriptionSource.stripe;
+
 sealed class SubscriptionEvent extends Equatable {
   const SubscriptionEvent();
 

@@ -85,10 +85,21 @@ class SubscriptionStatusBanner extends StatelessWidget {
   }
 
   String _legacyGraceMessage() {
-    final days = daysUntil(subscription.graceExpiresAt);
-    if (days == null) {
+    final expiry = subscription.graceExpiresAt;
+    if (expiry == null) {
       return 'Votre accès PRO gratuit prendra bientôt fin.';
     }
+    // Le cron de bascule des grâces historiques est désactivé par défaut : un
+    // statut `legacyGrace` survit donc à sa propre échéance. Sans ce garde,
+    // `daysUntil` bornant à 0, l'écran afficherait « prend fin dans 0 jour »
+    // indéfiniment APRÈS la date, ce qui est faux au présent comme au futur.
+    if (!expiry.toUtc().isAfter(DateTime.now().toUtc())) {
+      return 'Votre accès PRO gratuit a pris fin.';
+    }
+    // L'échéance est strictement dans le futur et `daysUntil` arrondit vers le
+    // haut : le compte vaut donc toujours 1 au minimum, et « 0 jour » est
+    // désormais inatteignable.
+    final days = daysUntil(expiry) ?? 1;
     final plural = days > 1 ? 's' : '';
     return 'Votre accès PRO gratuit prend fin dans $days jour$plural.';
   }
