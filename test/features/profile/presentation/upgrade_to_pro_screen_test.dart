@@ -176,6 +176,7 @@ Widget _wrap({
   required MockProfileRepository repo,
   required MockAuthBloc authBloc,
   required MockSubscriptionBloc subBloc,
+  String initialLocation = '/',
 }) {
   _register(repo, subBloc);
 
@@ -183,6 +184,7 @@ Widget _wrap({
     value: authBloc,
     child: MaterialApp.router(
       routerConfig: GoRouter(
+        initialLocation: initialLocation,
         routes: [
           GoRoute(path: '/', builder: (_, _) => const UpgradeToProScreen()),
           GoRoute(
@@ -255,9 +257,17 @@ void main() {
     );
   }
 
-  Future<void> pumpScreen(WidgetTester tester) async {
+  Future<void> pumpScreen(
+    WidgetTester tester, {
+    String initialLocation = '/',
+  }) async {
     await tester.pumpWidget(
-      _wrap(repo: mockRepo, authBloc: mockAuthBloc, subBloc: mockSubBloc),
+      _wrap(
+        repo: mockRepo,
+        authBloc: mockAuthBloc,
+        subBloc: mockSubBloc,
+        initialLocation: initialLocation,
+      ),
     );
     await tester.pump(_kSettle);
   }
@@ -575,6 +585,35 @@ void main() {
     );
 
     testWidgets(
+      'résiliation réussie : la page se referme sur celle qui la précédait',
+      (tester) async {
+        when(() => mockRepo.downgradePro()).thenAnswer((_) async {});
+        subscriptionState(const SubscriptionLoaded(_tAdminGrant));
+
+        // Ce test seul démarre ailleurs et EMPILE l'écran, pour que
+        // `canPop()` soit vrai. Monté à la racine du routeur comme les
+        // autres tests du fichier, la branche de fermeture n'est jamais
+        // atteinte et ne prouverait donc rien.
+        await pumpScreen(tester, initialLocation: '/profile');
+        // `push` ne se complète qu'au dépilement de la route : l'attendre ici
+        // bloquerait le test avant même le premier `pump`.
+        unawaited(tester.element(find.text('Profile')).push('/'));
+        await tester.pumpAndSettle();
+        expect(find.text(_kDowngradeButton), findsOneWidget);
+
+        await tester.tap(find.text(_kDowngradeButton));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text(_kDowngradeConfirmLabel));
+        await tester.pumpAndSettle();
+
+        // L'écran a disparu et la page précédente est revenue : rester sur
+        // un écran PRO après avoir cessé d'être PRO serait incohérent.
+        expect(find.text(_kDowngradeButton), findsNothing);
+        expect(find.text('Profile'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
       'downgrade refusé en 409 active-stripe-subscription : message renvoyant '
       'vers le web, jamais le message brut du serveur',
       (tester) async {
@@ -655,6 +694,10 @@ void main() {
         await pumpScreen(tester);
 
         expect(find.text(_kRetryButton), findsOneWidget);
+        // Pas d'indicateur d'activité dans cette branche : un « attends »
+        // affiché à côté d'un « agis » se contredit, et rien n'attend
+        // effectivement quoi que ce soit puisque aucune demande n'est en vol.
+        expect(find.byType(CircularProgressIndicator), findsNothing);
 
         await tester.tap(find.text(_kRetryButton));
         await tester.pump();
@@ -664,6 +707,67 @@ void main() {
       },
     );
   });
+
+  // ── États d'authentification qui ne portent pas d'utilisateur ─────────────
+
+  group(
+    "UpgradeToProScreen — l'authentification ne dit rien de l'utilisateur",
+    () {
+      testWidgets(
+        'un rafraîchissement de profil ne fait pas clignoter la page de vente '
+        "sous les yeux d'un abonné",
+        (tester) async {
+          // `AuthCheckRequested` émet `AuthLoading` AVANT l'état authentifié
+          // (voir `AuthBloc._onCheckRequested`). Déduire « non PRO » de cet
+          // état intermédiaire ferait défiler la page de vente, tarifs
+          // compris, à un abonné qui n'a rien demandé. C'est le même mensonge
+          // visuel que celui que cette tâche supprime, en plus bref.
+          final authStates = StreamController<AuthState>.broadcast();
+          addTearDown(authStates.close);
+          whenListen<AuthState>(
+            mockAuthBloc,
+            authStates.stream,
+            initialState: AuthAuthenticated(_proUser()),
+          );
+          subscriptionState(const SubscriptionLoaded(_tStripeActive));
+
+          await pumpScreen(tester);
+          expect(find.byType(SubscriptionStatusCard), findsOneWidget);
+
+          authStates.add(const AuthLoading());
+          await tester.pump();
+
+          expect(find.text(_kMonthlyPrice), findsNothing);
+          expect(find.text(_kPortalButton), findsNothing);
+          expect(find.byType(SubscriptionStatusCard), findsOneWidget);
+        },
+      );
+
+      testWidgets(
+        "au démarrage à froid, rien n'est affirmé : ni page de vente, ni vue "
+        "d'abonné",
+        (tester) async {
+          // L'état d'authentification n'a encore rien dit. Montrer la page de
+          // vente reviendrait à affirmer « vous n'êtes pas abonné » sans le
+          // savoir.
+          whenListen<AuthState>(
+            mockAuthBloc,
+            const Stream.empty(),
+            initialState: const AuthLoading(),
+          );
+          subscriptionState(const SubscriptionInitial());
+
+          await pumpScreen(tester);
+
+          expect(find.text(_kMonthlyPrice), findsNothing);
+          expect(find.text(_kPortalButton), findsNothing);
+          expect(find.byType(SubscriptionStatusCard), findsNothing);
+          // Et aucune requête d'abonnement n'est émise sur une supposition.
+          verifyNever(() => mockSubBloc.add(const SubscriptionRequested()));
+        },
+      );
+    },
+  );
 
   // ── Contraintes de copie, sur les deux vues ───────────────────────────────
 

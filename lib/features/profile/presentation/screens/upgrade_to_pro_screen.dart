@@ -63,6 +63,16 @@ class UpgradeToProScreen extends StatelessWidget {
           create: (_) => getIt<UpgradeToProBloc>(),
         ),
         BlocProvider<SubscriptionBloc>(
+          // Construction NON paresseuse, et c'est une garantie, pas un
+          // détail. Le `BlocListener<AuthBloc>` ci-dessous lit ce BLoC pour
+          // lui envoyer sa demande ; si le BLoC n'existait pas encore à cet
+          // instant, cette lecture le construirait, `create` relirait un état
+          // déjà PRO et enverrait une PREMIÈRE demande, immédiatement suivie
+          // de celle du listener. Deux appels réseau. Le cas est écarté
+          // aujourd'hui parce qu'un autre listener force la création dès la
+          // première image, mais s'appuyer là-dessus ferait réapparaître le
+          // doublon le jour où ce listener disparaîtrait.
+          lazy: false,
           create: (_) {
             final bloc = getIt<SubscriptionBloc>();
             // Cas du compte déjà PRO au montage. La bascule ultérieure est
@@ -138,8 +148,6 @@ class _UpgradeToProViewState extends State<_UpgradeToProView> {
 
   @override
   Widget build(BuildContext context) {
-    final isProAccount = _isPro(context.watch<AuthBloc>().state);
-
     return MultiBlocListener(
       listeners: [
         // Le compte peut devenir PRO alors que cet écran est déjà monté :
@@ -200,9 +208,46 @@ class _UpgradeToProViewState extends State<_UpgradeToProView> {
           },
         ),
       ],
-      child: isProAccount
-          ? _ProSubscriberView(onDowngrade: () => _confirmDowngrade(context))
-          : const _ProPitchView(),
+      // `buildWhen` filtre les états d'authentification qui ne portent PAS
+      // d'utilisateur. `AuthCheckRequested` émet `AuthLoading` avant l'état
+      // authentifié : le traiter comme « non PRO » ferait défiler la page de
+      // vente, tarifs compris, sous les yeux d'un abonné dont le profil se
+      // rafraîchit. Un état qui ne dit rien ne doit rien changer à ce qui est
+      // affiché, et c'est bien un filtre de reconstruction, pas un `watch`,
+      // qui exprime ça : la dernière décision connue reste en place.
+      child: BlocBuilder<AuthBloc, AuthState>(
+        buildWhen: (previous, current) => _userOf(current) != null,
+        builder: (context, state) {
+          final user = _userOf(state);
+          if (user == null) {
+            // Démarrage à froid : l'authentification n'a encore rien affirmé.
+            // Montrer la page de vente affirmerait « vous n'êtes pas
+            // abonné » sans le savoir.
+            return const _ProAuthPendingView();
+          }
+          return user.isProAccount
+              ? _ProSubscriberView(
+                  onDowngrade: () => _confirmDowngrade(context),
+                )
+              : const _ProPitchView();
+        },
+      ),
+    );
+  }
+}
+
+/// Attente de l'état d'authentification, avant toute affirmation sur le
+/// compte. Ce n'est pas une impasse : l'utilisateur garde le bouton de retour
+/// de la barre de navigation, et l'attente porte sur l'AuthBloc global, que
+/// cet écran ne pilote pas.
+class _ProAuthPendingView extends StatelessWidget {
+  const _ProAuthPendingView();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      appBar: DonyAppBar(title: 'Compte PRO'),
+      body: Center(child: CircularProgressIndicator()),
     );
   }
 }
@@ -378,10 +423,17 @@ class _ProSubscriberView extends StatelessWidget {
     SizedBox(height: DonySpacing.xxl),
   ];
 
-  /// Chargement **sans demande en vol**. Même rendu que `_loading`, plus la
-  /// sortie de secours : sans elle, l'écran serait une impasse.
+  /// **Aucune demande en vol.** Pas d'indicateur d'activité ici : il dirait
+  /// « attends » à côté d'un bouton qui dit « agis », alors que rien n'est
+  /// effectivement en train de se charger. Même forme que la branche
+  /// d'erreur, message neutre plutôt qu'alarmiste : rien n'a échoué, l'état
+  /// n'a simplement pas encore été demandé.
   List<Widget> _idle(BuildContext context) => [
-    ..._loading(),
+    const DonyStatusBanner(
+      type: DonyStatusBannerType.info,
+      message: "L'état de votre abonnement n'a pas encore été chargé.",
+    ),
+    const SizedBox(height: DonySpacing.lg),
     _retryButton(context),
   ];
 
