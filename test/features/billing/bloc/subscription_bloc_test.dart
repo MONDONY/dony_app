@@ -137,6 +137,61 @@ void main() {
         ),
       ],
     );
+    blocTest<SubscriptionBloc, SubscriptionState>(
+      'deux SubscriptionRequested rapprochées ne chargent et ne comptent '
+      "qu'une fois (droppable tant qu'une demande est en vol)",
+      build: () {
+        when(() => repository.getSubscription()).thenAnswer((_) async {
+          // La seconde demande doit arriver PENDANT que la première est
+          // encore en vol, sinon le test prouverait une absence de rebond
+          // fortuite plutôt que le comportement droppable.
+          await Future<void>.delayed(const Duration(milliseconds: 50));
+          return tActiveSubscription;
+        });
+        return bloc();
+      },
+      act: (b) {
+        b.add(const SubscriptionRequested());
+        b.add(const SubscriptionRequested());
+      },
+      wait: const Duration(milliseconds: 100),
+      verify: (_) {
+        // Le retour du portail émet une demande, et la bascule non-PRO → PRO
+        // qui suit le rafraîchissement de profil en émet une seconde. Sans
+        // transformateur, ce sont deux appels réseau ET surtout **deux
+        // événements `pro_subscription_viewed` comptés pour une seule
+        // ouverture** : un double comptage bien réel dans les statistiques.
+        verify(() => repository.getSubscription()).called(1);
+        verify(
+          () => analytics.logEvent(
+            'pro_subscription_viewed',
+            properties: any(named: 'properties'),
+          ),
+        ).called(1);
+      },
+    );
+
+    blocTest<SubscriptionBloc, SubscriptionState>(
+      'une demande émise APRÈS la fin de la précédente est bien traitée',
+      build: () {
+        when(
+          () => repository.getSubscription(),
+        ).thenAnswer((_) async => tActiveSubscription);
+        return bloc();
+      },
+      act: (b) async {
+        b.add(const SubscriptionRequested());
+        // Laisse la première se terminer : « droppable » ne doit pas devenir
+        // « une seule fois pour toujours », sinon le bouton « Réessayer » et
+        // les retours de portail successifs cesseraient de fonctionner.
+        await Future<void>.delayed(const Duration(milliseconds: 30));
+        b.add(const SubscriptionRequested());
+      },
+      wait: const Duration(milliseconds: 60),
+      verify: (_) {
+        verify(() => repository.getSubscription()).called(2);
+      },
+    );
   });
 
   group('ProPortalOpenRequested', () {

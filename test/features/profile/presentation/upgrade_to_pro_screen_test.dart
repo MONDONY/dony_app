@@ -877,6 +877,13 @@ void main() {
         // Une au montage, une au retour. Sans le rechargement, le bandeau ou
         // la carte affichent encore l'état d'avant le paiement, et le bouton
         // renvoie au portail que l'utilisateur vient tout juste de quitter.
+        //
+        // Ce compte est celui des ENVOIS d'événement, pas des appels réseau :
+        // le BLoC est simulé ici, et un `MockBloc` n'applique aucun
+        // transformateur. Le dédoublonnage d'une demande déjà en vol vit dans
+        // le vrai `SubscriptionBloc` (`exhaustMap`) et est prouvé par
+        // `subscription_bloc_test.dart`. Les deux comptes ne se contredisent
+        // pas, ils mesurent deux étages différents.
         verify(() => mockSubBloc.add(const SubscriptionRequested())).called(2);
       });
     }
@@ -1119,10 +1126,13 @@ void main() {
           verifyNever(() => mockSubBloc.add(const SubscriptionRequested()));
           // Un indicateur nu se lit comme un plantage, en particulier après
           // une déconnexion écran ouvert, où plus rien ne charge.
-          // Ni affirmation de chargement (plus rien ne charge après une
-          // déconnexion), ni indicateur nu, qui se lit comme un plantage.
+          // Une ligne accompagne l'indicateur : nu, il se lit comme un
+          // plantage. Elle décrit le démarrage à froid, cas pour lequel cette
+          // vue existe et où un chargement est bien en cours. Le cas de la
+          // déconnexion écran ouvert reste couvert par l'ambiguïté connue
+          // d'`AuthInitial`, que ce lot ne prétend pas lever.
           expect(
-            find.textContaining('pas disponible pour le moment'),
+            find.textContaining('Chargement de votre compte'),
             findsOneWidget,
           );
         },

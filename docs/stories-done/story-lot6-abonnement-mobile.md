@@ -30,6 +30,7 @@ l'écran de la seule source de vérité : `GET /billing/subscription`.
 - `lib/features/billing/presentation/widgets/subscription_status_card.dart` — `SubscriptionStatusCard`
 - `lib/features/billing/presentation/widgets/subscription_date_format.dart` — `formatSubscriptionDate()`, partagé par les deux widgets ci-dessus
 - `lib/features/billing/presentation/widgets/subscription_banner_host.dart` — `SubscriptionBannerHost`, monté sur l'écran Profil
+- `lib/features/billing/presentation/pro_portal_copy.dart` — `kProPortalOpenFailedMessage`, libellé d'échec d'ouverture du portail partagé par les deux hôtes (l'écran PRO et le bandeau du Profil rencontrent le même échec ; dupliquer le message le faisait diverger, et la copie non testée dérivait sans que rien ne le signale)
 - Tests dédiés sous `test/core/config/`, `test/features/billing/**` (modèle, repository, BLoC, 3 widgets)
 
 ## Fichiers modifiés
@@ -99,13 +100,17 @@ l'écran de la seule source de vérité : `GET /billing/subscription`.
 
 1. Même route, `_UpgradeToProView` affiche `_ProSubscriberView` :
    `SubscriptionStatusBanner` (si une alerte est à signaler) puis
-   `SubscriptionStatusCard`, puis, selon `source`, un bouton « Gérer mon abonnement »
-   ou « Revenir en compte standard », ou aucun des deux.
-2. « Gérer mon abonnement » (visible seulement si `source == stripe`) envoie
+   `SubscriptionStatusCard`, puis, selon `source` **et selon l'accès réellement
+   accordé par le serveur** (`ProSubscriptionModel.active`), un bouton « Gérer mon
+   abonnement », « Revenir en compte standard », « S'abonner sur le site Yadony PRO »,
+   ou aucun des trois.
+2. « Gérer mon abonnement » (visible seulement si `active` **et**
+   `proPortalManageIsLegitimate`, c'est-à-dire `source == stripe`) envoie
    `ProPortalOpenRequested(ProPortalTarget.manage)` → ouverture de
    `proPortalSubscriptionUrl()` en navigateur externe.
-3. « Revenir en compte standard » (visible seulement si `source ∈ {adminGrant,
-   legacyFree}`) ouvre `DonyDialog` de confirmation puis envoie `DowngradeRequested` au
+3. « Revenir en compte standard » (visible seulement si `active` **et**
+   `source ∈ {adminGrant, legacyFree}` : résilier un accès déjà fermé côté serveur ne
+   pourrait qu'échouer) ouvre `DonyDialog` de confirmation puis envoie `DowngradeRequested` au
    `UpgradeToProBloc`, qui appelle `DELETE /auth/me/upgrade-to-pro`. En cas de succès :
    `AuthCheckRequested` (rafraîchit le profil), snackbar de confirmation, retour en
    arrière si possible.
@@ -202,7 +207,23 @@ PreferredLaunchMode.externalApplication))`.
    systématiquement en 409) ; `adminGrant`/`legacyFree` → l'inverse (rien à gérer sur
    un accès offert ou une grâce historique, mais le retour en compte standard est un
    geste légitime) ; `null`/`unknown` → **aucun des deux boutons**, jamais un geste
-   dont la légitimité n'est pas établie.
+   dont la légitimité n'est pas établie, mais la phrase qui dit où gérer et résilier
+   (`_kManageGuidance`), sans quoi ces comptes n'auraient ni action ni explication.
+
+   **Ces deux règles sont gouvernées par `active` en plus de `source`.** Le drapeau PRO
+   local n'est rechargé qu'au démarrage à froid ou au retour du navigateur : il reste
+   vrai des jours après la fermeture d'un abonnement côté serveur. Quand `active` est
+   faux, la gestion et la résiliation disparaissent toutes deux, un bandeau explique la
+   situation — distinct selon que le serveur dit « aucun abonnement » (`none`, l'utilisateur
+   n'en a peut-être jamais eu) ou « accès terminé » — et un bouton vers la page de vente
+   apparaît. `SubscriptionStatusCard` cesse également d'annoncer un rythme de
+   facturation dans ce cas : décrire un prélèvement qui n'aura pas lieu serait faux.
+
+   La même règle gouverne l'action du bandeau, sur les deux hôtes, via
+   `proPortalActionIsLegitimate` : une action menant à la page de vente est toujours
+   légitime (page publique), une action menant à la gestion exige une source Stripe.
+   Sans ce partage, un impayé de source inconnue se voyait offrir « Régler » tandis que
+   « Gérer mon abonnement » lui était masqué, pour la même page de destination.
 
 4. **`PRO_PORTAL_URL` existe pour absorber une incohérence de préfixe non tranchée.**
    Le portail web sert ses routes sous un préfixe `/pro/` (`app.baseURL` côté PR #24),

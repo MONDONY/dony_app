@@ -386,10 +386,15 @@ class _ProAuthPendingView extends StatelessWidget {
           children: [
             const CircularProgressIndicator(),
             const SizedBox(height: DonySpacing.lg),
-            // Un indicateur nu se lit comme un plantage, en particulier après
-            // une déconnexion écran ouvert, où plus rien ne charge.
+            // Une ligne accompagne l'indicateur : nu, il se lit comme un
+            // plantage. Elle décrit le cas pour lequel cette vue existe, le
+            // démarrage à froid, où un chargement est réellement en cours —
+            // affirmer une indisponibilité y serait faux, et contredirait
+            // l'indicateur juste au-dessus. Le cas de la déconnexion écran
+            // ouvert reste couvert par l'ambiguïté connue d'`AuthInitial`,
+            // que ce lot ne prétend pas lever.
             Text(
-              "Votre compte PRO n'est pas disponible pour le moment.",
+              'Chargement de votre compte.',
               style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
             ),
           ],

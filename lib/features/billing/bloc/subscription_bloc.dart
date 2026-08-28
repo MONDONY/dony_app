@@ -18,7 +18,18 @@ part 'subscription_state.dart';
 class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
   SubscriptionBloc(this._repository, this._analytics)
     : super(const SubscriptionInitial()) {
-    on<SubscriptionRequested>(_onRequested);
+    on<SubscriptionRequested>(
+      _onRequested,
+      // Droppable, pour la même raison que l'ouverture du portail : une
+      // demande en vol suffit, une seconde n'apporte rien.
+      //
+      // Le retour du portail en émet une (l'abonnement a pu changer), et la
+      // bascule non-PRO → PRO qui suit le rafraîchissement de profil en émet
+      // une autre. Sans ce transformateur, ce ne sont pas seulement deux
+      // appels réseau : ce sont **deux `pro_subscription_viewed` comptés pour
+      // une seule ouverture**, donc un double comptage dans les statistiques.
+      transformer: (events, mapper) => events.exhaustMap(mapper),
+    );
     on<ProPortalOpenRequested>(
       _onPortalOpenRequested,
       // Droppable : ignore toute nouvelle demande tant qu'une ouverture est
