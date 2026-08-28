@@ -23,6 +23,7 @@ import 'package:dony/features/auth/bloc/personal_info_cubit.dart';
 import 'package:dony/features/auth/data/datasources/auth_remote_datasource.dart';
 import 'package:dony/features/auth/data/repositories/auth_repository.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
+import 'package:dony/features/billing/data/billing_repository.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/data/datasources/cancellation_remote_datasource.dart';
 import 'package:dony/features/cancellation/data/repositories/cancellation_repository.dart';
@@ -457,6 +458,11 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<WalletRefundRequestsListCubit>(
     () => WalletRefundRequestsListCubit(getIt<WalletRepository>()),
+  );
+
+  // Billing (abonnement PRO)
+  getIt.registerLazySingleton<BillingRepository>(
+    () => BillingRepository(getIt<ApiClient>()),
   );
 
   // Cancellation
