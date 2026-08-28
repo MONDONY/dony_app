@@ -70,7 +70,10 @@ class ProSubscriptionModel extends Equatable {
 
   factory ProSubscriptionModel.fromJson(Map<String, dynamic> json) =>
       ProSubscriptionModel(
-        active: json['active'] as bool,
+        // Repli sur `false` si la clé est absente ou nulle (réponse
+        // dégradée) : mieux vaut taire le bandeau PRO qu'affirmer un état
+        // non prouvé par le serveur.
+        active: json['active'] as bool? ?? false,
         status: ProSubscriptionStatus.fromWire(json['status'] as String?),
         source: ProSubscriptionSource.fromWire(json['source'] as String?),
         billingCycle: json['billingCycle'] as String?,
