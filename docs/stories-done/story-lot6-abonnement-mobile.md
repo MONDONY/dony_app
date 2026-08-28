@@ -7,7 +7,7 @@
 ## Résumé
 
 Le compte PRO de Yadony passe de gratuit à un abonnement payant vendu sur un portail
-web externe (`pro.yadony.com`). Ce lot est le dernier d'une série de cinq (back PR
+web externe (`yadony.com/pro`). Ce lot est le dernier d'une série de cinq (back PR
 #234, portail PR #24) et porte la partie mobile : lecture de l'état réel de
 l'abonnement, ouverture du portail en navigateur externe pour vendre ou gérer, et
 refonte complète de l'écran « Compte PRO » qui affichait jusqu'ici une promesse que le
@@ -229,7 +229,7 @@ PreferredLaunchMode.externalApplication))`.
    Le portail web sert ses routes sous un préfixe `/pro/` (`app.baseURL` côté PR #24),
    mais les URL de retour configurées côté backend (PR #234) n'en tiennent pas compte.
    Si le proxy inverse en production ne réécrit pas ce préfixe, `PRO_PORTAL_URL` doit
-   valoir `https://pro.yadony.com/pro` et non `https://pro.yadony.com` (valeur par
+   valoir `https://yadony.com/pro/pro` et non `https://yadony.com/pro` (valeur par
    défaut Dart). La décision de déploiement reste entière ; cette variable ne fait que
    permettre de la corriger sans nouveau build.
 
