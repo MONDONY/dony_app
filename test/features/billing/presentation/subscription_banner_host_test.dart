@@ -24,9 +24,13 @@ class MockSubscriptionBloc
     extends MockBloc<SubscriptionEvent, SubscriptionState>
     implements SubscriptionBloc {}
 
-/// Assez long pour laisser les délais `flutter_animate` du bandeau se
-/// terminer, sans dépendre d'un `pumpAndSettle` qui boucle indéfiniment sur
-/// une animation en continu.
+/// Assez long pour laisser le pipeline asynchrone du BLoC se terminer après
+/// le montage (event initial envoyé, réponse du repository ou du stream
+/// mocké, puis rebuild), sans dépendre d'un `pumpAndSettle` qui ne rendrait
+/// jamais la main sur un `StreamController` resté ouvert (utilisé par
+/// plusieurs tests ci-dessous). Ni `SubscriptionStatusBanner` ni
+/// `DonyStatusBanner` n'utilisent `flutter_animate` : ce délai n'a rien à
+/// voir avec une animation.
 const _kSettle = Duration(milliseconds: 600);
 
 const tActiveSubscription = ProSubscriptionModel(
@@ -179,7 +183,8 @@ void main() {
     });
 
     testWidgets(
-      'active sans résiliation : rien n\'est rendu, aucun espace résiduel',
+      'active sans résiliation : rien n\'est rendu, aucun espace résiduel, '
+      'espacement compris',
       (tester) async {
         whenListen<SubscriptionState>(
           mockBloc,
@@ -192,15 +197,46 @@ void main() {
         );
         await tester.pump(_kSettle);
 
-        // `SubscriptionStatusBanner` est bien instancié (l'état est chargé,
-        // c'est à lui de décider s'il y a quelque chose à signaler) : le
-        // composant visuellement porteur d'une alerte, lui, doit être
-        // absent.
         expect(find.byType(DonyStatusBanner), findsNothing);
-        // Discriminant : une taille non nulle prouverait un espace vide
-        // résiduel dans la liste, même sans texte ni bandeau visible.
+        // Discriminant : c'est le composant lui-même, et non son appelant
+        // (`profile_screen.dart`), qui doit porter son propre espacement de
+        // section. Une taille non nulle ici prouverait soit un espace vide
+        // résiduel, soit un espacement laissé à la charge de l'appelant —
+        // dans les deux cas, un vide apparaîtrait dans la liste pour la
+        // majorité des comptes (non-PRO ou sans rien à signaler).
         final size = tester.getSize(find.byType(SubscriptionBannerHost));
         expect(size, Size.zero);
+      },
+    );
+
+    testWidgets(
+      "l'espacement de section suit le bandeau, et seulement quand il "
+      's\'affiche',
+      (tester) async {
+        whenListen<SubscriptionState>(
+          mockBloc,
+          Stream.value(const SubscriptionLoaded(tPastDueSubscription)),
+          initialState: const SubscriptionLoaded(tPastDueSubscription),
+        );
+
+        await tester.pumpWidget(
+          _wrap(const SubscriptionBannerHost(isProAccount: true)),
+        );
+        await tester.pump(_kSettle);
+
+        final hostHeight = tester
+            .getSize(find.byType(SubscriptionBannerHost))
+            .height;
+        final bannerHeight = tester
+            .getSize(find.byType(SubscriptionStatusBanner))
+            .height;
+
+        // Discriminant : si l'espacement de section restait porté par
+        // l'appelant (comme avant ce correctif) plutôt que par le composant
+        // lui-même, la hauteur du host égalerait exactement celle du
+        // bandeau, sans les `DonySpacing.lg` supplémentaires attendus après
+        // lui.
+        expect(hostHeight, bannerHeight + DonySpacing.lg);
       },
     );
 
@@ -308,8 +344,8 @@ void main() {
     );
 
     testWidgets(
-      "l'échec d'ouverture du portail affiche un message et laisse le "
-      'bandeau affiché',
+      'deux échecs successifs affichent le message deux fois : la seconde '
+      'notification n\'est jamais avalée',
       (tester) async {
         final controller = StreamController<SubscriptionState>();
         addTearDown(controller.close);
@@ -324,6 +360,38 @@ void main() {
         );
         await tester.pump(_kSettle);
 
+        // 1er échec : le message apparaît.
+        controller.add(
+          const SubscriptionPortalLaunchFailed(tPastDueSubscription),
+        );
+        await tester.pump();
+        controller.add(const SubscriptionLoaded(tPastDueSubscription));
+        await tester.pump();
+        expect(find.byType(SnackBar), findsOneWidget);
+        // Le bandeau reste affiché pendant tout l'épisode : l'état
+        // transitoire est traité par le `listener`, jamais par le
+        // `builder`.
+        expect(find.byType(SubscriptionStatusBanner), findsOneWidget);
+
+        // Fait disparaître le message explicitement (plutôt que d'attendre
+        // sa durée par défaut, minuterie plus fragile à piloter dans un
+        // test) : une réapparition plus bas prouve un second déclenchement
+        // distinct, pas le même message resté affiché.
+        tester
+            .state<ScaffoldMessengerState>(find.byType(ScaffoldMessenger))
+            .hideCurrentSnackBar();
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
+        expect(find.byType(SnackBar), findsNothing);
+
+        // Contourne le dédoublonnage interne de `DonySnackbar` (fenêtre de
+        // 400 ms en horloge réelle, sans rapport avec ce que ce test
+        // vérifie) : sans ça, deux appels rapprochés en temps réel
+        // d'exécution du test seraient fusionnés par `DonySnackbar`
+        // lui-même, masquant le comportement du BLoC que ce test cible.
+        DonySnackbar.clearDedup();
+
+        // 2e échec, avec exactement le même abonnement que le premier.
         controller.add(
           const SubscriptionPortalLaunchFailed(tPastDueSubscription),
         );
@@ -331,13 +399,13 @@ void main() {
         controller.add(const SubscriptionLoaded(tPastDueSubscription));
         await tester.pump();
 
-        // Discriminant : si le listener n'écoutait pas
-        // SubscriptionPortalLaunchFailed, aucun SnackBar n'apparaîtrait.
+        // Discriminant : un drapeau porté par `SubscriptionLoaded` (au lieu
+        // d'un état transitoire distinct) produirait ici, dans le vrai
+        // BLoC, un second `SubscriptionLoaded` strictement égal au premier
+        // pour Equatable — aucune nouvelle notification ne serait émise, le
+        // listener ne se redéclencherait pas, et le message ne
+        // réapparaîtrait jamais après un second tap sur le bouton.
         expect(find.byType(SnackBar), findsOneWidget);
-        // Discriminant : si l'état transitoire était traité par le
-        // `builder` (au lieu du `listener`), le bandeau disparaîtrait
-        // momentanément au lieu de rester affiché.
-        expect(find.byType(SubscriptionStatusBanner), findsOneWidget);
       },
     );
   });

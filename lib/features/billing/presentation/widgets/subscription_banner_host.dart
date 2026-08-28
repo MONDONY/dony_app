@@ -54,11 +54,33 @@ class SubscriptionBannerHost extends StatelessWidget {
             // sur cet écran.
             return const SizedBox.shrink();
           }
-          return SubscriptionStatusBanner(
-            subscription: state.subscription,
-            onAction: () => context.read<SubscriptionBloc>().add(
-              ProPortalOpenRequested(_targetFor(state.subscription.status)),
-            ),
+          final subscription = state.subscription;
+          if (!_hasVisibleAlert(subscription)) {
+            // Rien à signaler : zéro hauteur, espacement de section compris.
+            // Le composant porte lui-même son encombrement — l'écran hôte
+            // (`profile_screen.dart`) ne doit jamais ajouter un espacement
+            // conditionné à une décision qu'il ne peut pas connaître (l'état
+            // du BLoC n'est disponible qu'ici, une fois le réseau résolu).
+            return const SizedBox.shrink();
+          }
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SubscriptionStatusBanner(
+                subscription: subscription,
+                onAction: () => context.read<SubscriptionBloc>().add(
+                  ProPortalOpenRequested(_targetFor(subscription.status)),
+                ),
+              ),
+              // Même espacement que celui utilisé entre les sections
+              // voisines de l'écran Profil, porté ici plutôt que par
+              // l'appelant : sans ça, un `gap` inconditionnel ajouté après
+              // ce widget s'additionnerait au padding déjà porté par le
+              // `SliverPadding` de l'écran hôte quand rien n'est affiché,
+              // doublant l'espacement en tête de liste pour la majorité des
+              // comptes (non-PRO, ou PRO sans rien à signaler).
+              const SizedBox(height: DonySpacing.lg),
+            ],
           );
         },
       ),
@@ -73,4 +95,22 @@ class SubscriptionBannerHost extends StatelessWidget {
       status == ProSubscriptionStatus.legacyGrace
       ? ProPortalTarget.upgrade
       : ProPortalTarget.manage;
+
+  /// Reflète exactement les conditions sous lesquelles
+  /// [SubscriptionStatusBanner] rend autre chose qu'un `SizedBox.shrink()`
+  /// (voir son switch sur [ProSubscriptionStatus] et `_activeBanner`) : sert
+  /// uniquement à décider si l'espacement de section doit suivre le
+  /// bandeau. Si ce switch évolue là-bas, le mettre à jour ici.
+  bool _hasVisibleAlert(ProSubscriptionModel subscription) =>
+      switch (subscription.status) {
+        ProSubscriptionStatus.pastDue ||
+        ProSubscriptionStatus.legacyGrace => true,
+        ProSubscriptionStatus.active =>
+          subscription.cancelAtPeriodEnd &&
+              subscription.currentPeriodEnd != null,
+        ProSubscriptionStatus.none ||
+        ProSubscriptionStatus.canceled ||
+        ProSubscriptionStatus.expired ||
+        ProSubscriptionStatus.unknown => false,
+      };
 }
