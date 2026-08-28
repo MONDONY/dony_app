@@ -114,6 +114,15 @@ void main() {
       'now.toUtc() désignent le même instant et doivent rendre le même '
       'résultat',
       () {
+        // Complément volontairement modeste au test principal ci-dessus,
+        // pas un remplacement : sur une machine réglée sur UTC (décalage
+        // nul), `now` et `now.toUtc()` ont des champs calendaires
+        // identiques, donc même une implémentation naïve par champs
+        // calendaires passerait ce test sans être correcte. Il n'apporte
+        // une garantie réelle que sur une machine à décalage non nul (ex.
+        // un poste de développement à l'heure de Paris, UTC+1/+2) : c'est
+        // le test principal, construit pour rester discriminant sous tout
+        // fuseau, qui protège contre le piège UTC/local lui-même.
         final now = DateTime.now();
         final instant = now.add(const Duration(days: 5, hours: 8));
 
