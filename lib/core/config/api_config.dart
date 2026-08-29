@@ -34,10 +34,10 @@ const String posterShareBaseUrl = String.fromEnvironment(
 ///
 /// Le portail sert ses routes sous un préfixe (`app.baseURL`) qui peut ou non
 /// être réécrit par le proxy inverse. Cette variable absorbe les deux cas :
-/// sans réécriture, la valeur devient `https://pro.yadony.com/pro`.
+/// sans réécriture, la valeur devient `https://yadony.com/pro/pro`.
 const String kProPortalBaseUrl = String.fromEnvironment(
   'PRO_PORTAL_URL',
-  defaultValue: 'https://pro.yadony.com',
+  defaultValue: 'https://yadony.com/pro',
 );
 
 /// Page de vente de l'abonnement PRO.

@@ -115,13 +115,13 @@ void main() {
       ).thenAnswer((_) async => true);
 
       final result = await repository.openExternal(
-        Uri.parse('https://pro.yadony.com/upgrade'),
+        Uri.parse('https://yadony.com/pro/upgrade'),
       );
 
       expect(result, isTrue);
       final captured = verify(
         () => mockLauncher.launchUrl(
-          'https://pro.yadony.com/upgrade',
+          'https://yadony.com/pro/upgrade',
           captureAny(),
         ),
       ).captured;
@@ -135,7 +135,7 @@ void main() {
       ).thenAnswer((_) async => false);
 
       final result = await repository.openExternal(
-        Uri.parse('https://pro.yadony.com/upgrade'),
+        Uri.parse('https://yadony.com/pro/upgrade'),
       );
 
       expect(result, isFalse);
@@ -148,7 +148,7 @@ void main() {
       ).thenThrow(PlatformException(code: 'launch_failed'));
 
       final result = await repository.openExternal(
-        Uri.parse('https://pro.yadony.com/upgrade'),
+        Uri.parse('https://yadony.com/pro/upgrade'),
       );
 
       expect(result, isFalse);
@@ -158,7 +158,7 @@ void main() {
       'une URI de schéma non https rend false sans appeler le lanceur',
       () async {
         final result = await repository.openExternal(
-          Uri.parse('http://pro.yadony.com/upgrade'),
+          Uri.parse('http://yadony.com/pro/upgrade'),
         );
 
         expect(result, isFalse);
