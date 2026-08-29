@@ -96,6 +96,8 @@
 	<string>Yadony utilise l'appareil photo pour scanner les QR codes et photographier les colis.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Yadony utilise Face ID pour sécuriser tes paiements.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Yadony utilise ta position uniquement pendant que tu utilises l'application, pour te proposer les trajets depuis ta ville. Aucun suivi en arrière-plan.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Yadony utilise ta position pour trouver les trajets depuis ta ville.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
