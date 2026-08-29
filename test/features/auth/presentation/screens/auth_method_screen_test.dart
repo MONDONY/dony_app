@@ -57,6 +57,14 @@ Widget _app(AuthBloc bloc) => MaterialApp.router(
         path: '/home',
         builder: (_, _) => const Scaffold(body: Text('Recherche avec carte')),
       ),
+      GoRoute(
+        path: '/legal/terms',
+        builder: (_, _) => const Scaffold(body: Text('Page CGU')),
+      ),
+      GoRoute(
+        path: '/legal/privacy',
+        builder: (_, _) => const Scaffold(body: Text('Page confidentialité')),
+      ),
     ],
   ),
 );
@@ -64,6 +72,53 @@ Widget _app(AuthBloc bloc) => MaterialApp.router(
 void main() {
   setUp(() => setSmsAuthEnabled(kSmsAuthEnabledDefault));
   tearDown(() => setSmsAuthEnabled(kSmsAuthEnabledDefault));
+
+  // La mention légale était bleue et soulignée mais ne portait aucun
+  // `recognizer` : rien n'écoutait le toucher. On demandait d'accepter des
+  // documents qu'aucun geste ne permettait d'ouvrir, sur l'écran même que les
+  // relecteurs Apple et Google visitent avant de créer un compte.
+  testWidgets('toucher « CGU » ouvre la page des conditions', (tester) async {
+    final bloc = MockAuthBloc();
+    when(() => bloc.state).thenReturn(const AuthInitial());
+    when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
+
+    await tester.pumpWidget(_app(bloc));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    // La mention vit sous la ligne de flottaison de la fenêtre de test.
+    await tester.ensureVisible(
+      find.textContaining('En continuant tu acceptes nos'),
+    );
+    await tester.pump(const Duration(milliseconds: 600));
+
+    await tester.tapOnText(find.textRange.ofSubstring('CGU'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Page CGU'), findsOneWidget);
+  });
+
+  testWidgets('toucher « politique de confidentialité » ouvre la page dédiée', (
+    tester,
+  ) async {
+    final bloc = MockAuthBloc();
+    when(() => bloc.state).thenReturn(const AuthInitial());
+    when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
+
+    await tester.pumpWidget(_app(bloc));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    await tester.ensureVisible(
+      find.textContaining('En continuant tu acceptes nos'),
+    );
+    await tester.pump(const Duration(milliseconds: 600));
+
+    await tester.tapOnText(
+      find.textRange.ofSubstring('politique de confidentialité'),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Page confidentialité'), findsOneWidget);
+  });
 
   testWidgets('affiche le logo Yadony et les messages rassurants', (
     tester,

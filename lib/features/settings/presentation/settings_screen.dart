@@ -182,14 +182,14 @@ class SettingsScreen extends StatelessWidget {
                     iconColor: cs.onSurfaceVariant,
                     iconBgColor: cs.surfaceContainerHighest,
                     label: 'CGU',
-                    onTap: () => context.push('/settings/legal/terms'),
+                    onTap: () => context.push('/legal/terms'),
                   ),
                   DonyListTile(
                     iconAsset: 'file-badge',
                     iconColor: cs.onSurfaceVariant,
                     iconBgColor: cs.surfaceContainerHighest,
                     label: 'Politique de confidentialité',
-                    onTap: () => context.push('/settings/legal/privacy'),
+                    onTap: () => context.push('/legal/privacy'),
                   ),
                   DonyListTile(
                     iconAsset: 'flag',

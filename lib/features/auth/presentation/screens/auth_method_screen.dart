@@ -14,6 +14,7 @@ import 'package:dony/features/auth/presentation/post_signup_route.dart';
 import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -604,34 +605,55 @@ class _GuestCta extends StatelessWidget {
   }
 }
 
-class _CguFooter extends StatelessWidget {
+/// Mention légale sous les boutons de connexion.
+///
+/// Les deux libellés étaient bleus et soulignés mais ne portaient aucun
+/// `recognizer` : ils avaient l'apparence d'un lien sans en être un. On
+/// demandait donc d'accepter des documents qu'aucun geste ne permettait
+/// d'ouvrir. Les relecteurs Apple et Google les ouvrent depuis cet écran,
+/// avant toute création de compte, d'où la route publique `/legal/…`.
+class _CguFooter extends StatefulWidget {
   const _CguFooter();
+
+  @override
+  State<_CguFooter> createState() => _CguFooterState();
+}
+
+class _CguFooterState extends State<_CguFooter> {
+  /// Un `TapGestureRecognizer` se libère à la main : construit dans `build()`,
+  /// il fuirait à chaque reconstruction de l'écran.
+  late final TapGestureRecognizer _termsTap = TapGestureRecognizer()
+    ..onTap = () => unawaited(context.push('/legal/terms'));
+  late final TapGestureRecognizer _privacyTap = TapGestureRecognizer()
+    ..onTap = () => unawaited(context.push('/legal/privacy'));
+
+  @override
+  void dispose() {
+    _termsTap.dispose();
+    _privacyTap.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final linkStyle = tt.bodySmall?.copyWith(
+      color: cs.primary,
+      decoration: TextDecoration.underline,
+      decorationColor: cs.primary,
+    );
     return Text.rich(
       TextSpan(
         style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant, height: 1.5),
         children: [
           const TextSpan(text: 'En continuant tu acceptes nos '),
-          TextSpan(
-            text: 'CGU',
-            style: tt.bodySmall?.copyWith(
-              color: cs.primary,
-              decoration: TextDecoration.underline,
-              decorationColor: cs.primary,
-            ),
-          ),
+          TextSpan(text: 'CGU', style: linkStyle, recognizer: _termsTap),
           const TextSpan(text: ' et notre '),
           TextSpan(
             text: 'politique de confidentialité',
-            style: tt.bodySmall?.copyWith(
-              color: cs.primary,
-              decoration: TextDecoration.underline,
-              decorationColor: cs.primary,
-            ),
+            style: linkStyle,
+            recognizer: _privacyTap,
           ),
           const TextSpan(text: '.'),
         ],

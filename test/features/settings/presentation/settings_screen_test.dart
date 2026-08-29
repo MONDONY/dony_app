@@ -54,14 +54,8 @@ Widget _wrap({UserPreferencesModel? prefs}) {
         path: '/settings/accessibility',
         builder: (_, _) => const Scaffold(),
       ),
-      GoRoute(
-        path: '/settings/legal/terms',
-        builder: (_, _) => const Scaffold(),
-      ),
-      GoRoute(
-        path: '/settings/legal/privacy',
-        builder: (_, _) => const Scaffold(),
-      ),
+      GoRoute(path: '/legal/terms', builder: (_, _) => const Scaffold()),
+      GoRoute(path: '/legal/privacy', builder: (_, _) => const Scaffold()),
       GoRoute(
         path: '/settings/diagnostics',
         builder: (_, _) => const Scaffold(),
@@ -477,9 +471,7 @@ void main() {
       expect(find.text('Accessibilité'), findsNothing);
     });
 
-    testWidgets('tap CGU tile navigates to /settings/legal/terms', (
-      tester,
-    ) async {
+    testWidgets('tap CGU tile navigates to /legal/terms', (tester) async {
       await tester.pumpWidget(_wrap());
       await tester.pumpAndSettle();
 
@@ -494,7 +486,7 @@ void main() {
     });
 
     testWidgets(
-      'tap Politique de confidentialité tile navigates to /settings/legal/privacy',
+      'tap Politique de confidentialité tile navigates to /legal/privacy',
       (tester) async {
         await tester.pumpWidget(_wrap());
         await tester.pumpAndSettle();
@@ -611,14 +603,8 @@ Widget _wrapWithBloc(MockAppPreferencesBloc mockBloc) {
         path: '/settings/accessibility',
         builder: (_, _) => const Scaffold(),
       ),
-      GoRoute(
-        path: '/settings/legal/terms',
-        builder: (_, _) => const Scaffold(),
-      ),
-      GoRoute(
-        path: '/settings/legal/privacy',
-        builder: (_, _) => const Scaffold(),
-      ),
+      GoRoute(path: '/legal/terms', builder: (_, _) => const Scaffold()),
+      GoRoute(path: '/legal/privacy', builder: (_, _) => const Scaffold()),
       GoRoute(
         path: '/settings/diagnostics',
         builder: (_, _) => const Scaffold(),
