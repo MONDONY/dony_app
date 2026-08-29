@@ -219,6 +219,11 @@ const _publicRoutes = {
   '/home',
   '/recherche/composer',
   '/package-requests/search',
+  // Consultables sans compte : la mention légale de l'écran de connexion y
+  // renvoie, et les relecteurs des deux boutiques les ouvrent avant de
+  // s'inscrire.
+  '/legal/terms',
+  '/legal/privacy',
 };
 
 /// Décide si une navigation doit être détournée vers l'écran de connexion, et
@@ -1367,21 +1372,29 @@ final appRouter = GoRouter(
             );
           },
         ),
-        GoRoute(
-          path: 'legal/terms',
-          builder: (context, state) => const LegalWebViewScreen(
-            title: 'CGU',
-            url: 'https://yadony.com/legal/terms',
-          ),
-        ),
-        GoRoute(
-          path: 'legal/privacy',
-          builder: (context, state) => const LegalWebViewScreen(
-            title: 'Politique de confidentialité',
-            url: 'https://yadony.com/legal/privacy',
-          ),
-        ),
       ],
+    ),
+
+    // ── Pages légales (hors shell, publiques) ────────────────────────────
+    // Ces deux écrans vivaient sous `/settings/legal/…`, donc derrière la
+    // garde d'authentification : la mention « En continuant tu acceptes nos
+    // CGU » de l'écran de connexion pointait vers une route qui renvoyait le
+    // visiteur déconnecté sur `/auth/method`. Or Apple (2.1) comme Google
+    // ouvrent ces liens **avant** de créer un compte. Le chemin est désormais
+    // de premier niveau, calqué sur l'URL web, et listé dans `_publicRoutes`.
+    GoRoute(
+      path: '/legal/terms',
+      builder: (context, state) => const LegalWebViewScreen(
+        title: 'CGU',
+        url: 'https://yadony.com/legal/terms',
+      ),
+    ),
+    GoRoute(
+      path: '/legal/privacy',
+      builder: (context, state) => const LegalWebViewScreen(
+        title: 'Politique de confidentialité',
+        url: 'https://yadony.com/legal/privacy',
+      ),
     ),
 
     // ── Mes favoris (hors shell) ─────────────────────────────────────────

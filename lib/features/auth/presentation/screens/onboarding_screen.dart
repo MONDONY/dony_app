@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
@@ -771,13 +773,41 @@ class _OnboardingFooter extends StatelessWidget {
   }
 }
 
-class _LegalFooter extends StatelessWidget {
+/// Mention légale du bas de l'onboarding.
+///
+/// Même défaut que sur l'écran de connexion : les deux libellés étaient
+/// soulignés sans porter de `recognizer`, donc inertes au toucher.
+class _LegalFooter extends StatefulWidget {
   const _LegalFooter();
+
+  @override
+  State<_LegalFooter> createState() => _LegalFooterState();
+}
+
+class _LegalFooterState extends State<_LegalFooter> {
+  /// Libéré à la main : construit dans `build()`, il fuirait à chaque
+  /// reconstruction du carrousel.
+  late final TapGestureRecognizer _termsTap = TapGestureRecognizer()
+    ..onTap = () => unawaited(context.push('/legal/terms'));
+  late final TapGestureRecognizer _privacyTap = TapGestureRecognizer()
+    ..onTap = () => unawaited(context.push('/legal/privacy'));
+
+  @override
+  void dispose() {
+    _termsTap.dispose();
+    _privacyTap.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final linkStyle = tt.bodySmall?.copyWith(
+      color: cs.onPrimary,
+      decoration: TextDecoration.underline,
+      decorationColor: cs.onPrimary,
+    );
     return Text.rich(
       TextSpan(
         text: 'En continuant, vous acceptez nos ',
@@ -786,22 +816,12 @@ class _LegalFooter extends StatelessWidget {
           height: 1.3,
         ),
         children: [
-          TextSpan(
-            text: 'CGU',
-            style: tt.bodySmall?.copyWith(
-              color: cs.onPrimary,
-              decoration: TextDecoration.underline,
-              decorationColor: cs.onPrimary,
-            ),
-          ),
+          TextSpan(text: 'CGU', style: linkStyle, recognizer: _termsTap),
           const TextSpan(text: ' et notre '),
           TextSpan(
             text: 'politique de confidentialité',
-            style: tt.bodySmall?.copyWith(
-              color: cs.onPrimary,
-              decoration: TextDecoration.underline,
-              decorationColor: cs.onPrimary,
-            ),
+            style: linkStyle,
+            recognizer: _privacyTap,
           ),
           const TextSpan(text: '.'),
         ],

@@ -484,7 +484,7 @@ class _CguNoticeState extends State<_CguNotice> {
   /// Un `TapGestureRecognizer` doit être libéré à la main : construit dans un
   /// `build()`, il fuirait à chaque reconstruction de la barre sticky.
   late final TapGestureRecognizer _cguTap = TapGestureRecognizer()
-    ..onTap = () => unawaited(context.push('/settings/legal/terms'));
+    ..onTap = () => unawaited(context.push('/legal/terms'));
 
   @override
   void dispose() {

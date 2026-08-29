@@ -37,6 +37,14 @@ GoRouter _buildRouter(AuthBloc authBloc) => GoRouter(
       path: '/auth/method',
       builder: (_, _) => const Scaffold(body: Text('Auth Method')),
     ),
+    GoRoute(
+      path: '/legal/terms',
+      builder: (_, _) => const Scaffold(body: Text('Page CGU')),
+    ),
+    GoRoute(
+      path: '/legal/privacy',
+      builder: (_, _) => const Scaffold(body: Text('Page confidentialité')),
+    ),
   ],
 );
 
@@ -136,6 +144,40 @@ void main() {
     expect(find.textContaining('politique de confidentialité'), findsOneWidget);
     expect(find.textContaining('Dony'), findsNothing);
     expect(_currentStep(tester), 3);
+  });
+
+  // Le test ci-dessus vérifiait que les deux libellés sont **affichés** sur la
+  // dernière page. Ils l'étaient, soulignés et colorés, sans porter le moindre
+  // `recognizer` : on demandait d'accepter des documents qu'aucun geste ne
+  // permettait d'ouvrir.
+  Future<void> gotoLastPage(WidgetTester tester) async {
+    await _pump(tester, mockAuthBloc);
+    for (var i = 0; i < 3; i++) {
+      await tester.tap(find.text('Suivant'));
+      await tester.pumpAndSettle();
+    }
+  }
+
+  testWidgets('toucher « CGU » ouvre la page des conditions', (tester) async {
+    await gotoLastPage(tester);
+
+    await tester.tapOnText(find.textRange.ofSubstring('CGU'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Page CGU'), findsOneWidget);
+  });
+
+  testWidgets('toucher « politique de confidentialité » ouvre la page dédiée', (
+    tester,
+  ) async {
+    await gotoLastPage(tester);
+
+    await tester.tapOnText(
+      find.textRange.ofSubstring('politique de confidentialité'),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Page confidentialité'), findsOneWidget);
   });
 
   testWidgets('le swipe horizontal fonctionne dans les deux sens', (
