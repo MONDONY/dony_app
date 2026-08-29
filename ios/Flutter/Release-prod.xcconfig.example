@@ -1,0 +1,21 @@
+// Gabarit de la configuration native iOS de release.
+//
+// Copier ce fichier en `Release-prod.xcconfig` (gitignoré) et le remplir avec
+// les valeurs du projet Firebase de PRODUCTION `yadony-prod` (799389399791).
+// Ces trois valeurs sont lues par Info.plist au build ; elles doivent
+// appartenir au MÊME projet Firebase que FIREBASE_PROJECT_ID de env.prod.json.
+// Une divergence casse silencieusement la connexion Google et la
+// vérification par SMS dans le binaire soumis.
+//
+// Où les trouver :
+//   GID_CLIENT_ID / GID_REVERSED_CLIENT_ID
+//     → GoogleService-Info.plist de yadony-prod, clés CLIENT_ID et REVERSED_CLIENT_ID
+//   FIREBASE_PHONE_AUTH_URL_SCHEME
+//     → GoogleService-Info.plist de yadony-prod, clé GOOGLE_APP_ID, points remplacés par tirets
+//   GOOGLE_MAPS_API_KEY
+//     → console Google Cloud du projet yadony-prod, clé restreinte au bundle com.yadony.yadony
+
+GID_CLIENT_ID=REMPLIR
+GID_REVERSED_CLIENT_ID=REMPLIR
+FIREBASE_PHONE_AUTH_URL_SCHEME=REMPLIR
+GOOGLE_MAPS_API_KEY=REMPLIR

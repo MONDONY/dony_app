@@ -130,7 +130,6 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   gal: ^2.3.2
-  flutter_skill: ^0.9.36
   firebase_remote_config: ^6.5.0
   url_launcher_platform_interface: ^2.3.2
   # Importé directement par le code (Bloc/Emitter/Transition) et pas seulement
@@ -162,6 +161,11 @@ dev_dependencies:
   geolocator_platform_interface: ^4.2.6
   connectivity_plus_platform_interface: ^2.1.0
   webview_flutter_platform_interface: ^2.15.1
+  # Pont de télécommande pour agent IA, développement uniquement.
+  # En dev_dependencies pour ne pas figurer dans les dépendances du binaire
+  # soumis aux stores. Importé par test_driver/main_dev.dart, jamais par
+  # lib/ — pub interdit à lib/ d'importer une dépendance de développement.
+  flutter_skill: ^0.9.36
 
 # flutter_stripe 12.6 est requis pour le fix iOS (stripe_ios 12.6 contient la
 # résolution de fenêtre via UIScene `connectedScenes` → la PaymentSheet s'ouvre

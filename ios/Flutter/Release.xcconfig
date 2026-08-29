@@ -1,16 +1,12 @@
 #include? "Pods/Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"
 #include "Generated.xcconfig"
-GOOGLE_MAPS_API_KEY=AIzaSyAY3Dfswv7-dClFCnoYYWcqwJ2pfJruISk
 
-// Paramétrées le 2026-08-22 : ces 3 valeurs étaient codées en dur dans
-// Info.plist (staging, projet yadony-f1f0f). Info.plist référence désormais
-// $(GID_CLIENT_ID) / $(GID_REVERSED_CLIENT_ID) / $(FIREBASE_PHONE_AUTH_URL_SCHEME),
-// résolus par Xcode au build — même mécanisme que GOOGLE_MAPS_API_KEY ci-dessus.
-// ⚠️ POUR UN BUILD PROD (projet yadony-prod) : remplacer temporairement ces
-// 3 lignes (voir section 8.3 du runbook configuration-google-prod.md pour
-// les valeurs), builder, puis les remettre en staging juste après — ce
-// fichier est partagé par toute l'équipe, ne jamais y laisser les valeurs
-// prod committées.
-GID_CLIENT_ID=917070267063-jvm2ivthdvajqtb5qd372ctd65sugh25.apps.googleusercontent.com
-GID_REVERSED_CLIENT_ID=com.googleusercontent.apps.917070267063-jvm2ivthdvajqtb5qd372ctd65sugh25
-FIREBASE_PHONE_AUTH_URL_SCHEME=app-1-917070267063-ios-a7b83be04a9e3c19684332
+// Valeurs Google du projet de production, hors dépôt.
+// `#include?` (avec le point d'interrogation) rend l'inclusion facultative :
+// un poste sans ce fichier compile encore en release, avec des valeurs vides.
+// C'est volontaire — un build local de vérification ne doit pas exiger les
+// secrets de prod. En contrepartie, l'étape de validation de la tâche 2 est
+// obligatoire avant toute montée en console.
+//
+// Créer ce fichier depuis Release-prod.xcconfig.example.
+#include? "Release-prod.xcconfig"

@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/features/auth/data/apple_token_revoker.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:dony/features/settings/data/account_deletion_repository.dart';
@@ -25,7 +26,18 @@ void main() {
     mockRepo = MockAccountDeletionRepository();
     final analytics = makeDisabledAnalytics(MockAnalyticsBackend());
     analytics.onConfigured();
-    bloc = AccountDeletionBloc(mockRepo, analytics);
+    bloc = AccountDeletionBloc(
+      mockRepo,
+      analytics,
+      AppleTokenRevoker(
+        // Compte non Apple : revokeIfAppleUser sort immédiatement, aucun
+        // appel Firebase ni boîte système dans les tests.
+        providerIds: () => const ['phone'],
+        isApplePlatform: () => false,
+        fetchAuthorizationCode: () async => null,
+        revoke: (_) async {},
+      ),
+    );
   });
 
   tearDown(() => bloc.close());
@@ -98,6 +110,96 @@ void main() {
         isA<AccountDeletionLoading>(),
         isA<AccountDeletionError>(),
       ],
+    );
+
+    blocTest<AccountDeletionBloc, AccountDeletionState>(
+      'emits [Loading, AccountDeletionRequested] even when Apple revocation throws',
+      build: () {
+        when(() => mockRepo.requestDeletion()).thenAnswer((_) async {});
+        final analytics = makeDisabledAnalytics(MockAnalyticsBackend())
+          ..onConfigured();
+        return AccountDeletionBloc(
+          mockRepo,
+          analytics,
+          AppleTokenRevoker(
+            // Compte Apple, revocation qui echoue : la garantie testee ici
+            // est que _onRequestDeletion() ne doit JAMAIS traiter un echec
+            // de revokeIfAppleUser() comme un echec de suppression.
+            providerIds: () => const ['apple.com'],
+            isApplePlatform: () => true,
+            fetchAuthorizationCode: () async => throw Exception('reseau coupe'),
+            revoke: (_) async {},
+          ),
+        );
+      },
+      act: (b) => b.add(const RequestDeletion()),
+      expect: () => [
+        isA<AccountDeletionLoading>(),
+        isA<AccountDeletionRequested>(),
+      ],
+      verify: (_) => verify(() => mockRepo.requestDeletion()).called(1),
+    );
+
+    var codeRequestedOnEscrowRefusal = false;
+    blocTest<AccountDeletionBloc, AccountDeletionState>(
+      'does not revoke the Apple token when the pause is refused for an '
+      'active escrow',
+      build: () {
+        // Verrouille l'asymétrie I1 : requestDeletion() refusé ne doit
+        // jamais déclencher la révocation Apple, puisqu'elle vient
+        // maintenant APRÈS lui, dans le même try.
+        when(
+          () => mockRepo.requestDeletion(),
+        ).thenThrow(const ValidationException('active-transactions'));
+        return AccountDeletionBloc(
+          mockRepo,
+          makeDisabledAnalytics(MockAnalyticsBackend())..onConfigured(),
+          AppleTokenRevoker(
+            providerIds: () => const ['apple.com'],
+            isApplePlatform: () => true,
+            fetchAuthorizationCode: () async {
+              codeRequestedOnEscrowRefusal = true;
+              return 'code';
+            },
+            revoke: (_) async {},
+          ),
+        );
+      },
+      act: (b) => b.add(const RequestDeletion()),
+      expect: () => [
+        isA<AccountDeletionLoading>(),
+        isA<AccountDeletionError>().having(
+          (s) => s.isEscrowBlocked,
+          'isEscrowBlocked',
+          isTrue,
+        ),
+      ],
+      verify: (_) => expect(codeRequestedOnEscrowRefusal, isFalse),
+    );
+
+    var appleRevokedAfterSuccess = false;
+    blocTest<AccountDeletionBloc, AccountDeletionState>(
+      'revokes the Apple token after a successful pause request',
+      build: () {
+        when(() => mockRepo.requestDeletion()).thenAnswer((_) async {});
+        return AccountDeletionBloc(
+          mockRepo,
+          makeDisabledAnalytics(MockAnalyticsBackend())..onConfigured(),
+          AppleTokenRevoker(
+            providerIds: () => const ['apple.com'],
+            isApplePlatform: () => true,
+            fetchAuthorizationCode: () async => 'code-frais',
+            revoke: (code) async =>
+                appleRevokedAfterSuccess = code == 'code-frais',
+          ),
+        );
+      },
+      act: (b) => b.add(const RequestDeletion()),
+      expect: () => [
+        isA<AccountDeletionLoading>(),
+        isA<AccountDeletionRequested>(),
+      ],
+      verify: (_) => expect(appleRevokedAfterSuccess, isTrue),
     );
   });
 

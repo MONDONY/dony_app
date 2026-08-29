@@ -13,12 +13,36 @@ on:
           - staging
 
 env:
-  FLUTTER_VERSION: 3.24.x
+  # Alignée sur ci.yml et sur la contrainte sdk: ^3.11.5 du pubspec. La 3.24
+  # ne pouvait plus résoudre les dépendances.
+  #
+  # Ce n'était toutefois pas la seule raison pour laquelle ce workflow ne
+  # produisait aucun binaire utilisable, d'où les builds fabriqués à la main
+  # jusqu'ici. Trois défauts indépendants, réparés dans le même changement :
+  # - `cd dony_app` dans chaque étape : la racine de CE dépôt EST dony_app,
+  #   il n'existe pas de sous-dossier du même nom. Chaque étape échouait
+  #   immédiatement (comme ci.yml, qui ne fait d'ailleurs aucun `cd`).
+  # - google-services.json (gitignoré) n'était jamais provisionné : ajouté,
+  #   calqué sur ci.yml, avec échec explicite si le secret est absent — pas
+  #   de repli sur gabarit ici, cette release est publiée, pas seulement
+  #   compilée pour vérification.
+  # - env.prod.json ne portait que 5 des ~16 clés que l'app lit au
+  #   démarrage : Firebase.initializeApp levait à l'ouverture. Liste
+  #   complétée, échec explicite si une valeur bloquante manque.
+  FLUTTER_VERSION: 3.44.x
 
 jobs:
   build-apk:
     name: Build APK (${{ github.event.inputs.build_type }})
     runs-on: ubuntu-latest
+    # GOOGLE_MAPS_API_KEY doit être visible des étapes "Build APK"/"Build
+    # AppBundle" : android/app/build.gradle.kts:25 la lit via System.getenv
+    # au moment du build Gradle, pas via --dart-define. Déclarée seulement
+    # dans l'env de l'étape "Create env.prod.json from secrets" (plus bas),
+    # elle était invisible de ces deux étapes-là : manifestPlaceholders
+    # ["GOOGLE_MAPS_API_KEY"] vide, cartes blanches dans l'artefact publié.
+    env:
+      GOOGLE_MAPS_API_KEY: ${{ secrets.FLUTTER_GOOGLE_MAPS_API_KEY }}
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
@@ -26,27 +50,91 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
 
       - name: Get dependencies
-        run: |
-          cd dony_app
-          flutter pub get
+        run: flutter pub get
 
-      - name: Create env.prod.json from secrets
+      # google-services.json est gitignoré (identifiants Firebase). Calqué
+      # sur ci.yml:99-105, même secret — mais sans son repli sur gabarit :
+      # ci.yml ne fait qu'une vérification de compilation jetable, alors que
+      # ce job publie une release GitHub. Un binaire incapable de joindre
+      # Firebase, publié comme release, est pire que ce job qui échoue avant
+      # de le produire.
+      - name: Provision google-services.json
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: |
-          cd dony_app
+          if [ -z "$GOOGLE_SERVICES_JSON" ]; then
+            echo "::error::Secret GOOGLE_SERVICES_JSON absent du depot. Impossible de publier un binaire de release capable de joindre Firebase."
+            exit 1
+          fi
+          echo "$GOOGLE_SERVICES_JSON" > android/app/google-services.json
+          echo "google-services.json fourni par le secret du dépôt."
+
+      # Liste alignée sur les clés effectivement lues par l'app au
+      # démarrage/à l'exécution (cf. lib/core/config/api_config.dart,
+      # lib/core/firebase/firebase_options.dart, lib/main.dart,
+      # lib/core/network/api_client.dart) — env.prod.json.example n'en
+      # listait qu'une partie et a été complété en conséquence. Omises
+      # volontairement : POSTER_SHARE_BASE_URL, TRACKING_PUBLIC_URL,
+      # POSTHOG_HOST, qui ont un repli applicatif correct par défaut et
+      # n'ont donc pas besoin d'un secret dédié.
+      - name: Create env.prod.json from secrets
+        env:
+          API_BASE_URL: ${{ secrets.FLUTTER_API_BASE_URL }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FLUTTER_FIREBASE_PROJECT_ID }}
+          FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FLUTTER_FIREBASE_MESSAGING_SENDER_ID }}
+          FIREBASE_STORAGE_BUCKET: ${{ secrets.FLUTTER_FIREBASE_STORAGE_BUCKET }}
+          FIREBASE_ANDROID_API_KEY: ${{ secrets.FLUTTER_FIREBASE_ANDROID_API_KEY }}
+          FIREBASE_ANDROID_APP_ID: ${{ secrets.FLUTTER_FIREBASE_ANDROID_APP_ID }}
+          FIREBASE_IOS_API_KEY: ${{ secrets.FLUTTER_FIREBASE_IOS_API_KEY }}
+          FIREBASE_IOS_APP_ID: ${{ secrets.FLUTTER_FIREBASE_IOS_APP_ID }}
+          STRIPE_PUBLISHABLE_KEY: ${{ secrets.FLUTTER_STRIPE_PUBLISHABLE_KEY }}
+          SENTRY_DSN: ${{ secrets.FLUTTER_SENTRY_DSN }}
+          GOOGLE_MAPS_API_KEY: ${{ secrets.FLUTTER_GOOGLE_MAPS_API_KEY }}
+          POSTHOG_API_KEY: ${{ secrets.FLUTTER_POSTHOG_API_KEY }}
+        run: |
+          # Bloquantes : leur absence casse soit le démarrage (Firebase,
+          # sachant qu'API_BASE_URL retomberait sinon sur son défaut
+          # applicatif localhost) soit la fonction cœur du produit
+          # (paiement). Un binaire publié dans cet état est pire qu'un
+          # workflow qui échoue ici — même classe de défaut que celle qui a
+          # motivé toute cette branche, déplacée du dépôt vers la release.
+          # SENTRY_DSN, POSTHOG_API_KEY, GOOGLE_MAPS_API_KEY et les clés
+          # FIREBASE_IOS_* dégradent une fonctionnalité sans empêcher l'app
+          # de s'ouvrir sur Android (seule plateforme buildée ici) : non
+          # bloquantes, mais injectées dès qu'elles sont disponibles.
+          MISSING=""
+          for KEY in API_BASE_URL FIREBASE_PROJECT_ID FIREBASE_MESSAGING_SENDER_ID FIREBASE_STORAGE_BUCKET FIREBASE_ANDROID_API_KEY FIREBASE_ANDROID_APP_ID STRIPE_PUBLISHABLE_KEY; do
+            if [ -z "${!KEY}" ]; then
+              MISSING="$MISSING $KEY"
+            fi
+          done
+          if [ -n "$MISSING" ]; then
+            echo "::error::Secrets manquants pour un build de release fonctionnel :$MISSING"
+            exit 1
+          fi
+
           cat > env.prod.json <<EOF
           {
-            "API_BASE_URL": "${{ secrets.FLUTTER_API_BASE_URL }}",
-            "FIREBASE_PROJECT_ID": "${{ secrets.FLUTTER_FIREBASE_PROJECT_ID }}",
-            "STRIPE_PUBLISHABLE_KEY": "${{ secrets.FLUTTER_STRIPE_PUBLISHABLE_KEY }}",
-            "SENTRY_DSN": "${{ secrets.FLUTTER_SENTRY_DSN }}",
-            "GOOGLE_MAPS_API_KEY": "${{ secrets.FLUTTER_GOOGLE_MAPS_API_KEY }}"
+            "API_BASE_URL": "$API_BASE_URL",
+            "ENVIRONMENT": "production",
+            "TLS_PINNING": "on",
+            "FIREBASE_PROJECT_ID": "$FIREBASE_PROJECT_ID",
+            "FIREBASE_MESSAGING_SENDER_ID": "$FIREBASE_MESSAGING_SENDER_ID",
+            "FIREBASE_STORAGE_BUCKET": "$FIREBASE_STORAGE_BUCKET",
+            "FIREBASE_ANDROID_API_KEY": "$FIREBASE_ANDROID_API_KEY",
+            "FIREBASE_ANDROID_APP_ID": "$FIREBASE_ANDROID_APP_ID",
+            "FIREBASE_IOS_API_KEY": "$FIREBASE_IOS_API_KEY",
+            "FIREBASE_IOS_APP_ID": "$FIREBASE_IOS_APP_ID",
+            "STRIPE_PUBLISHABLE_KEY": "$STRIPE_PUBLISHABLE_KEY",
+            "SENTRY_DSN": "$SENTRY_DSN",
+            "GOOGLE_MAPS_API_KEY": "$GOOGLE_MAPS_API_KEY",
+            "POSTHOG_API_KEY": "$POSTHOG_API_KEY"
           }
           EOF
-          echo "✅ env.prod.json créé"
+          echo "✅ env.prod.json créé, valeurs bloquantes vérifiées."
 
       - name: Build APK (${{ github.event.inputs.build_type }})
         run: |
-          cd dony_app
           flutter build apk \
             --dart-define-from-file=env.prod.json \
             --${{ github.event.inputs.build_type }} \
@@ -54,7 +142,6 @@ jobs:
 
       - name: Build AppBundle (${{ github.event.inputs.build_type }})
         run: |
-          cd dony_app
           flutter build appbundle \
             --dart-define-from-file=env.prod.json \
             --${{ github.event.inputs.build_type }} \
@@ -64,14 +151,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: dony-app-${{ github.event.inputs.build_type }}-apk
-          path: dony_app/build/app/outputs/flutter-apk/app-${{ github.event.inputs.build_type }}.apk
+          path: build/app/outputs/flutter-apk/app-${{ github.event.inputs.build_type }}.apk
           retention-days: 30
 
       - name: Upload AppBundle artifact
         uses: actions/upload-artifact@v4
         with:
           name: dony-app-${{ github.event.inputs.build_type }}-bundle
-          path: dony_app/build/app/outputs/bundle/${{ github.event.inputs.build_type }}/app-${{ github.event.inputs.build_type }}.aab
+          path: build/app/outputs/bundle/${{ github.event.inputs.build_type }}/app-${{ github.event.inputs.build_type }}.aab
           retention-days: 30
 
       - name: Create Release on GitHub
@@ -79,8 +166,8 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            dony_app/build/app/outputs/flutter-apk/app-release.apk
-            dony_app/build/app/outputs/bundle/release/app-release.aab
+            build/app/outputs/flutter-apk/app-release.apk
+            build/app/outputs/bundle/release/app-release.aab
           tag_name: v${{ github.run_number }}
           name: Flutter Release ${{ github.run_number }}
           draft: true

@@ -8,6 +8,7 @@ import 'package:dony/core/services/app_log.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/auth/data/apple_token_revoker.dart';
 import 'package:dony/features/auth/data/repositories/auth_repository.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -37,6 +38,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final GoogleSignIn _googleSignIn;
   final AppleSignInCallback _appleSignIn;
   final AnalyticsService? _analytics;
+  final AppleTokenRevoker _appleTokenRevoker;
 
   String? _pendingPhoneNumber;
   Timer? _otpTimer;
@@ -57,12 +59,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     GoogleSignIn? googleSignIn,
     AppleSignInCallback? appleSignIn,
     AnalyticsService? analytics,
+    AppleTokenRevoker? appleTokenRevoker,
   }) : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance,
        _googleSignIn = googleSignIn ?? GoogleSignIn(scopes: googleSignInScopes),
        _appleSignIn =
            appleSignIn ??
            ((scopes) => SignInWithApple.getAppleIDCredential(scopes: scopes)),
        _analytics = analytics,
+       _appleTokenRevoker = appleTokenRevoker ?? AppleTokenRevoker(),
        super(const AuthInitial()) {
     on<AuthCheckRequested>(_onCheckRequested);
     on<AuthSendOtpRequested>(_onSendOtpRequested);
@@ -304,6 +308,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(const AuthLoading());
     try {
+      // Apple impose de révoquer le jeton Sign in with Apple au moment de la
+      // suppression. L'appel est sans effet pour un compte non Apple et
+      // n'échoue jamais, donc il ne peut pas bloquer la suppression
+      // (cf. AppleTokenRevoker.revokeIfAppleUser).
+      await _appleTokenRevoker.revokeIfAppleUser();
       await _authRepository.deleteAccount();
       await _localAuthService.clearPin();
       await _clearHiveAccountData();

@@ -9,7 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 P2P marketplace mobile pour la diaspora africaine (transport de colis vers l'Afrique).
 
 **Stack:** Flutter/Dart · flutter_bloc · GoRouter · Dio · Hive · Firebase Auth (Phone) · Stripe · FCM · Sentry  
-Min SDK: iOS 14+ / Android 8.0+ (API 26)
+Min SDK: iOS 15+ / Android 7.0+ (API 24)
 
 ---
 
@@ -59,6 +59,8 @@ flutter run --dart-define-from-file=env.dev.json -d emulator-5554
 ```bash
 # Dev
 flutter run --dart-define-from-file=env.dev.json [-d <device-id>]
+# Avec le pont flutter_skill (contrôle par agent IA) — développement uniquement
+flutter run -t test_driver/main_dev.dart --dart-define-from-file=env.dev.json
 flutter clean && flutter pub get && flutter run --dart-define-from-file=env.dev.json
 
 # Qualité

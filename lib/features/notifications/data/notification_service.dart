@@ -108,6 +108,13 @@ class NotificationService {
   /// défaut ne touche le SDK qu'à la première lecture.
   final FirebaseSessionProbe _sessionProbe;
 
+  /// Injecté en test uniquement. En production, laisser `null` : `_fcm` retombe
+  /// alors sur `FirebaseMessaging.instance`, résolu paresseusement au premier
+  /// usage. Ne jamais initialiser ce champ directement dans le constructeur :
+  /// `FirebaseMessaging.instance` lève tant qu'aucune app Firebase n'existe,
+  /// et le service est construit par GetIt avant cette initialisation.
+  final FirebaseMessaging? _fcmOverride;
+
   Future<void>? _inFlightUpload;
   Future<void>? _inFlightTokenUpload;
   bool _permissionDeniedReported = false;
@@ -118,10 +125,12 @@ class NotificationService {
     this._deviceIdService, [
     this._errorReporter,
     this._sessionProbe = const FirebaseSessionProbe(),
+    this._fcmOverride,
   ]);
 
   // late: deferred until initialize() so tests can instantiate this class without Firebase
-  late final FirebaseMessaging _fcm = FirebaseMessaging.instance;
+  late final FirebaseMessaging _fcm =
+      _fcmOverride ?? FirebaseMessaging.instance;
   final _localNotifications = FlutterLocalNotificationsPlugin();
 
   // Broadcasts the GoRouter path to navigate to when a notification is tapped
@@ -145,13 +154,15 @@ class NotificationService {
     description: 'Correspondances, invitations et informations générales',
   );
 
+  /// Prépare les canaux Android, le plugin de notifications locales et le
+  /// gestionnaire d'arrière-plan.
+  ///
+  /// Ne demande PAS la permission : l'appeler ici ferait surgir la boîte
+  /// système au tout premier lancement, avant que l'utilisateur ait vu le
+  /// moindre écran, et y compris pour un visiteur qui ne créera peut-être
+  /// jamais de compte. La demande passe par [requestPermission], déclenchée
+  /// une fois la session ouverte.
   Future<void> initialize() async {
-    // iOS / Android 13+ permission request
-    final settings = await _fcm.requestPermission();
-    if (kDebugMode) {
-      debugPrint('[FCM] Auth status: ${settings.authorizationStatus}');
-    }
-
     // Create Android notification channel
     final androidNotifications = _localNotifications
         .resolvePlatformSpecificImplementation<
@@ -191,14 +202,29 @@ class NotificationService {
     // Token upload is deferred to after authentication (called by app.dart).
     // onTokenRefresh re-uploads automatically once the user is signed in.
     _fcm.onTokenRefresh.listen((_) => _scheduleTokenUpload());
+  }
 
-    // Au tout premier lancement, `authStateChanges` déclenche l'upload avant
-    // que l'utilisateur n'ait répondu à la demande d'autorisation ci-dessus :
-    // sans autorisation, iOS n'inscrit pas l'appareil auprès d'APNs, aucun
-    // jeton n'existe et la tentative échoue. Or accepter la demande ne fait pas
+  /// Demande la permission de notification.
+  ///
+  /// À appeler au premier moment où une notification a du sens pour
+  /// l'utilisateur, c'est-à-dire une fois le compte créé ou la session
+  /// ouverte. Sans effet si la permission a déjà été accordée ou refusée :
+  /// le système ne réaffiche pas la boîte.
+  Future<void> requestPermission() async {
+    final settings = await _fcm.requestPermission();
+    if (kDebugMode) {
+      debugPrint('[FCM] Auth status: ${settings.authorizationStatus}');
+    }
+
+    // `authStateChanges` (app.dart) déclenche `uploadCurrentToken` au même
+    // moment que cet appel, sans l'attendre — à chaque transition vers un
+    // utilisateur réel (connexion, reconnexion, ou session restaurée au
+    // démarrage), pas seulement la toute première. Cette tentative parallèle
+    // échoue le plus souvent faute de jeton APNs, tant que l'utilisateur n'a
+    // pas encore répondu à la boîte système ci-dessus. Accepter ne fait pas
     // passer l'application en arrière-plan — `onAppResumed` n'est donc jamais
-    // appelé, et rien ne rattrapait cette première tentative perdue. On relance
-    // ici, une fois l'autorisation connue.
+    // appelé, et rien ne rattraperait cette tentative perdue. On relance ici,
+    // une fois l'autorisation connue.
     if (settings.authorizationStatus != AuthorizationStatus.denied &&
         _sessionProbe.hasRealSession) {
       _scheduleTokenUpload();

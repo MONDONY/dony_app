@@ -74,3 +74,7 @@ android/key.properties
 *.keystore
 # Dart obfuscation symbols (flutter build --split-debug-info)
 build/debug-info/
+
+# Configuration native iOS de release : identifiants clients Google et clé Maps
+# du projet de production. Voir ios/Flutter/Release-prod.xcconfig.example.
+ios/Flutter/Release-prod.xcconfig

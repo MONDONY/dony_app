@@ -322,7 +322,20 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
   }
 
   Future<void> _saveToGallery() {
-    return _withPoster('Impossible d\'enregistrer l\'affiche', (bytes) async {
+    const failureMessage = 'Impossible d\'enregistrer l\'affiche';
+    return _withPoster(failureMessage, (bytes) async {
+      // gal expose hasAccess()/requestAccess() mais ne les appelle jamais
+      // lui-même avant d'écrire — putImageBytes écrit directement. Sans
+      // cette demande explicite, WRITE_EXTERNAL_STORAGE (permission
+      // dangereuse depuis l'API 23, déclarée avec maxSdkVersion=28) reste
+      // accordée nulle part sur Android 7-9 (API 24-28), et l'écriture y
+      // échoue toujours. requestAccess() ne réaffiche pas la boîte si
+      // l'accès est déjà accordé — no-op sur API 29+, où gal le considère de
+      // toute façon déjà acquis hors album.
+      if (!await Gal.requestAccess()) {
+        _notify(failureMessage, DonySnackbarType.error);
+        return;
+      }
       await Gal.putImageBytes(
         bytes,
         name: 'yadony_affiche_${widget.announcement.id}.png',

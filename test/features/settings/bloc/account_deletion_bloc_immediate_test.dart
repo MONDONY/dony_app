@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/features/auth/data/apple_token_revoker.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:dony/features/settings/data/account_deletion_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -17,7 +18,18 @@ void main() {
     mockRepo = MockAccountDeletionRepository();
     final analytics = makeDisabledAnalytics(MockAnalyticsBackend());
     analytics.onConfigured();
-    bloc = AccountDeletionBloc(mockRepo, analytics);
+    bloc = AccountDeletionBloc(
+      mockRepo,
+      analytics,
+      AppleTokenRevoker(
+        // Compte non Apple : revokeIfAppleUser sort immédiatement, aucun
+        // appel Firebase ni boîte système dans les tests.
+        providerIds: () => const ['phone'],
+        isApplePlatform: () => false,
+        fetchAuthorizationCode: () async => null,
+        revoke: (_) async {},
+      ),
+    );
   });
 
   tearDown(() => bloc.close());
@@ -73,6 +85,34 @@ void main() {
           isFalse,
         ),
       ],
+    );
+
+    blocTest<AccountDeletionBloc, AccountDeletionState>(
+      'émet [Loading, AccountDeletionImmediate] même si la révocation Apple échoue',
+      build: () {
+        when(() => mockRepo.deleteImmediately()).thenAnswer((_) async {});
+        final analytics = makeDisabledAnalytics(MockAnalyticsBackend())
+          ..onConfigured();
+        return AccountDeletionBloc(
+          mockRepo,
+          analytics,
+          AppleTokenRevoker(
+            // Compte Apple, révocation qui échoue : la garantie testée ici
+            // est que _onConfirmImmediateDeletion() ne doit JAMAIS traiter
+            // un échec de revokeIfAppleUser() comme un échec de suppression.
+            providerIds: () => const ['apple.com'],
+            isApplePlatform: () => true,
+            fetchAuthorizationCode: () async => throw Exception('réseau coupé'),
+            revoke: (_) async {},
+          ),
+        );
+      },
+      act: (b) => b.add(const ConfirmImmediateDeletion()),
+      expect: () => [
+        isA<AccountDeletionLoading>(),
+        isA<AccountDeletionImmediate>(),
+      ],
+      verify: (_) => verify(() => mockRepo.deleteImmediately()).called(1),
     );
   });
 }

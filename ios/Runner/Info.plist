@@ -81,6 +81,12 @@
 	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<!-- Autorise le HTTP en clair vers le réseau local uniquement. Le backend
+	     de développement est joint sur une IP privée (cf. env.dev.json), qu'ATS
+	     bloquerait sinon. Contrairement à NSAllowsArbitraryLoads, cette clé
+	     n'appelle aucune justification auprès d'Apple. Info.plist étant unique
+	     et partagé entre Debug et Release, la retirer casserait le
+	     développement de toute l'équipe sans rien apporter à la revue. -->
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key>
@@ -90,8 +96,6 @@
 	<string>Yadony utilise l'appareil photo pour scanner les QR codes et photographier les colis.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Yadony utilise Face ID pour sécuriser tes paiements.</string>
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>Yadony utilise ta position pour trouver les trajets depuis ta ville.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Yadony utilise ta position pour trouver les trajets depuis ta ville.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
@@ -134,13 +138,6 @@
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
-	</array>
-	<key>UISupportedInterfaceOrientations~ipad</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationPortraitUpsideDown</string>
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>

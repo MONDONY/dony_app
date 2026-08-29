@@ -6,8 +6,15 @@ import 'package:dony/features/settings/data/repositories/blocked_users_repositor
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Affiche le menu ⋯ et gère le dialog de confirmation de blocage.
-/// À appeler depuis n'importe quelle fiche profil.
+/// Affiche le menu ⋯ (feuille à une seule entrée « Bloquer ») puis, au tap,
+/// le dialog de confirmation de blocage.
+///
+/// À appeler depuis un point d'entrée qui n'a pas déjà son propre menu — les
+/// fiches profil (`sender_profile_sheet.dart`, `traveler_profile_sheet.dart`),
+/// où c'est le bouton « Plus d'options » qui l'ouvre. Un appelant qui a déjà
+/// un menu contextuel avec une entrée « Bloquer » (le `PopupMenuButton` de
+/// `chat_screen.dart`) doit appeler [showBlockConfirmDialog] directement, pour
+/// ne pas ouvrir un menu dans un menu.
 void showBlockMenu(
   BuildContext context, {
   required String userId,
