@@ -7,16 +7,6 @@ sealed class UpgradeToProEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-class UpgradeToProSubmitted extends UpgradeToProEvent {
-  final String companyName;
-  final String siret;
-
-  const UpgradeToProSubmitted({required this.companyName, required this.siret});
-
-  @override
-  List<Object?> get props => [companyName, siret];
-}
-
 class DowngradeRequested extends UpgradeToProEvent {
   const DowngradeRequested();
 }

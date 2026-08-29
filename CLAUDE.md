@@ -373,7 +373,11 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `return_code_viewed` | CancellationBloc._onReturnCodeRequested() — expéditeur consulte son code de retour (D7) |
 | `return_code_entry_opened` | ReturnEntrySheet.show() — voyageur ouvre la saisie du code de retour (propriété `status`) |
 | `return_confirmed` | CancellationBloc._onReturnConfirm() — voyageur confirme la restitution du colis (D7) |
-| `upgrade_to_pro_started` | UpgradeToProScreen.initState |
+| `upgrade_to_pro_started` | UpgradeToProScreen.initState — ouverture de l'écran PRO, dans ses deux vues (vente pour un non-abonné, gestion pour un abonné) : la même intention est mesurée dans les deux cas |
+| `pro_subscription_viewed` | SubscriptionBloc._onRequested — après un `GET /billing/subscription` réussi, y compris quand `status` vaut `none` (propriété `status`) |
+| `pro_portal_opened` | SubscriptionBloc._onPortalOpenRequested — ouverture réussie du portail web externe (vente ou gestion), en navigateur externe jamais en webview (propriété `target` : `upgrade`/`manage`) |
+| `pro_portal_open_failed` | SubscriptionBloc._onPortalOpenRequested — l'ouverture échoue (URL invalide ou lanceur en échec), l'écran restaure l'état précédent (propriété `target`) |
+| `pro_downgrade_blocked` | UpgradeToProBloc._onDowngrade — `DELETE /auth/me/upgrade-to-pro` refusé en `409` `active-stripe-subscription` : l'abonnement Stripe est encore actif, la résiliation passe par le portail web. Aucune propriété (ni identifiant, ni message serveur) |
 | `help_center_opened` | HelpCenterBloc._onOpenRequested — ouverture réelle du hub, distincte du préchargement global |
 | `help_tutorial_opened` | HelpCenterBloc._onTutorialOpenRequested (propriétés contrôlées `tutorial_id`, `source`) |
 | `help_tutorial_play_started` | HelpCenterBloc._onPlaybackRequested — lecture démarrée (propriété `tutorial_id`) |

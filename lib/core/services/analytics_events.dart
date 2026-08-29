@@ -161,6 +161,18 @@ abstract final class AnalyticsEvents {
   static const helpYoutubeSubscribeTapped = 'help_youtube_subscribe_tapped';
   static const helpConfigLoadFailed = 'help_config_load_failed';
 
+  // Billing (abonnement PRO)
+  static const proSubscriptionViewed = 'pro_subscription_viewed';
+  static const proPortalOpened = 'pro_portal_opened';
+  static const proPortalOpenFailed = 'pro_portal_open_failed';
+
+  /// `DELETE /auth/me/upgrade-to-pro` refusé en `409`
+  /// `active-stripe-subscription` : l'abonnement Stripe est encore actif, la
+  /// résiliation passe par le portail web. Câblé dans
+  /// `UpgradeToProBloc._onDowngrade`, aucune propriété (ni identifiant, ni
+  /// message serveur).
+  static const proDowngradeBlocked = 'pro_downgrade_blocked';
+
   // Referral
   static const referralShared = 'referral_shared';
 
