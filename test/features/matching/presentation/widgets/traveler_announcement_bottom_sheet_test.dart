@@ -72,6 +72,9 @@ AnnouncementModel _buildAnnouncement({
   DateTime? handoverDeadline,
   bool acceptsUnverified = false,
   String currency = 'EUR',
+  bool negotiable = false,
+  String pricingMode = 'PER_KG',
+  List<AnnouncementGridItemModel> priceGridItems = const [],
 }) {
   final now = DateTime.now();
   return AnnouncementModel(
@@ -85,6 +88,9 @@ AnnouncementModel _buildAnnouncement({
     pricePerKg: 8,
     currency: currency,
     status: 'ACTIVE',
+    negotiable: negotiable,
+    pricingMode: pricingMode,
+    priceGridItems: priceGridItems,
     traveler: TravelerProfile(
       id: 't1',
       displayName: displayName,
@@ -203,7 +209,9 @@ void main() {
     await tester.tap(find.text('Ouvrir'));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('Dépôt des colis'), findsOneWidget);
+    // Redesign « Corridor héro » : la date limite vit dans une stat card
+    // dédiée, plus dans une ligne « Dépôt des colis … ».
+    expect(find.text('date limite de dépôt'), findsOneWidget);
   });
 
   testWidgets('masque la fenêtre de remise quand absente (annonce legacy)', (
@@ -214,7 +222,7 @@ void main() {
     await tester.tap(find.text('Ouvrir'));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('Remise :'), findsNothing);
+    expect(find.text('date limite de dépôt'), findsNothing);
   });
 
   testWidgets('affiche le prix dans la devise du trajet, pas toujours en EUR', (
@@ -640,5 +648,112 @@ void main() {
         expect(find.text('Publier un colis'), findsNothing);
       },
     );
+  });
+
+  // ── Redesign « Corridor héro » ─────────────────────────────────────────────
+
+  group('redesign corridor héro', () {
+    List<AnnouncementGridItemModel> gridItems(int count) => List.generate(
+      count,
+      (i) => AnnouncementGridItemModel(
+        id: 'g$i',
+        label: 'Article ${i + 1}',
+        unitPriceDisplay: 5.0 + i,
+      ),
+    );
+
+    testWidgets('affiche la carte héro corridor et le prix par kilo', (
+      tester,
+    ) async {
+      final a = _buildAnnouncement(kycVerified: true);
+      await tester.pumpWidget(_harness(announcement: a));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('TRAJET'), findsOneWidget);
+      expect(find.text('Paris'), findsOneWidget);
+      expect(find.text('Dakar'), findsOneWidget);
+      expect(find.text('par kilo'), findsOneWidget);
+    });
+
+    testWidgets('trajet négociable → mention et lien « Proposer un prix »', (
+      tester,
+    ) async {
+      final a = _buildAnnouncement(kycVerified: true, negotiable: true);
+      await tester.pumpWidget(_harness(announcement: a));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Trajet négociable'), findsOneWidget);
+      expect(find.text('Proposer un prix'), findsOneWidget);
+      expect(find.byKey(const Key('negotiate-price-btn')), findsOneWidget);
+    });
+
+    testWidgets('prix ferme → aucune mention de négociation', (tester) async {
+      final a = _buildAnnouncement(kycVerified: true);
+      await tester.pumpWidget(_harness(announcement: a));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Trajet négociable'), findsNothing);
+      expect(find.text('Proposer un prix'), findsNothing);
+    });
+
+    testWidgets('grille 6 articles → 4 lignes visibles + « Voir tous les '
+        'tarifs (6) »', (tester) async {
+      final a = _buildAnnouncement(
+        kycVerified: true,
+        pricingMode: 'MIXED',
+        priceGridItems: gridItems(6),
+      );
+      await tester.pumpWidget(_harness(announcement: a));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Grille tarifaire'), findsOneWidget);
+      expect(find.textContaining('dès '), findsOneWidget);
+      expect(find.text('Article 1'), findsOneWidget);
+      expect(find.text('Article 4'), findsOneWidget);
+      expect(find.text('Article 5'), findsNothing);
+      expect(find.text('Voir tous les tarifs (6)'), findsOneWidget);
+    });
+
+    testWidgets('« Voir tous les tarifs » déplie le reste de la grille', (
+      tester,
+    ) async {
+      final a = _buildAnnouncement(
+        kycVerified: true,
+        pricingMode: 'MIXED',
+        priceGridItems: gridItems(6),
+      );
+      await tester.pumpWidget(_harness(announcement: a));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(find.byKey(const Key('price-grid-expand')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('price-grid-expand')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Article 5'), findsOneWidget);
+      expect(find.text('Article 6'), findsOneWidget);
+      expect(find.text('Voir tous les tarifs (6)'), findsNothing);
+    });
+
+    testWidgets('grille de 3 articles → liste entière, pas de dépliant', (
+      tester,
+    ) async {
+      final a = _buildAnnouncement(
+        kycVerified: true,
+        pricingMode: 'MIXED',
+        priceGridItems: gridItems(3),
+      );
+      await tester.pumpWidget(_harness(announcement: a));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Article 3'), findsOneWidget);
+      expect(find.textContaining('Voir tous les tarifs'), findsNothing);
+    });
   });
 }

@@ -1,6 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
-import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -12,6 +11,7 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
 import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
 import 'package:flutter/material.dart';
@@ -146,6 +146,8 @@ void showTravelerAnnouncementSheet(
           }
         }
 
+        final tt = Theme.of(innerCtx).textTheme;
+        final cs = Theme.of(innerCtx).colorScheme;
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -154,18 +156,40 @@ void showTravelerAnnouncementSheet(
               iconAsset: 'send',
               onPressed: () => openCreateBid(negotiation: false),
             ),
-            // Second CTA réservé aux trajets ouverts aux propositions : sur un
-            // prix ferme, il n'aurait rien à proposer.
-            if (announcement.negotiable) ...[
-              const SizedBox(height: DonySpacing.sm),
-              DonyButton(
+            // Entrée de négociation reléguée en lien : un seul CTA dominant
+            // (redesign « Corridor héro »). Réservée aux trajets ouverts aux
+            // propositions : sur un prix ferme, il n'y aurait rien à proposer.
+            if (announcement.negotiable)
+              InkWell(
                 key: const Key('negotiate-price-btn'),
-                label: 'Proposer un prix',
-                iconAsset: 'handshake',
-                variant: DonyButtonVariant.secondary,
-                onPressed: () => openCreateBid(negotiation: true),
+                borderRadius: BorderRadius.circular(DonyRadius.sm),
+                onTap: () => openCreateBid(negotiation: true),
+                child: Container(
+                  constraints: const BoxConstraints(minHeight: 44),
+                  alignment: Alignment.center,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: DonySpacing.base,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Trajet négociable · ',
+                        style: tt.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                      Text(
+                        'Proposer un prix',
+                        style: tt.bodySmall?.copyWith(
+                          color: cs.primary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ],
           ],
         );
       },
@@ -183,243 +207,26 @@ class _TravelerAnnouncementContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    final traveler = announcement.traveler;
-    final rating = traveler?.averageRating;
-    final dateStr = DateFormat(
-      'EEEE d MMMM yyyy',
-      'fr',
-    ).format(announcement.departureDate);
     final categories = announcement.acceptedContentTypes ?? [];
-
-    final totalTrips = traveler?.totalTrips ?? 0;
-    final isKycVerified = traveler?.kycVerified ?? false;
+    final hasGrid =
+        announcement.pricingMode == 'MIXED' &&
+        announcement.priceGridItems.isNotEmpty;
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Voyageur — tappable pour ouvrir le profil complet (avec avis)
-        InkWell(
-          key: const Key('traveler-block'),
-          borderRadius: BorderRadius.circular(DonyRadius.lg),
-          onTap: traveler == null
-              ? null
-              : () => context.push(
-                  '/profile/public',
-                  extra: ProfilePublicArgs(
-                    userId: traveler.id,
-                    showSubscribe: true,
-                  ),
-                ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: DonySpacing.xs),
-            child: Row(
-              children: [
-                DonyAvatar(
-                  name: traveler?.resolvedName ?? 'Voyageur',
-                  imageUrl: traveler?.avatarUrl,
-                  size: DonyAvatarSize.lg,
-                  verified: isKycVerified,
-                  pro: traveler?.isProAccount ?? false,
-                ),
-                const SizedBox(width: DonySpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              traveler?.resolvedName ?? 'Voyageur',
-                              style: tt.titleLarge,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          if (isKycVerified) ...[
-                            const SizedBox(width: DonySpacing.xs),
-                            const _KycVerifiedBadge(),
-                          ],
-                        ],
-                      ),
-                      const SizedBox(height: DonySpacing.xxs),
-                      Row(
-                        children: [
-                          DonyIcon('star', size: 14, color: cs.warning),
-                          const SizedBox(width: DonySpacing.xxs),
-                          Text(
-                            rating != null
-                                ? '${rating.toStringAsFixed(1)}/5'
-                                : 'Nouveau',
-                            style: tt.bodySmall?.copyWith(
-                              color: cs.onSurfaceVariant,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(width: DonySpacing.xs),
-                          Text(
-                            '· $totalTrips trajet${totalTrips > 1 ? 's' : ''}',
-                            style: tt.bodySmall?.copyWith(
-                              color: cs.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                DonyIcon('chevron-right', size: 20, color: cs.onSurfaceVariant),
-              ],
-            ),
-          ),
-        ),
-
-        const SizedBox(height: DonySpacing.lg),
-        Container(height: 1, color: cs.outline),
-        const SizedBox(height: DonySpacing.lg),
-
-        // Route
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                announcement.departureCity,
-                style: tt.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: DonySpacing.sm),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 6,
-                    height: 6,
-                    decoration: BoxDecoration(
-                      color: cs.primary,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  Container(
-                    width: 28,
-                    height: 1.5,
-                    color: cs.primary.withValues(alpha: 0.3),
-                  ),
-                  const DonyEmoji.planeTakeoff(),
-                  Container(
-                    width: 28,
-                    height: 1.5,
-                    color: cs.primary.withValues(alpha: 0.3),
-                  ),
-                  Container(
-                    width: 6,
-                    height: 6,
-                    decoration: const BoxDecoration(
-                      color: DonyColors.accent,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: Text(
-                announcement.arrivalCity,
-                style: tt.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.right,
-              ),
-            ),
-          ],
-        ),
-
-        const SizedBox(height: DonySpacing.lg),
-
-        // Détails
-        _InfoRow(iconAsset: 'calendar', label: dateStr),
-        const SizedBox(height: DonySpacing.sm),
-        _InfoRow(
-          iconAsset: 'package',
-          label: announcement.isKgFree
-              ? 'Kg libre'
-              : '${announcement.availableKg.toStringAsFixed(0)} kg disponibles',
-        ),
-        const SizedBox(height: DonySpacing.sm),
-        _InfoRow(
-          iconAsset: 'euro',
-          // Garde sur hasKgPrice (valeur > 0), pas sur la seule nullité :
-          // senderPricePerKg n'est en pratique jamais null (pricePerKgDisplay
-          // toujours servi), 0 est la vraie valeur trompeuse en mode MIXED.
-          label: announcement.pricingMode == 'MIXED'
-              ? 'Grille tarifaire'
-              : !announcement.hasKgPrice
-              ? 'Prix indisponible'
-              : '${formatPriceIn(announcement.senderPricePerKg!, announcement.currency)}/kg',
-          labelStyle: TextStyle(color: cs.primary, fontWeight: FontWeight.w700),
-        ),
-
-        if (announcement.handoverDeadline != null) ...[
-          const SizedBox(height: DonySpacing.sm),
-          _InfoRow(
-            iconAsset: 'calendar',
-            label:
-                'Dépôt des colis '
-                '${_handoverDeadlineLabel(announcement.handoverDeadline!.toLocal())}',
+        _HeroCorridorCard(announcement: announcement),
+        const SizedBox(height: DonySpacing.md),
+        _StatCardsRow(announcement: announcement, hasGrid: hasGrid),
+        if (hasGrid) ...[
+          const SizedBox(height: DonySpacing.md),
+          _PriceGridCard(
+            items: announcement.priceGridItems,
+            currency: announcement.currency,
           ),
         ],
-
-        if (announcement.pricingMode == 'MIXED' &&
-            announcement.priceGridItems.isNotEmpty) ...[
-          const SizedBox(height: DonySpacing.lg),
-          Text(
-            'Tarif par article',
-            style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
-          ),
-          const SizedBox(height: DonySpacing.sm),
-          Container(
-            decoration: BoxDecoration(
-              color: cs.surfaceContainerHighest.withValues(alpha: 0.4),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            padding: const EdgeInsets.symmetric(vertical: DonySpacing.xs),
-            child: Column(
-              children: announcement.priceGridItems
-                  .map(
-                    (item) => Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: DonySpacing.base,
-                        vertical: DonySpacing.xs,
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              item.label,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: tt.bodyMedium,
-                            ),
-                          ),
-                          const SizedBox(width: DonySpacing.sm),
-                          Text(
-                            formatPriceIn(
-                              item.unitPriceDisplay,
-                              announcement.currency,
-                            ),
-                            style: tt.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: cs.primary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  )
-                  .toList(),
-            ),
-          ),
-        ],
+        const SizedBox(height: DonySpacing.md),
+        _TravelerCard(announcement: announcement),
 
         if (categories.isNotEmpty) ...[
           const SizedBox(height: DonySpacing.lg),
@@ -486,38 +293,524 @@ class _TravelerAnnouncementContent extends StatelessWidget {
   }
 }
 
-/// Formate la plage de remise. Même jour → « date heure → heure » ;
-/// jours différents → « date heure → date heure » (la date de fin est affichée
-/// quand elle diffère, car la fenêtre peut s'étaler sur plusieurs jours).
-String _handoverDeadlineLabel(DateTime deadline) {
-  return 'jusqu\'au ${DateFormat('EEE d MMM', 'fr').format(deadline)}';
+/// Carte héro navy du corridor — même dégradé que la carte du détail
+/// propriétaire ([AnnouncementDetailBody]) pour garder un seul langage visuel
+/// entre les deux faces du trajet.
+class _HeroCorridorCard extends StatelessWidget {
+  const _HeroCorridorCard({required this.announcement});
+
+  final AnnouncementModel announcement;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final dateStr = DateFormat(
+      'EEE d MMM yyyy',
+      'fr',
+    ).format(announcement.departureDate);
+    final kgLabel = announcement.isKgFree
+        ? 'Kg libre'
+        : '${announcement.availableKg.toStringAsFixed(0)} kg dispo';
+    final transportLabel = announcement.transportMode?.label;
+
+    final cityStyle = tt.headlineSmall?.copyWith(
+      fontWeight: FontWeight.w800,
+      fontSize: 21,
+      color: Colors.white,
+    );
+
+    return Container(
+      padding: const EdgeInsets.all(DonySpacing.base),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF0F172A), Color(0xFF1E3A5F), Color(0xFF0C4A6E)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'TRAJET',
+            style: tt.labelSmall?.copyWith(
+              color: Colors.white.withValues(alpha: 0.65),
+              letterSpacing: 2,
+            ),
+          ),
+          const SizedBox(height: DonySpacing.sm),
+          Row(
+            children: [
+              Flexible(
+                child: Text(
+                  announcement.departureCity,
+                  style: cityStyle,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: DonySpacing.sm),
+                child: DonyIcon(
+                  'arrow-right',
+                  size: 18,
+                  color: DonyColors.blue300,
+                ),
+              ),
+              Flexible(
+                child: Text(
+                  announcement.arrivalCity,
+                  style: cityStyle,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: DonySpacing.sm + DonySpacing.xxs),
+          Wrap(
+            spacing: DonySpacing.xs + 2,
+            runSpacing: DonySpacing.xs,
+            children: [
+              _HeroChip(label: dateStr),
+              if (transportLabel != null) _HeroChip(label: transportLabel),
+              _HeroChip(label: kgLabel),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-class _InfoRow extends StatelessWidget {
-  const _InfoRow({
-    required this.iconAsset,
-    required this.label,
-    this.labelStyle,
-  });
-  final String iconAsset;
+class _HeroChip extends StatelessWidget {
+  const _HeroChip({required this.label});
   final String label;
-  final TextStyle? labelStyle;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.sm + DonySpacing.xxs,
+        vertical: DonySpacing.xs,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(DonyRadius.xl),
+      ),
+      child: Text(label, style: tt.labelMedium?.copyWith(color: Colors.white)),
+    );
+  }
+}
+
+/// Rangée des chiffres forts : prix (ou grille) à gauche, date limite de dépôt
+/// à droite. Sans date limite, la carte prix prend toute la largeur.
+class _StatCardsRow extends StatelessWidget {
+  const _StatCardsRow({required this.announcement, required this.hasGrid});
+
+  final AnnouncementModel announcement;
+  final bool hasGrid;
+
+  @override
+  Widget build(BuildContext context) {
+    final deadline = announcement.handoverDeadline?.toLocal();
+    // IntrinsicHeight : égalise la hauteur des deux cartes sans stretch
+    // non borné (la colonne parente est dans un scrollable).
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: hasGrid
+                ? _GridStatCard(
+                    items: announcement.priceGridItems,
+                    currency: announcement.currency,
+                  )
+                : _PriceStatCard(announcement: announcement),
+          ),
+          if (deadline != null) ...[
+            const SizedBox(width: DonySpacing.sm),
+            Expanded(
+              child: _StatCard(
+                value: DateFormat('EEE d MMM', 'fr').format(deadline),
+                label: 'date limite de dépôt',
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _StatCard extends StatelessWidget {
+  const _StatCard({required this.value, required this.label, this.valueColor});
+
+  final String value;
+  final String label;
+  final Color? valueColor;
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    return Row(
-      children: [
-        DonyIcon(iconAsset, size: 16, color: cs.onSurfaceVariant),
-        const SizedBox(width: DonySpacing.sm),
-        Expanded(
-          child: Text(
+    return Container(
+      padding: const EdgeInsets.all(DonySpacing.md),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: cs.outline),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            value,
+            style: tt.headlineSmall?.copyWith(
+              fontWeight: FontWeight.w800,
+              fontSize: 21,
+              color: valueColor ?? cs.onSurface,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: DonySpacing.xxs),
+          Text(
             label,
-            style: (tt.bodyMedium ?? const TextStyle()).merge(labelStyle),
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PriceStatCard extends StatelessWidget {
+  const _PriceStatCard({required this.announcement});
+
+  final AnnouncementModel announcement;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    // Garde sur hasKgPrice (valeur > 0), pas sur la seule nullité :
+    // senderPricePerKg n'est en pratique jamais null (pricePerKgDisplay
+    // toujours servi), 0 est la vraie valeur trompeuse en mode MIXED.
+    if (!announcement.hasKgPrice) {
+      return const _StatCard(value: '—', label: 'Prix indisponible');
+    }
+    return _StatCard(
+      value: formatPriceIn(
+        announcement.senderPricePerKg!,
+        announcement.currency,
+      ),
+      label: 'par kilo',
+      valueColor: cs.primary,
+    );
+  }
+}
+
+/// Carte compacte annonçant la grille tarifaire, avec le nombre d'articles et
+/// le prix d'appel le plus bas — le détail vit dans [_PriceGridCard].
+class _GridStatCard extends StatelessWidget {
+  const _GridStatCard({required this.items, required this.currency});
+
+  final List<AnnouncementGridItemModel> items;
+  final String currency;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    final minPrice = items
+        .map((i) => i.unitPriceDisplay)
+        .reduce((a, b) => a < b ? a : b);
+    return Container(
+      padding: const EdgeInsets.all(DonySpacing.md),
+      decoration: BoxDecoration(
+        color: cs.primaryContainer,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: DonyColors.blue200),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              DonyIcon('layout-grid', size: 16, color: cs.primary),
+              const SizedBox(width: DonySpacing.xs + 2),
+              Flexible(
+                child: Text(
+                  'Grille tarifaire',
+                  style: tt.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 17,
+                    color: cs.primary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: DonySpacing.xxs),
+          Text(
+            '${items.length} article${items.length > 1 ? 's' : ''} · '
+            'dès ${formatPriceIn(minPrice, currency)}',
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Liste « Tarif par article », plafonnée à [_collapsedCount] lignes : au-delà,
+/// un pied « Voir tous les tarifs (N) » déplie le reste sur place pour que la
+/// grille ne repousse pas le voyageur et le CTA hors du premier regard.
+class _PriceGridCard extends StatefulWidget {
+  const _PriceGridCard({required this.items, required this.currency});
+
+  final List<AnnouncementGridItemModel> items;
+  final String currency;
+
+  @override
+  State<_PriceGridCard> createState() => _PriceGridCardState();
+}
+
+class _PriceGridCardState extends State<_PriceGridCard> {
+  static const _collapsedCount = 4;
+
+  /// Dépliage purement éphémère — ValueNotifier plutôt que setState pour ne
+  /// reconstruire que la liste, pas la carte entière.
+  final ValueNotifier<bool> _expanded = ValueNotifier(false);
+
+  @override
+  void dispose() {
+    _expanded.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: cs.outline),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              DonySpacing.md,
+              DonySpacing.md,
+              DonySpacing.md,
+              DonySpacing.sm,
+            ),
+            child: Text(
+              'Tarif par article',
+              style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
+            ),
+          ),
+          ValueListenableBuilder<bool>(
+            valueListenable: _expanded,
+            builder: (context, expanded, _) {
+              final showAll =
+                  expanded || widget.items.length <= _collapsedCount;
+              final visible = showAll
+                  ? widget.items
+                  : widget.items.take(_collapsedCount).toList();
+              return AnimatedSize(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeOutCubic,
+                alignment: Alignment.topCenter,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (var i = 0; i < visible.length; i++) ...[
+                      if (i > 0)
+                        Container(
+                          height: 1,
+                          margin: const EdgeInsets.symmetric(
+                            horizontal: DonySpacing.md,
+                          ),
+                          color: cs.surfaceContainerHighest,
+                        ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: DonySpacing.md,
+                          vertical: DonySpacing.sm,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                visible[i].label,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: tt.bodyMedium,
+                              ),
+                            ),
+                            const SizedBox(width: DonySpacing.sm),
+                            Text(
+                              formatPriceIn(
+                                visible[i].unitPriceDisplay,
+                                widget.currency,
+                              ),
+                              style: tt.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: cs.primary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    if (!showAll)
+                      InkWell(
+                        key: const Key('price-grid-expand'),
+                        onTap: () => _expanded.value = true,
+                        child: Container(
+                          constraints: const BoxConstraints(minHeight: 44),
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).scaffoldBackgroundColor,
+                            border: Border(top: BorderSide(color: cs.outline)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'Voir tous les tarifs (${widget.items.length})',
+                                style: tt.bodySmall?.copyWith(
+                                  color: cs.primary,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(width: DonySpacing.xs),
+                              DonyIcon(
+                                'chevron-down',
+                                size: 14,
+                                color: cs.primary,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Carte voyageur compacte — tappable pour ouvrir le profil public complet.
+class _TravelerCard extends StatelessWidget {
+  const _TravelerCard({required this.announcement});
+
+  final AnnouncementModel announcement;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    final traveler = announcement.traveler;
+    final rating = traveler?.averageRating;
+    final totalTrips = traveler?.totalTrips ?? 0;
+    final isKycVerified = traveler?.kycVerified ?? false;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: cs.outline),
+      ),
+      child: InkWell(
+        key: const Key('traveler-block'),
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        onTap: traveler == null
+            ? null
+            : () => context.push(
+                '/profile/public',
+                extra: ProfilePublicArgs(
+                  userId: traveler.id,
+                  showSubscribe: true,
+                ),
+              ),
+        child: Padding(
+          padding: const EdgeInsets.all(DonySpacing.md),
+          child: Row(
+            children: [
+              DonyAvatar(
+                name: traveler?.resolvedName ?? 'Voyageur',
+                imageUrl: traveler?.avatarUrl,
+                verified: isKycVerified,
+                pro: traveler?.isProAccount ?? false,
+              ),
+              const SizedBox(width: DonySpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            traveler?.resolvedName ?? 'Voyageur',
+                            style: tt.titleLarge,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (isKycVerified) ...[
+                          const SizedBox(width: DonySpacing.xs),
+                          const _KycVerifiedBadge(),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: DonySpacing.xxs),
+                    Row(
+                      children: [
+                        DonyIcon('star', size: 14, color: cs.warning),
+                        const SizedBox(width: DonySpacing.xxs),
+                        Text(
+                          rating != null
+                              ? '${rating.toStringAsFixed(1)}/5'
+                              : 'Nouveau',
+                          style: tt.bodySmall?.copyWith(
+                            color: cs.onSurfaceVariant,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(width: DonySpacing.xs),
+                        Text(
+                          '· $totalTrips trajet${totalTrips > 1 ? 's' : ''}',
+                          style: tt.bodySmall?.copyWith(
+                            color: cs.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              DonyIcon('chevron-right', size: 20, color: cs.onSurfaceVariant),
+            ],
           ),
         ),
-      ],
+      ),
     );
   }
 }
