@@ -227,6 +227,11 @@ class _TravelerAnnouncementContent extends StatelessWidget {
         ],
         const SizedBox(height: DonySpacing.md),
         _TravelerCard(announcement: announcement),
+        if (announcement.pickupAddress != null ||
+            announcement.deliveryAddress != null) ...[
+          const SizedBox(height: DonySpacing.md),
+          _LocationsCard(announcement: announcement),
+        ],
 
         if (categories.isNotEmpty) ...[
           const SizedBox(height: DonySpacing.lg),
@@ -713,6 +718,104 @@ class _PriceGridCardState extends State<_PriceGridCard> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Lieux de remise et de récupération du colis — mêmes libellés que la page
+/// web publique du trajet, masqués individuellement quand l'annonce (legacy)
+/// ne porte pas l'adresse.
+class _LocationsCard extends StatelessWidget {
+  const _LocationsCard({required this.announcement});
+
+  final AnnouncementModel announcement;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final pickup = announcement.pickupAddress;
+    final delivery = announcement.deliveryAddress;
+    return Container(
+      padding: const EdgeInsets.all(DonySpacing.md),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: cs.outline),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (pickup != null)
+            _LocationRow(
+              iconAsset: 'upload',
+              iconColor: cs.primary,
+              iconBackground: cs.primaryContainer,
+              title: 'Remise du colis',
+              label: pickup.label,
+            ),
+          if (pickup != null && delivery != null)
+            const SizedBox(height: DonySpacing.sm + DonySpacing.xxs),
+          if (delivery != null)
+            _LocationRow(
+              iconAsset: 'download',
+              iconColor: DonyColors.accent,
+              iconBackground: DonyColors.accentSoft,
+              title: 'Récupération',
+              label: delivery.label,
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LocationRow extends StatelessWidget {
+  const _LocationRow({
+    required this.iconAsset,
+    required this.iconColor,
+    required this.iconBackground,
+    required this.title,
+    required this.label,
+  });
+
+  final String iconAsset;
+  final Color iconColor;
+  final Color iconBackground;
+  final String title;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 28,
+          height: 28,
+          decoration: BoxDecoration(
+            color: iconBackground,
+            borderRadius: BorderRadius.circular(DonyRadius.sm),
+          ),
+          alignment: Alignment.center,
+          child: DonyIcon(iconAsset, size: 14, color: iconColor),
+        ),
+        const SizedBox(width: DonySpacing.sm + DonySpacing.xxs),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
+              ),
+              const SizedBox(height: DonySpacing.xxs),
+              Text(label, style: tt.bodyMedium),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

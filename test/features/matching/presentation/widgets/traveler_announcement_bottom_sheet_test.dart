@@ -13,6 +13,7 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_photo_upload.dart';
 import 'package:dony/features/matching/bloc/bid_photos_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
+import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
@@ -75,6 +76,8 @@ AnnouncementModel _buildAnnouncement({
   bool negotiable = false,
   String pricingMode = 'PER_KG',
   List<AnnouncementGridItemModel> priceGridItems = const [],
+  AddressData? pickupAddress,
+  AddressData? deliveryAddress,
 }) {
   final now = DateTime.now();
   return AnnouncementModel(
@@ -91,6 +94,8 @@ AnnouncementModel _buildAnnouncement({
     negotiable: negotiable,
     pricingMode: pricingMode,
     priceGridItems: priceGridItems,
+    pickupAddress: pickupAddress,
+    deliveryAddress: deliveryAddress,
     traveler: TravelerProfile(
       id: 't1',
       displayName: displayName,
@@ -648,6 +653,57 @@ void main() {
         expect(find.text('Publier un colis'), findsNothing);
       },
     );
+  });
+
+  // ── Lieux de remise / récupération ─────────────────────────────────────────
+
+  group('lieux de remise et récupération', () {
+    const pickup = AddressData(label: 'Marseille, France', lat: 43.3, lng: 5.4);
+    const delivery = AddressData(
+      label: "Abobo, Abidjan, Côte d'Ivoire",
+      lat: 5.4,
+      lng: -4.0,
+    );
+
+    testWidgets('adresses présentes → card Lieux avec les deux libellés', (
+      tester,
+    ) async {
+      final a = _buildAnnouncement(
+        kycVerified: true,
+        pickupAddress: pickup,
+        deliveryAddress: delivery,
+      );
+      await tester.pumpWidget(_harness(announcement: a));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Remise du colis'), findsOneWidget);
+      expect(find.text('Récupération'), findsOneWidget);
+      expect(find.text('Marseille, France'), findsOneWidget);
+      expect(find.text("Abobo, Abidjan, Côte d'Ivoire"), findsOneWidget);
+    });
+
+    testWidgets('une seule adresse → seule sa ligne apparaît', (tester) async {
+      final a = _buildAnnouncement(kycVerified: true, pickupAddress: pickup);
+      await tester.pumpWidget(_harness(announcement: a));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Remise du colis'), findsOneWidget);
+      expect(find.text('Récupération'), findsNothing);
+    });
+
+    testWidgets('aucune adresse (annonce legacy) → pas de card Lieux', (
+      tester,
+    ) async {
+      final a = _buildAnnouncement(kycVerified: true);
+      await tester.pumpWidget(_harness(announcement: a));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Remise du colis'), findsNothing);
+      expect(find.text('Récupération'), findsNothing);
+    });
   });
 
   // ── Redesign « Corridor héro » ─────────────────────────────────────────────
