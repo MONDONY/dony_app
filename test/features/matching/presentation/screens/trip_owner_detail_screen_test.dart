@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/design/widgets/dony_app_bar.dart';
@@ -124,6 +126,55 @@ Future<void> _pump(
     MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
   );
   await tester.pump(const Duration(milliseconds: 300));
+}
+
+// ── Pump helper (pile navigable) ──────────────────────────────────────────────
+//
+// Reproduit la topologie de `app.dart` : les blocs globaux (Auth, Bid) sont
+// AU-DESSUS de `MaterialApp.router`, si bien qu'une sheet ouverte sur le
+// navigateur racine peut les lire. Nécessaire pour tester la redirection
+// visiteur → sheet expéditeur, qui quitte l'écran (pop) avant d'ouvrir la sheet.
+Future<GoRouter> _pumpRouted(
+  WidgetTester tester, {
+  required _MockAnnouncementBloc annBloc,
+  required _MockBidBloc bidBloc,
+  required _MockCancellationBloc cancelBloc,
+  required _MockAuthBloc authBloc,
+}) async {
+  tester.view.physicalSize = const Size(800, 1600);
+  tester.view.devicePixelRatio = 1.0;
+  addTearDown(tester.view.resetPhysicalSize);
+
+  final router = GoRouter(
+    initialLocation: '/',
+    routes: [
+      GoRoute(
+        path: '/',
+        builder: (ctx, _) => const Scaffold(body: Text('HOST')),
+      ),
+      GoRoute(
+        path: '/detail',
+        builder: (ctx, _) =>
+            const TripOwnerDetailScreen(announcementId: 'ann-trip-001'),
+      ),
+    ],
+  );
+
+  await tester.pumpWidget(
+    MultiBlocProvider(
+      providers: [
+        BlocProvider<AnnouncementBloc>.value(value: annBloc),
+        BlocProvider<BidBloc>.value(value: bidBloc),
+        BlocProvider<CancellationBloc>.value(value: cancelBloc),
+        BlocProvider<AuthBloc>.value(value: authBloc),
+        BlocProvider<StripeAccountBloc>.value(value: stubStripeAccountBloc()),
+      ],
+      child: MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
+    ),
+  );
+  unawaited(router.push('/detail'));
+  await tester.pump(const Duration(milliseconds: 300));
+  return router;
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
@@ -428,6 +479,84 @@ void main() {
       expect(find.text('Arrivé à destination'), findsNothing);
     },
   );
+
+  // ── Visiteur non propriétaire (deep link d'affiche partagée) ───────────────
+  // Un expéditeur qui ouvre le lien d'un trajet d'un AUTRE voyageur ne doit pas
+  // voir l'écran propriétaire (compteurs de colis, nudge paiements par carte) :
+  // il doit retrouver la vue expéditeur du feed, avec le CTA « Faire une
+  // demande ».
+  testWidgets(
+    'visiteur authentifié non propriétaire → sheet expéditeur, écran quitté',
+    (tester) async {
+      final announcement = _makeAnnouncement();
+      when(
+        () => annBloc.state,
+      ).thenReturn(AnnouncementDetailLoaded(announcement));
+      whenListen(
+        annBloc,
+        Stream<AnnouncementState>.value(AnnouncementDetailLoaded(announcement)),
+        initialState: AnnouncementDetailLoaded(announcement),
+      );
+
+      const visitor = UserModel(
+        id: 'sender-042',
+        roles: [],
+        kycStatus: 'VERIFIED',
+        status: 'ACTIVE',
+      );
+      when(() => authBloc.state).thenReturn(const AuthAuthenticated(visitor));
+      whenListen(
+        authBloc,
+        const Stream<AuthState>.empty(),
+        initialState: const AuthAuthenticated(visitor),
+      );
+
+      await _pumpRouted(
+        tester,
+        annBloc: annBloc,
+        bidBloc: bidBloc,
+        cancelBloc: cancelBloc,
+        authBloc: authBloc,
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(TripOwnerDetailScreen), findsNothing);
+      expect(find.text('Faire une demande'), findsOneWidget);
+    },
+  );
+
+  testWidgets('propriétaire authentifié → écran propriétaire conservé', (
+    tester,
+  ) async {
+    final announcement = _makeAnnouncement();
+    when(
+      () => annBloc.state,
+    ).thenReturn(AnnouncementDetailLoaded(announcement));
+    whenListen(
+      annBloc,
+      Stream<AnnouncementState>.value(AnnouncementDetailLoaded(announcement)),
+      initialState: AnnouncementDetailLoaded(announcement),
+    );
+
+    when(() => authBloc.state).thenReturn(const AuthAuthenticated(_owner));
+    whenListen(
+      authBloc,
+      const Stream<AuthState>.empty(),
+      initialState: const AuthAuthenticated(_owner),
+    );
+
+    await _pumpRouted(
+      tester,
+      annBloc: annBloc,
+      bidBloc: bidBloc,
+      cancelBloc: cancelBloc,
+      authBloc: authBloc,
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(TripOwnerDetailScreen), findsOneWidget);
+    expect(find.text('Faire une demande'), findsNothing);
+  });
 
   group('tripArrivalCtaFor', () {
     test('tous IN_TRANSIT → markArrived', () {

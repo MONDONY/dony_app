@@ -324,7 +324,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `kyc_failed` | KycBloc._onSessionRequested() |
 | `announcement_created` | AnnouncementBloc._onCreateRequested() |
 | `announcement_viewed` | AnnouncementDetailScreen (BlocListener) |
-| `trip_owner_detail_opened` | TripOwnerDetailScreen.initState — ouverture de l'écran détail trajet par le propriétaire (propriété `status`) |
+| `trip_owner_detail_opened` | TripOwnerDetailScreen._evaluateViewer — émis quand le viewer est confirmé propriétaire (annonce chargée + auth résolue), une fois par écran (propriété `status`). Un visiteur non propriétaire (deep link d'affiche partagée) est basculé vers la sheet expéditeur sans émettre l'événement |
 | `trip_parcels_viewed` | TripParcelsSection — chargement de la liste des colis embarqués (propriété `count`) |
 | `trip_parcels_filtered` | TripParcelsSection — chip de filtre statut tapée dans « Colis dans le trajet » (propriété `status`, `all` si « Tous ») |
 | `surplus_opened` | AnnouncementBloc._onSurplusOpenRequested() |
