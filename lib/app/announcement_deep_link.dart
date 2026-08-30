@@ -14,8 +14,10 @@ final RegExp _uuidPattern = RegExp(
 ///
 /// Renvoie la route applicative correspondante, ou `null` si l'URI n'a pas
 /// exactement cette forme. La destination est le détail du trajet, qui gère
-/// lui-même le cas d'un visiteur non propriétaire : un expéditeur venu de
-/// Facebook y voit le trajet sans les actions réservées au voyageur.
+/// lui-même le cas d'un visiteur non propriétaire : une fois l'annonce chargée
+/// et l'auth résolue, il bascule l'expéditeur venu de Facebook vers la vue
+/// expéditeur du feed (sheet « Faire une demande »), seul le voyageur
+/// propriétaire reste sur l'écran propriétaire.
 String? resolveAnnouncementDeepLink(Uri uri) {
   if (uri.scheme != 'yadony' || uri.host != 'annonce') {
     return null;
