@@ -91,6 +91,29 @@ android {
     }
 }
 
+// Garde-fou de configuration native — pendant Android de la phase Xcode
+// « Verify iOS Release Config ».
+//
+// google-services.json est gitignoré et s'échange à la main : rien n'empêchait
+// jusqu'ici un AAB de production de partir avec la configuration Google de
+// staging. L'application se compile, s'installe et se lance ; ce sont la
+// connexion Google et la vérification par SMS qui échouent une fois publiée.
+// C'est exactement ce qui est arrivé à l'IPA 1.0.0+40.
+//
+// Accroché aux seules tâches `bundle*Release`, celles qui produisent l'AAB
+// déposé sur Play. Un `flutter run --release` local passe par `assembleRelease`
+// et reste donc libre : travailler en release contre staging est légitime, et
+// aucun binaire n'en sort. La phase iOS, elle, bloque tout build Release —
+// divergence assumée, c'est le côté Android qui vise juste.
+val verifyAndroidReleaseConfig = tasks.register<Exec>("verifyAndroidReleaseConfig") {
+    val repoRoot = rootProject.projectDir.parentFile
+    workingDir = repoRoot
+    commandLine("$repoRoot/tool/verify_android_release_config.sh")
+}
+
+tasks.matching { it.name.startsWith("bundle") && it.name.endsWith("Release") }
+    .configureEach { dependsOn(verifyAndroidReleaseConfig) }
+
 flutter {
     source = "../.."
 }
