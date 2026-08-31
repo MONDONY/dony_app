@@ -2097,8 +2097,9 @@ class _CurrencySelectionBanner extends StatelessWidget {
       builder: (context, currency, _) {
         final semanticsLabel =
             'Devise de publication : ${currency.displayName}, '
-            '${currency.code}. Les utilisateurs dans une autre devise ne '
-            'verront pas cette annonce. Bouton, modifier la devise.';
+            '${currency.code}. Les utilisateurs dans une autre devise voient '
+            'un prix converti. Le paiement reste dans cette devise. '
+            'Bouton, modifier la devise.';
         return Semantics(
           container: true,
           button: true,
@@ -2133,7 +2134,8 @@ class _CurrencySelectionBanner extends StatelessWidget {
                           ),
                           const SizedBox(height: DonySpacing.xs),
                           Text(
-                            'Les utilisateurs dans une autre devise ne verront pas cette annonce.',
+                            'Les utilisateurs dans une autre devise voient un prix '
+                            'converti. Le paiement reste dans cette devise.',
                             style: tt.bodySmall?.copyWith(
                               color: cs.onSurfaceVariant,
                             ),

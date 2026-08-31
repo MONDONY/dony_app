@@ -638,8 +638,8 @@ void main() {
       expect(
         find.bySemanticsLabel(
           'Devise de publication : Euro, EUR. Les utilisateurs dans une '
-          'autre devise ne verront pas cette annonce. Bouton, modifier la '
-          'devise.',
+          'autre devise voient un prix converti. Le paiement reste dans '
+          'cette devise. Bouton, modifier la devise.',
         ),
         findsOneWidget,
       );

@@ -25,11 +25,13 @@ class CurrencyPublishBanner extends StatelessWidget {
         ? 'Publié en ${currency!.displayName} (${currency!.code})'
         : 'Devise à confirmer';
     final description = hasCurrency
-        ? 'Les utilisateurs dans une autre devise ne verront pas cette annonce.'
+        ? 'Les utilisateurs dans une autre devise voient un prix converti. '
+              'Le paiement reste dans cette devise.'
         : 'La devise de publication est vérifiée par Yadony avant publication.';
     final semantics = hasCurrency
         ? 'Publication en ${currency!.displayName}, devise ${currency!.code}. '
-              'Les utilisateurs dans une autre devise ne verront pas cette annonce.'
+              'Les utilisateurs dans une autre devise voient un prix converti. '
+              'Le paiement reste dans cette devise.'
         : 'Devise de publication à confirmer par Yadony avant publication.';
 
     return Semantics(
