@@ -1,3 +1,4 @@
+import 'package:dony/core/config/pro_flag.dart';
 import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -239,61 +240,73 @@ class ProfileAdvantagesSection extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        ProfileSectionLabel(label: 'MES AVANTAGES', cs: cs),
-        ProfileListSection(
-          tiles: [
-            DonyListTile(
-              iconAsset: 'award',
-              iconColor: isProAccount ? cs.success : cs.warning,
-              iconBgColor: isProAccount ? cs.successLight : cs.warningLight,
-              label: isProAccount ? 'Mon profil PRO' : 'Passer en compte PRO',
-              trailing: isProAccount
-                  ? DonyIcon('badge-check', color: cs.success, size: 18)
-                  : null,
-              onTap: user != null
-                  ? () => context.push('/profile/upgrade-to-pro')
-                  : null,
-            ),
-            DonyListTile(
-              iconAsset: 'user-plus',
-              iconColor: cs.success,
-              iconBgColor: cs.successLight,
-              label: 'Parrainages',
-              trailing: Text(
-                '0 invité',
-                style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
+    // La tuile PRO suit le feature flag backend (`pro_enabled`) : offre
+    // fermée, elle disparaît pour tout le monde, y compris un compte déjà PRO
+    // (octroi admin, historique) — l'écran vers lequel elle mène est lui-même
+    // redirigé vers le profil tant que l'offre n'est pas ouverte.
+    return ValueListenableBuilder<bool>(
+      valueListenable: proEnabledListenable,
+      builder: (context, proEnabled, _) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ProfileSectionLabel(label: 'MES AVANTAGES', cs: cs),
+          ProfileListSection(
+            tiles: [
+              if (proEnabled)
+                DonyListTile(
+                  iconAsset: 'award',
+                  iconColor: isProAccount ? cs.success : cs.warning,
+                  iconBgColor: isProAccount ? cs.successLight : cs.warningLight,
+                  label: isProAccount
+                      ? 'Mon profil PRO'
+                      : 'Passer en compte PRO',
+                  trailing: isProAccount
+                      ? DonyIcon('badge-check', color: cs.success, size: 18)
+                      : null,
+                  onTap: user != null
+                      ? () => context.push('/profile/upgrade-to-pro')
+                      : null,
+                ),
+              DonyListTile(
+                iconAsset: 'user-plus',
+                iconColor: cs.success,
+                iconBgColor: cs.successLight,
+                label: 'Parrainages',
+                trailing: Text(
+                  '0 invité',
+                  style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
+                ),
+                onTap: () => context.push('/profile/referral'),
               ),
-              onTap: () => context.push('/profile/referral'),
-            ),
-            BlocBuilder<ReferralBloc, ReferralState>(
-              builder: (context, referralState) {
-                final alreadyReferred =
-                    referralState is ReferralLoaded &&
-                    referralState.info.hasBeenReferred;
-                if (alreadyReferred) return const SizedBox.shrink();
-                return DonyListTile(
-                  iconAsset: 'gift',
-                  iconColor: cs.primary,
-                  iconBgColor: cs.primaryContainer,
-                  label: 'J\'ai un code parrain',
-                  showDivider: false,
-                  onTap: () async {
-                    final redeemed = await RedeemCodeBottomSheet.show(context);
-                    if ((redeemed ?? false) && context.mounted) {
-                      context.read<ReferralBloc>().add(
-                        const ReferralLoadRequested(),
+              BlocBuilder<ReferralBloc, ReferralState>(
+                builder: (context, referralState) {
+                  final alreadyReferred =
+                      referralState is ReferralLoaded &&
+                      referralState.info.hasBeenReferred;
+                  if (alreadyReferred) return const SizedBox.shrink();
+                  return DonyListTile(
+                    iconAsset: 'gift',
+                    iconColor: cs.primary,
+                    iconBgColor: cs.primaryContainer,
+                    label: 'J\'ai un code parrain',
+                    showDivider: false,
+                    onTap: () async {
+                      final redeemed = await RedeemCodeBottomSheet.show(
+                        context,
                       );
-                    }
-                  },
-                );
-              },
-            ),
-          ],
-        ),
-      ],
+                      if ((redeemed ?? false) && context.mounted) {
+                        context.read<ReferralBloc>().add(
+                          const ReferralLoadRequested(),
+                        );
+                      }
+                    },
+                  );
+                },
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:dony/core/config/pro_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/widgets/browser_return_refresh_mixin.dart';
@@ -52,6 +53,21 @@ class _SubscriptionBannerHostState extends State<SubscriptionBannerHost>
       return const SizedBox.shrink();
     }
 
+    // Même porte pour le feature flag : offre PRO fermée, le bandeau (et son
+    // appel réseau) n'ont pas lieu d'être, même pour un compte PRO — ses
+    // actions mèneraient à un portail que l'application ne propose plus.
+    return ValueListenableBuilder<bool>(
+      valueListenable: proEnabledListenable,
+      builder: (context, proEnabled, _) {
+        if (!proEnabled) {
+          return const SizedBox.shrink();
+        }
+        return _buildBanner(context);
+      },
+    );
+  }
+
+  Widget _buildBanner(BuildContext context) {
     return BlocProvider<SubscriptionBloc>(
       create: (_) {
         final bloc = getIt<SubscriptionBloc>()

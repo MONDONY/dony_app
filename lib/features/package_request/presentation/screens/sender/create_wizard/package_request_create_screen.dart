@@ -6,6 +6,7 @@ import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/features/billing/presentation/pro_limit_dialog.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
@@ -278,14 +279,12 @@ class _PackageRequestCreateScreenState
     BuildContext context,
     String message,
   ) async {
-    final confirmed = await DonyDialog.show(
+    final goPro = await showProLimitReachedDialog(
       context,
       title: 'Limite de brouillons atteinte',
       message: message,
-      confirmLabel: 'Passer en PRO',
-      cancelLabel: 'Plus tard',
     );
-    if (confirmed == true && context.mounted) {
+    if (goPro && context.mounted) {
       unawaited(context.push('/profile/upgrade-to-pro'));
     }
   }

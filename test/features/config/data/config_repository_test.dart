@@ -147,6 +147,30 @@ void main() {
 
       expect(() => datasource.getSmsEnabled(), throwsA(isA<DioException>()));
     });
+
+    test('getProEnabled returns enabled flag from API response', () async {
+      when(() => mockDio.get('/config/pro-enabled')).thenAnswer(
+        (_) async => Response(
+          data: {'enabled': true},
+          statusCode: 200,
+          requestOptions: RequestOptions(path: '/config/pro-enabled'),
+        ),
+      );
+
+      final enabled = await datasource.getProEnabled();
+      expect(enabled, true);
+    });
+
+    test('getProEnabled throws on network error', () async {
+      when(() => mockDio.get('/config/pro-enabled')).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(path: '/config/pro-enabled'),
+          message: 'Network error',
+        ),
+      );
+
+      expect(() => datasource.getProEnabled(), throwsA(isA<DioException>()));
+    });
   });
 
   group('ConfigRepository', () {
@@ -236,6 +260,30 @@ void main() {
 
       final enabled = await repository.getSmsEnabled();
       expect(enabled, false);
+    });
+
+    test('getProEnabled delegates to datasource', () async {
+      when(() => mockDio.get('/config/pro-enabled')).thenAnswer(
+        (_) async => Response(
+          data: {'enabled': false},
+          statusCode: 200,
+          requestOptions: RequestOptions(path: '/config/pro-enabled'),
+        ),
+      );
+
+      final enabled = await repository.getProEnabled();
+      expect(enabled, false);
+    });
+
+    test('getProEnabled rethrows network exceptions', () async {
+      when(() => mockDio.get('/config/pro-enabled')).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(path: '/config/pro-enabled'),
+          message: 'Server error',
+        ),
+      );
+
+      expect(() => repository.getProEnabled(), throwsA(isA<Exception>()));
     });
 
     test('getSmsEnabled rethrows network exceptions', () async {

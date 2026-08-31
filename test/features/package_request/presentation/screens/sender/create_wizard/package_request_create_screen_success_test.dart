@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:dony/core/config/pro_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
@@ -131,6 +132,11 @@ void main() {
   });
 
   setUp(() {
+    // Offre PRO ouverte : le dialogue « limite atteinte » n'offre « Passer en
+    // PRO » que dans ce cas (cf. pro_limit_dialog_test pour l'offre fermée).
+    setProEnabled(true);
+    addTearDown(() => setProEnabled(kProEnabledDefault));
+
     repo = _MockRepo();
     when(
       () => repo.create(

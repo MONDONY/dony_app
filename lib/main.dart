@@ -5,6 +5,7 @@ import 'package:dony/app/app.dart';
 import 'package:dony/app/initial_location.dart';
 import 'package:dony/app/router.dart';
 import 'package:dony/core/config/api_config.dart';
+import 'package:dony/core/config/pro_flag.dart';
 import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/firebase/firebase_options.dart';
@@ -178,6 +179,21 @@ Future<void> _bootstrap() async {
   // suivent automatiquement. Repli sûr sur false (masqué) si le flag n'a pas
   // encore été chargé ou en cas d'erreur — voir kSmsAuthEnabledDefault.
   unawaited(_loadSmsEnabled());
+
+  // Feature flag PRO (SOURCE UNIQUE : réglage plateforme pro_enabled côté
+  // backend, piloté depuis le back-office) : chargé une fois pour que la tuile
+  // « Passer en compte PRO », le bandeau d'abonnement et les invitations
+  // « Passer en PRO » suivent automatiquement. Repli sûr sur false (masqué)
+  // tant que le flag n'a pas été chargé ou en cas d'erreur.
+  unawaited(_loadProEnabled());
+}
+
+Future<void> _loadProEnabled() async {
+  try {
+    setProEnabled(await getIt<IConfigRepository>().getProEnabled());
+  } catch (_) {
+    // Repli sur kProEnabledDefault (masqué) conservé — non bloquant.
+  }
 }
 
 Future<void> _loadDonyCommissionRate() async {
