@@ -1,5 +1,10 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/services/external_url_launcher.dart';
+import 'package:dony/core/utils/map_launcher.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -9,6 +14,7 @@ import 'package:dony/features/kyc/presentation/widgets/kyc_status_bottom_sheet.d
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
+import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
@@ -17,6 +23,7 @@ import 'package:dony/features/profile/presentation/screens/profile_public_screen
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 
 void showTravelerAnnouncementSheet(
@@ -233,6 +240,29 @@ class _TravelerAnnouncementContent extends StatelessWidget {
           _LocationsCard(announcement: announcement),
         ],
 
+        if (announcement.acceptedPaymentMethods.isNotEmpty) ...[
+          const SizedBox(height: DonySpacing.lg),
+          Text(
+            'Paiements acceptés',
+            style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
+          ),
+          const SizedBox(height: DonySpacing.sm),
+          Wrap(
+            spacing: DonySpacing.xs + 2,
+            runSpacing: DonySpacing.xs,
+            children: [
+              for (final m in announcement.acceptedPaymentMethods)
+                _PaymentChip(method: m),
+            ],
+          ),
+        ],
+
+        if (announcement.arrivalInstructions != null &&
+            announcement.arrivalInstructions!.trim().isNotEmpty) ...[
+          const SizedBox(height: DonySpacing.lg),
+          _InstructionsCard(text: announcement.arrivalInstructions!.trim()),
+        ],
+
         if (categories.isNotEmpty) ...[
           const SizedBox(height: DonySpacing.lg),
           Text(
@@ -317,6 +347,11 @@ class _HeroCorridorCard extends StatelessWidget {
         ? 'Kg libre'
         : '${announcement.availableKg.toStringAsFixed(0)} kg dispo';
     final transportLabel = announcement.transportMode?.label;
+    final depTime = announcement.departureTime;
+    final arrTime = announcement.arrivalTime;
+    final hoursLabel = (depTime != null && arrTime != null)
+        ? '$depTime → $arrTime'
+        : null;
 
     final cityStyle = tt.headlineSmall?.copyWith(
       fontWeight: FontWeight.w800,
@@ -378,6 +413,7 @@ class _HeroCorridorCard extends StatelessWidget {
             children: [
               _HeroChip(label: dateStr),
               if (transportLabel != null) _HeroChip(label: transportLabel),
+              if (hoursLabel != null) _HeroChip(label: hoursLabel),
               _HeroChip(label: kgLabel),
             ],
           ),
@@ -736,32 +772,36 @@ class _LocationsCard extends StatelessWidget {
     final pickup = announcement.pickupAddress;
     final delivery = announcement.deliveryAddress;
     return Container(
-      padding: const EdgeInsets.all(DonySpacing.md),
       decoration: BoxDecoration(
         color: cs.surface,
         borderRadius: BorderRadius.circular(DonyRadius.card),
         border: Border.all(color: cs.outline),
       ),
+      clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (pickup != null && delivery != null)
+            _RouteMiniMap(pickup: pickup, delivery: delivery),
           if (pickup != null)
             _LocationRow(
+              key: const Key('location-pickup'),
               iconAsset: 'upload',
               iconColor: cs.primary,
               iconBackground: cs.primaryContainer,
               title: 'Remise du colis',
-              label: pickup.label,
+              address: pickup,
             ),
           if (pickup != null && delivery != null)
-            const SizedBox(height: DonySpacing.sm + DonySpacing.xxs),
+            Divider(height: 1, color: cs.surfaceContainerHighest),
           if (delivery != null)
             _LocationRow(
+              key: const Key('location-delivery'),
               iconAsset: 'download',
               iconColor: DonyColors.accent,
               iconBackground: DonyColors.accentSoft,
               title: 'Récupération',
-              label: delivery.label,
+              address: delivery,
             ),
         ],
       ),
@@ -769,53 +809,250 @@ class _LocationsCard extends StatelessWidget {
   }
 }
 
+/// Une ligne d'adresse entièrement tappable : ouvre le point dans l'app de
+/// carte native (Plans sur iOS, Google Maps sur Android). Le badge
+/// « Itinéraire » signale l'affordance sans laisser croire à un lien web.
 class _LocationRow extends StatelessWidget {
   const _LocationRow({
+    super.key,
     required this.iconAsset,
     required this.iconColor,
     required this.iconBackground,
     required this.title,
-    required this.label,
+    required this.address,
   });
 
   final String iconAsset;
   final Color iconColor;
   final Color iconBackground;
   final String title;
-  final String label;
+  final AddressData address;
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 28,
-          height: 28,
-          decoration: BoxDecoration(
-            color: iconBackground,
-            borderRadius: BorderRadius.circular(DonyRadius.sm),
-          ),
-          alignment: Alignment.center,
-          child: DonyIcon(iconAsset, size: 14, color: iconColor),
+    return InkWell(
+      onTap: () => unawaited(
+        openInMaps(
+          getIt<ExternalUrlLauncher>(),
+          lat: address.lat,
+          lng: address.lng,
+          label: address.label,
         ),
-        const SizedBox(width: DonySpacing.sm + DonySpacing.xxs),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(DonySpacing.md),
+        child: Row(
+          children: [
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: iconBackground,
+                borderRadius: BorderRadius.circular(DonyRadius.sm),
               ),
-              const SizedBox(height: DonySpacing.xxs),
-              Text(label, style: tt.bodyMedium),
-            ],
-          ),
+              alignment: Alignment.center,
+              child: DonyIcon(iconAsset, size: 14, color: iconColor),
+            ),
+            const SizedBox(width: DonySpacing.sm + DonySpacing.xxs),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
+                  ),
+                  const SizedBox(height: DonySpacing.xxs),
+                  Text(address.label, style: tt.bodyMedium),
+                ],
+              ),
+            ),
+            const SizedBox(width: DonySpacing.sm),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                DonyIcon('map-pin', size: 13, color: cs.primary),
+                const SizedBox(width: DonySpacing.xxs),
+                Text(
+                  'Itinéraire',
+                  style: tt.bodySmall?.copyWith(
+                    color: cs.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
-      ],
+      ),
+    );
+  }
+}
+
+/// Mini-carte non interactive de l'itinéraire (remise → récupération), en tête
+/// de la card Lieux. Tap = ouvre la carte native centrée sur la remise. En
+/// `liteMode` sur Android (bitmap léger) ; sur iOS, une carte figée (tous les
+/// gestes désactivés). Un `GestureDetector` par-dessus capte le tap partout.
+class _RouteMiniMap extends StatelessWidget {
+  const _RouteMiniMap({required this.pickup, required this.delivery});
+
+  final AddressData pickup;
+  final AddressData delivery;
+
+  @override
+  Widget build(BuildContext context) {
+    final swLat = pickup.lat < delivery.lat ? pickup.lat : delivery.lat;
+    final swLng = pickup.lng < delivery.lng ? pickup.lng : delivery.lng;
+    final neLat = pickup.lat > delivery.lat ? pickup.lat : delivery.lat;
+    final neLng = pickup.lng > delivery.lng ? pickup.lng : delivery.lng;
+
+    return SizedBox(
+      height: 130,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          GoogleMap(
+            initialCameraPosition: CameraPosition(
+              target: LatLng(
+                (pickup.lat + delivery.lat) / 2,
+                (pickup.lng + delivery.lng) / 2,
+              ),
+              zoom: 2,
+            ),
+            liteModeEnabled: true,
+            zoomControlsEnabled: false,
+            myLocationButtonEnabled: false,
+            mapToolbarEnabled: false,
+            compassEnabled: false,
+            // Carte figée : le tap est géré par le GestureDetector au-dessus.
+            zoomGesturesEnabled: false,
+            scrollGesturesEnabled: false,
+            rotateGesturesEnabled: false,
+            tiltGesturesEnabled: false,
+            markers: {
+              Marker(
+                markerId: const MarkerId('pickup'),
+                position: LatLng(pickup.lat, pickup.lng),
+              ),
+              Marker(
+                markerId: const MarkerId('delivery'),
+                position: LatLng(delivery.lat, delivery.lng),
+              ),
+            },
+            onMapCreated: (c) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                c.animateCamera(
+                  CameraUpdate.newLatLngBounds(
+                    LatLngBounds(
+                      southwest: LatLng(swLat, swLng),
+                      northeast: LatLng(neLat, neLng),
+                    ),
+                    40,
+                  ),
+                );
+              });
+            },
+          ),
+          Positioned.fill(
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => unawaited(
+                openInMaps(
+                  getIt<ExternalUrlLauncher>(),
+                  lat: pickup.lat,
+                  lng: pickup.lng,
+                  label: pickup.label,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Chip d'un moyen de paiement accepté (espèces / carte).
+class _PaymentChip extends StatelessWidget {
+  const _PaymentChip({required this.method});
+
+  final BidPaymentMethod method;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    final isCash = method == BidPaymentMethod.cash;
+    final label = isCash ? 'Espèces' : 'Carte';
+    final icon = isCash ? 'banknote' : 'credit-card';
+    final fg = isCash ? cs.success : cs.primary;
+    final bg = isCash ? cs.successLight : cs.primaryContainer;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.sm + DonySpacing.xxs,
+        vertical: DonySpacing.xs + 1,
+      ),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(DonyRadius.xl),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          DonyIcon(icon, size: 13, color: fg),
+          const SizedBox(width: DonySpacing.xs),
+          Text(
+            label,
+            style: tt.bodySmall?.copyWith(
+              color: fg,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Encart « Instructions du voyageur » (consignes de retrait), ton neutre.
+class _InstructionsCard extends StatelessWidget {
+  const _InstructionsCard({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(DonySpacing.md),
+      decoration: BoxDecoration(
+        color: cs.surfaceWarm,
+        borderRadius: BorderRadius.circular(DonyRadius.md),
+        border: Border.all(color: cs.outline),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          DonyIcon('info', size: 16, color: cs.warning),
+          const SizedBox(width: DonySpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Instructions du voyageur',
+                  style: tt.labelMedium?.copyWith(color: cs.warning),
+                ),
+                const SizedBox(height: DonySpacing.xxs),
+                Text(text, style: tt.bodyMedium),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

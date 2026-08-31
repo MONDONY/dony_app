@@ -10,6 +10,7 @@ import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/contact_picker_service.dart';
 import 'package:dony/core/services/device_id_service.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
+import 'package:dony/core/services/external_url_launcher.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/services/media_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
@@ -272,6 +273,8 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerLazySingleton<AddressAutocompleteService>(
     () => AddressAutocompleteService(dio: getIt<ApiClient>().dio),
   );
+
+  getIt.registerLazySingleton<ExternalUrlLauncher>(() => ExternalUrlLauncher());
 
   // Auth
   getIt.registerLazySingleton<AuthRemoteDatasource>(
