@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/config/pro_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
@@ -88,6 +89,12 @@ void main() {
     GetIt.instance.reset();
   });
 
+  // Offre PRO ouverte par défaut : ces tests décrivent le bandeau tel qu'il
+  // se comporte quand l'offre existe. Le cas « offre fermée » a son propre
+  // test dans le groupe de la porte réseau.
+  setUp(() => setProEnabled(true));
+  tearDown(() => setProEnabled(kProEnabledDefault));
+
   // ── Porte réseau : isProAccount ─────────────────────────────────────────
 
   group('SubscriptionBannerHost — isProAccount gate', () {
@@ -131,6 +138,26 @@ void main() {
         // Discriminant : si le widget créait le BLoC puis se contentait de ne
         // pas lui envoyer d'event, ce provider existerait quand même dans
         // l'arbre.
+        expect(find.byType(BlocProvider<SubscriptionBloc>), findsNothing);
+        expect(find.byType(SubscriptionStatusBanner), findsNothing);
+        verifyNever(() => mockRepo.getSubscription());
+      },
+    );
+
+    testWidgets(
+      'offre PRO fermée (pro_enabled=false): même un compte PRO ne crée ni '
+      'BLoC ni appel réseau',
+      (tester) async {
+        setProEnabled(false);
+
+        await tester.pumpWidget(
+          _wrap(const SubscriptionBannerHost(isProAccount: true)),
+        );
+        await tester.pump(_kSettle);
+
+        // Les actions du bandeau (« Gérer », « Régler ») mèneraient à un
+        // portail que l'application ne propose plus tant que l'offre est
+        // fermée : rien ne doit partir, rien ne doit s'afficher.
         expect(find.byType(BlocProvider<SubscriptionBloc>), findsNothing);
         expect(find.byType(SubscriptionStatusBanner), findsNothing);
         verifyNever(() => mockRepo.getSubscription());

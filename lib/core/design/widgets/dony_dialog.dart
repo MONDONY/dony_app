@@ -14,6 +14,10 @@ import 'package:flutter/material.dart';
 ///   variant: DonyDialogVariant.destructive,
 /// );
 /// ```
+///
+/// `cancelLabel: null` retire le bouton secondaire : le dialogue ne fait
+/// qu'informer, et son unique bouton rend `true`. À réserver aux messages
+/// sans alternative (une limite atteinte qu'aucune action ne peut lever).
 enum DonyDialogVariant { info, destructive }
 
 abstract final class DonyDialog {
@@ -23,7 +27,7 @@ abstract final class DonyDialog {
     String? message,
     Widget? content,
     String confirmLabel = 'Confirmer',
-    String cancelLabel = 'Annuler',
+    String? cancelLabel = 'Annuler',
     DonyDialogVariant variant = DonyDialogVariant.info,
     IconData? icon,
     String? iconAsset,
@@ -82,7 +86,7 @@ class _DonyDialogWidget extends StatelessWidget {
   final String? message;
   final Widget? content;
   final String confirmLabel;
-  final String cancelLabel;
+  final String? cancelLabel;
   final DonyDialogVariant variant;
   final IconData? icon;
   final String? iconAsset;
@@ -164,13 +168,15 @@ class _DonyDialogWidget extends StatelessWidget {
             const SizedBox(height: DonySpacing.xl),
             Row(
               children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.of(context).pop(false),
-                    child: Text(cancelLabel),
+                if (cancelLabel != null) ...[
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.of(context).pop(false),
+                      child: Text(cancelLabel!),
+                    ),
                   ),
-                ),
-                const SizedBox(width: DonySpacing.sm),
+                  const SizedBox(width: DonySpacing.sm),
+                ],
                 Expanded(
                   child: FilledButton(
                     onPressed: () => Navigator.of(context).pop(true),

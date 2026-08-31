@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/config/pro_flag.dart';
 import 'package:dony/core/design/widgets/dony_avatar.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
@@ -251,6 +252,11 @@ void main() {
   late MockStripeAccountBloc stripeAccountBloc;
 
   setUp(() {
+    // Offre PRO ouverte par défaut : la tuile « Passer en compte PRO » et le
+    // bandeau d'abonnement en dépendent. Le cas « offre fermée » a son test.
+    setProEnabled(true);
+    addTearDown(() => setProEnabled(kProEnabledDefault));
+
     authBloc = MockAuthBloc();
     deletionBloc = MockAccountDeletionBloc();
     businessPrefsBloc = stubBusinessPrefsBloc();
@@ -508,6 +514,46 @@ void main() {
       expect(find.text('Mon profil PRO'), findsOneWidget);
       expect(find.text('Passer en compte PRO'), findsNothing);
     });
+
+    testWidgets(
+      'offre PRO fermée (pro_enabled=false) : aucune tuile PRO, le reste de '
+      '« Mes avantages » demeure',
+      (tester) async {
+        setProEnabled(false);
+        await pumpWith(tester, _dualRoleUser);
+        // On se place sur la section, sinon une tuile hors écran ne serait
+        // simplement pas construite et « findsNothing » ne prouverait rien.
+        await _scrollTo(tester, find.text('Parrainages'));
+
+        expect(find.text('Parrainages'), findsOneWidget);
+        expect(find.text('Passer en compte PRO'), findsNothing);
+        expect(find.text('Mon profil PRO'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'offre PRO fermée : un compte déjà PRO ne voit pas « Mon profil PRO » '
+      'non plus',
+      (tester) async {
+        setProEnabled(false);
+        await pumpWith(
+          tester,
+          const UserModel(
+            id: 'pro-2',
+            firstName: 'Pro',
+            lastName: 'User',
+            roles: ['TRAVELER', 'SENDER'],
+            kycStatus: 'VERIFIED',
+            status: 'ACTIVE',
+            isProAccount: true,
+          ),
+        );
+        await _scrollTo(tester, find.text('Parrainages'));
+
+        expect(find.text('Mon profil PRO'), findsNothing);
+        expect(find.text('Passer en compte PRO'), findsNothing);
+      },
+    );
   });
 
   // ── Navigation ──────────────────────────────────────────────────────────────

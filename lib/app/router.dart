@@ -1,4 +1,5 @@
 import 'package:dony/app/main_shell.dart';
+import 'package:dony/core/config/pro_flag.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
@@ -241,6 +242,12 @@ const _publicRoutes = {
 /// Extrait du `redirect` du routeur pour rester vérifiable sans Firebase ni
 /// montage de l'application (cf. `test/app/router_auth_redirect_test.dart`).
 @visibleForTesting
+/// Garde de la route `/profile/upgrade-to-pro` : tant que l'offre PRO est
+/// fermée (`pro_enabled=false` côté backend), l'écran de vente est renvoyé
+/// vers le profil. Fonction pure, testée sans monter le routeur.
+String? resolveProRouteRedirect({required bool proEnabled}) =>
+    proEnabled ? null : '/profile';
+
 String? resolveAuthRedirect({
   required String matchedLocation,
   required String path,
@@ -1199,6 +1206,10 @@ final appRouter = GoRouter(
     // ── Upgrade PRO (hors shell) ──────────────────────────────────────
     GoRoute(
       path: '/profile/upgrade-to-pro',
+      // Offre PRO fermée : la route n'a plus d'entrée dans l'interface, mais
+      // un lien profond ou une ancienne notification peuvent encore la viser.
+      redirect: (context, state) =>
+          resolveProRouteRedirect(proEnabled: proEnabledListenable.value),
       builder: (context, state) => const UpgradeToProScreen(),
     ),
 

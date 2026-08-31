@@ -8,6 +8,7 @@ import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/billing/presentation/pro_limit_dialog.dart';
 import 'package:dony/features/cancellation/presentation/widgets/cancellation_bottom_sheet.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
@@ -429,14 +430,12 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
   /// Limite mensuelle de trajets PRO atteinte — invite à passer PRO (pattern
   /// repris de [CreateTripScreen]).
   Future<void> _onProLimitReached(BuildContext context, String message) async {
-    final confirmed = await DonyDialog.show(
+    final goPro = await showProLimitReachedDialog(
       context,
       title: 'Limite mensuelle atteinte',
       message: message,
-      confirmLabel: 'Passer en PRO',
-      cancelLabel: 'Plus tard',
     );
-    if (confirmed == true && context.mounted) {
+    if (goPro && context.mounted) {
       unawaited(context.push('/profile/upgrade-to-pro'));
     }
   }

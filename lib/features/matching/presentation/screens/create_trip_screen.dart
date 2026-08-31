@@ -13,6 +13,7 @@ import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/billing/presentation/pro_limit_dialog.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/kyc/presentation/widgets/kyc_onboarding_bottom_sheet.dart';
@@ -1664,28 +1665,24 @@ class _TripFormContentState extends State<_TripFormContent> {
           } else if (state is AnnouncementProLimitReached) {
             context.pop();
             if (context.mounted) {
-              final confirmed = await DonyDialog.show(
+              final goPro = await showProLimitReachedDialog(
                 context,
                 title: 'Limite mensuelle atteinte',
                 message: state.message,
-                confirmLabel: 'Passer en PRO',
-                cancelLabel: 'Plus tard',
               );
-              if (confirmed == true && context.mounted) {
+              if (goPro && context.mounted) {
                 unawaited(context.push('/profile/upgrade-to-pro'));
               }
             }
           } else if (state is AnnouncementDraftLimitReached) {
             context.pop();
             if (context.mounted) {
-              final confirmed = await DonyDialog.show(
+              final goPro = await showProLimitReachedDialog(
                 context,
                 title: 'Limite de brouillons atteinte',
                 message: state.message,
-                confirmLabel: 'Passer en PRO',
-                cancelLabel: 'Plus tard',
               );
-              if (confirmed == true && context.mounted) {
+              if (goPro && context.mounted) {
                 unawaited(context.push('/profile/upgrade-to-pro'));
               }
             }
