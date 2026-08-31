@@ -40,13 +40,21 @@ void main() {
       expect(google.queryParameters['query'], '43.2965,5.3698');
     });
 
-    test('label avec caractères spéciaux : re-décodé identique, https valide', () {
-      const label = "Abobo, Abidjan, Côte d'Ivoire";
-      final uri = buildMapUri(lat: lat, lng: lng, label: label, isApple: true);
-      expect(uri.queryParameters['q'], label);
-      expect(uri.toString(), startsWith('https://maps.apple.com/'));
-      // Aucune espace brute dans la chaîne encodée.
-      expect(uri.toString(), isNot(contains(' ')));
-    });
+    test(
+      'label avec caractères spéciaux : re-décodé identique, https valide',
+      () {
+        const label = "Abobo, Abidjan, Côte d'Ivoire";
+        final uri = buildMapUri(
+          lat: lat,
+          lng: lng,
+          label: label,
+          isApple: true,
+        );
+        expect(uri.queryParameters['q'], label);
+        expect(uri.toString(), startsWith('https://maps.apple.com/'));
+        // Aucune espace brute dans la chaîne encodée.
+        expect(uri.toString(), isNot(contains(' ')));
+      },
+    );
   });
 }
