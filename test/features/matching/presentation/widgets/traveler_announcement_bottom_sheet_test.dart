@@ -1,4 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/external_url_launcher.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -13,6 +15,7 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_photo_upload.dart';
 import 'package:dony/features/matching/bloc/bid_photos_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
+import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
@@ -50,6 +53,10 @@ class _MockBidPhotosCubit extends MockCubit<List<BidPhotoUpload>>
 class _MockRecipientBloc extends MockBloc<RecipientEvent, RecipientState>
     implements RecipientBloc {}
 
+class _MockExternalUrlLauncher extends Mock implements ExternalUrlLauncher {}
+
+class _FakeUri extends Fake implements Uri {}
+
 class _FakeContentCategoryRepository implements IContentCategoryRepository {
   @override
   Future<List<ContentCategory>> getCategories() async => fallbackCatalog;
@@ -75,6 +82,14 @@ AnnouncementModel _buildAnnouncement({
   bool negotiable = false,
   String pricingMode = 'PER_KG',
   List<AnnouncementGridItemModel> priceGridItems = const [],
+  AddressData? pickupAddress,
+  AddressData? deliveryAddress,
+  String? departureTime,
+  String? arrivalTime,
+  String? arrivalInstructions,
+  Set<BidPaymentMethod> acceptedPaymentMethods = const {
+    BidPaymentMethod.stripe,
+  },
 }) {
   final now = DateTime.now();
   return AnnouncementModel(
@@ -83,6 +98,8 @@ AnnouncementModel _buildAnnouncement({
     departureCity: 'Paris',
     arrivalCity: 'Dakar',
     departureDate: DateTime(now.year, now.month + 1, 15),
+    departureTime: departureTime,
+    arrivalTime: arrivalTime,
     availableKg: 12,
     totalKg: 20,
     pricePerKg: 8,
@@ -91,6 +108,10 @@ AnnouncementModel _buildAnnouncement({
     negotiable: negotiable,
     pricingMode: pricingMode,
     priceGridItems: priceGridItems,
+    pickupAddress: pickupAddress,
+    deliveryAddress: deliveryAddress,
+    arrivalInstructions: arrivalInstructions,
+    acceptedPaymentMethods: acceptedPaymentMethods,
     traveler: TravelerProfile(
       id: 't1',
       displayName: displayName,
@@ -193,7 +214,10 @@ Widget _harness({
 // ─── Tests ───────────────────────────────────────────────────────────────────
 
 void main() {
-  setUpAll(() => initializeDateFormatting('fr'));
+  setUpAll(() {
+    initializeDateFormatting('fr');
+    registerFallbackValue(_FakeUri());
+  });
 
   // ── Tests existants (comportement inchangé) ────────────────────────────────
 
@@ -318,6 +342,10 @@ void main() {
 
       expect(find.byKey(const Key('report-announcement-link')), findsOneWidget);
 
+      await tester.ensureVisible(
+        find.byKey(const Key('report-announcement-link')),
+      );
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('report-announcement-link')));
       await tester.pumpAndSettle();
 
@@ -648,6 +676,154 @@ void main() {
         expect(find.text('Publier un colis'), findsNothing);
       },
     );
+  });
+
+  // ── Lieux de remise / récupération ─────────────────────────────────────────
+
+  group('lieux de remise et récupération', () {
+    const pickup = AddressData(label: 'Marseille, France', lat: 43.3, lng: 5.4);
+    const delivery = AddressData(
+      label: "Abobo, Abidjan, Côte d'Ivoire",
+      lat: 5.4,
+      lng: -4.0,
+    );
+
+    testWidgets('adresses présentes → card Lieux avec les deux libellés', (
+      tester,
+    ) async {
+      final a = _buildAnnouncement(
+        kycVerified: true,
+        pickupAddress: pickup,
+        deliveryAddress: delivery,
+      );
+      await tester.pumpWidget(_harness(announcement: a));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Remise du colis'), findsOneWidget);
+      expect(find.text('Récupération'), findsOneWidget);
+      expect(find.text('Marseille, France'), findsOneWidget);
+      expect(find.text("Abobo, Abidjan, Côte d'Ivoire"), findsOneWidget);
+    });
+
+    testWidgets('une seule adresse → seule sa ligne apparaît', (tester) async {
+      final a = _buildAnnouncement(kycVerified: true, pickupAddress: pickup);
+      await tester.pumpWidget(_harness(announcement: a));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Remise du colis'), findsOneWidget);
+      expect(find.text('Récupération'), findsNothing);
+    });
+
+    testWidgets('tap sur une adresse → ouvre la carte native (launcher)', (
+      tester,
+    ) async {
+      final launcher = _MockExternalUrlLauncher();
+      when(() => launcher.open(any())).thenAnswer((_) async => true);
+      if (getIt.isRegistered<ExternalUrlLauncher>()) {
+        getIt.unregister<ExternalUrlLauncher>();
+      }
+      getIt.registerSingleton<ExternalUrlLauncher>(launcher);
+      addTearDown(() => getIt.unregister<ExternalUrlLauncher>());
+
+      final a = _buildAnnouncement(kycVerified: true, pickupAddress: pickup);
+      await tester.pumpWidget(_harness(announcement: a));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('location-pickup')));
+      await tester.pump();
+
+      final captured = verify(() => launcher.open(captureAny())).captured;
+      expect(captured, isNotEmpty);
+      final uri = captured.single as Uri;
+      expect(uri.scheme, 'https');
+      // Les coordonnées de la remise sont dans la requête (Plans ou Maps).
+      expect(uri.query, contains('43.3'));
+    });
+
+    testWidgets('aucune adresse (annonce legacy) → pas de card Lieux', (
+      tester,
+    ) async {
+      final a = _buildAnnouncement(kycVerified: true);
+      await tester.pumpWidget(_harness(announcement: a));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Remise du colis'), findsNothing);
+      expect(find.text('Récupération'), findsNothing);
+    });
+  });
+
+  // ── Enrichissements (heures, paiements, instructions) ──────────────────────
+
+  group('enrichissements', () {
+    testWidgets('heures départ→arrivée présentes → chip 08:00 → 22:00', (
+      tester,
+    ) async {
+      final a = _buildAnnouncement(
+        kycVerified: true,
+        departureTime: '08:00',
+        arrivalTime: '22:00',
+      );
+      await tester.pumpWidget(_harness(announcement: a));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('08:00 → 22:00'), findsOneWidget);
+    });
+
+    testWidgets('une seule heure connue → pas de chip horaire', (tester) async {
+      final a = _buildAnnouncement(kycVerified: true, departureTime: '08:00');
+      await tester.pumpWidget(_harness(announcement: a));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('→'), findsNothing);
+    });
+
+    testWidgets('paiements acceptés → chips Espèces + Carte', (tester) async {
+      final a = _buildAnnouncement(
+        kycVerified: true,
+        acceptedPaymentMethods: const {
+          BidPaymentMethod.cash,
+          BidPaymentMethod.stripe,
+        },
+      );
+      await tester.pumpWidget(_harness(announcement: a));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Paiements acceptés'), findsOneWidget);
+      expect(find.text('Espèces'), findsOneWidget);
+      expect(find.text('Carte'), findsOneWidget);
+    });
+
+    testWidgets('instructions renseignées → encart affiché', (tester) async {
+      final a = _buildAnnouncement(
+        kycVerified: true,
+        arrivalInstructions: 'Récupération possible après 18h.',
+      );
+      await tester.pumpWidget(_harness(announcement: a));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Instructions du voyageur'), findsOneWidget);
+      expect(find.text('Récupération possible après 18h.'), findsOneWidget);
+    });
+
+    testWidgets('instructions vides → pas d\'encart', (tester) async {
+      final a = _buildAnnouncement(
+        kycVerified: true,
+        arrivalInstructions: '   ',
+      );
+      await tester.pumpWidget(_harness(announcement: a));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Instructions du voyageur'), findsNothing);
+    });
   });
 
   // ── Redesign « Corridor héro » ─────────────────────────────────────────────
