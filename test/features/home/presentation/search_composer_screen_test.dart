@@ -345,7 +345,9 @@ void main() {
     await tester.pumpWidget(const _Harness(withPriceAmbiguity: true));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Jusqu\'à 6 €/kg'));
+    // Libellé généré par formatPriceActive (espace insécable, montants scalés
+    // par devise) : on vise la première option de prix, pas une chaîne figée.
+    await tester.tap(find.textContaining('Jusqu\'à').first);
     await tester.pumpAndSettle();
 
     expect(find.textContaining('c\'est combien'), findsNothing);

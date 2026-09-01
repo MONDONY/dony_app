@@ -1,3 +1,4 @@
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/home/bloc/search_composer_bloc.dart';
 import 'package:dony/features/home/bloc/search_composer_event.dart';
 import 'package:dony/features/home/data/models/search_parse_result.dart';
@@ -23,10 +24,19 @@ class UnresolvedQuestion extends StatelessWidget {
   };
 
   /// Libellé affiché et valeur renvoyée au BLoC.
+  ///
+  /// Prix : montants scalés vers la devise ACTIVE (le backend interprète le
+  /// filtre dans la devise du lecteur). « 6 €/kg » figé éliminait 100 % des
+  /// annonces pour un lecteur XOF, tout prix CFA dépassant 6.
   List<({String label, String value})> get _options => switch (item.kind) {
-    UnresolvedKind.priceVague => const [
-      (label: 'Jusqu\'à 6 €/kg', value: '6'),
-      (label: 'Jusqu\'à 9 €/kg', value: '9'),
+    UnresolvedKind.priceVague => [
+      for (final amount in quickPriceFilterOptionsActive())
+        (
+          label: 'Jusqu\'à ${formatPriceActive(amount)}/kg',
+          value: amount.toStringAsFixed(
+            amount == amount.truncateToDouble() ? 0 : 2,
+          ),
+        ),
       (label: 'Peu importe le prix', value: ''),
     ],
     UnresolvedKind.dateVague => const [

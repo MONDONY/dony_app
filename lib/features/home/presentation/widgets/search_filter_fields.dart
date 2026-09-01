@@ -669,7 +669,11 @@ class WeightField extends StatelessWidget {
 ///
 /// [maxPrice] est le prix courant, `null` si aucun filtre. [onApply] reçoit
 /// `null` quand l'utilisateur pousse le curseur au maximum : la convention
-/// « 25 €/kg = tous les prix » est celle des deux feuilles d'origine.
+/// « curseur au max = tous les prix » est celle des deux feuilles d'origine.
+///
+/// Bornes en devise ACTIVE ([priceFilterBoundsActive]) : la valeur est
+/// interprétée par le backend dans la devise du lecteur, des bornes figées
+/// 3–25 n'avaient de sens qu'en euro.
 Future<void> showPricePicker(
   BuildContext context, {
   required double? maxPrice,
@@ -677,10 +681,13 @@ Future<void> showPricePicker(
 }) async {
   final tt = Theme.of(context).textTheme;
   final cs = Theme.of(context).colorScheme;
-  const double kMin = 3;
-  const double kMax = 25;
-  double local = maxPrice ?? kMax;
-  bool localEnabled = maxPrice != null;
+  final bounds = priceFilterBoundsActive();
+  final double kMin = bounds.min;
+  final double kMax = bounds.max;
+  // Un filtre mémorisé dans une autre devise (changement de devise entre deux
+  // ouvertures) sortirait des bornes et ferait planter le Slider : on le borne.
+  double local = (maxPrice ?? kMax).clamp(kMin, kMax);
+  bool localEnabled = maxPrice != null && local < kMax;
 
   await showModalBottomSheet<void>(
     context: context,
@@ -715,7 +722,7 @@ Future<void> showPricePicker(
                 value: local,
                 min: kMin,
                 max: kMax,
-                divisions: (kMax - kMin).toInt(),
+                divisions: ((kMax - kMin) / bounds.step).round(),
                 onChanged: (v) => setS(() {
                   local = v;
                   localEnabled = v < kMax;
@@ -728,11 +735,11 @@ Future<void> showPricePicker(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    '${formatPriceActive(3)}/kg',
+                    '${formatPriceActive(kMin)}/kg',
                     style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                   ),
                   Text(
-                    '${formatPriceActive(25)}/kg',
+                    '${formatPriceActive(kMax)}/kg',
                     style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                   ),
                 ],
