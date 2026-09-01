@@ -111,9 +111,29 @@ class _BusinessPrefsScreenState extends State<BusinessPrefsScreen> {
                             ),
                           ),
                           enabled: !state.currencyLocked,
-                          showDivider: false,
                           onTap: () =>
                               unawaited(_openCurrencySelector(context, state)),
+                        ),
+                        DonyListTile(
+                          iconAsset: 'eye',
+                          iconColor: cs.primary,
+                          iconBgColor: cs.primaryContainer,
+                          label: "Devise d'affichage",
+                          subtitle:
+                              'Les prix publiés dans une autre devise sont '
+                              'convertis à titre indicatif',
+                          trailing: Text(
+                            state.displayCurrencyCode == 'AUTO'
+                                ? 'Automatique'
+                                : state.displayCurrencyCode,
+                            style: tt.labelMedium?.copyWith(
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
+                          showDivider: false,
+                          onTap: () => unawaited(
+                            _openDisplayCurrencyPicker(context, state),
+                          ),
                         ),
                       ],
                     ),
@@ -239,6 +259,79 @@ Future<void> _openCurrencySelector(
     return;
   }
   bloc.add(CurrencyChanged(selected.code));
+}
+
+// ── Sélecteur de devise d'affichage (presentment, lot 8) ─────────────────────
+
+/// Contrairement à la devise de paiement ci-dessus, ce choix n'engage aucun
+/// rail de paiement et n'est jamais verrouillé : « Automatique » suit la
+/// devise active, une devise concrète fige les équivalents convertis que le
+/// backend sert sur les annonces et demandes publiées dans une autre devise.
+Future<void> _openDisplayCurrencyPicker(
+  BuildContext context,
+  BusinessPrefsState state,
+) async {
+  final bloc = context.read<BusinessPrefsBloc>();
+  final selected = await DonyBottomSheet.show<String>(
+    context,
+    title: "Devise d'affichage",
+    child: _DisplayCurrencyPickerList(selectedCode: state.displayCurrencyCode),
+  );
+  if (selected == null || !context.mounted) {
+    return;
+  }
+  bloc.add(DisplayCurrencyChanged(selected));
+}
+
+class _DisplayCurrencyPickerList extends StatelessWidget {
+  const _DisplayCurrencyPickerList({required this.selectedCode});
+
+  final String selectedCode;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    Widget tile({
+      required String code,
+      required String label,
+      String? subtitle,
+      bool showDivider = true,
+    }) {
+      final isSelected = selectedCode == code;
+      return DonyListTile(
+        iconAsset: code == 'AUTO' ? 'refresh-cw' : 'euro',
+        iconColor: cs.primary,
+        iconBgColor: cs.primaryContainer,
+        label: label,
+        subtitle: subtitle,
+        trailing: isSelected
+            ? DonyIcon('check', color: cs.primary, size: 20)
+            : null,
+        showDivider: showDivider,
+        onTap: () => Navigator.of(context).pop(code),
+      );
+    }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        tile(
+          code: 'AUTO',
+          label: 'Automatique',
+          subtitle: 'Suivre la devise de mon compte',
+        ),
+        for (final (index, currency) in SupportedCurrency.values.indexed)
+          tile(
+            code: currency.code,
+            label: '${currency.displayName} (${currency.symbol})',
+            showDivider: index < SupportedCurrency.values.length - 1,
+          ),
+        SizedBox(height: tt.bodySmall?.fontSize ?? 12),
+      ],
+    );
+  }
 }
 
 class _CountryPickerList extends StatefulWidget {

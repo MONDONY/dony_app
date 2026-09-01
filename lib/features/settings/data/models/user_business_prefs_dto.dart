@@ -24,6 +24,12 @@ class UserBusinessPrefsDto {
   /// [toJson].
   final bool countryLocked;
 
+  /// Devise d'affichage (presentment, lot 8) : `'AUTO'` = suivre la devise
+  /// active (comportement historique), sinon une des 7 devises. Jamais
+  /// verrouillée par le solde, contrairement à [currencyCode] : elle ne pilote
+  /// que les équivalents convertis servis par le backend.
+  final String displayCurrencyCode;
+
   const UserBusinessPrefsDto({
     required this.weightUnit,
     required this.currencyCode,
@@ -35,6 +41,7 @@ class UserBusinessPrefsDto {
     this.currencyLocked = false,
     this.country,
     this.countryLocked = false,
+    this.displayCurrencyCode = 'AUTO',
   });
 
   /// Recopier les champs un à un sur les sites d'appel fait perdre en silence
@@ -50,6 +57,7 @@ class UserBusinessPrefsDto {
     bool? currencyLocked,
     String? country,
     bool? countryLocked,
+    String? displayCurrencyCode,
   }) => UserBusinessPrefsDto(
     weightUnit: weightUnit ?? this.weightUnit,
     currencyCode: currencyCode ?? this.currencyCode,
@@ -62,6 +70,7 @@ class UserBusinessPrefsDto {
     currencyLocked: currencyLocked ?? this.currencyLocked,
     country: country ?? this.country,
     countryLocked: countryLocked ?? this.countryLocked,
+    displayCurrencyCode: displayCurrencyCode ?? this.displayCurrencyCode,
   );
 
   factory UserBusinessPrefsDto.fromJson(Map<String, dynamic> json) =>
@@ -76,6 +85,7 @@ class UserBusinessPrefsDto {
         currencyLocked: json['currencyLocked'] as bool? ?? false,
         country: json['country'] as String?,
         countryLocked: json['countryLocked'] as bool? ?? false,
+        displayCurrencyCode: json['displayCurrencyCode'] as String? ?? 'AUTO',
       );
 
   Map<String, dynamic> toJson() => {
@@ -87,5 +97,8 @@ class UserBusinessPrefsDto {
     if (contactMode != null) 'contactMode': contactMode,
     if (responseDelayHours != null) 'responseDelayHours': responseDelayHours,
     if (country != null) 'country': country,
+    // Toujours envoyée : 'AUTO' est une valeur a part entiere (efface le choix
+    // cote serveur), pas une absence. Le PUT du bloc pousse l'etat complet.
+    'displayCurrencyCode': displayCurrencyCode,
   };
 }

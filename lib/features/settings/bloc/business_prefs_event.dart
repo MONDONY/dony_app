@@ -69,6 +69,16 @@ class ResponseDelayChanged extends BusinessPrefsEvent {
   List<Object?> get props => [hours];
 }
 
+/// Devise d'affichage (presentment, lot 8) : `'AUTO'` ou une des 7 devises.
+/// Jamais soumise a un verrou : le backend l'exempte explicitement de
+/// `CurrencyLockService` (elle ne touche ni portefeuille ni paiements).
+class DisplayCurrencyChanged extends BusinessPrefsEvent {
+  final String code;
+  const DisplayCurrencyChanged(this.code);
+  @override
+  List<Object?> get props => [code];
+}
+
 class BusinessPrefsSyncRequested extends BusinessPrefsEvent {
   const BusinessPrefsSyncRequested();
 }

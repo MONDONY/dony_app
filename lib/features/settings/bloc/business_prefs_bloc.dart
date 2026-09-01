@@ -19,6 +19,7 @@ class BusinessPrefsBloc extends Bloc<BusinessPrefsEvent, BusinessPrefsState> {
     on<BusinessPrefsReset>(_onReset);
     on<WeightUnitChanged>(_onWeightUnit);
     on<CurrencyChanged>(_onCurrency);
+    on<DisplayCurrencyChanged>(_onDisplayCurrency);
     on<CountryChanged>(_onCountry);
     on<PickupRadiusChanged>(_onPickupRadius);
     on<DefaultWeightChanged>(_onDefaultWeight);
@@ -39,6 +40,9 @@ class BusinessPrefsBloc extends Bloc<BusinessPrefsEvent, BusinessPrefsState> {
     contactMode: box.get(HiveService.kContactMode) as String?,
     responseDelayHours: box.get(HiveService.kResponseDelay) as int?,
     country: box.get(HiveService.kCountryCode) as String?,
+    displayCurrencyCode:
+        box.get(HiveService.kDisplayCurrencyCode, defaultValue: 'AUTO')
+            as String,
   );
 
   // ── Sync depuis API ────────────────────────────────────────────────────────
@@ -93,6 +97,24 @@ class BusinessPrefsBloc extends Bloc<BusinessPrefsEvent, BusinessPrefsState> {
     final prev = state;
     await _box.put(HiveService.kCurrencyCode, e.code);
     emit(state.copyWith(currencyCode: e.code, errorMessageGetter: () => null));
+    await _putOrRollback(emit, prev);
+  }
+
+  /// Même schéma optimiste que [_onCurrency], sans aucun verrou : la devise
+  /// d'affichage est purement visuelle (lot 8, presentment) et le backend
+  /// l'exempte de `CurrencyLockService`.
+  Future<void> _onDisplayCurrency(
+    DisplayCurrencyChanged e,
+    Emitter<BusinessPrefsState> emit,
+  ) async {
+    final prev = state;
+    await _box.put(HiveService.kDisplayCurrencyCode, e.code);
+    emit(
+      state.copyWith(
+        displayCurrencyCode: e.code,
+        errorMessageGetter: () => null,
+      ),
+    );
     await _putOrRollback(emit, prev);
   }
 
@@ -248,6 +270,7 @@ class BusinessPrefsBloc extends Bloc<BusinessPrefsEvent, BusinessPrefsState> {
     } else {
       await _box.put(HiveService.kCountryCode, dto.country);
     }
+    await _box.put(HiveService.kDisplayCurrencyCode, dto.displayCurrencyCode);
   }
 
   BusinessPrefsState _dtoToState(UserBusinessPrefsDto dto) =>
@@ -262,6 +285,7 @@ class BusinessPrefsBloc extends Bloc<BusinessPrefsEvent, BusinessPrefsState> {
         currencyLocked: dto.currencyLocked,
         country: dto.country,
         countryLocked: dto.countryLocked,
+        displayCurrencyCode: dto.displayCurrencyCode,
       );
 
   UserBusinessPrefsDto _stateToDto(BusinessPrefsState s) =>
@@ -274,5 +298,6 @@ class BusinessPrefsBloc extends Bloc<BusinessPrefsEvent, BusinessPrefsState> {
         contactMode: s.contactMode,
         responseDelayHours: s.responseDelayHours,
         country: s.country,
+        displayCurrencyCode: s.displayCurrencyCode,
       );
 }
