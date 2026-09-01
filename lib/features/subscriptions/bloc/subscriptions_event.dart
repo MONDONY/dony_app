@@ -16,3 +16,8 @@ class ToggleSubscriptionPush extends SubscriptionsEvent {
   final bool enabled;
   const ToggleSubscriptionPush(this.travelerId, this.enabled);
 }
+
+/// Retire l'indicateur « nouveau » de tous les abonnements d'un coup.
+class MarkAllSubscriptionsSeen extends SubscriptionsEvent {
+  const MarkAllSubscriptionsSeen();
+}

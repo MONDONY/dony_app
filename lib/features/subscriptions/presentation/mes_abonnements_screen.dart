@@ -1,4 +1,9 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/subscriptions/bloc/subscriptions_bloc.dart';
 import 'package:dony/features/subscriptions/bloc/subscriptions_event.dart';
@@ -6,9 +11,14 @@ import 'package:dony/features/subscriptions/bloc/subscriptions_state.dart';
 import 'package:dony/features/subscriptions/data/subscriptions_repository.dart';
 import 'package:dony/features/subscriptions/presentation/widgets/subscription_tile.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:go_router/go_router.dart';
+
+/// Au-delà de ce nombre d'abonnements, la recherche apparaît. En deçà, elle
+/// coûterait plus de place qu'elle n'en fait gagner : la liste tient à l'écran.
+const int kSubscriptionsSearchThreshold = 6;
 
 class MesAbonnementsScreen extends StatefulWidget {
   const MesAbonnementsScreen({super.key});
@@ -25,12 +35,86 @@ class _MesAbonnementsScreenState extends State<MesAbonnementsScreen> {
     context.read<SubscriptionsBloc>().add(const LoadSubscriptions());
   }
 
+  /// Les voyageurs qui viennent de publier remontent, puis les plus récents.
+  /// Un abonné sans trajet ouvert ferme la liste : il n'y a rien à en attendre.
+  List<SubscriptionItem> _sorted(List<SubscriptionItem> items) {
+    final sorted = [...items];
+    sorted.sort((a, b) {
+      if (a.hasNew != b.hasNew) return a.hasNew ? -1 : 1;
+      final da = a.lastAnnouncement?.publishedAt;
+      final db = b.lastAnnouncement?.publishedAt;
+      if (da == null && db == null) {
+        return a.travelerName.toLowerCase().compareTo(
+          b.travelerName.toLowerCase(),
+        );
+      }
+      if (da == null) return 1;
+      if (db == null) return -1;
+      return db.compareTo(da);
+    });
+    return sorted;
+  }
+
+  Future<void> _confirmUnsubscribe(
+    BuildContext context,
+    SubscriptionItem item,
+  ) async {
+    final confirmed = await DonyDialog.show(
+      context,
+      title: 'Ne plus suivre ${item.travelerName} ?',
+      message:
+          'Vous ne serez plus prévenu de ses nouveaux trajets. '
+          'Vous pourrez vous réabonner depuis son profil.',
+      confirmLabel: 'Se désabonner',
+      variant: DonyDialogVariant.destructive,
+      iconAsset: 'bell-off',
+    );
+    if ((confirmed ?? false) && context.mounted) {
+      context.read<SubscriptionsBloc>().add(
+        UnsubscribeTraveler(item.travelerId),
+      );
+    }
+  }
+
+  void _togglePush(BuildContext context, SubscriptionItem item) {
+    final enabling = !item.pushEnabled;
+    context.read<SubscriptionsBloc>().add(
+      ToggleSubscriptionPush(item.travelerId, enabling),
+    );
+    DonySnackbar.show(
+      context,
+      message: enabling
+          ? 'Alertes push activées pour ${item.travelerName}.'
+          : 'Alertes push coupées. Ses nouveaux trajets resteront visibles '
+                'dans vos notifications.',
+      type: enabling ? DonySnackbarType.success : DonySnackbarType.info,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         leading: const DonyAppBarBackButton(),
         title: const Text('Mes abonnements'),
+        actions: [
+          BlocBuilder<SubscriptionsBloc, SubscriptionsState>(
+            buildWhen: (a, b) =>
+                a.items.any((i) => i.hasNew) != b.items.any((i) => i.hasNew),
+            builder: (context, state) {
+              if (!state.items.any((i) => i.hasNew)) {
+                return const SizedBox.shrink();
+              }
+              return IconButton(
+                tooltip: 'Tout marquer comme vu',
+                icon: const DonyIcon('check-check'),
+                onPressed: () => context.read<SubscriptionsBloc>().add(
+                  const MarkAllSubscriptionsSeen(),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: BlocBuilder<SubscriptionsBloc, SubscriptionsState>(
         builder: (context, state) {
@@ -68,47 +152,74 @@ class _MesAbonnementsScreenState extends State<MesAbonnementsScreen> {
               mascotte: DonyMascotteType.assis,
               title: 'Aucun abonnement',
               description:
-                  'Abonne-toi à un voyageur depuis son profil pour suivre ses trajets.',
+                  'Abonnez-vous à un voyageur depuis son profil : vous serez '
+                  'prévenu dès qu\'il publie un trajet.',
             );
           }
+
+          final all = _sorted(state.items);
           final q = _query.trim().toLowerCase();
           final filtered = q.isEmpty
-              ? state.items
-              : state.items
+              ? all
+              : all
                     .where((i) => i.travelerName.toLowerCase().contains(q))
                     .toList();
-          final recent = filtered.where((i) => i.hasNew).toList();
-          final others = filtered.where((i) => !i.hasNew).toList();
+          final newCount = all.where((i) => i.hasNew).length;
+          final showSearch = all.length >= kSubscriptionsSearchThreshold;
 
-          return Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  DonySpacing.base,
-                  DonySpacing.md,
-                  DonySpacing.base,
-                  DonySpacing.sm,
+          return RefreshIndicator(
+            onRefresh: () async => context.read<SubscriptionsBloc>().add(
+              const LoadSubscriptions(),
+            ),
+            child: Column(
+              children: [
+                if (showSearch)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      DonySpacing.base,
+                      DonySpacing.md,
+                      DonySpacing.base,
+                      DonySpacing.xs,
+                    ),
+                    child: DonySearchField(
+                      hint: 'Rechercher un voyageur…',
+                      onChanged: (v) => setState(() => _query = v),
+                    ),
+                  ),
+                _CountLine(total: all.length, newCount: newCount),
+                Expanded(
+                  child: filtered.isEmpty
+                      ? const _NoMatch()
+                      : ListView.separated(
+                          padding: const EdgeInsets.fromLTRB(
+                            DonySpacing.base,
+                            DonySpacing.xs,
+                            DonySpacing.base,
+                            DonySpacing.huge,
+                          ),
+                          itemCount: filtered.length,
+                          separatorBuilder: (_, _) =>
+                              const SizedBox(height: DonySpacing.sm),
+                          itemBuilder: (context, index) {
+                            final item = filtered[index];
+                            return _slidable(context, item)
+                                .animate()
+                                .fadeIn(
+                                  duration: 220.ms,
+                                  // Cadence décalée, plafonnée : au-delà de six
+                                  // cartes l'attente se verrait plus que
+                                  // l'animation.
+                                  delay: (30 * (index.clamp(0, 6))).ms,
+                                )
+                                .slideY(
+                                  begin: 0.06,
+                                  curve: Curves.easeOutCubic,
+                                );
+                          },
+                        ),
                 ),
-                child: DonySearchField(
-                  hint: 'Rechercher un voyageur…',
-                  onChanged: (v) => setState(() => _query = v),
-                ),
-              ),
-              Expanded(
-                child: ListView(
-                  children: [
-                    if (recent.isNotEmpty) ...[
-                      const _SectionLabel('🆕 Ont publié récemment'),
-                      _SubscriptionStoryRow(items: recent),
-                    ],
-                    if (others.isNotEmpty) ...[
-                      const _SectionLabel('Tous mes abonnements'),
-                      ...others.map((i) => _slidable(context, i)),
-                    ],
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           );
         },
       ),
@@ -120,17 +231,20 @@ class _MesAbonnementsScreenState extends State<MesAbonnementsScreen> {
       key: ValueKey(item.travelerId),
       endActionPane: ActionPane(
         motion: const DrawerMotion(),
+        extentRatio: 0.25,
         children: [
           CustomSlidableAction(
-            onPressed: (_) => context.read<SubscriptionsBloc>().add(
-              UnsubscribeTraveler(item.travelerId),
-            ),
+            // Le balayage n'agit plus directement : se désabonner est
+            // irréversible côté indicateur « nouveau », et rien ne permettait
+            // de revenir en arrière.
+            onPressed: (_) => _confirmUnsubscribe(context, item),
             backgroundColor: Theme.of(context).colorScheme.error,
             foregroundColor: Colors.white,
+            borderRadius: BorderRadius.circular(DonyRadius.card),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const DonyIcon('trash-2', color: Colors.white),
+                const DonyIcon('bell-off', color: Colors.white),
                 const SizedBox(height: DonySpacing.xs),
                 Text(
                   'Désabonner',
@@ -147,20 +261,44 @@ class _MesAbonnementsScreenState extends State<MesAbonnementsScreen> {
       child: SubscriptionTile(
         item: item,
         onTap: () => context.push('/travelers/${item.travelerId}'),
-        onToggleBell: () => context.read<SubscriptionsBloc>().add(
-          ToggleSubscriptionPush(item.travelerId, !item.pushEnabled),
-        ),
+        onToggleBell: () => _togglePush(context, item),
+        onOpenLastTrip: item.lastAnnouncement == null
+            ? null
+            : () {
+                unawaited(
+                  getIt<AnalyticsService>().logEvent(
+                    AnalyticsEvents.subscriptionLastTripOpened,
+                  ),
+                );
+                context.push(
+                  '/traveler/${item.lastAnnouncement!.announcementId}',
+                );
+              },
       ),
     );
   }
 }
 
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.label);
-  final String label;
+/// Récapitulatif d'une ligne, qui remplace l'ancien intitulé de section :
+/// il dit combien de voyageurs sont suivis et combien ont publié, sans
+/// découper la liste en deux blocs.
+class _CountLine extends StatelessWidget {
+  const _CountLine({required this.total, required this.newCount});
+
+  final int total;
+  final int newCount;
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final suivis = total == 1 ? '1 voyageur suivi' : '$total voyageurs suivis';
+    final nouveaux = newCount == 0
+        ? null
+        : (newCount == 1
+              ? '1 a publié depuis votre dernière visite'
+              : '$newCount ont publié depuis votre dernière visite');
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         DonySpacing.base,
@@ -168,81 +306,53 @@ class _SectionLabel extends StatelessWidget {
         DonySpacing.base,
         DonySpacing.xs,
       ),
-      child: Text(
-        label.toUpperCase(),
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: cs.onSurfaceVariant,
-          fontWeight: FontWeight.w800,
-        ),
+      child: Row(
+        children: [
+          Text(
+            suivis,
+            style: tt.labelMedium?.copyWith(
+              color: cs.onSurfaceVariant,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          if (nouveaux != null) ...[
+            Text(
+              ' · ',
+              style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
+            ),
+            Flexible(
+              child: Text(
+                nouveaux,
+                style: tt.labelMedium?.copyWith(
+                  color: DonyColors.accent,
+                  fontWeight: FontWeight.w700,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }
 }
 
-class _SubscriptionStoryRow extends StatelessWidget {
-  const _SubscriptionStoryRow({required this.items});
-
-  final List<SubscriptionItem> items;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 88,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: DonySpacing.base),
-        itemCount: items.length,
-        separatorBuilder: (_, _) => const SizedBox(width: DonySpacing.md),
-        itemBuilder: (context, index) => _StoryAvatar(item: items[index]),
-      ),
-    );
-  }
-}
-
-class _StoryAvatar extends StatelessWidget {
-  const _StoryAvatar({required this.item});
-
-  final SubscriptionItem item;
+class _NoMatch extends StatelessWidget {
+  const _NoMatch();
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
-    return Semantics(
-      label: 'Nouveau trajet publié par ${item.travelerName}',
-      button: true,
-      child: GestureDetector(
-        onTap: () => context.push('/travelers/${item.travelerId}'),
-        child: SizedBox(
-          width: 64,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    colors: [cs.primary, DonyColors.accent],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-                child: DonyAvatar(
-                  name: item.travelerName,
-                  imageUrl: item.avatarUrl,
-                ),
-              ),
-              const SizedBox(height: DonySpacing.xs),
-              Text(
-                item.travelerName,
-                style: tt.bodySmall?.copyWith(fontWeight: FontWeight.w600),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(DonySpacing.xl),
+        child: Text(
+          'Aucun voyageur ne correspond à cette recherche.',
+          textAlign: TextAlign.center,
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
         ),
       ),
     );

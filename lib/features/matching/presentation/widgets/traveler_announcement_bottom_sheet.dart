@@ -9,6 +9,8 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_required_sheet.dart';
+import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
+import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
 import 'package:dony/features/incident_report/data/repositories/incident_report_repository.dart';
 import 'package:dony/features/kyc/presentation/widgets/kyc_status_bottom_sheet.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
@@ -18,6 +20,7 @@ import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/matching/presentation/widgets/block_user_action.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
 import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
 import 'package:flutter/material.dart';
@@ -26,7 +29,12 @@ import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 
-void showTravelerAnnouncementSheet(
+/// Rend la feuille et se termine à sa fermeture.
+///
+/// Le `Future` sert à la route `/traveler/:announcementId`, qui doit se refermer
+/// derrière la feuille pour ne pas laisser une page vide dans la pile. Les
+/// autres appelants l'ignorent sans conséquence.
+Future<void> showTravelerAnnouncementSheet(
   BuildContext context, {
   required AnnouncementModel announcement,
   String? existingBidStatus,
@@ -38,6 +46,9 @@ void showTravelerAnnouncementSheet(
   // currentUser couvre AuthAuthenticated ET AuthProfileUpdated (émis après
   // upload avatar / édition profil) — sinon le KYC repasserait à false.
   final isKycVerified = authState.currentUser?.isKycVerified ?? false;
+  // Sert à masquer le blocage sur son propre trajet. Lu ici, comme le reste :
+  // la feuille s'affiche hors de l'arbre de providers.
+  final lecteurId = authState.currentUserId;
   // Un expéditeur non vérifié peut quand même écrire à un voyageur qui a
   // désactivé « profils vérifiés uniquement » : sans cette exception, le réglage
   // du voyageur resterait sans effet, le client barrant la route avant l'appel.
@@ -75,9 +86,25 @@ void showTravelerAnnouncementSheet(
       resolvedStatus != null &&
       MyActiveBidsLookup.ongoingBidStatuses.contains(resolvedStatus);
 
-  DonyBottomSheet.show<void>(
+  // `useRootNavigator: true` place la feuille hors de l'arbre de providers :
+  // le cubit doit être capturé ici et réinjecté par `wrapper`, sinon le cœur
+  // des favoris ne trouverait rien à lire.
+  FavoriteIdsCubit? favoris;
+  try {
+    favoris = context.read<FavoriteIdsCubit>();
+  } catch (_) {
+    /* Absent de ce contexte (tests, points d'entrée isolés) : pas de cœur. */
+  }
+
+  return DonyBottomSheet.show<void>(
     context,
     title: 'Détail du trajet',
+    wrapper: favoris == null
+        ? null
+        : (child) => BlocProvider<FavoriteIdsCubit>.value(
+            value: favoris!,
+            child: child,
+          ),
     stickyBottom: Builder(
       builder: (innerCtx) {
         // Le viewer a déjà un colis sur ce trajet : on n'autorise pas une
@@ -201,12 +228,38 @@ void showTravelerAnnouncementSheet(
         );
       },
     ),
-    child: _TravelerAnnouncementContent(announcement: announcement),
+    child: _TravelerAnnouncementContent(
+      announcement: announcement,
+      avecFavori: favoris != null,
+      lecteurId: lecteurId,
+    ),
   );
 }
 
 class _TravelerAnnouncementContent extends StatelessWidget {
-  const _TravelerAnnouncementContent({required this.announcement});
+  const _TravelerAnnouncementContent({
+    required this.announcement,
+    this.avecFavori = false,
+    this.lecteurId,
+  });
+
+  /// Identifiant du lecteur, pour ne pas lui proposer de se bloquer lui-même.
+  final String? lecteurId;
+
+  /// Le voyageur du trajet, sauf s'il s'agit du lecteur lui-même.
+  TravelerProfile? get _voyageurBloquable {
+    final voyageur = announcement.traveler;
+    if (voyageur == null) return null;
+    final estSien =
+        lecteurId != null &&
+        (lecteurId == announcement.travelerId || lecteurId == voyageur.id);
+    return estSien ? null : voyageur;
+  }
+
+  /// Faux quand le point d'ouverture n'a pas de `FavoriteIdsCubit` : un
+  /// `BlocBuilder` sans provider **lève**, il ne se contente pas de ne rien
+  /// afficher.
+  final bool avecFavori;
 
   final AnnouncementModel announcement;
 
@@ -222,7 +275,10 @@ class _TravelerAnnouncementContent extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _HeroCorridorCard(announcement: announcement),
+        if (avecFavori)
+          _HeroWithFavorite(announcement: announcement)
+        else
+          _HeroCorridorCard(announcement: announcement),
         const SizedBox(height: DonySpacing.md),
         _StatCardsRow(announcement: announcement, hasGrid: hasGrid),
         if (hasGrid) ...[
@@ -256,6 +312,33 @@ class _TravelerAnnouncementContent extends StatelessWidget {
                 _PaymentChip(method: m),
             ],
           ),
+          // Avertissement porté jusqu'ici par le seul écran « Détail annonce ».
+          // Il ne relève pas de la présentation : un trajet payé de la main à
+          // la main sort du séquestre, donc de toute garantie de remboursement.
+          if (announcement.acceptedPaymentMethods.length == 1 &&
+              announcement.acceptedPaymentMethods.contains(
+                BidPaymentMethod.cash,
+              )) ...[
+            const SizedBox(height: DonySpacing.md),
+            DonyStatusBanner(
+              type: DonyStatusBannerType.warning,
+              iconAsset: 'triangle-alert',
+              messageSpan: TextSpan(
+                children: [
+                  TextSpan(
+                    text: 'Trajet en espèces uniquement. ',
+                    style: tt.bodySmall?.copyWith(fontWeight: FontWeight.w700),
+                  ),
+                  const TextSpan(
+                    text:
+                        'Le paiement se fait en main propre au voyageur, '
+                        'Yadony ne séquestre pas votre argent et ne peut pas '
+                        'le rembourser automatiquement en cas de litige.',
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
 
         if (announcement.arrivalInstructions != null &&
@@ -323,6 +406,39 @@ class _TravelerAnnouncementContent extends StatelessWidget {
             ),
           ),
         ),
+
+        // Le blocage vivait sur l'écran « Détail annonce », supprimé au profit
+        // de cette feuille. Sans ce report, un des points d'entrée du blocage
+        // disparaîtrait. Masqué sur son propre trajet : on ne se bloque pas.
+        if (_voyageurBloquable != null)
+          Center(
+            child: InkWell(
+              key: const Key('block-traveler-link'),
+              borderRadius: BorderRadius.circular(DonyRadius.sm),
+              onTap: () => showBlockMenu(
+                context,
+                userId: _voyageurBloquable!.id,
+                displayName: _voyageurBloquable!.resolvedName,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: DonySpacing.sm,
+                  vertical: DonySpacing.xs,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    DonyIcon('ban', size: 14, color: cs.onSurfaceVariant),
+                    const SizedBox(width: DonySpacing.xs),
+                    Text(
+                      'Bloquer ce voyageur',
+                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         const SizedBox(height: DonySpacing.md),
       ],
     );
@@ -332,6 +448,69 @@ class _TravelerAnnouncementContent extends StatelessWidget {
 /// Carte héro navy du corridor — même dégradé que la carte du détail
 /// propriétaire ([AnnouncementDetailBody]) pour garder un seul langage visuel
 /// entre les deux faces du trajet.
+/// Carte héro surmontée du cœur des favoris.
+///
+/// Le cœur vivait dans la barre de titre de l'écran « Détail annonce ». Cet
+/// écran disparaît au profit de cette feuille : sans ce report, une annonce
+/// ouverte depuis une notification ne pourrait plus être mise en favori.
+class _HeroWithFavorite extends StatelessWidget {
+  const _HeroWithFavorite({required this.announcement});
+
+  final AnnouncementModel announcement;
+
+  @override
+  Widget build(BuildContext context) {
+    final hero = _HeroCorridorCard(announcement: announcement);
+
+    // N'est monté que lorsque le cubit existe : le point d'entrée sans favoris
+    // rend `_HeroCorridorCard` directement.
+    return BlocBuilder<FavoriteIdsCubit, FavoriteIdsState>(
+      builder: (context, state) {
+        final estFavori = state.tripIds.contains(announcement.id);
+        return Stack(
+          children: [
+            hero,
+            Positioned(
+              top: DonySpacing.xs,
+              right: DonySpacing.xs,
+              child: FavoriteHeartButton(
+                isFavorite: estFavori,
+                onToggle: () =>
+                    unawaited(_basculerFavori(context, announcement.id)),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _basculerFavori(BuildContext context, String id) async {
+    final cubit = context.read<FavoriteIdsCubit>();
+    try {
+      await cubit.toggleTrip(id);
+      if (!context.mounted) return;
+      final desormaisFavori = cubit.isTripFav(id);
+      DonySnackbar.show(
+        context,
+        message: desormaisFavori
+            ? 'Trajet ajouté aux favoris'
+            : 'Trajet retiré des favoris',
+        type: desormaisFavori
+            ? DonySnackbarType.success
+            : DonySnackbarType.info,
+      );
+    } catch (_) {
+      if (!context.mounted) return;
+      DonySnackbar.show(
+        context,
+        message: 'Impossible de modifier les favoris',
+        type: DonySnackbarType.error,
+      );
+    }
+  }
+}
+
 class _HeroCorridorCard extends StatelessWidget {
   const _HeroCorridorCard({required this.announcement});
 

@@ -11,6 +11,7 @@ import 'package:dony/features/ratings/presentation/widgets/rating_summary_card.d
 import 'package:dony/features/subscriptions/bloc/traveler_subscribe_bloc.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_subscribe_event.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_subscribe_state.dart';
+import 'package:dony/features/subscriptions/presentation/widgets/subscribe_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -515,66 +516,24 @@ class _SubscribeBar extends StatelessWidget {
                 DonySpacing.lg,
                 DonySpacing.sm,
               ),
-              child: state.subscribed
-                  ? _SubscribedRow(pushEnabled: state.pushEnabled)
-                  : DonyButton(
-                      label: "S'abonner à ce voyageur",
-                      iconAsset: 'bell',
-                      onPressed: () => context
-                          .read<TravelerSubscribeBloc>()
-                          .add(const SubscribePressed()),
-                    ),
+              child: SubscribeBar(
+                subscribed: state.subscribed,
+                pushEnabled: state.pushEnabled,
+                subscribeLabel: "S'abonner à ce voyageur",
+                onSubscribe: () => context.read<TravelerSubscribeBloc>().add(
+                  const SubscribePressed(),
+                ),
+                onUnsubscribe: () => context.read<TravelerSubscribeBloc>().add(
+                  const UnsubscribePressed(),
+                ),
+                onTogglePush: (enabled) => context
+                    .read<TravelerSubscribeBloc>()
+                    .add(TogglePushPressed(enabled)),
+              ),
             ),
           ),
         );
       },
-    );
-  }
-}
-
-class _SubscribedRow extends StatelessWidget {
-  const _SubscribedRow({required this.pushEnabled});
-
-  final bool pushEnabled;
-
-  Future<void> _confirmUnsubscribe(BuildContext context) async {
-    final confirmed = await DonyDialog.show(
-      context,
-      title: 'Se désabonner ?',
-      message: 'Vous ne recevrez plus les notifications de ce voyageur.',
-      confirmLabel: 'Se désabonner',
-      variant: DonyDialogVariant.destructive,
-      iconAsset: 'bell-off',
-    );
-    if ((confirmed ?? false) && context.mounted) {
-      context.read<TravelerSubscribeBloc>().add(const UnsubscribePressed());
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Row(
-      children: [
-        Expanded(
-          child: DonyButton(
-            label: 'Abonné ✓',
-            variant: DonyButtonVariant.secondary,
-            fullWidth: false,
-            onPressed: () => _confirmUnsubscribe(context),
-          ),
-        ),
-        const SizedBox(width: DonySpacing.sm),
-        IconButton(
-          tooltip: pushEnabled
-              ? 'Désactiver les notifications'
-              : 'Activer les notifications',
-          icon: DonyIcon(pushEnabled ? 'bell' : 'bell-off', color: cs.primary),
-          onPressed: () => context.read<TravelerSubscribeBloc>().add(
-            TogglePushPressed(!pushEnabled),
-          ),
-        ),
-      ],
     );
   }
 }

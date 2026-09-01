@@ -51,12 +51,22 @@ class LastAnnouncement {
   final String departureCity;
   final String arrivalCity;
   final double pricePerKg;
+
+  /// Devise du prix affiché. Le serveur la sert depuis l'annonce elle-même :
+  /// un voyageur peut publier en XOF, auquel cas afficher un euro serait faux.
+  final String currency;
+
+  /// Date de départ du trajet. Nulle tant que le serveur déployé ne la sert pas,
+  /// auquel cas la carte se rabat sur l'ancienneté de la publication.
+  final DateTime? departureDate;
   final DateTime publishedAt;
   const LastAnnouncement({
     required this.announcementId,
     required this.departureCity,
     required this.arrivalCity,
     required this.pricePerKg,
+    this.currency = 'EUR',
+    this.departureDate,
     required this.publishedAt,
   });
 
@@ -66,6 +76,10 @@ class LastAnnouncement {
         departureCity: json['departureCity'] as String,
         arrivalCity: json['arrivalCity'] as String,
         pricePerKg: (json['pricePerKg'] as num).toDouble(),
+        currency: json['currency'] as String? ?? 'EUR',
+        departureDate: json['departureDate'] == null
+            ? null
+            : DateTime.parse(json['departureDate'] as String),
         publishedAt: DateTime.parse(json['publishedAt'] as String),
       );
 }
@@ -92,17 +106,18 @@ class SubscriptionItem {
     required this.lastAnnouncement,
   });
 
-  SubscriptionItem copyWith({bool? pushEnabled}) => SubscriptionItem(
-    travelerId: travelerId,
-    travelerName: travelerName,
-    avatarUrl: avatarUrl,
-    isProAccount: isProAccount,
-    averageRating: averageRating,
-    ongoingTripsCount: ongoingTripsCount,
-    pushEnabled: pushEnabled ?? this.pushEnabled,
-    hasNew: hasNew,
-    lastAnnouncement: lastAnnouncement,
-  );
+  SubscriptionItem copyWith({bool? pushEnabled, bool? hasNew}) =>
+      SubscriptionItem(
+        travelerId: travelerId,
+        travelerName: travelerName,
+        avatarUrl: avatarUrl,
+        isProAccount: isProAccount,
+        averageRating: averageRating,
+        ongoingTripsCount: ongoingTripsCount,
+        pushEnabled: pushEnabled ?? this.pushEnabled,
+        hasNew: hasNew ?? this.hasNew,
+        lastAnnouncement: lastAnnouncement,
+      );
 
   factory SubscriptionItem.fromJson(Map<String, dynamic> json) =>
       SubscriptionItem(
@@ -129,6 +144,9 @@ abstract class SubscriptionsRepository {
   Future<SubscriptionStatus> getStatus(String travelerId);
   Future<void> subscribe(String travelerId);
   Future<void> markSeen(String travelerId);
+
+  /// Retire l'indicateur « nouveau » de tous les abonnements d'un coup.
+  Future<void> markAllSeen();
   Future<List<TravelerAnnouncement>> getTravelerAnnouncements(
     String travelerId,
   );

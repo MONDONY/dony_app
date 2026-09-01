@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -6,6 +8,7 @@ import 'package:dony/features/notifications/bloc/notification_event.dart';
 import 'package:dony/features/notifications/bloc/notification_state.dart';
 import 'package:dony/features/notifications/data/notification_model.dart';
 import 'package:dony/features/notifications/notification_route_resolver.dart';
+import 'package:dony/features/subscriptions/data/subscription_badge_consumer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -170,6 +173,9 @@ class _NotificationList extends StatelessWidget {
                       onTap: () {
                         context.read<NotificationBloc>().add(
                           NotificationMarkReadRequested(notif.id),
+                        );
+                        unawaited(
+                          consumeSubscriptionBadge(notif.type, notif.data),
                         );
                         final route = routeForNotification(notif);
                         if (route != null) {

@@ -47,7 +47,9 @@ void main() {
     expect(find.text('Dakar'), findsOneWidget);
   });
 
-  testWidgets('affiche l\'emoji avion', (tester) async {
+  testWidgets('la carte ne porte plus de décor de carte d\'embarquement', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       wrap(
         TravelerAnnouncementCard(
@@ -56,8 +58,16 @@ void main() {
         ),
       ),
     );
-    // L'icône avion est désormais l'emoji décollage (DonyEmoji 🛫).
-    expect(find.text('🛫'), findsOneWidget);
+    // L'avion, le rail pointillé et le liseré dégradé n'encodaient rien : seul
+    // le corridor porte désormais l'information de trajet.
+    // `CustomPaint` ne sert pas de preuve : Flutter en pose partout (encre
+    // Material, icônes). Le painter du rail pointillé, lui, n'existe plus dans
+    // le fichier — l'absence de l'emoji et la présence du seul corridor
+    // suffisent à constater la refonte.
+    expect(find.text('🛫'), findsNothing);
+    expect(find.text('Paris'), findsOneWidget);
+    expect(find.text('→'), findsOneWidget);
+    expect(find.text('Dakar'), findsOneWidget);
   });
 
   testWidgets('affiche la date formatée en français', (tester) async {
@@ -69,7 +79,8 @@ void main() {
         ),
       ),
     );
-    expect(find.text('01 juin 2026'), findsOneWidget);
+    // « 1 juin » et non « 01 juin » : le zéro initial ne se dit pas.
+    expect(find.text('1 juin 2026'), findsOneWidget);
   });
 
   testWidgets('affiche le poids disponible', (tester) async {
@@ -81,7 +92,7 @@ void main() {
         ),
       ),
     );
-    expect(find.text('7 kg dispo'), findsOneWidget);
+    expect(find.text('7 kg disponibles'), findsOneWidget);
   });
 
   testWidgets('affiche le prix et l\'unité /kg', (tester) async {
@@ -155,7 +166,9 @@ void main() {
       ),
     );
 
-    final button = tester.widget<FilledButton>(find.byType(FilledButton));
+    // Bouton à contour depuis la refonte : un aplat de couleur par carte
+    // criait plus fort que le prix qu'il accompagne.
+    final button = tester.widget<OutlinedButton>(find.byType(OutlinedButton));
     expect(button.onPressed, isNull);
 
     await tester.tap(find.text('Réserver'), warnIfMissed: false);

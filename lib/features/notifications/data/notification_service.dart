@@ -11,6 +11,7 @@ import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/features/notifications/data/notification_repository.dart';
 import 'package:dony/features/notifications/notification_route_resolver.dart';
+import 'package:dony/features/subscriptions/data/subscription_badge_consumer.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -599,6 +600,11 @@ class NotificationService {
 
   void _handleNotificationTap(RemoteMessage message) {
     _ackIfCritical(message.data);
+    // Effet de bord non bloquant : ouvrir la push d'un voyageur suivi consomme
+    // sa pastille « nouveau » dans « Mes abonnements ».
+    unawaited(
+      consumeSubscriptionBadge(message.data['type'] as String?, message.data),
+    );
     final route = _routeForMessage(message.data);
     if (route != null) {
       _navigationController.add(route);

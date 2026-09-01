@@ -1,3 +1,7 @@
+import 'dart:async';
+
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/subscriptions/bloc/subscriptions_event.dart';
 import 'package:dony/features/subscriptions/bloc/subscriptions_state.dart';
 import 'package:dony/features/subscriptions/data/subscriptions_repository.dart';
@@ -5,11 +9,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 class SubscriptionsBloc extends Bloc<SubscriptionsEvent, SubscriptionsState> {
   final SubscriptionsRepository _repository;
+  final AnalyticsService _analytics;
 
-  SubscriptionsBloc(this._repository) : super(const SubscriptionsState()) {
+  SubscriptionsBloc(this._repository, this._analytics)
+    : super(const SubscriptionsState()) {
     on<LoadSubscriptions>(_onLoad);
     on<UnsubscribeTraveler>(_onUnsubscribe);
     on<ToggleSubscriptionPush>(_onTogglePush);
+    on<MarkAllSubscriptionsSeen>(_onMarkAllSeen);
   }
 
   Future<void> _onLoad(
@@ -36,6 +43,7 @@ class SubscriptionsBloc extends Bloc<SubscriptionsEvent, SubscriptionsState> {
   ) async {
     try {
       await _repository.unsubscribe(e.travelerId);
+      unawaited(_analytics.logEvent(AnalyticsEvents.subscriptionRemoved));
       emit(
         state.copyWith(
           items: state.items
@@ -53,12 +61,44 @@ class SubscriptionsBloc extends Bloc<SubscriptionsEvent, SubscriptionsState> {
     }
   }
 
+  /// Optimiste : les pastilles disparaissent sans attendre le serveur, et un
+  /// échec réseau les fait revenir plutôt que d'afficher une erreur pour une
+  /// action sans conséquence.
+  Future<void> _onMarkAllSeen(
+    MarkAllSubscriptionsSeen e,
+    Emitter<SubscriptionsState> emit,
+  ) async {
+    final previous = state.items;
+    emit(
+      state.copyWith(
+        items: previous.map((i) => i.copyWith(hasNew: false)).toList(),
+      ),
+    );
+    try {
+      await _repository.markAllSeen();
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.subscriptionsMarkedAllSeen,
+          properties: {'count': previous.where((i) => i.hasNew).length},
+        ),
+      );
+    } catch (_) {
+      emit(state.copyWith(items: previous));
+    }
+  }
+
   Future<void> _onTogglePush(
     ToggleSubscriptionPush e,
     Emitter<SubscriptionsState> emit,
   ) async {
     try {
       final s = await _repository.setPush(e.travelerId, e.enabled);
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.subscriptionPushToggled,
+          properties: {'enabled': s.pushEnabled},
+        ),
+      );
       emit(
         state.copyWith(
           items: state.items
