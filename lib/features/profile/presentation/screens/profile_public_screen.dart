@@ -4,6 +4,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/incident_report/data/repositories/incident_report_repository.dart';
+import 'package:dony/features/matching/presentation/widgets/block_user_action.dart';
 import 'package:dony/features/profile/bloc/profile_public_bloc.dart';
 import 'package:dony/features/profile/bloc/profile_public_event.dart';
 import 'package:dony/features/profile/bloc/profile_public_state.dart';
@@ -93,6 +94,16 @@ class _ProfilePublicScreenState extends State<ProfilePublicScreen> {
 
     return BlocBuilder<ProfilePublicBloc, ProfilePublicState>(
       builder: (context, state) {
+        // Nom affiché de la personne consultée, connu seulement une fois le
+        // profil chargé. Il nomme les entrées du menu ⋯ (« Signaler X »,
+        // « Bloquer X ») ; tant qu'il manque, l'entrée « Bloquer » reste
+        // masquée plutôt que d'annoncer un blocage anonyme.
+        final String? viewedName =
+            state is ProfilePublicLoaded &&
+                state.profile.displayName.trim().isNotEmpty
+            ? state.profile.displayName
+            : null;
+
         // ── Contextual app bar title ──────────────────────────────────────────
         // Own profile → "Ce que les autres voient"
         // Other user, loaded → their displayName (or "Profil" as fallback)
@@ -100,9 +111,8 @@ class _ProfilePublicScreenState extends State<ProfilePublicScreen> {
         final String appBarTitle;
         if (isOwnProfile) {
           appBarTitle = 'Ce que les autres voient';
-        } else if (state is ProfilePublicLoaded &&
-            state.profile.displayName.isNotEmpty) {
-          appBarTitle = state.profile.displayName;
+        } else if (viewedName != null) {
+          appBarTitle = viewedName;
         } else {
           appBarTitle = 'Profil';
         }
@@ -137,22 +147,88 @@ class _ProfilePublicScreenState extends State<ProfilePublicScreen> {
             actions: isOwnProfile
                 ? null
                 : [
-                    IconButton(
-                      tooltip: 'Signaler',
-                      icon: DonyIcon('flag', color: cs.onSurfaceVariant),
-                      onPressed: () => context.push(
-                        '/settings/report-incident',
-                        extra: {
-                          'targetType': IncidentTargetType.user,
-                          'targetId': viewedUserId,
-                        },
-                      ),
+                    // Signaler et Bloquer partagent un seul menu ⋯ : deux
+                    // icônes alignées dans l'app bar transformeraient deux
+                    // actions rares en bruit permanent.
+                    PopupMenuButton<String>(
+                      tooltip: 'Plus d\'options',
+                      icon: DonyIcon('ellipsis', color: cs.onSurfaceVariant),
+                      onSelected: (value) {
+                        switch (value) {
+                          case 'report':
+                            context.push(
+                              '/settings/report-incident',
+                              extra: {
+                                'targetType': IncidentTargetType.user,
+                                'targetId': viewedUserId,
+                              },
+                            );
+                          case 'block':
+                            // Cet écran a déjà son menu contextuel :
+                            // showBlockMenu en rouvrirait un second avec le
+                            // même libellé. On va droit à la confirmation.
+                            if (viewedName != null) {
+                              showBlockConfirmDialog(
+                                context,
+                                userId: viewedUserId,
+                                displayName: viewedName,
+                              );
+                            }
+                        }
+                      },
+                      itemBuilder: (_) => [
+                        PopupMenuItem(
+                          value: 'report',
+                          child: _MenuRow(
+                            iconAsset: 'flag',
+                            label: viewedName == null
+                                ? 'Signaler'
+                                : 'Signaler $viewedName',
+                          ),
+                        ),
+                        if (viewedName != null)
+                          PopupMenuItem(
+                            value: 'block',
+                            child: _MenuRow(
+                              iconAsset: 'ban',
+                              label: 'Bloquer $viewedName',
+                            ),
+                          ),
+                      ],
                     ),
                   ],
           ),
           body: body,
         );
       },
+    );
+  }
+}
+
+// ─── App bar menu row ─────────────────────────────────────────────────────────
+
+class _MenuRow extends StatelessWidget {
+  const _MenuRow({required this.iconAsset, required this.label});
+
+  final String iconAsset;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Row(
+      children: [
+        DonyIcon(iconAsset, size: 20, color: cs.onSurfaceVariant),
+        const SizedBox(width: DonySpacing.sm),
+        Flexible(
+          child: Text(
+            label,
+            style: tt.bodyMedium,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
     );
   }
 }

@@ -5,6 +5,7 @@ import 'package:dony/core/design/widgets/dony_skeleton.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/block_events_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/incident_report/data/repositories/incident_report_repository.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
@@ -13,6 +14,9 @@ import 'package:dony/features/messaging/bloc/chat/chat_state.dart';
 import 'package:dony/features/messaging/data/models/conversation_model.dart';
 import 'package:dony/features/messaging/data/models/message_model.dart';
 import 'package:dony/features/messaging/presentation/chat_screen.dart';
+import 'package:dony/features/settings/bloc/blocked_users_bloc.dart';
+import 'package:dony/features/settings/data/models/blocked_user_model.dart';
+import 'package:dony/features/settings/data/repositories/blocked_users_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -57,6 +61,19 @@ Future<void> _pump(WidgetTester tester, ChatBloc bloc) async {
   await tester.pump(const Duration(milliseconds: 400));
 }
 
+/// Ces tests ouvrent le menu du chat mais ne confirment jamais un blocage :
+/// le dépôt n'a donc qu'à exister pour que le BLoC du dialog se construise.
+class _StubBlockedUsersRepository implements BlockedUsersRepository {
+  @override
+  Future<List<BlockedUserModel>> fetchBlockedUsers() async => [];
+
+  @override
+  Future<void> blockUser(String blockedUserId) async {}
+
+  @override
+  Future<void> unblockUser(String userId) async {}
+}
+
 void main() {
   late MockChatBloc bloc;
 
@@ -73,6 +90,22 @@ void main() {
     if (!getIt.isRegistered<AnalyticsService>()) {
       final analytics = makeEnabledAnalytics(MockAnalyticsBackend());
       getIt.registerSingleton<AnalyticsService>(analytics);
+    }
+    // Vrai service (simple StreamController) : les tests de blocage veulent
+    // observer le flux réel, pas un mock.
+    if (!getIt.isRegistered<BlockEventsService>()) {
+      getIt.registerSingleton<BlockEventsService>(BlockEventsService());
+    }
+    // Le dialog de confirmation de blocage résout son propre BLoC via getIt :
+    // sans cet enregistrement, ouvrir « Bloquer » depuis le menu du chat lève.
+    if (!getIt.isRegistered<BlockedUsersBloc>()) {
+      getIt.registerFactory<BlockedUsersBloc>(
+        () => BlockedUsersBloc(
+          _StubBlockedUsersRepository(),
+          getIt<AnalyticsService>(),
+          getIt<BlockEventsService>(),
+        ),
+      );
     }
   });
 
@@ -308,6 +341,58 @@ void main() {
         'targetType': IncidentTargetType.user,
         'targetId': 'uid-1',
       });
+    });
+  });
+
+  // ── Réaction aux blocages ────────────────────────────────────────────────
+  group('ChatScreen — blocage de l\'interlocuteur', () {
+    /// Monte l'écran et collecte les navigations demandées.
+    Future<List<String>> pumpAndCollect(WidgetTester tester) async {
+      when(() => bloc.state).thenReturn(const ChatLoaded([]));
+      final routes = <String>[];
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: BlocProvider<ChatBloc>.value(
+            value: bloc,
+            child: ChatScreen(
+              conversation: _conversation,
+              onNavigate: (path, _) => routes.add(path),
+            ),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+      return routes;
+    }
+
+    testWidgets('bloquer l\'interlocuteur ramène à la liste', (tester) async {
+      final routes = await pumpAndCollect(tester);
+
+      getIt<BlockEventsService>().notifyBlocked('uid-1');
+      await tester.pump(const Duration(milliseconds: 50));
+
+      expect(routes, ['/messages']);
+    });
+
+    testWidgets('un déblocage laisse la conversation ouverte', (tester) async {
+      final routes = await pumpAndCollect(tester);
+
+      getIt<BlockEventsService>().notifyUnblocked('uid-1');
+      await tester.pump(const Duration(milliseconds: 50));
+
+      expect(routes, isEmpty);
+    });
+
+    testWidgets('bloquer quelqu\'un d\'autre ne quitte pas l\'écran', (
+      tester,
+    ) async {
+      final routes = await pumpAndCollect(tester);
+
+      getIt<BlockEventsService>().notifyBlocked('un-autre-uid');
+      await tester.pump(const Duration(milliseconds: 50));
+
+      expect(routes, isEmpty);
     });
   });
 }

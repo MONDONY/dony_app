@@ -6,6 +6,7 @@ import 'package:dony/core/di/pending_search_notifier.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/block_events_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -108,6 +109,8 @@ class _MapSenderViewState extends State<_MapSenderView> {
 
   PendingSearchNotifier? _pendingSearchNotifier;
 
+  StreamSubscription<BlockChange>? _blockSub;
+
   bool _nearMeShowList = false;
   // True between the FAB tap and the position being acquired (FAB spinner).
   bool _isLocatingNearMe = false;
@@ -169,6 +172,16 @@ class _MapSenderViewState extends State<_MapSenderView> {
       _pendingSearchNotifier!.addListener(_consumePendingSearch);
     }
     _sheetController.addListener(_onSheetSizeChanged);
+    // Blocage ou déblocage : le serveur ne renvoie plus (ou renvoie de nouveau)
+    // les trajets et demandes de cette personne. On relance la recherche du mode
+    // affiché plutôt que de laisser une liste que le serveur désavoue.
+    //
+    // Abonnement côté widget : les filtres courants vivent ici (`_filters`), le
+    // BLoC de recherche ne les mémorise pas et ne saurait pas quoi rejouer.
+    _blockSub = _blockEvents()?.changes.listen((_) {
+      if (!mounted) return;
+      _dispatchForMode();
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Si l'utilisateur arrive depuis Envoyer avec des params en attente,
       // les appliquer au lieu de la recherche par défaut.
@@ -338,8 +351,19 @@ class _MapSenderViewState extends State<_MapSenderView> {
     );
   }
 
+  BlockEventsService? _blockEvents() {
+    try {
+      return getIt.isRegistered<BlockEventsService>()
+          ? getIt<BlockEventsService>()
+          : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
   @override
   void dispose() {
+    _blockSub?.cancel();
     _pendingSearchNotifier?.removeListener(_consumePendingSearch);
     _sheetController.removeListener(_onSheetSizeChanged);
     _sheetController.dispose();

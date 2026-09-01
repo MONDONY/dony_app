@@ -3,6 +3,7 @@ import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/block_events_service.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -407,8 +408,9 @@ Widget _buildHome({
   MockBidBloc? bidBloc,
   MockFavoriteIdsCubit? favCubit,
   String helpConfigJson = _emptyHelpConfigJson,
+  MockAnnouncementBloc? announcementBlocOverride,
 }) {
-  final announcementBloc = MockAnnouncementBloc();
+  final announcementBloc = announcementBlocOverride ?? MockAnnouncementBloc();
   final authBloc = MockAuthBloc();
   final roleCubit = MockActiveRoleCubit();
   final notifBloc = MockNotificationBloc();
@@ -2811,6 +2813,64 @@ void main() {
         findsOneWidget,
       );
       expect(find.byKey(const Key('notification-badge')), findsNothing);
+    });
+  });
+
+  // ── Réaction aux blocages ────────────────────────────────────────────────
+  group('HomeScreen — blocages', () {
+    late BlockEventsService blockEvents;
+
+    setUp(() {
+      blockEvents = BlockEventsService();
+      getIt.registerSingleton<BlockEventsService>(blockEvents);
+    });
+
+    tearDown(() => blockEvents.dispose());
+
+    testWidgets('un blocage relance la recherche de trajets', (tester) async {
+      final announcementBloc = MockAnnouncementBloc();
+      await tester.pumpWidget(
+        _buildHome(announcementBlocOverride: announcementBloc),
+      );
+      await tester.pump(const Duration(milliseconds: 1000));
+
+      // Une seule recherche au montage avant l'événement.
+      verify(
+        () => announcementBloc.add(
+          any(that: isA<AnnouncementSearchRequested>()),
+        ),
+      ).called(1);
+
+      blockEvents.notifyBlocked('traveler-1');
+      await tester.pump(const Duration(milliseconds: 50));
+
+      verify(
+        () => announcementBloc.add(
+          any(that: isA<AnnouncementSearchRequested>()),
+        ),
+      ).called(1);
+    });
+
+    testWidgets('un déblocage relance aussi la recherche', (tester) async {
+      final announcementBloc = MockAnnouncementBloc();
+      await tester.pumpWidget(
+        _buildHome(announcementBlocOverride: announcementBloc),
+      );
+      await tester.pump(const Duration(milliseconds: 1000));
+      verify(
+        () => announcementBloc.add(
+          any(that: isA<AnnouncementSearchRequested>()),
+        ),
+      ).called(1);
+
+      blockEvents.notifyUnblocked('traveler-1');
+      await tester.pump(const Duration(milliseconds: 50));
+
+      verify(
+        () => announcementBloc.add(
+          any(that: isA<AnnouncementSearchRequested>()),
+        ),
+      ).called(1);
     });
   });
 }
