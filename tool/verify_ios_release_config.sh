@@ -9,15 +9,43 @@
 # Usage :
 #   tool/verify_ios_release_config.sh                    # vérifie les sources
 #   tool/verify_ios_release_config.sh build/ios/ipa/Yadony.ipa   # vérifie l'artefact
+#   YADONY_ENV_FILE=env.staging.json tool/verify_ios_release_config.sh   # autre environnement
+#
+# Quel projet est « attendu » :
+#   1. Sous Xcode (phase « Verify iOS Release Config »), Flutter transmet ses
+#      --dart-define dans DART_DEFINES : valeurs KEY=VALUE encodées en base64,
+#      séparées par des virgules. On y lit FIREBASE_MESSAGING_SENDER_ID, donc le
+#      garde-fou suit l'environnement RÉELLEMENT compilé : un build staging exige
+#      la config native staging, un build prod la config prod. Sans ça, il ne
+#      savait produire que des IPA de production.
+#   2. À la main (hors Xcode), env.prod.json fait autorité, sauf YADONY_ENV_FILE.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-SENDER=$(python3 -c "import json;print(json.load(open('env.prod.json'))['FIREBASE_MESSAGING_SENDER_ID'])")
-if [ -z "$SENDER" ]; then
-  echo "ÉCHEC : FIREBASE_MESSAGING_SENDER_ID absent de env.prod.json"; exit 1
+SENDER=""
+SOURCE=""
+if [ -n "${DART_DEFINES:-}" ]; then
+  # `|| true` sur le décodage : une entrée non base64 ne doit pas tuer le
+  # pipeline, elle est simplement ignorée. `tail -1` et non `head -1` : sous
+  # pipefail, head fermerait le tube avant la fin de l'écriture (cf. plus bas).
+  SENDER=$(tr ',' '\n' <<<"$DART_DEFINES" \
+    | while IFS= read -r ENTRY; do base64 --decode <<<"$ENTRY" 2>/dev/null || true; echo; done \
+    | sed -n 's/^FIREBASE_MESSAGING_SENDER_ID=//p' | tail -1)
+  SOURCE="DART_DEFINES"
 fi
-echo "Projet Firebase attendu (côté Dart) : $SENDER"
+if [ -z "$SENDER" ]; then
+  ENV_FILE="${YADONY_ENV_FILE:-env.prod.json}"
+  SENDER=$(python3 -c "import json,sys;print(json.load(open(sys.argv[1])).get('FIREBASE_MESSAGING_SENDER_ID',''))" "$ENV_FILE")
+  SOURCE="$ENV_FILE"
+fi
+# Numérique et de la bonne longueur : un gabarit (« your-messaging-sender-id »)
+# passerait le simple test de non-vacuité, puis le grep plus bas le chercherait
+# en vain et rendrait un diagnostic trompeur.
+if ! [[ "$SENDER" =~ ^[0-9]{11,13}$ ]]; then
+  echo "ÉCHEC : FIREBASE_MESSAGING_SENDER_ID absent ou non numérique (source : $SOURCE)"; exit 1
+fi
+echo "Projet Firebase attendu (côté Dart, $SOURCE) : $SENDER"
 
 if [ $# -ge 1 ]; then
   IPA="$1"
