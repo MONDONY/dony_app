@@ -127,9 +127,13 @@ class _LoadedContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
-    // Le symbole suit la devise active : figer « € » affichait un montant faux
-    // dès qu'un utilisateur passait en XOF ou en CAD.
-    final currency = ActiveCurrency.current ?? SupportedCurrency.eur;
+    // Devise SERVIE par le backend (celle dans laquelle il a converti les
+    // totaux), repli sur le cache local pour un backend pas encore déployé :
+    // figer « € » affichait un montant faux dès qu'un utilisateur passait en XOF.
+    final currency =
+        SupportedCurrency.fromCode(stats.currency as String?) ??
+        ActiveCurrency.current ??
+        SupportedCurrency.eur;
     final currencyFmt = NumberFormat.currency(
       locale: currency.locale,
       symbol: currency.symbol,
@@ -156,7 +160,10 @@ class _LoadedContent extends StatelessWidget {
         ),
         const SizedBox(height: DonySpacing.xs),
         Text(
-          currencyFmt.format(stats.monthlyRevenue),
+          // « ≈ » : revenus encaissés dans plusieurs devises, total converti au
+          // taux courant — une estimation d'affichage, pas un solde.
+          (stats.isMultiCurrency == true ? '\u2248 ' : '') +
+              currencyFmt.format(stats.monthlyRevenue),
           style: tt.displaySmall!.copyWith(color: Colors.white),
         ).animate().fadeIn(duration: 300.ms),
         const SizedBox(height: DonySpacing.xxs),

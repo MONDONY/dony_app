@@ -112,6 +112,60 @@ String formatMinorAmount(int minorAmount, String? currencyCode) {
   return CurrencyFormatter.format(minorAmount / divisor, currency);
 }
 
+/// Bornes du filtre « prix maximum par kilo », exprimées dans la devise active.
+///
+/// Le backend interprète désormais `maxPricePerKg` dans la devise ACTIVE du
+/// lecteur (converti vers le pivot EUR côté serveur) : les bornes du curseur
+/// doivent donc suivre cette devise. Figées à 3–25, elles étaient justes en
+/// euro mais absurdes en franc CFA — tout prix XOF dépasse 25, le filtre
+/// éliminait 100 % des annonces.
+///
+/// Arrondi « lisible » : pas de 500 pour les devises sans sous-unité (XOF/XAF),
+/// pas de 1 pour les autres. En EUR, rend exactement les bornes historiques
+/// (3, 25, pas de 1) : aucun changement de comportement pour la zone euro.
+({double min, double max, double step}) priceFilterBoundsActive() =>
+    priceFilterBoundsFor(ActiveCurrency.current ?? SupportedCurrency.eur);
+
+/// Variante à devise explicite de [priceFilterBoundsActive] — même pattern que
+/// [maxUnitPriceFor] : la logique se teste sans conteneur d'injection.
+({double min, double max, double step}) priceFilterBoundsFor(
+  SupportedCurrency currency,
+) {
+  if (currency.minorUnit == 0) {
+    double round500(double v) => (v / 500).round() * 500.0;
+    return (
+      min: round500(3 * currency.unitsPerEur),
+      max: round500(25 * currency.unitsPerEur),
+      step: 500,
+    );
+  }
+  return (
+    min: (3 * currency.unitsPerEur).roundToDouble(),
+    max: (25 * currency.unitsPerEur).roundToDouble(),
+    step: 1,
+  );
+}
+
+/// Montants des réponses rapides « Jusqu'à X /kg » du composeur de recherche,
+/// scalés de leurs valeurs de référence (6 et 9 EUR/kg) vers la devise active.
+///
+/// Même contrat que [priceFilterBoundsActive] : la valeur part au backend dans
+/// la devise active du lecteur. L'arrondi vise un montant qu'un humain
+/// proposerait (4 000 F CFA, 6,5 $), pas une conversion au centime.
+List<double> quickPriceFilterOptionsActive() =>
+    quickPriceFilterOptionsFor(ActiveCurrency.current ?? SupportedCurrency.eur);
+
+/// Variante à devise explicite de [quickPriceFilterOptionsActive].
+List<double> quickPriceFilterOptionsFor(SupportedCurrency currency) {
+  double nice(double eur) {
+    final scaled = eur * currency.unitsPerEur;
+    if (currency.minorUnit == 0) return (scaled / 500).round() * 500.0;
+    return (scaled * 2).round() / 2.0;
+  }
+
+  return [nice(6), nice(9)];
+}
+
 /// Plafond de référence, en euros, d'un prix unitaire ou au kilo. Aligné sur
 /// `CurrencyBounds.MAX_PRICE_PER_KG_EUR` côté backend.
 const double kMaxUnitPriceEur = 500;

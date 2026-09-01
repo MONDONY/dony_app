@@ -14,6 +14,47 @@ void main() {
     await initializeDateFormatting('fr_FR');
   });
 
+  group('priceFilterBoundsFor — bornes du filtre prix par devise', () {
+    test('EUR : bornes historiques inchangées (3, 25, pas 1)', () {
+      final b = priceFilterBoundsFor(SupportedCurrency.eur);
+      expect(b.min, 3);
+      expect(b.max, 25);
+      expect(b.step, 1);
+    });
+
+    test('XOF : scalées et arrondies au 500, pas 500', () {
+      // 3 € ≈ 1968 F → 2000 ; 25 € ≈ 16 399 F → 16 500. Figées à 3–25, les
+      // bornes éliminaient 100 % des annonces XOF (tout prix CFA dépasse 25).
+      final b = priceFilterBoundsFor(SupportedCurrency.xof);
+      expect(b.min, 2000);
+      expect(b.max, 16500);
+      expect(b.step, 500);
+    });
+
+    test('USD : arrondies à l\'entier, pas 1', () {
+      final b = priceFilterBoundsFor(SupportedCurrency.usd);
+      expect(b.min, 3);
+      expect(b.max, 27);
+      expect(b.step, 1);
+    });
+  });
+
+  group('quickPriceFilterOptionsFor — réponses rapides scalées', () {
+    test('EUR : 6 et 9, comme les anciennes options figées', () {
+      expect(quickPriceFilterOptionsFor(SupportedCurrency.eur), [6, 9]);
+    });
+
+    test('XOF : montants « humains », arrondis au 500', () {
+      // 6 € ≈ 3936 F → 4000 ; 9 € ≈ 5904 F → 6000.
+      expect(quickPriceFilterOptionsFor(SupportedCurrency.xof), [4000, 6000]);
+    });
+
+    test('USD : arrondis au demi', () {
+      // 6 € ≈ 6,48 $ → 6,5 ; 9 € ≈ 9,72 $ → 9,5.
+      expect(quickPriceFilterOptionsFor(SupportedCurrency.usd), [6.5, 9.5]);
+    });
+  });
+
   group('formatMinorAmount — la sous-unité dépend de la devise', () {
     test('l\'euro a des centimes : 4000 unités mineures valent 40,00 €', () {
       expect(formatMinorAmount(4000, 'EUR'), contains('40,00'));

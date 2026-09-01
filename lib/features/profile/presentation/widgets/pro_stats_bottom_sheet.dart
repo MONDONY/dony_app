@@ -28,8 +28,12 @@ class ProStatsBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    // Le symbole suit la devise active plutôt qu'un euro figé.
-    final currency = ActiveCurrency.current ?? SupportedCurrency.eur;
+    // Devise servie par le backend (totaux convertis dedans), repli cache local.
+    final currency =
+        SupportedCurrency.fromCode(stats.currency) ??
+        ActiveCurrency.current ??
+        SupportedCurrency.eur;
+    final bool multiCurrency = stats.isMultiCurrency;
     final currencyFmt = NumberFormat.currency(
       locale: currency.locale,
       symbol: currency.symbol,
@@ -44,7 +48,9 @@ class ProStatsBottomSheet extends StatelessWidget {
         // ── Hero mensuel glass ──────────────────────────────────────────────
         _GlassHeroCard(
               monthLabel: monthLabel,
-              revenue: currencyFmt.format(stats.monthlyRevenue),
+              revenue:
+                  (multiCurrency ? '\u2248 ' : '') +
+                  currencyFmt.format(stats.monthlyRevenue),
               trips: stats.monthlyTrips,
               parcels: stats.monthlyParcelsDelivered,
             )
@@ -57,8 +63,12 @@ class ProStatsBottomSheet extends StatelessWidget {
         // ── Revenus total ───────────────────────────────────────────────────
         _SectionCard(
               child: _MetricRow(
-                label: 'Revenus total (depuis le début)',
-                value: currencyFmt.format(stats.totalRevenue),
+                label: multiCurrency
+                    ? 'Revenus total (environ, toutes devises)'
+                    : 'Revenus total (depuis le début)',
+                value:
+                    (multiCurrency ? '\u2248 ' : '') +
+                    currencyFmt.format(stats.totalRevenue),
                 iconAsset: 'wallet',
               ),
             )
