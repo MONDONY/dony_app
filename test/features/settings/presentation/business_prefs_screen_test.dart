@@ -75,6 +75,10 @@ void main() {
     await tester.pumpWidget(buildScreen());
     await tester.pumpAndSettle();
 
+    // La tuile « Devise d'affichage » (lot 8) a poussé la section sous la
+    // fenêtre du ListView lazy : la faire entrer dans le viewport d'abord.
+    await tester.scrollUntilVisible(find.text('MES TRAJETS'), 200);
+
     expect(find.text('MES TRAJETS'), findsOneWidget);
     expect(find.text('Poids par défaut'), findsOneWidget);
     expect(find.text('Prix minimum'), findsOneWidget);
@@ -90,6 +94,8 @@ void main() {
     ).thenReturn(AuthAuthenticated(_makeUser(roles: const ['TRAVELER'])));
     await tester.pumpWidget(buildScreen());
     await tester.pumpAndSettle();
+
+    await tester.scrollUntilVisible(find.text('MES TRAJETS'), 200);
 
     expect(find.text('MES TRAJETS'), findsOneWidget);
   });

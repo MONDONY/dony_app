@@ -25,6 +25,11 @@ class BusinessPrefsState extends Equatable {
   /// renseigné par le serveur, jamais dérivé localement.
   final bool countryLocked;
 
+  /// Devise d'affichage (presentment, lot 8) : `'AUTO'` = suivre la devise
+  /// active, sinon une des 7 devises. Jamais verrouillée : préférence purement
+  /// visuelle, les montants transactionnels restent dans leur devise d'origine.
+  final String displayCurrencyCode;
+
   const BusinessPrefsState({
     this.weightUnit = 'kg',
     this.currencyCode = 'EUR',
@@ -38,6 +43,7 @@ class BusinessPrefsState extends Equatable {
     this.currencyLocked = false,
     this.country,
     this.countryLocked = false,
+    this.displayCurrencyCode = 'AUTO',
   });
 
   BusinessPrefsState copyWith({
@@ -53,6 +59,7 @@ class BusinessPrefsState extends Equatable {
     bool? currencyLocked,
     String? Function()? countryGetter,
     bool? countryLocked,
+    String? displayCurrencyCode,
   }) => BusinessPrefsState(
     weightUnit: weightUnit ?? this.weightUnit,
     currencyCode: currencyCode ?? this.currencyCode,
@@ -71,6 +78,7 @@ class BusinessPrefsState extends Equatable {
     currencyLocked: currencyLocked ?? this.currencyLocked,
     country: countryGetter != null ? countryGetter() : country,
     countryLocked: countryLocked ?? this.countryLocked,
+    displayCurrencyCode: displayCurrencyCode ?? this.displayCurrencyCode,
   );
 
   @override
@@ -87,5 +95,6 @@ class BusinessPrefsState extends Equatable {
     currencyLocked,
     country,
     countryLocked,
+    displayCurrencyCode,
   ];
 }
