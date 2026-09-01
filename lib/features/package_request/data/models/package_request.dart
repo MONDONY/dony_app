@@ -47,6 +47,8 @@ class PackageRequest extends Equatable {
     this.viewerThreadStatus,
     this.promoCode,
     this.currency = 'EUR',
+    this.convertedDisplayPrice,
+    this.convertedCurrency,
     this.grossPriceEur,
   });
 
@@ -112,6 +114,14 @@ class PackageRequest extends Equatable {
   /// anciens payloads sans ce champ.
   final String currency;
 
+  /// Équivalent ESTIMÉ, dans la devise active du lecteur et au taux courant
+  /// serveur, du PRIX AFFICHÉ ([grossPriceEur] sinon [targetPriceEur]).
+  /// `null` sans budget, même devise, ou backend antérieur au lot 5.
+  final double? convertedDisplayPrice;
+
+  /// Devise cible de [convertedDisplayPrice] : celle du lecteur.
+  final String? convertedCurrency;
+
   /// Parse le tableau `photos` du wire en deux listes alignées (URLs
   /// présignées + clés S3) en un seul passage.
   static (List<String>, List<String>) _photosFromJson(List<dynamic>? raw) {
@@ -164,6 +174,9 @@ class PackageRequest extends Equatable {
       viewerThreadStatus: json['viewerThreadStatus'] as String?,
       promoCode: json['promoCode'] as String?,
       currency: json['currency'] as String? ?? 'EUR',
+      convertedDisplayPrice: (json['convertedDisplayPrice'] as num?)
+          ?.toDouble(),
+      convertedCurrency: json['convertedCurrency'] as String?,
       grossPriceEur: (json['grossPriceEur'] as num?)?.toDouble(),
     );
   }
@@ -195,6 +208,8 @@ class PackageRequest extends Equatable {
     viewerThreadStatus,
     promoCode,
     currency,
+    convertedDisplayPrice,
+    convertedCurrency,
     grossPriceEur,
   ];
 }

@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:dony/core/currency/converted_price.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -361,21 +362,35 @@ class _Budget extends StatelessWidget {
         ),
       );
     }
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.baseline,
-      textBaseline: TextBaseline.alphabetic,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          'Budget ',
-          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
+          children: [
+            Text(
+              'Budget ',
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
+            Text(
+              formatPriceIn(displayPrice, item.currency),
+              style: tt.titleMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: cs.primary,
+                letterSpacing: -0.3,
+              ),
+            ),
+          ],
         ),
-        Text(
-          formatPriceIn(displayPrice, item.currency),
-          style: tt.titleMedium?.copyWith(
-            fontWeight: FontWeight.w800,
-            color: cs.primary,
-            letterSpacing: -0.3,
-          ),
+        // Repère « environ » dans la devise du lecteur (serveur, lot 5) : le
+        // budget d'origine reste seul montant réel.
+        ConvertedPriceLabel(
+          originalCurrency: item.currency,
+          convertedPricePerKg: item.convertedDisplayPrice,
+          convertedCurrency: item.convertedCurrency,
+          suffix: '',
         ),
       ],
     );
