@@ -854,9 +854,13 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                   },
                 ),
                 title: Text(
+                  // « Faire une demande », comme le bouton qui ouvre cette
+                  // feuille. « Publier un colis » désigne ailleurs la
+                  // publication d'une demande publique, ouverte à tous les
+                  // voyageurs — pas l'envoi d'une demande à celui-ci.
                   step == _FormStep.paymentPicker
                       ? 'Paiement'
-                      : 'Publier un colis',
+                      : 'Faire une demande',
                   style: tt.titleLarge?.copyWith(
                     fontWeight: FontWeight.w800,
                     letterSpacing: -0.3,

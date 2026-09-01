@@ -21,6 +21,7 @@ class DonyButton extends StatefulWidget {
     required this.label,
     required this.onPressed,
     this.variant = DonyButtonVariant.primary,
+    this.flat = false,
     this.icon,
     this.iconRight,
     this.iconAsset,
@@ -32,6 +33,13 @@ class DonyButton extends StatefulWidget {
   final String label;
   final VoidCallback? onPressed;
   final DonyButtonVariant variant;
+
+  /// Rend le bouton d'un seul aplat, sans dégradé ni ombre colorée.
+  ///
+  /// À réserver aux barres d'action fixes, où le halo du bouton plein déborde
+  /// sur le contenu qui défile derrière et attire l'œil plus que le contenu
+  /// lui-même. N'a d'effet que sur les variantes pleines.
+  final bool flat;
   final IconData? icon;
   final IconData? iconRight;
 
@@ -138,7 +146,7 @@ class _DonyButtonState extends State<DonyButton> {
 
     final button = switch (widget.variant) {
       DonyButtonVariant.primary => _GlowButton(
-        colors: hc
+        colors: (hc || widget.flat)
             ? _flat(cs.primary)
             : isLight
             ? [const Color(0xFF1F6BF5), DonyColors.blue500, DonyColors.blue700]
@@ -147,7 +155,9 @@ class _DonyButtonState extends State<DonyButton> {
                 DonyColors.blueDark500,
                 DonyColors.blueDark700,
               ],
-        shadows: isLight ? DonyShadow.brand : DonyShadow.brandDark,
+        shadows: widget.flat
+            ? const []
+            : (isLight ? DonyShadow.brand : DonyShadow.brandDark),
         foreground: onBrand,
         pressed: _pressed,
         fullWidth: widget.fullWidth,

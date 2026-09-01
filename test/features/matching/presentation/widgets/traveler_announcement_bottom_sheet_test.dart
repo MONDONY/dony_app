@@ -573,7 +573,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text("Vérification d'identité"), findsOneWidget);
-      expect(find.text('Publier un colis'), findsNothing);
+      expect(find.byKey(const Key('bid-submit-btn')), findsNothing);
     });
 
     testWidgets('expéditeur PENDING : ouvre KycStatusBottomSheet '
@@ -592,7 +592,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text("Vérification d'identité"), findsOneWidget);
-      expect(find.text('Publier un colis'), findsNothing);
+      expect(find.byKey(const Key('bid-submit-btn')), findsNothing);
     });
 
     testWidgets('expéditeur REJECTED : ouvre KycStatusBottomSheet '
@@ -611,7 +611,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text("Vérification d'identité"), findsOneWidget);
-      expect(find.text('Publier un colis'), findsNothing);
+      expect(find.byKey(const Key('bid-submit-btn')), findsNothing);
     });
 
     testWidgets('expéditeur VÉRIFIÉ : ouvre CreateBidBottomSheet '
@@ -629,7 +629,7 @@ void main() {
       await tester.tap(find.text('Faire une demande'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Publier un colis'), findsOneWidget);
+      expect(find.byKey(const Key('bid-submit-btn')), findsOneWidget);
       expect(find.text("Vérification d'identité"), findsNothing);
     });
 
@@ -651,7 +651,7 @@ void main() {
       await tester.tap(find.text('Faire une demande'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Publier un colis'), findsOneWidget);
+      expect(find.byKey(const Key('bid-submit-btn')), findsOneWidget);
       expect(find.text("Vérification d'identité"), findsNothing);
     });
 
@@ -673,7 +673,7 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text("Vérification d'identité"), findsOneWidget);
-        expect(find.text('Publier un colis'), findsNothing);
+        expect(find.byKey(const Key('bid-submit-btn')), findsNothing);
       },
     );
   });

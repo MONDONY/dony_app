@@ -1,14 +1,19 @@
+import 'dart:async';
+
 import 'package:dony/core/config/sms_auth_flag.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/services/external_url_launcher.dart';
+import 'package:dony/core/utils/map_launcher.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
+import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
@@ -86,6 +91,13 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
                 ),
               ],
       ),
+      // La barre d'action était posée en `Positioned` par-dessus le contenu,
+      // avec une réserve de 100 points codée en dur sous la liste. Passée en
+      // `bottomNavigationBar`, elle occupe sa propre hauteur : le contenu ne
+      // peut plus disparaître dessous, quelle que soit la taille de police.
+      bottomNavigationBar: widget.consultOnly
+          ? null
+          : _ActionBar(announcement: _a),
       body: Stack(
         children: [
           SingleChildScrollView(
@@ -93,9 +105,7 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
               DonyLayout.hPadding(context),
               DonySpacing.xl,
               DonyLayout.hPadding(context),
-              widget.consultOnly
-                  ? DonySpacing.huge
-                  : MediaQuery.of(context).padding.bottom + 100,
+              DonySpacing.huge,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -225,35 +235,81 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
             ),
           ),
 
-          // ── CTA fixe ────────────────────────────────────────────────
-          if (!widget.consultOnly)
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child:
-                  Container(
-                    padding: EdgeInsets.fromLTRB(
-                      DonyLayout.hPadding(context),
-                      14,
-                      DonyLayout.hPadding(context),
-                      MediaQuery.of(context).padding.bottom + DonySpacing.base,
-                    ),
-                    decoration: BoxDecoration(
-                      color: cs.surface,
-                      border: Border(top: BorderSide(color: cs.outline)),
-                    ),
-                    child: DonyButton(
-                      label: 'Publier un colis',
-                      onPressed: () =>
-                          CreateBidBottomSheet.show(context, announcement: _a),
-                    ),
-                  ).animate().slideY(
-                    begin: 0.5,
-                    duration: 280.ms,
-                    curve: Curves.easeOutCubic,
-                  ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Barre d'action fixe du détail d'un trajet.
+///
+/// Le bouton disait « Publier un colis », ce qui désigne ailleurs dans l'app la
+/// publication d'une demande **publique**, visible de tous les voyageurs. Il
+/// ouvre en réalité l'envoi d'une demande à ce voyageur, pour ce trajet : d'où
+/// « Faire une demande », déjà le libellé de la fiche trajet côté expéditeur.
+class _ActionBar extends StatelessWidget {
+  const _ActionBar({required this.announcement});
+
+  final AnnouncementModel announcement;
+
+  /// Un trajet dont le départ est passé ne se réserve plus. La comparaison se
+  /// fait à la journée : un vol qui décolle ce soir reste réservable ce matin.
+  bool get _estPasse {
+    final maintenant = DateTime.now();
+    final jour = DateTime(maintenant.year, maintenant.month, maintenant.day);
+    return announcement.departureDate.isBefore(jour);
+  }
+
+  bool get _estComplet => announcement.availableKg <= 0;
+
+  String? get _empechement {
+    if (_estPasse) return 'Ce trajet est déjà parti.';
+    if (_estComplet) return 'Ce trajet est complet, il ne reste aucun kilo.';
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final empechement = _empechement;
+
+    return Container(
+      padding: EdgeInsets.fromLTRB(
+        DonyLayout.hPadding(context),
+        DonySpacing.md,
+        DonyLayout.hPadding(context),
+        MediaQuery.of(context).padding.bottom + DonySpacing.base,
+      ),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        border: Border(top: BorderSide(color: cs.outline)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (empechement != null)
+            // Dire pourquoi l'action est impossible vaut mieux qu'un bouton
+            // grisé sans explication.
+            Padding(
+              padding: const EdgeInsets.only(bottom: DonySpacing.sm),
+              child: Text(
+                empechement,
+                textAlign: TextAlign.center,
+                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+              ),
             ),
+          DonyButton(
+            label: 'Faire une demande',
+            iconAsset: 'send',
+            flat: true,
+            onPressed: empechement != null
+                ? null
+                : () => CreateBidBottomSheet.show(
+                    context,
+                    announcement: announcement,
+                  ),
+          ),
         ],
       ),
     );
@@ -615,6 +671,7 @@ class _HandoverCard extends StatelessWidget {
             label: 'Lieu de remise (départ)',
             value: hasDepLoc ? depLoc : 'Non précisé par le voyageur',
             hasValue: hasDepLoc,
+            address: hasDepLoc ? announcement.pickupAddress : null,
             iconAsset: 'map-pin',
             iconBg: cs.primaryContainer,
             iconColor: cs.primary,
@@ -629,6 +686,7 @@ class _HandoverCard extends StatelessWidget {
             label: 'Lieu de récupération (arrivée)',
             value: hasArrLoc ? arrLoc : 'Non précisé par le voyageur',
             hasValue: hasArrLoc,
+            address: hasArrLoc ? announcement.deliveryAddress : null,
             iconAsset: 'map-pin',
             iconBg: cs.errorContainer,
             iconColor: cs.error,
@@ -651,11 +709,17 @@ class _LocationRow extends StatelessWidget {
     required this.cs,
     required this.tt,
     this.iconAsset,
+    this.address,
   }) : icon = null;
 
   final String label;
   final String value;
   final bool hasValue;
+
+  /// Adresse complète, avec ses coordonnées. Quand elle est fournie, la ligne
+  /// s'ouvre dans l'app de cartes : un lieu de remise sert à s'y rendre, le
+  /// lire sans pouvoir l'ouvrir obligeait à le recopier à la main.
+  final AddressData? address;
   final IconData? icon;
   final String? iconAsset;
   final Color iconBg;
@@ -665,6 +729,34 @@ class _LocationRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ligne = _contenu(context);
+    final adresse = address;
+    if (adresse == null) return ligne;
+
+    return Semantics(
+      button: true,
+      label: 'Ouvrir $value dans les cartes',
+      child: InkWell(
+        onTap: () => unawaited(
+          openInMaps(
+            getIt<ExternalUrlLauncher>(),
+            lat: adresse.lat,
+            lng: adresse.lng,
+            label: adresse.label,
+          ),
+        ),
+        borderRadius: BorderRadius.circular(DonyRadius.sm),
+        child: Padding(
+          // Le tap doit rester confortable sans décaler la ligne : la marge
+          // négative annule le rembourrage ajouté pour la cible tactile.
+          padding: const EdgeInsets.symmetric(vertical: DonySpacing.xs),
+          child: ligne,
+        ),
+      ),
+    );
+  }
+
+  Widget _contenu(BuildContext context) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
