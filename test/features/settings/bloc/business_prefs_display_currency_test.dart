@@ -109,15 +109,16 @@ void main() {
     blocTest<BusinessPrefsBloc, BusinessPrefsState>(
       'échec réseau : rollback sur la valeur précédente avec message d\'erreur',
       build: () {
-        when(
-          () => mockRepo.updatePrefs(any()),
-        ).thenThrow(Exception('réseau'));
+        when(() => mockRepo.updatePrefs(any())).thenThrow(Exception('réseau'));
         return build();
       },
       act: (bloc) => bloc.add(const DisplayCurrencyChanged('CAD')),
       expect: () => [
-        isA<BusinessPrefsState>()
-            .having((s) => s.displayCurrencyCode, 'displayCurrencyCode', 'CAD'),
+        isA<BusinessPrefsState>().having(
+          (s) => s.displayCurrencyCode,
+          'displayCurrencyCode',
+          'CAD',
+        ),
         isA<BusinessPrefsState>().having((s) => s.isSyncing, 'isSyncing', true),
         isA<BusinessPrefsState>()
             .having((s) => s.displayCurrencyCode, 'displayCurrencyCode', 'AUTO')
@@ -176,7 +177,9 @@ void main() {
     test('toJson : toujours envoyée, AUTO compris (valeur à part entière)', () {
       expect(_defaultDto.toJson()['displayCurrencyCode'], 'AUTO');
       expect(
-        _defaultDto.copyWith(displayCurrencyCode: 'XAF').toJson()['displayCurrencyCode'],
+        _defaultDto
+            .copyWith(displayCurrencyCode: 'XAF')
+            .toJson()['displayCurrencyCode'],
         'XAF',
       );
     });
