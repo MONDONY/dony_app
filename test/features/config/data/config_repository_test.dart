@@ -23,6 +23,53 @@ void main() {
     repository = ConfigRepository(datasource);
   });
 
+  group('ConfigDatasource — getExchangeRates', () {
+    test('mappe la liste rates en map code -> taux', () async {
+      when(() => mockDio.get('/config/exchange-rates')).thenAnswer(
+        (_) async => Response(
+          data: {
+            'rates': [
+              {'currency': 'EUR', 'unitsPerEur': 1},
+              {'currency': 'USD', 'unitsPerEur': 1.1642},
+              {'currency': 'XOF', 'unitsPerEur': 655.957},
+            ],
+          },
+          statusCode: 200,
+          requestOptions: RequestOptions(path: '/config/exchange-rates'),
+        ),
+      );
+
+      final rates = await datasource.getExchangeRates();
+
+      expect(rates, {'EUR': 1.0, 'USD': 1.1642, 'XOF': 655.957});
+    });
+
+    test('le repository propage la map et unwrap les erreurs Dio', () async {
+      when(() => mockDio.get('/config/exchange-rates')).thenAnswer(
+        (_) async => Response(
+          data: {
+            'rates': [
+              {'currency': 'CAD', 'unitsPerEur': 1.6},
+            ],
+          },
+          statusCode: 200,
+          requestOptions: RequestOptions(path: '/config/exchange-rates'),
+        ),
+      );
+
+      expect(await repository.getExchangeRates(), {'CAD': 1.6});
+
+      when(() => mockDio.get('/config/exchange-rates')).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(path: '/config/exchange-rates'),
+          message: 'Network error',
+        ),
+      );
+
+      expect(repository.getExchangeRates(), throwsA(isA<Exception>()));
+    });
+  });
+
   group('ConfigDatasource', () {
     test('getCommissionRate returns rate from API response', () async {
       when(() => mockDio.get('/config/commission-rate')).thenAnswer(
