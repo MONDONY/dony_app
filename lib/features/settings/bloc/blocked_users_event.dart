@@ -12,3 +12,10 @@ class BlockedUserUnblockRequested extends BlockedUsersEvent {
   final String userId;
   const BlockedUserUnblockRequested(this.userId);
 }
+
+/// Blocage demandé depuis un point d'entrée hors de l'écran Confidentialité
+/// (fiche profil, conversation). L'appelant fournit sa propre instance du BLoC.
+class BlockedUserBlockRequested extends BlockedUsersEvent {
+  final String userId;
+  const BlockedUserBlockRequested(this.userId);
+}

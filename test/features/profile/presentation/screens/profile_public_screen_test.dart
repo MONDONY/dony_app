@@ -684,9 +684,9 @@ void main() {
     },
   );
 
-  // ── 10. Report action (⋮) ─────────────────────────────────────────────────
+  // ── 10. Menu ⋯ : Signaler + Bloquer ───────────────────────────────────────
 
-  testWidgets('report icon absent when viewing own profile', (tester) async {
+  testWidgets('menu ⋯ absent when viewing own profile', (tester) async {
     await tester.pumpWidget(
       _wrapLoaded(
         profile: _profile,
@@ -695,21 +695,77 @@ void main() {
     );
     await tester.pump(const Duration(milliseconds: 600));
 
-    expect(find.byTooltip('Signaler'), findsNothing);
+    expect(find.byTooltip("Plus d'options"), findsNothing);
   });
 
   testWidgets(
-    'report icon present, tap navigates to report-incident with user target',
+    'menu ⋯ présent, « Signaler » navigue vers report-incident avec la cible user',
     (tester) async {
       await tester.pumpWidget(_wrapLoaded(profile: _profile));
       await tester.pump(const Duration(milliseconds: 600));
 
-      expect(find.byTooltip('Signaler'), findsOneWidget);
+      expect(find.byTooltip("Plus d'options"), findsOneWidget);
 
-      await tester.tap(find.byTooltip('Signaler'));
+      await tester.tap(find.byTooltip("Plus d'options"));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Signaler Fatou Diallo'));
       await tester.pumpAndSettle();
 
       expect(find.text('Reported: user-1'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'Signaler et Bloquer sont regroupés dans le même menu ⋯, pas deux icônes',
+    (tester) async {
+      await tester.pumpWidget(_wrapLoaded(profile: _profile));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      // Une seule affordance dans l'app bar, aucune icône « Signaler » isolée.
+      expect(find.byTooltip('Signaler'), findsNothing);
+
+      await tester.tap(find.byTooltip("Plus d'options"));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Signaler Fatou Diallo'), findsOneWidget);
+      expect(find.text('Bloquer Fatou Diallo'), findsOneWidget);
+    },
+  );
+
+  testWidgets('« Bloquer » est absent du menu ⋯ sur son propre profil', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrapLoaded(
+        profile: _profile,
+        authUserId: _userId, // own profile
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.byTooltip("Plus d'options"), findsNothing);
+    expect(find.text('Bloquer Fatou Diallo'), findsNothing);
+  });
+
+  testWidgets(
+    'profil pas encore chargé : « Signaler » reste, « Bloquer » attend le nom',
+    (tester) async {
+      // Sans displayName, « Bloquer X » n'a pas de sujet à nommer : on
+      // n'affiche pas une action destructive anonyme.
+      when(() => bloc.state).thenReturn(const ProfilePublicLoading());
+
+      await tester.pumpWidget(_wrap(bloc));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      await tester.tap(find.byTooltip("Plus d'options"));
+      // Pas de pumpAndSettle ici : le squelette de chargement fait tourner un
+      // shimmer en boucle, l'arbre ne se stabilise jamais.
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.text('Signaler'), findsOneWidget);
+      expect(find.textContaining('Bloquer'), findsNothing);
     },
   );
 

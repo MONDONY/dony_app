@@ -7,6 +7,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/block_events_service.dart';
 import 'package:dony/core/utils/phone_dialer.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -54,6 +55,8 @@ class _ChatScreenState extends State<ChatScreen> {
   final List<SentRecord> _recentSends = [];
   bool _isSending = false;
 
+  StreamSubscription<BlockChange>? _blockSub;
+
   String get _myUid {
     try {
       return FirebaseAuth.instance.currentUser?.uid ?? '';
@@ -81,10 +84,46 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
       );
     });
+    // Abonnement côté widget (et non dans ChatBloc) : ce qu'il déclenche est une
+    // navigation, qui n'appartient pas au BLoC.
+    _blockSub = _blockEvents()?.changes.listen(_onBlockChange);
+  }
+
+  BlockEventsService? _blockEvents() {
+    try {
+      return getIt.isRegistered<BlockEventsService>()
+          ? getIt<BlockEventsService>()
+          : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Le serveur refuse désormais tout message vers cet interlocuteur : rester
+  /// sur un fil qui n'accepte plus rien n'aurait aucun sens, on revient à la
+  /// liste. Un déblocage, lui, ne change rien à l'écran ouvert.
+  void _onBlockChange(BlockChange change) {
+    if (!change.blocked) return;
+    if (change.userId != widget.conversation.otherParticipant.id) return;
+    // Navigation immédiate, sans passer par un post-frame : rien ne garantit
+    // qu'une frame soit produite ensuite, et l'écran resterait ouvert. Le
+    // dialog de confirmation éventuellement au-dessus se referme de lui-même.
+    if (!mounted) return;
+    _leaveToConversationList();
+  }
+
+  void _leaveToConversationList() {
+    final override = widget.onNavigate;
+    if (override != null) {
+      override('/messages', null);
+      return;
+    }
+    context.go('/messages');
   }
 
   @override
   void dispose() {
+    _blockSub?.cancel();
     _controller.dispose();
     _scrollController.dispose();
     super.dispose();

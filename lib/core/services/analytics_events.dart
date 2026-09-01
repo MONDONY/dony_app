@@ -181,6 +181,8 @@ abstract final class AnalyticsEvents {
   static const accountDeletionRequested = 'account_deletion_requested';
   static const walletRefundRequested = 'wallet_refund_requested';
   static const phoneVisibilityToggled = 'phone_visibility_toggled';
+  static const userBlocked = 'user_blocked';
+  static const userUnblocked = 'user_unblocked';
 
   // Envois
   static const shipmentFilterApplied = 'shipment_filter_applied';

@@ -1,9 +1,9 @@
 import 'package:dony/core/design/widgets/dony_snackbar.dart';
 import 'package:dony/core/di/injection.dart';
-import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
-import 'package:dony/features/settings/data/repositories/blocked_users_repository.dart';
+import 'package:dony/features/settings/bloc/blocked_users_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 /// Affiche le menu ⋯ (feuille à une seule entrée « Bloquer ») puis, au tap,
@@ -65,7 +65,12 @@ void showBlockMenu(
   );
 }
 
-/// Dialog de confirmation du blocage (réutilisable dans les deux fiches profil).
+/// Dialog de confirmation du blocage, réutilisable depuis tout point d'entrée
+/// affichant un autre utilisateur (fiches profil, profil public, conversation).
+///
+/// Fournit sa propre instance de [BlockedUsersBloc] : les écrans appelants n'ont
+/// pas à en exposer une, et le blocage passe malgré tout par un BLoC plutôt que
+/// par un appel repository depuis le widget.
 void showBlockConfirmDialog(
   BuildContext context, {
   required String userId,
@@ -73,57 +78,54 @@ void showBlockConfirmDialog(
 }) {
   showDialog<void>(
     context: context,
-    builder: (_) =>
-        _BlockConfirmDialog(userId: userId, displayName: displayName),
+    builder: (_) => BlocProvider<BlockedUsersBloc>(
+      create: (_) => getIt<BlockedUsersBloc>(),
+      child: _BlockConfirmDialog(userId: userId, displayName: displayName),
+    ),
   );
 }
 
-class _BlockConfirmDialog extends StatefulWidget {
+class _BlockConfirmDialog extends StatelessWidget {
   const _BlockConfirmDialog({required this.userId, required this.displayName});
 
   final String userId;
   final String displayName;
 
   @override
-  State<_BlockConfirmDialog> createState() => _BlockConfirmDialogState();
+  Widget build(BuildContext context) {
+    return BlocConsumer<BlockedUsersBloc, BlockedUsersState>(
+      listener: (context, state) {
+        if (state is BlockedUserBlockSuccess) {
+          Navigator.of(context, rootNavigator: true).pop();
+          DonySnackbar.show(context, message: '$displayName a été bloqué(e)');
+        }
+      },
+      builder: (context, state) => _BlockConfirmDialogView(
+        userId: userId,
+        displayName: displayName,
+        loading: state is BlockedUserBlocking,
+        errorMessage: state is BlockedUserBlockFailure ? state.message : null,
+      ),
+    );
+  }
 }
 
-class _BlockConfirmDialogState extends State<_BlockConfirmDialog> {
-  bool _loading = false;
-  String? _errorMessage;
+class _BlockConfirmDialogView extends StatelessWidget {
+  const _BlockConfirmDialogView({
+    required this.userId,
+    required this.displayName,
+    required this.loading,
+    required this.errorMessage,
+  });
 
-  Future<void> _block() async {
-    setState(() {
-      _loading = true;
-      _errorMessage = null;
-    });
-    try {
-      await getIt<BlockedUsersRepository>().blockUser(widget.userId);
-      if (!mounted) {
-        return;
-      }
-      Navigator.of(context, rootNavigator: true).pop();
-      DonySnackbar.show(
-        context,
-        message: '${widget.displayName} a été bloqué(e)',
-      );
-    } on ConflictException {
-      setState(() {
-        _loading = false;
-        _errorMessage =
-            'Termine d\'abord la transaction en cours avant de bloquer cet utilisateur.';
-      });
-    } catch (_) {
-      setState(() {
-        _loading = false;
-        _errorMessage = 'Une erreur est survenue. Réessaie plus tard.';
-      });
-    }
-  }
+  final String userId;
+  final String displayName;
+  final bool loading;
+  final String? errorMessage;
 
   @override
   Widget build(BuildContext context) {
-    final firstName = widget.displayName.split(' ').first;
+    final firstName = displayName.split(' ').first;
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -153,7 +155,7 @@ class _BlockConfirmDialogState extends State<_BlockConfirmDialog> {
                 height: 1.6,
               ),
             ),
-            if (_errorMessage != null) ...[
+            if (errorMessage != null) ...[
               const SizedBox(height: 12),
               Container(
                 padding: const EdgeInsets.all(10),
@@ -163,7 +165,7 @@ class _BlockConfirmDialogState extends State<_BlockConfirmDialog> {
                   border: Border.all(color: const Color(0xFFFFCDD2)),
                 ),
                 child: Text(
-                  _errorMessage!,
+                  errorMessage!,
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 12,
                     color: const Color(0xFFE53935),
@@ -176,7 +178,7 @@ class _BlockConfirmDialogState extends State<_BlockConfirmDialog> {
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: _loading
+                    onPressed: loading
                         ? null
                         : () => Navigator.of(context).pop(),
                     style: OutlinedButton.styleFrom(
@@ -198,7 +200,11 @@ class _BlockConfirmDialogState extends State<_BlockConfirmDialog> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: _loading ? null : _block,
+                    onPressed: loading
+                        ? null
+                        : () => context.read<BlockedUsersBloc>().add(
+                            BlockedUserBlockRequested(userId),
+                          ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFE53935),
                       foregroundColor: Colors.white,
@@ -208,7 +214,7 @@ class _BlockConfirmDialogState extends State<_BlockConfirmDialog> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: _loading
+                    child: loading
                         ? const SizedBox(
                             width: 18,
                             height: 18,

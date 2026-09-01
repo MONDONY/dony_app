@@ -1090,4 +1090,39 @@ void main() {
       expect(find.text('Détail du trajet'), findsOneWidget);
     });
   });
+
+  // ─── Blocage, reporté de l'écran supprimé (PR #301) ───────────────────────
+
+  group('blocage du voyageur', () {
+    testWidgets('trajet d\'un tiers → « Bloquer ce voyageur »', (tester) async {
+      await tester.pumpWidget(_harness(announcement: _buildAnnouncement()));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('block-traveler-link')), findsOneWidget);
+      expect(find.text('Bloquer ce voyageur'), findsOneWidget);
+    });
+
+    testWidgets('son propre trajet → aucune entrée de blocage', (tester) async {
+      final a = _buildAnnouncement();
+      // Le lecteur est le voyageur de l'annonce : on ne se bloque pas soi-même.
+      await tester.pumpWidget(
+        _harness(
+          announcement: a,
+          authState: AuthAuthenticated(
+            UserModel(
+              id: a.travelerId,
+              roles: const [],
+              kycStatus: 'VERIFIED',
+              status: 'ACTIVE',
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('block-traveler-link')), findsNothing);
+    });
+  });
 }

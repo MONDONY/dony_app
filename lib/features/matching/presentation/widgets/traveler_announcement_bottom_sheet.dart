@@ -20,6 +20,7 @@ import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/matching/presentation/widgets/block_user_action.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
 import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
 import 'package:flutter/material.dart';
@@ -45,6 +46,9 @@ Future<void> showTravelerAnnouncementSheet(
   // currentUser couvre AuthAuthenticated ET AuthProfileUpdated (émis après
   // upload avatar / édition profil) — sinon le KYC repasserait à false.
   final isKycVerified = authState.currentUser?.isKycVerified ?? false;
+  // Sert à masquer le blocage sur son propre trajet. Lu ici, comme le reste :
+  // la feuille s'affiche hors de l'arbre de providers.
+  final lecteurId = authState.currentUserId;
   // Un expéditeur non vérifié peut quand même écrire à un voyageur qui a
   // désactivé « profils vérifiés uniquement » : sans cette exception, le réglage
   // du voyageur resterait sans effet, le client barrant la route avant l'appel.
@@ -227,6 +231,7 @@ Future<void> showTravelerAnnouncementSheet(
     child: _TravelerAnnouncementContent(
       announcement: announcement,
       avecFavori: favoris != null,
+      lecteurId: lecteurId,
     ),
   );
 }
@@ -235,7 +240,21 @@ class _TravelerAnnouncementContent extends StatelessWidget {
   const _TravelerAnnouncementContent({
     required this.announcement,
     this.avecFavori = false,
+    this.lecteurId,
   });
+
+  /// Identifiant du lecteur, pour ne pas lui proposer de se bloquer lui-même.
+  final String? lecteurId;
+
+  /// Le voyageur du trajet, sauf s'il s'agit du lecteur lui-même.
+  TravelerProfile? get _voyageurBloquable {
+    final voyageur = announcement.traveler;
+    if (voyageur == null) return null;
+    final estSien =
+        lecteurId != null &&
+        (lecteurId == announcement.travelerId || lecteurId == voyageur.id);
+    return estSien ? null : voyageur;
+  }
 
   /// Faux quand le point d'ouverture n'a pas de `FavoriteIdsCubit` : un
   /// `BlocBuilder` sans provider **lève**, il ne se contente pas de ne rien
@@ -387,6 +406,39 @@ class _TravelerAnnouncementContent extends StatelessWidget {
             ),
           ),
         ),
+
+        // Le blocage vivait sur l'écran « Détail annonce », supprimé au profit
+        // de cette feuille. Sans ce report, un des points d'entrée du blocage
+        // disparaîtrait. Masqué sur son propre trajet : on ne se bloque pas.
+        if (_voyageurBloquable != null)
+          Center(
+            child: InkWell(
+              key: const Key('block-traveler-link'),
+              borderRadius: BorderRadius.circular(DonyRadius.sm),
+              onTap: () => showBlockMenu(
+                context,
+                userId: _voyageurBloquable!.id,
+                displayName: _voyageurBloquable!.resolvedName,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: DonySpacing.sm,
+                  vertical: DonySpacing.xs,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    DonyIcon('ban', size: 14, color: cs.onSurfaceVariant),
+                    const SizedBox(width: DonySpacing.xs),
+                    Text(
+                      'Bloquer ce voyageur',
+                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         const SizedBox(height: DonySpacing.md),
       ],
     );

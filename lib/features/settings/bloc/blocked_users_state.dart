@@ -35,6 +35,33 @@ class BlockedUsersUnblocking extends BlockedUsersState {
   List<Object?> get props => [userId, currentUsers];
 }
 
+/// États du blocage déclenché hors de l'écran Confidentialité. Séparés des états
+/// de la liste : le dialog de confirmation a sa propre instance du BLoC et n'a
+/// aucune liste à afficher.
+class BlockedUserBlocking extends BlockedUsersState {
+  final String userId;
+  const BlockedUserBlocking(this.userId);
+
+  @override
+  List<Object?> get props => [userId];
+}
+
+class BlockedUserBlockSuccess extends BlockedUsersState {
+  final String userId;
+  const BlockedUserBlockSuccess(this.userId);
+
+  @override
+  List<Object?> get props => [userId];
+}
+
+class BlockedUserBlockFailure extends BlockedUsersState {
+  final String message;
+  const BlockedUserBlockFailure(this.message);
+
+  @override
+  List<Object?> get props => [message];
+}
+
 class BlockedUsersError extends BlockedUsersState {
   final String message;
   const BlockedUsersError(this.message);
