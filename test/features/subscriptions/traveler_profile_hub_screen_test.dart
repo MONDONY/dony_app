@@ -496,7 +496,7 @@ void main() {
 
   // ─── Test 14: averageRating == 0 → '—' in stat column ───────────────────
 
-  testWidgets('averageRating 0 → affiche — dans la colonne Note', (
+  testWidgets('profil sans note ni livraison → « Nouveau sur Yadony »', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(400, 900));
@@ -527,12 +527,15 @@ void main() {
     await tester.pumpWidget(pump());
     await tester.pump(const Duration(milliseconds: 600));
 
-    // averageRating == 0 → shows '–', and responseDelayHours null → '–'
-    expect(find.text('–'), findsWidgets);
+    // Les trois cartes de stats affichaient un tiret pour chaque donnée
+    // absente. Une case vide se lisait comme une mauvaise note ; la phrase
+    // n'écrit que ce qui existe, et le dit quand il n'y a rien.
+    expect(find.text('Nouveau sur Yadony'), findsOneWidget);
+    expect(find.text('–'), findsNothing);
   });
 
   // ─── Test 15: Labels des 3 stats visibles ────────────────────────────────
-  testWidgets('stats — labels Note, Livraisons, Réponse visibles', (
+  testWidgets('réputation énoncée en une phrase', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(400, 900));
@@ -551,9 +554,18 @@ void main() {
     await tester.pumpWidget(pump());
     await tester.pump(const Duration(milliseconds: 600));
 
-    expect(find.text('Note'), findsOneWidget);
-    expect(find.text('Livraisons'), findsOneWidget);
-    expect(find.text('Réponse'), findsOneWidget);
+    expect(
+      find.textContaining('de note', findRichText: true),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining('livraisons', findRichText: true),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining('répond en', findRichText: true),
+      findsOneWidget,
+    );
   });
 
   // ─── Test 16: Valeurs stats correctes ────────────────────────────────────
@@ -576,9 +588,10 @@ void main() {
     await tester.pumpWidget(pump());
     await tester.pump(const Duration(milliseconds: 600));
 
-    expect(find.text('4.7'), findsOneWidget);
-    expect(find.text('12'), findsOneWidget);
-    expect(find.text('<2h'), findsOneWidget);
+    // Note à la française, et un délai qui se lit « répond en 2 h ».
+    expect(find.textContaining('4,7', findRichText: true), findsOneWidget);
+    expect(find.textContaining('12 livraisons', findRichText: true), findsOneWidget);
+    expect(find.textContaining('2 h', findRichText: true), findsOneWidget);
   });
 
   // ─── Test 17: Badge KYC "Identité vérifiée" ──────────────────────────────

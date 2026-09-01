@@ -1,5 +1,4 @@
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/profile/bloc/profile_public_bloc.dart';
 import 'package:dony/features/profile/bloc/profile_public_state.dart';
@@ -53,7 +52,7 @@ class _TravelerProfileHubScreenState extends State<TravelerProfileHubScreen>
               headerSliverBuilder: (context, _) => [
                 SliverAppBar(
                   pinned: true,
-                  expandedHeight: 280,
+                  expandedHeight: 200,
                   backgroundColor: Theme.of(context).scaffoldBackgroundColor,
                   surfaceTintColor: Colors.transparent,
                   elevation: 0,
@@ -93,17 +92,15 @@ class _ProfileHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
+    // Même teinte que l'en-tête chargé : sans elle, l'écran passerait du
+    // sombre au clair entre le squelette et le profil.
+    final fond = Color.alphaBlend(
+      cs.primary.withValues(alpha: 0.06),
+      Theme.of(context).scaffoldBackgroundColor,
+    );
+
     return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            DonyColors.proBg2,
-            Theme.of(context).scaffoldBackgroundColor,
-          ],
-        ),
-      ),
+      color: fond,
       child: BlocBuilder<ProfilePublicBloc, ProfilePublicState>(
         builder: (context, state) {
           if (state is ProfilePublicLoaded) {
@@ -134,300 +131,268 @@ class _LoadedProfileHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
 
-    return Stack(
-      children: [
-        // Fond nuit fixe (choix de marque assumé, non theme-aware — voir spec
-        // section "Dark mode" : ce hero reste identique en light/dark mode).
-        const Positioned.fill(
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: RadialGradient(
-                center: Alignment(-0.6, -0.9),
-                radius: 1.4,
-                colors: [
-                  DonyColors.proBg3,
-                  DonyColors.proBg1,
-                  DonyColors.proBg2,
-                ],
-              ),
-            ),
+    return Container(
+      // Teinte de marque très pâle au lieu du dégradé nuit : elle accueille
+      // sans assombrir la photo de profil ni forcer des pastilles
+      // translucides pour rester lisibles par-dessus.
+      color: Color.alphaBlend(
+        cs.primary.withValues(alpha: 0.06),
+        Theme.of(context).scaffoldBackgroundColor,
+      ),
+      child: Align(
+        alignment: Alignment.bottomLeft,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            DonySpacing.base,
+            0,
+            DonySpacing.base,
+            DonySpacing.base,
           ),
-        ),
-        // Halo diffus terracotta, haut-droit
-        Positioned.fill(
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: RadialGradient(
-                center: const Alignment(0.8, -0.7),
-                radius: 0.9,
-                colors: [
-                  DonyColors.accent.withValues(alpha: 0.30),
-                  DonyColors.accent.withValues(alpha: 0.0),
-                ],
-              ),
-            ),
-          ),
-        ),
-        Align(
-          alignment: Alignment.bottomLeft,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              DonySpacing.base,
-              0,
-              DonySpacing.base,
-              _StatsAndTabBar.height + DonySpacing.md,
-            ),
-            child: Row(
-              children: [
-                // Avatar avec bordure blanche et ombre accent
-                Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 3),
-                    boxShadow: [
-                      BoxShadow(
-                        color: DonyColors.accent.withValues(alpha: 0.35),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: DonyAvatar(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  DonyAvatar(
                     name: profile.displayName,
                     imageUrl: profile.avatarUrl,
                     size: DonyAvatarSize.lg,
                     verified: profile.kycVerified,
                     pro: profile.isProAccount,
                   ),
-                ),
-                const SizedBox(width: DonySpacing.md),
-                // Infos à droite
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        profile.displayName,
-                        style: tt.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                          letterSpacing: -0.4,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: DonySpacing.xs),
-                      Wrap(
-                        spacing: DonySpacing.xs,
-                        runSpacing: DonySpacing.xs,
-                        children: [
-                          if (profile.isProAccount)
-                            const _ProfileBadge(
-                              lucideIcon: 'star',
-                              label: 'Compte PRO',
-                              iconColor: DonyColors.kycBadgeGold,
-                            ),
-                          if (profile.isKiloPro)
-                            const _ProfileBadge(
-                              iconAsset: 'package',
-                              label: 'Kilo Pro',
-                              iconColor: DonyColors.kycBadgeGold,
-                            ),
-                          if (profile.kycVerified)
-                            const _ProfileBadge(
-                              lucideIcon: 'badge-check',
-                              label: 'Identité vérifiée',
-                              iconColor: DonyColors.kycBadgeBlue,
-                            ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _ProfileBadge extends StatelessWidget {
-  const _ProfileBadge({
-    this.lucideIcon,
-    this.iconAsset,
-    required this.label,
-    required this.iconColor,
-  });
-
-  final String? lucideIcon;
-  final String? iconAsset;
-  final String label;
-  final Color iconColor;
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: DonySpacing.sm,
-        vertical: 3,
-      ),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(DonyRadius.full),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          iconAsset != null
-              ? const DonyEmoji.parcel(size: 11)
-              : DonyIcon(lucideIcon!, size: 11, color: iconColor),
-          const SizedBox(width: DonySpacing.xs),
-          Text(
-            label,
-            style: tt.bodySmall?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: iconColor,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatCard extends StatelessWidget {
-  const _StatCard({
-    this.lucideIcon,
-    this.iconAsset,
-    required this.iconColor,
-    required this.value,
-    required this.label,
-  });
-
-  final String? lucideIcon;
-  final String? iconAsset;
-  final Color iconColor;
-  final String value;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: cs.outline),
-        boxShadow: [
-          BoxShadow(
-            color: cs.shadow.withValues(alpha: 0.12),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          iconAsset != null
-              ? const DonyEmoji.parcel(size: 14)
-              : DonyIcon(lucideIcon!, size: 14, color: iconColor),
-          Text(
-            value,
-            style: tt.titleSmall?.copyWith(
-              fontWeight: FontWeight.w900,
-              color: cs.onSurface,
-            ),
-          ),
-          Text(
-            label,
-            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Skeleton du header, calqué sur [_LoadedProfileHeader] — même avatar +
-/// hauteur de contenu, en blanc translucide : le fond reste le dégradé nuit
-/// (marque assumée, non theme-aware) même pendant le chargement.
-class _HeaderSkeleton extends StatelessWidget {
-  const _HeaderSkeleton();
-
-  @override
-  Widget build(BuildContext context) {
-    const boxColor = Color.fromRGBO(255, 255, 255, 0.18);
-
-    return const Stack(
-      children: [
-        Positioned.fill(
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: RadialGradient(
-                center: Alignment(-0.6, -0.9),
-                radius: 1.4,
-                colors: [
-                  DonyColors.proBg3,
-                  DonyColors.proBg1,
-                  DonyColors.proBg2,
-                ],
-              ),
-            ),
-          ),
-        ),
-        Align(
-          alignment: Alignment.bottomLeft,
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(
-              DonySpacing.base,
-              0,
-              DonySpacing.base,
-              _StatsAndTabBar.height + DonySpacing.md,
-            ),
-            child: DonyShimmer(
-              color: Color.fromRGBO(255, 255, 255, 0.35),
-              child: Row(
-                children: [
-                  DonySkeletonCircle(diameter: 56, color: boxColor),
-                  SizedBox(width: DonySpacing.md),
+                  const SizedBox(width: DonySpacing.md),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        DonySkeletonBox(
-                          width: 160,
-                          height: 20,
-                          color: boxColor,
+                        Text(
+                          profile.displayName,
+                          style: tt.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.4,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        SizedBox(height: DonySpacing.xs),
-                        DonySkeletonBox(
-                          width: 100,
-                          height: 14,
-                          color: boxColor,
-                        ),
+                        const SizedBox(height: DonySpacing.xxs),
+                        _TrustMarks(profile: profile),
                       ],
                     ),
                   ),
                 ],
               ),
-            ),
+              const SizedBox(height: DonySpacing.md),
+              _StatSentence(profile: profile),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Marques de confiance, en texte plutôt qu'en pastilles.
+///
+/// Trois pastilles translucides sur un fond sombre demandaient au lecteur de
+/// déchiffrer un contraste faible pour une information qui tient en deux mots.
+class _TrustMarks extends StatelessWidget {
+  const _TrustMarks({required this.profile});
+
+  final ProfilePublicModel profile;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    final style = tt.labelMedium?.copyWith(
+      color: cs.onSurfaceVariant,
+      fontWeight: FontWeight.w600,
+    );
+
+    final marques = <Widget>[
+      if (profile.isProAccount)
+        _Mark(
+          icon: 'star',
+          label: 'Compte PRO',
+          color: cs.primary,
+          bold: true,
+        ),
+      if (profile.isKiloPro)
+        _Mark(
+          icon: 'package',
+          label: 'Kilo Pro',
+          color: cs.onSurfaceVariant,
+        ),
+      if (profile.kycVerified)
+        _Mark(
+          icon: 'badge-check',
+          label: 'Identité vérifiée',
+          color: cs.onSurfaceVariant,
+        ),
+    ];
+    if (marques.isEmpty) return const SizedBox.shrink();
+
+    return Wrap(
+      spacing: DonySpacing.sm,
+      runSpacing: DonySpacing.xxs,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        for (var i = 0; i < marques.length; i++) ...[
+          if (i > 0) Text('·', style: style),
+          marques[i],
+        ],
+      ],
+    );
+  }
+}
+
+class _Mark extends StatelessWidget {
+  const _Mark({
+    required this.icon,
+    required this.label,
+    required this.color,
+    this.bold = false,
+  });
+
+  final String icon;
+  final String label;
+  final Color color;
+  final bool bold;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        DonyIcon(icon, size: 13, color: color),
+        const SizedBox(width: DonySpacing.xxs),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+            color: color,
+            fontWeight: bold ? FontWeight.w700 : FontWeight.w600,
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Réputation en une phrase, à la place de trois cartes de même taille.
+///
+/// Une carte est une promesse de contenu : « Réponse – » en affichait une vide.
+/// Ici, une donnée absente ne s'écrit pas, et un profil sans historique le dit.
+class _StatSentence extends StatelessWidget {
+  const _StatSentence({required this.profile});
+
+  final ProfilePublicModel profile;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    final style = tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant);
+    final fort = style?.copyWith(
+      color: cs.onSurface,
+      fontWeight: FontWeight.w800,
+      fontFeatures: const [FontFeature.tabularFigures()],
+    );
+
+    final morceaux = <InlineSpan>[];
+    void ajouter(List<InlineSpan> spans) {
+      if (morceaux.isNotEmpty) {
+        morceaux.add(TextSpan(text: '  ·  ', style: style));
+      }
+      morceaux.addAll(spans);
+    }
+
+    if (profile.averageRating > 0) {
+      ajouter([
+        WidgetSpan(
+          alignment: PlaceholderAlignment.middle,
+          child: Padding(
+            padding: const EdgeInsets.only(right: DonySpacing.xxs),
+            child: DonyIcon('star', size: 13, color: cs.warning),
+          ),
+        ),
+        TextSpan(
+          text: profile.averageRating.toStringAsFixed(1).replaceAll('.', ','),
+          style: fort,
+        ),
+        TextSpan(text: ' de note', style: style),
+      ]);
+    }
+
+    final livraisons = profile.completedBidsCount;
+    ajouter([
+      TextSpan(text: '$livraisons', style: fort),
+      TextSpan(
+        text: livraisons > 1 ? ' livraisons' : ' livraison',
+        style: style,
+      ),
+    ]);
+
+    final delai = profile.responseDelayHours;
+    if (delai != null) {
+      ajouter([
+        TextSpan(text: 'répond en ', style: style),
+        TextSpan(text: '$delai h', style: fort),
+      ]);
+    }
+
+    // Aucun historique : le dire franchement vaut mieux qu'aligner des zéros.
+    if (profile.averageRating <= 0 && livraisons == 0) {
+      return Text('Nouveau sur Yadony', style: style);
+    }
+
+    return Text.rich(TextSpan(children: morceaux));
+  }
+}
+
+class _HeaderSkeleton extends StatelessWidget {
+  const _HeaderSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Align(
+      alignment: Alignment.bottomLeft,
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+          DonySpacing.base,
+          0,
+          DonySpacing.base,
+          DonySpacing.base,
+        ),
+        child: DonyShimmer(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  DonySkeletonCircle(diameter: 56),
+                  SizedBox(width: DonySpacing.md),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      DonySkeletonBox(width: 150, height: 22),
+                      SizedBox(height: DonySpacing.xs),
+                      DonySkeletonBox(width: 190, height: 13),
+                    ],
+                  ),
+                ],
+              ),
+              SizedBox(height: DonySpacing.md),
+              DonySkeletonBox(width: 230, height: 15),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -437,8 +402,9 @@ class _StatsAndTabBar extends StatelessWidget implements PreferredSizeWidget {
 
   final TabController controller;
 
-  // 96px (stats) + 48px (TabBar) = 144px
-  static const double height = 144;
+  /// Les trois cartes de statistiques ont rejoint l'en-tête sous forme de
+  /// phrase : il ne reste que la barre d'onglets.
+  static const double height = 48;
 
   @override
   Size get preferredSize => const Size.fromHeight(height);
@@ -447,95 +413,16 @@ class _StatsAndTabBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    return ClipRect(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // ── Stats row ───────────────────────────────────────────────────
-          BlocBuilder<ProfilePublicBloc, ProfilePublicState>(
-            buildWhen: (p, c) =>
-                c is ProfilePublicLoaded ||
-                c is ProfilePublicLoading ||
-                c is ProfilePublicInitial,
-            builder: (context, state) {
-              if (state is! ProfilePublicLoaded) {
-                return SizedBox(
-                  height: 96,
-                  child: Center(
-                    child: SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: cs.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-                );
-              }
-              final profile = state.profile;
-              return SizedBox(
-                height: 96,
-                child: Container(
-                  color: Theme.of(context).scaffoldBackgroundColor,
-                  padding: const EdgeInsets.fromLTRB(
-                    DonySpacing.base,
-                    DonySpacing.sm,
-                    DonySpacing.base,
-                    DonySpacing.sm,
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _StatCard(
-                          lucideIcon: 'star',
-                          iconColor: cs.warning,
-                          value: profile.averageRating > 0
-                              ? profile.averageRating.toStringAsFixed(1)
-                              : '–',
-                          label: 'Note',
-                        ),
-                      ),
-                      const SizedBox(width: DonySpacing.sm),
-                      Expanded(
-                        child: _StatCard(
-                          iconAsset: 'package',
-                          iconColor: cs.primary,
-                          value: '${profile.completedBidsCount}',
-                          label: 'Livraisons',
-                        ),
-                      ),
-                      const SizedBox(width: DonySpacing.sm),
-                      Expanded(
-                        child: _StatCard(
-                          lucideIcon: 'timer',
-                          iconColor: cs.success,
-                          value: profile.responseDelayHours != null
-                              ? '<${profile.responseDelayHours}h'
-                              : '–',
-                          label: 'Réponse',
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-          // ── TabBar (48px) ─────────────────────────────────────────────────
-          Container(
-            decoration: BoxDecoration(
-              color: cs.surface,
-              border: Border(top: BorderSide(color: cs.outline)),
-            ),
-            child: TabBar(
-              controller: controller,
-              tabs: const [
-                Tab(text: 'Trajets'),
-                Tab(text: 'Avis'),
-              ],
-            ),
-          ),
+    return Container(
+      decoration: BoxDecoration(
+        color: cs.surface,
+        border: Border(top: BorderSide(color: cs.outline)),
+      ),
+      child: TabBar(
+        controller: controller,
+        tabs: const [
+          Tab(text: 'Trajets'),
+          Tab(text: 'Avis'),
         ],
       ),
     );
