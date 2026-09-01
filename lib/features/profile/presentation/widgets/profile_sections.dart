@@ -339,7 +339,7 @@ class ProfileFollowUpSection extends StatelessWidget {
               iconColor: cs.tertiary,
               iconBgColor: cs.tertiaryContainer.withValues(alpha: 0.5),
               label: 'Mes abonnements',
-              subtitle: 'Alertes corridors et voyageurs',
+              subtitle: 'Les voyageurs dont vous suivez les trajets',
               showDivider: false,
               onTap: () => context.push('/profile/subscriptions'),
             ),

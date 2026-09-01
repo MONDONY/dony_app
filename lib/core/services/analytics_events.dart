@@ -279,6 +279,21 @@ abstract final class AnalyticsEvents {
   static const notificationPrefToggled = 'notification_pref_toggled';
 
   // Corridor alerts
+  /// Bascule de la cloche d'un voyageur suivi (propriété `enabled`). Ne mesure
+  /// que le push : la notification reste inscrite au centre de notifications
+  /// dans les deux cas.
+  static const subscriptionPushToggled = 'subscription_push_toggled';
+
+  /// Désabonnement confirmé depuis « Mes abonnements ».
+  static const subscriptionRemoved = 'subscription_removed';
+
+  /// « Tout marquer comme vu » de l'en-tête (propriété `count`).
+  static const subscriptionsMarkedAllSeen = 'subscriptions_marked_all_seen';
+
+  /// Tap sur la ligne du dernier trajet d'une carte d'abonnement : raccourci
+  /// vers l'annonce, distinct du tap sur la carte qui mène au profil.
+  static const subscriptionLastTripOpened = 'subscription_last_trip_opened';
+
   static const corridorAlertToggled = 'corridor_alert_toggled';
   static const corridorAlertDeleted = 'corridor_alert_deleted';
   static const corridorAlertCreated = 'corridor_alert_created';

@@ -1,5 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
-import 'package:dony/core/design/widgets/dony_skeleton.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/subscriptions/bloc/subscriptions_bloc.dart';
 import 'package:dony/features/subscriptions/bloc/subscriptions_event.dart';
@@ -15,33 +15,35 @@ class MockSubscriptionsBloc
     extends MockBloc<SubscriptionsEvent, SubscriptionsState>
     implements SubscriptionsBloc {}
 
-SubscriptionItem _item(String name, {bool hasNew = false, bool push = false}) =>
-    SubscriptionItem(
-      travelerId: 't-$name',
-      travelerName: name,
-      isProAccount: false,
-      averageRating: 4.8,
-      ongoingTripsCount: 2,
-      pushEnabled: push,
-      hasNew: hasNew,
-      lastAnnouncement: null,
-    );
-
-SubscriptionItem _itemWithNew(String name) => SubscriptionItem(
+SubscriptionItem _item(
+  String name, {
+  bool hasNew = false,
+  bool push = false,
+  LastAnnouncement? last,
+}) => SubscriptionItem(
   travelerId: 't-$name',
   travelerName: name,
   isProAccount: false,
   averageRating: 4.8,
-  ongoingTripsCount: 1,
-  pushEnabled: false,
-  hasNew: true,
-  lastAnnouncement: LastAnnouncement(
-    announcementId: 'ann-1',
-    departureCity: 'Paris',
-    arrivalCity: 'Dakar',
-    pricePerKg: 8.0,
-    publishedAt: DateTime(2026, 6),
-  ),
+  ongoingTripsCount: 2,
+  pushEnabled: push,
+  hasNew: hasNew,
+  lastAnnouncement: last,
+);
+
+LastAnnouncement _last({
+  String from = 'Paris',
+  String to = 'Dakar',
+  double price = 8.0,
+  String currency = 'EUR',
+  DateTime? at,
+}) => LastAnnouncement(
+  announcementId: 'ann-$from$to',
+  departureCity: from,
+  arrivalCity: to,
+  pricePerKg: price,
+  currency: currency,
+  publishedAt: at ?? DateTime.now().subtract(const Duration(hours: 2)),
 );
 
 void main() {
@@ -49,6 +51,9 @@ void main() {
 
   setUp(() {
     bloc = MockSubscriptionsBloc();
+    // Sans ça, un message identique émis par un test précédent est avalé par la
+    // déduplication et l'assertion suivante ne trouve rien.
+    DonySnackbar.clearDedup();
     registerFallbackValue(const LoadSubscriptions());
     registerFallbackValue(const ToggleSubscriptionPush('', false));
   });
@@ -60,13 +65,14 @@ void main() {
     ),
   );
 
-  testWidgets('liste les abonnements', (tester) async {
+  void givenItems(List<SubscriptionItem> items) {
     when(() => bloc.state).thenReturn(
-      SubscriptionsState(
-        status: SubscriptionsStatus.success,
-        items: [_item('Awa'), _item('Moussa')],
-      ),
+      SubscriptionsState(status: SubscriptionsStatus.success, items: items),
     );
+  }
+
+  testWidgets('liste les abonnements', (tester) async {
+    givenItems([_item('Awa'), _item('Moussa')]);
     await tester.pumpWidget(pump());
     await tester.pump(const Duration(milliseconds: 600));
     expect(find.text('Awa'), findsOneWidget);
@@ -82,19 +88,62 @@ void main() {
     expect(find.text('Aucun abonnement'), findsOneWidget);
   });
 
-  testWidgets('recherche filtre par nom', (tester) async {
-    when(() => bloc.state).thenReturn(
-      SubscriptionsState(
-        status: SubscriptionsStatus.success,
-        items: [_item('Awa'), _item('Moussa')],
-      ),
-    );
+  // ─── Recherche conditionnelle ───────────────────────────────────────────────
+
+  testWidgets('moins de 6 abonnements → pas de champ de recherche', (
+    tester,
+  ) async {
+    givenItems([_item('Awa'), _item('Moussa')]);
     await tester.pumpWidget(pump());
     await tester.pump(const Duration(milliseconds: 600));
+    expect(find.byType(TextField), findsNothing);
+  });
+
+  testWidgets('à partir de 6 abonnements → recherche affichée et filtrante', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(400, 1400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    givenItems([
+      _item('Awa'),
+      _item('Moussa'),
+      _item('Fatou'),
+      _item('Ibou'),
+      _item('Karim'),
+      _item('Sophie'),
+    ]);
+    await tester.pumpWidget(pump());
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.byType(TextField), findsOneWidget);
     await tester.enterText(find.byType(TextField), 'awa');
-    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
     expect(find.text('Awa'), findsOneWidget);
     expect(find.text('Moussa'), findsNothing);
+  });
+
+  testWidgets('recherche sans résultat → message dédié', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(400, 1400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    givenItems([
+      _item('Awa'),
+      _item('Moussa'),
+      _item('Fatou'),
+      _item('Ibou'),
+      _item('Karim'),
+      _item('Sophie'),
+    ]);
+    await tester.pumpWidget(pump());
+    await tester.pump(const Duration(milliseconds: 600));
+
+    await tester.enterText(find.byType(TextField), 'zzz');
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(
+      find.text('Aucun voyageur ne correspond à cette recherche.'),
+      findsOneWidget,
+    );
   });
 
   // ─── Loading state ────────────────────────────────────────────────────────────
@@ -103,8 +152,8 @@ void main() {
     when(
       () => bloc.state,
     ).thenReturn(const SubscriptionsState(status: SubscriptionsStatus.loading));
+    await tester.pump();
     await tester.pumpWidget(pump());
-    // No pump(600ms) here — we want to catch the loading indicator before items arrive.
     await tester.pump();
     expect(find.byType(DonyUserCardSkeleton), findsWidgets);
   });
@@ -146,63 +195,56 @@ void main() {
     ).called(greaterThanOrEqualTo(1));
   });
 
-  // ─── Bell toggle ──────────────────────────────────────────────────────────────
+  // ─── Bascule des alertes push ──────────────────────────────────────────────
 
-  testWidgets('tap cloche → bloc.add(ToggleSubscriptionPush)', (tester) async {
+  testWidgets('tap cloche → événement + message qui dit ce qui est coupé', (
+    tester,
+  ) async {
     await tester.binding.setSurfaceSize(const Size(400, 800));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
-    when(() => bloc.state).thenReturn(
-      SubscriptionsState(
-        status: SubscriptionsStatus.success,
-        items: [_item('Awa')],
-      ),
-    );
+    givenItems([_item('Awa', push: true)]);
     await tester.pumpWidget(pump());
     await tester.pump(const Duration(milliseconds: 600));
 
-    // The bell icon button is inside SubscriptionTile (DonyIcon 'bell-off')
     final bellFinder = find.byWidgetPredicate(
-      (w) => w is DonyIcon && w.name == 'bell-off',
+      (w) => w is DonyIcon && w.name == 'bell',
     );
     expect(bellFinder, findsOneWidget);
     await tester.tap(bellFinder);
     await tester.pump();
 
-    // ToggleSubscriptionPush doesn't implement ==, use captureAny to verify the type.
     final captured = verify(() => bloc.add(captureAny())).captured;
+    expect(captured.any((e) => e is ToggleSubscriptionPush), isTrue);
+
+    // Le message dit explicitement que la notification, elle, reste : c'est le
+    // mensonge que portait l'ancien libellé « Couper les notifications ».
     expect(
-      captured.any((e) => e is ToggleSubscriptionPush),
-      isTrue,
-      reason: 'Expected a ToggleSubscriptionPush event to be added',
+      find.textContaining('resteront visibles dans vos notifications'),
+      findsOneWidget,
     );
   });
 
-  // ─── hasNew section ───────────────────────────────────────────────────────────
+  // ─── Voyageurs ayant publié ────────────────────────────────────────────────
 
   testWidgets(
-    'item hasNew:true + lastAnnouncement → section "ONT PUBLIÉ RÉCEMMENT" + story avatar accessible',
+    'un voyageur ayant publié reste dans la liste, avec son dernier trajet',
     (tester) async {
       await tester.binding.setSurfaceSize(const Size(400, 900));
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
-      when(() => bloc.state).thenReturn(
-        SubscriptionsState(
-          status: SubscriptionsStatus.success,
-          items: [_itemWithNew('Ibou')],
-        ),
-      );
+      givenItems([_item('Ibou', hasNew: true, last: _last())]);
       await tester.pumpWidget(pump());
       await tester.pump(const Duration(milliseconds: 600));
 
-      // The section label is uppercased
+      expect(find.text('Ibou'), findsOneWidget);
+      expect(find.textContaining('Paris → Dakar'), findsOneWidget);
+      // Il garde sa cloche et son balayage : la rangée de « stories » les lui
+      // retirait en le sortant de la liste.
       expect(
-        find.textContaining('ONT PUBLIÉ RÉCEMMENT', findRichText: true),
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bell-off'),
         findsOneWidget,
       );
-      // La story-row remplace le badge texte "NOUVEAU" par un Semantics
-      // label sur l'avatar (a11y — cf. lib/core/design/CLAUDE.md règle
-      // "Semantics sur icônes sans label").
       expect(
         find.byWidgetPredicate(
           (w) =>
@@ -211,7 +253,105 @@ void main() {
         ),
         findsOneWidget,
       );
-      expect(find.text('Ibou'), findsOneWidget);
     },
   );
+
+  testWidgets('les voyageurs ayant publié passent devant les autres', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(400, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    givenItems([
+      _item('Awa', last: _last(from: 'Lyon', to: 'Bamako')),
+      _item('Ibou', hasNew: true, last: _last()),
+    ]);
+    await tester.pumpWidget(pump());
+    await tester.pump(const Duration(milliseconds: 600));
+
+    final awa = tester.getTopLeft(find.text('Awa')).dy;
+    final ibou = tester.getTopLeft(find.text('Ibou')).dy;
+    expect(ibou, lessThan(awa));
+  });
+
+  testWidgets('compteur annonce le total et les nouveaux', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(400, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    givenItems([_item('Awa'), _item('Ibou', hasNew: true, last: _last())]);
+    await tester.pumpWidget(pump());
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('2 voyageurs suivis'), findsOneWidget);
+    expect(
+      find.text('1 a publié depuis votre dernière visite'),
+      findsOneWidget,
+    );
+  });
+
+  // ─── Tout marquer comme vu ─────────────────────────────────────────────────
+
+  testWidgets('aucune pastille → pas d\'action "tout marquer comme vu"', (
+    tester,
+  ) async {
+    givenItems([_item('Awa')]);
+    await tester.pumpWidget(pump());
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(
+      find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'check-check'),
+      findsNothing,
+    );
+  });
+
+  testWidgets('tap "tout marquer comme vu" → MarkAllSubscriptionsSeen', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(400, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    givenItems([_item('Ibou', hasNew: true, last: _last())]);
+    await tester.pumpWidget(pump());
+    await tester.pump(const Duration(milliseconds: 600));
+
+    final action = find.byWidgetPredicate(
+      (w) => w is DonyIcon && w.name == 'check-check',
+    );
+    expect(action, findsOneWidget);
+    await tester.tap(action);
+    await tester.pump();
+
+    final captured = verify(() => bloc.add(captureAny())).captured;
+    expect(captured.any((e) => e is MarkAllSubscriptionsSeen), isTrue);
+  });
+
+  // ─── Désabonnement ─────────────────────────────────────────────────────────
+
+  testWidgets('balayer puis Désabonner demande confirmation avant d\'agir', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(400, 800));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    givenItems([_item('Awa')]);
+    await tester.pumpWidget(pump());
+    await tester.pump(const Duration(milliseconds: 600));
+
+    await tester.drag(find.text('Awa'), const Offset(-200, 0));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Désabonner'));
+    await tester.pumpAndSettle();
+
+    // Le dialogue s'ouvre, et rien n'est encore parti au serveur.
+    expect(find.text('Ne plus suivre Awa ?'), findsOneWidget);
+    final avant = verify(() => bloc.add(captureAny())).captured;
+    expect(avant.any((e) => e is UnsubscribeTraveler), isFalse);
+
+    await tester.tap(find.text('Se désabonner'));
+    await tester.pumpAndSettle();
+
+    final apres = verify(() => bloc.add(captureAny())).captured;
+    expect(apres.any((e) => e is UnsubscribeTraveler), isTrue);
+  });
 }

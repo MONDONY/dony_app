@@ -422,6 +422,10 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `trip_matching_viewed` | PackageRequestSearchBloc._onFiltersChanged — chargement d'une recherche colis filtrée « Pour mes trajets » (propriété `count`) |
 | `package_match_alert_toggled` | NotificationPrefsBloc._onPackageMatchAlertToggled — ligne « Nouveaux colis compatibles » des réglages de notifications (propriété `enabled`) |
 | `notification_pref_toggled` | NotificationPrefsBloc._onToggled — bascule d'une catégorie de push confirmée par le serveur (propriétés `pref`, `enabled`) ; non émis si l'écriture échoue |
+| `subscription_push_toggled` | SubscriptionsBloc._onTogglePush — cloche d'un voyageur suivi, tracée avec l'état rendu par le serveur (propriété `enabled`). Ne mesure que le push : la notification reste inscrite au centre de notifications dans les deux cas |
+| `subscription_removed` | SubscriptionsBloc._onUnsubscribe — désabonnement confirmé, après acquittement du serveur |
+| `subscriptions_marked_all_seen` | SubscriptionsBloc._onMarkAllSeen — « Tout marquer comme vu » de l'en-tête (propriété `count` : pastilles réellement retirées). Non émis si l'appel échoue et que les pastilles reviennent |
+| `subscription_last_trip_opened` | MesAbonnementsScreen — tap sur la ligne du dernier trajet d'une carte, raccourci vers l'annonce, distinct du tap sur la carte qui mène au profil du voyageur |
 | `corridor_alert_toggled` | CorridorAlertListBloc._onToggle — actif/pause d'une alerte corridor (propriété `active`) |
 | `corridor_alert_deleted` | CorridorAlertListBloc._onDelete — suppression d'une alerte corridor |
 | `corridor_alert_created` | CorridorAlertFormCubit.submit() — création d'une alerte corridor |

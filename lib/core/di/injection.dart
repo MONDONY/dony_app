@@ -833,7 +833,10 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => SubscriptionsRemoteDatasource(getIt<ApiClient>()),
   );
   getIt.registerFactory<SubscriptionsBloc>(
-    () => SubscriptionsBloc(getIt<SubscriptionsRepository>()),
+    () => SubscriptionsBloc(
+      getIt<SubscriptionsRepository>(),
+      getIt<AnalyticsService>(),
+    ),
   );
   getIt.registerFactory<TravelerHubBloc>(
     () => TravelerHubBloc(getIt<SubscriptionsRepository>()),

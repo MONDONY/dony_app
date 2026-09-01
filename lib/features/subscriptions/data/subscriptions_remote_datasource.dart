@@ -44,6 +44,11 @@ class SubscriptionsRemoteDatasource implements SubscriptionsRepository {
   }
 
   @override
+  Future<void> markAllSeen() async {
+    await _apiClient.dio.post('/me/subscriptions/mark-seen');
+  }
+
+  @override
   Future<List<TravelerAnnouncement>> getTravelerAnnouncements(
     String travelerId,
   ) async {

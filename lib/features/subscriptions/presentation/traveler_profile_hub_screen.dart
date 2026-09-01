@@ -8,6 +8,7 @@ import 'package:dony/features/ratings/data/models/rating_summary.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_hub_bloc.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_hub_event.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_hub_state.dart';
+import 'package:dony/features/subscriptions/presentation/widgets/subscribe_bar.dart';
 import 'package:dony/features/subscriptions/presentation/widgets/traveler_announcement_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -558,65 +559,20 @@ class _SubscriptionBar extends StatelessWidget {
               horizontal: DonySpacing.lg,
               vertical: DonySpacing.sm,
             ),
-            child: state.subscribed
-                ? _SubscribedRow(pushEnabled: state.pushEnabled)
-                : DonyButton(
-                    label: "S'abonner",
-                    onPressed: () => context.read<TravelerHubBloc>().add(
-                      const HubSubscribePressed(),
-                    ),
-                  ),
+            child: SubscribeBar(
+              subscribed: state.subscribed,
+              pushEnabled: state.pushEnabled,
+              onSubscribe: () =>
+                  context.read<TravelerHubBloc>().add(const HubSubscribePressed()),
+              onUnsubscribe: () => context.read<TravelerHubBloc>().add(
+                const HubUnsubscribePressed(),
+              ),
+              onTogglePush: (enabled) =>
+                  context.read<TravelerHubBloc>().add(HubTogglePush(enabled)),
+            ),
           ),
         );
       },
-    );
-  }
-}
-
-class _SubscribedRow extends StatelessWidget {
-  const _SubscribedRow({required this.pushEnabled});
-
-  final bool pushEnabled;
-
-  Future<void> _confirmUnsubscribe(BuildContext context) async {
-    final confirmed = await DonyDialog.show(
-      context,
-      title: 'Se désabonner ?',
-      message: 'Vous ne recevrez plus les notifications de ce voyageur.',
-      confirmLabel: 'Se désabonner',
-      variant: DonyDialogVariant.destructive,
-      iconAsset: 'bell-off',
-    );
-    if ((confirmed ?? false) && context.mounted) {
-      context.read<TravelerHubBloc>().add(const HubUnsubscribePressed());
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: DonyButton(
-            label: 'Abonné ✓',
-            variant: DonyButtonVariant.secondary,
-            fullWidth: false,
-            onPressed: () => _confirmUnsubscribe(context),
-          ),
-        ),
-        const SizedBox(width: DonySpacing.sm),
-        IconButton(
-          tooltip: pushEnabled
-              ? 'Désactiver les notifications'
-              : 'Activer les notifications',
-          icon: DonyIcon(
-            pushEnabled ? 'bell' : 'bell-off',
-            color: Theme.of(context).colorScheme.primary,
-          ),
-          onPressed: () =>
-              context.read<TravelerHubBloc>().add(HubTogglePush(!pushEnabled)),
-        ),
-      ],
     );
   }
 }
