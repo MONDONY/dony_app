@@ -7,6 +7,7 @@ import 'package:dony/app/router.dart';
 import 'package:dony/core/config/api_config.dart';
 import 'package:dony/core/config/pro_flag.dart';
 import 'package:dony/core/config/sms_auth_flag.dart';
+import 'package:dony/core/currency/active_rates.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/firebase/firebase_options.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
@@ -174,6 +175,11 @@ Future<void> _bootstrap() async {
   // automatiquement. Non bloquant.
   unawaited(_loadReimbursementCap());
 
+  // Taux de change courants (bornes de saisie et de filtre) : le serveur les
+  // pilote (back-office + sync BCE), les constantes du catalogue restent le
+  // repli hors ligne. Non bloquant, comme ses voisins.
+  unawaited(_loadExchangeRates());
+
   // Flag SMS OTP (SOURCE UNIQUE : app.sms.enabled côté backend) : chargé une
   // fois pour que le bouton téléphone (auth) et la ligne téléphone (profil)
   // suivent automatiquement. Repli sûr sur false (masqué) si le flag n'a pas
@@ -211,6 +217,16 @@ Future<void> _loadUrgencyThreshold() async {
     );
   } catch (_) {
     // Repli sur kUrgencyThresholdDaysDefault conservé — non bloquant.
+  }
+}
+
+Future<void> _loadExchangeRates() async {
+  try {
+    ActiveRates.setServerRates(
+      await getIt<IConfigRepository>().getExchangeRates(),
+    );
+  } catch (_) {
+    // Repli sur les constantes du catalogue conservé — non bloquant.
   }
 }
 

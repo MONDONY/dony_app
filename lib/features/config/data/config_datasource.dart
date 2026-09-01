@@ -29,6 +29,17 @@ class ConfigDatasource {
     return data['enabled'] as bool;
   }
 
+  /// Taux administrés courants : `{"rates":[{"currency":"USD","unitsPerEur":1.16},...]}`.
+  Future<Map<String, double>> getExchangeRates() async {
+    final response = await _client.dio.get('/config/exchange-rates');
+    final data = response.data as Map<String, dynamic>;
+    final rates = data['rates'] as List<dynamic>;
+    return {
+      for (final entry in rates.cast<Map<String, dynamic>>())
+        entry['currency'] as String: (entry['unitsPerEur'] as num).toDouble(),
+    };
+  }
+
   Future<bool> getProEnabled() async {
     final response = await _client.dio.get('/config/pro-enabled');
     final data = response.data as Map<String, dynamic>;

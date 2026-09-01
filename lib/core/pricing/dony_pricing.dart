@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:dony/core/currency/active_currency.dart';
+import 'package:dony/core/currency/active_rates.dart';
 import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
@@ -131,17 +132,14 @@ String formatMinorAmount(int minorAmount, String? currencyCode) {
 ({double min, double max, double step}) priceFilterBoundsFor(
   SupportedCurrency currency,
 ) {
+  final rate = ActiveRates.unitsPerEurFor(currency);
   if (currency.minorUnit == 0) {
     double round500(double v) => (v / 500).round() * 500.0;
-    return (
-      min: round500(3 * currency.unitsPerEur),
-      max: round500(25 * currency.unitsPerEur),
-      step: 500,
-    );
+    return (min: round500(3 * rate), max: round500(25 * rate), step: 500);
   }
   return (
-    min: (3 * currency.unitsPerEur).roundToDouble(),
-    max: (25 * currency.unitsPerEur).roundToDouble(),
+    min: (3 * rate).roundToDouble(),
+    max: (25 * rate).roundToDouble(),
     step: 1,
   );
 }
@@ -157,8 +155,9 @@ List<double> quickPriceFilterOptionsActive() =>
 
 /// Variante à devise explicite de [quickPriceFilterOptionsActive].
 List<double> quickPriceFilterOptionsFor(SupportedCurrency currency) {
+  final rate = ActiveRates.unitsPerEurFor(currency);
   double nice(double eur) {
-    final scaled = eur * currency.unitsPerEur;
+    final scaled = eur * rate;
     if (currency.minorUnit == 0) return (scaled / 500).round() * 500.0;
     return (scaled * 2).round() / 2.0;
   }
@@ -192,7 +191,7 @@ double get maxUnitPriceActive =>
 /// absurde (ou refusé un prix valide) dès que l'annonce et le profil
 /// divergent.
 double maxUnitPriceFor(SupportedCurrency currency) {
-  final scaled = kMaxUnitPriceEur * currency.unitsPerEur;
+  final scaled = kMaxUnitPriceEur * ActiveRates.unitsPerEurFor(currency);
   return currency.minorUnit == 0 ? scaled.floorToDouble() : scaled;
 }
 
