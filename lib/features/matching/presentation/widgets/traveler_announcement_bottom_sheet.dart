@@ -230,6 +230,7 @@ class _TravelerAnnouncementContent extends StatelessWidget {
           _PriceGridCard(
             items: announcement.priceGridItems,
             currency: announcement.currency,
+            convertedCurrency: announcement.convertedCurrency,
           ),
         ],
         const SizedBox(height: DonySpacing.md),
@@ -485,11 +486,19 @@ class _StatCardsRow extends StatelessWidget {
 }
 
 class _StatCard extends StatelessWidget {
-  const _StatCard({required this.value, required this.label, this.valueColor});
+  const _StatCard({
+    required this.value,
+    required this.label,
+    this.valueColor,
+    this.subtitle,
+  });
 
   final String value;
   final String label;
   final Color? valueColor;
+
+  /// Ligne discrète sous la valeur (équivalent « environ » multidevise).
+  final String? subtitle;
 
   @override
   Widget build(BuildContext context) {
@@ -521,6 +530,17 @@ class _StatCard extends StatelessWidget {
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             textAlign: TextAlign.center,
           ),
+          if (subtitle != null)
+            Text(
+              subtitle!,
+              style: tt.bodySmall?.copyWith(
+                color: cs.onSurfaceVariant,
+                fontStyle: FontStyle.italic,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
         ],
       ),
     );
@@ -546,6 +566,13 @@ class _PriceStatCard extends StatelessWidget {
         announcement.senderPricePerKg!,
         announcement.currency,
       ),
+      // Repère « environ » du même montant (brut expéditeur) dans la devise du
+      // lecteur, servi par le détail depuis le lot 5.
+      subtitle:
+          announcement.pricePerKgDisplayConverted != null &&
+              announcement.convertedCurrency != null
+          ? 'environ ${formatPriceIn(announcement.pricePerKgDisplayConverted!, announcement.convertedCurrency)}/kg'
+          : null,
       label: 'par kilo',
       valueColor: cs.primary,
     );
@@ -613,7 +640,14 @@ class _GridStatCard extends StatelessWidget {
 /// un pied « Voir tous les tarifs (N) » déplie le reste sur place pour que la
 /// grille ne repousse pas le voyageur et le CTA hors du premier regard.
 class _PriceGridCard extends StatefulWidget {
-  const _PriceGridCard({required this.items, required this.currency});
+  const _PriceGridCard({
+    required this.items,
+    required this.currency,
+    this.convertedCurrency,
+  });
+
+  /// Devise du lecteur pour les équivalents « environ » des items (lot 5).
+  final String? convertedCurrency;
 
   final List<AnnouncementGridItemModel> items;
   final String currency;
@@ -702,15 +736,31 @@ class _PriceGridCardState extends State<_PriceGridCard> {
                               ),
                             ),
                             const SizedBox(width: DonySpacing.sm),
-                            Text(
-                              formatPriceIn(
-                                visible[i].unitPriceDisplay,
-                                widget.currency,
-                              ),
-                              style: tt.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: cs.primary,
-                              ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  formatPriceIn(
+                                    visible[i].unitPriceDisplay,
+                                    widget.currency,
+                                  ),
+                                  style: tt.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: cs.primary,
+                                  ),
+                                ),
+                                // Équivalent « environ » (lot 5), serveur.
+                                if (visible[i].convertedUnitPriceDisplay !=
+                                        null &&
+                                    widget.convertedCurrency != null)
+                                  Text(
+                                    'environ ${formatPriceIn(visible[i].convertedUnitPriceDisplay!, widget.convertedCurrency)}',
+                                    style: tt.bodySmall?.copyWith(
+                                      color: cs.onSurfaceVariant,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                              ],
                             ),
                           ],
                         ),

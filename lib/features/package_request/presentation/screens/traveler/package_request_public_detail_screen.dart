@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:dony/core/currency/converted_price.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
@@ -438,6 +439,16 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
                     'banknote',
                     r.negotiable ? 'Budget' : 'Prix ferme',
                     PriceDisplay.money(_displayPrice!, r.currency),
+                  ),
+                  // Repère « environ » dans la devise du lecteur (serveur, lot 5).
+                  Padding(
+                    padding: const EdgeInsets.only(top: DonySpacing.xxs),
+                    child: ConvertedPriceLabel(
+                      originalCurrency: r.currency,
+                      convertedPricePerKg: r.convertedDisplayPrice,
+                      convertedCurrency: r.convertedCurrency,
+                      suffix: '',
+                    ),
                   ),
                 ]),
               ],

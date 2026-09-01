@@ -20,11 +20,17 @@ class AnnouncementGridItemModel {
   final double? unitPriceNet;
   final double unitPriceDisplay;
 
+  /// Équivalent ESTIMÉ de [unitPriceDisplay] dans la devise active du lecteur,
+  /// calculé par le serveur au taux courant. `null` quand le lecteur lit déjà
+  /// dans la devise de l'annonce (ou backend antérieur au lot 5).
+  final double? convertedUnitPriceDisplay;
+
   const AnnouncementGridItemModel({
     required this.id,
     required this.label,
     this.unitPriceNet,
     required this.unitPriceDisplay,
+    this.convertedUnitPriceDisplay,
   });
 
   factory AnnouncementGridItemModel.fromJson(Map<String, dynamic> json) =>
@@ -33,6 +39,8 @@ class AnnouncementGridItemModel {
         label: json['label'] as String,
         unitPriceNet: (json['unitPriceNet'] as num?)?.toDouble(),
         unitPriceDisplay: (json['unitPriceDisplay'] as num).toDouble(),
+        convertedUnitPriceDisplay: (json['convertedUnitPriceDisplay'] as num?)
+            ?.toDouble(),
       );
 
   Map<String, dynamic> toJson() => {
@@ -40,6 +48,7 @@ class AnnouncementGridItemModel {
     'label': label,
     'unitPriceNet': unitPriceNet,
     'unitPriceDisplay': unitPriceDisplay,
+    'convertedUnitPriceDisplay': convertedUnitPriceDisplay,
   };
 }
 

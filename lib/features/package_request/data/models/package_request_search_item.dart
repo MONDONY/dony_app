@@ -35,6 +35,8 @@ class PackageRequestSearchItem extends Equatable {
     this.matchedTripId,
     this.matchedTripDepartureDate,
     this.currency = 'EUR',
+    this.convertedDisplayPrice,
+    this.convertedCurrency,
     this.grossPriceEur,
   });
 
@@ -109,54 +111,63 @@ class PackageRequestSearchItem extends Equatable {
   /// anciens payloads sans ce champ.
   final String currency;
 
-  factory PackageRequestSearchItem.fromJson(Map<String, dynamic> json) =>
-      PackageRequestSearchItem(
-        id: json['id'] as String,
-        departureCity: json['departureCity'] as String,
-        arrivalCity: json['arrivalCity'] as String,
-        departureLat: (json['departureLat'] as num?)?.toDouble(),
-        departureLng: (json['departureLng'] as num?)?.toDouble(),
-        arrivalLat: (json['arrivalLat'] as num?)?.toDouble(),
-        arrivalLng: (json['arrivalLng'] as num?)?.toDouble(),
-        desiredDate: DateTime.parse(json['desiredDate'] as String),
-        dateToleranceDays: json['dateToleranceDays'] as int,
-        weightKg: (json['weightKg'] as num).toDouble(),
-        parcelSize: ParcelSize.fromJson(json['parcelSize'] as String),
-        categories: splitContentCategoryLabels(
-          json['contentCategory'] as String?,
-        ),
-        targetPriceEur: (json['targetPriceEur'] as num?)?.toDouble(),
-        photoUrl: json['photoUrl'] as String?,
-        photoUrls:
-            (json['photos'] as List<dynamic>?)
-                ?.map((e) => (e as Map<String, dynamic>)['url'] as String)
-                .toList() ??
-            const [],
-        pickupNeighborhood: json['pickupNeighborhood'] as String?,
-        deliveryNeighborhood: json['deliveryNeighborhood'] as String?,
-        negotiable: json['negotiable'] as bool? ?? true,
-        acceptedPaymentMethods: PaymentMethod.setFromJson(
-          json['acceptedPaymentMethods'] as List<dynamic>?,
-        ),
-        sender: switch (json['sender']) {
-          final Map<String, dynamic> senderJson => SenderPublicProfile.fromJson(
-            senderJson,
-          ),
-          _ => SenderPublicProfile.guest(
-            json['senderDisplayName'] as String? ?? 'Utilisateur Yadony',
-          ),
-        },
-        isFavorite: json['isFavorite'] as bool? ?? false,
-        urgent: json['urgent'] as bool?,
-        matchScore: (json['matchScore'] as num?)?.toInt(),
-        matchedTripId: json['matchedTripId'] as String?,
-        matchedTripDepartureDate: switch (json['matchedTripDepartureDate']) {
-          final String d => DateTime.parse(d),
-          _ => null,
-        },
-        currency: json['currency'] as String? ?? 'EUR',
-        grossPriceEur: (json['grossPriceEur'] as num?)?.toDouble(),
-      );
+  /// Équivalent ESTIMÉ, dans la devise active du lecteur et au taux courant
+  /// serveur, du PRIX AFFICHÉ ([grossPriceEur] sinon [targetPriceEur]).
+  /// `null` sans budget, même devise, ou backend antérieur au lot 5.
+  final double? convertedDisplayPrice;
+
+  /// Devise cible de [convertedDisplayPrice] : celle du lecteur.
+  final String? convertedCurrency;
+
+  factory PackageRequestSearchItem.fromJson(
+    Map<String, dynamic> json,
+  ) => PackageRequestSearchItem(
+    id: json['id'] as String,
+    departureCity: json['departureCity'] as String,
+    arrivalCity: json['arrivalCity'] as String,
+    departureLat: (json['departureLat'] as num?)?.toDouble(),
+    departureLng: (json['departureLng'] as num?)?.toDouble(),
+    arrivalLat: (json['arrivalLat'] as num?)?.toDouble(),
+    arrivalLng: (json['arrivalLng'] as num?)?.toDouble(),
+    desiredDate: DateTime.parse(json['desiredDate'] as String),
+    dateToleranceDays: json['dateToleranceDays'] as int,
+    weightKg: (json['weightKg'] as num).toDouble(),
+    parcelSize: ParcelSize.fromJson(json['parcelSize'] as String),
+    categories: splitContentCategoryLabels(json['contentCategory'] as String?),
+    targetPriceEur: (json['targetPriceEur'] as num?)?.toDouble(),
+    photoUrl: json['photoUrl'] as String?,
+    photoUrls:
+        (json['photos'] as List<dynamic>?)
+            ?.map((e) => (e as Map<String, dynamic>)['url'] as String)
+            .toList() ??
+        const [],
+    pickupNeighborhood: json['pickupNeighborhood'] as String?,
+    deliveryNeighborhood: json['deliveryNeighborhood'] as String?,
+    negotiable: json['negotiable'] as bool? ?? true,
+    acceptedPaymentMethods: PaymentMethod.setFromJson(
+      json['acceptedPaymentMethods'] as List<dynamic>?,
+    ),
+    sender: switch (json['sender']) {
+      final Map<String, dynamic> senderJson => SenderPublicProfile.fromJson(
+        senderJson,
+      ),
+      _ => SenderPublicProfile.guest(
+        json['senderDisplayName'] as String? ?? 'Utilisateur Yadony',
+      ),
+    },
+    isFavorite: json['isFavorite'] as bool? ?? false,
+    urgent: json['urgent'] as bool?,
+    matchScore: (json['matchScore'] as num?)?.toInt(),
+    matchedTripId: json['matchedTripId'] as String?,
+    matchedTripDepartureDate: switch (json['matchedTripDepartureDate']) {
+      final String d => DateTime.parse(d),
+      _ => null,
+    },
+    currency: json['currency'] as String? ?? 'EUR',
+    convertedDisplayPrice: (json['convertedDisplayPrice'] as num?)?.toDouble(),
+    convertedCurrency: json['convertedCurrency'] as String?,
+    grossPriceEur: (json['grossPriceEur'] as num?)?.toDouble(),
+  );
 
   @override
   List<Object?> get props => [
@@ -186,6 +197,8 @@ class PackageRequestSearchItem extends Equatable {
     matchedTripId,
     matchedTripDepartureDate,
     currency,
+    convertedDisplayPrice,
+    convertedCurrency,
     grossPriceEur,
   ];
 }

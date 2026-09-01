@@ -26,6 +26,7 @@ class ConvertedPriceLabel extends StatelessWidget {
     this.convertedPricePerKg,
     this.convertedCurrency,
     this.style,
+    this.suffix = '/kg',
   });
 
   /// Devise de l'annonce (celle du montant d'origine, affiché ailleurs par
@@ -39,6 +40,10 @@ class ConvertedPriceLabel extends StatelessWidget {
   final String? convertedCurrency;
 
   final TextStyle? style;
+
+  /// Suffixe d'unité accolé au montant (« /kg » par défaut). Chaîne vide pour
+  /// un montant global (budget d'une demande, article de grille).
+  final String suffix;
 
   bool get _shouldShow {
     final amount = convertedPricePerKg;
@@ -54,7 +59,7 @@ class ConvertedPriceLabel extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final formatted = formatPriceIn(convertedPricePerKg!, convertedCurrency);
     return Text(
-      'environ $formatted/kg',
+      'environ $formatted$suffix',
       style:
           style ??
           tt.bodySmall?.copyWith(
