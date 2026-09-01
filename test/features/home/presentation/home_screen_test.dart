@@ -2836,18 +2836,16 @@ void main() {
 
       // Une seule recherche au montage avant l'événement.
       verify(
-        () => announcementBloc.add(
-          any(that: isA<AnnouncementSearchRequested>()),
-        ),
+        () =>
+            announcementBloc.add(any(that: isA<AnnouncementSearchRequested>())),
       ).called(1);
 
       blockEvents.notifyBlocked('traveler-1');
       await tester.pump(const Duration(milliseconds: 50));
 
       verify(
-        () => announcementBloc.add(
-          any(that: isA<AnnouncementSearchRequested>()),
-        ),
+        () =>
+            announcementBloc.add(any(that: isA<AnnouncementSearchRequested>())),
       ).called(1);
     });
 
@@ -2858,18 +2856,16 @@ void main() {
       );
       await tester.pump(const Duration(milliseconds: 1000));
       verify(
-        () => announcementBloc.add(
-          any(that: isA<AnnouncementSearchRequested>()),
-        ),
+        () =>
+            announcementBloc.add(any(that: isA<AnnouncementSearchRequested>())),
       ).called(1);
 
       blockEvents.notifyUnblocked('traveler-1');
       await tester.pump(const Duration(milliseconds: 50));
 
       verify(
-        () => announcementBloc.add(
-          any(that: isA<AnnouncementSearchRequested>()),
-        ),
+        () =>
+            announcementBloc.add(any(that: isA<AnnouncementSearchRequested>())),
       ).called(1);
     });
   });
