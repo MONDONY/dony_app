@@ -214,7 +214,8 @@ void main() {
     'la bascule push est tracée avec l\'état rendu par le serveur',
     build: () {
       when(() => repo.setPush('t1', true)).thenAnswer(
-        (_) async => const SubscriptionStatus(subscribed: true, pushEnabled: true),
+        (_) async =>
+            const SubscriptionStatus(subscribed: true, pushEnabled: true),
       );
       return SubscriptionsBloc(repo, analytics);
     },
@@ -242,9 +243,9 @@ void main() {
       items: [_item('t1')],
     ),
     act: (b) => b.add(const UnsubscribeTraveler('t1')),
-    verify: (_) =>
-        verify(() => analytics.logEvent(AnalyticsEvents.subscriptionRemoved))
-            .called(1),
+    verify: (_) => verify(
+      () => analytics.logEvent(AnalyticsEvents.subscriptionRemoved),
+    ).called(1),
   );
 
   blocTest<SubscriptionsBloc, SubscriptionsState>(

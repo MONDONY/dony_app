@@ -20,14 +20,17 @@ void main() {
 
   tearDown(() => getIt.unregister<SubscriptionsRepository>());
 
-  test('ouvrir la notification d\'un voyageur suivi consomme sa pastille', () async {
-    await consumeSubscriptionBadge('TRAVELER_NEW_ANNOUNCEMENT', {
-      'travelerId': 't-1',
-      'announcementId': 'a-1',
-    });
+  test(
+    'ouvrir la notification d\'un voyageur suivi consomme sa pastille',
+    () async {
+      await consumeSubscriptionBadge('TRAVELER_NEW_ANNOUNCEMENT', {
+        'travelerId': 't-1',
+        'announcementId': 'a-1',
+      });
 
-    verify(() => repo.markSeen('t-1')).called(1);
-  });
+      verify(() => repo.markSeen('t-1')).called(1);
+    },
+  );
 
   test('un autre type de notification ne touche à rien', () async {
     await consumeSubscriptionBadge('CORRIDOR_ALERT', {'travelerId': 't-1'});

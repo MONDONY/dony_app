@@ -106,17 +106,18 @@ class SubscriptionItem {
     required this.lastAnnouncement,
   });
 
-  SubscriptionItem copyWith({bool? pushEnabled, bool? hasNew}) => SubscriptionItem(
-    travelerId: travelerId,
-    travelerName: travelerName,
-    avatarUrl: avatarUrl,
-    isProAccount: isProAccount,
-    averageRating: averageRating,
-    ongoingTripsCount: ongoingTripsCount,
-    pushEnabled: pushEnabled ?? this.pushEnabled,
-    hasNew: hasNew ?? this.hasNew,
-    lastAnnouncement: lastAnnouncement,
-  );
+  SubscriptionItem copyWith({bool? pushEnabled, bool? hasNew}) =>
+      SubscriptionItem(
+        travelerId: travelerId,
+        travelerName: travelerName,
+        avatarUrl: avatarUrl,
+        isProAccount: isProAccount,
+        averageRating: averageRating,
+        ongoingTripsCount: ongoingTripsCount,
+        pushEnabled: pushEnabled ?? this.pushEnabled,
+        hasNew: hasNew ?? this.hasNew,
+        lastAnnouncement: lastAnnouncement,
+      );
 
   factory SubscriptionItem.fromJson(Map<String, dynamic> json) =>
       SubscriptionItem(

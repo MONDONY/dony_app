@@ -215,18 +215,9 @@ class _TrustMarks extends StatelessWidget {
 
     final marques = <Widget>[
       if (profile.isProAccount)
-        _Mark(
-          icon: 'star',
-          label: 'Compte PRO',
-          color: cs.primary,
-          bold: true,
-        ),
+        _Mark(icon: 'star', label: 'Compte PRO', color: cs.primary, bold: true),
       if (profile.isKiloPro)
-        _Mark(
-          icon: 'package',
-          label: 'Kilo Pro',
-          color: cs.onSurfaceVariant,
-        ),
+        _Mark(icon: 'package', label: 'Kilo Pro', color: cs.onSurfaceVariant),
       if (profile.kycVerified)
         _Mark(
           icon: 'badge-check',
@@ -449,8 +440,9 @@ class _SubscriptionBar extends StatelessWidget {
             child: SubscribeBar(
               subscribed: state.subscribed,
               pushEnabled: state.pushEnabled,
-              onSubscribe: () =>
-                  context.read<TravelerHubBloc>().add(const HubSubscribePressed()),
+              onSubscribe: () => context.read<TravelerHubBloc>().add(
+                const HubSubscribePressed(),
+              ),
               onUnsubscribe: () => context.read<TravelerHubBloc>().add(
                 const HubUnsubscribePressed(),
               ),

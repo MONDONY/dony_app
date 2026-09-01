@@ -263,7 +263,10 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
     givenItems([
-      _item('Awa', last: _last(from: 'Lyon', to: 'Bamako')),
+      _item(
+        'Awa',
+        last: _last(from: 'Lyon', to: 'Bamako'),
+      ),
       _item('Ibou', hasNew: true, last: _last()),
     ]);
     await tester.pumpWidget(pump());

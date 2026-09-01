@@ -50,10 +50,7 @@ void main() {
 
   testWidgets('abonné avec push → état annoncé', (tester) async {
     await tester.pumpWidget(host(subscribed: true, pushEnabled: true));
-    expect(
-      find.textContaining('Alertes push activées'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('Alertes push activées'), findsOneWidget);
   });
 
   testWidgets('tap sur S\'abonner déclenche le rappel', (tester) async {
@@ -72,11 +69,7 @@ void main() {
   testWidgets('la bascule Push inverse l\'état courant', (tester) async {
     bool? recu;
     await tester.pumpWidget(
-      host(
-        subscribed: true,
-        pushEnabled: false,
-        onTogglePush: (v) => recu = v,
-      ),
+      host(subscribed: true, pushEnabled: false, onTogglePush: (v) => recu = v),
     );
     await tester.tap(find.text('Push'));
     expect(recu, isTrue);

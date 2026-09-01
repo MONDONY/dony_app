@@ -209,7 +209,8 @@ Widget _harness({
       BlocProvider<BidBloc>.value(value: bidBloc),
       // Optionnel : la feuille se passe du cœur quand le cubit est absent de
       // l'arbre — c'est le cas de plusieurs points d'entrée réels.
-      if (favorites != null) BlocProvider<FavoriteIdsCubit>.value(value: favorites),
+      if (favorites != null)
+        BlocProvider<FavoriteIdsCubit>.value(value: favorites),
     ],
     child: MaterialApp.router(
       routerConfig: router,
@@ -955,7 +956,9 @@ void main() {
     testWidgets('trajet en espèces uniquement → avertissement de séquestre', (
       tester,
     ) async {
-      final a = _buildAnnouncement(acceptedPaymentMethods: {BidPaymentMethod.cash});
+      final a = _buildAnnouncement(
+        acceptedPaymentMethods: {BidPaymentMethod.cash},
+      );
       await tester.pumpWidget(_harness(announcement: a));
       await tester.tap(find.text('Ouvrir'));
       await tester.pumpAndSettle();
@@ -963,7 +966,10 @@ void main() {
       // Le message est un TextSpan composé : sans findRichText, le finder ne
       // regarde que les widgets Text simples et ne voit rien.
       expect(
-        find.textContaining('Trajet en espèces uniquement.', findRichText: true),
+        find.textContaining(
+          'Trajet en espèces uniquement.',
+          findRichText: true,
+        ),
         findsOneWidget,
       );
       expect(
@@ -978,7 +984,10 @@ void main() {
 
     testWidgets('carte acceptée → aucun avertissement', (tester) async {
       final a = _buildAnnouncement(
-        acceptedPaymentMethods: {BidPaymentMethod.stripe, BidPaymentMethod.cash},
+        acceptedPaymentMethods: {
+          BidPaymentMethod.stripe,
+          BidPaymentMethod.cash,
+        },
       );
       await tester.pumpWidget(_harness(announcement: a));
       await tester.tap(find.text('Ouvrir'));
@@ -986,7 +995,10 @@ void main() {
 
       // Le séquestre s'applique dès qu'un paiement par carte est possible.
       expect(
-        find.textContaining('Trajet en espèces uniquement.', findRichText: true),
+        find.textContaining(
+          'Trajet en espèces uniquement.',
+          findRichText: true,
+        ),
         findsNothing,
       );
     });
@@ -1000,22 +1012,16 @@ void main() {
       await tester.tap(find.text('Ouvrir'));
       await tester.pumpAndSettle();
 
-      final avatar = tester.widget<DonyAvatar>(
-        find.byType(DonyAvatar).first,
-      );
+      final avatar = tester.widget<DonyAvatar>(find.byType(DonyAvatar).first);
       expect(avatar.pro, isTrue);
     });
 
     testWidgets('compte ordinaire → avatar non marqué', (tester) async {
-      await tester.pumpWidget(
-        _harness(announcement: _buildAnnouncement()),
-      );
+      await tester.pumpWidget(_harness(announcement: _buildAnnouncement()));
       await tester.tap(find.text('Ouvrir'));
       await tester.pumpAndSettle();
 
-      final avatar = tester.widget<DonyAvatar>(
-        find.byType(DonyAvatar).first,
-      );
+      final avatar = tester.widget<DonyAvatar>(find.byType(DonyAvatar).first);
       expect(avatar.pro, isFalse);
     });
   });

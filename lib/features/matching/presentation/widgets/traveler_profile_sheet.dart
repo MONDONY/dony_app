@@ -520,12 +520,12 @@ class _SubscribeBar extends StatelessWidget {
                 subscribed: state.subscribed,
                 pushEnabled: state.pushEnabled,
                 subscribeLabel: "S'abonner à ce voyageur",
-                onSubscribe: () => context
-                    .read<TravelerSubscribeBloc>()
-                    .add(const SubscribePressed()),
-                onUnsubscribe: () => context
-                    .read<TravelerSubscribeBloc>()
-                    .add(const UnsubscribePressed()),
+                onSubscribe: () => context.read<TravelerSubscribeBloc>().add(
+                  const SubscribePressed(),
+                ),
+                onUnsubscribe: () => context.read<TravelerSubscribeBloc>().add(
+                  const UnsubscribePressed(),
+                ),
                 onTogglePush: (enabled) => context
                     .read<TravelerSubscribeBloc>()
                     .add(TogglePushPressed(enabled)),

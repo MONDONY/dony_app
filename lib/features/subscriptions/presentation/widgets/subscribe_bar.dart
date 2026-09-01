@@ -127,13 +127,13 @@ class _PushToggle extends StatelessWidget {
               // quoi la bascule serait plus difficile à viser que l'action
               // destructrice d'à côté.
               constraints: const BoxConstraints(minHeight: 48),
-              padding: const EdgeInsets.symmetric(
-                horizontal: DonySpacing.md,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(DonyRadius.lg),
                 border: Border.all(
-                  color: enabled ? cs.primary.withValues(alpha: 0.4) : cs.outline,
+                  color: enabled
+                      ? cs.primary.withValues(alpha: 0.4)
+                      : cs.outline,
                 ),
               ),
               child: Row(

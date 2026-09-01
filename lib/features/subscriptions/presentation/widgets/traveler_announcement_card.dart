@@ -64,9 +64,7 @@ class TravelerAnnouncementCard extends StatelessWidget {
                     const SizedBox(width: DonySpacing.xxs),
                     Text(
                       '/kg',
-                      style: tt.bodySmall?.copyWith(
-                        color: cs.onSurfaceVariant,
-                      ),
+                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                     ),
                   ],
                 ),
@@ -134,10 +132,7 @@ class _Corridor extends StatelessWidget {
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: DonySpacing.sm),
-          child: Text(
-            '→',
-            style: style?.copyWith(color: cs.onSurfaceVariant),
-          ),
+          child: Text('→', style: style?.copyWith(color: cs.onSurfaceVariant)),
         ),
         Flexible(
           child: Text(

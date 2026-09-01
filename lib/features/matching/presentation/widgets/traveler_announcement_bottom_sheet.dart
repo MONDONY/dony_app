@@ -423,9 +423,8 @@ class _HeroWithFavorite extends StatelessWidget {
               right: DonySpacing.xs,
               child: FavoriteHeartButton(
                 isFavorite: estFavori,
-                onToggle: () => unawaited(
-                  _basculerFavori(context, announcement.id),
-                ),
+                onToggle: () =>
+                    unawaited(_basculerFavori(context, announcement.id)),
               ),
             ),
           ],

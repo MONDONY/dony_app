@@ -206,9 +206,7 @@ void main() {
   testWidgets('la zone trajet respecte la cible tactile de 44pt', (
     tester,
   ) async {
-    await tester.pumpWidget(
-      host(_item(last: trajet()), onOpenLastTrip: () {}),
-    );
+    await tester.pumpWidget(host(_item(last: trajet()), onOpenLastTrip: () {}));
 
     final zone = find.ancestor(
       of: find.textContaining('Paris → Dakar'),

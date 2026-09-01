@@ -535,9 +535,7 @@ void main() {
   });
 
   // ─── Test 15: Labels des 3 stats visibles ────────────────────────────────
-  testWidgets('réputation énoncée en une phrase', (
-    tester,
-  ) async {
+  testWidgets('réputation énoncée en une phrase', (tester) async {
     await tester.binding.setSurfaceSize(const Size(400, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -554,10 +552,7 @@ void main() {
     await tester.pumpWidget(pump());
     await tester.pump(const Duration(milliseconds: 600));
 
-    expect(
-      find.textContaining('de note', findRichText: true),
-      findsOneWidget,
-    );
+    expect(find.textContaining('de note', findRichText: true), findsOneWidget);
     expect(
       find.textContaining('livraisons', findRichText: true),
       findsOneWidget,
@@ -590,7 +585,10 @@ void main() {
 
     // Note à la française, et un délai qui se lit « répond en 2 h ».
     expect(find.textContaining('4,7', findRichText: true), findsOneWidget);
-    expect(find.textContaining('12 livraisons', findRichText: true), findsOneWidget);
+    expect(
+      find.textContaining('12 livraisons', findRichText: true),
+      findsOneWidget,
+    );
     expect(find.textContaining('2 h', findRichText: true), findsOneWidget);
   });
 

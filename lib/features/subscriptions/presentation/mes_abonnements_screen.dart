@@ -70,7 +70,9 @@ class _MesAbonnementsScreenState extends State<MesAbonnementsScreen> {
       iconAsset: 'bell-off',
     );
     if ((confirmed ?? false) && context.mounted) {
-      context.read<SubscriptionsBloc>().add(UnsubscribeTraveler(item.travelerId));
+      context.read<SubscriptionsBloc>().add(
+        UnsubscribeTraveler(item.travelerId),
+      );
     }
   }
 

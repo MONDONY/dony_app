@@ -50,7 +50,9 @@ class SubscriptionTile extends StatelessWidget {
     return Semantics(
       // Le « nouveau » est signalé visuellement par une pastille sur l'avatar :
       // sans ce label, un lecteur d'écran ne le percevrait pas du tout.
-      label: item.hasNew ? 'Nouveau trajet publié par ${item.travelerName}' : null,
+      label: item.hasNew
+          ? 'Nouveau trajet publié par ${item.travelerName}'
+          : null,
       child: DonyCard(
         onTap: onTap,
         padding: const EdgeInsets.all(DonySpacing.base),
@@ -91,9 +93,7 @@ class SubscriptionTile extends StatelessWidget {
                   else
                     Text(
                       'Aucun trajet publié pour le moment',
-                      style: tt.bodySmall?.copyWith(
-                        color: cs.onSurfaceVariant,
-                      ),
+                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                     ),
                   const SizedBox(height: DonySpacing.xs),
                   _MetaLine(
