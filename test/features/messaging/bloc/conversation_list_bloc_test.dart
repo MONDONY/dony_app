@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/services/block_events_service.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_event.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_state.dart';
@@ -470,5 +471,83 @@ void main() {
         ),
       ],
     );
+  });
+
+  // ── Réaction aux blocages ────────────────────────────────────────────────
+  group('ConversationListBloc — blocages', () {
+    late BlockEventsService blockEvents;
+
+    setUp(() {
+      blockEvents = BlockEventsService();
+      when(() => convRepo.getConversations()).thenAnswer((_) async => [_conv]);
+      when(
+        () => convRepo.getArchivedConversations(),
+      ).thenAnswer((_) async => []);
+      when(
+        () => firestoreRepo.perConversationUnreadStream(any()),
+      ).thenAnswer((_) => const Stream.empty());
+    });
+
+    tearDown(() => blockEvents.dispose());
+
+    blocTest<ConversationListBloc, ConversationListState>(
+      'un blocage relance un chargement de la liste',
+      build: () => ConversationListBloc(
+        convRepo,
+        firestoreRepo,
+        blockEvents: blockEvents,
+      ),
+      act: (b) async {
+        b.add(const ConversationsLoadRequested());
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        blockEvents.notifyBlocked('uid-1');
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+      },
+      expect: () => [
+        isA<ConversationListLoading>(),
+        isA<ConversationListLoaded>(),
+        isA<ConversationListLoading>(),
+        isA<ConversationListLoaded>(),
+      ],
+    );
+
+    blocTest<ConversationListBloc, ConversationListState>(
+      'un déblocage relance aussi un chargement',
+      build: () => ConversationListBloc(
+        convRepo,
+        firestoreRepo,
+        blockEvents: blockEvents,
+      ),
+      act: (b) async {
+        blockEvents.notifyUnblocked('uid-1');
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+      },
+      expect: () => [
+        isA<ConversationListLoading>(),
+        isA<ConversationListLoaded>(),
+      ],
+    );
+
+    test('aucun rechargement après la fermeture du bloc', () async {
+      final bloc = ConversationListBloc(
+        convRepo,
+        firestoreRepo,
+        blockEvents: blockEvents,
+      );
+      await bloc.close();
+
+      blockEvents.notifyBlocked('uid-1');
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+
+      verifyNever(() => convRepo.getConversations());
+    });
+
+    test('sans service injecté, la construction reste possible', () {
+      // GetIt n'est pas initialisé dans ce test : la résolution doit échouer en
+      // silence plutôt que de faire tomber le bloc.
+      final bloc = ConversationListBloc(convRepo, firestoreRepo);
+      expect(bloc.state, isA<ConversationListInitial>());
+      bloc.close();
+    });
   });
 }

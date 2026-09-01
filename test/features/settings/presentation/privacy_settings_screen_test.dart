@@ -1,8 +1,15 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/design/widgets/dony_skeleton.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/block_events_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/features/settings/bloc/blocked_users_bloc.dart';
 import 'package:dony/features/settings/bloc/privacy_settings_bloc.dart';
+import 'package:dony/features/settings/data/models/blocked_user_model.dart';
+import 'package:dony/features/settings/data/repositories/blocked_users_repository.dart';
 import 'package:dony/features/settings/presentation/screens/privacy_settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -17,6 +24,23 @@ class MockPrivacySettingsBloc
     implements PrivacySettingsBloc {}
 
 class _MockHiveService extends Mock implements HiveService {}
+
+class _MockBlockedUsersRepository extends Mock
+    implements BlockedUsersRepository {}
+
+/// Dépôt courant de la carte « Utilisateurs bloqués ». La fabrique GetIt le lit
+/// au moment du build, chaque test peut donc le remplacer dans son `setUp`.
+late BlockedUsersRepository blockedRepo;
+
+/// Service d'événements partagé par les tests : un vrai, pas un mock, c'est un
+/// simple StreamController.
+late BlockEventsService blockEvents;
+
+BlockedUserModel _blocked(String id) => BlockedUserModel(
+  userId: id,
+  displayName: 'Bloqué $id',
+  blockedAt: DateTime(2026, 5, 20),
+);
 
 class _MockBox extends Mock implements Box<dynamic> {}
 
@@ -63,6 +87,19 @@ void main() {
         analytics.onConfigured();
         getIt.registerSingleton<AnalyticsService>(analytics);
       }
+      // Carte « Utilisateurs bloqués » : elle résout sa propre instance de BLoC
+      // via GetIt, comme en production.
+      if (!getIt.isRegistered<BlockEventsService>()) {
+        blockEvents = BlockEventsService();
+        getIt.registerSingleton<BlockEventsService>(blockEvents);
+        getIt.registerFactory<BlockedUsersBloc>(
+          () => BlockedUsersBloc(
+            blockedRepo,
+            getIt<AnalyticsService>(),
+            blockEvents,
+          ),
+        );
+      }
     });
 
     tearDownAll(() {
@@ -71,6 +108,8 @@ void main() {
 
     setUp(() {
       mockBloc = MockPrivacySettingsBloc();
+      blockedRepo = _MockBlockedUsersRepository();
+      when(() => blockedRepo.fetchBlockedUsers()).thenAnswer((_) async => []);
     });
 
     testWidgets('affiche le titre "Confidentialité"', (tester) async {
@@ -399,6 +438,71 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.textContaining('Réglage non enregistré'), findsOneWidget);
+    });
+
+    // ── Compteur d'utilisateurs bloqués ─────────────────────────────────────
+
+    testWidgets('le badge affiche le nombre d\'utilisateurs bloqués', (
+      tester,
+    ) async {
+      when(
+        () => blockedRepo.fetchBlockedUsers(),
+      ).thenAnswer((_) async => [_blocked('u1'), _blocked('u2')]);
+
+      await tester.pumpWidget(_wrap(mockBloc: mockBloc));
+      await tester.pumpAndSettle();
+
+      expect(find.text('2'), findsOneWidget);
+    });
+
+    testWidgets('aucun badge quand personne n\'est bloqué', (tester) async {
+      when(() => blockedRepo.fetchBlockedUsers()).thenAnswer((_) async => []);
+
+      await tester.pumpWidget(_wrap(mockBloc: mockBloc));
+      await tester.pumpAndSettle();
+
+      expect(find.text('0'), findsNothing);
+      expect(find.byType(DonySkeletonBox), findsNothing);
+    });
+
+    testWidgets('un squelette occupe la place du badge pendant le chargement', (
+      tester,
+    ) async {
+      final completer = Completer<List<BlockedUserModel>>();
+      when(
+        () => blockedRepo.fetchBlockedUsers(),
+      ).thenAnswer((_) => completer.future);
+
+      await tester.pumpWidget(_wrap(mockBloc: mockBloc));
+      await tester.pump();
+
+      expect(find.byType(DonySkeletonBox), findsOneWidget);
+
+      completer.complete([_blocked('u1')]);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(DonySkeletonBox), findsNothing);
+      expect(find.text('1'), findsOneWidget);
+    });
+
+    testWidgets('le compteur est rechargé après un blocage diffusé', (
+      tester,
+    ) async {
+      when(
+        () => blockedRepo.fetchBlockedUsers(),
+      ).thenAnswer((_) async => [_blocked('u1')]);
+
+      await tester.pumpWidget(_wrap(mockBloc: mockBloc));
+      await tester.pumpAndSettle();
+      expect(find.text('1'), findsOneWidget);
+
+      when(
+        () => blockedRepo.fetchBlockedUsers(),
+      ).thenAnswer((_) async => [_blocked('u1'), _blocked('u2')]);
+      blockEvents.notifyBlocked('u2');
+      await tester.pumpAndSettle();
+
+      expect(find.text('2'), findsOneWidget);
     });
   });
 }

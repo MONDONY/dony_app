@@ -4,8 +4,10 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/block_events_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/settings/bloc/blocked_users_bloc.dart';
 import 'package:dony/features/settings/bloc/privacy_settings_bloc.dart';
 import 'package:dony/features/settings/presentation/widgets/settings_flat_group.dart';
 import 'package:dony/features/settings/presentation/widgets/settings_section_header.dart';
@@ -135,7 +137,7 @@ class PrivacySettingsScreen extends StatelessWidget {
 
                 // ── 3. Section "BLOCAGE" ──────────────────────────────────
                 const SettingsSectionHeader('BLOCAGE'),
-                _BlockedUsersCard(),
+                const _BlockedUsersCard(),
                 const SizedBox(height: DonySpacing.xxl),
 
                 // ── 4. Section "AMÉLIORATION DE L'APP" ────────────────────
@@ -418,14 +420,87 @@ class _AnalyticsConsentCard extends StatelessWidget {
 
 // ── Card utilisateurs bloqués ─────────────────────────────────────────────────
 
-class _BlockedUsersCard extends StatelessWidget {
+/// Carte « Utilisateurs bloqués » avec son compteur.
+///
+/// Porte sa propre instance de [BlockedUsersBloc] : la route Confidentialité
+/// n'expose que [PrivacySettingsBloc], et le compteur n'a pas de raison de
+/// remonter jusqu'à elle.
+class _BlockedUsersCard extends StatefulWidget {
+  const _BlockedUsersCard();
+
+  @override
+  State<_BlockedUsersCard> createState() => _BlockedUsersCardState();
+}
+
+class _BlockedUsersCardState extends State<_BlockedUsersCard> {
+  late final BlockedUsersBloc _bloc;
+  StreamSubscription<BlockChange>? _blockSub;
+
+  @override
+  void initState() {
+    super.initState();
+    _bloc = getIt<BlockedUsersBloc>()..add(const BlockedUsersLoadRequested());
+    // Abonnement côté widget : BlockedUsersBloc est une factory, chaque écran a
+    // la sienne, et c'est bien cette instance-ci qu'il faut recharger quand un
+    // blocage ou un déblocage aboutit ailleurs.
+    _blockSub = _blockEvents()?.changes.listen((_) {
+      if (!mounted) return;
+      _bloc.add(const BlockedUsersLoadRequested());
+    });
+  }
+
+  BlockEventsService? _blockEvents() {
+    try {
+      return getIt.isRegistered<BlockEventsService>()
+          ? getIt<BlockEventsService>()
+          : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  @override
+  void dispose() {
+    _blockSub?.cancel();
+    unawaited(_bloc.close());
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider<BlockedUsersBloc>.value(
+      value: _bloc,
+      child: BlocBuilder<BlockedUsersBloc, BlockedUsersState>(
+        builder: (context, state) => _BlockedUsersCardView(
+          // Null pendant le chargement : la vue réserve alors la place du badge
+          // au lieu de le faire apparaître d'un coup et de décaler la ligne.
+          blockedCount: switch (state) {
+            BlockedUsersLoaded(:final users) => users.length,
+            BlockedUsersUnblocking(:final currentUsers) => currentUsers.length,
+            // Échec de chargement : pas de badge plutôt qu'un squelette qui
+            // tournerait indéfiniment. La liste complète reste accessible d'un
+            // tap, avec son propre message d'erreur.
+            BlockedUsersError() => 0,
+            _ => null,
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _BlockedUsersCardView extends StatelessWidget {
+  const _BlockedUsersCardView({required this.blockedCount});
+
+  /// `null` tant que la liste n'est pas connue.
+  final int? blockedCount;
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    // Le compteur sera 0 jusqu'à l'implémentation de Task 10
-    const int blockedCount = 0;
+    final count = blockedCount;
 
     return GestureDetector(
       onTap: () => context.go('/settings/privacy/blocked-users'),
@@ -474,7 +549,12 @@ class _BlockedUsersCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: DonySpacing.sm),
-                if (blockedCount > 0) ...[
+                if (count == null) ...[
+                  // Même gabarit que le badge : la ligne ne bouge pas quand le
+                  // compteur arrive, qu'il y ait des blocages ou aucun.
+                  const DonySkeletonBox(width: 24, height: 22, radius: 6),
+                  const SizedBox(width: DonySpacing.xs),
+                ] else if (count > 0) ...[
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: DonySpacing.sm,
@@ -485,7 +565,7 @@ class _BlockedUsersCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(DonyRadius.sm),
                     ),
                     child: Text(
-                      '$blockedCount',
+                      '$count',
                       style: tt.labelMedium?.copyWith(
                         color: cs.onSurfaceVariant,
                         fontWeight: FontWeight.w600,

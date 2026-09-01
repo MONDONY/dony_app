@@ -7,6 +7,7 @@ import 'package:dony/core/network/api_client.dart';
 import 'package:dony/core/services/address_autocomplete_service.dart';
 import 'package:dony/core/services/analytics_consent_remote.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/block_events_service.dart';
 import 'package:dony/core/services/contact_picker_service.dart';
 import 'package:dony/core/services/device_id_service.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
@@ -525,6 +526,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => ConversationListBloc(
       getIt<ConversationRepository>(),
       getIt<FirestoreChatRepository>(),
+      blockEvents: getIt<BlockEventsService>(),
     ),
     dispose: (b) => b.close(),
   );
@@ -640,6 +642,9 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<AnalyticsService>(),
     ),
   );
+  // Singleton : c'est le canal par lequel les écrans déjà ouverts apprennent
+  // qu'un blocage vient d'avoir lieu ailleurs dans l'application.
+  getIt.registerLazySingleton<BlockEventsService>(() => BlockEventsService());
   getIt.registerLazySingleton<BlockedUsersDatasource>(
     () => BlockedUsersDatasource(getIt<ApiClient>()),
   );
@@ -647,7 +652,11 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => BlockedUsersRepository(getIt<BlockedUsersDatasource>()),
   );
   getIt.registerFactory<BlockedUsersBloc>(
-    () => BlockedUsersBloc(getIt<BlockedUsersRepository>()),
+    () => BlockedUsersBloc(
+      getIt<BlockedUsersRepository>(),
+      getIt<AnalyticsService>(),
+      getIt<BlockEventsService>(),
+    ),
   );
 
   // Settings — Notification preferences

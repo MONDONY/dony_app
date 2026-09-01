@@ -4,6 +4,8 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
@@ -11,6 +13,7 @@ import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/widgets/block_user_action.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
 import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
 import 'package:flutter/material.dart';
@@ -36,6 +39,19 @@ class TravelerProfileScreen extends StatefulWidget {
 class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
   AnnouncementModel get _a => widget.announcement;
 
+  /// Identifiant du compte connecté, ou `null` si personne n'est connecté ou si
+  /// l'`AuthBloc` n'est pas dans l'arbre — l'écran est aussi monté en simple
+  /// consultation (deep link d'affiche partagée), sans session résolue.
+  String? _currentUserId(BuildContext context) {
+    try {
+      // currentUserId couvre AuthAuthenticated ET AuthProfileUpdated : tester
+      // le seul AuthAuthenticated raterait l'état émis après une maj de profil.
+      return context.read<AuthBloc>().state.currentUserId;
+    } catch (_) {
+      return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -44,47 +60,64 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
     final refusedTypes = _a.refusedTypes ?? [];
     final description = _a.description;
 
+    // Le voyageur de l'annonce est la seule contrepartie de cet écran : c'est
+    // lui que l'on peut bloquer. On masque l'action sur son propre trajet.
+    final traveler = _a.traveler;
+    final currentUserId = _currentUserId(context);
+    final isOwnTrip =
+        currentUserId != null &&
+        (currentUserId == _a.travelerId || currentUserId == traveler?.id);
+
     return Scaffold(
       appBar: DonyAppBar(
         title: 'Détail annonce',
-        actions: widget.consultOnly
-            ? null
-            : [
-                BlocBuilder<FavoriteIdsCubit, FavoriteIdsState>(
-                  builder: (context, state) {
-                    final isFav = state.tripIds.contains(_a.id);
-                    return FavoriteHeartButton(
-                      isFavorite: isFav,
-                      onToggle: () async {
-                        final cubit = context.read<FavoriteIdsCubit>();
-                        try {
-                          await cubit.toggleTrip(_a.id);
-                          if (context.mounted) {
-                            final nowFav = cubit.isTripFav(_a.id);
-                            DonySnackbar.show(
-                              context,
-                              message: nowFav
-                                  ? 'Trajet ajouté aux favoris'
-                                  : 'Trajet retiré des favoris',
-                              type: nowFav
-                                  ? DonySnackbarType.success
-                                  : DonySnackbarType.info,
-                            );
-                          }
-                        } catch (_) {
-                          if (context.mounted) {
-                            DonySnackbar.show(
-                              context,
-                              message: 'Impossible de modifier les favoris',
-                              type: DonySnackbarType.error,
-                            );
-                          }
-                        }
-                      },
-                    );
+        actions: [
+          if (!widget.consultOnly)
+            BlocBuilder<FavoriteIdsCubit, FavoriteIdsState>(
+              builder: (context, state) {
+                final isFav = state.tripIds.contains(_a.id);
+                return FavoriteHeartButton(
+                  isFavorite: isFav,
+                  onToggle: () async {
+                    final cubit = context.read<FavoriteIdsCubit>();
+                    try {
+                      await cubit.toggleTrip(_a.id);
+                      if (context.mounted) {
+                        final nowFav = cubit.isTripFav(_a.id);
+                        DonySnackbar.show(
+                          context,
+                          message: nowFav
+                              ? 'Trajet ajouté aux favoris'
+                              : 'Trajet retiré des favoris',
+                          type: nowFav
+                              ? DonySnackbarType.success
+                              : DonySnackbarType.info,
+                        );
+                      }
+                    } catch (_) {
+                      if (context.mounted) {
+                        DonySnackbar.show(
+                          context,
+                          message: 'Impossible de modifier les favoris',
+                          type: DonySnackbarType.error,
+                        );
+                      }
+                    }
                   },
-                ),
-              ],
+                );
+              },
+            ),
+          if (traveler != null && !isOwnTrip)
+            IconButton(
+              tooltip: 'Plus d\'options',
+              icon: DonyIcon('ellipsis', color: cs.onSurfaceVariant),
+              onPressed: () => showBlockMenu(
+                context,
+                userId: traveler.id,
+                displayName: traveler.resolvedName,
+              ),
+            ),
+        ],
       ),
       body: Stack(
         children: [

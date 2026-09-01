@@ -1,4 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/block_events_service.dart';
 import 'package:dony/features/settings/bloc/blocked_users_bloc.dart';
 import 'package:dony/features/settings/data/models/blocked_user_model.dart';
 import 'package:dony/features/settings/data/repositories/blocked_users_repository.dart';
@@ -8,8 +10,17 @@ import 'package:mocktail/mocktail.dart';
 class MockBlockedUsersRepository extends Mock
     implements BlockedUsersRepository {}
 
+class MockAnalyticsService extends Mock implements AnalyticsService {}
+
 void main() {
   late MockBlockedUsersRepository mockRepo;
+  late MockAnalyticsService mockAnalytics;
+  late BlockEventsService blockEvents;
+
+  /// Le service d'événements est un vrai (et non un mock) : c'est un simple
+  /// StreamController, et les tests d'émission veulent observer le flux réel.
+  BlockedUsersBloc makeBloc() =>
+      BlockedUsersBloc(mockRepo, mockAnalytics, blockEvents);
 
   final user1 = BlockedUserModel(
     userId: 'u1',
@@ -24,12 +35,19 @@ void main() {
 
   setUp(() {
     mockRepo = MockBlockedUsersRepository();
+    mockAnalytics = MockAnalyticsService();
+    blockEvents = BlockEventsService();
+    when(
+      () => mockAnalytics.logEvent(any(), properties: any(named: 'properties')),
+    ).thenAnswer((_) async {});
   });
+
+  tearDown(() => blockEvents.dispose());
 
   group('BlockedUsersBloc', () {
     // ── état initial ────────────────────────────────────────────────────────
     test('état initial est BlockedUsersInitial', () {
-      final bloc = BlockedUsersBloc(mockRepo);
+      final bloc = makeBloc();
       expect(bloc.state, isA<BlockedUsersInitial>());
       bloc.close();
     });
@@ -42,7 +60,7 @@ void main() {
           () => mockRepo.fetchBlockedUsers(),
         ).thenAnswer((_) async => [user1, user2]);
       },
-      build: () => BlockedUsersBloc(mockRepo),
+      build: () => makeBloc(),
       act: (bloc) => bloc.add(const BlockedUsersLoadRequested()),
       expect: () => [
         isA<BlockedUsersLoading>(),
@@ -58,7 +76,7 @@ void main() {
       setUp: () {
         when(() => mockRepo.fetchBlockedUsers()).thenAnswer((_) async => []);
       },
-      build: () => BlockedUsersBloc(mockRepo),
+      build: () => makeBloc(),
       act: (bloc) => bloc.add(const BlockedUsersLoadRequested()),
       expect: () => [
         isA<BlockedUsersLoading>(),
@@ -74,7 +92,7 @@ void main() {
           () => mockRepo.fetchBlockedUsers(),
         ).thenThrow(Exception('Network error'));
       },
-      build: () => BlockedUsersBloc(mockRepo),
+      build: () => makeBloc(),
       act: (bloc) => bloc.add(const BlockedUsersLoadRequested()),
       expect: () => [
         isA<BlockedUsersLoading>(),
@@ -95,7 +113,7 @@ void main() {
           () => mockRepo.fetchBlockedUsers(),
         ).thenAnswer((_) async => [user2]);
       },
-      build: () => BlockedUsersBloc(mockRepo),
+      build: () => makeBloc(),
       seed: () => BlockedUsersLoaded([user1, user2]),
       act: (bloc) => bloc.add(const BlockedUserUnblockRequested('u1')),
       expect: () => [
@@ -120,7 +138,7 @@ void main() {
           () => mockRepo.unblockUser('u1'),
         ).thenThrow(Exception('Server error'));
       },
-      build: () => BlockedUsersBloc(mockRepo),
+      build: () => makeBloc(),
       seed: () => BlockedUsersLoaded([user1, user2]),
       act: (bloc) => bloc.add(const BlockedUserUnblockRequested('u1')),
       expect: () => [
@@ -128,6 +146,97 @@ void main() {
         isA<BlockedUsersLoaded>().having((s) => s.users.length, 'length', 2),
       ],
     );
+
+    // ── BlockedUserBlockRequested — succès ──────────────────────────────────
+    blocTest<BlockedUsersBloc, BlockedUsersState>(
+      'BlockedUserBlockRequested émet Blocking puis BlockSuccess',
+      setUp: () {
+        when(() => mockRepo.blockUser('u1')).thenAnswer((_) async {});
+      },
+      build: () => makeBloc(),
+      act: (bloc) => bloc.add(const BlockedUserBlockRequested('u1')),
+      expect: () => [
+        isA<BlockedUserBlocking>().having((s) => s.userId, 'userId', 'u1'),
+        isA<BlockedUserBlockSuccess>().having((s) => s.userId, 'userId', 'u1'),
+      ],
+      verify: (_) {
+        verify(() => mockRepo.blockUser('u1')).called(1);
+        verify(
+          () => mockAnalytics.logEvent(
+            'user_blocked',
+            properties: any(named: 'properties'),
+          ),
+        ).called(1);
+      },
+    );
+
+    // ── BlockedUserBlockRequested — échec ───────────────────────────────────
+    blocTest<BlockedUsersBloc, BlockedUsersState>(
+      'BlockedUserBlockRequested émet BlockFailure si le backend refuse',
+      setUp: () {
+        when(() => mockRepo.blockUser('u1')).thenThrow(Exception('Server'));
+      },
+      build: () => makeBloc(),
+      act: (bloc) => bloc.add(const BlockedUserBlockRequested('u1')),
+      expect: () => [
+        isA<BlockedUserBlocking>(),
+        isA<BlockedUserBlockFailure>().having(
+          (s) => s.message,
+          'message',
+          'Une erreur est survenue. Réessaie plus tard.',
+        ),
+      ],
+      verify: (_) {
+        verifyNever(
+          () => mockAnalytics.logEvent(
+            'user_blocked',
+            properties: any(named: 'properties'),
+          ),
+        );
+      },
+    );
+
+    // ── diffusion aux autres écrans ─────────────────────────────────────────
+    test('un blocage réussi est diffusé sur BlockEventsService', () async {
+      when(() => mockRepo.blockUser('u1')).thenAnswer((_) async {});
+      final bloc = makeBloc();
+      final change = blockEvents.changes.first;
+
+      bloc.add(const BlockedUserBlockRequested('u1'));
+
+      final received = await change;
+      expect(received.userId, 'u1');
+      expect(received.blocked, isTrue);
+      await bloc.close();
+    });
+
+    test('un déblocage réussi est diffusé avec blocked à false', () async {
+      when(() => mockRepo.unblockUser('u1')).thenAnswer((_) async {});
+      when(() => mockRepo.fetchBlockedUsers()).thenAnswer((_) async => []);
+      final bloc = makeBloc();
+      final change = blockEvents.changes.first;
+
+      bloc.add(const BlockedUserUnblockRequested('u1'));
+
+      final received = await change;
+      expect(received.userId, 'u1');
+      expect(received.blocked, isFalse);
+      await bloc.close();
+    });
+
+    test('un blocage en échec ne diffuse rien', () async {
+      when(() => mockRepo.blockUser('u1')).thenThrow(Exception('Server'));
+      final bloc = makeBloc();
+      var emitted = false;
+      final sub = blockEvents.changes.listen((_) => emitted = true);
+
+      bloc.add(const BlockedUserBlockRequested('u1'));
+      await bloc.stream.firstWhere((s) => s is BlockedUserBlockFailure);
+
+      expect(emitted, isFalse);
+      await sub.cancel();
+      await bloc.close();
+    });
 
     // ── equality ────────────────────────────────────────────────────────────
     test('BlockedUsersLoaded equality est correcte', () {

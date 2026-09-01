@@ -389,6 +389,8 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `referral_shared` | ReferralBloc._onShared() |
 | `analytics_consent_changed` | PrivacySettingsScreen.onChanged |
 | `phone_visibility_toggled` | PrivacySettingsBloc._onToggleHidePhone — bascule « Masquer mon numéro » confirmée par le serveur (propriété `hidden`) |
+| `user_blocked` | BlockedUsersBloc._onBlock — blocage confirmé par le serveur, depuis une fiche profil, un profil public ou une conversation. Aucune propriété : l'identité de la personne bloquée est sensible |
+| `user_unblocked` | BlockedUsersBloc._onUnblock — déblocage confirmé depuis Confidentialité › Utilisateurs bloqués |
 | `account_deletion_requested` | AccountDeletionBloc._onRequestDeletion() |
 | `wallet_refund_requested` | DeletionEligibilityCubit.requestWalletRefund() — solde wallet bloquant la suppression, ticket de remboursement manuel ouvert (aucune propriété : ni montant ni devise, PII financière) |
 | `shipment_filter_applied` | ShipmentFilterCubit (statut/période/preset, sans PII) |

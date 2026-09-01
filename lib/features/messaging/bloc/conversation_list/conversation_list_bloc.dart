@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/block_events_service.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_event.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_state.dart';
 import 'package:dony/features/messaging/data/conversation_repository.dart';
@@ -16,6 +17,7 @@ class ConversationListBloc
 
   StreamSubscription<Map<String, int>>? _unreadSub;
   StreamSubscription<User?>? _authSub;
+  StreamSubscription<BlockChange>? _blockSub;
   List<ConversationModel>? _loaded;
   List<ConversationModel> _archived = [];
 
@@ -23,8 +25,13 @@ class ConversationListBloc
   ConversationFilter _currentFilter = ConversationFilter.all;
   String _currentSearchQuery = '';
 
-  ConversationListBloc(this._repository, this._firestoreRepo)
-    : super(const ConversationListInitial()) {
+  /// [blockEvents] reste nullable pour les tests unitaires qui n'ont pas besoin
+  /// des blocages ; la DI en fournit toujours une instance.
+  ConversationListBloc(
+    this._repository,
+    this._firestoreRepo, {
+    BlockEventsService? blockEvents,
+  }) : super(const ConversationListInitial()) {
     on<ConversationsLoadRequested>(_onLoad);
     on<ConversationsUnreadUpdated>(_onUnreadUpdated);
     on<ConversationDeleteRequested>(_onDelete);
@@ -46,6 +53,15 @@ class ConversationListBloc
     } catch (_) {
       // Firebase not available (e.g. in tests) — skip auth-state subscription
     }
+
+    // Un blocage retire les conversations du bloqué côté serveur, un déblocage
+    // les rend à nouveau visibles : dans les deux sens la liste en mémoire est
+    // périmée, on la redemande.
+    _blockSub = blockEvents?.changes.listen((_) {
+      if (!isClosed) {
+        add(const ConversationsLoadRequested());
+      }
+    });
   }
 
   Future<void> _onLoad(
@@ -249,6 +265,7 @@ class ConversationListBloc
   Future<void> close() {
     _unreadSub?.cancel();
     _authSub?.cancel();
+    _blockSub?.cancel();
     return super.close();
   }
 }

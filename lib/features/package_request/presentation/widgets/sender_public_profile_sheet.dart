@@ -1,7 +1,11 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/matching/presentation/widgets/block_user_action.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 void showSenderPublicProfileSheet(
   BuildContext context,
@@ -19,10 +23,27 @@ class _SenderPublicProfileContent extends StatelessWidget {
 
   final SenderPublicProfile sender;
 
+  /// Identifiant du compte connecté, ou `null` si personne n'est connecté ou si
+  /// l'`AuthBloc` n'est pas dans l'arbre.
+  String? _currentUserId(BuildContext context) {
+    try {
+      // currentUserId couvre AuthAuthenticated ET AuthProfileUpdated : tester
+      // le seul AuthAuthenticated raterait l'état émis après une maj de profil.
+      return context.read<AuthBloc>().state.currentUserId;
+    } catch (_) {
+      return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+
+    // `SenderPublicProfile.guest` ne porte pas d'identifiant : sans cible, pas
+    // de blocage possible. Et on ne se bloque pas soi-même.
+    final canBlock =
+        sender.id.isNotEmpty && sender.id != _currentUserId(context);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(
@@ -33,6 +54,19 @@ class _SenderPublicProfileContent extends StatelessWidget {
       ),
       child: Column(
         children: [
+          if (canBlock)
+            Align(
+              alignment: Alignment.centerRight,
+              child: IconButton(
+                tooltip: 'Plus d\'options',
+                icon: DonyIcon('ellipsis', color: cs.onSurfaceVariant),
+                onPressed: () => showBlockMenu(
+                  context,
+                  userId: sender.id,
+                  displayName: sender.displayName,
+                ),
+              ),
+            ),
           DonyAvatar(
             name: sender.displayName,
             imageUrl: sender.avatarUrl,
