@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/external_url_launcher.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -7,6 +8,9 @@ import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
+import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
+import 'package:dony/features/favorites/data/repositories/favorite_repository.dart';
+import 'package:dony/features/favorites/presentation/widgets/favorite_heart_button.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/bloc/kyc_event.dart';
 import 'package:dony/features/kyc/bloc/kyc_state.dart';
@@ -55,6 +59,8 @@ class _MockRecipientBloc extends MockBloc<RecipientEvent, RecipientState>
 
 class _MockExternalUrlLauncher extends Mock implements ExternalUrlLauncher {}
 
+class _MockFavoriteRepository extends Mock implements FavoriteRepository {}
+
 class _FakeUri extends Fake implements Uri {}
 
 class _FakeContentCategoryRepository implements IContentCategoryRepository {
@@ -78,6 +84,7 @@ AnnouncementModel _buildAnnouncement({
   String displayName = 'Ibrahima Diallo',
   DateTime? handoverDeadline,
   bool acceptsUnverified = false,
+  bool isProAccount = false,
   String currency = 'EUR',
   bool negotiable = false,
   String pricingMode = 'PER_KG',
@@ -119,6 +126,7 @@ AnnouncementModel _buildAnnouncement({
       totalTrips: totalTrips,
       kycVerified: kycVerified,
       acceptsUnverified: acceptsUnverified,
+      isProAccount: isProAccount,
     ),
     createdAt: now,
     updatedAt: now,
@@ -135,6 +143,7 @@ Widget _harness({
   required AnnouncementModel announcement,
   AuthState? authState,
   BidState? bidState,
+  FavoriteIdsCubit? favorites,
 }) {
   final authBloc = _MockAuthBloc();
   when(
@@ -198,6 +207,9 @@ Widget _harness({
     providers: [
       BlocProvider<AuthBloc>.value(value: authBloc),
       BlocProvider<BidBloc>.value(value: bidBloc),
+      // Optionnel : la feuille se passe du cœur quand le cubit est absent de
+      // l'arbre — c'est le cas de plusieurs points d'entrée réels.
+      if (favorites != null) BlocProvider<FavoriteIdsCubit>.value(value: favorites),
     ],
     child: MaterialApp.router(
       routerConfig: router,
@@ -930,6 +942,146 @@ void main() {
 
       expect(find.text('Article 3'), findsOneWidget);
       expect(find.textContaining('Voir tous les tarifs'), findsNothing);
+    });
+  });
+
+  // ─── Reports de l'écran « Détail annonce » supprimé ────────────────────────
+  //
+  // Ces comportements n'existaient que sur l'écran plein, remplacé par cette
+  // feuille. Ils sont testés ici pour que la suppression n'emporte pas leur
+  // couverture avec elle.
+
+  group('avertissement paiement en espèces', () {
+    testWidgets('trajet en espèces uniquement → avertissement de séquestre', (
+      tester,
+    ) async {
+      final a = _buildAnnouncement(acceptedPaymentMethods: {BidPaymentMethod.cash});
+      await tester.pumpWidget(_harness(announcement: a));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      // Le message est un TextSpan composé : sans findRichText, le finder ne
+      // regarde que les widgets Text simples et ne voit rien.
+      expect(
+        find.textContaining('Trajet en espèces uniquement.', findRichText: true),
+        findsOneWidget,
+      );
+      expect(
+        find.textContaining(
+          'Yadony ne séquestre pas votre argent et ne peut pas '
+          'le rembourser automatiquement en cas de litige.',
+          findRichText: true,
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('carte acceptée → aucun avertissement', (tester) async {
+      final a = _buildAnnouncement(
+        acceptedPaymentMethods: {BidPaymentMethod.stripe, BidPaymentMethod.cash},
+      );
+      await tester.pumpWidget(_harness(announcement: a));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      // Le séquestre s'applique dès qu'un paiement par carte est possible.
+      expect(
+        find.textContaining('Trajet en espèces uniquement.', findRichText: true),
+        findsNothing,
+      );
+    });
+  });
+
+  group('marqueur PRO du voyageur', () {
+    testWidgets('compte PRO → avatar marqué', (tester) async {
+      await tester.pumpWidget(
+        _harness(announcement: _buildAnnouncement(isProAccount: true)),
+      );
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      final avatar = tester.widget<DonyAvatar>(
+        find.byType(DonyAvatar).first,
+      );
+      expect(avatar.pro, isTrue);
+    });
+
+    testWidgets('compte ordinaire → avatar non marqué', (tester) async {
+      await tester.pumpWidget(
+        _harness(announcement: _buildAnnouncement()),
+      );
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      final avatar = tester.widget<DonyAvatar>(
+        find.byType(DonyAvatar).first,
+      );
+      expect(avatar.pro, isFalse);
+    });
+  });
+
+  group('cœur des favoris', () {
+    late FavoriteIdsCubit cubit;
+    late _MockFavoriteRepository repo;
+
+    setUp(() {
+      repo = _MockFavoriteRepository();
+      cubit = FavoriteIdsCubit(repo);
+    });
+    tearDown(() => cubit.close());
+
+    Future<void> ouvrir(WidgetTester tester, AnnouncementModel a) async {
+      await tester.pumpWidget(_harness(announcement: a, favorites: cubit));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('ajout → message de confirmation', (tester) async {
+      final a = _buildAnnouncement();
+      when(() => repo.add('trip', a.id)).thenAnswer((_) async {});
+
+      await ouvrir(tester, a);
+      await tester.tap(find.byType(FavoriteHeartButton));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text('Trajet ajouté aux favoris'), findsOneWidget);
+    });
+
+    testWidgets('retrait → message de confirmation', (tester) async {
+      final a = _buildAnnouncement();
+      cubit.emitSeed(trips: {a.id}, requests: {});
+      when(() => repo.remove('trip', a.id)).thenAnswer((_) async {});
+
+      await ouvrir(tester, a);
+      await tester.tap(find.byType(FavoriteHeartButton));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text('Trajet retiré des favoris'), findsOneWidget);
+    });
+
+    testWidgets('échec réseau → message d\'erreur', (tester) async {
+      final a = _buildAnnouncement();
+      when(() => repo.add('trip', a.id)).thenThrow(Exception('réseau'));
+
+      await ouvrir(tester, a);
+      await tester.tap(find.byType(FavoriteHeartButton));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text('Impossible de modifier les favoris'), findsOneWidget);
+    });
+
+    testWidgets('sans cubit dans l\'arbre, aucun cœur et aucune erreur', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_harness(announcement: _buildAnnouncement()));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(FavoriteHeartButton), findsNothing);
+      expect(find.text('Détail du trajet'), findsOneWidget);
     });
   });
 }
