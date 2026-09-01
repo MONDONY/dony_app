@@ -48,6 +48,9 @@ class HiveService {
   // Devise active, telle que renvoyée par le serveur (dérivée du pays) : une
   // des 7 devises de SupportedCurrency, jamais devinée côté client.
   static const String kCurrencyCode = 'currency_code';
+  // Devise d'affichage (presentment, lot 8) : 'AUTO' = suivre la devise active,
+  // sinon une des 7 devises. Purement visuelle, jamais verrouillee par le solde.
+  static const String kDisplayCurrencyCode = 'display_currency_code';
   static const String kCountryCode =
       'country_code'; // ISO 3166-1 alpha-2, ou absent
   static const String kTravelerCountryUnsupported =
