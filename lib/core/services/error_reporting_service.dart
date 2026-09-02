@@ -35,13 +35,16 @@ class ErrorReportingService {
 
   final ErrorReportingSink _sink;
 
-  static const _expectedStatusCodes = {401, 403, 404, 409, 422};
+  // 429 : réponse normale du rate-limiting nginx (5 req/min sur /auth et
+  // /kyc) — un poll qui tombe dessus n'est pas un bug à remonter.
+  static const _expectedStatusCodes = {401, 403, 404, 409, 422, 429};
   static const _expectedCodes = {
     'UNAUTHORIZED',
     'FORBIDDEN',
     'NOT_FOUND',
     'CONFLICT',
     'CANCELLED',
+    'RATE_LIMITED',
   };
 
   Future<void> report(

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -97,6 +98,8 @@ class _KycStatusContent extends StatefulWidget {
 
 class _KycStatusContentState extends State<_KycStatusContent> {
   Timer? _pollingTimer;
+  // Période courante du poll : 30 s nominal, doublée à chaque 429 (max 2 min).
+  Duration _pollInterval = const Duration(seconds: 30);
   Timer? _autoNavTimer; // 1.5s delay before auto-navigating on VERIFIED
   Timer? _timeoutTimer; // 5min hard timeout on PENDING
   bool _timedOut = false;
@@ -124,7 +127,7 @@ class _KycStatusContentState extends State<_KycStatusContent> {
 
   void _startPolling() {
     _pollingTimer?.cancel();
-    _pollingTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+    _pollingTimer = Timer.periodic(_pollInterval, (_) {
       if (mounted) _loadStatus();
     });
   }
@@ -214,7 +217,18 @@ class _KycStatusContentState extends State<_KycStatusContent> {
           Navigator.of(context, rootNavigator: true).pop(state.stripeUrl);
           return;
         }
+        if (state is KycError && state.error is RateLimitException) {
+          // Nginx bride /kyc à 5 req/min : repartir à 30 s re-déclencherait
+          // le 429 en boucle. On espace le poll (x2, plafonné à 2 min) et
+          // la période retombe à 30 s au premier statut chargé.
+          _pollInterval = Duration(
+            seconds: (_pollInterval.inSeconds * 2).clamp(30, 120),
+          );
+          if (_pollingTimer != null && !_timedOut) _startPolling();
+          return;
+        }
         if (state is! KycStatusLoaded) return;
+        _pollInterval = const Duration(seconds: 30);
         if (state.kycStatus == 'VERIFIED') {
           _stopPolling();
           // Cancellable timer: auto-close after a short visual delay.
@@ -526,9 +540,12 @@ class _PollingIndicator extends StatelessWidget {
           child: CircularProgressIndicator(strokeWidth: 2, color: cs.warning),
         ),
         const SizedBox(width: DonySpacing.sm),
-        Text(
-          'Vérification automatique toutes les 30s',
-          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+        Flexible(
+          child: Text(
+            'Vérification automatique en cours',
+            textAlign: TextAlign.center,
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+          ),
         ),
       ],
     );

@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -354,4 +357,58 @@ void main() {
       expect(find.text('Home route'), findsOneWidget);
     },
   );
+
+  // Régression : nginx bride /kyc à 5 req/min. Quand le poll de statut tombe
+  // sur un 429 (KycError RateLimitException), repartir tous les 30 s
+  // re-déclenche le 429 en boucle. Le poll doit s'espacer (60 s après le
+  // premier 429) et retomber à 30 s dès qu'un statut se charge.
+  testWidgets('le poll s\'espace après un 429 puis retombe à 30 s', (
+    tester,
+  ) async {
+    final states = StreamController<KycState>.broadcast();
+    addTearDown(states.close);
+    const pending = KycStatusLoaded(
+      kycStatus: 'PENDING',
+      verificationStatus: 'PENDING',
+    );
+    when(() => kycBloc.state).thenReturn(pending);
+    when(() => kycBloc.stream).thenAnswer((_) => states.stream);
+
+    await _wrap(tester, kycBloc: kycBloc, authBloc: authBloc);
+    // Chargement initial au montage.
+    verify(() => kycBloc.add(const KycStatusRefreshed())).called(1);
+
+    // PENDING → le poll démarre à 30 s.
+    states.add(pending);
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 30));
+    verify(() => kycBloc.add(const KycStatusRefreshed())).called(1);
+
+    // 429 → l'intervalle double (60 s) : rien à 30 s, un tick à 60 s.
+    states.add(const KycError(RateLimitException()));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 30));
+    verifyNever(() => kycBloc.add(const KycStatusRefreshed()));
+    await tester.pump(const Duration(seconds: 30));
+    verify(() => kycBloc.add(const KycStatusRefreshed())).called(1);
+
+    // Statut chargé → retour au rythme nominal de 30 s.
+    states.add(pending);
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 30));
+    verify(() => kycBloc.add(const KycStatusRefreshed())).called(1);
+
+    // Terminer sur VERIFIED comme les autres tests : coupe le poll et le
+    // timeout, l'auto-navigation démonte l'écran et ses animations.
+    states.add(
+      const KycStatusLoaded(
+        kycStatus: 'VERIFIED',
+        verificationStatus: 'VERIFIED',
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 1600));
+    await tester.pumpAndSettle();
+    expect(find.text('Home route'), findsOneWidget);
+  });
 }

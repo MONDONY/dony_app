@@ -92,7 +92,18 @@ Future<void> _bootstrap() async {
     }
   }
 
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  // L'auto-init native Android (plugin google-services) peut avoir déjà créé
+  // l'app [DEFAULT] avant ce point ; sur certains appareils (vu sur
+  // Xiaomi/Unisoc, Android 15) re-passer les options lève alors
+  // [core/duplicate-app] et plantait le démarrage. L'app existante est la
+  // bonne : on ignore uniquement ce code, tout autre échec reste fatal.
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } on FirebaseException catch (e) {
+    if (e.code != 'duplicate-app') rethrow;
+  }
 
   // Stripe doit être initialisé avant runApp
   Stripe.publishableKey = _stripePublishableKey;
