@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/block_events_service.dart';
 import 'package:dony/features/subscriptions/bloc/subscriptions_bloc.dart';
 import 'package:dony/features/subscriptions/bloc/subscriptions_event.dart';
 import 'package:dony/features/subscriptions/bloc/subscriptions_state.dart';
@@ -289,4 +290,72 @@ void main() {
       ),
     ),
   );
+
+  // ─── Réaction aux blocages ──────────────────────────────────────────────────
+  // Le serveur masque un voyageur bloqué dans « Mes abonnements » ; sans ce
+  // rechargement, la liste en mémoire continuait de l'afficher.
+  group('SubscriptionsBloc — blocages', () {
+    late BlockEventsService blockEvents;
+
+    setUp(() => blockEvents = BlockEventsService());
+    tearDown(() => blockEvents.dispose());
+
+    blocTest<SubscriptionsBloc, SubscriptionsState>(
+      'un blocage recharge la liste',
+      build: () {
+        when(() => repo.getMySubscriptions()).thenAnswer((_) async => []);
+        return SubscriptionsBloc(repo, analytics, blockEvents: blockEvents);
+      },
+      seed: () => SubscriptionsState(
+        status: SubscriptionsStatus.success,
+        items: [_item('t1')],
+      ),
+      act: (b) async {
+        blockEvents.notifyBlocked('t1');
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+      },
+      expect: () => [
+        isA<SubscriptionsState>().having(
+          (s) => s.status,
+          'status',
+          SubscriptionsStatus.loading,
+        ),
+        isA<SubscriptionsState>()
+            .having((s) => s.status, 'status', SubscriptionsStatus.success)
+            .having((s) => s.items, 'items', isEmpty),
+      ],
+    );
+
+    blocTest<SubscriptionsBloc, SubscriptionsState>(
+      'un déblocage recharge aussi : l\'abonnement masqué réapparaît',
+      build: () {
+        when(
+          () => repo.getMySubscriptions(),
+        ).thenAnswer((_) async => [_item('t1')]);
+        return SubscriptionsBloc(repo, analytics, blockEvents: blockEvents);
+      },
+      act: (b) async {
+        blockEvents.notifyUnblocked('t1');
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+      },
+      expect: () => [
+        isA<SubscriptionsState>().having(
+          (s) => s.status,
+          'status',
+          SubscriptionsStatus.loading,
+        ),
+        isA<SubscriptionsState>().having((s) => s.items.length, 'len', 1),
+      ],
+    );
+
+    test('aucun rechargement après la fermeture du bloc', () async {
+      final bloc = SubscriptionsBloc(repo, analytics, blockEvents: blockEvents);
+      await bloc.close();
+
+      blockEvents.notifyBlocked('t1');
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      verifyNever(() => repo.getMySubscriptions());
+    });
+  });
 }
