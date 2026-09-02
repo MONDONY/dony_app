@@ -326,7 +326,23 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
                       ),
                       const SizedBox(height: DonySpacing.md),
                       _TileRow(
+                        // La grille de prix vit ici, aux côtés des modèles de
+                        // trajet : ce sont les deux réglages qu'un voyageur
+                        // prépare avant de publier. Elle était rangée sous
+                        // « ARGENT » dans le profil, entre le solde et les
+                        // virements, alors qu'elle ne parle pas d'argent reçu
+                        // mais de tarifs proposés.
                         left: _OtherTile(
+                          iconName: 'layout-grid',
+                          label: 'Ma grille de prix',
+                          subtitle: 'Tarifs par article pour vos trajets',
+                          color: cs.primary,
+                          onTap: () => _open(
+                            AnalyticsEvents.activitesHubPriceGridOpened,
+                            '/profile/price-grid',
+                          ),
+                        ),
+                        right: _OtherTile(
                           iconName: 'map-pin',
                           label: 'Mes adresses',
                           subtitle: 'Vos lieux d\'envoi enregistrés',
@@ -336,7 +352,10 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
                             '/profile/addresses',
                           ),
                         ),
-                        right: _OtherTile(
+                      ),
+                      const SizedBox(height: DonySpacing.md),
+                      _TileRow(
+                        left: _OtherTile(
                           iconName: 'contact',
                           label: 'Mes destinataires',
                           subtitle: 'Les personnes à qui vous envoyez',
@@ -346,10 +365,7 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
                             '/profile/recipients',
                           ),
                         ),
-                      ),
-                      const SizedBox(height: DonySpacing.md),
-                      _TileRow(
-                        left: _OtherTile(
+                        right: _OtherTile(
                           iconName: 'chart-line',
                           label: 'Historique',
                           subtitle: 'Tout ce qui est terminé',
@@ -359,7 +375,10 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
                             '/profile/shipments/history',
                           ),
                         ),
-                        right: _OtherTile(
+                      ),
+                      const SizedBox(height: DonySpacing.md),
+                      _TileRow(
+                        left: _OtherTile(
                           iconName: 'circle-help',
                           label: 'Aide & support',
                           subtitle: 'Une question, un souci ?',
@@ -646,10 +665,13 @@ class _ActivityGrid extends StatelessWidget {
 /// `IntrinsicHeight` est nécessaire : dans un scroll, `stretch` seul réclame
 /// une hauteur infinie et fait échouer le layout.
 class _TileRow extends StatelessWidget {
-  const _TileRow({required this.left, required this.right});
+  const _TileRow({required this.left, this.right});
 
   final Widget left;
-  final Widget right;
+
+  /// Rangée impaire : la dernière tuile reste sur sa demi-largeur plutôt que
+  /// de s'étirer, sinon elle se lit comme une section à part.
+  final Widget? right;
 
   @override
   Widget build(BuildContext context) {
@@ -659,7 +681,7 @@ class _TileRow extends StatelessWidget {
         children: [
           Expanded(child: left),
           const SizedBox(width: DonySpacing.md),
-          Expanded(child: right),
+          Expanded(child: right ?? const SizedBox.shrink()),
         ],
       ),
     );
