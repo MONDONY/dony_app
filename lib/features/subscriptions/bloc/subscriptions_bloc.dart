@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/block_events_service.dart';
 import 'package:dony/features/subscriptions/bloc/subscriptions_event.dart';
 import 'package:dony/features/subscriptions/bloc/subscriptions_state.dart';
 import 'package:dony/features/subscriptions/data/subscriptions_repository.dart';
@@ -10,13 +11,33 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 class SubscriptionsBloc extends Bloc<SubscriptionsEvent, SubscriptionsState> {
   final SubscriptionsRepository _repository;
   final AnalyticsService _analytics;
+  StreamSubscription<BlockChange>? _blockSub;
 
-  SubscriptionsBloc(this._repository, this._analytics)
-    : super(const SubscriptionsState()) {
+  /// [blockEvents] reste nullable pour les tests unitaires qui n'ont pas besoin
+  /// des blocages ; la DI en fournit toujours une instance.
+  SubscriptionsBloc(
+    this._repository,
+    this._analytics, {
+    BlockEventsService? blockEvents,
+  }) : super(const SubscriptionsState()) {
     on<LoadSubscriptions>(_onLoad);
     on<UnsubscribeTraveler>(_onUnsubscribe);
     on<ToggleSubscriptionPush>(_onTogglePush);
     on<MarkAllSubscriptionsSeen>(_onMarkAllSeen);
+
+    // Le serveur masque les abonnements vers un compte bloqué et les rend au
+    // déblocage : dans les deux sens la liste en mémoire est périmée.
+    _blockSub = blockEvents?.changes.listen((_) {
+      if (!isClosed) {
+        add(const LoadSubscriptions());
+      }
+    });
+  }
+
+  @override
+  Future<void> close() {
+    _blockSub?.cancel();
+    return super.close();
   }
 
   Future<void> _onLoad(

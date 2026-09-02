@@ -845,6 +845,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => SubscriptionsBloc(
       getIt<SubscriptionsRepository>(),
       getIt<AnalyticsService>(),
+      blockEvents: getIt<BlockEventsService>(),
     ),
   );
   getIt.registerFactory<TravelerHubBloc>(
