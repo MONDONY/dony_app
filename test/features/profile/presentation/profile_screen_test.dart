@@ -180,7 +180,6 @@ Widget _buildTestHarness({
       path: '/profile/upgrade-to-pro',
       builder: (_, _) => stub('UpgradeToPro'),
     ),
-    GoRoute(path: '/profile/price-grid', builder: (_, _) => stub('PriceGrid')),
     GoRoute(
       path: '/profile/subscriptions',
       builder: (_, _) => stub('Subscriptions'),
@@ -383,6 +382,13 @@ void main() {
       await tester.pumpAndSettle();
     } else {
       await tester.pump(const Duration(seconds: 1));
+      // flutter_animate programme un Timer de durée zéro à chaque initState
+      // d'entrée. Sans ces passes finales, ceux des widgets construits au
+      // dernier build restent en attente et le test échoue au dispose, pour
+      // une raison qui n'a rien à voir avec ce qu'il vérifie.
+      for (var i = 0; i < 6; i++) {
+        await tester.pump(const Duration(milliseconds: 400));
+      }
     }
   }
 
@@ -452,7 +458,6 @@ void main() {
         for (final label in [
           'Recevoir mes paiements',
           'Carte commission espèces',
-          'Ma grille de prix',
         ]) {
           await _scrollTo(tester, find.text(label));
           expect(find.text(label), findsOneWidget, reason: label);
@@ -481,8 +486,25 @@ void main() {
 
           expect(find.text('Recevoir mes paiements'), findsNothing);
           // Le reste de la section ARGENT n'est pas concerné.
-          await _scrollTo(tester, find.text('Ma grille de prix'));
-          expect(find.text('Ma grille de prix'), findsOneWidget);
+          await _scrollTo(tester, find.text('Carte commission espèces'));
+          expect(find.text('Carte commission espèces'), findsOneWidget);
+        },
+      );
+
+      testWidgets(
+        '${entry.key} : « Ma grille de prix » ne figure plus dans le profil',
+        (tester) async {
+          // L'entrée vit désormais dans les outils de l'onglet Activités.
+          // Deux portes vers le même écran, c'est deux endroits à tenir à
+          // jour et un utilisateur qui se demande si elles diffèrent.
+          await pumpWith(tester, entry.value);
+
+          // ProfileListSection est un Column : dès que « Carte commission
+          // espèces » est à l'écran, toutes les tuiles de la section ARGENT
+          // sont construites. L'absence se lit donc ici, sans balayer la page.
+          await _scrollTo(tester, find.text('Carte commission espèces'));
+
+          expect(find.text('Ma grille de prix'), findsNothing);
         },
       );
 
@@ -566,7 +588,6 @@ void main() {
       ('Contacter le support', 'Contact'),
       ('Mes litiges', 'Disputes'),
       ('Mes abonnements', 'Subscriptions'),
-      ('Ma grille de prix', 'PriceGrid'),
       ('Mon profil public', 'PublicProfile'),
       ('Mes avis reçus', 'Reviews'),
       ('Parrainages', 'Referral'),
@@ -848,6 +869,10 @@ void main() {
         ),
       );
       await tester.pump(const Duration(milliseconds: 600));
+      // Voir pumpWith : purge les Timers de flutter_animate.
+      for (var i = 0; i < 6; i++) {
+        await tester.pump(const Duration(milliseconds: 400));
+      }
 
       expect(find.textContaining('Nouveau'), findsWidgets);
     });

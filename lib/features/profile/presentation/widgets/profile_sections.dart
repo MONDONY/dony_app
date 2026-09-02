@@ -155,21 +155,17 @@ class ProfileMoneySection extends StatelessWidget {
                         ? () => context.push('/payments/onboarding')
                         : null,
                   ),
+                // « Ma grille de prix » a quitté cette section pour les
+                // outils de l'onglet Activités : elle fixe des tarifs, elle
+                // n'encaisse rien. Une seule entrée, ici ou là-bas, jamais
+                // les deux.
                 DonyListTile(
                   iconAsset: 'credit-card',
                   iconColor: DonyColors.purple,
                   iconBgColor: DonyColors.violetLight,
                   label: 'Carte commission espèces',
-                  onTap: () => context.push('/payments/commission-method'),
-                ),
-                DonyListTile(
-                  iconAsset: 'layout-grid',
-                  iconColor: cs.primary,
-                  iconBgColor: cs.primaryContainer,
-                  label: 'Ma grille de prix',
-                  subtitle: 'Tarifs par article pour vos trajets',
                   showDivider: false,
-                  onTap: () => context.push('/profile/price-grid'),
+                  onTap: () => context.push('/payments/commission-method'),
                 ),
               ],
             ),

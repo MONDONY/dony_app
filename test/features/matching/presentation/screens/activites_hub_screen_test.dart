@@ -222,6 +222,7 @@ Future<void> _pump(
       route('/trip-templates', 'Modèles'),
       route('/profile/addresses', 'Adresses'),
       route('/profile/recipients', 'Destinataires'),
+      route('/profile/price-grid', 'Grille de prix'),
       GoRoute(
         path: '/profile/help/tutorial/:tutorialId',
         builder: (_, state) => Scaffold(
@@ -429,6 +430,16 @@ void main() {
         tester,
         'Mes destinataires',
         '/profile/recipients',
+      );
+    });
+
+    // L'entrée a quitté la section ARGENT du profil : si elle n'ouvre pas
+    // depuis les outils, elle n'ouvre plus de nulle part.
+    testWidgets('Ma grille de prix → grille de prix', (tester) async {
+      await expectNavigation(
+        tester,
+        'Ma grille de prix',
+        '/profile/price-grid',
       );
     });
   });
