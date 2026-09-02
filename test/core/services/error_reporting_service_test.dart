@@ -33,6 +33,24 @@ void main() {
     expect(sink.error, isNull);
   });
 
+  test('ignores rate limiting (RateLimitException and status 429)', () async {
+    final sink = _RecordingSink();
+    final reporter = ErrorReportingService(sink);
+
+    await reporter.report(
+      const RateLimitException(),
+      operation: 'kyc.refresh_status',
+    );
+    expect(sink.error, isNull);
+
+    await reporter.report(
+      StateError('throttled'),
+      operation: 'kyc.refresh_status',
+      statusCode: 429,
+    );
+    expect(sink.error, isNull);
+  });
+
   test('captures critical errors with safe context only', () async {
     final sink = _RecordingSink();
     final reporter = ErrorReportingService(sink);
