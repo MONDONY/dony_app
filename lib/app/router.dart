@@ -90,7 +90,9 @@ import 'package:dony/features/messaging/data/models/conversation_model.dart';
 import 'package:dony/features/messaging/presentation/archived_conversations_screen.dart';
 import 'package:dony/features/messaging/presentation/chat_screen.dart';
 import 'package:dony/features/messaging/presentation/conversation_loader_screen.dart';
+import 'package:dony/features/notifications/presentation/announcements_inbox_screen.dart';
 import 'package:dony/features/notifications/presentation/inbox_screen.dart';
+import 'package:dony/features/notifications/presentation/notification_detail_screen.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
@@ -861,6 +863,19 @@ final appRouter = GoRouter(
       path: '/stripe/onboarding/refresh',
       redirect: (context, state) => '/connect/onboarding/intro',
     ),
+    // ── Boîte « Annonces Yadony » (hors shell) ───────────────────────────
+    GoRoute(
+      path: AnnouncementsInboxScreen.route,
+      builder: (_, _) => const AnnouncementsInboxScreen(),
+    ),
+    // Détail générique d'une notification (annonces plateforme, texte complet).
+    // Déclaré après « annonces » : le segment littéral doit gagner sur `:id`.
+    GoRoute(
+      path: '/notifications/:id',
+      builder: (_, state) =>
+          NotificationDetailScreen(id: state.pathParameters['id']!),
+    ),
+
     // ── Alertes corridor (hors shell) ────────────────────────────────────
     GoRoute(
       path: '/corridor-alerts',

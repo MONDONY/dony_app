@@ -1,3 +1,5 @@
+import 'package:dony/features/notifications/data/announcements_summary.dart';
+import 'package:dony/features/notifications/data/notification_detail.dart';
 import 'package:dony/features/notifications/data/notification_model.dart';
 import 'package:dony/features/notifications/data/notification_remote_datasource.dart';
 import 'package:dony/features/notifications/data/notification_repository.dart';
@@ -46,6 +48,54 @@ void main() {
       await repository.getNotifications(page: 2);
 
       verify(() => datasource.fetchNotifications(page: 2)).called(1);
+    });
+
+    test('getFeed delegates to datasource with the page', () async {
+      when(
+        () => datasource.fetchFeed(page: 1),
+      ).thenAnswer((_) async => [notif]);
+
+      final result = await repository.getFeed(page: 1);
+
+      expect(result, [notif]);
+      verify(() => datasource.fetchFeed(page: 1)).called(1);
+    });
+
+    test('markGroupRead delegates to datasource', () async {
+      when(
+        () => datasource.markGroupRead('bid:announcement:a'),
+      ).thenAnswer((_) async {});
+
+      await repository.markGroupRead('bid:announcement:a');
+
+      verify(() => datasource.markGroupRead('bid:announcement:a')).called(1);
+    });
+
+    test('getAnnouncements and getAnnouncementsSummary delegate', () async {
+      when(
+        () => datasource.fetchAnnouncements(),
+      ).thenAnswer((_) async => [notif]);
+      when(() => datasource.fetchAnnouncementsSummary()).thenAnswer(
+        (_) async => const AnnouncementsSummary(unreadCount: 1, latestId: 'a'),
+      );
+
+      expect(await repository.getAnnouncements(), [notif]);
+      expect((await repository.getAnnouncementsSummary()).unreadCount, 1);
+    });
+
+    test('getDetail delegates to datasource', () async {
+      final detail = NotificationDetail(
+        id: 'n1',
+        type: 'ADMIN_BROADCAST',
+        category: 'annonce',
+        title: 't',
+        body: 'b',
+        read: false,
+        createdAt: DateTime(2026, 9, 3),
+      );
+      when(() => datasource.fetchDetail('n1')).thenAnswer((_) async => detail);
+
+      expect(await repository.getDetail('n1'), detail);
     });
 
     test('getUnreadCount delegates to datasource', () async {
