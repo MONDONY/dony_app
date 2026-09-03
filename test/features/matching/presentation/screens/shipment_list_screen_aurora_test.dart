@@ -198,28 +198,7 @@ void main() {
     expect(find.byType(ShipmentListScreen), findsOneWidget);
   });
 
-  // ── Header clair ──────────────────────────────────────────────────────────
-
-  testWidgets('header clair : plus de fond navy #0A2540, titre visible', (
-    tester,
-  ) async {
-    await _pump(
-      tester,
-      bidBloc: bidBloc,
-      paymentBloc: paymentBloc,
-      authBloc: authBloc,
-    );
-    final containers = tester.widgetList<Container>(find.byType(Container));
-    final hasNavyHeader = containers.any(
-      (c) =>
-          c.color == const Color(0xFF0A2540) ||
-          (c.decoration is BoxDecoration &&
-              (c.decoration as BoxDecoration).color == const Color(0xFF0A2540)),
-    );
-    // Le header s'aligne désormais sur les autres écrans (fond clair).
-    expect(hasNavyHeader, isFalse);
-    expect(find.text('Colis en route'), findsOneWidget);
-  });
+  // ── Fond ──────────────────────────────────────────────────────────────────
 
   testWidgets('fond Scaffold theme-aware (pas transparent)', (tester) async {
     await _pump(
@@ -318,18 +297,6 @@ void main() {
       authBloc: authBloc,
     );
     expect(find.textContaining('Aucun envoi'), findsOneWidget);
-  });
-
-  // ── Titre ─────────────────────────────────────────────────────────────────
-
-  testWidgets('titre "Colis en route" visible dans le header', (tester) async {
-    await _pump(
-      tester,
-      bidBloc: bidBloc,
-      paymentBloc: paymentBloc,
-      authBloc: authBloc,
-    );
-    expect(find.text('Colis en route'), findsOneWidget);
   });
 
   // ── Stepper ───────────────────────────────────────────────────────────────
@@ -617,31 +584,6 @@ void main() {
     expect(find.text('TERMINÉ'), findsOneWidget);
   });
 
-  // ── Pill « Envoyer » du header ────────────────────────────────────────────
-
-  testWidgets('header : pill « Envoyer » (nouvelle demande) visible', (
-    tester,
-  ) async {
-    final bid = _makeBid(status: 'ACCEPTED');
-    final ctrl = StreamController<BidState>.broadcast();
-    addTearDown(ctrl.close);
-    whenListen(bidBloc, ctrl.stream, initialState: BidInitial());
-
-    await _pump(
-      tester,
-      bidBloc: bidBloc,
-      paymentBloc: paymentBloc,
-      authBloc: authBloc,
-    );
-    ctrl.add(BidListLoaded([bid]));
-    await tester.pump();
-    await tester.pump(_kSettle);
-
-    // Le compteur d'antan est remplacé par une pill d'action.
-    expect(find.byKey(const Key('shipment-new-request')), findsOneWidget);
-    expect(find.text('Envoyer'), findsOneWidget);
-  });
-
   // ── Rafraîchissement en cours ─────────────────────────────────────────────
 
   testWidgets('affiche LinearProgressIndicator quand isRefreshing=true', (
@@ -689,9 +631,9 @@ void main() {
     expect(find.text('Envoi supprimé'), findsOneWidget);
   });
 
-  // ── Mode embedded ─────────────────────────────────────
+  // ── Montage hors GoRouter ─────────────────────────────
 
-  testWidgets('Mode embedded : rendu sans GoRouter, filter chips visibles', (
+  testWidgets('rendu hors GoRouter : les puces de filtre restent visibles', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(800, 1400);
@@ -711,7 +653,7 @@ void main() {
             BlocProvider<PaymentBloc>.value(value: paymentBloc),
             BlocProvider<AuthBloc>.value(value: authBloc),
           ],
-          child: const Scaffold(body: ShipmentListScreen(embedded: true)),
+          child: const Scaffold(body: ShipmentListScreen()),
         ),
       ),
     );
@@ -722,33 +664,7 @@ void main() {
     expect(find.text('Livrés'), findsOneWidget);
   });
 
-  testWidgets('Mode embedded : pas de header "Colis en route" en mode embedded', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(800, 1400);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.reset);
-
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.light(),
-        home: MultiBlocProvider(
-          providers: [
-            BlocProvider<BidBloc>.value(value: bidBloc),
-            BlocProvider<PaymentBloc>.value(value: paymentBloc),
-            BlocProvider<AuthBloc>.value(value: authBloc),
-          ],
-          child: const Scaffold(body: ShipmentListScreen(embedded: true)),
-        ),
-      ),
-    );
-    await tester.pump(_kSettle);
-
-    // En mode embedded le header sombre (titre "Colis en route") n'est pas rendu.
-    expect(find.text('Colis en route'), findsNothing);
-  });
-
-  testWidgets('Mode embedded : changement de puce fonctionne', (tester) async {
+  testWidgets('changement de puce de filtre', (tester) async {
     tester.view.physicalSize = const Size(800, 1400);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
@@ -766,7 +682,7 @@ void main() {
             BlocProvider<PaymentBloc>.value(value: paymentBloc),
             BlocProvider<AuthBloc>.value(value: authBloc),
           ],
-          child: const Scaffold(body: ShipmentListScreen(embedded: true)),
+          child: const Scaffold(body: ShipmentListScreen()),
         ),
       ),
     );
@@ -1069,9 +985,9 @@ void main() {
     expect(find.text('TERMINÉ'), findsOneWidget);
   });
 
-  // ── Embedded : puces En attente et En cours ─────────────────────────────
+  // ── Puces En attente et En cours ────────────────────────────────────────
 
-  testWidgets('Mode embedded : puce "En attente" embedded fonctionne', (
+  testWidgets('puces « En attente » et « En cours »', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(800, 1400);
@@ -1091,7 +1007,7 @@ void main() {
             BlocProvider<PaymentBloc>.value(value: paymentBloc),
             BlocProvider<AuthBloc>.value(value: authBloc),
           ],
-          child: const Scaffold(body: ShipmentListScreen(embedded: true)),
+          child: const Scaffold(body: ShipmentListScreen()),
         ),
       ),
     );

@@ -23,6 +23,7 @@ import 'package:dony/features/matching/presentation/screens/activites_hub_screen
 import 'package:dony/features/matching/presentation/widgets/tool_status_badge.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
+import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/profile/bloc/help_center_bloc.dart';
 import 'package:dony/features/profile/data/datasources/help_center_remote_config_datasource.dart';
@@ -317,7 +318,7 @@ void main() {
       await _pump(tester);
 
       expect(find.text('Trajets actifs'), findsOneWidget);
-      expect(find.text('Colis en route'), findsOneWidget);
+      expect(find.text('Mes colis'), findsOneWidget);
       expect(find.text('Demandes reçues'), findsOneWidget);
       expect(find.text('Discussions de prix'), findsOneWidget);
 
@@ -331,8 +332,8 @@ void main() {
     });
 
     testWidgets(
-      'demande envoyée en négo allume la pastille de « Demandes reçues » '
-      '(même sans demande reçue)',
+      'demande publiée en négo allume la pastille de « Mes colis », '
+      'pas celle de « Demandes reçues »',
       (tester) async {
         final negoReq = PackageRequest.fromJson(const {
           'id': 'pr-1',
@@ -356,18 +357,34 @@ void main() {
             hasMore: false,
             filter: TravelerBidFilter.aTraiter,
           ),
-          // …mais une demande envoyée est en négociation.
+          // …mais une demande publiée porte une discussion non lue.
           packageRequestState: PackageRequestState(requests: [negoReq]),
+          negoState: NegotiationListState(
+            threads: [
+              NegotiationThread(
+                id: 'th-1',
+                packageRequestId: 'pr-1',
+                travelerId: 'tr-1',
+                status: NegotiationThreadStatus.open,
+                currentPriceEur: 45,
+                roundsCount: 1,
+                lastActivityAt: DateTime(2026, 6, 10),
+                createdAt: DateTime(2026, 6),
+                travelerTravelDate: DateTime(2026, 7),
+                travelerAvailableKg: 10,
+                messages: const [],
+                hasUnread: true,
+              ),
+            ],
+          ),
         );
 
-        // L'invite bascule sur la négociation en cours plutôt que « Aucune ».
-        expect(find.text('Négociation en cours'), findsOneWidget);
-        expect(find.text('Aucune pour l\'instant'), findsNothing);
+        // La tuile Demandes reçues ne parle plus que des demandes reçues :
+        // son invite reste « Aucune » et elle ne porte aucun point rouge.
+        expect(find.text('Aucune pour l\'instant'), findsOneWidget);
 
-        // Un point d'attention rouge (Container 8×8 cercle) est peint sur la
-        // tuile Demandes — même rouge que le point de l'onglet Activités.
-        final dot = find.descendant(
-          of: find.byKey(const Key('hub-tile-requests')),
+        Finder dotIn(String tileKey) => find.descendant(
+          of: find.byKey(Key(tileKey)),
           matching: find.byWidgetPredicate((w) {
             if (w is! Container) {
               return false;
@@ -378,9 +395,44 @@ void main() {
                 deco.color == DonyColors.error;
           }),
         );
-        expect(dot, findsOneWidget);
+
+        expect(dotIn('hub-tile-requests'), findsNothing);
+        // Le point d'attention est porté par la tuile qui ouvre la liste où
+        // la négociation se trouve réellement.
+        expect(dotIn('hub-tile-shipments'), findsOneWidget);
       },
     );
+
+    testWidgets('« Mes colis » agrège les envois et les demandes publiées', (
+      tester,
+    ) async {
+      final openReq = PackageRequest.fromJson(const {
+        'id': 'pr-2',
+        'senderId': 's1',
+        'departureCity': 'Lyon',
+        'arrivalCity': 'Bamako',
+        'desiredDate': '2026-08-01',
+        'dateToleranceDays': 2,
+        'weightKg': 3.0,
+        'parcelSize': 'SMALL',
+        'status': 'OPEN',
+        'createdAt': '2026-07-01T10:00:00Z',
+      });
+
+      await _pump(
+        tester,
+        packageRequestState: PackageRequestState(requests: [openReq]),
+      );
+
+      // 2 envois en cours (fixture par défaut) + 1 demande publiée.
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('hub-tile-shipments')),
+          matching: find.text('3'),
+        ),
+        findsOneWidget,
+      );
+    });
 
     testWidgets('une erreur de résumé n\'affecte que sa propre tuile', (
       tester,
@@ -392,7 +444,7 @@ void main() {
 
       await _pump(tester);
       // Les autres tuiles gardent leurs compteurs même si le résumé échoue.
-      expect(find.text('Colis en route'), findsOneWidget);
+      expect(find.text('Mes colis'), findsOneWidget);
       expect(find.text('Demandes reçues'), findsOneWidget);
     });
   });
@@ -414,8 +466,8 @@ void main() {
       await expectNavigation(tester, 'Trajets actifs', '/announcements/trips');
     });
 
-    testWidgets('Colis en route → liste des envois', (tester) async {
-      await expectNavigation(tester, 'Colis en route', '/envois');
+    testWidgets('Mes colis → liste des envois', (tester) async {
+      await expectNavigation(tester, 'Mes colis', '/envois');
     });
 
     testWidgets('Demandes reçues → écran Demandes', (tester) async {
