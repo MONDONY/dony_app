@@ -136,5 +136,90 @@ void main() {
 
       expect(tester.takeException(), isNull);
     });
+
+    testWidgets('le libellé sémantique est surchargeable', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          const DonyOnboardingGauge(
+            segments: [DonyGaugeSegment.done, DonyGaugeSegment.todo],
+            label: 'Outils',
+            semanticsLabel: 'Préparation de vos outils',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // `find.bySemanticsLabel` fait une égalité stricte (cf.
+      // flutter_test/src/finders.dart) : avec `showCounter` par défaut à
+      // `true`, le `Text` visible se fusionne dans le label du conteneur
+      // (comportement pré-existant, cf. le `startsWith` des tests
+      // ci-dessus) et la chaîne exacte ne matche plus jamais. On vérifie
+      // donc via `getSemantics` + `startsWith`, comme le fait déjà le
+      // reste de ce fichier pour la même raison.
+      final semantics = tester.getSemantics(find.byType(DonyOnboardingGauge));
+      expect(semantics.label, startsWith('Préparation de vos outils'));
+    });
+
+    testWidgets('sans surcharge, le libellé reste celui de l\'inscription', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(
+          const DonyOnboardingGauge(
+            segments: [DonyGaugeSegment.done, DonyGaugeSegment.todo],
+            label: 'Pays',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final semantics = tester.getSemantics(find.byType(DonyOnboardingGauge));
+      expect(semantics.label, startsWith('Progression de l\'inscription'));
+    });
+
+    testWidgets(
+      'showCounter: false masque le compteur mais garde la sémantique',
+      (tester) async {
+        await tester.pumpWidget(
+          _wrap(
+            const DonyOnboardingGauge(
+              segments: [
+                DonyGaugeSegment.done,
+                DonyGaugeSegment.todo,
+                DonyGaugeSegment.todo,
+              ],
+              label: 'Outils',
+              showCounter: false,
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('/ 3'), findsNothing);
+        expect(find.byType(TweenAnimationBuilder<double>), findsNWidgets(3));
+        expect(
+          find.bySemanticsLabel('Progression de l\'inscription'),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets('par défaut le compteur est affiché', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          const DonyOnboardingGauge(
+            segments: [
+              DonyGaugeSegment.done,
+              DonyGaugeSegment.todo,
+              DonyGaugeSegment.todo,
+            ],
+            label: 'Outils',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('1 / 3 · Outils'), findsOneWidget);
+    });
   });
 }

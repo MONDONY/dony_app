@@ -28,12 +28,24 @@ class DonyOnboardingGauge extends StatelessWidget {
     super.key,
     required this.segments,
     required this.label,
+    this.semanticsLabel = 'Progression de l\'inscription',
+    this.showCounter = true,
   });
 
   final List<DonyGaugeSegment> segments;
 
   /// Nom de l'étape en cours, ou du contexte quand aucune ne l'est.
   final String label;
+
+  /// Ce que la jauge mesure, lu par le lecteur d'écran. Par défaut le parcours
+  /// d'inscription, son premier usage ; la carte des outils en fournit un autre.
+  final String semanticsLabel;
+
+  /// Affiche la ligne de compteur texte (« n / total · label ») au-dessus des
+  /// segments. À `false` quand un autre élément de l'écran affiche déjà ce
+  /// compteur (ex : titre de la carte de complétion des outils) — la
+  /// `Semantics` reste inchangée dans les deux cas.
+  final bool showCounter;
 
   /// Position affichée : segments pleins + l'étape en cours. Sur le 4e écran
   /// d'un parcours de 5, le compteur dit « 4 / 5 » — le numéro de l'étape où
@@ -60,26 +72,28 @@ class DonyOnboardingGauge extends StatelessWidget {
 
     return Semantics(
       container: true,
-      label: 'Progression de l\'inscription',
+      label: semanticsLabel,
       value: _semanticsValue(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            '$_reachedCount / $total · $label',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: tt.labelSmall?.copyWith(
-              color: cs.primary,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.3,
-              // Chiffres tabulaires : le compteur ne doit pas se décaler
-              // quand il passe de 1 à 4 (cf. dony_price_tag.dart).
-              fontFeatures: const [FontFeature.tabularFigures()],
+          if (showCounter) ...[
+            Text(
+              '$_reachedCount / $total · $label',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: tt.labelSmall?.copyWith(
+                color: cs.primary,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.3,
+                // Chiffres tabulaires : le compteur ne doit pas se décaler
+                // quand il passe de 1 à 4 (cf. dony_price_tag.dart).
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
             ),
-          ),
-          const SizedBox(height: DonySpacing.xs),
+            const SizedBox(height: DonySpacing.xs),
+          ],
           Row(
             children: [
               for (var i = 0; i < total; i++)
