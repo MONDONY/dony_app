@@ -2,6 +2,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
@@ -138,8 +139,13 @@ Future<void> _pump(
   ToolsCompletionModel? toolsCompletion,
   bool toolsCompletionFails = false,
   String helpConfigJson = _emptyHelpConfigJson,
+
+  /// Largeur logique de la vue (devicePixelRatio 1). Par défaut une vue large
+  /// où rien ne serre ; passer 360 px pour éprouver le plus petit téléphone
+  /// visé, là où les tuiles-outils tombent à 154 px de large.
+  Size? physicalSize,
 }) async {
-  tester.view.physicalSize = const Size(900, 1800);
+  tester.view.physicalSize = physicalSize ?? const Size(900, 1800);
   tester.view.devicePixelRatio = 1.0;
   addTearDown(tester.view.resetPhysicalSize);
 
@@ -736,6 +742,83 @@ void main() {
       expect(find.text('À configurer'), findsNothing);
     });
 
+    testWidgets('à 360 px la pastille prend toute la largeur de la tuile', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        physicalSize: const Size(360, 1800),
+        // Les compteurs qui donnent les libellés les plus longs de chaque
+        // outil : c'est le pire cas de largeur.
+        toolsCompletion: const ToolsCompletionModel(
+          tools: [
+            ToolStatus(key: ToolKey.addresses, count: 2),
+            ToolStatus(key: ToolKey.recipients, count: 4),
+            ToolStatus(key: ToolKey.alerts, count: 0),
+            ToolStatus(key: ToolKey.tripTemplates, count: 1),
+            ToolStatus(key: ToolKey.priceGrid, count: 3),
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      for (final t in const [
+        '2 adresses',
+        '4 destinataires',
+        'À configurer',
+        '1 modèle',
+        'Configurée',
+      ]) {
+        final badge = find
+            .ancestor(
+              of: find.text(t),
+              matching: find.byKey(const Key('tool-status-badge')),
+            )
+            .first;
+        final card = find
+            .ancestor(of: find.text(t), matching: find.byType(DonyCard))
+            .first;
+        final icon = find
+            .descendant(of: card, matching: find.byType(DonyIconContainer))
+            .first;
+
+        // La pastille est sous la pastille d'icône, alignée à gauche sur elle,
+        // et non plus à sa droite sur la même ligne.
+        expect(
+          tester.getTopLeft(badge).dy,
+          greaterThanOrEqualTo(tester.getBottomLeft(icon).dy),
+          reason: t,
+        );
+        expect(
+          tester.getTopLeft(badge).dx,
+          closeTo(tester.getTopLeft(icon).dx, 0.5),
+          reason: t,
+        );
+
+        // Elle reçoit donc toute la largeur intérieure de la carte. Sur la
+        // ligne de l'icône, il ne lui restait que cette largeur moins la
+        // pastille d'icône (32 px) et son gap, soit une cinquantaine de
+        // pixels pour le libellé : « 4 destinataires » s'y coupait.
+        final resteAncienLayout =
+            tester.getSize(card).width -
+            2 * DonySpacing.base -
+            32 -
+            DonySpacing.sm;
+        expect(
+          tester.getSize(badge).width,
+          greaterThan(resteAncienLayout),
+          reason: t,
+        );
+      }
+
+      // Sous flutter_test, la police par défaut dessine chaque glyphe dans un
+      // carré d'un cadratin, environ deux fois plus large que Plus Jakarta
+      // Sans : à 360 px les chips de période débordent de leur Row, ce qui
+      // n'arrive pas avec la vraie police (leurs trois libellés tiennent en
+      // ~250 px sur 320). On consomme ce débordement, étranger aux pastilles.
+      tester.takeException();
+    });
+
     testWidgets('le CTA ouvre le premier outil manquant puis recharge', (
       tester,
     ) async {
@@ -747,6 +830,14 @@ void main() {
       await tester.tap(find.byKey(const Key('tools-completion-cta')));
       await tester.pumpAndSettle();
       expect(visited, ['/profile/recipients']);
+
+      final analytics = getIt<AnalyticsService>();
+      verify(
+        () => analytics.logEvent(
+          AnalyticsEvents.activitesHubToolsCtaTapped,
+          properties: {'tool': 'recipients'},
+        ),
+      ).called(1);
 
       // Retour : la carte doit refléter ce qui vient d'être ajouté.
       tester.state<NavigatorState>(find.byType(Navigator).first).pop();
