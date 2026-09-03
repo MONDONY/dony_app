@@ -442,6 +442,8 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `activites_hub_stats_period_changed` | ActivitesHubScreen — changement de période des statistiques |
 | `activites_hub_search_opened` | ActivitesHubScreen — bouton « Suivre un colis » du header |
 | `activites_hub_history_opened` / `activites_hub_help_opened` / `activites_hub_alerts_opened` / `activites_hub_templates_opened` / `activites_hub_addresses_opened` / `activites_hub_recipients_opened` | ActivitesHubScreen — tuiles de la section Outils |
+| `activites_hub_tools_completion_loaded` | ToolsCompletionCubit.load — `GET /users/me/tools-completion` réussi (propriétés `ready`, `total`), non émis en cas d'échec |
+| `activites_hub_tools_cta_tapped` | ActivitesHubScreen._onToolCta — tap sur le CTA de la carte « Publiez en 3 taps » (propriété `tool` : clé API de l'outil ouvert) |
 | `activites_hub_intro_dismissed` | ActivitesHubScreen — fermeture (X) de la carte d'introduction |
 | `traveler_bids_filter_applied` | TravelerBidsBloc._onFilterChanged — chips « À traiter / Acceptées / Terminées » de l'écran Demandes (propriété `filter`) |
 | `home_search_mode_changed` | HomeScreen._onModeChanged — bascule du sélecteur de mode Trajets/Colis (propriété `mode`) |

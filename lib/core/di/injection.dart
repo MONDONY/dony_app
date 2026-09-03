@@ -83,6 +83,7 @@ import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.d
 import 'package:dony/features/matching/bloc/mobile_money_payment_bloc.dart';
 import 'package:dony/features/matching/bloc/shipment_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/stats_period_cubit.dart';
+import 'package:dony/features/matching/bloc/tools_completion_cubit.dart';
 import 'package:dony/features/matching/bloc/traveler_bids_bloc.dart';
 import 'package:dony/features/matching/bloc/trip_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
@@ -94,6 +95,7 @@ import 'package:dony/features/matching/data/repositories/announcement_repository
 import 'package:dony/features/matching/data/repositories/bid_negotiation_repository.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:dony/features/matching/data/repositories/mobile_money_repository.dart';
+import 'package:dony/features/matching/data/repositories/tools_completion_repository.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
@@ -347,6 +349,15 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<TripsSummaryCubit>(
     () => TripsSummaryCubit(getIt<AnnouncementRepository>()),
+  );
+  getIt.registerLazySingleton<ToolsCompletionRepository>(
+    () => ToolsCompletionRepository(getIt<ApiClient>()),
+  );
+  getIt.registerFactory<ToolsCompletionCubit>(
+    () => ToolsCompletionCubit(
+      getIt<ToolsCompletionRepository>(),
+      getIt<AnalyticsService>(),
+    ),
   );
   getIt.registerFactory<TripFilterCubit>(
     () => TripFilterCubit(getIt<AnalyticsService>()),
