@@ -258,6 +258,9 @@ abstract final class AnalyticsEvents {
   static const activitesHubAddressesOpened = 'activites_hub_addresses_opened';
   static const activitesHubRecipientsOpened = 'activites_hub_recipients_opened';
   static const activitesHubPriceGridOpened = 'activites_hub_price_grid_opened';
+  static const activitesHubToolsCompletionLoaded =
+      'activites_hub_tools_completion_loaded';
+  static const activitesHubToolsCtaTapped = 'activites_hub_tools_cta_tapped';
 
   // Écran Demandes — filtre appliqué (tiré dans TravelerBidsBloc)
   static const travelerBidsFilterApplied = 'traveler_bids_filter_applied';
