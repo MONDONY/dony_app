@@ -8,14 +8,18 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/bloc/stats_period_cubit.dart';
+import 'package:dony/features/matching/bloc/tools_completion_cubit.dart';
 import 'package:dony/features/matching/bloc/traveler_bids_bloc.dart';
 import 'package:dony/features/matching/bloc/traveler_bids_event.dart';
 import 'package:dony/features/matching/bloc/traveler_bids_state.dart';
 import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/tools_completion_model.dart';
 import 'package:dony/features/matching/data/models/trips_summary_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
+import 'package:dony/features/matching/data/repositories/tools_completion_repository.dart';
 import 'package:dony/features/matching/presentation/screens/activites_hub_screen.dart';
+import 'package:dony/features/matching/presentation/widgets/tool_status_badge.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
@@ -90,6 +94,9 @@ class _MockAnnouncementRepository extends Mock
 
 class _MockAnalyticsService extends Mock implements AnalyticsService {}
 
+class _MockToolsCompletionRepository extends Mock
+    implements ToolsCompletionRepository {}
+
 // Le vrai Hive est inutilisable sous testWidgets : ses écritures passent par
 // un verrou asynchrone qui ne se résout jamais dans la zone FakeAsync et
 // bloque tous les accès suivants. On mocke la box, le contrat suffit.
@@ -118,6 +125,9 @@ late List<String> visited;
 /// [EnvoisRefreshNotifier] (throttle anti-rafale).
 late _MockTravelerBidsBloc _travelerBidsBlocUnderTest;
 
+/// Exposé pour compter les rechargements de la complétion des outils.
+late _MockToolsCompletionRepository _toolsRepoUnderTest;
+
 Future<void> _pump(
   WidgetTester tester, {
   TripsSummaryModel? summary,
@@ -125,6 +135,8 @@ Future<void> _pump(
   TravelerBidsState? travelerBidsState,
   NegotiationListState? negoState,
   PackageRequestState? packageRequestState,
+  ToolsCompletionModel? toolsCompletion,
+  bool toolsCompletionFails = false,
   String helpConfigJson = _emptyHelpConfigJson,
 }) async {
   tester.view.physicalSize = const Size(900, 1800);
@@ -172,6 +184,30 @@ Future<void> _pump(
 
   final summaryCubit = TripsSummaryCubit(repo);
 
+  final toolsRepo = _MockToolsCompletionRepository();
+  if (toolsCompletionFails) {
+    when(() => toolsRepo.getToolsCompletion()).thenThrow(Exception('down'));
+  } else {
+    when(() => toolsRepo.getToolsCompletion()).thenAnswer(
+      (_) async =>
+          toolsCompletion ??
+          const ToolsCompletionModel(
+            tools: [
+              ToolStatus(key: ToolKey.addresses, count: 2),
+              ToolStatus(key: ToolKey.recipients, count: 0),
+              ToolStatus(key: ToolKey.alerts, count: 0),
+              ToolStatus(key: ToolKey.tripTemplates, count: 1),
+              ToolStatus(key: ToolKey.priceGrid, count: 6),
+            ],
+          ),
+    );
+  }
+  _toolsRepoUnderTest = toolsRepo;
+  final toolsCubit = ToolsCompletionCubit(
+    toolsRepo,
+    makeDisabledAnalytics(MockAnalyticsBackend()),
+  );
+
   Widget stub(String label) => Scaffold(body: Text(label));
 
   GoRoute route(String path, String label) => GoRoute(
@@ -195,6 +231,7 @@ Future<void> _pump(
             BlocProvider<StatsPeriodCubit>(create: (_) => StatsPeriodCubit()),
             BlocProvider<NegotiationListBloc>.value(value: nego),
             BlocProvider<PackageRequestBloc>.value(value: packageRequests),
+            BlocProvider<ToolsCompletionCubit>.value(value: toolsCubit),
             BlocProvider<HelpCenterBloc>(
               create: (_) => HelpCenterBloc(
                 HelpCenterRepository(
@@ -645,5 +682,108 @@ void main() {
         expect(find.text('Besoin d\'aide ? Voir le tutoriel'), findsOneWidget);
       },
     );
+  });
+
+  group('complétion des outils', () {
+    testWidgets('carte partielle + badges cohérents avec les compteurs', (
+      tester,
+    ) async {
+      await _pump(tester);
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('tools-completion-card')), findsOneWidget);
+      expect(find.text('Publiez en 3 taps'), findsOneWidget);
+      expect(find.text('2 adresses'), findsOneWidget);
+      expect(find.text('1 modèle'), findsOneWidget);
+      expect(find.text('Configurée'), findsOneWidget);
+      expect(find.text('À configurer'), findsNWidgets(2));
+      // Historique et Aide n'ont rien à remplir : 5 badges, pas 7.
+      expect(find.byType(ToolStatusBadge), findsNWidgets(5));
+    });
+
+    testWidgets('échec réseau : ni carte ni badge, tuiles intactes', (
+      tester,
+    ) async {
+      await _pump(tester, toolsCompletionFails: true);
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('tools-completion-card')), findsNothing);
+      expect(find.byKey(const Key('tools-completion-complete')), findsNothing);
+      expect(find.byType(ToolStatusBadge), findsNothing);
+      expect(find.text('Mes alertes'), findsOneWidget);
+    });
+
+    testWidgets('5 / 5 : bandeau compact, badges tous verts', (tester) async {
+      await _pump(
+        tester,
+        toolsCompletion: const ToolsCompletionModel(
+          tools: [
+            ToolStatus(key: ToolKey.addresses, count: 1),
+            ToolStatus(key: ToolKey.recipients, count: 4),
+            ToolStatus(key: ToolKey.alerts, count: 2),
+            ToolStatus(key: ToolKey.tripTemplates, count: 1),
+            ToolStatus(key: ToolKey.priceGrid, count: 3),
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const Key('tools-completion-complete')),
+        findsOneWidget,
+      );
+      expect(find.text('4 destinataires'), findsOneWidget);
+      expect(find.text('À configurer'), findsNothing);
+    });
+
+    testWidgets('le CTA ouvre le premier outil manquant puis recharge', (
+      tester,
+    ) async {
+      await _pump(tester);
+      await tester.pumpAndSettle();
+      clearInteractions(_toolsRepoUnderTest);
+
+      await tester.ensureVisible(find.byKey(const Key('tools-completion-cta')));
+      await tester.tap(find.byKey(const Key('tools-completion-cta')));
+      await tester.pumpAndSettle();
+      expect(visited, ['/profile/recipients']);
+
+      // Retour : la carte doit refléter ce qui vient d'être ajouté.
+      tester.state<NavigatorState>(find.byType(Navigator).first).pop();
+      await tester.pumpAndSettle();
+      verify(() => _toolsRepoUnderTest.getToolsCompletion()).called(1);
+    });
+
+    testWidgets('une tuile-outil recharge aussi au retour', (tester) async {
+      await _pump(tester);
+      await tester.pumpAndSettle();
+      clearInteractions(_toolsRepoUnderTest);
+
+      await tester.ensureVisible(find.text('Mes adresses'));
+      await tester.tap(find.text('Mes adresses'));
+      await tester.pumpAndSettle();
+      expect(visited, ['/profile/addresses']);
+
+      tester.state<NavigatorState>(find.byType(Navigator).first).pop();
+      await tester.pumpAndSettle();
+      verify(() => _toolsRepoUnderTest.getToolsCompletion()).called(1);
+    });
+
+    testWidgets('le pull-to-refresh recharge la complétion', (tester) async {
+      await _pump(tester);
+      await tester.pumpAndSettle();
+      clearInteractions(_toolsRepoUnderTest);
+
+      // Amplitude > 25 % de la hauteur de la vue (450 px ici) : en deçà, le
+      // RefreshIndicator ne s'arme pas.
+      await tester.fling(
+        find.byType(CustomScrollView),
+        const Offset(0, 800),
+        1000,
+      );
+      await tester.pumpAndSettle();
+
+      verify(() => _toolsRepoUnderTest.getToolsCompletion()).called(1);
+    });
   });
 }

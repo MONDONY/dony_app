@@ -14,12 +14,17 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/bloc/shipment_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/stats_period_cubit.dart';
+import 'package:dony/features/matching/bloc/tools_completion_cubit.dart';
 import 'package:dony/features/matching/bloc/traveler_bids_bloc.dart';
 import 'package:dony/features/matching/bloc/traveler_bids_event.dart';
 import 'package:dony/features/matching/bloc/traveler_bids_state.dart';
 import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
+import 'package:dony/features/matching/data/models/tools_completion_model.dart';
 import 'package:dony/features/matching/presentation/widgets/activity_tile.dart';
 import 'package:dony/features/matching/presentation/widgets/stat_tile.dart';
+import 'package:dony/features/matching/presentation/widgets/tool_key_presentation.dart';
+import 'package:dony/features/matching/presentation/widgets/tool_status_badge.dart';
+import 'package:dony/features/matching/presentation/widgets/tools_completion_card.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
@@ -59,6 +64,7 @@ class ActivitesHubScreen extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (_) => getIt<TripsSummaryCubit>()),
+        BlocProvider(create: (_) => getIt<ToolsCompletionCubit>()),
         // TravelerBidsBloc est désormais un singleton (partagé avec l'onglet) :
         // `.value` pour ne pas le fermer quand le hub se démonte.
         BlocProvider.value(value: getIt<TravelerBidsBloc>()),
@@ -171,6 +177,7 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
       const NegotiationListFetchRequested(),
     );
     context.read<PackageRequestBloc>().add(const FetchMyRequests());
+    unawaited(context.read<ToolsCompletionCubit>().load());
   }
 
   Future<void> _onRefresh() async {
@@ -179,6 +186,45 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
   }
 
   void _open(String event, String route) => _openRoute(context, event, route);
+
+  /// Ouvre une tuile-outil et attend le retour pour recharger la complétion :
+  /// un destinataire ajouté doit faire passer le badge et la jauge sans
+  /// quitter l'onglet.
+  Future<void> _openTool(String event, String route) async {
+    _logEvent(event);
+    await context.push(route);
+    if (!mounted) return;
+    unawaited(context.read<ToolsCompletionCubit>().load());
+  }
+
+  Future<void> _onToolCta(ToolKey tool) async {
+    unawaited(
+      getIt<AnalyticsService>().logEvent(
+        AnalyticsEvents.activitesHubToolsCtaTapped,
+        properties: {'tool': tool.apiKey},
+      ),
+    );
+    await context.push(tool.route);
+    if (!mounted) return;
+    unawaited(context.read<ToolsCompletionCubit>().load());
+  }
+
+  /// Badge d'une tuile-outil, ou `null` tant que la complétion n'est pas
+  /// connue : ne jamais afficher « À configurer » sur un simple échec réseau.
+  Widget? _toolBadge(ToolsCompletionState state, ToolKey tool, String title) {
+    final model = state.model;
+    if (state.status != ToolsCompletionStatus.loaded || model == null) {
+      return null;
+    }
+    final count = model.countOf(tool);
+    final ready = count > 0;
+    final label = ready ? tool.badgeLabel(count) : 'À configurer';
+    return ToolStatusBadge(
+      ready: ready,
+      label: label,
+      semanticsLabel: ready ? '$title, prêt, $label' : '$title, à configurer',
+    );
+  }
 
   void _onNewRequest() {
     _logEvent(AnalyticsEvents.activitesHubRequestCreateOpened);
@@ -216,6 +262,7 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
     final cs = Theme.of(context).colorScheme;
     final summaryState = context.watch<TripsSummaryCubit>().state;
     final period = context.watch<StatsPeriodCubit>().state;
+    final toolsState = context.watch<ToolsCompletionCubit>().state;
     // Trois portes gardent la section visible en plus de l'activité détectée :
     // le chargement (pas de flash pendant un reload), et une période non par
     // défaut — sinon sélectionner « 7 jours » à zéro ferait disparaître les
@@ -302,13 +349,26 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
                     children: [
                       Text('Outils', style: tt.titleMedium),
                       const SizedBox(height: DonySpacing.md),
+                      if (toolsState.status == ToolsCompletionStatus.loaded &&
+                          toolsState.model != null) ...[
+                        ToolsCompletionCard(
+                          model: toolsState.model!,
+                          onCtaTap: _onToolCta,
+                        ),
+                        const SizedBox(height: DonySpacing.md),
+                      ],
                       _TileRow(
                         left: _OtherTile(
                           iconName: 'bell',
                           label: 'Mes alertes',
                           subtitle: 'Nouveaux trajets et colis',
                           color: cs.primary,
-                          onTap: () => _open(
+                          badge: _toolBadge(
+                            toolsState,
+                            ToolKey.alerts,
+                            'Mes alertes',
+                          ),
+                          onTap: () => _openTool(
                             AnalyticsEvents.activitesHubAlertsOpened,
                             '/corridor-alerts',
                           ),
@@ -318,7 +378,12 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
                           label: 'Modèles de trajet',
                           subtitle: 'Republiez vos trajets habituels',
                           color: DonyColors.violet,
-                          onTap: () => _open(
+                          badge: _toolBadge(
+                            toolsState,
+                            ToolKey.tripTemplates,
+                            'Modèles de trajet',
+                          ),
+                          onTap: () => _openTool(
                             AnalyticsEvents.activitesHubTemplatesOpened,
                             '/trip-templates',
                           ),
@@ -337,7 +402,12 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
                           label: 'Ma grille de prix',
                           subtitle: 'Tarifs par article pour vos trajets',
                           color: cs.primary,
-                          onTap: () => _open(
+                          badge: _toolBadge(
+                            toolsState,
+                            ToolKey.priceGrid,
+                            'Ma grille de prix',
+                          ),
+                          onTap: () => _openTool(
                             AnalyticsEvents.activitesHubPriceGridOpened,
                             '/profile/price-grid',
                           ),
@@ -347,7 +417,12 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
                           label: 'Mes adresses',
                           subtitle: 'Vos lieux d\'envoi enregistrés',
                           color: cs.secondary,
-                          onTap: () => _open(
+                          badge: _toolBadge(
+                            toolsState,
+                            ToolKey.addresses,
+                            'Mes adresses',
+                          ),
+                          onTap: () => _openTool(
                             AnalyticsEvents.activitesHubAddressesOpened,
                             '/profile/addresses',
                           ),
@@ -360,7 +435,12 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
                           label: 'Mes destinataires',
                           subtitle: 'Les personnes à qui vous envoyez',
                           color: DonyColors.violet,
-                          onTap: () => _open(
+                          badge: _toolBadge(
+                            toolsState,
+                            ToolKey.recipients,
+                            'Mes destinataires',
+                          ),
+                          onTap: () => _openTool(
                             AnalyticsEvents.activitesHubRecipientsOpened,
                             '/profile/recipients',
                           ),
@@ -792,6 +872,7 @@ class _OtherTile extends StatelessWidget {
     required this.color,
     required this.onTap,
     this.subtitle,
+    this.badge,
   });
 
   final String iconName;
@@ -800,6 +881,10 @@ class _OtherTile extends StatelessWidget {
   /// Couleur de la catégorie : remplit la pastille d'icône (icône blanche).
   final Color color;
   final String? subtitle;
+
+  /// Pastille d'état de l'outil, à droite de l'icône. `null` pour les tuiles
+  /// sans rien à remplir (Historique, Aide) ou tant que l'état est inconnu.
+  final Widget? badge;
   final VoidCallback onTap;
 
   @override
@@ -814,12 +899,26 @@ class _OtherTile extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          DonyIconContainer(
-            iconAsset: iconName,
-            size: DonyIconContainerSize.sm,
-            backgroundColor: color,
-            iconColor: DonyColors.neutral0,
-            borderRadius: DonyRadius.iconBtn,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              DonyIconContainer(
+                iconAsset: iconName,
+                size: DonyIconContainerSize.sm,
+                backgroundColor: color,
+                iconColor: DonyColors.neutral0,
+                borderRadius: DonyRadius.iconBtn,
+              ),
+              if (badge != null) ...[
+                const SizedBox(width: DonySpacing.sm),
+                // Expanded plutôt que Spacer + Flexible : ces deux-là se
+                // partageaient la place restante à parts égales et coupaient
+                // la pastille au milieu d'un espace libre.
+                Expanded(
+                  child: Align(alignment: Alignment.centerRight, child: badge),
+                ),
+              ],
+            ],
           ),
           const SizedBox(height: DonySpacing.xl),
           Text(

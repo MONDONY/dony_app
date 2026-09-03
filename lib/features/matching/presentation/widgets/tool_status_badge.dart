@@ -44,13 +44,17 @@ class ToolStatusBadge extends StatelessWidget {
               DonyIcon('check', size: 12, color: fg),
               const SizedBox(width: DonySpacing.xs),
             ],
-            Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: tt.labelMedium?.copyWith(
-                color: fg,
-                fontFeatures: const [FontFeature.tabularFigures()],
+            // Flexible : sur une tuile étroite, le libellé se coupe plutôt
+            // que de déborder de la pastille.
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: tt.labelMedium?.copyWith(
+                  color: fg,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
               ),
             ),
           ],
