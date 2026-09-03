@@ -35,6 +35,10 @@ void main() {
   });
 
   group('missingSentence', () {
+    test('aucun manquant : phrase vide', () {
+      expect(missingSentence(const []), '');
+    });
+
     test('un seul manquant', () {
       expect(
         missingSentence([ToolKey.recipients]),
