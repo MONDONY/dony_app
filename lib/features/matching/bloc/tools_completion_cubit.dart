@@ -35,7 +35,11 @@ class ToolsCompletionCubit extends Cubit<ToolsCompletionState> {
   final AnalyticsService _analytics;
 
   Future<void> load() async {
-    emit(const ToolsCompletionState.loading());
+    // Rechargement avec un modèle déjà connu : on le garde à l'écran, sinon la
+    // carte et les badges clignotent à chaque retour d'un outil.
+    if (state.model == null) {
+      emit(const ToolsCompletionState.loading());
+    }
     try {
       final model = await _repository.getToolsCompletion();
       unawaited(

@@ -71,6 +71,46 @@ void main() {
     verify: (_) => verifyNever(() => backend.capture(any(), any())),
   );
 
+  const model2 = ToolsCompletionModel(
+    tools: [
+      ToolStatus(key: ToolKey.addresses, count: 2),
+      ToolStatus(key: ToolKey.recipients, count: 4),
+      ToolStatus(key: ToolKey.alerts, count: 0),
+      ToolStatus(key: ToolKey.tripTemplates, count: 1),
+      ToolStatus(key: ToolKey.priceGrid, count: 6),
+    ],
+  );
+
+  blocTest<ToolsCompletionCubit, ToolsCompletionState>(
+    'rechargement depuis loaded : pas de passage par loading',
+    build: () {
+      when(
+        () => repository.getToolsCompletion(),
+      ).thenAnswer((_) async => model2);
+      final analytics = makeEnabledAnalytics(backend)..onConfigured();
+      return ToolsCompletionCubit(repository, analytics);
+    },
+    seed: () => const ToolsCompletionState.loaded(model),
+    act: (c) => c.load(),
+    // Un loading intercalé viderait la carte et les 5 badges du hub le temps
+    // de la requête : la carte clignoterait à chaque retour d'un outil.
+    expect: () => [const ToolsCompletionState.loaded(model2)],
+  );
+
+  blocTest<ToolsCompletionCubit, ToolsCompletionState>(
+    'rechargement depuis loaded en échec : hidden',
+    build: () {
+      when(
+        () => repository.getToolsCompletion(),
+      ).thenThrow(Exception('network'));
+      final analytics = makeEnabledAnalytics(backend)..onConfigured();
+      return ToolsCompletionCubit(repository, analytics);
+    },
+    seed: () => const ToolsCompletionState.loaded(model),
+    act: (c) => c.load(),
+    expect: () => [const ToolsCompletionState.hidden()],
+  );
+
   test('loaded expose le modèle, hidden ne prétend rien', () {
     expect(const ToolsCompletionState.loaded(model).model, same(model));
     expect(const ToolsCompletionState.hidden().model, isNull);
