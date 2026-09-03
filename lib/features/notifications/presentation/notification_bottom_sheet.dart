@@ -6,8 +6,10 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_event.dart';
 import 'package:dony/features/notifications/bloc/notification_state.dart';
+import 'package:dony/features/notifications/data/announcements_summary.dart';
 import 'package:dony/features/notifications/data/notification_model.dart';
 import 'package:dony/features/notifications/notification_route_resolver.dart';
+import 'package:dony/features/notifications/presentation/announcements_inbox_screen.dart';
 import 'package:dony/features/subscriptions/data/subscription_badge_consumer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -184,11 +186,24 @@ class _NotificationList extends StatelessWidget {
         }
 
         if (state is NotificationLoaded) {
+          // La carte des annonces vit au-dessus du feed, hors de ses sections,
+          // et reste là même quand le feed est vide.
+          final card = state.announcements.hasAny
+              ? _AnnouncementsCard(summary: state.announcements)
+              : null;
+
           if (state.notifications.isEmpty) {
-            return const DonyEmptyState(
-              mascotte: DonyMascotteType.assis,
-              title: 'Aucune notification',
-              description: 'Vos notifications apparaîtront ici.',
+            return Column(
+              children: [
+                ?card,
+                const Expanded(
+                  child: DonyEmptyState(
+                    mascotte: DonyMascotteType.assis,
+                    title: 'Aucune notification',
+                    description: 'Vos notifications apparaîtront ici.',
+                  ),
+                ),
+              ],
             );
           }
 
@@ -203,8 +218,12 @@ class _NotificationList extends StatelessWidget {
                 bottom:
                     DonySpacing.sm + MediaQuery.of(context).viewPadding.bottom,
               ),
-              itemCount: rows.length,
+              itemCount: rows.length + (card == null ? 0 : 1),
               itemBuilder: (context, index) {
+                if (card != null) {
+                  if (index == 0) return card;
+                  index -= 1;
+                }
                 final row = rows[index];
                 if (row is _SectionRow) {
                   return _SectionHeader(section: row.section);
@@ -328,6 +347,117 @@ class _NotificationRow extends _Row {
   /// Première ligne de sa section : pas de séparateur au-dessus.
   final bool first;
   const _NotificationRow(this.notification, {required this.first});
+}
+
+/// La carte « Annonces Yadony » : une seule boîte pour tout ce qui vient de
+/// la plateforme, visuellement à part du feed, avec son compteur de non-lus
+/// et le titre de la dernière annonce.
+class _AnnouncementsCard extends StatelessWidget {
+  final AnnouncementsSummary summary;
+  const _AnnouncementsCard({required this.summary});
+
+  /// Le sheet se ferme avant d'ouvrir la boîte ; au retour, le feed se
+  /// recharge pour que la carte reflète ce qui a été lu dans la liste.
+  Future<void> _open(BuildContext context) async {
+    final bloc = context.read<NotificationBloc>();
+    final router = GoRouter.of(context);
+    Navigator.of(context, rootNavigator: true).pop();
+    await router.push(AnnouncementsInboxScreen.route);
+    if (!bloc.isClosed) bloc.add(const NotificationsLoadRequested());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final unread = summary.unreadCount;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        DonySpacing.lg,
+        DonySpacing.sm,
+        DonySpacing.lg,
+        DonySpacing.md,
+      ),
+      child: Material(
+        color: cs.primaryContainer,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        child: InkWell(
+          onTap: () => _open(context),
+          borderRadius: BorderRadius.circular(DonyRadius.card),
+          child: Container(
+            padding: const EdgeInsets.all(DonySpacing.md),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(DonyRadius.card),
+              border: Border.all(color: cs.primary.withValues(alpha: 0.2)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: DonySpacing.icon,
+                  height: DonySpacing.icon,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: cs.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(DonyRadius.md),
+                  ),
+                  child: DonyIcon(
+                    'megaphone',
+                    size: DonySpacing.iconSm,
+                    color: cs.primary,
+                  ),
+                ),
+                const SizedBox(width: DonySpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Annonces Yadony',
+                        style: tt.titleLarge?.copyWith(color: cs.onSurface),
+                      ),
+                      if (summary.latestTitle != null) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          summary.latestTitle!,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: tt.bodySmall?.copyWith(
+                            color: cs.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                if (unread > 0) ...[
+                  const SizedBox(width: DonySpacing.sm),
+                  Container(
+                    constraints: const BoxConstraints(minWidth: 20),
+                    height: 20,
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: cs.primary,
+                      borderRadius: BorderRadius.circular(DonyRadius.full),
+                    ),
+                    child: Text(
+                      unread > 99 ? '99+' : '$unread',
+                      style: tt.labelMedium?.copyWith(
+                        color: cs.onPrimary,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  ),
+                ],
+                const SizedBox(width: DonySpacing.sm),
+                DonyIcon('chevron-right', size: 18, color: cs.onSurfaceVariant),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _SectionHeader extends StatelessWidget {

@@ -1,3 +1,4 @@
+import 'package:dony/features/notifications/data/announcements_summary.dart';
 import 'package:dony/features/notifications/data/notification_model.dart';
 import 'package:dony/features/notifications/data/notification_remote_datasource.dart';
 import 'package:dony/features/notifications/data/notification_repository.dart';
@@ -67,6 +68,18 @@ void main() {
       await repository.markGroupRead('bid:announcement:a');
 
       verify(() => datasource.markGroupRead('bid:announcement:a')).called(1);
+    });
+
+    test('getAnnouncements and getAnnouncementsSummary delegate', () async {
+      when(
+        () => datasource.fetchAnnouncements(),
+      ).thenAnswer((_) async => [notif]);
+      when(() => datasource.fetchAnnouncementsSummary()).thenAnswer(
+        (_) async => const AnnouncementsSummary(unreadCount: 1, latestId: 'a'),
+      );
+
+      expect(await repository.getAnnouncements(), [notif]);
+      expect((await repository.getAnnouncementsSummary()).unreadCount, 1);
     });
 
     test('getUnreadCount delegates to datasource', () async {

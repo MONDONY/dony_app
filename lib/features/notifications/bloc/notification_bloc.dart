@@ -1,6 +1,7 @@
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/notifications/bloc/notification_event.dart';
 import 'package:dony/features/notifications/bloc/notification_state.dart';
+import 'package:dony/features/notifications/data/announcements_summary.dart';
 import 'package:dony/features/notifications/data/notification_model.dart';
 import 'package:dony/features/notifications/data/notification_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -23,8 +24,17 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
     try {
       final notifications = await _repository.getFeed();
       final unread = await _repository.getUnreadCount();
+      // La carte est un complément : sans elle le feed s'affiche quand même.
+      AnnouncementsSummary announcements = AnnouncementsSummary.empty;
+      try {
+        announcements = await _repository.getAnnouncementsSummary();
+      } catch (_) {}
       emit(
-        NotificationLoaded(notifications: notifications, unreadCount: unread),
+        NotificationLoaded(
+          notifications: notifications,
+          unreadCount: unread,
+          announcements: announcements,
+        ),
       );
     } catch (e) {
       emit(NotificationError(unwrapDioError(e)));
@@ -74,7 +84,13 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
     final updated = current.notifications
         .map((n) => n.copyWith(read: true))
         .toList();
-    emit(current.copyWith(notifications: updated, unreadCount: 0));
+    emit(
+      current.copyWith(
+        notifications: updated,
+        unreadCount: 0,
+        announcements: current.announcements.copyWith(unreadCount: 0),
+      ),
+    );
     try {
       await _repository.markAllRead();
     } catch (_) {

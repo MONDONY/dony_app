@@ -2,6 +2,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_event.dart';
 import 'package:dony/features/notifications/bloc/notification_state.dart';
+import 'package:dony/features/notifications/data/announcements_summary.dart';
 import 'package:dony/features/notifications/data/notification_model.dart';
 import 'package:dony/features/notifications/data/notification_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -243,6 +244,84 @@ void main() {
       expect: () => [
         isA<NotificationLoaded>().having((s) => s.unreadCount, 'optimistic', 0),
         isA<NotificationLoaded>().having((s) => s.unreadCount, 'restored', 3),
+      ],
+    );
+
+    // ── Carte « Annonces Yadony » ───────────────────────────────────────────
+
+    blocTest<NotificationBloc, NotificationState>(
+      'le chargement embarque le résumé des annonces',
+      build: () {
+        when(() => repository.getFeed()).thenAnswer((_) async => []);
+        when(() => repository.getUnreadCount()).thenAnswer((_) async => 2);
+        when(() => repository.getAnnouncementsSummary()).thenAnswer(
+          (_) async => const AnnouncementsSummary(
+            unreadCount: 2,
+            latestId: 'a1',
+            latestTitle: 'Maintenance',
+          ),
+        );
+        return NotificationBloc(repository);
+      },
+      act: (bloc) => bloc.add(const NotificationsLoadRequested()),
+      expect: () => [
+        const NotificationLoading(),
+        isA<NotificationLoaded>()
+            .having((s) => s.announcements.unreadCount, 'annonces non lues', 2)
+            .having(
+              (s) => s.announcements.latestTitle,
+              'dernière',
+              'Maintenance',
+            ),
+      ],
+    );
+
+    blocTest<NotificationBloc, NotificationState>(
+      'un résumé en échec ne bloque pas le feed',
+      build: () {
+        when(() => repository.getFeed()).thenAnswer((_) async => []);
+        when(() => repository.getUnreadCount()).thenAnswer((_) async => 0);
+        when(
+          () => repository.getAnnouncementsSummary(),
+        ).thenThrow(Exception('boom'));
+        return NotificationBloc(repository);
+      },
+      act: (bloc) => bloc.add(const NotificationsLoadRequested()),
+      expect: () => [
+        const NotificationLoading(),
+        isA<NotificationLoaded>().having(
+          (s) => s.announcements.hasAny,
+          'carte vide',
+          false,
+        ),
+      ],
+    );
+
+    blocTest<NotificationBloc, NotificationState>(
+      '« Tout lire » remet aussi le compteur de la carte à zéro',
+      build: () {
+        when(() => repository.markAllRead()).thenAnswer((_) async {});
+        return NotificationBloc(repository);
+      },
+      seed: () => NotificationLoaded(
+        notifications: [_makeNotif(id: '1')],
+        unreadCount: 3,
+        announcements: const AnnouncementsSummary(
+          unreadCount: 2,
+          latestId: 'a1',
+          latestTitle: 'Maintenance',
+        ),
+      ),
+      act: (bloc) => bloc.add(const NotificationsMarkAllReadRequested()),
+      expect: () => [
+        isA<NotificationLoaded>()
+            .having((s) => s.unreadCount, 'unread', 0)
+            .having((s) => s.announcements.unreadCount, 'carte', 0)
+            .having(
+              (s) => s.announcements.latestTitle,
+              'dernière',
+              'Maintenance',
+            ),
       ],
     );
   });

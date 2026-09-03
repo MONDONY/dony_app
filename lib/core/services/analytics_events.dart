@@ -281,6 +281,10 @@ abstract final class AnalyticsEvents {
   static const tripMatchingViewed = 'trip_matching_viewed';
   static const packageMatchAlertToggled = 'package_match_alert_toggled';
 
+  /// Boîte « Annonces Yadony » ouverte et chargée depuis le sheet de
+  /// notifications (propriétés `count`, `unread`), sans aucun texte d'annonce.
+  static const announcementsInboxOpened = 'announcements_inbox_opened';
+
   // Préférences de notification (Réglages › Notifications)
   static const notificationPrefToggled = 'notification_pref_toggled';
 

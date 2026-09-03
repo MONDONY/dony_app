@@ -101,6 +101,7 @@ import 'package:dony/features/messaging/bloc/conversation_list/conversation_list
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/data/conversation_repository.dart';
 import 'package:dony/features/messaging/data/firestore_chat_repository.dart';
+import 'package:dony/features/notifications/bloc/announcements_inbox_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/data/notification_remote_datasource.dart';
 import 'package:dony/features/notifications/data/notification_repository.dart';
@@ -265,6 +266,12 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<NotificationBloc>(
     () => NotificationBloc(getIt<NotificationRepository>()),
+  );
+  getIt.registerFactory<AnnouncementsInboxBloc>(
+    () => AnnouncementsInboxBloc(
+      getIt<NotificationRepository>(),
+      getIt<AnalyticsService>(),
+    ),
   );
   getIt.registerLazySingleton<EnvoisRefreshNotifier>(
     () => EnvoisRefreshNotifier(),

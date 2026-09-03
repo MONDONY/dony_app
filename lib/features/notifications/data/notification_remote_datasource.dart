@@ -1,4 +1,5 @@
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/features/notifications/data/announcements_summary.dart';
 import 'package:dony/features/notifications/data/notification_model.dart';
 
 class NotificationRemoteDatasource {
@@ -29,6 +30,26 @@ class NotificationRemoteDatasource {
       queryParameters: {'page': page, 'size': size},
     );
     return _content(response.data);
+  }
+
+  /// La boîte « Annonces Yadony » : uniquement les annonces plateforme.
+  Future<List<NotificationModel>> fetchAnnouncements({
+    int page = 0,
+    int size = 30,
+  }) async {
+    final response = await _apiClient.dio.get(
+      '/notifications/annonces',
+      queryParameters: {'page': page, 'size': size},
+    );
+    return _content(response.data);
+  }
+
+  /// La carte en tête de sheet : non-lus et dernière annonce.
+  Future<AnnouncementsSummary> fetchAnnouncementsSummary() async {
+    final response = await _apiClient.dio.get(
+      '/notifications/annonces/summary',
+    );
+    return AnnouncementsSummary.fromJson(response.data as Map<String, dynamic>);
   }
 
   List<NotificationModel> _content(dynamic data) {
