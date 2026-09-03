@@ -102,7 +102,7 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
   late bool _showIntro;
   DateTime? _lastLoadAt;
 
-  // En dessous de ce délai, un retour sur l'onglet ne redéclenche pas les 5
+  // En dessous de ce délai, un retour sur l'onglet ne redéclenche pas les 6
   // requêtes concurrentes de _loadAll() : à chaque va-et-vient rapide entre
   // onglets, ce hub retirait tout au complet côté serveur, ce qui épuisait
   // le rate-limit nginx (burst api_general) en quelques allers-retours et
@@ -882,8 +882,9 @@ class _OtherTile extends StatelessWidget {
   final Color color;
   final String? subtitle;
 
-  /// Pastille d'état de l'outil, à droite de l'icône. `null` pour les tuiles
-  /// sans rien à remplir (Historique, Aide) ou tant que l'état est inconnu.
+  /// Pastille d'état de l'outil, sur sa propre ligne sous l'icône. `null` pour
+  /// les tuiles sans rien à remplir (Historique, Aide) ou tant que l'état est
+  /// inconnu.
   final Widget? badge;
   final VoidCallback onTap;
 
@@ -909,17 +910,16 @@ class _OtherTile extends StatelessWidget {
                 iconColor: DonyColors.neutral0,
                 borderRadius: DonyRadius.iconBtn,
               ),
-              if (badge != null) ...[
-                const SizedBox(width: DonySpacing.sm),
-                // Expanded plutôt que Spacer + Flexible : ces deux-là se
-                // partageaient la place restante à parts égales et coupaient
-                // la pastille au milieu d'un espace libre.
-                Expanded(
-                  child: Align(alignment: Alignment.centerRight, child: badge),
-                ),
-              ],
             ],
           ),
+          // La pastille prend sa propre ligne plutôt que la place restante à
+          // droite de l'icône : sur un écran de 360 dp une tuile ne fait que
+          // 154 px, il ne restait qu'une cinquantaine de pixels et « 4
+          // destinataires » se coupait en « 4 desti… ».
+          if (badge != null) ...[
+            const SizedBox(height: DonySpacing.sm),
+            badge!,
+          ],
           const SizedBox(height: DonySpacing.xl),
           Text(
             label,

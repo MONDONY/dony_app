@@ -53,6 +53,10 @@ class ToolStatusBadge extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: tt.labelMedium?.copyWith(
                   color: fg,
+                  // Le tracking de labelMedium (0,8) est calibré pour des
+                  // chips en capitales ; ici le libellé est en casse normale
+                  // et chaque dixième de pixel compte sur une tuile étroite.
+                  letterSpacing: 0,
                   fontFeatures: const [FontFeature.tabularFigures()],
                 ),
               ),
