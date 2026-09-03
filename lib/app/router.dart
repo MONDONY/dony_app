@@ -76,10 +76,10 @@ import 'package:dony/features/matching/presentation/screens/bid_list_screen.dart
 import 'package:dony/features/matching/presentation/screens/bid_negotiation_thread_screen.dart';
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
 import 'package:dony/features/matching/presentation/screens/demandes_screen.dart';
+import 'package:dony/features/matching/presentation/screens/mes_colis_screen.dart';
 import 'package:dony/features/matching/presentation/screens/mobile_money_awaiting_screen.dart';
 import 'package:dony/features/matching/presentation/screens/pending_bids_screen.dart';
 import 'package:dony/features/matching/presentation/screens/publish_intro_screen.dart';
-import 'package:dony/features/matching/presentation/screens/shipment_list_screen.dart';
 import 'package:dony/features/matching/presentation/screens/traveler_profile_screen.dart';
 import 'package:dony/features/matching/presentation/screens/trip_owner_detail_screen.dart';
 import 'package:dony/features/matching/presentation/screens/trip_poster_screen.dart';
@@ -1030,15 +1030,9 @@ final appRouter = GoRouter(
     // ── Mes colis — hub expéditeur (hors shell) ───────────────────────
 
     // ── Envois et demandes — destinations du hub Activités ────────────
-    // ShipmentListScreen lit le BidBloc depuis son parent et déclenche
-    // lui-même son chargement — pas d'event à ajouter ici.
-    GoRoute(
-      path: '/envois',
-      builder: (_, _) => BlocProvider(
-        create: (_) => getIt<BidBloc>(),
-        child: const ShipmentListScreen(),
-      ),
-    ),
+    // MesColisScreen pose lui-même ses providers (BidBloc + PackageRequestBloc)
+    // et laisse chaque volet déclencher son propre chargement.
+    GoRoute(path: '/envois', builder: (_, _) => const MesColisScreen()),
     GoRoute(path: '/demandes', builder: (_, _) => const DemandesScreen()),
 
     // ── Profile — quick wins (hors shell) ────────────────────────────

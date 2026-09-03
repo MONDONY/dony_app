@@ -20,6 +20,7 @@ import 'package:dony/features/matching/bloc/traveler_bids_event.dart';
 import 'package:dony/features/matching/bloc/traveler_bids_state.dart';
 import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/matching/data/models/tools_completion_model.dart';
+import 'package:dony/features/matching/presentation/screens/mes_colis_screen.dart';
 import 'package:dony/features/matching/presentation/widgets/activity_tile.dart';
 import 'package:dony/features/matching/presentation/widgets/stat_tile.dart';
 import 'package:dony/features/matching/presentation/widgets/tool_key_presentation.dart';
@@ -27,7 +28,6 @@ import 'package:dony/features/matching/presentation/widgets/tool_status_badge.da
 import 'package:dony/features/matching/presentation/widgets/tools_completion_card.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
-import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/profile/data/models/help_center_config.dart';
 import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
 import 'package:flutter/material.dart';
@@ -648,17 +648,29 @@ class _ActivityGrid extends StatelessWidget {
 
     final shipments = BlocBuilder<BidBloc, BidState>(
       builder: (context, state) {
-        final count = envoisEnCours(state);
+        // La tuile couvre tout le parcours expéditeur : les envois qui ont
+        // trouvé leur voyageur ET les demandes encore publiées. Ce sont les
+        // deux volets de « Mes colis », donc les deux moitiés d'un compteur.
+        final requestState = context.select<PackageRequestBloc, PackageRequestState>(
+          (b) => b.state,
+        );
+        final negoState = context
+            .select<NegotiationListBloc, NegotiationListState>((b) => b.state);
+        final negociations = negosNonLuesSurMesColis(requestState, negoState);
+        final count = envoisEnCours(state) + colisPublies(requestState);
         return ActivityTile(
           key: const Key('hub-tile-shipments'),
           iconName: 'package',
           iconColor: cs.secondary,
           value: count,
-          label: 'Colis en route',
-          subtitle: 'Les colis que vous envoyez',
+          label: 'Mes colis',
+          subtitle: 'Publiés, négociés, en route',
           emptyHint: 'Envoyez un colis',
           isLoading: state is BidLoading,
           hasError: state is BidError,
+          // Une discussion de prix attend une décision de l'expéditeur : le
+          // seul signal d'action que porte cette tuile.
+          showNotificationDot: negociations > 0,
           onTap: () => _openRoute(
             context,
             AnalyticsEvents.activitesHubEnvoisOpened,
@@ -672,15 +684,6 @@ class _ActivityGrid extends StatelessWidget {
       builder: (context, state) {
         final loaded = state is TravelerBidsLoaded ? state : null;
         final count = loaded?.pendingCount ?? 0;
-        // Une demande ENVOYÉE en négociation (volet « Envoyées » de l'écran
-        // Demandes) attend aussi une action : on la signale sur cette carte,
-        // même sans demande reçue. La carte ouvre l'écran Demandes complet où
-        // le badge « Envoyées » précise le décompte.
-        final sentNegotiating = context.select<PackageRequestBloc, int>(
-          (b) => b.state.requests
-              .where((r) => r.status == PackageRequestStatus.negotiating)
-              .length,
-        );
         return ActivityTile(
           key: const Key('hub-tile-requests'),
           iconName: 'bell',
@@ -690,12 +693,10 @@ class _ActivityGrid extends StatelessWidget {
           value: count,
           label: 'Demandes reçues',
           subtitle: 'Des colis à transporter pour vous',
-          emptyHint: sentNegotiating > 0
-              ? 'Négociation en cours'
-              : 'Aucune pour l\'instant',
+          emptyHint: 'Aucune pour l\'instant',
           isLoading: state is TravelerBidsLoading,
           hasError: state is TravelerBidsError,
-          showNotificationDot: count > 0 || sentNegotiating > 0,
+          showNotificationDot: count > 0,
           onTap: () => _openRoute(
             context,
             AnalyticsEvents.activitesHubDemandesOpened,

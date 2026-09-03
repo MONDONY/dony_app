@@ -20,31 +20,19 @@ import 'package:dony/features/matching/bloc/traveler_bids_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_list/bid_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_list/bid_list_chrome.dart';
-import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
-import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
-import 'package:dony/features/package_request/presentation/screens/sender/my_package_requests_screen.dart';
 import 'package:dony/features/profile/data/models/help_center_config.dart';
 import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-/// Volet affiché par [DemandesScreen].
-enum DemandesTab {
-  /// Demandes d'expéditeurs sur mes trajets — je suis transporteur.
-  recues,
-
-  /// Demandes d'envoi que j'ai publiées — je suis expéditeur.
-  envoyees,
-}
-
 /// Écran « Demandes » du hub Activités.
 ///
-/// Réunit les deux sens du marketplace, conformément au modèle double rôle :
-/// les demandes reçues sur mes trajets (`GET /travelers/me/bids`, tous trajets
-/// confondus, ce qui n'existait pas) et les demandes d'envoi que j'ai publiées
-/// — ces dernières venaient de l'onglet « Demandes » de l'écran Envoyer,
-/// désormais retiré.
+/// Les demandes d'expéditeurs reçues sur mes trajets (`GET /travelers/me/bids`,
+/// tous trajets confondus), côté transporteur. Le volet « Envoyées », qui
+/// doublait cet écran d'un second rôle, a rejoint l'écran « Mes colis »
+/// (`/envois`) aux côtés de la liste d'envois : les deux y parlent du même
+/// objet, un colis que j'expédie.
 class DemandesScreen extends StatelessWidget {
   const DemandesScreen({super.key});
 
@@ -60,10 +48,6 @@ class DemandesScreen extends StatelessWidget {
         ),
         BlocProvider(create: (_) => getIt<BidBloc>()),
         BlocProvider(create: (_) => getIt<BidAcceptanceBloc>()),
-        // Singleton partagé : le volet « Envoyées » déclenche son propre
-        // chargement quand il est réellement affiché.
-        BlocProvider.value(value: getIt<PackageRequestBloc>()),
-        BlocProvider.value(value: getIt<NegotiationListBloc>()),
       ],
       child: const _DemandesView(),
     );
@@ -79,28 +63,8 @@ class DemandesScreenTesting extends StatelessWidget {
   Widget build(BuildContext context) => const _DemandesView();
 }
 
-class _DemandesView extends StatefulWidget {
+class _DemandesView extends StatelessWidget {
   const _DemandesView();
-
-  @override
-  State<_DemandesView> createState() => _DemandesViewState();
-}
-
-class _DemandesViewState extends State<_DemandesView> {
-  DemandesTab _tab = DemandesTab.recues;
-
-  @override
-  void initState() {
-    super.initState();
-    context.read<PackageRequestBloc>().add(const RefreshMyRequests());
-    context.read<NegotiationListBloc>().add(
-      const NegotiationListRefreshRequested(),
-    );
-  }
-
-  void _selectTab(DemandesTab tab) {
-    setState(() => _tab = tab);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -131,194 +95,13 @@ class _DemandesViewState extends State<_DemandesView> {
               hp,
               DonySpacing.sm,
             ),
-            // Le badge « à traiter » du volet Reçues vit sur le toggle : c'est
-            // l'information qui décide où l'utilisateur doit aller en premier.
-            child: BlocBuilder<TravelerBidsBloc, TravelerBidsState>(
-              builder: (context, state) {
-                final pending = state is TravelerBidsLoaded
-                    ? state.pendingCount
-                    : 0;
-                // Côté Envoyées, l'équivalent « à traiter » est une demande en
-                // négociation : une discussion de prix attend l'expéditeur.
-                return BlocBuilder<PackageRequestBloc, PackageRequestState>(
-                  builder: (context, prState) {
-                    final requestIds = prState.requests
-                        .map((request) => request.id)
-                        .toSet();
-                    return BlocBuilder<
-                      NegotiationListBloc,
-                      NegotiationListState
-                    >(
-                      builder: (context, negotiationState) => _RoleSegmented(
-                        selected: _tab,
-                        recuesBadge: pending,
-                        envoyeesBadge: negotiationState.unreadCountForRequests(
-                          requestIds,
-                        ),
-                        onSelect: _selectTab,
-                      ),
-                    );
-                  },
-                );
-              },
+            child: const ContextualTutorialCard(
+              context: TutorialContext.receivedRequests,
             ),
           ),
-          if (_tab == DemandesTab.recues)
-            Padding(
-              padding: EdgeInsets.fromLTRB(hp, 0, hp, DonySpacing.sm),
-              child: const ContextualTutorialCard(
-                context: TutorialContext.receivedRequests,
-              ),
-            ),
-          Expanded(
-            child: switch (_tab) {
-              DemandesTab.recues => const _DemandesRecuesBody(),
-              DemandesTab.envoyees => const MyPackageRequestsBody(),
-            },
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Segmented control de rôle ─────────────────────────────────────────────────
-
-/// Bascule Reçues / Envoyées : une seule surface connectée avec une capsule
-/// qui glisse, plutôt que deux pastilles séparées. Le rôle est le choix le plus
-/// structurant de l'écran, il doit se lire comme un vrai contrôle unique.
-class _RoleSegmented extends StatelessWidget {
-  const _RoleSegmented({
-    required this.selected,
-    required this.recuesBadge,
-    required this.envoyeesBadge,
-    required this.onSelect,
-  });
-
-  final DemandesTab selected;
-  final int recuesBadge;
-  final int envoyeesBadge;
-  final ValueChanged<DemandesTab> onSelect;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
-    return Container(
-      height: 46,
-      padding: const EdgeInsets.all(DonySpacing.xs),
-      decoration: BoxDecoration(
-        color: cs.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(DonyRadius.lg),
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final segWidth = constraints.maxWidth / 2;
-          return Stack(
-            children: [
-              AnimatedAlign(
-                duration: DonyDuration.base,
-                curve: DonyCurve.easeOut,
-                alignment: selected == DemandesTab.recues
-                    ? Alignment.centerLeft
-                    : Alignment.centerRight,
-                child: Container(
-                  width: segWidth,
-                  height: double.infinity,
-                  decoration: BoxDecoration(
-                    color: cs.surface,
-                    borderRadius: BorderRadius.circular(DonyRadius.md),
-                    boxShadow: DonyShadows.card,
-                  ),
-                ),
-              ),
-              // Positioned.fill : sans ça la rangée de labels se cale en haut
-              // à gauche du Stack et le texte n'est pas centré verticalement.
-              Positioned.fill(
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _RoleSegLabel(
-                        key: const Key('demandes-tab-recues'),
-                        label: 'Reçues',
-                        badge: recuesBadge,
-                        selected: selected == DemandesTab.recues,
-                        onTap: () => onSelect(DemandesTab.recues),
-                      ),
-                    ),
-                    Expanded(
-                      child: _RoleSegLabel(
-                        key: const Key('demandes-tab-envoyees'),
-                        label: 'Envoyées',
-                        badge: envoyeesBadge,
-                        selected: selected == DemandesTab.envoyees,
-                        onTap: () => onSelect(DemandesTab.envoyees),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _RoleSegLabel extends StatelessWidget {
-  const _RoleSegLabel({
-    super.key,
-    required this.label,
-    required this.badge,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final int badge;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            label,
-            style: tt.labelLarge?.copyWith(
-              color: selected ? cs.onSurface : cs.onSurfaceVariant,
-              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-            ),
-          ),
-          if (badge > 0) ...[
-            const SizedBox(width: DonySpacing.xs),
-            Container(
-              constraints: const BoxConstraints(minWidth: 18),
-              height: 18,
-              padding: const EdgeInsets.symmetric(horizontal: 5),
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: cs.error,
-                borderRadius: BorderRadius.circular(9),
-              ),
-              child: Text(
-                badge > 99 ? '99+' : '$badge',
-                style: tt.labelSmall?.copyWith(
-                  color: cs.onError,
-                  fontWeight: FontWeight.w800,
-                  height: 1,
-                ),
-              ),
-            ),
-          ],
+          // Le décompte « à traiter » vit sur les pastilles de filtre de ce
+          // volet ; il n'a plus de toggle où s'afficher, et n'en a plus besoin.
+          const Expanded(child: _DemandesRecuesBody()),
         ],
       ),
     );

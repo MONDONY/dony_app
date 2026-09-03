@@ -15,8 +15,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// Écran « Envoyer » — liste des envois de l'expéditeur.
 ///
 /// Le segmented control « Envois / Demandes » a été retiré : les demandes
-/// d'envoi publiées sont désormais consultables depuis le hub Activités, volet
-/// « Envoyées » de l'écran Demandes (`/demandes`). Cet écran ne montre donc
+/// d'envoi publiées sont consultables depuis le hub Activités, volet
+/// « Publiés » de l'écran « Mes colis » (`/envois`). Cet écran ne montre donc
 /// plus qu'une seule liste.
 class EnvoyerHubScreen extends StatefulWidget {
   const EnvoyerHubScreen({super.key, this.showBackButton = false});
@@ -71,7 +71,7 @@ class _EnvoyerHubScreenState extends State<EnvoyerHubScreen> {
                   onNew: _onNew,
                   showBackButton: widget.showBackButton,
                 ),
-                const Expanded(child: ShipmentListScreen(embedded: true)),
+                const Expanded(child: ShipmentListScreen()),
               ],
             ),
           ),
