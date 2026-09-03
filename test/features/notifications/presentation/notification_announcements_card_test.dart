@@ -1,3 +1,4 @@
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_event.dart';
 import 'package:dony/features/notifications/bloc/notification_state.dart';
@@ -51,9 +52,10 @@ void main() {
     ).thenAnswer((_) => Stream<NotificationState>.value(state));
   }
 
-  Future<void> pumpSheet(WidgetTester tester) async {
+  Future<void> pumpSheet(WidgetTester tester, {ThemeData? theme}) async {
     await tester.pumpWidget(
       MaterialApp(
+        theme: theme,
         home: Scaffold(
           body: BlocProvider<NotificationBloc>.value(
             value: bloc,
@@ -124,5 +126,39 @@ void main() {
     await pumpSheet(tester);
 
     expect(find.text('Annonces Yadony'), findsNothing);
+  });
+
+  testWidgets('en sombre, le chiffre de la pastille n\'est pas blanc', (
+    tester,
+  ) async {
+    stub(
+      NotificationLoaded(
+        notifications: [_notif('n1')],
+        unreadCount: 3,
+        announcements: _summary,
+      ),
+    );
+
+    await pumpSheet(tester, theme: AppTheme.dark());
+
+    final pill = tester.widget<Text>(find.text('2'));
+    expect(pill.style?.color, DonyColors.onBrandHcDark);
+  });
+
+  testWidgets('en clair, le chiffre de la pastille reste onPrimary', (
+    tester,
+  ) async {
+    stub(
+      NotificationLoaded(
+        notifications: [_notif('n1')],
+        unreadCount: 3,
+        announcements: _summary,
+      ),
+    );
+
+    await pumpSheet(tester, theme: AppTheme.light());
+
+    final pill = tester.widget<Text>(find.text('2'));
+    expect(pill.style?.color, AppTheme.light().colorScheme.onPrimary);
   });
 }

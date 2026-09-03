@@ -1,4 +1,5 @@
 import 'package:dony/features/notifications/data/announcements_summary.dart';
+import 'package:dony/features/notifications/data/notification_detail.dart';
 import 'package:dony/features/notifications/data/notification_model.dart';
 import 'package:dony/features/notifications/data/notification_remote_datasource.dart';
 import 'package:dony/features/notifications/data/notification_repository.dart';
@@ -80,6 +81,21 @@ void main() {
 
       expect(await repository.getAnnouncements(), [notif]);
       expect((await repository.getAnnouncementsSummary()).unreadCount, 1);
+    });
+
+    test('getDetail delegates to datasource', () async {
+      final detail = NotificationDetail(
+        id: 'n1',
+        type: 'ADMIN_BROADCAST',
+        category: 'annonce',
+        title: 't',
+        body: 'b',
+        read: false,
+        createdAt: DateTime(2026, 9, 3),
+      );
+      when(() => datasource.fetchDetail('n1')).thenAnswer((_) async => detail);
+
+      expect(await repository.getDetail('n1'), detail);
     });
 
     test('getUnreadCount delegates to datasource', () async {

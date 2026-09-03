@@ -465,7 +465,11 @@ class _AnnouncementsCard extends StatelessWidget {
                     child: Text(
                       unread > 99 ? '99+' : '$unread',
                       style: tt.labelMedium?.copyWith(
-                        color: cs.onPrimary,
+                        // Le primaire sombre est un bleu clair : un chiffre
+                        // blanc n'y fait que 3,28:1, le noir monte à 6,39:1.
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? DonyColors.onBrandHcDark
+                            : cs.onPrimary,
                         fontFeatures: const [FontFeature.tabularFigures()],
                       ),
                     ),
