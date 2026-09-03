@@ -21,7 +21,7 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
   ) async {
     emit(const NotificationLoading());
     try {
-      final notifications = await _repository.getNotifications();
+      final notifications = await _repository.getFeed();
       final unread = await _repository.getUnreadCount();
       emit(
         NotificationLoaded(notifications: notifications, unreadCount: unread),
@@ -31,19 +31,35 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
     }
   }
 
+  /// Marque une ligne lue. Une ligne agrégée se lit par sa clé de groupe :
+  /// toutes les notifications qu'elle recouvre passent lues d'un coup. Le
+  /// compteur global décroît du nombre recouvert, pas d'une unité, parce que
+  /// le serveur compte les événements et non les lignes.
   Future<void> _onMarkRead(
     NotificationMarkReadRequested event,
     Emitter<NotificationState> emit,
   ) async {
     final current = state;
     if (current is! NotificationLoaded) return;
+    NotificationModel? target;
     final updated = current.notifications.map((n) {
-      return n.id == event.id ? _setRead(n) : n;
+      if (n.id != event.id) return n;
+      target = n;
+      return n.copyWith(read: true);
     }).toList();
-    final unread = updated.where((n) => !n.read).length;
+    if (target == null) return;
+    final row = target!;
+    final unread = row.read
+        ? current.unreadCount
+        : _floor(current.unreadCount - row.count);
     emit(current.copyWith(notifications: updated, unreadCount: unread));
     try {
-      await _repository.markRead(event.id);
+      final groupKey = row.groupKey;
+      if (row.isAggregate && groupKey != null) {
+        await _repository.markGroupRead(groupKey);
+      } else {
+        await _repository.markRead(event.id);
+      }
     } catch (_) {
       emit(current);
     }
@@ -55,7 +71,9 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
   ) async {
     final current = state;
     if (current is! NotificationLoaded) return;
-    final updated = current.notifications.map(_setRead).toList();
+    final updated = current.notifications
+        .map((n) => n.copyWith(read: true))
+        .toList();
     emit(current.copyWith(notifications: updated, unreadCount: 0));
     try {
       await _repository.markAllRead();
@@ -70,10 +88,16 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
   ) async {
     final current = state;
     if (current is! NotificationLoaded) return;
-    final optimistic = current.notifications
-        .where((n) => n.id != event.id)
-        .toList();
-    final unread = optimistic.where((n) => !n.read).length;
+    NotificationModel? removed;
+    final optimistic = current.notifications.where((n) {
+      if (n.id != event.id) return true;
+      removed = n;
+      return false;
+    }).toList();
+    final gone = removed;
+    final unread = gone == null || gone.read
+        ? current.unreadCount
+        : _floor(current.unreadCount - gone.count);
     emit(current.copyWith(notifications: optimistic, unreadCount: unread));
     try {
       await _repository.deleteNotification(event.id);
@@ -82,15 +106,5 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
     }
   }
 
-  NotificationModel _setRead(NotificationModel n) {
-    return NotificationModel(
-      id: n.id,
-      type: n.type,
-      title: n.title,
-      body: n.body,
-      data: n.data,
-      read: true,
-      createdAt: n.createdAt,
-    );
-  }
+  static int _floor(int n) => n < 0 ? 0 : n;
 }

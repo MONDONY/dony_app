@@ -9,9 +9,15 @@ class NotificationRepository {
   Future<List<NotificationModel>> getNotifications({int page = 0}) =>
       _datasource.fetchNotifications(page: page);
 
+  Future<List<NotificationModel>> getFeed({int page = 0}) =>
+      _datasource.fetchFeed(page: page);
+
   Future<int> getUnreadCount() => _datasource.fetchUnreadCount();
 
   Future<void> markRead(String id) => _datasource.markRead(id);
+
+  Future<void> markGroupRead(String groupKey) =>
+      _datasource.markGroupRead(groupKey);
 
   Future<void> markAllRead() => _datasource.markAllRead();
 

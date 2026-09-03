@@ -48,6 +48,27 @@ void main() {
       verify(() => datasource.fetchNotifications(page: 2)).called(1);
     });
 
+    test('getFeed delegates to datasource with the page', () async {
+      when(
+        () => datasource.fetchFeed(page: 1),
+      ).thenAnswer((_) async => [notif]);
+
+      final result = await repository.getFeed(page: 1);
+
+      expect(result, [notif]);
+      verify(() => datasource.fetchFeed(page: 1)).called(1);
+    });
+
+    test('markGroupRead delegates to datasource', () async {
+      when(
+        () => datasource.markGroupRead('bid:announcement:a'),
+      ).thenAnswer((_) async {});
+
+      await repository.markGroupRead('bid:announcement:a');
+
+      verify(() => datasource.markGroupRead('bid:announcement:a')).called(1);
+    });
+
     test('getUnreadCount delegates to datasource', () async {
       when(() => datasource.fetchUnreadCount()).thenAnswer((_) async => 3);
 
