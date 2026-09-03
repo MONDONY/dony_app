@@ -424,6 +424,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `trip_matching_viewed` | PackageRequestSearchBloc._onFiltersChanged — chargement d'une recherche colis filtrée « Pour mes trajets » (propriété `count`) |
 | `package_match_alert_toggled` | NotificationPrefsBloc._onPackageMatchAlertToggled — ligne « Nouveaux colis compatibles » des réglages de notifications (propriété `enabled`) |
 | `announcements_inbox_opened` | AnnouncementsInboxBloc._onLoad — boîte « Annonces Yadony » chargée depuis la carte du sheet de notifications (propriétés `count`, `unread`), jamais le texte d'une annonce |
+| `notification_detail_opened` | NotificationDetailCubit.load — écran de détail générique d'une notification chargé, réservé aux lignes sans deeplink (propriétés `type`, `category`), jamais le texte |
 | `notification_pref_toggled` | NotificationPrefsBloc._onToggled — bascule d'une catégorie de push confirmée par le serveur (propriétés `pref`, `enabled`) ; non émis si l'écriture échoue |
 | `subscription_push_toggled` | SubscriptionsBloc._onTogglePush — cloche d'un voyageur suivi, tracée avec l'état rendu par le serveur (propriété `enabled`). Ne mesure que le push : la notification reste inscrite au centre de notifications dans les deux cas |
 | `subscription_removed` | SubscriptionsBloc._onUnsubscribe — désabonnement confirmé, après acquittement du serveur |

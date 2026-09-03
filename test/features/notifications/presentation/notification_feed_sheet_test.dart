@@ -185,14 +185,25 @@ void main() {
       expect(routeForNotification(aggregate), '/announcements/a1/bids');
     });
 
-    test('une ligne seule ignore le deeplink et garde le resolver', () {
-      final single = _notif(
-        id: 's',
-        createdAt: now,
-        type: 'KYC_VERIFIED',
-        deeplink: 'yadony://ailleurs',
-      );
-      expect(routeForNotification(single), '/kyc/status');
+    test(
+      'une ligne seule suit son deeplink, le resolver ne sert qu\'en repli',
+      () {
+        final withLink = _notif(
+          id: 's',
+          createdAt: now,
+          type: 'KYC_VERIFIED',
+          deeplink: 'yadony://kyc/verify',
+        );
+        expect(routeForNotification(withLink), '/kyc/verify');
+
+        final legacy = _notif(id: 'l', createdAt: now, type: 'KYC_VERIFIED');
+        expect(routeForNotification(legacy), '/kyc/status');
+      },
+    );
+
+    test('sans deeplink ni route connue, la ligne ouvre son détail', () {
+      final annonce = _notif(id: 'a1', createdAt: now, type: 'ADMIN_BROADCAST');
+      expect(routeForNotification(annonce), '/notifications/a1');
     });
 
     testWidgets('le tap lit la ligne par son id, comme une ligne seule', (

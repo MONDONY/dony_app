@@ -10,6 +10,7 @@ import 'package:dony/features/notifications/data/announcements_summary.dart';
 import 'package:dony/features/notifications/data/notification_model.dart';
 import 'package:dony/features/notifications/notification_route_resolver.dart';
 import 'package:dony/features/notifications/presentation/announcements_inbox_screen.dart';
+import 'package:dony/features/notifications/presentation/notification_detail_screen.dart';
 import 'package:dony/features/subscriptions/data/subscription_badge_consumer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -17,18 +18,27 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-/// Résout la route d'une ligne.
+/// Résout la route d'une ligne : le `deeplink` décide.
 ///
-/// Une ligne agrégée va là où le serveur l'envoie (les offres de l'annonce,
-/// les correspondances de l'alerte) : c'est sa `deeplink`, qui vise la
-/// ressource commune et non la dernière notification. Une ligne seule passe
-/// par le resolver partagé avec le tap sur push, pour que la boîte de
-/// réception et les push mènent toujours au même endroit.
-String? routeForNotification(NotificationModel n) {
-  if (n.isAggregate) {
-    return n.deeplinkRoute ?? resolveNotificationRoute(n.type, n.data);
-  }
-  return resolveNotificationRoute(n.type, n.data);
+/// Présent, on y va : c'est le serveur qui connaît la ressource cible, et
+/// pour une ligne agrégée il vise la ressource commune (les offres de
+/// l'annonce, les correspondances de l'alerte) et non la dernière
+/// notification. Absent, le resolver partagé avec le tap sur push prend le
+/// relais pour les lignes servies avant le contrat. Sans rien, et seulement
+/// alors, la ligne ouvre l'écran de détail générique : c'est le cas des
+/// annonces plateforme, dont le texte complet n'existe que là.
+String routeForNotification(NotificationModel n) {
+  return n.deeplinkRoute ??
+      resolveNotificationRoute(n.type, n.data) ??
+      NotificationDetailScreen.routeFor(n.id);
+}
+
+/// `true` si [route] est connue du routeur : un deeplink périmé ou malformé
+/// n'ouvre pas la page d'erreur par défaut, le sheet le dit et reste ouvert.
+bool notificationRouteExists(GoRouter router, String route) {
+  final uri = Uri.tryParse(route);
+  if (uri == null) return false;
+  return !router.configuration.findMatch(uri).isError;
 }
 
 /// Sections temporelles du feed. Une section vide ne s'affiche pas.
@@ -300,17 +310,29 @@ class _NotificationList extends StatelessWidget {
   /// Marque lue, puis navigue. La lecture part avant la navigation et ne
   /// dépend pas de son succès. Le sheet se ferme avant de pousser la route.
   void _open(BuildContext context, NotificationModel notif) {
+    // La lecture part d'abord et ne dépend pas de la navigation.
     context.read<NotificationBloc>().add(
       NotificationMarkReadRequested(notif.id),
     );
     unawaited(consumeSubscriptionBadge(notif.type, notif.data));
+    final router = GoRouter.maybeOf(context);
+    if (router == null) return;
     final route = routeForNotification(notif);
-    if (route == null) return;
+    if (!notificationRouteExists(router, route)) {
+      // Deeplink périmé ou inconnu de cette version de l'app : on le dit,
+      // plutôt que d'ouvrir une page vide, et le sheet reste ouvert.
+      DonySnackbar.show(
+        context,
+        message: 'Cette notification ne mène plus nulle part.',
+        type: DonySnackbarType.error,
+      );
+      return;
+    }
     Navigator.of(context, rootNavigator: true).pop();
     if (isShellTabRoute(route)) {
-      context.go(route);
+      router.go(route);
     } else {
-      context.push(route);
+      router.push(route);
     }
   }
 
@@ -506,7 +528,6 @@ class _NotificationTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final hasRoute = routeForNotification(notification) != null;
 
     return InkWell(
       onTap: onTap,
@@ -582,7 +603,7 @@ class _NotificationTile extends StatelessWidget {
                 ],
               ),
             ),
-            if (hasRoute) ...[
+            ...[
               const SizedBox(width: DonySpacing.sm),
               Padding(
                 padding: const EdgeInsets.only(top: 1),

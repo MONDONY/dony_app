@@ -1,5 +1,6 @@
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/notifications/data/announcements_summary.dart';
+import 'package:dony/features/notifications/data/notification_detail.dart';
 import 'package:dony/features/notifications/data/notification_model.dart';
 
 class NotificationRemoteDatasource {
@@ -50,6 +51,12 @@ class NotificationRemoteDatasource {
       '/notifications/annonces/summary',
     );
     return AnnouncementsSummary.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  /// Une notification seule avec son texte complet (écran de détail).
+  Future<NotificationDetail> fetchDetail(String id) async {
+    final response = await _apiClient.dio.get('/notifications/$id');
+    return NotificationDetail.fromJson(response.data as Map<String, dynamic>);
   }
 
   List<NotificationModel> _content(dynamic data) {

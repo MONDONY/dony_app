@@ -5,15 +5,17 @@ import 'package:dony/features/notifications/bloc/announcements_inbox_event.dart'
 import 'package:dony/features/notifications/bloc/announcements_inbox_state.dart';
 import 'package:dony/features/notifications/data/notification_model.dart';
 import 'package:dony/features/notifications/presentation/notification_bottom_sheet.dart';
+import 'package:dony/features/notifications/presentation/notification_detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 /// La boîte « Annonces Yadony » : la liste des annonces plateforme.
 ///
 /// Pas d'avatar ni d'icône de type : tout vient de la même source, une icône
-/// répétée serait du bruit. Le tap marque l'annonce lue ; l'écran de détail
-/// avec le texte complet arrive avec le routage (lot 6).
+/// répétée serait du bruit. Le tap marque l'annonce lue et ouvre son texte
+/// complet sur l'écran de détail.
 class AnnouncementsInboxScreen extends StatelessWidget {
   const AnnouncementsInboxScreen({super.key});
 
@@ -111,9 +113,15 @@ class _AnnouncementsList extends StatelessWidget {
           final a = announcements[index];
           return _AnnouncementTile(
             announcement: a,
-            onTap: () => context.read<AnnouncementsInboxBloc>().add(
-              AnnouncementsInboxMarkReadRequested(a.id),
-            ),
+            onTap: () {
+              // Lue d'abord, puis le texte complet sur l'écran de détail.
+              context.read<AnnouncementsInboxBloc>().add(
+                AnnouncementsInboxMarkReadRequested(a.id),
+              );
+              GoRouter.maybeOf(
+                context,
+              )?.push(NotificationDetailScreen.routeFor(a.id));
+            },
           ).animate().fadeIn(
             delay: Duration(milliseconds: 40 * index),
             duration: 280.ms,

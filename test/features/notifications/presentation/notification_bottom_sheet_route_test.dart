@@ -28,8 +28,11 @@ void main() {
       );
     });
 
-    test('CORRIDOR_ALERT without announcementId returns null', () {
-      expect(routeForNotification(_notif('CORRIDOR_ALERT')), isNull);
+    test('CORRIDOR_ALERT without announcementId falls back to the detail', () {
+      expect(
+        routeForNotification(_notif('CORRIDOR_ALERT')),
+        '/notifications/n1',
+      );
     });
 
     test('PACKAGE_MATCH routes to the matching package request detail', () {
@@ -41,8 +44,11 @@ void main() {
       );
     });
 
-    test('PACKAGE_MATCH without requestId returns null', () {
-      expect(routeForNotification(_notif('PACKAGE_MATCH')), isNull);
+    test('PACKAGE_MATCH without requestId falls back to the detail', () {
+      expect(
+        routeForNotification(_notif('PACKAGE_MATCH')),
+        '/notifications/n1',
+      );
     });
 
     test('BID_CREATED routes to announcement bids page', () {
@@ -61,12 +67,12 @@ void main() {
       );
     });
 
-    test('BID_ACCEPTED with non-UUID bidId returns null', () {
+    test('BID_ACCEPTED with non-UUID bidId falls back to the detail', () {
       expect(
         routeForNotification(
           _notif('BID_ACCEPTED', data: {'bidId': '../../evil'}),
         ),
-        isNull,
+        '/notifications/n1',
       );
     });
 
@@ -116,8 +122,8 @@ void main() {
       },
     );
 
-    test('unknown type returns null', () {
-      expect(routeForNotification(_notif('WHATEVER')), isNull);
+    test('unknown type falls back to the detail', () {
+      expect(routeForNotification(_notif('WHATEVER')), '/notifications/n1');
     });
 
     test(

@@ -1,4 +1,5 @@
 import 'package:dony/features/notifications/data/announcements_summary.dart';
+import 'package:dony/features/notifications/data/notification_detail.dart';
 import 'package:dony/features/notifications/data/notification_model.dart';
 import 'package:dony/features/notifications/data/notification_remote_datasource.dart';
 
@@ -18,6 +19,9 @@ class NotificationRepository {
 
   Future<AnnouncementsSummary> getAnnouncementsSummary() =>
       _datasource.fetchAnnouncementsSummary();
+
+  Future<NotificationDetail> getDetail(String id) =>
+      _datasource.fetchDetail(id);
 
   Future<int> getUnreadCount() => _datasource.fetchUnreadCount();
 

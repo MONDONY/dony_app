@@ -285,6 +285,10 @@ abstract final class AnalyticsEvents {
   /// notifications (propriétés `count`, `unread`), sans aucun texte d'annonce.
   static const announcementsInboxOpened = 'announcements_inbox_opened';
 
+  /// Écran de détail générique d'une notification chargé (propriétés `type`,
+  /// `category`), jamais son texte.
+  static const notificationDetailOpened = 'notification_detail_opened';
+
   // Préférences de notification (Réglages › Notifications)
   static const notificationPrefToggled = 'notification_pref_toggled';
 
