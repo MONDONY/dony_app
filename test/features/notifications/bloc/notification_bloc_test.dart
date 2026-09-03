@@ -2,6 +2,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_event.dart';
 import 'package:dony/features/notifications/bloc/notification_state.dart';
+import 'package:dony/features/notifications/data/announcements_summary.dart';
 import 'package:dony/features/notifications/data/notification_model.dart';
 import 'package:dony/features/notifications/data/notification_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -23,6 +24,22 @@ NotificationModel _makeNotif({required String id, bool read = false}) =>
       createdAt: _now,
     );
 
+/// Ligne agrégée telle que la sert `GET /notifications/feed`.
+NotificationModel _makeAggregate({required String id, int count = 3}) =>
+    NotificationModel(
+      id: id,
+      type: 'BID_CREATED',
+      title: '$count demandes d\'envoi',
+      body: 'Body',
+      data: {},
+      read: false,
+      createdAt: _now,
+      groupKey: 'bid:announcement:ann-1',
+      deeplink: 'yadony://announcements/ann-1/bids',
+      count: count,
+      notificationIds: List.generate(count, (i) => '$id-$i'),
+    );
+
 void main() {
   late MockNotificationRepository repository;
 
@@ -36,7 +53,7 @@ void main() {
     blocTest<NotificationBloc, NotificationState>(
       'emits Loading then Loaded on success',
       build: () {
-        when(() => repository.getNotifications()).thenAnswer(
+        when(() => repository.getFeed()).thenAnswer(
           (_) async => [_makeNotif(id: '1'), _makeNotif(id: '2', read: true)],
         );
         when(() => repository.getUnreadCount()).thenAnswer((_) async => 1);
@@ -54,7 +71,7 @@ void main() {
     blocTest<NotificationBloc, NotificationState>(
       'emits Loading then Error on failure',
       build: () {
-        when(() => repository.getNotifications()).thenThrow(Exception('err'));
+        when(() => repository.getFeed()).thenThrow(Exception('err'));
         when(() => repository.getUnreadCount()).thenAnswer((_) async => 0);
         return NotificationBloc(repository);
       },
@@ -161,6 +178,150 @@ void main() {
           'restored',
           1,
         ),
+      ],
+    );
+
+    // ── Lignes agrégées ─────────────────────────────────────────────────────
+
+    blocTest<NotificationBloc, NotificationState>(
+      'reading an aggregate marks the whole group and decrements by its count',
+      build: () {
+        when(
+          () => repository.markGroupRead('bid:announcement:ann-1'),
+        ).thenAnswer((_) async {});
+        return NotificationBloc(repository);
+      },
+      seed: () => NotificationLoaded(
+        notifications: [
+          _makeAggregate(id: 'agg'),
+          _makeNotif(id: '2'),
+        ],
+        unreadCount: 4,
+      ),
+      act: (bloc) => bloc.add(const NotificationMarkReadRequested('agg')),
+      expect: () => [
+        isA<NotificationLoaded>()
+            .having((s) => s.notifications.first.read, 'aggregate read', true)
+            .having((s) => s.unreadCount, 'unread', 1),
+      ],
+      verify: (_) {
+        verify(
+          () => repository.markGroupRead('bid:announcement:ann-1'),
+        ).called(1);
+        verifyNever(() => repository.markRead(any()));
+      },
+    );
+
+    blocTest<NotificationBloc, NotificationState>(
+      'reading an already read line leaves unreadCount untouched',
+      build: () {
+        when(() => repository.markRead('1')).thenAnswer((_) async {});
+        return NotificationBloc(repository);
+      },
+      seed: () => NotificationLoaded(
+        notifications: [_makeNotif(id: '1', read: true)],
+        unreadCount: 5,
+      ),
+      act: (bloc) => bloc.add(const NotificationMarkReadRequested('1')),
+      expect: () => [
+        isA<NotificationLoaded>().having((s) => s.unreadCount, 'unread', 5),
+      ],
+    );
+
+    blocTest<NotificationBloc, NotificationState>(
+      'restores previous state when group read fails',
+      build: () {
+        when(
+          () => repository.markGroupRead('bid:announcement:ann-1'),
+        ).thenThrow(Exception('network'));
+        return NotificationBloc(repository);
+      },
+      seed: () => NotificationLoaded(
+        notifications: [_makeAggregate(id: 'agg')],
+        unreadCount: 3,
+      ),
+      act: (bloc) => bloc.add(const NotificationMarkReadRequested('agg')),
+      expect: () => [
+        isA<NotificationLoaded>().having((s) => s.unreadCount, 'optimistic', 0),
+        isA<NotificationLoaded>().having((s) => s.unreadCount, 'restored', 3),
+      ],
+    );
+
+    // ── Carte « Annonces Yadony » ───────────────────────────────────────────
+
+    blocTest<NotificationBloc, NotificationState>(
+      'le chargement embarque le résumé des annonces',
+      build: () {
+        when(() => repository.getFeed()).thenAnswer((_) async => []);
+        when(() => repository.getUnreadCount()).thenAnswer((_) async => 2);
+        when(() => repository.getAnnouncementsSummary()).thenAnswer(
+          (_) async => const AnnouncementsSummary(
+            unreadCount: 2,
+            latestId: 'a1',
+            latestTitle: 'Maintenance',
+          ),
+        );
+        return NotificationBloc(repository);
+      },
+      act: (bloc) => bloc.add(const NotificationsLoadRequested()),
+      expect: () => [
+        const NotificationLoading(),
+        isA<NotificationLoaded>()
+            .having((s) => s.announcements.unreadCount, 'annonces non lues', 2)
+            .having(
+              (s) => s.announcements.latestTitle,
+              'dernière',
+              'Maintenance',
+            ),
+      ],
+    );
+
+    blocTest<NotificationBloc, NotificationState>(
+      'un résumé en échec ne bloque pas le feed',
+      build: () {
+        when(() => repository.getFeed()).thenAnswer((_) async => []);
+        when(() => repository.getUnreadCount()).thenAnswer((_) async => 0);
+        when(
+          () => repository.getAnnouncementsSummary(),
+        ).thenThrow(Exception('boom'));
+        return NotificationBloc(repository);
+      },
+      act: (bloc) => bloc.add(const NotificationsLoadRequested()),
+      expect: () => [
+        const NotificationLoading(),
+        isA<NotificationLoaded>().having(
+          (s) => s.announcements.hasAny,
+          'carte vide',
+          false,
+        ),
+      ],
+    );
+
+    blocTest<NotificationBloc, NotificationState>(
+      '« Tout lire » remet aussi le compteur de la carte à zéro',
+      build: () {
+        when(() => repository.markAllRead()).thenAnswer((_) async {});
+        return NotificationBloc(repository);
+      },
+      seed: () => NotificationLoaded(
+        notifications: [_makeNotif(id: '1')],
+        unreadCount: 3,
+        announcements: const AnnouncementsSummary(
+          unreadCount: 2,
+          latestId: 'a1',
+          latestTitle: 'Maintenance',
+        ),
+      ),
+      act: (bloc) => bloc.add(const NotificationsMarkAllReadRequested()),
+      expect: () => [
+        isA<NotificationLoaded>()
+            .having((s) => s.unreadCount, 'unread', 0)
+            .having((s) => s.announcements.unreadCount, 'carte', 0)
+            .having(
+              (s) => s.announcements.latestTitle,
+              'dernière',
+              'Maintenance',
+            ),
       ],
     );
   });
