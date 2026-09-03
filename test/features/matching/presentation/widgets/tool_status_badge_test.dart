@@ -34,6 +34,10 @@ void main() {
       find.byKey(const Key('tool-status-badge')),
     );
     expect((box.decoration! as BoxDecoration).color, cs.successLight);
+    final text = tester.widget<Text>(find.text('2 adresses'));
+    expect(text.style?.color, cs.success);
+    final icon = tester.widget<DonyIcon>(find.byType(DonyIcon));
+    expect(icon.color, cs.success);
   });
 
   testWidgets('pas prêt : « À configurer », sans icône, fond neutre', (
@@ -59,6 +63,8 @@ void main() {
       (box.decoration! as BoxDecoration).color,
       cs.surfaceContainerHighest,
     );
+    final text = tester.widget<Text>(find.text('À configurer'));
+    expect(text.style?.color, cs.onSurfaceVariant);
   });
 
   testWidgets('en sombre, le fond success vient bien du thème sombre', (
@@ -82,5 +88,7 @@ void main() {
       (box.decoration! as BoxDecoration).color,
       AppTheme.dark().colorScheme.successLight,
     );
+    final text = tester.widget<Text>(find.text('1 alerte'));
+    expect(text.style?.color, AppTheme.dark().colorScheme.success);
   });
 }
