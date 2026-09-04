@@ -260,6 +260,9 @@ Future<void> _pump(
       route('/trips/publish-intro', 'Intro trajet'),
       route('/parcels/send-intro', 'Intro colis'),
       route('/tracking/search', 'Recherche'),
+      route('/tracking/scan-hub', 'Scan'),
+      route('/settings', 'Paramètres'),
+      route('/payments/wallet', 'Portefeuille'),
       route('/profile/shipments/history', 'Écran historique'),
       route('/profile/help/faq', 'FAQ'),
       route('/corridor-alerts', 'Alertes'),
@@ -475,10 +478,6 @@ void main() {
       await expectNavigation(tester, 'Discussions de prix', '/negotiations');
     });
 
-    testWidgets('Suivre un colis → recherche de suivi', (tester) async {
-      await expectNavigation(tester, 'Suivre un colis', '/tracking/search');
-    });
-
     testWidgets('Publier un trajet → écran d\'intro trajet', (tester) async {
       await expectNavigation(
         tester,
@@ -532,6 +531,133 @@ void main() {
         tester,
         'Ma grille de prix',
         '/profile/price-grid',
+      );
+    });
+  });
+
+  group('menu de l\'en-tête', () {
+    Future<void> openMenu(WidgetTester tester) async {
+      await _pump(tester);
+      await tester.tap(find.byKey(const Key('hub-menu-button')));
+      await tester.pumpAndSettle();
+    }
+
+    Future<void> expectMenuNavigation(
+      WidgetTester tester,
+      Key entry,
+      String expectedRoute,
+    ) async {
+      await openMenu(tester);
+      await tester.ensureVisible(find.byKey(entry));
+      await tester.tap(find.byKey(entry), warnIfMissed: false);
+      await tester.pumpAndSettle();
+      expect(visited, contains(expectedRoute));
+    }
+
+    // Le bouton « Suivre un colis » de l'en-tête a disparu : le suivi ne
+    // s'atteint plus que par le menu.
+    testWidgets('le burger remplace l\'ancien bouton de suivi', (tester) async {
+      await _pump(tester);
+
+      expect(find.byKey(const Key('hub-menu-button')), findsOneWidget);
+      expect(find.text('Suivre un colis'), findsNothing);
+    });
+
+    testWidgets('Suivre un colis → recherche de suivi', (tester) async {
+      await expectMenuNavigation(
+        tester,
+        const Key('menu-quick-track'),
+        '/tracking/search',
+      );
+    });
+
+    testWidgets('Scanner un colis → hub de scan', (tester) async {
+      await expectMenuNavigation(
+        tester,
+        const Key('menu-quick-scan'),
+        '/tracking/scan-hub',
+      );
+    });
+
+    testWidgets('Paramètres → réglages', (tester) async {
+      await expectMenuNavigation(
+        tester,
+        const Key('menu-quick-settings'),
+        '/settings',
+      );
+    });
+
+    testWidgets('Portefeuille → wallet', (tester) async {
+      await expectMenuNavigation(
+        tester,
+        const Key('menu-item-wallet'),
+        '/payments/wallet',
+      );
+    });
+
+    testWidgets('Mes alertes → alertes corridor', (tester) async {
+      await expectMenuNavigation(
+        tester,
+        const Key('menu-tool-alerts'),
+        '/corridor-alerts',
+      );
+    });
+
+    // Un outil ouvert depuis le menu passe par le même chemin que sa tuile :
+    // au retour, la complétion est rechargée pour que la jauge suive.
+    testWidgets('un outil du menu recharge la complétion au retour', (
+      tester,
+    ) async {
+      await openMenu(tester);
+      clearInteractions(_toolsRepoUnderTest);
+
+      await tester.tap(
+        find.byKey(const Key('menu-tool-recipients')),
+        warnIfMissed: false,
+      );
+      await tester.pumpAndSettle();
+      expect(visited, contains('/profile/recipients'));
+
+      tester.state<NavigatorState>(find.byType(Navigator).last).pop();
+      await tester.pumpAndSettle();
+
+      verify(() => _toolsRepoUnderTest.getToolsCompletion()).called(1);
+    });
+
+    // La règle de contenu du menu : il ne redouble jamais « En ce moment ».
+    // Chaque libellé reste unique dans l'arbre, celui de sa tuile.
+    testWidgets('le menu ne reprend pas les tuiles « En ce moment »', (
+      tester,
+    ) async {
+      await openMenu(tester);
+
+      expect(find.text('Trajets actifs'), findsOneWidget);
+      expect(find.text('Mes colis'), findsOneWidget);
+      expect(find.text('Demandes reçues'), findsOneWidget);
+      expect(find.text('Discussions de prix'), findsOneWidget);
+    });
+
+    testWidgets('les outils portent leur pastille et le décompte global', (
+      tester,
+    ) async {
+      await openMenu(tester);
+
+      // Le jeu par défaut du harnais : adresses 2, modèles 1, grille 6 →
+      // trois outils prêts sur cinq.
+      expect(find.text('3/5 prêts'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('menu-tool-alerts')),
+          matching: find.text('À configurer'),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('menu-tool-addresses')),
+          matching: find.text('2 adresses'),
+        ),
+        findsOneWidget,
       );
     });
   });

@@ -442,8 +442,12 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `activites_hub_trips_opened` / `activites_hub_envois_opened` / `activites_hub_demandes_opened` / `activites_hub_negotiations_opened` | ActivitesHubScreen — tap sur une tuile d'activité du hub. `activites_hub_envois_opened` porte la tuile « Mes colis », qui ouvre `/envois` (MesColisScreen : envois en route + demandes publiées) |
 | `activites_hub_trip_create_opened` / `activites_hub_request_create_opened` | ActivitesHubScreen — CTA « Publier un trajet » / « Publier un colis » |
 | `activites_hub_stats_period_changed` | ActivitesHubScreen — changement de période des statistiques |
-| `activites_hub_search_opened` | ActivitesHubScreen — bouton « Suivre un colis » du header |
-| `activites_hub_history_opened` / `activites_hub_help_opened` / `activites_hub_alerts_opened` / `activites_hub_templates_opened` / `activites_hub_addresses_opened` / `activites_hub_recipients_opened` | ActivitesHubScreen — tuiles de la section Outils |
+| `activites_hub_menu_opened` | ActivitesHubScreen._openMenu — bouton burger du header, à l'ouverture de la feuille de menu (`ActivitesMenuSheet`). Émis même si la feuille est refermée sans choisir : c'est l'entrée de l'entonnoir |
+| `activites_hub_search_opened` | ActivitesHubScreen._openMenu — entrée « Suivre un colis » de la feuille de menu (l'ancien bouton du header a été remplacé par le burger) |
+| `activites_hub_scan_opened` | ActivitesHubScreen._openMenu — entrée « Scanner un colis » de la feuille de menu |
+| `activites_hub_settings_opened` | ActivitesHubScreen._openMenu — entrée « Paramètres » de la feuille de menu |
+| `activites_hub_wallet_opened` | ActivitesHubScreen._openMenu — entrée « Portefeuille » de la feuille de menu |
+| `activites_hub_history_opened` / `activites_hub_help_opened` / `activites_hub_alerts_opened` / `activites_hub_templates_opened` / `activites_hub_addresses_opened` / `activites_hub_recipients_opened` | ActivitesHubScreen — tuiles de la section Outils, et entrées correspondantes de la feuille de menu du burger (même événement des deux côtés : c'est la destination qui est mesurée, pas le chemin) |
 | `activites_hub_tools_completion_loaded` | ToolsCompletionCubit.load — `GET /users/me/tools-completion` réussi (propriétés `ready`, `total`), non émis en cas d'échec |
 | `activites_hub_tools_cta_tapped` | ActivitesHubScreen._onToolCta — tap sur le CTA de la carte « Publiez en 3 taps » (propriété `tool` : clé API de l'outil ouvert) |
 | `activites_hub_intro_dismissed` | ActivitesHubScreen — fermeture (X) de la carte d'introduction |

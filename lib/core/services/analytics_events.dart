@@ -250,6 +250,10 @@ abstract final class AnalyticsEvents {
   static const activitesHubStatsPeriodChanged =
       'activites_hub_stats_period_changed';
   static const activitesHubSearchOpened = 'activites_hub_search_opened';
+  static const activitesHubMenuOpened = 'activites_hub_menu_opened';
+  static const activitesHubScanOpened = 'activites_hub_scan_opened';
+  static const activitesHubSettingsOpened = 'activites_hub_settings_opened';
+  static const activitesHubWalletOpened = 'activites_hub_wallet_opened';
   static const activitesHubHistoryOpened = 'activites_hub_history_opened';
   static const activitesHubHelpOpened = 'activites_hub_help_opened';
   static const activitesHubIntroDismissed = 'activites_hub_intro_dismissed';
