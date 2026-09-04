@@ -260,4 +260,33 @@ void main() {
     expect(result.trips, hasLength(1));
     expect(result.packages, isEmpty);
   });
+
+  test('getById → GET /me/corridor-alerts/{id}', () async {
+    when(
+      () => dio.get<Map<String, dynamic>>('/me/corridor-alerts/a1'),
+    ).thenAnswer(
+      (_) async =>
+          _resp<Map<String, dynamic>>({...alertJson, 'newMatchCount': 2}),
+    );
+    final alert = await repo.getById('a1');
+    expect(alert.id, 'a1');
+    expect(alert.newMatchCount, 2);
+  });
+
+  test(
+    'markSeen → POST /me/corridor-alerts/{id}/seen, renvoie l\'alerte',
+    () async {
+      when(
+        () => dio.post<Map<String, dynamic>>('/me/corridor-alerts/a1/seen'),
+      ).thenAnswer(
+        (_) async =>
+            _resp<Map<String, dynamic>>({...alertJson, 'newMatchCount': 0}),
+      );
+      final alert = await repo.markSeen('a1');
+      expect(alert.newMatchCount, 0);
+      verify(
+        () => dio.post<Map<String, dynamic>>('/me/corridor-alerts/a1/seen'),
+      ).called(1);
+    },
+  );
 }

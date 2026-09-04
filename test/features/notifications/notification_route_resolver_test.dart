@@ -228,6 +228,45 @@ void main() {
     });
   });
 
+  group('resolveNotificationRoute — CORRIDOR_ALERT', () {
+    const alertId = '0a1b2c3d-e5f6-7890-abcd-ef1234567890';
+
+    test('match instantané (un trajet) → détail du trajet', () {
+      expect(
+        resolveNotificationRoute('CORRIDOR_ALERT', {
+          'announcementId': announcementId,
+          'alertId': alertId,
+        }),
+        '/traveler/$announcementId',
+      );
+    });
+
+    test('match instantané (un colis) → détail public du colis', () {
+      expect(
+        resolveNotificationRoute('CORRIDOR_ALERT', {
+          'requestId': requestId,
+          'alertId': alertId,
+        }),
+        '/package-requests/$requestId/public',
+      );
+    });
+
+    test('digest (plusieurs matchs, pas de trajet) → correspondances', () {
+      expect(
+        resolveNotificationRoute('CORRIDOR_ALERT', {'alertId': alertId}),
+        '/corridor-alerts/$alertId/matches',
+      );
+    });
+
+    test('sans id valide → null', () {
+      expect(
+        resolveNotificationRoute('CORRIDOR_ALERT', {'alertId': '../x'}),
+        isNull,
+      );
+      expect(resolveNotificationRoute('CORRIDOR_ALERT', {}), isNull);
+    });
+  });
+
   group('isShellTabRoute', () {
     test('shell tabs use go()', () {
       for (final tab in [

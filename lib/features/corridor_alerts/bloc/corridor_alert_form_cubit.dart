@@ -6,6 +6,7 @@ import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/corridor_alerts/data/corridor_alert_repository.dart';
 import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
+import 'package:dony/features/corridor_alerts/data/models/alert_notify_mode.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
 import 'package:equatable/equatable.dart';
 
@@ -24,6 +25,7 @@ class CorridorAlertFormState extends Equatable {
     this.status = CorridorAlertFormStatus.editing,
     this.errorMessage,
     this.direction = AlertDirection.travelerWantsPackages,
+    this.notifyMode = AlertNotifyMode.instant,
     this.centerLat,
     this.centerLng,
     this.radiusKm,
@@ -41,6 +43,7 @@ class CorridorAlertFormState extends Equatable {
   final CorridorAlertFormStatus status;
   final String? errorMessage;
   final AlertDirection direction;
+  final AlertNotifyMode notifyMode;
 
   // ── Zone de remise optionnelle (alertes trajet) ──────────────────────────
   final double? centerLat;
@@ -69,6 +72,7 @@ class CorridorAlertFormState extends Equatable {
     CorridorAlertFormStatus? status,
     Object? errorMessage = _unset,
     AlertDirection? direction,
+    AlertNotifyMode? notifyMode,
     Object? centerLat = _unset,
     Object? centerLng = _unset,
     Object? radiusKm = _unset,
@@ -99,6 +103,7 @@ class CorridorAlertFormState extends Equatable {
         ? this.errorMessage
         : errorMessage as String?,
     direction: direction ?? this.direction,
+    notifyMode: notifyMode ?? this.notifyMode,
     centerLat: identical(centerLat, _unset)
         ? this.centerLat
         : centerLat as double?,
@@ -124,6 +129,7 @@ class CorridorAlertFormState extends Equatable {
     status,
     errorMessage,
     direction,
+    notifyMode,
     centerLat,
     centerLng,
     radiusKm,
@@ -138,11 +144,31 @@ class CorridorAlertFormCubit extends Cubit<CorridorAlertFormState> {
     CorridorAlertModel? editing,
     AlertDirection initialDirection = AlertDirection.travelerWantsPackages,
     HiveService? hiveService,
+    CorridorAlertDraft? prefill,
   }) : _editingId = editing?.id,
        _hiveService = hiveService,
        super(
          editing == null
-             ? CorridorAlertFormState(direction: initialDirection)
+             ? (prefill == null
+                   ? CorridorAlertFormState(direction: initialDirection)
+                   // Création préremplie (dupliquer, « m'alerter pour cette
+                   // recherche ») : un nouveau formulaire, pas une édition.
+                   : CorridorAlertFormState(
+                       departureCity: prefill.departureCity,
+                       arrivalCity: prefill.arrivalCity,
+                       departureCountryCode: prefill.departureCountryCode,
+                       arrivalCountryCode: prefill.arrivalCountryCode,
+                       dateFrom: prefill.dateFrom,
+                       dateTo: prefill.dateTo,
+                       minWeightKg: prefill.minWeightKg,
+                       contentCategories: prefill.contentCategories,
+                       direction: prefill.direction,
+                       notifyMode: prefill.notifyMode,
+                       centerLat: prefill.centerLat,
+                       centerLng: prefill.centerLng,
+                       radiusKm: prefill.radiusKm,
+                       centerLabel: prefill.centerLabel,
+                     ))
              : CorridorAlertFormState(
                  departureCity: editing.departureCity,
                  arrivalCity: editing.arrivalCity,
@@ -153,6 +179,7 @@ class CorridorAlertFormCubit extends Cubit<CorridorAlertFormState> {
                  minWeightKg: editing.minWeightKg,
                  contentCategories: editing.contentCategories,
                  direction: editing.direction,
+                 notifyMode: editing.notifyMode,
                  centerLat: editing.centerLat,
                  centerLng: editing.centerLng,
                  radiusKm: editing.radiusKm,
@@ -198,6 +225,8 @@ class CorridorAlertFormCubit extends Cubit<CorridorAlertFormState> {
   void setMinWeight(double? kg) => emit(state.copyWith(minWeightKg: kg));
 
   void setDirection(AlertDirection d) => emit(state.copyWith(direction: d));
+
+  void setNotifyMode(AlertNotifyMode m) => emit(state.copyWith(notifyMode: m));
 
   /// Définit la zone de remise (centre + rayon + label). Réservé aux alertes
   /// trajet ; l'UI ne l'expose que pour `senderWantsTrips`.
@@ -257,6 +286,7 @@ class CorridorAlertFormCubit extends Cubit<CorridorAlertFormState> {
       minWeightKg: state.minWeightKg,
       contentCategories: state.contentCategories,
       direction: state.direction,
+      notifyMode: state.notifyMode,
       centerLat: state.centerLat,
       centerLng: state.centerLng,
       radiusKm: state.radiusKm,

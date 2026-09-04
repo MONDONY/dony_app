@@ -1,4 +1,5 @@
 import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
+import 'package:dony/features/corridor_alerts/data/models/alert_notify_mode.dart';
 import 'package:equatable/equatable.dart';
 
 /// Alerte corridor du voyageur (saved search). Mappe `CorridorAlertResponse`
@@ -16,8 +17,11 @@ class CorridorAlertModel extends Equatable {
     this.contentCategories = const [],
     required this.active,
     this.matchCount = 0,
+    this.newMatchCount = 0,
+    this.lastSeenAt,
     required this.createdAt,
     this.direction = AlertDirection.travelerWantsPackages,
+    this.notifyMode = AlertNotifyMode.instant,
     this.centerLat,
     this.centerLng,
     this.radiusKm,
@@ -34,9 +38,20 @@ class CorridorAlertModel extends Equatable {
   final double? minWeightKg;
   final List<String> contentCategories;
   final bool active;
+
+  /// Tout ce qui matche aujourd'hui.
   final int matchCount;
+
+  /// Ce qui est apparu depuis la dernière ouverture des correspondances
+  /// (tout, si elles n'ont jamais été ouvertes). C'est le seul chiffre que
+  /// l'interface met en avant : [matchCount] ne dit rien de ce qui a changé.
+  final int newMatchCount;
+
+  /// Dernière ouverture des correspondances ; `null` = jamais ouvertes.
+  final DateTime? lastSeenAt;
   final DateTime createdAt;
   final AlertDirection direction;
+  final AlertNotifyMode notifyMode;
 
   // ── Zone de remise optionnelle (alertes trajet) ──────────────────────────
   final double? centerLat;
@@ -44,9 +59,42 @@ class CorridorAlertModel extends Equatable {
   final int? radiusKm;
   final String? centerLabel;
 
+  /// Brouillon reprenant tous les réglages : base d'un « Dupliquer ».
+  CorridorAlertDraft toDraft() => CorridorAlertDraft(
+    departureCity: departureCity,
+    arrivalCity: arrivalCity,
+    departureCountryCode: departureCountryCode,
+    arrivalCountryCode: arrivalCountryCode,
+    dateFrom: dateFrom,
+    dateTo: dateTo,
+    minWeightKg: minWeightKg,
+    contentCategories: contentCategories,
+    direction: direction,
+    notifyMode: notifyMode,
+    centerLat: centerLat,
+    centerLng: centerLng,
+    radiusKm: radiusKm,
+    centerLabel: centerLabel,
+  );
+
   /// True si l'alerte porte une zone de remise (centre + rayon).
   bool get hasPickupZone =>
       centerLat != null && centerLng != null && radiusKm != null;
+
+  String get corridorLabel => '$departureCity → $arrivalCity';
+
+  bool get hasNews => newMatchCount > 0;
+
+  /// Fenêtre de dates dépassée : l'alerte ne peut plus rien trouver de neuf.
+  /// Sans `dateTo`, une alerte est permanente.
+  bool isExpiredAt(DateTime now) {
+    final end = dateTo;
+    if (end == null) return false;
+    final today = DateTime(now.year, now.month, now.day);
+    return DateTime(end.year, end.month, end.day).isBefore(today);
+  }
+
+  bool get isExpired => isExpiredAt(DateTime.now());
 
   factory CorridorAlertModel.fromJson(Map<String, dynamic> json) =>
       CorridorAlertModel(
@@ -69,8 +117,13 @@ class CorridorAlertModel extends Equatable {
             const [],
         active: json['active'] as bool,
         matchCount: (json['matchCount'] as num?)?.toInt() ?? 0,
+        newMatchCount: (json['newMatchCount'] as num?)?.toInt() ?? 0,
+        lastSeenAt: json['lastSeenAt'] != null
+            ? DateTime.parse(json['lastSeenAt'] as String)
+            : null,
         createdAt: DateTime.parse(json['createdAt'] as String),
         direction: AlertDirection.fromWire(json['direction'] as String?),
+        notifyMode: AlertNotifyMode.fromWire(json['notifyMode'] as String?),
         centerLat: (json['centerLat'] as num?)?.toDouble(),
         centerLng: (json['centerLng'] as num?)?.toDouble(),
         radiusKm: (json['radiusKm'] as num?)?.toInt(),
@@ -80,6 +133,7 @@ class CorridorAlertModel extends Equatable {
   CorridorAlertModel copyWith({
     bool? active,
     int? matchCount,
+    int? newMatchCount,
     AlertDirection? direction,
   }) => CorridorAlertModel(
     id: id,
@@ -93,8 +147,11 @@ class CorridorAlertModel extends Equatable {
     contentCategories: contentCategories,
     active: active ?? this.active,
     matchCount: matchCount ?? this.matchCount,
+    newMatchCount: newMatchCount ?? this.newMatchCount,
+    lastSeenAt: lastSeenAt,
     createdAt: createdAt,
     direction: direction ?? this.direction,
+    notifyMode: notifyMode,
     centerLat: centerLat,
     centerLng: centerLng,
     radiusKm: radiusKm,
@@ -114,8 +171,11 @@ class CorridorAlertModel extends Equatable {
     contentCategories,
     active,
     matchCount,
+    newMatchCount,
+    lastSeenAt,
     createdAt,
     direction,
+    notifyMode,
     centerLat,
     centerLng,
     radiusKm,
@@ -137,6 +197,7 @@ class CorridorAlertDraft {
     this.minWeightKg,
     this.contentCategories = const [],
     this.direction = AlertDirection.travelerWantsPackages,
+    this.notifyMode = AlertNotifyMode.instant,
     this.centerLat,
     this.centerLng,
     this.radiusKm,
@@ -152,6 +213,7 @@ class CorridorAlertDraft {
   final double? minWeightKg;
   final List<String> contentCategories;
   final AlertDirection direction;
+  final AlertNotifyMode notifyMode;
 
   // ── Zone de remise optionnelle (alertes trajet) ──────────────────────────
   final double? centerLat;
@@ -163,6 +225,7 @@ class CorridorAlertDraft {
     'departureCity': departureCity,
     'arrivalCity': arrivalCity,
     'direction': direction.wire,
+    'notifyMode': notifyMode.wire,
     if (departureCountryCode != null)
       'departureCountryCode': departureCountryCode,
     if (arrivalCountryCode != null) 'arrivalCountryCode': arrivalCountryCode,

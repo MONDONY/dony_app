@@ -91,4 +91,30 @@ void main() {
     final text = tester.widget<Text>(find.text('1 alerte'));
     expect(text.style?.color, AppTheme.dark().colorScheme.success);
   });
+
+  testWidgets('nouveautés : point ambre, pas de coche, fond ambre', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrap(
+        const ToolStatusBadge(
+          ready: true,
+          tone: ToolStatusTone.news,
+          label: '2 nouveaux',
+          semanticsLabel:
+              'Mes alertes, 2 nouveaux depuis votre dernière visite',
+        ),
+      ),
+    );
+
+    expect(find.text('2 nouveaux'), findsOneWidget);
+    expect(find.byType(DonyIcon), findsNothing);
+    expect(find.byKey(const Key('tool-status-badge-dot')), findsOneWidget);
+    final box = tester.widget<Container>(
+      find.byKey(const Key('tool-status-badge')),
+    );
+    expect((box.decoration! as BoxDecoration).color, DonyColors.amberLight);
+    final text = tester.widget<Text>(find.text('2 nouveaux'));
+    expect(text.style?.color, DonyColors.amberDark);
+  });
 }

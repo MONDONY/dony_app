@@ -17,6 +17,7 @@ class TripMatchModel extends Equatable {
     this.transportMode,
     this.photoUrl,
     this.currency = 'EUR',
+    this.publishedAt,
   });
 
   final String announcementId;
@@ -33,6 +34,11 @@ class TripMatchModel extends Equatable {
   final String? photoUrl;
   final String currency;
 
+  /// Publication du trajet ; sert à le classer « nouveau » ou « déjà vu »
+  /// par rapport à la dernière consultation de l'alerte. `null` sur un
+  /// backend antérieur : le trajet est alors considéré comme déjà vu.
+  final DateTime? publishedAt;
+
   factory TripMatchModel.fromJson(Map<String, dynamic> json) => TripMatchModel(
     announcementId: json['announcementId'] as String,
     departureCity: json['departureCity'] as String,
@@ -47,6 +53,9 @@ class TripMatchModel extends Equatable {
     transportMode: json['transportMode'] as String?,
     photoUrl: json['photoUrl'] as String?,
     currency: json['currency'] as String? ?? 'EUR',
+    publishedAt: json['publishedAt'] != null
+        ? DateTime.parse(json['publishedAt'] as String)
+        : null,
   );
 
   @override
@@ -64,5 +73,6 @@ class TripMatchModel extends Equatable {
     transportMode,
     photoUrl,
     currency,
+    publishedAt,
   ];
 }

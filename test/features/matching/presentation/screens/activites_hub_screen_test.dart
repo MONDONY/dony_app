@@ -5,6 +5,10 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/features/corridor_alerts/bloc/corridor_alert_summary_cubit.dart';
+import 'package:dony/features/corridor_alerts/data/corridor_alert_repository.dart';
+import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
+import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
@@ -99,6 +103,26 @@ class _MockAnalyticsService extends Mock implements AnalyticsService {}
 class _MockToolsCompletionRepository extends Mock
     implements ToolsCompletionRepository {}
 
+class _MockCorridorAlertRepository extends Mock
+    implements CorridorAlertRepository {}
+
+CorridorAlertModel _corridorAlert(
+  String id,
+  String from,
+  String to, {
+  int fresh = 0,
+  bool active = true,
+}) => CorridorAlertModel(
+  id: id,
+  departureCity: from,
+  arrivalCity: to,
+  active: active,
+  matchCount: fresh + 1,
+  newMatchCount: fresh,
+  direction: AlertDirection.senderWantsTrips,
+  createdAt: DateTime(2026, 6, 20),
+);
+
 // Le vrai Hive est inutilisable sous testWidgets : ses écritures passent par
 // un verrou asynchrone qui ne se résout jamais dans la zone FakeAsync et
 // bloque tous les accès suivants. On mocke la box, le contrat suffit.
@@ -139,6 +163,8 @@ Future<void> _pump(
   PackageRequestState? packageRequestState,
   ToolsCompletionModel? toolsCompletion,
   bool toolsCompletionFails = false,
+  List<CorridorAlertModel> alerts = const [],
+  bool alertsFail = false,
   String helpConfigJson = _emptyHelpConfigJson,
 
   /// Largeur logique de la vue (devicePixelRatio 1). Par défaut une vue large
@@ -215,6 +241,14 @@ Future<void> _pump(
     makeDisabledAnalytics(MockAnalyticsBackend()),
   );
 
+  final alertsRepo = _MockCorridorAlertRepository();
+  if (alertsFail) {
+    when(() => alertsRepo.getMyAlerts()).thenThrow(Exception('down'));
+  } else {
+    when(() => alertsRepo.getMyAlerts()).thenAnswer((_) async => alerts);
+  }
+  final alertsSummaryCubit = CorridorAlertSummaryCubit(alertsRepo);
+
   Widget stub(String label) => Scaffold(body: Text(label));
 
   GoRoute route(String path, String label) => GoRoute(
@@ -239,6 +273,9 @@ Future<void> _pump(
             BlocProvider<NegotiationListBloc>.value(value: nego),
             BlocProvider<PackageRequestBloc>.value(value: packageRequests),
             BlocProvider<ToolsCompletionCubit>.value(value: toolsCubit),
+            BlocProvider<CorridorAlertSummaryCubit>.value(
+              value: alertsSummaryCubit,
+            ),
             BlocProvider<HelpCenterBloc>(
               create: (_) => HelpCenterBloc(
                 HelpCenterRepository(
@@ -863,6 +900,121 @@ void main() {
         expect(find.text('Besoin d\'aide ? Voir le tutoriel'), findsOneWidget);
       },
     );
+  });
+
+  group('tuile Mes alertes', () {
+    const configured = ToolsCompletionModel(
+      tools: [
+        ToolStatus(key: ToolKey.addresses, count: 2),
+        ToolStatus(key: ToolKey.recipients, count: 0),
+        ToolStatus(key: ToolKey.alerts, count: 2),
+        ToolStatus(key: ToolKey.tripTemplates, count: 1),
+        ToolStatus(key: ToolKey.priceGrid, count: 6),
+      ],
+    );
+
+    Finder inAlertsTile(Finder matching) => find.descendant(
+      of: find.byKey(const Key('hub-tool-alerts')),
+      matching: matching,
+    );
+
+    testWidgets(
+      'nouveautés : pastille ambre, point sur l\'icône, corridors en sous-titre',
+      (tester) async {
+        await _pump(
+          tester,
+          toolsCompletion: configured,
+          alerts: [
+            _corridorAlert('a', 'Lyon', 'Abidjan', fresh: 1),
+            _corridorAlert('b', 'Paris', 'Dakar', fresh: 2),
+          ],
+        );
+        await tester.pumpAndSettle();
+
+        expect(inAlertsTile(find.text('3 nouveaux')), findsOneWidget);
+        expect(
+          inAlertsTile(find.text('Paris → Dakar, Lyon → Abidjan')),
+          findsOneWidget,
+        );
+        expect(
+          inAlertsTile(find.byKey(const Key('tool-tile-dot'))),
+          findsOneWidget,
+        );
+        expect(find.text('2 alertes'), findsNothing);
+      },
+    );
+
+    testWidgets('plus de deux corridors : les deux premiers puis « +n »', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        toolsCompletion: configured,
+        alerts: [
+          _corridorAlert('a', 'Paris', 'Dakar', fresh: 3),
+          _corridorAlert('b', 'Lyon', 'Abidjan', fresh: 2),
+          _corridorAlert('c', 'Marseille', 'Bamako', fresh: 1),
+        ],
+      );
+      await tester.pumpAndSettle();
+
+      expect(inAlertsTile(find.text('6 nouveaux')), findsOneWidget);
+      expect(
+        inAlertsTile(find.text('Paris → Dakar, Lyon → Abidjan +1')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('rien de neuf : pastille de configuration, sans point', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        toolsCompletion: configured,
+        alerts: [_corridorAlert('a', 'Paris', 'Dakar')],
+      );
+      await tester.pumpAndSettle();
+
+      expect(inAlertsTile(find.text('2 alertes')), findsOneWidget);
+      expect(
+        inAlertsTile(find.text('Rien de neuf pour l\'instant')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('tool-tile-dot')), findsNothing);
+    });
+
+    testWidgets('résumé en échec : la tuile garde son état de configuration', (
+      tester,
+    ) async {
+      await _pump(tester, toolsCompletion: configured, alertsFail: true);
+      await tester.pumpAndSettle();
+
+      expect(inAlertsTile(find.text('2 alertes')), findsOneWidget);
+      expect(
+        inAlertsTile(find.text('Nouveaux trajets et colis')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('tool-tile-dot')), findsNothing);
+    });
+
+    testWidgets('aucune alerte configurée : jamais de signal de nouveauté', (
+      tester,
+    ) async {
+      // Compteur à zéro côté complétion : un résumé qui dirait le contraire
+      // serait incohérent, la tuile reste sur « À configurer ».
+      await _pump(
+        tester,
+        alerts: [_corridorAlert('a', 'Paris', 'Dakar', fresh: 2)],
+      );
+      await tester.pumpAndSettle();
+
+      expect(inAlertsTile(find.text('À configurer')), findsOneWidget);
+      expect(
+        inAlertsTile(find.text('Soyez prévenu avant les autres')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('tool-tile-dot')), findsNothing);
+    });
   });
 
   group('complétion des outils', () {

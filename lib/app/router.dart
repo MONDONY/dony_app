@@ -888,10 +888,14 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/corridor-alerts/:id/matches',
-      builder: (context, state) {
-        final alert = state.extra as CorridorAlertModel;
-        return CorridorAlertMatchesScreen(alert: alert);
-      },
+      // Depuis la liste, l'alerte voyage en extra ; depuis un push (digest),
+      // seul l'id est connu et l'écran la charge lui-même.
+      builder: (context, state) => CorridorAlertMatchesScreen(
+        alertId: state.pathParameters['id'],
+        alert: state.extra is CorridorAlertModel
+            ? state.extra as CorridorAlertModel
+            : null,
+      ),
     ),
 
     GoRoute(
