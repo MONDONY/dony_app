@@ -21,6 +21,7 @@ import 'package:dony/features/matching/bloc/traveler_bids_state.dart';
 import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/matching/data/models/tools_completion_model.dart';
 import 'package:dony/features/matching/presentation/screens/mes_colis_screen.dart';
+import 'package:dony/features/matching/presentation/widgets/activites_menu_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/activity_tile.dart';
 import 'package:dony/features/matching/presentation/widgets/stat_tile.dart';
 import 'package:dony/features/matching/presentation/widgets/tool_key_presentation.dart';
@@ -187,6 +188,24 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
 
   void _open(String event, String route) => _openRoute(context, event, route);
 
+  /// Feuille de menu du bouton burger. Elle est montée sur le navigateur
+  /// racine et ne voit donc ni le `GoRouter` du shell ni les blocs du hub :
+  /// elle rend la destination choisie, c'est ici qu'on trace et qu'on navigue.
+  Future<void> _openMenu() async {
+    _logEvent(AnalyticsEvents.activitesHubMenuOpened);
+    final model = context.read<ToolsCompletionCubit>().state.model;
+    final choice = await ActivitesMenuSheet.show(context, tools: model);
+    if (choice == null || !mounted) return;
+    // Un outil ouvert depuis le menu doit remonter sa jauge au retour,
+    // exactement comme sa tuile.
+    final isTool = ToolKey.values.any((k) => k.route == choice.route);
+    if (isTool) {
+      await _openTool(choice.event, choice.route);
+    } else {
+      _open(choice.event, choice.route);
+    }
+  }
+
   /// Ouvre une tuile-outil et attend le retour pour recharger la complétion :
   /// un destinataire ajouté doit faire passer le badge et la jauge sans
   /// quitter l'onglet.
@@ -296,12 +315,7 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
                   ),
                   sliver: SliverList.list(
                     children: [
-                      _Header(
-                        onTrack: () => _open(
-                          AnalyticsEvents.activitesHubSearchOpened,
-                          '/tracking/search',
-                        ),
-                      ),
+                      _Header(onMenu: _openMenu),
                       if (_showIntro) ...[
                         const SizedBox(height: DonySpacing.md),
                         _IntroCard(onDismiss: _dismissIntro),
@@ -484,9 +498,9 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
 // ── Header ───────────────────────────────────────────────────────────────────
 
 class _Header extends StatelessWidget {
-  const _Header({required this.onTrack});
+  const _Header({required this.onMenu});
 
-  final VoidCallback onTrack;
+  final VoidCallback onMenu;
 
   @override
   Widget build(BuildContext context) {
@@ -495,16 +509,23 @@ class _Header extends StatelessWidget {
 
     return Row(
       children: [
-        Expanded(child: Text('Activités', style: tt.headlineLarge)),
-        // Libellé explicite plutôt qu'une loupe seule : la destination est la
-        // recherche de suivi, pas une recherche globale — l'icône promettait
-        // plus que la route ne tient.
-        TextButton.icon(
-          key: const Key('hub-track-parcel'),
-          onPressed: onTrack,
-          icon: DonyIcon('search', size: 16, color: cs.primary),
-          label: const Text('Suivre un colis'),
+        // Le burger remplace l'ancien bouton « Suivre un colis », qui occupait
+        // seul le coin de l'en-tête pour une seule route. Il est à gauche,
+        // comme partout : le menu s'ouvre du même côté que son bouton, et le
+        // suivi n'est plus qu'une entrée parmi d'autres dans la feuille.
+        SizedBox(
+          width: kDonyMinTapTarget,
+          height: kDonyMinTapTarget,
+          child: IconButton(
+            key: const Key('hub-menu-button'),
+            padding: EdgeInsets.zero,
+            onPressed: onMenu,
+            tooltip: 'Menu',
+            icon: DonyIcon('menu', color: cs.onSurface, semanticLabel: 'Menu'),
+          ),
         ),
+        const SizedBox(width: DonySpacing.sm),
+        Expanded(child: Text('Activités', style: tt.headlineLarge)),
       ],
     );
   }
