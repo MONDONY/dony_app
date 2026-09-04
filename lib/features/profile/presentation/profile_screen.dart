@@ -1,5 +1,10 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
@@ -8,8 +13,10 @@ import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/billing/presentation/widgets/subscription_banner_host.dart';
 import 'package:dony/features/profile/presentation/widgets/pending_deletion_banner.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_header.dart';
+import 'package:dony/features/profile/presentation/widgets/profile_menu_sheet.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_sections.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
+import 'package:dony/features/settings/presentation/widgets/delete_account_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -53,6 +60,54 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void dispose() {
     _scroll.dispose();
     super.dispose();
+  }
+
+  void _logEvent(String event) {
+    unawaited(getIt<AnalyticsService>().logEvent(event));
+  }
+
+  /// Feuille de menu du bouton burger. Elle est montée sur le navigateur
+  /// racine, sans GoRouter ni blocs dans son contexte : elle rend une action,
+  /// c'est l'écran qui trace et qui agit.
+  Future<void> _openMenu(UserModel? user) async {
+    _logEvent(AnalyticsEvents.profileMenuOpened);
+    final action = await ProfileMenuSheet.show(
+      context,
+      canDeleteAccount: !(user?.isPendingDeletion ?? false),
+    );
+    if (action == null || !mounted) return;
+    switch (action) {
+      case ProfileMenuAction.editProfile:
+        _logEvent(AnalyticsEvents.profileMenuEditOpened);
+        unawaited(context.push('/profile/edit'));
+      case ProfileMenuAction.settings:
+        _logEvent(AnalyticsEvents.profileMenuSettingsOpened);
+        unawaited(context.push('/settings'));
+      case ProfileMenuAction.exportData:
+        _logEvent(AnalyticsEvents.profileMenuExportOpened);
+        unawaited(context.push('/settings/data'));
+      case ProfileMenuAction.logout:
+        _logEvent(AnalyticsEvents.profileMenuLogoutTapped);
+        await _confirmLogout();
+      case ProfileMenuAction.deleteAccount:
+        _logEvent(AnalyticsEvents.profileMenuDeleteOpened);
+        await DeleteAccountBottomSheet.show(context);
+    }
+  }
+
+  Future<void> _confirmLogout() async {
+    final authBloc = context.read<AuthBloc>();
+    final confirmed = await DonyDialog.show(
+      context,
+      title: 'Se déconnecter ?',
+      message: 'Vous devrez vous reconnecter pour continuer.',
+      confirmLabel: 'Se déconnecter',
+      variant: DonyDialogVariant.destructive,
+      iconAsset: 'circle-alert',
+    );
+    if (confirmed ?? false) {
+      authBloc.add(const AuthLogoutRequested());
+    }
   }
 
   @override
@@ -125,7 +180,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   phoneNumber: user?.phoneNumber,
                   email: user?.email,
                   city: user?.city,
-                  onEditProfile: () => context.push('/profile/edit'),
                   topPadding: topPad,
                 );
 
@@ -178,6 +232,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             isKycVerified: isKycVerified,
                             isProAccount: isProAccount,
                             header: profileHeader,
+                            onMenu: () => _openMenu(user),
                           ),
                           SliverPadding(
                             padding: EdgeInsets.fromLTRB(
@@ -216,6 +271,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required bool isKycVerified,
     required bool isProAccount,
     required Widget header,
+    required VoidCallback onMenu,
   }) {
     final cs = Theme.of(context).colorScheme;
 
@@ -278,7 +334,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
           );
         },
       ),
-      actions: const [],
+      // Le burger remplace le crayon du header : dans la barre épinglée, il
+      // reste sous le doigt une fois le header replié, là où le crayon
+      // disparaissait au défilement. Même icône, même feuille qu'Activités.
+      actions: [
+        SizedBox(
+          width: kDonyMinTapTarget,
+          height: kDonyMinTapTarget,
+          child: IconButton(
+            key: const Key('profile-menu-button'),
+            padding: EdgeInsets.zero,
+            onPressed: onMenu,
+            tooltip: 'Menu',
+            icon: DonyIcon('menu', color: cs.onSurface, semanticLabel: 'Menu'),
+          ),
+        ),
+        const SizedBox(width: DonySpacing.sm),
+      ],
       flexibleSpace: FlexibleSpaceBar(
         // none : pas de parallax/étirement du background (sinon il est
         // agrandi puis décalé → vide sous le header).
@@ -366,25 +438,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       gap,
       animated(const ProfileHelpSection()),
 
-      const SizedBox(height: DonySpacing.xxl),
-      DonyButton(
-        label: 'Se déconnecter',
-        onPressed: () async {
-          final authBloc = context.read<AuthBloc>();
-          final confirmed = await DonyDialog.show(
-            context,
-            title: 'Se déconnecter ?',
-            message: 'Vous devrez vous reconnecter pour continuer.',
-            confirmLabel: 'Se déconnecter',
-            variant: DonyDialogVariant.destructive,
-            iconAsset: 'circle-alert',
-          );
-          if (confirmed ?? false) {
-            authBloc.add(const AuthLogoutRequested());
-          }
-        },
-        variant: DonyButtonVariant.ghost,
-      ),
+      // « Se déconnecter » a quitté le bas de page pour la feuille de menu :
+      // il fallait défiler six sections pour l'atteindre.
       const SizedBox(height: DonySpacing.xxl),
       Text(
         'Yadony v1.0.0 · Made with ❤️ in Paris',

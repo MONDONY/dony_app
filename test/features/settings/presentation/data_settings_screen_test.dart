@@ -67,24 +67,15 @@ void main() {
       expect(find.text('Export RGPD au format JSON'), findsOneWidget);
     });
 
-    testWidgets('affiche la section DANGER ZONE', (tester) async {
-      await tester.pumpWidget(buildScreen());
-      await tester.pumpAndSettle();
-      expect(find.text('DANGER ZONE'), findsOneWidget);
-    });
-
-    testWidgets('affiche "Supprimer mon compte"', (tester) async {
-      await tester.pumpWidget(buildScreen());
-      await tester.pumpAndSettle();
-      expect(find.text('Supprimer mon compte'), findsOneWidget);
-    });
-
-    testWidgets('affiche "Action irréversible" comme sous-titre', (
+    // La suppression du compte vit désormais dans la feuille de menu de
+    // l'onglet Moi : cet écran ne porte plus que l'export.
+    testWidgets('ne porte plus de « Danger zone » ni de suppression', (
       tester,
     ) async {
       await tester.pumpWidget(buildScreen());
       await tester.pumpAndSettle();
-      expect(find.text('Action irréversible'), findsOneWidget);
+      expect(find.text('DANGER ZONE'), findsNothing);
+      expect(find.text('Supprimer mon compte'), findsNothing);
     });
 
     testWidgets('affiche CircularProgressIndicator quand DataExportLoading', (

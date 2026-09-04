@@ -346,8 +346,10 @@ class ProfileFollowUpSection extends StatelessWidget {
   }
 }
 
-// ── AIDE & RÉGLAGES ───────────────────────────────────────────────────────────
+// ── AIDE ──────────────────────────────────────────────────────────────────────
 
+/// Aide seule : « Paramètres » a quitté cette section pour la feuille de menu
+/// du burger, et un menu ne redit jamais une tuile de l'écran qui l'ouvre.
 class ProfileHelpSection extends StatelessWidget {
   const ProfileHelpSection({super.key});
 
@@ -358,15 +360,9 @@ class ProfileHelpSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        ProfileSectionLabel(label: 'AIDE & RÉGLAGES', cs: cs),
+        ProfileSectionLabel(label: 'AIDE', cs: cs),
         ProfileListSection(
           tiles: [
-            DonyListTile(
-              iconAsset: 'sliders-horizontal',
-              label: 'Paramètres',
-              subtitle: 'Thème, langue, notifications, sécurité',
-              onTap: () => context.push('/settings'),
-            ),
             DonyListTile(
               iconAsset: 'circle-help',
               iconColor: cs.tertiary,
