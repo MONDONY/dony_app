@@ -987,9 +987,7 @@ void main() {
 
   // ── Puces En attente et En cours ────────────────────────────────────────
 
-  testWidgets('puces « En attente » et « En cours »', (
-    tester,
-  ) async {
+  testWidgets('puces « En attente » et « En cours »', (tester) async {
     tester.view.physicalSize = const Size(800, 1400);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);

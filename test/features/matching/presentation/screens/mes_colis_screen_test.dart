@@ -216,8 +216,9 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
   }
 
-  int? bodyIndex(WidgetTester tester) =>
-      tester.widget<IndexedStack>(find.byKey(const Key('mes-colis-body'))).index;
+  int? bodyIndex(WidgetTester tester) => tester
+      .widget<IndexedStack>(find.byKey(const Key('mes-colis-body')))
+      .index;
 
   group('MesColisScreen — chrome', () {
     testWidgets('affiche le titre « Mes colis » et la pill « Envoyer »', (
@@ -300,32 +301,33 @@ void main() {
           status: PackageRequestListStatus.loaded,
           requests: [_request(PackageRequestStatus.negotiating)],
         ),
-        negoState: NegotiationListState(
-          threads: [_thread(requestId: 'pr-1')],
-        ),
+        negoState: NegotiationListState(threads: [_thread(requestId: 'pr-1')]),
       );
 
       expect(badge(), findsNothing);
     });
 
-    testWidgets('une discussion non lue sur la demande d’un autre est ignorée', (
+    testWidgets(
+      'une discussion non lue sur la demande d’un autre est ignorée',
+      (tester) async {
+        await pump(
+          tester,
+          packageState: PackageRequestState(
+            status: PackageRequestListStatus.loaded,
+            requests: [_request(PackageRequestStatus.open)],
+          ),
+          negoState: NegotiationListState(
+            threads: [_thread(requestId: 'pr-autre', hasUnread: true)],
+          ),
+        );
+
+        expect(badge(), findsNothing);
+      },
+    );
+
+    testWidgets('charge la liste des discussions à l’ouverture', (
       tester,
     ) async {
-      await pump(
-        tester,
-        packageState: PackageRequestState(
-          status: PackageRequestListStatus.loaded,
-          requests: [_request(PackageRequestStatus.open)],
-        ),
-        negoState: NegotiationListState(
-          threads: [_thread(requestId: 'pr-autre', hasUnread: true)],
-        ),
-      );
-
-      expect(badge(), findsNothing);
-    });
-
-    testWidgets('charge la liste des discussions à l’ouverture', (tester) async {
       await pump(tester);
 
       verify(
@@ -358,22 +360,25 @@ void main() {
       expect(colisPublies(state), 2);
     });
 
-    test('negosNonLuesSurMesColis ne compte que les fils non lus des miennes', () {
-      final requests = PackageRequestState(
-        requests: [_request(PackageRequestStatus.open, id: 'pr-0')],
-      );
-      final negos = NegotiationListState(
-        threads: [
-          _thread(requestId: 'pr-0', hasUnread: true, id: 'th-a'),
-          // Déjà lu → pas un signal d'attention.
-          _thread(requestId: 'pr-0', id: 'th-b'),
-          // Non lu, mais sur la demande de quelqu'un d'autre.
-          _thread(requestId: 'pr-inconnue', hasUnread: true, id: 'th-c'),
-        ],
-      );
+    test(
+      'negosNonLuesSurMesColis ne compte que les fils non lus des miennes',
+      () {
+        final requests = PackageRequestState(
+          requests: [_request(PackageRequestStatus.open, id: 'pr-0')],
+        );
+        final negos = NegotiationListState(
+          threads: [
+            _thread(requestId: 'pr-0', hasUnread: true, id: 'th-a'),
+            // Déjà lu → pas un signal d'attention.
+            _thread(requestId: 'pr-0', id: 'th-b'),
+            // Non lu, mais sur la demande de quelqu'un d'autre.
+            _thread(requestId: 'pr-inconnue', hasUnread: true, id: 'th-c'),
+          ],
+        );
 
-      expect(negosNonLuesSurMesColis(requests, negos), 1);
-    });
+        expect(negosNonLuesSurMesColis(requests, negos), 1);
+      },
+    );
 
     test('les deux compteurs valent zéro sur un état vide', () {
       expect(colisPublies(PackageRequestState()), 0);

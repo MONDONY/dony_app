@@ -651,9 +651,8 @@ class _ActivityGrid extends StatelessWidget {
         // La tuile couvre tout le parcours expéditeur : les envois qui ont
         // trouvé leur voyageur ET les demandes encore publiées. Ce sont les
         // deux volets de « Mes colis », donc les deux moitiés d'un compteur.
-        final requestState = context.select<PackageRequestBloc, PackageRequestState>(
-          (b) => b.state,
-        );
+        final requestState = context
+            .select<PackageRequestBloc, PackageRequestState>((b) => b.state);
         final negoState = context
             .select<NegotiationListBloc, NegotiationListState>((b) => b.state);
         final negociations = negosNonLuesSurMesColis(requestState, negoState);

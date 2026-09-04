@@ -58,7 +58,10 @@ class MesColisScreen extends StatelessWidget {
 /// Variante de test : les blocs sont fournis par le contexte parent.
 @visibleForTesting
 class MesColisScreenTesting extends StatelessWidget {
-  const MesColisScreenTesting({super.key, this.initialTab = MesColisTab.enRoute});
+  const MesColisScreenTesting({
+    super.key,
+    this.initialTab = MesColisTab.enRoute,
+  });
 
   final MesColisTab initialTab;
 
@@ -149,10 +152,7 @@ class _MesColisViewState extends State<_MesColisView> {
               child: IndexedStack(
                 key: const Key('mes-colis-body'),
                 index: _tab.index,
-                children: const [
-                  ShipmentListScreen(),
-                  MyPackageRequestsBody(),
-                ],
+                children: const [ShipmentListScreen(), MyPackageRequestsBody()],
               ),
             ),
           ],

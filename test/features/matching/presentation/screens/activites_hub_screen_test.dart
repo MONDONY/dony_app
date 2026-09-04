@@ -331,77 +331,74 @@ void main() {
       expect(find.text('Aucune en cours'), findsOneWidget);
     });
 
-    testWidgets(
-      'demande publiée en négo allume la pastille de « Mes colis », '
-      'pas celle de « Demandes reçues »',
-      (tester) async {
-        final negoReq = PackageRequest.fromJson(const {
-          'id': 'pr-1',
-          'senderId': 's1',
-          'departureCity': 'Paris',
-          'arrivalCity': 'Dakar',
-          'desiredDate': '2026-08-01',
-          'dateToleranceDays': 2,
-          'weightKg': 3.0,
-          'parcelSize': 'SMALL',
-          'status': 'NEGOTIATING',
-          'createdAt': '2026-07-01T10:00:00Z',
-        });
+    testWidgets('demande publiée en négo allume la pastille de « Mes colis », '
+        'pas celle de « Demandes reçues »', (tester) async {
+      final negoReq = PackageRequest.fromJson(const {
+        'id': 'pr-1',
+        'senderId': 's1',
+        'departureCity': 'Paris',
+        'arrivalCity': 'Dakar',
+        'desiredDate': '2026-08-01',
+        'dateToleranceDays': 2,
+        'weightKg': 3.0,
+        'parcelSize': 'SMALL',
+        'status': 'NEGOTIATING',
+        'createdAt': '2026-07-01T10:00:00Z',
+      });
 
-        await _pump(
-          tester,
-          // Aucune demande reçue à traiter…
-          travelerBidsState: TravelerBidsLoaded(
-            bids: const [],
-            page: 0,
-            hasMore: false,
-            filter: TravelerBidFilter.aTraiter,
-          ),
-          // …mais une demande publiée porte une discussion non lue.
-          packageRequestState: PackageRequestState(requests: [negoReq]),
-          negoState: NegotiationListState(
-            threads: [
-              NegotiationThread(
-                id: 'th-1',
-                packageRequestId: 'pr-1',
-                travelerId: 'tr-1',
-                status: NegotiationThreadStatus.open,
-                currentPriceEur: 45,
-                roundsCount: 1,
-                lastActivityAt: DateTime(2026, 6, 10),
-                createdAt: DateTime(2026, 6),
-                travelerTravelDate: DateTime(2026, 7),
-                travelerAvailableKg: 10,
-                messages: const [],
-                hasUnread: true,
-              ),
-            ],
-          ),
-        );
+      await _pump(
+        tester,
+        // Aucune demande reçue à traiter…
+        travelerBidsState: TravelerBidsLoaded(
+          bids: const [],
+          page: 0,
+          hasMore: false,
+          filter: TravelerBidFilter.aTraiter,
+        ),
+        // …mais une demande publiée porte une discussion non lue.
+        packageRequestState: PackageRequestState(requests: [negoReq]),
+        negoState: NegotiationListState(
+          threads: [
+            NegotiationThread(
+              id: 'th-1',
+              packageRequestId: 'pr-1',
+              travelerId: 'tr-1',
+              status: NegotiationThreadStatus.open,
+              currentPriceEur: 45,
+              roundsCount: 1,
+              lastActivityAt: DateTime(2026, 6, 10),
+              createdAt: DateTime(2026, 6),
+              travelerTravelDate: DateTime(2026, 7),
+              travelerAvailableKg: 10,
+              messages: const [],
+              hasUnread: true,
+            ),
+          ],
+        ),
+      );
 
-        // La tuile Demandes reçues ne parle plus que des demandes reçues :
-        // son invite reste « Aucune » et elle ne porte aucun point rouge.
-        expect(find.text('Aucune pour l\'instant'), findsOneWidget);
+      // La tuile Demandes reçues ne parle plus que des demandes reçues :
+      // son invite reste « Aucune » et elle ne porte aucun point rouge.
+      expect(find.text('Aucune pour l\'instant'), findsOneWidget);
 
-        Finder dotIn(String tileKey) => find.descendant(
-          of: find.byKey(Key(tileKey)),
-          matching: find.byWidgetPredicate((w) {
-            if (w is! Container) {
-              return false;
-            }
-            final deco = w.decoration;
-            return deco is BoxDecoration &&
-                deco.shape == BoxShape.circle &&
-                deco.color == DonyColors.error;
-          }),
-        );
+      Finder dotIn(String tileKey) => find.descendant(
+        of: find.byKey(Key(tileKey)),
+        matching: find.byWidgetPredicate((w) {
+          if (w is! Container) {
+            return false;
+          }
+          final deco = w.decoration;
+          return deco is BoxDecoration &&
+              deco.shape == BoxShape.circle &&
+              deco.color == DonyColors.error;
+        }),
+      );
 
-        expect(dotIn('hub-tile-requests'), findsNothing);
-        // Le point d'attention est porté par la tuile qui ouvre la liste où
-        // la négociation se trouve réellement.
-        expect(dotIn('hub-tile-shipments'), findsOneWidget);
-      },
-    );
+      expect(dotIn('hub-tile-requests'), findsNothing);
+      // Le point d'attention est porté par la tuile qui ouvre la liste où
+      // la négociation se trouve réellement.
+      expect(dotIn('hub-tile-shipments'), findsOneWidget);
+    });
 
     testWidgets('« Mes colis » agrège les envois et les demandes publiées', (
       tester,
