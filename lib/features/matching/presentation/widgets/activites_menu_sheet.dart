@@ -332,6 +332,10 @@ class _MenuTile extends StatelessWidget {
       key: itemKey,
       iconAsset: iconAsset,
       iconColor: color,
+      // Le fond par défaut de DonyListTile est le conteneur primaire, bleu :
+      // vu sur device, les icônes violettes et terracotta y détonnaient. Le
+      // fond suit la teinte de l'icône, comme les tuiles du hub.
+      iconBgColor: color.withValues(alpha: 0.12),
       label: label,
       trailing: trailing,
       showDivider: showDivider,
