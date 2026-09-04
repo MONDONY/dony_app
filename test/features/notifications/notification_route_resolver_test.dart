@@ -69,6 +69,29 @@ void main() {
     }
   });
 
+  group('resolveNotificationRoute — négociation de prix sur un trajet', () {
+    // Le back émet `bid_negotiation_*` avec un bidId : ni le préfixe
+    // `negotiation` ni les cas BID_* ne le couvraient, et la proposition,
+    // la contre-offre et l'acceptation ouvraient une notification inerte.
+    for (final type in ['bid_negotiation_message', 'bid_negotiation_expired']) {
+      test('$type routes to the trip negotiation thread', () {
+        expect(
+          resolveNotificationRoute(type, {
+            'bidId': bidId,
+            'announcementId': announcementId,
+            'kind': 'ACCEPT',
+          }),
+          '/bids/$bidId/negotiation',
+        );
+      });
+
+      test('$type without a valid bidId returns null', () {
+        expect(resolveNotificationRoute(type, {'bidId': '../x'}), isNull);
+        expect(resolveNotificationRoute(type, {}), isNull);
+      });
+    }
+  });
+
   group('resolveNotificationRoute — négociation', () {
     test('negotiation (relance/annulation) routes to thread page', () {
       expect(

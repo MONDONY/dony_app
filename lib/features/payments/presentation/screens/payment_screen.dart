@@ -9,6 +9,7 @@ import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/config/bloc/config_bloc.dart';
+import 'package:dony/features/matching/data/confirm_bid_payment.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
@@ -83,7 +84,11 @@ class PaymentScreen extends StatelessWidget {
         paymentMethodTypes: state.paymentMethodTypes,
       ),
       contextLabel: 'Envoi de ${bid.recipientName ?? 'votre colis'}',
-      onSuccess: () {
+      onSuccess: () async {
+        // Filet client de la promotion AWAITING_PAYMENT → PAYMENT_ESCROWED,
+        // comme sur le fil de négociation : attendu AVANT de changer d'état,
+        // sinon la requête peut ne jamais partir (cf. confirmBidPaymentSafely).
+        await confirmBidPaymentSafely(bid.id);
         if (!context.mounted) return;
         context.read<PaymentBloc>().add(const PaymentSheetCompleted());
       },

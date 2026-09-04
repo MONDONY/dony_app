@@ -63,7 +63,12 @@ class _FakeContentCategoryRepository implements IContentCategoryRepository {
 
 const _kSettle = Duration(milliseconds: 600);
 
-AnnouncementModel _announcement({bool negotiable = false}) => AnnouncementModel(
+AnnouncementModel _announcement({
+  bool negotiable = false,
+  Set<BidPaymentMethod> acceptedPaymentMethods = const {
+    BidPaymentMethod.stripe,
+  },
+}) => AnnouncementModel(
   id: 'ann-nego',
   travelerId: 'traveler-1',
   departureCity: 'Paris',
@@ -76,7 +81,7 @@ AnnouncementModel _announcement({bool negotiable = false}) => AnnouncementModel(
   createdAt: DateTime(2026, 8),
   updatedAt: DateTime(2026, 8),
   negotiable: negotiable,
-  acceptedPaymentMethods: {BidPaymentMethod.stripe},
+  acceptedPaymentMethods: acceptedPaymentMethods,
   traveler: const TravelerProfile(
     id: 'traveler-1',
     displayName: 'Mamadou Diallo',
@@ -245,7 +250,12 @@ void main() {
 
   // ── Écran de proposition ──────────────────────────────────────────────────
 
-  Widget bidApp({required bool negotiation}) => MaterialApp.router(
+  Widget bidApp({
+    required bool negotiation,
+    Set<BidPaymentMethod> acceptedPaymentMethods = const {
+      BidPaymentMethod.stripe,
+    },
+  }) => MaterialApp.router(
     theme: AppTheme.light(),
     localizationsDelegates: const [
       GlobalMaterialLocalizations.delegate,
@@ -258,7 +268,10 @@ void main() {
         GoRoute(
           path: '/',
           builder: (_, _) => CreateBidScreen(
-            announcement: _announcement(negotiable: negotiation),
+            announcement: _announcement(
+              negotiable: negotiation,
+              acceptedPaymentMethods: acceptedPaymentMethods,
+            ),
             negotiation: negotiation,
           ),
         ),
@@ -266,12 +279,83 @@ void main() {
     ),
   );
 
-  Future<void> openBid(WidgetTester tester, {required bool negotiation}) async {
+  Future<void> openBid(
+    WidgetTester tester, {
+    required bool negotiation,
+    Set<BidPaymentMethod> acceptedPaymentMethods = const {
+      BidPaymentMethod.stripe,
+    },
+  }) async {
     tester.view.physicalSize = const Size(800, 6000);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
-    await tester.pumpWidget(bidApp(negotiation: negotiation));
+    await tester.pumpWidget(
+      bidApp(
+        negotiation: negotiation,
+        acceptedPaymentMethods: acceptedPaymentMethods,
+      ),
+    );
     await tester.pump(_kSettle);
+  }
+
+  /// Remplit le formulaire de proposition jusqu'au disclaimer, sans soumettre.
+  Future<void> fillNegotiationForm(WidgetTester tester) async {
+    // Trajet kilo pur (pas de grille) : le poids est obligatoire pour
+    // pouvoir soumettre (cf. `_syncFormButtonState`).
+    await tester.drag(find.byType(Slider), const Offset(200, 0));
+    await tester.pump(_kSettle);
+
+    // Contenu du colis
+    await tester.ensureVisible(find.byKey(const Key('bid-content-field')));
+    await tester.tap(find.byKey(const Key('bid-content-field')));
+    await tester.pump(_kSettle);
+    await tester.pump(_kSettle);
+    await tester.enterText(
+      find.byKey(const Key('bid-content-field')),
+      'Chaussures',
+    );
+    await tester.pump(_kSettle);
+    await tester.pump(_kSettle);
+    await tester.tap(find.byKey(const Key('bid-content-item-Chaussures')));
+    await tester.pump(_kSettle);
+
+    // Description et destinataire
+    await tester.enterText(
+      find.widgetWithText(
+        TextFormField,
+        'Médicaments pour diabète + 2 tee-shirts enfants',
+      ),
+      'Deux paires de chaussures',
+    );
+    await tester.pump(_kSettle);
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Prénom et nom du destinataire'),
+      'Awa Diop',
+    );
+    await tester.pump(_kSettle);
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Téléphone du destinataire'),
+      '+221700000000',
+    );
+    await tester.pump(_kSettle);
+
+    // Disclaimer
+    await tester.ensureVisible(find.text('Je signe & j\'accepte'));
+    await tester.tap(find.text('Je signe & j\'accepte'));
+    await tester.pump(_kSettle);
+    await tester.pump(_kSettle);
+  }
+
+  Future<List<BidNegotiationProposeRequested>> submitProposal(
+    WidgetTester tester,
+  ) async {
+    await tester.ensureVisible(find.byKey(const Key('bid-submit-btn')));
+    await tester.tap(find.byKey(const Key('bid-submit-btn')));
+    await tester.pump(_kSettle);
+
+    return verify(
+      () => negotiationBloc.add(captureAny()),
+    ).captured.whereType<BidNegotiationProposeRequested>().toList();
   }
 
   String proposalText(WidgetTester tester) => tester
@@ -354,64 +438,68 @@ void main() {
     tester,
   ) async {
     await openBid(tester, negotiation: true);
+    await fillNegotiationForm(tester);
 
-    // Trajet kilo pur (pas de grille) : le poids est obligatoire pour
-    // pouvoir soumettre (cf. `_syncFormButtonState`).
-    await tester.drag(find.byType(Slider), const Offset(200, 0));
-    await tester.pump(_kSettle);
-
-    // Contenu du colis
-    await tester.ensureVisible(find.byKey(const Key('bid-content-field')));
-    await tester.tap(find.byKey(const Key('bid-content-field')));
-    await tester.pump(_kSettle);
-    await tester.pump(_kSettle);
-    await tester.enterText(
-      find.byKey(const Key('bid-content-field')),
-      'Chaussures',
-    );
-    await tester.pump(_kSettle);
-    await tester.pump(_kSettle);
-    await tester.tap(find.byKey(const Key('bid-content-item-Chaussures')));
-    await tester.pump(_kSettle);
-
-    // Description et destinataire
-    await tester.enterText(
-      find.widgetWithText(
-        TextFormField,
-        'Médicaments pour diabète + 2 tee-shirts enfants',
-      ),
-      'Deux paires de chaussures',
-    );
-    await tester.pump(_kSettle);
-    await tester.enterText(
-      find.widgetWithText(TextFormField, 'Prénom et nom du destinataire'),
-      'Awa Diop',
-    );
-    await tester.pump(_kSettle);
-    await tester.enterText(
-      find.widgetWithText(TextFormField, 'Téléphone du destinataire'),
-      '+221700000000',
-    );
-    await tester.pump(_kSettle);
-
-    // Disclaimer
-    await tester.ensureVisible(find.text('Je signe & j\'accepte'));
-    await tester.tap(find.text('Je signe & j\'accepte'));
-    await tester.pump(_kSettle);
-    await tester.pump(_kSettle);
-
-    await tester.ensureVisible(find.byKey(const Key('bid-submit-btn')));
-    await tester.tap(find.byKey(const Key('bid-submit-btn')));
-    await tester.pump(_kSettle);
-
-    final captured = verify(
-      () => negotiationBloc.add(captureAny()),
-    ).captured.whereType<BidNegotiationProposeRequested>().toList();
+    final captured = await submitProposal(tester);
     expect(captured, hasLength(1));
     expect(captured.single.announcementId, 'ann-nego');
     expect(captured.single.proposedTotalEur, greaterThan(0));
     expect(captured.single.recipientName, 'Awa Diop');
+    // Trajet carte seule : le mode est figé sur la carte sans rien demander.
+    expect(captured.single.paymentMethod, BidPaymentMethod.stripe);
   });
+
+  testWidgets('sans alternative, la proposition ne propose aucun mode', (
+    tester,
+  ) async {
+    await openBid(tester, negotiation: true);
+
+    expect(find.byKey(const Key('payment-method-stripe')), findsNothing);
+    expect(find.byKey(const Key('payment-method-cash')), findsNothing);
+  });
+
+  testWidgets(
+    'sur un trajet carte + especes, la proposition porte le mode choisi',
+    (tester) async {
+      await openBid(
+        tester,
+        negotiation: true,
+        acceptedPaymentMethods: {
+          BidPaymentMethod.stripe,
+          BidPaymentMethod.cash,
+        },
+      );
+      await fillNegotiationForm(tester);
+
+      // Sans ce choix, tout accord négocié partait en carte, même quand
+      // l'expéditeur voulait payer le voyageur en main propre.
+      await tester.ensureVisible(find.byKey(const Key('payment-method-cash')));
+      await tester.tap(find.byKey(const Key('payment-method-cash')));
+      await tester.pump(_kSettle);
+
+      final captured = await submitProposal(tester);
+      expect(captured, hasLength(1));
+      expect(captured.single.paymentMethod, BidPaymentMethod.cash);
+    },
+  );
+
+  testWidgets(
+    'sur un trajet carte + especes, la carte reste le choix par defaut',
+    (tester) async {
+      await openBid(
+        tester,
+        negotiation: true,
+        acceptedPaymentMethods: {
+          BidPaymentMethod.stripe,
+          BidPaymentMethod.cash,
+        },
+      );
+      await fillNegotiationForm(tester);
+
+      final captured = await submitProposal(tester);
+      expect(captured.single.paymentMethod, BidPaymentMethod.stripe);
+    },
+  );
 
   testWidgets('ouvrir le mode negociation tire l event d ouverture', (
     tester,

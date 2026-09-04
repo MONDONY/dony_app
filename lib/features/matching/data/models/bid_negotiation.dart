@@ -293,6 +293,38 @@ class BidNegotiationSummary {
         role: json['role'] as String?,
       );
 
-  /// Même règle que le fil : seul `NEGOTIATING` reste ouvert.
-  bool get isClosed => status != 'NEGOTIATING';
+  /// Statuts sous lesquels le back liste encore le fil : en discussion, ou
+  /// accord conclu mais pas encore réglé (carte : l'expéditeur doit payer ;
+  /// espèces : le voyageur doit régler la commission). Une fois payé, le
+  /// colis vit dans « Mes colis » et le fil quitte la liste.
+  static const _openStatuses = {'NEGOTIATING', 'AWAITING_PAYMENT', 'PENDING'};
+
+  /// La discussion attend encore quelque chose de quelqu'un.
+  ///
+  /// Aligné sur `BidRepository.findNegotiationsForUser`. L'ancienne règle
+  /// (« seul NEGOTIATING reste ouvert ») faisait disparaître le fil de
+  /// « Discussions de prix » dès l'acceptation, sans laisser à l'expéditeur
+  /// de chemin vers le paiement.
+  bool get isClosed => !_openStatuses.contains(status);
+
+  bool get isAwaitingCardPayment => status == 'AWAITING_PAYMENT';
+
+  bool get isAwaitingCashSettlement => status == 'PENDING';
+
+  /// C'est à moi de payer : accord carte, vu par l'expéditeur.
+  bool get needsMyPayment => isAwaitingCardPayment && role != 'TRAVELER';
+
+  /// Libellé court sous le montant de la carte de liste.
+  String get stageLabel {
+    if (isAwaitingCardPayment) {
+      return needsMyPayment ? 'à payer' : 'attente paiement';
+    }
+    if (isAwaitingCashSettlement) {
+      return 'accord conclu';
+    }
+    if (isClosed) {
+      return 'terminé';
+    }
+    return 'proposition';
+  }
 }

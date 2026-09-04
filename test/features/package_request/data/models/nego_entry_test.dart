@@ -75,6 +75,18 @@ void main() {
   });
 
   group('NegoEntry.fromTrip', () {
+    test('un accord de trajet en attente de paiement reste actif', () {
+      expect(
+        NegoEntry.fromTrip(_summary(status: 'AWAITING_PAYMENT')).isActive,
+        isTrue,
+      );
+      expect(NegoEntry.fromTrip(_summary(status: 'PENDING')).isActive, isTrue);
+      expect(
+        NegoEntry.fromTrip(_summary(status: 'PAYMENT_ESCROWED')).isActive,
+        isFalse,
+      );
+    });
+
     test('expose les champs communs d une negociation de trajet', () {
       final entry = NegoEntry.fromTrip(_summary());
 
