@@ -16,6 +16,7 @@ class CorridorAlertModel extends Equatable {
     this.contentCategories = const [],
     required this.active,
     this.matchCount = 0,
+    this.newMatchCount = 0,
     required this.createdAt,
     this.direction = AlertDirection.travelerWantsPackages,
     this.centerLat,
@@ -34,7 +35,14 @@ class CorridorAlertModel extends Equatable {
   final double? minWeightKg;
   final List<String> contentCategories;
   final bool active;
+
+  /// Tout ce qui matche aujourd'hui.
   final int matchCount;
+
+  /// Ce qui est apparu depuis la dernière ouverture des correspondances
+  /// (tout, si elles n'ont jamais été ouvertes). C'est le seul chiffre que
+  /// l'interface met en avant : [matchCount] ne dit rien de ce qui a changé.
+  final int newMatchCount;
   final DateTime createdAt;
   final AlertDirection direction;
 
@@ -47,6 +55,21 @@ class CorridorAlertModel extends Equatable {
   /// True si l'alerte porte une zone de remise (centre + rayon).
   bool get hasPickupZone =>
       centerLat != null && centerLng != null && radiusKm != null;
+
+  String get corridorLabel => '$departureCity → $arrivalCity';
+
+  bool get hasNews => newMatchCount > 0;
+
+  /// Fenêtre de dates dépassée : l'alerte ne peut plus rien trouver de neuf.
+  /// Sans `dateTo`, une alerte est permanente.
+  bool isExpiredAt(DateTime now) {
+    final end = dateTo;
+    if (end == null) return false;
+    final today = DateTime(now.year, now.month, now.day);
+    return DateTime(end.year, end.month, end.day).isBefore(today);
+  }
+
+  bool get isExpired => isExpiredAt(DateTime.now());
 
   factory CorridorAlertModel.fromJson(Map<String, dynamic> json) =>
       CorridorAlertModel(
@@ -69,6 +92,7 @@ class CorridorAlertModel extends Equatable {
             const [],
         active: json['active'] as bool,
         matchCount: (json['matchCount'] as num?)?.toInt() ?? 0,
+        newMatchCount: (json['newMatchCount'] as num?)?.toInt() ?? 0,
         createdAt: DateTime.parse(json['createdAt'] as String),
         direction: AlertDirection.fromWire(json['direction'] as String?),
         centerLat: (json['centerLat'] as num?)?.toDouble(),
@@ -80,6 +104,7 @@ class CorridorAlertModel extends Equatable {
   CorridorAlertModel copyWith({
     bool? active,
     int? matchCount,
+    int? newMatchCount,
     AlertDirection? direction,
   }) => CorridorAlertModel(
     id: id,
@@ -93,6 +118,7 @@ class CorridorAlertModel extends Equatable {
     contentCategories: contentCategories,
     active: active ?? this.active,
     matchCount: matchCount ?? this.matchCount,
+    newMatchCount: newMatchCount ?? this.newMatchCount,
     createdAt: createdAt,
     direction: direction ?? this.direction,
     centerLat: centerLat,
@@ -114,6 +140,7 @@ class CorridorAlertModel extends Equatable {
     contentCategories,
     active,
     matchCount,
+    newMatchCount,
     createdAt,
     direction,
     centerLat,

@@ -3,8 +3,10 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/corridor_alerts/bloc/corridor_alert_list_bloc.dart';
 import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
+import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
+import 'package:dony/features/corridor_alerts/presentation/widgets/corridor_alert_actions_sheet.dart';
+import 'package:dony/features/corridor_alerts/presentation/widgets/corridor_alert_card.dart';
 import 'package:dony/features/corridor_alerts/presentation/widgets/corridor_alert_form_sheet.dart';
-import 'package:dony/features/corridor_alerts/presentation/widgets/corridor_alert_tile.dart';
 import 'package:dony/features/profile/data/models/help_center_config.dart';
 import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
 import 'package:flutter/material.dart';
@@ -19,8 +21,8 @@ import 'package:go_router/go_router.dart';
 ///   Voyageur).
 /// - `senderWantsTrips` → alertes « Trajets » (atteint depuis le bloc/​hub
 ///   Expéditeur).
-/// - `null` → toutes les alertes (hub Activités, modèle double rôle) ; le
-///   formulaire montre alors son segment de direction.
+/// - `null` → toutes les alertes (hub Activités, modèle double rôle),
+///   groupées par direction ; le formulaire montre alors son segment.
 class CorridorAlertListScreen extends StatelessWidget {
   const CorridorAlertListScreen({super.key, this.direction});
 
@@ -43,14 +45,67 @@ class _CorridorAlertListView extends StatelessWidget {
 
   bool get _isPackages => direction == AlertDirection.travelerWantsPackages;
 
+  // Une direction verrouille la création (segment masqué, direction forcée) ;
+  // sans direction, les deux rôles sont passés au form → segment visible.
+  bool get _formIsTraveler => direction == null || _isPackages;
+  bool get _formIsSender => direction == null || !_isPackages;
+
+  void _reload(BuildContext ctx) =>
+      ctx.read<CorridorAlertListBloc>().add(CorridorAlertListRequested());
+
+  Future<void> _create(BuildContext ctx) async {
+    await CorridorAlertFormSheet.show(
+      ctx,
+      isTraveler: _formIsTraveler,
+      isSender: _formIsSender,
+    );
+    if (!ctx.mounted) return;
+    _reload(ctx);
+  }
+
+  Future<void> _edit(BuildContext ctx, CorridorAlertModel alert) async {
+    await CorridorAlertFormSheet.show(
+      ctx,
+      alert: alert,
+      isTraveler: _formIsTraveler,
+      isSender: _formIsSender,
+    );
+    if (!ctx.mounted) return;
+    _reload(ctx);
+  }
+
+  Future<void> _openMatches(BuildContext ctx, CorridorAlertModel alert) async {
+    await ctx.push('/corridor-alerts/${alert.id}/matches', extra: alert);
+    // Ouvrir les correspondances les marque comme vues : la carte doit
+    // repasser à « rien de neuf » au retour.
+    if (!ctx.mounted) return;
+    _reload(ctx);
+  }
+
+  void _toggle(BuildContext ctx, CorridorAlertModel alert, bool active) {
+    ctx.read<CorridorAlertListBloc>().add(
+      CorridorAlertActiveToggled(alert.id, active),
+    );
+  }
+
+  Future<void> _menu(BuildContext ctx, CorridorAlertModel alert) async {
+    final action = await CorridorAlertActionsSheet.show(ctx, alert: alert);
+    if (action == null || !ctx.mounted) return;
+    switch (action) {
+      case CorridorAlertAction.edit:
+        await _edit(ctx, alert);
+      case CorridorAlertAction.pause:
+        _toggle(ctx, alert, false);
+      case CorridorAlertAction.resume:
+        _toggle(ctx, alert, true);
+      case CorridorAlertAction.delete:
+        ctx.read<CorridorAlertListBloc>().add(CorridorAlertDeleted(alert.id));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-
-    // Une direction verrouille la création (segment masqué, direction forcée) ;
-    // sans direction, les deux rôles sont passés au form → segment visible.
-    final formIsTraveler = direction == null || _isPackages;
-    final formIsSender = direction == null || !_isPackages;
 
     final emptyDescription = switch (direction) {
       AlertDirection.travelerWantsPackages =>
@@ -76,18 +131,7 @@ class _CorridorAlertListView extends StatelessWidget {
           foregroundColor: cs.onPrimary,
           icon: const Icon(Icons.add_rounded),
           label: const Text('Créer'),
-          onPressed: () async {
-            await CorridorAlertFormSheet.show(
-              fabCtx,
-              isTraveler: formIsTraveler,
-              isSender: formIsSender,
-            );
-            if (fabCtx.mounted) {
-              fabCtx.read<CorridorAlertListBloc>().add(
-                CorridorAlertListRequested(),
-              );
-            }
-          },
+          onPressed: () => _create(fabCtx),
         ),
       ),
       body: Column(
@@ -138,9 +182,7 @@ class _CorridorAlertListView extends StatelessWidget {
                     description:
                         state.errorMessage ?? 'Une erreur est survenue.',
                     actionLabel: 'Réessayer',
-                    onAction: () => ctx.read<CorridorAlertListBloc>().add(
-                      CorridorAlertListRequested(),
-                    ),
+                    onAction: () => _reload(ctx),
                   );
                 }
                 if (visible.isEmpty) {
@@ -149,71 +191,106 @@ class _CorridorAlertListView extends StatelessWidget {
                     title: 'Aucune alerte corridor',
                     description: emptyDescription,
                     actionLabel: 'Créer une alerte',
-                    onAction: () async {
-                      await CorridorAlertFormSheet.show(
-                        ctx,
-                        isTraveler: formIsTraveler,
-                        isSender: formIsSender,
-                      );
-                      if (ctx.mounted) {
-                        ctx.read<CorridorAlertListBloc>().add(
-                          CorridorAlertListRequested(),
-                        );
-                      }
-                    },
+                    onAction: () => _create(ctx),
                   );
                 }
-                return ListView.separated(
-                  padding: const EdgeInsets.only(
-                    top: DonySpacing.sm,
-                    bottom: DonySpacing.huge,
+
+                final trips = visible
+                    .where(
+                      (a) => a.direction == AlertDirection.senderWantsTrips,
+                    )
+                    .toList();
+                final packages = visible
+                    .where(
+                      (a) =>
+                          a.direction == AlertDirection.travelerWantsPackages,
+                    )
+                    .toList();
+                // Les en-têtes de groupe n'ont de sens que lorsque les deux
+                // directions cohabitent (hub) : un écran mono-direction dit
+                // déjà tout dans son titre.
+                final grouped = direction == null;
+
+                return ListView(
+                  padding: const EdgeInsets.fromLTRB(
+                    DonySpacing.lg,
+                    DonySpacing.md,
+                    DonySpacing.lg,
+                    DonySpacing.huge * 2,
                   ),
-                  itemCount: visible.length,
-                  separatorBuilder: (context, index) => Divider(
-                    height: 1,
-                    thickness: 1,
-                    indent: DonySpacing.lg + 44 + DonySpacing.md,
-                    color: cs.outline.withValues(alpha: 0.5),
-                  ),
-                  itemBuilder: (lCtx, i) {
-                    final alert = visible[i];
-                    return Dismissible(
-                      key: ValueKey(alert.id),
-                      direction: DismissDirection.endToStart,
-                      onDismissed: (_) => lCtx
-                          .read<CorridorAlertListBloc>()
-                          .add(CorridorAlertDeleted(alert.id)),
-                      background: Container(
-                        alignment: Alignment.centerRight,
-                        padding: const EdgeInsets.only(right: DonySpacing.xl),
-                        color: cs.error,
-                        // size: 24 is the DonyIcon default — matches the brief.
-                        child: DonyIcon('trash-2', color: cs.onError),
-                      ),
-                      child: CorridorAlertTile(
-                        alert: alert,
-                        onToggle: (next) => lCtx
-                            .read<CorridorAlertListBloc>()
-                            .add(CorridorAlertActiveToggled(alert.id, next)),
-                        onTap: () async {
-                          await lCtx.push(
-                            '/corridor-alerts/${alert.id}/matches',
-                            extra: alert,
-                          );
-                          if (lCtx.mounted) {
-                            lCtx.read<CorridorAlertListBloc>().add(
-                              CorridorAlertListRequested(),
-                            );
-                          }
-                        },
-                      ),
-                    );
-                  },
+                  children: [
+                    if (trips.isNotEmpty) ...[
+                      if (grouped) const _GroupHeader('Trajets surveillés'),
+                      for (final a in trips) _row(ctx, a),
+                    ],
+                    if (packages.isNotEmpty) ...[
+                      if (grouped) ...[
+                        if (trips.isNotEmpty)
+                          const SizedBox(height: DonySpacing.sm),
+                        const _GroupHeader('Colis surveillés'),
+                      ],
+                      for (final a in packages) _row(ctx, a),
+                    ],
+                  ],
                 );
               },
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _row(BuildContext ctx, CorridorAlertModel alert) {
+    final cs = Theme.of(ctx).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: DonySpacing.md),
+      child: Dismissible(
+        key: ValueKey(alert.id),
+        direction: DismissDirection.endToStart,
+        onDismissed: (_) => ctx.read<CorridorAlertListBloc>().add(
+          CorridorAlertDeleted(alert.id),
+        ),
+        background: Container(
+          alignment: Alignment.centerRight,
+          padding: const EdgeInsets.only(right: DonySpacing.xl),
+          decoration: BoxDecoration(
+            color: cs.error,
+            borderRadius: BorderRadius.circular(DonyRadius.card),
+          ),
+          child: DonyIcon('trash-2', color: cs.onError),
+        ),
+        child: CorridorAlertCard(
+          alert: alert,
+          onTap: () => _openMatches(ctx, alert),
+          onMenu: () => _menu(ctx, alert),
+          onResume: () => _toggle(ctx, alert, true),
+          onExtend: () => _edit(ctx, alert),
+        ),
+      ),
+    );
+  }
+}
+
+class _GroupHeader extends StatelessWidget {
+  const _GroupHeader(this.label);
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        DonySpacing.xs,
+        0,
+        DonySpacing.xs,
+        DonySpacing.md,
+      ),
+      child: Text(
+        label.toUpperCase(),
+        style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
       ),
     );
   }

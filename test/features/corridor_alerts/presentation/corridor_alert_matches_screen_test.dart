@@ -82,7 +82,7 @@ void main() {
     GetIt.I.registerFactoryParam<
       CorridorAlertMatchesCubit,
       String,
-      AlertDirection
+      CorridorAlertModel?
     >((_, _) => cubit);
   });
 
@@ -111,6 +111,58 @@ void main() {
     await tester.pumpWidget(pump(AlertDirection.travelerWantsPackages));
     await tester.pump(const Duration(milliseconds: 600));
     expect(find.byType(MatchingRequestCard), findsOneWidget);
+  });
+
+  testWidgets(
+    'alertId seul (push) : titre et bouton Modifier viennent de l\'alerte chargée',
+    (tester) async {
+      when(() => cubit.state).thenReturn(
+        CorridorAlertMatchesState(
+          status: CorridorAlertMatchesStatus.loaded,
+          alert: _alert(AlertDirection.senderWantsTrips),
+          result: CorridorAlertMatches(
+            direction: AlertDirection.senderWantsTrips,
+            trips: [_fakeTrip()],
+          ),
+        ),
+      );
+      await tester.pumpWidget(
+        MultiBlocProvider(
+          providers: [BlocProvider<AuthBloc>.value(value: authBloc)],
+          child: MaterialApp(
+            theme: AppTheme.light(),
+            home: const CorridorAlertMatchesScreen(alertId: 'alert-1'),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(find.text('Paris → Dakar'), findsWidgets);
+      expect(find.byTooltip('Modifier l\'alerte'), findsOneWidget);
+      expect(find.byType(TripMatchCard), findsOneWidget);
+    },
+  );
+
+  testWidgets('alertId seul, alerte pas encore chargée : titre neutre', (
+    tester,
+  ) async {
+    when(() => cubit.state).thenReturn(
+      const CorridorAlertMatchesState(
+        status: CorridorAlertMatchesStatus.loading,
+      ),
+    );
+    await tester.pumpWidget(
+      MultiBlocProvider(
+        providers: [BlocProvider<AuthBloc>.value(value: authBloc)],
+        child: MaterialApp(
+          theme: AppTheme.light(),
+          home: const CorridorAlertMatchesScreen(alertId: 'alert-1'),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(find.text('Mes alertes'), findsOneWidget);
+    expect(find.byTooltip('Modifier l\'alerte'), findsNothing);
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
   });
 
   testWidgets('trip direction loaded → TripMatchCard rendered', (tester) async {

@@ -48,6 +48,7 @@ import 'package:dony/features/content_categories/data/content_category_repositor
 import 'package:dony/features/corridor_alerts/bloc/corridor_alert_form_cubit.dart';
 import 'package:dony/features/corridor_alerts/bloc/corridor_alert_list_bloc.dart';
 import 'package:dony/features/corridor_alerts/bloc/corridor_alert_matches_cubit.dart';
+import 'package:dony/features/corridor_alerts/bloc/corridor_alert_summary_cubit.dart';
 import 'package:dony/features/corridor_alerts/data/corridor_alert_repository.dart';
 import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
@@ -921,14 +922,23 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       hiveService: getIt<HiveService>(),
     ),
   );
-  // param1 = alertId (String), param2 = direction (AlertDirection) — matchs typés par direction.
-  getIt.registerFactoryParam<CorridorAlertMatchesCubit, String, AlertDirection>(
-    (alertId, direction) => CorridorAlertMatchesCubit(
+  // param1 = alertId (String), param2 = alerte déjà connue (null depuis un
+  // push : le cubit la charge par son id).
+  getIt.registerFactoryParam<
+    CorridorAlertMatchesCubit,
+    String,
+    CorridorAlertModel?
+  >(
+    (alertId, alert) => CorridorAlertMatchesCubit(
       getIt<CorridorAlertRepository>(),
       getIt<AnalyticsService>(),
       alertId: alertId,
-      direction: direction,
+      alert: alert,
     ),
+  );
+  // Résumé des nouveautés pour la tuile « Mes alertes » du hub Activités.
+  getIt.registerFactory<CorridorAlertSummaryCubit>(
+    () => CorridorAlertSummaryCubit(getIt<CorridorAlertRepository>()),
   );
   getIt.registerLazySingleton<NegotiationRepository>(
     () => NegotiationRepository(getIt<ApiClient>()),

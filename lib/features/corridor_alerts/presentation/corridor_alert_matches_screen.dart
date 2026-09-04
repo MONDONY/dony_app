@@ -14,33 +14,45 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+/// Correspondances d'une alerte. Reçoit l'alerte entière depuis la liste, ou
+/// seulement son id depuis un push : le cubit la charge alors lui-même.
 class CorridorAlertMatchesScreen extends StatelessWidget {
-  const CorridorAlertMatchesScreen({super.key, required this.alert});
+  const CorridorAlertMatchesScreen({super.key, this.alert, String? alertId})
+    : assert(alert != null || alertId != null, 'alert ou alertId requis'),
+      _alertId = alertId;
 
-  final CorridorAlertModel alert;
+  final CorridorAlertModel? alert;
+  final String? _alertId;
+
+  String get alertId => alert?.id ?? _alertId!;
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => getIt<CorridorAlertMatchesCubit>(
-        param1: alert.id,
-        param2: alert.direction,
-      )..load(),
-      child: _CorridorAlertMatchesView(alert: alert),
+      create: (_) =>
+          getIt<CorridorAlertMatchesCubit>(param1: alertId, param2: alert)
+            ..load(),
+      child: _CorridorAlertMatchesView(initialAlert: alert),
     );
   }
 }
 
 class _CorridorAlertMatchesView extends StatelessWidget {
-  const _CorridorAlertMatchesView({required this.alert});
+  const _CorridorAlertMatchesView({this.initialAlert});
 
-  final CorridorAlertModel alert;
+  /// Alerte connue avant tout chargement (depuis la liste) ; l'état du cubit
+  /// prend le relais dès qu'il en porte une, notamment après « vu ».
+  final CorridorAlertModel? initialAlert;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final isTrip = alert.direction == AlertDirection.senderWantsTrips;
+    final state = context.watch<CorridorAlertMatchesCubit>().state;
+    final alert = state.alert ?? initialAlert;
+    final isTrip =
+        (alert?.direction ?? state.result?.direction) ==
+        AlertDirection.senderWantsTrips;
 
     // Resolve role flags for the edit sheet.
     // watch ensures build() re-runs on auth state change so the edit callback captures fresh flags.
@@ -64,22 +76,23 @@ class _CorridorAlertMatchesView extends StatelessWidget {
         elevation: 0,
         scrolledUnderElevation: 0,
         title: Text(
-          '${alert.departureCity} → ${alert.arrivalCity}',
+          alert?.corridorLabel ?? 'Mes alertes',
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w700),
         ),
         actions: [
-          IconButton(
-            tooltip: 'Modifier l\'alerte',
-            icon: DonyIcon('square-pen', size: 22, color: cs.primary),
-            onPressed: () => CorridorAlertFormSheet.show(
-              context,
-              alert: alert,
-              isTraveler: isTraveler,
-              isSender: isSender,
+          if (alert != null)
+            IconButton(
+              tooltip: 'Modifier l\'alerte',
+              icon: DonyIcon('square-pen', size: 22, color: cs.primary),
+              onPressed: () => CorridorAlertFormSheet.show(
+                context,
+                alert: alert,
+                isTraveler: isTraveler,
+                isSender: isSender,
+              ),
             ),
-          ),
         ],
       ),
       body: BlocBuilder<CorridorAlertMatchesCubit, CorridorAlertMatchesState>(

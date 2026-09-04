@@ -102,6 +102,54 @@ void main() {
       expect(updated.matchCount, 9);
       expect(updated.id, 'a3');
     });
+
+    test('newMatchCount parsed, defaults to 0, overridable via copyWith', () {
+      final fresh = CorridorAlertModel.fromJson(const <String, dynamic>{
+        'id': 'n1',
+        'departureCity': 'Paris',
+        'arrivalCity': 'Dakar',
+        'active': true,
+        'matchCount': 5,
+        'newMatchCount': 2,
+        'createdAt': '2026-06-20T09:00:00',
+      });
+      expect(fresh.newMatchCount, 2);
+      expect(fresh.hasNews, isTrue);
+      expect(fresh.corridorLabel, 'Paris → Dakar');
+
+      final legacy = CorridorAlertModel.fromJson(const <String, dynamic>{
+        'id': 'n2',
+        'departureCity': 'Paris',
+        'arrivalCity': 'Dakar',
+        'active': true,
+        'createdAt': '2026-06-20T09:00:00',
+      });
+      expect(legacy.newMatchCount, 0);
+      expect(legacy.hasNews, isFalse);
+
+      expect(fresh.copyWith(newMatchCount: 0).hasNews, isFalse);
+    });
+  });
+
+  group('CorridorAlertModel.isExpiredAt', () {
+    CorridorAlertModel withDateTo(DateTime? to) => CorridorAlertModel(
+      id: 'e',
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      active: true,
+      createdAt: DateTime(2026, 6, 20),
+      dateTo: to,
+    );
+
+    test('sans dateTo, jamais expirée', () {
+      expect(withDateTo(null).isExpiredAt(DateTime(2030)), isFalse);
+    });
+
+    test('expirée le lendemain de dateTo, pas le jour même', () {
+      final a = withDateTo(DateTime(2026, 8, 31));
+      expect(a.isExpiredAt(DateTime(2026, 8, 31, 23, 59)), isFalse);
+      expect(a.isExpiredAt(DateTime(2026, 9, 1, 0, 1)), isTrue);
+    });
   });
 
   group('CorridorAlertDraft.toJson', () {

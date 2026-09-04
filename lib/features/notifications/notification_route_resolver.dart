@@ -37,6 +37,7 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
   final cancellationId = field('cancellationId');
   final packageRequestId = field('packageRequestId');
   final conversationId = field('conversationId');
+  final alertId = field('alertId');
 
   return switch (type) {
     'BID_CREATED' when _isUuid(announcementId) =>
@@ -100,6 +101,10 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
     // Expéditeur → détail du trajet qui matche son alerte
     'CORRIDOR_ALERT' when _isUuid(announcementId) =>
       '/traveler/$announcementId',
+    // Digest quotidien : plusieurs matchs, pas de trajet unique → les
+    // correspondances de l'alerte.
+    'CORRIDOR_ALERT' when _isUuid(alertId) =>
+      '/corridor-alerts/$alertId/matches',
     // Voyageur → détail du colis qui matche un de ses trajets
     'PACKAGE_MATCH' when _isUuid(requestId) =>
       '/package-requests/$requestId/public',

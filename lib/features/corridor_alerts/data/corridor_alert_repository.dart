@@ -22,6 +22,15 @@ class CorridorAlertRepository {
         .toList();
   }
 
+  /// Une alerte seule : sert à ouvrir ses correspondances depuis un push
+  /// digest qui ne porte que son id.
+  Future<CorridorAlertModel> getById(String id) async {
+    final response = await _apiClient.dio.get<Map<String, dynamic>>(
+      '/me/corridor-alerts/$id',
+    );
+    return CorridorAlertModel.fromJson(response.data!);
+  }
+
   Future<CorridorAlertModel> create(CorridorAlertDraft draft) async {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
       '/me/corridor-alerts',
@@ -48,6 +57,15 @@ class CorridorAlertRepository {
 
   Future<void> delete(String id) async {
     await _apiClient.dio.delete<void>('/me/corridor-alerts/$id');
+  }
+
+  /// Les correspondances viennent d'être ouvertes : le serveur remet le
+  /// compteur de nouveautés à zéro et renvoie l'alerte à jour.
+  Future<CorridorAlertModel> markSeen(String id) async {
+    final response = await _apiClient.dio.post<Map<String, dynamic>>(
+      '/me/corridor-alerts/$id/seen',
+    );
+    return CorridorAlertModel.fromJson(response.data!);
   }
 
   /// Matchs pour une alerte. Selon [direction], retourne soit une liste de

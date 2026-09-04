@@ -9,6 +9,7 @@ import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/corridor_alerts/bloc/corridor_alert_summary_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
@@ -66,6 +67,7 @@ class ActivitesHubScreen extends StatelessWidget {
       providers: [
         BlocProvider(create: (_) => getIt<TripsSummaryCubit>()),
         BlocProvider(create: (_) => getIt<ToolsCompletionCubit>()),
+        BlocProvider(create: (_) => getIt<CorridorAlertSummaryCubit>()),
         // TravelerBidsBloc est désormais un singleton (partagé avec l'onglet) :
         // `.value` pour ne pas le fermer quand le hub se démonte.
         BlocProvider.value(value: getIt<TravelerBidsBloc>()),
@@ -179,6 +181,7 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
     );
     context.read<PackageRequestBloc>().add(const FetchMyRequests());
     unawaited(context.read<ToolsCompletionCubit>().load());
+    unawaited(context.read<CorridorAlertSummaryCubit>().load());
   }
 
   Future<void> _onRefresh() async {
@@ -214,6 +217,71 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
     await context.push(route);
     if (!mounted) return;
     unawaited(context.read<ToolsCompletionCubit>().load());
+    // Les correspondances ouvertes là-bas sont désormais vues : la pastille
+    // « nouveaux » doit s'éteindre au retour.
+    if (route == ToolKey.alerts.route) {
+      unawaited(context.read<CorridorAlertSummaryCubit>().load());
+    }
+  }
+
+  /// Tuile « Mes alertes » : contrairement aux autres outils, sa pastille ne
+  /// parle pas que de configuration. Dès que des correspondances sont
+  /// apparues depuis la dernière visite, elle le dit en ambre et le
+  /// sous-titre nomme les corridors concernés.
+  Widget _alertsTile(
+    ColorScheme cs,
+    ToolsCompletionState toolsState,
+    CorridorAlertSummaryState summary,
+  ) {
+    const title = 'Mes alertes';
+    final configured =
+        toolsState.status == ToolsCompletionStatus.loaded &&
+        toolsState.model != null &&
+        toolsState.model!.countOf(ToolKey.alerts) > 0;
+    final hasNews = configured && summary.hasNews;
+
+    final Widget? badge;
+    final String subtitle;
+    if (hasNews) {
+      final n = summary.newMatchCount;
+      final label = '$n nouveau${n > 1 ? 'x' : ''}';
+      badge = ToolStatusBadge(
+        ready: true,
+        tone: ToolStatusTone.news,
+        label: label,
+        semanticsLabel: '$title, $label depuis votre dernière visite',
+      );
+      subtitle = _corridorsSubtitle(summary.newCorridors);
+    } else {
+      badge = _toolBadge(toolsState, ToolKey.alerts, title);
+      subtitle = !configured
+          ? 'Soyez prévenu avant les autres'
+          : summary.isLoaded
+          ? 'Rien de neuf pour l\'instant'
+          : 'Nouveaux trajets et colis';
+    }
+
+    return _OtherTile(
+      key: const Key('hub-tool-alerts'),
+      iconName: 'bell',
+      label: title,
+      subtitle: subtitle,
+      color: cs.primary,
+      badge: badge,
+      showNotificationDot: hasNews,
+      onTap: () => _openTool(
+        AnalyticsEvents.activitesHubAlertsOpened,
+        ToolKey.alerts.route,
+      ),
+    );
+  }
+
+  /// « Paris → Dakar, Lyon → Abidjan » ; au-delà de deux corridors, « +n ».
+  static String _corridorsSubtitle(List<String> corridors) {
+    if (corridors.isEmpty) return 'Nouveaux trajets et colis';
+    final shown = corridors.take(2).join(', ');
+    final rest = corridors.length - 2;
+    return rest > 0 ? '$shown +$rest' : shown;
   }
 
   Future<void> _onToolCta(ToolKey tool) async {
@@ -282,6 +350,7 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
     final summaryState = context.watch<TripsSummaryCubit>().state;
     final period = context.watch<StatsPeriodCubit>().state;
     final toolsState = context.watch<ToolsCompletionCubit>().state;
+    final alertsSummary = context.watch<CorridorAlertSummaryCubit>().state;
     // Trois portes gardent la section visible en plus de l'activité détectée :
     // le chargement (pas de flash pendant un reload), et une période non par
     // défaut — sinon sélectionner « 7 jours » à zéro ferait disparaître les
@@ -372,21 +441,7 @@ class _ActivitesHubViewState extends State<_ActivitesHubView> {
                         const SizedBox(height: DonySpacing.md),
                       ],
                       _TileRow(
-                        left: _OtherTile(
-                          iconName: 'bell',
-                          label: 'Mes alertes',
-                          subtitle: 'Nouveaux trajets et colis',
-                          color: cs.primary,
-                          badge: _toolBadge(
-                            toolsState,
-                            ToolKey.alerts,
-                            'Mes alertes',
-                          ),
-                          onTap: () => _openTool(
-                            AnalyticsEvents.activitesHubAlertsOpened,
-                            '/corridor-alerts',
-                          ),
-                        ),
+                        left: _alertsTile(cs, toolsState, alertsSummary),
                         right: _OtherTile(
                           iconName: 'bookmark',
                           label: 'Modèles de trajet',
@@ -888,12 +943,14 @@ class _StatsRow extends StatelessWidget {
 
 class _OtherTile extends StatelessWidget {
   const _OtherTile({
+    super.key,
     required this.iconName,
     required this.label,
     required this.color,
     required this.onTap,
     this.subtitle,
     this.badge,
+    this.showNotificationDot = false,
   });
 
   final String iconName;
@@ -907,6 +964,10 @@ class _OtherTile extends StatelessWidget {
   /// les tuiles sans rien à remplir (Historique, Aide) ou tant que l'état est
   /// inconnu.
   final Widget? badge;
+
+  /// Point ambre sur l'icône : l'outil a du nouveau depuis la dernière
+  /// visite (aujourd'hui, seules les alertes s'en servent).
+  final bool showNotificationDot;
   final VoidCallback onTap;
 
   @override
@@ -924,12 +985,32 @@ class _OtherTile extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              DonyIconContainer(
-                iconAsset: iconName,
-                size: DonyIconContainerSize.sm,
-                backgroundColor: color,
-                iconColor: DonyColors.neutral0,
-                borderRadius: DonyRadius.iconBtn,
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  DonyIconContainer(
+                    iconAsset: iconName,
+                    size: DonyIconContainerSize.sm,
+                    backgroundColor: color,
+                    iconColor: DonyColors.neutral0,
+                    borderRadius: DonyRadius.iconBtn,
+                  ),
+                  if (showNotificationDot)
+                    Positioned(
+                      top: -3,
+                      right: -3,
+                      child: Container(
+                        key: const Key('tool-tile-dot'),
+                        width: 10,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          color: DonyColors.amberDark,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: cs.surface, width: 2),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ],
           ),
