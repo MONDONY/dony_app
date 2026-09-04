@@ -170,23 +170,30 @@ void main() {
     filter: TravelerBidFilter.aTraiter,
   );
 
-  testWidgets('les deux volets du toggle sont présents', (tester) async {
+  testWidgets('l’écran est mono-rôle : plus de toggle Reçues / Envoyées', (
+    tester,
+  ) async {
     await _pump(tester, travelerBidsState: loaded(const []));
 
-    expect(find.text('Reçues'), findsOneWidget);
-    expect(find.text('Envoyées'), findsOneWidget);
+    expect(find.text('Reçues'), findsNothing);
+    expect(find.text('Envoyées'), findsNothing);
   });
 
-  testWidgets('rafraîchit le badge Envoyées dès l’ouverture', (tester) async {
+  testWidgets('ne charge plus les demandes envoyées', (tester) async {
+    // Le volet « Envoyées » vit désormais dans « Mes colis » (/envois) : cet
+    // écran ne doit plus toucher au bloc des demandes publiées.
     final packageRequests = await _pump(
       tester,
       travelerBidsState: loaded(const []),
     );
 
-    verify(() => packageRequests.add(const RefreshMyRequests())).called(1);
+    verifyNever(() => packageRequests.add(const RefreshMyRequests()));
+    verifyNever(() => packageRequests.add(const FetchMyRequests()));
   });
 
-  testWidgets('le badge « à traiter » s\'affiche sur Reçues', (tester) async {
+  testWidgets('le décompte « à traiter » vit sur la pastille de filtre', (
+    tester,
+  ) async {
     await _pump(
       tester,
       travelerBidsState: loaded([
@@ -197,13 +204,16 @@ void main() {
     );
 
     // 2 en attente d'une décision (PENDING + PAYMENT_ESCROWED), pas le 3e.
-    expect(find.text('2'), findsOneWidget);
+    // Sans toggle, c'est la pastille de filtre qui porte le compteur.
+    expect(find.text('À traiter (2)'), findsOneWidget);
   });
 
-  testWidgets('aucun badge quand rien à traiter', (tester) async {
+  testWidgets('la pastille affiche zéro quand rien n’est à traiter', (
+    tester,
+  ) async {
     await _pump(tester, travelerBidsState: loaded([_bid('b1', 'ACCEPTED')]));
 
-    expect(find.text('0'), findsNothing);
+    expect(find.text('À traiter (0)'), findsOneWidget);
   });
 
   testWidgets('l\'état vide « À traiter » propose de publier un trajet', (

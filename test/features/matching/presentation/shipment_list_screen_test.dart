@@ -16,7 +16,6 @@ import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -82,7 +81,7 @@ void main() {
         BlocProvider<BidBloc>.value(value: bidBloc),
         BlocProvider<PaymentBloc>.value(value: paymentBloc),
       ],
-      child: const ShipmentListScreen(embedded: true),
+      child: const ShipmentListScreen(),
     ),
   );
 
@@ -140,38 +139,6 @@ void main() {
     expect(find.textContaining('Aucun envoi ne correspond'), findsOneWidget);
     expect(find.text('Réinitialiser'), findsOneWidget);
   });
-
-  testWidgets(
-    'mode standalone (embedded:false) affiche le header « Colis en route »',
-    (tester) async {
-      whenListen(
-        bidBloc,
-        Stream<BidState>.fromIterable([BidListLoaded(const [])]),
-        initialState: BidListLoaded(const []),
-      );
-
-      final router = GoRouter(
-        initialLocation: '/',
-        routes: [
-          GoRoute(
-            path: '/',
-            builder: (_, _) => MultiBlocProvider(
-              providers: [
-                BlocProvider<BidBloc>.value(value: bidBloc),
-                BlocProvider<PaymentBloc>.value(value: paymentBloc),
-              ],
-              child: const ShipmentListScreen(),
-            ),
-          ),
-        ],
-      );
-
-      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Colis en route'), findsOneWidget);
-    },
-  );
 
   testWidgets('état BidLoading affiche un skeleton', (tester) async {
     whenListen(
@@ -598,57 +565,5 @@ void main() {
 
     expect(find.text('Dakar'), findsOneWidget);
     expect(find.text('Abidjan'), findsNothing);
-  });
-
-  testWidgets('mode standalone avec canGoBack=true affiche le bouton retour', (
-    tester,
-  ) async {
-    whenListen(
-      bidBloc,
-      const Stream<BidState>.empty(),
-      initialState: BidListLoaded(const []),
-    );
-
-    final router = GoRouter(
-      initialLocation: '/prev',
-      routes: [
-        GoRoute(
-          path: '/prev',
-          builder: (ctx, _) => Scaffold(
-            body: MultiBlocProvider(
-              providers: [
-                BlocProvider<BidBloc>.value(value: bidBloc),
-                BlocProvider<PaymentBloc>.value(value: paymentBloc),
-              ],
-              child: ElevatedButton(
-                // push so canPop returns true
-                onPressed: () => ctx.push('/envois'),
-                child: const Text('go'),
-              ),
-            ),
-          ),
-        ),
-        GoRoute(
-          path: '/envois',
-          builder: (_, _) => MultiBlocProvider(
-            providers: [
-              BlocProvider<BidBloc>.value(value: bidBloc),
-              BlocProvider<PaymentBloc>.value(value: paymentBloc),
-            ],
-            child: const ShipmentListScreen(),
-          ),
-        ),
-      ],
-    );
-
-    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('go'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Colis en route'), findsOneWidget);
-    // Back button appears because canPop is true (pushed route)
-    expect(find.byType(DonyAppBarBackButton), findsOneWidget);
   });
 }

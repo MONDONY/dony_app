@@ -5,8 +5,6 @@ import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/di/pending_search_notifier.dart';
 import 'package:dony/core/error/error_presenter.dart';
-import 'package:dony/core/services/analytics_events.dart';
-import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
@@ -23,12 +21,11 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+/// Liste des envois de l'expéditeur — toujours montée comme corps d'un écran
+/// qui porte son propre header (« Mes colis », « Envoyer »). Elle n'en a donc
+/// pas : le drapeau `embedded` d'antan n'avait plus qu'une seule valeur.
 class ShipmentListScreen extends StatelessWidget {
-  const ShipmentListScreen({super.key, this.embedded = false});
-
-  /// Quand `true`, l'écran omet son header sombre — adapté pour servir de
-  /// corps dans `EnvoyerHubScreen`.
-  final bool embedded;
+  const ShipmentListScreen({super.key});
 
   /// Le `BidBloc` vient du contexte parent — c'est ce qui permet aux tests
   /// d'en injecter un mock. L'écran déclenche lui-même son chargement dans
@@ -36,13 +33,12 @@ class ShipmentListScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) => BlocProvider(
     create: (_) => getIt<ShipmentFilterCubit>(),
-    child: _ShipmentListContent(embedded: embedded),
+    child: const _ShipmentListContent(),
   );
 }
 
 class _ShipmentListContent extends StatefulWidget {
-  const _ShipmentListContent({required this.embedded});
-  final bool embedded;
+  const _ShipmentListContent();
   @override
   State<_ShipmentListContent> createState() => _ShipmentListContentState();
 }
@@ -71,17 +67,6 @@ class _ShipmentListContentState extends State<_ShipmentListContent> {
         const BidMyListAutoRefreshRequested(force: true),
       );
     }
-  }
-
-  void _onNewRequest() {
-    unawaited(
-      getIt<AnalyticsService>().logEvent(
-        AnalyticsEvents.shipmentNewRequestOpened,
-      ),
-    );
-    // Passe par l'écran d'intro (conditions + responsabilités) ; c'est lui qui
-    // applique le gate KYC et ouvre le wizard une fois vérifié.
-    context.push('/parcels/send-intro');
   }
 
   void _onQueryChanged(String q) {
@@ -180,16 +165,9 @@ class _ShipmentListContentState extends State<_ShipmentListContent> {
             }
 
             return Scaffold(
-              backgroundColor: widget.embedded
-                  ? Theme.of(context).colorScheme.surface
-                  : Theme.of(context).scaffoldBackgroundColor,
+              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
               body: Column(
                 children: [
-                  if (!widget.embedded)
-                    SafeArea(
-                      bottom: false,
-                      child: _ShipmentHeader(onNewRequest: _onNewRequest),
-                    ),
                   // Hide filter bar when RAW bid list is empty
                   if (!rawEmpty)
                     _ShipmentFilterBar(
@@ -342,69 +320,6 @@ class _ShipmentFilterBar extends StatelessWidget {
 }
 
 // ── Dark Header ───────────────────────────────────────────────────────────────
-
-/// Header clair de « Colis en route », aligné sur les autres écrans
-/// (`cs.surface` + titre encre + liseré bas). Le compteur d'antan est remplacé
-/// par une pill « Envoyer » qui ouvre le wizard de demande d'envoi.
-class _ShipmentHeader extends StatelessWidget {
-  const _ShipmentHeader({required this.onNewRequest});
-
-  final VoidCallback onNewRequest;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    final canGoBack = context.canPop();
-
-    return Container(
-      color: cs.surface,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(
-            height: kToolbarHeight,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                DonySpacing.xs,
-                0,
-                DonySpacing.base,
-                0,
-              ),
-              child: Row(
-                children: [
-                  if (canGoBack)
-                    const DonyAppBarBackButton()
-                  else
-                    const SizedBox(width: DonySpacing.base),
-                  const SizedBox(width: DonySpacing.xs),
-                  Expanded(
-                    child: Text(
-                      'Colis en route',
-                      style: tt.titleLarge?.copyWith(
-                        color: cs.onSurface,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
-                  HeaderPill(
-                    key: const Key('shipment-new-request'),
-                    label: 'Envoyer',
-                    iconAsset: 'package',
-                    style: HeaderPillStyle.warm,
-                    onTap: onNewRequest,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Container(height: 1, color: cs.outline),
-        ],
-      ),
-    );
-  }
-}
 
 // ── List view ─────────────────────────────────────────────────────────────────
 

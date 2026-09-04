@@ -201,7 +201,7 @@ void main() {
         await tester.pumpWidget(wrap());
         await tester.pump(const Duration(milliseconds: 400));
 
-        // Le corps est ShipmentListScreen embedded : sur une liste vide, son état vide.
+        // Le corps est ShipmentListScreen : sur une liste vide, son état vide.
         expect(find.textContaining('Aucun envoi'), findsOneWidget);
         // Le hint de MyPackageRequestsBody n'est plus atteignable ici : les
         // demandes d'envoi ont migré vers l'écran Demandes du hub Activités.

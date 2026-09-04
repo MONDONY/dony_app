@@ -394,7 +394,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `account_deletion_requested` | AccountDeletionBloc._onRequestDeletion() |
 | `wallet_refund_requested` | DeletionEligibilityCubit.requestWalletRefund() — solde wallet bloquant la suppression, ticket de remboursement manuel ouvert (aucune propriété : ni montant ni devise, PII financière) |
 | `shipment_filter_applied` | ShipmentFilterCubit (statut/période/preset, sans PII) |
-| `shipment_new_request_opened` | ShipmentListScreen — pill « Envoyer » du header ouvre le wizard de demande d'envoi |
+| `shipment_new_request_opened` | ShipmentListScreen et MesColisScreen — pill « Envoyer » du header ouvre le wizard de demande d'envoi |
 | `publish_intro_stripe_reminder_tapped` | PublishIntroScreen (trajet) — tap sur le rappel « Activez les paiements par carte » → onboarding Stripe Connect |
 | `trip_filter_applied` | TripFilterCubit.setFilter() — chips statut « Mes trajets » (Activités), propriété `status` |
 | `envoyer_envois` / `envoyer_demandes` | EnvoyerHubScreen `logScreen` au changement d'onglet (Envois / Demandes) |
@@ -439,7 +439,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `recipient_selected` | RecipientBloc._onPicked — destinataire confirmé dans la sheet (propriété `source`: saved/phone_contact/new) |
 | `recipient_created` | RecipientBloc._onCreated — destinataire ajouté au carnet |
 | `recipient_default_set` | RecipientBloc._onDefaultSet — destinataire marqué par défaut |
-| `activites_hub_trips_opened` / `activites_hub_envois_opened` / `activites_hub_demandes_opened` / `activites_hub_negotiations_opened` | ActivitesHubScreen — tap sur une tuile d'activité du hub |
+| `activites_hub_trips_opened` / `activites_hub_envois_opened` / `activites_hub_demandes_opened` / `activites_hub_negotiations_opened` | ActivitesHubScreen — tap sur une tuile d'activité du hub. `activites_hub_envois_opened` porte la tuile « Mes colis », qui ouvre `/envois` (MesColisScreen : envois en route + demandes publiées) |
 | `activites_hub_trip_create_opened` / `activites_hub_request_create_opened` | ActivitesHubScreen — CTA « Publier un trajet » / « Publier un colis » |
 | `activites_hub_stats_period_changed` | ActivitesHubScreen — changement de période des statistiques |
 | `activites_hub_search_opened` | ActivitesHubScreen — bouton « Suivre un colis » du header |
