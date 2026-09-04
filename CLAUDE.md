@@ -451,6 +451,10 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `activites_hub_tools_completion_loaded` | ToolsCompletionCubit.load — `GET /users/me/tools-completion` réussi (propriétés `ready`, `total`), non émis en cas d'échec |
 | `activites_hub_tools_cta_tapped` | ActivitesHubScreen._onToolCta — tap sur le CTA de la carte « Publiez en 3 taps » (propriété `tool` : clé API de l'outil ouvert) |
 | `activites_hub_intro_dismissed` | ActivitesHubScreen — fermeture (X) de la carte d'introduction |
+| `profile_menu_opened` | ProfileScreen._openMenu — bouton burger de l'en-tête de l'onglet Moi, à l'ouverture de la feuille de menu (`ProfileMenuSheet`). Émis même si la feuille est refermée sans choisir : c'est l'entrée de l'entonnoir |
+| `profile_menu_edit_opened` / `profile_menu_settings_opened` / `profile_menu_export_opened` | ProfileScreen._openMenu — entrées « Modifier le profil » (`/profile/edit`), « Paramètres » (`/settings`) et « Télécharger mes données » (`/settings/data`) de la feuille de menu. Ces trois destinations n'ont plus d'autre chemin depuis l'onglet Moi : le crayon du header et la tuile Paramètres ont été retirés |
+| `profile_menu_logout_tapped` | ProfileScreen._openMenu — entrée « Se déconnecter » de la feuille de menu, avant le dialogue de confirmation (la déconnexion effective reste `AuthLogoutRequested`) |
+| `profile_menu_delete_opened` | ProfileScreen._openMenu — entrée « Supprimer mon compte » de la feuille de menu, à l'ouverture de `DeleteAccountBottomSheet` (la demande effective reste `account_deletion_requested`). L'entrée est masquée quand une suppression est déjà en cours |
 | `traveler_bids_filter_applied` | TravelerBidsBloc._onFilterChanged — chips « À traiter / Acceptées / Terminées » de l'écran Demandes (propriété `filter`) |
 | `home_search_mode_changed` | HomeScreen._onModeChanged — bascule du sélecteur de mode Trajets/Colis (propriété `mode`) |
 | `home_cross_discovery_tapped` | HomeScreen._onCrossDiscoveryTap — bascule proposée depuis l'état vide (propriétés `from_mode`, `count`) |

@@ -125,7 +125,7 @@ class SettingsScreen extends StatelessWidget {
                     iconColor: cs.error,
                     iconBgColor: cs.errorContainer,
                     label: 'Mes données',
-                    subtitle: 'Export, suppression du compte',
+                    subtitle: 'Export RGPD',
                     showDivider: false,
                     onTap: () => context.push('/settings/data'),
                   ),

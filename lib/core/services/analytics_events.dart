@@ -260,6 +260,14 @@ abstract final class AnalyticsEvents {
   static const activitesHubHistoryOpened = 'activites_hub_history_opened';
   static const activitesHubHelpOpened = 'activites_hub_help_opened';
   static const activitesHubIntroDismissed = 'activites_hub_intro_dismissed';
+
+  // ── Onglet Moi : feuille de menu du burger ─────────────────────────────────
+  static const profileMenuOpened = 'profile_menu_opened';
+  static const profileMenuEditOpened = 'profile_menu_edit_opened';
+  static const profileMenuSettingsOpened = 'profile_menu_settings_opened';
+  static const profileMenuExportOpened = 'profile_menu_export_opened';
+  static const profileMenuLogoutTapped = 'profile_menu_logout_tapped';
+  static const profileMenuDeleteOpened = 'profile_menu_delete_opened';
   static const activitesHubAlertsOpened = 'activites_hub_alerts_opened';
   static const activitesHubTemplatesOpened = 'activites_hub_templates_opened';
   static const activitesHubAddressesOpened = 'activites_hub_addresses_opened';

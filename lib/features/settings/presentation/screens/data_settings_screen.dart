@@ -1,6 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/settings/bloc/data_export_bloc.dart';
-import 'package:dony/features/settings/presentation/widgets/delete_account_bottom_sheet.dart';
 import 'package:dony/features/settings/presentation/widgets/settings_flat_group.dart';
 import 'package:dony/features/settings/presentation/widgets/settings_section_header.dart';
 import 'package:flutter/material.dart';
@@ -74,22 +73,9 @@ class DataSettingsScreen extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: DonySpacing.xl),
-            const SettingsSectionHeader('DANGER ZONE'),
-            SettingsFlatGroup(
-              children: [
-                DonyListTile(
-                  iconAsset: 'trash',
-                  iconColor: cs.error,
-                  iconBgColor: cs.errorContainer,
-                  label: 'Supprimer mon compte',
-                  subtitle: 'Action irréversible',
-                  showDivider: false,
-                  destructive: true,
-                  onTap: () => DeleteAccountBottomSheet.show(context),
-                ),
-              ],
-            ),
+            // La suppression du compte a quitté cet écran : elle vit dans la
+            // feuille de menu de l'onglet Moi, à un tap de l'en-tête, avec
+            // les autres actions de compte.
           ],
         ),
       ),

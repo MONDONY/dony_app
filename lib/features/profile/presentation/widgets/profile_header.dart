@@ -15,7 +15,6 @@ class ProfileHeader extends StatelessWidget {
     this.phoneNumber,
     this.email,
     this.city,
-    this.onEditProfile,
     this.topPadding,
   });
 
@@ -28,7 +27,6 @@ class ProfileHeader extends StatelessWidget {
   final String? phoneNumber;
   final String? email;
   final String? city;
-  final VoidCallback? onEditProfile;
 
   /// Padding haut (zone status bar) — passé explicitement pour que la sonde de
   /// mesure et le rendu réel utilisent une valeur identique (les deux vivent
@@ -55,7 +53,9 @@ class ProfileHeader extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Row : avatar + infos + bouton édition ────────────────────
+          // ── Row : avatar + infos ─────────────────────────────────────
+          // Le crayon « Modifier le profil » a quitté ce header : l'édition
+          // vit dans la feuille de menu du burger, avec le reste du compte.
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -108,29 +108,6 @@ class ProfileHeader extends StatelessWidget {
                       isKycVerified: isKycVerified,
                     ),
                   ],
-                ),
-              ),
-              // Bouton édition
-              Semantics(
-                button: true,
-                container: true,
-                excludeSemantics: true,
-                label: 'Modifier le profil',
-                child: GestureDetector(
-                  onTap: onEditProfile,
-                  child: Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: cs.surfaceContainerHighest,
-                      shape: BoxShape.circle,
-                    ),
-                    child: DonyIcon(
-                      'square-pen',
-                      size: 15,
-                      color: cs.onSurfaceVariant,
-                    ),
-                  ),
                 ),
               ),
             ],

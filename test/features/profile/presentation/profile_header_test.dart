@@ -15,7 +15,6 @@ Widget _buildHeader({
   String? phoneNumber,
   String? email,
   String? city,
-  VoidCallback? onEditProfile,
 }) {
   return MaterialApp(
     theme: AppTheme.light(),
@@ -30,7 +29,6 @@ Widget _buildHeader({
         phoneNumber: phoneNumber,
         email: email,
         city: city,
-        onEditProfile: onEditProfile,
       ),
     ),
   );
@@ -168,14 +166,18 @@ void main() {
       },
     );
 
-    testWidgets('edit button calls onEditProfile when tapped', (tester) async {
-      var tapped = false;
-      await tester.pumpWidget(_buildHeader(onEditProfile: () => tapped = true));
+    // L'édition vit dans la feuille de menu du burger : le header ne porte
+    // plus de crayon, et ne réclame plus de rappel d'édition.
+    testWidgets('ne porte plus de bouton « Modifier le profil »', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_buildHeader());
       await tester.pump();
-      await tester.tap(
+      expect(
         find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'square-pen'),
+        findsNothing,
       );
-      expect(tapped, isTrue);
+      expect(find.bySemanticsLabel('Modifier le profil'), findsNothing);
     });
 
     testWidgets('passes avatarUrl to DonyAvatar when non-null', (tester) async {

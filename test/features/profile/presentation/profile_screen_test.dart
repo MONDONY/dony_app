@@ -4,6 +4,7 @@ import 'package:dony/core/design/widgets/dony_avatar.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/models/connect_account_status.dart';
+import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
@@ -26,6 +27,7 @@ import 'package:dony/features/profile/presentation/widgets/wallet_balance_card.d
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
+import 'package:dony/features/settings/data/account_deletion_repository.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -156,6 +158,7 @@ Widget _buildTestHarness({
     ),
     GoRoute(path: '/auth/method', builder: (_, _) => stub('AuthMethod')),
     GoRoute(path: '/settings', builder: (_, _) => stub('Settings')),
+    GoRoute(path: '/settings/data', builder: (_, _) => stub('DataSettings')),
     GoRoute(path: '/profile/public', builder: (_, _) => stub('PublicProfile')),
     GoRoute(path: '/profile/reviews', builder: (_, _) => stub('Reviews')),
     GoRoute(path: '/disputes', builder: (_, _) => stub('Disputes')),
@@ -231,7 +234,11 @@ Future<void> _scrollTo(
 
 class _MockAnalyticsService extends Mock implements AnalyticsService {}
 
+class _MockAccountDeletionRepository extends Mock
+    implements AccountDeletionRepository {}
+
 void main() {
+  late _MockAnalyticsService analyticsService;
   setUpAll(() {
     registerFallbackValue(FakeAuthEvent());
     registerFallbackValue(const ReactivateAccount());
@@ -264,11 +271,28 @@ void main() {
     // consideree faite — les fixtures de cette page testent le reste.
     final analytics = _MockAnalyticsService();
     when(() => analytics.isConfigured).thenReturn(false);
+    when(
+      () => analytics.logEvent(any(), properties: any(named: 'properties')),
+    ).thenAnswer((_) async {});
     if (getIt.isRegistered<AnalyticsService>()) {
       getIt.unregister<AnalyticsService>();
     }
     getIt.registerSingleton<AnalyticsService>(analytics);
     addTearDown(() => getIt.unregister<AnalyticsService>());
+    analyticsService = analytics;
+
+    // La feuille de suppression ouvre son propre cubit d'éligibilité, qui
+    // interroge le serveur via getIt. Un dépôt qui échoue suffit : le cubit
+    // est fail-open, la feuille s'affiche quand même.
+    final deletionRepo = _MockAccountDeletionRepository();
+    when(
+      () => deletionRepo.checkEligibility(),
+    ).thenThrow(Exception('hors ligne'));
+    if (getIt.isRegistered<AccountDeletionRepository>()) {
+      getIt.unregister<AccountDeletionRepository>();
+    }
+    getIt.registerSingleton<AccountDeletionRepository>(deletionRepo);
+    addTearDown(() => getIt.unregister<AccountDeletionRepository>());
 
     // Inerte par défaut (abonnement actif, sans résiliation programmée) :
     // aucune de ces fixtures ne teste le bandeau lui-même (voir
@@ -423,7 +447,7 @@ void main() {
         'MA RÉPUTATION',
         'MES AVANTAGES',
         'SUIVI',
-        'AIDE & RÉGLAGES',
+        'AIDE',
       ]) {
         await _scrollTo(tester, find.text(label));
         expect(find.text(label), findsOneWidget, reason: 'section $label');
@@ -434,7 +458,7 @@ void main() {
       tester,
     ) async {
       await pumpWith(tester, _dualRoleUser);
-      await _scrollTo(tester, find.text('AIDE & RÉGLAGES'));
+      await _scrollTo(tester, find.text('AIDE'));
 
       expect(find.text('Mes négociations'), findsNothing);
       expect(find.text('Mes colis'), findsNothing);
@@ -582,7 +606,6 @@ void main() {
 
   group('Navigation', () {
     for (final nav in [
-      ('Paramètres', 'Settings'),
       ('FAQ & aide', 'FAQ'),
       ('Réseaux sociaux et tutoriels', 'Community'),
       ('Contacter le support', 'Contact'),
@@ -877,18 +900,129 @@ void main() {
       expect(find.textContaining('Nouveau'), findsWidgets);
     });
 
-    testWidgets('« Se déconnecter » déclenche AuthLogoutRequested', (
+    // La déconnexion a quitté le bas de page pour la feuille de menu : la
+    // page ne porte plus le bouton, c'est le groupe « Menu » qui le couvre.
+    testWidgets('la page ne porte plus de bouton « Se déconnecter »', (
       tester,
     ) async {
       await pumpWith(tester, _dualRoleUser);
-      await _scrollTo(tester, find.text('Se déconnecter'));
+      await _scrollTo(tester, find.textContaining('Yadony v'));
 
-      await tester.tap(find.text('Se déconnecter').first);
+      expect(find.text('Se déconnecter'), findsNothing);
+    });
+  });
+
+  // ── Menu du burger ──────────────────────────────────────────────────────────
+
+  group('Menu', () {
+    final menuButton = find.byKey(const Key('profile-menu-button'));
+
+    Future<void> openMenu(WidgetTester tester, UserModel user) async {
+      await pumpWith(tester, user);
+      await tester.tap(menuButton);
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Se déconnecter').last);
+    }
+
+    testWidgets('le burger est dans la barre et ouvre la feuille', (
+      tester,
+    ) async {
+      await openMenu(tester, _dualRoleUser);
+
+      expect(find.text('Mon compte'), findsOneWidget);
+      expect(find.byKey(const Key('profile-menu-edit')), findsOneWidget);
+      verify(
+        () => analyticsService.logEvent(AnalyticsEvents.profileMenuOpened),
+      ).called(1);
+    });
+
+    // Le menu ne redit jamais une tuile de l'écran : ce qu'il prend, la page
+    // le perd. Paramètres et le crayon d'édition n'existent plus qu'ici.
+    testWidgets('la page ne porte plus « Paramètres » ni le crayon', (
+      tester,
+    ) async {
+      await pumpWith(tester, _dualRoleUser);
+      await _scrollTo(tester, find.text('AIDE'));
+
+      expect(find.text('Paramètres'), findsNothing);
+      expect(find.bySemanticsLabel('Modifier le profil'), findsNothing);
+    });
+
+    for (final nav in [
+      (
+        'profile-menu-edit',
+        'EditProfile',
+        AnalyticsEvents.profileMenuEditOpened,
+      ),
+      (
+        'profile-menu-settings',
+        'Settings',
+        AnalyticsEvents.profileMenuSettingsOpened,
+      ),
+      (
+        'profile-menu-export',
+        'DataSettings',
+        AnalyticsEvents.profileMenuExportOpened,
+      ),
+    ]) {
+      testWidgets('« ${nav.$1} » ouvre ${nav.$2} et trace ${nav.$3}', (
+        tester,
+      ) async {
+        await openMenu(tester, _dualRoleUser);
+
+        await tester.tap(find.byKey(Key(nav.$1)));
+        await tester.pumpAndSettle();
+
+        expect(find.text(nav.$2), findsOneWidget);
+        verify(() => analyticsService.logEvent(nav.$3)).called(1);
+      });
+    }
+
+    testWidgets(
+      '« Se déconnecter » confirme puis déclenche AuthLogoutRequested',
+      (tester) async {
+        await openMenu(tester, _dualRoleUser);
+
+        await tester.tap(find.byKey(const Key('profile-menu-logout')));
+        await tester.pumpAndSettle();
+        // Le dialogue de confirmation, inchangé.
+        expect(find.text('Se déconnecter ?'), findsOneWidget);
+        await tester.tap(find.text('Se déconnecter').last);
+        await tester.pumpAndSettle();
+
+        verify(() => authBloc.add(const AuthLogoutRequested())).called(1);
+        verify(
+          () => analyticsService.logEvent(
+            AnalyticsEvents.profileMenuLogoutTapped,
+          ),
+        ).called(1);
+      },
+    );
+
+    testWidgets('« Supprimer mon compte » ouvre la feuille de suppression', (
+      tester,
+    ) async {
+      await openMenu(tester, _dualRoleUser);
+
+      await tester.tap(find.byKey(const Key('profile-menu-delete')));
       await tester.pumpAndSettle();
 
-      verify(() => authBloc.add(const AuthLogoutRequested())).called(1);
+      // Titre de `DeleteAccountBottomSheet`, réutilisée telle quelle.
+      expect(find.text('Supprimer mon compte'), findsOneWidget);
+      verify(
+        () =>
+            analyticsService.logEvent(AnalyticsEvents.profileMenuDeleteOpened),
+      ).called(1);
+    });
+
+    // Suppression déjà demandée : la bannière propose la réactivation, le
+    // menu ne redemande pas la suppression.
+    testWidgets('suppression en cours : l\'entrée « Supprimer » disparaît', (
+      tester,
+    ) async {
+      await openMenu(tester, _pendingDeletionUser);
+
+      expect(find.byKey(const Key('profile-menu-logout')), findsOneWidget);
+      expect(find.byKey(const Key('profile-menu-delete')), findsNothing);
     });
   });
 }
