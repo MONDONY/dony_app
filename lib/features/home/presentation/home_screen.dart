@@ -12,6 +12,9 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_required_sheet.dart';
+import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
+import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
+import 'package:dony/features/corridor_alerts/presentation/widgets/corridor_alert_form_sheet.dart';
 import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
@@ -595,27 +598,89 @@ class _MapSenderViewState extends State<_MapSenderView> {
   /// critères, la tuile de bascule. Zéro résultat sur un corridor est le moment
   /// où l'autre mode a le plus de valeur.
   Widget _emptyWithCrossDiscovery(Widget emptyState) {
-    if (!_showCrossDiscovery) {
+    final showAlert = _showAlertForSearch;
+    if (!_showCrossDiscovery && !showAlert) {
       return emptyState;
     }
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         emptyState,
-        Padding(
-          padding: const EdgeInsets.fromLTRB(
-            DonySpacing.lg,
-            0,
-            DonySpacing.lg,
-            DonySpacing.lg,
+        if (_showCrossDiscovery)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              DonySpacing.lg,
+              0,
+              DonySpacing.lg,
+              DonySpacing.lg,
+            ),
+            child: _CrossDiscoveryTile(
+              key: const Key('cross-discovery'),
+              label: _crossDiscoveryLabel,
+              onTap: _onCrossDiscoveryTap,
+            ),
           ),
-          child: _CrossDiscoveryTile(
-            key: const Key('cross-discovery'),
-            label: _crossDiscoveryLabel,
-            onTap: _onCrossDiscoveryTap,
+        // Zéro résultat sur un corridor précis : le meilleur moment pour
+        // proposer d'être prévenu quand quelque chose y apparaîtra.
+        if (showAlert)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              DonySpacing.lg,
+              0,
+              DonySpacing.lg,
+              DonySpacing.lg,
+            ),
+            child: _CrossDiscoveryTile(
+              key: const Key('alert-for-search'),
+              label: _mode.isTrips
+                  ? 'M\'alerter dès qu\'un trajet apparaît sur ${_filters.departureCity} → ${_filters.arrivalCity}'
+                  : 'M\'alerter dès qu\'un colis apparaît sur ${_filters.departureCity} → ${_filters.arrivalCity}',
+              onTap: _onAlertForSearchTap,
+            ),
           ),
-        ),
       ],
+    );
+  }
+
+  /// Une alerte exige un corridor complet et un compte connecté : un invité
+  /// n'a pas d'alertes, et le formulaire ne sait pas partir d'une seule ville.
+  bool get _showAlertForSearch {
+    if (_filters.departureCity == null || _filters.arrivalCity == null) {
+      return false;
+    }
+    final s = context.read<AuthBloc>().state;
+    return s is AuthAuthenticated || s is AuthProfileUpdated;
+  }
+
+  /// Ouvre le formulaire d'alerte prérempli avec le corridor et la fenêtre
+  /// de dates de la recherche, dans la direction du mode courant.
+  Future<void> _onAlertForSearchTap() async {
+    unawaited(
+      getIt<AnalyticsService>().logEvent(
+        AnalyticsEvents.homeAlertForSearchTapped,
+        properties: {'mode': _mode.name},
+      ),
+    );
+    final direction = _mode.isTrips
+        ? AlertDirection.senderWantsTrips
+        : AlertDirection.travelerWantsPackages;
+    final s = context.read<AuthBloc>().state;
+    final user = switch (s) {
+      final AuthAuthenticated a => a.user,
+      final AuthProfileUpdated a => a.user,
+      _ => null,
+    };
+    await CorridorAlertFormSheet.show(
+      context,
+      prefill: CorridorAlertDraft(
+        departureCity: _filters.departureCity!,
+        arrivalCity: _filters.arrivalCity!,
+        dateFrom: _filters.dateFrom,
+        dateTo: _filters.dateTo,
+        direction: direction,
+      ),
+      isTraveler: user?.isTraveler ?? false,
+      isSender: user?.isSender ?? false,
     );
   }
 

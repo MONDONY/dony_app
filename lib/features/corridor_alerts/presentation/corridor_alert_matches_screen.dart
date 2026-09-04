@@ -239,7 +239,7 @@ class _AlertSummaryBanner extends StatelessWidget {
         ? ('Alerte en pause', 'Aucune notification')
         : alert.isExpired
         ? ('Alerte expirée', 'La fenêtre de dates est passée')
-        : ('Alerte active', 'Push instantané, digest à 9 h');
+        : ('Alerte active', alert.notifyMode.description);
 
     return DonyCard(
       key: const Key('alert-summary-banner'),

@@ -2,7 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
 import 'package:flutter/material.dart';
 
-enum CorridorAlertAction { edit, pause, resume, delete }
+enum CorridorAlertAction { edit, duplicate, pause, resume, delete }
 
 /// Menu « ⋯ » d'une carte d'alerte. La feuille ne fait rien elle-même : elle
 /// rend l'action choisie à l'écran liste, qui porte le bloc.
@@ -40,6 +40,15 @@ class _Actions extends StatelessWidget {
           label: 'Modifier',
           subtitle: 'Corridor, dates et filtres',
           onTap: () => choose(CorridorAlertAction.edit),
+        ),
+        DonyListTile(
+          key: const Key('alert-action-duplicate'),
+          iconAsset: 'copy',
+          iconColor: cs.primary,
+          iconBgColor: cs.primaryContainer,
+          label: 'Dupliquer',
+          subtitle: 'Repartir de cette alerte pour en créer une autre',
+          onTap: () => choose(CorridorAlertAction.duplicate),
         ),
         if (active)
           DonyListTile(

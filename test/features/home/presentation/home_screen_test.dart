@@ -2219,6 +2219,43 @@ void main() {
     );
   });
 
+  group('alerte depuis la recherche', () {
+    testWidgets('0 résultat sur un corridor : « M\'alerter » est proposé', (
+      tester,
+    ) async {
+      await pumpHome(tester, tripResults: const []);
+      tester.view.physicalSize = const Size(1000, 2400);
+      await tester.pump();
+      await ouvrirSheetEtSaisirCorridor(tester, 'Lyon', 'Bamako');
+
+      final tile = find.byKey(const Key('alert-for-search'));
+      expect(tile, findsOneWidget);
+      final label = tester
+          .widget<Text>(find.descendant(of: tile, matching: find.byType(Text)))
+          .data!;
+      expect(label, contains('trajet'));
+      expect(label, contains('Lyon → Bamako'));
+      expect(label, isNot(contains('—')));
+    });
+
+    testWidgets('sans corridor complet, rien n\'est proposé', (tester) async {
+      await pumpHome(tester, tripResults: const []);
+      expect(find.byKey(const Key('alert-for-search')), findsNothing);
+    });
+
+    testWidgets('un invité ne voit pas la proposition', (tester) async {
+      await pumpHome(
+        tester,
+        tripResults: const [],
+        authState: const AuthGuestSessionReady(),
+      );
+      tester.view.physicalSize = const Size(1000, 2400);
+      await tester.pump();
+      await ouvrirSheetEtSaisirCorridor(tester, 'Lyon', 'Bamako');
+      expect(find.byKey(const Key('alert-for-search')), findsNothing);
+    });
+  });
+
   group('découverte croisée', () {
     /// Le texte réellement porté par la tuile. Sert aux assertions sur le
     /// libellé complet (accord, corridor) sans dépendre de `find.text`.

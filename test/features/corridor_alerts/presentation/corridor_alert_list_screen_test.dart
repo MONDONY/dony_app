@@ -212,6 +212,8 @@ void main() {
     await t.pumpAndSettle();
     expect(find.byKey(const Key('alert-action-pause')), findsOneWidget);
     expect(find.byKey(const Key('alert-action-resume')), findsNothing);
+    expect(find.byKey(const Key('alert-action-duplicate')), findsOneWidget);
+    expect(find.byKey(const Key('alert-action-edit')), findsOneWidget);
     await t.tap(find.byKey(const Key('alert-action-pause')));
     await t.pumpAndSettle();
     final captured = verify(() => bloc.add(captureAny())).captured;

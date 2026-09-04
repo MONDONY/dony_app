@@ -7,6 +7,7 @@ import 'package:dony/features/content_categories/data/content_category_model.dar
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/corridor_alerts/bloc/corridor_alert_form_cubit.dart';
 import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
+import 'package:dony/features/corridor_alerts/data/models/alert_notify_mode.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
 import 'package:dony/features/corridor_alerts/presentation/widgets/corridor_alert_form_sheet.dart';
 import 'package:flutter/material.dart';
@@ -67,7 +68,11 @@ Future<void> _pumpSheet(
 
   GetIt.I.registerFactoryParam<
     CorridorAlertFormCubit,
-    ({CorridorAlertModel? editing, AlertDirection direction}),
+    ({
+      CorridorAlertModel? editing,
+      AlertDirection direction,
+      CorridorAlertDraft? prefill,
+    }),
     void
   >((params, _) => cubit);
   GetIt.I.registerFactory<CitySearchBloc>(() => cityBloc);
@@ -130,7 +135,11 @@ void main() {
 
     GetIt.I.registerFactoryParam<
       CorridorAlertFormCubit,
-      ({CorridorAlertModel? editing, AlertDirection direction}),
+      ({
+        CorridorAlertModel? editing,
+        AlertDirection direction,
+        CorridorAlertDraft? prefill,
+      }),
       void
     >((params, _) => cubit);
     GetIt.I.registerFactory<CitySearchBloc>(() => cityBloc);
@@ -178,7 +187,11 @@ void main() {
 
     GetIt.I.registerFactoryParam<
       CorridorAlertFormCubit,
-      ({CorridorAlertModel? editing, AlertDirection direction}),
+      ({
+        CorridorAlertModel? editing,
+        AlertDirection direction,
+        CorridorAlertDraft? prefill,
+      }),
       void
     >((params, _) => cubit);
     GetIt.I.registerFactory<CitySearchBloc>(() => cityBloc);
@@ -220,7 +233,11 @@ void main() {
 
     GetIt.I.registerFactoryParam<
       CorridorAlertFormCubit,
-      ({CorridorAlertModel? editing, AlertDirection direction}),
+      ({
+        CorridorAlertModel? editing,
+        AlertDirection direction,
+        CorridorAlertDraft? prefill,
+      }),
       void
     >((params, _) => cubit);
     GetIt.I.registerFactory<CitySearchBloc>(() => cityBloc);
@@ -271,7 +288,11 @@ void main() {
 
     GetIt.I.registerFactoryParam<
       CorridorAlertFormCubit,
-      ({CorridorAlertModel? editing, AlertDirection direction}),
+      ({
+        CorridorAlertModel? editing,
+        AlertDirection direction,
+        CorridorAlertDraft? prefill,
+      }),
       void
     >((params, _) => cubit);
     GetIt.I.registerFactory<CitySearchBloc>(() => cityBloc);
@@ -323,7 +344,11 @@ void main() {
 
     GetIt.I.registerFactoryParam<
       CorridorAlertFormCubit,
-      ({CorridorAlertModel? editing, AlertDirection direction}),
+      ({
+        CorridorAlertModel? editing,
+        AlertDirection direction,
+        CorridorAlertDraft? prefill,
+      }),
       void
     >((params, _) => cubit);
     GetIt.I.registerFactory<CitySearchBloc>(() => cityBloc);
@@ -441,7 +466,11 @@ void main() {
 
     GetIt.I.registerFactoryParam<
       CorridorAlertFormCubit,
-      ({CorridorAlertModel? editing, AlertDirection direction}),
+      ({
+        CorridorAlertModel? editing,
+        AlertDirection direction,
+        CorridorAlertDraft? prefill,
+      }),
       void
     >((params, _) => cubit);
     GetIt.I.registerFactory<CitySearchBloc>(() => cityBloc);
@@ -480,5 +509,138 @@ void main() {
     await tester.pumpAndSettle();
 
     verify(() => cubit.setCategories(['Poissons'])).called(1);
+  });
+
+  // ---------------------------------------------------------------------------
+  // Fréquence des notifications
+  // ---------------------------------------------------------------------------
+
+  testWidgets('trois chips de fréquence, instantanée sélectionnée par défaut', (
+    t,
+  ) async {
+    final cubit = MockFormCubit();
+    final cityBloc = MockCitySearchBloc();
+    when(() => cityBloc.state).thenReturn(const CitySearchInitial());
+    when(() => cubit.isEditing).thenReturn(false);
+    when(() => cubit.state).thenReturn(
+      const CorridorAlertFormState(
+        departureCity: 'Paris',
+        arrivalCity: 'Bamako',
+        direction: AlertDirection.senderWantsTrips,
+      ),
+    );
+
+    GetIt.I.registerFactoryParam<
+      CorridorAlertFormCubit,
+      ({
+        CorridorAlertModel? editing,
+        AlertDirection direction,
+        CorridorAlertDraft? prefill,
+      }),
+      void
+    >((params, _) => cubit);
+    GetIt.I.registerFactory<CitySearchBloc>(() => cityBloc);
+
+    t.view.physicalSize = const Size(800, 2400);
+    t.view.devicePixelRatio = 1.0;
+    addTearDown(t.view.reset);
+
+    await t.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: Builder(
+          builder: (ctx) => Scaffold(
+            body: Center(
+              child: ElevatedButton(
+                onPressed: () =>
+                    CorridorAlertFormSheet.show(ctx, isSender: true),
+                child: const Text('open'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await t.tap(find.text('open'));
+    await t.pumpAndSettle();
+
+    expect(find.byKey(const Key('notify-mode-instant')), findsOneWidget);
+    expect(find.byKey(const Key('notify-mode-daily')), findsOneWidget);
+    expect(find.byKey(const Key('notify-mode-muted')), findsOneWidget);
+    expect(find.text('Push instantané, digest à 9 h'), findsOneWidget);
+
+    await t.ensureVisible(find.byKey(const Key('notify-mode-daily')));
+    await t.tap(find.byKey(const Key('notify-mode-daily')));
+    await t.pump();
+    verify(() => cubit.setNotifyMode(AlertNotifyMode.daily)).called(1);
+  });
+
+  testWidgets('prefill : le formulaire s\'ouvre en création, prérempli', (
+    t,
+  ) async {
+    final cubit = MockFormCubit();
+    final cityBloc = MockCitySearchBloc();
+    when(() => cityBloc.state).thenReturn(const CitySearchInitial());
+    when(() => cubit.isEditing).thenReturn(false);
+    when(() => cubit.state).thenReturn(
+      const CorridorAlertFormState(
+        departureCity: 'Lyon',
+        arrivalCity: 'Abidjan',
+        direction: AlertDirection.senderWantsTrips,
+      ),
+    );
+
+    ({
+      CorridorAlertModel? editing,
+      AlertDirection direction,
+      CorridorAlertDraft? prefill,
+    })?
+    received;
+    GetIt.I.registerFactoryParam<
+      CorridorAlertFormCubit,
+      ({
+        CorridorAlertModel? editing,
+        AlertDirection direction,
+        CorridorAlertDraft? prefill,
+      }),
+      void
+    >((params, _) {
+      received = params;
+      return cubit;
+    });
+    GetIt.I.registerFactory<CitySearchBloc>(() => cityBloc);
+
+    await t.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: Builder(
+          builder: (ctx) => Scaffold(
+            body: Center(
+              child: ElevatedButton(
+                onPressed: () => CorridorAlertFormSheet.show(
+                  ctx,
+                  prefill: const CorridorAlertDraft(
+                    departureCity: 'Lyon',
+                    arrivalCity: 'Abidjan',
+                    direction: AlertDirection.senderWantsTrips,
+                  ),
+                  isTraveler: true,
+                  isSender: true,
+                ),
+                child: const Text('open'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await t.tap(find.text('open'));
+    await t.pumpAndSettle();
+
+    expect(find.text('Créer une alerte'), findsOneWidget);
+    expect(received?.editing, isNull);
+    expect(received?.prefill?.departureCity, 'Lyon');
+    // La direction du brouillon prime sur celle déduite des rôles.
+    expect(received?.direction, AlertDirection.senderWantsTrips);
   });
 }

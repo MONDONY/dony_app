@@ -908,10 +908,15 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       hiveService: getIt<HiveService>(),
     ),
   );
-  // param1 = record {editing, direction} — direction forcée par rôle ou from editing.
+  // param1 = record {editing, direction, prefill} — direction forcée par rôle
+  // ou from editing ; prefill = création préremplie (dupliquer, recherche).
   getIt.registerFactoryParam<
     CorridorAlertFormCubit,
-    ({CorridorAlertModel? editing, AlertDirection direction}),
+    ({
+      CorridorAlertModel? editing,
+      AlertDirection direction,
+      CorridorAlertDraft? prefill,
+    }),
     void
   >(
     (params, _) => CorridorAlertFormCubit(
@@ -919,6 +924,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<AnalyticsService>(),
       editing: params.editing,
       initialDirection: params.direction,
+      prefill: params.prefill,
       hiveService: getIt<HiveService>(),
     ),
   );

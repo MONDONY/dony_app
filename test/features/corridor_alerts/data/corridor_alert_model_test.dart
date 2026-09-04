@@ -1,4 +1,5 @@
 import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
+import 'package:dony/features/corridor_alerts/data/models/alert_notify_mode.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -152,6 +153,44 @@ void main() {
           'createdAt': '2026-06-20T09:00:00',
         });
         expect(never.lastSeenAt, isNull);
+      },
+    );
+
+    test(
+      'notifyMode parsed, defaults to instant, round-trips in the draft',
+      () {
+        final daily = CorridorAlertModel.fromJson(const <String, dynamic>{
+          'id': 'm1',
+          'departureCity': 'Paris',
+          'arrivalCity': 'Dakar',
+          'active': true,
+          'createdAt': '2026-06-20T09:00:00',
+          'notifyMode': 'DAILY',
+          'direction': 'SENDER_WANTS_TRIPS',
+          'minWeightKg': 2.5,
+          'contentCategories': <String>['Documents'],
+        });
+        expect(daily.notifyMode, AlertNotifyMode.daily);
+        expect(daily.copyWith(active: false).notifyMode, AlertNotifyMode.daily);
+
+        final legacy = CorridorAlertModel.fromJson(const <String, dynamic>{
+          'id': 'm2',
+          'departureCity': 'Paris',
+          'arrivalCity': 'Dakar',
+          'active': true,
+          'createdAt': '2026-06-20T09:00:00',
+        });
+        expect(legacy.notifyMode, AlertNotifyMode.instant);
+        expect(AlertNotifyMode.fromWire('garbage'), AlertNotifyMode.instant);
+
+        // Dupliquer : le brouillon reprend tous les réglages, sans l'id.
+        final draft = daily.toDraft();
+        expect(draft.departureCity, 'Paris');
+        expect(draft.direction, AlertDirection.senderWantsTrips);
+        expect(draft.notifyMode, AlertNotifyMode.daily);
+        expect(draft.minWeightKg, 2.5);
+        expect(draft.contentCategories, ['Documents']);
+        expect(draft.toJson()['notifyMode'], 'DAILY');
       },
     );
   });

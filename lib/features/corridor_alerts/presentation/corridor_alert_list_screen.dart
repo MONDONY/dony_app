@@ -74,6 +74,19 @@ class _CorridorAlertListView extends StatelessWidget {
     _reload(ctx);
   }
 
+  /// Nouvelle alerte préremplie depuis une existante : le serveur refuse un
+  /// doublon exact (409), l'utilisateur change donc au moins un réglage.
+  Future<void> _duplicate(BuildContext ctx, CorridorAlertModel alert) async {
+    await CorridorAlertFormSheet.show(
+      ctx,
+      prefill: alert.toDraft(),
+      isTraveler: _formIsTraveler,
+      isSender: _formIsSender,
+    );
+    if (!ctx.mounted) return;
+    _reload(ctx);
+  }
+
   Future<void> _openMatches(BuildContext ctx, CorridorAlertModel alert) async {
     await ctx.push('/corridor-alerts/${alert.id}/matches', extra: alert);
     // Ouvrir les correspondances les marque comme vues : la carte doit
@@ -94,6 +107,8 @@ class _CorridorAlertListView extends StatelessWidget {
     switch (action) {
       case CorridorAlertAction.edit:
         await _edit(ctx, alert);
+      case CorridorAlertAction.duplicate:
+        await _duplicate(ctx, alert);
       case CorridorAlertAction.pause:
         _toggle(ctx, alert, false);
       case CorridorAlertAction.resume:

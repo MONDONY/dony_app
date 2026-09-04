@@ -1,4 +1,5 @@
 import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
+import 'package:dony/features/corridor_alerts/data/models/alert_notify_mode.dart';
 import 'package:equatable/equatable.dart';
 
 /// Alerte corridor du voyageur (saved search). Mappe `CorridorAlertResponse`
@@ -20,6 +21,7 @@ class CorridorAlertModel extends Equatable {
     this.lastSeenAt,
     required this.createdAt,
     this.direction = AlertDirection.travelerWantsPackages,
+    this.notifyMode = AlertNotifyMode.instant,
     this.centerLat,
     this.centerLng,
     this.radiusKm,
@@ -49,12 +51,31 @@ class CorridorAlertModel extends Equatable {
   final DateTime? lastSeenAt;
   final DateTime createdAt;
   final AlertDirection direction;
+  final AlertNotifyMode notifyMode;
 
   // ── Zone de remise optionnelle (alertes trajet) ──────────────────────────
   final double? centerLat;
   final double? centerLng;
   final int? radiusKm;
   final String? centerLabel;
+
+  /// Brouillon reprenant tous les réglages : base d'un « Dupliquer ».
+  CorridorAlertDraft toDraft() => CorridorAlertDraft(
+    departureCity: departureCity,
+    arrivalCity: arrivalCity,
+    departureCountryCode: departureCountryCode,
+    arrivalCountryCode: arrivalCountryCode,
+    dateFrom: dateFrom,
+    dateTo: dateTo,
+    minWeightKg: minWeightKg,
+    contentCategories: contentCategories,
+    direction: direction,
+    notifyMode: notifyMode,
+    centerLat: centerLat,
+    centerLng: centerLng,
+    radiusKm: radiusKm,
+    centerLabel: centerLabel,
+  );
 
   /// True si l'alerte porte une zone de remise (centre + rayon).
   bool get hasPickupZone =>
@@ -102,6 +123,7 @@ class CorridorAlertModel extends Equatable {
             : null,
         createdAt: DateTime.parse(json['createdAt'] as String),
         direction: AlertDirection.fromWire(json['direction'] as String?),
+        notifyMode: AlertNotifyMode.fromWire(json['notifyMode'] as String?),
         centerLat: (json['centerLat'] as num?)?.toDouble(),
         centerLng: (json['centerLng'] as num?)?.toDouble(),
         radiusKm: (json['radiusKm'] as num?)?.toInt(),
@@ -129,6 +151,7 @@ class CorridorAlertModel extends Equatable {
     lastSeenAt: lastSeenAt,
     createdAt: createdAt,
     direction: direction ?? this.direction,
+    notifyMode: notifyMode,
     centerLat: centerLat,
     centerLng: centerLng,
     radiusKm: radiusKm,
@@ -152,6 +175,7 @@ class CorridorAlertModel extends Equatable {
     lastSeenAt,
     createdAt,
     direction,
+    notifyMode,
     centerLat,
     centerLng,
     radiusKm,
@@ -173,6 +197,7 @@ class CorridorAlertDraft {
     this.minWeightKg,
     this.contentCategories = const [],
     this.direction = AlertDirection.travelerWantsPackages,
+    this.notifyMode = AlertNotifyMode.instant,
     this.centerLat,
     this.centerLng,
     this.radiusKm,
@@ -188,6 +213,7 @@ class CorridorAlertDraft {
   final double? minWeightKg;
   final List<String> contentCategories;
   final AlertDirection direction;
+  final AlertNotifyMode notifyMode;
 
   // ── Zone de remise optionnelle (alertes trajet) ──────────────────────────
   final double? centerLat;
@@ -199,6 +225,7 @@ class CorridorAlertDraft {
     'departureCity': departureCity,
     'arrivalCity': arrivalCity,
     'direction': direction.wire,
+    'notifyMode': notifyMode.wire,
     if (departureCountryCode != null)
       'departureCountryCode': departureCountryCode,
     if (arrivalCountryCode != null) 'arrivalCountryCode': arrivalCountryCode,

@@ -4,6 +4,7 @@ import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/corridor_alerts/bloc/corridor_alert_form_cubit.dart';
 import 'package:dony/features/corridor_alerts/data/corridor_alert_repository.dart';
 import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
+import 'package:dony/features/corridor_alerts/data/models/alert_notify_mode.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
@@ -65,6 +66,63 @@ void main() {
     expect(c.state.arrivalCity, 'Bamako');
     expect(c.state.isValid, isTrue);
   });
+
+  test('prefill seeds a NEW form (not editing) from a draft', () {
+    final c = CorridorAlertFormCubit(
+      repo,
+      analytics,
+      prefill: CorridorAlertDraft(
+        departureCity: 'Lyon',
+        arrivalCity: 'Abidjan',
+        dateFrom: DateTime(2026, 9, 15),
+        dateTo: DateTime(2026, 9, 30),
+        direction: AlertDirection.senderWantsTrips,
+        notifyMode: AlertNotifyMode.daily,
+      ),
+    );
+    expect(c.isEditing, isFalse);
+    expect(c.state.departureCity, 'Lyon');
+    expect(c.state.arrivalCity, 'Abidjan');
+    expect(c.state.dateFrom, DateTime(2026, 9, 15));
+    expect(c.state.direction, AlertDirection.senderWantsTrips);
+    expect(c.state.notifyMode, AlertNotifyMode.daily);
+    expect(c.state.isValid, isTrue);
+  });
+
+  test('editing wins over prefill', () {
+    final c = CorridorAlertFormCubit(
+      repo,
+      analytics,
+      editing: _created(),
+      prefill: const CorridorAlertDraft(
+        departureCity: 'Lyon',
+        arrivalCity: 'Abidjan',
+      ),
+    );
+    expect(c.isEditing, isTrue);
+    expect(c.state.departureCity, 'Paris');
+  });
+
+  blocTest<CorridorAlertFormCubit, CorridorAlertFormState>(
+    'setNotifyMode is carried into the created draft',
+    build: () => CorridorAlertFormCubit(repo, analytics),
+    setUp: () =>
+        when(() => repo.create(any())).thenAnswer((_) async => _created()),
+    act: (c) async {
+      c.setDeparture('Paris', 'FR');
+      c.setArrival('Bamako', 'ML');
+      c.setNotifyMode(AlertNotifyMode.muted);
+      await c.submit();
+    },
+    verify: (c) {
+      expect(c.state.notifyMode, AlertNotifyMode.muted);
+      final draft =
+          verify(() => repo.create(captureAny())).captured.single
+              as CorridorAlertDraft;
+      expect(draft.notifyMode, AlertNotifyMode.muted);
+      expect(draft.toJson()['notifyMode'], 'MUTED');
+    },
+  );
 
   blocTest<CorridorAlertFormCubit, CorridorAlertFormState>(
     'becomes valid once both cities set',

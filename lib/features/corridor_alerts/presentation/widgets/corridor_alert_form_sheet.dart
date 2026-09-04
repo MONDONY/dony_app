@@ -7,6 +7,7 @@ import 'package:dony/features/content_categories/data/content_category_repositor
 import 'package:dony/features/content_categories/presentation/content_category_selector.dart';
 import 'package:dony/features/corridor_alerts/bloc/corridor_alert_form_cubit.dart';
 import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
+import 'package:dony/features/corridor_alerts/data/models/alert_notify_mode.dart';
 import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
 import 'package:dony/features/corridor_alerts/presentation/widgets/zone_picker_field.dart';
 import 'package:flutter/material.dart';
@@ -16,9 +17,12 @@ import 'package:google_maps_flutter/google_maps_flutter.dart' show LatLng;
 import 'package:intl/intl.dart';
 
 abstract final class CorridorAlertFormSheet {
+  /// [alert] ouvre l'édition ; [prefill] ouvre une création déjà remplie
+  /// (dupliquer une alerte, « m'alerter pour cette recherche »).
   static Future<void> show(
     BuildContext context, {
     CorridorAlertModel? alert,
+    CorridorAlertDraft? prefill,
     bool isTraveler = false,
     bool isSender = false,
   }) {
@@ -26,10 +30,11 @@ abstract final class CorridorAlertFormSheet {
     final forcedDirection = isSender && !isTraveler
         ? AlertDirection.senderWantsTrips
         : AlertDirection.travelerWantsPackages;
-    final initialDirection = alert?.direction ?? forcedDirection;
+    final initialDirection =
+        alert?.direction ?? prefill?.direction ?? forcedDirection;
 
     final cubit = getIt<CorridorAlertFormCubit>(
-      param1: (editing: alert, direction: initialDirection),
+      param1: (editing: alert, direction: initialDirection, prefill: prefill),
     );
     final canSubmitNotifier = ValueNotifier<bool>(cubit.state.isValid);
 
@@ -172,6 +177,12 @@ class _CorridorAlertFormBodyState extends State<_CorridorAlertFormBody> {
           onPicked: cubit.setDateWindow,
           onClear: cubit.clearDateWindow,
         ),
+        const SizedBox(height: DonySpacing.lg),
+        _NotifyModeField(
+          key: const Key('corridor-alert-notify-mode'),
+          value: state.notifyMode,
+          onChanged: cubit.setNotifyMode,
+        ),
         // Zone de remise — option en plus du corridor, alertes trajet seulement
         if (isTrips) ...[
           const SizedBox(height: DonySpacing.lg),
@@ -216,6 +227,50 @@ class _CorridorAlertFormBodyState extends State<_CorridorAlertFormBody> {
           ),
         ],
         const SizedBox(height: DonySpacing.md),
+      ],
+    );
+  }
+}
+
+/// Fréquence des notifications : trois chips exclusives. Le compteur de
+/// nouveautés ne dépend pas de ce choix, seul le push change.
+class _NotifyModeField extends StatelessWidget {
+  const _NotifyModeField({
+    super.key,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final AlertNotifyMode value;
+  final ValueChanged<AlertNotifyMode> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Notifications', style: tt.titleSmall),
+        const SizedBox(height: DonySpacing.xs),
+        Text(
+          value.description,
+          key: const Key('corridor-alert-notify-mode-hint'),
+          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+        ),
+        const SizedBox(height: DonySpacing.sm),
+        Wrap(
+          spacing: DonySpacing.sm,
+          children: [
+            for (final mode in AlertNotifyMode.values)
+              DonyChip(
+                key: Key('notify-mode-${mode.name}'),
+                label: mode.label,
+                selected: mode == value,
+                onTap: () => onChanged(mode),
+              ),
+          ],
+        ),
       ],
     );
   }
