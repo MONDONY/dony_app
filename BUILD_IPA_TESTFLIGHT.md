@@ -12,6 +12,45 @@ version: 1.0.0+15   # +1 par rapport au précédent
 
 **Toujours vérifier le dernier build déjà présent sur TestFlight/App Store Connect avant de choisir le numéro** — un build number déjà utilisé est rejeté à l'upload.
 
+## 1bis. `ios/Flutter/Release-prod.xcconfig` (worktree neuf)
+
+Gitignoré, absent de tout worktree neuf. La phase Xcode « Verify iOS Release
+Config » (`tool/verify_ios_release_config.sh`) l'exige pour **tout** build
+Release — staging inclus, malgré son nom. Le script est agnostique de
+l'environnement : il compare le contenu de ce fichier au projet Firebase
+attendu côté Dart (`FIREBASE_MESSAGING_SENDER_ID` de `env.staging.json` ou
+`env.prod.json`), donc pour un build **staging** il faut y mettre les
+valeurs **staging** (projet `yadony-f1f0f`, sender `917070267063`), pas
+celles de prod — malgré ce que dit le gabarit `Release-prod.xcconfig.example`.
+
+Sans lui, l'archive échoue tard (`Command PhaseScriptExecution failed`,
+juste avant `Encountered error while archiving for device`) après ~1-2 min
+de compilation Swift/ObjC, un signal facile à confondre avec une vraie
+erreur de code.
+
+```
+GID_CLIENT_ID=<CLIENT_ID de secrets/staging/GoogleService-Info-3.plist>
+GID_REVERSED_CLIENT_ID=<REVERSED_CLIENT_ID du même fichier>
+FIREBASE_PHONE_AUTH_URL_SCHEME=<GOOGLE_APP_ID du même fichier, points → tirets>
+GOOGLE_MAPS_API_KEY=<GOOGLE_MAPS_API_KEY de env.staging.json>
+```
+
+**`secrets/staging/GoogleService-Info-2.plist` est un piège** : même projet,
+mais sans `CLIENT_ID`/`REVERSED_CLIENT_ID` (fichier incomplet, antérieur de
+quelques heures à `-3`). Toujours prendre `-3`, vérifiable via `plutil -p`.
+
+Vérifier avant de lancer le build (évite d'attendre l'échec en fin d'archive) :
+
+```bash
+YADONY_ENV_FILE=env.staging.json tool/verify_ios_release_config.sh
+```
+
+Et sur l'artefact final, une fois généré :
+
+```bash
+YADONY_ENV_FILE=env.staging.json tool/verify_ios_release_config.sh build/ios/ipa/Yadony.ipa
+```
+
 ## 2. Build le .ipa
 
 Depuis la racine de `dony_app/` :
