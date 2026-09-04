@@ -559,6 +559,11 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         recipientName: _recipientNameCtrl.text.trim(),
         recipientPhone: _recipientPhoneCtrl.text.trim(),
         proposedTotalEur: proposed,
+        // Figé sur le bid dès la proposition : c'est ce mode que le back
+        // appliquera à l'accord (carte → escrow à payer, espèces → commission
+        // réglée par le voyageur). Sans lui, tout accord négocié partait en
+        // carte, même sur un trajet qui n'acceptait que les espèces.
+        paymentMethod: _methodNotifier.value,
         photoKeys: _photosCubit.readyKeys,
         customItems: _customItemsNotifier.value
             .map((item) => item.toJson())
@@ -1344,6 +1349,10 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
               ),
               const SizedBox(height: DonySpacing.xxl),
               _buildProposalSection(context),
+              if (_hasAlternativePaymentMethods) ...[
+                const SizedBox(height: DonySpacing.xxl),
+                _buildNegotiationPaymentSection(context),
+              ],
             ],
             const SizedBox(height: DonySpacing.md),
           ],
@@ -1382,6 +1391,48 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
             'Suggéré : ${formatPriceIn(_suggestedTotalEur, widget.announcement.currency)}',
             key: const Key('negotiation-suggested-hint'),
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Choix du mode de paiement en mode négociation.
+  ///
+  /// Le flux ferme passe par l'étape « Paiement » (montants, promo, wallet),
+  /// sans objet ici : le prix n'est pas encore connu. Le mode, lui, doit être
+  /// figé dès la proposition, parmi ceux que le trajet accepte. Affiché
+  /// seulement quand il y a un vrai choix (carte ET espèces).
+  Widget _buildNegotiationPaymentSection(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _SectionLabel(label: 'MODE DE PAIEMENT'),
+        const SizedBox(height: DonySpacing.xs),
+        Text(
+          'Si le voyageur accepte votre prix, vous réglerez de cette façon.',
+          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+        ),
+        const SizedBox(height: DonySpacing.sm),
+        ValueListenableBuilder<BidPaymentMethod>(
+          valueListenable: _methodNotifier,
+          builder: (context, method, _) => Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _PaymentMethodSelector(
+                selectedMethod: method,
+                onChanged: (m) => _methodNotifier.value = m,
+                isCashAvailable: _isCashAvailable,
+                isStripeAvailable: _isStripeAvailable,
+              ),
+              if (method == BidPaymentMethod.cash) ...[
+                const SizedBox(height: DonySpacing.sm),
+                const _CashEscrowWarning(),
+              ],
+            ],
           ),
         ),
       ],

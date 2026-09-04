@@ -271,6 +271,7 @@ void main() {
         'bid-not-negotiated',
         'bid-not-awaiting-payment',
         'payment-already-completed',
+        'bid-already-paid',
         'traveler-stripe-invalid',
       ];
 
@@ -290,11 +291,11 @@ void main() {
     });
 
     test('accord deja paye n alarme pas', () {
-      final p = ErrorCatalog.lookup(
-        const ConflictException('x', code: 'payment-already-completed'),
-      );
+      for (final code in ['payment-already-completed', 'bid-already-paid']) {
+        final p = ErrorCatalog.lookup(ConflictException('x', code: code));
 
-      expect(p.severity, isNot(ErrorSeverity.critical));
+        expect(p.severity, isNot(ErrorSeverity.critical), reason: code);
+      }
     });
   });
 

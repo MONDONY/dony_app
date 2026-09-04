@@ -451,6 +451,12 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.hourglass_empty_rounded,
     ),
+    'bid-already-paid': ErrorPresentation(
+      title: 'Déjà payé',
+      message: 'Ce colis est déjà payé. Actualisez pour voir son état à jour.',
+      severity: ErrorSeverity.info,
+      icon: Icons.check_circle_outline_rounded,
+    ),
     'payment-already-completed': ErrorPresentation(
       title: 'Déjà payé',
       message:

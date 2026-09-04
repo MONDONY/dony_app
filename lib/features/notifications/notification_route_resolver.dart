@@ -75,6 +75,14 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
     'TRIP_CANCELLED' when _isUuid(bidId) => '/bids/$bidId',
     'TRIP_CANCELLED' => '/profile/shipments/history',
 
+    // Négociation du prix d'un TRAJET (bid_negotiation_*) : le back envoie un
+    // bidId, jamais de threadId, et le préfixe `negotiation` ci-dessous ne
+    // matche pas « bid_negotiation… ». Sans ces deux lignes, la proposition,
+    // la contre-offre et l'acceptation du voyageur ouvraient une notification
+    // inerte, alors qu'elles attendent toutes une réponse dans le fil.
+    'bid_negotiation_message' when _isUuid(bidId) => '/bids/$bidId/negotiation',
+    'bid_negotiation_expired' when _isUuid(bidId) => '/bids/$bidId/negotiation',
+
     // Négociation — les deux parties naviguent vers le thread, quel que soit le
     // sous-type. Le préfixe couvre d'un coup tous les `negotiation*` émis par le
     // back (offre, contre-offre, attente de trajet, de paiement ou de commission,

@@ -663,7 +663,7 @@ class _TripNegoCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      isTerminal ? 'terminé' : 'proposition',
+                      summary.stageLabel,
                       style: tt.bodySmall?.copyWith(
                         fontSize: 10,
                         color: cs.onSurfaceVariant,

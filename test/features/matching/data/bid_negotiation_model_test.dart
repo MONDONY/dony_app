@@ -314,5 +314,54 @@ void main() {
       expect(summary.updatedAt, isNull);
       expect(summary.isClosed, isTrue);
     });
+
+    // Un accord conclu mais pas encore réglé reste une discussion ouverte :
+    // c'est le seul chemin de l'expéditeur vers le paiement.
+    test('un accord en attente de paiement reste ouvert', () {
+      final card = BidNegotiationSummary.fromJson({
+        ..._summaryJson(),
+        'status': 'AWAITING_PAYMENT',
+      });
+      expect(card.isClosed, isFalse);
+      expect(card.isAwaitingCardPayment, isTrue);
+      expect(card.needsMyPayment, isTrue, reason: 'vu par l expediteur');
+      expect(card.stageLabel, 'à payer');
+
+      final cardTraveler = BidNegotiationSummary.fromJson({
+        ..._summaryJson(),
+        'status': 'AWAITING_PAYMENT',
+        'role': 'TRAVELER',
+      });
+      expect(cardTraveler.needsMyPayment, isFalse);
+      expect(cardTraveler.stageLabel, 'attente paiement');
+
+      final cash = BidNegotiationSummary.fromJson({
+        ..._summaryJson(),
+        'status': 'PENDING',
+      });
+      expect(cash.isClosed, isFalse);
+      expect(cash.isAwaitingCashSettlement, isTrue);
+      expect(cash.stageLabel, 'accord conclu');
+    });
+
+    test('un accord paye ou un fil clos est termine', () {
+      for (final status in [
+        'PAYMENT_ESCROWED',
+        'ACCEPTED',
+        'NEGOTIATION_CLOSED',
+        'EXPIRED',
+      ]) {
+        final summary = BidNegotiationSummary.fromJson({
+          ..._summaryJson(),
+          'status': status,
+        });
+        expect(summary.isClosed, isTrue, reason: status);
+        expect(summary.stageLabel, 'terminé', reason: status);
+      }
+      expect(
+        BidNegotiationSummary.fromJson(_summaryJson()).stageLabel,
+        'proposition',
+      );
+    });
   });
 }
