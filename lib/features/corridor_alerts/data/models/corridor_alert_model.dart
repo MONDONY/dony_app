@@ -17,6 +17,7 @@ class CorridorAlertModel extends Equatable {
     required this.active,
     this.matchCount = 0,
     this.newMatchCount = 0,
+    this.lastSeenAt,
     required this.createdAt,
     this.direction = AlertDirection.travelerWantsPackages,
     this.centerLat,
@@ -43,6 +44,9 @@ class CorridorAlertModel extends Equatable {
   /// (tout, si elles n'ont jamais été ouvertes). C'est le seul chiffre que
   /// l'interface met en avant : [matchCount] ne dit rien de ce qui a changé.
   final int newMatchCount;
+
+  /// Dernière ouverture des correspondances ; `null` = jamais ouvertes.
+  final DateTime? lastSeenAt;
   final DateTime createdAt;
   final AlertDirection direction;
 
@@ -93,6 +97,9 @@ class CorridorAlertModel extends Equatable {
         active: json['active'] as bool,
         matchCount: (json['matchCount'] as num?)?.toInt() ?? 0,
         newMatchCount: (json['newMatchCount'] as num?)?.toInt() ?? 0,
+        lastSeenAt: json['lastSeenAt'] != null
+            ? DateTime.parse(json['lastSeenAt'] as String)
+            : null,
         createdAt: DateTime.parse(json['createdAt'] as String),
         direction: AlertDirection.fromWire(json['direction'] as String?),
         centerLat: (json['centerLat'] as num?)?.toDouble(),
@@ -119,6 +126,7 @@ class CorridorAlertModel extends Equatable {
     active: active ?? this.active,
     matchCount: matchCount ?? this.matchCount,
     newMatchCount: newMatchCount ?? this.newMatchCount,
+    lastSeenAt: lastSeenAt,
     createdAt: createdAt,
     direction: direction ?? this.direction,
     centerLat: centerLat,
@@ -141,6 +149,7 @@ class CorridorAlertModel extends Equatable {
     active,
     matchCount,
     newMatchCount,
+    lastSeenAt,
     createdAt,
     direction,
     centerLat,

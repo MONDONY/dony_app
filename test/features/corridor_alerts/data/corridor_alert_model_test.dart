@@ -129,6 +129,31 @@ void main() {
 
       expect(fresh.copyWith(newMatchCount: 0).hasNews, isFalse);
     });
+
+    test(
+      'lastSeenAt parsed when present, null otherwise, kept by copyWith',
+      () {
+        final seen = CorridorAlertModel.fromJson(const <String, dynamic>{
+          'id': 's1',
+          'departureCity': 'Paris',
+          'arrivalCity': 'Dakar',
+          'active': true,
+          'createdAt': '2026-06-20T09:00:00',
+          'lastSeenAt': '2026-09-01T08:30:00',
+        });
+        expect(seen.lastSeenAt, DateTime(2026, 9, 1, 8, 30));
+        expect(seen.copyWith(active: false).lastSeenAt, seen.lastSeenAt);
+
+        final never = CorridorAlertModel.fromJson(const <String, dynamic>{
+          'id': 's2',
+          'departureCity': 'Paris',
+          'arrivalCity': 'Dakar',
+          'active': true,
+          'createdAt': '2026-06-20T09:00:00',
+        });
+        expect(never.lastSeenAt, isNull);
+      },
+    );
   });
 
   group('CorridorAlertModel.isExpiredAt', () {

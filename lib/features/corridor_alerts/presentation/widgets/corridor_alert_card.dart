@@ -71,22 +71,6 @@ class CorridorAlertCard extends StatelessWidget {
         ? ('plane', cs.primaryContainer, cs.primary)
         : ('package', cs.secondaryContainer, cs.secondary);
 
-    final chips = <Widget>[
-      _FilterChip(iconAsset: 'calendar', label: dateLabel(alert)),
-      if (isTrips && alert.hasPickupZone)
-        _FilterChip(
-          iconAsset: 'map-pin',
-          label: alert.centerLabel != null
-              ? '≤ ${alert.radiusKm} km · ${alert.centerLabel}'
-              : '≤ ${alert.radiusKm} km',
-          background: cs.primaryContainer,
-          foreground: cs.onPrimaryContainer,
-        ),
-      if (!isTrips) _FilterChip(iconAsset: 'weight', label: weightLabel(alert)),
-      if (!isTrips)
-        for (final c in alert.contentCategories) _FilterChip(label: c),
-    ];
-
     final card = DonyCard(
       key: Key('alert-card-${alert.id}'),
       elevated: true,
@@ -126,11 +110,7 @@ class CorridorAlertCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: DonySpacing.md),
-          Wrap(
-            spacing: DonySpacing.xs + 2,
-            runSpacing: DonySpacing.xs + 2,
-            children: chips,
-          ),
+          CorridorAlertFilterChips(alert: alert),
           const SizedBox(height: DonySpacing.md),
           Divider(height: 1, color: cs.outlineVariant),
           const SizedBox(height: DonySpacing.sm + 2),
@@ -149,6 +129,47 @@ class CorridorAlertCard extends StatelessWidget {
 
     // En pause : la carte s'efface sans disparaître, le menu reste actif.
     return paused ? Opacity(opacity: 0.6, child: card) : card;
+  }
+}
+
+/// Les filtres d'une alerte en chips : dates, zone de remise (trajets),
+/// poids et catégories (colis). Partagé par la carte et l'écran des
+/// correspondances.
+class CorridorAlertFilterChips extends StatelessWidget {
+  const CorridorAlertFilterChips({super.key, required this.alert});
+
+  final CorridorAlertModel alert;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final isTrips = alert.direction == AlertDirection.senderWantsTrips;
+    return Wrap(
+      spacing: DonySpacing.xs + 2,
+      runSpacing: DonySpacing.xs + 2,
+      children: [
+        _FilterChip(
+          iconAsset: 'calendar',
+          label: CorridorAlertCard.dateLabel(alert),
+        ),
+        if (isTrips && alert.hasPickupZone)
+          _FilterChip(
+            iconAsset: 'map-pin',
+            label: alert.centerLabel != null
+                ? '≤ ${alert.radiusKm} km · ${alert.centerLabel}'
+                : '≤ ${alert.radiusKm} km',
+            background: cs.primaryContainer,
+            foreground: cs.onPrimaryContainer,
+          ),
+        if (!isTrips)
+          _FilterChip(
+            iconAsset: 'weight',
+            label: CorridorAlertCard.weightLabel(alert),
+          ),
+        if (!isTrips)
+          for (final c in alert.contentCategories) _FilterChip(label: c),
+      ],
+    );
   }
 }
 

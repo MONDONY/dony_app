@@ -180,6 +180,98 @@ void main() {
     expect(find.byType(TripMatchCard), findsOneWidget);
   });
 
+  testWidgets('nouveautés : bandeau résumé, section Nouveaux puis Déjà vus', (
+    tester,
+  ) async {
+    final seenAt = DateTime(2026, 9, 1, 8);
+    final fresh = TripMatchModel(
+      announcementId: 'ann-new',
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      departureDate: DateTime(2026, 9, 18),
+      travelerId: 't-2',
+      travelerName: 'Moussa D.',
+      travelerInitials: 'MD',
+      travelerRating: 4.9,
+      availableKg: 12.0,
+      publishedAt: DateTime(2026, 9, 3),
+    );
+    final old = TripMatchModel(
+      announcementId: 'ann-old',
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      departureDate: DateTime(2026, 9, 16),
+      travelerId: 't-3',
+      travelerName: 'Ibrahima N.',
+      travelerInitials: 'IN',
+      travelerRating: 4.2,
+      availableKg: 8.0,
+      publishedAt: DateTime(2026, 8, 20),
+    );
+    when(() => cubit.state).thenReturn(
+      CorridorAlertMatchesState(
+        status: CorridorAlertMatchesStatus.loaded,
+        alert: _alert(AlertDirection.senderWantsTrips),
+        thresholdKnown: true,
+        seenThreshold: seenAt,
+        result: CorridorAlertMatches(
+          direction: AlertDirection.senderWantsTrips,
+          trips: [old, fresh],
+        ),
+      ),
+    );
+    await tester.pumpWidget(pump(AlertDirection.senderWantsTrips));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.byKey(const Key('alert-summary-banner')), findsOneWidget);
+    expect(find.text('Alerte active'), findsOneWidget);
+    expect(find.text('Nouveaux · 1 trajet'), findsOneWidget);
+    expect(find.text('Déjà vus · 1 trajet'), findsOneWidget);
+    expect(find.byType(TripMatchCard), findsNWidgets(2));
+
+    // Le nouveau vient en premier, même s'il était second dans la réponse.
+    final newY = tester.getTopLeft(find.text('Moussa D.')).dy;
+    final oldY = tester.getTopLeft(find.text('Ibrahima N.')).dy;
+    expect(newY, lessThan(oldY));
+  });
+
+  testWidgets('sans nouveauté : un seul compteur, pas de section', (
+    tester,
+  ) async {
+    when(() => cubit.state).thenReturn(
+      CorridorAlertMatchesState(
+        status: CorridorAlertMatchesStatus.loaded,
+        alert: _alert(AlertDirection.senderWantsTrips),
+        thresholdKnown: true,
+        seenThreshold: DateTime(2026, 9, 4),
+        result: CorridorAlertMatches(
+          direction: AlertDirection.senderWantsTrips,
+          trips: [_fakeTrip()],
+        ),
+      ),
+    );
+    await tester.pumpWidget(pump(AlertDirection.senderWantsTrips));
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(find.text('1 trajet'), findsOneWidget);
+    expect(find.textContaining('Nouveaux'), findsNothing);
+    expect(find.textContaining('Déjà vus'), findsNothing);
+  });
+
+  testWidgets('alerte en pause : le bandeau le dit', (tester) async {
+    when(() => cubit.state).thenReturn(
+      CorridorAlertMatchesState(
+        status: CorridorAlertMatchesStatus.empty,
+        alert: _alert(
+          AlertDirection.travelerWantsPackages,
+        ).copyWith(active: false),
+      ),
+    );
+    await tester.pumpWidget(pump(AlertDirection.travelerWantsPackages));
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(find.text('Alerte en pause'), findsOneWidget);
+    expect(find.textContaining('Aucun colis'), findsWidgets);
+  });
+
   testWidgets('trip direction empty → Aucun trajet copy', (tester) async {
     when(() => cubit.state).thenReturn(
       const CorridorAlertMatchesState(status: CorridorAlertMatchesStatus.empty),

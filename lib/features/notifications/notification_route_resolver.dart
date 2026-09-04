@@ -101,7 +101,10 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
     // Expéditeur → détail du trajet qui matche son alerte
     'CORRIDOR_ALERT' when _isUuid(announcementId) =>
       '/traveler/$announcementId',
-    // Digest quotidien : plusieurs matchs, pas de trajet unique → les
+    // Voyageur → détail du colis qui matche son alerte (push instantané)
+    'CORRIDOR_ALERT' when _isUuid(requestId) =>
+      '/package-requests/$requestId/public',
+    // Digest quotidien : plusieurs matchs, pas d'élément unique → les
     // correspondances de l'alerte.
     'CORRIDOR_ALERT' when _isUuid(alertId) =>
       '/corridor-alerts/$alertId/matches',

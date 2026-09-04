@@ -241,6 +241,16 @@ void main() {
       );
     });
 
+    test('match instantané (un colis) → détail public du colis', () {
+      expect(
+        resolveNotificationRoute('CORRIDOR_ALERT', {
+          'requestId': requestId,
+          'alertId': alertId,
+        }),
+        '/package-requests/$requestId/public',
+      );
+    });
+
     test('digest (plusieurs matchs, pas de trajet) → correspondances', () {
       expect(
         resolveNotificationRoute('CORRIDOR_ALERT', {'alertId': alertId}),

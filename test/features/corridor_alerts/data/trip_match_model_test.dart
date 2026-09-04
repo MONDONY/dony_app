@@ -30,6 +30,24 @@ void main() {
     expect(m.pricePerKg, 9.5);
     expect(m.transportMode, 'PLANE');
     expect(m.photoUrl, 'https://x/y.jpg');
+    // Backend antérieur : pas d'horodatage de publication.
+    expect(m.publishedAt, isNull);
+  });
+
+  test('fromJson parses publishedAt when present', () {
+    final m = TripMatchModel.fromJson(const <String, dynamic>{
+      'announcementId': 'ann-3',
+      'departureCity': 'Paris',
+      'arrivalCity': 'Dakar',
+      'departureDate': '2026-07-10',
+      'travelerId': 't-3',
+      'travelerName': 'Awa S.',
+      'travelerInitials': 'AS',
+      'travelerRating': 4.7,
+      'availableKg': 12.0,
+      'publishedAt': '2026-06-01T10:00:00',
+    });
+    expect(m.publishedAt, DateTime(2026, 6, 1, 10));
   });
 
   test('fromJson tolerates null optional fields', () {

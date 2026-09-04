@@ -158,6 +158,80 @@ void main() {
     verify: (_) => verify(() => repo.getById('alert-1')).called(1),
   );
 
+  group('seuil « déjà vu »', () {
+    final seenAt = DateTime(2026, 9, 1, 8);
+
+    test(
+      'isNew : inconnu → rien de nouveau ; jamais vue → tout est nouveau',
+      () {
+        const unknown = CorridorAlertMatchesState();
+        expect(unknown.isNew(DateTime(2026, 9, 3)), isFalse);
+
+        const neverSeen = CorridorAlertMatchesState(thresholdKnown: true);
+        expect(neverSeen.isNew(DateTime(2020)), isTrue);
+        expect(neverSeen.isNew(null), isTrue);
+      },
+    );
+
+    test('isNew : après le seuil seulement, jamais sans horodatage', () {
+      final s = CorridorAlertMatchesState(
+        thresholdKnown: true,
+        seenThreshold: seenAt,
+      );
+      expect(s.isNew(DateTime(2026, 9, 2)), isTrue);
+      expect(s.isNew(DateTime(2026, 8, 30)), isFalse);
+      expect(s.isNew(seenAt), isFalse);
+      expect(s.isNew(null), isFalse);
+    });
+
+    blocTest<CorridorAlertMatchesCubit, CorridorAlertMatchesState>(
+      'le seuil est figé avant « vu » et survit à un rechargement',
+      build: () => build(
+        alert: CorridorAlertModel(
+          id: 'alert-1',
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          active: true,
+          lastSeenAt: seenAt,
+          createdAt: DateTime(2026, 6, 20),
+        ),
+      ),
+      setUp: () {
+        when(
+          () =>
+              repo.getMatches('alert-1', AlertDirection.travelerWantsPackages),
+        ).thenAnswer(
+          (_) async => CorridorAlertMatches(
+            direction: AlertDirection.travelerWantsPackages,
+            packages: [_fakeMatch('m1')],
+          ),
+        );
+        // « Vu » renvoie une alerte dont lastSeenAt vient de passer à maintenant.
+        when(() => repo.markSeen('alert-1')).thenAnswer(
+          (_) async => CorridorAlertModel(
+            id: 'alert-1',
+            departureCity: 'Paris',
+            arrivalCity: 'Dakar',
+            active: true,
+            lastSeenAt: DateTime(2026, 9, 4, 12),
+            createdAt: DateTime(2026, 6, 20),
+          ),
+        );
+      },
+      act: (c) async {
+        await c.load();
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+        await c.load();
+      },
+      wait: const Duration(milliseconds: 20),
+      verify: (c) {
+        expect(c.state.thresholdKnown, isTrue);
+        expect(c.state.seenThreshold, seenAt);
+        expect(c.state.alert?.lastSeenAt, DateTime(2026, 9, 4, 12));
+      },
+    );
+  });
+
   blocTest<CorridorAlertMatchesCubit, CorridorAlertMatchesState>(
     'résultat vide → empty, et marquée vue quand même',
     build: () => build(alert: _alert(AlertDirection.travelerWantsPackages)),

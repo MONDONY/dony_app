@@ -16,6 +16,8 @@ class CorridorAlertMatchesState extends Equatable {
     this.alert,
     this.result,
     this.errorMessage,
+    this.seenThreshold,
+    this.thresholdKnown = false,
   });
 
   final CorridorAlertMatchesStatus status;
@@ -26,20 +28,49 @@ class CorridorAlertMatchesState extends Equatable {
   final CorridorAlertMatches? result;
   final String? errorMessage;
 
+  /// Dernière consultation AVANT cette ouverture : c'est elle qui sépare
+  /// « nouveaux » et « déjà vus ». Figée au chargement, elle ne bouge pas
+  /// quand l'alerte est marquée vue dans la foulée, sinon tout deviendrait
+  /// « déjà vu » à l'instant où l'écran s'affiche.
+  final DateTime? seenThreshold;
+
+  /// Vrai une fois le seuil lu depuis l'alerte (`null` = jamais consultée).
+  final bool thresholdKnown;
+
+  /// Un élément est nouveau s'il est apparu après la dernière consultation,
+  /// ou si l'alerte n'a jamais été consultée. Sans horodatage, on le range
+  /// dans les « déjà vus » plutôt que de crier au nouveau à tort.
+  bool isNew(DateTime? createdAt) {
+    if (!thresholdKnown) return false;
+    if (seenThreshold == null) return true;
+    return createdAt != null && createdAt.isAfter(seenThreshold!);
+  }
+
   CorridorAlertMatchesState copyWith({
     CorridorAlertMatchesStatus? status,
     CorridorAlertModel? alert,
     CorridorAlertMatches? result,
     String? errorMessage,
+    DateTime? seenThreshold,
+    bool? thresholdKnown,
   }) => CorridorAlertMatchesState(
     status: status ?? this.status,
     alert: alert ?? this.alert,
     result: result ?? this.result,
     errorMessage: errorMessage ?? this.errorMessage,
+    seenThreshold: seenThreshold ?? this.seenThreshold,
+    thresholdKnown: thresholdKnown ?? this.thresholdKnown,
   );
 
   @override
-  List<Object?> get props => [status, alert, result, errorMessage];
+  List<Object?> get props => [
+    status,
+    alert,
+    result,
+    errorMessage,
+    seenThreshold,
+    thresholdKnown,
+  ];
 }
 
 class CorridorAlertMatchesCubit extends Cubit<CorridorAlertMatchesState> {
@@ -59,6 +90,11 @@ class CorridorAlertMatchesCubit extends Cubit<CorridorAlertMatchesState> {
     try {
       final alert = state.alert ?? await _repository.getById(alertId);
       final direction = alert.direction;
+      // Le seuil se lit une seule fois : un rechargement (Réessayer) après
+      // « vu » ne doit pas faire disparaître les nouveautés.
+      final threshold = state.thresholdKnown
+          ? state.seenThreshold
+          : alert.lastSeenAt;
       final matches = await _repository.getMatches(alertId, direction);
       if (matches.isEmpty) {
         emit(
@@ -66,6 +102,8 @@ class CorridorAlertMatchesCubit extends Cubit<CorridorAlertMatchesState> {
             status: CorridorAlertMatchesStatus.empty,
             alert: alert,
             result: CorridorAlertMatches(direction: direction),
+            seenThreshold: threshold,
+            thresholdKnown: true,
           ),
         );
       } else {
@@ -74,6 +112,8 @@ class CorridorAlertMatchesCubit extends Cubit<CorridorAlertMatchesState> {
             status: CorridorAlertMatchesStatus.loaded,
             alert: alert,
             result: matches,
+            seenThreshold: threshold,
+            thresholdKnown: true,
           ),
         );
         unawaited(
