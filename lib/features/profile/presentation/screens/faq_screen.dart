@@ -488,7 +488,7 @@ class _ContactSupportCard extends StatelessWidget {
             iconAsset: 'mail',
             onPressed: () {
               context.read<FaqBloc>().add(const FaqContactRequested());
-              context.push('/profile/help/contact');
+              context.push('/support');
             },
           ),
         ],

@@ -164,7 +164,7 @@ Widget _buildTestHarness({
     GoRoute(path: '/disputes', builder: (_, _) => stub('Disputes')),
     GoRoute(path: '/profile/help/faq', builder: (_, _) => stub('FAQ')),
     GoRoute(path: '/profile/community', builder: (_, _) => stub('Community')),
-    GoRoute(path: '/profile/help/contact', builder: (_, _) => stub('Contact')),
+    GoRoute(path: '/support', builder: (_, _) => stub('Contact')),
     GoRoute(
       path: '/payments/onboarding',
       builder: (_, _) => stub('PaymentsOnboarding'),

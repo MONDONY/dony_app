@@ -88,7 +88,7 @@ Widget _wrap({
         routes: [
           GoRoute(path: '/', builder: (_, _) => const FaqScreen()),
           GoRoute(
-            path: '/profile/help/contact',
+            path: '/support',
             builder: (_, _) => const Scaffold(body: Text('SupportContactStub')),
           ),
           GoRoute(

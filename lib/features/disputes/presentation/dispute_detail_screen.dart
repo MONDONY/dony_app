@@ -251,7 +251,7 @@ class _DisputeDetailScreenState extends State<DisputeDetailScreen> {
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
-                onPressed: () => context.push('/profile/help/contact'),
+                onPressed: () => context.push('/support'),
                 icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
                 label: const Text('Contacter le support'),
               ),

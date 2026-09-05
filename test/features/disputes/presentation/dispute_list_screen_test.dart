@@ -122,7 +122,7 @@ Widget _harness({
         builder: (_, _) => const Scaffold(body: Text('DetailStub')),
       ),
       GoRoute(
-        path: '/profile/help/contact',
+        path: '/support',
         builder: (_, _) => const Scaffold(body: Text('SupportStub')),
       ),
       GoRoute(
