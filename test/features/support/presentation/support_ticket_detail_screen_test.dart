@@ -64,18 +64,16 @@ void main() {
   });
 
   void stubState(SupportState state) {
-    whenListen(
-      bloc,
-      const Stream<SupportState>.empty(),
-      initialState: state,
-    );
+    whenListen(bloc, const Stream<SupportState>.empty(), initialState: state);
   }
 
   testWidgets('affiche le fil de messages des deux auteurs', (tester) async {
-    stubState(const SupportState(
-      detailStatus: SupportViewStatus.ready,
-      ticket: _openTicket,
-    ));
+    stubState(
+      const SupportState(
+        detailStatus: SupportViewStatus.ready,
+        ticket: _openTicket,
+      ),
+    );
 
     await tester.pumpWidget(_harness(bloc));
     await tester.pumpAndSettle();
@@ -86,12 +84,15 @@ void main() {
     expect(find.text('Support Yadony'), findsOneWidget);
   });
 
-  testWidgets('propose le champ de réponse quand le ticket est ouvert',
-      (tester) async {
-    stubState(const SupportState(
-      detailStatus: SupportViewStatus.ready,
-      ticket: _openTicket,
-    ));
+  testWidgets('propose le champ de réponse quand le ticket est ouvert', (
+    tester,
+  ) async {
+    stubState(
+      const SupportState(
+        detailStatus: SupportViewStatus.ready,
+        ticket: _openTicket,
+      ),
+    );
 
     await tester.pumpWidget(_harness(bloc));
     await tester.pumpAndSettle();
@@ -101,30 +102,32 @@ void main() {
   });
 
   testWidgets('masque la saisie sur un ticket résolu', (tester) async {
-    stubState(const SupportState(
-      detailStatus: SupportViewStatus.ready,
-      ticket: _resolvedTicket,
-    ));
+    stubState(
+      const SupportState(
+        detailStatus: SupportViewStatus.ready,
+        ticket: _resolvedTicket,
+      ),
+    );
 
     await tester.pumpWidget(_harness(bloc));
     await tester.pumpAndSettle();
 
     expect(find.text('Votre message'), findsNothing);
     expect(find.byTooltip('Envoyer'), findsNothing);
-    expect(
-      find.textContaining('Ce ticket est résolu'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('Ce ticket est résolu'), findsOneWidget);
     // DonyBadge rend son libellé en majuscules.
     expect(find.text('RÉSOLU'), findsOneWidget);
   });
 
-  testWidgets("affiche l'erreur avec Réessayer quand le ticket ne charge pas",
-      (tester) async {
-    stubState(const SupportState(
-      detailStatus: SupportViewStatus.failure,
-      errorMessage: 'Ticket support introuvable',
-    ));
+  testWidgets("affiche l'erreur avec Réessayer quand le ticket ne charge pas", (
+    tester,
+  ) async {
+    stubState(
+      const SupportState(
+        detailStatus: SupportViewStatus.failure,
+        errorMessage: 'Ticket support introuvable',
+      ),
+    );
 
     await tester.pumpWidget(_harness(bloc));
     await tester.pumpAndSettle();

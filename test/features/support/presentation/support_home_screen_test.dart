@@ -52,19 +52,18 @@ void main() {
   });
 
   void stubState(SupportState state) {
-    whenListen(
-      bloc,
-      const Stream<SupportState>.empty(),
-      initialState: state,
-    );
+    whenListen(bloc, const Stream<SupportState>.empty(), initialState: state);
   }
 
-  testWidgets('affiche les réponses prédéfinies et déplie la réponse',
-      (tester) async {
-    stubState(const SupportState(
-      homeStatus: SupportViewStatus.ready,
-      replies: [_reply],
-    ));
+  testWidgets('affiche les réponses prédéfinies et déplie la réponse', (
+    tester,
+  ) async {
+    stubState(
+      const SupportState(
+        homeStatus: SupportViewStatus.ready,
+        replies: [_reply],
+      ),
+    );
 
     await tester.pumpWidget(_harness(bloc));
     await tester.pumpAndSettle();
@@ -81,8 +80,9 @@ void main() {
     );
   });
 
-  testWidgets('affiche le CTA de contact et ouvre la sheet de création',
-      (tester) async {
+  testWidgets('affiche le CTA de contact et ouvre la sheet de création', (
+    tester,
+  ) async {
     stubState(const SupportState(homeStatus: SupportViewStatus.ready));
 
     await tester.pumpWidget(_harness(bloc));
@@ -98,12 +98,15 @@ void main() {
     expect(find.text('Envoyer'), findsOneWidget);
   });
 
-  testWidgets('affiche la liste des tickets avec statut traduit',
-      (tester) async {
-    stubState(const SupportState(
-      homeStatus: SupportViewStatus.ready,
-      tickets: [_ticket],
-    ));
+  testWidgets('affiche la liste des tickets avec statut traduit', (
+    tester,
+  ) async {
+    stubState(
+      const SupportState(
+        homeStatus: SupportViewStatus.ready,
+        tickets: [_ticket],
+      ),
+    );
 
     await tester.pumpWidget(_harness(bloc));
     await tester.pumpAndSettle();
@@ -115,12 +118,15 @@ void main() {
     expect(find.text('Paiement'), findsOneWidget);
   });
 
-  testWidgets("affiche l'état d'erreur avec un bouton Réessayer",
-      (tester) async {
-    stubState(const SupportState(
-      homeStatus: SupportViewStatus.failure,
-      errorMessage: 'Une erreur est survenue. Réessayez.',
-    ));
+  testWidgets("affiche l'état d'erreur avec un bouton Réessayer", (
+    tester,
+  ) async {
+    stubState(
+      const SupportState(
+        homeStatus: SupportViewStatus.failure,
+        errorMessage: 'Une erreur est survenue. Réessayez.',
+      ),
+    );
 
     await tester.pumpWidget(_harness(bloc));
     await tester.pumpAndSettle();

@@ -1623,8 +1623,8 @@ final appRouter = GoRouter(
       builder: (_, state) {
         final ticketId = state.pathParameters['id']!;
         return BlocProvider(
-          create: (_) => getIt<SupportBloc>()
-            ..add(SupportTicketDetailRequested(ticketId)),
+          create: (_) =>
+              getIt<SupportBloc>()..add(SupportTicketDetailRequested(ticketId)),
           child: SupportTicketDetailScreen(ticketId: ticketId),
         );
       },

@@ -29,19 +29,19 @@ abstract final class SupportLabels {
   static String category(String code) => categories[code] ?? code;
 
   static String status(String code) => switch (code) {
-        SupportTicketStatuses.newTicket => 'Nouveau',
-        SupportTicketStatuses.assigned => 'Pris en charge',
-        SupportTicketStatuses.waitingUser => 'Réponse reçue',
-        SupportTicketStatuses.waitingSupport => 'En attente du support',
-        SupportTicketStatuses.resolved => 'Résolu',
-        _ => code,
-      };
+    SupportTicketStatuses.newTicket => 'Nouveau',
+    SupportTicketStatuses.assigned => 'Pris en charge',
+    SupportTicketStatuses.waitingUser => 'Réponse reçue',
+    SupportTicketStatuses.waitingSupport => 'En attente du support',
+    SupportTicketStatuses.resolved => 'Résolu',
+    _ => code,
+  };
 
   static DonyBadgeType statusBadge(String code) => switch (code) {
-        SupportTicketStatuses.waitingUser => DonyBadgeType.warning,
-        SupportTicketStatuses.resolved => DonyBadgeType.success,
-        _ => DonyBadgeType.info,
-      };
+    SupportTicketStatuses.waitingUser => DonyBadgeType.warning,
+    SupportTicketStatuses.resolved => DonyBadgeType.success,
+    _ => DonyBadgeType.info,
+  };
 }
 
 /// Accueil du support : assistant (réponses prédéfinies), tickets de
@@ -78,19 +78,17 @@ class SupportHomeScreen extends StatelessWidget {
           }
         },
         builder: (context, state) => switch (state.homeStatus) {
-          SupportViewStatus.initial ||
-          SupportViewStatus.loading =>
+          SupportViewStatus.initial || SupportViewStatus.loading =>
             const Center(child: CircularProgressIndicator()),
           SupportViewStatus.failure => DonyEmptyState(
-              type: DonyEmptyStateType.error,
-              title: 'Impossible de charger le support',
-              description:
-                  state.errorMessage ?? 'Vérifiez votre connexion et réessayez.',
-              actionLabel: 'Réessayer',
-              onAction: () => context
-                  .read<SupportBloc>()
-                  .add(const SupportHomeRequested()),
-            ),
+            type: DonyEmptyStateType.error,
+            title: 'Impossible de charger le support',
+            description:
+                state.errorMessage ?? 'Vérifiez votre connexion et réessayez.',
+            actionLabel: 'Réessayer',
+            onAction: () =>
+                context.read<SupportBloc>().add(const SupportHomeRequested()),
+          ),
           SupportViewStatus.ready => _SupportHomeBody(state: state),
         },
       ),
@@ -117,20 +115,19 @@ class _SupportHomeBody extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             'La réponse est peut-être déjà là. Sinon, ouvrez un ticket.',
-            style: Theme.of(context)
-                .textTheme
-                .bodySmall
-                ?.copyWith(color: cs.onSurfaceVariant),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
           const SizedBox(height: 12),
           ...state.replies.asMap().entries.map(
-                (entry) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: _PredefinedReplyTile(reply: entry.value)
-                      .animate()
-                      .fadeIn(duration: 250.ms, delay: (40 * entry.key).ms),
-                ),
-              ),
+            (entry) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: _PredefinedReplyTile(
+                reply: entry.value,
+              ).animate().fadeIn(duration: 250.ms, delay: (40 * entry.key).ms),
+            ),
+          ),
           const SizedBox(height: 24),
         ],
         Text('Mes tickets', style: Theme.of(context).textTheme.titleMedium),
@@ -142,10 +139,9 @@ class _SupportHomeBody extends StatelessWidget {
               child: Text(
                 'Aucun ticket pour le moment. Un problème non résolu par '
                 "l'assistant ? Ouvrez un ticket, l'équipe Yadony vous répond.",
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium
-                    ?.copyWith(color: cs.onSurfaceVariant),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
               ),
             ),
           )
@@ -184,20 +180,18 @@ class _PredefinedReplyTile extends StatelessWidget {
           childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           title: Text(
             reply.question,
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(fontWeight: FontWeight.w600),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           children: [
             Align(
               alignment: Alignment.centerLeft,
               child: Text(
                 reply.answer,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium
-                    ?.copyWith(color: cs.onSurfaceVariant),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
               ),
             ),
           ],
@@ -232,10 +226,9 @@ class _TicketCard extends StatelessWidget {
                   ticket.subject,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.copyWith(fontWeight: FontWeight.w700),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
                 ),
               ),
               const SizedBox(width: 8),
@@ -248,10 +241,9 @@ class _TicketCard extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             SupportLabels.category(ticket.category),
-            style: Theme.of(context)
-                .textTheme
-                .bodySmall
-                ?.copyWith(color: cs.onSurfaceVariant),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
         ],
       ),
@@ -270,7 +262,8 @@ Future<void> _openCreateTicketSheet(BuildContext context) {
   final canSubmit = ValueNotifier<bool>(false);
 
   void recompute() {
-    canSubmit.value = selectedCategory.value != null &&
+    canSubmit.value =
+        selectedCategory.value != null &&
         subjectController.text.trim().isNotEmpty &&
         messageController.text.trim().isNotEmpty;
   }
@@ -283,19 +276,18 @@ Future<void> _openCreateTicketSheet(BuildContext context) {
     wrapper: (child) => BlocProvider.value(value: bloc, child: child),
     stickyBottom: ValueListenableBuilder<bool>(
       valueListenable: canSubmit,
-      builder: (context, ready, _) =>
-          BlocBuilder<SupportBloc, SupportState>(
+      builder: (context, ready, _) => BlocBuilder<SupportBloc, SupportState>(
         builder: (context, state) => DonyButton(
           label: 'Envoyer',
           isLoading: state.createStatus == SupportActionStatus.submitting,
           onPressed: ready
               ? () => context.read<SupportBloc>().add(
-                    SupportTicketCreateRequested(
-                      category: selectedCategory.value!,
-                      subject: subjectController.text.trim(),
-                      message: messageController.text.trim(),
-                    ),
-                  )
+                  SupportTicketCreateRequested(
+                    category: selectedCategory.value!,
+                    subject: subjectController.text.trim(),
+                    message: messageController.text.trim(),
+                  ),
+                )
               : null,
         ),
       ),

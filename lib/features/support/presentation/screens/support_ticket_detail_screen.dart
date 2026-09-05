@@ -56,28 +56,28 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
           }
         },
         builder: (context, state) => switch (state.detailStatus) {
-          SupportViewStatus.initial ||
-          SupportViewStatus.loading =>
+          SupportViewStatus.initial || SupportViewStatus.loading =>
             const Center(child: CircularProgressIndicator()),
           SupportViewStatus.failure => DonyEmptyState(
-              type: DonyEmptyStateType.error,
-              title: 'Ticket introuvable',
-              description: state.errorMessage ??
-                  'Vérifiez votre connexion et réessayez.',
-              actionLabel: 'Réessayer',
-              onAction: () => context
-                  .read<SupportBloc>()
-                  .add(SupportTicketDetailRequested(widget.ticketId)),
+            type: DonyEmptyStateType.error,
+            title: 'Ticket introuvable',
+            description:
+                state.errorMessage ?? 'Vérifiez votre connexion et réessayez.',
+            actionLabel: 'Réessayer',
+            onAction: () => context.read<SupportBloc>().add(
+              SupportTicketDetailRequested(widget.ticketId),
             ),
+          ),
           // `ready` n'est émis qu'avec un ticket chargé, mais le repli évite
           // qu'une transition ajoutée plus tard ne fasse planter l'écran.
-          SupportViewStatus.ready => state.ticket == null
-              ? const Center(child: CircularProgressIndicator())
-              : _TicketThread(
-                  ticket: state.ticket!,
-                  controller: _messageController,
-                  sending: state.sendStatus == SupportActionStatus.submitting,
-                ),
+          SupportViewStatus.ready =>
+            state.ticket == null
+                ? const Center(child: CircularProgressIndicator())
+                : _TicketThread(
+                    ticket: state.ticket!,
+                    controller: _messageController,
+                    sending: state.sendStatus == SupportActionStatus.submitting,
+                  ),
         },
       ),
     );
@@ -112,10 +112,9 @@ class _TicketThread extends StatelessWidget {
               Expanded(
                 child: Text(
                   SupportLabels.category(ticket.category),
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodySmall
-                      ?.copyWith(color: cs.onSurfaceVariant),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
               ),
             ],
@@ -178,16 +177,16 @@ class _MessageBubble extends StatelessWidget {
                 child: Text(
                   'Support Yadony',
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: cs.primary,
-                        fontWeight: FontWeight.w700,
-                      ),
+                    color: cs.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             Text(
               message.content,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: fromUser ? cs.onPrimary : cs.onSurface,
-                  ),
+                color: fromUser ? cs.onPrimary : cs.onSurface,
+              ),
             ),
           ],
         ),
@@ -216,10 +215,9 @@ class _ResolvedBanner extends StatelessWidget {
           'Ce ticket est résolu. Un autre problème ? Ouvrez un nouveau '
           'ticket depuis la page Support.',
           textAlign: TextAlign.center,
-          style: Theme.of(context)
-              .textTheme
-              .bodySmall
-              ?.copyWith(color: cs.onSurfaceVariant),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),
       ),
     );
@@ -243,8 +241,8 @@ class _MessageComposer extends StatelessWidget {
       return;
     }
     context.read<SupportBloc>().add(
-          SupportMessageSendRequested(ticketId: ticketId, content: content),
-        );
+      SupportMessageSendRequested(ticketId: ticketId, content: content),
+    );
   }
 
   @override

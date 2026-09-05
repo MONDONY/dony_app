@@ -74,10 +74,10 @@ void main() {
     blocTest<SupportBloc, SupportState>(
       'passe en échec avec un message quand le chargement casse',
       build: () {
-        when(() => repository.loadReplies())
-            .thenThrow(Exception('réseau indisponible'));
-        when(() => repository.loadTickets())
-            .thenAnswer((_) async => [_ticket]);
+        when(
+          () => repository.loadReplies(),
+        ).thenThrow(Exception('réseau indisponible'));
+        when(() => repository.loadTickets()).thenAnswer((_) async => [_ticket]);
         return buildBloc();
       },
       act: (bloc) => bloc.add(const SupportHomeRequested()),
@@ -95,18 +95,22 @@ void main() {
     blocTest<SupportBloc, SupportState>(
       'crée le ticket, expose son id et le met en tête de liste',
       build: () {
-        when(() => repository.createTicket(
-              category: 'PAYMENT',
-              subject: 'Paiement bloque',
-              message: 'Bonjour, mon paiement est bloque.',
-            )).thenAnswer((_) async => _ticket);
+        when(
+          () => repository.createTicket(
+            category: 'PAYMENT',
+            subject: 'Paiement bloque',
+            message: 'Bonjour, mon paiement est bloque.',
+          ),
+        ).thenAnswer((_) async => _ticket);
         return buildBloc();
       },
-      act: (bloc) => bloc.add(const SupportTicketCreateRequested(
-        category: 'PAYMENT',
-        subject: 'Paiement bloque',
-        message: 'Bonjour, mon paiement est bloque.',
-      )),
+      act: (bloc) => bloc.add(
+        const SupportTicketCreateRequested(
+          category: 'PAYMENT',
+          subject: 'Paiement bloque',
+          message: 'Bonjour, mon paiement est bloque.',
+        ),
+      ),
       expect: () => [
         const SupportState(createStatus: SupportActionStatus.submitting),
         const SupportState(
@@ -118,25 +122,28 @@ void main() {
     );
 
     test('trace la création avec la seule catégorie', () async {
-      when(() => repository.createTicket(
-            category: 'PAYMENT',
-            subject: 'Paiement bloque',
-            message: 'Bonjour, mon paiement est bloque.',
-          )).thenAnswer((_) async => _ticket);
+      when(
+        () => repository.createTicket(
+          category: 'PAYMENT',
+          subject: 'Paiement bloque',
+          message: 'Bonjour, mon paiement est bloque.',
+        ),
+      ).thenAnswer((_) async => _ticket);
       final bloc = buildBloc();
 
-      bloc.add(const SupportTicketCreateRequested(
-        category: 'PAYMENT',
-        subject: 'Paiement bloque',
-        message: 'Bonjour, mon paiement est bloque.',
-      ));
+      bloc.add(
+        const SupportTicketCreateRequested(
+          category: 'PAYMENT',
+          subject: 'Paiement bloque',
+          message: 'Bonjour, mon paiement est bloque.',
+        ),
+      );
       await Future<void>.delayed(Duration.zero);
 
       verify(
-        () => backend.capture(
-          AnalyticsEvents.supportTicketCreated,
-          {'category': 'PAYMENT'},
-        ),
+        () => backend.capture(AnalyticsEvents.supportTicketCreated, {
+          'category': 'PAYMENT',
+        }),
       ).called(1);
       await bloc.close();
     });
@@ -144,18 +151,22 @@ void main() {
     blocTest<SupportBloc, SupportState>(
       'remonte le detail RFC 7807 du backend en cas de refus',
       build: () {
-        when(() => repository.createTicket(
-              category: 'PAYMENT',
-              subject: 'Paiement bloque',
-              message: 'Bonjour, mon paiement est bloque.',
-            )).thenThrow(Exception('categorie inconnue'));
+        when(
+          () => repository.createTicket(
+            category: 'PAYMENT',
+            subject: 'Paiement bloque',
+            message: 'Bonjour, mon paiement est bloque.',
+          ),
+        ).thenThrow(Exception('categorie inconnue'));
         return buildBloc();
       },
-      act: (bloc) => bloc.add(const SupportTicketCreateRequested(
-        category: 'PAYMENT',
-        subject: 'Paiement bloque',
-        message: 'Bonjour, mon paiement est bloque.',
-      )),
+      act: (bloc) => bloc.add(
+        const SupportTicketCreateRequested(
+          category: 'PAYMENT',
+          subject: 'Paiement bloque',
+          message: 'Bonjour, mon paiement est bloque.',
+        ),
+      ),
       expect: () => [
         const SupportState(createStatus: SupportActionStatus.submitting),
         const SupportState(
@@ -200,8 +211,9 @@ void main() {
     blocTest<SupportBloc, SupportState>(
       'passe en échec quand le ticket est introuvable',
       build: () {
-        when(() => repository.loadTicket('ticket-404'))
-            .thenThrow(Exception('404'));
+        when(
+          () => repository.loadTicket('ticket-404'),
+        ).thenThrow(Exception('404'));
         return buildBloc();
       },
       act: (bloc) => bloc.add(const SupportTicketDetailRequested('ticket-404')),
@@ -219,8 +231,9 @@ void main() {
     blocTest<SupportBloc, SupportState>(
       'envoie le message puis recharge le fil (statut serveur fait foi)',
       build: () {
-        when(() => repository.sendMessage('ticket-1', 'Merci !'))
-            .thenAnswer((_) async => _message);
+        when(
+          () => repository.sendMessage('ticket-1', 'Merci !'),
+        ).thenAnswer((_) async => _message);
         when(() => repository.loadTicket('ticket-1')).thenAnswer(
           (_) async => const SupportTicket(
             id: 'ticket-1',
@@ -236,10 +249,12 @@ void main() {
         detailStatus: SupportViewStatus.ready,
         ticket: _ticket,
       ),
-      act: (bloc) => bloc.add(const SupportMessageSendRequested(
-        ticketId: 'ticket-1',
-        content: 'Merci !',
-      )),
+      act: (bloc) => bloc.add(
+        const SupportMessageSendRequested(
+          ticketId: 'ticket-1',
+          content: 'Merci !',
+        ),
+      ),
       expect: () => [
         const SupportState(
           detailStatus: SupportViewStatus.ready,
@@ -259,10 +274,9 @@ void main() {
         ),
       ],
       verify: (_) {
-        verify(() => backend.capture(
-              AnalyticsEvents.supportTicketMessageSent,
-              null,
-            )).called(1);
+        verify(
+          () => backend.capture(AnalyticsEvents.supportTicketMessageSent, null),
+        ).called(1);
       },
     );
 
@@ -273,10 +287,12 @@ void main() {
         detailStatus: SupportViewStatus.ready,
         ticket: _resolvedTicket,
       ),
-      act: (bloc) => bloc.add(const SupportMessageSendRequested(
-        ticketId: 'ticket-2',
-        content: 'Encore un souci',
-      )),
+      act: (bloc) => bloc.add(
+        const SupportMessageSendRequested(
+          ticketId: 'ticket-2',
+          content: 'Encore un souci',
+        ),
+      ),
       expect: () => [
         const SupportState(
           detailStatus: SupportViewStatus.ready,
@@ -294,18 +310,21 @@ void main() {
     blocTest<SupportBloc, SupportState>(
       "passe l'envoi en échec quand le backend refuse",
       build: () {
-        when(() => repository.sendMessage('ticket-1', 'Merci !'))
-            .thenThrow(Exception('422'));
+        when(
+          () => repository.sendMessage('ticket-1', 'Merci !'),
+        ).thenThrow(Exception('422'));
         return buildBloc();
       },
       seed: () => const SupportState(
         detailStatus: SupportViewStatus.ready,
         ticket: _ticket,
       ),
-      act: (bloc) => bloc.add(const SupportMessageSendRequested(
-        ticketId: 'ticket-1',
-        content: 'Merci !',
-      )),
+      act: (bloc) => bloc.add(
+        const SupportMessageSendRequested(
+          ticketId: 'ticket-1',
+          content: 'Merci !',
+        ),
+      ),
       expect: () => [
         const SupportState(
           detailStatus: SupportViewStatus.ready,

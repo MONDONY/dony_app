@@ -36,16 +36,20 @@ class SupportBloc extends Bloc<SupportEvent, SupportState> {
         _repository.loadReplies(),
         _repository.loadTickets(),
       ]);
-      emit(state.copyWith(
-        homeStatus: SupportViewStatus.ready,
-        replies: results[0] as List<SupportPredefinedReply>,
-        tickets: results[1] as List<SupportTicket>,
-      ));
+      emit(
+        state.copyWith(
+          homeStatus: SupportViewStatus.ready,
+          replies: results[0] as List<SupportPredefinedReply>,
+          tickets: results[1] as List<SupportTicket>,
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(
-        homeStatus: SupportViewStatus.failure,
-        errorMessage: _message(e),
-      ));
+      emit(
+        state.copyWith(
+          homeStatus: SupportViewStatus.failure,
+          errorMessage: _message(e),
+        ),
+      );
     }
   }
 
@@ -60,20 +64,26 @@ class SupportBloc extends Bloc<SupportEvent, SupportState> {
         subject: event.subject,
         message: event.message,
       );
-      unawaited(_analytics.logEvent(
-        AnalyticsEvents.supportTicketCreated,
-        properties: {'category': event.category},
-      ));
-      emit(state.copyWith(
-        createStatus: SupportActionStatus.success,
-        createdTicketId: ticket.id,
-        tickets: [ticket, ...state.tickets],
-      ));
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.supportTicketCreated,
+          properties: {'category': event.category},
+        ),
+      );
+      emit(
+        state.copyWith(
+          createStatus: SupportActionStatus.success,
+          createdTicketId: ticket.id,
+          tickets: [ticket, ...state.tickets],
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(
-        createStatus: SupportActionStatus.failure,
-        errorMessage: _message(e),
-      ));
+      emit(
+        state.copyWith(
+          createStatus: SupportActionStatus.failure,
+          errorMessage: _message(e),
+        ),
+      );
     }
   }
 
@@ -84,15 +94,16 @@ class SupportBloc extends Bloc<SupportEvent, SupportState> {
     emit(state.copyWith(detailStatus: SupportViewStatus.loading));
     try {
       final ticket = await _repository.loadTicket(event.ticketId);
-      emit(state.copyWith(
-        detailStatus: SupportViewStatus.ready,
-        ticket: ticket,
-      ));
+      emit(
+        state.copyWith(detailStatus: SupportViewStatus.ready, ticket: ticket),
+      );
     } catch (e) {
-      emit(state.copyWith(
-        detailStatus: SupportViewStatus.failure,
-        errorMessage: _message(e),
-      ));
+      emit(
+        state.copyWith(
+          detailStatus: SupportViewStatus.failure,
+          errorMessage: _message(e),
+        ),
+      );
     }
   }
 
@@ -102,32 +113,36 @@ class SupportBloc extends Bloc<SupportEvent, SupportState> {
   ) async {
     final current = state.ticket;
     if (current != null && current.isResolved) {
-      emit(state.copyWith(
-        sendStatus: SupportActionStatus.failure,
-        errorMessage:
-            'Ce ticket est résolu. Ouvrez-en un nouveau pour un autre problème.',
-      ));
+      emit(
+        state.copyWith(
+          sendStatus: SupportActionStatus.failure,
+          errorMessage:
+              'Ce ticket est résolu. Ouvrez-en un nouveau pour un autre problème.',
+        ),
+      );
       return;
     }
     emit(state.copyWith(sendStatus: SupportActionStatus.submitting));
     try {
       await _repository.sendMessage(event.ticketId, event.content);
-      unawaited(
-        _analytics.logEvent(AnalyticsEvents.supportTicketMessageSent),
-      );
+      unawaited(_analytics.logEvent(AnalyticsEvents.supportTicketMessageSent));
       // Le fil rechargé fait foi : statut mis à jour (WAITING_SUPPORT) et
       // message horodaté par le serveur.
       final ticket = await _repository.loadTicket(event.ticketId);
-      emit(state.copyWith(
-        sendStatus: SupportActionStatus.success,
-        detailStatus: SupportViewStatus.ready,
-        ticket: ticket,
-      ));
+      emit(
+        state.copyWith(
+          sendStatus: SupportActionStatus.success,
+          detailStatus: SupportViewStatus.ready,
+          ticket: ticket,
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(
-        sendStatus: SupportActionStatus.failure,
-        errorMessage: _message(e),
-      ));
+      emit(
+        state.copyWith(
+          sendStatus: SupportActionStatus.failure,
+          errorMessage: _message(e),
+        ),
+      );
     }
   }
 

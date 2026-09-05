@@ -150,6 +150,7 @@ abstract final class AnalyticsEvents {
   static const reviewsFiltered = 'reviews_filtered';
   static const faqQuestionOpened = 'faq_question_opened';
   static const faqContactRequested = 'faq_contact_requested';
+
   /// Ticket support créé avec succès (propriété `category` : énumération
   /// fermée backend, jamais le sujet ni le message).
   static const supportTicketCreated = 'support_ticket_created';
