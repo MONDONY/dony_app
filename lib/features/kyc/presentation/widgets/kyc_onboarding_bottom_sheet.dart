@@ -84,7 +84,7 @@ class KycOnboardingBottomSheet extends StatelessWidget {
             const SizedBox(height: DonySpacing.xl),
             _InfoRow(
               iconAsset: 'shield-check',
-              text: 'Processus Stripe Identity sécurisé',
+              text: 'Processus de vérification sécurisé',
               cs: cs,
               tt: tt,
             ),
