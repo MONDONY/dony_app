@@ -55,7 +55,7 @@ class DisputeListScreen extends StatelessWidget {
                     description:
                         'Tant mieux ! Un litige s\'ouvre automatiquement si vous contestez l\'absence d\'un voyageur lors d\'une remise.',
                     actionLabel: 'Un problème avec un envoi ?',
-                    onAction: () => context.push('/profile/help/contact'),
+                    onAction: () => context.push('/support'),
                   ),
                 DisputeListLoaded(:final disputes) => RefreshIndicator(
                   color: cs.primary,

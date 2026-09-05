@@ -150,8 +150,13 @@ abstract final class AnalyticsEvents {
   static const reviewsFiltered = 'reviews_filtered';
   static const faqQuestionOpened = 'faq_question_opened';
   static const faqContactRequested = 'faq_contact_requested';
-  static const supportEmailComposerOpened = 'support_email_composer_opened';
-  static const supportContactFailed = 'support_contact_failed';
+  /// Ticket support créé avec succès (propriété `category` : énumération
+  /// fermée backend, jamais le sujet ni le message).
+  static const supportTicketCreated = 'support_ticket_created';
+
+  /// Message utilisateur envoyé dans un ticket support existant. Aucune
+  /// propriété : le contenu ne part jamais dans l'analytics.
+  static const supportTicketMessageSent = 'support_ticket_message_sent';
   static const helpCenterOpened = 'help_center_opened';
   static const helpTutorialOpened = 'help_tutorial_opened';
   static const helpTutorialPlayStarted = 'help_tutorial_play_started';

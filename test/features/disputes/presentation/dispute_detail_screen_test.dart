@@ -47,7 +47,7 @@ Widget _harness(DisputeModel dispute) {
         builder: (_, _) => DisputeDetailScreen(dispute: dispute),
       ),
       GoRoute(
-        path: '/profile/help/contact',
+        path: '/support',
         builder: (_, _) => const Scaffold(body: Text('SupportStub')),
       ),
     ],

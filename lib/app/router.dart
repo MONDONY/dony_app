@@ -131,7 +131,6 @@ import 'package:dony/features/price_grid/presentation/price_grid_screen.dart';
 import 'package:dony/features/profile/bloc/faq_bloc.dart';
 import 'package:dony/features/profile/bloc/profile_public_bloc.dart';
 import 'package:dony/features/profile/bloc/profile_public_event.dart';
-import 'package:dony/features/profile/bloc/support_contact_bloc.dart';
 import 'package:dony/features/profile/presentation/profile_screen.dart';
 import 'package:dony/features/profile/presentation/screens/community_screen.dart';
 import 'package:dony/features/profile/presentation/screens/edit_profile_screen.dart';
@@ -139,7 +138,6 @@ import 'package:dony/features/profile/presentation/screens/faq_screen.dart';
 import 'package:dony/features/profile/presentation/screens/help_tutorial_screen.dart';
 import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
 import 'package:dony/features/profile/presentation/screens/shipments_history_screen.dart';
-import 'package:dony/features/profile/presentation/screens/support_contact_screen.dart';
 import 'package:dony/features/profile/presentation/screens/upgrade_to_pro_screen.dart';
 import 'package:dony/features/profile/presentation/widgets/add_contact_sheets.dart';
 import 'package:dony/features/ratings/bloc/my_reviews_bloc.dart';
@@ -183,6 +181,9 @@ import 'package:dony/features/subscriptions/bloc/traveler_hub_event.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_subscribe_bloc.dart';
 import 'package:dony/features/subscriptions/presentation/mes_abonnements_screen.dart';
 import 'package:dony/features/subscriptions/presentation/traveler_profile_hub_screen.dart';
+import 'package:dony/features/support/bloc/support_bloc.dart';
+import 'package:dony/features/support/presentation/screens/support_home_screen.dart';
+import 'package:dony/features/support/presentation/screens/support_ticket_detail_screen.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/presentation/screens/offline_scan_queue_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/qr_picker_screen.dart';
@@ -1068,13 +1069,6 @@ final appRouter = GoRouter(
     ),
     buildHelpTutorialRoute(),
     GoRoute(
-      path: '/profile/help/contact',
-      builder: (context, state) => BlocProvider(
-        create: (_) => getIt<SupportContactBloc>(),
-        child: const SupportContactScreen(),
-      ),
-    ),
-    GoRoute(
       path: '/profile/shipments/history',
       builder: (context, state) => BlocProvider(
         create: (_) => getIt<BidBloc>()..add(BidMyListRequested()),
@@ -1614,6 +1608,24 @@ final appRouter = GoRouter(
           value: getIt<NegotiationBloc>()
             ..add(NegotiationFetchRequested(thread.id)),
           child: LinkTripScreen(thread: thread, autoCreateDedicated: true),
+        );
+      },
+    ),
+    GoRoute(
+      path: '/support',
+      builder: (_, _) => BlocProvider(
+        create: (_) => getIt<SupportBloc>()..add(const SupportHomeRequested()),
+        child: const SupportHomeScreen(),
+      ),
+    ),
+    GoRoute(
+      path: '/support/tickets/:id',
+      builder: (_, state) {
+        final ticketId = state.pathParameters['id']!;
+        return BlocProvider(
+          create: (_) => getIt<SupportBloc>()
+            ..add(SupportTicketDetailRequested(ticketId)),
+          child: SupportTicketDetailScreen(ticketId: ticketId),
         );
       },
     ),
