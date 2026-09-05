@@ -484,12 +484,18 @@ final appRouter = GoRouter(
         if (raw is! String) {
           return KycStatusScreen(progress: progress);
         }
+        // Second filtre, en plus de celui de la webview elle-même : une URL
+        // qui n'est pas celle d'un fournisseur connu ne doit même pas ouvrir
+        // l'écran. Les deux partagent `isVerificationProviderHost` — quand la
+        // liste vivait en double, ajouter Didit à la webview ne suffisait pas :
+        // le routeur retombait silencieusement sur l'écran de statut, sans
+        // message, et le parcours paraissait « ne rien faire ».
         final uri = Uri.tryParse(raw);
-        final host = uri?.host ?? '';
-        final isStripe =
-            uri?.scheme == 'https' &&
-            (host == 'verify.stripe.com' || host.endsWith('.stripe.com'));
-        if (!isStripe) {
+        final estFournisseurConnu =
+            uri != null &&
+            uri.scheme == 'https' &&
+            isVerificationProviderHost(uri.host);
+        if (!estFournisseurConnu) {
           return KycStatusScreen(progress: progress);
         }
         return BlocProvider(

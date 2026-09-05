@@ -17,6 +17,23 @@ import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 
+/// Hôtes autorisés dans la webview de vérification d'identité.
+///
+/// Liste fermée et vérifiée par égalité ou par suffixe de domaine : un simple
+/// `contains` laisserait passer `verify.didit.me.attaquant.com`. C'est le seul
+/// rempart entre l'utilisateur, qui va présenter sa pièce d'identité et son
+/// visage, et une page qui se ferait passer pour le fournisseur.
+///
+/// Source unique : le routeur applique le MÊME filtre avant de construire cet
+/// écran. Tant que la liste vivait en double, ajouter un fournisseur ici ne
+/// suffisait pas — le routeur retombait sur l'écran de statut sans rien dire.
+bool isVerificationProviderHost(String host) {
+  const domaines = <String>['didit.me', 'stripe.com'];
+  return domaines.any(
+    (domaine) => host == domaine || host.endsWith('.$domaine'),
+  );
+}
+
 class KycWebViewScreen extends StatefulWidget {
   const KycWebViewScreen({
     super.key,
@@ -100,6 +117,18 @@ class _KycWebViewScreenState extends State<KycWebViewScreen> {
               onPageStarted: (_) => _isLoading.value = true,
               onPageFinished: (_) => _isLoading.value = false,
               onWebResourceError: (error) {
+                // N'alerter que si c'est la PAGE qui échoue. Une sous-ressource
+                // en échec est sans conséquence : la page Didit charge une vidéo
+                // d'illustration (`/videos/face_scan_compressed.mp4`) qui tombe
+                // en `net::ERR_FAILED`, et l'utilisateur voyait « Impossible de
+                // charger la page de vérification » en plein parcours réussi —
+                // un message alarmant, faux, et de nature à faire abandonner.
+                //
+                // `isForMainFrame` peut être nul selon la plateforme : dans le
+                // doute on alerte, pour ne jamais taire une vraie panne.
+                if (error.isForMainFrame == false) {
+                  return;
+                }
                 if (mounted) {
                   _isLoading.value = false;
                   DonySnackbar.show(
@@ -128,18 +157,19 @@ class _KycWebViewScreenState extends State<KycWebViewScreen> {
                   }
                   return NavigationDecision.prevent;
                 }
-                // Allow only Stripe-hosted pages. Reject any other navigation
-                // (phishing, open redirect, file://, intent://, ...).
+                // N'autoriser que les pages hébergées par un fournisseur de
+                // vérification connu. Tout le reste est refusé (hameçonnage,
+                // redirection ouverte, file://, intent://, ...).
+                //
+                // Didit remplace progressivement Stripe Identity : les deux
+                // domaines cohabitent tant que des comptes vérifiés côté Stripe
+                // peuvent rouvrir leur session. Retirer Stripe d'ici le jour où
+                // l'implémentation serveur correspondante disparaît.
                 final uri = Uri.tryParse(request.url);
                 if (uri == null || uri.scheme != 'https') {
                   return NavigationDecision.prevent;
                 }
-                final host = uri.host;
-                final isStripe =
-                    host == 'verify.stripe.com' ||
-                    host == 'stripe.com' ||
-                    host.endsWith('.stripe.com');
-                return isStripe
+                return isVerificationProviderHost(uri.host)
                     ? NavigationDecision.navigate
                     : NavigationDecision.prevent;
               },

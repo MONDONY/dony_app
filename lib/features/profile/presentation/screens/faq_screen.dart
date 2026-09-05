@@ -33,7 +33,7 @@ class _FaqScreenState extends State<FaqScreen> {
         _FaqItem(
           id: 'identity_delay',
           q: 'Combien de temps prend la validation ?',
-          a: 'La validation est souvent réalisée en quelques minutes via Stripe Identity. Si une vérification manuelle est nécessaire, le délai peut être plus long.',
+          a: 'La validation est souvent réalisée en quelques minutes. Si une vérification manuelle est nécessaire, le délai peut être plus long.',
         ),
         _FaqItem(
           id: 'identity_documents',
