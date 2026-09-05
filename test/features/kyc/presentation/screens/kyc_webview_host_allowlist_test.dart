@@ -24,8 +24,14 @@ void main() {
 
   group('hôtes refusés', () {
     test('un domaine qui imite le fournisseur en suffixe', () {
-      expect(isVerificationProviderHost('verify.didit.me.attaquant.com'), isFalse);
-      expect(isVerificationProviderHost('verify.stripe.com.attaquant.com'), isFalse);
+      expect(
+        isVerificationProviderHost('verify.didit.me.attaquant.com'),
+        isFalse,
+      );
+      expect(
+        isVerificationProviderHost('verify.stripe.com.attaquant.com'),
+        isFalse,
+      );
     });
 
     test('un domaine qui contient le nom sans en être un sous-domaine', () {
