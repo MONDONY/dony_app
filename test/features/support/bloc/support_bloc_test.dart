@@ -232,7 +232,7 @@ void main() {
       'envoie le message puis recharge le fil (statut serveur fait foi)',
       build: () {
         when(
-          () => repository.sendMessage('ticket-1', 'Merci !'),
+          () => repository.sendMessage('ticket-1', 'Merci !', const []),
         ).thenAnswer((_) async => _message);
         when(() => repository.loadTicket('ticket-1')).thenAnswer(
           (_) async => const SupportTicket(
@@ -303,7 +303,7 @@ void main() {
         ),
       ],
       verify: (_) {
-        verifyNever(() => repository.sendMessage(any(), any()));
+        verifyNever(() => repository.sendMessage(any(), any(), any()));
       },
     );
 
@@ -311,7 +311,7 @@ void main() {
       "passe l'envoi en échec quand le backend refuse",
       build: () {
         when(
-          () => repository.sendMessage('ticket-1', 'Merci !'),
+          () => repository.sendMessage('ticket-1', 'Merci !', const []),
         ).thenThrow(Exception('422'));
         return buildBloc();
       },
