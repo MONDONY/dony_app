@@ -73,14 +73,3 @@ final class SupportAttachmentRemoved extends SupportEvent {
   @override
   List<Object?> get props => [localId];
 }
-
-/// Marque le ticket comme lu (envoi silencieux, ne bloque pas la lecture).
-/// Émis à l'ouverture de l'écran de détail, avant ou avec `SupportTicketDetailRequested`.
-final class SupportTicketReadRequested extends SupportEvent {
-  const SupportTicketReadRequested(this.ticketId);
-
-  final String ticketId;
-
-  @override
-  List<Object?> get props => [ticketId];
-}

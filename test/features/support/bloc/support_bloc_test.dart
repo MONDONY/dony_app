@@ -405,6 +405,27 @@ void main() {
       act: (bloc) => bloc.add(const SupportTicketDetailRequested('ticket-1')),
       verify: (_) => verify(() => repository.loadTicket('ticket-1')).called(1),
     );
+
+    // Correction critique : le backend recalcule unreadCount depuis
+    // user_last_read_at. Si markRead est appelé AVANT loadTicket, la réponse
+    // porte toujours unreadCount = 0 et la pastille ne s'éteint jamais.
+    blocTest<SupportBloc, SupportState>(
+      'charge le fil avant de le marquer lu, sinon unreadCount revient toujours a zero',
+      build: () {
+        when(() => repository.markRead('t1')).thenAnswer((_) async {});
+        when(
+          () => repository.loadTicket('t1'),
+        ).thenAnswer((_) async => _ticket);
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const SupportTicketDetailRequested('t1')),
+      verify: (_) {
+        verifyInOrder([
+          () => repository.loadTicket('t1'),
+          () => repository.markRead('t1'),
+        ]);
+      },
+    );
   });
 
   group('SupportAttachmentPickRequested', () {
