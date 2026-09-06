@@ -2,6 +2,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/support/bloc/support_bloc.dart';
+import 'package:dony/features/support/data/support_attachment.dart';
 import 'package:dony/features/support/data/support_models.dart';
 import 'package:dony/features/support/data/support_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -30,6 +31,41 @@ const _resolvedTicket = SupportTicket(
   category: 'DELIVERY',
   subject: 'Colis en retard',
   status: SupportTicketStatuses.resolved,
+);
+
+// Helpers pour les tests d'attachements
+const _readyAttachmentLocalId = 'local-img-1';
+const _readyAttachmentKey = 'support/u1/1_a.jpg';
+
+SupportState get stateWithOneReadyAttachment => const SupportState(
+  pendingAttachments: [
+    SupportAttachmentUpload(
+      localId: _readyAttachmentLocalId,
+      localPath: '/tmp/a.jpg',
+      status: SupportUploadStatus.ready,
+      remoteKey: _readyAttachmentKey,
+    ),
+  ],
+);
+
+SupportState get stateWithUploading => const SupportState(
+  pendingAttachments: [
+    SupportAttachmentUpload(
+      localId: 'local-uploading',
+      localPath: '/tmp/b.jpg',
+      status: SupportUploadStatus.uploading,
+    ),
+  ],
+);
+
+SupportState get stateWithOnlyFailed => const SupportState(
+  pendingAttachments: [
+    SupportAttachmentUpload(
+      localId: 'local-failed',
+      localPath: '/tmp/c.jpg',
+      status: SupportUploadStatus.failed,
+    ),
+  ],
 );
 
 const _message = SupportMessage(
@@ -339,5 +375,187 @@ void main() {
         ),
       ],
     );
+  });
+
+  group('SupportTicketDetailRequested — marquage de lecture', () {
+    blocTest<SupportBloc, SupportState>(
+      'marque le fil lu à l ouverture du détail',
+      build: () {
+        when(() => repository.markRead('ticket-1')).thenAnswer((_) async {});
+        when(
+          () => repository.loadTicket('ticket-1'),
+        ).thenAnswer((_) async => _ticket);
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const SupportTicketDetailRequested('ticket-1')),
+      verify: (_) => verify(() => repository.markRead('ticket-1')).called(1),
+    );
+
+    blocTest<SupportBloc, SupportState>(
+      'n échoue pas si le marquage de lecture échoue',
+      build: () {
+        when(
+          () => repository.markRead('ticket-1'),
+        ).thenThrow(Exception('réseau'));
+        when(
+          () => repository.loadTicket('ticket-1'),
+        ).thenAnswer((_) async => _ticket);
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const SupportTicketDetailRequested('ticket-1')),
+      verify: (_) => verify(() => repository.loadTicket('ticket-1')).called(1),
+    );
+  });
+
+  group('SupportAttachmentPickRequested', () {
+    blocTest<SupportBloc, SupportState>(
+      'passe une image de uploading à ready puis autorise l envoi',
+      build: () {
+        when(
+          () => repository.uploadAttachment('/tmp/a.jpg'),
+        ).thenAnswer((_) async => 'support/u1/1_a.jpg');
+        return buildBloc();
+      },
+      act: (bloc) =>
+          bloc.add(const SupportAttachmentPickRequested('/tmp/a.jpg')),
+      expect: () => [
+        isA<SupportState>().having(
+          (s) => s.pendingAttachments.single.status,
+          'status uploading',
+          SupportUploadStatus.uploading,
+        ),
+        isA<SupportState>()
+            .having(
+              (s) => s.pendingAttachments.single.status,
+              'status ready',
+              SupportUploadStatus.ready,
+            )
+            .having(
+              (s) => s.pendingAttachments.single.remoteKey,
+              'remoteKey',
+              'support/u1/1_a.jpg',
+            ),
+      ],
+    );
+
+    blocTest<SupportBloc, SupportState>(
+      'marque l image en échec quand l upload échoue',
+      build: () {
+        when(
+          () => repository.uploadAttachment(any()),
+        ).thenThrow(Exception('boom'));
+        return buildBloc();
+      },
+      act: (bloc) =>
+          bloc.add(const SupportAttachmentPickRequested('/tmp/a.jpg')),
+      expect: () => [
+        isA<SupportState>().having(
+          (s) => s.pendingAttachments.single.status,
+          'status uploading',
+          SupportUploadStatus.uploading,
+        ),
+        isA<SupportState>().having(
+          (s) => s.pendingAttachments.single.status,
+          'status failed',
+          SupportUploadStatus.failed,
+        ),
+      ],
+    );
+
+    test('fire l event analytics après un upload réussi', () async {
+      when(
+        () => repository.uploadAttachment('/tmp/a.jpg'),
+      ).thenAnswer((_) async => 'support/u1/1_a.jpg');
+      final bloc = buildBloc();
+      bloc.add(const SupportAttachmentPickRequested('/tmp/a.jpg'));
+      await Future<void>.delayed(Duration.zero);
+      verify(
+        () => backend.capture(AnalyticsEvents.supportAttachmentAdded, null),
+      ).called(1);
+      await bloc.close();
+    });
+  });
+
+  group('SupportAttachmentRemoved', () {
+    blocTest<SupportBloc, SupportState>(
+      'retire une image de la liste',
+      build: () => buildBloc(),
+      seed: () => stateWithOneReadyAttachment,
+      act: (bloc) =>
+          bloc.add(const SupportAttachmentRemoved(_readyAttachmentLocalId)),
+      expect: () => [
+        isA<SupportState>().having(
+          (s) => s.pendingAttachments,
+          'pendingAttachments vide',
+          isEmpty,
+        ),
+      ],
+    );
+  });
+
+  group('SupportMessageSendRequested — avec images', () {
+    blocTest<SupportBloc, SupportState>(
+      'envoie les clés des images prêtes puis vide la liste',
+      build: () {
+        when(
+          () => repository.sendMessage('ticket-1', 'Voici', const [
+            _readyAttachmentKey,
+          ]),
+        ).thenAnswer((_) async => _message);
+        when(
+          () => repository.loadTicket('ticket-1'),
+        ).thenAnswer((_) async => _ticket);
+        return buildBloc();
+      },
+      seed: () => stateWithOneReadyAttachment,
+      act: (bloc) => bloc.add(
+        const SupportMessageSendRequested(
+          ticketId: 'ticket-1',
+          content: 'Voici',
+        ),
+      ),
+      verify: (_) {
+        verify(
+          () => repository.sendMessage('ticket-1', 'Voici', const [
+            _readyAttachmentKey,
+          ]),
+        ).called(1);
+      },
+    );
+
+    blocTest<SupportBloc, SupportState>(
+      'refuse d envoyer sur un ticket résolu sans appeler le réseau',
+      build: () => buildBloc(),
+      seed: () => const SupportState(ticket: _resolvedTicket),
+      act: (bloc) => bloc.add(
+        const SupportMessageSendRequested(
+          ticketId: 'ticket-2',
+          content: 'Bonjour',
+        ),
+      ),
+      verify: (_) =>
+          verifyNever(() => repository.sendMessage(any(), any(), any())),
+    );
+  });
+
+  group('canSendWith', () {
+    test('exige du texte ou une image prête, et aucun upload en cours', () {
+      const vide = SupportState();
+
+      // pas de texte, pas d'image → impossible
+      expect(vide.canSendWith(''), isFalse);
+
+      // un upload en cours bloque même avec du texte
+      expect(stateWithUploading.canSendWith('hello'), isFalse);
+
+      // une image prête suffit sans texte
+      expect(stateWithOneReadyAttachment.canSendWith(''), isTrue);
+
+      // une image en échec ne bloque pas mais ne suffit pas non plus
+      expect(stateWithOnlyFailed.canSendWith(''), isFalse);
+
+      // texte seul suffit (pas d'images)
+      expect(vide.canSendWith('bonjour'), isTrue);
+    });
   });
 }

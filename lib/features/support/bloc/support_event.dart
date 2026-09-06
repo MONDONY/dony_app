@@ -51,3 +51,36 @@ final class SupportMessageSendRequested extends SupportEvent {
   @override
   List<Object?> get props => [ticketId, content];
 }
+
+/// Déclenche l'upload d'une image sélectionnée depuis le disque local.
+/// L'upload est asynchrone : le BLoC émet d'abord `uploading`, puis
+/// `ready` (avec la clé distante) ou `failed`.
+final class SupportAttachmentPickRequested extends SupportEvent {
+  const SupportAttachmentPickRequested(this.localPath);
+
+  final String localPath;
+
+  @override
+  List<Object?> get props => [localPath];
+}
+
+/// Retire une image de la liste des pièces jointes en attente.
+final class SupportAttachmentRemoved extends SupportEvent {
+  const SupportAttachmentRemoved(this.localId);
+
+  final String localId;
+
+  @override
+  List<Object?> get props => [localId];
+}
+
+/// Marque le ticket comme lu (envoi silencieux, ne bloque pas la lecture).
+/// Émis à l'ouverture de l'écran de détail, avant ou avec `SupportTicketDetailRequested`.
+final class SupportTicketReadRequested extends SupportEvent {
+  const SupportTicketReadRequested(this.ticketId);
+
+  final String ticketId;
+
+  @override
+  List<Object?> get props => [ticketId];
+}

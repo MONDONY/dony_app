@@ -1,6 +1,8 @@
+import 'package:equatable/equatable.dart';
+
 /// Image jointe à un message support. L'URL est présignée par le backend et
 /// expire au bout d'une heure : ne jamais la mettre en cache sur disque.
-class SupportAttachment {
+class SupportAttachment extends Equatable {
   const SupportAttachment({
     required this.id,
     required this.url,
@@ -18,13 +20,16 @@ class SupportAttachment {
       contentType: json['contentType'] as String? ?? 'image/jpeg',
     );
   }
+
+  @override
+  List<Object?> get props => [id, url, contentType];
 }
 
 enum SupportUploadStatus { uploading, ready, failed }
 
 /// État local d'une image en cours d'envoi, avant qu'elle ne rejoigne un
 /// message. `remoteKey` n'est rempli qu'une fois l'upload terminé.
-class SupportAttachmentUpload {
+class SupportAttachmentUpload extends Equatable {
   const SupportAttachmentUpload({
     required this.localId,
     required this.localPath,
@@ -48,4 +53,7 @@ class SupportAttachmentUpload {
       remoteKey: remoteKey ?? this.remoteKey,
     );
   }
+
+  @override
+  List<Object?> get props => [localId, localPath, status, remoteKey];
 }

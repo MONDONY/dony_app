@@ -40,8 +40,7 @@ class SupportRepository {
       data: {
         'category': category,
         'subject': subject,
-        if (message != null)
-          'message': message, // ignore: use_null_aware_elements
+        'message': message,
         'attachmentKeys': attachmentKeys,
       },
     );

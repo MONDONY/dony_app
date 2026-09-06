@@ -190,6 +190,7 @@ import 'package:dony/features/subscriptions/bloc/traveler_subscribe_bloc.dart';
 import 'package:dony/features/subscriptions/data/subscriptions_remote_datasource.dart';
 import 'package:dony/features/subscriptions/data/subscriptions_repository.dart';
 import 'package:dony/features/support/bloc/support_bloc.dart';
+import 'package:dony/features/support/bloc/support_unread_cubit.dart';
 import 'package:dony/features/support/data/support_repository.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
@@ -636,6 +637,11 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<SupportBloc>(
     () => SupportBloc(getIt<SupportRepository>(), getIt<AnalyticsService>()),
+  );
+  // Singleton : le badge de l'onglet et l'écran de détail partagent
+  // la même instance pour que la pastille s'éteigne à la lecture.
+  getIt.registerLazySingleton<SupportUnreadCubit>(
+    () => SupportUnreadCubit(getIt<SupportRepository>()),
   );
 
   // Settings — Account Deletion

@@ -158,6 +158,10 @@ abstract final class AnalyticsEvents {
   /// Message utilisateur envoyé dans un ticket support existant. Aucune
   /// propriété : le contenu ne part jamais dans l'analytics.
   static const supportTicketMessageSent = 'support_ticket_message_sent';
+
+  /// Image jointe à un message support uploadée avec succès. Aucune propriété
+  /// (ni chemin, ni taille, ni contenu — PII).
+  static const supportAttachmentAdded = 'support_attachment_added';
   static const helpCenterOpened = 'help_center_opened';
   static const helpTutorialOpened = 'help_tutorial_opened';
   static const helpTutorialPlayStarted = 'help_tutorial_play_started';

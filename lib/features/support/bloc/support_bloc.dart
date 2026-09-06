@@ -3,10 +3,12 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/features/support/data/support_attachment.dart';
 import 'package:dony/features/support/data/support_models.dart';
 import 'package:dony/features/support/data/support_repository.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:uuid/uuid.dart';
 
 part 'support_event.dart';
 part 'support_state.dart';
@@ -21,10 +23,14 @@ class SupportBloc extends Bloc<SupportEvent, SupportState> {
     on<SupportTicketCreateRequested>(_onCreateRequested);
     on<SupportTicketDetailRequested>(_onDetailRequested);
     on<SupportMessageSendRequested>(_onMessageSendRequested);
+    on<SupportAttachmentPickRequested>(_onAttachmentPickRequested);
+    on<SupportAttachmentRemoved>(_onAttachmentRemoved);
+    on<SupportTicketReadRequested>(_onTicketReadRequested);
   }
 
   final SupportRepository _repository;
   final AnalyticsService _analytics;
+  static const _uuid = Uuid();
 
   Future<void> _onHomeRequested(
     SupportHomeRequested event,
@@ -92,6 +98,13 @@ class SupportBloc extends Bloc<SupportEvent, SupportState> {
     Emitter<SupportState> emit,
   ) async {
     emit(state.copyWith(detailStatus: SupportViewStatus.loading));
+    // Marquer comme lu AVANT le chargement. Un échec du marquage ne doit
+    // jamais empêcher l'utilisateur de lire son fil.
+    try {
+      await _repository.markRead(event.ticketId);
+    } catch (_) {
+      // silence intentionnel
+    }
     try {
       final ticket = await _repository.loadTicket(event.ticketId);
       emit(
@@ -122,9 +135,15 @@ class SupportBloc extends Bloc<SupportEvent, SupportState> {
       );
       return;
     }
+    // Ne transmettre que les clés des images prêtes ; les images en échec
+    // sont silencieusement ignorées (l'utilisateur les voit en rouge).
+    final readyKeys = state.pendingAttachments
+        .where((a) => a.status == SupportUploadStatus.ready)
+        .map((a) => a.remoteKey!)
+        .toList();
     emit(state.copyWith(sendStatus: SupportActionStatus.submitting));
     try {
-      await _repository.sendMessage(event.ticketId, event.content);
+      await _repository.sendMessage(event.ticketId, event.content, readyKeys);
       unawaited(_analytics.logEvent(AnalyticsEvents.supportTicketMessageSent));
       // Le fil rechargé fait foi : statut mis à jour (WAITING_SUPPORT) et
       // message horodaté par le serveur.
@@ -134,6 +153,7 @@ class SupportBloc extends Bloc<SupportEvent, SupportState> {
           sendStatus: SupportActionStatus.success,
           detailStatus: SupportViewStatus.ready,
           ticket: ticket,
+          pendingAttachments: const [],
         ),
       );
     } catch (e) {
@@ -143,6 +163,71 @@ class SupportBloc extends Bloc<SupportEvent, SupportState> {
           errorMessage: _message(e),
         ),
       );
+    }
+  }
+
+  Future<void> _onAttachmentPickRequested(
+    SupportAttachmentPickRequested event,
+    Emitter<SupportState> emit,
+  ) async {
+    final localId = _uuid.v4();
+    final uploading = SupportAttachmentUpload(
+      localId: localId,
+      localPath: event.localPath,
+      status: SupportUploadStatus.uploading,
+    );
+    emit(
+      state.copyWith(
+        pendingAttachments: [...state.pendingAttachments, uploading],
+      ),
+    );
+    try {
+      final remoteKey = await _repository.uploadAttachment(event.localPath);
+      unawaited(_analytics.logEvent(AnalyticsEvents.supportAttachmentAdded));
+      final updated = state.pendingAttachments
+          .map(
+            (a) => a.localId == localId
+                ? a.copyWith(
+                    status: SupportUploadStatus.ready,
+                    remoteKey: remoteKey,
+                  )
+                : a,
+          )
+          .toList();
+      emit(state.copyWith(pendingAttachments: updated));
+    } catch (_) {
+      final updated = state.pendingAttachments
+          .map(
+            (a) => a.localId == localId
+                ? a.copyWith(status: SupportUploadStatus.failed)
+                : a,
+          )
+          .toList();
+      emit(state.copyWith(pendingAttachments: updated));
+    }
+  }
+
+  void _onAttachmentRemoved(
+    SupportAttachmentRemoved event,
+    Emitter<SupportState> emit,
+  ) {
+    emit(
+      state.copyWith(
+        pendingAttachments: state.pendingAttachments
+            .where((a) => a.localId != event.localId)
+            .toList(),
+      ),
+    );
+  }
+
+  Future<void> _onTicketReadRequested(
+    SupportTicketReadRequested event,
+    Emitter<SupportState> emit,
+  ) async {
+    try {
+      await _repository.markRead(event.ticketId);
+    } catch (_) {
+      // silence intentionnel : le marquage ne doit jamais bloquer la lecture
     }
   }
 
