@@ -244,7 +244,7 @@ class _AttachmentsGrid extends StatelessWidget {
         for (final att in attachments)
           Semantics(
             button: true,
-            label: 'Voir l\'image en plein ecran',
+            label: 'Voir l\'image en plein écran',
             child: GestureDetector(
               onTap: () => _openViewer(context, attachments, att.id),
               child: ClipRRect(
@@ -540,7 +540,10 @@ class _MessageComposerState extends State<_MessageComposer> {
   void _send(BuildContext context, SupportState state) {
     if (!state.canSendWith(_draft) || widget.sending) return;
     context.read<SupportBloc>().add(
-      SupportMessageSendRequested(ticketId: widget.ticketId, content: _draft),
+      SupportMessageSendRequested(
+        ticketId: widget.ticketId,
+        content: _draft.trim(),
+      ),
     );
   }
 
@@ -566,14 +569,14 @@ class _MessageComposerState extends State<_MessageComposer> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Vignettes + trombone (seulement si des images sont en attente
-                // ou toujours — le picker gère lui-même son état vide)
+                // Vignettes au-dessus du champ de saisie : chaque vignette fait
+                // 64 px + marge. À quatre images dans la même Row que le champ,
+                // il reste moins de 20 px pour saisir du texte sur 375 pt.
+                const SupportAttachmentPicker(),
+                // Rangée champ de saisie + bouton d'envoi
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    // Trombone (désactivé à 4 images)
-                    SupportAttachmentPicker(ticketId: widget.ticketId),
-                    const SizedBox(width: 4),
                     Expanded(
                       child: DonyTextField(
                         controller: widget.controller,

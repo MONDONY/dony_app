@@ -422,6 +422,61 @@ void main() {
     expect(find.byKey(const Key('support-attachment-att-2')), findsOneWidget);
   });
 
+  testWidgets(
+    'quatre vignettes au-dessus du champ ne debordent pas sur 375 pt',
+    (tester) async {
+      // Reproduit la largeur d'un iPhone standard (375 points logiques).
+      // Avant le fix, les vignettes étaient dans la même Row que le champ :
+      // 4 × (64 + 8) = 288 px + bouton trombone (48) + bouton envoi (48) +
+      // espacements > 375 → overflow garanti.
+      tester.view.physicalSize = const Size(375 * 3, 812 * 3);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      const fourAttachments = [
+        SupportAttachmentUpload(
+          localId: 'a1',
+          localPath: '/tmp/1.jpg',
+          status: SupportUploadStatus.ready,
+          remoteKey: 'k1',
+        ),
+        SupportAttachmentUpload(
+          localId: 'a2',
+          localPath: '/tmp/2.jpg',
+          status: SupportUploadStatus.ready,
+          remoteKey: 'k2',
+        ),
+        SupportAttachmentUpload(
+          localId: 'a3',
+          localPath: '/tmp/3.jpg',
+          status: SupportUploadStatus.ready,
+          remoteKey: 'k3',
+        ),
+        SupportAttachmentUpload(
+          localId: 'a4',
+          localPath: '/tmp/4.jpg',
+          status: SupportUploadStatus.ready,
+          remoteKey: 'k4',
+        ),
+      ];
+
+      stubState(
+        const SupportState(
+          detailStatus: SupportViewStatus.ready,
+          ticket: _openTicket,
+          pendingAttachments: fourAttachments,
+        ),
+      );
+
+      await tester.pumpWidget(_harness(bloc));
+      await tester.pump();
+
+      // Aucune exception de débordement (overflow RenderFlex).
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets('le trombone se desactive a quatre images', (tester) async {
     const fourAttachments = [
       SupportAttachmentUpload(

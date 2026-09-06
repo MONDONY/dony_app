@@ -19,9 +19,7 @@ import 'package:image_picker/image_picker.dart';
 /// - Ne jamais appeler depuis un ticket résolu : [_TicketThread] ne l'instancie
 ///   que quand `!ticket.isResolved`.
 class SupportAttachmentPicker extends StatelessWidget {
-  const SupportAttachmentPicker({required this.ticketId, super.key});
-
-  final String ticketId;
+  const SupportAttachmentPicker({super.key});
 
   static const int _maxAttachments = 4;
 
@@ -37,7 +35,7 @@ class SupportAttachmentPicker extends StatelessWidget {
       if (context.mounted) {
         DonySnackbar.show(
           context,
-          message: 'Image non supportee ou trop volumineuse',
+          message: 'Image non supportée ou trop volumineuse',
           type: DonySnackbarType.error,
         );
       }
@@ -206,10 +204,13 @@ class _AttachmentThumb extends StatelessWidget {
                 ),
               ),
             ),
-          // Bouton de retrait (44 × 44 tap target, visuel 20 × 20)
+          // Bouton de retrait (zone de tap 44 × 44, visuel 20 × 20).
+          // Positionné à top: 0 / right: 0 pour rester dans les bornes du Stack
+          // de 64 × 64 : Clip.none n'affecte que la peinture, pas le hit-test,
+          // et un bouton à -18/-18 réduit la zone tapable à ~26 × 26.
           Positioned(
-            top: -18,
-            right: -18,
+            top: 0,
+            right: 0,
             child: Semantics(
               button: true,
               container: true,
