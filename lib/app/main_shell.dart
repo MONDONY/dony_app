@@ -137,6 +137,8 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
       // un pull-to-refresh manuel.
       _lastMessagesRefreshAt = DateTime.now();
       getIt<ConversationListBloc>().add(const ConversationsLoadRequested());
+      // Rafraîchir aussi le compteur de non-lus support (même onglet).
+      unawaited(getIt<SupportUnreadCubit>().refresh());
     }
     widget.navigationShell.goBranch(
       index,
@@ -161,6 +163,8 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
       context.read<NotificationBloc>().add(const NotificationsLoadRequested());
       context.read<RatingBloc>().add(const PendingRatingChecked());
       context.read<StripeAccountBloc>().add(const StripeAccountStatusLoaded());
+      // Initialise le compteur de non-lus support au démarrage du shell.
+      unawaited(getIt<SupportUnreadCubit>().refresh());
       // Alimente le point d'attention de l'onglet Activités dès le démarrage,
       // sans attendre que l'utilisateur ouvre le hub.
       _loadActivityIndicators();

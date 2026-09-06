@@ -574,6 +574,11 @@ class NotificationService {
   void _handleForegroundMessage(RemoteMessage message) {
     _ackIfCritical(message.data);
     _newNotificationController.add(null);
+    // Rafraîchir le compteur support dès réception au premier plan, sans
+    // attendre que l'utilisateur tape sur la notification.
+    if (message.data['type'] == 'SUPPORT_MESSAGE') {
+      unawaited(getIt<SupportUnreadCubit>().refresh());
+    }
     final notification = message.notification;
     if (notification == null) return;
 
