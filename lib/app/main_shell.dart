@@ -31,6 +31,7 @@ import 'package:dony/features/ratings/bloc/rating_state.dart';
 import 'package:dony/features/ratings/presentation/widgets/rating_bottom_sheet.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/stripe_account/presentation/widgets/account_rejected_banner.dart';
+import 'package:dony/features/support/bloc/support_unread_cubit.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -439,13 +440,23 @@ class _DonyBottomNav extends StatelessWidget {
                                     stream: getIt<FirestoreChatRepository>()
                                         .totalUnreadStream(uid),
                                     builder: (context, snapshot) {
-                                      return DonyNavItem(
-                                        iconAsset: 'message-circle',
-                                        label: 'Messages',
-                                        index: 3,
-                                        currentIndex: currentIndex,
-                                        onTap: () => onTap(3),
-                                        badgeCount: snapshot.data ?? 0,
+                                      return BlocBuilder<
+                                        SupportUnreadCubit,
+                                        int
+                                      >(
+                                        bloc: getIt<SupportUnreadCubit>(),
+                                        builder: (context, supportUnread) {
+                                          return DonyNavItem(
+                                            iconAsset: 'message-circle',
+                                            label: 'Messages',
+                                            index: 3,
+                                            currentIndex: currentIndex,
+                                            onTap: () => onTap(3),
+                                            badgeCount:
+                                                (snapshot.data ?? 0) +
+                                                supportUnread,
+                                          );
+                                        },
                                       );
                                     },
                                   );

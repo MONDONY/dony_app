@@ -146,6 +146,12 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
     'STRIPE_ONBOARDING_INCOMPLETE' => '/connect/onboarding/intro',
     'CARD_EXPIRING' => '/payments/commission-method',
 
+    // Message de l'équipe support → détail du ticket si l'id est valide,
+    // sinon la liste des tickets.
+    'SUPPORT_MESSAGE' when _isUuid(field('ticketId')) =>
+      '/support/tickets/${field('ticketId')}',
+    'SUPPORT_MESSAGE' => '/support',
+
     // PROMO et types inconnus : aucune cible connue, reste sur l'inbox
     _ => null,
   };

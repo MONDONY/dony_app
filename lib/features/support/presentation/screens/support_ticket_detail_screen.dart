@@ -3,7 +3,9 @@ import 'package:dony/core/design/widgets/dony_badge.dart';
 import 'package:dony/core/design/widgets/dony_empty_state.dart';
 import 'package:dony/core/design/widgets/dony_snackbar.dart';
 import 'package:dony/core/design/widgets/dony_text_field.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/support/bloc/support_bloc.dart';
+import 'package:dony/features/support/bloc/support_unread_cubit.dart';
 import 'package:dony/features/support/data/support_models.dart';
 import 'package:dony/features/support/presentation/screens/support_home_screen.dart';
 import 'package:flutter/material.dart';
@@ -53,6 +55,13 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
           }
           if (state.sendStatus == SupportActionStatus.success) {
             _messageController.clear();
+          }
+          // À l'ouverture du fil, éteindre la pastille sans attendre le
+          // serveur : le BLoC a déjà marqué les messages comme lus (Task 9).
+          if (state.detailStatus == SupportViewStatus.ready &&
+              state.ticket != null &&
+              state.ticket!.unreadCount > 0) {
+            getIt<SupportUnreadCubit>().decrementBy(state.ticket!.unreadCount);
           }
         },
         builder: (context, state) => switch (state.detailStatus) {
