@@ -26,6 +26,11 @@ class SupportTicketDetailScreen extends StatefulWidget {
 class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
   final _messageController = TextEditingController();
 
+  /// Garde-fou : le décrément de la pastille ne s'exécute qu'une seule fois
+  /// par instance d'écran, même si le BLoC émet plusieurs états `ready`
+  /// (ex. : cycle submitting → success d'un envoi de réponse).
+  bool _unreadDeducted = false;
+
   @override
   void dispose() {
     _messageController.dispose();
@@ -58,9 +63,14 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
           }
           // À l'ouverture du fil, éteindre la pastille sans attendre le
           // serveur : le BLoC a déjà marqué les messages comme lus (Task 9).
-          if (state.detailStatus == SupportViewStatus.ready &&
+          // Le flag _unreadDeducted garantit que le décrément ne s'exécute
+          // qu'une fois par instance d'écran, même si le BLoC réémet un état
+          // `ready` lors d'un cycle sendStatus (submitting → success).
+          if (!_unreadDeducted &&
+              state.detailStatus == SupportViewStatus.ready &&
               state.ticket != null &&
               state.ticket!.unreadCount > 0) {
+            _unreadDeducted = true;
             getIt<SupportUnreadCubit>().decrementBy(state.ticket!.unreadCount);
           }
         },
