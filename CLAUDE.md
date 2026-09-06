@@ -419,8 +419,8 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `reviews_filtered` | MyReviewsBloc._onStarFilterToggled — tap sur une ligne de distribution dans « Mes avis reçus » (propriété `stars`: note 1–5 ou `all` si filtre retiré) |
 | `faq_question_opened` | FaqBloc — ouverture d’une réponse du Centre d’aide (propriétés `category`, `question_id`, identifiants non sensibles) |
 | `faq_contact_requested` | FaqBloc — tap sur « Contacter le support » depuis le Centre d’aide |
-| `support_email_composer_opened` | SupportContactBloc — brouillon support ouvert dans l’application Mail (propriété `category`, aucun texte libre) |
-| `support_contact_failed` | SupportContactBloc — échec d’ouverture de l’application Mail (propriétés `category`, `reason`, aucun texte libre) |
+| `support_ticket_created` | SupportBloc._onCreateRequested — ticket support créé avec succès (propriété `category`, énumération fermée backend ; jamais le sujet ni le message) |
+| `support_ticket_message_sent` | SupportBloc._onMessageSendRequested — message utilisateur envoyé dans un ticket existant, avant rechargement du fil. Aucune propriété : le contenu ne part jamais dans l'analytics |
 | `trip_matching_viewed` | PackageRequestSearchBloc._onFiltersChanged — chargement d'une recherche colis filtrée « Pour mes trajets » (propriété `count`) |
 | `package_match_alert_toggled` | NotificationPrefsBloc._onPackageMatchAlertToggled — ligne « Nouveaux colis compatibles » des réglages de notifications (propriété `enabled`) |
 | `announcements_inbox_opened` | AnnouncementsInboxBloc._onLoad — boîte « Annonces Yadony » chargée depuis la carte du sheet de notifications (propriétés `count`, `unread`), jamais le texte d'une annonce |

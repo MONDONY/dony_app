@@ -144,7 +144,6 @@ import 'package:dony/features/profile/bloc/faq_bloc.dart';
 import 'package:dony/features/profile/bloc/help_center_bloc.dart';
 import 'package:dony/features/profile/bloc/pro_stats_bloc.dart';
 import 'package:dony/features/profile/bloc/profile_public_bloc.dart';
-import 'package:dony/features/profile/bloc/support_contact_bloc.dart';
 import 'package:dony/features/profile/bloc/upgrade_to_pro_bloc.dart';
 import 'package:dony/features/profile/bloc/user_reviews_cubit.dart';
 import 'package:dony/features/profile/data/datasources/help_center_remote_config_datasource.dart';
@@ -190,6 +189,8 @@ import 'package:dony/features/subscriptions/bloc/traveler_hub_bloc.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_subscribe_bloc.dart';
 import 'package:dony/features/subscriptions/data/subscriptions_remote_datasource.dart';
 import 'package:dony/features/subscriptions/data/subscriptions_repository.dart';
+import 'package:dony/features/support/bloc/support_bloc.dart';
+import 'package:dony/features/support/data/support_repository.dart';
 import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
@@ -615,9 +616,6 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerFactory<ProStatsBloc>(
     () => ProStatsBloc(getIt<ProStatsRepository>()),
   );
-  getIt.registerFactory<SupportContactBloc>(
-    () => SupportContactBloc(getIt<AnalyticsService>()),
-  );
   getIt.registerFactory<FaqBloc>(() => FaqBloc(getIt<AnalyticsService>()));
   getIt.registerLazySingleton<HelpCenterConfigSource>(
     () => HelpCenterRemoteConfigDatasource(),
@@ -630,6 +628,14 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<HelpCenterRepository>(),
       getIt<AnalyticsService>(),
     ),
+  );
+
+  // Support (tickets utilisateur ↔ admin)
+  getIt.registerLazySingleton<SupportRepository>(
+    () => SupportRepository(getIt<ApiClient>()),
+  );
+  getIt.registerFactory<SupportBloc>(
+    () => SupportBloc(getIt<SupportRepository>(), getIt<AnalyticsService>()),
   );
 
   // Settings — Account Deletion

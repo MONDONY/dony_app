@@ -386,7 +386,7 @@ class ProfileHelpSection extends StatelessWidget {
               label: 'Contacter le support',
               subtitle: 'Réponse généralement sous 24 h',
               showDivider: false,
-              onTap: () => context.push('/profile/help/contact'),
+              onTap: () => context.push('/support'),
             ),
           ],
         ),
