@@ -11,9 +11,19 @@
 //   GID_CLIENT_ID / GID_REVERSED_CLIENT_ID
 //     → GoogleService-Info.plist de yadony-prod, clés CLIENT_ID et REVERSED_CLIENT_ID
 //   FIREBASE_PHONE_AUTH_URL_SCHEME
-//     → GoogleService-Info.plist de yadony-prod, clé GOOGLE_APP_ID, points remplacés par tirets
+//     → GoogleService-Info.plist de yadony-prod, clé GOOGLE_APP_ID (ex.
+//       "1:799389399791:ios:xxxx"), préfixé de "app-" et les DEUX-POINTS
+//       remplacés par des tirets : "app-1-799389399791-ios-xxxx". C'est le
+//       format documenté par Firebase pour le fallback URL scheme du phone
+//       auth — sans le préfixe "app-", App Store Connect rejette l'upload
+//       (409 « URL schemes ... need to begin with an alphabetic character »),
+//       et ça n'est détecté qu'à l'upload, jamais à la compilation.
 //   GOOGLE_MAPS_API_KEY
 //     → console Google Cloud du projet yadony-prod, clé restreinte au bundle com.yadony.yadony
+//
+// Même fichier réutilisé pour un build STAGING (tool/verify_ios_release_config.sh
+// compare au projet réellement compilé, pas toujours prod) : dans ce cas prendre
+// les quatre valeurs du plist et de l'env STAGING — voir BUILD_IPA_TESTFLIGHT.md.
 
 GID_CLIENT_ID=REMPLIR
 GID_REVERSED_CLIENT_ID=REMPLIR
