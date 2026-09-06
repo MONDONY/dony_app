@@ -421,6 +421,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `faq_contact_requested` | FaqBloc — tap sur « Contacter le support » depuis le Centre d’aide |
 | `support_ticket_created` | SupportBloc._onCreateRequested — ticket support créé avec succès (propriété `category`, énumération fermée backend ; jamais le sujet ni le message) |
 | `support_ticket_message_sent` | SupportBloc._onMessageSendRequested — message utilisateur envoyé dans un ticket existant, avant rechargement du fil. Aucune propriété : le contenu ne part jamais dans l'analytics |
+| `support_attachment_added` | SupportBloc — image jointe uploadée avec succès dans un fil support. Aucune propriété : ni chemin, ni taille, ni contenu ne partent dans l'analytics |
 | `trip_matching_viewed` | PackageRequestSearchBloc._onFiltersChanged — chargement d'une recherche colis filtrée « Pour mes trajets » (propriété `count`) |
 | `package_match_alert_toggled` | NotificationPrefsBloc._onPackageMatchAlertToggled — ligne « Nouveaux colis compatibles » des réglages de notifications (propriété `enabled`) |
 | `announcements_inbox_opened` | AnnouncementsInboxBloc._onLoad — boîte « Annonces Yadony » chargée depuis la carte du sheet de notifications (propriétés `count`, `unread`), jamais le texte d'une annonce |

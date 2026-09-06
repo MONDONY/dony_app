@@ -4,9 +4,11 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/support/bloc/support_bloc.dart';
 import 'package:dony/features/support/bloc/support_unread_cubit.dart';
+import 'package:dony/features/support/data/support_attachment.dart';
 import 'package:dony/features/support/data/support_models.dart';
 import 'package:dony/features/support/data/support_repository.dart';
 import 'package:dony/features/support/presentation/screens/support_ticket_detail_screen.dart';
+import 'package:dony/features/support/presentation/widgets/support_attachment_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -53,6 +55,53 @@ const _resolvedTicket = SupportTicket(
   subject: 'Paiement bloque',
   status: SupportTicketStatuses.resolved,
   messages: [_userMessage, _adminMessage],
+);
+
+// Pièces jointes pendantes pour les nouveaux tests
+const _uploadingAttachment = SupportAttachmentUpload(
+  localId: 'local-1',
+  localPath: '/tmp/test.jpg',
+  status: SupportUploadStatus.uploading,
+);
+
+const _readyAttachment = SupportAttachmentUpload(
+  localId: 'local-2',
+  localPath: '/tmp/test2.jpg',
+  status: SupportUploadStatus.ready,
+  remoteKey: 'remote/key.jpg',
+);
+
+const _failedAttachment = SupportAttachmentUpload(
+  localId: 'local-3',
+  localPath: '/tmp/test3.jpg',
+  status: SupportUploadStatus.failed,
+);
+
+// Message avec pièces jointes (URLs factices pour le test widget)
+const _attachedMessage = SupportMessage(
+  id: 'message-3',
+  authorType: 'USER',
+  content: 'Voici les photos.',
+  attachments: [
+    SupportAttachment(
+      id: 'att-1',
+      url: 'https://example.com/img1.jpg',
+      contentType: 'image/jpeg',
+    ),
+    SupportAttachment(
+      id: 'att-2',
+      url: 'https://example.com/img2.jpg',
+      contentType: 'image/jpeg',
+    ),
+  ],
+);
+
+const _ticketWithAttachedMessage = SupportTicket(
+  id: 'ticket-1',
+  category: 'PAYMENT',
+  subject: 'Paiement bloque',
+  status: SupportTicketStatuses.waitingUser,
+  messages: [_attachedMessage],
 );
 
 Widget _harness(SupportBloc bloc) {
@@ -242,5 +291,196 @@ void main() {
 
     expect(find.text('Ticket introuvable'), findsOneWidget);
     expect(find.text('Réessayer'), findsOneWidget);
+  });
+
+  // ---------------------------------------------------------------------------
+  // Nouveaux tests Task 11 : pièces jointes
+  // ---------------------------------------------------------------------------
+
+  testWidgets('le bouton d envoi reste inerte pendant un upload', (
+    tester,
+  ) async {
+    // État : une image en cours d'upload => envoi bloqué
+    stubState(
+      const SupportState(
+        detailStatus: SupportViewStatus.ready,
+        ticket: _openTicket,
+        pendingAttachments: [_uploadingAttachment],
+      ),
+    );
+
+    await tester.pumpWidget(_harness(bloc));
+    // Pas de pumpAndSettle : le CircularProgressIndicator tourne en continu
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    // Le bouton Envoyer doit être inactif (onPressed null) car upload en cours
+    final sendFinder = find.byTooltip('Envoyer');
+    expect(sendFinder, findsOneWidget);
+    final sendParent =
+        tester.widget(
+              find
+                  .ancestor(of: sendFinder, matching: find.byType(IconButton))
+                  .first,
+            )
+            as IconButton;
+    expect(sendParent.onPressed, isNull);
+  });
+
+  testWidgets('le bouton s active avec une image prete et aucun texte', (
+    tester,
+  ) async {
+    // État : une image prête, champ texte vide => envoi actif
+    stubState(
+      const SupportState(
+        detailStatus: SupportViewStatus.ready,
+        ticket: _openTicket,
+        pendingAttachments: [_readyAttachment],
+      ),
+    );
+
+    await tester.pumpWidget(_harness(bloc));
+    await tester.pump();
+
+    // Le bouton doit être actif grâce à l'image prête
+    final sendFinder = find.byTooltip('Envoyer');
+    expect(sendFinder, findsOneWidget);
+    final sendParent =
+        tester.widget(
+              find
+                  .ancestor(of: sendFinder, matching: find.byType(IconButton))
+                  .first,
+            )
+            as IconButton;
+    expect(sendParent.onPressed, isNotNull);
+  });
+
+  testWidgets('une image en echec est retirable et ne bloque pas l envoi', (
+    tester,
+  ) async {
+    // État : une image en échec => bouton de retrait présent
+    stubState(
+      const SupportState(
+        detailStatus: SupportViewStatus.ready,
+        ticket: _openTicket,
+        pendingAttachments: [_failedAttachment],
+      ),
+    );
+
+    await tester.pumpWidget(_harness(bloc));
+    await tester.pump();
+
+    // Vérifier qu'un bouton de retrait est présent
+    expect(find.byKey(const Key('remove-attachment-local-3')), findsOneWidget);
+
+    // Taper dans le champ pour activer le bouton d'envoi
+    await tester.enterText(find.byType(TextField), 'un message');
+    await tester.pump();
+
+    // Bouton d'envoi doit être actif (texte saisi + image en échec ne bloque pas)
+    final sendFinder = find.byTooltip('Envoyer');
+    expect(sendFinder, findsOneWidget);
+    final sendParent =
+        tester.widget(
+              find
+                  .ancestor(of: sendFinder, matching: find.byType(IconButton))
+                  .first,
+            )
+            as IconButton;
+    expect(sendParent.onPressed, isNotNull);
+  });
+
+  testWidgets('un ticket resolu n offre ni champ ni trombone', (tester) async {
+    stubState(
+      const SupportState(
+        detailStatus: SupportViewStatus.ready,
+        ticket: _resolvedTicket,
+      ),
+    );
+
+    await tester.pumpWidget(_harness(bloc));
+    await tester.pumpAndSettle();
+
+    // Ni champ de saisie ni trombone
+    expect(find.byType(TextField), findsNothing);
+    expect(find.byType(SupportAttachmentPicker), findsNothing);
+  });
+
+  testWidgets('affiche les images d un message en grille', (tester) async {
+    stubState(
+      const SupportState(
+        detailStatus: SupportViewStatus.ready,
+        ticket: _ticketWithAttachedMessage,
+      ),
+    );
+
+    await tester.pumpWidget(_harness(bloc));
+    await tester.pumpAndSettle();
+
+    // Deux images réseau doivent être rendues (via Image.network ou CachedNetworkImage)
+    expect(find.byKey(const Key('support-attachment-att-1')), findsOneWidget);
+    expect(find.byKey(const Key('support-attachment-att-2')), findsOneWidget);
+  });
+
+  testWidgets('le trombone se desactive a quatre images', (tester) async {
+    const fourAttachments = [
+      SupportAttachmentUpload(
+        localId: 'a1',
+        localPath: '/tmp/1.jpg',
+        status: SupportUploadStatus.ready,
+        remoteKey: 'k1',
+      ),
+      SupportAttachmentUpload(
+        localId: 'a2',
+        localPath: '/tmp/2.jpg',
+        status: SupportUploadStatus.ready,
+        remoteKey: 'k2',
+      ),
+      SupportAttachmentUpload(
+        localId: 'a3',
+        localPath: '/tmp/3.jpg',
+        status: SupportUploadStatus.ready,
+        remoteKey: 'k3',
+      ),
+      SupportAttachmentUpload(
+        localId: 'a4',
+        localPath: '/tmp/4.jpg',
+        status: SupportUploadStatus.ready,
+        remoteKey: 'k4',
+      ),
+    ];
+
+    stubState(
+      const SupportState(
+        detailStatus: SupportViewStatus.ready,
+        ticket: _openTicket,
+        pendingAttachments: fourAttachments,
+      ),
+    );
+
+    await tester.pumpWidget(_harness(bloc));
+    await tester.pump();
+
+    // A 4 images, le trombone est soit absent soit désactivé.
+    // Le SupportAttachmentPicker n'affiche le bouton inline que si canAdd.
+    // Ici canAdd == false donc le bouton trombone ne doit pas être actif.
+    final tromboneFinder = find.byTooltip('Joindre une image');
+    if (tromboneFinder.evaluate().isNotEmpty) {
+      // Si le bouton existe encore (variante UI), il doit être désactivé
+      final tromboneBtn =
+          tester.widget(
+                find
+                    .ancestor(
+                      of: tromboneFinder,
+                      matching: find.byType(IconButton),
+                    )
+                    .first,
+              )
+              as IconButton;
+      expect(tromboneBtn.onPressed, isNull);
+    } else {
+      // Le bouton a été retiré de l'arbre : cible atteinte
+      expect(tromboneFinder, findsNothing);
+    }
   });
 }
