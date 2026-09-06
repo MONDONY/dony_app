@@ -2,6 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/support/bloc/support_bloc.dart';
 import 'package:dony/features/support/bloc/support_unread_cubit.dart';
+import 'package:dony/features/support/data/support_attachment.dart';
 import 'package:dony/features/support/data/support_models.dart';
 import 'package:dony/features/support/presentation/screens/support_home_screen.dart';
 import 'package:dony/features/support/presentation/widgets/support_attachment_picker.dart';
@@ -206,8 +207,9 @@ class _MessageBubble extends StatelessWidget {
                 ),
               ),
             // Grille des images jointes. L'URL est présignée (expire en 1 h) :
-            // on utilise Image.network avec cacheKey fondé sur l'identifiant de
-            // la pièce jointe (stable), pas sur l'URL (volatile).
+            // on utilise Image.network qui maintient un cache mémoire (keyed
+            // par URL). Aucun cache disque : les URLs présignées expirent après
+            // 1 h, et une URL expirée en cache disque retournerait un 403.
             if (message.attachments.isNotEmpty) ...[
               if (message.content.isNotEmpty) const SizedBox(height: 6),
               _AttachmentsGrid(message: message),
@@ -291,7 +293,7 @@ class _AttachmentsGrid extends StatelessWidget {
 
   void _openViewer(
     BuildContext context,
-    List<dynamic> attachments,
+    List<SupportAttachment> attachments,
     String currentId,
   ) {
     final initialIndex = attachments
@@ -315,7 +317,7 @@ class _AttachmentsGrid extends StatelessWidget {
 class _SupportImageViewer extends StatefulWidget {
   const _SupportImageViewer({required this.attachments, this.initialIndex = 0});
 
-  final List<dynamic> attachments;
+  final List<SupportAttachment> attachments;
   final int initialIndex;
 
   @override
@@ -416,7 +418,7 @@ class _SupportImageViewerState extends State<_SupportImageViewer> {
                         itemCount: count,
                         onPageChanged: (i) => _index.value = i,
                         itemBuilder: (_, i) => Image.network(
-                          widget.attachments[i].url as String,
+                          widget.attachments[i].url,
                           fit: BoxFit.cover,
                           loadingBuilder: (_, child, progress) {
                             if (progress == null) return child;

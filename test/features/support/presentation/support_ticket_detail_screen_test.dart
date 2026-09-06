@@ -461,26 +461,9 @@ void main() {
     await tester.pumpWidget(_harness(bloc));
     await tester.pump();
 
-    // A 4 images, le trombone est soit absent soit désactivé.
+    // A 4 images, le trombone doit être absent du widget tree car canAdd == false.
     // Le SupportAttachmentPicker n'affiche le bouton inline que si canAdd.
-    // Ici canAdd == false donc le bouton trombone ne doit pas être actif.
-    final tromboneFinder = find.byTooltip('Joindre une image');
-    if (tromboneFinder.evaluate().isNotEmpty) {
-      // Si le bouton existe encore (variante UI), il doit être désactivé
-      final tromboneBtn =
-          tester.widget(
-                find
-                    .ancestor(
-                      of: tromboneFinder,
-                      matching: find.byType(IconButton),
-                    )
-                    .first,
-              )
-              as IconButton;
-      expect(tromboneBtn.onPressed, isNull);
-    } else {
-      // Le bouton a été retiré de l'arbre : cible atteinte
-      expect(tromboneFinder, findsNothing);
-    }
+    final addButtonFinder = find.byTooltip('Joindre une image');
+    expect(addButtonFinder, findsNothing);
   });
 }
