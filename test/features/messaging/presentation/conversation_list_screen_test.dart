@@ -1,12 +1,16 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/design/widgets/dony_skeleton.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_event.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_state.dart';
 import 'package:dony/features/messaging/data/models/conversation_model.dart';
 import 'package:dony/features/messaging/presentation/conversation_list_screen.dart';
+import 'package:dony/features/support/bloc/support_unread_cubit.dart';
+import 'package:dony/features/support/data/support_repository.dart';
+import 'package:dony/features/support/presentation/widgets/support_conversation_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -20,6 +24,8 @@ class MockConversationListBloc
 
 class _FakeConversationListEvent extends Fake
     implements ConversationListEvent {}
+
+class _MockSupportRepository extends Mock implements SupportRepository {}
 
 const _participant = ParticipantModel(id: 'uid-1', name: 'Aïcha Bah');
 final _conv = ConversationModel(
@@ -78,6 +84,14 @@ GoRouter _buildRouter(ConversationListBloc bloc) => GoRouter(
 );
 
 Future<void> _pump(WidgetTester tester, ConversationListBloc bloc) async {
+  // La tuile Support Yadony épinglée en tête consomme ~70 px. On agrandit la
+  // surface de test pour éviter que les états « vide » ou « erreur » ne causent
+  // un overflow de rendu (qui ferait échouer le test).
+  tester.view.physicalSize = const Size(800, 1400);
+  tester.view.devicePixelRatio = 1.0;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
+
   await tester.pumpWidget(
     MaterialApp.router(
       theme: AppTheme.light(),
@@ -96,13 +110,33 @@ void main() {
   });
 
   late MockConversationListBloc bloc;
+  late _MockSupportRepository mockSupportRepository;
+  late SupportUnreadCubit supportUnreadCubit;
 
   setUp(() {
     bloc = MockConversationListBloc();
     when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
+
+    // Enregistre SupportUnreadCubit dans GetIt pour que ConversationListScreen
+    // puisse l'obtenir via getIt<SupportUnreadCubit>().
+    mockSupportRepository = _MockSupportRepository();
+    when(
+      () => mockSupportRepository.loadUnreadCount(),
+    ).thenAnswer((_) async => 0);
+    supportUnreadCubit = SupportUnreadCubit(mockSupportRepository);
+    if (getIt.isRegistered<SupportUnreadCubit>()) {
+      getIt.unregister<SupportUnreadCubit>();
+    }
+    getIt.registerLazySingleton<SupportUnreadCubit>(() => supportUnreadCubit);
   });
 
-  tearDown(() => bloc.close());
+  tearDown(() async {
+    await bloc.close();
+    if (getIt.isRegistered<SupportUnreadCubit>()) {
+      getIt.unregister<SupportUnreadCubit>();
+    }
+    await supportUnreadCubit.close();
+  });
 
   group('ConversationListScreen', () {
     testWidgets('affiche le header Messages dans tous les états', (
@@ -405,6 +439,22 @@ void main() {
       verify(
         () => bloc.add(const ConversationsLoadRequested()),
       ).called(greaterThanOrEqualTo(1));
+    });
+
+    testWidgets('affiche la ligne épinglée Support Yadony en tête de liste', (
+      tester,
+    ) async {
+      when(() => bloc.state).thenReturn(const ConversationListLoaded([]));
+      await _pump(tester, bloc);
+
+      expect(
+        find.byType(SupportConversationTile),
+        findsOneWidget,
+        reason:
+            'La tuile Support Yadony doit toujours être présente en tête, '
+            'indépendamment de la liste des conversations.',
+      );
+      expect(find.text('Support Yadony'), findsOneWidget);
     });
   });
 }
