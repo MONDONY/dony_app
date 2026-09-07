@@ -4,6 +4,7 @@ import 'dart:io' show Platform;
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:dony/core/config/api_config.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/firebase/firebase_options.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/core/services/device_id_service.dart';
@@ -12,6 +13,7 @@ import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/features/notifications/data/notification_repository.dart';
 import 'package:dony/features/notifications/notification_route_resolver.dart';
 import 'package:dony/features/subscriptions/data/subscription_badge_consumer.dart';
+import 'package:dony/features/support/bloc/support_unread_cubit.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -572,6 +574,11 @@ class NotificationService {
   void _handleForegroundMessage(RemoteMessage message) {
     _ackIfCritical(message.data);
     _newNotificationController.add(null);
+    // Rafraîchir le compteur support dès réception au premier plan, sans
+    // attendre que l'utilisateur tape sur la notification.
+    if (message.data['type'] == 'SUPPORT_MESSAGE') {
+      unawaited(getIt<SupportUnreadCubit>().refresh());
+    }
     final notification = message.notification;
     if (notification == null) return;
 
@@ -605,6 +612,10 @@ class NotificationService {
     unawaited(
       consumeSubscriptionBadge(message.data['type'] as String?, message.data),
     );
+    // Message support : rafraîchir le compteur de non-lus dès le tap.
+    if (message.data['type'] == 'SUPPORT_MESSAGE') {
+      unawaited(getIt<SupportUnreadCubit>().refresh());
+    }
     final route = _routeForMessage(message.data);
     if (route != null) {
       _navigationController.add(route);

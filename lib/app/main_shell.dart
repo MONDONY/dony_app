@@ -31,6 +31,7 @@ import 'package:dony/features/ratings/bloc/rating_state.dart';
 import 'package:dony/features/ratings/presentation/widgets/rating_bottom_sheet.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/stripe_account/presentation/widgets/account_rejected_banner.dart';
+import 'package:dony/features/support/bloc/support_unread_cubit.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -136,6 +137,8 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
       // un pull-to-refresh manuel.
       _lastMessagesRefreshAt = DateTime.now();
       getIt<ConversationListBloc>().add(const ConversationsLoadRequested());
+      // Rafraîchir aussi le compteur de non-lus support (même onglet).
+      unawaited(getIt<SupportUnreadCubit>().refresh());
     }
     widget.navigationShell.goBranch(
       index,
@@ -160,6 +163,8 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
       context.read<NotificationBloc>().add(const NotificationsLoadRequested());
       context.read<RatingBloc>().add(const PendingRatingChecked());
       context.read<StripeAccountBloc>().add(const StripeAccountStatusLoaded());
+      // Initialise le compteur de non-lus support au démarrage du shell.
+      unawaited(getIt<SupportUnreadCubit>().refresh());
       // Alimente le point d'attention de l'onglet Activités dès le démarrage,
       // sans attendre que l'utilisateur ouvre le hub.
       _loadActivityIndicators();
@@ -439,13 +444,23 @@ class _DonyBottomNav extends StatelessWidget {
                                     stream: getIt<FirestoreChatRepository>()
                                         .totalUnreadStream(uid),
                                     builder: (context, snapshot) {
-                                      return DonyNavItem(
-                                        iconAsset: 'message-circle',
-                                        label: 'Messages',
-                                        index: 3,
-                                        currentIndex: currentIndex,
-                                        onTap: () => onTap(3),
-                                        badgeCount: snapshot.data ?? 0,
+                                      return BlocBuilder<
+                                        SupportUnreadCubit,
+                                        int
+                                      >(
+                                        bloc: getIt<SupportUnreadCubit>(),
+                                        builder: (context, supportUnread) {
+                                          return DonyNavItem(
+                                            iconAsset: 'message-circle',
+                                            label: 'Messages',
+                                            index: 3,
+                                            currentIndex: currentIndex,
+                                            onTap: () => onTap(3),
+                                            badgeCount:
+                                                (snapshot.data ?? 0) +
+                                                supportUnread,
+                                          );
+                                        },
                                       );
                                     },
                                   );

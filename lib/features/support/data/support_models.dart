@@ -1,3 +1,4 @@
+import 'package:dony/features/support/data/support_attachment.dart';
 import 'package:equatable/equatable.dart';
 
 /// Statuts d'un ticket support, miroir de l'enum backend
@@ -46,16 +47,19 @@ class SupportMessage extends Equatable {
     required this.authorType,
     required this.content,
     this.createdAt,
+    this.attachments = const [],
   });
 
   final String id;
   final String authorType;
   final String content;
   final DateTime? createdAt;
+  final List<SupportAttachment> attachments;
 
   bool get isFromUser => authorType == 'USER';
 
   factory SupportMessage.fromJson(Map<String, dynamic> json) {
+    final rawAttachments = json['attachments'] as List<dynamic>? ?? const [];
     return SupportMessage(
       id: json['id'] as String? ?? '',
       authorType: json['authorType'] as String? ?? 'USER',
@@ -63,11 +67,14 @@ class SupportMessage extends Equatable {
       createdAt: json['createdAt'] != null
           ? DateTime.tryParse(json['createdAt'] as String)
           : null,
+      attachments: rawAttachments
+          .map((e) => SupportAttachment.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
   }
 
   @override
-  List<Object?> get props => [id, authorType, content, createdAt];
+  List<Object?> get props => [id, authorType, content, createdAt, attachments];
 }
 
 /// Ticket support. En liste, `messages` est vide (résumé backend) ;
@@ -82,6 +89,7 @@ class SupportTicket extends Equatable {
     this.lastMessageAt,
     this.resolvedAt,
     this.messages = const [],
+    this.unreadCount = 0,
   });
 
   final String id;
@@ -92,6 +100,10 @@ class SupportTicket extends Equatable {
   final DateTime? lastMessageAt;
   final DateTime? resolvedAt;
   final List<SupportMessage> messages;
+
+  /// Nombre de messages non lus pour l'utilisateur courant.
+  /// Vaut 0 par défaut (absent du JSON de liste ou détail).
+  final int unreadCount;
 
   bool get isResolved => status == SupportTicketStatuses.resolved;
 
@@ -114,6 +126,7 @@ class SupportTicket extends Equatable {
       messages: rawMessages
           .map((e) => SupportMessage.fromJson(e as Map<String, dynamic>))
           .toList(),
+      unreadCount: (json['unreadCount'] as num?)?.toInt() ?? 0,
     );
   }
 
@@ -127,5 +140,6 @@ class SupportTicket extends Equatable {
     lastMessageAt,
     resolvedAt,
     messages,
+    unreadCount,
   ];
 }

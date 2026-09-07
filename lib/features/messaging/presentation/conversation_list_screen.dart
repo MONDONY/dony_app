@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
@@ -6,6 +7,8 @@ import 'package:dony/features/messaging/bloc/conversation_list/conversation_list
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_state.dart';
 import 'package:dony/features/messaging/data/models/conversation_model.dart';
 import 'package:dony/features/messaging/presentation/widgets/conversation_tile.dart';
+import 'package:dony/features/support/bloc/support_unread_cubit.dart';
+import 'package:dony/features/support/presentation/widgets/support_conversation_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -47,6 +50,10 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
           (bloc.state as ConversationListLoaded).searchQuery;
     }
     bloc.add(const ConversationsLoadRequested());
+    // Rafraîchir le compteur support à chaque ouverture de l'onglet.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      getIt<SupportUnreadCubit>().refresh();
+    });
   }
 
   @override
@@ -76,6 +83,17 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
                   searchController: _searchController,
                   activeFilter: filter,
                   searchQuery: searchQuery,
+                ),
+                // Ligne épinglée Support Yadony — toujours en tête, non
+                // filtrable, non déplaçable.
+                BlocBuilder<SupportUnreadCubit, int>(
+                  bloc: getIt<SupportUnreadCubit>(),
+                  builder: (context, supportUnread) {
+                    return SupportConversationTile(
+                      unreadCount: supportUnread,
+                      preview: '',
+                    );
+                  },
                 ),
                 Expanded(child: _buildBody(context, state)),
               ],

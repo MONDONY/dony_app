@@ -19,6 +19,7 @@ final class SupportState extends Equatable {
     this.createdTicketId,
     this.sendStatus = SupportActionStatus.idle,
     this.errorMessage,
+    this.pendingAttachments = const [],
   });
 
   final SupportViewStatus homeStatus;
@@ -33,6 +34,27 @@ final class SupportState extends Equatable {
   final String? createdTicketId;
   final SupportActionStatus sendStatus;
   final String? errorMessage;
+
+  /// Images en attente d'envoi (état local avant que le message parte).
+  final List<SupportAttachmentUpload> pendingAttachments;
+
+  /// Envoi possible s'il y a du texte ou au moins une image prête, et
+  /// qu'aucun upload n'est encore en cours. Une image en échec ne bloque
+  /// pas : elle est simplement retirée du message.
+  ///
+  /// Le brouillon textuel n'est pas stocké dans le BLoC pour éviter de
+  /// dupliquer l'état du TextEditingController. Le widget passe le texte
+  /// courant en paramètre.
+  bool canSendWith(String draft) {
+    final hasUploading = pendingAttachments.any(
+      (a) => a.status == SupportUploadStatus.uploading,
+    );
+    if (hasUploading) return false;
+    final hasReadyAttachment = pendingAttachments.any(
+      (a) => a.status == SupportUploadStatus.ready,
+    );
+    return draft.trim().isNotEmpty || hasReadyAttachment;
+  }
 
   /// `createdTicketId` et `errorMessage` ne sont volontairement pas reportés
   /// de l'état précédent : ce sont des signaux à usage unique, consommés par
@@ -49,6 +71,7 @@ final class SupportState extends Equatable {
     String? createdTicketId,
     SupportActionStatus? sendStatus,
     String? errorMessage,
+    List<SupportAttachmentUpload>? pendingAttachments,
   }) {
     return SupportState(
       homeStatus: homeStatus ?? this.homeStatus,
@@ -60,6 +83,7 @@ final class SupportState extends Equatable {
       createdTicketId: createdTicketId,
       sendStatus: sendStatus ?? this.sendStatus,
       errorMessage: errorMessage,
+      pendingAttachments: pendingAttachments ?? this.pendingAttachments,
     );
   }
 
@@ -74,5 +98,6 @@ final class SupportState extends Equatable {
     createdTicketId,
     sendStatus,
     errorMessage,
+    pendingAttachments,
   ];
 }

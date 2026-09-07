@@ -290,6 +290,29 @@ void main() {
     });
   });
 
+  group('resolveNotificationRoute — SUPPORT_MESSAGE', () {
+    const ticketId = 'f47ac10b-58cc-4372-a567-0e02b2c3d479';
+
+    test('avec ticketId UUID valide → détail du ticket', () {
+      expect(
+        resolveNotificationRoute('SUPPORT_MESSAGE', {'ticketId': ticketId}),
+        '/support/tickets/$ticketId',
+      );
+    });
+
+    test('ticketId absent ou non-UUID → repli /support', () {
+      expect(resolveNotificationRoute('SUPPORT_MESSAGE', {}), '/support');
+      expect(
+        resolveNotificationRoute('SUPPORT_MESSAGE', {'ticketId': 'not-a-uuid'}),
+        '/support',
+      );
+      expect(
+        resolveNotificationRoute('SUPPORT_MESSAGE', {'ticketId': '../admin'}),
+        '/support',
+      );
+    });
+  });
+
   group('isShellTabRoute', () {
     test('shell tabs use go()', () {
       for (final tab in [
