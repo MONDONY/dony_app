@@ -254,21 +254,17 @@ class _TicketCard extends StatelessWidget {
 /// Sheet de création : le bloc de l'écran est partagé via `wrapper` pour que
 /// le `stickyBottom` suive `createStatus` et que le listener de l'écran
 /// referme la sheet après succès.
+///
+/// Les contrôleurs de texte appartiennent au [State] du formulaire, pas à
+/// cette fonction : `whenComplete` se déclenche dès le `pop`, alors que la
+/// sheet reste affichée le temps de son animation de sortie. Le clavier qui
+/// se replie à ce moment rebâtit les champs, et des contrôleurs déjà disposés
+/// faisaient planter la frame (Sentry FLUTTER-18, puis 17/19/1A en cascade).
+/// Le [State] n'est disposé qu'au retrait effectif de la route.
 Future<void> _openCreateTicketSheet(BuildContext context) {
   final bloc = context.read<SupportBloc>();
-  final subjectController = TextEditingController();
-  final messageController = TextEditingController();
-  final selectedCategory = ValueNotifier<String?>(null);
   final canSubmit = ValueNotifier<bool>(false);
-
-  void recompute() {
-    canSubmit.value =
-        selectedCategory.value != null &&
-        subjectController.text.trim().isNotEmpty &&
-        messageController.text.trim().isNotEmpty;
-  }
-
-  selectedCategory.addListener(recompute);
+  VoidCallback? submit;
 
   return DonyBottomSheet.show<void>(
     context,
@@ -280,44 +276,71 @@ Future<void> _openCreateTicketSheet(BuildContext context) {
         builder: (context, state) => DonyButton(
           label: 'Envoyer',
           isLoading: state.createStatus == SupportActionStatus.submitting,
-          onPressed: ready
-              ? () => context.read<SupportBloc>().add(
-                  SupportTicketCreateRequested(
-                    category: selectedCategory.value!,
-                    subject: subjectController.text.trim(),
-                    message: messageController.text.trim(),
-                  ),
-                )
-              : null,
+          onPressed: ready ? () => submit?.call() : null,
         ),
       ),
     ),
     child: _CreateTicketForm(
-      subjectController: subjectController,
-      messageController: messageController,
-      selectedCategory: selectedCategory,
-      onChanged: recompute,
+      canSubmit: canSubmit,
+      onSubmitReady: (fn) => submit = fn,
     ),
-  ).whenComplete(() {
-    selectedCategory.dispose();
-    canSubmit.dispose();
-    subjectController.dispose();
-    messageController.dispose();
-  });
+  ).whenComplete(canSubmit.dispose);
 }
 
-class _CreateTicketForm extends StatelessWidget {
+class _CreateTicketForm extends StatefulWidget {
   const _CreateTicketForm({
-    required this.subjectController,
-    required this.messageController,
-    required this.selectedCategory,
-    required this.onChanged,
+    required this.canSubmit,
+    required this.onSubmitReady,
   });
 
-  final TextEditingController subjectController;
-  final TextEditingController messageController;
-  final ValueNotifier<String?> selectedCategory;
-  final VoidCallback onChanged;
+  /// Validité du formulaire, lue par le bouton du `stickyBottom`.
+  final ValueNotifier<bool> canSubmit;
+
+  /// Remet au parent la fonction d'envoi, pour que le bouton du
+  /// `stickyBottom` déclenche la soumission avec les valeurs saisies ici.
+  final ValueChanged<VoidCallback> onSubmitReady;
+
+  @override
+  State<_CreateTicketForm> createState() => _CreateTicketFormState();
+}
+
+class _CreateTicketFormState extends State<_CreateTicketForm> {
+  final subjectController = TextEditingController();
+  final messageController = TextEditingController();
+  final selectedCategory = ValueNotifier<String?>(null);
+
+  @override
+  void initState() {
+    super.initState();
+    selectedCategory.addListener(_recompute);
+    widget.onSubmitReady(_submit);
+  }
+
+  @override
+  void dispose() {
+    selectedCategory.dispose();
+    subjectController.dispose();
+    messageController.dispose();
+    super.dispose();
+  }
+
+  void _recompute() {
+    widget.canSubmit.value =
+        selectedCategory.value != null &&
+        subjectController.text.trim().isNotEmpty &&
+        messageController.text.trim().isNotEmpty;
+  }
+
+  void _submit() {
+    if (!mounted) return;
+    context.read<SupportBloc>().add(
+      SupportTicketCreateRequested(
+        category: selectedCategory.value!,
+        subject: subjectController.text.trim(),
+        message: messageController.text.trim(),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -348,7 +371,7 @@ class _CreateTicketForm extends StatelessWidget {
           controller: subjectController,
           label: 'Sujet',
           hint: 'Résumez votre problème',
-          onChanged: (_) => onChanged(),
+          onChanged: (_) => _recompute(),
         ),
         const SizedBox(height: 12),
         DonyTextField(
@@ -357,7 +380,7 @@ class _CreateTicketForm extends StatelessWidget {
           hint: 'Décrivez ce qui vous arrive',
           maxLines: 5,
           minLines: 3,
-          onChanged: (_) => onChanged(),
+          onChanged: (_) => _recompute(),
         ),
         const SizedBox(height: 12),
       ],

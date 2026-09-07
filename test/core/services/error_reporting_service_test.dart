@@ -1,5 +1,6 @@
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
+import 'package:firebase_core/firebase_core.dart' show FirebaseException;
 import 'package:flutter_test/flutter_test.dart';
 
 class _RecordingSink implements ErrorReportingSink {
@@ -50,6 +51,50 @@ void main() {
     );
     expect(sink.error, isNull);
   });
+
+  test(
+    'ignores network conditions (OfflineException, TimeoutException)',
+    () async {
+      final sink = _RecordingSink();
+      final reporter = ErrorReportingService(sink);
+
+      await reporter.report(
+        const OfflineException(),
+        operation: 'kyc.create_session',
+      );
+      expect(sink.error, isNull);
+
+      await reporter.report(
+        const TimeoutException(),
+        operation: 'kyc.create_session',
+      );
+      expect(sink.error, isNull);
+    },
+  );
+
+  test(
+    'keeps the closed FirebaseException code in the reported title',
+    () async {
+      final sink = _RecordingSink();
+      final reporter = ErrorReportingService(sink);
+
+      await reporter.report(
+        FirebaseException(
+          plugin: 'firebase_messaging',
+          code: 'apns-token-not-set',
+          message: 'APNS token has not been set yet for +2250102030405',
+        ),
+        operation: 'notifications.resolve_fcm_token',
+      );
+
+      expect(
+        sink.error.toString(),
+        'ReportedError(notifications.resolve_fcm_token, FirebaseException, '
+        'apns-token-not-set)',
+      );
+      expect(sink.error.toString(), isNot(contains('+2250102030405')));
+    },
+  );
 
   test('captures critical errors with safe context only', () async {
     final sink = _RecordingSink();

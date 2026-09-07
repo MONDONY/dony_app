@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:firebase_core/firebase_core.dart' show FirebaseException;
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 /// Small abstraction used to test error reporting without booting Sentry.
@@ -38,6 +39,9 @@ class ErrorReportingService {
   // 429 : réponse normale du rate-limiting nginx (5 req/min sur /auth et
   // /kyc) — un poll qui tombe dessus n'est pas un bug à remonter.
   static const _expectedStatusCodes = {401, 403, 404, 409, 422, 429};
+  // OFFLINE / TIMEOUT : l'appareil n'a pas de réseau ou le perd en route. Ce
+  // n'est pas un défaut de l'app, l'écran affiche déjà le message adapté, et
+  // un utilisateur en 2G en produisait une salve à chaque parcours KYC.
   static const _expectedCodes = {
     'UNAUTHORIZED',
     'FORBIDDEN',
@@ -45,6 +49,8 @@ class ErrorReportingService {
     'CONFLICT',
     'CANCELLED',
     'RATE_LIMITED',
+    'OFFLINE',
+    'TIMEOUT',
   };
 
   Future<void> report(
@@ -71,12 +77,22 @@ class ErrorReportingService {
       _ReportedError(
         operation: operation,
         errorType: error.runtimeType.toString(),
-        code: error is AppException ? error.code : null,
+        code: _safeCode(error),
       ),
       stackTrace: stackTrace,
       context: safeContext,
     );
   }
+
+  /// Code d'erreur sans donnée personnelle : le code métier d'une
+  /// [AppException], ou le code fermé d'une [FirebaseException]
+  /// (`apns-token-not-set`, `unknown`…). Sans lui, tous les échecs Firebase se
+  /// regroupaient sous un même titre impossible à diagnostiquer.
+  static String? _safeCode(Object error) => switch (error) {
+    AppException(:final code) => code,
+    FirebaseException(:final code) => code,
+    _ => null,
+  };
 
   static bool _isExpected(Object error, int? statusCode) {
     if (statusCode != null && _expectedStatusCodes.contains(statusCode)) {

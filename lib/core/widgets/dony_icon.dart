@@ -1,4 +1,5 @@
 import 'package:dony/core/design/tokens/color_tokens.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -52,6 +53,14 @@ class DonyIcon extends StatelessWidget {
         semanticsLabel: semanticLabel,
         // Fond transparent pendant le décodage → pas de flash.
         placeholderBuilder: (_) => SizedBox(width: size, height: size),
+        // Un nom de fichier erroné faisait planter l'app entière (erreur
+        // « fatale » non gérée dans le chargeur SVG). Le test
+        // dony_icon_assets_test verrouille la liste ; ce repli garantit qu'une
+        // icône manquante coûte au pire un carré vide, jamais un crash.
+        errorBuilder: (_, error, _) {
+          if (kDebugMode) debugPrint('[DonyIcon] $name introuvable: $error');
+          return SizedBox(width: size, height: size);
+        },
       ),
     );
   }
