@@ -273,5 +273,12 @@ Future<void> main() async {
     // Logs structurés Sentry : alimentés par AppLog (cf. core/services/app_log.dart).
     // Sans ce flag, tout appel Sentry.logger.* est ignoré côté SDK.
     options.enableLogs = true;
+    // Le SDK natif iOS remontait TOUTE réponse HTTP en erreur de l'appareil,
+    // y compris celles des SDK tiers (Firebase, Google, Stripe) sur lesquelles
+    // l'app n'a aucune prise : un 500 de googleapis.com faisait une issue
+    // « fatale ». Les échecs de notre API passent déjà par
+    // ErrorReportingService, avec filtrage des données personnelles ; le
+    // natif n'a pas de ciblage par hôte, on le coupe.
+    options.captureNativeFailedRequests = false;
   }, appRunner: _bootstrap);
 }

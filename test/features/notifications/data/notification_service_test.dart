@@ -8,6 +8,7 @@ import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/features/notifications/data/notification_repository.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
+import 'package:firebase_core/firebase_core.dart' show FirebaseException;
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -472,23 +473,34 @@ void main() {
       expect(apnsCalls, 3);
     });
 
+    // Régression Sentry FLUTTER-Q/P/R : sans jeton APNs, `getToken()` ne
+    // renvoie pas null, il lève une FirebaseException. L'appeler après
+    // l'abandon transformait l'attente en erreur remontée à chaque reprise.
     test(
-      'iOS : abandonne après maxAttempts sans boucler indéfiniment',
+      'iOS : abandonne après maxAttempts sans demander le jeton FCM',
       () async {
         var apnsCalls = 0;
+        var fcmCalls = 0;
         final token = await NotificationService.resolveFcmToken(
           isIOS: true,
           getApnsToken: () async {
             apnsCalls++;
             return null;
           },
-          getFcmToken: () async => null,
+          getFcmToken: () async {
+            fcmCalls++;
+            throw FirebaseException(
+              plugin: 'firebase_messaging',
+              code: 'apns-token-not-set',
+            );
+          },
           maxAttempts: 4,
           retryDelay: Duration.zero,
         );
 
         expect(token, isNull);
         expect(apnsCalls, 4);
+        expect(fcmCalls, 0);
       },
     );
 
@@ -506,6 +518,37 @@ void main() {
 
       expect(token, 'fcm-token');
       expect(apnsCalls, 0);
+    });
+  });
+
+  group('NotificationService.uploadCurrentToken', () {
+    // Un appareil sans réseau échoue à chaque reprise de l'app : 28
+    // événements Sentry identiques pour un seul utilisateur. Le premier
+    // suffit à signaler l'appareil non enregistré.
+    test('ne remonte l\'échec de résolution du jeton qu\'une fois', () async {
+      final sink = _RecordingErrorSink();
+      final fcm = MockFirebaseMessaging();
+      when(() => fcm.getToken()).thenThrow(
+        FirebaseException(plugin: 'firebase_messaging', code: 'unknown'),
+      );
+      service = NotificationService(
+        apiClient,
+        repository,
+        deviceIdService,
+        ErrorReportingService(sink),
+        const FirebaseSessionProbe(),
+        fcm,
+      );
+
+      await service.uploadCurrentToken();
+      await service.uploadCurrentToken();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(sink.contexts, hasLength(1));
+      expect(
+        sink.contexts.single['operation'],
+        'notifications.resolve_fcm_token',
+      );
     });
   });
 

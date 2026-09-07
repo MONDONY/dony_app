@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/features/support/bloc/support_bloc.dart';
 import 'package:dony/features/support/data/support_models.dart';
@@ -97,6 +99,46 @@ void main() {
     expect(find.text('Sujet'), findsOneWidget);
     expect(find.text('Envoyer'), findsOneWidget);
   });
+
+  // Régression Sentry FLUTTER-18 (puis 17, 19, 1A en cascade) : après la
+  // création du ticket, la sheet est refermée et le clavier se replie pendant
+  // son animation de sortie. Ce repli rebâtit les champs de la sheet : leurs
+  // contrôleurs, disposés dès la fermeture, faisaient planter la frame.
+  testWidgets(
+    'survit au repli du clavier pendant la fermeture de la sheet de création',
+    (tester) async {
+      final states = StreamController<SupportState>();
+      addTearDown(states.close);
+      const ready = SupportState(homeStatus: SupportViewStatus.ready);
+      whenListen(bloc, states.stream, initialState: ready);
+
+      await tester.pumpWidget(_harness(bloc));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Contacter le support'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.widgetWithText(TextField, 'Sujet'), 'Sujet');
+      tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+      addTearDown(tester.view.reset);
+      await tester.pump();
+
+      states.add(
+        const SupportState(
+          homeStatus: SupportViewStatus.ready,
+          createStatus: SupportActionStatus.success,
+          createdTicketId: 'ticket-1',
+        ),
+      );
+      await tester.pump();
+      // Le clavier se replie alors que la sheet est encore à l'écran.
+      tester.view.viewInsets = FakeViewPadding.zero;
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('detail-stub'), findsOneWidget);
+    },
+  );
 
   testWidgets('affiche la liste des tickets avec statut traduit', (
     tester,

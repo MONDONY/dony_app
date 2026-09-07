@@ -116,7 +116,7 @@ class _SupportAvatar extends StatelessWidget {
         borderRadius: BorderRadius.circular(DonyRadius.card),
       ),
       child: Center(
-        child: DonyIcon('help-circle', size: 22, color: cs.onPrimaryContainer),
+        child: DonyIcon('circle-help', size: 22, color: cs.onPrimaryContainer),
       ),
     );
   }

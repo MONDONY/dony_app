@@ -121,6 +121,7 @@ class NotificationService {
   Future<void>? _inFlightUpload;
   Future<void>? _inFlightTokenUpload;
   bool _permissionDeniedReported = false;
+  bool _tokenResolutionFailureReported = false;
 
   NotificationService(
     this._apiClient,
@@ -302,6 +303,12 @@ class NotificationService {
       );
     } catch (e, stackTrace) {
       if (kDebugMode) debugPrint('[FCM] uploadCurrentToken failed: $e');
+      // Une seule remontée par session : l'upload est retenté à chaque reprise
+      // de l'app, et un appareil sans réseau produisait une salve d'événements
+      // identiques (jusqu'à 28 pour un seul utilisateur). Le premier suffit à
+      // signaler l'appareil non enregistré.
+      if (_tokenResolutionFailureReported) return;
+      _tokenResolutionFailureReported = true;
       unawaited(
         _errorReporter?.report(
           e,
@@ -374,6 +381,13 @@ class NotificationService {
   );
 
   /// Cœur testable de [_resolveFcmToken], sans dépendance à Firebase.
+  ///
+  /// Sur iOS, si APNs n'a toujours pas répondu après [maxAttempts], on renvoie
+  /// `null` sans appeler `getToken()` : le SDK Firebase refuse de fabriquer un
+  /// jeton FCM sans jeton APNs et lève une `FirebaseException`. L'appelant
+  /// remonte déjà le jeton absent comme une anomalie, avec l'état APNs en
+  /// contexte ; laisser l'exception partir ne faisait que doubler le signal
+  /// à chaque reprise de l'app.
   @visibleForTesting
   static Future<String?> resolveFcmToken({
     required bool isIOS,
@@ -383,10 +397,15 @@ class NotificationService {
     Duration retryDelay = apnsRetryDelay,
   }) async {
     if (isIOS) {
+      var apnsReady = false;
       for (var attempt = 0; attempt < maxAttempts; attempt++) {
-        if (await getApnsToken() != null) break;
+        if (await getApnsToken() != null) {
+          apnsReady = true;
+          break;
+        }
         await Future<void>.delayed(retryDelay);
       }
+      if (!apnsReady) return null;
     }
     return getFcmToken();
   }

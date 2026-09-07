@@ -163,7 +163,7 @@ class CorridorAlertFilterChips extends StatelessWidget {
           ),
         if (!isTrips)
           _FilterChip(
-            iconAsset: 'weight',
+            iconAsset: 'scale',
             label: CorridorAlertCard.weightLabel(alert),
           ),
         if (!isTrips)

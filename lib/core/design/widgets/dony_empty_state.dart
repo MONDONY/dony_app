@@ -75,60 +75,74 @@ class DonyEmptyState extends StatelessWidget {
       ),
     };
 
-    return Center(
-      child: Padding(
-        padding: padding ?? const EdgeInsets.all(DonySpacing.huge),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            (mascotte != null
-                    ? DonyMascotteAnimated(
-                        type: mascotte!,
-                        size: DonyMascotteSize.lg,
-                      )
-                    : DonyIconContainer(
-                        icon: iconAsset == null ? (icon ?? defaultIcon) : null,
-                        iconAsset: iconAsset,
-                        size: DonyIconContainerSize.xl,
-                        backgroundColor: bg,
-                        iconColor: ic,
-                      ))
-                .animate()
-                .fadeIn(duration: 400.ms, curve: Curves.easeOutCubic)
-                .scaleXY(
-                  begin: 0.82,
-                  duration: 400.ms,
-                  curve: Curves.easeOutBack,
-                ),
+    final content = Padding(
+      padding: padding ?? const EdgeInsets.all(DonySpacing.huge),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          (mascotte != null
+                  ? DonyMascotteAnimated(
+                      type: mascotte!,
+                      size: DonyMascotteSize.lg,
+                    )
+                  : DonyIconContainer(
+                      icon: iconAsset == null ? (icon ?? defaultIcon) : null,
+                      iconAsset: iconAsset,
+                      size: DonyIconContainerSize.xl,
+                      backgroundColor: bg,
+                      iconColor: ic,
+                    ))
+              .animate()
+              .fadeIn(duration: 400.ms, curve: Curves.easeOutCubic)
+              .scaleXY(
+                begin: 0.82,
+                duration: 400.ms,
+                curve: Curves.easeOutBack,
+              ),
+          const SizedBox(height: DonySpacing.xl),
+          Text(
+            title,
+            style: tt.headlineSmall,
+            textAlign: TextAlign.center,
+          ).animate(delay: 80.ms).fadeIn(duration: 300.ms).slideY(begin: 0.05),
+          if (description != null) ...[
+            const SizedBox(height: DonySpacing.sm),
+            Text(
+              description!,
+              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+              textAlign: TextAlign.center,
+            ).animate(delay: 140.ms).fadeIn(duration: 300.ms),
+          ],
+          if (actionLabel != null && onAction != null) ...[
             const SizedBox(height: DonySpacing.xl),
-            Text(title, style: tt.headlineSmall, textAlign: TextAlign.center)
-                .animate(delay: 80.ms)
+            DonyButton(
+                  label: actionLabel!,
+                  onPressed: onAction,
+                  variant: type == DonyEmptyStateType.error
+                      ? DonyButtonVariant.primary
+                      : DonyButtonVariant.secondary,
+                  fullWidth: false,
+                )
+                .animate(delay: 200.ms)
                 .fadeIn(duration: 300.ms)
                 .slideY(begin: 0.05),
-            if (description != null) ...[
-              const SizedBox(height: DonySpacing.sm),
-              Text(
-                description!,
-                style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-                textAlign: TextAlign.center,
-              ).animate(delay: 140.ms).fadeIn(duration: 300.ms),
-            ],
-            if (actionLabel != null && onAction != null) ...[
-              const SizedBox(height: DonySpacing.xl),
-              DonyButton(
-                    label: actionLabel!,
-                    onPressed: onAction,
-                    variant: type == DonyEmptyStateType.error
-                        ? DonyButtonVariant.primary
-                        : DonyButtonVariant.secondary,
-                    fullWidth: false,
-                  )
-                  .animate(delay: 200.ms)
-                  .fadeIn(duration: 300.ms)
-                  .slideY(begin: 0.05),
-            ],
           ],
-        ),
+        ],
+      ),
+    );
+
+    // Mascotte + titre + description + bouton dépassent la hauteur disponible
+    // sur un petit écran (720×1640 à densité 2) dès que l'espace est partagé
+    // avec un en-tête : la colonne débordait de 95 px. Le défilement prend la
+    // taille du contenu quand il tient (donc reste centré) et se borne à la
+    // hauteur disponible sinon. Pas de LayoutBuilder : il ne sait pas rendre
+    // de dimensions intrinsèques, et SliverFillRemaining(hasScrollBody: false)
+    // les demande sur Recherche et la liste des trajets. Physique clamping :
+    // sans dépassement, le geste vertical est laissé au défilement parent.
+    return Center(
+      child: SingleChildScrollView(
+        physics: const ClampingScrollPhysics(),
+        child: content,
       ),
     );
   }

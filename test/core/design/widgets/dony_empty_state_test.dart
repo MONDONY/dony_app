@@ -30,6 +30,37 @@ void main() {
       expect(find.byType(DonyIconContainer), findsOneWidget);
     });
 
+    // Régression Sentry FLUTTER-13 : sur un petit écran, mascotte + titre +
+    // description + bouton dépassaient la hauteur disponible de 95 px.
+    testWidgets('scrolls instead of overflowing in a tight height', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrap(
+          SizedBox(
+            height: 160,
+            child: DonyEmptyState(
+              mascotte: DonyMascotteType.assis,
+              title: 'Aucune alerte corridor',
+              description: 'Créez une alerte pour être prévenu.',
+              actionLabel: 'Créer une alerte',
+              onAction: () {},
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.byType(SingleChildScrollView), findsOneWidget);
+      await tester.drag(
+        find.byType(SingleChildScrollView),
+        const Offset(0, -300),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Créer une alerte'), findsOneWidget);
+    });
+
     testWidgets('empty type shows description when provided', (tester) async {
       await tester.pumpWidget(
         wrap(
