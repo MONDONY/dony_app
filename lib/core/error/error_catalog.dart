@@ -49,30 +49,30 @@ abstract final class ErrorCatalog {
       title: 'Mobile money indisponible',
       message:
           'Le paiement mobile money n\'est pas ouvert pour le moment. '
-          'Choisissez un autre moyen de paiement.',
+          'Choisis un autre moyen de paiement.',
       severity: ErrorSeverity.warning,
       icon: Icons.flag_outlined,
     ),
     'mobile-money-phone-required': ErrorPresentation(
       title: 'Numéro introuvable',
       message:
-          'Aucun numéro de téléphone n\'est associé à votre compte '
-          'Yadony. Ajoutez-le dans votre profil.',
+          'Aucun numéro de téléphone n\'est associé à ton compte '
+          'Yadony. Ajoute-le dans ton profil.',
       severity: ErrorSeverity.warning,
       icon: Icons.flag_outlined,
     ),
     'mobile-money-account-unsupported': ErrorPresentation(
       title: 'Numéro non pris en charge',
       message:
-          'Votre numéro n\'est pas rattaché à un opérateur mobile money '
-          'compatible, ou sa devise ne correspond pas à votre zone.',
+          'Ton numéro n\'est pas rattaché à un opérateur mobile money '
+          'compatible, ou sa devise ne correspond pas à ta zone.',
       severity: ErrorSeverity.warning,
       icon: Icons.flag_outlined,
     ),
     'mobile-money-account-required': ErrorPresentation(
       title: 'Compte de versement requis',
       message:
-          'Activez votre versement mobile money avant d\'accepter cette '
+          'Active ton versement mobile money avant d\'accepter cette '
           'offre.',
       severity: ErrorSeverity.warning,
       icon: Icons.flag_outlined,
@@ -80,7 +80,7 @@ abstract final class ErrorCatalog {
     'mobile-money-currency-mismatch': ErrorPresentation(
       title: 'Devise différente',
       message:
-          'Votre compte de versement mobile money n\'est pas dans la '
+          'Ton compte de versement mobile money n\'est pas dans la '
           'devise de ce trajet.',
       severity: ErrorSeverity.warning,
       icon: Icons.flag_outlined,
@@ -94,7 +94,7 @@ abstract final class ErrorCatalog {
     'mobile-money-payer-unsupported': ErrorPresentation(
       title: 'Numéro non pris en charge',
       message:
-          'Vérifiez le numéro qui doit payer, ou essayez avec un autre '
+          'Vérifie le numéro qui doit payer, ou essaie avec un autre '
           'numéro.',
       severity: ErrorSeverity.warning,
       icon: Icons.flag_outlined,
@@ -102,7 +102,7 @@ abstract final class ErrorCatalog {
     'mobile-money-deposit-rejected': ErrorPresentation(
       title: 'Paiement refusé',
       message:
-          'L\'opérateur a refusé la demande de paiement. Réessayez, '
+          'L\'opérateur a refusé la demande de paiement. Réessaie, '
           'éventuellement avec un autre numéro.',
       severity: ErrorSeverity.warning,
       icon: Icons.flag_outlined,
@@ -110,7 +110,7 @@ abstract final class ErrorCatalog {
     'mobile-money-payment-expired': ErrorPresentation(
       title: 'Délai dépassé',
       message:
-          'Le délai de paiement de 30 minutes est passé. Refaites une '
+          'Le délai de paiement de 30 minutes est passé. Refais une '
           'offre au voyageur.',
       severity: ErrorSeverity.warning,
       icon: Icons.flag_outlined,
@@ -133,7 +133,7 @@ abstract final class ErrorCatalog {
       title: 'Opération en cours',
       message:
           'Une opération mobile money est déjà en cours pour cet envoi. '
-          'Patientez quelques instants.',
+          'Patiente quelques instants.',
       severity: ErrorSeverity.warning,
       icon: Icons.pending_rounded,
     ),
@@ -143,7 +143,7 @@ abstract final class ErrorCatalog {
     'mobile-money-provider-unavailable': ErrorPresentation(
       title: 'Service indisponible',
       message:
-          'Le service mobile money ne répond pas. Réessayez dans '
+          'Le service mobile money ne répond pas. Réessaie dans '
           'quelques minutes.',
       severity: ErrorSeverity.error,
       icon: Icons.cloud_off_rounded,
@@ -151,7 +151,7 @@ abstract final class ErrorCatalog {
     'invalid-payment-method': ErrorPresentation(
       title: 'Moyen de paiement invalide',
       message:
-          'Ce moyen de paiement n\'est pas reconnu. Mettez l\'application '
+          'Ce moyen de paiement n\'est pas reconnu. Mets l\'application '
           'à jour.',
       severity: ErrorSeverity.warning,
       icon: Icons.flag_outlined,

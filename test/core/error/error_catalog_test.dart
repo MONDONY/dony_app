@@ -379,31 +379,33 @@ void main() {
       return ValidationException('detail brut backend', code: code);
     }
 
-    // code -> [titre attendu, message attendu], recopies tels quels du
-    // brief de la tache 7.
+    // code -> [titre attendu, message attendu]. Textes adaptes au
+    // tutoiement (convention dominante du catalogue et des ecrans) par
+    // rapport au brief de la tache 7, qui vouvoyait a tort : correction
+    // demandee en relecture de la tache 7.
     const attendus = <String, List<String>>{
       'mobile-money-disabled': [
         'Mobile money indisponible',
         "Le paiement mobile money n'est pas ouvert pour le moment. "
-            'Choisissez un autre moyen de paiement.',
+            'Choisis un autre moyen de paiement.',
       ],
       'mobile-money-phone-required': [
         'Numéro introuvable',
-        "Aucun numéro de téléphone n'est associé à votre compte Yadony. "
-            'Ajoutez-le dans votre profil.',
+        "Aucun numéro de téléphone n'est associé à ton compte Yadony. "
+            'Ajoute-le dans ton profil.',
       ],
       'mobile-money-account-unsupported': [
         'Numéro non pris en charge',
-        "Votre numéro n'est pas rattaché à un opérateur mobile money "
-            'compatible, ou sa devise ne correspond pas à votre zone.',
+        "Ton numéro n'est pas rattaché à un opérateur mobile money "
+            'compatible, ou sa devise ne correspond pas à ta zone.',
       ],
       'mobile-money-account-required': [
         'Compte de versement requis',
-        "Activez votre versement mobile money avant d'accepter cette offre.",
+        "Active ton versement mobile money avant d'accepter cette offre.",
       ],
       'mobile-money-currency-mismatch': [
         'Devise différente',
-        "Votre compte de versement mobile money n'est pas dans la devise "
+        "Ton compte de versement mobile money n'est pas dans la devise "
             'de ce trajet.',
       ],
       'mobile-money-not-available': [
@@ -417,17 +419,17 @@ void main() {
       ],
       'mobile-money-payer-unsupported': [
         'Numéro non pris en charge',
-        'Vérifiez le numéro qui doit payer, ou essayez avec un autre '
+        'Vérifie le numéro qui doit payer, ou essaie avec un autre '
             'numéro.',
       ],
       'mobile-money-deposit-rejected': [
         'Paiement refusé',
-        "L'opérateur a refusé la demande de paiement. Réessayez, "
+        "L'opérateur a refusé la demande de paiement. Réessaie, "
             'éventuellement avec un autre numéro.',
       ],
       'mobile-money-payment-expired': [
         'Délai dépassé',
-        'Le délai de paiement de 30 minutes est passé. Refaites une offre '
+        'Le délai de paiement de 30 minutes est passé. Refais une offre '
             'au voyageur.',
       ],
       'mobile-money-payment-not-pending': [
@@ -437,16 +439,16 @@ void main() {
       'mobile-money-operation-in-progress': [
         'Opération en cours',
         'Une opération mobile money est déjà en cours pour cet envoi. '
-            'Patientez quelques instants.',
+            'Patiente quelques instants.',
       ],
       'mobile-money-provider-unavailable': [
         'Service indisponible',
-        'Le service mobile money ne répond pas. Réessayez dans quelques '
+        'Le service mobile money ne répond pas. Réessaie dans quelques '
             'minutes.',
       ],
       'invalid-payment-method': [
         'Moyen de paiement invalide',
-        "Ce moyen de paiement n'est pas reconnu. Mettez l'application à "
+        "Ce moyen de paiement n'est pas reconnu. Mets l'application à "
             'jour.',
       ],
     };
