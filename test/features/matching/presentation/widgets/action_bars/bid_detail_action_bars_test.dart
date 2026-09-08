@@ -62,6 +62,7 @@ void main() {
   setUpAll(() {
     registerFallbackValue(BidRejectRequested('fallback'));
     registerFallbackValue(BidAcceptRequested('fallback'));
+    registerFallbackValue(BidAcceptMobileMoneyRequested('fallback'));
     registerFallbackValue(ace.BidAcceptRequested('fallback'));
   });
 
@@ -130,6 +131,46 @@ void main() {
 
       verify(() => bidBloc.add(any(that: isA<BidAcceptRequested>()))).called(1);
     });
+  });
+
+  group('TravelerPendingBar — Accepter selon le mode de paiement', () {
+    testWidgets(
+      'Accepter (mobile money) dispatch BidAcceptMobileMoneyRequested sur '
+      'BidBloc, jamais sur BidAcceptanceBloc',
+      (tester) async {
+        await tester.pumpWidget(
+          _wrap(_makeBid(BidPaymentMethod.mobileMoney), bidBloc, accBloc),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.widgetWithText(FilledButton, 'Accepter'));
+        await tester.pump();
+
+        verify(
+          () => bidBloc.add(any(that: isA<BidAcceptMobileMoneyRequested>())),
+        ).called(1);
+        verifyNever(() => accBloc.add(any()));
+      },
+    );
+
+    testWidgets(
+      'Accepter (espèces) dispatch BidAcceptRequested sur BidAcceptanceBloc, '
+      'jamais sur BidBloc',
+      (tester) async {
+        await tester.pumpWidget(
+          _wrap(_makeBid(BidPaymentMethod.cash), bidBloc, accBloc),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.widgetWithText(FilledButton, 'Accepter'));
+        await tester.pump();
+
+        verify(
+          () => accBloc.add(any(that: isA<ace.BidAcceptRequested>())),
+        ).called(1);
+        verifyNever(() => bidBloc.add(any()));
+      },
+    );
   });
 
   group('showSenderOptionsSheet — Signaler ce trajet', () {

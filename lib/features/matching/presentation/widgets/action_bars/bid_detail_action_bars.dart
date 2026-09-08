@@ -84,6 +84,11 @@ class TravelerPendingBar extends StatelessWidget {
                         context.read<BidAcceptanceBloc>().add(
                           ace.BidAcceptRequested(bid.id),
                         );
+                      } else if (bid.paymentMethod ==
+                          BidPaymentMethod.mobileMoney) {
+                        context.read<BidBloc>().add(
+                          BidAcceptMobileMoneyRequested(bid.id),
+                        );
                       } else {
                         context.read<BidBloc>().add(BidAcceptRequested(bid.id));
                       }

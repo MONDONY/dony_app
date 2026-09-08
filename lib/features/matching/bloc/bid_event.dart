@@ -116,6 +116,15 @@ class BidAcceptRequested extends BidEvent {
   BidAcceptRequested(this.bidId);
 }
 
+/// Acceptation dédiée d'un bid réglé en mobile money (pawaPay) par le
+/// voyageur : contrairement au cash (BidAcceptanceBloc) ou à la carte, aucune
+/// interaction Stripe n'est nécessaire côté voyageur, d'où un event distinct
+/// porté directement par [BidBloc].
+class BidAcceptMobileMoneyRequested extends BidEvent {
+  final String bidId;
+  BidAcceptMobileMoneyRequested(this.bidId);
+}
+
 class BidRejectRequested extends BidEvent {
   final String bidId;
   final String? reason;
