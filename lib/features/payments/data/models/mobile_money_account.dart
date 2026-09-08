@@ -1,13 +1,13 @@
 import 'package:equatable/equatable.dart';
 
-/// Etat du compte de versement mobile money d'un voyageur.
+/// État du compte de versement mobile money d'un voyageur.
 enum MobileMoneyAccountStatus { notConfigured, active, disabled }
 
-/// Compte de versement mobile money (voyageur), renvoye par
+/// Compte de versement mobile money (voyageur), renvoyé par
 /// `GET/POST/DELETE /payments/mobile-money/account`.
 ///
-/// Le numero de telephone n'est jamais expose en clair : `msisdnMasked`
-/// est deja masque cote backend.
+/// Le numéro de téléphone n'est jamais exposé en clair : `msisdnMasked`
+/// est déjà masqué côté backend.
 class MobileMoneyAccount extends Equatable {
   const MobileMoneyAccount({
     required this.status,

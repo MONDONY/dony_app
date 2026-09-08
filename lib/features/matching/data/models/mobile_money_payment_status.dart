@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-/// Etat d'un depot mobile money tente cote pawaPay.
+/// État d'un dépôt mobile money tenté côté pawaPay.
 enum MobileMoneyDepositStatus {
   created,
   accepted,
@@ -11,8 +11,8 @@ enum MobileMoneyDepositStatus {
   unknown,
 }
 
-/// Dernier depot mobile money tente pour un bid (nul tant qu'aucune
-/// tentative n'a ete faite). Fait partie de `MobileMoneyPaymentStatus`.
+/// Dernier dépôt mobile money tenté pour un bid (nul tant qu'aucune
+/// tentative n'a été faite). Fait partie de `MobileMoneyPaymentStatus`.
 class MobileMoneyDeposit extends Equatable {
   const MobileMoneyDeposit({
     required this.id,
@@ -30,7 +30,7 @@ class MobileMoneyDeposit extends Equatable {
   final String? msisdnMasked;
 
   /// Non nul uniquement pour Wave : l'app doit rediriger vers cette URL
-  /// plutot que d'afficher la consigne de validation du code PIN.
+  /// plutôt que d'afficher la consigne de validation du code PIN.
   final String? authorizationUrl;
   final String? failureCode;
   final String? failureMessage;
@@ -46,14 +46,14 @@ class MobileMoneyDeposit extends Equatable {
         failureMessage: json['failureMessage'] as String?,
       );
 
-  /// Depot en cours cote operateur (PIN pas encore valide, ou en attente
-  /// de confirmation Wave) : l'ecran d'attente doit rester ouvert.
+  /// Dépôt en cours côté opérateur (PIN pas encore validé, ou en attente
+  /// de confirmation Wave) : l'écran d'attente doit rester ouvert.
   bool get isLive =>
       status == MobileMoneyDepositStatus.created ||
       status == MobileMoneyDepositStatus.accepted ||
       status == MobileMoneyDepositStatus.processing;
 
-  /// Depot rejete : plus aucune action possible sans relancer un paiement.
+  /// Dépôt rejeté : plus aucune action possible sans relancer un paiement.
   bool get isFailed =>
       status == MobileMoneyDepositStatus.failed ||
       status == MobileMoneyDepositStatus.submitRejected;
@@ -89,7 +89,7 @@ class MobileMoneyDeposit extends Equatable {
   ];
 }
 
-/// Statut de paiement mobile money d'un bid, renvoye par
+/// Statut de paiement mobile money d'un bid, renvoyé par
 /// `POST .../mobile-money/accept`, `POST .../mobile-money/initiate` et
 /// `GET .../mobile-money/status`.
 class MobileMoneyPaymentStatus extends Equatable {
@@ -107,16 +107,16 @@ class MobileMoneyPaymentStatus extends Equatable {
   final String bidStatus;
 
   /// `PENDING`, `ESCROW`, `RELEASED`, `REFUNDED`, `CANCELLED`, ou nul tant
-  /// qu'aucun paiement n'a ete initie.
+  /// qu'aucun paiement n'a été initié.
   final String? paymentStatus;
 
-  /// Fin de la fenetre de 30 minutes pour payer. Renvoyee par le backend en
+  /// Fin de la fenêtre de 30 minutes pour payer. Renvoyée par le backend en
   /// heure locale UTC sans suffixe de zone.
   final DateTime? deadlineAt;
   final double? amount;
   final String currency;
 
-  /// Dernier depot tente, nul tant qu'aucune tentative n'a ete faite.
+  /// Dernier dépôt tenté, nul tant qu'aucune tentative n'a été faite.
   final MobileMoneyDeposit? deposit;
 
   factory MobileMoneyPaymentStatus.fromJson(Map<String, dynamic> json) =>
@@ -134,31 +134,31 @@ class MobileMoneyPaymentStatus extends Equatable {
             : null,
       );
 
-  /// Paiement deja seguestre (ou verse) : le compte a rebours ne s'applique
-  /// plus et l'ecran d'attente doit se refermer sur un succes.
+  /// Paiement déjà séquestré (ou versé) : le compte à rebours ne s'applique
+  /// plus et l'écran d'attente doit se refermer sur un succès.
   bool get isEscrowed =>
       paymentStatus == 'ESCROW' || paymentStatus == 'RELEASED';
 
-  /// Un depot est en cours cote operateur.
+  /// Un dépôt est en cours côté opérateur.
   bool get isDepositLive => deposit?.isLive ?? false;
 
-  /// Le dernier depot tente a echoue.
+  /// Le dernier dépôt tenté a échoué.
   bool get isDepositFailed => deposit?.isFailed ?? false;
 
-  /// Le bid a ete annule, ou le delai de paiement de 30 minutes est depasse
-  /// sans que le paiement ait ete sequestre.
+  /// Le bid a été annulé, ou le délai de paiement de 30 minutes est dépassé
+  /// sans que le paiement ait été séquestré.
   bool isExpired(DateTime now) =>
       bidStatus == 'CANCELLED' ||
       (!isEscrowed && deadlineAt != null && now.isAfter(deadlineAt!));
 
-  /// Le depot necessite une redirection vers Wave plutot qu'une simple
+  /// Le dépôt nécessite une redirection vers Wave plutôt qu'une simple
   /// consigne de validation du code PIN.
   bool get isWaveRedirect => deposit?.authorizationUrl != null;
 
-  /// `deadlineAt` est renvoye par le backend en `LocalDateTime` UTC, sans
-  /// suffixe de zone (ex. `2026-09-08T07:30:00`). Sans ce forcage, un
-  /// `DateTime.parse` classique interpreterait la chaine comme une heure
-  /// locale et decalerait le compte a rebours affiche a l'expediteur.
+  /// `deadlineAt` est renvoyé par le backend en `LocalDateTime` UTC, sans
+  /// suffixe de zone (ex. `2026-09-08T07:30:00`). Sans ce forçage, un
+  /// `DateTime.parse` classique interpréterait la chaîne comme une heure
+  /// locale et décalerait le compte à rebours affiché à l'expéditeur.
   static DateTime? _parseUtc(String? raw) {
     if (raw == null) return null;
     final hasZone =
