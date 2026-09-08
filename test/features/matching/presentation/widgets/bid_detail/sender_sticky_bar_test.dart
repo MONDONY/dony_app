@@ -365,6 +365,14 @@ void main() {
       expect(SenderStickyBar.hasAction(bid), isFalse);
     });
 
+    // PENDING reste inchangé pour le mobile money : une offre mobile money
+    // en attente d'acceptation n'a pas d'action, comme les espèces (arbitrage
+    // task 11 — seul AWAITING_PAYMENT gagne le mobile money).
+    test('PENDING mobile money → false', () {
+      final bid = _bid(paymentMethod: BidPaymentMethod.mobileMoney);
+      expect(SenderStickyBar.hasAction(bid), isFalse);
+    });
+
     test('ACCEPTED → true', () {
       expect(SenderStickyBar.hasAction(_bid(status: 'ACCEPTED')), isTrue);
     });

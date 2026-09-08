@@ -541,9 +541,9 @@ class _CashBadge extends StatelessWidget {
 }
 
 /// Informational pill shown to the sender when the deal is settled via
-/// mobile money (pawaPay). Same shape as [_CashBadge] but with the primary
-/// accent, pour distinguer un règlement en ligne (séquestré) d'un simple
-/// échange en espèces.
+/// mobile money (pawaPay). Same shape as [_CashBadge], but with the primary
+/// accent to signal an online (escrowed) settlement rather than a plain
+/// in-person cash exchange.
 class _MobileMoneyBadge extends StatelessWidget {
   const _MobileMoneyBadge();
 
