@@ -267,8 +267,13 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   List<String> get _refusedCategories =>
       widget.announcement.refusedTypes ?? const [];
 
+  /// Mobile money ne compte comme « alternative » qu'en mode direct : le
+  /// backend rejette toute négociation en mobile money (422
+  /// mobile-money-negotiation-unsupported, `BidNegotiationService`) — en
+  /// mode négociation, seul le cash reste une alternative à Stripe, comme
+  /// avant la task 10 mobile money.
   bool get _hasAlternativePaymentMethods =>
-      _isCashAvailable || _isMobileMoneyAvailable;
+      _isCashAvailable || (!widget.negotiation && _isMobileMoneyAvailable);
 
   @override
   void initState() {
@@ -290,11 +295,18 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _isMobileMoneyAvailable = widget.announcement.acceptedPaymentMethods
         .contains(BidPaymentMethod.mobileMoney);
     _methodNotifier = ValueNotifier<BidPaymentMethod>(
-      _isStripeAvailable
-          ? BidPaymentMethod.stripe
-          : _isCashAvailable
-          ? BidPaymentMethod.cash
-          : BidPaymentMethod.mobileMoney,
+      // En négociation, le mobile money n'est jamais un choix possible
+      // (rejeté par le backend) : le défaut reste celui d'avant la task 10
+      // mobile money, stripe sinon cash, jamais mobileMoney.
+      widget.negotiation
+          ? (_isStripeAvailable
+                ? BidPaymentMethod.stripe
+                : BidPaymentMethod.cash)
+          : (_isStripeAvailable
+                ? BidPaymentMethod.stripe
+                : _isCashAvailable
+                ? BidPaymentMethod.cash
+                : BidPaymentMethod.mobileMoney),
     );
     _payerPhoneCtrl = TextEditingController(text: _initialPayerPhone());
 
@@ -609,9 +621,6 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         // réglée par le voyageur). Sans lui, tout accord négocié partait en
         // carte, même sur un trajet qui n'acceptait que les espèces.
         paymentMethod: _methodNotifier.value,
-        phoneNumber: _methodNotifier.value == BidPaymentMethod.mobileMoney
-            ? normalizePayerPhone(_payerPhoneCtrl.text)
-            : null,
         photoKeys: _photosCubit.readyKeys,
         customItems: _customItemsNotifier.value
             .map((item) => item.toJson())
@@ -1479,20 +1488,22 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
           builder: (context, method, _) => Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // R13 : le backend rejette toute négociation en mobile money
+              // (422 mobile-money-negotiation-unsupported,
+              // BidNegotiationService) — décision produit « offres
+              // classiques seulement ». `isMobileMoneyAvailable` n'est donc
+              // jamais passé ici (garde son défaut `false`), contrairement au
+              // site direct (_buildPickerStep) qui passe
+              // _isMobileMoneyAvailable.
               _PaymentMethodSelector(
                 selectedMethod: method,
                 onChanged: (m) => _methodNotifier.value = m,
                 isCashAvailable: _isCashAvailable,
                 isStripeAvailable: _isStripeAvailable,
-                isMobileMoneyAvailable: _isMobileMoneyAvailable,
               ),
               if (method == BidPaymentMethod.cash) ...[
                 const SizedBox(height: DonySpacing.sm),
                 const _CashEscrowWarning(),
-              ],
-              if (method == BidPaymentMethod.mobileMoney) ...[
-                const SizedBox(height: DonySpacing.sm),
-                _PayerPhoneField(controller: _payerPhoneCtrl),
               ],
             ],
           ),

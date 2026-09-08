@@ -55,6 +55,15 @@ Future<void> showTravelerAnnouncementSheet(
   // Le serveur reste l'autorité (403 contact-kyc-required s'il s'est ravisé).
   final canSendRequest =
       isKycVerified || (announcement.traveler?.acceptsUnverified ?? false);
+  // R13 : le backend rejette toute négociation en mobile money (422
+  // mobile-money-negotiation-unsupported, `BidNegotiationService`) —
+  // décision produit « offres classiques seulement ». Un trajet qui
+  // n'accepte QUE le mobile money ne propose donc pas l'entrée de
+  // négociation, même si `announcement.negotiable` vaut true côté back.
+  final canNegotiate =
+      announcement.negotiable &&
+      (announcement.acceptedPaymentMethods.contains(BidPaymentMethod.stripe) ||
+          announcement.acceptedPaymentMethods.contains(BidPaymentMethod.cash));
   // Capture la référence au BidBloc du parent (carousel / liste) pour pouvoir
   // déclencher un refresh après la fermeture de CreateBidBottomSheet, même
   // quand useRootNavigator: true sort du BlocProvider tree.
@@ -193,7 +202,8 @@ Future<void> showTravelerAnnouncementSheet(
             // Entrée de négociation reléguée en lien : un seul CTA dominant
             // (redesign « Corridor héro »). Réservée aux trajets ouverts aux
             // propositions : sur un prix ferme, il n'y aurait rien à proposer.
-            if (announcement.negotiable)
+            // Voir `canNegotiate` plus haut pour l'exclusion mobile-money-only.
+            if (canNegotiate)
               InkWell(
                 key: const Key('negotiate-price-btn'),
                 borderRadius: BorderRadius.circular(DonyRadius.sm),
