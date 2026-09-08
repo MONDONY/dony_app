@@ -15,6 +15,9 @@ import 'package:flutter/material.dart';
 ///   • CANCELLED / REJECTED / NO_SHOW / EXPIRED → remboursé
 ///   • sinon → séquestré, libéré à la livraison (lock)
 ///
+/// — Mobile Money (pawaPay) : séquestré par Yadony jusqu'à la livraison,
+///   comme Stripe, mais avec un badge dédié (pas de détail par statut).
+///
 /// — Cash / Wave / Orange Money : paiement en personne à la remise.
 class PaiementCard extends StatelessWidget {
   final BidModel bid;
@@ -45,6 +48,24 @@ class PaiementCard extends StatelessWidget {
 
     if (bid.paymentMethod == BidPaymentMethod.stripe) {
       body = _stripeBody(context, cs, tt, senderLabel);
+    } else if (bid.paymentMethod == BidPaymentMethod.mobileMoney) {
+      // Mobile money (pawaPay) — séquestré par Yadony comme Stripe, mais
+      // sans le détail par statut (pas de distinction libéré/remboursé).
+      body = Row(
+        children: [
+          DonyIcon('smartphone', color: cs.primary, size: 20),
+          const SizedBox(width: DonySpacing.sm),
+          Expanded(
+            child: Text(
+              "Paiement mobile money, gardé en sécurité par Yadony jusqu'à "
+              'la livraison : $senderLabel',
+              style: tt.bodySmall?.copyWith(color: cs.onSurface),
+            ),
+          ),
+          const SizedBox(width: DonySpacing.sm),
+          const DonyBadge(label: 'MOBILE MONEY'),
+        ],
+      );
     } else {
       // Cash / Wave / Orange Money — règlement en personne (net voyageur)
       body = Row(

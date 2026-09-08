@@ -296,7 +296,9 @@ class SenderActionBar extends StatelessWidget {
               // Cash / Wave / Orange Money: paid in person, Yadony's commission
               // is collected from the traveler server-side — never show an
               // online sender payment button or its loading placeholder.
-              child: !_hasOnlineSenderPayment
+              child: bid.paymentMethod == BidPaymentMethod.mobileMoney
+                  ? const _MobileMoneyBadge()
+                  : !_hasOnlineSenderPayment
                   ? const _CashBadge()
                   : !paymentLoaded
                   ? Container(
@@ -527,6 +529,45 @@ class _CashBadge extends StatelessWidget {
           Flexible(
             child: Text(
               'Paiement en espèces à la remise',
+              style: tt.titleSmall?.copyWith(color: color),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Informational pill shown to the sender when the deal is settled via
+/// mobile money (pawaPay). Same shape as [_CashBadge] but with the primary
+/// accent, pour distinguer un règlement en ligne (séquestré) d'un simple
+/// échange en espèces.
+class _MobileMoneyBadge extends StatelessWidget {
+  const _MobileMoneyBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    final color = cs.primary;
+
+    return Container(
+      height: 52,
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(DonyRadius.lg),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          DonyIcon('smartphone', color: color, size: 18),
+          const SizedBox(width: DonySpacing.sm),
+          Flexible(
+            child: Text(
+              'Paiement mobile money',
               style: tt.titleSmall?.copyWith(color: color),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,

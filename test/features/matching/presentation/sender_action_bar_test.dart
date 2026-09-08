@@ -101,5 +101,28 @@ void main() {
       expect(find.text('Payer mon envoi'), findsNothing);
       expect(find.text('Paiement en espèces à la remise'), findsOneWidget);
     });
+
+    testWidgets(
+      'MOBILE_MONEY → badge mobile money affiché (pas badge espèces)',
+      (tester) async {
+        final bid = _makeBid(
+          status: 'PENDING',
+          paymentMethod: BidPaymentMethod.mobileMoney,
+        );
+
+        await tester.pumpWidget(_wrap(bid));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Payer mon envoi'), findsNothing);
+        expect(find.text('Paiement en espèces à la remise'), findsNothing);
+        expect(find.text('Paiement mobile money'), findsOneWidget);
+        expect(
+          find.byWidgetPredicate(
+            (w) => w is DonyIcon && w.name == 'smartphone',
+          ),
+          findsOneWidget,
+        );
+      },
+    );
   });
 }

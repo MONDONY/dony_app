@@ -30,12 +30,20 @@ class SenderStickyBar extends StatelessWidget {
   final PaymentModel? existingPayment;
   final bool paymentLoaded;
 
+  /// Appelé après le retour de l'écran d'attente mobile money
+  /// (`/bids/{id}/mobile-money/awaiting`), quel que soit le résultat du pop
+  /// (`true`, `false` ou `null`) : un pop sans paiement peut aussi signifier
+  /// que le bid a expiré ou a été annulé entre-temps, recharger le détail
+  /// reste toujours pertinent.
+  final VoidCallback? onPaymentReturned;
+
   const SenderStickyBar({
     super.key,
     required this.bid,
     required this.isLoading,
     this.existingPayment,
     this.paymentLoaded = false,
+    this.onPaymentReturned,
   });
 
   // ── Static helper ────────────────────────────────────────────────────────────
@@ -62,7 +70,11 @@ class SenderStickyBar extends StatelessWidget {
     final status = bid.status;
 
     if (status == 'AWAITING_PAYMENT') {
-      return bid.paymentMethod == BidPaymentMethod.stripe;
+      // Stripe (reprise de paiement) et mobile money (le voyageur vient
+      // d'accepter, fenêtre de 30 min pour séquestrer) ont toutes deux une
+      // action. Cash n'en a pas : rien à payer en ligne.
+      return bid.paymentMethod == BidPaymentMethod.stripe ||
+          bid.paymentMethod == BidPaymentMethod.mobileMoney;
     }
 
     if (status == 'PENDING') {
@@ -135,6 +147,50 @@ class SenderStickyBar extends StatelessWidget {
     }
 
     final status = bid.status;
+
+    // 1.4 AWAITING_PAYMENT (mobile money) : le voyageur vient d'accepter,
+    //     l'expéditeur a 30 min pour séquestrer via pawaPay. Le retour de
+    //     l'écran d'attente (pop true/false/null) recharge toujours le
+    //     détail via [onPaymentReturned] — un pop sans paiement peut aussi
+    //     signifier que le bid a expiré ou a été annulé entre-temps.
+    if (status == 'AWAITING_PAYMENT' &&
+        bid.paymentMethod == BidPaymentMethod.mobileMoney) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          DonyButton(
+            label: 'Payer par mobile money',
+            iconAsset: 'smartphone',
+            isLoading: isLoading,
+            onPressed: isLoading
+                ? null
+                : () async {
+                    await context.push<bool>(
+                      '/bids/${bid.id}/mobile-money/awaiting',
+                    );
+                    if (context.mounted) {
+                      onPaymentReturned?.call();
+                    }
+                  },
+          ),
+          const SizedBox(height: DonySpacing.sm),
+          DonyButton(
+            label: 'Annuler la demande',
+            variant: DonyButtonVariant.ghost,
+            onPressed: isLoading
+                ? null
+                : () => _showDeleteDialog(
+                    context,
+                    title: 'Annuler la demande de transport ?',
+                    body:
+                        "Aucun paiement n'a été effectué. La demande sera retirée.",
+                    confirmLabel: 'Oui, annuler',
+                    dismissLabel: 'Retour',
+                  ),
+          ),
+        ],
+      );
+    }
 
     // 1.5 AWAITING_PAYMENT (stripe) : l'expéditeur a quitté la PaymentSheet
     //     avant d'autoriser l'escrow → reprendre le paiement. Le backend
