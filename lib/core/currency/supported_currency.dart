@@ -91,6 +91,14 @@ class SupportedCurrency {
 
   bool get isStripeEligible => _stripeEligibleCodes.contains(code);
 
+  /// Devises pour lesquelles le rail mobile money (pawaPay — Orange Money,
+  /// Wave, MTN) est proposé : zone CFA uniquement, XOF (Afrique de l'Ouest)
+  /// et XAF (Afrique Centrale). Même logique de prévisualisation client que
+  /// [isStripeEligible] — le serveur reste seul décideur au paiement réel.
+  static const _mobileMoneyEligibleCodes = {'XOF', 'XAF'};
+
+  bool get isMobileMoneyEligible => _mobileMoneyEligibleCodes.contains(code);
+
   static SupportedCurrency? fromCode(String? value) {
     if (value == null) {
       return null;

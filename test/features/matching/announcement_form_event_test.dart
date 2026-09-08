@@ -147,6 +147,20 @@ void main() {
       );
     });
 
+    test('MobileMoneyAcceptedChanged — equal when same value', () {
+      expect(
+        const MobileMoneyAcceptedChanged(true),
+        equals(const MobileMoneyAcceptedChanged(true)),
+      );
+    });
+
+    test('MobileMoneyAcceptedChanged — not equal when different value', () {
+      expect(
+        const MobileMoneyAcceptedChanged(true),
+        isNot(equals(const MobileMoneyAcceptedChanged(false))),
+      );
+    });
+
     test('AcceptedTypesChanged — equal when same list', () {
       expect(
         const AcceptedTypesChanged(['CLOTHING', 'ELECTRONICS']),

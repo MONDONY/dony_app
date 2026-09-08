@@ -33,10 +33,14 @@ import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/locked_trip_context.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
+import 'package:dony/features/payments/bloc/mobile_money_account_bloc.dart';
+import 'package:dony/features/payments/bloc/mobile_money_account_event.dart';
+import 'package:dony/features/payments/bloc/mobile_money_account_state.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_state.dart';
 import 'package:dony/features/payments/cash/data/repositories/commission_method_repository.dart';
+import 'package:dony/features/payments/data/models/mobile_money_account.dart';
 import 'package:dony/features/payments/wallet/data/repositories/wallet_repository.dart';
 import 'package:dony/features/price_grid/data/repositories/price_grid_repository.dart';
 import 'package:dony/features/profile/bloc/help_center_bloc.dart';
@@ -117,6 +121,10 @@ class _MockTripTemplateBloc
 class _MockStripeAccountBloc
     extends MockBloc<StripeAccountEvent, StripeAccountState>
     implements StripeAccountBloc {}
+
+class _MockMobileMoneyAccountBloc
+    extends MockBloc<MobileMoneyAccountEvent, MobileMoneyAccountState>
+    implements MobileMoneyAccountBloc {}
 
 class _MockNegotiationBloc extends MockBloc<NegotiationEvent, NegotiationState>
     implements NegotiationBloc {}
@@ -283,7 +291,13 @@ AnnouncementModel _makeAnnouncement() => AnnouncementModel(
 /// • pickupAddress + deliveryAddress (enables step-1 → step-2 navigation)
 /// • departureTime + arrivalTime (covers TimeOfDay parsing in initState)
 /// • acceptedContentTypes + refusedTypes (covers content-type init code)
-AnnouncementModel _makeFullAnnouncement() => AnnouncementModel(
+AnnouncementModel _makeFullAnnouncement({
+  String currency = 'EUR',
+  Set<BidPaymentMethod> acceptedPaymentMethods = const {
+    BidPaymentMethod.stripe,
+    BidPaymentMethod.cash,
+  },
+}) => AnnouncementModel(
   id: 'ann-full-1',
   travelerId: 'trav-1',
   departureCity: 'Paris',
@@ -311,9 +325,10 @@ AnnouncementModel _makeFullAnnouncement() => AnnouncementModel(
     lng: -17.467,
   ),
   transportMode: TransportMode.plane,
-  acceptedPaymentMethods: {BidPaymentMethod.stripe, BidPaymentMethod.cash},
+  acceptedPaymentMethods: acceptedPaymentMethods,
   acceptedContentTypes: const ['Vêtements', 'Médicaments'],
   refusedTypes: const ['Produits dangereux'],
+  currency: currency,
 );
 
 /// Returns a minimal `LockedTripContext` suitable for locked-mode tests.
@@ -373,6 +388,7 @@ void main() {
     // Sealed event fallbacks — use concrete subclass instances
     registerFallbackValue(const TripTemplateLoaded());
     registerFallbackValue(const StripeAccountStatusLoaded());
+    registerFallbackValue(const MobileMoneyAccountRequested());
     registerFallbackValue(const NegotiationFetchRequested('fallback-thread'));
     registerFallbackValue(
       NegotiationCreateDedicatedTripRequested(
@@ -474,6 +490,20 @@ void main() {
     if (!getIt.isRegistered<StripeAccountBloc>()) {
       getIt.registerFactory<StripeAccountBloc>(_makeStripeBloc);
     }
+
+    // MobileMoneyAccountBloc factory — CreateTripScreen.build() (Tâche 9)
+    // ajoute désormais `BlocProvider<MobileMoneyAccountBloc>(create: (_) =>
+    // getIt<MobileMoneyAccountBloc>()..add(const MobileMoneyAccountRequested()))`
+    // au MultiBlocProvider, inconditionnellement (comme TripTemplateBloc) :
+    // sans cet enregistrement, TOUT l'écran cesse de se construire.
+    if (!getIt.isRegistered<MobileMoneyAccountBloc>()) {
+      getIt.registerFactory<MobileMoneyAccountBloc>(() {
+        final b = _MockMobileMoneyAccountBloc();
+        when(() => b.state).thenReturn(const MobileMoneyAccountInitial());
+        when(() => b.stream).thenAnswer((_) => const Stream.empty());
+        return b;
+      });
+    }
   });
 
   tearDownAll(() {
@@ -498,6 +528,89 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
   }
+
+  // ── Group: mobileMoneyAccountActiveFrom (fonction pure, Tâche 9) ──────────────
+
+  group('mobileMoneyAccountActiveFrom', () {
+    test('Initial → false', () {
+      expect(
+        mobileMoneyAccountActiveFrom(const MobileMoneyAccountInitial()),
+        isFalse,
+      );
+    });
+
+    test('Loading → false', () {
+      expect(
+        mobileMoneyAccountActiveFrom(const MobileMoneyAccountLoading()),
+        isFalse,
+      );
+    });
+
+    test('Error sans compte connu → false', () {
+      expect(
+        mobileMoneyAccountActiveFrom(MobileMoneyAccountError(Exception('x'))),
+        isFalse,
+      );
+    });
+
+    test('Loaded avec compte actif → true', () {
+      expect(
+        mobileMoneyAccountActiveFrom(
+          const MobileMoneyAccountLoaded(
+            MobileMoneyAccount(status: MobileMoneyAccountStatus.active),
+          ),
+        ),
+        isTrue,
+      );
+    });
+
+    test('Loaded avec compte non configuré → false', () {
+      expect(
+        mobileMoneyAccountActiveFrom(
+          const MobileMoneyAccountLoaded(
+            MobileMoneyAccount(status: MobileMoneyAccountStatus.notConfigured),
+          ),
+        ),
+        isFalse,
+      );
+    });
+
+    test('Loaded avec compte désactivé → false', () {
+      expect(
+        mobileMoneyAccountActiveFrom(
+          const MobileMoneyAccountLoaded(
+            MobileMoneyAccount(status: MobileMoneyAccountStatus.disabled),
+          ),
+        ),
+        isFalse,
+      );
+    });
+
+    test('Updating avec compte actif conservé → true', () {
+      expect(
+        mobileMoneyAccountActiveFrom(
+          const MobileMoneyAccountUpdating(
+            MobileMoneyAccount(status: MobileMoneyAccountStatus.active),
+          ),
+        ),
+        isTrue,
+      );
+    });
+
+    test('Error avec compte actif conservé → true', () {
+      expect(
+        mobileMoneyAccountActiveFrom(
+          MobileMoneyAccountError(
+            Exception('x'),
+            account: const MobileMoneyAccount(
+              status: MobileMoneyAccountStatus.active,
+            ),
+          ),
+        ),
+        isTrue,
+      );
+    });
+  });
 
   // ── Group: AppBar titles ──────────────────────────────────────────────────────
 
@@ -1166,12 +1279,15 @@ void main() {
     Future<void> navigateToStep2(
       WidgetTester tester, {
       AuthState? authState,
+      AnnouncementModel? announcement,
     }) async {
       tester.view.physicalSize = const Size(800, 1024);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
 
-      final args = CreateTripArgs(announcement: _makeFullAnnouncement());
+      final args = CreateTripArgs(
+        announcement: announcement ?? _makeFullAnnouncement(),
+      );
       await pumpAndDrain(
         tester,
         _wrapWithRouter(CreateTripScreen(args: args), authState: authState),
@@ -1200,6 +1316,36 @@ void main() {
                     e.acceptedPaymentMethods.contains('CASH') &&
                     !e.acceptedPaymentMethods.contains('STRIPE'),
                 'AnnouncementUpdateRequested sans STRIPE, avec CASH forcé',
+              ),
+            ),
+          ),
+        ).called(1);
+      },
+    );
+
+    testWidgets(
+      'paymentMethods : MOBILE_MONEY inclus pour un trajet en XOF déjà '
+      'accepté au mobile money (préremplissage édition)',
+      (tester) async {
+        await navigateToStep2(
+          tester,
+          announcement: _makeFullAnnouncement(
+            currency: 'XOF',
+            acceptedPaymentMethods: {BidPaymentMethod.mobileMoney},
+          ),
+        );
+
+        await tester.tap(find.byKey(const Key('create-announcement-submit')));
+        await tester.pump(const Duration(milliseconds: 600));
+
+        verify(
+          () => announcementBloc.add(
+            any(
+              that: predicate<AnnouncementEvent>(
+                (e) =>
+                    e is AnnouncementUpdateRequested &&
+                    e.acceptedPaymentMethods.contains('MOBILE_MONEY'),
+                'AnnouncementUpdateRequested avec MOBILE_MONEY',
               ),
             ),
           ),

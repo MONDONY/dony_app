@@ -38,5 +38,18 @@ void main() {
       expect(SupportedCurrency.xof.unitsPerEur, 655.957);
       expect(SupportedCurrency.xaf.unitsPerEur, 655.957);
     });
+
+    test(
+      'isMobileMoneyEligible — seules XOF et XAF (zone CFA) sont éligibles',
+      () {
+        expect(SupportedCurrency.xof.isMobileMoneyEligible, isTrue);
+        expect(SupportedCurrency.xaf.isMobileMoneyEligible, isTrue);
+        expect(SupportedCurrency.eur.isMobileMoneyEligible, isFalse);
+        expect(SupportedCurrency.usd.isMobileMoneyEligible, isFalse);
+        expect(SupportedCurrency.cad.isMobileMoneyEligible, isFalse);
+        expect(SupportedCurrency.gbp.isMobileMoneyEligible, isFalse);
+        expect(SupportedCurrency.chf.isMobileMoneyEligible, isFalse);
+      },
+    );
   });
 }

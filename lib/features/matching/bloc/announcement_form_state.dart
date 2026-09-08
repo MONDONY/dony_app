@@ -72,6 +72,12 @@ class AnnouncementFormState extends Equatable {
   final AddressData? deliveryAddress;
   final bool cashAccepted;
 
+  /// Le voyageur accepte le paiement par mobile money (Orange Money, Wave,
+  /// MTN via pawaPay) sur ce trajet. Uniquement pertinent pour un trajet en
+  /// zone CFA (XOF/XAF) — la validité de la devise se vérifie côté écran,
+  /// pas ici.
+  final bool mobileMoneyAccepted;
+
   /// Le voyageur accepte les propositions de prix des expéditeurs sur ce
   /// trajet. `false` par défaut : un trajet reste à prix ferme tant que le
   /// voyageur ne l'ouvre pas explicitement.
@@ -99,6 +105,7 @@ class AnnouncementFormState extends Equatable {
     this.pickupAddress,
     this.deliveryAddress,
     this.cashAccepted = false,
+    this.mobileMoneyAccepted = false,
     this.negotiable = false,
     this.acceptedTypes = const [],
     this.rejectedTypes = const [],
@@ -155,6 +162,7 @@ class AnnouncementFormState extends Equatable {
     AddressData? Function()? pickupAddressGetter,
     AddressData? Function()? deliveryAddressGetter,
     bool? cashAccepted,
+    bool? mobileMoneyAccepted,
     bool? negotiable,
     List<String>? acceptedTypes,
     List<String>? rejectedTypes,
@@ -189,6 +197,7 @@ class AnnouncementFormState extends Equatable {
           ? deliveryAddressGetter()
           : deliveryAddress,
       cashAccepted: cashAccepted ?? this.cashAccepted,
+      mobileMoneyAccepted: mobileMoneyAccepted ?? this.mobileMoneyAccepted,
       negotiable: negotiable ?? this.negotiable,
       acceptedTypes: acceptedTypes ?? this.acceptedTypes,
       rejectedTypes: rejectedTypes ?? this.rejectedTypes,
@@ -214,6 +223,7 @@ class AnnouncementFormState extends Equatable {
     pickupAddress,
     deliveryAddress,
     cashAccepted,
+    mobileMoneyAccepted,
     negotiable,
     acceptedTypes,
     rejectedTypes,

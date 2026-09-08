@@ -111,6 +111,10 @@ Widget _host({
   final availableKgNotifier = ValueNotifier<double>(initialAvailableKg);
   final cashEnabledNotifier = ValueNotifier<bool>(false);
   final kgPriceEnabledNotifier = ValueNotifier<bool>(true);
+  final mobileMoneyEnabledNotifier = ValueNotifier<bool>(false);
+  final currencyNotifier = ValueNotifier<SupportedCurrency>(
+    currency ?? SupportedCurrency.eur,
+  );
   final resolvedNegotiableNotifier =
       negotiableNotifier ?? ValueNotifier<bool>(false);
   final selectedContentNotifier = ValueNotifier<Set<String>>({});
@@ -144,6 +148,8 @@ Widget _host({
             availableKgNotifier: availableKgNotifier,
             cashEnabledNotifier: cashEnabledNotifier,
             kgPriceEnabledNotifier: kgPriceEnabledNotifier,
+            mobileMoneyEnabledNotifier: mobileMoneyEnabledNotifier,
+            currencyNotifier: currencyNotifier,
             negotiableNotifier: resolvedNegotiableNotifier,
             selectedContentNotifier: selectedContentNotifier,
             customAcceptedNotifier: customAcceptedNotifier,
@@ -438,6 +444,10 @@ void main() {
                       availableKgNotifier: ValueNotifier<double>(10),
                       cashEnabledNotifier: ValueNotifier<bool>(false),
                       kgPriceEnabledNotifier: ValueNotifier<bool>(true),
+                      mobileMoneyEnabledNotifier: ValueNotifier<bool>(false),
+                      currencyNotifier: ValueNotifier<SupportedCurrency>(
+                        SupportedCurrency.eur,
+                      ),
                       negotiableNotifier: ValueNotifier<bool>(false),
                       selectedContentNotifier: ValueNotifier<Set<String>>({}),
                       customAcceptedNotifier: ValueNotifier<Set<String>>({}),
@@ -797,6 +807,10 @@ void main() {
                   availableKgNotifier: availKg,
                   cashEnabledNotifier: cash,
                   kgPriceEnabledNotifier: kgEnabled,
+                  mobileMoneyEnabledNotifier: ValueNotifier<bool>(false),
+                  currencyNotifier: ValueNotifier<SupportedCurrency>(
+                    SupportedCurrency.eur,
+                  ),
                   negotiableNotifier: ValueNotifier<bool>(false),
                   selectedContentNotifier: selContent,
                   customAcceptedNotifier: custAccepted,

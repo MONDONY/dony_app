@@ -34,6 +34,23 @@ class PrixConditionsStep extends StatelessWidget {
   final ValueNotifier<double> availableKgNotifier;
   final ValueNotifier<bool> cashEnabledNotifier;
   final ValueNotifier<bool> kgPriceEnabledNotifier; // ← NOUVEAU
+
+  /// Le voyageur accepte le paiement par mobile money (Orange Money, Wave,
+  /// MTN via pawaPay). Bascule visible même hors zone CFA, mais désactivée
+  /// (cf. [currencyNotifier] et [mobileMoneyAccountActive]).
+  final ValueNotifier<bool> mobileMoneyEnabledNotifier;
+
+  /// Devise courante, écoutée en direct pour activer/désactiver la bascule
+  /// mobile money : seuls XOF et XAF (zone CFA) y sont éligibles. Distinct de
+  /// [currency] (valeur déjà résolue, utilisée pour l'affichage des prix) —
+  /// le parent transmet les deux.
+  final ValueNotifier<SupportedCurrency> currencyNotifier;
+
+  /// Le voyageur a activé son compte de versement mobile money
+  /// (`MobileMoneyAccountBloc` côté écran). Tant que ce n'est pas le cas, la
+  /// bascule reste désactivée même en zone CFA.
+  final bool mobileMoneyAccountActive;
+
   /// Le voyageur accepte les propositions de prix des expéditeurs.
   /// Propriété du parent, comme les autres notifiers de cette étape.
   final ValueNotifier<bool> negotiableNotifier;
@@ -76,6 +93,9 @@ class PrixConditionsStep extends StatelessWidget {
     required this.availableKgNotifier,
     required this.cashEnabledNotifier,
     required this.kgPriceEnabledNotifier, // ← NOUVEAU
+    required this.mobileMoneyEnabledNotifier,
+    required this.currencyNotifier,
+    this.mobileMoneyAccountActive = false,
     required this.negotiableNotifier,
     required this.selectedContentNotifier,
     required this.customAcceptedNotifier,
@@ -615,6 +635,8 @@ class PrixConditionsStep extends StatelessWidget {
                         );
                       },
                     ),
+                    const CaRowDivider(),
+                    _buildMobileMoneySection(tt, cs),
                   ],
                 ),
               );
@@ -1004,8 +1026,77 @@ class PrixConditionsStep extends StatelessWidget {
               duration: 200.ms,
             ),
           ),
+          const CaRowDivider(),
+          _buildMobileMoneySection(tt, cs),
         ],
       ),
+    );
+  }
+
+  /// Bascule « Mobile money » : partagée entre la disposition « Stripe
+  /// configuré » et « Stripe non configuré » — les deux sont vivantes en
+  /// production selon que le voyageur a terminé l'onboarding Stripe Connect,
+  /// indépendant du rail mobile money. Visible même hors zone CFA (bascule
+  /// désactivée) et tant que le compte de versement n'est pas actif.
+  Widget _buildMobileMoneySection(TextTheme tt, ColorScheme cs) {
+    return ValueListenableBuilder<SupportedCurrency>(
+      valueListenable: currencyNotifier,
+      builder: (context, currencyValue, _) {
+        final eligible = currencyValue.isMobileMoneyEligible;
+        return Column(
+          children: [
+            if (eligible && !mobileMoneyAccountActive)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton(
+                  onPressed: () =>
+                      context.push('/payments/mobile-money/account'),
+                  child: const Text('Activer le versement'),
+                ),
+              ),
+            ValueListenableBuilder<bool>(
+              valueListenable: mobileMoneyEnabledNotifier,
+              builder: (context, mobileMoneyEnabled, _) {
+                return SwitchListTile(
+                  key: const Key('payment-method-mobile-money'),
+                  value: mobileMoneyEnabled,
+                  onChanged: eligible && mobileMoneyAccountActive
+                      ? (v) => mobileMoneyEnabledNotifier.value = v
+                      : null,
+                  activeThumbColor: cs.primary,
+                  title: Row(
+                    children: [
+                      const DonyIcon('smartphone', size: 18),
+                      const SizedBox(width: DonySpacing.sm),
+                      Flexible(
+                        child: Text(
+                          'Mobile money',
+                          style: tt.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: cs.onSurface,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  subtitle: Text(
+                    !eligible
+                        ? 'Disponible pour les trajets en XOF ou XAF'
+                        : !mobileMoneyAccountActive
+                        ? 'Active d\'abord ton versement mobile money'
+                        : 'Orange Money, Wave, MTN',
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: DonySpacing.base,
+                    vertical: DonySpacing.xs,
+                  ),
+                );
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }

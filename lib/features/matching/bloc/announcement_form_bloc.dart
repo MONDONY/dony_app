@@ -33,6 +33,7 @@ class AnnouncementFormBloc
     on<PickupAddressChanged>(_onPickupAddressChanged);
     on<DeliveryAddressChanged>(_onDeliveryAddressChanged);
     on<CashAcceptedChanged>(_onCashAcceptedChanged);
+    on<MobileMoneyAcceptedChanged>(_onMobileMoneyAcceptedChanged);
     on<NegotiableChanged>(_onNegotiableChanged);
     on<AcceptedTypesChanged>(_onAcceptedTypesChanged);
     on<RejectedTypesChanged>(_onRejectedTypesChanged);
@@ -166,6 +167,13 @@ class AnnouncementFormBloc
     Emitter<AnnouncementFormState> emit,
   ) {
     emit(state.copyWith(cashAccepted: event.accepted));
+  }
+
+  void _onMobileMoneyAcceptedChanged(
+    MobileMoneyAcceptedChanged event,
+    Emitter<AnnouncementFormState> emit,
+  ) {
+    emit(state.copyWith(mobileMoneyAccepted: event.accepted));
   }
 
   void _onNegotiableChanged(

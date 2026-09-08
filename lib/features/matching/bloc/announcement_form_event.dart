@@ -115,6 +115,15 @@ class CashAcceptedChanged extends AnnouncementFormEvent {
   List<Object?> get props => [accepted];
 }
 
+class MobileMoneyAcceptedChanged extends AnnouncementFormEvent {
+  final bool accepted;
+
+  const MobileMoneyAcceptedChanged(this.accepted);
+
+  @override
+  List<Object?> get props => [accepted];
+}
+
 /// Le voyageur ouvre (ou referme) son trajet aux propositions de prix des
 /// expéditeurs.
 class NegotiableChanged extends AnnouncementFormEvent {
