@@ -142,6 +142,7 @@ void main() {
   setUpAll(() {
     registerFallbackValue(BidListRequested('ann-1'));
     registerFallbackValue(BidAcceptRequested('fallback'));
+    registerFallbackValue(BidAcceptMobileMoneyRequested('fallback'));
     registerFallbackValue(BidRejectRequested('fallback'));
     registerFallbackValue(ace.BidAcceptRequested('fallback'));
   });
@@ -281,6 +282,36 @@ void main() {
       () => acceptanceBloc.add(any(that: isA<ace.BidAcceptRequested>())),
     );
   });
+
+  testWidgets(
+    'tap Accepter sur bid MOBILE_MONEY → BidBloc.add(BidAcceptMobileMoneyRequested)',
+    (tester) async {
+      final ctrl = _wireStates(bidBloc);
+      addTearDown(ctrl.close);
+
+      await _pump(tester, bidBloc, acceptanceBloc);
+      ctrl.add(
+        BidListLoaded([
+          _makeBid(
+            status: 'PAYMENT_ESCROWED',
+            id: 'mm-1',
+            paymentMethod: BidPaymentMethod.mobileMoney,
+          ),
+        ]),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Accepter'));
+      await tester.pump();
+
+      verify(
+        () => bidBloc.add(any(that: isA<BidAcceptMobileMoneyRequested>())),
+      ).called(1);
+      verifyNever(
+        () => acceptanceBloc.add(any(that: isA<ace.BidAcceptRequested>())),
+      );
+    },
+  );
 
   // ── Refuser → dialog → confirmer ────────────────────────────────────────────
 

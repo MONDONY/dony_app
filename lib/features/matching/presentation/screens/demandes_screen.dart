@@ -179,9 +179,12 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
     setState(() => _processingBidIds.add(bid.id));
     // Pas d'event analytics ici : bid_accepted est tracé dans les blocs au
     // succès réel, pas au tap (un échec réseau ne doit pas compter).
-    // Le cash passe par le flux commission ; la carte est déjà en séquestre.
+    // Le cash passe par le flux commission ; la carte et le mobile money sont
+    // déjà en séquestre.
     if (bid.paymentMethod == BidPaymentMethod.cash) {
       context.read<BidAcceptanceBloc>().add(ace.BidAcceptRequested(bid.id));
+    } else if (bid.paymentMethod == BidPaymentMethod.mobileMoney) {
+      context.read<BidBloc>().add(BidAcceptMobileMoneyRequested(bid.id));
     } else {
       context.read<BidBloc>().add(BidAcceptRequested(bid.id));
     }

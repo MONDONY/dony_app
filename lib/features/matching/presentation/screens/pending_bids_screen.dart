@@ -322,6 +322,8 @@ class _PendingBidsViewState extends State<_PendingBidsView> {
     final bid = pendingBids.firstWhere((b) => b.id == bidId);
     if (bid.paymentMethod == BidPaymentMethod.cash) {
       context.read<BidAcceptanceBloc>().add(ace.BidAcceptRequested(bidId));
+    } else if (bid.paymentMethod == BidPaymentMethod.mobileMoney) {
+      context.read<BidBloc>().add(BidAcceptMobileMoneyRequested(bidId));
     } else {
       context.read<BidBloc>().add(BidAcceptRequested(bidId));
     }
