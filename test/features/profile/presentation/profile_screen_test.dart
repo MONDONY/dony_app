@@ -173,6 +173,10 @@ Widget _buildTestHarness({
       path: '/payments/commission-method',
       builder: (_, _) => stub('CommissionMethod'),
     ),
+    GoRoute(
+      path: '/payments/mobile-money/account',
+      builder: (_, _) => stub('MobileMoneyAccount'),
+    ),
     GoRoute(path: '/payments/wallet', builder: (_, _) => stub('Wallet')),
     GoRoute(
       path: '/payments/wallet/topup/method',
@@ -481,6 +485,7 @@ void main() {
 
         for (final label in [
           'Recevoir mes paiements',
+          'Versement mobile money',
           'Carte commission espèces',
         ]) {
           await _scrollTo(tester, find.text(label));
@@ -614,6 +619,7 @@ void main() {
       ('Mon profil public', 'PublicProfile'),
       ('Mes avis reçus', 'Reviews'),
       ('Parrainages', 'Referral'),
+      ('Versement mobile money', 'MobileMoneyAccount'),
     ]) {
       testWidgets('« ${nav.$1} » ouvre ${nav.$2}', (tester) async {
         await pumpWith(tester, _dualRoleUser);

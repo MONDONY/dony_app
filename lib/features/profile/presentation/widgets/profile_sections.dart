@@ -155,6 +155,14 @@ class ProfileMoneySection extends StatelessWidget {
                         ? () => context.push('/payments/onboarding')
                         : null,
                   ),
+                DonyListTile(
+                  iconAsset: 'smartphone',
+                  iconColor: cs.primary,
+                  iconBgColor: cs.primaryContainer,
+                  label: 'Versement mobile money',
+                  subtitle: 'Zone CFA : Orange Money, Wave, MTN',
+                  onTap: () => context.push('/payments/mobile-money/account'),
+                ),
                 // « Ma grille de prix » a quitté cette section pour les
                 // outils de l'onglet Activités : elle fixe des tarifs, elle
                 // n'encaisse rien. Une seule entrée, ici ou là-bas, jamais
