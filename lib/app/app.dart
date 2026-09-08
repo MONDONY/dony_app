@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:app_links/app_links.dart';
 import 'package:dony/app/announcement_deep_link.dart';
+import 'package:dony/app/mobile_money_deep_link.dart';
 import 'package:dony/app/reduced_motion_priming.dart';
 import 'package:dony/app/router.dart';
 import 'package:dony/core/design/design_system.dart';
@@ -144,14 +145,23 @@ class _DonyAppState extends State<DonyApp> {
     );
   }
 
+  // Chemins PARAMÉTRÉS : une table d'égalité ne peut pas décrire un
+  // identifiant variable, donc résolus dans l'ordre AVANT la liste blanche
+  // ci-dessous — premier résultat non nul gagnant. Chaque résolveur valide
+  // strictement son propre segment (UUID) ; voir resolveAnnouncementDeepLink
+  // et resolveMobileMoneyAwaitingDeepLink. Un nouveau chemin paramétré
+  // s'ajoute à cette liste, jamais comme un bras séparé dans _handleDeepLink.
+  static final _parameterizedResolvers = <String? Function(Uri)>[
+    resolveAnnouncementDeepLink,
+    resolveMobileMoneyAwaitingDeepLink,
+  ];
+
   // Allowlist par égalité stricte des chemins FIXES atteignables via yadony://.
   // Empêche un lien forgé (ex. yadony://admin/…) d'atteindre un écran non prévu.
   //
-  // Ce n'est plus la seule porte du schéma : les chemins PARAMÉTRÉS, qu'une
-  // table d'égalité ne peut pas décrire, sont résolus avant elle dans
-  // _handleDeepLink. Auditer la surface deep-link demande donc de lire les deux.
-  // Au deuxième chemin paramétré, remplacer l'ensemble par une liste ordonnée de
-  // résolveurs plutôt que d'ajouter un troisième bras.
+  // Ce n'est plus la seule porte du schéma : les chemins paramétrés ci-dessus
+  // sont résolus avant elle. Auditer la surface deep-link demande donc de
+  // lire les deux.
   static const _allowedDeepLinkPaths = {
     '/stripe/onboarding/complete',
     '/stripe/onboarding/refresh',
@@ -164,17 +174,16 @@ class _DonyAppState extends State<DonyApp> {
       return;
     }
 
-    // Chemin paramétré : traité à part de la liste blanche exhaustive, qui
-    // fonctionne par égalité stricte et ne peut donc pas porter un identifiant
-    // variable. La validation du segment vit dans resolveAnnouncementDeepLink.
-    final announcementRoute = resolveAnnouncementDeepLink(uri);
-    if (announcementRoute != null) {
-      try {
-        _navigateToRoute(announcementRoute);
-      } catch (_) {
-        // Route indisponible — no-op, comme pour les autres liens profonds.
+    for (final resolver in _parameterizedResolvers) {
+      final route = resolver(uri);
+      if (route != null) {
+        try {
+          _navigateToRoute(route);
+        } catch (_) {
+          // Route indisponible — no-op, comme pour les autres liens profonds.
+        }
+        return;
       }
-      return;
     }
 
     final routePath = '/${uri.host}${uri.path}';

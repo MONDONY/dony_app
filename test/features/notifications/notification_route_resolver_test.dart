@@ -16,7 +16,6 @@ void main() {
       'BID_EXPIRED',
       'CONFIRMATION_CODE_READY',
       'DELIVERY_NOSHOW_REPORTED',
-      'MM_PAYMENT_PENDING',
     ]) {
       test('$type routes to bid detail', () {
         expect(
@@ -30,6 +29,32 @@ void main() {
       });
     }
   });
+
+  group(
+    'resolveNotificationRoute — MM_PAYMENT_PENDING (paiement mobile money)',
+    () {
+      // Le paiement mobile money attend un dépôt (PIN opérateur ou redirection
+      // Wave) : la notification doit rouvrir directement l'écran d'attente qui
+      // relance/sonde ce dépôt, pas le simple détail du bid.
+      test('MM_PAYMENT_PENDING routes to the mobile money awaiting screen', () {
+        expect(
+          resolveNotificationRoute('MM_PAYMENT_PENDING', {'bidId': bidId}),
+          '/bids/$bidId/mobile-money/awaiting',
+        );
+      });
+
+      test('MM_PAYMENT_PENDING without bidId returns null', () {
+        expect(resolveNotificationRoute('MM_PAYMENT_PENDING', {}), isNull);
+      });
+
+      test('MM_PAYMENT_PENDING rejects an invalid bidId', () {
+        expect(
+          resolveNotificationRoute('MM_PAYMENT_PENDING', {'bidId': '../admin'}),
+          isNull,
+        );
+      });
+    },
+  );
 
   group('resolveNotificationRoute — nouveaux événements transactionnels', () {
     for (final type in [
