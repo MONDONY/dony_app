@@ -68,7 +68,11 @@ BidModel _$BidModelFromJson(Map<String, dynamic> json) => BidModel(
       ? null
       : DateTime.parse(json['confirmationCodeRefreshWindowStart'] as String),
   paymentMethod:
-      $enumDecodeNullable(_$BidPaymentMethodEnumMap, json['paymentMethod']) ??
+      $enumDecodeNullable(
+        _$BidPaymentMethodEnumMap,
+        json['paymentMethod'],
+        unknownValue: BidPaymentMethod.stripe,
+      ) ??
       BidPaymentMethod.stripe,
   commissionStatus: $enumDecodeNullable(
     _$CommissionStatusEnumMap,
@@ -192,6 +196,7 @@ const _$BidPaymentMethodEnumMap = {
   BidPaymentMethod.cash: 'CASH',
   BidPaymentMethod.wave: 'WAVE',
   BidPaymentMethod.orangeMoney: 'ORANGE_MONEY',
+  BidPaymentMethod.mobileMoney: 'MOBILE_MONEY',
 };
 
 const _$CommissionStatusEnumMap = {

@@ -13,6 +13,8 @@ enum BidPaymentMethod {
   wave,
   @JsonValue('ORANGE_MONEY')
   orangeMoney,
+  @JsonValue('MOBILE_MONEY')
+  mobileMoney,
 }
 
 /// Extension exposing the canonical API string value for each [BidPaymentMethod].
@@ -24,6 +26,23 @@ extension BidPaymentMethodApi on BidPaymentMethod {
   /// Returns the `@JsonValue` string that must be sent to the API.
   /// e.g. [BidPaymentMethod.orangeMoney] → `'ORANGE_MONEY'`
   String get apiValue => _$BidPaymentMethodEnumMap[this]!;
+
+  /// Valeur reçue de l'API, ou null si l'app ne la connaît pas encore :
+  /// une nouvelle méthode côté backend ne doit jamais faire planter un parsing.
+  static BidPaymentMethod? fromApi(String? raw) {
+    if (raw == null) return null;
+    for (final entry in _$BidPaymentMethodEnumMap.entries) {
+      if (entry.value == raw) return entry.key;
+    }
+    return null;
+  }
+}
+
+/// Parsing tolérant de `acceptedPaymentMethods` : valeurs inconnues ignorées,
+/// liste absente = carte (comportement historique).
+Set<BidPaymentMethod> acceptedPaymentMethodsFromJson(Object? raw) {
+  if (raw is! List) return const {BidPaymentMethod.stripe};
+  return {for (final v in raw) ?BidPaymentMethodApi.fromApi(v as String?)};
 }
 
 enum CommissionStatus {
@@ -123,6 +142,7 @@ class BidModel {
   final bool travelerHasRated;
   final int confirmationCodeRefreshCount;
   final DateTime? confirmationCodeRefreshWindowStart;
+  @JsonKey(unknownEnumValue: BidPaymentMethod.stripe)
   final BidPaymentMethod paymentMethod;
   final CommissionStatus? commissionStatus;
   final String? cancellationNoShowStatus;
