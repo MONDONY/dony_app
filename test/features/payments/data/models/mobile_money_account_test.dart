@@ -116,9 +116,7 @@ void main() {
 
       test('deux comptes avec un statut different ne sont pas egaux', () {
         const a = MobileMoneyAccount(status: MobileMoneyAccountStatus.active);
-        const b = MobileMoneyAccount(
-          status: MobileMoneyAccountStatus.disabled,
-        );
+        const b = MobileMoneyAccount(status: MobileMoneyAccountStatus.disabled);
 
         expect(a, isNot(equals(b)));
       });
