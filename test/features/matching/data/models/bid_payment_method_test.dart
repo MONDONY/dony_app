@@ -59,14 +59,11 @@ void main() {
     expect(b.paymentMethod, BidPaymentMethod.stripe);
   });
 
-  test(
-    'AnnouncementModel.fromJson ignore une méthode de paiement inconnue '
-    'dans acceptedPaymentMethods',
-    () {
-      final a = AnnouncementModel.fromJson(
-        _minimalAnnouncement(methods: ['STRIPE', 'BITCOIN']),
-      );
-      expect(a.acceptedPaymentMethods, {BidPaymentMethod.stripe});
-    },
-  );
+  test('AnnouncementModel.fromJson ignore une méthode de paiement inconnue '
+      'dans acceptedPaymentMethods', () {
+    final a = AnnouncementModel.fromJson(
+      _minimalAnnouncement(methods: ['STRIPE', 'BITCOIN']),
+    );
+    expect(a.acceptedPaymentMethods, {BidPaymentMethod.stripe});
+  });
 }
