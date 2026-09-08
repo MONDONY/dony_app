@@ -125,8 +125,10 @@ import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/data/datasources/commission_method_remote_datasource.dart';
 import 'package:dony/features/payments/cash/data/repositories/commission_method_repository.dart';
+import 'package:dony/features/payments/data/datasources/mobile_money_account_remote_datasource.dart';
 import 'package:dony/features/payments/data/datasources/payment_remote_datasource.dart';
 import 'package:dony/features/payments/data/payment_gateway.dart';
+import 'package:dony/features/payments/data/repositories/mobile_money_account_repository.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_eligible_topups_cubit.dart';
@@ -447,6 +449,16 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<MobileMoneyPaymentBloc>(
     () => MobileMoneyPaymentBloc(getIt<MobileMoneyRepository>()),
+  );
+
+  // Payments — Mobile money (compte de versement)
+  getIt.registerLazySingleton<MobileMoneyAccountRemoteDatasource>(
+    () => MobileMoneyAccountRemoteDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<MobileMoneyAccountRepository>(
+    () => MobileMoneyAccountRepository(
+      getIt<MobileMoneyAccountRemoteDatasource>(),
+    ),
   );
 
   // Cash commission method

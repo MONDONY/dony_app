@@ -2,7 +2,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/features/matching/bloc/mobile_money_payment_bloc.dart';
 import 'package:dony/features/matching/bloc/mobile_money_payment_event.dart';
 import 'package:dony/features/matching/bloc/mobile_money_payment_state.dart';
-import 'package:dony/features/matching/data/models/mobile_money_payment_model.dart';
+import 'package:dony/features/matching/data/models/mobile_money_payment_status.dart';
 import 'package:dony/features/matching/data/repositories/mobile_money_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -23,15 +23,19 @@ void main() {
     tearDown(() => bloc.close());
 
     blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
-      'MobileMoneyStatusPolled → MobileMoneyPaymentPending quand status=PENDING',
+      'MobileMoneyStatusPolled → MobileMoneyPaymentPending quand le paiement n\'est ni séquestré ni expiré',
       build: () {
         when(() => repo.getStatus(bidId)).thenAnswer(
-          (_) async => const MobileMoneyPaymentModel(
-            id: 'id-1',
-            status: 'PENDING',
-            paymentLink: 'https://wave.test/pay?ref=abc',
+          (_) async => const MobileMoneyPaymentStatus(
+            bidId: bidId,
+            bidStatus: 'AWAITING_PAYMENT',
+            paymentStatus: 'PENDING',
             amount: 50.0,
-            currency: 'XOF',
+            deposit: MobileMoneyDeposit(
+              id: 'deposit-1',
+              status: MobileMoneyDepositStatus.accepted,
+              authorizationUrl: 'https://wave.test/pay?ref=abc',
+            ),
           ),
         );
         return bloc;
@@ -48,14 +52,14 @@ void main() {
     );
 
     blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
-      'MobileMoneyStatusPolled → MobileMoneyPaymentConfirmed quand status=COMPLETED',
+      'MobileMoneyStatusPolled → MobileMoneyPaymentConfirmed quand paymentStatus=ESCROW',
       build: () {
         when(() => repo.getStatus(bidId)).thenAnswer(
-          (_) async => const MobileMoneyPaymentModel(
-            id: 'id-2',
-            status: 'COMPLETED',
+          (_) async => const MobileMoneyPaymentStatus(
+            bidId: bidId,
+            bidStatus: 'ACCEPTED',
+            paymentStatus: 'ESCROW',
             amount: 50.0,
-            currency: 'XOF',
           ),
         );
         return bloc;
@@ -81,14 +85,13 @@ void main() {
     );
 
     blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
-      'MobileMoneyStatusPolled → MobileMoneyPaymentExpired quand status=EXPIRED',
+      'MobileMoneyStatusPolled → MobileMoneyPaymentExpired quand le bid est annulé',
       build: () {
         when(() => repo.getStatus(bidId)).thenAnswer(
-          (_) async => const MobileMoneyPaymentModel(
-            id: 'id-3',
-            status: 'EXPIRED',
+          (_) async => const MobileMoneyPaymentStatus(
+            bidId: bidId,
+            bidStatus: 'CANCELLED',
             amount: 50.0,
-            currency: 'XOF',
           ),
         );
         return bloc;
@@ -101,15 +104,18 @@ void main() {
     );
 
     blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
-      'MobileMoneyStatusPolled → MobileMoneyPaymentError quand status=FAILED',
+      'MobileMoneyStatusPolled → MobileMoneyPaymentError quand le dernier dépôt a échoué',
       build: () {
         when(() => repo.getStatus(bidId)).thenAnswer(
-          (_) async => const MobileMoneyPaymentModel(
-            id: 'id-4',
-            status: 'FAILED',
+          (_) async => const MobileMoneyPaymentStatus(
+            bidId: bidId,
+            bidStatus: 'AWAITING_PAYMENT',
             amount: 50.0,
-            currency: 'XOF',
-            failureReason: 'Solde insuffisant',
+            deposit: MobileMoneyDeposit(
+              id: 'deposit-1',
+              status: MobileMoneyDepositStatus.failed,
+              failureMessage: 'Solde insuffisant',
+            ),
           ),
         );
         return bloc;
@@ -128,13 +134,17 @@ void main() {
     blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
       'MobileMoneyLinkRegenRequested → MobileMoneyPaymentPending avec nouveau lien',
       build: () {
-        when(() => repo.regenerateLink(bidId)).thenAnswer(
-          (_) async => const MobileMoneyPaymentModel(
-            id: 'id-5',
-            status: 'PENDING',
+        when(() => repo.initiate(bidId)).thenAnswer(
+          (_) async => const MobileMoneyPaymentStatus(
+            bidId: bidId,
+            bidStatus: 'AWAITING_PAYMENT',
+            paymentStatus: 'PENDING',
             amount: 50.0,
-            currency: 'XOF',
-            paymentLink: 'https://wave.test/pay?ref=new',
+            deposit: MobileMoneyDeposit(
+              id: 'deposit-2',
+              status: MobileMoneyDepositStatus.accepted,
+              authorizationUrl: 'https://wave.test/pay?ref=new',
+            ),
           ),
         );
         return bloc;
@@ -153,13 +163,13 @@ void main() {
     blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
       'MobileMoneyStatusPolled depuis état Pending → pas de Loading (pas de clignotement)',
       build: () {
-        // Server returns COMPLETED — so a state change DOES happen, but no Loading first
+        // Le serveur renvoie ESCROW — un changement d'état a bien lieu, mais sans Loading avant.
         when(() => repo.getStatus(bidId)).thenAnswer(
-          (_) async => const MobileMoneyPaymentModel(
-            id: 'id-6',
-            status: 'COMPLETED',
+          (_) async => const MobileMoneyPaymentStatus(
+            bidId: bidId,
+            bidStatus: 'ACCEPTED',
+            paymentStatus: 'ESCROW',
             amount: 50.0,
-            currency: 'XOF',
           ),
         );
         return bloc;
@@ -169,7 +179,7 @@ void main() {
       ),
       act: (b) => b.add(const MobileMoneyStatusPolled(bidId: bidId)),
       expect: () => [
-        // No MobileMoneyPaymentLoading emitted — periodic poll skips spinner
+        // Pas de MobileMoneyPaymentLoading émis — le poll périodique saute le spinner.
         isA<MobileMoneyPaymentConfirmed>(),
       ],
     );
@@ -178,12 +188,16 @@ void main() {
       'MobileMoneyStatusPolled depuis état Error → Loading émis (première tentative après erreur)',
       build: () {
         when(() => repo.getStatus(bidId)).thenAnswer(
-          (_) async => const MobileMoneyPaymentModel(
-            id: 'id-7',
-            status: 'PENDING',
-            paymentLink: 'https://wave.test/pay?ref=abc',
+          (_) async => const MobileMoneyPaymentStatus(
+            bidId: bidId,
+            bidStatus: 'AWAITING_PAYMENT',
+            paymentStatus: 'PENDING',
             amount: 50.0,
-            currency: 'XOF',
+            deposit: MobileMoneyDeposit(
+              id: 'deposit-3',
+              status: MobileMoneyDepositStatus.accepted,
+              authorizationUrl: 'https://wave.test/pay?ref=abc',
+            ),
           ),
         );
         return bloc;

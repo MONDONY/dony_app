@@ -122,6 +122,59 @@ void main() {
     });
   });
 
+  // ── acceptMobileMoneyBid ─────────────────────────────────────────────────────
+
+  group('acceptMobileMoneyBid', () {
+    test(
+      'POST /bids/{bidId}/mobile-money/accept puis relit le bid via GET /bids/{bidId}',
+      () async {
+        when(
+          () => mockDio.post('/bids/bid-001/mobile-money/accept'),
+        ).thenAnswer(
+          (_) async => _ok({
+            'bidId': 'bid-001',
+            'bidStatus': 'ACCEPTED',
+          }, '/bids/bid-001/mobile-money/accept'),
+        );
+        final accepted = {..._bidJson, 'status': 'ACCEPTED'};
+        when(
+          () => mockDio.get('/bids/bid-001'),
+        ).thenAnswer((_) async => _ok(accepted, '/bids/bid-001'));
+
+        final result = await datasource.acceptMobileMoneyBid('bid-001');
+
+        expect(result.status, 'ACCEPTED');
+        verify(
+          () => mockDio.post('/bids/bid-001/mobile-money/accept'),
+        ).called(1);
+        verify(() => mockDio.get('/bids/bid-001')).called(1);
+      },
+    );
+
+    test('propage la DioException levée par l\'appel accept', () async {
+      when(() => mockDio.post('/bids/bid-001/mobile-money/accept')).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(
+            path: '/bids/bid-001/mobile-money/accept',
+          ),
+          type: DioExceptionType.badResponse,
+          response: Response(
+            statusCode: 422,
+            requestOptions: RequestOptions(
+              path: '/bids/bid-001/mobile-money/accept',
+            ),
+          ),
+        ),
+      );
+
+      expect(
+        () => datasource.acceptMobileMoneyBid('bid-001'),
+        throwsA(isA<DioException>()),
+      );
+      verifyNever(() => mockDio.get('/bids/bid-001'));
+    });
+  });
+
   // ── rejectBid ────────────────────────────────────────────────────────────────
 
   group('rejectBid', () {

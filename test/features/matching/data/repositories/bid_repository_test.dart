@@ -85,6 +85,16 @@ void main() {
       expect(result.status, 'ACCEPTED');
     });
 
+    test('acceptMobileMoneyBid delegates correctly', () async {
+      when(
+        () => mockDs.acceptMobileMoneyBid('bid-001'),
+      ).thenAnswer((_) async => _bid(status: 'ACCEPTED'));
+
+      final result = await repo.acceptMobileMoneyBid('bid-001');
+      expect(result.status, 'ACCEPTED');
+      verify(() => mockDs.acceptMobileMoneyBid('bid-001')).called(1);
+    });
+
     test('rejectBid delegates correctly', () async {
       when(
         () => mockDs.rejectBid('bid-001', reason: any(named: 'reason')),
