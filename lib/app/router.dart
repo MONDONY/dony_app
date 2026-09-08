@@ -803,8 +803,9 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/payments/mobile-money/account',
       builder: (_, _) => BlocProvider(
-        create: (_) => getIt<MobileMoneyAccountBloc>()
-          ..add(const MobileMoneyAccountRequested()),
+        create: (_) =>
+            getIt<MobileMoneyAccountBloc>()
+              ..add(const MobileMoneyAccountRequested()),
         child: const MobileMoneyAccountScreen(),
       ),
     ),

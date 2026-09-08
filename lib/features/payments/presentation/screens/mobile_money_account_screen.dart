@@ -46,8 +46,7 @@ class MobileMoneyAccountScreen extends StatelessWidget {
           }
         },
         builder: (context, state) => switch (state) {
-          MobileMoneyAccountInitial() ||
-          MobileMoneyAccountLoading() => Center(
+          MobileMoneyAccountInitial() || MobileMoneyAccountLoading() => Center(
             child: CircularProgressIndicator(color: cs.primary),
           ),
           MobileMoneyAccountLoaded(:final account) => _AccountBody(

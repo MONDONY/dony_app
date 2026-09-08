@@ -81,9 +81,7 @@ void main() {
     expect(find.text('Versement mobile money'), findsOneWidget);
   });
 
-  testWidgets('chargement en cours : indicateur de chargement', (
-    tester,
-  ) async {
+  testWidgets('chargement en cours : indicateur de chargement', (tester) async {
     stub(const MobileMoneyAccountLoading());
 
     await pumpScreen(tester, settle: false);
@@ -229,9 +227,7 @@ void main() {
       await tester.tap(find.text('Réessayer'));
       await tester.pump();
 
-      verify(
-        () => bloc.add(const MobileMoneyAccountRequested()),
-      ).called(1);
+      verify(() => bloc.add(const MobileMoneyAccountRequested())).called(1);
     },
   );
 }
