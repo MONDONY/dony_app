@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
@@ -29,6 +30,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart'
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
 import 'package:dony/features/matching/presentation/widgets/cash_commission_notice.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/prix_conditions_step.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/locked_trip_context.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
@@ -1346,6 +1348,59 @@ void main() {
                     e is AnnouncementUpdateRequested &&
                     e.acceptedPaymentMethods.contains('MOBILE_MONEY'),
                 'AnnouncementUpdateRequested avec MOBILE_MONEY',
+              ),
+            ),
+          ),
+        ).called(1);
+      },
+    );
+
+    testWidgets(
+      'paymentMethods : MOBILE_MONEY retiré si la devise quitte la zone CFA '
+      'après activation (_onCurrencyChanged)',
+      (tester) async {
+        await navigateToStep2(
+          tester,
+          announcement: _makeFullAnnouncement(
+            currency: 'XOF',
+            acceptedPaymentMethods: {BidPaymentMethod.mobileMoney},
+          ),
+        );
+
+        // La bannière de devise est masquée en édition (currency verrouillée
+        // côté UI) : le seul moyen d'exercer le listener réel
+        // `_onCurrencyChanged` est de muter directement le currencyNotifier
+        // partagé. `PrixConditionsStep.currencyNotifier` EST l'instance
+        // `widget.currencyNotifier` de `_TripFormContentState` (même
+        // référence, passée telle quelle dans `_buildStep2`) : la muter ici
+        // déclenche donc le vrai listener de l'écran, pas une simulation.
+        final step = tester.widget<PrixConditionsStep>(
+          find.byType(PrixConditionsStep),
+        );
+        step.currencyNotifier.value = SupportedCurrency.eur;
+        await tester.pump(const Duration(milliseconds: 600));
+
+        final tile = tester.widget<SwitchListTile>(
+          find.byKey(const Key('payment-method-mobile-money')),
+        );
+        expect(
+          tile.value,
+          isFalse,
+          reason: 'La bascule doit se remettre à false hors zone CFA',
+        );
+
+        await tester.tap(find.byKey(const Key('create-announcement-submit')));
+        await tester.pump(const Duration(milliseconds: 600));
+
+        verify(
+          () => announcementBloc.add(
+            any(
+              that: predicate<AnnouncementEvent>(
+                (e) =>
+                    e is AnnouncementUpdateRequested &&
+                    !e.acceptedPaymentMethods.contains('MOBILE_MONEY'),
+                'AnnouncementUpdateRequested sans MOBILE_MONEY après reset '
+                'de devise',
               ),
             ),
           ),
