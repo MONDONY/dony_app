@@ -59,6 +59,10 @@ abstract final class AnalyticsEvents {
   static const paymentFailed = 'payment_failed';
   static const mobileMoneyAwaiting = 'mobile_money_awaiting';
 
+  /// Compte de versement mobile money (voyageur) activé ou désactivé.
+  static const mobileMoneyAccountActivated = 'mobile_money_account_activated';
+  static const mobileMoneyAccountDisabled = 'mobile_money_account_disabled';
+
   // Tracking / QR
   static const qrScanSuccess = 'qr_scan_success';
   static const deliveryConfirmed = 'delivery_confirmed';

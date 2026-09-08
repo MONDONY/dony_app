@@ -121,6 +121,7 @@ import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/negotiation_repository.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/package_request/data/price_estimation_repository.dart';
+import 'package:dony/features/payments/bloc/mobile_money_account_bloc.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/data/datasources/commission_method_remote_datasource.dart';
@@ -458,6 +459,12 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerLazySingleton<MobileMoneyAccountRepository>(
     () => MobileMoneyAccountRepository(
       getIt<MobileMoneyAccountRemoteDatasource>(),
+    ),
+  );
+  getIt.registerFactory<MobileMoneyAccountBloc>(
+    () => MobileMoneyAccountBloc(
+      getIt<MobileMoneyAccountRepository>(),
+      getIt<AnalyticsService>(),
     ),
   );
 

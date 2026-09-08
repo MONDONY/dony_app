@@ -170,7 +170,7 @@ class BidRemoteDatasource {
 
   /// Accepte un bid payé en mobile money : le statut de paiement renvoyé par
   /// l'endpoint accept n'est pas exploité ici (les tâches suivantes le font
-  /// via `MobileMoneyRepository`) — seul le bid à jour est utile à
+  /// via `MobileMoneyRepository`) : seul le bid à jour est utile à
   /// l'appelant, on le relit donc avec le même appel que `getBidById`
   /// (celui utilisé pour `BidDetailRequested` dans `BidBloc`).
   Future<BidModel> acceptMobileMoneyBid(String bidId) async {
