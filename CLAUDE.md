@@ -335,6 +335,11 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `payment_succeeded` | PaymentBloc._onPaymentSheetCompleted() |
 | `payment_failed` | PaymentBloc._onPaymentFailed() |
 | `mobile_money_awaiting` | MobileMoneyAwaitingScreen.initState |
+| `mobile_money_account_activated` | MobileMoneyAccountBloc._onActivateRequested — compte de versement mobile money du voyageur (Wave/Orange Money) activé avec succès (propriétés `provider`, `currency`) |
+| `mobile_money_account_disabled` | MobileMoneyAccountBloc._onDisableRequested — compte de versement mobile money désactivé (propriétés `provider`, `currency`) |
+| `mobile_money_initiated` | MobileMoneyPaymentBloc._initiateAndEmit — dépôt mobile money initié pour le paiement d'un bid, avant confirmation (propriétés `provider`, `wave` : redirection Wave ou non) |
+| `mobile_money_confirmed` | MobileMoneyPaymentBloc._emitKnown — dépôt mobile money séquestré, une seule fois par transition. Aucune propriété |
+| `mobile_money_failed` | MobileMoneyPaymentBloc._emitKnown — dépôt mobile money refusé par l'opérateur, une seule fois par transition (propriété `failure_code`) |
 | `qr_scan_success` | TrackingBloc._onScanSubmit() |
 | `delivery_confirmed` | ReceptionConfirmScreen._confirm() |
 | `package_request_created` | PackageRequestFormBloc |

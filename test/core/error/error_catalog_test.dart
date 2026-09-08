@@ -333,7 +333,13 @@ void main() {
       }
     });
 
-    test('carte refusee par la devise oriente vers les especes', () {
+    // Tache 7 (pawaPay) : ce code est desormais leve aussi bien pour la
+    // carte (BidService/PaymentService) que pour le mobile money
+    // (BidService.resolvePaymentMethodFor, branche MOBILE_MONEY) quand la
+    // devise du trajet ne supporte pas le moyen choisi. Le message ne peut
+    // donc plus presumer d'un moyen de paiement precis ni orienter vers les
+    // especes.
+    test('devise incompatible : message generique au moyen de paiement', () {
       final p = ErrorCatalog.lookup(
         const ValidationException(
           'x',
@@ -341,8 +347,139 @@ void main() {
         ),
       );
 
-      expect(p.message, contains('espèces'));
+      expect(
+        p.message,
+        "Ce moyen de paiement n'est pas proposé dans la devise de ce "
+        'trajet.',
+      );
       expect(p.severity, isNot(ErrorSeverity.critical));
+    });
+  });
+
+  // Tache 7 : catalogue d'erreurs du rail mobile money (pawaPay), compte de
+  // versement voyageur (mobile-money-account-*) et paiement d'un bid par
+  // l'expediteur. Chaque code est verifie avec le type d'exception que
+  // l'interceptor produit reellement pour son statut HTTP backend :
+  // 422 -> ValidationException, 409 -> ConflictException, 502 -> ServerException
+  // (mappe sur >=500).
+  group('ErrorCatalog — mobile money (pawaPay)', () {
+    const codes409 = {
+      'mobile-money-payment-not-pending',
+      'mobile-money-operation-in-progress',
+    };
+    const codes5xx = {'mobile-money-provider-unavailable'};
+
+    AppException buildError(String code) {
+      if (codes409.contains(code)) {
+        return ConflictException('detail brut backend', code: code);
+      }
+      if (codes5xx.contains(code)) {
+        return ServerException('detail brut backend', code);
+      }
+      return ValidationException('detail brut backend', code: code);
+    }
+
+    // code -> [titre attendu, message attendu], recopies tels quels du
+    // brief de la tache 7.
+    const attendus = <String, List<String>>{
+      'mobile-money-disabled': [
+        'Mobile money indisponible',
+        "Le paiement mobile money n'est pas ouvert pour le moment. "
+            'Choisissez un autre moyen de paiement.',
+      ],
+      'mobile-money-phone-required': [
+        'Numéro introuvable',
+        "Aucun numéro de téléphone n'est associé à votre compte Yadony. "
+            'Ajoutez-le dans votre profil.',
+      ],
+      'mobile-money-account-unsupported': [
+        'Numéro non pris en charge',
+        "Votre numéro n'est pas rattaché à un opérateur mobile money "
+            'compatible, ou sa devise ne correspond pas à votre zone.',
+      ],
+      'mobile-money-account-required': [
+        'Compte de versement requis',
+        "Activez votre versement mobile money avant d'accepter cette offre.",
+      ],
+      'mobile-money-currency-mismatch': [
+        'Devise différente',
+        "Votre compte de versement mobile money n'est pas dans la devise "
+            'de ce trajet.',
+      ],
+      'mobile-money-not-available': [
+        'Mobile money non proposé',
+        "Ce voyageur n'accepte pas le paiement mobile money.",
+      ],
+      'payment-method-unavailable-for-currency': [
+        'Moyen de paiement indisponible',
+        "Ce moyen de paiement n'est pas proposé dans la devise de ce "
+            'trajet.',
+      ],
+      'mobile-money-payer-unsupported': [
+        'Numéro non pris en charge',
+        'Vérifiez le numéro qui doit payer, ou essayez avec un autre '
+            'numéro.',
+      ],
+      'mobile-money-deposit-rejected': [
+        'Paiement refusé',
+        "L'opérateur a refusé la demande de paiement. Réessayez, "
+            'éventuellement avec un autre numéro.',
+      ],
+      'mobile-money-payment-expired': [
+        'Délai dépassé',
+        'Le délai de paiement de 30 minutes est passé. Refaites une offre '
+            'au voyageur.',
+      ],
+      'mobile-money-payment-not-pending': [
+        'Paiement déjà traité',
+        "Ce paiement n'est plus en attente.",
+      ],
+      'mobile-money-operation-in-progress': [
+        'Opération en cours',
+        'Une opération mobile money est déjà en cours pour cet envoi. '
+            'Patientez quelques instants.',
+      ],
+      'mobile-money-provider-unavailable': [
+        'Service indisponible',
+        'Le service mobile money ne répond pas. Réessayez dans quelques '
+            'minutes.',
+      ],
+      'invalid-payment-method': [
+        'Moyen de paiement invalide',
+        "Ce moyen de paiement n'est pas reconnu. Mettez l'application à "
+            'jour.',
+      ],
+    };
+
+    // Titres generiques : un code dedie ne doit jamais en afficher un.
+    final genericTitles = [
+      ErrorCatalog.lookup(const ValidationException('x')).title,
+      ErrorCatalog.lookup(const ConflictException('x')).title,
+      ErrorCatalog.lookup(const ServerException('x')).title,
+    ];
+
+    for (final entry in attendus.entries) {
+      final code = entry.key;
+      final title = entry.value[0];
+      final message = entry.value[1];
+
+      test('$code : titre et message dedies', () {
+        final error = buildError(code);
+        final p = ErrorCatalog.lookup(error);
+
+        expect(ErrorCatalog.isKnown(error), isTrue, reason: code);
+        expect(p.title, title, reason: code);
+        expect(p.message, message, reason: code);
+        expect(p.title, isNot(anyOf(genericTitles)), reason: code);
+        // Le detail brut du backend ne doit jamais atteindre l'utilisateur,
+        // et aucun texte affiche ne porte de tiret cadratin.
+        expect(p.message, isNot(contains('detail brut backend')));
+        expect(p.message, isNot(contains('—')));
+      });
+    }
+
+    test('quatorze codes couverts (liste du brief)', () {
+      expect(attendus.length, 14);
     });
   });
 }
