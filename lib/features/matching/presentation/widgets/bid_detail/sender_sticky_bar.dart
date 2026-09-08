@@ -174,20 +174,7 @@ class SenderStickyBar extends StatelessWidget {
                   },
           ),
           const SizedBox(height: DonySpacing.sm),
-          DonyButton(
-            label: 'Annuler la demande',
-            variant: DonyButtonVariant.ghost,
-            onPressed: isLoading
-                ? null
-                : () => _showDeleteDialog(
-                    context,
-                    title: 'Annuler la demande de transport ?',
-                    body:
-                        "Aucun paiement n'a été effectué. La demande sera retirée.",
-                    confirmLabel: 'Oui, annuler',
-                    dismissLabel: 'Retour',
-                  ),
-          ),
+          _cancelRequestButton(context),
         ],
       );
     }
@@ -211,20 +198,7 @@ class SenderStickyBar extends StatelessWidget {
                 : () => context.push('/payments/pay', extra: bid),
           ),
           const SizedBox(height: DonySpacing.sm),
-          DonyButton(
-            label: 'Annuler la demande',
-            variant: DonyButtonVariant.ghost,
-            onPressed: isLoading
-                ? null
-                : () => _showDeleteDialog(
-                    context,
-                    title: 'Annuler la demande de transport ?',
-                    body:
-                        "Aucun paiement n'a été effectué. La demande sera retirée.",
-                    confirmLabel: 'Oui, annuler',
-                    dismissLabel: 'Retour',
-                  ),
-          ),
+          _cancelRequestButton(context),
         ],
       );
     }
@@ -347,6 +321,26 @@ class SenderStickyBar extends StatelessWidget {
     }
 
     return null;
+  }
+
+  // ── Cancel request button ────────────────────────────────────────────────────
+
+  /// Bouton « Annuler la demande » partagé par les blocs AWAITING_PAYMENT
+  /// mobile money et stripe : même dialogue de confirmation dans les deux cas.
+  Widget _cancelRequestButton(BuildContext context) {
+    return DonyButton(
+      label: 'Annuler la demande',
+      variant: DonyButtonVariant.ghost,
+      onPressed: isLoading
+          ? null
+          : () => _showDeleteDialog(
+              context,
+              title: 'Annuler la demande de transport ?',
+              body: "Aucun paiement n'a été effectué. La demande sera retirée.",
+              confirmLabel: 'Oui, annuler',
+              dismissLabel: 'Retour',
+            ),
+    );
   }
 
   // ── Delete dialog ────────────────────────────────────────────────────────────

@@ -29,11 +29,4 @@ class MobileMoneyRemoteDatasource {
     );
     return MobileMoneyPaymentStatus.fromJson(response.data!);
   }
-
-  Future<MobileMoneyPaymentStatus> accept(String bidId) async {
-    final response = await _client.dio.post<Map<String, dynamic>>(
-      '/bids/$bidId/mobile-money/accept',
-    );
-    return MobileMoneyPaymentStatus.fromJson(response.data!);
-  }
 }

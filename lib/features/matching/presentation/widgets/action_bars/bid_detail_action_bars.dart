@@ -5,11 +5,10 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/incident_report/data/repositories/incident_report_repository.dart';
-import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
-import 'package:dony/features/matching/bloc/bid_acceptance_event.dart' as ace;
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_accept_dispatch.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
@@ -79,20 +78,7 @@ class TravelerPendingBar extends StatelessWidget {
             child: FilledButton.icon(
               onPressed: isLoading
                   ? null
-                  : () {
-                      if (bid.paymentMethod == BidPaymentMethod.cash) {
-                        context.read<BidAcceptanceBloc>().add(
-                          ace.BidAcceptRequested(bid.id),
-                        );
-                      } else if (bid.paymentMethod ==
-                          BidPaymentMethod.mobileMoney) {
-                        context.read<BidBloc>().add(
-                          BidAcceptMobileMoneyRequested(bid.id),
-                        );
-                      } else {
-                        context.read<BidBloc>().add(BidAcceptRequested(bid.id));
-                      }
-                    },
+                  : () => dispatchBidAccept(context, bid),
               icon: isLoading
                   ? const SizedBox(
                       width: 16,

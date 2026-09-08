@@ -23,6 +23,14 @@ void main() {
       expect(normalizePayerPhone('+'), isNull);
     });
 
+    test(
+      'un « + » non initial est retiré comme un caractère non numérique '
+      '(seul le premier caractère compte pour repérer un préfixe international)',
+      () {
+        expect(normalizePayerPhone('077+123'), '077123');
+      },
+    );
+
     test('points et parenthèses retirés', () {
       expect(normalizePayerPhone('(077).345.67.89'), '0773456789');
     });

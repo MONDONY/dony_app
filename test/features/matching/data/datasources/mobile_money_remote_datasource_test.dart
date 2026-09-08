@@ -235,58 +235,5 @@ void main() {
         expect(datasource.initiate(bidId), throwsA(isA<DioException>()));
       });
     });
-
-    group('accept', () {
-      test(
-        'appelle POST /bids/{bidId}/mobile-money/accept sans corps',
-        () async {
-          when(
-            () => dio.post<Map<String, dynamic>>(
-              '/bids/$bidId/mobile-money/accept',
-            ),
-          ).thenAnswer(
-            (_) async => Response(
-              data: statusJson,
-              statusCode: 200,
-              requestOptions: RequestOptions(
-                path: '/bids/$bidId/mobile-money/accept',
-              ),
-            ),
-          );
-
-          final result = await datasource.accept(bidId);
-
-          expect(result.bidId, bidId);
-          verify(
-            () => dio.post<Map<String, dynamic>>(
-              '/bids/$bidId/mobile-money/accept',
-            ),
-          ).called(1);
-        },
-      );
-
-      test('propage la DioException', () async {
-        when(
-          () => dio.post<Map<String, dynamic>>(
-            '/bids/$bidId/mobile-money/accept',
-          ),
-        ).thenThrow(
-          DioException(
-            requestOptions: RequestOptions(
-              path: '/bids/$bidId/mobile-money/accept',
-            ),
-            type: DioExceptionType.badResponse,
-            response: Response(
-              statusCode: 422,
-              requestOptions: RequestOptions(
-                path: '/bids/$bidId/mobile-money/accept',
-              ),
-            ),
-          ),
-        );
-
-        expect(datasource.accept(bidId), throwsA(isA<DioException>()));
-      });
-    });
   });
 }

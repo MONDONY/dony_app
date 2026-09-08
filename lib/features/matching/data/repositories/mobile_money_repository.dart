@@ -12,7 +12,4 @@ class MobileMoneyRepository {
     String bidId, {
     String? phoneNumber,
   }) => _datasource.initiate(bidId, phoneNumber: phoneNumber);
-
-  Future<MobileMoneyPaymentStatus> accept(String bidId) =>
-      _datasource.accept(bidId);
 }

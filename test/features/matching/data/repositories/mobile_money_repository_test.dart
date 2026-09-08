@@ -20,13 +20,6 @@ void main() {
     amount: 50.0,
   );
 
-  const escrowedStatus = MobileMoneyPaymentStatus(
-    bidId: bidId,
-    bidStatus: 'ACCEPTED',
-    paymentStatus: 'ESCROW',
-    amount: 50.0,
-  );
-
   setUp(() {
     datasource = MockMobileMoneyRemoteDatasource();
     repository = MobileMoneyRepository(datasource);
@@ -95,28 +88,6 @@ void main() {
           repository.initiate(bidId),
           throwsA(isA<Exception>()),
         );
-      });
-    });
-
-    group('accept', () {
-      test('délègue à datasource.accept et renvoie le statut', () async {
-        when(
-          () => datasource.accept(bidId),
-        ).thenAnswer((_) async => escrowedStatus);
-
-        final result = await repository.accept(bidId);
-
-        verify(() => datasource.accept(bidId)).called(1);
-        expect(result, equals(escrowedStatus));
-        expect(result.paymentStatus, 'ESCROW');
-      });
-
-      test('propage l\'exception du datasource', () async {
-        when(
-          () => datasource.accept(bidId),
-        ).thenAnswer((_) => Future.error(Exception('422 Unprocessable')));
-
-        await expectLater(repository.accept(bidId), throwsA(isA<Exception>()));
       });
     });
   });

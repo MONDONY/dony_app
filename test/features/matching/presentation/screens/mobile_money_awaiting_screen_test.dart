@@ -455,6 +455,23 @@ void main() {
         findsOneWidget,
       );
     });
+
+    testWidgets(
+      'le sondage est arrêté : plus aucun event Polled après coup (le '
+      'compte à rebours, lui, continue)',
+      (tester) async {
+        stub(const MobileMoneyPaymentDepositFailed(depositFailedStatus));
+
+        await pumpScreen(tester);
+        await tester.pump(const Duration(seconds: 5));
+        await tester.pump(const Duration(seconds: 5));
+        await tester.pump(const Duration(seconds: 5));
+
+        // Comme pour Escrowed : verifyNever, pas called(0) (mocktail échoue
+        // sur called(0) avec "No matching calls").
+        verifyNever(() => bloc.add(any(that: isA<MobileMoneyStatusPolled>())));
+      },
+    );
   });
 
   group('Expired', () {
