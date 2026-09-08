@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -13,6 +14,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+// NOTE : adaptation a minima au bloc réécrit par la tâche 5 du plan pawaPay.
+// Cet écran est entièrement redessiné par la tâche 12 ; il ne fait ici que
+// suivre le nouveau contrat d'events/states (Opened/InitiateRequested/Polled,
+// AwaitingConfirmation/Escrowed/DepositFailed/Expired/Error).
 class MobileMoneyAwaitingScreen extends StatefulWidget {
   const MobileMoneyAwaitingScreen({super.key, required this.bidId});
   final String bidId;
@@ -37,7 +42,9 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
         ),
       );
     });
-    _poll();
+    context.read<MobileMoneyPaymentBloc>().add(
+      MobileMoneyPaymentOpened(bidId: widget.bidId),
+    );
     _pollingTimer = Timer.periodic(const Duration(seconds: 10), (_) {
       if (mounted) _poll();
     });
@@ -46,6 +53,12 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
   void _poll() {
     context.read<MobileMoneyPaymentBloc>().add(
       MobileMoneyStatusPolled(bidId: widget.bidId),
+    );
+  }
+
+  void _retryInitiate() {
+    context.read<MobileMoneyPaymentBloc>().add(
+      MobileMoneyPaymentInitiateRequested(bidId: widget.bidId),
     );
   }
 
@@ -83,7 +96,7 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
       ),
       body: BlocConsumer<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
         listener: (context, state) {
-          if (state is MobileMoneyPaymentConfirmed) {
+          if (state is MobileMoneyPaymentEscrowed) {
             _pollingTimer?.cancel();
             DonySnackbar.show(
               context,
@@ -92,8 +105,14 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
             );
             context.go('/bids/${widget.bidId}');
           } else if (state is MobileMoneyPaymentExpired ||
-              state is MobileMoneyPaymentError) {
+              state is MobileMoneyPaymentDepositFailed) {
             _pollingTimer?.cancel();
+          } else if (state is MobileMoneyPaymentError) {
+            _pollingTimer?.cancel();
+            // Jamais state.error brut (String/Object non traduit) : toujours
+            // passer par ErrorPresenter, qui résout le code métier via
+            // ErrorCatalog et retombe sur un message générique français.
+            unawaited(ErrorPresenter.show(context, state.error));
           }
         },
         builder: (context, state) {
@@ -102,7 +121,7 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
             return Center(child: CircularProgressIndicator(color: cs.primary));
           }
 
-          if (state is MobileMoneyPaymentConfirmed) {
+          if (state is MobileMoneyPaymentEscrowed) {
             return Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -135,11 +154,32 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
                     const SizedBox(height: DonySpacing.xl),
                     DonyButton(
                       label: 'Régénérer le lien',
-                      onPressed: () =>
-                          context.read<MobileMoneyPaymentBloc>().add(
-                            MobileMoneyLinkRegenRequested(bidId: widget.bidId),
-                          ),
+                      onPressed: _retryInitiate,
                     ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          if (state is MobileMoneyPaymentDepositFailed) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: DonySpacing.lg),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    DonyIcon('circle-alert', color: cs.error, size: 48),
+                    const SizedBox(height: DonySpacing.base),
+                    Text(
+                      state.status.deposit?.failureMessage ?? 'Paiement refusé',
+                      textAlign: TextAlign.center,
+                      style: tt.bodyMedium?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: DonySpacing.xl),
+                    DonyButton(label: 'Réessayer', onPressed: _retryInitiate),
                   ],
                 ),
               ),
@@ -155,8 +195,11 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
                   children: [
                     DonyIcon('circle-alert', color: cs.error, size: 48),
                     const SizedBox(height: DonySpacing.base),
+                    // Jamais state.error.toString() : message technique
+                    // potentiellement non traduit. Le détail exploitable est
+                    // déjà montré par ErrorPresenter (listener ci-dessus).
                     Text(
-                      state.message,
+                      'Une erreur est survenue',
                       textAlign: TextAlign.center,
                       style: tt.bodyMedium?.copyWith(
                         color: cs.onSurfaceVariant,
@@ -166,7 +209,7 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
                     TextButton(
                       onPressed: () => context
                           .read<MobileMoneyPaymentBloc>()
-                          .add(MobileMoneyStatusPolled(bidId: widget.bidId)),
+                          .add(MobileMoneyPaymentOpened(bidId: widget.bidId)),
                       child: const Text('Réessayer'),
                     ),
                   ],
@@ -175,8 +218,10 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
             );
           }
 
-          // PENDING
-          final pending = state as MobileMoneyPaymentPending;
+          // AwaitingConfirmation
+          final awaiting = state as MobileMoneyPaymentAwaitingConfirmation;
+          final paymentLink = awaiting.status.deposit?.authorizationUrl ?? '';
+          final expiresAt = awaiting.status.deadlineAt;
           return Padding(
             padding: const EdgeInsets.fromLTRB(
               DonySpacing.lg,
@@ -250,11 +295,11 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
                             const SizedBox(height: DonySpacing.xl),
 
                             // Expiry info
-                            if (pending.expiresAt != null) ...[
+                            if (expiresAt != null) ...[
                               Text(
                                 'Lien valable jusqu\'à '
-                                '${pending.expiresAt!.hour.toString().padLeft(2, '0')}:'
-                                '${pending.expiresAt!.minute.toString().padLeft(2, '0')}',
+                                '${expiresAt.hour.toString().padLeft(2, '0')}:'
+                                '${expiresAt.minute.toString().padLeft(2, '0')}',
                                 style: tt.bodySmall?.copyWith(
                                   color: cs.onSurfaceVariant,
                                 ),
@@ -279,8 +324,8 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
                 DonyButton(
                   label: 'Payer maintenant',
                   iconAsset: 'external-link',
-                  onPressed: pending.paymentLink.isNotEmpty
-                      ? () => _openLink(pending.paymentLink)
+                  onPressed: paymentLink.isNotEmpty
+                      ? () => _openLink(paymentLink)
                       : null,
                 ),
               ],

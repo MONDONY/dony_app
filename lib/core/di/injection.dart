@@ -449,7 +449,10 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => MobileMoneyRepository(getIt<MobileMoneyRemoteDatasource>()),
   );
   getIt.registerFactory<MobileMoneyPaymentBloc>(
-    () => MobileMoneyPaymentBloc(getIt<MobileMoneyRepository>()),
+    () => MobileMoneyPaymentBloc(
+      getIt<MobileMoneyRepository>(),
+      getIt<AnalyticsService>(),
+    ),
   );
 
   // Payments — Mobile money (compte de versement)

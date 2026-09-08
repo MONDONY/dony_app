@@ -63,6 +63,12 @@ abstract final class AnalyticsEvents {
   static const mobileMoneyAccountActivated = 'mobile_money_account_activated';
   static const mobileMoneyAccountDisabled = 'mobile_money_account_disabled';
 
+  /// Paiement mobile money d'un bid (pawaPay) : initiation d'un dépôt,
+  /// séquestre atteint, dépôt refusé.
+  static const mobileMoneyInitiated = 'mobile_money_initiated';
+  static const mobileMoneyConfirmed = 'mobile_money_confirmed';
+  static const mobileMoneyFailed = 'mobile_money_failed';
+
   // Tracking / QR
   static const qrScanSuccess = 'qr_scan_success';
   static const deliveryConfirmed = 'delivery_confirmed';
