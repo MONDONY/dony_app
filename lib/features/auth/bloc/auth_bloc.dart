@@ -40,6 +40,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AnalyticsService? _analytics;
   final AppleTokenRevoker _appleTokenRevoker;
 
+  /// Oubli du jeton push de cet appareil côté serveur, avant `signOut`.
+  /// Injecté (`NotificationService.forgetDeviceToken`) ; nul en test.
+  final Future<void> Function()? _forgetDeviceToken;
+
   String? _pendingPhoneNumber;
   Timer? _otpTimer;
 
@@ -60,6 +64,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AppleSignInCallback? appleSignIn,
     AnalyticsService? analytics,
     AppleTokenRevoker? appleTokenRevoker,
+    Future<void> Function()? forgetDeviceToken,
   }) : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance,
        _googleSignIn = googleSignIn ?? GoogleSignIn(scopes: googleSignInScopes),
        _appleSignIn =
@@ -67,6 +72,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
            ((scopes) => SignInWithApple.getAppleIDCredential(scopes: scopes)),
        _analytics = analytics,
        _appleTokenRevoker = appleTokenRevoker ?? AppleTokenRevoker(),
+       _forgetDeviceToken = forgetDeviceToken,
        super(const AuthInitial()) {
     on<AuthCheckRequested>(_onCheckRequested);
     on<AuthSendOtpRequested>(_onSendOtpRequested);
@@ -273,6 +279,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     // ⚠️ NE PAS clearPin() — le PIN doit survivre au logout
+    await _forgetDevice();
     await _firebaseAuth.signOut();
     await _clearHiveAccountData();
     _pendingPhoneNumber = null;
@@ -293,11 +300,28 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     await _localAuthService.clearPin();
+    await _forgetDevice();
     await _firebaseAuth.signOut();
     await _clearHiveAccountData();
     _pendingPhoneNumber = null;
     _pendingGuestIdToken = null;
     emit(const AuthInitial());
+  }
+
+  /// Avant `signOut`, tant que la session est encore authentifiée : ce
+  /// téléphone cesse de recevoir les pushs du compte qui s'en va. Sans ça, le
+  /// compte suivant sur le même appareil recevait ses notifications et
+  /// ouvrait ses écrans (403, recette du 2026-09-09). Jamais bloquant : le
+  /// service borne l'appel et avale ses erreurs, et une exception inattendue
+  /// ici ne doit pas empêcher la déconnexion.
+  Future<void> _forgetDevice() async {
+    final forget = _forgetDeviceToken;
+    if (forget == null) return;
+    try {
+      await forget();
+    } catch (_) {
+      // Meilleur effort : la déconnexion ne dépend jamais du réseau.
+    }
   }
 
   // ─── Suppression de compte ────────────────────────────────────────────────

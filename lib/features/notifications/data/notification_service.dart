@@ -101,6 +101,10 @@ class NotificationService {
   @visibleForTesting
   static const uploadRetryDelay = Duration(seconds: 1);
 
+  /// Borne de l'oubli du jeton à la déconnexion : jamais plus long que ça,
+  /// la déconnexion n'attend pas le réseau.
+  static const forgetDeviceTimeout = Duration(seconds: 3);
+
   final ApiClient _apiClient;
   final NotificationRepository _repository;
   final DeviceIdService _deviceIdService;
@@ -516,6 +520,27 @@ class NotificationService {
           },
         ),
       );
+    }
+  }
+
+  /// Déconnexion : ce téléphone ne doit plus recevoir les pushs du compte qui
+  /// s'en va. Appelé AVANT `signOut`, tant que la session est encore
+  /// authentifiée. Meilleur effort et borné dans le temps : un échec (hors
+  /// ligne, 401) est ignoré, la déconnexion suit son cours. Le backend fait le
+  /// reste : `DELETE /auth/me/fcm-token` supprime la ligne `user_devices` de
+  /// cet appareil et vide la colonne héritée `users.fcm_token`.
+  Future<void> forgetDeviceToken() async {
+    try {
+      final deviceId = await _deviceIdService.getDeviceId();
+      await _apiClient.dio
+          .delete<void>(
+            '/auth/me/fcm-token',
+            queryParameters: {'deviceId': deviceId},
+          )
+          .timeout(forgetDeviceTimeout);
+      if (kDebugMode) debugPrint('[FCM] Device token forgotten on backend');
+    } catch (e) {
+      if (kDebugMode) debugPrint('[FCM] forgetDeviceToken ignored: $e');
     }
   }
 

@@ -70,6 +70,63 @@ void main() {
     service = NotificationService(apiClient, repository, deviceIdService);
   });
 
+  group('forgetDeviceToken', () {
+    late MockDio mockDio;
+
+    setUp(() {
+      mockDio = MockDio();
+      when(() => apiClient.dio).thenReturn(mockDio);
+      when(
+        () => deviceIdService.getDeviceId(),
+      ).thenAnswer((_) async => 'dev-1');
+    });
+
+    test(
+      'DELETE /auth/me/fcm-token avec l\'identifiant de cet appareil',
+      () async {
+        when(
+          () => mockDio.delete<void>(
+            '/auth/me/fcm-token',
+            queryParameters: any(named: 'queryParameters'),
+          ),
+        ).thenAnswer(
+          (_) async => Response<void>(
+            requestOptions: RequestOptions(path: '/auth/me/fcm-token'),
+            statusCode: 204,
+          ),
+        );
+
+        await service.forgetDeviceToken();
+
+        verify(
+          () => mockDio.delete<void>(
+            '/auth/me/fcm-token',
+            queryParameters: {'deviceId': 'dev-1'},
+          ),
+        ).called(1);
+      },
+    );
+
+    test(
+      'un échec réseau est avalé : la déconnexion ne dépend pas du serveur',
+      () async {
+        when(
+          () => mockDio.delete<void>(
+            '/auth/me/fcm-token',
+            queryParameters: any(named: 'queryParameters'),
+          ),
+        ).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/auth/me/fcm-token'),
+            type: DioExceptionType.connectionError,
+          ),
+        );
+
+        await expectLater(service.forgetDeviceToken(), completes);
+      },
+    );
+  });
+
   group('NotificationService._uploadToken', () {
     late MockDio mockDio;
 

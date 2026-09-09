@@ -392,6 +392,49 @@ void main() {
       },
     );
 
+    // Recette du 2026-09-09 : sans oubli du jeton, le compte suivant sur le
+    // même téléphone recevait les pushs du compte déconnecté.
+    final calls = <String>[];
+
+    blocTest<AuthBloc, AuthState>(
+      'oublie le jeton FCM de l\'appareil AVANT signOut, session encore authentifiée',
+      build: () {
+        calls.clear();
+        when(() => mockFirebaseAuth.signOut()).thenAnswer((_) async {
+          calls.add('signOut');
+        });
+        return AuthBloc(
+          mockRepo,
+          mockLocalAuth,
+          firebaseAuth: mockFirebaseAuth,
+          appleTokenRevoker: _inertAppleTokenRevoker,
+          forgetDeviceToken: () async => calls.add('forget'),
+        );
+      },
+      act: (bloc) => bloc.add(const AuthLogoutRequested()),
+      wait: const Duration(milliseconds: 50),
+      expect: () => [isA<AuthInitial>()],
+      verify: (_) => expect(calls, ['forget', 'signOut']),
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'la déconnexion aboutit même si l\'oubli du jeton échoue',
+      build: () {
+        when(() => mockFirebaseAuth.signOut()).thenAnswer((_) async {});
+        return AuthBloc(
+          mockRepo,
+          mockLocalAuth,
+          firebaseAuth: mockFirebaseAuth,
+          appleTokenRevoker: _inertAppleTokenRevoker,
+          forgetDeviceToken: () async => throw StateError('hors ligne'),
+        );
+      },
+      act: (bloc) => bloc.add(const AuthLogoutRequested()),
+      wait: const Duration(milliseconds: 50),
+      expect: () => [isA<AuthInitial>()],
+      verify: (_) => verify(() => mockFirebaseAuth.signOut()).called(1),
+    );
+
     blocTest<AuthBloc, AuthState>(
       'déconnexion → vide les données Hive du compte',
       setUp: seedHiveUserData,

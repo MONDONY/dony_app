@@ -493,6 +493,57 @@ void main() {
     );
   });
 
+  /// Ouvert depuis la push « paiement en attente » (lien profond), l'écran
+  /// est la seule page de la pile : rien à dépiler, le repli est le détail du
+  /// colis (Sentry FLUTTER-1D, « There is nothing to pop »).
+  Future<void> pumpDeepLinked(WidgetTester tester) async {
+    final router = GoRouter(
+      initialLocation: '/bids/$bidId/mobile-money/awaiting',
+      routes: [
+        GoRoute(
+          path: '/bids/:bidId',
+          builder: (_, state) =>
+              Scaffold(body: Text('detail ${state.pathParameters['bidId']}')),
+        ),
+        GoRoute(
+          path: '/bids/:bidId/mobile-money/awaiting',
+          builder: (_, _) => BlocProvider<MobileMoneyPaymentBloc>.value(
+            value: bloc,
+            child: const MobileMoneyAwaitingScreen(bidId: bidId),
+          ),
+        ),
+      ],
+    );
+    await tester.pumpWidget(
+      MaterialApp.router(theme: AppTheme.light(), routerConfig: router),
+    );
+    await tester.pumpAndSettle();
+  }
+
+  group('Ouvert par lien profond (pile vide)', () {
+    testWidgets('Escrowed → détail du colis, sans « nothing to pop »', (
+      tester,
+    ) async {
+      stub(const MobileMoneyPaymentEscrowed(escrowedStatus));
+
+      await pumpDeepLinked(tester);
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('detail $bidId'), findsOneWidget);
+    });
+
+    testWidgets('Expired + Retour → détail du colis', (tester) async {
+      stub(const MobileMoneyPaymentExpired(expiredStatus));
+
+      await pumpDeepLinked(tester);
+      await tester.tap(find.text('Retour'));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('detail $bidId'), findsOneWidget);
+    });
+  });
+
   group('Expired', () {
     testWidgets('texte + bouton Retour → pop(false)', (tester) async {
       stub(const MobileMoneyPaymentExpired(expiredStatus));

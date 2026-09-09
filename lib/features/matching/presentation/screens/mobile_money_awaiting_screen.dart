@@ -116,6 +116,19 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
   static bool _isPhoneRequired(Object error) =>
       error is AppException && error.code == 'mobile-money-phone-required';
 
+  /// Ouvert depuis le détail (`push<bool>`), l'écran rend son résultat au
+  /// parent. Ouvert depuis la push « paiement en attente » (lien profond,
+  /// seule page de la pile), il n'a rien à dépiler : `pop` levait
+  /// « There is nothing to pop » (Sentry FLUTTER-1D, recette du 2026-09-09),
+  /// le repli est le détail du colis.
+  void _close(BuildContext context, {required bool paid}) {
+    if (context.canPop()) {
+      context.pop(paid);
+    } else {
+      context.go('/bids/${widget.bidId}');
+    }
+  }
+
   void _retry(String rawPhone) {
     context.read<MobileMoneyPaymentBloc>().add(
       MobileMoneyPaymentInitiateRequested(
@@ -172,7 +185,7 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
                   message: 'Paiement confirmé, ton envoi est sécurisé',
                   type: DonySnackbarType.success,
                 );
-                context.pop(true);
+                _close(context, paid: true);
               case MobileMoneyPaymentExpired():
                 _cancelAllTimers();
               case MobileMoneyPaymentDepositFailed():
@@ -196,7 +209,7 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
               onRetry: () => _retry(_retryPhoneController.text),
             ),
             MobileMoneyPaymentExpired() => _ExpiredBody(
-              onBack: () => context.pop(false),
+              onBack: () => _close(context, paid: false),
             ),
             MobileMoneyPaymentEscrowed() => const _EscrowedBody(),
             // Aucun numéro disponible pour payer (compte Firebase de
