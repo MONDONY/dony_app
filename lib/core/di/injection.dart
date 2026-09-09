@@ -316,6 +316,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<LocalAuthService>(),
       analytics: getIt<AnalyticsService>(),
       appleTokenRevoker: getIt<AppleTokenRevoker>(),
+      forgetDeviceToken: getIt<NotificationService>().forgetDeviceToken,
     ),
   );
   getIt.registerFactory<CountryOnboardingCubit>(
