@@ -63,13 +63,14 @@ class MobileMoneyAccountScreen extends StatelessWidget {
               account: account,
               isLoading: true,
             ),
-            // Activation refusée faute de numéro disponible : la vue « non
-            // configuré » bascule sur le formulaire de saisie, jamais une
-            // snackbar (le listener ci-dessus ne réagit qu'à
-            // MobileMoneyAccountError, pas à cet état dédié).
+            // Activation refusée faute de numéro : la vue « non configuré »
+            // affiche de toute façon déjà le formulaire de saisie (voir
+            // _NotConfiguredView) — cet état ne fait donc que garder le
+            // compte courant sans jamais déclencher de snackbar (le
+            // listener ci-dessus ne réagit qu'à MobileMoneyAccountError,
+            // pas à cet état dédié).
             MobileMoneyAccountPhoneRequired(:final account) => _AccountBody(
               account: account,
-              phoneRequired: true,
             ),
             // Échec d'activation/désactivation : le dernier compte connu reste
             // affiché (le listener ci-dessus a déjà notifié l'erreur).
@@ -94,19 +95,10 @@ class MobileMoneyAccountScreen extends StatelessWidget {
 /// Contenu selon le statut du compte, commun aux états `Loaded`, `Updating`
 /// et `Error` (avec compte conservé).
 class _AccountBody extends StatelessWidget {
-  const _AccountBody({
-    required this.account,
-    this.isLoading = false,
-    this.phoneRequired = false,
-  });
+  const _AccountBody({required this.account, this.isLoading = false});
 
   final MobileMoneyAccount account;
   final bool isLoading;
-
-  /// Vrai sur `MobileMoneyAccountPhoneRequired` : force le formulaire de
-  /// saisie dans [_NotConfiguredView], même si le profil semble avoir un
-  /// numéro (le backend fait autorité sur ce refus).
-  final bool phoneRequired;
 
   @override
   Widget build(BuildContext context) {
@@ -120,15 +112,15 @@ class _AccountBody extends StatelessWidget {
       child: switch (account.status) {
         MobileMoneyAccountStatus.notConfigured => _NotConfiguredView(
           isLoading: isLoading,
-          phoneRequired: phoneRequired,
         ),
         MobileMoneyAccountStatus.active => _ActiveView(
           account: account,
           isLoading: isLoading,
         ),
-        // La désactivation ne repose jamais sur un numéro saisi ici : le
-        // backend conserve celui qu'il avait avant la désactivation.
+        // Réactivation : même formulaire que l'activation initiale (voir
+        // _DisabledView), avec un rappel du numéro précédent quand connu.
         MobileMoneyAccountStatus.disabled => _DisabledView(
+          account: account,
           isLoading: isLoading,
         ),
       },
@@ -136,118 +128,71 @@ class _AccountBody extends StatelessWidget {
   }
 }
 
-/// Aucun versement configuré : explique le principe et propose l'activation,
-/// ou demande le numéro de versement quand aucun n'est disponible (voir
-/// [_missingProfilePhone] et [MobileMoneyAccountPhoneRequired]).
+/// Aucun versement configuré : demande le numéro de versement (voir
+/// [_PayoutNumberForm]).
+///
+/// Le numéro mobile money est TOUJOURS demandé pour activer le versement,
+/// qu'il y ait ou non un numéro sur le profil Yadony : il peut légitimement
+/// en différer (le backend privilégie le numéro fourni ici, puis à défaut
+/// le numéro Firebase, puis répond 422 `mobile-money-phone-required`).
 class _NotConfiguredView extends StatelessWidget {
-  const _NotConfiguredView({
+  const _NotConfiguredView({required this.isLoading});
+
+  final bool isLoading;
+
+  @override
+  Widget build(BuildContext context) => _PayoutNumberForm(
+    isLoading: isLoading,
+    explanation:
+        'Indique le numéro mobile money qui recevra tes versements. Il '
+        'peut être différent de ton numéro Yadony (zone CFA : Orange '
+        'Money, Wave, MTN, Free).',
+    buttonLabel: 'Activer le versement mobile money',
+  );
+}
+
+/// Formulaire de saisie du numéro de versement, affiché par
+/// [_NotConfiguredView] (activation) et [_DisabledView] (réactivation) :
+/// dans les deux cas le numéro mobile money est TOUJOURS demandé, jamais
+/// seulement en repli d'un profil sans téléphone — il peut légitimement
+/// différer du numéro Yadony (Firebase).
+///
+/// Deux champs identiques (numéro + confirmation) évitent une faute de
+/// frappe silencieuse : un numéro de versement erroné ferait échouer un
+/// versement bien plus tard, sans recours simple pour le voyageur. Le
+/// premier champ est pré-rempli avec le numéro de l'utilisateur connecté
+/// quand `AuthBloc` est accessible (toujours vrai dans l'app réelle ; en son
+/// absence, certains harnais de test, `ProviderNotFoundException` est
+/// rattrapée et le champ démarre vide, jamais de plantage — même principe
+/// que `_initialPayerPhone` dans `CreateBidBottomSheet`), mais reste
+/// modifiable : la confirmation, elle, part toujours vide et doit être
+/// ressaisie. Aucun `setState` : un [ValueNotifier] recalculé à chaque
+/// frappe porte le numéro normalisé, seulement quand les deux saisies
+/// normalisées coïncident et ne sont pas vides — le bouton collant s'y
+/// abonne via [ValueListenableBuilder].
+class _PayoutNumberForm extends StatefulWidget {
+  const _PayoutNumberForm({
     required this.isLoading,
-    required this.phoneRequired,
+    required this.explanation,
+    required this.buttonLabel,
   });
 
   final bool isLoading;
 
-  /// Vrai quand le backend a déjà refusé une activation faute de numéro
-  /// (`MobileMoneyAccountPhoneRequired`) : force le formulaire même si
-  /// [_missingProfilePhone] ne le déclencherait pas à lui seul.
-  final bool phoneRequired;
+  /// Texte affiché au-dessus des champs, propre au contexte (première
+  /// activation vs réactivation avec rappel du numéro précédent).
+  final String explanation;
 
-  /// Vrai quand l'utilisateur connecté n'a pas de numéro de téléphone Yadony
-  /// (compte sans vérification SMS Twilio configurée). `AuthBloc` est
-  /// toujours fourni dans l'app réelle ; en son absence (certains harnais de
-  /// test), impossible de savoir : on retombe alors sur le comportement
-  /// historique (pas de formulaire), jamais de plantage — même principe que
-  /// `_initialPayerPhone` dans `CreateBidBottomSheet`.
-  bool _missingProfilePhone(BuildContext context) {
-    try {
-      final phone = context.read<AuthBloc>().state.currentUser?.phoneNumber;
-      return phone == null || phone.isEmpty;
-    } on ProviderNotFoundException {
-      return false;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (phoneRequired || _missingProfilePhone(context)) {
-      return _PayoutNumberForm(isLoading: isLoading);
-    }
-
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Expanded(
-          child: SingleChildScrollView(
-            child: DonyCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  DonyIcon('smartphone', color: cs.primary, size: 32),
-                  const SizedBox(height: DonySpacing.base),
-                  Text(
-                    'Ton numéro de téléphone Yadony devient ton compte de '
-                    'versement. Le montant net de chaque envoi t\'est versé '
-                    'dessus à la livraison.',
-                    style: tt.bodyMedium?.copyWith(
-                      color: cs.onSurfaceVariant,
-                      height: 1.45,
-                    ),
-                  ),
-                  const SizedBox(height: DonySpacing.lg),
-                  Text(
-                    'Opérateurs disponibles',
-                    style: tt.labelMedium?.copyWith(
-                      color: cs.onSurfaceVariant,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                  const SizedBox(height: DonySpacing.xs),
-                  Text('Orange Money, Wave, MTN, Free…', style: tt.bodyMedium),
-                ],
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: DonySpacing.lg),
-        DonyButton(
-          label: 'Activer le versement mobile money',
-          isLoading: isLoading,
-          onPressed: () => context.read<MobileMoneyAccountBloc>().add(
-            const MobileMoneyAccountActivateRequested(),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// Formulaire de saisie du numéro de versement, affiché par
-/// [_NotConfiguredView] à la place de la carte explicative quand aucun
-/// numéro n'est disponible côté profil ou que le backend l'a explicitement
-/// demandé (`MobileMoneyAccountPhoneRequired`).
-///
-/// Deux champs identiques (numéro + confirmation) évitent une faute de
-/// frappe silencieuse : un numéro de versement erroné ferait échouer un
-/// versement bien plus tard, sans recours simple pour le voyageur. Aucun
-/// `setState` : un [ValueNotifier] recalculé à chaque frappe porte le
-/// numéro normalisé, seulement quand les deux saisies normalisées
-/// coïncident et ne sont pas vides — le bouton collant s'y abonne via
-/// [ValueListenableBuilder].
-class _PayoutNumberForm extends StatefulWidget {
-  const _PayoutNumberForm({required this.isLoading});
-
-  final bool isLoading;
+  /// Libellé du bouton collant (« Activer le versement mobile money » vs
+  /// « Réactiver ») : les deux envoient le même event, seul le texte change.
+  final String buttonLabel;
 
   @override
   State<_PayoutNumberForm> createState() => _PayoutNumberFormState();
 }
 
 class _PayoutNumberFormState extends State<_PayoutNumberForm> {
-  final _phoneCtrl = TextEditingController();
+  late final TextEditingController _phoneCtrl;
   final _confirmCtrl = TextEditingController();
 
   /// Numéro normalisé quand les deux champs coïncident, `null` sinon (l'un
@@ -259,8 +204,20 @@ class _PayoutNumberFormState extends State<_PayoutNumberForm> {
   @override
   void initState() {
     super.initState();
+    _phoneCtrl = TextEditingController(text: _profilePhone());
     _phoneCtrl.addListener(_syncNormalizedPhone);
     _confirmCtrl.addListener(_syncNormalizedPhone);
+  }
+
+  /// Numéro de l'utilisateur connecté, pour pré-remplir le premier champ.
+  /// Peut différer du numéro finalement envoyé (le champ reste modifiable) :
+  /// le backend accepte un numéro mobile money distinct du numéro Yadony.
+  String _profilePhone() {
+    try {
+      return context.read<AuthBloc>().state.currentUser?.phoneNumber ?? '';
+    } on ProviderNotFoundException {
+      return '';
+    }
   }
 
   void _syncNormalizedPhone() {
@@ -294,10 +251,7 @@ class _PayoutNumberFormState extends State<_PayoutNumberForm> {
                   DonyIcon('smartphone', color: cs.primary, size: 32),
                   const SizedBox(height: DonySpacing.base),
                   Text(
-                    "Ton compte Yadony n'a pas de numéro de téléphone : "
-                    'indique le numéro mobile money qui recevra tes '
-                    'versements (zone CFA : Orange Money, Wave, MTN, '
-                    'Free).',
+                    widget.explanation,
                     style: tt.bodyMedium?.copyWith(
                       color: cs.onSurfaceVariant,
                       height: 1.45,
@@ -326,7 +280,7 @@ class _PayoutNumberFormState extends State<_PayoutNumberForm> {
         ValueListenableBuilder<String?>(
           valueListenable: _normalizedPhone,
           builder: (context, phone, _) => DonyButton(
-            label: 'Activer le versement mobile money',
+            label: widget.buttonLabel,
             isLoading: widget.isLoading,
             onPressed: phone == null
                 ? null
@@ -406,52 +360,27 @@ class _ActiveView extends StatelessWidget {
   }
 }
 
-/// Versement désactivé : les informations sont conservées, on peut réactiver.
+/// Versement désactivé : redemande un numéro pour réactiver (même
+/// formulaire que la première activation), avec un rappel du numéro
+/// précédent quand il est connu — le numéro fourni peut différer de celui
+/// utilisé avant la désactivation.
 class _DisabledView extends StatelessWidget {
-  const _DisabledView({required this.isLoading});
+  const _DisabledView({required this.account, required this.isLoading});
 
+  final MobileMoneyAccount account;
   final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Expanded(
-          child: SingleChildScrollView(
-            child: DonyCard(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  DonyIcon('smartphone', color: cs.onSurfaceVariant, size: 28),
-                  const SizedBox(width: DonySpacing.base),
-                  Expanded(
-                    child: Text(
-                      'Versement désactivé. Tes informations sont '
-                      'conservées.',
-                      style: tt.bodyMedium?.copyWith(
-                        color: cs.onSurfaceVariant,
-                        height: 1.45,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: DonySpacing.lg),
-        DonyButton(
-          label: 'Réactiver',
-          isLoading: isLoading,
-          onPressed: () => context.read<MobileMoneyAccountBloc>().add(
-            const MobileMoneyAccountActivateRequested(),
-          ),
-        ),
-      ],
+    final masked = account.msisdnMasked;
+    return _PayoutNumberForm(
+      isLoading: isLoading,
+      explanation: masked == null
+          ? 'Ton versement est désactivé. Indique le numéro mobile money '
+                'pour le réactiver.'
+          : 'Ton versement est désactivé. Indique le numéro mobile money '
+                'pour le réactiver (précédent : $masked).',
+      buttonLabel: 'Réactiver',
     );
   }
 }

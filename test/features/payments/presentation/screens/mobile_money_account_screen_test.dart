@@ -60,6 +60,14 @@ void main() {
     status: MobileMoneyAccountStatus.disabled,
   );
 
+  // Numéro précédent connu (compte réactivé depuis un état désactivé) : le
+  // formulaire affiche un rappel dédié dans ce cas, absent quand
+  // msisdnMasked est nul (disabledAccount ci-dessus).
+  const disabledAccountWithNumber = MobileMoneyAccount(
+    status: MobileMoneyAccountStatus.disabled,
+    msisdnMasked: '+225 07 ** ** 67',
+  );
+
   setUpAll(() {
     // MobileMoneyAccountEvent est sealed : le fallback est un vrai événement.
     registerFallbackValue(const MobileMoneyAccountRequested());
@@ -81,10 +89,10 @@ void main() {
   /// [settle] reste faux tant qu'un CircularProgressIndicator tourne : son
   /// animation ne s'arrête jamais et ferait expirer pumpAndSettle.
   ///
-  /// [authBloc] optionnel : la plupart des tests vérifient justement que
-  /// l'écran survit à son absence (`ProviderNotFoundException` rattrapée,
-  /// comportement historique conservé — voir `_NotConfiguredView`). Seul le
-  /// groupe « numéro de versement manquant » le fournit.
+  /// [authBloc] optionnel : le formulaire de numéro de versement lit
+  /// `AuthBloc` pour pré-remplir son premier champ mais tolère son absence
+  /// (`ProviderNotFoundException` rattrapée, champ vide, jamais de
+  /// plantage) — la plupart des tests ne le fournissent donc pas.
   Future<void> pumpScreen(
     WidgetTester tester, {
     bool settle = true,
@@ -113,6 +121,15 @@ void main() {
       await tester.pump();
     }
   }
+
+  /// Widget `TextField` interne au [DonyTextField] portant [key], pour lire
+  /// le texte réellement affiché par son contrôleur.
+  TextField textFieldByKey(Key key) =>
+      (find.descendant(
+            of: find.byKey(key),
+            matching: find.byType(TextField),
+          )).evaluate().single.widget
+          as TextField;
 
   testWidgets('état initial : indicateur de chargement', (tester) async {
     stub(const MobileMoneyAccountInitial());
@@ -150,158 +167,223 @@ void main() {
     });
   });
 
-  group('Vue non configurée', () {
-    testWidgets('carte explicative, opérateurs et bouton d\'activation', (
-      tester,
-    ) async {
-      stub(const MobileMoneyAccountLoaded(notConfiguredAccount));
+  // Décision produit (round 2) : le numéro mobile money est désormais
+  // TOUJOURS demandé pour activer le versement, qu'il y ait ou non un
+  // numéro sur le profil — il peut légitimement différer du numéro Firebase
+  // (le backend PR #274 privilégie le numéro fourni, puis le numéro
+  // Firebase, puis 422 mobile-money-phone-required). Le formulaire
+  // `_PayoutNumberForm` s'affiche donc systématiquement pour `Loaded` et
+  // pour `PhoneRequired`, qui rendent désormais la même vue.
+  group(
+    'Vue non configurée — formulaire de numéro de versement (toujours affiché)',
+    () {
+      testWidgets(
+        'formulaire affiché avec l\'explication et les deux champs, bouton '
+        'inactif tant que rien n\'est saisi (sans AuthBloc)',
+        (tester) async {
+          stub(const MobileMoneyAccountLoaded(notConfiguredAccount));
 
-      await pumpScreen(tester);
+          await pumpScreen(tester);
 
-      expect(
-        find.textContaining('devient ton compte de versement'),
-        findsOneWidget,
-      );
-      expect(find.textContaining('Orange Money'), findsOneWidget);
-      expect(find.text('Activer le versement mobile money'), findsOneWidget);
-    });
-
-    testWidgets('le bouton envoie ActivateRequested', (tester) async {
-      stub(const MobileMoneyAccountLoaded(notConfiguredAccount));
-
-      await pumpScreen(tester);
-
-      await tester.tap(find.text('Activer le versement mobile money'));
-      await tester.pump();
-
-      verify(
-        () => bloc.add(const MobileMoneyAccountActivateRequested()),
-      ).called(1);
-    });
-  });
-
-  // Le compte Firebase peut n'avoir aucun téléphone tant que la vérification
-  // SMS (Twilio) n'est pas configurée : dans ce cas seulement, l'app demande
-  // le numéro de versement avant d'activer.
-  group('Vue non configurée — numéro de versement manquant', () {
-    testWidgets(
-      'utilisateur connecté sans numéro → formulaire de saisie au lieu de '
-      'la carte, bouton inactif tant que rien n\'est saisi',
-      (tester) async {
-        stub(const MobileMoneyAccountLoaded(notConfiguredAccount));
-
-        await pumpScreen(tester, authBloc: _authBlocWithPhone(null));
-
-        expect(find.text('Numéro de versement'), findsOneWidget);
-        expect(find.text('Confirme le numéro'), findsOneWidget);
-        expect(
-          find.textContaining("n'a pas de numéro de téléphone"),
-          findsOneWidget,
-        );
-        // La carte historique (numéro Yadony auto) a bien disparu.
-        expect(
-          find.textContaining('devient ton compte de versement'),
-          findsNothing,
-        );
-
-        final button = tester.widget<DonyButton>(find.byType(DonyButton));
-        expect(button.onPressed, isNull);
-      },
-    );
-
-    testWidgets('numéro vide côté profil (chaîne vide, pas seulement nul) → '
-        'formulaire affiché aussi', (tester) async {
-      stub(const MobileMoneyAccountLoaded(notConfiguredAccount));
-
-      await pumpScreen(tester, authBloc: _authBlocWithPhone(''));
-
-      expect(find.text('Numéro de versement'), findsOneWidget);
-    });
-
-    testWidgets(
-      'les deux saisies doivent coïncider (normalisées) pour activer le '
-      'bouton, qui envoie alors le numéro normalisé',
-      (tester) async {
-        stub(const MobileMoneyAccountLoaded(notConfiguredAccount));
-
-        await pumpScreen(tester, authBloc: _authBlocWithPhone(null));
-
-        await tester.enterText(
-          find.byKey(const Key('payout-phone-field')),
-          '+221 77 345 67 89',
-        );
-        await tester.pump();
-        // Saisies différentes : le bouton reste inactif.
-        await tester.enterText(
-          find.byKey(const Key('payout-phone-confirm-field')),
-          '+221 77 345 67 88',
-        );
-        await tester.pump();
-
-        var button = tester.widget<DonyButton>(find.byType(DonyButton));
-        expect(button.onPressed, isNull);
-
-        // Même numéro, écrit avec des espaces différents : la normalisation
-        // les fait coïncider.
-        await tester.enterText(
-          find.byKey(const Key('payout-phone-confirm-field')),
-          '+221773456789',
-        );
-        await tester.pump();
-
-        button = tester.widget<DonyButton>(find.byType(DonyButton));
-        expect(button.onPressed, isNotNull);
-
-        await tester.tap(find.text('Activer le versement mobile money'));
-        await tester.pump();
-
-        verify(
-          () => bloc.add(
-            const MobileMoneyAccountActivateRequested(
-              phoneNumber: '+221773456789',
+          expect(find.text('Numéro de versement'), findsOneWidget);
+          expect(find.text('Confirme le numéro'), findsOneWidget);
+          expect(
+            find.textContaining(
+              'Indique le numéro mobile money qui recevra tes versements. '
+              'Il peut être différent de ton numéro Yadony',
             ),
-          ),
-        ).called(1);
-      },
-    );
+            findsOneWidget,
+          );
+          expect(
+            find.text('Activer le versement mobile money'),
+            findsOneWidget,
+          );
 
-    testWidgets(
-      'état PhoneRequired → formulaire affiché même si le profil semble '
-      'avoir un numéro (le backend fait autorité)',
-      (tester) async {
-        stub(const MobileMoneyAccountPhoneRequired(notConfiguredAccount));
+          final button = tester.widget<DonyButton>(find.byType(DonyButton));
+          expect(button.onPressed, isNull);
+        },
+      );
 
-        await pumpScreen(tester, authBloc: _authBlocWithPhone('+221770000000'));
+      testWidgets(
+        'les deux champs remplis et identiques (normalisés) → le bouton '
+        'envoie ActivateRequested avec le numéro',
+        (tester) async {
+          stub(const MobileMoneyAccountLoaded(notConfiguredAccount));
 
-        expect(find.text('Numéro de versement'), findsOneWidget);
-        // Jamais de snackbar pour ce cas : ce n'est pas une MobileMoneyAccountError.
-        expect(find.byType(SnackBar), findsNothing);
-      },
-    );
+          await pumpScreen(tester);
 
-    testWidgets(
-      'utilisateur connecté avec un numéro → vue classique inchangée, pas '
-      'de formulaire, activation sans numéro',
-      (tester) async {
-        stub(const MobileMoneyAccountLoaded(notConfiguredAccount));
+          await tester.enterText(
+            find.byKey(const Key('payout-phone-field')),
+            '+221773456789',
+          );
+          await tester.pump();
+          await tester.enterText(
+            find.byKey(const Key('payout-phone-confirm-field')),
+            '+221773456789',
+          );
+          await tester.pump();
 
-        await pumpScreen(tester, authBloc: _authBlocWithPhone('+221771234567'));
+          await tester.tap(find.text('Activer le versement mobile money'));
+          await tester.pump();
 
-        expect(
-          find.textContaining('devient ton compte de versement'),
-          findsOneWidget,
-        );
-        expect(find.text('Numéro de versement'), findsNothing);
+          verify(
+            () => bloc.add(
+              const MobileMoneyAccountActivateRequested(
+                phoneNumber: '+221773456789',
+              ),
+            ),
+          ).called(1);
+        },
+      );
 
-        await tester.tap(find.text('Activer le versement mobile money'));
-        await tester.pump();
+      testWidgets(
+        'utilisateur connecté sans numéro → premier champ démarre vide',
+        (tester) async {
+          stub(const MobileMoneyAccountLoaded(notConfiguredAccount));
 
-        verify(
-          () => bloc.add(const MobileMoneyAccountActivateRequested()),
-        ).called(1);
-      },
-    );
-  });
+          await pumpScreen(tester, authBloc: _authBlocWithPhone(null));
+
+          expect(
+            textFieldByKey(const Key('payout-phone-field')).controller!.text,
+            isEmpty,
+          );
+        },
+      );
+
+      testWidgets(
+        'numéro vide côté profil (chaîne vide, pas seulement nul) → premier '
+        'champ démarre vide aussi',
+        (tester) async {
+          stub(const MobileMoneyAccountLoaded(notConfiguredAccount));
+
+          await pumpScreen(tester, authBloc: _authBlocWithPhone(''));
+
+          expect(
+            textFieldByKey(const Key('payout-phone-field')).controller!.text,
+            isEmpty,
+          );
+        },
+      );
+
+      testWidgets(
+        'les deux saisies doivent coïncider (normalisées) pour activer le '
+        'bouton, qui envoie alors le numéro normalisé',
+        (tester) async {
+          stub(const MobileMoneyAccountLoaded(notConfiguredAccount));
+
+          await pumpScreen(tester, authBloc: _authBlocWithPhone(null));
+
+          await tester.enterText(
+            find.byKey(const Key('payout-phone-field')),
+            '+221 77 345 67 89',
+          );
+          await tester.pump();
+          // Saisies différentes : le bouton reste inactif.
+          await tester.enterText(
+            find.byKey(const Key('payout-phone-confirm-field')),
+            '+221 77 345 67 88',
+          );
+          await tester.pump();
+
+          var button = tester.widget<DonyButton>(find.byType(DonyButton));
+          expect(button.onPressed, isNull);
+
+          // Même numéro, écrit avec des espaces différents : la normalisation
+          // les fait coïncider.
+          await tester.enterText(
+            find.byKey(const Key('payout-phone-confirm-field')),
+            '+221773456789',
+          );
+          await tester.pump();
+
+          button = tester.widget<DonyButton>(find.byType(DonyButton));
+          expect(button.onPressed, isNotNull);
+
+          await tester.tap(find.text('Activer le versement mobile money'));
+          await tester.pump();
+
+          verify(
+            () => bloc.add(
+              const MobileMoneyAccountActivateRequested(
+                phoneNumber: '+221773456789',
+              ),
+            ),
+          ).called(1);
+        },
+      );
+
+      testWidgets(
+        'état PhoneRequired → formulaire affiché, premier champ pré-rempli '
+        'avec le numéro du profil (le backend fait autorité sur le refus, '
+        'pas sur le pré-remplissage)',
+        (tester) async {
+          stub(const MobileMoneyAccountPhoneRequired(notConfiguredAccount));
+
+          await pumpScreen(
+            tester,
+            authBloc: _authBlocWithPhone('+221770000000'),
+          );
+
+          expect(find.text('Numéro de versement'), findsOneWidget);
+          // Jamais de snackbar pour ce cas : ce n'est pas une
+          // MobileMoneyAccountError.
+          expect(find.byType(SnackBar), findsNothing);
+          expect(
+            textFieldByKey(const Key('payout-phone-field')).controller!.text,
+            '+221770000000',
+          );
+        },
+      );
+
+      testWidgets(
+        'utilisateur connecté avec un numéro → premier champ pré-rempli, '
+        'confirmation vide et bouton inactif jusqu\'à confirmation '
+        'identique',
+        (tester) async {
+          stub(const MobileMoneyAccountLoaded(notConfiguredAccount));
+
+          await pumpScreen(
+            tester,
+            authBloc: _authBlocWithPhone('+221771234567'),
+          );
+
+          expect(
+            textFieldByKey(const Key('payout-phone-field')).controller!.text,
+            '+221771234567',
+          );
+          expect(
+            textFieldByKey(
+              const Key('payout-phone-confirm-field'),
+            ).controller!.text,
+            isEmpty,
+          );
+
+          var button = tester.widget<DonyButton>(find.byType(DonyButton));
+          expect(button.onPressed, isNull);
+
+          await tester.enterText(
+            find.byKey(const Key('payout-phone-confirm-field')),
+            '+221771234567',
+          );
+          await tester.pump();
+
+          button = tester.widget<DonyButton>(find.byType(DonyButton));
+          expect(button.onPressed, isNotNull);
+
+          await tester.tap(find.text('Activer le versement mobile money'));
+          await tester.pump();
+
+          verify(
+            () => bloc.add(
+              const MobileMoneyAccountActivateRequested(
+                phoneNumber: '+221771234567',
+              ),
+            ),
+          ).called(1);
+        },
+      );
+    },
+  );
 
   group('Vue active', () {
     testWidgets('opérateur, numéro masqué, devise et badge actif', (
@@ -332,33 +414,83 @@ void main() {
     });
   });
 
+  // Décision produit (round 2) : la réactivation redemande elle aussi
+  // toujours un numéro (même formulaire que l'activation initiale), avec un
+  // rappel du numéro masqué précédent quand il est connu.
   group('Vue désactivée', () {
-    testWidgets('message de conservation et bouton de réactivation', (
-      tester,
-    ) async {
-      stub(const MobileMoneyAccountLoaded(disabledAccount));
+    testWidgets(
+      'formulaire affiché sans rappel de numéro (aucun numéro précédent '
+      'connu), bouton Réactiver inactif sans saisie',
+      (tester) async {
+        stub(const MobileMoneyAccountLoaded(disabledAccount));
 
-      await pumpScreen(tester);
+        await pumpScreen(tester);
 
-      expect(
-        find.text('Versement désactivé. Tes informations sont conservées.'),
-        findsOneWidget,
-      );
-      expect(find.text('Réactiver'), findsOneWidget);
-    });
+        expect(
+          find.text(
+            'Ton versement est désactivé. Indique le numéro mobile money '
+            'pour le réactiver.',
+          ),
+          findsOneWidget,
+        );
+        expect(find.textContaining('précédent'), findsNothing);
+        expect(find.text('Numéro de versement'), findsOneWidget);
+        expect(find.text('Confirme le numéro'), findsOneWidget);
+        expect(find.text('Réactiver'), findsOneWidget);
 
-    testWidgets('le bouton envoie ActivateRequested', (tester) async {
-      stub(const MobileMoneyAccountLoaded(disabledAccount));
+        final button = tester.widget<DonyButton>(find.byType(DonyButton));
+        expect(button.onPressed, isNull);
+      },
+    );
 
-      await pumpScreen(tester);
+    testWidgets(
+      'numéro précédent connu → rappel affiché avec le numéro masqué',
+      (tester) async {
+        stub(const MobileMoneyAccountLoaded(disabledAccountWithNumber));
 
-      await tester.tap(find.text('Réactiver'));
-      await tester.pump();
+        await pumpScreen(tester);
 
-      verify(
-        () => bloc.add(const MobileMoneyAccountActivateRequested()),
-      ).called(1);
-    });
+        expect(
+          find.text(
+            'Ton versement est désactivé. Indique le numéro mobile money '
+            'pour le réactiver (précédent : +225 07 ** ** 67).',
+          ),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'les deux champs remplis et identiques → le bouton Réactiver envoie '
+      'ActivateRequested avec le numéro',
+      (tester) async {
+        stub(const MobileMoneyAccountLoaded(disabledAccount));
+
+        await pumpScreen(tester);
+
+        await tester.enterText(
+          find.byKey(const Key('payout-phone-field')),
+          '+221773456789',
+        );
+        await tester.pump();
+        await tester.enterText(
+          find.byKey(const Key('payout-phone-confirm-field')),
+          '+221773456789',
+        );
+        await tester.pump();
+
+        await tester.tap(find.text('Réactiver'));
+        await tester.pump();
+
+        verify(
+          () => bloc.add(
+            const MobileMoneyAccountActivateRequested(
+              phoneNumber: '+221773456789',
+            ),
+          ),
+        ).called(1);
+      },
+    );
   });
 
   testWidgets(
