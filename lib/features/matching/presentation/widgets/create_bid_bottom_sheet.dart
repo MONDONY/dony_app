@@ -291,14 +291,18 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _photosCubit = getIt<BidPhotosCubit>();
     _negotiationBloc = widget.negotiation ? getIt<BidNegotiationBloc>() : null;
 
-    _isCashAvailable = widget.announcement.acceptedPaymentMethods.contains(
-      BidPaymentMethod.cash,
-    );
-    _isStripeAvailable = widget.announcement.acceptedPaymentMethods.contains(
-      BidPaymentMethod.stripe,
-    );
-    _isMobileMoneyAvailable = widget.announcement.acceptedPaymentMethods
-        .contains(BidPaymentMethod.mobileMoney);
+    // Une annonce n'offre que les moyens que sa devise autorise (pas de carte en
+    // zone CFA, pas de mobile money ailleurs) : le backend filtre à l'écriture,
+    // l'app n'affiche jamais un moyen qu'une demande ne pourra pas honorer.
+    final accepted = widget.announcement.acceptedPaymentMethods;
+    final currency = widget.announcement.currency;
+    _isCashAvailable = accepted.contains(BidPaymentMethod.cash);
+    _isStripeAvailable =
+        accepted.contains(BidPaymentMethod.stripe) &&
+        BidPaymentMethod.stripe.isAllowedIn(currency);
+    _isMobileMoneyAvailable =
+        accepted.contains(BidPaymentMethod.mobileMoney) &&
+        BidPaymentMethod.mobileMoney.isAllowedIn(currency);
     _methodNotifier = ValueNotifier<BidPaymentMethod>(
       // En négociation, le mobile money n'est jamais un choix possible
       // (rejeté par le backend) : le défaut reste celui d'avant la task 10
