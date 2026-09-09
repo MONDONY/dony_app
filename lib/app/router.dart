@@ -109,10 +109,13 @@ import 'package:dony/features/package_request/presentation/screens/shared/negoti
 import 'package:dony/features/package_request/presentation/screens/traveler/link_trip_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/traveler/package_request_public_detail_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/traveler/package_request_search_screen.dart';
+import 'package:dony/features/payments/bloc/mobile_money_account_bloc.dart';
+import 'package:dony/features/payments/bloc/mobile_money_account_event.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
 import 'package:dony/features/payments/cash/presentation/screens/commission_method_screen.dart';
+import 'package:dony/features/payments/presentation/screens/mobile_money_account_screen.dart';
 import 'package:dony/features/payments/presentation/screens/payment_screen.dart';
 import 'package:dony/features/payments/presentation/screens/payout_onboarding_screen.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
@@ -796,6 +799,15 @@ final appRouter = GoRouter(
           ),
         );
       },
+    ),
+    GoRoute(
+      path: '/payments/mobile-money/account',
+      builder: (_, _) => BlocProvider(
+        create: (_) =>
+            getIt<MobileMoneyAccountBloc>()
+              ..add(const MobileMoneyAccountRequested()),
+        child: const MobileMoneyAccountScreen(),
+      ),
     ),
     GoRoute(
       path: '/payments/pay',

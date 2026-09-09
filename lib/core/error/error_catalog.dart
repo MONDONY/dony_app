@@ -36,6 +36,128 @@ abstract final class ErrorCatalog {
   /// `DonyBusinessException` → ProblemDetail `code`.
   /// Source: `dony-back/.../DonyBusinessException` invocations (29 codes).
   static const Map<String, ErrorPresentation> _byCode = {
+    // ─── Mobile money (pawaPay) ───────────────────────────────────────
+    // Rail de versement voyageur (Wave / Orange Money) : activation du
+    // compte de versement (`mobile-money-account-*`, `MobileMoneyAccountService`)
+    // et paiement d'un bid par l'expéditeur (`mobile-money-payment-*`,
+    // `mobile-money-deposit-*`, `mobile-money-operation-*`,
+    // `mobile-money-provider-*`, `MobileMoneyBidPaymentService` /
+    // `PawapayOperationService` / `PawapayErrors`). Le code
+    // `payment-method-unavailable-for-currency`, partagé avec la carte,
+    // reste documenté plus bas avec son groupe d'origine.
+    'mobile-money-disabled': ErrorPresentation(
+      title: 'Mobile money indisponible',
+      message:
+          'Le paiement mobile money n\'est pas ouvert pour le moment. '
+          'Choisis un autre moyen de paiement.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.flag_outlined,
+    ),
+    // Le message ne présume plus d'un profil à compléter : l'app propose
+    // maintenant la saisie du numéro directement dans le flux (formulaire de
+    // versement, relance de paiement) plutôt que de renvoyer vers le profil.
+    'mobile-money-phone-required': ErrorPresentation(
+      title: 'Numéro manquant',
+      message: 'Indique le numéro mobile money à utiliser pour continuer.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.flag_outlined,
+    ),
+    'mobile-money-account-unsupported': ErrorPresentation(
+      title: 'Numéro non pris en charge',
+      message:
+          'Ton numéro n\'est pas rattaché à un opérateur mobile money '
+          'compatible, ou sa devise ne correspond pas à ta zone.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.flag_outlined,
+    ),
+    'mobile-money-account-required': ErrorPresentation(
+      title: 'Compte de versement requis',
+      message:
+          'Active ton versement mobile money avant d\'accepter cette '
+          'offre.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.flag_outlined,
+    ),
+    'mobile-money-currency-mismatch': ErrorPresentation(
+      title: 'Devise différente',
+      message:
+          'Ton compte de versement mobile money n\'est pas dans la '
+          'devise de ce trajet.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.flag_outlined,
+    ),
+    'mobile-money-not-available': ErrorPresentation(
+      title: 'Mobile money non proposé',
+      message: 'Ce voyageur n\'accepte pas le paiement mobile money.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.flag_outlined,
+    ),
+    'mobile-money-payer-unsupported': ErrorPresentation(
+      title: 'Numéro non pris en charge',
+      message:
+          'Vérifie le numéro qui doit payer, ou essaie avec un autre '
+          'numéro.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.flag_outlined,
+    ),
+    'mobile-money-deposit-rejected': ErrorPresentation(
+      title: 'Paiement refusé',
+      message:
+          'L\'opérateur a refusé la demande de paiement. Réessaie, '
+          'éventuellement avec un autre numéro.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.flag_outlined,
+    ),
+    'mobile-money-payment-expired': ErrorPresentation(
+      title: 'Délai dépassé',
+      message:
+          'Le délai de paiement de 30 minutes est passé. Refais une '
+          'offre au voyageur.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.flag_outlined,
+    ),
+    // 409 : le paiement a déjà quitté l'état PENDING (confirmé, expiré ou
+    // refusé) au moment où le client agit dessus, ex. régénération de lien
+    // (MobileMoneyBidPaymentService) — rien à corriger côté utilisateur,
+    // un simple constat, comme `bid-already-paid`/`payment-already-completed`
+    // plus bas.
+    'mobile-money-payment-not-pending': ErrorPresentation(
+      title: 'Paiement déjà traité',
+      message: 'Ce paiement n\'est plus en attente.',
+      severity: ErrorSeverity.info,
+      icon: Icons.info_outline_rounded,
+    ),
+    // 409 : un dépôt pawaPay est déjà en cours pour ce bid
+    // (PawapayOperationService), aligné sur `active-transactions` plus bas
+    // (même sévérité et icône : une opération en cours empêche l'action).
+    'mobile-money-operation-in-progress': ErrorPresentation(
+      title: 'Opération en cours',
+      message:
+          'Une opération mobile money est déjà en cours pour cet envoi. '
+          'Patiente quelques instants.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.pending_rounded,
+    ),
+    // 502 : pawaPay ne répond pas (PawapayErrors), aligné sur les autres
+    // services externes indisponibles plus bas (`SERVER_ERROR`,
+    // `email-service-error`, `firebase-error` : sévérité error).
+    'mobile-money-provider-unavailable': ErrorPresentation(
+      title: 'Service indisponible',
+      message:
+          'Le service mobile money ne répond pas. Réessaie dans '
+          'quelques minutes.',
+      severity: ErrorSeverity.error,
+      icon: Icons.cloud_off_rounded,
+    ),
+    'invalid-payment-method': ErrorPresentation(
+      title: 'Moyen de paiement invalide',
+      message:
+          'Ce moyen de paiement n\'est pas reconnu. Mets l\'application '
+          'à jour.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.flag_outlined,
+    ),
+
     // ─── Course à la commission (accord en espèces) ──────────────────
     // Sans ces deux entrées, le voyageur qui perd la course lit « Action
     // impossible, l'état actuel ne permet pas cette action », soit exactement
@@ -497,7 +619,10 @@ abstract final class ErrorCatalog {
     // Seul `wallet-topup-stripe-error` appartient au rechargement. Les deux
     // autres viennent des parcours de paiement d'un colis :
     // `payment-method-unavailable-for-currency` est levé par
-    // `BidService.resolvePaymentMethodFor` et `PaymentService.createEscrow`,
+    // `BidService.resolvePaymentMethodFor` et `PaymentService.createEscrow`
+    // pour la carte, désormais aussi par le rail mobile money (pawaPay)
+    // pour la même raison de devise : le message reste donc générique au
+    // moyen de paiement plutôt que de nommer la carte.
     // `unsupported-currency` par `CurrencyCatalog.resolve`.
     'wallet-topup-stripe-error': ErrorPresentation(
       title: 'Rechargement indisponible',
@@ -507,9 +632,10 @@ abstract final class ErrorCatalog {
       icon: Icons.account_balance_wallet_outlined,
     ),
     'payment-method-unavailable-for-currency': ErrorPresentation(
-      title: 'Paiement par carte indisponible',
+      title: 'Moyen de paiement indisponible',
       message:
-          'La carte bancaire n\'est pas acceptée pour un colis dans cette devise. Choisis le paiement en espèces.',
+          'Ce moyen de paiement n\'est pas proposé dans la devise de ce '
+          'trajet.',
       severity: ErrorSeverity.warning,
       icon: Icons.credit_card_off_outlined,
     ),

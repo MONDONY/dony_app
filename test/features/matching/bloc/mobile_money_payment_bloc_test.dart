@@ -1,199 +1,495 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/bloc/mobile_money_payment_bloc.dart';
 import 'package:dony/features/matching/bloc/mobile_money_payment_event.dart';
 import 'package:dony/features/matching/bloc/mobile_money_payment_state.dart';
-import 'package:dony/features/matching/data/models/mobile_money_payment_model.dart';
+import 'package:dony/features/matching/data/models/mobile_money_payment_status.dart';
 import 'package:dony/features/matching/data/repositories/mobile_money_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockMobileMoneyRepository extends Mock implements MobileMoneyRepository {}
 
+class MockAnalyticsService extends Mock implements AnalyticsService {}
+
 void main() {
-  group('MobileMoneyPaymentBloc', () {
-    late MockMobileMoneyRepository repo;
-    late MobileMoneyPaymentBloc bloc;
-    const bidId = '550e8400-e29b-41d4-a716-446655440000';
+  late MockMobileMoneyRepository repository;
+  late MockAnalyticsService analytics;
 
-    setUp(() {
-      repo = MockMobileMoneyRepository();
-      bloc = MobileMoneyPaymentBloc(repo);
-    });
+  const bidId = '550e8400-e29b-41d4-a716-446655440000';
 
-    tearDown(() => bloc.close());
+  const liveDeposit = MobileMoneyDeposit(
+    id: 'deposit-1',
+    status: MobileMoneyDepositStatus.accepted,
+    providerLabel: 'Wave',
+    authorizationUrl: 'https://wave.test/pay?ref=abc',
+  );
+  const liveStatus = MobileMoneyPaymentStatus(
+    bidId: bidId,
+    bidStatus: 'AWAITING_PAYMENT',
+    paymentStatus: 'PENDING',
+    amount: 50.0,
+    deposit: liveDeposit,
+  );
+  const noDepositStatus = MobileMoneyPaymentStatus(
+    bidId: bidId,
+    bidStatus: 'AWAITING_PAYMENT',
+    amount: 50.0,
+  );
+  const escrowedStatus = MobileMoneyPaymentStatus(
+    bidId: bidId,
+    bidStatus: 'ACCEPTED',
+    paymentStatus: 'ESCROW',
+    amount: 50.0,
+  );
+  final deadline = DateTime(2026, 9, 8, 10);
+  final statusNearDeadline = MobileMoneyPaymentStatus(
+    bidId: bidId,
+    bidStatus: 'AWAITING_PAYMENT',
+    paymentStatus: 'PENDING',
+    deadlineAt: deadline,
+    amount: 50.0,
+    deposit: liveDeposit,
+  );
 
+  setUp(() {
+    repository = MockMobileMoneyRepository();
+    analytics = MockAnalyticsService();
+    when(
+      () => analytics.logEvent(any(), properties: any(named: 'properties')),
+    ).thenAnswer((_) async {});
+  });
+
+  MobileMoneyPaymentBloc bloc({DateTime Function()? now}) =>
+      MobileMoneyPaymentBloc(repository, analytics, now: now);
+
+  test('état initial', () {
+    expect(bloc().state, isA<MobileMoneyPaymentInitial>());
+  });
+
+  group('MobileMoneyPaymentOpened', () {
     blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
-      'MobileMoneyStatusPolled → MobileMoneyPaymentPending quand status=PENDING',
+      'dépôt déjà vivant : statut mappé directement, initiate jamais appelé',
       build: () {
-        when(() => repo.getStatus(bidId)).thenAnswer(
-          (_) async => const MobileMoneyPaymentModel(
-            id: 'id-1',
-            status: 'PENDING',
-            paymentLink: 'https://wave.test/pay?ref=abc',
-            amount: 50.0,
-            currency: 'XOF',
-          ),
-        );
-        return bloc;
+        when(
+          () => repository.getStatus(bidId),
+        ).thenAnswer((_) async => liveStatus);
+        return bloc();
       },
-      act: (b) => b.add(const MobileMoneyStatusPolled(bidId: bidId)),
+      act: (b) => b.add(const MobileMoneyPaymentOpened(bidId: bidId)),
       expect: () => [
         isA<MobileMoneyPaymentLoading>(),
-        isA<MobileMoneyPaymentPending>().having(
-          (s) => s.paymentLink,
-          'paymentLink',
-          contains('wave.test'),
+        isA<MobileMoneyPaymentAwaitingConfirmation>().having(
+          (s) => s.status,
+          'status',
+          liveStatus,
+        ),
+      ],
+      verify: (_) {
+        verifyNever(
+          () => repository.initiate(
+            any(),
+            phoneNumber: any(named: 'phoneNumber'),
+          ),
+        );
+      },
+    );
+
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'aucun dépôt : initiate appelé une fois, analytics mobileMoneyInitiated',
+      build: () {
+        when(
+          () => repository.getStatus(bidId),
+        ).thenAnswer((_) async => noDepositStatus);
+        when(
+          () => repository.initiate(bidId),
+        ).thenAnswer((_) async => liveStatus);
+        return bloc();
+      },
+      act: (b) => b.add(const MobileMoneyPaymentOpened(bidId: bidId)),
+      expect: () => [
+        isA<MobileMoneyPaymentLoading>(),
+        isA<MobileMoneyPaymentAwaitingConfirmation>().having(
+          (s) => s.status,
+          'status',
+          liveStatus,
+        ),
+      ],
+      verify: (_) {
+        verify(() => repository.initiate(bidId)).called(1);
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.mobileMoneyInitiated,
+            properties: {'provider': 'Wave', 'wave': true},
+          ),
+        ).called(1);
+      },
+    );
+
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'déjà séquestré : Escrowed direct, initiate jamais appelé, analytics '
+      'mobileMoneyConfirmed',
+      build: () {
+        when(
+          () => repository.getStatus(bidId),
+        ).thenAnswer((_) async => escrowedStatus);
+        return bloc();
+      },
+      act: (b) => b.add(const MobileMoneyPaymentOpened(bidId: bidId)),
+      expect: () => [
+        isA<MobileMoneyPaymentLoading>(),
+        isA<MobileMoneyPaymentEscrowed>(),
+      ],
+      verify: (_) {
+        verifyNever(
+          () => repository.initiate(
+            any(),
+            phoneNumber: any(named: 'phoneNumber'),
+          ),
+        );
+        verify(
+          () => analytics.logEvent(AnalyticsEvents.mobileMoneyConfirmed),
+        ).called(1);
+      },
+    );
+
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'getStatus en échec → Error porte une AppException (jamais e.toString())',
+      build: () {
+        when(
+          () => repository.getStatus(bidId),
+        ).thenThrow(const OfflineException());
+        return bloc();
+      },
+      act: (b) => b.add(const MobileMoneyPaymentOpened(bidId: bidId)),
+      expect: () => [
+        isA<MobileMoneyPaymentLoading>(),
+        isA<MobileMoneyPaymentError>().having(
+          (s) => s.error,
+          'error',
+          isA<OfflineException>(),
         ),
       ],
     );
 
     blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
-      'MobileMoneyStatusPolled → MobileMoneyPaymentConfirmed quand status=COMPLETED',
+      'initiate en échec après un statut sans dépôt → Error',
       build: () {
-        when(() => repo.getStatus(bidId)).thenAnswer(
-          (_) async => const MobileMoneyPaymentModel(
-            id: 'id-2',
-            status: 'COMPLETED',
-            amount: 50.0,
-            currency: 'XOF',
-          ),
-        );
-        return bloc;
+        when(
+          () => repository.getStatus(bidId),
+        ).thenAnswer((_) async => noDepositStatus);
+        when(
+          () => repository.initiate(bidId),
+        ).thenThrow(const ServerException());
+        return bloc();
       },
-      act: (b) => b.add(const MobileMoneyStatusPolled(bidId: bidId)),
+      act: (b) => b.add(const MobileMoneyPaymentOpened(bidId: bidId)),
       expect: () => [
         isA<MobileMoneyPaymentLoading>(),
-        isA<MobileMoneyPaymentConfirmed>(),
+        isA<MobileMoneyPaymentError>().having(
+          (s) => s.error,
+          'error',
+          isA<ServerException>(),
+        ),
       ],
     );
 
     blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
-      'MobileMoneyStatusPolled → MobileMoneyPaymentError si exception réseau',
+      'l\'AppException levée par le repository conserve son code métier',
       build: () {
-        when(() => repo.getStatus(bidId)).thenThrow(Exception('network error'));
-        return bloc;
+        when(() => repository.getStatus(bidId)).thenThrow(
+          const ValidationException(
+            'Numéro invalide',
+            code: 'invalid-phone-number',
+          ),
+        );
+        return bloc();
       },
-      act: (b) => b.add(const MobileMoneyStatusPolled(bidId: bidId)),
+      act: (b) => b.add(const MobileMoneyPaymentOpened(bidId: bidId)),
+      expect: () => [
+        isA<MobileMoneyPaymentLoading>(),
+        isA<MobileMoneyPaymentError>().having(
+          (s) => s.error,
+          'error',
+          isA<ValidationException>().having(
+            (e) => e.code,
+            'code',
+            'invalid-phone-number',
+          ),
+        ),
+      ],
+    );
+  });
+
+  group('MobileMoneyPaymentInitiateRequested', () {
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'numéro transmis au repository, résultat mappé, analytics '
+      'mobileMoneyInitiated',
+      build: () {
+        when(
+          () => repository.initiate(bidId, phoneNumber: '+221771234567'),
+        ).thenAnswer((_) async => liveStatus);
+        return bloc();
+      },
+      act: (b) => b.add(
+        const MobileMoneyPaymentInitiateRequested(
+          bidId: bidId,
+          phoneNumber: '+221771234567',
+        ),
+      ),
+      expect: () => [
+        isA<MobileMoneyPaymentLoading>(),
+        isA<MobileMoneyPaymentAwaitingConfirmation>(),
+      ],
+      verify: (_) {
+        verify(
+          () => repository.initiate(bidId, phoneNumber: '+221771234567'),
+        ).called(1);
+      },
+    );
+
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'sans numéro : repository appelé sans phoneNumber',
+      build: () {
+        when(
+          () => repository.initiate(bidId),
+        ).thenAnswer((_) async => liveStatus);
+        return bloc();
+      },
+      act: (b) =>
+          b.add(const MobileMoneyPaymentInitiateRequested(bidId: bidId)),
+      expect: () => [
+        isA<MobileMoneyPaymentLoading>(),
+        isA<MobileMoneyPaymentAwaitingConfirmation>(),
+      ],
+      verify: (_) {
+        verify(() => repository.initiate(bidId)).called(1);
+      },
+    );
+
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'échec → Error',
+      build: () {
+        when(
+          () => repository.initiate(bidId),
+        ).thenThrow(const NetworkException('boom'));
+        return bloc();
+      },
+      act: (b) =>
+          b.add(const MobileMoneyPaymentInitiateRequested(bidId: bidId)),
       expect: () => [
         isA<MobileMoneyPaymentLoading>(),
         isA<MobileMoneyPaymentError>(),
       ],
     );
+  });
 
+  group('MobileMoneyStatusPolled', () {
     blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
-      'MobileMoneyStatusPolled → MobileMoneyPaymentExpired quand status=EXPIRED',
+      'silencieux : jamais de Loading, transition directe',
       build: () {
-        when(() => repo.getStatus(bidId)).thenAnswer(
-          (_) async => const MobileMoneyPaymentModel(
-            id: 'id-3',
-            status: 'EXPIRED',
-            amount: 50.0,
-            currency: 'XOF',
-          ),
-        );
-        return bloc;
+        when(
+          () => repository.getStatus(bidId),
+        ).thenAnswer((_) async => escrowedStatus);
+        return bloc();
       },
+      seed: () => const MobileMoneyPaymentAwaitingConfirmation(liveStatus),
       act: (b) => b.add(const MobileMoneyStatusPolled(bidId: bidId)),
-      expect: () => [
-        isA<MobileMoneyPaymentLoading>(),
-        isA<MobileMoneyPaymentExpired>(),
-      ],
+      expect: () => [isA<MobileMoneyPaymentEscrowed>()],
     );
 
     blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
-      'MobileMoneyStatusPolled → MobileMoneyPaymentError quand status=FAILED',
+      'erreur réseau ignorée depuis AwaitingConfirmation : aucune émission',
       build: () {
-        when(() => repo.getStatus(bidId)).thenAnswer(
-          (_) async => const MobileMoneyPaymentModel(
-            id: 'id-4',
-            status: 'FAILED',
-            amount: 50.0,
-            currency: 'XOF',
-            failureReason: 'Solde insuffisant',
-          ),
-        );
-        return bloc;
+        when(
+          () => repository.getStatus(bidId),
+        ).thenThrow(const OfflineException());
+        return bloc();
       },
+      seed: () => const MobileMoneyPaymentAwaitingConfirmation(liveStatus),
       act: (b) => b.add(const MobileMoneyStatusPolled(bidId: bidId)),
-      expect: () => [
-        isA<MobileMoneyPaymentLoading>(),
-        isA<MobileMoneyPaymentError>().having(
-          (s) => s.message,
-          'message',
-          'Solde insuffisant',
-        ),
-      ],
+      expect: () => [],
     );
 
     blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
-      'MobileMoneyLinkRegenRequested → MobileMoneyPaymentPending avec nouveau lien',
+      'erreur réseau depuis Initial → Error (première tentative)',
       build: () {
-        when(() => repo.regenerateLink(bidId)).thenAnswer(
-          (_) async => const MobileMoneyPaymentModel(
-            id: 'id-5',
-            status: 'PENDING',
-            amount: 50.0,
-            currency: 'XOF',
-            paymentLink: 'https://wave.test/pay?ref=new',
-          ),
-        );
-        return bloc;
+        when(
+          () => repository.getStatus(bidId),
+        ).thenThrow(const OfflineException());
+        return bloc();
       },
-      act: (b) => b.add(const MobileMoneyLinkRegenRequested(bidId: bidId)),
-      expect: () => [
-        isA<MobileMoneyPaymentLoading>(),
-        isA<MobileMoneyPaymentPending>().having(
-          (s) => s.paymentLink,
-          'paymentLink',
-          contains('ref=new'),
-        ),
-      ],
+      act: (b) => b.add(const MobileMoneyStatusPolled(bidId: bidId)),
+      expect: () => [isA<MobileMoneyPaymentError>()],
     );
 
     blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
-      'MobileMoneyStatusPolled depuis état Pending → pas de Loading (pas de clignotement)',
+      'erreur réseau depuis Loading → Error',
       build: () {
-        // Server returns COMPLETED — so a state change DOES happen, but no Loading first
-        when(() => repo.getStatus(bidId)).thenAnswer(
-          (_) async => const MobileMoneyPaymentModel(
-            id: 'id-6',
-            status: 'COMPLETED',
-            amount: 50.0,
-            currency: 'XOF',
-          ),
-        );
-        return bloc;
+        when(
+          () => repository.getStatus(bidId),
+        ).thenThrow(const OfflineException());
+        return bloc();
       },
-      seed: () => const MobileMoneyPaymentPending(
-        paymentLink: 'https://wave.test/pay?ref=abc',
-      ),
+      seed: () => const MobileMoneyPaymentLoading(),
       act: (b) => b.add(const MobileMoneyStatusPolled(bidId: bidId)),
-      expect: () => [
-        // No MobileMoneyPaymentLoading emitted — periodic poll skips spinner
-        isA<MobileMoneyPaymentConfirmed>(),
-      ],
+      expect: () => [isA<MobileMoneyPaymentError>()],
     );
 
     blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
-      'MobileMoneyStatusPolled depuis état Error → Loading émis (première tentative après erreur)',
+      'aucun dépôt renvoyé pendant un sondage : état inchangé',
       build: () {
-        when(() => repo.getStatus(bidId)).thenAnswer(
-          (_) async => const MobileMoneyPaymentModel(
-            id: 'id-7',
-            status: 'PENDING',
-            paymentLink: 'https://wave.test/pay?ref=abc',
+        when(
+          () => repository.getStatus(bidId),
+        ).thenAnswer((_) async => noDepositStatus);
+        return bloc();
+      },
+      seed: () => const MobileMoneyPaymentAwaitingConfirmation(liveStatus),
+      act: (b) => b.add(const MobileMoneyStatusPolled(bidId: bidId)),
+      expect: () => [],
+    );
+
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'isExpired avec now avant la deadline : reste AwaitingConfirmation',
+      build: () {
+        when(
+          () => repository.getStatus(bidId),
+        ).thenAnswer((_) async => statusNearDeadline);
+        return bloc(now: () => deadline.subtract(const Duration(minutes: 1)));
+      },
+      act: (b) => b.add(const MobileMoneyStatusPolled(bidId: bidId)),
+      expect: () => [isA<MobileMoneyPaymentAwaitingConfirmation>()],
+    );
+
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'isExpired avec now après la deadline : passe à Expired',
+      build: () {
+        when(
+          () => repository.getStatus(bidId),
+        ).thenAnswer((_) async => statusNearDeadline);
+        return bloc(now: () => deadline.add(const Duration(minutes: 1)));
+      },
+      act: (b) => b.add(const MobileMoneyStatusPolled(bidId: bidId)),
+      expect: () => [isA<MobileMoneyPaymentExpired>()],
+    );
+
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'plusieurs sondages Escrowed de suite : mobileMoneyConfirmed une seule '
+      'fois',
+      build: () {
+        var call = 0;
+        when(() => repository.getStatus(bidId)).thenAnswer((_) async {
+          call++;
+          return call == 1
+              ? const MobileMoneyPaymentStatus(
+                  bidId: bidId,
+                  bidStatus: 'ACCEPTED',
+                  paymentStatus: 'ESCROW',
+                  amount: 50.0,
+                )
+              : const MobileMoneyPaymentStatus(
+                  bidId: bidId,
+                  bidStatus: 'ACCEPTED',
+                  paymentStatus: 'RELEASED',
+                  amount: 50.0,
+                );
+        });
+        return bloc();
+      },
+      act: (b) async {
+        b.add(const MobileMoneyStatusPolled(bidId: bidId));
+        await Future<void>.delayed(Duration.zero);
+        b.add(const MobileMoneyStatusPolled(bidId: bidId));
+      },
+      expect: () => [
+        isA<MobileMoneyPaymentEscrowed>(),
+        isA<MobileMoneyPaymentEscrowed>(),
+      ],
+      verify: (_) {
+        verify(
+          () => analytics.logEvent(AnalyticsEvents.mobileMoneyConfirmed),
+        ).called(1);
+      },
+    );
+
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'plusieurs sondages DepositFailed de suite : mobileMoneyFailed une '
+      'seule fois',
+      build: () {
+        var call = 0;
+        when(() => repository.getStatus(bidId)).thenAnswer((_) async {
+          call++;
+          return call == 1
+              ? const MobileMoneyPaymentStatus(
+                  bidId: bidId,
+                  bidStatus: 'AWAITING_PAYMENT',
+                  amount: 50.0,
+                  deposit: MobileMoneyDeposit(
+                    id: 'd1',
+                    status: MobileMoneyDepositStatus.failed,
+                    failureCode: 'INSUFFICIENT_FUNDS',
+                  ),
+                )
+              : const MobileMoneyPaymentStatus(
+                  bidId: bidId,
+                  bidStatus: 'AWAITING_PAYMENT',
+                  amount: 50.0,
+                  deposit: MobileMoneyDeposit(
+                    id: 'd2',
+                    status: MobileMoneyDepositStatus.submitRejected,
+                    failureCode: 'INVALID_PIN',
+                  ),
+                );
+        });
+        return bloc();
+      },
+      act: (b) async {
+        b.add(const MobileMoneyStatusPolled(bidId: bidId));
+        await Future<void>.delayed(Duration.zero);
+        b.add(const MobileMoneyStatusPolled(bidId: bidId));
+      },
+      expect: () => [
+        isA<MobileMoneyPaymentDepositFailed>(),
+        isA<MobileMoneyPaymentDepositFailed>(),
+      ],
+      verify: (_) {
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.mobileMoneyFailed,
+            properties: {'failure_code': 'INSUFFICIENT_FUNDS'},
+          ),
+        ).called(1);
+      },
+    );
+
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'DepositFailed sans failureCode : properties failure_code vide',
+      build: () {
+        when(() => repository.getStatus(bidId)).thenAnswer(
+          (_) async => const MobileMoneyPaymentStatus(
+            bidId: bidId,
+            bidStatus: 'AWAITING_PAYMENT',
             amount: 50.0,
-            currency: 'XOF',
+            deposit: MobileMoneyDeposit(
+              id: 'd1',
+              status: MobileMoneyDepositStatus.failed,
+            ),
           ),
         );
-        return bloc;
+        return bloc();
       },
-      seed: () => const MobileMoneyPaymentError('previous error'),
       act: (b) => b.add(const MobileMoneyStatusPolled(bidId: bidId)),
-      expect: () => [
-        isA<MobileMoneyPaymentLoading>(),
-        isA<MobileMoneyPaymentPending>(),
-      ],
+      expect: () => [isA<MobileMoneyPaymentDepositFailed>()],
+      verify: (_) {
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.mobileMoneyFailed,
+            properties: {'failure_code': ''},
+          ),
+        ).called(1);
+      },
     );
   });
 }

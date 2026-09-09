@@ -449,6 +449,18 @@ void main() {
     );
 
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'MobileMoneyAcceptedChanged met à jour mobileMoneyAccepted',
+      build: () => _makeBloc(),
+      act: (b) => b.add(const MobileMoneyAcceptedChanged(true)),
+      expect: () => [
+        predicate<AnnouncementFormState>(
+          (s) => s.mobileMoneyAccepted == true,
+          'mobileMoneyAccepted is true',
+        ),
+      ],
+    );
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
       'AcceptedTypesChanged met à jour acceptedTypes',
       build: () => _makeBloc(),
       act: (b) =>

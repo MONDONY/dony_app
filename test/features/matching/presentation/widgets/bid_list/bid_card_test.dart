@@ -199,6 +199,33 @@ void main() {
     expect(find.text('Arrivé'), findsOneWidget);
   });
 
+  // Régression staging : un bid accepté en mobile money passe en
+  // AWAITING_PAYMENT (30 min pour le séquestre côté expéditeur) — avant le
+  // fix, le _StatusDot n'avait pas d'entrée dédiée et retombait sur le
+  // défaut, affichant la chaîne brute anglaise « AWAITING_PAYMENT » au
+  // voyageur (quand le bid n'était pas déjà filtré hors de la liste).
+  testWidgets(
+    'AWAITING_PAYMENT (mobile money) sans callbacks → badge « Paiement en '
+    'attente », jamais la chaîne brute',
+    (tester) async {
+      await _pumpCard(
+        tester,
+        BidCard(
+          bid: _makeBid(
+            status: 'AWAITING_PAYMENT',
+            paymentMethod: BidPaymentMethod.mobileMoney,
+          ),
+          isProcessing: false,
+        ),
+      );
+
+      expect(find.text('Paiement en attente'), findsOneWidget);
+      expect(find.text('AWAITING_PAYMENT'), findsNothing);
+      expect(find.text('Refuser'), findsNothing);
+      expect(find.text('Accepter'), findsNothing);
+    },
+  );
+
   testWidgets(
     'sans catégorie mais description → pill description (ellipsis, pas d\'overflow)',
     (tester) async {

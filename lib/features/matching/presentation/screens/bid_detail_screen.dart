@@ -538,6 +538,12 @@ class _BidDetailViewState extends State<_BidDetailView> {
                                   existingPayment:
                                       _existingPaymentNotifier.value,
                                   paymentLoaded: _paymentLoadedNotifier.value,
+                                  onPaymentReturned: () {
+                                    context.read<BidBloc>().add(
+                                      BidDetailRequested(_bid.id),
+                                    );
+                                    _loadPaymentStatus();
+                                  },
                                 ),
                               )
                             : null)

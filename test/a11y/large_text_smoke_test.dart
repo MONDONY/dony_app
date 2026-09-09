@@ -49,6 +49,9 @@ import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_event.dart';
 import 'package:dony/features/notifications/bloc/notification_state.dart';
 import 'package:dony/features/package_request/bloc/package_request_search_bloc.dart';
+import 'package:dony/features/payments/bloc/mobile_money_account_bloc.dart';
+import 'package:dony/features/payments/bloc/mobile_money_account_event.dart';
+import 'package:dony/features/payments/bloc/mobile_money_account_state.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
@@ -395,6 +398,17 @@ _TripMockStripeAccountBloc _tripMakeStripeBloc() {
   return b;
 }
 
+class _TripMockMobileMoneyAccountBloc
+    extends MockBloc<MobileMoneyAccountEvent, MobileMoneyAccountState>
+    implements MobileMoneyAccountBloc {}
+
+_TripMockMobileMoneyAccountBloc _tripMakeMobileMoneyAccountBloc() {
+  final b = _TripMockMobileMoneyAccountBloc();
+  when(() => b.state).thenReturn(const MobileMoneyAccountInitial());
+  when(() => b.stream).thenAnswer((_) => const Stream.empty());
+  return b;
+}
+
 UserModel _tripMakeUser() => const UserModel(
   id: 'user-test-1',
   roles: ['TRAVELER'],
@@ -497,6 +511,13 @@ void _tripRegisterDependencies() {
   }
   if (!getIt.isRegistered<StripeAccountBloc>()) {
     getIt.registerFactory<StripeAccountBloc>(_tripMakeStripeBloc);
+  }
+  // Rail mobile money : l'écran de création de trajet lit le compte de
+  // versement pour activer ou non la bascule « Mobile money » (zone CFA).
+  if (!getIt.isRegistered<MobileMoneyAccountBloc>()) {
+    getIt.registerFactory<MobileMoneyAccountBloc>(
+      _tripMakeMobileMoneyAccountBloc,
+    );
   }
 }
 

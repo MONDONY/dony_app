@@ -37,6 +37,9 @@ import 'package:dony/features/package_request/data/models/locked_trip_context.da
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart'
     show NegotiationThreadStatus;
 import 'package:dony/features/package_request/presentation/widgets/payment_capability_block_sheets.dart';
+import 'package:dony/features/payments/bloc/mobile_money_account_bloc.dart';
+import 'package:dony/features/payments/bloc/mobile_money_account_event.dart';
+import 'package:dony/features/payments/bloc/mobile_money_account_state.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
 import 'package:dony/features/profile/data/models/help_center_config.dart';
@@ -64,6 +67,22 @@ class CreateTripArgs {
     this.negotiationBloc,
     this.lockCorridorAndDate = false,
   });
+}
+
+/// Dérive si le compte de versement mobile money du voyageur est actif à
+/// partir de l'état de `MobileMoneyAccountBloc`.
+///
+/// `Initial`, `Loading` ou `Error` sans compte connu valent « non actif » —
+/// seul un état portant un compte dont `isActive` est vrai (`Loaded`,
+/// `Updating`, ou `Error` avec le dernier compte connu conservé) l'active.
+bool mobileMoneyAccountActiveFrom(MobileMoneyAccountState state) {
+  final account = switch (state) {
+    MobileMoneyAccountLoaded() => state.account,
+    MobileMoneyAccountUpdating() => state.account,
+    MobileMoneyAccountError() => state.account,
+    _ => null,
+  };
+  return account?.isActive ?? false;
 }
 
 class CreateTripScreen extends StatefulWidget {
@@ -197,6 +216,11 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
       BlocProvider<TripTemplateBloc>(
         create: (_) =>
             getIt<TripTemplateBloc>()..add(const TripTemplateLoaded()),
+      ),
+      BlocProvider<MobileMoneyAccountBloc>(
+        create: (_) =>
+            getIt<MobileMoneyAccountBloc>()
+              ..add(const MobileMoneyAccountRequested()),
       ),
       // `.value` obligatoire : StripeAccountBloc est un lazySingleton GetIt
       // partagé par toute l'app. Avec `create:`, le provider fermerait le
@@ -585,6 +609,12 @@ class _TripFormContentState extends State<_TripFormContent> {
   final _refusedTypesNotifier = ValueNotifier<Set<String>>({});
   final _cashEnabledNotifier = ValueNotifier<bool>(false);
 
+  /// Le voyageur accepte le paiement par mobile money (Orange Money, Wave,
+  /// MTN via pawaPay). Uniquement pertinent pour un trajet en zone CFA
+  /// (XOF/XAF) — remis à `false` par [_onCurrencyChanged] si la devise
+  /// quitte cette zone après activation.
+  final _mobileMoneyEnabledNotifier = ValueNotifier<bool>(false);
+
   /// Le voyageur ouvre son trajet aux propositions de prix des expéditeurs.
   final _negotiableNotifier = ValueNotifier<bool>(false);
   late final ValueNotifier<bool> _kgPriceEnabledNotifier;
@@ -707,6 +737,9 @@ class _TripFormContentState extends State<_TripFormContent> {
       _cashEnabledNotifier.value = a.acceptedPaymentMethods.contains(
         BidPaymentMethod.cash,
       );
+      _mobileMoneyEnabledNotifier.value = a.acceptedPaymentMethods.contains(
+        BidPaymentMethod.mobileMoney,
+      );
 
       // Sans ce report, rouvrir un trajet ouvert aux propositions pour le
       // modifier le refermerait en silence à l'enregistrement.
@@ -772,6 +805,11 @@ class _TripFormContentState extends State<_TripFormContent> {
     // autre (cf. _isPriceValid) : changer de devise doit donc réévaluer
     // canSubmit sans que l'utilisateur retouche le champ prix.
     widget.currencyNotifier.addListener(_syncCanSubmit);
+    // Le mobile money n'est proposé qu'en zone CFA (XOF/XAF) : si le
+    // voyageur l'avait activé puis change de devise vers une devise hors
+    // zone, la bascule doit se remettre à false — sinon la liste envoyée au
+    // submit contiendrait MOBILE_MONEY pour un trajet dans une autre devise.
+    widget.currencyNotifier.addListener(_onCurrencyChanged);
     // Avion sélectionné par défaut en mode création
     if (!_isEdit && !_isLocked) {
       _transportModeNotifier.value = TransportMode.plane;
@@ -824,6 +862,7 @@ class _TripFormContentState extends State<_TripFormContent> {
     _descriptionCtrl.addListener(_syncDescriptionToFormBloc);
     _transportModeNotifier.addListener(_syncTransportModeToFormBloc);
     _cashEnabledNotifier.addListener(_syncCashAcceptedToFormBloc);
+    _mobileMoneyEnabledNotifier.addListener(_syncMobileMoneyAcceptedToFormBloc);
     _selectedContentNotifier.addListener(_syncAcceptedTypesToFormBloc);
     _customAcceptedNotifier.addListener(_syncAcceptedTypesToFormBloc);
     _refusedTypesNotifier.addListener(_syncRejectedTypesToFormBloc);
@@ -902,6 +941,7 @@ class _TripFormContentState extends State<_TripFormContent> {
     _customAcceptedNotifier,
     _refusedTypesNotifier,
     _cashEnabledNotifier,
+    _mobileMoneyEnabledNotifier,
     _negotiableNotifier,
     _kgPriceEnabledNotifier,
     _descriptionCtrl,
@@ -938,6 +978,7 @@ class _TripFormContentState extends State<_TripFormContent> {
       _customPriceNotifier.value,
       _transportModeNotifier.value,
       _cashEnabledNotifier.value,
+      _mobileMoneyEnabledNotifier.value,
       _negotiableNotifier.value,
       _kgPriceEnabledNotifier.value,
       set(_selectedContentNotifier.value),
@@ -1125,6 +1166,22 @@ class _TripFormContentState extends State<_TripFormContent> {
     );
   }
 
+  void _syncMobileMoneyAcceptedToFormBloc() {
+    if (!mounted) return;
+    context.read<AnnouncementFormBloc>().add(
+      MobileMoneyAcceptedChanged(_mobileMoneyEnabledNotifier.value),
+    );
+  }
+
+  /// Remet la bascule mobile money à `false` quand la devise quitte la zone
+  /// CFA (XOF/XAF). Ne fait rien si elle y reste ou y entre — seule la
+  /// sortie de zone doit désactiver un choix devenu invalide.
+  void _onCurrencyChanged() {
+    if (!widget.currencyNotifier.value.isMobileMoneyEligible) {
+      _mobileMoneyEnabledNotifier.value = false;
+    }
+  }
+
   void _syncAcceptedTypesToFormBloc() {
     if (!mounted) return;
     final all = {
@@ -1172,6 +1229,9 @@ class _TripFormContentState extends State<_TripFormContent> {
     _transportModeNotifier.removeListener(_syncCanSubmit);
     _transportModeNotifier.removeListener(_syncTransportModeToFormBloc);
     _cashEnabledNotifier.removeListener(_syncCashAcceptedToFormBloc);
+    _mobileMoneyEnabledNotifier.removeListener(
+      _syncMobileMoneyAcceptedToFormBloc,
+    );
     _selectedContentNotifier.removeListener(_syncAcceptedTypesToFormBloc);
     _customAcceptedNotifier.removeListener(_syncAcceptedTypesToFormBloc);
     _refusedTypesNotifier.removeListener(_syncRejectedTypesToFormBloc);
@@ -1181,8 +1241,10 @@ class _TripFormContentState extends State<_TripFormContent> {
     _priceOptionNotifier.removeListener(_syncCanSubmit);
     _customPriceCtrl.removeListener(_syncCanSubmit);
     widget.currencyNotifier.removeListener(_syncCanSubmit);
+    widget.currencyNotifier.removeListener(_onCurrencyChanged);
     _kgPriceEnabledNotifier.dispose();
     _cashEnabledNotifier.dispose();
+    _mobileMoneyEnabledNotifier.dispose();
     _negotiableNotifier.dispose();
     _descriptionCtrl.dispose();
     _customAcceptedCtrl.dispose();
@@ -1359,6 +1421,7 @@ class _TripFormContentState extends State<_TripFormContent> {
     final paymentMethods = [
       if (stripeConfigured) 'STRIPE',
       if (_cashEnabledNotifier.value || !stripeConfigured) 'CASH',
+      if (_mobileMoneyEnabledNotifier.value) 'MOBILE_MONEY',
     ];
 
     final formBlocState = context.read<AnnouncementFormBloc>().state;
@@ -1927,34 +1990,44 @@ class _TripFormContentState extends State<_TripFormContent> {
   // ── Step 2 — Prix & Conditions ───────────────────────────────────────────────
   List<Widget> _buildStep2(BuildContext context, TextTheme tt, ColorScheme cs) {
     return [
-      ValueListenableBuilder<SupportedCurrency>(
-        valueListenable: widget.currencyNotifier,
-        builder: (context, currency, _) => PrixConditionsStep(
-          currency: currency,
-          priceOptionNotifier: _priceOptionNotifier,
-          customPriceNotifier: _customPriceNotifier,
-          availableKgNotifier: _availableKgNotifier,
-          cashEnabledNotifier: _cashEnabledNotifier,
-          kgPriceEnabledNotifier: _kgPriceEnabledNotifier,
-          negotiableNotifier: _negotiableNotifier,
-          selectedContentNotifier: _selectedContentNotifier,
-          customAcceptedNotifier: _customAcceptedNotifier,
-          refusedTypesNotifier: _refusedTypesNotifier,
-          catalogLabelsNotifier: _catalogLabelsNotifier,
-          descriptionCtrl: _descriptionCtrl,
-          customAcceptedCtrl: _customAcceptedCtrl,
-          refusedCtrl: _refusedCtrl,
-          customPriceCtrl: _customPriceCtrl,
-          // Prix verrouillé en modification-pour-négo ET en trajet dédié : il
-          // est fixé par la négociation.
-          lockPrice: widget.lockCorridorAndDate || _isLocked,
-          // Trajet dédié : affiche le prix total convenu et masque la section
-          // « Modes de paiement » (déjà fixé par la négociation).
-          lockedTotalPriceEur: _isLocked
-              ? widget.lockContext!.agreedPriceEur
-              : null,
-          showPaymentMethods: !_isLocked,
-        ),
+      BlocBuilder<MobileMoneyAccountBloc, MobileMoneyAccountState>(
+        builder: (context, mobileMoneyState) {
+          final mobileMoneyAccountActive = mobileMoneyAccountActiveFrom(
+            mobileMoneyState,
+          );
+          return ValueListenableBuilder<SupportedCurrency>(
+            valueListenable: widget.currencyNotifier,
+            builder: (context, currency, _) => PrixConditionsStep(
+              currency: currency,
+              priceOptionNotifier: _priceOptionNotifier,
+              customPriceNotifier: _customPriceNotifier,
+              availableKgNotifier: _availableKgNotifier,
+              cashEnabledNotifier: _cashEnabledNotifier,
+              kgPriceEnabledNotifier: _kgPriceEnabledNotifier,
+              mobileMoneyEnabledNotifier: _mobileMoneyEnabledNotifier,
+              currencyNotifier: widget.currencyNotifier,
+              mobileMoneyAccountActive: mobileMoneyAccountActive,
+              negotiableNotifier: _negotiableNotifier,
+              selectedContentNotifier: _selectedContentNotifier,
+              customAcceptedNotifier: _customAcceptedNotifier,
+              refusedTypesNotifier: _refusedTypesNotifier,
+              catalogLabelsNotifier: _catalogLabelsNotifier,
+              descriptionCtrl: _descriptionCtrl,
+              customAcceptedCtrl: _customAcceptedCtrl,
+              refusedCtrl: _refusedCtrl,
+              customPriceCtrl: _customPriceCtrl,
+              // Prix verrouillé en modification-pour-négo ET en trajet dédié : il
+              // est fixé par la négociation.
+              lockPrice: widget.lockCorridorAndDate || _isLocked,
+              // Trajet dédié : affiche le prix total convenu et masque la section
+              // « Modes de paiement » (déjà fixé par la négociation).
+              lockedTotalPriceEur: _isLocked
+                  ? widget.lockContext!.agreedPriceEur
+                  : null,
+              showPaymentMethods: !_isLocked,
+            ),
+          );
+        },
       ),
     ];
   }

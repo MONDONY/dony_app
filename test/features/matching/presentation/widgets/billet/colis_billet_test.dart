@@ -77,4 +77,24 @@ void main() {
     expect(find.text('N° DE SUIVI'), findsOneWidget);
     expect(find.text('DON-3TSTR9VH'), findsOneWidget);
   });
+
+  // Régression staging : le rôle (isSender, déjà porté par ColisBillet)
+  // atteint bien BilletStatusStamp de bout en bout — pas seulement testé en
+  // isolation dans billet_status_stamp_test.dart.
+  testWidgets(
+    'voyageur + AWAITING_PAYMENT → tampon "Paiement en attente", jamais '
+    '"À payer"',
+    (tester) async {
+      await _pump(tester, _bid(status: 'AWAITING_PAYMENT'), false);
+      expect(find.text('Paiement en attente'), findsOneWidget);
+      expect(find.text('À payer'), findsNothing);
+    },
+  );
+
+  testWidgets('expéditeur + AWAITING_PAYMENT → tampon "À payer" (inchangé)', (
+    tester,
+  ) async {
+    await _pump(tester, _bid(status: 'AWAITING_PAYMENT'), true);
+    expect(find.text('À payer'), findsOneWidget);
+  });
 }

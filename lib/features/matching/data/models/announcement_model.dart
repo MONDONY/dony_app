@@ -174,6 +174,7 @@ class AnnouncementModel {
   final List<String>? refusedTypes;
   final DateTime createdAt;
   final DateTime updatedAt;
+  @JsonKey(fromJson: acceptedPaymentMethodsFromJson)
   final Set<BidPaymentMethod> acceptedPaymentMethods;
   final String? capacityUnit;
   final String pricingMode;

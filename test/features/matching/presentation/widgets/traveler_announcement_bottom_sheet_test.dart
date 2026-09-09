@@ -878,6 +878,48 @@ void main() {
       expect(find.byKey(const Key('negotiate-price-btn')), findsOneWidget);
     });
 
+    testWidgets(
+      // R13 : le backend rejette toute négociation en mobile money (422
+      // mobile-money-negotiation-unsupported) — un trajet négociable qui
+      // n'accepte QUE le mobile money ne doit pas proposer l'entrée de
+      // négociation, même si `announcement.negotiable` vaut true.
+      'trajet négociable acceptant seulement le mobile money → aucune '
+      'entrée de négociation',
+      (tester) async {
+        final a = _buildAnnouncement(
+          kycVerified: true,
+          negotiable: true,
+          acceptedPaymentMethods: const {BidPaymentMethod.mobileMoney},
+        );
+        await tester.pumpWidget(_harness(announcement: a));
+        await tester.tap(find.text('Ouvrir'));
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('Trajet négociable'), findsNothing);
+        expect(find.text('Proposer un prix'), findsNothing);
+        expect(find.byKey(const Key('negotiate-price-btn')), findsNothing);
+      },
+    );
+
+    testWidgets('trajet négociable acceptant carte + mobile money → entrée de '
+        'négociation présente', (tester) async {
+      final a = _buildAnnouncement(
+        kycVerified: true,
+        negotiable: true,
+        acceptedPaymentMethods: const {
+          BidPaymentMethod.stripe,
+          BidPaymentMethod.mobileMoney,
+        },
+      );
+      await tester.pumpWidget(_harness(announcement: a));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Trajet négociable'), findsOneWidget);
+      expect(find.text('Proposer un prix'), findsOneWidget);
+      expect(find.byKey(const Key('negotiate-price-btn')), findsOneWidget);
+    });
+
     testWidgets('prix ferme → aucune mention de négociation', (tester) async {
       final a = _buildAnnouncement(kycVerified: true);
       await tester.pumpWidget(_harness(announcement: a));

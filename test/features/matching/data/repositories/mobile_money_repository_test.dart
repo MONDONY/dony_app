@@ -1,5 +1,5 @@
 import 'package:dony/features/matching/data/datasources/mobile_money_remote_datasource.dart';
-import 'package:dony/features/matching/data/models/mobile_money_payment_model.dart';
+import 'package:dony/features/matching/data/models/mobile_money_payment_status.dart';
 import 'package:dony/features/matching/data/repositories/mobile_money_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -13,19 +13,11 @@ void main() {
 
   const bidId = '550e8400-e29b-41d4-a716-446655440000';
 
-  const pendingModel = MobileMoneyPaymentModel(
-    id: 'payment-id-1',
-    status: 'PENDING',
+  const pendingStatus = MobileMoneyPaymentStatus(
+    bidId: bidId,
+    bidStatus: 'AWAITING_PAYMENT',
+    paymentStatus: 'PENDING',
     amount: 50.0,
-    currency: 'XOF',
-    paymentLink: 'https://wave.test/pay?ref=abc',
-  );
-
-  const completedModel = MobileMoneyPaymentModel(
-    id: 'payment-id-2',
-    status: 'COMPLETED',
-    amount: 50.0,
-    currency: 'XOF',
   );
 
   setUp(() {
@@ -35,19 +27,19 @@ void main() {
 
   group('MobileMoneyRepository', () {
     group('getStatus', () {
-      test('delegates to datasource.getStatus and returns model', () async {
+      test('délègue à datasource.getStatus et renvoie le statut', () async {
         when(
           () => datasource.getStatus(bidId),
-        ).thenAnswer((_) async => pendingModel);
+        ).thenAnswer((_) async => pendingStatus);
 
         final result = await repository.getStatus(bidId);
 
         verify(() => datasource.getStatus(bidId)).called(1);
-        expect(result, equals(pendingModel));
-        expect(result.status, 'PENDING');
+        expect(result, equals(pendingStatus));
+        expect(result.paymentStatus, 'PENDING');
       });
 
-      test('propagates exception from datasource', () async {
+      test('propage l\'exception du datasource', () async {
         when(
           () => datasource.getStatus(bidId),
         ).thenAnswer((_) => Future.error(Exception('Network error')));
@@ -59,29 +51,41 @@ void main() {
       });
     });
 
-    group('regenerateLink', () {
-      test(
-        'delegates to datasource.regenerateLink and returns model',
-        () async {
-          when(
-            () => datasource.regenerateLink(bidId),
-          ).thenAnswer((_) async => completedModel);
-
-          final result = await repository.regenerateLink(bidId);
-
-          verify(() => datasource.regenerateLink(bidId)).called(1);
-          expect(result, equals(completedModel));
-          expect(result.status, 'COMPLETED');
-        },
-      );
-
-      test('propagates exception from datasource', () async {
+    group('initiate', () {
+      test('délègue à datasource.initiate sans phoneNumber', () async {
         when(
-          () => datasource.regenerateLink(bidId),
+          () => datasource.initiate(bidId),
+        ).thenAnswer((_) async => pendingStatus);
+
+        final result = await repository.initiate(bidId);
+
+        verify(() => datasource.initiate(bidId)).called(1);
+        expect(result, equals(pendingStatus));
+      });
+
+      test('délègue à datasource.initiate avec phoneNumber', () async {
+        when(
+          () => datasource.initiate(bidId, phoneNumber: '+221771234567'),
+        ).thenAnswer((_) async => pendingStatus);
+
+        final result = await repository.initiate(
+          bidId,
+          phoneNumber: '+221771234567',
+        );
+
+        verify(
+          () => datasource.initiate(bidId, phoneNumber: '+221771234567'),
+        ).called(1);
+        expect(result, equals(pendingStatus));
+      });
+
+      test('propage l\'exception du datasource', () async {
+        when(
+          () => datasource.initiate(bidId),
         ).thenAnswer((_) => Future.error(Exception('403 Forbidden')));
 
         await expectLater(
-          repository.regenerateLink(bidId),
+          repository.initiate(bidId),
           throwsA(isA<Exception>()),
         );
       });

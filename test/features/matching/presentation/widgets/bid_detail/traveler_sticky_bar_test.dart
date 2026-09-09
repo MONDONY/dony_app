@@ -23,6 +23,7 @@ BidModel _bid({
   required String status,
   bool voyageurConfirmed = false,
   DateTime? windowEnd,
+  BidPaymentMethod paymentMethod = BidPaymentMethod.stripe,
 }) => BidModel(
   id: 'b1',
   announcementId: 'a1',
@@ -31,6 +32,7 @@ BidModel _bid({
   weightKg: 5,
   voyageurConfirmed: voyageurConfirmed,
   handoverDeadline: windowEnd,
+  paymentMethod: paymentMethod,
   createdAt: DateTime(2026, 5),
   updatedAt: DateTime(2026, 5),
 );
@@ -204,6 +206,56 @@ void main() {
       );
     });
   });
+
+  // Régression staging : un bid accepté en mobile money passe en
+  // AWAITING_PAYMENT (30 min pour le séquestre côté expéditeur) — la barre
+  // ne portait aucun cas dédié et restait vide (SizedBox.shrink), sans
+  // expliquer au voyageur pourquoi rien ne se passe. Scopé au mobile money
+  // uniquement (seul rail concerné par cette attente de 30 min côté
+  // voyageur) : hors périmètre pour les autres moyens de paiement.
+  group('TravelerStickyBar.hasAction — AWAITING_PAYMENT', () {
+    test('mobile money → true (ligne d\'information, pas un bouton)', () {
+      expect(
+        TravelerStickyBar.hasAction(
+          _bid(
+            status: 'AWAITING_PAYMENT',
+            paymentMethod: BidPaymentMethod.mobileMoney,
+          ),
+        ),
+        isTrue,
+      );
+    });
+
+    test('stripe (défaut) → false, hors périmètre de ce fix', () {
+      expect(
+        TravelerStickyBar.hasAction(_bid(status: 'AWAITING_PAYMENT')),
+        isFalse,
+      );
+    });
+  });
+
+  testWidgets(
+    'AWAITING_PAYMENT mobile money → ligne d\'information, aucune action',
+    (tester) async {
+      await _pump(
+        tester,
+        _bid(
+          status: 'AWAITING_PAYMENT',
+          paymentMethod: BidPaymentMethod.mobileMoney,
+        ),
+      );
+
+      expect(
+        find.text("En attente du paiement de l'expéditeur (mobile money)."),
+        findsOneWidget,
+      );
+      expect(find.text('Lire le QR du colis'), findsNothing);
+      expect(find.text('Lire le QR de transit'), findsNothing);
+      expect(find.text('Valider la remise'), findsNothing);
+      expect(find.text('Accepter'), findsNothing);
+      expect(find.text('Refuser'), findsNothing);
+    },
+  );
 
   testWidgets('tap Scanner le colis → GoRouter push déclenché', (tester) async {
     final bidBloc = _MockBidBloc();

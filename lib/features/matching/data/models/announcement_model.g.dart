@@ -76,11 +76,9 @@ AnnouncementModel _$AnnouncementModelFromJson(
       .toList(),
   createdAt: DateTime.parse(json['createdAt'] as String),
   updatedAt: DateTime.parse(json['updatedAt'] as String),
-  acceptedPaymentMethods:
-      (json['acceptedPaymentMethods'] as List<dynamic>?)
-          ?.map((e) => $enumDecode(_$BidPaymentMethodEnumMap, e))
-          .toSet() ??
-      const {BidPaymentMethod.stripe},
+  acceptedPaymentMethods: json['acceptedPaymentMethods'] == null
+      ? const {BidPaymentMethod.stripe}
+      : acceptedPaymentMethodsFromJson(json['acceptedPaymentMethods']),
   capacityUnit: json['capacityUnit'] as String?,
   pricingMode: json['pricingMode'] as String? ?? 'KG',
   priceGridItems: json['priceGridItems'] == null
@@ -157,4 +155,5 @@ const _$BidPaymentMethodEnumMap = {
   BidPaymentMethod.cash: 'CASH',
   BidPaymentMethod.wave: 'WAVE',
   BidPaymentMethod.orangeMoney: 'ORANGE_MONEY',
+  BidPaymentMethod.mobileMoney: 'MOBILE_MONEY',
 };

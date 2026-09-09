@@ -121,12 +121,15 @@ import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/negotiation_repository.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/package_request/data/price_estimation_repository.dart';
+import 'package:dony/features/payments/bloc/mobile_money_account_bloc.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/data/datasources/commission_method_remote_datasource.dart';
 import 'package:dony/features/payments/cash/data/repositories/commission_method_repository.dart';
+import 'package:dony/features/payments/data/datasources/mobile_money_account_remote_datasource.dart';
 import 'package:dony/features/payments/data/datasources/payment_remote_datasource.dart';
 import 'package:dony/features/payments/data/payment_gateway.dart';
+import 'package:dony/features/payments/data/repositories/mobile_money_account_repository.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_eligible_topups_cubit.dart';
@@ -446,7 +449,26 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => MobileMoneyRepository(getIt<MobileMoneyRemoteDatasource>()),
   );
   getIt.registerFactory<MobileMoneyPaymentBloc>(
-    () => MobileMoneyPaymentBloc(getIt<MobileMoneyRepository>()),
+    () => MobileMoneyPaymentBloc(
+      getIt<MobileMoneyRepository>(),
+      getIt<AnalyticsService>(),
+    ),
+  );
+
+  // Payments — Mobile money (compte de versement)
+  getIt.registerLazySingleton<MobileMoneyAccountRemoteDatasource>(
+    () => MobileMoneyAccountRemoteDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<MobileMoneyAccountRepository>(
+    () => MobileMoneyAccountRepository(
+      getIt<MobileMoneyAccountRemoteDatasource>(),
+    ),
+  );
+  getIt.registerFactory<MobileMoneyAccountBloc>(
+    () => MobileMoneyAccountBloc(
+      getIt<MobileMoneyAccountRepository>(),
+      getIt<AnalyticsService>(),
+    ),
   );
 
   // Cash commission method

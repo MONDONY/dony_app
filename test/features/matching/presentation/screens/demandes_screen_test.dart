@@ -46,12 +46,17 @@ class _MockNegotiationListBloc
 
 class _MockAnalyticsService extends Mock implements AnalyticsService {}
 
-BidModel _bid(String id, String status) => BidModel(
+BidModel _bid(
+  String id,
+  String status, {
+  BidPaymentMethod paymentMethod = BidPaymentMethod.stripe,
+}) => BidModel(
   id: id,
   announcementId: 'a1',
   senderId: 's1',
   weightKg: 5,
   status: status,
+  paymentMethod: paymentMethod,
   createdAt: DateTime(2026),
   updatedAt: DateTime(2026),
 );
@@ -84,6 +89,8 @@ late List<String> visited;
 Future<_MockPackageRequestBloc> _pump(
   WidgetTester tester, {
   required TravelerBidsState travelerBidsState,
+  _MockBidBloc? bidBloc,
+  _MockBidAcceptanceBloc? acceptanceBloc,
 }) async {
   tester.view.physicalSize = const Size(900, 1800);
   tester.view.devicePixelRatio = 1.0;
@@ -93,10 +100,13 @@ Future<_MockPackageRequestBloc> _pump(
 
   final travelerBids = _MockTravelerBidsBloc();
   when(() => travelerBids.state).thenReturn(travelerBidsState);
-  final bidBloc = _MockBidBloc();
-  when(() => bidBloc.state).thenReturn(BidListLoaded(const []));
-  final acceptance = _MockBidAcceptanceBloc();
-  when(() => acceptance.state).thenReturn(acs.BidAcceptanceInitial());
+  // Réutilise les mocks fournis par l'appelant (nécessaire pour vérifier les
+  // events dispatchés, ex. tap Accepter) sinon en crée de nouveaux avec un
+  // état par défaut neutre.
+  final resolvedBidBloc = bidBloc ?? _MockBidBloc();
+  when(() => resolvedBidBloc.state).thenReturn(BidListLoaded(const []));
+  final resolvedAcceptance = acceptanceBloc ?? _MockBidAcceptanceBloc();
+  when(() => resolvedAcceptance.state).thenReturn(acs.BidAcceptanceInitial());
   final packageRequests = _MockPackageRequestBloc();
   when(() => packageRequests.state).thenReturn(PackageRequestState());
   final negotiations = _MockNegotiationListBloc();
@@ -110,8 +120,8 @@ Future<_MockPackageRequestBloc> _pump(
         builder: (_, _) => MultiBlocProvider(
           providers: [
             BlocProvider<TravelerBidsBloc>.value(value: travelerBids),
-            BlocProvider<BidBloc>.value(value: bidBloc),
-            BlocProvider<BidAcceptanceBloc>.value(value: acceptance),
+            BlocProvider<BidBloc>.value(value: resolvedBidBloc),
+            BlocProvider<BidAcceptanceBloc>.value(value: resolvedAcceptance),
             BlocProvider<PackageRequestBloc>.value(value: packageRequests),
             BlocProvider<NegotiationListBloc>.value(value: negotiations),
             BlocProvider<HelpCenterBloc>(
@@ -149,6 +159,9 @@ Future<_MockPackageRequestBloc> _pump(
 void main() {
   setUpAll(() {
     registerFallbackValue(const TravelerBidsRequested());
+    registerFallbackValue(BidAcceptRequested('fallback'));
+    registerFallbackValue(BidAcceptMobileMoneyRequested('fallback'));
+    registerFallbackValue(ace.BidAcceptRequested('fallback'));
   });
 
   setUp(() {
@@ -239,4 +252,64 @@ void main() {
       findsOneWidget,
     );
   });
+
+  // ── Accepter — dispatch selon mode de paiement ──────────────────────────────
+
+  testWidgets(
+    'tap Accepter sur bid CASH → BidAcceptanceBloc.add(BidAcceptRequested)',
+    (tester) async {
+      final bidBloc = _MockBidBloc();
+      final acceptance = _MockBidAcceptanceBloc();
+
+      await _pump(
+        tester,
+        travelerBidsState: loaded([
+          _bid(
+            'cash-1',
+            'PAYMENT_ESCROWED',
+            paymentMethod: BidPaymentMethod.cash,
+          ),
+        ]),
+        bidBloc: bidBloc,
+        acceptanceBloc: acceptance,
+      );
+
+      await tester.tap(find.text('Accepter'));
+      await tester.pump();
+
+      verify(
+        () => acceptance.add(any(that: isA<ace.BidAcceptRequested>())),
+      ).called(1);
+      verifyNever(() => bidBloc.add(any()));
+    },
+  );
+
+  testWidgets(
+    'tap Accepter sur bid MOBILE_MONEY → BidBloc.add(BidAcceptMobileMoneyRequested)',
+    (tester) async {
+      final bidBloc = _MockBidBloc();
+      final acceptance = _MockBidAcceptanceBloc();
+
+      await _pump(
+        tester,
+        travelerBidsState: loaded([
+          _bid(
+            'mm-1',
+            'PAYMENT_ESCROWED',
+            paymentMethod: BidPaymentMethod.mobileMoney,
+          ),
+        ]),
+        bidBloc: bidBloc,
+        acceptanceBloc: acceptance,
+      );
+
+      await tester.tap(find.text('Accepter'));
+      await tester.pump();
+
+      verify(
+        () => bidBloc.add(any(that: isA<BidAcceptMobileMoneyRequested>())),
+      ).called(1);
+      verifyNever(() => acceptance.add(any()));
+    },
+  );
 }

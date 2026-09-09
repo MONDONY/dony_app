@@ -51,7 +51,8 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
     'BID_EXPIRED' when _isUuid(bidId) => '/bids/$bidId',
     'CONFIRMATION_CODE_READY' when _isUuid(bidId) => '/bids/$bidId',
     'DELIVERY_NOSHOW_REPORTED' when _isUuid(bidId) => '/bids/$bidId',
-    'MM_PAYMENT_PENDING' when _isUuid(bidId) => '/bids/$bidId',
+    'MM_PAYMENT_PENDING' when _isUuid(bidId) =>
+      '/bids/$bidId/mobile-money/awaiting',
     'HANDOVER_REMINDER_H2' when _isUuid(bidId) => '/bids/$bidId',
     'MOBILE_MONEY_PAYMENT_CONFIRMED' when _isUuid(bidId) => '/bids/$bidId',
     'PARCEL_RETURNED' when _isUuid(bidId) => '/bids/$bidId',

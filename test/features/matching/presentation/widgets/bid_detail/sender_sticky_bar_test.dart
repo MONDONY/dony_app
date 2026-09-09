@@ -365,6 +365,14 @@ void main() {
       expect(SenderStickyBar.hasAction(bid), isFalse);
     });
 
+    // PENDING reste inchangé pour le mobile money : une offre mobile money
+    // en attente d'acceptation n'a pas d'action, comme les espèces (arbitrage
+    // task 11 — seul AWAITING_PAYMENT gagne le mobile money).
+    test('PENDING mobile money → false', () {
+      final bid = _bid(paymentMethod: BidPaymentMethod.mobileMoney);
+      expect(SenderStickyBar.hasAction(bid), isFalse);
+    });
+
     test('ACCEPTED → true', () {
       expect(SenderStickyBar.hasAction(_bid(status: 'ACCEPTED')), isTrue);
     });
@@ -429,6 +437,18 @@ void main() {
           ),
         ),
         isFalse,
+      );
+    });
+
+    test('AWAITING_PAYMENT mobile money → true', () {
+      expect(
+        SenderStickyBar.hasAction(
+          _bid(
+            status: 'AWAITING_PAYMENT',
+            paymentMethod: BidPaymentMethod.mobileMoney,
+          ),
+        ),
+        isTrue,
       );
     });
   });
@@ -668,6 +688,107 @@ void main() {
       verify(() => bloc.add(any(that: isA<BidDeleteRequested>()))).called(1);
     },
   );
+
+  // Test 24: AWAITING_PAYMENT mobile money → boutons "Payer par mobile
+  // money" et "Annuler la demande" (jamais le bloc stripe en parallèle)
+  testWidgets('24. AWAITING_PAYMENT mobile money → "Payer par mobile money" et '
+      '"Annuler la demande"', (tester) async {
+    final bloc = _MockBidBloc();
+    whenListen<BidState>(
+      bloc,
+      const Stream.empty(),
+      initialState: BidInitial(),
+    );
+
+    await tester.pumpWidget(
+      _host(
+        bloc,
+        _bid(
+          status: 'AWAITING_PAYMENT',
+          paymentMethod: BidPaymentMethod.mobileMoney,
+        ),
+        paymentLoaded: true,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Payer par mobile money'), findsOneWidget);
+    expect(find.text('Annuler la demande'), findsOneWidget);
+    expect(find.text('Payer mon envoi'), findsNothing);
+  });
+
+  // Test 25: AWAITING_PAYMENT mobile money → "Annuler la demande" → dialog
+  // → "Oui, annuler" → BidDeleteRequested dispatché une fois
+  testWidgets(
+    '25. AWAITING_PAYMENT mobile money → "Annuler la demande" → dialog → '
+    '"Oui, annuler" → BidDeleteRequested',
+    (tester) async {
+      final bloc = _MockBidBloc();
+      whenListen<BidState>(
+        bloc,
+        const Stream.empty(),
+        initialState: BidInitial(),
+      );
+
+      await tester.pumpWidget(
+        _host(
+          bloc,
+          _bid(
+            status: 'AWAITING_PAYMENT',
+            paymentMethod: BidPaymentMethod.mobileMoney,
+          ),
+          paymentLoaded: true,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Annuler la demande'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Annuler la demande de transport ?'), findsOneWidget);
+      expect(
+        find.text("Aucun paiement n'a été effectué. La demande sera retirée."),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.text('Oui, annuler'));
+      await tester.pumpAndSettle();
+
+      verify(() => bloc.add(any(that: isA<BidDeleteRequested>()))).called(1);
+    },
+  );
+
+  // Test 26: AWAITING_PAYMENT mobile money → dialog → "Retour" → aucun
+  // BidDeleteRequested
+  testWidgets('26. AWAITING_PAYMENT mobile money → dialog → "Retour" → aucun '
+      'BidDeleteRequested', (tester) async {
+    final bloc = _MockBidBloc();
+    whenListen<BidState>(
+      bloc,
+      const Stream.empty(),
+      initialState: BidInitial(),
+    );
+
+    await tester.pumpWidget(
+      _host(
+        bloc,
+        _bid(
+          status: 'AWAITING_PAYMENT',
+          paymentMethod: BidPaymentMethod.mobileMoney,
+        ),
+        paymentLoaded: true,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Annuler la demande'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Retour'));
+    await tester.pumpAndSettle();
+
+    verifyNever(() => bloc.add(any(that: isA<BidDeleteRequested>())));
+  });
 
   // ── Tap tests that open bottom sheets (requires GetIt mocks) ─────────────────
   //

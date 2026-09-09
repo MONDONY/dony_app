@@ -418,6 +418,14 @@ class _StatusDot extends StatelessWidget {
 
     final (Color color, Color bg, String label) = switch (status) {
       'ACCEPTED' => (cs.success, cs.successLight, 'Accepté'),
+      // Voyageur vient d'accepter une offre mobile money, en attente du
+      // séquestre par l'expéditeur (30 min) — jamais la chaîne brute
+      // anglaise (régression staging).
+      'AWAITING_PAYMENT' => (
+        cs.warning,
+        cs.warningLight,
+        'Paiement en attente',
+      ),
       'HANDED_OVER' => (cs.primary, cs.primaryContainer, 'En route'),
       'IN_TRANSIT' => (cs.info, cs.infoLight, 'En transit'),
       'ARRIVED' => (cs.info, cs.infoLight, 'Arrivé'),

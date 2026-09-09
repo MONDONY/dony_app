@@ -13,6 +13,7 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_accept_dispatch.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_list/bid_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_list/bid_list_chrome.dart';
 import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
@@ -320,11 +321,7 @@ class _PendingBidsViewState extends State<_PendingBidsView> {
   ) {
     _addProcessing(bidId);
     final bid = pendingBids.firstWhere((b) => b.id == bidId);
-    if (bid.paymentMethod == BidPaymentMethod.cash) {
-      context.read<BidAcceptanceBloc>().add(ace.BidAcceptRequested(bidId));
-    } else {
-      context.read<BidBloc>().add(BidAcceptRequested(bidId));
-    }
+    dispatchBidAccept(context, bid);
   }
 
   // Ouvre le détail et recharge la liste au retour : le statut du bid peut

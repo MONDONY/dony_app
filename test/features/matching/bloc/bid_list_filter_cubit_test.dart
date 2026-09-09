@@ -91,6 +91,17 @@ void main() {
         expect(isActiveBid(_bid(status: s)), isFalse, reason: s);
       }
     });
+
+    // Régression staging : un bid accepté en mobile money passe en
+    // AWAITING_PAYMENT (30 min pour que l'expéditeur séquestre) et
+    // disparaissait purement et simplement des listes du voyageur — ni actif
+    // ni « à traiter ». Test explicite en plus de la boucle générique
+    // ci-dessus, pour documenter clairement l'intention de ce statut.
+    test('AWAITING_PAYMENT (mobile money, accepté en attente du paiement) est '
+        'actif', () {
+      expect(kActiveBidStatuses, contains('AWAITING_PAYMENT'));
+      expect(isActiveBid(_bid(status: 'AWAITING_PAYMENT')), isTrue);
+    });
   });
 
   group('isClosedBid', () {

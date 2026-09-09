@@ -21,6 +21,7 @@ class _MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
 
 BidModel _bid({
   required String status,
+  BidPaymentMethod paymentMethod = BidPaymentMethod.stripe,
   String? trackingNumber,
   String? confirmationCode,
   String? contentCategory,
@@ -31,6 +32,7 @@ BidModel _bid({
   String? tripCancellationId,
   String? tripCancellationRematchStatus,
 }) => BidModel(
+  paymentMethod: paymentMethod,
   id: 'bid-1',
   announcementId: 'a-1',
   senderId: 's-1',
@@ -434,6 +436,31 @@ void main() {
     },
   );
 
+  testWidgets(
+    'sender + AWAITING_PAYMENT mobile money → invitation à payer, pas le '
+    'placeholder « en attente du voyageur »',
+    (tester) async {
+      await _pump(
+        tester,
+        _bid(
+          status: 'AWAITING_PAYMENT',
+          paymentMethod: BidPaymentMethod.mobileMoney,
+        ),
+        true,
+      );
+      expect(find.textContaining('paie par mobile money'), findsOneWidget);
+      expect(find.textContaining('En attente de confirmation'), findsNothing);
+    },
+  );
+
+  testWidgets('sender + AWAITING_PAYMENT carte → placeholder inchangé', (
+    tester,
+  ) async {
+    await _pump(tester, _bid(status: 'AWAITING_PAYMENT'), true);
+    expect(find.textContaining('En attente de confirmation'), findsOneWidget);
+    expect(find.textContaining('paie par mobile money'), findsNothing);
+  });
+
   // ── Traveler dispatch ───────────────────────────────────────────────────────
 
   testWidgets('voyageur + ACCEPTED → lien "Scanner les étapes" (Suivi)', (
@@ -453,6 +480,23 @@ void main() {
     // La bande de suivi reste.
     expect(find.text('N° DE SUIVI'), findsOneWidget);
   });
+
+  // Régression staging : un bid accepté en mobile money passe en
+  // AWAITING_PAYMENT (30 min pour le séquestre côté expéditeur) — avant le
+  // fix, le dispatch voyageur n'avait pas de cas dédié et retombait sur
+  // SizedBox.shrink() (zone d'action vide, sans explication).
+  testWidgets(
+    'voyageur + AWAITING_PAYMENT → ligne d\'information, aucune action de '
+    'scan',
+    (tester) async {
+      await _pump(tester, _bid(status: 'AWAITING_PAYMENT'), false);
+      expect(
+        find.textContaining("En attente du paiement de l'expéditeur"),
+        findsOneWidget,
+      );
+      expect(find.text('Lire les QR des étapes'), findsNothing);
+    },
+  );
 
   testWidgets('voyageur + PENDING → résumé de décision avec poids/type', (
     tester,

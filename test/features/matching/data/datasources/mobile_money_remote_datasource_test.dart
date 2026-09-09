@@ -15,14 +15,22 @@ void main() {
 
   const bidId = '550e8400-e29b-41d4-a716-446655440000';
 
-  final paymentJson = {
-    'id': 'payment-id-1',
-    'status': 'PENDING',
+  final statusJson = {
+    'bidId': bidId,
+    'bidStatus': 'AWAITING_PAYMENT',
+    'paymentStatus': 'PENDING',
+    'deadlineAt': '2026-05-27T20:00:00',
     'amount': 50.0,
     'currency': 'XOF',
-    'paymentLink': 'https://wave.test/pay?ref=wave_abc',
-    'expiresAt': '2026-05-27T20:00:00.000',
-    'failureReason': null,
+    'deposit': {
+      'id': 'deposit-1',
+      'status': 'ACCEPTED',
+      'providerLabel': 'Orange Money',
+      'msisdnMasked': '+221 •••• 67',
+      'authorizationUrl': null,
+      'failureCode': null,
+      'failureMessage': null,
+    },
   };
 
   setUp(() {
@@ -34,28 +42,32 @@ void main() {
 
   group('MobileMoneyRemoteDatasource', () {
     group('getStatus', () {
-      test('returns MobileMoneyPaymentModel on success', () async {
-        when(
-          () =>
-              dio.get<Map<String, dynamic>>('/bids/$bidId/mobile-money/status'),
-        ).thenAnswer(
-          (_) async => Response(
-            data: paymentJson,
-            statusCode: 200,
-            requestOptions: RequestOptions(
-              path: '/bids/$bidId/mobile-money/status',
+      test(
+        'appelle GET /bids/{bidId}/mobile-money/status et parse le statut',
+        () async {
+          when(
+            () => dio.get<Map<String, dynamic>>(
+              '/bids/$bidId/mobile-money/status',
             ),
-          ),
-        );
+          ).thenAnswer(
+            (_) async => Response(
+              data: statusJson,
+              statusCode: 200,
+              requestOptions: RequestOptions(
+                path: '/bids/$bidId/mobile-money/status',
+              ),
+            ),
+          );
 
-        final result = await datasource.getStatus(bidId);
+          final result = await datasource.getStatus(bidId);
 
-        expect(result.id, 'payment-id-1');
-        expect(result.status, 'PENDING');
-        expect(result.paymentLink, contains('wave.test'));
-      });
+          expect(result.bidId, bidId);
+          expect(result.paymentStatus, 'PENDING');
+          expect(result.deposit?.providerLabel, 'Orange Money');
+        },
+      );
 
-      test('propagates DioException on network error', () async {
+      test('propage la DioException sur erreur réseau', () async {
         when(
           () =>
               dio.get<Map<String, dynamic>>('/bids/$bidId/mobile-money/status'),
@@ -71,7 +83,7 @@ void main() {
         expect(datasource.getStatus(bidId), throwsA(isA<DioException>()));
       });
 
-      test('propagates DioException on 404', () async {
+      test('propage la DioException sur 404', () async {
         when(
           () =>
               dio.get<Map<String, dynamic>>('/bids/$bidId/mobile-money/status'),
@@ -94,50 +106,116 @@ void main() {
       });
     });
 
-    group('regenerateLink', () {
-      test(
-        'calls POST /bids/{bidId}/mobile-money/initiate and returns model',
-        () async {
-          final newPaymentJson = {
-            'id': 'payment-id-2',
-            'status': 'PENDING',
-            'amount': 50.0,
-            'currency': 'XOF',
-            'paymentLink': 'https://wave.test/pay?ref=wave_new',
-            'expiresAt': '2026-05-27T21:00:00.000',
-            'failureReason': null,
-          };
-
-          when(
-            () => dio.post<Map<String, dynamic>>(
-              '/bids/$bidId/mobile-money/initiate',
-            ),
-          ).thenAnswer(
-            (_) async => Response(
-              data: newPaymentJson,
-              statusCode: 201,
-              requestOptions: RequestOptions(
-                path: '/bids/$bidId/mobile-money/initiate',
-              ),
-            ),
-          );
-
-          final result = await datasource.regenerateLink(bidId);
-
-          verify(
-            () => dio.post<Map<String, dynamic>>(
-              '/bids/$bidId/mobile-money/initiate',
-            ),
-          ).called(1);
-          expect(result.id, 'payment-id-2');
-          expect(result.paymentLink, contains('ref=wave_new'));
-        },
-      );
-
-      test('propagates DioException on 403', () async {
+    group('initiate', () {
+      test('sans phoneNumber : POST sans corps', () async {
+        dynamic capturedData = 'non-appelé';
         when(
           () => dio.post<Map<String, dynamic>>(
             '/bids/$bidId/mobile-money/initiate',
+            data: any(named: 'data'),
+          ),
+        ).thenAnswer((invocation) async {
+          capturedData = invocation.namedArguments[const Symbol('data')];
+          return Response(
+            data: statusJson,
+            statusCode: 200,
+            requestOptions: RequestOptions(
+              path: '/bids/$bidId/mobile-money/initiate',
+            ),
+          );
+        });
+
+        final result = await datasource.initiate(bidId);
+
+        expect(result.bidId, bidId);
+        expect(capturedData, isNull);
+      });
+
+      test('avec phoneNumber vide : POST sans corps', () async {
+        dynamic capturedData = 'non-appelé';
+        when(
+          () => dio.post<Map<String, dynamic>>(
+            '/bids/$bidId/mobile-money/initiate',
+            data: any(named: 'data'),
+          ),
+        ).thenAnswer((invocation) async {
+          capturedData = invocation.namedArguments[const Symbol('data')];
+          return Response(
+            data: statusJson,
+            statusCode: 200,
+            requestOptions: RequestOptions(
+              path: '/bids/$bidId/mobile-money/initiate',
+            ),
+          );
+        });
+
+        await datasource.initiate(bidId, phoneNumber: '');
+
+        expect(capturedData, isNull);
+      });
+
+      test(
+        'avec phoneNumber composé uniquement d\'espaces : POST sans corps',
+        () async {
+          dynamic capturedData = 'non-appelé';
+          when(
+            () => dio.post<Map<String, dynamic>>(
+              '/bids/$bidId/mobile-money/initiate',
+              data: any(named: 'data'),
+            ),
+          ).thenAnswer((invocation) async {
+            capturedData = invocation.namedArguments[const Symbol('data')];
+            return Response(
+              data: statusJson,
+              statusCode: 200,
+              requestOptions: RequestOptions(
+                path: '/bids/$bidId/mobile-money/initiate',
+              ),
+            );
+          });
+
+          await datasource.initiate(bidId, phoneNumber: '   ');
+
+          expect(capturedData, isNull);
+        },
+      );
+
+      test(
+        'avec phoneNumber renseigné : POST {phoneNumber} après trim()',
+        () async {
+          dynamic capturedData = 'non-appelé';
+          when(
+            () => dio.post<Map<String, dynamic>>(
+              '/bids/$bidId/mobile-money/initiate',
+              data: any(named: 'data'),
+            ),
+          ).thenAnswer((invocation) async {
+            capturedData = invocation.namedArguments[const Symbol('data')];
+            return Response(
+              data: statusJson,
+              statusCode: 200,
+              requestOptions: RequestOptions(
+                path: '/bids/$bidId/mobile-money/initiate',
+              ),
+            );
+          });
+
+          final result = await datasource.initiate(
+            bidId,
+            phoneNumber: '  +221771234567  ',
+          );
+
+          expect(result.bidId, bidId);
+          expect(capturedData, isA<Map>());
+          expect((capturedData as Map)['phoneNumber'], '+221771234567');
+        },
+      );
+
+      test('propage la DioException', () async {
+        when(
+          () => dio.post<Map<String, dynamic>>(
+            '/bids/$bidId/mobile-money/initiate',
+            data: any(named: 'data'),
           ),
         ).thenThrow(
           DioException(
@@ -154,7 +232,7 @@ void main() {
           ),
         );
 
-        expect(datasource.regenerateLink(bidId), throwsA(isA<DioException>()));
+        expect(datasource.initiate(bidId), throwsA(isA<DioException>()));
       });
     });
   });

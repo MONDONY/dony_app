@@ -9,6 +9,8 @@ import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_emoji.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
@@ -24,6 +26,7 @@ import 'package:dony/features/matching/data/confirm_bid_payment.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_quote_response.dart';
+import 'package:dony/features/matching/presentation/widgets/create_bid/payer_phone.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid/photo_section.dart';
 import 'package:dony/features/matching/presentation/widgets/custom_items_section.dart';
 import 'package:dony/features/matching/presentation/widgets/grid_item_selection_sheet.dart';
@@ -146,13 +149,31 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   String _lastWrittenSuggestion = '';
 
   // ── Payment method availability ─────────────────────────────────────────────
-  // Mobile money (Wave/Orange Money) n'est plus proposé comme paiement direct
-  // d'un bid — retiré au profit de GeniusPay pour la recharge du wallet
-  // voyageur uniquement (backend : 422 mobile-money-bid-payment-retired).
+  // Le mobile money direct est de retour comme moyen de paiement d'un bid,
+  // porté par le nouveau rail pawaPay (BidPaymentMethod.mobileMoney, valeur
+  // API MOBILE_MONEY) — distinct des anciens WAVE/ORANGE_MONEY, qui restent
+  // retirés (backend : 422 mobile-money-bid-payment-retired).
   late final bool _isCashAvailable;
   // Trajets cash-only (publiés sans Stripe Connect) : la chip Stripe doit
   // disparaître et le mode par défaut doit basculer sur cash.
   late final bool _isStripeAvailable;
+  // Mobile money (Orange Money, Wave, MTN…) via pawaPay — proposé dès que
+  // l'annonce l'accepte (le backend restreint déjà pawaPay aux annonces
+  // XOF/XAF à la création, rien à revérifier côté app).
+  late final bool _isMobileMoneyAvailable;
+
+  /// Numéro qui recevra la demande de paiement mobile money. Pré-rempli avec
+  /// le téléphone de l'utilisateur connecté quand `AuthBloc` est accessible
+  /// depuis ce contexte (toujours vrai dans l'app réelle — voir
+  /// [_initialPayerPhone] pour le repli en test) ; toujours modifiable ou
+  /// effaçable par l'expéditeur, jamais requis pour soumettre.
+  late final TextEditingController _payerPhoneCtrl;
+
+  /// Vrai quand [_initialPayerPhone] est vide (compte Yadony sans numéro de
+  /// téléphone, vérification SMS pas encore configurée) : fait basculer le
+  /// texte d'aide de [_PayerPhoneField], qui ne peut plus affirmer un
+  /// pré-remplissage qui n'a pas eu lieu.
+  late final bool _payerPhoneEmpty;
 
   // ── Form step fields ────────────────────────────────────────────────────────
   final _descCtrl = TextEditingController();
@@ -252,7 +273,13 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   List<String> get _refusedCategories =>
       widget.announcement.refusedTypes ?? const [];
 
-  bool get _hasAlternativePaymentMethods => _isCashAvailable;
+  /// Mobile money ne compte comme « alternative » qu'en mode direct : le
+  /// backend rejette toute négociation en mobile money (422
+  /// mobile-money-negotiation-unsupported, `BidNegotiationService`) — en
+  /// mode négociation, seul le cash reste une alternative à Stripe, comme
+  /// avant la task 10 mobile money.
+  bool get _hasAlternativePaymentMethods =>
+      _isCashAvailable || (!widget.negotiation && _isMobileMoneyAvailable);
 
   @override
   void initState() {
@@ -271,9 +298,25 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _isStripeAvailable = widget.announcement.acceptedPaymentMethods.contains(
       BidPaymentMethod.stripe,
     );
+    _isMobileMoneyAvailable = widget.announcement.acceptedPaymentMethods
+        .contains(BidPaymentMethod.mobileMoney);
     _methodNotifier = ValueNotifier<BidPaymentMethod>(
-      _isStripeAvailable ? BidPaymentMethod.stripe : BidPaymentMethod.cash,
+      // En négociation, le mobile money n'est jamais un choix possible
+      // (rejeté par le backend) : le défaut reste celui d'avant la task 10
+      // mobile money, stripe sinon cash, jamais mobileMoney.
+      widget.negotiation
+          ? (_isStripeAvailable
+                ? BidPaymentMethod.stripe
+                : BidPaymentMethod.cash)
+          : (_isStripeAvailable
+                ? BidPaymentMethod.stripe
+                : _isCashAvailable
+                ? BidPaymentMethod.cash
+                : BidPaymentMethod.mobileMoney),
     );
+    final initialPayerPhone = _initialPayerPhone();
+    _payerPhoneEmpty = initialPayerPhone.isEmpty;
+    _payerPhoneCtrl = TextEditingController(text: initialPayerPhone);
 
     // Toujours 0 au départ, y compris en tarification kilo pure : la
     // grille et le kilo-libre partent aussi de 0 désormais. Sur un trajet
@@ -314,6 +357,19 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     }
     _photosSub = _photosCubit.stream.listen((_) => _recomputeDirty());
     _captureInitialSignature();
+  }
+
+  /// Numéro de l'utilisateur connecté, si `AuthBloc` est accessible depuis ce
+  /// contexte. Dans l'app réelle il l'est toujours (fourni à la racine de
+  /// `app.dart`) ; certains harnais de test ne le fournissent pas — dans ce
+  /// cas (`ProviderNotFoundException`) le champ démarre simplement vide,
+  /// jamais de plantage.
+  String _initialPayerPhone() {
+    try {
+      return context.read<AuthBloc>().state.currentUser?.phoneNumber ?? '';
+    } on ProviderNotFoundException {
+      return '';
+    }
   }
 
   /// Prend la référence de comparaison une fois les post-frames
@@ -401,6 +457,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _recipientNameCtrl.dispose();
     _recipientPhoneCtrl.dispose();
     _promoCtrl.dispose();
+    _payerPhoneCtrl.dispose();
     _weightNotifier.removeListener(_syncFormButtonState);
     _categoriesNotifier.removeListener(_syncFormButtonState);
     _disclaimerNotifier.removeListener(_syncFormButtonState);
@@ -475,6 +532,14 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       label =
           'Confirmer ${formatPriceIn(total, widget.announcement.currency)} en espèces';
       iconAsset = 'banknote';
+    } else if (method == BidPaymentMethod.mobileMoney) {
+      // Comme en espèces : cette étape ENVOIE seulement l'offre
+      // (BidCreateRequested) — aucun paiement n'est bloqué avant que le
+      // voyageur accepte. Le CTA ne doit donc jamais dire « Bloquer & payer »,
+      // réservé au checkout Stripe immédiat.
+      label =
+          'Confirmer ${formatPriceIn(total, widget.announcement.currency)} par mobile money';
+      iconAsset = 'smartphone';
     } else {
       label =
           'Bloquer ${formatPriceIn(total, widget.announcement.currency)} & payer';
@@ -701,7 +766,8 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     if (data == null) return;
     final method = _methodNotifier.value;
 
-    if (method == BidPaymentMethod.cash) {
+    if (method == BidPaymentMethod.cash ||
+        method == BidPaymentMethod.mobileMoney) {
       _bidBloc.add(
         BidCreateRequested(
           announcementId: widget.announcement.id,
@@ -710,7 +776,10 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
           contentCategory: data.contentCategory,
           recipientName: data.recipientName,
           recipientPhone: data.recipientPhone,
-          paymentMethod: BidPaymentMethod.cash,
+          paymentMethod: method,
+          phoneNumber: method == BidPaymentMethod.mobileMoney
+              ? normalizePayerPhone(_payerPhoneCtrl.text)
+              : null,
           promoCode: data.promoCode,
           gridItems: data.gridItems,
           photoKeys: data.photoKeys,
@@ -778,6 +847,11 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
             'en main propre à la remise du colis. En cas d\'annulation après la '
             'remise, Yadony ne peut pas te rembourser immédiatement mais '
             's\'assurera que le voyageur te restitue ton argent.',
+      BidPaymentMethod.mobileMoney =>
+        'Paiement mobile money : si le voyageur accepte, tu recevras une '
+            'notification et auras 30 minutes pour valider le paiement sur '
+            'ton téléphone. Le montant est gardé en sécurité par Yadony '
+            'jusqu\'à la livraison.',
       _ => 'Le voyageur va examiner ta demande.',
     };
 
@@ -1422,6 +1496,13 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
           builder: (context, method, _) => Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // R13 : le backend rejette toute négociation en mobile money
+              // (422 mobile-money-negotiation-unsupported,
+              // BidNegotiationService) — décision produit « offres
+              // classiques seulement ». `isMobileMoneyAvailable` n'est donc
+              // jamais passé ici (garde son défaut `false`), contrairement au
+              // site direct (_buildPickerStep) qui passe
+              // _isMobileMoneyAvailable.
               _PaymentMethodSelector(
                 selectedMethod: method,
                 onChanged: (m) => _methodNotifier.value = m,
@@ -1528,10 +1609,18 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                   onChanged: (m) => _methodNotifier.value = m,
                   isCashAvailable: _isCashAvailable,
                   isStripeAvailable: _isStripeAvailable,
+                  isMobileMoneyAvailable: _isMobileMoneyAvailable,
                 ),
                 if (method == BidPaymentMethod.cash) ...[
                   const SizedBox(height: DonySpacing.sm),
                   const _CashEscrowWarning(),
+                ],
+                if (method == BidPaymentMethod.mobileMoney) ...[
+                  const SizedBox(height: DonySpacing.sm),
+                  _PayerPhoneField(
+                    controller: _payerPhoneCtrl,
+                    hasProfilePhone: !_payerPhoneEmpty,
+                  ),
                 ],
               ],
             );
@@ -2144,12 +2233,14 @@ class _PaymentMethodSelector extends StatelessWidget {
     required this.onChanged,
     this.isCashAvailable = false,
     this.isStripeAvailable = true,
+    this.isMobileMoneyAvailable = false,
   });
 
   final BidPaymentMethod selectedMethod;
   final ValueChanged<BidPaymentMethod> onChanged;
   final bool isCashAvailable;
   final bool isStripeAvailable;
+  final bool isMobileMoneyAvailable;
 
   @override
   Widget build(BuildContext context) {
@@ -2172,6 +2263,15 @@ class _PaymentMethodSelector extends StatelessWidget {
           sublabel: 'Remise directe',
           selected: selectedMethod == BidPaymentMethod.cash,
           onTap: () => onChanged(BidPaymentMethod.cash),
+        ),
+      if (isMobileMoneyAvailable)
+        _MethodTile(
+          key: const Key('payment-method-mobile-money'),
+          iconAsset: 'smartphone',
+          label: 'Mobile money',
+          sublabel: 'Orange Money, Wave, MTN',
+          selected: selectedMethod == BidPaymentMethod.mobileMoney,
+          onTap: () => onChanged(BidPaymentMethod.mobileMoney),
         ),
     ];
 
@@ -2209,6 +2309,64 @@ class _CashEscrowWarning extends StatelessWidget {
             'directement, sans garantie de remboursement par Yadony.',
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Numéro payeur mobile money ──────────────────────────────────────────────
+//
+// Affiché uniquement quand le mode mobile money est sélectionné. Le numéro
+// reste modifiable/effaçable par l'expéditeur (jamais requis pour
+// soumettre) : un champ vide envoie `phoneNumber: null`, et le backend
+// replie alors sur le téléphone Firebase de l'expéditeur. Un champ de saisie
+// et un texte d'aide, jamais de DonyButton ici — reste dans le `child`
+// scrollable du picker, jamais dans le _StickyBottom.
+class _PayerPhoneField extends StatelessWidget {
+  const _PayerPhoneField({
+    required this.controller,
+    required this.hasProfilePhone,
+  });
+
+  final TextEditingController controller;
+
+  /// Faux quand `_initialPayerPhone()` était vide (compte Yadony sans
+  /// numéro de téléphone) : le texte d'aide ne peut alors plus affirmer un
+  /// pré-remplissage qui n'a pas eu lieu.
+  final bool hasProfilePhone;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        DonyTextField(
+          key: const Key('payer-phone-field'),
+          controller: controller,
+          label: 'Numéro qui paiera (facultatif)',
+          keyboardType: TextInputType.phone,
+        ),
+        const SizedBox(height: DonySpacing.xs),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            DonyIcon('smartphone', size: 14, color: cs.onSurfaceVariant),
+            const SizedBox(width: DonySpacing.xs),
+            Expanded(
+              child: Text(
+                hasProfilePhone
+                    ? 'Par défaut, ton numéro Yadony. Tu recevras la '
+                          'demande de paiement sur ce numéro.'
+                    : "Ton compte n'a pas de numéro : indique celui qui "
+                          'paiera. Tu recevras la demande de paiement '
+                          'dessus.',
+                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+              ),
+            ),
+          ],
         ),
       ],
     );

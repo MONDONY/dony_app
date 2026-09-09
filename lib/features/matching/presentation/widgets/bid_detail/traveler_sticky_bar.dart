@@ -1,10 +1,19 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/action_bars/bid_detail_action_bars.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-enum _TravelerAction { decide, confirmPresence, scan, transit, deliver, delete }
+enum _TravelerAction {
+  decide,
+  confirmPresence,
+  scan,
+  transit,
+  deliver,
+  delete,
+  awaitingMobileMoneyPayment,
+}
 
 /// Barre collante contextuelle voyageur — route vers le bon scanner/étape
 /// selon le statut de l'offre.
@@ -32,6 +41,17 @@ class TravelerStickyBar extends StatelessWidget {
       case 'PENDING':
       case 'PAYMENT_ESCROWED':
         return _TravelerAction.decide;
+      // Le voyageur vient d'accepter une offre mobile money : l'expéditeur a
+      // 30 min pour séquestrer via pawaPay. Rien à faire ici tant que le
+      // paiement n'est pas séquestré (le bid repasse alors en ACCEPTED) —
+      // simple ligne d'information, jamais un bouton scan/remise. Scopé au
+      // mobile money : stripe/cash en AWAITING_PAYMENT restent hors
+      // périmètre (barre vide, comportement historique).
+      case 'AWAITING_PAYMENT':
+        if (bid.paymentMethod == BidPaymentMethod.mobileMoney) {
+          return _TravelerAction.awaitingMobileMoneyPayment;
+        }
+        return null;
       case 'REJECTED':
         return _TravelerAction.delete;
       case 'ACCEPTED':
@@ -78,7 +98,48 @@ class TravelerStickyBar extends StatelessWidget {
         return const _TransitBar();
       case _TravelerAction.deliver:
         return const _DeliverBar();
+      case _TravelerAction.awaitingMobileMoneyPayment:
+        return const _AwaitingMobileMoneyPaymentBar();
     }
+  }
+}
+
+// ── Awaiting mobile money payment bar ────────────────────────────────────────
+
+/// Bid AWAITING_PAYMENT (mobile money) côté voyageur : ligne d'information
+/// sans action, jamais de bouton scan/remise tant que l'expéditeur n'a pas
+/// séquestré son paiement (30 min, le bid repasse alors en ACCEPTED).
+class _AwaitingMobileMoneyPaymentBar extends StatelessWidget {
+  const _AwaitingMobileMoneyPaymentBar();
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final h = DonyLayout.hPadding(context);
+    return Container(
+      color: cs.surface,
+      padding: EdgeInsets.fromLTRB(
+        h,
+        DonySpacing.base,
+        h,
+        MediaQuery.of(context).padding.bottom + DonySpacing.base,
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          DonyIcon('timer', size: 16, color: cs.onSurfaceVariant),
+          const SizedBox(width: DonySpacing.xs),
+          Flexible(
+            child: Text(
+              "En attente du paiement de l'expéditeur (mobile money).",
+              textAlign: TextAlign.center,
+              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

@@ -5,11 +5,10 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/incident_report/data/repositories/incident_report_repository.dart';
-import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
-import 'package:dony/features/matching/bloc/bid_acceptance_event.dart' as ace;
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_accept_dispatch.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
@@ -79,15 +78,7 @@ class TravelerPendingBar extends StatelessWidget {
             child: FilledButton.icon(
               onPressed: isLoading
                   ? null
-                  : () {
-                      if (bid.paymentMethod == BidPaymentMethod.cash) {
-                        context.read<BidAcceptanceBloc>().add(
-                          ace.BidAcceptRequested(bid.id),
-                        );
-                      } else {
-                        context.read<BidBloc>().add(BidAcceptRequested(bid.id));
-                      }
-                    },
+                  : () => dispatchBidAccept(context, bid),
               icon: isLoading
                   ? const SizedBox(
                       width: 16,
@@ -291,7 +282,9 @@ class SenderActionBar extends StatelessWidget {
               // Cash / Wave / Orange Money: paid in person, Yadony's commission
               // is collected from the traveler server-side — never show an
               // online sender payment button or its loading placeholder.
-              child: !_hasOnlineSenderPayment
+              child: bid.paymentMethod == BidPaymentMethod.mobileMoney
+                  ? const _MobileMoneyBadge()
+                  : !_hasOnlineSenderPayment
                   ? const _CashBadge()
                   : !paymentLoaded
                   ? Container(
@@ -522,6 +515,45 @@ class _CashBadge extends StatelessWidget {
           Flexible(
             child: Text(
               'Paiement en espèces à la remise',
+              style: tt.titleSmall?.copyWith(color: color),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Informational pill shown to the sender when the deal is settled via
+/// mobile money (pawaPay). Same shape as [_CashBadge], but with the primary
+/// accent to signal an online (escrowed) settlement rather than a plain
+/// in-person cash exchange.
+class _MobileMoneyBadge extends StatelessWidget {
+  const _MobileMoneyBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    final color = cs.primary;
+
+    return Container(
+      height: 52,
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(DonyRadius.lg),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          DonyIcon('smartphone', color: color, size: 18),
+          const SizedBox(width: DonySpacing.sm),
+          Flexible(
+            child: Text(
+              'Paiement mobile money',
               style: tt.titleSmall?.copyWith(color: color),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,

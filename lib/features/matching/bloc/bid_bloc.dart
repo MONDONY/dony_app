@@ -21,6 +21,7 @@ class BidBloc extends Bloc<BidEvent, BidState> {
     on<BidListRequested>(_onListRequested);
     on<BidDetailRequested>(_onDetailRequested);
     on<BidAcceptRequested>(_onAcceptRequested);
+    on<BidAcceptMobileMoneyRequested>(_onAcceptMobileMoneyRequested);
     on<BidRejectRequested>(_onRejectRequested);
     on<BidConfirmPresenceRequested>(_onConfirmPresenceRequested);
     on<BidMyListRequested>(_onMyListRequested);
@@ -143,6 +144,28 @@ class BidBloc extends Bloc<BidEvent, BidState> {
         _analytics.logEvent(
           AnalyticsEvents.bidAccepted,
           properties: {'bid_id': bid.id},
+        ),
+      );
+    } catch (e) {
+      emit(BidError(unwrapDioError(e)));
+    }
+  }
+
+  /// Acceptation d'un bid mobile money (pawaPay) : le voyageur n'a aucune
+  /// interaction Stripe à effectuer, contrairement au cash (BidAcceptanceBloc)
+  /// ou à la carte. Même gestion d'états/erreurs que [_onAcceptRequested].
+  Future<void> _onAcceptMobileMoneyRequested(
+    BidAcceptMobileMoneyRequested event,
+    Emitter<BidState> emit,
+  ) async {
+    emit(BidLoading());
+    try {
+      final bid = await _repository.acceptMobileMoneyBid(event.bidId);
+      emit(BidAccepted(bid));
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.bidAccepted,
+          properties: {'bid_id': bid.id, 'payment_method': 'mobile_money'},
         ),
       );
     } catch (e) {

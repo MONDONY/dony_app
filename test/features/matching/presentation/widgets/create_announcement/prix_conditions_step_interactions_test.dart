@@ -52,6 +52,9 @@ Widget _host({
   ValueNotifier<double>? availableKg,
   ValueNotifier<bool>? cashEnabled,
   ValueNotifier<bool>? kgPriceEnabled,
+  ValueNotifier<bool>? mobileMoneyEnabled,
+  ValueNotifier<SupportedCurrency>? currencyNotifier,
+  bool mobileMoneyAccountActive = false,
   ValueNotifier<Set<String>>? selectedContent,
   ValueNotifier<Set<String>>? customAccepted,
   ValueNotifier<Set<String>>? refusedTypes,
@@ -96,6 +99,14 @@ Widget _host({
             availableKgNotifier: availableKg ?? ValueNotifier<double>(10),
             cashEnabledNotifier: cashEnabled ?? ValueNotifier<bool>(false),
             kgPriceEnabledNotifier: kgPriceEnabled ?? ValueNotifier<bool>(true),
+            mobileMoneyEnabledNotifier:
+                mobileMoneyEnabled ?? ValueNotifier<bool>(false),
+            currencyNotifier:
+                currencyNotifier ??
+                ValueNotifier<SupportedCurrency>(
+                  currency ?? SupportedCurrency.eur,
+                ),
+            mobileMoneyAccountActive: mobileMoneyAccountActive,
             negotiableNotifier: ValueNotifier<bool>(false),
             selectedContentNotifier:
                 selectedContent ?? ValueNotifier<Set<String>>({}),

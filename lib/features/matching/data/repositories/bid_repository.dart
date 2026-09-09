@@ -89,6 +89,9 @@ class BidRepository {
 
   Future<BidModel> acceptBid(String bidId) => _datasource.acceptBid(bidId);
 
+  Future<BidModel> acceptMobileMoneyBid(String bidId) =>
+      _datasource.acceptMobileMoneyBid(bidId);
+
   Future<BidModel> rejectBid(String bidId, {String? reason}) =>
       _datasource.rejectBid(bidId, reason: reason);
 

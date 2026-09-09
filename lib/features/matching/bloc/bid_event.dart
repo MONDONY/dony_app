@@ -40,7 +40,9 @@ class BidCreateRequested extends BidEvent {
   final String recipientPhone;
   final BidPaymentMethod paymentMethod;
 
-  /// Numéro de téléphone Mobile Money (requis si WAVE ou ORANGE_MONEY).
+  /// Numéro payeur d'une offre mobile money, facultatif : normalisé côté
+  /// app avant l'envoi (voir `normalizePayerPhone`). Si absent, le backend
+  /// se replie sur le téléphone Firebase de l'expéditeur à l'initiation.
   final String? phoneNumber;
 
   /// Code pays ISO 3166-1 alpha-2 (requis si WAVE ou ORANGE_MONEY).
@@ -114,6 +116,15 @@ class BidDetailRequested extends BidEvent {
 class BidAcceptRequested extends BidEvent {
   final String bidId;
   BidAcceptRequested(this.bidId);
+}
+
+/// Acceptation dédiée d'un bid réglé en mobile money (pawaPay) par le
+/// voyageur : contrairement au cash (BidAcceptanceBloc) ou à la carte, aucune
+/// interaction Stripe n'est nécessaire côté voyageur, d'où un event distinct
+/// porté directement par [BidBloc].
+class BidAcceptMobileMoneyRequested extends BidEvent {
+  final String bidId;
+  BidAcceptMobileMoneyRequested(this.bidId);
 }
 
 class BidRejectRequested extends BidEvent {

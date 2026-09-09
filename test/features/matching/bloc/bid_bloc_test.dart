@@ -580,6 +580,71 @@ void main() {
     );
   });
 
+  // ─── BidAcceptMobileMoneyRequested ──────────────────────────────────────────
+
+  group('BidAcceptMobileMoneyRequested', () {
+    blocTest<BidBloc, BidState>(
+      'acceptation réussie → [Loading, BidAccepted]',
+      build: () {
+        when(
+          () => mockRepo.acceptMobileMoneyBid('bid-001'),
+        ).thenAnswer((_) async => buildBid(status: 'ACCEPTED'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(BidAcceptMobileMoneyRequested('bid-001')),
+      expect: () => [
+        isA<BidLoading>(),
+        predicate<BidState>(
+          (s) => s is BidAccepted && s.bid.status == 'ACCEPTED',
+        ),
+      ],
+      verify: (_) {
+        verify(() => mockRepo.acceptMobileMoneyBid('bid-001')).called(1);
+      },
+    );
+
+    blocTest<BidBloc, BidState>(
+      'erreur acceptation → [Loading, BidError]',
+      build: () {
+        when(() => mockRepo.acceptMobileMoneyBid(any())).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(
+              path: '/bids/bid-001/mobile-money/accept',
+            ),
+            error: const ConflictException('Capacité insuffisante'),
+            response: Response(
+              requestOptions: RequestOptions(
+                path: '/bids/bid-001/mobile-money/accept',
+              ),
+              statusCode: 409,
+              data: {'detail': 'Capacité insuffisante'},
+            ),
+          ),
+        );
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(BidAcceptMobileMoneyRequested('bid-001')),
+      expect: () => [
+        isA<BidLoading>(),
+        predicate<BidState>(
+          (s) => s is BidError && s.error.message == 'Capacité insuffisante',
+        ),
+      ],
+    );
+
+    blocTest<BidBloc, BidState>(
+      'erreur générique → [Loading, BidError]',
+      build: () {
+        when(
+          () => mockRepo.acceptMobileMoneyBid(any()),
+        ).thenThrow(Exception('timeout'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(BidAcceptMobileMoneyRequested('bid-001')),
+      expect: () => [isA<BidLoading>(), isA<BidError>()],
+    );
+  });
+
   // ─── BidRejectRequested ──────────────────────────────────────────────────────
 
   group('BidRejectRequested', () {

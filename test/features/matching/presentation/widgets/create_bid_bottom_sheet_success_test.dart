@@ -395,6 +395,45 @@ void main() {
   );
 
   testWidgets(
+    'BidCreated (MOBILE_MONEY) → sheet fermé, DonySuccessScreen « Offre '
+    'envoyée ! », subtitle mobile money pawaPay',
+    (tester) async {
+      final bidStates = StreamController<BidState>.broadcast();
+      addTearDown(bidStates.close);
+      when(() => bidBloc.stream).thenAnswer((_) => bidStates.stream);
+
+      await openSheet(tester);
+
+      bidStates.add(
+        BidCreated(bidWithMethod('bid-mm-1', BidPaymentMethod.mobileMoney)),
+      );
+      await tester.pumpAndSettle();
+
+      // 1. L'écran de création est fermé (pop) et DonySuccessScreen affiché.
+      expect(find.text('Faire une demande'), findsNothing);
+      expect(find.byType(DonySuccessScreen), findsOneWidget);
+      expect(find.text('Offre envoyée !'), findsOneWidget);
+      expect(
+        find.textContaining(
+          'Paiement mobile money : si le voyageur accepte, tu recevras une '
+          'notification et auras 30 minutes pour valider le paiement sur '
+          'ton téléphone. Le montant est gardé en sécurité par Yadony '
+          'jusqu\'à la livraison.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.textContaining('Bid détail'), findsNothing);
+
+      // 2. La navigation vers /bids/{id}?from=payment n'arrive qu'au tap CTA.
+      await tester.tap(find.text('Voir mon envoi'));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Bid détail'), findsOneWidget);
+      expect(find.textContaining('from=payment'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
     'BidCreated (WAVE legacy) → subtitle générique (mobile money retiré)',
     (tester) async {
       final bidStates = StreamController<BidState>.broadcast();
