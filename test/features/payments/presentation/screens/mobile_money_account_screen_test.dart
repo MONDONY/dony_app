@@ -89,6 +89,25 @@ void main() {
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
   });
 
+  group('Zone sûre', () {
+    testWidgets('le corps est protégé de la barre de navigation système', (
+      tester,
+    ) async {
+      stub(const MobileMoneyAccountInitial());
+      await pumpScreen(tester, settle: false);
+      await tester.pump();
+      // L'AppBar porte sa propre SafeArea (haut seulement) : on cible celle
+      // du corps, qui protège le bouton bas de la barre de navigation.
+      expect(
+        find.byWidgetPredicate(
+          (w) => w is SafeArea && !w.top && w.bottom,
+          description: 'SafeArea du corps (bas seulement)',
+        ),
+        findsOneWidget,
+      );
+    });
+  });
+
   group('Vue non configurée', () {
     testWidgets('carte explicative, opérateurs et bouton d\'activation', (
       tester,

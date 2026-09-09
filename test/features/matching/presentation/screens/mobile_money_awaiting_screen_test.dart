@@ -254,6 +254,25 @@ void main() {
     verify(() => bloc.add(any(that: isA<MobileMoneyStatusPolled>()))).called(1);
   });
 
+  group('Zone sûre', () {
+    testWidgets('le corps est protégé de la barre de navigation système', (
+      tester,
+    ) async {
+      stub(const MobileMoneyPaymentInitial());
+      await pumpScreen(tester, settle: false);
+      await tester.pump();
+      // L'AppBar porte sa propre SafeArea (haut seulement) : on cible celle
+      // du corps, qui protège le bouton bas de la barre de navigation.
+      expect(
+        find.byWidgetPredicate(
+          (w) => w is SafeArea && !w.top && w.bottom,
+          description: 'SafeArea du corps (bas seulement)',
+        ),
+        findsOneWidget,
+      );
+    });
+  });
+
   group('AwaitingConfirmation — PIN opérateur', () {
     testWidgets(
       'affiche le montant, l\'opérateur, le numéro masqué et le texte PIN',

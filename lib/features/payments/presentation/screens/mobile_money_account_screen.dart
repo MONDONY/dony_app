@@ -36,40 +36,45 @@ class MobileMoneyAccountScreen extends StatelessWidget {
           child: Divider(height: 1, color: cs.outline),
         ),
       ),
-      body: BlocConsumer<MobileMoneyAccountBloc, MobileMoneyAccountState>(
-        listener: (context, state) {
-          if (state is MobileMoneyAccountError) {
-            // Jamais state.error brut : toujours passer par ErrorPresenter,
-            // qui résout le code métier via ErrorCatalog et retombe sur un
-            // message générique français.
-            unawaited(ErrorPresenter.show(context, state.error));
-          }
-        },
-        builder: (context, state) => switch (state) {
-          MobileMoneyAccountInitial() || MobileMoneyAccountLoading() => Center(
-            child: CircularProgressIndicator(color: cs.primary),
-          ),
-          MobileMoneyAccountLoaded(:final account) => _AccountBody(
-            account: account,
-          ),
-          MobileMoneyAccountUpdating(:final account) => _AccountBody(
-            account: account,
-            isLoading: true,
-          ),
-          // Échec d'activation/désactivation : le dernier compte connu reste
-          // affiché (le listener ci-dessus a déjà notifié l'erreur).
-          MobileMoneyAccountError(:final account) when account != null =>
-            _AccountBody(account: account),
-          // Échec du premier chargement : aucun compte connu à afficher.
-          MobileMoneyAccountError() => DonyEmptyState(
-            type: DonyEmptyStateType.error,
-            title: 'Impossible de charger ton compte',
-            actionLabel: 'Réessayer',
-            onAction: () => context.read<MobileMoneyAccountBloc>().add(
-              const MobileMoneyAccountRequested(),
+      // Le bouton collant ne doit pas passer sous la barre de navigation
+      // Android (constaté sur un Redmi à trois boutons) : le haut est déjà
+      // couvert par l'AppBar.
+      body: SafeArea(
+        top: false,
+        child: BlocConsumer<MobileMoneyAccountBloc, MobileMoneyAccountState>(
+          listener: (context, state) {
+            if (state is MobileMoneyAccountError) {
+              // Jamais state.error brut : toujours passer par ErrorPresenter,
+              // qui résout le code métier via ErrorCatalog et retombe sur un
+              // message générique français.
+              unawaited(ErrorPresenter.show(context, state.error));
+            }
+          },
+          builder: (context, state) => switch (state) {
+            MobileMoneyAccountInitial() || MobileMoneyAccountLoading() =>
+              Center(child: CircularProgressIndicator(color: cs.primary)),
+            MobileMoneyAccountLoaded(:final account) => _AccountBody(
+              account: account,
             ),
-          ),
-        },
+            MobileMoneyAccountUpdating(:final account) => _AccountBody(
+              account: account,
+              isLoading: true,
+            ),
+            // Échec d'activation/désactivation : le dernier compte connu reste
+            // affiché (le listener ci-dessus a déjà notifié l'erreur).
+            MobileMoneyAccountError(:final account) when account != null =>
+              _AccountBody(account: account),
+            // Échec du premier chargement : aucun compte connu à afficher.
+            MobileMoneyAccountError() => DonyEmptyState(
+              type: DonyEmptyStateType.error,
+              title: 'Impossible de charger ton compte',
+              actionLabel: 'Réessayer',
+              onAction: () => context.read<MobileMoneyAccountBloc>().add(
+                const MobileMoneyAccountRequested(),
+              ),
+            ),
+          },
+        ),
       ),
     );
   }

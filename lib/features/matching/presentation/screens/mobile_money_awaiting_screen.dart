@@ -147,56 +147,61 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
           child: Divider(height: 1, color: cs.outline),
         ),
       ),
-      body: BlocConsumer<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
-        listenWhen: (previous, current) =>
-            previous.runtimeType != current.runtimeType,
-        listener: (context, state) {
-          _syncCountdown(state);
-          switch (state) {
-            case MobileMoneyPaymentEscrowed():
-              _cancelAllTimers();
-              DonySnackbar.show(
-                context,
-                message: 'Paiement confirmé, ton envoi est sécurisé',
-                type: DonySnackbarType.success,
-              );
-              context.pop(true);
-            case MobileMoneyPaymentExpired():
-              _cancelAllTimers();
-            case MobileMoneyPaymentDepositFailed():
-              _pollingTimer?.cancel();
-            case final MobileMoneyPaymentError e:
-              unawaited(ErrorPresenter.show(context, e.error));
-            case _:
-          }
-        },
-        builder: (context, state) => switch (state) {
-          MobileMoneyPaymentInitial() || MobileMoneyPaymentLoading() => Center(
-            child: CircularProgressIndicator(color: cs.primary),
-          ),
-          final MobileMoneyPaymentAwaitingConfirmation s => _AwaitingBody(
-            status: s.status,
-            remaining: _remaining,
-          ),
-          final MobileMoneyPaymentDepositFailed s => _FailedBody(
-            status: s.status,
-            remaining: _remaining,
-            phoneController: _retryPhoneController,
-            onRetry: () => _retry(_retryPhoneController.text),
-          ),
-          MobileMoneyPaymentExpired() => _ExpiredBody(
-            onBack: () => context.pop(false),
-          ),
-          MobileMoneyPaymentEscrowed() => const _EscrowedBody(),
-          MobileMoneyPaymentError() => DonyEmptyState(
-            type: DonyEmptyStateType.error,
-            title: 'Une erreur est survenue',
-            actionLabel: 'Réessayer',
-            onAction: () => context.read<MobileMoneyPaymentBloc>().add(
-              MobileMoneyPaymentOpened(bidId: widget.bidId),
+      // Le bouton collant ne doit pas passer sous la barre de navigation
+      // Android (constaté sur un Redmi à trois boutons) : le haut est déjà
+      // couvert par l'AppBar.
+      body: SafeArea(
+        top: false,
+        child: BlocConsumer<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+          listenWhen: (previous, current) =>
+              previous.runtimeType != current.runtimeType,
+          listener: (context, state) {
+            _syncCountdown(state);
+            switch (state) {
+              case MobileMoneyPaymentEscrowed():
+                _cancelAllTimers();
+                DonySnackbar.show(
+                  context,
+                  message: 'Paiement confirmé, ton envoi est sécurisé',
+                  type: DonySnackbarType.success,
+                );
+                context.pop(true);
+              case MobileMoneyPaymentExpired():
+                _cancelAllTimers();
+              case MobileMoneyPaymentDepositFailed():
+                _pollingTimer?.cancel();
+              case final MobileMoneyPaymentError e:
+                unawaited(ErrorPresenter.show(context, e.error));
+              case _:
+            }
+          },
+          builder: (context, state) => switch (state) {
+            MobileMoneyPaymentInitial() || MobileMoneyPaymentLoading() =>
+              Center(child: CircularProgressIndicator(color: cs.primary)),
+            final MobileMoneyPaymentAwaitingConfirmation s => _AwaitingBody(
+              status: s.status,
+              remaining: _remaining,
             ),
-          ),
-        },
+            final MobileMoneyPaymentDepositFailed s => _FailedBody(
+              status: s.status,
+              remaining: _remaining,
+              phoneController: _retryPhoneController,
+              onRetry: () => _retry(_retryPhoneController.text),
+            ),
+            MobileMoneyPaymentExpired() => _ExpiredBody(
+              onBack: () => context.pop(false),
+            ),
+            MobileMoneyPaymentEscrowed() => const _EscrowedBody(),
+            MobileMoneyPaymentError() => DonyEmptyState(
+              type: DonyEmptyStateType.error,
+              title: 'Une erreur est survenue',
+              actionLabel: 'Réessayer',
+              onAction: () => context.read<MobileMoneyPaymentBloc>().add(
+                MobileMoneyPaymentOpened(bidId: widget.bidId),
+              ),
+            ),
+          },
+        ),
       ),
     );
   }
