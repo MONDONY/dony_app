@@ -57,9 +57,14 @@ class BilletTalon extends StatelessWidget {
     // ── Sender dispatch ───────────────────────────────────────────────────────
     if (isSender) {
       return switch (status) {
-        'PENDING' ||
-        'AWAITING_PAYMENT' ||
-        'PAYMENT_ESCROWED' => const _PendingPlaceholder(),
+        'PENDING' || 'PAYMENT_ESCROWED' => const _PendingPlaceholder(),
+        // Offre mobile money acceptée par le voyageur : c'est à l'expéditeur
+        // de payer (30 min), via « Payer par mobile money » dans la barre
+        // collante. Le placeholder « en attente du voyageur » serait faux ici.
+        'AWAITING_PAYMENT'
+            when bid.paymentMethod == BidPaymentMethod.mobileMoney =>
+          const _SenderAwaitingPaymentBlock(),
+        'AWAITING_PAYMENT' => const _PendingPlaceholder(),
         'ACCEPTED' => _QrTalonButton(bid: bid),
         // Le code de retrait existe dès la remise (HANDED_OVER). Comme le QR,
         // il s'ouvre dans un bottom sheet : deux boutons côte à côte dans le
@@ -383,6 +388,33 @@ class _PendingPlaceholder extends StatelessWidget {
 /// paiement mobile money : rien à faire côté voyageur ici, juste un repère
 /// visuel le temps que le statut évolue (ACCEPTED au séquestre, annulation
 /// automatique sinon).
+/// Côté expéditeur, offre mobile money acceptée : le voyageur a confirmé, il
+/// reste à payer depuis la barre collante du détail (30 min).
+class _SenderAwaitingPaymentBlock extends StatelessWidget {
+  const _SenderAwaitingPaymentBlock();
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const SizedBox(height: DonySpacing.sm),
+        DonyIcon('smartphone', size: 32, color: cs.primary),
+        const SizedBox(height: DonySpacing.sm),
+        Text(
+          'Le voyageur a accepté : paie par mobile money depuis le bouton en '
+          'bas pour sécuriser ton envoi.',
+          textAlign: TextAlign.center,
+          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+        ),
+        const SizedBox(height: DonySpacing.sm),
+      ],
+    );
+  }
+}
+
 class _TravelerAwaitingPaymentBlock extends StatelessWidget {
   const _TravelerAwaitingPaymentBlock();
 

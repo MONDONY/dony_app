@@ -21,6 +21,7 @@ class _MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
 
 BidModel _bid({
   required String status,
+  BidPaymentMethod paymentMethod = BidPaymentMethod.stripe,
   String? trackingNumber,
   String? confirmationCode,
   String? contentCategory,
@@ -31,6 +32,7 @@ BidModel _bid({
   String? tripCancellationId,
   String? tripCancellationRematchStatus,
 }) => BidModel(
+  paymentMethod: paymentMethod,
   id: 'bid-1',
   announcementId: 'a-1',
   senderId: 's-1',
@@ -433,6 +435,31 @@ void main() {
       expect(find.text('Voir les trajets alternatifs'), findsNothing);
     },
   );
+
+  testWidgets(
+    'sender + AWAITING_PAYMENT mobile money → invitation à payer, pas le '
+    'placeholder « en attente du voyageur »',
+    (tester) async {
+      await _pump(
+        tester,
+        _bid(
+          status: 'AWAITING_PAYMENT',
+          paymentMethod: BidPaymentMethod.mobileMoney,
+        ),
+        true,
+      );
+      expect(find.textContaining('paie par mobile money'), findsOneWidget);
+      expect(find.textContaining('En attente de confirmation'), findsNothing);
+    },
+  );
+
+  testWidgets('sender + AWAITING_PAYMENT carte → placeholder inchangé', (
+    tester,
+  ) async {
+    await _pump(tester, _bid(status: 'AWAITING_PAYMENT'), true);
+    expect(find.textContaining('En attente de confirmation'), findsOneWidget);
+    expect(find.textContaining('paie par mobile money'), findsNothing);
+  });
 
   // ── Traveler dispatch ───────────────────────────────────────────────────────
 
