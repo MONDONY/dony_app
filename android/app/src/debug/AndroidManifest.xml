@@ -4,5 +4,12 @@
     <!-- Allow cleartext HTTP in debug builds (WSL2 dev backend) -->
     <application
         android:usesCleartextTraffic="true"
-        tools:replace="android:usesCleartextTraffic" />
+        tools:replace="android:usesCleartextTraffic">
+        <!-- Impeller/Vulkan ne peint rien sur les GPU Unisoc/Mali en debug
+             (Redmi 25028RN03Y) : écran 100 % noir, process vivant. Debug
+             uniquement, la release garde Impeller. -->
+        <meta-data
+            android:name="io.flutter.embedding.android.EnableImpeller"
+            android:value="false" />
+    </application>
 </manifest>
