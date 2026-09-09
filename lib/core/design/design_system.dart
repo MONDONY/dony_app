@@ -28,6 +28,7 @@ export 'package:dony/core/design/widgets/dony_chip.dart';
 // Overlays
 export 'package:dony/core/design/widgets/dony_dialog.dart';
 export 'package:dony/core/design/widgets/dony_empty_state.dart';
+export 'package:dony/core/design/widgets/dony_expandable_choice.dart';
 // Feedback
 export 'package:dony/core/design/widgets/dony_feedback_button.dart';
 export 'package:dony/core/design/widgets/dony_field_error.dart';

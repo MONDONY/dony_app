@@ -36,7 +36,6 @@ import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
 import 'package:dony/features/payments/presentation/payment_auth.dart';
 import 'package:dony/features/payments/presentation/widgets/dony_payment_sheet.dart';
 import 'package:dony/features/payments/presentation/widgets/payment_method_names.dart';
-import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
 import 'package:dony/features/recipients/presentation/widgets/recipient_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -892,9 +891,6 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         BlocProvider<BidBloc>.value(value: _bidBloc),
         BlocProvider<PaymentBloc>.value(value: _paymentBloc),
         BlocProvider<BidPhotosCubit>.value(value: _photosCubit),
-        BlocProvider<WalletBloc>(
-          create: (_) => getIt<WalletBloc>()..add(WalletLoadRequested()),
-        ),
       ],
       // Un seul builder pour les deux signaux : le fichier utilise déjà cet
       // idiome plus bas, et deux ValueListenableBuilder imbriqués ajoutaient
@@ -1582,6 +1578,9 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   Widget _buildPickerStep(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    // Même somme que sur le bouton collant (_syncPickerButtonState) : la carte
+    // ouverte et le CTA ne doivent jamais annoncer deux montants différents.
+    final total = _computeStripeTotal();
 
     return Column(
       key: const ValueKey('picker'),
@@ -1596,54 +1595,24 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
           'Choisis le mode de paiement pour cette demande.',
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),
-        const SizedBox(height: DonySpacing.xl),
+        const SizedBox(height: DonySpacing.lg),
 
+        // Une carte par mode ; celle qu'on touche s'ouvre sur sa conséquence
+        // (montant, ce qu'il advient de l'argent, champs propres au mode).
         ValueListenableBuilder<BidPaymentMethod>(
           valueListenable: _methodNotifier,
-          builder: (context, method, _) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _PaymentMethodSelector(
-                  selectedMethod: method,
-                  onChanged: (m) => _methodNotifier.value = m,
-                  isCashAvailable: _isCashAvailable,
-                  isStripeAvailable: _isStripeAvailable,
-                  isMobileMoneyAvailable: _isMobileMoneyAvailable,
-                ),
-                if (method == BidPaymentMethod.cash) ...[
-                  const SizedBox(height: DonySpacing.sm),
-                  const _CashEscrowWarning(),
-                ],
-                if (method == BidPaymentMethod.mobileMoney) ...[
-                  const SizedBox(height: DonySpacing.sm),
-                  _PayerPhoneField(
-                    controller: _payerPhoneCtrl,
-                    hasProfilePhone: !_payerPhoneEmpty,
-                  ),
-                ],
-              ],
-            );
-          },
+          builder: (context, method, _) => _PaymentMethodSelector(
+            selectedMethod: method,
+            onChanged: (m) => _methodNotifier.value = m,
+            isCashAvailable: _isCashAvailable,
+            isStripeAvailable: _isStripeAvailable,
+            isMobileMoneyAvailable: _isMobileMoneyAvailable,
+            total: total,
+            currency: widget.announcement.currency,
+            payerPhoneController: _payerPhoneCtrl,
+            hasProfilePhone: !_payerPhoneEmpty,
+          ),
         ),
-
-        BlocBuilder<WalletBloc, WalletState>(
-          builder: (ctx, walletState) {
-            if (walletState is! WalletLoaded) {
-              return const SizedBox.shrink();
-            }
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: DonySpacing.xl),
-                _WalletTile(
-                  balance: walletState.wallet.balance,
-                  currency: widget.announcement.currency,
-                ),
-              ],
-            );
-          },
-        ).animate().fadeIn(delay: 195.ms),
 
         const SizedBox(height: DonySpacing.md),
       ],
@@ -2234,6 +2203,10 @@ class _PaymentMethodSelector extends StatelessWidget {
     this.isCashAvailable = false,
     this.isStripeAvailable = true,
     this.isMobileMoneyAvailable = false,
+    this.total,
+    this.currency,
+    this.payerPhoneController,
+    this.hasProfilePhone = true,
   });
 
   final BidPaymentMethod selectedMethod;
@@ -2242,47 +2215,60 @@ class _PaymentMethodSelector extends StatelessWidget {
   final bool isStripeAvailable;
   final bool isMobileMoneyAvailable;
 
+  /// Montant à afficher dans la carte ouverte. Absent en négociation : le
+  /// prix n'y est pas encore connu, la carte n'explique alors que le mode.
+  final double? total;
+  final String? currency;
+
+  /// Champ numéro payeur, révélé dans la carte mobile money ouverte.
+  final TextEditingController? payerPhoneController;
+  final bool hasProfilePhone;
+
   @override
   Widget build(BuildContext context) {
-    final tiles = <Widget>[
+    // Du plus immédiat au plus manuel : carte, mobile money, espèces. Les
+    // clés vivent sur les en-têtes : tests et accessibilité s'y attachent.
+    final choices = <DonyChoice<BidPaymentMethod>>[
       if (isStripeAvailable)
-        _MethodTile(
+        DonyChoice(
+          value: BidPaymentMethod.stripe,
+          title: 'Carte',
+          subtitle: 'Bloqué jusqu\'à la livraison',
+          iconAsset: 'credit-card',
           key: const Key('payment-method-stripe'),
-          iconAsset: 'lock',
-          label: 'Paiement sécurisé',
-          marks: const PaymentMethodNames(),
-          sublabel: 'Via Stripe',
-          selected: selectedMethod == BidPaymentMethod.stripe,
-          onTap: () => onChanged(BidPaymentMethod.stripe),
-        ),
-      if (isCashAvailable)
-        _MethodTile(
-          key: const Key('payment-method-cash'),
-          iconAsset: 'banknote',
-          label: 'En espèces',
-          sublabel: 'Remise directe',
-          selected: selectedMethod == BidPaymentMethod.cash,
-          onTap: () => onChanged(BidPaymentMethod.cash),
+          expanded: (context) =>
+              _CardModeContent(total: total, currency: currency),
         ),
       if (isMobileMoneyAvailable)
-        _MethodTile(
-          key: const Key('payment-method-mobile-money'),
+        DonyChoice(
+          value: BidPaymentMethod.mobileMoney,
+          title: 'Mobile money',
+          subtitle: 'Orange Money, Wave, MTN',
           iconAsset: 'smartphone',
-          label: 'Mobile money',
-          sublabel: 'Orange Money, Wave, MTN',
-          selected: selectedMethod == BidPaymentMethod.mobileMoney,
-          onTap: () => onChanged(BidPaymentMethod.mobileMoney),
+          key: const Key('payment-method-mobile-money'),
+          expanded: (context) => _MobileMoneyModeContent(
+            total: total,
+            currency: currency,
+            payerPhoneController: payerPhoneController,
+            hasProfilePhone: hasProfilePhone,
+          ),
+        ),
+      if (isCashAvailable)
+        DonyChoice(
+          value: BidPaymentMethod.cash,
+          title: 'Espèces',
+          subtitle: 'En main propre, à la remise',
+          iconAsset: 'banknote',
+          key: const Key('payment-method-cash'),
+          expanded: (context) =>
+              _CashModeContent(total: total, currency: currency),
         ),
     ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        for (int i = 0; i < tiles.length; i++) ...[
-          if (i > 0) const SizedBox(height: DonySpacing.sm),
-          tiles[i],
-        ],
-      ],
+    if (choices.isEmpty) return const SizedBox.shrink();
+    return DonyExpandableChoice<BidPaymentMethod>(
+      choices: choices,
+      value: selectedMethod,
+      onChanged: onChanged,
     );
   }
 }
@@ -2373,138 +2359,279 @@ class _PayerPhoneField extends StatelessWidget {
   }
 }
 
-class _MethodTile extends StatelessWidget {
-  const _MethodTile({
-    super.key,
-    required this.iconAsset,
-    required this.label,
-    required this.sublabel,
-    required this.selected,
-    required this.onTap,
-    this.marks,
-  });
+// ── Contenu des cartes ouvertes ────────────────────────────────────────────────
+//
+// Du contenu et des champs seulement — jamais de DonyButton ici, le CTA reste
+// dans le _StickyBottom. Le montant n'est rendu que s'il est connu (pas en
+// négociation).
 
-  final String iconAsset;
-  final String label;
-  final String sublabel;
-  final bool selected;
-  final VoidCallback onTap;
-  final Widget? marks;
+class _CardModeContent extends StatelessWidget {
+  const _CardModeContent({required this.total, required this.currency});
+
+  final double? total;
+  final String? currency;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: 150.ms,
-        padding: const EdgeInsets.all(DonySpacing.md),
-        decoration: BoxDecoration(
-          color: selected ? cs.primaryContainer : cs.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(DonyRadius.card),
-          border: Border.all(
-            color: selected ? cs.primary : cs.outline,
-            width: selected ? 2 : 1,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (total != null && currency != null) ...[
+          _ModeAmountRow(total: total!, currency: currency!, tag: 'Séquestre'),
+          const SizedBox(height: DonySpacing.sm),
+        ],
+        Text(
+          'Bloqué par Yadony dès maintenant, versé au voyageur quand le '
+          'destinataire confirme la livraison.',
+          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+        ),
+        const SizedBox(height: DonySpacing.md),
+        const PaymentMethodNames(compact: true),
+        const SizedBox(height: DonySpacing.md),
+        const _PanelAssurance(text: 'Remboursé si le colis n\'arrive pas'),
+      ],
+    );
+  }
+}
+
+class _MobileMoneyModeContent extends StatelessWidget {
+  const _MobileMoneyModeContent({
+    required this.total,
+    required this.currency,
+    required this.payerPhoneController,
+    required this.hasProfilePhone,
+  });
+
+  final double? total;
+  final String? currency;
+  final TextEditingController? payerPhoneController;
+  final bool hasProfilePhone;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (total != null && currency != null) ...[
+          _ModeAmountRow(total: total!, currency: currency!, tag: 'Séquestre'),
+          const SizedBox(height: DonySpacing.sm),
+        ],
+        Text(
+          'Après l\'accord du voyageur, tu reçois une demande de paiement '
+          'sur ton téléphone. Le montant est bloqué par Yadony jusqu\'à la '
+          'livraison.',
+          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+        ),
+        const SizedBox(height: DonySpacing.md),
+        const _OperatorChips(),
+        if (payerPhoneController != null) ...[
+          const SizedBox(height: DonySpacing.md),
+          _PayerPhoneField(
+            controller: payerPhoneController!,
+            hasProfilePhone: hasProfilePhone,
+          ),
+        ],
+        const SizedBox(height: DonySpacing.md),
+        const _PanelAssurance(text: 'Remboursé si le colis n\'arrive pas'),
+      ],
+    );
+  }
+}
+
+class _CashModeContent extends StatelessWidget {
+  const _CashModeContent({required this.total, required this.currency});
+
+  final double? total;
+  final String? currency;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (total != null && currency != null) ...[
+          _ModeAmountRow(
+            total: total!,
+            currency: currency!,
+            tag: 'En main propre',
+            amber: true,
+          ),
+          const SizedBox(height: DonySpacing.sm),
+        ],
+        Text(
+          'Tu remets la somme au voyageur le jour où tu lui confies le colis.',
+          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+        ),
+        const SizedBox(height: DonySpacing.md),
+        // L'avertissement (D5) en encart ambré, dans la carte, jamais détaché.
+        Container(
+          padding: const EdgeInsets.all(DonySpacing.md),
+          decoration: BoxDecoration(
+            color: cs.warning.withValues(alpha: 0.10),
+            borderRadius: BorderRadius.circular(DonyRadius.md),
+          ),
+          child: const _CashEscrowWarning(),
+        ),
+      ],
+    );
+  }
+}
+
+/// Montant en grand, et un tag qui dit l'essentiel en un mot : « Séquestre »
+/// (l'argent est bloqué chez Yadony) ou « En main propre ».
+class _ModeAmountRow extends StatelessWidget {
+  const _ModeAmountRow({
+    required this.total,
+    required this.currency,
+    required this.tag,
+    this.amber = false,
+  });
+
+  final double total;
+  final String currency;
+  final String tag;
+  final bool amber;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final tagColor = amber ? cs.warning : cs.primary;
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            formatPriceIn(total, currency),
+            key: const Key('payment-panel-amount'),
+            style: tt.headlineLarge?.copyWith(
+              fontSize: 26,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.4,
+              color: cs.primary,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
           ),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            DonyIcon(
-              iconAsset,
-              color: selected ? cs.primary : cs.onSurfaceVariant,
-              size: 20,
+        const SizedBox(width: DonySpacing.sm),
+        Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: DonySpacing.sm + 1,
+            vertical: DonySpacing.xs,
+          ),
+          decoration: BoxDecoration(
+            color: tagColor.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(DonyRadius.full),
+          ),
+          child: Text(
+            tag.toUpperCase(),
+            style: tt.labelSmall?.copyWith(
+              color: tagColor,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.6,
             ),
-            const SizedBox(height: DonySpacing.xs),
-            Text(
-              label,
-              style: tt.labelMedium?.copyWith(
-                color: selected ? cs.onPrimaryContainer : cs.onSurface,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            if (marks != null) ...[
-              const SizedBox(height: DonySpacing.xs),
-              marks!,
-            ],
-            Text(
-              sublabel,
-              style: tt.bodySmall?.copyWith(
-                color: selected ? cs.onPrimaryContainer : cs.onSurfaceVariant,
-              ),
-            ),
-          ],
+          ),
         ),
+      ],
+    );
+  }
+}
+
+// Couleurs de marque des opérateurs (comme _payPalGold dans la feuille de
+// paiement) : reconnues avant d'être lues, jamais sémantiques.
+const _orangeMoneyBrand = Color(0xFFFF7900);
+const _waveBrand = Color(0xFF1DC3F5);
+const _mtnBrand = Color(0xFFFFCC00);
+
+class _OperatorChips extends StatelessWidget {
+  const _OperatorChips();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Wrap(
+      spacing: DonySpacing.xs + 2,
+      runSpacing: DonySpacing.xs + 2,
+      children: [
+        _OperatorChip(label: 'Orange Money', brand: _orangeMoneyBrand),
+        _OperatorChip(label: 'Wave', brand: _waveBrand),
+        _OperatorChip(label: 'MTN', brand: _mtnBrand),
+      ],
+    );
+  }
+}
+
+class _OperatorChip extends StatelessWidget {
+  const _OperatorChip({required this.label, required this.brand});
+
+  final String label;
+  final Color brand;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(
+        DonySpacing.xs + 2,
+        DonySpacing.xs + 1,
+        DonySpacing.sm + 2,
+        DonySpacing.xs + 1,
+      ),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(DonyRadius.full),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 14,
+            height: 14,
+            decoration: BoxDecoration(shape: BoxShape.circle, color: brand),
+          ),
+          const SizedBox(width: DonySpacing.xs + 2),
+          Text(
+            label,
+            style: tt.labelMedium?.copyWith(
+              color: cs.onSurface,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0,
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-// ── Wallet tile ────────────────────────────────────────────────────────────────
+class _PanelAssurance extends StatelessWidget {
+  const _PanelAssurance({required this.text});
 
-class _WalletTile extends StatelessWidget {
-  const _WalletTile({required this.balance, required this.currency});
-
-  final double balance;
-  final String currency;
+  final String text;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final hasBalance = balance > 0;
-
-    return GestureDetector(
-      onTap: hasBalance ? null : () => context.push('/payments/wallet'),
-      child: AnimatedContainer(
-        duration: 150.ms,
-        width: double.infinity,
-        padding: const EdgeInsets.all(DonySpacing.md),
-        decoration: BoxDecoration(
-          color: hasBalance
-              ? cs.surfaceContainerLow
-              : cs.surfaceContainerLow.withValues(alpha: 0.5),
-          borderRadius: BorderRadius.circular(DonyRadius.card),
-          border: Border.all(
-            color: hasBalance ? cs.outline : cs.outlineVariant,
+    return Row(
+      children: [
+        DonyIcon('shield-check', size: 14, color: cs.success),
+        const SizedBox(width: DonySpacing.xs),
+        Expanded(
+          child: Text(
+            text,
+            style: tt.bodySmall?.copyWith(
+              color: cs.success,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
-        child: Row(
-          children: [
-            DonyIcon(
-              'wallet',
-              color: hasBalance ? cs.primary : cs.onSurfaceVariant,
-              size: 20,
-            ),
-            const SizedBox(width: DonySpacing.sm),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Compte Yadony',
-                    style: tt.labelMedium?.copyWith(
-                      color: cs.onSurface,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  Text(
-                    hasBalance
-                        ? 'Solde disponible : ${formatPriceIn(balance, currency)}'
-                        : 'Solde insuffisant · Recharger',
-                    style: tt.bodySmall?.copyWith(
-                      color: hasBalance ? cs.primary : cs.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (!hasBalance)
-              DonyIcon('chevron-right', color: cs.onSurfaceVariant, size: 20),
-          ],
-        ),
-      ),
+      ],
     );
   }
 }
