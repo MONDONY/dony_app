@@ -1,5 +1,10 @@
+import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_event.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_bloc.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_event.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_state.dart';
@@ -12,6 +17,29 @@ import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 class _MockBloc extends Mock implements MobileMoneyAccountBloc {}
+
+class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
+    implements AuthBloc {}
+
+/// [phoneNumber] nul ou vide simule un compte Firebase sans téléphone
+/// (vérification SMS pas encore configurée).
+AuthBloc _authBlocWithPhone(String? phoneNumber) {
+  final authBloc = _MockAuthBloc();
+  whenListen(
+    authBloc,
+    const Stream<AuthState>.empty(),
+    initialState: AuthAuthenticated(
+      UserModel(
+        id: 'u1',
+        roles: const [],
+        kycStatus: 'VERIFIED',
+        status: 'ACTIVE',
+        phoneNumber: phoneNumber,
+      ),
+    ),
+  );
+  return authBloc;
+}
 
 void main() {
   late _MockBloc bloc;
@@ -52,7 +80,16 @@ void main() {
 
   /// [settle] reste faux tant qu'un CircularProgressIndicator tourne : son
   /// animation ne s'arrête jamais et ferait expirer pumpAndSettle.
-  Future<void> pumpScreen(WidgetTester tester, {bool settle = true}) async {
+  ///
+  /// [authBloc] optionnel : la plupart des tests vérifient justement que
+  /// l'écran survit à son absence (`ProviderNotFoundException` rattrapée,
+  /// comportement historique conservé — voir `_NotConfiguredView`). Seul le
+  /// groupe « numéro de versement manquant » le fournit.
+  Future<void> pumpScreen(
+    WidgetTester tester, {
+    bool settle = true,
+    AuthBloc? authBloc,
+  }) async {
     final router = GoRouter(
       routes: [
         GoRoute(
@@ -64,7 +101,12 @@ void main() {
         ),
       ],
     );
-    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    final app = MaterialApp.router(routerConfig: router);
+    await tester.pumpWidget(
+      authBloc == null
+          ? app
+          : BlocProvider<AuthBloc>.value(value: authBloc, child: app),
+    );
     if (settle) {
       await tester.pumpAndSettle();
     } else {
@@ -136,6 +178,129 @@ void main() {
         () => bloc.add(const MobileMoneyAccountActivateRequested()),
       ).called(1);
     });
+  });
+
+  // Le compte Firebase peut n'avoir aucun téléphone tant que la vérification
+  // SMS (Twilio) n'est pas configurée : dans ce cas seulement, l'app demande
+  // le numéro de versement avant d'activer.
+  group('Vue non configurée — numéro de versement manquant', () {
+    testWidgets(
+      'utilisateur connecté sans numéro → formulaire de saisie au lieu de '
+      'la carte, bouton inactif tant que rien n\'est saisi',
+      (tester) async {
+        stub(const MobileMoneyAccountLoaded(notConfiguredAccount));
+
+        await pumpScreen(tester, authBloc: _authBlocWithPhone(null));
+
+        expect(find.text('Numéro qui recevra tes versements'), findsOneWidget);
+        expect(find.text('Confirme le numéro'), findsOneWidget);
+        expect(
+          find.textContaining("n'a pas de numéro de téléphone"),
+          findsOneWidget,
+        );
+        // La carte historique (numéro Yadony auto) a bien disparu.
+        expect(
+          find.textContaining('devient ton compte de versement'),
+          findsNothing,
+        );
+
+        final button = tester.widget<DonyButton>(find.byType(DonyButton));
+        expect(button.onPressed, isNull);
+      },
+    );
+
+    testWidgets('numéro vide côté profil (chaîne vide, pas seulement nul) → '
+        'formulaire affiché aussi', (tester) async {
+      stub(const MobileMoneyAccountLoaded(notConfiguredAccount));
+
+      await pumpScreen(tester, authBloc: _authBlocWithPhone(''));
+
+      expect(find.text('Numéro qui recevra tes versements'), findsOneWidget);
+    });
+
+    testWidgets(
+      'les deux saisies doivent coïncider (normalisées) pour activer le '
+      'bouton, qui envoie alors le numéro normalisé',
+      (tester) async {
+        stub(const MobileMoneyAccountLoaded(notConfiguredAccount));
+
+        await pumpScreen(tester, authBloc: _authBlocWithPhone(null));
+
+        await tester.enterText(
+          find.byKey(const Key('payout-phone-field')),
+          '+221 77 345 67 89',
+        );
+        await tester.pump();
+        // Saisies différentes : le bouton reste inactif.
+        await tester.enterText(
+          find.byKey(const Key('payout-phone-confirm-field')),
+          '+221 77 345 67 88',
+        );
+        await tester.pump();
+
+        var button = tester.widget<DonyButton>(find.byType(DonyButton));
+        expect(button.onPressed, isNull);
+
+        // Même numéro, écrit avec des espaces différents : la normalisation
+        // les fait coïncider.
+        await tester.enterText(
+          find.byKey(const Key('payout-phone-confirm-field')),
+          '+221773456789',
+        );
+        await tester.pump();
+
+        button = tester.widget<DonyButton>(find.byType(DonyButton));
+        expect(button.onPressed, isNotNull);
+
+        await tester.tap(find.text('Activer le versement mobile money'));
+        await tester.pump();
+
+        verify(
+          () => bloc.add(
+            const MobileMoneyAccountActivateRequested(
+              phoneNumber: '+221773456789',
+            ),
+          ),
+        ).called(1);
+      },
+    );
+
+    testWidgets(
+      'état PhoneRequired → formulaire affiché même si le profil semble '
+      'avoir un numéro (le backend fait autorité)',
+      (tester) async {
+        stub(const MobileMoneyAccountPhoneRequired(notConfiguredAccount));
+
+        await pumpScreen(tester, authBloc: _authBlocWithPhone('+221770000000'));
+
+        expect(find.text('Numéro qui recevra tes versements'), findsOneWidget);
+        // Jamais de snackbar pour ce cas : ce n'est pas une MobileMoneyAccountError.
+        expect(find.byType(SnackBar), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'utilisateur connecté avec un numéro → vue classique inchangée, pas '
+      'de formulaire, activation sans numéro',
+      (tester) async {
+        stub(const MobileMoneyAccountLoaded(notConfiguredAccount));
+
+        await pumpScreen(tester, authBloc: _authBlocWithPhone('+221771234567'));
+
+        expect(
+          find.textContaining('devient ton compte de versement'),
+          findsOneWidget,
+        );
+        expect(find.text('Numéro qui recevra tes versements'), findsNothing);
+
+        await tester.tap(find.text('Activer le versement mobile money'));
+        await tester.pump();
+
+        verify(
+          () => bloc.add(const MobileMoneyAccountActivateRequested()),
+        ).called(1);
+      },
+    );
   });
 
   group('Vue active', () {

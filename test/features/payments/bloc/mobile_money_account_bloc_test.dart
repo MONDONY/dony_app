@@ -198,6 +198,69 @@ void main() {
         );
       },
     );
+
+    // ── Numéro de versement (compte Firebase sans téléphone) ──────────────
+
+    blocTest<MobileMoneyAccountBloc, MobileMoneyAccountState>(
+      'un numéro fourni dans l\'event est transmis tel quel au repository',
+      build: () {
+        when(
+          () => repository.activate(phoneNumber: any(named: 'phoneNumber')),
+        ).thenAnswer((_) async => active);
+        return bloc();
+      },
+      act: (b) => b.add(
+        const MobileMoneyAccountActivateRequested(phoneNumber: '+221773456789'),
+      ),
+      verify: (_) {
+        verify(
+          () => repository.activate(phoneNumber: '+221773456789'),
+        ).called(1);
+      },
+    );
+
+    blocTest<MobileMoneyAccountBloc, MobileMoneyAccountState>(
+      '422 mobile-money-phone-required : émet PhoneRequired (jamais Error), '
+      'compte courant conservé, sans appel analytics',
+      build: () {
+        when(() => repository.activate()).thenThrow(
+          const ValidationException(
+            'Aucun numéro de téléphone disponible',
+            code: 'mobile-money-phone-required',
+          ),
+        );
+        return bloc();
+      },
+      act: (b) => b.add(const MobileMoneyAccountActivateRequested()),
+      expect: () => [
+        const MobileMoneyAccountUpdating(notConfigured),
+        const MobileMoneyAccountPhoneRequired(notConfigured),
+      ],
+      verify: (_) {
+        verifyNever(
+          () => analytics.logEvent(any(), properties: any(named: 'properties')),
+        );
+      },
+    );
+
+    blocTest<MobileMoneyAccountBloc, MobileMoneyAccountState>(
+      'un PhoneRequired précédent sert de compte courant pour la nouvelle '
+      'tentative (avec numéro cette fois)',
+      build: () {
+        when(
+          () => repository.activate(phoneNumber: any(named: 'phoneNumber')),
+        ).thenAnswer((_) async => active);
+        return bloc();
+      },
+      seed: () => const MobileMoneyAccountPhoneRequired(notConfigured),
+      act: (b) => b.add(
+        const MobileMoneyAccountActivateRequested(phoneNumber: '+221773456789'),
+      ),
+      expect: () => [
+        const MobileMoneyAccountUpdating(notConfigured),
+        const MobileMoneyAccountLoaded(active),
+      ],
+    );
   });
 
   group('MobileMoneyAccountDisableRequested', () {

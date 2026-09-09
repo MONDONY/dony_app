@@ -499,9 +499,61 @@ void main() {
       expect(find.byKey(const Key('payer-phone-field')), findsNothing);
     });
 
-    testWidgets('tap sur la tuile mobile money → champ numéro apparaît', (
-      tester,
-    ) async {
+    testWidgets(
+      // Ce harnais ne fournit pas d'AuthBloc : _initialPayerPhone() est donc
+      // vide (ProviderNotFoundException rattrapée), exactement comme un
+      // compte Yadony sans numéro de téléphone (vérification SMS pas encore
+      // configurée) — l'aide doit refléter l'absence de pré-remplissage.
+      'tap sur la tuile mobile money, sans numéro disponible → champ '
+      'numéro apparaît avec l\'aide "aucun numéro"',
+      (tester) async {
+        await _openSheet(
+          tester,
+          _announcement(
+            methods: const {
+              BidPaymentMethod.stripe,
+              BidPaymentMethod.mobileMoney,
+            },
+          ),
+        );
+        await _goToPaymentPicker(tester);
+
+        await tester.tap(find.byKey(const Key('payment-method-mobile-money')));
+        await tester.pump();
+
+        expect(find.byKey(const Key('payer-phone-field')), findsOneWidget);
+        expect(find.text('Numéro qui paiera (facultatif)'), findsOneWidget);
+        expect(
+          find.textContaining(
+            "Ton compte n'a pas de numéro : indique celui qui paiera. Tu "
+            'recevras la demande de paiement dessus.',
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.textContaining('Par défaut, ton numéro Yadony'),
+          findsNothing,
+        );
+      },
+    );
+
+    testWidgets('tap sur la tuile mobile money, AuthBloc avec un numéro → aide '
+        '"Par défaut, ton numéro Yadony"', (tester) async {
+      final authBloc = _MockAuthBloc();
+      whenListen(
+        authBloc,
+        const Stream<AuthState>.empty(),
+        initialState: const AuthAuthenticated(
+          UserModel(
+            id: 'u1',
+            roles: [],
+            kycStatus: 'VERIFIED',
+            status: 'ACTIVE',
+            phoneNumber: '+221771234567',
+          ),
+        ),
+      );
+
       await _openSheet(
         tester,
         _announcement(
@@ -510,6 +562,7 @@ void main() {
             BidPaymentMethod.mobileMoney,
           },
         ),
+        authBloc: authBloc,
       );
       await _goToPaymentPicker(tester);
 
@@ -517,7 +570,6 @@ void main() {
       await tester.pump();
 
       expect(find.byKey(const Key('payer-phone-field')), findsOneWidget);
-      expect(find.text('Numéro qui paiera (facultatif)'), findsOneWidget);
       expect(
         find.textContaining(
           'Par défaut, ton numéro Yadony. Tu recevras la demande de '
@@ -525,6 +577,7 @@ void main() {
         ),
         findsOneWidget,
       );
+      expect(find.textContaining("Ton compte n'a pas de numéro"), findsNothing);
     });
 
     testWidgets('retour à STRIPE après mobile money → champ numéro disparaît', (

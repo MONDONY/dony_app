@@ -569,4 +569,84 @@ void main() {
       },
     );
   });
+
+  // Le compte Firebase de l'expéditeur peut n'avoir aucun téléphone tant que
+  // la vérification SMS (Twilio) n'est pas configurée : le backend renvoie
+  // alors ce code sur l'initiation, sans numéro de repli possible (contraire
+  // au groupe DepositFailed, où le numéro reste facultatif).
+  group('Error — numéro manquant (mobile-money-phone-required)', () {
+    testWidgets(
+      'corps dédié avec champ numéro ; bouton inactif sans numéro valide, '
+      'relance avec le numéro normalisé sinon',
+      (tester) async {
+        stub(
+          const MobileMoneyPaymentError(
+            ValidationException(
+              'Aucun numéro disponible',
+              code: 'mobile-money-phone-required',
+            ),
+          ),
+        );
+
+        await pumpScreen(tester);
+
+        expect(
+          find.text(
+            "Ton compte Yadony n'a pas de numéro de téléphone : indique "
+            'le numéro mobile money qui paiera.',
+          ),
+          findsOneWidget,
+        );
+        // Le DonyEmptyState générique n'apparaît pas pour ce cas dédié.
+        expect(find.text('Une erreur est survenue'), findsNothing);
+
+        final button = tester.widget<DonyButton>(find.byType(DonyButton));
+        expect(button.onPressed, isNull);
+
+        await tester.enterText(
+          find.byKey(const Key('mobile-money-phone-required-field')),
+          '+221 77 345 67 89',
+        );
+        await tester.pump();
+
+        final buttonAfter = tester.widget<DonyButton>(find.byType(DonyButton));
+        expect(buttonAfter.onPressed, isNotNull);
+
+        await tester.tap(find.text('Réessayer'));
+        await tester.pump();
+
+        verify(
+          () => bloc.add(
+            const MobileMoneyPaymentInitiateRequested(
+              bidId: bidId,
+              phoneNumber: '+221773456789',
+            ),
+          ),
+        ).called(1);
+      },
+    );
+
+    testWidgets(
+      'un autre code métier (mobile-money-disabled) garde le DonyEmptyState '
+      'générique, jamais le corps dédié',
+      (tester) async {
+        stub(
+          const MobileMoneyPaymentError(
+            ValidationException(
+              'Le mobile money est désactivé pour ce pays',
+              code: 'mobile-money-disabled',
+            ),
+          ),
+        );
+
+        await pumpScreen(tester);
+
+        expect(find.text('Une erreur est survenue'), findsOneWidget);
+        expect(
+          find.byKey(const Key('mobile-money-phone-required-field')),
+          findsNothing,
+        );
+      },
+    );
+  });
 }

@@ -8,7 +8,14 @@ class MobileMoneyAccountRepository {
 
   Future<MobileMoneyAccount> get() => _datasource.get();
 
-  Future<MobileMoneyAccount> activate() => _datasource.activate();
+  /// Voir [MobileMoneyAccountRemoteDatasource.activate] pour [phoneNumber].
+  /// Le repli sans argument (plutôt que `phoneNumber: null`) évite d'envoyer
+  /// un named argument explicite au datasource quand il n'y a rien à
+  /// transmettre.
+  Future<MobileMoneyAccount> activate({String? phoneNumber}) =>
+      phoneNumber != null
+      ? _datasource.activate(phoneNumber: phoneNumber)
+      : _datasource.activate();
 
   Future<MobileMoneyAccount> disable() => _datasource.disable();
 }

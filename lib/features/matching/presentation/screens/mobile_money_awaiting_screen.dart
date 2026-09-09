@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/services/analytics_events.dart';
@@ -109,6 +110,12 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
     _remaining.value = diff.isNegative ? Duration.zero : diff;
   }
 
+  /// Vrai quand [error] signale l'absence de numéro côté expéditeur (compte
+  /// Firebase sans téléphone) : ce cas bascule sur [_PhoneRequiredBody] au
+  /// lieu du `DonyEmptyState` générique.
+  static bool _isPhoneRequired(Object error) =>
+      error is AppException && error.code == 'mobile-money-phone-required';
+
   void _retry(String rawPhone) {
     context.read<MobileMoneyPaymentBloc>().add(
       MobileMoneyPaymentInitiateRequested(
@@ -192,6 +199,14 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
               onBack: () => context.pop(false),
             ),
             MobileMoneyPaymentEscrowed() => const _EscrowedBody(),
+            // Aucun numéro disponible pour payer (compte Firebase de
+            // l'expéditeur sans téléphone) : corps dédié avec saisie
+            // obligatoire, plutôt que le DonyEmptyState générique.
+            final MobileMoneyPaymentError e when _isPhoneRequired(e.error) =>
+              _PhoneRequiredBody(
+                phoneController: _retryPhoneController,
+                onRetry: () => _retry(_retryPhoneController.text),
+              ),
             MobileMoneyPaymentError() => DonyEmptyState(
               type: DonyEmptyStateType.error,
               title: 'Une erreur est survenue',
@@ -403,6 +418,62 @@ class _FailedBody extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.base),
           DonyButton(label: 'Réessayer', onPressed: onRetry),
+        ],
+      ),
+    );
+  }
+}
+
+/// Aucun numéro disponible pour payer (compte Firebase de l'expéditeur sans
+/// téléphone, vérification SMS Twilio pas encore configurée) : contrairement
+/// à [_FailedBody], le numéro est ici obligatoire (rien à quoi se replier
+/// côté backend), donc la relance reste désactivée tant qu'aucun numéro
+/// valide n'est saisi. Pas de `setState` : `ListenableBuilder` s'abonne
+/// directement au [TextEditingController], déjà un `Listenable`.
+class _PhoneRequiredBody extends StatelessWidget {
+  const _PhoneRequiredBody({
+    required this.phoneController,
+    required this.onRetry,
+  });
+
+  final TextEditingController phoneController;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(DonySpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(child: DonyIcon('smartphone', color: cs.primary, size: 48)),
+          const SizedBox(height: DonySpacing.base),
+          Text(
+            "Ton compte Yadony n'a pas de numéro de téléphone : indique le "
+            'numéro mobile money qui paiera.',
+            textAlign: TextAlign.center,
+            style: tt.bodyMedium,
+          ),
+          const SizedBox(height: DonySpacing.xl),
+          DonyTextField(
+            key: const Key('mobile-money-phone-required-field'),
+            controller: phoneController,
+            label: 'Numéro qui paiera',
+            keyboardType: TextInputType.phone,
+          ),
+          const SizedBox(height: DonySpacing.base),
+          ListenableBuilder(
+            listenable: phoneController,
+            builder: (context, _) => DonyButton(
+              label: 'Réessayer',
+              onPressed: normalizePayerPhone(phoneController.text) == null
+                  ? null
+                  : onRetry,
+            ),
+          ),
         ],
       ),
     );

@@ -37,6 +37,22 @@ class MobileMoneyAccountUpdating extends MobileMoneyAccountState {
   List<Object?> get props => [account];
 }
 
+/// Activation refusée par le backend faute de numéro disponible (compte
+/// Firebase sans téléphone, et aucun `phoneNumber` fourni dans l'event) :
+/// distinct de [MobileMoneyAccountError] pour que l'écran affiche un
+/// formulaire de saisie plutôt qu'une snackbar d'erreur.
+class MobileMoneyAccountPhoneRequired extends MobileMoneyAccountState {
+  const MobileMoneyAccountPhoneRequired(this.account);
+
+  /// Dernier compte connu (ou le compte par défaut non configuré),
+  /// conservé pour que l'écran reste affichable pendant que l'utilisateur
+  /// saisit son numéro.
+  final MobileMoneyAccount account;
+
+  @override
+  List<Object?> get props => [account];
+}
+
 class MobileMoneyAccountError extends MobileMoneyAccountState {
   const MobileMoneyAccountError(this.error, {this.account});
 

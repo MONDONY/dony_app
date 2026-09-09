@@ -92,6 +92,38 @@ void main() {
 
       expect(datasource.activate(), throwsA(isA<DioException>()));
     });
+
+    // Tâche numéro de versement : le compte Firebase peut n'avoir aucun
+    // téléphone (SMS Twilio pas encore configuré) — l'app fournit alors le
+    // numéro saisi par le voyageur dans le corps de la requête.
+    test('avec un numéro : POST avec le corps {phoneNumber} et renvoie le '
+        'compte activé', () async {
+      final activated = {...accountJson, 'status': 'ACTIVE'};
+      when(
+        () => mockDio.post(_path, data: {'phoneNumber': '+221773456789'}),
+      ).thenAnswer((_) async => _ok(activated, _path));
+
+      final result = await datasource.activate(phoneNumber: '+221773456789');
+
+      expect(result.status, MobileMoneyAccountStatus.active);
+      verify(
+        () => mockDio.post(_path, data: {'phoneNumber': '+221773456789'}),
+      ).called(1);
+    });
+
+    test(
+      'phoneNumber nul : aucun corps envoyé (comportement historique)',
+      () async {
+        when(
+          () => mockDio.post(_path),
+        ).thenAnswer((_) async => _ok(accountJson, _path));
+
+        await datasource.activate();
+
+        verify(() => mockDio.post(_path)).called(1);
+        verifyNever(() => mockDio.post(_path, data: any(named: 'data')));
+      },
+    );
   });
 
   group('disable', () {

@@ -53,11 +53,12 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.flag_outlined,
     ),
+    // Le message ne présume plus d'un profil à compléter : l'app propose
+    // maintenant la saisie du numéro directement dans le flux (formulaire de
+    // versement, relance de paiement) plutôt que de renvoyer vers le profil.
     'mobile-money-phone-required': ErrorPresentation(
-      title: 'Numéro introuvable',
-      message:
-          'Aucun numéro de téléphone n\'est associé à ton compte '
-          'Yadony. Ajoute-le dans ton profil.',
+      title: 'Numéro manquant',
+      message: 'Indique le numéro mobile money à utiliser pour continuer.',
       severity: ErrorSeverity.warning,
       icon: Icons.flag_outlined,
     ),

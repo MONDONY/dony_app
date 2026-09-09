@@ -13,8 +13,18 @@ class MobileMoneyAccountRequested extends MobileMoneyAccountEvent {
 }
 
 /// Active (ou réactive) le versement mobile money pour le voyageur connecté.
+///
+/// [phoneNumber] : numéro saisi par le voyageur, transmis seulement quand
+/// son compte Firebase n'a pas de téléphone (vérification SMS pas encore
+/// configurée) — voir `MobileMoneyAccountPhoneRequired`. Le backend ignore
+/// ce champ si le compte a déjà un numéro vérifié.
 class MobileMoneyAccountActivateRequested extends MobileMoneyAccountEvent {
-  const MobileMoneyAccountActivateRequested();
+  const MobileMoneyAccountActivateRequested({this.phoneNumber});
+
+  final String? phoneNumber;
+
+  @override
+  List<Object?> get props => [phoneNumber];
 }
 
 /// Désactive le versement mobile money pour le voyageur connecté.

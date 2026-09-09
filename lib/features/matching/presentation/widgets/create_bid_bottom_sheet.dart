@@ -169,6 +169,12 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   /// effaçable par l'expéditeur, jamais requis pour soumettre.
   late final TextEditingController _payerPhoneCtrl;
 
+  /// Vrai quand [_initialPayerPhone] est vide (compte Yadony sans numéro de
+  /// téléphone, vérification SMS pas encore configurée) : fait basculer le
+  /// texte d'aide de [_PayerPhoneField], qui ne peut plus affirmer un
+  /// pré-remplissage qui n'a pas eu lieu.
+  late final bool _payerPhoneEmpty;
+
   // ── Form step fields ────────────────────────────────────────────────────────
   final _descCtrl = TextEditingController();
   final _recipientNameCtrl = TextEditingController();
@@ -308,7 +314,9 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                 ? BidPaymentMethod.cash
                 : BidPaymentMethod.mobileMoney),
     );
-    _payerPhoneCtrl = TextEditingController(text: _initialPayerPhone());
+    final initialPayerPhone = _initialPayerPhone();
+    _payerPhoneEmpty = initialPayerPhone.isEmpty;
+    _payerPhoneCtrl = TextEditingController(text: initialPayerPhone);
 
     // Toujours 0 au départ, y compris en tarification kilo pure : la
     // grille et le kilo-libre partent aussi de 0 désormais. Sur un trajet
@@ -1609,7 +1617,10 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                 ],
                 if (method == BidPaymentMethod.mobileMoney) ...[
                   const SizedBox(height: DonySpacing.sm),
-                  _PayerPhoneField(controller: _payerPhoneCtrl),
+                  _PayerPhoneField(
+                    controller: _payerPhoneCtrl,
+                    hasProfilePhone: !_payerPhoneEmpty,
+                  ),
                 ],
               ],
             );
@@ -2313,9 +2324,17 @@ class _CashEscrowWarning extends StatelessWidget {
 // et un texte d'aide, jamais de DonyButton ici — reste dans le `child`
 // scrollable du picker, jamais dans le _StickyBottom.
 class _PayerPhoneField extends StatelessWidget {
-  const _PayerPhoneField({required this.controller});
+  const _PayerPhoneField({
+    required this.controller,
+    required this.hasProfilePhone,
+  });
 
   final TextEditingController controller;
+
+  /// Faux quand `_initialPayerPhone()` était vide (compte Yadony sans
+  /// numéro de téléphone) : le texte d'aide ne peut alors plus affirmer un
+  /// pré-remplissage qui n'a pas eu lieu.
+  final bool hasProfilePhone;
 
   @override
   Widget build(BuildContext context) {
@@ -2338,8 +2357,12 @@ class _PayerPhoneField extends StatelessWidget {
             const SizedBox(width: DonySpacing.xs),
             Expanded(
               child: Text(
-                'Par défaut, ton numéro Yadony. Tu recevras la demande de '
-                'paiement sur ce numéro.',
+                hasProfilePhone
+                    ? 'Par défaut, ton numéro Yadony. Tu recevras la '
+                          'demande de paiement sur ce numéro.'
+                    : "Ton compte n'a pas de numéro : indique celui qui "
+                          'paiera. Tu recevras la demande de paiement '
+                          'dessus.',
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
             ),

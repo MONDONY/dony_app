@@ -53,6 +53,20 @@ void main() {
       verify(() => mockDs.activate()).called(1);
     });
 
+    test(
+      'activate avec un numéro délègue à datasource.activate(phoneNumber:)',
+      () async {
+        when(
+          () => mockDs.activate(phoneNumber: '+221771234567'),
+        ).thenAnswer((_) async => activeAccount);
+
+        final result = await repository.activate(phoneNumber: '+221771234567');
+
+        expect(result, activeAccount);
+        verify(() => mockDs.activate(phoneNumber: '+221771234567')).called(1);
+      },
+    );
+
     test('disable délègue à datasource.disable()', () async {
       when(() => mockDs.disable()).thenAnswer((_) async => disabledAccount);
 

@@ -41,6 +41,7 @@ class MobileMoneyAccountBloc
       MobileMoneyAccountLoaded() => s.account,
       MobileMoneyAccountUpdating() => s.account,
       MobileMoneyAccountError() => s.account,
+      MobileMoneyAccountPhoneRequired() => s.account,
       _ => null,
     };
   }
@@ -65,7 +66,9 @@ class MobileMoneyAccountBloc
     final base = _currentAccount ?? _fallbackAccount;
     emit(MobileMoneyAccountUpdating(base));
     try {
-      final account = await _repository.activate();
+      final account = await _repository.activate(
+        phoneNumber: event.phoneNumber,
+      );
       emit(MobileMoneyAccountLoaded(account));
       unawaited(
         _analytics.logEvent(
@@ -77,7 +80,15 @@ class MobileMoneyAccountBloc
         ),
       );
     } catch (e) {
-      emit(MobileMoneyAccountError(unwrapDioError(e), account: base));
+      final error = unwrapDioError(e);
+      // Aucun numéro disponible (compte Firebase sans téléphone, rien fourni
+      // dans l'event) : un formulaire de saisie, jamais une snackbar
+      // d'erreur — voir MobileMoneyAccountScreen.
+      if (error.code == 'mobile-money-phone-required') {
+        emit(MobileMoneyAccountPhoneRequired(base));
+      } else {
+        emit(MobileMoneyAccountError(error, account: base));
+      }
     }
   }
 

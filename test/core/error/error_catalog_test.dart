@@ -390,9 +390,8 @@ void main() {
             'Choisis un autre moyen de paiement.',
       ],
       'mobile-money-phone-required': [
-        'Numéro introuvable',
-        "Aucun numéro de téléphone n'est associé à ton compte Yadony. "
-            'Ajoute-le dans ton profil.',
+        'Numéro manquant',
+        'Indique le numéro mobile money à utiliser pour continuer.',
       ],
       'mobile-money-account-unsupported': [
         'Numéro non pris en charge',

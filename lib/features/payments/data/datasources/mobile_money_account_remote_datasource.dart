@@ -13,8 +13,18 @@ class MobileMoneyAccountRemoteDatasource {
     return MobileMoneyAccount.fromJson(response.data as Map<String, dynamic>);
   }
 
-  Future<MobileMoneyAccount> activate() async {
-    final response = await _client.dio.post('/payments/mobile-money/account');
+  /// [phoneNumber] : numéro mobile money saisi par le voyageur, à envoyer
+  /// seulement quand son compte Firebase n'a pas de téléphone (vérification
+  /// SMS Twilio pas encore configurée). Le backend l'ignore si le compte a
+  /// déjà un numéro vérifié — aucun corps n'est envoyé quand il est nul, pour
+  /// ne rien changer au comportement historique.
+  Future<MobileMoneyAccount> activate({String? phoneNumber}) async {
+    final response = phoneNumber != null
+        ? await _client.dio.post(
+            '/payments/mobile-money/account',
+            data: {'phoneNumber': phoneNumber},
+          )
+        : await _client.dio.post('/payments/mobile-money/account');
     return MobileMoneyAccount.fromJson(response.data as Map<String, dynamic>);
   }
 
