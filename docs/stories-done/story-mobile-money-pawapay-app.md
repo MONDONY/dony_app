@@ -114,6 +114,32 @@ Plan (13 tâches) : `docs/superpowers/plans/2026-09-08-mobile-money-pawapay-app.
 - Couverture globale : 82,3 % de lignes (plancher CI 78 %, cible projet 90 %). Fichiers nouveaux du chantier : 100 % (modèles, datasources, repositories, blocs, écran du compte, résolveur de lien profond, `payer_phone`, `bid_accept_dispatch`, `paiement_card`) ; `mobile_money_awaiting_screen` 95 %, `sender_sticky_bar` 96 %, `create_bid_bottom_sheet` 93 %, `prix_conditions_step` 99,8 %. Les fichiers préexistants restés sous 90 % (`create_trip_screen` 83 %, `bid_detail_action_bars` 63 % dont `SenderActionBar` inutilisé, `bid_detail_screen` 35 %) le sont sur du code antérieur au chantier.
 - Tests ajoutés ou réécrits : `bid_model_test`, `mobile_money_payment_status_test`, `mobile_money_account_test`, datasources et repositories mobile money, `mobile_money_account_bloc_test`, `mobile_money_payment_bloc_test`, `bid_bloc_test`, `announcement_form_bloc_test`, `error_catalog_test`, `mobile_money_account_screen_test`, `prix_conditions_step_mobile_money_test`, `create_trip_screen_test`, `create_bid_bottom_sheet_mobile_money_test`, `payer_phone_test`, `traveler_announcement_bottom_sheet_test`, `sender_sticky_bar_test` et `_mobile_money_test`, `paiement_card_test`, `bid_accept_dispatch_test`, `mobile_money_awaiting_screen_test`, `mobile_money_deep_link_test`, `notification_route_resolver_test`, `profile_screen_test`, `large_text_smoke_test`.
 
+## Suite du 2026-09-09 : saisie du numéro quand le profil n'en a pas
+
+Les comptes n'ont pas de numéro de téléphone tant que la vérification par SMS
+(Twilio) n'est pas configurée. Règle produit : si le profil a un numéro, aucune
+saisie (le backend utilise le numéro vérifié par OTP) ; sinon l'app demande le
+numéro, que Twilio soit actif ou non. Côté backend, dony-back #274 accepte un
+corps facultatif `{"phoneNumber"}` à l'activation, utilisé seulement sans
+téléphone Firebase.
+
+- `MobileMoneyAccountRemoteDatasource.activate({phoneNumber})`, event
+  `MobileMoneyAccountActivateRequested({phoneNumber})`, état
+  `MobileMoneyAccountPhoneRequired(account)` émis sur le 422
+  `mobile-money-phone-required` (sans snackbar).
+- `MobileMoneyAccountScreen` : `_PayoutNumberForm` (double saisie « Numéro de
+  versement » / « Confirme le numéro », normalisation par `normalizePayerPhone`,
+  bouton actif seulement quand les deux coïncident) affiché quand l'utilisateur
+  connecté n'a pas de numéro ou sur `PhoneRequired` ; corps sous `SafeArea`.
+- `MobileMoneyAwaitingScreen` : `_PhoneRequiredBody` (« Numéro qui paiera » +
+  « Réessayer » → `InitiateRequested(bidId, phoneNumber)`) sur la même erreur ;
+  corps sous `SafeArea`.
+- Sheet d'offre : aide « Ton compte n'a pas de numéro : indique celui qui
+  paiera. » ; catalogue `mobile-money-phone-required` → « Numéro manquant ».
+- Piège : un numéro saisi n'est pas vérifié par OTP (risque documenté dans le
+  service backend) ; le formulaire exige la double saisie pour limiter la faute
+  de frappe.
+
 ## Décisions techniques
 
 - **Le bloc initie le dépôt à l'ouverture de l'écran** plutôt qu'au tap d'un bouton : le paiement est déjà décidé par l'expéditeur au moment où il ouvre l'écran, et le bloc reste idempotent (un dépôt vivant n'est jamais doublé).
