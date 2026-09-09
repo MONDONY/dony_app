@@ -1,3 +1,4 @@
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/matching/data/models/bid_photo.dart';
 import 'package:json_annotation/json_annotation.dart';
@@ -35,6 +36,31 @@ extension BidPaymentMethodApi on BidPaymentMethod {
       if (entry.value == raw) return entry.key;
     }
     return null;
+  }
+}
+
+/// Rails de paiement par devise, miroir de `CurrencyPaymentRails` côté backend :
+/// la carte n'existe pas en zone CFA (pas de Stripe Connect), le mobile money
+/// n'existe qu'en zone CFA. Le backend reste l'autorité (il filtre les moyens
+/// d'une annonce à l'écriture et refuse un checkout carte hors rail) ; ce filtre
+/// évite de proposer un moyen que la demande ne pourra jamais honorer. Recette du
+/// 2026-09-09 : une annonce XOF proposait la carte et le séquestre Stripe partait
+/// en euros pour un montant en francs CFA.
+extension BidPaymentMethodRails on BidPaymentMethod {
+  /// Vrai si ce moyen de paiement existe dans la devise [currency] (code ISO,
+  /// repli euro comme le backend quand il manque ou n'est pas connu).
+  bool isAllowedIn(String? currency) {
+    final resolved = SupportedCurrency.fromCodeOrDefault(
+      currency?.toUpperCase(),
+    );
+    final cfa =
+        resolved == SupportedCurrency.xof || resolved == SupportedCurrency.xaf;
+    return switch (this) {
+      BidPaymentMethod.cash => true,
+      BidPaymentMethod.stripe => !cfa,
+      BidPaymentMethod.mobileMoney => cfa,
+      BidPaymentMethod.wave || BidPaymentMethod.orangeMoney => false,
+    };
   }
 }
 

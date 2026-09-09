@@ -82,6 +82,7 @@ late _MockNegotiationBloc _currentNegotiationBloc;
 AnnouncementModel _announcement({
   required Set<BidPaymentMethod> methods,
   bool negotiable = false,
+  String currency = 'XOF',
 }) => AnnouncementModel(
   id: 'ann-mm',
   travelerId: 'trav-1',
@@ -92,7 +93,7 @@ AnnouncementModel _announcement({
   totalKg: 10,
   pricePerKg: 8,
   status: 'ACTIVE',
-  currency: 'XOF',
+  currency: currency,
   createdAt: DateTime(2026),
   updatedAt: DateTime(2026),
   acceptedPaymentMethods: methods,
@@ -412,12 +413,13 @@ void main() {
 
   group('Visibilité de la tuile mobile money (site direct)', () {
     testWidgets(
-      'annonce STRIPE+CASH (sans mobile money) → tuile mobile money absente',
+      'annonce EUR STRIPE+CASH (sans mobile money) → tuile mobile money absente',
       (tester) async {
         await _openSheet(
           tester,
           _announcement(
             methods: const {BidPaymentMethod.stripe, BidPaymentMethod.cash},
+            currency: 'EUR',
           ),
         );
         await _goToPaymentPicker(tester);
@@ -432,7 +434,8 @@ void main() {
     );
 
     testWidgets(
-      'annonce STRIPE+MOBILE_MONEY → tuile mobile money présente, pas de tuile cash',
+      'annonce XOF STRIPE+MOBILE_MONEY → carte retirée (zone CFA), tuile mobile '
+      'money présente, pas de tuile cash',
       (tester) async {
         await _openSheet(
           tester,
@@ -445,7 +448,8 @@ void main() {
         );
         await _goToPaymentPicker(tester);
 
-        expect(find.byKey(const Key('payment-method-stripe')), findsOneWidget);
+        // Recette du 2026-09-09 : la carte n'existe pas en XOF, même déclarée.
+        expect(find.byKey(const Key('payment-method-stripe')), findsNothing);
         expect(
           find.byKey(const Key('payment-method-mobile-money')),
           findsOneWidget,
@@ -479,19 +483,77 @@ void main() {
     );
   });
 
+  // ── 1 bis. Rails par devise ───────────────────────────────────────────────
+  //
+  // Recette du 2026-09-09 : une annonce XOF déclarait la carte, la feuille la
+  // proposait, et le séquestre Stripe partait en euros pour un montant en
+  // francs CFA. Le backend filtre désormais à l'écriture ; la feuille ne
+  // propose jamais un moyen que la devise du trajet n'autorise pas.
+
+  group('Rails par devise', () {
+    testWidgets(
+      'annonce XOF déclarant la carte → carte retirée, espèces et mobile money '
+      'proposés, espèces par défaut',
+      (tester) async {
+        await _openSheet(
+          tester,
+          _announcement(
+            methods: const {
+              BidPaymentMethod.stripe,
+              BidPaymentMethod.cash,
+              BidPaymentMethod.mobileMoney,
+            },
+          ),
+        );
+        await _goToPaymentPicker(tester);
+
+        expect(find.byKey(const Key('payment-method-stripe')), findsNothing);
+        expect(find.byKey(const Key('payment-method-cash')), findsOneWidget);
+        expect(
+          find.byKey(const Key('payment-method-mobile-money')),
+          findsOneWidget,
+        );
+        expect(find.byKey(const Key('payer-phone-field')), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'annonce EUR déclarant le mobile money → mobile money retiré, carte et '
+      'espèces proposées',
+      (tester) async {
+        await _openSheet(
+          tester,
+          _announcement(
+            methods: const {
+              BidPaymentMethod.stripe,
+              BidPaymentMethod.cash,
+              BidPaymentMethod.mobileMoney,
+            },
+            currency: 'EUR',
+          ),
+        );
+        await _goToPaymentPicker(tester);
+
+        expect(find.byKey(const Key('payment-method-stripe')), findsOneWidget);
+        expect(find.byKey(const Key('payment-method-cash')), findsOneWidget);
+        expect(
+          find.byKey(const Key('payment-method-mobile-money')),
+          findsNothing,
+        );
+      },
+    );
+  });
+
   // ── 2. Affichage du champ numéro ─────────────────────────────────────────
 
   group('Champ numéro payeur — affichage', () {
-    testWidgets('tuile stripe sélectionnée par défaut → champ numéro absent', (
+    testWidgets('tuile espèces sélectionnée par défaut → champ numéro absent', (
       tester,
     ) async {
       await _openSheet(
         tester,
         _announcement(
-          methods: const {
-            BidPaymentMethod.stripe,
-            BidPaymentMethod.mobileMoney,
-          },
+          methods: const {BidPaymentMethod.cash, BidPaymentMethod.mobileMoney},
         ),
       );
       await _goToPaymentPicker(tester);
@@ -511,7 +573,7 @@ void main() {
           tester,
           _announcement(
             methods: const {
-              BidPaymentMethod.stripe,
+              BidPaymentMethod.cash,
               BidPaymentMethod.mobileMoney,
             },
           ),
@@ -557,10 +619,7 @@ void main() {
       await _openSheet(
         tester,
         _announcement(
-          methods: const {
-            BidPaymentMethod.stripe,
-            BidPaymentMethod.mobileMoney,
-          },
+          methods: const {BidPaymentMethod.cash, BidPaymentMethod.mobileMoney},
         ),
         authBloc: authBloc,
       );
@@ -580,28 +639,29 @@ void main() {
       expect(find.textContaining("Ton compte n'a pas de numéro"), findsNothing);
     });
 
-    testWidgets('retour à STRIPE après mobile money → champ numéro disparaît', (
-      tester,
-    ) async {
-      await _openSheet(
-        tester,
-        _announcement(
-          methods: const {
-            BidPaymentMethod.stripe,
-            BidPaymentMethod.mobileMoney,
-          },
-        ),
-      );
-      await _goToPaymentPicker(tester);
+    testWidgets(
+      'retour aux espèces après mobile money → champ numéro disparaît',
+      (tester) async {
+        await _openSheet(
+          tester,
+          _announcement(
+            methods: const {
+              BidPaymentMethod.cash,
+              BidPaymentMethod.mobileMoney,
+            },
+          ),
+        );
+        await _goToPaymentPicker(tester);
 
-      await tester.tap(find.byKey(const Key('payment-method-mobile-money')));
-      await tester.pump();
-      expect(find.byKey(const Key('payer-phone-field')), findsOneWidget);
+        await tester.tap(find.byKey(const Key('payment-method-mobile-money')));
+        await tester.pump();
+        expect(find.byKey(const Key('payer-phone-field')), findsOneWidget);
 
-      await tester.tap(find.byKey(const Key('payment-method-stripe')));
-      await tester.pump();
-      expect(find.byKey(const Key('payer-phone-field')), findsNothing);
-    });
+        await tester.tap(find.byKey(const Key('payment-method-cash')));
+        await tester.pump();
+        expect(find.byKey(const Key('payer-phone-field')), findsNothing);
+      },
+    );
   });
 
   // ── 3. Pré-remplissage depuis l'utilisateur connecté ────────────────────
@@ -723,10 +783,8 @@ void main() {
       await _openSheet(
         tester,
         _announcement(
-          methods: const {
-            BidPaymentMethod.stripe,
-            BidPaymentMethod.mobileMoney,
-          },
+          methods: const {BidPaymentMethod.stripe, BidPaymentMethod.cash},
+          currency: 'EUR',
         ),
       );
       await _goToPaymentPicker(tester);
@@ -941,7 +999,7 @@ void main() {
         // Avec cash, l'alternative redevient réelle : la section s'affiche
         // (stripe + cash), mais la tuile mobile money reste exclue même si
         // l'annonce l'accepte — c'est le cœur du fix R13.
-        'annonce STRIPE+CASH+MOBILE_MONEY en négociation → tuiles stripe et '
+        'annonce EUR STRIPE+CASH+MOBILE_MONEY en négociation → tuiles stripe et '
         'cash présentes, tuile mobile money toujours absente',
         (tester) async {
           await _openNegotiation(
@@ -953,6 +1011,7 @@ void main() {
                 BidPaymentMethod.mobileMoney,
               },
               negotiable: true,
+              currency: 'EUR',
             ),
           );
 
@@ -960,6 +1019,33 @@ void main() {
             find.byKey(const Key('payment-method-stripe')),
             findsOneWidget,
           );
+          expect(find.byKey(const Key('payment-method-cash')), findsOneWidget);
+          expect(
+            find.byKey(const Key('payment-method-mobile-money')),
+            findsNothing,
+          );
+          expect(find.byKey(const Key('payer-phone-field')), findsNothing);
+        },
+      );
+
+      testWidgets(
+        // Zone CFA : la carte n'existe pas, l'espèce ouvre la section, et le
+        // mobile money reste exclu en négociation même si la devise l'autorise.
+        'annonce XOF CASH+MOBILE_MONEY en négociation → tuile espèces seule, '
+        'tuile mobile money absente',
+        (tester) async {
+          await _openNegotiation(
+            tester,
+            _announcement(
+              methods: const {
+                BidPaymentMethod.cash,
+                BidPaymentMethod.mobileMoney,
+              },
+              negotiable: true,
+            ),
+          );
+
+          expect(find.byKey(const Key('payment-method-stripe')), findsNothing);
           expect(find.byKey(const Key('payment-method-cash')), findsOneWidget);
           expect(
             find.byKey(const Key('payment-method-mobile-money')),
@@ -984,6 +1070,7 @@ void main() {
                 BidPaymentMethod.mobileMoney,
               },
               negotiable: true,
+              currency: 'EUR',
             ),
           );
           await _fillNegotiationForm(tester);
