@@ -192,7 +192,7 @@ void main() {
 
         await pumpScreen(tester, authBloc: _authBlocWithPhone(null));
 
-        expect(find.text('Numéro qui recevra tes versements'), findsOneWidget);
+        expect(find.text('Numéro de versement'), findsOneWidget);
         expect(find.text('Confirme le numéro'), findsOneWidget);
         expect(
           find.textContaining("n'a pas de numéro de téléphone"),
@@ -215,7 +215,7 @@ void main() {
 
       await pumpScreen(tester, authBloc: _authBlocWithPhone(''));
 
-      expect(find.text('Numéro qui recevra tes versements'), findsOneWidget);
+      expect(find.text('Numéro de versement'), findsOneWidget);
     });
 
     testWidgets(
@@ -273,7 +273,7 @@ void main() {
 
         await pumpScreen(tester, authBloc: _authBlocWithPhone('+221770000000'));
 
-        expect(find.text('Numéro qui recevra tes versements'), findsOneWidget);
+        expect(find.text('Numéro de versement'), findsOneWidget);
         // Jamais de snackbar pour ce cas : ce n'est pas une MobileMoneyAccountError.
         expect(find.byType(SnackBar), findsNothing);
       },
@@ -291,7 +291,7 @@ void main() {
           find.textContaining('devient ton compte de versement'),
           findsOneWidget,
         );
-        expect(find.text('Numéro qui recevra tes versements'), findsNothing);
+        expect(find.text('Numéro de versement'), findsNothing);
 
         await tester.tap(find.text('Activer le versement mobile money'));
         await tester.pump();

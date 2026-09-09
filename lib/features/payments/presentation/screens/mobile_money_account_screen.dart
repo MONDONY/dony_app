@@ -307,7 +307,7 @@ class _PayoutNumberFormState extends State<_PayoutNumberForm> {
                   DonyTextField(
                     key: const Key('payout-phone-field'),
                     controller: _phoneCtrl,
-                    label: 'Numéro qui recevra tes versements',
+                    label: 'Numéro de versement',
                     keyboardType: TextInputType.phone,
                   ),
                   const SizedBox(height: DonySpacing.base),
