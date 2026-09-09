@@ -276,6 +276,7 @@ class _ColisRow extends StatelessWidget {
 /// Ordre d'affichage métier des statuts dans le filtre rapide.
 const _kStatusOrder = <String>[
   'ACCEPTED',
+  'AWAITING_PAYMENT',
   'HANDED_OVER',
   'IN_TRANSIT',
   'ARRIVED',
@@ -288,6 +289,10 @@ const _kStatusOrder = <String>[
 /// Libellé FR + couleur d'un statut de colis embarqué.
 (String, Color) _statusMeta(String status, ColorScheme cs) => switch (status) {
   'ACCEPTED' => ('Accepté', cs.primary),
+  // Voyageur vient d'accepter une offre mobile money, en attente du
+  // séquestre par l'expéditeur (30 min) — jamais la chaîne brute anglaise
+  // (régression staging).
+  'AWAITING_PAYMENT' => ('Paiement en attente', cs.warning),
   'HANDED_OVER' => ('Remis', cs.warning),
   'IN_TRANSIT' => ('En transit', cs.info),
   // Même libellé/couleur que le _StatusDot de bid_card.dart.

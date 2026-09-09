@@ -4,7 +4,19 @@ import 'package:flutter/material.dart';
 /// Tampon de statut incliné affiché dans l'en-tête du billet.
 class BilletStatusStamp extends StatelessWidget {
   final String status;
-  const BilletStatusStamp({super.key, required this.status});
+
+  /// Rôle du lecteur — déjà porté par `ColisBillet`, simplement transmis
+  /// ici. Seul AWAITING_PAYMENT en dépend : côté expéditeur c'est lui qui
+  /// doit payer (« À payer ») ; côté voyageur, rien à faire, juste attendre
+  /// (« Paiement en attente ») — afficher « À payer » au voyageur n'a pas de
+  /// sens (régression staging).
+  final bool isSender;
+
+  const BilletStatusStamp({
+    super.key,
+    required this.status,
+    required this.isSender,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -12,7 +24,10 @@ class BilletStatusStamp extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
 
     final (Color color, String label) = switch (status) {
-      'AWAITING_PAYMENT' => (cs.warning, 'À payer'),
+      'AWAITING_PAYMENT' => (
+        cs.warning,
+        isSender ? 'À payer' : 'Paiement en attente',
+      ),
       'PENDING' || 'PAYMENT_ESCROWED' => (cs.warning, 'En attente'),
       'ACCEPTED' => (cs.success, 'Confirmé'),
       'HANDED_OVER' => (cs.primary, 'En route'),

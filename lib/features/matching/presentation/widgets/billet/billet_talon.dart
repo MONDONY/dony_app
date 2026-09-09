@@ -89,6 +89,11 @@ class BilletTalon extends StatelessWidget {
     // ── Traveler dispatch ───────────────────────────────────────────────────────
     return switch (status) {
       'PENDING' => _TravelerDecisionSummary(bid: bid),
+      // Voyageur vient d'accepter une offre mobile money : l'expéditeur a
+      // 30 min pour séquestrer via pawaPay. Rien à faire ici tant que le
+      // paiement n'est pas séquestré (le bid repasse alors en ACCEPTED) —
+      // simple repère visuel, jamais d'action de scan.
+      'AWAITING_PAYMENT' => const _TravelerAwaitingPaymentBlock(),
       // ACCEPTED / HANDED_OVER / IN_TRANSIT : accès au scan depuis le détail →
       // lien vers les étapes du Suivi (ScanHub : Départ/Transit/Arrivée + scan
       // QR + identification par numéro). La barre collante garde son CTA
@@ -364,6 +369,35 @@ class _PendingPlaceholder extends StatelessWidget {
         const SizedBox(height: DonySpacing.sm),
         Text(
           'En attente de confirmation du voyageur',
+          textAlign: TextAlign.center,
+          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+        ),
+        const SizedBox(height: DonySpacing.sm),
+      ],
+    );
+  }
+}
+
+/// traveler / AWAITING_PAYMENT — Hourglass + « En attente du paiement de
+/// l'expéditeur ». L'expéditeur a jusqu'à 30 min pour séquestrer son
+/// paiement mobile money : rien à faire côté voyageur ici, juste un repère
+/// visuel le temps que le statut évolue (ACCEPTED au séquestre, annulation
+/// automatique sinon).
+class _TravelerAwaitingPaymentBlock extends StatelessWidget {
+  const _TravelerAwaitingPaymentBlock();
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const SizedBox(height: DonySpacing.sm),
+        DonyIcon('hourglass', size: 32, color: cs.onSurfaceVariant),
+        const SizedBox(height: DonySpacing.sm),
+        Text(
+          "En attente du paiement de l'expéditeur",
           textAlign: TextAlign.center,
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),

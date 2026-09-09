@@ -226,6 +226,25 @@ void main() {
     expect(find.text('ARRIVED'), findsNothing);
   });
 
+  // Régression staging : un bid accepté en mobile money passe en
+  // AWAITING_PAYMENT (30 min pour le séquestre côté expéditeur). Avant le
+  // fix, isAcceptedTabBid le filtrait purement et simplement de cette
+  // section (colis invisible) ; une fois rendu visible, _statusMeta
+  // retombait sur le défaut et affichait la chaîne brute anglaise.
+  testWidgets('AWAITING_PAYMENT (mobile money) → colis visible avec le libellé '
+      'français « Paiement en attente », jamais la chaîne brute', (
+    tester,
+  ) async {
+    stub(BidListLoaded([_makeBid(status: 'AWAITING_PAYMENT', id: 'b1')]));
+
+    await _pump(tester, bidBloc);
+    await tester.pump();
+
+    expect(find.text('Paiement en attente'), findsOneWidget);
+    expect(find.text('AWAITING_PAYMENT'), findsNothing);
+    expect(find.byType(DonyEmptyState), findsNothing);
+  });
+
   testWidgets('un seul statut → pas de filtre rapide', (tester) async {
     stub(
       BidListLoaded([

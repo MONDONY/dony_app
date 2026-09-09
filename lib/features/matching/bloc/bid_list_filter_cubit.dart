@@ -7,8 +7,14 @@ export 'package:dony/core/utils/text_search.dart' show normalizeSearch;
 // ── Groupes de statuts ────────────────────────────────────────────────────────
 
 /// Statuts d'un bid « actif » dans l'onglet Acceptées.
+///
+/// `AWAITING_PAYMENT` : le voyageur a accepté une offre mobile money, en
+/// attente du séquestre par l'expéditeur (30 min). Régression staging sans
+/// cette entrée : le bid n'était plus PENDING (déjà accepté) ni dans ce set
+/// (pas encore ACCEPTED) — invisible dans toutes les listes du voyageur.
 const kActiveBidStatuses = <String>{
   'ACCEPTED',
+  'AWAITING_PAYMENT',
   'HANDED_OVER',
   'IN_TRANSIT',
   'ARRIVED',

@@ -41,7 +41,7 @@ class ColisBillet extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _BilletHeader(bid: bid),
+              _BilletHeader(bid: bid, isSender: isSender),
               _BilletCorridor(bid: bid),
               _BilletDates(bid: bid),
               BilletPerforation(
@@ -61,7 +61,8 @@ class ColisBillet extends StatelessWidget {
 
 class _BilletHeader extends StatelessWidget {
   final BidModel bid;
-  const _BilletHeader({required this.bid});
+  final bool isSender;
+  const _BilletHeader({required this.bid, required this.isSender});
 
   @override
   Widget build(BuildContext context) {
@@ -90,7 +91,7 @@ class _BilletHeader extends StatelessWidget {
             ),
           ),
           const SizedBox(width: DonySpacing.sm),
-          BilletStatusStamp(status: bid.status),
+          BilletStatusStamp(status: bid.status, isSender: isSender),
         ],
       ),
     );
