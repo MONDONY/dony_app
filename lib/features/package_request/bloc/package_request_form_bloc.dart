@@ -234,6 +234,7 @@ class PackageRequestFormBloc
           state.copyWith(
             submissionStatus: FormSubmissionStatus.error,
             errorMessage: error.message,
+            error: error,
           ),
         );
       }

@@ -555,6 +555,64 @@ void main() {
   );
 
   blocTest<PackageRequestFormBloc, PackageRequestFormState>(
+    "échec typé (422) : l'état porte l'exception elle-même, pas seulement son "
+    'texte, pour que le présenteur affiche la vraie cause et non « Erreur réseau »',
+    build: () {
+      when(
+        () => repo.create(
+          departureCity: any(named: 'departureCity'),
+          arrivalCity: any(named: 'arrivalCity'),
+          desiredDate: any(named: 'desiredDate'),
+          dateToleranceDays: any(named: 'dateToleranceDays'),
+          weightKg: any(named: 'weightKg'),
+          parcelSize: any(named: 'parcelSize'),
+          transportMode: any(named: 'transportMode'),
+          categories: any(named: 'categories'),
+          negotiable: any(named: 'negotiable'),
+          acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
+          totalBudgetEur: any(named: 'totalBudgetEur'),
+          description: any(named: 'description'),
+          photoKeys: any(named: 'photoKeys'),
+          pickupNeighborhood: any(named: 'pickupNeighborhood'),
+          deliveryNeighborhood: any(named: 'deliveryNeighborhood'),
+          saveAsDraft: any(named: 'saveAsDraft'),
+        ),
+      ).thenThrow(
+        const ValidationException(
+          'Validation failed',
+          code: 'request/budget-out-of-bounds',
+        ),
+      );
+      return makeBloc(repo);
+    },
+    seed: () => draftValidSeed,
+    act: (b) => b.add(const FormStep3Submitted()),
+    expect: () => [
+      isA<PackageRequestFormState>().having(
+        (s) => s.submissionStatus,
+        'submissionStatus',
+        FormSubmissionStatus.submitting,
+      ),
+      isA<PackageRequestFormState>()
+          .having(
+            (s) => s.submissionStatus,
+            'submissionStatus',
+            FormSubmissionStatus.error,
+          )
+          .having((s) => s.errorMessage, 'errorMessage', 'Validation failed')
+          .having(
+            (s) => s.error,
+            'error',
+            isA<ValidationException>().having(
+              (e) => e.code,
+              'code',
+              'request/budget-out-of-bounds',
+            ),
+          ),
+    ],
+  );
+
+  blocTest<PackageRequestFormBloc, PackageRequestFormState>(
     'draft-limit-reached (403) sets draftLimitMessage, not the generic errorMessage',
     build: () {
       when(

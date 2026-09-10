@@ -158,6 +158,18 @@ abstract final class ErrorCatalog {
       icon: Icons.flag_outlined,
     ),
 
+    // ─── Budget d'une demande hors du plafond de sa devise ──────────────
+    // Le serveur borne le budget dans la devise de la demande (560 € mis à
+    // l'échelle). Le formulaire l'empêche déjà ; l'entrée couvre un client
+    // pas à jour ou une devise dont le taux a bougé, sans « Erreur réseau ».
+    'request/budget-out-of-bounds': ErrorPresentation(
+      title: 'Budget trop élevé',
+      message:
+          'Ce budget dépasse le plafond autorisé pour cette devise. Réduis '
+          'le montant puis réessaie.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.rule_rounded,
+    ),
     // ─── Course à la commission (accord en espèces) ──────────────────
     // Sans ces deux entrées, le voyageur qui perd la course lit « Action
     // impossible, l'état actuel ne permet pas cette action », soit exactement

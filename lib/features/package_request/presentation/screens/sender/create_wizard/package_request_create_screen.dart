@@ -268,9 +268,12 @@ class _PackageRequestCreateScreenState
         state.draftLimitMessage != null) {
       unawaited(_handleDraftLimitReached(context, state.draftLimitMessage!));
     } else if (state.submissionStatus == FormSubmissionStatus.error) {
+      // L'exception typée, jamais son texte : un texte nu ressort du
+      // présenteur en « Erreur réseau » quel que soit le statut HTTP, et le
+      // 422 « budget hors bornes » d'une demande en franc CFA était illisible.
       ErrorPresenter.show(
         context,
-        state.errorMessage ?? 'Erreur lors de la création',
+        state.error ?? state.errorMessage ?? 'Erreur lors de la création',
       );
     }
   }
