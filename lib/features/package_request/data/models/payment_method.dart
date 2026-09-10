@@ -1,3 +1,4 @@
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:flutter/material.dart';
 
 enum PaymentMethod {
@@ -28,6 +29,15 @@ enum PaymentMethod {
   /// l'enum pour désérialiser et afficher les demandes existantes.
   static const List<PaymentMethod> selectable = [
     PaymentMethod.stripe,
+    PaymentMethod.cash,
+  ];
+
+  /// Méthodes proposables dans [currency] : la devise borne les rails, comme
+  /// `CurrencyPaymentRails` côté backend. La carte n'existe pas en zone CFA
+  /// (pas de Stripe Connect), une demande en franc CFA cochait pourtant la
+  /// carte par défaut et le fil la proposait au voyageur.
+  static List<PaymentMethod> selectableIn(SupportedCurrency currency) => [
+    if (currency.isStripeEligible) PaymentMethod.stripe,
     PaymentMethod.cash,
   ];
 

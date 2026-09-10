@@ -36,9 +36,7 @@ class PackageRequestFormBloc
       (e, emit) => emit(state.copyWith(negotiable: e.value)),
     );
     on<PackageRequestPaymentMethodToggled>(_onPaymentMethodToggled);
-    on<PackageRequestCurrencyChanged>(
-      (e, emit) => emit(state.copyWith(currency: e.currency)),
-    );
+    on<PackageRequestCurrencyChanged>(_onCurrencyChanged);
     on<PackageRequestTotalBudgetChanged>(
       (e, emit) => emit(
         state.copyWith(
@@ -252,6 +250,24 @@ class PackageRequestFormBloc
   /// l'écran, qui a besoin de la même réponse pour expliquer son refus.
   static bool canDeselectPaymentMethod(Set<PaymentMethod> selected) =>
       selected.length > 1;
+
+  /// La devise borne les moyens de paiement : passer en franc CFA retire la
+  /// carte (le serveur la retirerait de toute façon), repasser en euro la
+  /// remet. Le choix ne reste jamais vide : l'espèce est toujours possible.
+  void _onCurrencyChanged(
+    PackageRequestCurrencyChanged e,
+    Emitter<PackageRequestFormState> emit,
+  ) {
+    final allowed = PaymentMethod.selectableIn(e.currency);
+    final next = state.acceptedPaymentMethods.where(allowed.contains).toSet();
+    if (!e.currency.isStripeEligible && next.isEmpty) {
+      next.add(PaymentMethod.cash);
+    }
+    if (next.isEmpty) {
+      next.addAll(state.acceptedPaymentMethods);
+    }
+    emit(state.copyWith(currency: e.currency, acceptedPaymentMethods: next));
+  }
 
   void _onPaymentMethodToggled(
     PackageRequestPaymentMethodToggled e,

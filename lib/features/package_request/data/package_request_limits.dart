@@ -26,6 +26,17 @@ abstract final class PackageRequestLimits {
   static const double minBudgetEur = 1.0;
   static const double maxBudgetEur = 560.0;
 
+  /// Plafond d'une offre ou d'une contre-offre sur une demande, **en euros**
+  /// (miroir de `CurrencyBounds.maxNegotiationPrice` côté backend). Comme le
+  /// budget, il se lit à l'échelle de la devise de la demande : figé à 500
+  /// dans deux feuilles, il refusait toute offre réaliste en franc CFA
+  /// (500 XOF valent moins d'un euro) alors que le serveur en accepte 327 500.
+  static const double maxOfferEur = 500.0;
+
+  /// Plafond d'une offre dans [currency]. Voir [maxOfferEur].
+  static double maxOfferFor(SupportedCurrency currency) =>
+      _scale(maxOfferEur, currency);
+
   static bool isWeightValid(double? kg) =>
       kg != null && kg >= minWeightKg && kg <= maxWeightKg;
 

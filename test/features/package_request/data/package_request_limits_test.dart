@@ -81,4 +81,13 @@ void main() {
       );
     });
   });
+
+  group('maxOfferFor', () {
+    test('500 en euros, mis à l\'échelle en franc CFA sans décimale', () {
+      expect(PackageRequestLimits.maxOfferFor(SupportedCurrency.eur), 500.0);
+      final xof = PackageRequestLimits.maxOfferFor(SupportedCurrency.xof);
+      expect(xof, greaterThan(300000));
+      expect(xof, xof.floorToDouble());
+    });
+  });
 }

@@ -18,6 +18,7 @@ class TripPickerSection extends StatefulWidget {
     required this.desiredDate,
     required this.dateToleranceDays,
     required this.weightKg,
+    this.currency,
     required this.onSelected,
     required this.onCreateDedicated,
     this.selected,
@@ -31,6 +32,12 @@ class TripPickerSection extends StatefulWidget {
   final DateTime desiredDate;
   final int dateToleranceDays;
   final double weightKg;
+
+  /// Devise de la demande. Le prix proposé est accepté dans cette devise et
+  /// copié tel quel sur le fil : un trajet d'une autre devise (refusé par le
+  /// serveur, `announcement/currency-mismatch`) n'est jamais proposé. Absente,
+  /// aucun filtre : l'écran garde l'ancien comportement.
+  final String? currency;
   final void Function(AnnouncementModel) onSelected;
   final VoidCallback onCreateDedicated;
   final AnnouncementModel? selected;
@@ -110,6 +117,9 @@ class TripPickerSectionState extends State<TripPickerSection> {
         // ou sans place ne doit jamais être proposé.
         final linkable =
             ann.status == 'ACTIVE' && ann.availableKg >= widget.weightKg;
+        final currencyMatch =
+            widget.currency == null ||
+            ann.currency.toUpperCase() == widget.currency!.toUpperCase();
         final corridorMatch =
             cityKey(ann.departureCity) == cityKey(widget.departureCity) &&
             cityKey(ann.arrivalCity) == cityKey(widget.arrivalCity);
@@ -125,7 +135,7 @@ class TripPickerSectionState extends State<TripPickerSection> {
               d.month,
               d.day,
             ).isAfter(DateTime(dateTo.year, dateTo.month, dateTo.day));
-        return linkable && corridorMatch && dateMatch;
+        return linkable && currencyMatch && corridorMatch && dateMatch;
       }).toList();
       if (mounted) {
         _matchingTripsNotifier.value = matching;

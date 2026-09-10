@@ -8,6 +8,7 @@ import 'package:dony/features/package_request/bloc/package_request_form_event.da
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
 import 'package:dony/features/package_request/bloc/package_request_photos_cubit.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
+import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/steps/step_3_recap_budget.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/widgets/wizard_summary_card.dart';
@@ -187,6 +188,43 @@ void main() {
         );
       },
     );
+
+    // La devise borne les moyens : pas de puce « Carte » sur une demande en
+    // franc CFA, la carte n'y existe pas.
+    testWidgets('en XOF, la puce Carte disparaît et Espèces reste', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrap(
+          const Step3RecapBudget(currency: SupportedCurrency.xof),
+          seed: const PackageRequestFormState(
+            currency: SupportedCurrency.xof,
+            acceptedPaymentMethods: {PaymentMethod.cash},
+          ),
+          useMock: true,
+        ),
+      );
+      await tester.pump();
+
+      expect(find.text('Espèces'), findsOneWidget);
+      expect(find.text('Carte'), findsNothing);
+    });
+
+    testWidgets('en EUR, les puces Carte et Espèces sont proposées', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrap(
+          const Step3RecapBudget(currency: SupportedCurrency.eur),
+          seed: const PackageRequestFormState(currency: SupportedCurrency.eur),
+          useMock: true,
+        ),
+      );
+      await tester.pump();
+
+      expect(find.text('Carte'), findsOneWidget);
+      expect(find.text('Espèces'), findsOneWidget);
+    });
 
     testWidgets('affiche le suffixe et le détail du budget en CAD', (
       tester,
