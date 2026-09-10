@@ -1,4 +1,5 @@
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/payments/presentation/screens/escrow_explainer_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -63,9 +64,16 @@ void main() {
       expect(find.textContaining('Fatou'), findsWidgets);
     });
 
-    testWidgets('shows insurance card with 200€ guarantee', (tester) async {
+    testWidgets('shows insurance card with the configured guarantee cap', (
+      tester,
+    ) async {
       await _pump(tester);
-      expect(find.textContaining('200 €'), findsOneWidget);
+      // Le plafond vient de la configuration backend, plus de « 200 € » en dur.
+      expect(
+        find.textContaining(formatPriceIn(donyReimbursementCapEur, 'EUR')),
+        findsOneWidget,
+      );
+      expect(find.textContaining('200 €'), findsNothing);
     });
 
     testWidgets('shows 4 how-it-works steps', (tester) async {

@@ -216,6 +216,7 @@ class AnnouncementDetailBody extends StatelessWidget {
               final label = switch (m.apiValue) {
                 'CASH' => '💵 Espèces',
                 'STRIPE' => '💳 Carte',
+                'MOBILE_MONEY' => '📱 Mobile money',
                 'WAVE' => '🌊 Wave',
                 'ORANGE_MONEY' => '🟠 Orange Money',
                 _ => m.apiValue,

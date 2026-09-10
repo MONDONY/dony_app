@@ -1,3 +1,6 @@
+import 'package:dony/core/currency/active_currency.dart';
+import 'package:dony/core/currency/active_rates.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -305,15 +308,18 @@ class _InsuranceCard extends StatelessWidget {
             child: Text.rich(
               TextSpan(
                 style: tt.bodySmall?.copyWith(color: cs.onSurface),
-                children: const [
-                  TextSpan(
+                children: [
+                  const TextSpan(
                     text: "Si le colis n'arrive pas, on vous rembourse ",
                   ),
                   TextSpan(
-                    text: 'jusqu\'à 200 €',
-                    style: TextStyle(fontWeight: FontWeight.w700),
+                    // Plafond chargé depuis le backend, dans la devise du
+                    // lecteur : « 200 € » codé en dur ne suivait ni la
+                    // configuration ni la devise.
+                    text: 'jusqu\'à ${_reimbursementCapLabel()}',
+                    style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
-                  TextSpan(text: ' via le fonds de garantie.'),
+                  const TextSpan(text: ' via le fonds de garantie.'),
                 ],
               ),
             ),
@@ -322,4 +328,15 @@ class _InsuranceCard extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Plafond de remboursement (configuration backend, en euros) exprimé dans la
+/// devise active du lecteur : un montant fixé par la plateforme se met à
+/// l'échelle, il ne se convertit pas.
+String _reimbursementCapLabel() {
+  final currency = ActiveCurrency.current ?? SupportedCurrency.eur;
+  return formatPriceIn(
+    donyReimbursementCapEur * ActiveRates.unitsPerEurFor(currency),
+    currency.code,
+  );
 }

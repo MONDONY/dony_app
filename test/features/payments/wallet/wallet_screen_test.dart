@@ -340,7 +340,8 @@ void main() {
 
       expect(find.text('Comment fonctionne le portefeuille'), findsOneWidget);
       expect(find.text('Changer de devise'), findsOneWidget);
-      expect(find.text('Devise à 0 €'), findsOneWidget);
+      // Plus de « 0 € » codé en dur : le portefeuille peut être en XOF.
+      expect(find.text('Devise à zéro'), findsOneWidget);
     },
   );
 

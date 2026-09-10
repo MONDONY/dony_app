@@ -180,9 +180,7 @@ class NegotiationThread extends Equatable {
             .toList() ??
         const [],
     grossPriceEur: (json['grossPriceEur'] as num?)?.toDouble(),
-    paymentMethod: json['paymentMethod'] != null
-        ? PaymentMethod.fromWire(json['paymentMethod'] as String)
-        : null,
+    paymentMethod: PaymentMethod.tryFromWire(json['paymentMethod'] as String?),
     paymentIntentClientSecret: json['paymentIntentClientSecret'] as String?,
     travelerName: json['travelerName'] as String?,
     travelerRating: (json['travelerRating'] as num?)?.toDouble(),

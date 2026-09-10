@@ -34,7 +34,8 @@ class TravelerGainCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final amount = travelerAmountLabel(bid);
-    final isCash = bid.paymentMethod != BidPaymentMethod.stripe;
+    final isCash = bid.paymentMethod == BidPaymentMethod.cash;
+    final isMobileMoney = bid.paymentMethod == BidPaymentMethod.mobileMoney;
 
     late final String topLabel;
     late final Color amountColor;
@@ -53,6 +54,27 @@ class TravelerGainCard extends StatelessWidget {
         label: 'ESPÈCES',
         fg: cs.onSurface,
         bg: cs.surfaceContainerHighest,
+      );
+    } else if (isMobileMoney && _terminal.contains(bid.status)) {
+      // Un paiement mobile money était présenté comme un encaissement en
+      // espèces : le voyageur est versé sur son compte mobile money, la
+      // commission déjà déduite.
+      topLabel = 'VOUS AVEZ REÇU';
+      amountColor = cs.success;
+      note = 'Versé sur ton compte mobile money.';
+      pill = _Pill(
+        label: '● Versé',
+        fg: cs.success,
+        bg: cs.success.withValues(alpha: 0.12),
+      );
+    } else if (isMobileMoney && !_cancelled.contains(bid.status)) {
+      topLabel = 'VOUS RECEVEZ';
+      amountColor = cs.onSurface;
+      note = 'Versé sur ton compte mobile money à la livraison.';
+      pill = _Pill(
+        label: '📱 mobile money',
+        fg: cs.primary,
+        bg: cs.primary.withValues(alpha: 0.10),
       );
     } else if (_terminal.contains(bid.status)) {
       topLabel = 'VOUS AVEZ REÇU';

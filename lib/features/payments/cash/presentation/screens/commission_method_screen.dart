@@ -1,3 +1,5 @@
+import 'package:dony/core/currency/active_currency.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
@@ -104,7 +106,13 @@ class _CommissionMethodScreenState extends State<CommissionMethodScreen>
                 ),
                 const SizedBox(height: DonySpacing.base),
                 Text(
-                  'Cette carte sera débitée de la commission ($donyCommissionPercentLabel %, min. 1 €) à chaque colis en espèces accepté.',
+                  // Le plancher de 1 € n'est vrai qu'en euros : ne pas
+                  // l'afficher à un voyageur dont la commission est prélevée
+                  // dans une autre devise.
+                  (ActiveCurrency.current ?? SupportedCurrency.eur) ==
+                          SupportedCurrency.eur
+                      ? 'Cette carte sera débitée de la commission ($donyCommissionPercentLabel %, min. 1 €) à chaque colis en espèces accepté.'
+                      : 'Cette carte sera débitée de la commission ($donyCommissionPercentLabel %) à chaque colis en espèces accepté.',
                   style: Theme.of(ctx).textTheme.bodyMedium,
                 ),
                 const SizedBox(height: DonySpacing.xl),

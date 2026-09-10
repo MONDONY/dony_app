@@ -5,21 +5,37 @@ enum PaymentMethod {
   stripe('STRIPE'),
   cash('CASH'),
   wave('WAVE'),
-  orangeMoney('ORANGE_MONEY');
+  orangeMoney('ORANGE_MONEY'),
+  mobileMoney('MOBILE_MONEY');
 
   final String wireName;
   const PaymentMethod(this.wireName);
 
-  static PaymentMethod fromWire(String s) =>
-      PaymentMethod.values.firstWhere((e) => e.wireName == s);
+  /// Valeur reçue de l'API, ou null si l'app ne la connaît pas : une nouvelle
+  /// méthode côté backend ne doit jamais faire planter un parsing.
+  static PaymentMethod? tryFromWire(String? s) {
+    if (s == null) return null;
+    for (final e in PaymentMethod.values) {
+      if (e.wireName == s) return e;
+    }
+    return null;
+  }
 
-  static Set<PaymentMethod> setFromJson(List<dynamic>? l) =>
-      (l ?? const []).map((e) => fromWire(e as String)).toSet();
+  static PaymentMethod fromWire(String s) =>
+      tryFromWire(s) ??
+      (throw ArgumentError.value(s, 'PaymentMethod', 'valeur inconnue'));
+
+  /// Ignore les valeurs inconnues au lieu de planter sur toute la liste.
+  static Set<PaymentMethod> setFromJson(List<dynamic>? l) => (l ?? const [])
+      .map((e) => tryFromWire(e as String?))
+      .whereType<PaymentMethod>()
+      .toSet();
 
   /// Ordre canonique d'affichage : carte d'abord, puis cash, puis mobile money.
   static const List<PaymentMethod> canonicalOrder = [
     PaymentMethod.stripe,
     PaymentMethod.cash,
+    PaymentMethod.mobileMoney,
     PaymentMethod.wave,
     PaymentMethod.orangeMoney,
   ];
@@ -51,6 +67,8 @@ enum PaymentMethod {
         return 'Wave';
       case PaymentMethod.orangeMoney:
         return 'Orange Money';
+      case PaymentMethod.mobileMoney:
+        return 'Mobile money';
     }
   }
 
@@ -63,6 +81,8 @@ enum PaymentMethod {
       case PaymentMethod.wave:
         return Icons.waves_rounded;
       case PaymentMethod.orangeMoney:
+        return Icons.phone_android_rounded;
+      case PaymentMethod.mobileMoney:
         return Icons.phone_android_rounded;
     }
   }
