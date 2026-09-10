@@ -42,8 +42,17 @@ class ConversationRepository {
 
   Future<List<ConversationModel>> getArchivedConversations() async {
     final response = await _api.dio.get('/conversations/archived');
-    final data = response.data as Map<String, dynamic>? ?? const {};
-    final list = data['content'] as List<dynamic>? ?? const [];
+    // Le serveur renvoie une page ({content: [...]}) comme pour la liste
+    // active ; un serveur antérieur renvoie la liste nue. Les deux formes
+    // sont lues : un cast en Map sur une liste faisait planter l'écran des
+    // conversations archivées face à un serveur en retard.
+    final data = response.data;
+    final list = switch (data) {
+      final List<dynamic> raw => raw,
+      final Map<String, dynamic> page =>
+        page['content'] as List<dynamic>? ?? const <dynamic>[],
+      _ => const <dynamic>[],
+    };
     return list
         .map((e) => ConversationModel.fromJson(e as Map<String, dynamic>))
         .toList();
