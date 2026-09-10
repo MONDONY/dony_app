@@ -13,6 +13,7 @@ import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/locked_trip_context.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/data/models/price_estimate.dart';
+import 'package:dony/features/package_request/data/package_request_limits.dart';
 import 'package:dony/features/package_request/data/price_estimation_repository.dart';
 import 'package:dony/features/package_request/presentation/widgets/trip_picker_section.dart';
 import 'package:flutter/material.dart';
@@ -394,8 +395,15 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
                               (v ?? '').replaceAll(',', '.'),
                             );
                             if (d == null) return 'Invalide';
-                            if (d <= 0 || d > 500) {
-                              return '0–500 ${SupportedCurrency.symbolOf(widget.currency)}';
+                            // Plafond à l'échelle de la devise de la demande :
+                            // 500 en dur refusait toute offre en franc CFA.
+                            final maxOffer = PackageRequestLimits.maxOfferFor(
+                              SupportedCurrency.fromCodeOrDefault(
+                                widget.currency,
+                              ),
+                            );
+                            if (d <= 0 || d > maxOffer) {
+                              return '0 à ${formatPriceIn(maxOffer, widget.currency)}';
                             }
                             return null;
                           },
@@ -510,6 +518,7 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
                     desiredDate: widget.requestDesiredDate,
                     dateToleranceDays: widget.requestDateToleranceDays,
                     weightKg: widget.weightKg,
+                    currency: widget.currency,
                     selected: selected,
                     onSelected: (ann) =>
                         widget.selectedTripNotifier.value = ann,

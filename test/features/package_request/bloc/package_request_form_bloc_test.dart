@@ -1008,6 +1008,58 @@ void main() {
         expect(b.state.acceptedPaymentMethods, {PaymentMethod.stripe}),
   );
 
+  // La devise borne les moyens : une demande en franc CFA ne peut pas cocher
+  // la carte, que le serveur retirerait et que le fil proposerait pour rien.
+  blocTest<PackageRequestFormBloc, PackageRequestFormState>(
+    'passage en XOF retire la carte et garde les espèces',
+    build: () => makeBloc(repo),
+    seed: () => const PackageRequestFormState(
+      acceptedPaymentMethods: {PaymentMethod.stripe, PaymentMethod.cash},
+    ),
+    act: (b) =>
+        b.add(const PackageRequestCurrencyChanged(SupportedCurrency.xof)),
+    expect: () => [
+      isA<PackageRequestFormState>()
+          .having((s) => s.currency, 'currency', SupportedCurrency.xof)
+          .having((s) => s.acceptedPaymentMethods, 'acceptedPaymentMethods', {
+            PaymentMethod.cash,
+          }),
+    ],
+  );
+
+  blocTest<PackageRequestFormBloc, PackageRequestFormState>(
+    'passage en XOF avec la carte seule cochée bascule sur les espèces',
+    build: () => makeBloc(repo),
+    seed: () => const PackageRequestFormState(),
+    act: (b) =>
+        b.add(const PackageRequestCurrencyChanged(SupportedCurrency.xaf)),
+    expect: () => [
+      isA<PackageRequestFormState>().having(
+        (s) => s.acceptedPaymentMethods,
+        'acceptedPaymentMethods',
+        {PaymentMethod.cash},
+      ),
+    ],
+  );
+
+  blocTest<PackageRequestFormBloc, PackageRequestFormState>(
+    'passage en EUR garde le choix courant (carte et espèces restent possibles)',
+    build: () => makeBloc(repo),
+    seed: () => const PackageRequestFormState(
+      currency: SupportedCurrency.xof,
+      acceptedPaymentMethods: {PaymentMethod.cash},
+    ),
+    act: (b) =>
+        b.add(const PackageRequestCurrencyChanged(SupportedCurrency.eur)),
+    expect: () => [
+      isA<PackageRequestFormState>()
+          .having((s) => s.currency, 'currency', SupportedCurrency.eur)
+          .having((s) => s.acceptedPaymentMethods, 'acceptedPaymentMethods', {
+            PaymentMethod.cash,
+          }),
+    ],
+  );
+
   blocTest<PackageRequestFormBloc, PackageRequestFormState>(
     'total budget changed updates state',
     build: () => makeBloc(repo),

@@ -375,6 +375,7 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
                 desiredDate: r.desiredDate,
                 dateToleranceDays: r.dateToleranceDays,
                 weightKg: r.weightKg,
+                currency: r.currency,
                 selected: selectedTrip,
                 onSelected: _selectTrip,
                 onCreateDedicated: _createNewTrip,

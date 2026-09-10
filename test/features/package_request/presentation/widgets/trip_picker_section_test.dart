@@ -19,8 +19,10 @@ AnnouncementModel _announcement({
   required String arrivalCity,
   DateTime? departureDate,
   double availableKg = 20,
+  String currency = 'EUR',
 }) => AnnouncementModel(
   id: id,
+  currency: currency,
   travelerId: 'trav-1',
   departureCity: departureCity,
   arrivalCity: arrivalCity,
@@ -298,6 +300,54 @@ void main() {
       // Même widget, nouvelle desiredDate → didUpdateWidget recharge et le
       // trajet de septembre apparaît désormais.
       expect(find.byKey(const Key('trip-tile-0')), findsOneWidget);
+    },
+  );
+
+  // Le prix proposé est accepté dans la devise de la demande et copié tel quel
+  // sur le fil : un trajet d'une autre devise ferait de 50 000 XOF un séquestre
+  // de 50 000 EUR. Le serveur le refuse ; l'écran ne le propose plus.
+  testWidgets(
+    'avec une devise, seuls les trajets de cette devise sont listés',
+    (tester) async {
+      when(() => announcementRepo.getMyAnnouncements()).thenAnswer(
+        (_) async => (
+          announcements: [
+            _announcement(
+              id: 'eur',
+              status: 'ACTIVE',
+              departureCity: 'Paris',
+              arrivalCity: 'Abidjan',
+            ),
+            _announcement(
+              id: 'xof',
+              status: 'ACTIVE',
+              departureCity: 'Paris',
+              arrivalCity: 'Abidjan',
+              currency: 'XOF',
+            ),
+          ],
+          totalElements: 2,
+        ),
+      );
+
+      await tester.pumpWidget(
+        _harness(
+          TripPickerSection(
+            departureCity: 'Paris',
+            arrivalCity: 'Abidjan',
+            desiredDate: DateTime(2026, 9),
+            dateToleranceDays: 3,
+            weightKg: 10,
+            currency: 'xof',
+            onSelected: (_) {},
+            onCreateDedicated: () {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('trip-tile-0')), findsOneWidget);
+      expect(find.byKey(const Key('trip-tile-1')), findsNothing);
     },
   );
 }

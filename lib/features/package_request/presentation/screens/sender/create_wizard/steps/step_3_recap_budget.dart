@@ -429,7 +429,10 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
                 const SizedBox(height: DonySpacing.sm),
-                _PaymentMethodChips(selected: state.acceptedPaymentMethods),
+                _PaymentMethodChips(
+                  selected: state.acceptedPaymentMethods,
+                  currency: currency,
+                ),
                 const SizedBox(height: DonySpacing.base),
 
                 // L'écran s'arrêtait sur la mention CGU, qui répond à une
@@ -799,18 +802,21 @@ class _BudgetBreakdown extends StatelessWidget {
 // ─── Payment method chips ─────────────────────────────────────────────────────
 
 class _PaymentMethodChips extends StatelessWidget {
-  const _PaymentMethodChips({required this.selected});
+  const _PaymentMethodChips({required this.selected, required this.currency});
   final Set<PaymentMethod> selected;
+  final SupportedCurrency currency;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    // Mobile money retiré des nouvelles demandes ; on garde toutefois les
-    // méthodes legacy déjà cochées (édition) pour pouvoir les décocher.
+    // La devise borne les moyens : pas de carte en franc CFA. Mobile money
+    // retiré des nouvelles demandes ; on garde toutefois les méthodes legacy
+    // déjà cochées (édition) pour pouvoir les décocher.
+    final selectable = PaymentMethod.selectableIn(currency);
     final methods = [
-      ...PaymentMethod.selectable,
-      ...selected.where((m) => !PaymentMethod.selectable.contains(m)),
+      ...selectable,
+      ...selected.where((m) => !selectable.contains(m)),
     ];
     // Carte dédiée + icônes + chips plus hauts : la version précédente était
     // une simple ligne de pastilles fines, facile à survoler sans la remarquer.
