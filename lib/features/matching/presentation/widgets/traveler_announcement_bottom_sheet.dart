@@ -1213,7 +1213,7 @@ class _RouteMiniMap extends StatelessWidget {
   }
 }
 
-/// Chip d'un moyen de paiement accepté (espèces / carte).
+/// Chip d'un moyen de paiement accepté (espèces / mobile money / carte).
 class _PaymentChip extends StatelessWidget {
   const _PaymentChip({required this.method});
 
@@ -1224,8 +1224,19 @@ class _PaymentChip extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final isCash = method == BidPaymentMethod.cash;
-    final label = isCash ? 'Espèces' : 'Carte';
-    final icon = isCash ? 'banknote' : 'credit-card';
+    // Le mobile money s'affichait « Carte » : un expéditeur en zone CFA
+    // cherchait une carte qui n'existe pas.
+    final isMobileMoney = method == BidPaymentMethod.mobileMoney;
+    final label = isCash
+        ? 'Espèces'
+        : isMobileMoney
+        ? 'Mobile money'
+        : 'Carte';
+    final icon = isCash
+        ? 'banknote'
+        : isMobileMoney
+        ? 'smartphone'
+        : 'credit-card';
     final fg = isCash ? cs.success : cs.primary;
     final bg = isCash ? cs.successLight : cs.primaryContainer;
     return Container(

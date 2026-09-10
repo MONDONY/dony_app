@@ -135,4 +135,26 @@ void main() {
       expect(find.text('Activer les paiements par carte'), findsNothing);
     });
   });
+
+  // La puce MOBILE_MONEY s'affichait avec la valeur brute de l'API.
+  group('AnnouncementDetailBody — puces des moyens de paiement', () {
+    testWidgets(
+      'mobile money accepté → puce « Mobile money », jamais MOBILE_MONEY brut',
+      (tester) async {
+        final a = _announcement(
+          acceptedPaymentMethods: {
+            BidPaymentMethod.cash,
+            BidPaymentMethod.mobileMoney,
+          },
+        );
+
+        await tester.pumpWidget(_wrap(a));
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('Mobile money'), findsOneWidget);
+        expect(find.textContaining('MOBILE_MONEY'), findsNothing);
+        expect(find.textContaining('Espèces'), findsOneWidget);
+      },
+    );
+  });
 }

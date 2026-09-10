@@ -437,6 +437,7 @@ class _PaymentMethodChoice extends StatelessWidget {
     PaymentMethod.cash => 'banknote',
     PaymentMethod.wave => 'waves',
     PaymentMethod.orangeMoney => 'smartphone',
+    PaymentMethod.mobileMoney => 'smartphone',
   };
 
   @override

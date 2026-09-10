@@ -725,12 +725,12 @@ class _WalletInfoContent extends StatelessWidget {
           iconAsset: 'lock',
           title: 'Changer de devise',
           description:
-              'Impossible une fois que votre solde total dépasse 0 €. '
+              'Impossible une fois que votre solde total n\'est plus à zéro. '
               'Verrouillée : videz votre portefeuille pour en changer.',
         ),
         _WalletInfoRow(
           iconAsset: 'circle-alert',
-          title: 'Devise à 0 €',
+          title: 'Devise à zéro',
           description:
               'N\'est jamais considérée comme verrouillée : elle n\'apparaît '
               'que si vous y détenez réellement des fonds.',

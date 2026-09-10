@@ -60,4 +60,31 @@ void main() {
     expect(find.text('VOUS ENCAISSEZ'), findsOneWidget);
     expect(find.textContaining('espèces'), findsOneWidget);
   });
+
+  // Un paiement mobile money était présenté comme un encaissement en espèces.
+  testWidgets(
+    'Mobile money actif → "Vous recevez" + mobile money, jamais espèces',
+    (tester) async {
+      await _pump(
+        tester,
+        _bid(status: 'ACCEPTED', method: BidPaymentMethod.mobileMoney),
+      );
+      expect(find.text('VOUS RECEVEZ'), findsOneWidget);
+      expect(find.textContaining('mobile money'), findsWidgets);
+      expect(find.textContaining('espèces'), findsNothing);
+      expect(find.text('VOUS ENCAISSEZ'), findsNothing);
+    },
+  );
+
+  testWidgets('Mobile money COMPLETED → "Vous avez reçu" + Versé', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      _bid(status: 'COMPLETED', method: BidPaymentMethod.mobileMoney),
+    );
+    expect(find.text('VOUS AVEZ REÇU'), findsOneWidget);
+    expect(find.textContaining('Versé'), findsWidgets);
+    expect(find.textContaining('espèces'), findsNothing);
+  });
 }

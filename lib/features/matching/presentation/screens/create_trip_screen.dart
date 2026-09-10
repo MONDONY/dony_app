@@ -114,6 +114,13 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
     if (announcement != null) {
       return SupportedCurrency.fromCodeOrDefault(announcement.currency);
     }
+    // Trajet dédié à une demande de colis : le prix convenu est dans la devise
+    // de la demande, pas celle du portefeuille du voyageur. Sans cette ligne,
+    // 50 000 XOF convenus s'affichaient « 50 000 € » à un voyageur parisien.
+    final lock = widget.args?.lockContext;
+    if (lock != null) {
+      return SupportedCurrency.fromCodeOrDefault(lock.currency);
+    }
     return ActiveCurrency.current ?? SupportedCurrency.eur;
   }
 
@@ -1417,7 +1424,11 @@ class _TripFormContentState extends State<_TripFormContent> {
     // Publiable sans Stripe (cash-only) : STRIPE n'est inclus que si
     // configuré, et CASH est forcé quand Stripe ne l'est pas — la liste ne
     // peut jamais être vide (au moins une méthode de paiement est requise).
-    final stripeConfigured = _isStripeConfigured();
+    // La carte n'existe pas en zone CFA (pas de Stripe Connect) : elle n'est
+    // envoyée que si la devise du trajet l'autorise, comme l'aperçu du
+    // sélecteur de devise. Le backend la retirerait de toute façon.
+    final stripeConfigured =
+        _isStripeConfigured() && _currency.isStripeEligible;
     final paymentMethods = [
       if (stripeConfigured) 'STRIPE',
       if (_cashEnabledNotifier.value || !stripeConfigured) 'CASH',

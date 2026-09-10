@@ -901,6 +901,26 @@ void main() {
       },
     );
 
+    // Le moyen MOBILE_MONEY s'affichait « Carte » : un expéditeur en zone CFA
+    // cherchait une carte qui n'existe pas.
+    testWidgets('trajet acceptant espèces + mobile money → puces Espèces et '
+        'Mobile money, jamais Carte', (tester) async {
+      final a = _buildAnnouncement(
+        kycVerified: true,
+        acceptedPaymentMethods: const {
+          BidPaymentMethod.cash,
+          BidPaymentMethod.mobileMoney,
+        },
+      );
+      await tester.pumpWidget(_harness(announcement: a));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Espèces'), findsOneWidget);
+      expect(find.text('Mobile money'), findsOneWidget);
+      expect(find.text('Carte'), findsNothing);
+    });
+
     testWidgets('trajet négociable acceptant carte + mobile money → entrée de '
         'négociation présente', (tester) async {
       final a = _buildAnnouncement(
