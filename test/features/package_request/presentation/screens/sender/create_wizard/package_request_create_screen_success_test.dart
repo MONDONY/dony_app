@@ -556,6 +556,32 @@ void main() {
     expect(find.text('Accueil'), findsOneWidget);
   });
 
+  testWidgets(
+    'échec serveur : la vraie erreur est affichée, jamais « Erreur réseau » '
+    '(régression : le listener passait un texte au présenteur, qui le '
+    'reclassait en erreur réseau quel que soit le statut HTTP)',
+    (tester) async {
+      when(createCall(saveAsDraft: false)).thenThrow(
+        const ValidationException(
+          'Validation failed',
+          errors: {
+            'totalBudgetEur': ['Le budget dépasse le plafond de la devise.'],
+          },
+        ),
+      );
+
+      await driveToSuccess(tester);
+
+      expect(find.byType(DonySuccessScreen), findsNothing);
+      expect(find.text('Erreur réseau'), findsNothing);
+      expect(find.text('Données invalides'), findsOneWidget);
+      expect(
+        find.text('Le budget dépasse le plafond de la devise.'),
+        findsOneWidget,
+      );
+    },
+  );
+
   // ── Task 3 : sheet d'aperçu + option brouillon ──────────────────────────
 
   testWidgets(

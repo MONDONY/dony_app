@@ -29,6 +29,7 @@ class PackageRequestFormState extends Equatable {
     this.promoCode,
     this.submissionStatus = FormSubmissionStatus.idle,
     this.errorMessage,
+    this.error,
     this.draftLimitMessage,
     this.createdRequest,
     this.editingRequestId,
@@ -61,6 +62,12 @@ class PackageRequestFormState extends Equatable {
   final String? promoCode;
   final FormSubmissionStatus submissionStatus;
   final String? errorMessage;
+
+  /// L'exception typée de la dernière soumission échouée. C'est elle, et non
+  /// [errorMessage], qu'il faut donner au présenteur d'erreurs : un texte nu
+  /// y est reclassé en erreur réseau, et un 422 du serveur (budget hors
+  /// bornes, données invalides) s'affichait « Erreur réseau ».
+  final Object? error;
   final String? draftLimitMessage;
   final PackageRequest? createdRequest;
 
@@ -99,6 +106,7 @@ class PackageRequestFormState extends Equatable {
     bool clearPromoCode = false,
     FormSubmissionStatus? submissionStatus,
     String? errorMessage,
+    Object? error,
     String? draftLimitMessage,
     // Même pattern que clearTotalBudgetEur : un message de limite affiché
     // une fois doit pouvoir être effacé, pas seulement remplacé.
@@ -130,6 +138,7 @@ class PackageRequestFormState extends Equatable {
     promoCode: clearPromoCode ? null : (promoCode ?? this.promoCode),
     submissionStatus: submissionStatus ?? this.submissionStatus,
     errorMessage: errorMessage ?? this.errorMessage,
+    error: error ?? this.error,
     draftLimitMessage: clearDraftLimitMessage
         ? null
         : (draftLimitMessage ?? this.draftLimitMessage),
@@ -160,6 +169,7 @@ class PackageRequestFormState extends Equatable {
     promoCode,
     submissionStatus,
     errorMessage,
+    error,
     draftLimitMessage,
     createdRequest,
     editingRequestId,
