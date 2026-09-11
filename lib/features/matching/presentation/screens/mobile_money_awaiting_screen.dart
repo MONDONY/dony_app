@@ -72,7 +72,10 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
       unawaited(
         getIt<AnalyticsService>().logEvent(
           AnalyticsEvents.mobileMoneyAwaiting,
-          properties: {'provider': 'mobile_money'},
+          properties: {
+            'provider': 'mobile_money',
+            'scope': widget.scope.analyticsName,
+          },
         ),
       );
     });
@@ -226,6 +229,7 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
               onRetry: () => _retry(_retryPhoneController.text),
             ),
             MobileMoneyPaymentExpired() => _ExpiredBody(
+              scope: widget.scope,
               onBack: () => _close(context, paid: false),
             ),
             MobileMoneyPaymentEscrowed() => const _EscrowedBody(),
@@ -510,10 +514,22 @@ class _PhoneRequiredBody extends StatelessWidget {
   }
 }
 
-/// Fenêtre de 30 minutes dépassée (ou bid annulé) sans séquestre.
+/// Fenêtre de 30 minutes dépassée (ou sujet annulé) sans séquestre. Le
+/// texte dépend de la portée : un bid expiré est annulé côté back (il faut
+/// refaire une offre), alors qu'un fil revient simplement à « à payer ».
 class _ExpiredBody extends StatelessWidget {
-  const _ExpiredBody({required this.onBack});
+  const _ExpiredBody({required this.scope, required this.onBack});
+  final MobileMoneyScope scope;
   final VoidCallback onBack;
+
+  String get _message => switch (scope) {
+    BidMobileMoneyScope() =>
+      'Délai dépassé. La demande a été annulée, refais une offre au '
+          'voyageur.',
+    NegotiationMobileMoneyScope() =>
+      'Délai dépassé. Le fil est revenu à « à payer » : tu peux relancer le '
+          'paiement ou changer de moyen de paiement depuis le fil.',
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -527,12 +543,7 @@ class _ExpiredBody extends StatelessWidget {
           children: [
             DonyIcon('timer-off', color: cs.warning, size: 48),
             const SizedBox(height: DonySpacing.base),
-            Text(
-              'Délai dépassé. La demande a été annulée, refais une offre au '
-              'voyageur.',
-              textAlign: TextAlign.center,
-              style: tt.bodyMedium,
-            ),
+            Text(_message, textAlign: TextAlign.center, style: tt.bodyMedium),
             const SizedBox(height: DonySpacing.xl),
             DonyButton(
               label: 'Retour',

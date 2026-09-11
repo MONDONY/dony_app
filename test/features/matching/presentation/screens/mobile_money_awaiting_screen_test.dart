@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/external_url_launcher.dart';
 import 'package:dony/features/matching/bloc/mobile_money_payment_bloc.dart';
@@ -26,6 +27,7 @@ void main() {
 
   late _MockBloc bloc;
   late _MockUrlLauncher urlLauncher;
+  late MockAnalyticsBackend analyticsBackend;
 
   const bidId = 'bid-1';
   const threadId = 'thread-1';
@@ -131,8 +133,11 @@ void main() {
     if (getIt.isRegistered<AnalyticsService>()) {
       getIt.unregister<AnalyticsService>();
     }
+    // `onConfigured()` est indispensable : sans lui, `isEnabled` reste faux
+    // et `logEvent` n'atteint jamais le backend (rien à vérifier).
+    analyticsBackend = MockAnalyticsBackend();
     getIt.registerSingleton<AnalyticsService>(
-      makeEnabledAnalytics(MockAnalyticsBackend()),
+      makeEnabledAnalytics(analyticsBackend)..onConfigured(),
     );
 
     if (getIt.isRegistered<ExternalUrlLauncher>()) {
@@ -253,6 +258,46 @@ void main() {
     verify(
       () => bloc.add(any(that: isA<MobileMoneyPaymentOpened>())),
     ).called(1);
+  });
+
+  group('analytics mobileMoneyAwaiting', () {
+    testWidgets('porte scope bid en portée bid', (tester) async {
+      stub(
+        const MobileMoneyPaymentInitial(),
+        previous: const MobileMoneyPaymentInitial(),
+      );
+
+      await pumpScreen(tester, settle: false);
+
+      verify(
+        () => analyticsBackend.capture(AnalyticsEvents.mobileMoneyAwaiting, {
+          'provider': 'mobile_money',
+          'scope': 'bid',
+        }),
+      ).called(1);
+    });
+
+    testWidgets('porte scope negotiation en portée négociation', (
+      tester,
+    ) async {
+      stub(
+        const MobileMoneyPaymentInitial(),
+        previous: const MobileMoneyPaymentInitial(),
+      );
+
+      await pumpScreen(
+        tester,
+        settle: false,
+        scope: const MobileMoneyScope.negotiation(threadId),
+      );
+
+      verify(
+        () => analyticsBackend.capture(AnalyticsEvents.mobileMoneyAwaiting, {
+          'provider': 'mobile_money',
+          'scope': 'negotiation',
+        }),
+      ).called(1);
+    });
   });
 
   testWidgets('sondage : un event Polled est envoyé toutes les 5 secondes', (
@@ -641,6 +686,43 @@ void main() {
       expect(find.text('host'), findsOneWidget);
       expect(await poppedResult, isFalse);
     });
+
+    testWidgets(
+      'en portée négociation : le fil est revenu à « à payer », pas de '
+      'demande annulée',
+      (tester) async {
+        stub(
+          const MobileMoneyPaymentExpired(
+            MobileMoneyPaymentStatus(
+              subjectId: threadId,
+              paymentStatus: 'CANCELLED',
+              amount: 50.0,
+            ),
+          ),
+        );
+
+        await pumpScreen(
+          tester,
+          scope: const MobileMoneyScope.negotiation(threadId),
+        );
+
+        expect(
+          find.text(
+            'Délai dépassé. Le fil est revenu à « à payer » : tu peux '
+            'relancer le paiement ou changer de moyen de paiement depuis le '
+            'fil.',
+          ),
+          findsOneWidget,
+        );
+        expect(find.textContaining('La demande a été annulée'), findsNothing);
+
+        await tester.tap(find.text('Retour'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('host'), findsOneWidget);
+        expect(await poppedResult, isFalse);
+      },
+    );
   });
 
   group('Escrowed', () {
