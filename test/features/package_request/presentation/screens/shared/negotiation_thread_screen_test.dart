@@ -358,6 +358,25 @@ void main() {
     );
 
     testWidgets(
+      'statut AWAITING_DEPOSIT : l\'expéditeur peut encore mettre fin à la '
+      'négociation (item présent dans l\'ellipsis)',
+      (tester) async {
+        when(() => bloc.state).thenReturn(
+          NegotiationLoaded(
+            _thread(status: NegotiationThreadStatus.awaitingDeposit),
+          ),
+        );
+        await tester.pumpWidget(wrap());
+        await tester.pumpAndSettle();
+
+        expect(find.byType(PopupMenuButton<String>), findsOneWidget);
+        await tester.tap(find.byType(PopupMenuButton<String>));
+        await tester.pumpAndSettle();
+        expect(find.text('Mettre fin à la négociation'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
       'statut ACCEPTED : l\'item « Mettre fin à la négociation » est absent',
       (tester) async {
         when(() => bloc.state).thenReturn(

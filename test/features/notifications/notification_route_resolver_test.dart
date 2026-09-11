@@ -143,6 +143,31 @@ void main() {
       );
     });
 
+    // Décision 2 (lot 2 mobile money) : le back envoie le même type au
+    // voyageur et à l'expéditeur, tous deux avec threadId + packageRequestId.
+    // Les deux DOIVENT ouvrir le fil et jamais l'écran d'attente, sinon un
+    // voyageur poussé dessus y déclencherait une initiation de paiement
+    // interdite.
+    test('negotiation_deposit_pending routes to the thread', () {
+      expect(
+        resolveNotificationRoute('negotiation_deposit_pending', {
+          'threadId': threadId,
+          'packageRequestId': packageRequestId,
+        }),
+        '/negotiations/$threadId',
+      );
+    });
+
+    test('negotiation_deposit_reverted routes to the thread', () {
+      expect(
+        resolveNotificationRoute('negotiation_deposit_reverted', {
+          'threadId': threadId,
+          'packageRequestId': packageRequestId,
+        }),
+        '/negotiations/$threadId',
+      );
+    });
+
     test('request_expired routes to the sender package request', () {
       expect(
         resolveNotificationRoute('request_expired', {

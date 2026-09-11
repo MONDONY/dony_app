@@ -27,6 +27,7 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/bid_quote_response.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid/payer_phone.dart';
+import 'package:dony/features/matching/presentation/widgets/create_bid/payer_phone_field.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid/photo_section.dart';
 import 'package:dony/features/matching/presentation/widgets/custom_items_section.dart';
 import 'package:dony/features/matching/presentation/widgets/grid_item_selection_sheet.dart';
@@ -170,7 +171,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
 
   /// Vrai quand [_initialPayerPhone] est vide (compte Yadony sans numéro de
   /// téléphone, vérification SMS pas encore configurée) : fait basculer le
-  /// texte d'aide de [_PayerPhoneField], qui ne peut plus affirmer un
+  /// texte d'aide de [PayerPhoneField], qui ne peut plus affirmer un
   /// pré-remplissage qui n'a pas eu lieu.
   late final bool _payerPhoneEmpty;
 
@@ -2308,64 +2309,6 @@ class _CashEscrowWarning extends StatelessWidget {
   }
 }
 
-// ── Numéro payeur mobile money ──────────────────────────────────────────────
-//
-// Affiché uniquement quand le mode mobile money est sélectionné. Le numéro
-// reste modifiable/effaçable par l'expéditeur (jamais requis pour
-// soumettre) : un champ vide envoie `phoneNumber: null`, et le backend
-// replie alors sur le téléphone Firebase de l'expéditeur. Un champ de saisie
-// et un texte d'aide, jamais de DonyButton ici — reste dans le `child`
-// scrollable du picker, jamais dans le _StickyBottom.
-class _PayerPhoneField extends StatelessWidget {
-  const _PayerPhoneField({
-    required this.controller,
-    required this.hasProfilePhone,
-  });
-
-  final TextEditingController controller;
-
-  /// Faux quand `_initialPayerPhone()` était vide (compte Yadony sans
-  /// numéro de téléphone) : le texte d'aide ne peut alors plus affirmer un
-  /// pré-remplissage qui n'a pas eu lieu.
-  final bool hasProfilePhone;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        DonyTextField(
-          key: const Key('payer-phone-field'),
-          controller: controller,
-          label: 'Numéro qui paiera (facultatif)',
-          keyboardType: TextInputType.phone,
-        ),
-        const SizedBox(height: DonySpacing.xs),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            DonyIcon('smartphone', size: 14, color: cs.onSurfaceVariant),
-            const SizedBox(width: DonySpacing.xs),
-            Expanded(
-              child: Text(
-                hasProfilePhone
-                    ? 'Par défaut, ton numéro Yadony. Tu recevras la '
-                          'demande de paiement sur ce numéro.'
-                    : "Ton compte n'a pas de numéro : indique celui qui "
-                          'paiera. Tu recevras la demande de paiement '
-                          'dessus.',
-                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
 // ── Contenu des cartes ouvertes ────────────────────────────────────────────────
 //
 // Du contenu et des champs seulement — jamais de DonyButton ici, le CTA reste
@@ -2437,7 +2380,7 @@ class _MobileMoneyModeContent extends StatelessWidget {
         const _OperatorChips(),
         if (payerPhoneController != null) ...[
           const SizedBox(height: DonySpacing.md),
-          _PayerPhoneField(
+          PayerPhoneField(
             controller: payerPhoneController!,
             hasProfilePhone: hasProfilePhone,
           ),

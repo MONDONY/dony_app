@@ -3,7 +3,11 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
+import 'package:dony/features/matching/presentation/widgets/create_bid/payer_phone.dart';
+import 'package:dony/features/matching/presentation/widgets/create_bid/payer_phone_field.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart'
@@ -27,6 +31,8 @@ const String kCashPaymentSentinel = 'CASH';
 ///
 /// Shows an itemized fee breakdown:
 /// - STRIPE: traveler net + service fee + total → CTA "Payer X €"
+/// - MOBILE_MONEY: même grille + champ du numéro payeur → CTA
+///   "Payer X par mobile money" (ouvre l'écran d'attente du dépôt)
 /// - CASH:   amount to hand over + note on fee covered by traveler → CTA "Confirmer l'accord"
 ///
 /// Rule: [DonyButton] is always in [stickyBottom], never in the scrollable child.
@@ -47,6 +53,7 @@ class PaymentRecapBottomSheet {
     final dony.PaymentMethod method =
         paymentMethod ?? thread.paymentMethod ?? dony.PaymentMethod.stripe;
     final bool isCash = method == dony.PaymentMethod.cash;
+    final bool isMobileMoney = method == dony.PaymentMethod.mobileMoney;
 
     // Garde anti-double-tap : le flux Stripe (initiatePayment → présentation de
     // la sheet) est asynchrone et ne change pas l'état du BLoC avant son terme,
@@ -55,9 +62,19 @@ class PaymentRecapBottomSheet {
     // bouton dès le 1er tap et rend `onPressed` ré-entrant.
     final processing = ValueNotifier<bool>(false);
 
+    // Mobile money : le numéro payeur est saisi dans le `child` (son
+    // `TextEditingController` vit dans le `State` de `_MobileMoneyRecapContent`)
+    // et le bouton du `stickyBottom` le lit au tap par cette fonction, remise
+    // via `onSubmitReady` (motif « Bouton dépend d'état local »).
+    String Function()? readPhone;
+
     await DonyBottomSheet.show<void>(
       context,
-      title: isCash ? 'Confirmer l\'accord' : 'Payer en toute sécurité',
+      title: isCash
+          ? 'Confirmer l\'accord'
+          : isMobileMoney
+          ? 'Payer par mobile money'
+          : 'Payer en toute sécurité',
       wrapper: (child) => BlocProvider.value(value: bloc, child: child),
       stickyBottom: ValueListenableBuilder<bool>(
         valueListenable: processing,
@@ -73,6 +90,8 @@ class PaymentRecapBottomSheet {
                   ? 'Traitement…'
                   : isCash
                   ? 'Confirmer l\'accord'
+                  : isMobileMoney
+                  ? 'Payer ${PriceDisplay.money(gross, thread.currency)} par mobile money'
                   : 'Payer ${PriceDisplay.money(gross, thread.currency)}',
               isLoading: isLoading,
               onPressed: isLoading
@@ -81,7 +100,16 @@ class PaymentRecapBottomSheet {
                       // Ré-entrance : si un tap est déjà en cours, ignorer.
                       if (processing.value) return;
                       processing.value = true;
-                      if (!isCash) {
+                      if (isMobileMoney) {
+                        await _payByMobileMoney(
+                          sheetContext: ctx,
+                          callerContext: context,
+                          bloc: bloc,
+                          thread: thread,
+                          processing: processing,
+                          readPhone: () => readPhone?.call() ?? '',
+                        );
+                      } else if (!isCash) {
                         // Stripe: require biometric/PIN before payment
                         final authenticated = await requirePaymentAuth(
                           ctx,
@@ -195,14 +223,154 @@ class PaymentRecapBottomSheet {
           },
         ),
       ),
-      child: PaymentRecapContent(
-        net: net,
-        gross: gross,
-        fee: fee,
-        isCash: isCash,
-        currency: thread.currency,
-      ),
+      child: isMobileMoney
+          ? _MobileMoneyRecapContent(
+              net: net,
+              gross: gross,
+              fee: fee,
+              currency: thread.currency,
+              onSubmitReady: (fn) => readPhone = fn,
+            )
+          : PaymentRecapContent(
+              net: net,
+              gross: gross,
+              fee: fee,
+              isCash: isCash,
+              currency: thread.currency,
+            ),
     ).whenComplete(processing.dispose);
+  }
+
+  /// Branche mobile money du bouton : authentification locale, puis la feuille
+  /// se ferme et l'écran d'attente du dépôt (`/negotiations/:id/mobile-money/
+  /// awaiting`) est poussé avec le numéro payeur normalisé en `extra`. Cet
+  /// écran fait lui-même l'unique appel `initiate` et se referme sur `true`
+  /// quand le dépôt est séquestré, `false` à l'échéance. Au retour, le fil est
+  /// rechargé dans tous les cas ; l'écran de succès n'est poussé que sur
+  /// `true`. Si l'expéditeur quitte l'attente sans payer, le fil reste en
+  /// « dépôt en cours » jusqu'à l'échéance côté serveur : rien à faire ici.
+  ///
+  /// [processing] n'est plus touché après la fermeture de la feuille : il est
+  /// disposé par le `whenComplete` de [show] dès que la route est retirée.
+  static Future<void> _payByMobileMoney({
+    required BuildContext sheetContext,
+    required BuildContext callerContext,
+    required NegotiationBloc bloc,
+    required NegotiationThread thread,
+    required ValueNotifier<bool> processing,
+    required String Function() readPhone,
+  }) async {
+    final authenticated = await requirePaymentAuth(
+      sheetContext,
+      authService: getIt<LocalAuthService>(),
+      userPrefs: getIt<HiveService>().userPrefs,
+    );
+    if (!sheetContext.mounted) return;
+    if (!authenticated) {
+      processing.value = false;
+      DonySnackbar.show(
+        sheetContext,
+        message: 'Paiement non confirmé, réessayez',
+        type: DonySnackbarType.warning,
+      );
+      return;
+    }
+    // Lu avant la fermeture : le contrôleur du champ vit dans le `State` du
+    // `child` et est disposé avec lui.
+    final phone = normalizePayerPhone(readPhone());
+    Navigator.of(sheetContext, rootNavigator: true).pop();
+    if (!callerContext.mounted) return;
+    final paid = await callerContext.push<bool>(
+      '/negotiations/${thread.id}/mobile-money/awaiting',
+      extra: phone,
+    );
+    if (!callerContext.mounted) return;
+    bloc.add(NegotiationFetchRequested(thread.id));
+    if (paid == true) {
+      unawaited(callerContext.push('/negotiations/${thread.id}/paid'));
+    }
+  }
+}
+
+/// Contenu de la feuille en mode mobile money : le récapitulatif habituel
+/// suivi du champ du numéro payeur. Ce `State` n'existe que pour le cycle de
+/// vie du [TextEditingController] (créé ici, disposé dans [dispose], jamais
+/// dans un `whenComplete` qui se déclenche pendant l'animation de sortie) :
+/// aucun `setState`.
+class _MobileMoneyRecapContent extends StatefulWidget {
+  const _MobileMoneyRecapContent({
+    required this.net,
+    required this.gross,
+    required this.fee,
+    required this.currency,
+    required this.onSubmitReady,
+  });
+
+  final double net;
+  final double gross;
+  final double fee;
+  final String currency;
+
+  /// Remet au bouton du `stickyBottom` la lecture du numéro saisi.
+  final void Function(String Function() readPhone) onSubmitReady;
+
+  @override
+  State<_MobileMoneyRecapContent> createState() =>
+      _MobileMoneyRecapContentState();
+}
+
+class _MobileMoneyRecapContentState extends State<_MobileMoneyRecapContent> {
+  late final TextEditingController _phoneController;
+  late final bool _hasProfilePhone;
+
+  @override
+  void initState() {
+    super.initState();
+    final initial = _initialPayerPhone();
+    _phoneController = TextEditingController(text: initial);
+    _hasProfilePhone = initial.isNotEmpty;
+    widget.onSubmitReady(() => _phoneController.text);
+  }
+
+  /// Numéro du compte connecté, pré-rempli mais toujours modifiable ou
+  /// effaçable (un champ vide laisse le backend replier sur le téléphone
+  /// Firebase). `AuthBloc` est fourni au-dessus du navigateur racine dans
+  /// l'app ; certains harnais de test ne le fournissent pas, le champ démarre
+  /// alors simplement vide.
+  String _initialPayerPhone() {
+    try {
+      return context.read<AuthBloc>().state.currentUser?.phoneNumber ?? '';
+    } on ProviderNotFoundException {
+      return '';
+    }
+  }
+
+  @override
+  void dispose() {
+    _phoneController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        PaymentRecapContent(
+          net: widget.net,
+          gross: widget.gross,
+          fee: widget.fee,
+          isCash: false,
+          isMobileMoney: true,
+          currency: widget.currency,
+        ),
+        const SizedBox(height: DonySpacing.base),
+        PayerPhoneField(
+          controller: _phoneController,
+          hasProfilePhone: _hasProfilePhone,
+        ),
+      ],
+    );
   }
 }
 
@@ -217,6 +385,7 @@ class PaymentRecapContent extends StatelessWidget {
     required this.gross,
     required this.fee,
     required this.isCash,
+    this.isMobileMoney = false,
     this.currency = 'EUR',
   });
 
@@ -224,6 +393,10 @@ class PaymentRecapContent extends StatelessWidget {
   final double gross;
   final double fee;
   final bool isCash;
+
+  /// Paiement en ligne par mobile money : même grille que la carte, bannière
+  /// et note adaptées (validation sur le téléphone, séquestre Yadony).
+  final bool isMobileMoney;
   final String currency;
 
   @override
@@ -235,7 +408,7 @@ class PaymentRecapContent extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // Trust banner
-        _TrustBanner(isCash: isCash),
+        _TrustBanner(isCash: isCash, isMobileMoney: isMobileMoney),
         const SizedBox(height: DonySpacing.base),
 
         // Fee table
@@ -294,6 +467,8 @@ class PaymentRecapContent extends StatelessWidget {
         Text(
           isCash
               ? 'Remettez le montant total en espèces au voyageur lors de la remise du colis. Le voyageur déduira ses frais Yadony de ce montant.'
+              : isMobileMoney
+              ? 'Une demande de paiement arrive sur le numéro indiqué ci-dessous. Le voyageur reçoit le montant uniquement après confirmation de la livraison.'
               : 'Le montant est bloqué et sécurisé. Le voyageur le reçoit uniquement après confirmation de la livraison.',
           style: tt.bodySmall?.copyWith(
             color: cs.onSurfaceVariant,
@@ -306,9 +481,10 @@ class PaymentRecapContent extends StatelessWidget {
 }
 
 class _TrustBanner extends StatelessWidget {
-  const _TrustBanner({required this.isCash});
+  const _TrustBanner({required this.isCash, this.isMobileMoney = false});
 
   final bool isCash;
+  final bool isMobileMoney;
 
   @override
   Widget build(BuildContext context) {
@@ -317,6 +493,16 @@ class _TrustBanner extends StatelessWidget {
 
     final Color bgColor = isCash ? cs.warningLight : cs.infoLight;
     final Color iconColor = isCash ? DonyColors.warning500 : DonyColors.info500;
+    final String icon = isCash
+        ? 'banknote'
+        : isMobileMoney
+        ? 'smartphone'
+        : 'lock';
+    final String message = isCash
+        ? 'Paiement en main propre à la remise'
+        : isMobileMoney
+        ? 'Tu valides le paiement sur ton téléphone. Yadony garde l\'argent et ne le verse au voyageur qu\'après confirmation de la livraison.'
+        : 'Sécurisé · bloqué jusqu\'à la livraison';
 
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -328,14 +514,17 @@ class _TrustBanner extends StatelessWidget {
         borderRadius: BorderRadius.circular(DonyRadius.md),
       ),
       child: Row(
+        // Le message mobile money tient sur plusieurs lignes : icône alignée
+        // en haut ; les bannières carte et espèces restent centrées.
+        crossAxisAlignment: isMobileMoney
+            ? CrossAxisAlignment.start
+            : CrossAxisAlignment.center,
         children: [
-          DonyIcon(isCash ? 'banknote' : 'lock', size: 18, color: iconColor),
+          DonyIcon(icon, size: 18, color: iconColor),
           const SizedBox(width: DonySpacing.sm),
           Expanded(
             child: Text(
-              isCash
-                  ? 'Paiement en main propre à la remise'
-                  : 'Sécurisé · bloqué jusqu\'à la livraison',
+              message,
               style: tt.bodySmall?.copyWith(
                 color: iconColor,
                 fontWeight: FontWeight.w600,

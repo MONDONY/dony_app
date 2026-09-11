@@ -1094,4 +1094,128 @@ void main() {
       ],
     );
   });
+  // ── NegotiationCancelDepositRequested ───────────────────────────────────────
+
+  group('NegotiationCancelDepositRequested', () {
+    blocTest<NegotiationBloc, NegotiationState>(
+      'garde : un renoncement déjà en cours (ActionInProgress) ignore un '
+      'second event, aucun appel réseau',
+      build: () => _makeBloc(repo),
+      seed: () => NegotiationActionInProgress(
+        _fakeThread(status: NegotiationThreadStatus.awaitingDeposit),
+      ),
+      act: (b) => b.add(const NegotiationCancelDepositRequested('t-1')),
+      expect: () => [],
+      verify: (_) => verifyNever(() => repo.cancelMobileMoneyDeposit(any())),
+    );
+
+    blocTest<NegotiationBloc, NegotiationState>(
+      'renoncement réussi → ActionInProgress, puis le fil est rechargé '
+      '(NegotiationFetchRequested : Loading, Loaded en awaitingPayment)',
+      build: () {
+        when(
+          () => repo.cancelMobileMoneyDeposit('t-1'),
+        ).thenAnswer((_) async {});
+        when(() => repo.getById('t-1')).thenAnswer(
+          (_) async =>
+              _fakeThread(status: NegotiationThreadStatus.awaitingPayment),
+        );
+        return _makeBloc(repo);
+      },
+      seed: () => NegotiationLoaded(
+        _fakeThread(status: NegotiationThreadStatus.awaitingDeposit),
+      ),
+      act: (b) => b.add(const NegotiationCancelDepositRequested('t-1')),
+      expect: () => [
+        isA<NegotiationActionInProgress>(),
+        isA<NegotiationLoading>(),
+        isA<NegotiationLoaded>().having(
+          (s) => s.thread.status,
+          'status',
+          NegotiationThreadStatus.awaitingPayment,
+        ),
+      ],
+      verify: (_) {
+        verifyInOrder([
+          () => repo.cancelMobileMoneyDeposit('t-1'),
+          () => repo.getById('t-1'),
+        ]);
+      },
+    );
+
+    blocTest<NegotiationBloc, NegotiationState>(
+      'renoncement depuis un état autre que Loaded → Loading puis rechargement',
+      build: () {
+        when(
+          () => repo.cancelMobileMoneyDeposit('t-1'),
+        ).thenAnswer((_) async {});
+        when(() => repo.getById('t-1')).thenAnswer(
+          (_) async =>
+              _fakeThread(status: NegotiationThreadStatus.awaitingPayment),
+        );
+        return _makeBloc(repo);
+      },
+      act: (b) => b.add(const NegotiationCancelDepositRequested('t-1')),
+      // Le Loading du rechargement est identique (Equatable) à celui de
+      // l'action : le bloc ne l'émet qu'une fois.
+      expect: () => [isA<NegotiationLoading>(), isA<NegotiationLoaded>()],
+      verify: (_) =>
+          verify(() => repo.cancelMobileMoneyDeposit('t-1')).called(1),
+    );
+
+    blocTest<NegotiationBloc, NegotiationState>(
+      'renoncement en échec → NegotiationError, pas de rechargement',
+      build: () {
+        when(
+          () => repo.cancelMobileMoneyDeposit('t-1'),
+        ).thenThrow(Exception('server error'));
+        return _makeBloc(repo);
+      },
+      seed: () => NegotiationLoaded(
+        _fakeThread(status: NegotiationThreadStatus.awaitingDeposit),
+      ),
+      act: (b) => b.add(const NegotiationCancelDepositRequested('t-1')),
+      expect: () => [
+        isA<NegotiationActionInProgress>(),
+        isA<NegotiationError>(),
+      ],
+      verify: (_) => verifyNever(() => repo.getById(any())),
+    );
+
+    blocTest<NegotiationBloc, NegotiationState>(
+      '409 negotiation/not-awaiting-deposit (dépôt déjà libéré ou scellé '
+      'côté back) → NegotiationError puis rechargement du fil',
+      build: () {
+        when(() => repo.cancelMobileMoneyDeposit('t-1')).thenThrow(
+          const ConflictException(
+            'Aucun dépôt en attente',
+            code: 'negotiation/not-awaiting-deposit',
+          ),
+        );
+        when(() => repo.getById('t-1')).thenAnswer(
+          (_) async => _fakeThread(status: NegotiationThreadStatus.accepted),
+        );
+        return _makeBloc(repo);
+      },
+      seed: () => NegotiationLoaded(
+        _fakeThread(status: NegotiationThreadStatus.awaitingDeposit),
+      ),
+      act: (b) => b.add(const NegotiationCancelDepositRequested('t-1')),
+      expect: () => [
+        isA<NegotiationActionInProgress>(),
+        isA<NegotiationError>().having(
+          (s) => s.error.code,
+          'code',
+          'negotiation/not-awaiting-deposit',
+        ),
+        isA<NegotiationLoading>(),
+        isA<NegotiationLoaded>().having(
+          (s) => s.thread.status,
+          'status',
+          NegotiationThreadStatus.accepted,
+        ),
+      ],
+      verify: (_) => verify(() => repo.getById('t-1')).called(1),
+    );
+  });
 }

@@ -13,6 +13,7 @@ import 'package:dony/features/matching/bloc/mobile_money_payment_bloc.dart';
 import 'package:dony/features/matching/bloc/mobile_money_payment_event.dart';
 import 'package:dony/features/matching/bloc/mobile_money_payment_state.dart';
 import 'package:dony/features/matching/data/models/mobile_money_payment_status.dart';
+import 'package:dony/features/matching/data/models/mobile_money_scope.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid/payer_phone.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -20,19 +21,31 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 /// Écran d'attente du paiement mobile money (Wave / Orange Money via
-/// pawaPay) d'un bid, ouvert depuis le détail de l'envoi
-/// (`context.push<bool>('/bids/{id}/mobile-money/awaiting')`), une
+/// pawaPay) d'un bid ou d'un fil de négociation, ouvert depuis le détail de
+/// l'envoi ou le fil (`context.push<bool>(scope.awaitingRoute)`), une
 /// notification `MM_PAYMENT_PENDING` ou le lien profond
-/// `yadony://bids/{uuid}/mobile-money/awaiting`.
+/// `yadony://bids/{uuid}/mobile-money/awaiting` (ou
+/// `yadony://negotiations/{uuid}/mobile-money/awaiting`).
 ///
 /// L'ouverture déclenche le dépôt (push PIN chez l'opérateur, ou redirection
 /// Wave via `authorizationUrl`) : le bloc s'en charge lui-même dès
-/// `MobileMoneyPaymentOpened`. L'écran sonde ensuite le statut jusqu'au
-/// séquestre, puis se referme sur `context.pop(true)` — le détail de
-/// l'envoi se recharge au retour.
+/// `MobileMoneyPaymentOpened`. [initialPhone] porte le numéro payeur déjà
+/// saisi (feuille de récapitulatif), absent depuis un lien profond ou une
+/// notification. L'écran sonde ensuite le statut jusqu'au séquestre, puis se
+/// referme sur `context.pop(true)` — l'appelant se recharge au retour.
 class MobileMoneyAwaitingScreen extends StatefulWidget {
-  const MobileMoneyAwaitingScreen({super.key, required this.bidId});
-  final String bidId;
+  const MobileMoneyAwaitingScreen({
+    super.key,
+    required this.scope,
+    this.initialPhone,
+  });
+
+  /// Bid ou fil de négociation dont ce dépôt paie l'escrow.
+  final MobileMoneyScope scope;
+
+  /// Numéro payeur déjà connu, envoyé avec `MobileMoneyPaymentOpened` à
+  /// l'ouverture.
+  final String? initialPhone;
 
   @override
   State<MobileMoneyAwaitingScreen> createState() =>
@@ -59,12 +72,18 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
       unawaited(
         getIt<AnalyticsService>().logEvent(
           AnalyticsEvents.mobileMoneyAwaiting,
-          properties: {'provider': 'mobile_money'},
+          properties: {
+            'provider': 'mobile_money',
+            'scope': widget.scope.analyticsName,
+          },
         ),
       );
     });
     context.read<MobileMoneyPaymentBloc>().add(
-      MobileMoneyPaymentOpened(bidId: widget.bidId),
+      MobileMoneyPaymentOpened(
+        scope: widget.scope,
+        phoneNumber: widget.initialPhone,
+      ),
     );
     _startPolling();
     _countdownTimer = Timer.periodic(_countdownInterval, (_) {
@@ -78,7 +97,7 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
     _pollingTimer = Timer.periodic(_pollInterval, (_) {
       if (!mounted) return;
       context.read<MobileMoneyPaymentBloc>().add(
-        MobileMoneyStatusPolled(bidId: widget.bidId),
+        MobileMoneyStatusPolled(scope: widget.scope),
       );
     });
   }
@@ -120,19 +139,20 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
   /// parent. Ouvert depuis la push « paiement en attente » (lien profond,
   /// seule page de la pile), il n'a rien à dépiler : `pop` levait
   /// « There is nothing to pop » (Sentry FLUTTER-1D, recette du 2026-09-09),
-  /// le repli est le détail du colis.
+  /// le repli est l'écran de repli de la portée (détail du bid, ou fil de
+  /// négociation).
   void _close(BuildContext context, {required bool paid}) {
     if (context.canPop()) {
       context.pop(paid);
     } else {
-      context.go('/bids/${widget.bidId}');
+      context.go(widget.scope.fallbackRoute);
     }
   }
 
   void _retry(String rawPhone) {
     context.read<MobileMoneyPaymentBloc>().add(
       MobileMoneyPaymentInitiateRequested(
-        bidId: widget.bidId,
+        scope: widget.scope,
         phoneNumber: normalizePayerPhone(rawPhone),
       ),
     );
@@ -209,6 +229,7 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
               onRetry: () => _retry(_retryPhoneController.text),
             ),
             MobileMoneyPaymentExpired() => _ExpiredBody(
+              scope: widget.scope,
               onBack: () => _close(context, paid: false),
             ),
             MobileMoneyPaymentEscrowed() => const _EscrowedBody(),
@@ -225,7 +246,7 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
               title: 'Une erreur est survenue',
               actionLabel: 'Réessayer',
               onAction: () => context.read<MobileMoneyPaymentBloc>().add(
-                MobileMoneyPaymentOpened(bidId: widget.bidId),
+                MobileMoneyPaymentOpened(scope: widget.scope),
               ),
             ),
           },
@@ -493,10 +514,22 @@ class _PhoneRequiredBody extends StatelessWidget {
   }
 }
 
-/// Fenêtre de 30 minutes dépassée (ou bid annulé) sans séquestre.
+/// Fenêtre de 30 minutes dépassée (ou sujet annulé) sans séquestre. Le
+/// texte dépend de la portée : un bid expiré est annulé côté back (il faut
+/// refaire une offre), alors qu'un fil revient simplement à « à payer ».
 class _ExpiredBody extends StatelessWidget {
-  const _ExpiredBody({required this.onBack});
+  const _ExpiredBody({required this.scope, required this.onBack});
+  final MobileMoneyScope scope;
   final VoidCallback onBack;
+
+  String get _message => switch (scope) {
+    BidMobileMoneyScope() =>
+      'Délai dépassé. La demande a été annulée, refais une offre au '
+          'voyageur.',
+    NegotiationMobileMoneyScope() =>
+      'Délai dépassé. Le fil est revenu à « à payer » : tu peux relancer le '
+          'paiement ou changer de moyen de paiement depuis le fil.',
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -510,12 +543,7 @@ class _ExpiredBody extends StatelessWidget {
           children: [
             DonyIcon('timer-off', color: cs.warning, size: 48),
             const SizedBox(height: DonySpacing.base),
-            Text(
-              'Délai dépassé. La demande a été annulée, refais une offre au '
-              'voyageur.',
-              textAlign: TextAlign.center,
-              style: tt.bodyMedium,
-            ),
+            Text(_message, textAlign: TextAlign.center, style: tt.bodyMedium),
             const SizedBox(height: DonySpacing.xl),
             DonyButton(
               label: 'Retour',

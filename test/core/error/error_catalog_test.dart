@@ -483,4 +483,63 @@ void main() {
       expect(attendus.length, 14);
     });
   });
+  // Lot 2 mobile money sur colis : codes emis par le back sur le depot d'un fil
+  // de negociation (POST /negotiations/{id}/mobile-money/*) et par la
+  // resolution du moyen de paiement (PR back #295).
+  group('ErrorCatalog — depot mobile money d un fil de negociation', () {
+    const attendus = <String, (String, String, ErrorSeverity)>{
+      'negotiation/not-awaiting-deposit': (
+        'Aucun dépôt en cours',
+        'Ce fil n\'attend pas de paiement mobile money.',
+        ErrorSeverity.info,
+      ),
+      'negotiation/deposit-in-flight': (
+        'Paiement en cours de validation',
+        'Ton opérateur traite encore le paiement, patiente quelques instants.',
+        ErrorSeverity.warning,
+      ),
+      'negotiation/traveler-cannot-receive-mobile-money': (
+        'Mobile money indisponible',
+        'Le voyageur ne peut pas recevoir de versement mobile money dans '
+            'cette devise. Choisis un autre moyen de paiement.',
+        ErrorSeverity.warning,
+      ),
+      'payment-method/not-in-available-set': (
+        'Moyen de paiement non proposé',
+        'Ce moyen de paiement n\'est pas proposé pour cette offre. '
+            'Choisis-en un autre.',
+        ErrorSeverity.warning,
+      ),
+      'payment-method/mobile-money-capability-required': (
+        'Mobile money indisponible',
+        'Le voyageur n\'a pas de compte de versement mobile money dans '
+            'cette devise.',
+        ErrorSeverity.warning,
+      ),
+    };
+
+    final genericTitles = [
+      ErrorCatalog.lookup(const ValidationException('x')).title,
+      ErrorCatalog.lookup(const ConflictException('x')).title,
+      ErrorCatalog.lookup(const NetworkException('x')).title,
+    ];
+
+    for (final entry in attendus.entries) {
+      final code = entry.key;
+      final (title, message, severity) = entry.value;
+
+      test('$code : titre, message et severite dedies', () {
+        final error = ConflictException('detail brut backend', code: code);
+        final p = ErrorCatalog.lookup(error);
+
+        expect(ErrorCatalog.isKnown(error), isTrue, reason: code);
+        expect(p.title, title, reason: code);
+        expect(p.message, message, reason: code);
+        expect(p.severity, severity, reason: code);
+        expect(p.title, isNot(anyOf(genericTitles)), reason: code);
+        expect(p.message, isNot(contains('detail brut backend')));
+        expect(p.message, isNot(contains('\u2014')));
+      });
+    }
+  });
 }

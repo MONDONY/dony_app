@@ -448,7 +448,8 @@ class CandidatesSection extends StatelessWidget {
           .where(
             (t) =>
                 t.status == NegotiationThreadStatus.awaitingTrip ||
-                t.status == NegotiationThreadStatus.awaitingPayment,
+                t.status == NegotiationThreadStatus.awaitingPayment ||
+                t.status == NegotiationThreadStatus.awaitingDeposit,
           )
           .toList();
 

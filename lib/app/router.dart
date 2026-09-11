@@ -68,6 +68,7 @@ import 'package:dony/features/matching/bloc/trip_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/mobile_money_scope.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/matching/presentation/screens/activites_hub_screen.dart';
 import 'package:dony/features/matching/presentation/screens/announcement_list_screen.dart';
@@ -103,6 +104,7 @@ import 'package:dony/features/package_request/presentation/screens/sender/comple
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/package_request_create_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/envoyer_hub_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/my_package_requests_screen.dart';
+import 'package:dony/features/package_request/presentation/screens/sender/negotiation_paid_success_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/package_request_detail_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/shared/my_negotiations_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/shared/negotiation_thread_screen.dart';
@@ -565,9 +567,33 @@ final appRouter = GoRouter(
         final bidId = state.pathParameters['bidId']!;
         return BlocProvider(
           create: (_) => getIt<MobileMoneyPaymentBloc>(),
-          child: MobileMoneyAwaitingScreen(bidId: bidId),
+          child: MobileMoneyAwaitingScreen(scope: MobileMoneyScope.bid(bidId)),
         );
       },
+    ),
+    // Même écran pour le dépôt d'un fil de négociation (colis). `extra` : numéro
+    // payeur saisi dans la feuille de récapitulatif, absent depuis un lien profond.
+    GoRoute(
+      path: '/negotiations/:id/mobile-money/awaiting',
+      builder: (context, state) {
+        final threadId = state.pathParameters['id']!;
+        final phone = state.extra is String ? state.extra! as String : null;
+        return BlocProvider(
+          create: (_) => getIt<MobileMoneyPaymentBloc>(),
+          child: MobileMoneyAwaitingScreen(
+            scope: MobileMoneyScope.negotiation(threadId),
+            initialPhone: phone,
+          ),
+        );
+      },
+    ),
+    // Écran de succès « Offre acceptée et payée ! » d'un fil séquestré (hors
+    // shell) : poussé par la feuille de récapitulatif au retour de l'écran
+    // d'attente mobile money. Le CTA ramène sur le fil via `go`.
+    GoRoute(
+      path: '/negotiations/:id/paid',
+      builder: (_, state) =>
+          NegotiationPaidSuccessScreen(threadId: state.pathParameters['id']!),
     ),
 
     // ── Cancellation (hors shell) ────────────────────────────────────────

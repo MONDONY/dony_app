@@ -89,13 +89,13 @@ class MobileMoneyDeposit extends Equatable {
   ];
 }
 
-/// Statut de paiement mobile money d'un bid, renvoyé par
-/// `POST .../mobile-money/accept`, `POST .../mobile-money/initiate` et
-/// `GET .../mobile-money/status`.
+/// Statut de paiement mobile money d'un bid ou d'un fil de négociation,
+/// renvoyé par `POST .../mobile-money/accept`, `POST .../mobile-money/initiate`
+/// et `GET .../mobile-money/status`.
 class MobileMoneyPaymentStatus extends Equatable {
   const MobileMoneyPaymentStatus({
-    required this.bidId,
-    required this.bidStatus,
+    required this.subjectId,
+    this.subjectStatus,
     this.paymentStatus,
     this.deadlineAt,
     this.amount,
@@ -103,8 +103,13 @@ class MobileMoneyPaymentStatus extends Equatable {
     this.deposit,
   });
 
-  final String bidId;
-  final String bidStatus;
+  /// UUID du bid ou du fil de négociation payé.
+  final String subjectId;
+
+  /// Statut du bid (`AWAITING_PAYMENT`, `ACCEPTED`, `CANCELLED`, …). Nul pour
+  /// un fil de négociation : le backend n'expose pas d'équivalent, le retour
+  /// à « à payer » se lit sur `paymentStatus == 'CANCELLED'`.
+  final String? subjectStatus;
 
   /// `PENDING`, `ESCROW`, `RELEASED`, `REFUNDED`, `CANCELLED`, ou nul tant
   /// qu'aucun paiement n'a été initié.
@@ -121,8 +126,8 @@ class MobileMoneyPaymentStatus extends Equatable {
 
   factory MobileMoneyPaymentStatus.fromJson(Map<String, dynamic> json) =>
       MobileMoneyPaymentStatus(
-        bidId: json['bidId'] as String,
-        bidStatus: json['bidStatus'] as String,
+        subjectId: (json['bidId'] ?? json['threadId']) as String,
+        subjectStatus: json['bidStatus'] as String?,
         paymentStatus: json['paymentStatus'] as String?,
         deadlineAt: _parseUtc(json['deadlineAt'] as String?),
         amount: (json['amount'] as num?)?.toDouble(),
@@ -145,11 +150,21 @@ class MobileMoneyPaymentStatus extends Equatable {
   /// Le dernier dépôt tenté a échoué.
   bool get isDepositFailed => deposit?.isFailed ?? false;
 
-  /// Le bid a été annulé, ou le délai de paiement de 30 minutes est dépassé
-  /// sans que le paiement ait été séquestré.
+  /// Le sujet a été annulé, le paiement du fil a été libéré (retour à
+  /// « à payer », `paymentStatus == 'CANCELLED'`), ou le délai de 30 minutes
+  /// est dépassé sans séquestre.
   bool isExpired(DateTime now) =>
-      bidStatus == 'CANCELLED' ||
+      subjectStatus == 'CANCELLED' ||
+      paymentStatus == 'CANCELLED' ||
       (!isEscrowed && deadlineAt != null && now.isAfter(deadlineAt!));
+
+  /// Ligne de paiement libérée sans que le sujet soit annulé : le fil est
+  /// revenu à « à payer » (renoncement, dépôt refusé ou échéance) et le
+  /// backend accepte une nouvelle initiation. Toujours faux pour un bid, où
+  /// `paymentStatus == 'CANCELLED'` n'arrive jamais sans
+  /// `bidStatus == 'CANCELLED'`.
+  bool get isReverted =>
+      paymentStatus == 'CANCELLED' && subjectStatus != 'CANCELLED';
 
   /// Le dépôt nécessite une redirection vers Wave plutôt qu'une simple
   /// consigne de validation du code PIN.
@@ -169,8 +184,8 @@ class MobileMoneyPaymentStatus extends Equatable {
 
   @override
   List<Object?> get props => [
-    bidId,
-    bidStatus,
+    subjectId,
+    subjectStatus,
     paymentStatus,
     deadlineAt,
     amount,

@@ -854,4 +854,29 @@ void main() {
       await expectLater(repo.declineCommission('th-1'), completes);
     });
   });
+  // ── cancelMobileMoneyDeposit ────────────────────────────────────────────────
+
+  group('cancelMobileMoneyDeposit', () {
+    test('POSTs to /negotiations/:id/mobile-money/cancel-deposit', () async {
+      when(
+        () => mockDio.post<void>(
+          '/negotiations/th-1/mobile-money/cancel-deposit',
+        ),
+      ).thenAnswer(
+        (_) async => Response<void>(
+          statusCode: 204,
+          requestOptions: RequestOptions(
+            path: '/negotiations/th-1/mobile-money/cancel-deposit',
+          ),
+        ),
+      );
+
+      await expectLater(repo.cancelMobileMoneyDeposit('th-1'), completes);
+      verify(
+        () => mockDio.post<void>(
+          '/negotiations/th-1/mobile-money/cancel-deposit',
+        ),
+      ).called(1);
+    });
+  });
 }

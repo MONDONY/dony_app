@@ -8,6 +8,7 @@ enum NegotiationThreadStatus {
   awaitingTrip('AWAITING_TRIP'),
   awaitingPayment('AWAITING_PAYMENT'),
   awaitingCommission('AWAITING_COMMISSION'),
+  awaitingDeposit('AWAITING_DEPOSIT'),
   accepted('ACCEPTED'),
   rejected('REJECTED'),
   autoRejected('AUTO_REJECTED'),
@@ -30,7 +31,8 @@ enum NegotiationThreadStatus {
       this == NegotiationThreadStatus.open ||
       this == NegotiationThreadStatus.awaitingTrip ||
       this == NegotiationThreadStatus.awaitingPayment ||
-      this == NegotiationThreadStatus.awaitingCommission;
+      this == NegotiationThreadStatus.awaitingCommission ||
+      this == NegotiationThreadStatus.awaitingDeposit;
 }
 
 class NegotiationThread extends Equatable {
@@ -76,6 +78,7 @@ class NegotiationThread extends Equatable {
     this.currency = 'EUR',
     this.commissionStatus,
     this.commissionDeadline,
+    this.depositExpiresAt,
   });
 
   final String id;
@@ -151,6 +154,13 @@ class NegotiationThread extends Equatable {
   /// cours (accord par carte, ou commission déjà réglée).
   final DateTime? commissionDeadline;
 
+  /// Date limite au-delà de laquelle le dépôt mobile money en cours (statut
+  /// `AWAITING_DEPOSIT`) expire. `null` en dehors de ce statut. Le backend
+  /// sérialise un `LocalDateTime` UTC sans suffixe de zone : forcé en UTC au
+  /// parse via [_parseUtc], sinon le compte à rebours du fil serait décalé du
+  /// fuseau du téléphone.
+  final DateTime? depositExpiresAt;
+
   /// Vrai quand un règlement est resté suspendu à une authentification forte
   /// 3DS. Le voyageur a basculé vers son application bancaire et l'OS a pu tuer
   /// yadony entre-temps : à sa prochaine tentative il faut confirmer le
@@ -223,7 +233,18 @@ class NegotiationThread extends Equatable {
     commissionDeadline: json['commissionDeadline'] == null
         ? null
         : DateTime.parse(json['commissionDeadline'] as String),
+    depositExpiresAt: _parseUtc(json['depositExpiresAt'] as String?),
   );
+
+  /// Force l'UTC sur un `LocalDateTime` back sans suffixe de zone (ex.
+  /// `2026-09-11T10:30:00`). Sans ce forçage, `DateTime.parse` l'interprète
+  /// en heure locale de l'appareil et décale le compte à rebours du dépôt.
+  static DateTime? _parseUtc(String? raw) {
+    if (raw == null) return null;
+    final hasZone =
+        raw.endsWith('Z') || RegExp(r'[+-]\d{2}:?\d{2}$').hasMatch(raw);
+    return DateTime.parse(hasZone ? raw : '${raw}Z');
+  }
 
   @override
   List<Object?> get props => [
@@ -265,5 +286,6 @@ class NegotiationThread extends Equatable {
     currency,
     commissionStatus,
     commissionDeadline,
+    depositExpiresAt,
   ];
 }

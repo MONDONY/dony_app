@@ -567,6 +567,40 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.critical,
       icon: Icons.account_balance_wallet_outlined,
     ),
+    // Dépôt mobile money d'un fil de négociation (colis) :
+    // `POST /negotiations/{id}/mobile-money/*` (`NegotiationDepositService`).
+    // Tutoiement, l'expéditeur est le payeur sur ces écrans.
+    //
+    // 409 : le fil n'est pas (ou plus) en AWAITING_DEPOSIT quand l'expéditeur
+    // renonce ou reprend le dépôt. Simple constat, comme
+    // `mobile-money-payment-not-pending`.
+    'negotiation/not-awaiting-deposit': ErrorPresentation(
+      title: 'Aucun dépôt en cours',
+      message: 'Ce fil n\'attend pas de paiement mobile money.',
+      severity: ErrorSeverity.info,
+      icon: Icons.info_outline_rounded,
+    ),
+    // 409 : l'opérateur a déjà accepté la demande, le renoncement est refusé
+    // tant que la confirmation finale n'est pas tombée (aligné sur
+    // `mobile-money-operation-in-progress`).
+    'negotiation/deposit-in-flight': ErrorPresentation(
+      title: 'Paiement en cours de validation',
+      message:
+          'Ton opérateur traite encore le paiement, patiente quelques '
+          'instants.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.pending_rounded,
+    ),
+    // 422 : le voyageur n'a pas de compte de versement mobile money actif
+    // dans la devise du fil au moment du dépôt.
+    'negotiation/traveler-cannot-receive-mobile-money': ErrorPresentation(
+      title: 'Mobile money indisponible',
+      message:
+          'Le voyageur ne peut pas recevoir de versement mobile money dans '
+          'cette devise. Choisis un autre moyen de paiement.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.flag_outlined,
+    ),
     // Refus du checkout d'un accord de prix négocié sur un trajet. Le payeur
     // est toujours l'expéditeur, d'où le vouvoiement.
     'bid-not-negotiated': ErrorPresentation(
@@ -621,6 +655,30 @@ abstract final class ErrorCatalog {
           "Ajoute d'abord une carte de commission pour payer en espèces sans solde suffisant.",
       severity: ErrorSeverity.warning,
       icon: Icons.credit_card_outlined,
+    ),
+    // 422 : le moyen de paiement demandé au checkout d'un colis n'est pas
+    // dans l'ensemble calculé par le serveur pour ce fil (déclaré par
+    // l'expéditeur, puis filtré par ce que le voyageur peut honorer).
+    'payment-method/not-in-available-set': ErrorPresentation(
+      title: 'Moyen de paiement non proposé',
+      message:
+          'Ce moyen de paiement n\'est pas proposé pour cette offre. '
+          'Choisis-en un autre.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.flag_outlined,
+    ),
+    // 422 (back PR #295) : mobile money demandé alors que le voyageur n'a pas
+    // de compte de versement dans la devise du fil. Contrairement à
+    // `payment-method/card-capability-required`, qui a sa feuille dédiée
+    // (`PaymentCapabilityBlock._byCode`), ce code n'a pas d'écran propre : il
+    // est affiché via cette entrée du catalogue.
+    'payment-method/mobile-money-capability-required': ErrorPresentation(
+      title: 'Mobile money indisponible',
+      message:
+          'Le voyageur n\'a pas de compte de versement mobile money dans '
+          'cette devise.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.flag_outlined,
     ),
 
     // ─── Devises et rechargement du portefeuille ─────────────────────

@@ -28,6 +28,7 @@ NegotiationThread _thread({
   PaymentMethod? paymentMethod,
   String? materializedBidId,
   bool canNudge = false,
+  DateTime? depositExpiresAt,
 }) {
   final messages = <NegotiationMessage>[
     NegotiationMessage(
@@ -56,13 +57,18 @@ NegotiationThread _thread({
     paymentMethod: paymentMethod,
     materializedBidId: materializedBidId,
     canNudge: canNudge,
+    depositExpiresAt: depositExpiresAt,
   );
 }
 
 void main() {
   // Épingle le taux de commission : ces tests assertent des montants
   // calculés à 12 % (indépendants du défaut kDonyCommissionRateDefault).
-  setUpAll(() => setDonyCommissionRate(0.12));
+  setUpAll(() {
+    setDonyCommissionRate(0.12);
+    // `verifyNever(bloc.add(any()))` a besoin d'une valeur de repli typée.
+    registerFallbackValue(const NegotiationFetchRequested('fallback'));
+  });
   tearDownAll(() => setDonyCommissionRate(kDonyCommissionRateDefault));
 
   late _MockNegotiationBloc bloc;
@@ -89,10 +95,15 @@ void main() {
     ),
   );
 
-  // Variante avec GoRouter pour vérifier la navigation vers /bids/:bidId.
+  // Variante avec GoRouter pour vérifier la navigation vers /bids/:bidId et
+  // vers les écrans mobile money. Chaque route poussée est consignée dans
+  // `pushedLocations` ; le stub d'attente sait se fermer en `pop(true)`
+  // (séquestré) ou `pop(false)` (expiré), comme le fait le vrai écran.
   String? lastPushedLocation;
+  final pushedLocations = <String>[];
   Widget wrapRouter(NegotiationThread thread, String viewerUserId) {
     lastPushedLocation = null;
+    pushedLocations.clear();
     final router = GoRouter(
       initialLocation: '/',
       routes: [
@@ -114,6 +125,37 @@ void main() {
           builder: (context, state) {
             lastPushedLocation = state.uri.toString();
             return const Scaffold(body: Text('Bid detail'));
+          },
+        ),
+        GoRoute(
+          path: '/negotiations/:id/mobile-money/awaiting',
+          builder: (ctx, state) {
+            lastPushedLocation = state.uri.toString();
+            pushedLocations.add(state.uri.toString());
+            return Scaffold(
+              body: Column(
+                children: [
+                  const Text('Awaiting stub'),
+                  ElevatedButton(
+                    key: const Key('deposit-ok'),
+                    onPressed: () => ctx.pop(true),
+                    child: const Text('séquestré'),
+                  ),
+                  ElevatedButton(
+                    key: const Key('deposit-expired'),
+                    onPressed: () => ctx.pop(false),
+                    child: const Text('expiré'),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+        GoRoute(
+          path: '/negotiations/:id/paid',
+          builder: (_, state) {
+            pushedLocations.add(state.uri.toString());
+            return const Scaffold(body: Text('Paid stub'));
           },
         ),
       ],
@@ -269,6 +311,26 @@ void main() {
     });
 
     testWidgets(
+      'ACCEPTED · mobileMoney → "Demande acceptée et payée" (réglé en ligne)',
+      (tester) async {
+        await tester.pumpWidget(
+          wrap(
+            _thread(
+              status: NegotiationThreadStatus.accepted,
+              paymentMethod: PaymentMethod.mobileMoney,
+            ),
+            _viewerSender,
+          ),
+        );
+        expect(find.text('Demande acceptée et payée'), findsOneWidget);
+        expect(
+          find.text('Tu peux passer aux étapes suivantes du suivi.'),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
       'ACCEPTED · cash → "Demande acceptée" (pas "payée") + paiement à la remise',
       (tester) async {
         await tester.pumpWidget(
@@ -345,6 +407,220 @@ void main() {
       expect(find.byType(ThreadStateBanner), findsNothing);
       expect(find.textContaining('Accepter'), findsNothing);
       expect(find.text('Contre-offre'), findsNothing);
+    });
+  });
+
+  group('AWAITING_DEPOSIT (dépôt mobile money en cours)', () {
+    testWidgets(
+      'sender · échéance future → banner + « Expire dans N min » + deux boutons',
+      (tester) async {
+        await tester.pumpWidget(
+          wrap(
+            _thread(
+              status: NegotiationThreadStatus.awaitingDeposit,
+              depositExpiresAt: DateTime.now().toUtc().add(
+                const Duration(minutes: 20),
+              ),
+            ),
+            _viewerSender,
+          ),
+        );
+        expect(find.byType(ThreadStateBanner), findsOneWidget);
+        expect(find.text('Dépôt mobile money en cours'), findsOneWidget);
+        expect(find.textContaining('Expire dans'), findsOneWidget);
+        expect(find.textContaining(' min.'), findsOneWidget);
+        expect(find.text('Reprendre le paiement'), findsOneWidget);
+        expect(find.text('Changer de moyen de paiement'), findsOneWidget);
+        // Plus de bouton « payer » classique : le dépôt est déjà lancé.
+        expect(find.textContaining('Compléter & payer'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'sender · échéance passée → sous-titre « délai écoulé », boutons présents',
+      (tester) async {
+        await tester.pumpWidget(
+          wrap(
+            _thread(
+              status: NegotiationThreadStatus.awaitingDeposit,
+              depositExpiresAt: DateTime.now().toUtc().subtract(
+                const Duration(minutes: 2),
+              ),
+            ),
+            _viewerSender,
+          ),
+        );
+        expect(find.textContaining('Le délai est écoulé'), findsOneWidget);
+        expect(find.textContaining('Expire dans'), findsNothing);
+        expect(find.text('Reprendre le paiement'), findsOneWidget);
+        expect(find.text('Changer de moyen de paiement'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'sender · échéance inconnue → sous-titre neutre, ni « délai écoulé » '
+      'ni « Expire dans », boutons présents',
+      (tester) async {
+        await tester.pumpWidget(
+          wrap(
+            _thread(status: NegotiationThreadStatus.awaitingDeposit),
+            _viewerSender,
+          ),
+        );
+        expect(
+          find.text('Valide le paiement sur ton téléphone.'),
+          findsOneWidget,
+        );
+        expect(find.textContaining('Le délai est écoulé'), findsNothing);
+        expect(find.textContaining('Expire dans'), findsNothing);
+        expect(find.text('Reprendre le paiement'), findsOneWidget);
+        expect(find.text('Changer de moyen de paiement'), findsOneWidget);
+      },
+    );
+
+    testWidgets('sender · tap « Changer de moyen de paiement » → '
+        'NegotiationCancelDepositRequested(thread.id)', (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          _thread(
+            status: NegotiationThreadStatus.awaitingDeposit,
+            depositExpiresAt: DateTime.now().toUtc().add(
+              const Duration(minutes: 20),
+            ),
+          ),
+          _viewerSender,
+        ),
+      );
+      await tester.tap(find.text('Changer de moyen de paiement'));
+      await tester.pump();
+      verify(
+        () => bloc.add(const NegotiationCancelDepositRequested('t1')),
+      ).called(1);
+    });
+
+    testWidgets(
+      'sender · tap « Reprendre le paiement » → pousse la route d\'attente '
+      'mobile money du fil',
+      (tester) async {
+        await tester.pumpWidget(
+          wrapRouter(
+            _thread(
+              status: NegotiationThreadStatus.awaitingDeposit,
+              depositExpiresAt: DateTime.now().toUtc().add(
+                const Duration(minutes: 20),
+              ),
+            ),
+            _viewerSender,
+          ),
+        );
+        await tester.tap(find.text('Reprendre le paiement'));
+        await tester.pumpAndSettle();
+        expect(lastPushedLocation, '/negotiations/t1/mobile-money/awaiting');
+        expect(find.text('Awaiting stub'), findsOneWidget);
+        // Tant que l'écran d'attente est ouvert, rien n'est rechargé.
+        verifyNever(() => bloc.add(any()));
+      },
+    );
+
+    testWidgets('sender · reprise → écran d\'attente rend true (séquestré) → '
+        'NegotiationFetchRequested puis route /negotiations/{id}/paid', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrapRouter(
+          _thread(
+            status: NegotiationThreadStatus.awaitingDeposit,
+            depositExpiresAt: DateTime.now().toUtc().add(
+              const Duration(minutes: 20),
+            ),
+          ),
+          _viewerSender,
+        ),
+      );
+      await tester.tap(find.text('Reprendre le paiement'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('deposit-ok')));
+      await tester.pumpAndSettle();
+
+      verify(() => bloc.add(const NegotiationFetchRequested('t1'))).called(1);
+      expect(pushedLocations, [
+        '/negotiations/t1/mobile-money/awaiting',
+        '/negotiations/t1/paid',
+      ]);
+      expect(find.text('Paid stub'), findsOneWidget);
+    });
+
+    testWidgets('sender · reprise → écran d\'attente rend false (expiré) → '
+        'NegotiationFetchRequested seul, aucune route /paid', (tester) async {
+      await tester.pumpWidget(
+        wrapRouter(
+          _thread(
+            status: NegotiationThreadStatus.awaitingDeposit,
+            depositExpiresAt: DateTime.now().toUtc().add(
+              const Duration(minutes: 20),
+            ),
+          ),
+          _viewerSender,
+        ),
+      );
+      await tester.tap(find.text('Reprendre le paiement'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('deposit-expired')));
+      await tester.pumpAndSettle();
+
+      verify(() => bloc.add(const NegotiationFetchRequested('t1'))).called(1);
+      expect(pushedLocations, ['/negotiations/t1/mobile-money/awaiting']);
+      expect(find.text('Paid stub'), findsNothing);
+      // Retour sur le fil, la barre CTA est de nouveau visible.
+      expect(find.text('Reprendre le paiement'), findsOneWidget);
+    });
+
+    testWidgets(
+      'sender · actionInProgress → les deux boutons sont désactivés',
+      (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: AppTheme.light(),
+            home: BlocProvider<NegotiationBloc>.value(
+              value: bloc,
+              child: Scaffold(
+                body: ThreadStateCtaBar(
+                  thread: _thread(
+                    status: NegotiationThreadStatus.awaitingDeposit,
+                    depositExpiresAt: DateTime.now().toUtc().add(
+                      const Duration(minutes: 20),
+                    ),
+                  ),
+                  viewerUserId: _viewerSender,
+                  actionInProgress: true,
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.tap(find.text('Changer de moyen de paiement'));
+        await tester.pump();
+        verifyNever(() => bloc.add(any()));
+      },
+    );
+
+    testWidgets('traveler → banner seul, aucun bouton', (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          _thread(
+            status: NegotiationThreadStatus.awaitingDeposit,
+            depositExpiresAt: DateTime.now().toUtc().add(
+              const Duration(minutes: 20),
+            ),
+          ),
+          _viewerTraveler,
+        ),
+      );
+      expect(find.byType(ThreadStateBanner), findsOneWidget);
+      expect(find.text("L'expéditeur règle par mobile money"), findsOneWidget);
+      expect(find.byType(DonyButton), findsNothing);
+      expect(find.text('Reprendre le paiement'), findsNothing);
+      expect(find.text('Changer de moyen de paiement'), findsNothing);
     });
   });
 

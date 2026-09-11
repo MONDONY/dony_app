@@ -92,6 +92,12 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
     // `negotiation_commission_declined` et `negotiation_commission_expired`
     // ouvrir une notification inerte, alors qu'elles annoncent justement à
     // l'utilisateur que son accord vient de tomber.
+    //
+    // `negotiation_deposit_pending` et `negotiation_deposit_reverted` (dépôt
+    // mobile money en cours, puis renoncé) passent volontairement par ce même
+    // préfixe et ouvrent le FIL, jamais l'écran d'attente : le back envoie le
+    // même type à l'expéditeur et au voyageur, et rediriger le voyageur vers
+    // l'écran d'attente y déclencherait une initiation de paiement interdite.
     final String t when t.startsWith('negotiation') && _isUuid(threadId) =>
       '/negotiations/$threadId',
     'request_accepted' when _isUuid(threadId) => '/negotiations/$threadId',

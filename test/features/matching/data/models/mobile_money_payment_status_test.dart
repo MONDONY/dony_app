@@ -192,8 +192,8 @@ void main() {
 
         final status = MobileMoneyPaymentStatus.fromJson(json);
 
-        expect(status.bidId, 'bid-uuid-1');
-        expect(status.bidStatus, 'AWAITING_PAYMENT');
+        expect(status.subjectId, 'bid-uuid-1');
+        expect(status.subjectStatus, 'AWAITING_PAYMENT');
         expect(status.paymentStatus, 'PENDING');
         expect(status.amount, 16800.0);
         expect(status.currency, 'XOF');
@@ -312,13 +312,31 @@ void main() {
 
         expect(status.deposit!.status, MobileMoneyDepositStatus.unknown);
       });
+
+      test(
+        'parses une reponse de fil de negociation (threadId, sans bidStatus)',
+        () {
+          final json = {
+            'threadId': 'thread-uuid-1',
+            'paymentStatus': 'PENDING',
+            'amount': 16800,
+            'currency': 'XOF',
+          };
+
+          final status = MobileMoneyPaymentStatus.fromJson(json);
+
+          expect(status.subjectId, 'thread-uuid-1');
+          expect(status.subjectStatus, isNull);
+          expect(status.paymentStatus, 'PENDING');
+        },
+      );
     });
 
     group('isEscrowed', () {
       test('vrai quand paymentStatus vaut ESCROW', () {
         const status = MobileMoneyPaymentStatus(
-          bidId: 'bid-1',
-          bidStatus: 'AWAITING_PAYMENT',
+          subjectId: 'bid-1',
+          subjectStatus: 'AWAITING_PAYMENT',
           paymentStatus: 'ESCROW',
         );
 
@@ -327,8 +345,8 @@ void main() {
 
       test('vrai quand paymentStatus vaut RELEASED', () {
         const status = MobileMoneyPaymentStatus(
-          bidId: 'bid-1',
-          bidStatus: 'COMPLETED',
+          subjectId: 'bid-1',
+          subjectStatus: 'COMPLETED',
           paymentStatus: 'RELEASED',
         );
 
@@ -337,13 +355,13 @@ void main() {
 
       test('faux quand paymentStatus vaut PENDING ou est nul', () {
         const pending = MobileMoneyPaymentStatus(
-          bidId: 'bid-1',
-          bidStatus: 'AWAITING_PAYMENT',
+          subjectId: 'bid-1',
+          subjectStatus: 'AWAITING_PAYMENT',
           paymentStatus: 'PENDING',
         );
         const none = MobileMoneyPaymentStatus(
-          bidId: 'bid-1',
-          bidStatus: 'AWAITING_PAYMENT',
+          subjectId: 'bid-1',
+          subjectStatus: 'AWAITING_PAYMENT',
         );
 
         expect(pending.isEscrowed, isFalse);
@@ -354,16 +372,16 @@ void main() {
     group('isDepositLive / isDepositFailed', () {
       test('refletent le statut du depot imbrique', () {
         const live = MobileMoneyPaymentStatus(
-          bidId: 'bid-1',
-          bidStatus: 'AWAITING_PAYMENT',
+          subjectId: 'bid-1',
+          subjectStatus: 'AWAITING_PAYMENT',
           deposit: MobileMoneyDeposit(
             id: 'd',
             status: MobileMoneyDepositStatus.processing,
           ),
         );
         const failed = MobileMoneyPaymentStatus(
-          bidId: 'bid-1',
-          bidStatus: 'AWAITING_PAYMENT',
+          subjectId: 'bid-1',
+          subjectStatus: 'AWAITING_PAYMENT',
           deposit: MobileMoneyDeposit(
             id: 'd',
             status: MobileMoneyDepositStatus.failed,
@@ -378,8 +396,8 @@ void main() {
 
       test('sont faux quand il n\'y a pas encore de depot', () {
         const status = MobileMoneyPaymentStatus(
-          bidId: 'bid-1',
-          bidStatus: 'AWAITING_PAYMENT',
+          subjectId: 'bid-1',
+          subjectStatus: 'AWAITING_PAYMENT',
         );
 
         expect(status.isDepositLive, isFalse);
@@ -390,8 +408,8 @@ void main() {
     group('isExpired', () {
       test('vrai quand bidStatus vaut CANCELLED, meme deadline future', () {
         final status = MobileMoneyPaymentStatus(
-          bidId: 'bid-1',
-          bidStatus: 'CANCELLED',
+          subjectId: 'bid-1',
+          subjectStatus: 'CANCELLED',
           deadlineAt: DateTime.now().add(const Duration(hours: 1)),
         );
 
@@ -401,8 +419,8 @@ void main() {
       test('vrai quand la deadline est passee et non sequestre', () {
         final deadline = DateTime.now().subtract(const Duration(minutes: 1));
         final status = MobileMoneyPaymentStatus(
-          bidId: 'bid-1',
-          bidStatus: 'AWAITING_PAYMENT',
+          subjectId: 'bid-1',
+          subjectStatus: 'AWAITING_PAYMENT',
           paymentStatus: 'PENDING',
           deadlineAt: deadline,
         );
@@ -413,8 +431,8 @@ void main() {
       test('faux quand la deadline est encore dans le futur', () {
         final deadline = DateTime.now().add(const Duration(minutes: 5));
         final status = MobileMoneyPaymentStatus(
-          bidId: 'bid-1',
-          bidStatus: 'AWAITING_PAYMENT',
+          subjectId: 'bid-1',
+          subjectStatus: 'AWAITING_PAYMENT',
           paymentStatus: 'PENDING',
           deadlineAt: deadline,
         );
@@ -425,8 +443,8 @@ void main() {
       test('jamais expire une fois sequestre, meme deadline passee', () {
         final deadline = DateTime.now().subtract(const Duration(minutes: 1));
         final status = MobileMoneyPaymentStatus(
-          bidId: 'bid-1',
-          bidStatus: 'ACCEPTED',
+          subjectId: 'bid-1',
+          subjectStatus: 'ACCEPTED',
           paymentStatus: 'ESCROW',
           deadlineAt: deadline,
         );
@@ -436,19 +454,61 @@ void main() {
 
       test('faux sans deadline quand le bid n\'est pas annule', () {
         const status = MobileMoneyPaymentStatus(
-          bidId: 'bid-1',
-          bidStatus: 'AWAITING_PAYMENT',
+          subjectId: 'bid-1',
+          subjectStatus: 'AWAITING_PAYMENT',
         );
 
         expect(status.isExpired(DateTime.now()), isFalse);
+      });
+
+      test('vrai quand paymentStatus vaut CANCELLED (fil revenu a payer)', () {
+        final status = MobileMoneyPaymentStatus(
+          subjectId: 'thread-1',
+          paymentStatus: 'CANCELLED',
+          deadlineAt: DateTime.now().add(const Duration(hours: 1)),
+        );
+
+        expect(status.isExpired(DateTime.now()), isTrue);
+      });
+    });
+
+    group('isReverted', () {
+      test('vrai sur un fil revenu a payer (CANCELLED sans bidStatus)', () {
+        const status = MobileMoneyPaymentStatus(
+          subjectId: 'thread-1',
+          paymentStatus: 'CANCELLED',
+        );
+
+        expect(status.isReverted, isTrue);
+      });
+
+      test('faux sur un bid annule (bidStatus CANCELLED)', () {
+        const status = MobileMoneyPaymentStatus(
+          subjectId: 'bid-1',
+          subjectStatus: 'CANCELLED',
+          paymentStatus: 'CANCELLED',
+        );
+
+        expect(status.isReverted, isFalse);
+      });
+
+      test('faux quand le paiement est PENDING ou nul', () {
+        const pending = MobileMoneyPaymentStatus(
+          subjectId: 'thread-1',
+          paymentStatus: 'PENDING',
+        );
+        const none = MobileMoneyPaymentStatus(subjectId: 'thread-1');
+
+        expect(pending.isReverted, isFalse);
+        expect(none.isReverted, isFalse);
       });
     });
 
     group('isWaveRedirect', () {
       test('vrai quand le depot a une authorizationUrl', () {
         const status = MobileMoneyPaymentStatus(
-          bidId: 'bid-1',
-          bidStatus: 'AWAITING_PAYMENT',
+          subjectId: 'bid-1',
+          subjectStatus: 'AWAITING_PAYMENT',
           deposit: MobileMoneyDeposit(
             id: 'd',
             status: MobileMoneyDepositStatus.created,
@@ -461,8 +521,8 @@ void main() {
 
       test('faux quand le depot n\'a pas d\'authorizationUrl', () {
         const status = MobileMoneyPaymentStatus(
-          bidId: 'bid-1',
-          bidStatus: 'AWAITING_PAYMENT',
+          subjectId: 'bid-1',
+          subjectStatus: 'AWAITING_PAYMENT',
           deposit: MobileMoneyDeposit(
             id: 'd',
             status: MobileMoneyDepositStatus.created,
@@ -474,8 +534,8 @@ void main() {
 
       test('faux quand il n\'y a pas de depot', () {
         const status = MobileMoneyPaymentStatus(
-          bidId: 'bid-1',
-          bidStatus: 'AWAITING_PAYMENT',
+          subjectId: 'bid-1',
+          subjectStatus: 'AWAITING_PAYMENT',
         );
 
         expect(status.isWaveRedirect, isFalse);
@@ -485,13 +545,13 @@ void main() {
     group('Equatable', () {
       test('deux statuts avec les memes donnees sont egaux', () {
         const a = MobileMoneyPaymentStatus(
-          bidId: 'bid-1',
-          bidStatus: 'AWAITING_PAYMENT',
+          subjectId: 'bid-1',
+          subjectStatus: 'AWAITING_PAYMENT',
           paymentStatus: 'PENDING',
         );
         const b = MobileMoneyPaymentStatus(
-          bidId: 'bid-1',
-          bidStatus: 'AWAITING_PAYMENT',
+          subjectId: 'bid-1',
+          subjectStatus: 'AWAITING_PAYMENT',
           paymentStatus: 'PENDING',
         );
 
@@ -500,12 +560,12 @@ void main() {
 
       test('deux statuts avec un bidId different ne sont pas egaux', () {
         const a = MobileMoneyPaymentStatus(
-          bidId: 'bid-1',
-          bidStatus: 'AWAITING_PAYMENT',
+          subjectId: 'bid-1',
+          subjectStatus: 'AWAITING_PAYMENT',
         );
         const b = MobileMoneyPaymentStatus(
-          bidId: 'bid-2',
-          bidStatus: 'AWAITING_PAYMENT',
+          subjectId: 'bid-2',
+          subjectStatus: 'AWAITING_PAYMENT',
         );
 
         expect(a, isNot(equals(b)));
