@@ -814,9 +814,10 @@ class _PaymentMethodChips extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     // La devise borne les moyens : pas de carte en franc CFA, pas de mobile
-    // money hors CFA. Les méthodes legacy encore cochées sur une demande en
-    // édition (Wave, Orange Money) restent affichées pour pouvoir les
-    // décocher.
+    // money hors CFA. Une méthode déjà cochée hors de cette borne (demande en
+    // édition : rail retiré comme Wave ou Orange Money, ou devise changée)
+    // reste affichée pour que l'expéditeur puisse la décocher, tant qu'il en
+    // garde au moins une (canDeselectPaymentMethod).
     final selectable = PaymentMethod.selectableIn(currency);
     final methods = [
       ...selectable,

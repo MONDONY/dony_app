@@ -82,8 +82,9 @@ class SupportedCurrency {
 
   /// Devises pour lesquelles Stripe peut traiter un paiement carte, verbatim
   /// depuis les contraintes globales du plan devise-par-annonce (2026-08-20) :
-  /// « Rails carte : EUR, USD, CAD, GBP, CHF ». XOF et XAF en sont exclues —
-  /// espèces uniquement, quel que soit l'état Stripe Connect du voyageur.
+  /// « Rails carte : EUR, USD, CAD, GBP, CHF ». XOF et XAF en sont exclues :
+  /// pas de rail carte. Leur rail non liquide est le mobile money, cf.
+  /// [isMobileMoneyEligible].
   ///
   /// Le serveur reste seul décideur au moment du paiement réel
   /// (`AnnouncementPaymentRails.availableFor`) : ce champ ne sert qu'à
