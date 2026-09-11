@@ -95,10 +95,15 @@ void main() {
     ),
   );
 
-  // Variante avec GoRouter pour vérifier la navigation vers /bids/:bidId.
+  // Variante avec GoRouter pour vérifier la navigation vers /bids/:bidId et
+  // vers les écrans mobile money. Chaque route poussée est consignée dans
+  // `pushedLocations` ; le stub d'attente sait se fermer en `pop(true)`
+  // (séquestré) ou `pop(false)` (expiré), comme le fait le vrai écran.
   String? lastPushedLocation;
+  final pushedLocations = <String>[];
   Widget wrapRouter(NegotiationThread thread, String viewerUserId) {
     lastPushedLocation = null;
+    pushedLocations.clear();
     final router = GoRouter(
       initialLocation: '/',
       routes: [
@@ -124,9 +129,33 @@ void main() {
         ),
         GoRoute(
           path: '/negotiations/:id/mobile-money/awaiting',
-          builder: (context, state) {
+          builder: (ctx, state) {
             lastPushedLocation = state.uri.toString();
-            return const Scaffold(body: Text('Awaiting stub'));
+            pushedLocations.add(state.uri.toString());
+            return Scaffold(
+              body: Column(
+                children: [
+                  const Text('Awaiting stub'),
+                  ElevatedButton(
+                    key: const Key('deposit-ok'),
+                    onPressed: () => ctx.pop(true),
+                    child: const Text('séquestré'),
+                  ),
+                  ElevatedButton(
+                    key: const Key('deposit-expired'),
+                    onPressed: () => ctx.pop(false),
+                    child: const Text('expiré'),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+        GoRoute(
+          path: '/negotiations/:id/paid',
+          builder: (_, state) {
+            pushedLocations.add(state.uri.toString());
+            return const Scaffold(body: Text('Paid stub'));
           },
         ),
       ],
@@ -480,8 +509,63 @@ void main() {
         await tester.pumpAndSettle();
         expect(lastPushedLocation, '/negotiations/t1/mobile-money/awaiting');
         expect(find.text('Awaiting stub'), findsOneWidget);
+        // Tant que l'écran d'attente est ouvert, rien n'est rechargé.
+        verifyNever(() => bloc.add(any()));
       },
     );
+
+    testWidgets('sender · reprise → écran d\'attente rend true (séquestré) → '
+        'NegotiationFetchRequested puis route /negotiations/{id}/paid', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrapRouter(
+          _thread(
+            status: NegotiationThreadStatus.awaitingDeposit,
+            depositExpiresAt: DateTime.now().toUtc().add(
+              const Duration(minutes: 20),
+            ),
+          ),
+          _viewerSender,
+        ),
+      );
+      await tester.tap(find.text('Reprendre le paiement'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('deposit-ok')));
+      await tester.pumpAndSettle();
+
+      verify(() => bloc.add(const NegotiationFetchRequested('t1'))).called(1);
+      expect(pushedLocations, [
+        '/negotiations/t1/mobile-money/awaiting',
+        '/negotiations/t1/paid',
+      ]);
+      expect(find.text('Paid stub'), findsOneWidget);
+    });
+
+    testWidgets('sender · reprise → écran d\'attente rend false (expiré) → '
+        'NegotiationFetchRequested seul, aucune route /paid', (tester) async {
+      await tester.pumpWidget(
+        wrapRouter(
+          _thread(
+            status: NegotiationThreadStatus.awaitingDeposit,
+            depositExpiresAt: DateTime.now().toUtc().add(
+              const Duration(minutes: 20),
+            ),
+          ),
+          _viewerSender,
+        ),
+      );
+      await tester.tap(find.text('Reprendre le paiement'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('deposit-expired')));
+      await tester.pumpAndSettle();
+
+      verify(() => bloc.add(const NegotiationFetchRequested('t1'))).called(1);
+      expect(pushedLocations, ['/negotiations/t1/mobile-money/awaiting']);
+      expect(find.text('Paid stub'), findsNothing);
+      // Retour sur le fil, la barre CTA est de nouveau visible.
+      expect(find.text('Reprendre le paiement'), findsOneWidget);
+    });
 
     testWidgets(
       'sender · actionInProgress → les deux boutons sont désactivés',

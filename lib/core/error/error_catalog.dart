@@ -668,9 +668,10 @@ abstract final class ErrorCatalog {
       icon: Icons.flag_outlined,
     ),
     // 422 (back PR #295) : mobile money demandé alors que le voyageur n'a pas
-    // de compte de versement dans la devise du fil, pendant mobile money du
-    // code carte `payment-method/card-capability-required` (que le bloc de
-    // négociation traite lui-même pour son écran dédié).
+    // de compte de versement dans la devise du fil. Contrairement à
+    // `payment-method/card-capability-required`, qui a sa feuille dédiée
+    // (`PaymentCapabilityBlock._byCode`), ce code n'a pas d'écran propre : il
+    // est affiché via cette entrée du catalogue.
     'payment-method/mobile-money-capability-required': ErrorPresentation(
       title: 'Mobile money indisponible',
       message:
