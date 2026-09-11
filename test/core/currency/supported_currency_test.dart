@@ -1,4 +1,5 @@
 import 'package:dony/core/currency/supported_currency.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -28,6 +29,49 @@ void main() {
         expect(SupportedCurrency.fromCode('JPY'), isNull);
       },
     );
+
+    group('fromCodeOrDefault', () {
+      late List<String> printed;
+      late DebugPrintCallback original;
+
+      setUp(() {
+        SupportedCurrency.resetUnknownCodeReportsForTest();
+        printed = <String>[];
+        original = debugPrint;
+        debugPrint = (String? message, {int? wrapWidth}) {
+          if (message != null) printed.add(message);
+        };
+      });
+
+      tearDown(() {
+        debugPrint = original;
+        SupportedCurrency.resetUnknownCodeReportsForTest();
+      });
+
+      test('code connu → la devise, sans avertissement', () {
+        expect(SupportedCurrency.fromCodeOrDefault('xof'), SupportedCurrency.xof);
+        expect(printed, isEmpty);
+      });
+
+      test('code absent ou vide → euro, en silence', () {
+        expect(SupportedCurrency.fromCodeOrDefault(null), SupportedCurrency.eur);
+        expect(SupportedCurrency.fromCodeOrDefault('  '), SupportedCurrency.eur);
+        expect(printed, isEmpty);
+      });
+
+      test('code hors catalogue → euro, signalé une seule fois par code', () {
+        expect(SupportedCurrency.fromCodeOrDefault('MAD'), SupportedCurrency.eur);
+        expect(SupportedCurrency.fromCodeOrDefault('mad '), SupportedCurrency.eur);
+        expect(SupportedCurrency.symbolOf('MAD'), '€');
+        expect(printed, hasLength(1));
+        expect(printed.single, contains('Devise hors catalogue'));
+        expect(printed.single, contains('MAD'));
+
+        expect(SupportedCurrency.fromCodeOrDefault('GNF'), SupportedCurrency.eur);
+        expect(printed, hasLength(2));
+        expect(printed.last, contains('GNF'));
+      });
+    });
 
     test('expose le taux indicatif de chaque devise par rapport à EUR', () {
       expect(SupportedCurrency.eur.unitsPerEur, 1);
