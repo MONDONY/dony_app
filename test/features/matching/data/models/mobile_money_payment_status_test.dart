@@ -461,18 +461,15 @@ void main() {
         expect(status.isExpired(DateTime.now()), isFalse);
       });
 
-      test(
-        'vrai quand paymentStatus vaut CANCELLED (fil revenu a payer)',
-        () {
-          final status = MobileMoneyPaymentStatus(
-            subjectId: 'thread-1',
-            paymentStatus: 'CANCELLED',
-            deadlineAt: DateTime.now().add(const Duration(hours: 1)),
-          );
+      test('vrai quand paymentStatus vaut CANCELLED (fil revenu a payer)', () {
+        final status = MobileMoneyPaymentStatus(
+          subjectId: 'thread-1',
+          paymentStatus: 'CANCELLED',
+          deadlineAt: DateTime.now().add(const Duration(hours: 1)),
+        );
 
-          expect(status.isExpired(DateTime.now()), isTrue);
-        },
-      );
+        expect(status.isExpired(DateTime.now()), isTrue);
+      });
     });
 
     group('isReverted', () {

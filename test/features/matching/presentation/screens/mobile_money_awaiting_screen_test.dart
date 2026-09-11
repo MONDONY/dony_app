@@ -621,49 +621,43 @@ void main() {
   });
 
   group('Portée négociation', () {
-    testWidgets(
-      'Escrowed sans pile (lien profond) → fil de négociation, sans '
-      '« nothing to pop »',
-      (tester) async {
-        stub(const MobileMoneyPaymentEscrowed(escrowedStatus));
+    testWidgets('Escrowed sans pile (lien profond) → fil de négociation, sans '
+        '« nothing to pop »', (tester) async {
+      stub(const MobileMoneyPaymentEscrowed(escrowedStatus));
 
-        await pumpDeepLinked(
-          tester,
-          scope: const MobileMoneyScope.negotiation(threadId),
-        );
+      await pumpDeepLinked(
+        tester,
+        scope: const MobileMoneyScope.negotiation(threadId),
+      );
 
-        expect(tester.takeException(), isNull);
-        expect(find.text('thread $threadId'), findsOneWidget);
-      },
-    );
+      expect(tester.takeException(), isNull);
+      expect(find.text('thread $threadId'), findsOneWidget);
+    });
 
-    testWidgets(
-      'ouverture avec initialPhone : le bloc reçoit '
-      'MobileMoneyPaymentOpened(scope, phoneNumber)',
-      (tester) async {
-        const scope = MobileMoneyScope.negotiation(threadId);
-        stub(
-          const MobileMoneyPaymentInitial(),
-          previous: const MobileMoneyPaymentInitial(),
-        );
+    testWidgets('ouverture avec initialPhone : le bloc reçoit '
+        'MobileMoneyPaymentOpened(scope, phoneNumber)', (tester) async {
+      const scope = MobileMoneyScope.negotiation(threadId);
+      stub(
+        const MobileMoneyPaymentInitial(),
+        previous: const MobileMoneyPaymentInitial(),
+      );
 
-        await pumpScreen(
-          tester,
-          settle: false,
-          scope: scope,
-          initialPhone: '+221771234567',
-        );
+      await pumpScreen(
+        tester,
+        settle: false,
+        scope: scope,
+        initialPhone: '+221771234567',
+      );
 
-        verify(
-          () => bloc.add(
-            const MobileMoneyPaymentOpened(
-              scope: scope,
-              phoneNumber: '+221771234567',
-            ),
+      verify(
+        () => bloc.add(
+          const MobileMoneyPaymentOpened(
+            scope: scope,
+            phoneNumber: '+221771234567',
           ),
-        ).called(1);
-      },
-    );
+        ),
+      ).called(1);
+    });
   });
 
   group('Expired', () {

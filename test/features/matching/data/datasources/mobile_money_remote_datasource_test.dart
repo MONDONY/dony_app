@@ -74,10 +74,7 @@ void main() {
       test(
         'portée négociation : appelle GET /negotiations/{id}/mobile-money/status',
         () async {
-          final threadJson = {
-            'threadId': threadId,
-            'paymentStatus': 'PENDING',
-          };
+          final threadJson = {'threadId': threadId, 'paymentStatus': 'PENDING'};
           when(
             () => dio.get<Map<String, dynamic>>(
               '/negotiations/$threadId/mobile-money/status',
@@ -166,10 +163,7 @@ void main() {
       test(
         'portée négociation : appelle POST /negotiations/{id}/mobile-money/initiate',
         () async {
-          final threadJson = {
-            'threadId': threadId,
-            'paymentStatus': 'PENDING',
-          };
+          final threadJson = {'threadId': threadId, 'paymentStatus': 'PENDING'};
           dynamic capturedData = 'non-appelé';
           when(
             () => dio.post<Map<String, dynamic>>(

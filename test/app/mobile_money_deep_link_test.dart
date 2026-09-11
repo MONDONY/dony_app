@@ -49,18 +49,15 @@ void main() {
       );
     });
 
-    test(
-      'résout un UUID valide vers l\'écran d\'attente d\'un fil de '
-      'négociation',
-      () {
-        expect(
-          resolveMobileMoneyAwaitingDeepLink(
-            Uri.parse('yadony://negotiations/$uuid/mobile-money/awaiting'),
-          ),
-          '/negotiations/$uuid/mobile-money/awaiting',
-        );
-      },
-    );
+    test('résout un UUID valide vers l\'écran d\'attente d\'un fil de '
+        'négociation', () {
+      expect(
+        resolveMobileMoneyAwaitingDeepLink(
+          Uri.parse('yadony://negotiations/$uuid/mobile-money/awaiting'),
+        ),
+        '/negotiations/$uuid/mobile-money/awaiting',
+      );
+    });
 
     test(
       'rejette un identifiant qui n\'est pas un UUID (fil de négociation)',
