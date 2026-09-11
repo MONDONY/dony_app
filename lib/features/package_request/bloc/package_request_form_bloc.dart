@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -85,6 +86,11 @@ class PackageRequestFormBloc
       totalBudgetEur: gross,
       targetPriceEur: gross,
       promoCode: r.promoCode,
+      // Devise de la demande éditée, pas celle du portefeuille actif : sinon
+      // les puces de l'étape 3 se calent sur ActiveCurrency et proposent
+      // « Mobile money » sur une demande EUR (ou « Carte » sur une XOF) qui
+      // sera silencieusement retirée au PUT (restrictToCurrency côté back).
+      currency: SupportedCurrency.fromCodeOrDefault(r.currency),
     );
   }
 

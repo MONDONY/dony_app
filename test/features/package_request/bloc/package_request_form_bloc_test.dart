@@ -762,6 +762,35 @@ void main() {
       PaymentMethod.cash,
     });
     expect(s.totalBudgetEur, closeTo(56.0, 0.001));
+    // I1 : la devise de la demande éditée (ici EUR, valeur par défaut de
+    // editRequest), pas celle du portefeuille actif.
+    expect(s.currency, SupportedCurrency.eur);
+    bloc.close();
+  });
+
+  test('I1 : mode édition d\'une demande XOF : state.currency == xof, pas la '
+      'devise du portefeuille', () {
+    final xofEditRequest = PackageRequest(
+      id: 'r-edit-xof',
+      senderId: 's-1',
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      desiredDate: DateTime(2026, 7, 20),
+      dateToleranceDays: 3,
+      weightKg: 5,
+      parcelSize: ParcelSize.small,
+      transportMode: TransportMode.plane,
+      status: PackageRequestStatus.open,
+      createdAt: DateTime(2026, 5, 10),
+      currency: 'XOF',
+      acceptedPaymentMethods: const {PaymentMethod.cash},
+    );
+    final bloc = PackageRequestFormBloc(
+      repo,
+      analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+      editing: xofEditRequest,
+    );
+    expect(bloc.state.currency, SupportedCurrency.xof);
     bloc.close();
   });
 
