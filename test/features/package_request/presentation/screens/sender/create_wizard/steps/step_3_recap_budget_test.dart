@@ -463,6 +463,34 @@ void main() {
       },
     );
 
+    // M5 : bout en bout avec le bloc réel (pas de seed injecté à la main) —
+    // vérifie que le post-frame de initState émet bien
+    // PackageRequestCurrencyChanged(xof) et que ça aboutit à l'état attendu,
+    // pas seulement que le rendu d'un état posé manuellement est correct.
+    testWidgets(
+      'seed XOF au premier affichage : mobile money et espèces cochés, '
+      'carte absente',
+      (tester) async {
+        await tester.pumpWidget(
+          wrap(const Step3RecapBudget(currency: SupportedCurrency.xof)),
+        );
+        await tester.pump();
+
+        final bloc = tester
+            .element(find.byType(Step3RecapBudget))
+            .read<PackageRequestFormBloc>();
+
+        expect(bloc.state.currency, SupportedCurrency.xof);
+        expect(bloc.state.acceptedPaymentMethods, {
+          PaymentMethod.mobileMoney,
+          PaymentMethod.cash,
+        });
+        expect(find.text('Mobile money'), findsOneWidget);
+        expect(find.text('Espèces'), findsOneWidget);
+        expect(find.text('Carte'), findsNothing);
+      },
+    );
+
     testWidgets('la suite de la publication est annoncée', (tester) async {
       await tester.pumpWidget(wrap(const Step3RecapBudget()));
       await tester.pump();
