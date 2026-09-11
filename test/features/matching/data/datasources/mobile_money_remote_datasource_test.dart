@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/matching/data/datasources/mobile_money_remote_datasource.dart';
+import 'package:dony/features/matching/data/models/mobile_money_scope.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -14,6 +15,9 @@ void main() {
   late MobileMoneyRemoteDatasource datasource;
 
   const bidId = '550e8400-e29b-41d4-a716-446655440000';
+  const threadId = '660e8400-e29b-41d4-a716-446655440000';
+  const bidScope = MobileMoneyScope.bid(bidId);
+  const negotiationScope = MobileMoneyScope.negotiation(threadId);
 
   final statusJson = {
     'bidId': bidId,
@@ -59,11 +63,39 @@ void main() {
             ),
           );
 
-          final result = await datasource.getStatus(bidId);
+          final result = await datasource.getStatus(bidScope);
 
-          expect(result.bidId, bidId);
+          expect(result.subjectId, bidId);
           expect(result.paymentStatus, 'PENDING');
           expect(result.deposit?.providerLabel, 'Orange Money');
+        },
+      );
+
+      test(
+        'portée négociation : appelle GET /negotiations/{id}/mobile-money/status',
+        () async {
+          final threadJson = {
+            'threadId': threadId,
+            'paymentStatus': 'PENDING',
+          };
+          when(
+            () => dio.get<Map<String, dynamic>>(
+              '/negotiations/$threadId/mobile-money/status',
+            ),
+          ).thenAnswer(
+            (_) async => Response(
+              data: threadJson,
+              statusCode: 200,
+              requestOptions: RequestOptions(
+                path: '/negotiations/$threadId/mobile-money/status',
+              ),
+            ),
+          );
+
+          final result = await datasource.getStatus(negotiationScope);
+
+          expect(result.subjectId, threadId);
+          expect(result.subjectStatus, isNull);
         },
       );
 
@@ -80,7 +112,7 @@ void main() {
           ),
         );
 
-        expect(datasource.getStatus(bidId), throwsA(isA<DioException>()));
+        expect(datasource.getStatus(bidScope), throwsA(isA<DioException>()));
       });
 
       test('propage la DioException sur 404', () async {
@@ -102,7 +134,7 @@ void main() {
           ),
         );
 
-        expect(datasource.getStatus(bidId), throwsA(isA<DioException>()));
+        expect(datasource.getStatus(bidScope), throwsA(isA<DioException>()));
       });
     });
 
@@ -125,11 +157,42 @@ void main() {
           );
         });
 
-        final result = await datasource.initiate(bidId);
+        final result = await datasource.initiate(bidScope);
 
-        expect(result.bidId, bidId);
+        expect(result.subjectId, bidId);
         expect(capturedData, isNull);
       });
+
+      test(
+        'portée négociation : appelle POST /negotiations/{id}/mobile-money/initiate',
+        () async {
+          final threadJson = {
+            'threadId': threadId,
+            'paymentStatus': 'PENDING',
+          };
+          dynamic capturedData = 'non-appelé';
+          when(
+            () => dio.post<Map<String, dynamic>>(
+              '/negotiations/$threadId/mobile-money/initiate',
+              data: any(named: 'data'),
+            ),
+          ).thenAnswer((invocation) async {
+            capturedData = invocation.namedArguments[const Symbol('data')];
+            return Response(
+              data: threadJson,
+              statusCode: 200,
+              requestOptions: RequestOptions(
+                path: '/negotiations/$threadId/mobile-money/initiate',
+              ),
+            );
+          });
+
+          final result = await datasource.initiate(negotiationScope);
+
+          expect(result.subjectId, threadId);
+          expect(capturedData, isNull);
+        },
+      );
 
       test('avec phoneNumber vide : POST sans corps', () async {
         dynamic capturedData = 'non-appelé';
@@ -149,7 +212,7 @@ void main() {
           );
         });
 
-        await datasource.initiate(bidId, phoneNumber: '');
+        await datasource.initiate(bidScope, phoneNumber: '');
 
         expect(capturedData, isNull);
       });
@@ -174,7 +237,7 @@ void main() {
             );
           });
 
-          await datasource.initiate(bidId, phoneNumber: '   ');
+          await datasource.initiate(bidScope, phoneNumber: '   ');
 
           expect(capturedData, isNull);
         },
@@ -201,11 +264,11 @@ void main() {
           });
 
           final result = await datasource.initiate(
-            bidId,
+            bidScope,
             phoneNumber: '  +221771234567  ',
           );
 
-          expect(result.bidId, bidId);
+          expect(result.subjectId, bidId);
           expect(capturedData, isA<Map>());
           expect((capturedData as Map)['phoneNumber'], '+221771234567');
         },
@@ -232,7 +295,7 @@ void main() {
           ),
         );
 
-        expect(datasource.initiate(bidId), throwsA(isA<DioException>()));
+        expect(datasource.initiate(bidScope), throwsA(isA<DioException>()));
       });
     });
   });

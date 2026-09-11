@@ -40,8 +40,8 @@ void main() {
   );
 
   const awaitingPinStatus = MobileMoneyPaymentStatus(
-    bidId: bidId,
-    bidStatus: 'AWAITING_PAYMENT',
+    subjectId: bidId,
+    subjectStatus: 'AWAITING_PAYMENT',
     paymentStatus: 'PENDING',
     amount: 50.0,
     deposit: MobileMoneyDeposit(
@@ -53,8 +53,8 @@ void main() {
   );
 
   const awaitingPinNoProviderStatus = MobileMoneyPaymentStatus(
-    bidId: bidId,
-    bidStatus: 'AWAITING_PAYMENT',
+    subjectId: bidId,
+    subjectStatus: 'AWAITING_PAYMENT',
     paymentStatus: 'PENDING',
     amount: 50.0,
     deposit: MobileMoneyDeposit(
@@ -64,8 +64,8 @@ void main() {
   );
 
   const awaitingWaveStatus = MobileMoneyPaymentStatus(
-    bidId: bidId,
-    bidStatus: 'AWAITING_PAYMENT',
+    subjectId: bidId,
+    subjectStatus: 'AWAITING_PAYMENT',
     paymentStatus: 'PENDING',
     amount: 50.0,
     deposit: MobileMoneyDeposit(
@@ -77,14 +77,14 @@ void main() {
   );
 
   const expiredStatus = MobileMoneyPaymentStatus(
-    bidId: bidId,
-    bidStatus: 'AWAITING_PAYMENT',
+    subjectId: bidId,
+    subjectStatus: 'AWAITING_PAYMENT',
     amount: 50.0,
   );
 
   const depositFailedStatus = MobileMoneyPaymentStatus(
-    bidId: bidId,
-    bidStatus: 'AWAITING_PAYMENT',
+    subjectId: bidId,
+    subjectStatus: 'AWAITING_PAYMENT',
     amount: 50.0,
     deposit: MobileMoneyDeposit(
       id: 'deposit-2',
@@ -94,8 +94,8 @@ void main() {
   );
 
   const depositFailedNoMessageStatus = MobileMoneyPaymentStatus(
-    bidId: bidId,
-    bidStatus: 'AWAITING_PAYMENT',
+    subjectId: bidId,
+    subjectStatus: 'AWAITING_PAYMENT',
     amount: 50.0,
     deposit: MobileMoneyDeposit(
       id: 'deposit-3',
@@ -104,8 +104,8 @@ void main() {
   );
 
   const escrowedStatus = MobileMoneyPaymentStatus(
-    bidId: bidId,
-    bidStatus: 'ACCEPTED',
+    subjectId: bidId,
+    subjectStatus: 'ACCEPTED',
     paymentStatus: 'ESCROW',
     amount: 50.0,
   );
@@ -355,8 +355,8 @@ void main() {
       stub(
         MobileMoneyPaymentAwaitingConfirmation(
           MobileMoneyPaymentStatus(
-            bidId: bidId,
-            bidStatus: 'AWAITING_PAYMENT',
+            subjectId: bidId,
+            subjectStatus: 'AWAITING_PAYMENT',
             amount: 50.0,
             deadlineAt: deadline,
             deposit: awaitingPinStatus.deposit,
@@ -376,8 +376,8 @@ void main() {
       stub(
         MobileMoneyPaymentAwaitingConfirmation(
           MobileMoneyPaymentStatus(
-            bidId: bidId,
-            bidStatus: 'AWAITING_PAYMENT',
+            subjectId: bidId,
+            subjectStatus: 'AWAITING_PAYMENT',
             amount: 50.0,
             deadlineAt: deadline,
             deposit: awaitingPinStatus.deposit,
@@ -409,8 +409,8 @@ void main() {
       stub(
         MobileMoneyPaymentDepositFailed(
           MobileMoneyPaymentStatus(
-            bidId: bidId,
-            bidStatus: 'AWAITING_PAYMENT',
+            subjectId: bidId,
+            subjectStatus: 'AWAITING_PAYMENT',
             amount: 50.0,
             deadlineAt: deadline,
             deposit: depositFailedStatus.deposit,

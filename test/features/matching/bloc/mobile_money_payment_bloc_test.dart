@@ -6,6 +6,7 @@ import 'package:dony/features/matching/bloc/mobile_money_payment_bloc.dart';
 import 'package:dony/features/matching/bloc/mobile_money_payment_event.dart';
 import 'package:dony/features/matching/bloc/mobile_money_payment_state.dart';
 import 'package:dony/features/matching/data/models/mobile_money_payment_status.dart';
+import 'package:dony/features/matching/data/models/mobile_money_scope.dart';
 import 'package:dony/features/matching/data/repositories/mobile_money_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -15,10 +16,15 @@ class MockMobileMoneyRepository extends Mock implements MobileMoneyRepository {}
 class MockAnalyticsService extends Mock implements AnalyticsService {}
 
 void main() {
+  setUpAll(() {
+    registerFallbackValue(const MobileMoneyScope.bid('fallback'));
+  });
+
   late MockMobileMoneyRepository repository;
   late MockAnalyticsService analytics;
 
   const bidId = '550e8400-e29b-41d4-a716-446655440000';
+  const scope = MobileMoneyScope.bid(bidId);
 
   const liveDeposit = MobileMoneyDeposit(
     id: 'deposit-1',
@@ -27,27 +33,27 @@ void main() {
     authorizationUrl: 'https://wave.test/pay?ref=abc',
   );
   const liveStatus = MobileMoneyPaymentStatus(
-    bidId: bidId,
-    bidStatus: 'AWAITING_PAYMENT',
+    subjectId: bidId,
+    subjectStatus: 'AWAITING_PAYMENT',
     paymentStatus: 'PENDING',
     amount: 50.0,
     deposit: liveDeposit,
   );
   const noDepositStatus = MobileMoneyPaymentStatus(
-    bidId: bidId,
-    bidStatus: 'AWAITING_PAYMENT',
+    subjectId: bidId,
+    subjectStatus: 'AWAITING_PAYMENT',
     amount: 50.0,
   );
   const escrowedStatus = MobileMoneyPaymentStatus(
-    bidId: bidId,
-    bidStatus: 'ACCEPTED',
+    subjectId: bidId,
+    subjectStatus: 'ACCEPTED',
     paymentStatus: 'ESCROW',
     amount: 50.0,
   );
   final deadline = DateTime(2026, 9, 8, 10);
   final statusNearDeadline = MobileMoneyPaymentStatus(
-    bidId: bidId,
-    bidStatus: 'AWAITING_PAYMENT',
+    subjectId: bidId,
+    subjectStatus: 'AWAITING_PAYMENT',
     paymentStatus: 'PENDING',
     deadlineAt: deadline,
     amount: 50.0,
@@ -74,7 +80,7 @@ void main() {
       'dépôt déjà vivant : statut mappé directement, initiate jamais appelé',
       build: () {
         when(
-          () => repository.getStatus(bidId),
+          () => repository.getStatus(scope),
         ).thenAnswer((_) async => liveStatus);
         return bloc();
       },
@@ -101,10 +107,10 @@ void main() {
       'aucun dépôt : initiate appelé une fois, analytics mobileMoneyInitiated',
       build: () {
         when(
-          () => repository.getStatus(bidId),
+          () => repository.getStatus(scope),
         ).thenAnswer((_) async => noDepositStatus);
         when(
-          () => repository.initiate(bidId),
+          () => repository.initiate(scope),
         ).thenAnswer((_) async => liveStatus);
         return bloc();
       },
@@ -118,7 +124,7 @@ void main() {
         ),
       ],
       verify: (_) {
-        verify(() => repository.initiate(bidId)).called(1);
+        verify(() => repository.initiate(scope)).called(1);
         verify(
           () => analytics.logEvent(
             AnalyticsEvents.mobileMoneyInitiated,
@@ -133,7 +139,7 @@ void main() {
       'mobileMoneyConfirmed',
       build: () {
         when(
-          () => repository.getStatus(bidId),
+          () => repository.getStatus(scope),
         ).thenAnswer((_) async => escrowedStatus);
         return bloc();
       },
@@ -159,7 +165,7 @@ void main() {
       'getStatus en échec → Error porte une AppException (jamais e.toString())',
       build: () {
         when(
-          () => repository.getStatus(bidId),
+          () => repository.getStatus(scope),
         ).thenThrow(const OfflineException());
         return bloc();
       },
@@ -178,10 +184,10 @@ void main() {
       'initiate en échec après un statut sans dépôt → Error',
       build: () {
         when(
-          () => repository.getStatus(bidId),
+          () => repository.getStatus(scope),
         ).thenAnswer((_) async => noDepositStatus);
         when(
-          () => repository.initiate(bidId),
+          () => repository.initiate(scope),
         ).thenThrow(const ServerException());
         return bloc();
       },
@@ -199,7 +205,7 @@ void main() {
     blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
       'l\'AppException levée par le repository conserve son code métier',
       build: () {
-        when(() => repository.getStatus(bidId)).thenThrow(
+        when(() => repository.getStatus(scope)).thenThrow(
           const ValidationException(
             'Numéro invalide',
             code: 'invalid-phone-number',
@@ -229,7 +235,7 @@ void main() {
       'mobileMoneyInitiated',
       build: () {
         when(
-          () => repository.initiate(bidId, phoneNumber: '+221771234567'),
+          () => repository.initiate(scope, phoneNumber: '+221771234567'),
         ).thenAnswer((_) async => liveStatus);
         return bloc();
       },
@@ -245,7 +251,7 @@ void main() {
       ],
       verify: (_) {
         verify(
-          () => repository.initiate(bidId, phoneNumber: '+221771234567'),
+          () => repository.initiate(scope, phoneNumber: '+221771234567'),
         ).called(1);
       },
     );
@@ -254,7 +260,7 @@ void main() {
       'sans numéro : repository appelé sans phoneNumber',
       build: () {
         when(
-          () => repository.initiate(bidId),
+          () => repository.initiate(scope),
         ).thenAnswer((_) async => liveStatus);
         return bloc();
       },
@@ -265,7 +271,7 @@ void main() {
         isA<MobileMoneyPaymentAwaitingConfirmation>(),
       ],
       verify: (_) {
-        verify(() => repository.initiate(bidId)).called(1);
+        verify(() => repository.initiate(scope)).called(1);
       },
     );
 
@@ -273,7 +279,7 @@ void main() {
       'échec → Error',
       build: () {
         when(
-          () => repository.initiate(bidId),
+          () => repository.initiate(scope),
         ).thenThrow(const NetworkException('boom'));
         return bloc();
       },
@@ -291,7 +297,7 @@ void main() {
       'silencieux : jamais de Loading, transition directe',
       build: () {
         when(
-          () => repository.getStatus(bidId),
+          () => repository.getStatus(scope),
         ).thenAnswer((_) async => escrowedStatus);
         return bloc();
       },
@@ -304,7 +310,7 @@ void main() {
       'erreur réseau ignorée depuis AwaitingConfirmation : aucune émission',
       build: () {
         when(
-          () => repository.getStatus(bidId),
+          () => repository.getStatus(scope),
         ).thenThrow(const OfflineException());
         return bloc();
       },
@@ -317,7 +323,7 @@ void main() {
       'erreur réseau depuis Initial → Error (première tentative)',
       build: () {
         when(
-          () => repository.getStatus(bidId),
+          () => repository.getStatus(scope),
         ).thenThrow(const OfflineException());
         return bloc();
       },
@@ -329,7 +335,7 @@ void main() {
       'erreur réseau depuis Loading → Error',
       build: () {
         when(
-          () => repository.getStatus(bidId),
+          () => repository.getStatus(scope),
         ).thenThrow(const OfflineException());
         return bloc();
       },
@@ -342,7 +348,7 @@ void main() {
       'aucun dépôt renvoyé pendant un sondage : état inchangé',
       build: () {
         when(
-          () => repository.getStatus(bidId),
+          () => repository.getStatus(scope),
         ).thenAnswer((_) async => noDepositStatus);
         return bloc();
       },
@@ -355,7 +361,7 @@ void main() {
       'isExpired avec now avant la deadline : reste AwaitingConfirmation',
       build: () {
         when(
-          () => repository.getStatus(bidId),
+          () => repository.getStatus(scope),
         ).thenAnswer((_) async => statusNearDeadline);
         return bloc(now: () => deadline.subtract(const Duration(minutes: 1)));
       },
@@ -367,7 +373,7 @@ void main() {
       'isExpired avec now après la deadline : passe à Expired',
       build: () {
         when(
-          () => repository.getStatus(bidId),
+          () => repository.getStatus(scope),
         ).thenAnswer((_) async => statusNearDeadline);
         return bloc(now: () => deadline.add(const Duration(minutes: 1)));
       },
@@ -380,18 +386,18 @@ void main() {
       'fois',
       build: () {
         var call = 0;
-        when(() => repository.getStatus(bidId)).thenAnswer((_) async {
+        when(() => repository.getStatus(scope)).thenAnswer((_) async {
           call++;
           return call == 1
               ? const MobileMoneyPaymentStatus(
-                  bidId: bidId,
-                  bidStatus: 'ACCEPTED',
+                  subjectId: bidId,
+                  subjectStatus: 'ACCEPTED',
                   paymentStatus: 'ESCROW',
                   amount: 50.0,
                 )
               : const MobileMoneyPaymentStatus(
-                  bidId: bidId,
-                  bidStatus: 'ACCEPTED',
+                  subjectId: bidId,
+                  subjectStatus: 'ACCEPTED',
                   paymentStatus: 'RELEASED',
                   amount: 50.0,
                 );
@@ -419,12 +425,12 @@ void main() {
       'seule fois',
       build: () {
         var call = 0;
-        when(() => repository.getStatus(bidId)).thenAnswer((_) async {
+        when(() => repository.getStatus(scope)).thenAnswer((_) async {
           call++;
           return call == 1
               ? const MobileMoneyPaymentStatus(
-                  bidId: bidId,
-                  bidStatus: 'AWAITING_PAYMENT',
+                  subjectId: bidId,
+                  subjectStatus: 'AWAITING_PAYMENT',
                   amount: 50.0,
                   deposit: MobileMoneyDeposit(
                     id: 'd1',
@@ -433,8 +439,8 @@ void main() {
                   ),
                 )
               : const MobileMoneyPaymentStatus(
-                  bidId: bidId,
-                  bidStatus: 'AWAITING_PAYMENT',
+                  subjectId: bidId,
+                  subjectStatus: 'AWAITING_PAYMENT',
                   amount: 50.0,
                   deposit: MobileMoneyDeposit(
                     id: 'd2',
@@ -467,10 +473,10 @@ void main() {
     blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
       'DepositFailed sans failureCode : properties failure_code vide',
       build: () {
-        when(() => repository.getStatus(bidId)).thenAnswer(
+        when(() => repository.getStatus(scope)).thenAnswer(
           (_) async => const MobileMoneyPaymentStatus(
-            bidId: bidId,
-            bidStatus: 'AWAITING_PAYMENT',
+            subjectId: bidId,
+            subjectStatus: 'AWAITING_PAYMENT',
             amount: 50.0,
             deposit: MobileMoneyDeposit(
               id: 'd1',

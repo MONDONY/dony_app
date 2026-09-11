@@ -6,6 +6,7 @@ import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/bloc/mobile_money_payment_event.dart';
 import 'package:dony/features/matching/bloc/mobile_money_payment_state.dart';
 import 'package:dony/features/matching/data/models/mobile_money_payment_status.dart';
+import 'package:dony/features/matching/data/models/mobile_money_scope.dart';
 import 'package:dony/features/matching/data/repositories/mobile_money_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -39,7 +40,9 @@ class MobileMoneyPaymentBloc
   ) async {
     emit(const MobileMoneyPaymentLoading());
     try {
-      final status = await _repository.getStatus(event.bidId);
+      final status = await _repository.getStatus(
+        MobileMoneyScope.bid(event.bidId),
+      );
       final known = _stateFor(status);
       if (known != null) {
         _emitKnown(known, emit);
@@ -71,7 +74,9 @@ class MobileMoneyPaymentBloc
     Emitter<MobileMoneyPaymentState> emit,
   ) async {
     try {
-      final status = await _repository.getStatus(event.bidId);
+      final status = await _repository.getStatus(
+        MobileMoneyScope.bid(event.bidId),
+      );
       final known = _stateFor(status);
       // `null` : aucun dépôt encore renvoyé par le backend (rare en plein
       // sondage) — on garde l'état courant plutôt que de perdre l'écran.
@@ -97,7 +102,10 @@ class MobileMoneyPaymentBloc
     String? phoneNumber,
     Emitter<MobileMoneyPaymentState> emit,
   ) async {
-    final status = await _repository.initiate(bidId, phoneNumber: phoneNumber);
+    final status = await _repository.initiate(
+      MobileMoneyScope.bid(bidId),
+      phoneNumber: phoneNumber,
+    );
     final next =
         _stateFor(status) ?? MobileMoneyPaymentAwaitingConfirmation(status);
     _emitKnown(next, emit);
