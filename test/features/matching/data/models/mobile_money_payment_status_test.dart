@@ -475,6 +475,38 @@ void main() {
       );
     });
 
+    group('isReverted', () {
+      test('vrai sur un fil revenu a payer (CANCELLED sans bidStatus)', () {
+        const status = MobileMoneyPaymentStatus(
+          subjectId: 'thread-1',
+          paymentStatus: 'CANCELLED',
+        );
+
+        expect(status.isReverted, isTrue);
+      });
+
+      test('faux sur un bid annule (bidStatus CANCELLED)', () {
+        const status = MobileMoneyPaymentStatus(
+          subjectId: 'bid-1',
+          subjectStatus: 'CANCELLED',
+          paymentStatus: 'CANCELLED',
+        );
+
+        expect(status.isReverted, isFalse);
+      });
+
+      test('faux quand le paiement est PENDING ou nul', () {
+        const pending = MobileMoneyPaymentStatus(
+          subjectId: 'thread-1',
+          paymentStatus: 'PENDING',
+        );
+        const none = MobileMoneyPaymentStatus(subjectId: 'thread-1');
+
+        expect(pending.isReverted, isFalse);
+        expect(none.isReverted, isFalse);
+      });
+    });
+
     group('isWaveRedirect', () {
       test('vrai quand le depot a une authorizationUrl', () {
         const status = MobileMoneyPaymentStatus(

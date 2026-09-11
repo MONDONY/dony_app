@@ -42,13 +42,20 @@ class MobileMoneyPaymentBloc
     try {
       final status = await _repository.getStatus(event.scope);
       final known = _stateFor(status);
-      if (known != null) {
+      // Une ligne `CANCELLED` résiduelle sur un fil (renoncement, dépôt refusé
+      // ou échéance) n'est pas une expiration à afficher : le fil est revenu
+      // à « à payer » et le backend recycle la ligne au prochain `initiate`.
+      // Seul un sondage en cours de suivi traduit `CANCELLED` en Expired.
+      final residualCancelled =
+          known is MobileMoneyPaymentExpired && status.isReverted;
+      if (known != null && !residualCancelled) {
         _emitKnown(known, emit, event.scope);
         return;
       }
-      // Aucun dépôt encore tenté pour cette portée : on en lance un
-      // immédiatement, l'écran d'attente n'a pas de raison d'afficher un état
-      // intermédiaire "rien à payer" avant que l'utilisateur agisse.
+      // Aucun dépôt encore tenté pour cette portée (ou ligne recyclable) : on
+      // en lance un immédiatement, l'écran d'attente n'a pas de raison
+      // d'afficher un état intermédiaire "rien à payer" avant que
+      // l'utilisateur agisse.
       await _initiateAndEmit(event.scope, event.phoneNumber, emit);
     } catch (e) {
       emit(MobileMoneyPaymentError(unwrapDioError(e)));

@@ -158,6 +158,14 @@ class MobileMoneyPaymentStatus extends Equatable {
       paymentStatus == 'CANCELLED' ||
       (!isEscrowed && deadlineAt != null && now.isAfter(deadlineAt!));
 
+  /// Ligne de paiement libérée sans que le sujet soit annulé : le fil est
+  /// revenu à « à payer » (renoncement, dépôt refusé ou échéance) et le
+  /// backend accepte une nouvelle initiation. Toujours faux pour un bid, où
+  /// `paymentStatus == 'CANCELLED'` n'arrive jamais sans
+  /// `bidStatus == 'CANCELLED'`.
+  bool get isReverted =>
+      paymentStatus == 'CANCELLED' && subjectStatus != 'CANCELLED';
+
   /// Le dépôt nécessite une redirection vers Wave plutôt qu'une simple
   /// consigne de validation du code PIN.
   bool get isWaveRedirect => deposit?.authorizationUrl != null;

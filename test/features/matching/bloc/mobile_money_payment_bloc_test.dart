@@ -224,6 +224,130 @@ void main() {
     );
 
     blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'ouverture en portée négociation sur une ligne CANCELLED résiduelle '
+      '(fil revenu à payer, aucun dépôt vivant) : initiate appelé, '
+      'AwaitingConfirmation',
+      build: () {
+        when(() => repository.getStatus(negotiationScope)).thenAnswer(
+          (_) async => const MobileMoneyPaymentStatus(
+            subjectId: threadId,
+            paymentStatus: 'CANCELLED',
+            amount: 50.0,
+          ),
+        );
+        when(
+          () => repository.initiate(negotiationScope),
+        ).thenAnswer((_) async => liveStatus);
+        return bloc();
+      },
+      act: (b) =>
+          b.add(const MobileMoneyPaymentOpened(scope: negotiationScope)),
+      expect: () => [
+        isA<MobileMoneyPaymentLoading>(),
+        isA<MobileMoneyPaymentAwaitingConfirmation>().having(
+          (s) => s.status,
+          'status',
+          liveStatus,
+        ),
+      ],
+      verify: (_) {
+        verify(() => repository.initiate(negotiationScope)).called(1);
+      },
+    );
+
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'ouverture en portée négociation après un dépôt refusé puis libéré '
+      '(CANCELLED + dépôt FAILED) : initiate appelé, jamais Expired',
+      build: () {
+        when(() => repository.getStatus(negotiationScope)).thenAnswer(
+          (_) async => const MobileMoneyPaymentStatus(
+            subjectId: threadId,
+            paymentStatus: 'CANCELLED',
+            amount: 50.0,
+            deposit: MobileMoneyDeposit(
+              id: 'd0',
+              status: MobileMoneyDepositStatus.failed,
+              failureCode: 'INSUFFICIENT_FUNDS',
+            ),
+          ),
+        );
+        when(
+          () => repository.initiate(negotiationScope),
+        ).thenAnswer((_) async => liveStatus);
+        return bloc();
+      },
+      act: (b) =>
+          b.add(const MobileMoneyPaymentOpened(scope: negotiationScope)),
+      expect: () => [
+        isA<MobileMoneyPaymentLoading>(),
+        isA<MobileMoneyPaymentAwaitingConfirmation>(),
+      ],
+      verify: (_) {
+        verify(() => repository.initiate(negotiationScope)).called(1);
+      },
+    );
+
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'ouverture sur un bid annulé (bidStatus + paymentStatus CANCELLED) : '
+      'Expired, initiate jamais appelé',
+      build: () {
+        when(() => repository.getStatus(scope)).thenAnswer(
+          (_) async => const MobileMoneyPaymentStatus(
+            subjectId: bidId,
+            subjectStatus: 'CANCELLED',
+            paymentStatus: 'CANCELLED',
+            amount: 50.0,
+          ),
+        );
+        return bloc();
+      },
+      act: (b) => b.add(const MobileMoneyPaymentOpened(scope: scope)),
+      expect: () => [
+        isA<MobileMoneyPaymentLoading>(),
+        isA<MobileMoneyPaymentExpired>(),
+      ],
+      verify: (_) {
+        verifyNever(
+          () => repository.initiate(
+            any(),
+            phoneNumber: any(named: 'phoneNumber'),
+          ),
+        );
+      },
+    );
+
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'ouverture en portée négociation, échéance passée sans libération '
+      '(PENDING) : Expired, initiate jamais appelé',
+      build: () {
+        when(() => repository.getStatus(negotiationScope)).thenAnswer(
+          (_) async => MobileMoneyPaymentStatus(
+            subjectId: threadId,
+            paymentStatus: 'PENDING',
+            deadlineAt: deadline,
+            amount: 50.0,
+            deposit: liveDeposit,
+          ),
+        );
+        return bloc(now: () => deadline.add(const Duration(minutes: 1)));
+      },
+      act: (b) =>
+          b.add(const MobileMoneyPaymentOpened(scope: negotiationScope)),
+      expect: () => [
+        isA<MobileMoneyPaymentLoading>(),
+        isA<MobileMoneyPaymentExpired>(),
+      ],
+      verify: (_) {
+        verifyNever(
+          () => repository.initiate(
+            any(),
+            phoneNumber: any(named: 'phoneNumber'),
+          ),
+        );
+      },
+    );
+
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
       'déjà séquestré : Escrowed direct, initiate jamais appelé, analytics '
       'mobileMoneyConfirmed',
       build: () {
@@ -471,6 +595,32 @@ void main() {
       },
       act: (b) => b.add(const MobileMoneyStatusPolled(scope: scope)),
       expect: () => [isA<MobileMoneyPaymentExpired>()],
+    );
+
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'sondage en portée négociation : le dépôt suivi vient d\'être libéré '
+      '(CANCELLED) → Expired, jamais de nouvelle initiation',
+      build: () {
+        when(() => repository.getStatus(negotiationScope)).thenAnswer(
+          (_) async => const MobileMoneyPaymentStatus(
+            subjectId: threadId,
+            paymentStatus: 'CANCELLED',
+            amount: 50.0,
+          ),
+        );
+        return bloc();
+      },
+      seed: () => const MobileMoneyPaymentAwaitingConfirmation(liveStatus),
+      act: (b) => b.add(const MobileMoneyStatusPolled(scope: negotiationScope)),
+      expect: () => [isA<MobileMoneyPaymentExpired>()],
+      verify: (_) {
+        verifyNever(
+          () => repository.initiate(
+            any(),
+            phoneNumber: any(named: 'phoneNumber'),
+          ),
+        );
+      },
     );
 
     blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
