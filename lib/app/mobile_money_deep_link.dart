@@ -7,16 +7,15 @@ final RegExp _uuidPattern = RegExp(
   r'[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
 );
 
-/// Résout `yadony://bids/{uuid}/mobile-money/awaiting`, le lien profond ouvert
-/// depuis la notification push `MM_PAYMENT_PENDING` ou une reprise externe du
-/// paiement mobile money (ex. redirection Wave revenue vers l'app).
+/// Résout `yadony://bids/{uuid}/mobile-money/awaiting` et
+/// `yadony://negotiations/{uuid}/mobile-money/awaiting` (retour Wave ou
+/// notification) vers l'écran d'attente de la bonne portée.
 ///
 /// Renvoie la route applicative correspondante, ou `null` si l'URI n'a pas
 /// exactement cette forme.
 String? resolveMobileMoneyAwaitingDeepLink(Uri uri) {
-  if (uri.scheme != 'yadony' || uri.host != 'bids') {
-    return null;
-  }
+  if (uri.scheme != 'yadony') return null;
+  if (uri.host != 'bids' && uri.host != 'negotiations') return null;
   final segments = uri.pathSegments;
   if (segments.length != 3 ||
       !_uuidPattern.hasMatch(segments[0]) ||
@@ -24,5 +23,5 @@ String? resolveMobileMoneyAwaitingDeepLink(Uri uri) {
       segments[2] != 'awaiting') {
     return null;
   }
-  return '/bids/${segments[0]}/mobile-money/awaiting';
+  return '/${uri.host}/${segments[0]}/mobile-money/awaiting';
 }

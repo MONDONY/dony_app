@@ -1,11 +1,13 @@
 import 'package:dony/app/mobile_money_deep_link.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// Le lien `yadony://bids/{uuid}/mobile-money/awaiting` est ouvert depuis la
+/// Les liens `yadony://bids/{uuid}/mobile-money/awaiting` et
+/// `yadony://negotiations/{uuid}/mobile-money/awaiting` sont ouverts depuis la
 /// notification push `MM_PAYMENT_PENDING` ou une reprise externe du paiement
-/// mobile money. Comme pour `resolveAnnouncementDeepLink`, la liste blanche
-/// par égalité stricte de `app.dart` ne peut pas porter un identifiant
-/// variable : la validation du segment UUID vit ici, testée isolément.
+/// mobile money (bid ou fil de négociation). Comme pour
+/// `resolveAnnouncementDeepLink`, la liste blanche par égalité stricte de
+/// `app.dart` ne peut pas porter un identifiant variable : la validation du
+/// segment UUID vit ici, testée isolément.
 void main() {
   const uuid = '3f2504e0-4f89-41d3-9a0c-0305e82c3301';
 
@@ -46,6 +48,31 @@ void main() {
         isNull,
       );
     });
+
+    test(
+      'résout un UUID valide vers l\'écran d\'attente d\'un fil de '
+      'négociation',
+      () {
+        expect(
+          resolveMobileMoneyAwaitingDeepLink(
+            Uri.parse('yadony://negotiations/$uuid/mobile-money/awaiting'),
+          ),
+          '/negotiations/$uuid/mobile-money/awaiting',
+        );
+      },
+    );
+
+    test(
+      'rejette un identifiant qui n\'est pas un UUID (fil de négociation)',
+      () {
+        expect(
+          resolveMobileMoneyAwaitingDeepLink(
+            Uri.parse('yadony://negotiations/42/mobile-money/awaiting'),
+          ),
+          isNull,
+        );
+      },
+    );
 
     test('rejette un identifiant qui n\'est pas un UUID', () {
       expect(

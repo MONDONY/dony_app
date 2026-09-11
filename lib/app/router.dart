@@ -68,6 +68,7 @@ import 'package:dony/features/matching/bloc/trip_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/mobile_money_scope.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/matching/presentation/screens/activites_hub_screen.dart';
 import 'package:dony/features/matching/presentation/screens/announcement_list_screen.dart';
@@ -565,7 +566,23 @@ final appRouter = GoRouter(
         final bidId = state.pathParameters['bidId']!;
         return BlocProvider(
           create: (_) => getIt<MobileMoneyPaymentBloc>(),
-          child: MobileMoneyAwaitingScreen(bidId: bidId),
+          child: MobileMoneyAwaitingScreen(scope: MobileMoneyScope.bid(bidId)),
+        );
+      },
+    ),
+    // Même écran pour le dépôt d'un fil de négociation (colis). `extra` : numéro
+    // payeur saisi dans la feuille de récapitulatif, absent depuis un lien profond.
+    GoRoute(
+      path: '/negotiations/:id/mobile-money/awaiting',
+      builder: (context, state) {
+        final threadId = state.pathParameters['id']!;
+        final phone = state.extra is String ? state.extra! as String : null;
+        return BlocProvider(
+          create: (_) => getIt<MobileMoneyPaymentBloc>(),
+          child: MobileMoneyAwaitingScreen(
+            scope: MobileMoneyScope.negotiation(threadId),
+            initialPhone: phone,
+          ),
         );
       },
     ),

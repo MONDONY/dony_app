@@ -21,19 +21,31 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 /// Écran d'attente du paiement mobile money (Wave / Orange Money via
-/// pawaPay) d'un bid, ouvert depuis le détail de l'envoi
-/// (`context.push<bool>('/bids/{id}/mobile-money/awaiting')`), une
+/// pawaPay) d'un bid ou d'un fil de négociation, ouvert depuis le détail de
+/// l'envoi ou le fil (`context.push<bool>(scope.awaitingRoute)`), une
 /// notification `MM_PAYMENT_PENDING` ou le lien profond
-/// `yadony://bids/{uuid}/mobile-money/awaiting`.
+/// `yadony://bids/{uuid}/mobile-money/awaiting` (ou
+/// `yadony://negotiations/{uuid}/mobile-money/awaiting`).
 ///
 /// L'ouverture déclenche le dépôt (push PIN chez l'opérateur, ou redirection
 /// Wave via `authorizationUrl`) : le bloc s'en charge lui-même dès
-/// `MobileMoneyPaymentOpened`. L'écran sonde ensuite le statut jusqu'au
-/// séquestre, puis se referme sur `context.pop(true)` — le détail de
-/// l'envoi se recharge au retour.
+/// `MobileMoneyPaymentOpened`. [initialPhone] porte le numéro payeur déjà
+/// saisi (feuille de récapitulatif), absent depuis un lien profond ou une
+/// notification. L'écran sonde ensuite le statut jusqu'au séquestre, puis se
+/// referme sur `context.pop(true)` — l'appelant se recharge au retour.
 class MobileMoneyAwaitingScreen extends StatefulWidget {
-  const MobileMoneyAwaitingScreen({super.key, required this.bidId});
-  final String bidId;
+  const MobileMoneyAwaitingScreen({
+    super.key,
+    required this.scope,
+    this.initialPhone,
+  });
+
+  /// Bid ou fil de négociation dont ce dépôt paie l'escrow.
+  final MobileMoneyScope scope;
+
+  /// Numéro payeur déjà connu, envoyé avec `MobileMoneyPaymentOpened` à
+  /// l'ouverture.
+  final String? initialPhone;
 
   @override
   State<MobileMoneyAwaitingScreen> createState() =>
@@ -65,7 +77,10 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
       );
     });
     context.read<MobileMoneyPaymentBloc>().add(
-      MobileMoneyPaymentOpened(scope: MobileMoneyScope.bid(widget.bidId)),
+      MobileMoneyPaymentOpened(
+        scope: widget.scope,
+        phoneNumber: widget.initialPhone,
+      ),
     );
     _startPolling();
     _countdownTimer = Timer.periodic(_countdownInterval, (_) {
@@ -79,7 +94,7 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
     _pollingTimer = Timer.periodic(_pollInterval, (_) {
       if (!mounted) return;
       context.read<MobileMoneyPaymentBloc>().add(
-        MobileMoneyStatusPolled(scope: MobileMoneyScope.bid(widget.bidId)),
+        MobileMoneyStatusPolled(scope: widget.scope),
       );
     });
   }
@@ -121,19 +136,20 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
   /// parent. Ouvert depuis la push « paiement en attente » (lien profond,
   /// seule page de la pile), il n'a rien à dépiler : `pop` levait
   /// « There is nothing to pop » (Sentry FLUTTER-1D, recette du 2026-09-09),
-  /// le repli est le détail du colis.
+  /// le repli est l'écran de repli de la portée (détail du bid, ou fil de
+  /// négociation).
   void _close(BuildContext context, {required bool paid}) {
     if (context.canPop()) {
       context.pop(paid);
     } else {
-      context.go('/bids/${widget.bidId}');
+      context.go(widget.scope.fallbackRoute);
     }
   }
 
   void _retry(String rawPhone) {
     context.read<MobileMoneyPaymentBloc>().add(
       MobileMoneyPaymentInitiateRequested(
-        scope: MobileMoneyScope.bid(widget.bidId),
+        scope: widget.scope,
         phoneNumber: normalizePayerPhone(rawPhone),
       ),
     );
@@ -226,9 +242,7 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
               title: 'Une erreur est survenue',
               actionLabel: 'Réessayer',
               onAction: () => context.read<MobileMoneyPaymentBloc>().add(
-                MobileMoneyPaymentOpened(
-                  scope: MobileMoneyScope.bid(widget.bidId),
-                ),
+                MobileMoneyPaymentOpened(scope: widget.scope),
               ),
             ),
           },

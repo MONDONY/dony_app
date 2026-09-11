@@ -28,6 +28,7 @@ void main() {
   late _MockUrlLauncher urlLauncher;
 
   const bidId = 'bid-1';
+  const threadId = 'thread-1';
   // AppTheme.light() charge des polices via HTTP (google_fonts) : appelée
   // hors d'un testWidgets, la requête tombe hors de la zone de test et
   // plante. On ne la calcule donc jamais au niveau de main(), seulement à
@@ -181,7 +182,12 @@ void main() {
   /// [settle] reste faux dès qu'un `Timer` périodique tourne encore sans
   /// jamais s'arrêter (spinner indéterminé, ou compte à rebours actif tant
   /// que `deadlineAt` est fourni) : ces cas feraient expirer `pumpAndSettle`.
-  Future<void> pumpScreen(WidgetTester tester, {bool settle = true}) async {
+  Future<void> pumpScreen(
+    WidgetTester tester, {
+    bool settle = true,
+    MobileMoneyScope scope = const MobileMoneyScope.bid(bidId),
+    String? initialPhone,
+  }) async {
     final router = GoRouter(
       initialLocation: '/host',
       routes: [
@@ -193,7 +199,10 @@ void main() {
           path: '/awaiting',
           builder: (_, _) => BlocProvider<MobileMoneyPaymentBloc>.value(
             value: bloc,
-            child: const MobileMoneyAwaitingScreen(bidId: bidId),
+            child: MobileMoneyAwaitingScreen(
+              scope: scope,
+              initialPhone: initialPhone,
+            ),
           ),
         ),
       ],
@@ -503,9 +512,12 @@ void main() {
   /// Ouvert depuis la push « paiement en attente » (lien profond), l'écran
   /// est la seule page de la pile : rien à dépiler, le repli est le détail du
   /// colis (Sentry FLUTTER-1D, « There is nothing to pop »).
-  Future<void> pumpDeepLinked(WidgetTester tester) async {
+  Future<void> pumpDeepLinked(
+    WidgetTester tester, {
+    MobileMoneyScope scope = const MobileMoneyScope.bid(bidId),
+  }) async {
     final router = GoRouter(
-      initialLocation: '/bids/$bidId/mobile-money/awaiting',
+      initialLocation: scope.awaitingRoute,
       routes: [
         GoRoute(
           path: '/bids/:bidId',
@@ -513,10 +525,22 @@ void main() {
               Scaffold(body: Text('detail ${state.pathParameters['bidId']}')),
         ),
         GoRoute(
+          path: '/negotiations/:id',
+          builder: (_, state) =>
+              Scaffold(body: Text('thread ${state.pathParameters['id']}')),
+        ),
+        GoRoute(
           path: '/bids/:bidId/mobile-money/awaiting',
           builder: (_, _) => BlocProvider<MobileMoneyPaymentBloc>.value(
             value: bloc,
-            child: const MobileMoneyAwaitingScreen(bidId: bidId),
+            child: MobileMoneyAwaitingScreen(scope: scope),
+          ),
+        ),
+        GoRoute(
+          path: '/negotiations/:id/mobile-money/awaiting',
+          builder: (_, _) => BlocProvider<MobileMoneyPaymentBloc>.value(
+            value: bloc,
+            child: MobileMoneyAwaitingScreen(scope: scope),
           ),
         ),
       ],
@@ -549,6 +573,52 @@ void main() {
       expect(tester.takeException(), isNull);
       expect(find.text('detail $bidId'), findsOneWidget);
     });
+  });
+
+  group('Portée négociation', () {
+    testWidgets(
+      'Escrowed sans pile (lien profond) → fil de négociation, sans '
+      '« nothing to pop »',
+      (tester) async {
+        stub(const MobileMoneyPaymentEscrowed(escrowedStatus));
+
+        await pumpDeepLinked(
+          tester,
+          scope: const MobileMoneyScope.negotiation(threadId),
+        );
+
+        expect(tester.takeException(), isNull);
+        expect(find.text('thread $threadId'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'ouverture avec initialPhone : le bloc reçoit '
+      'MobileMoneyPaymentOpened(scope, phoneNumber)',
+      (tester) async {
+        const scope = MobileMoneyScope.negotiation(threadId);
+        stub(
+          const MobileMoneyPaymentInitial(),
+          previous: const MobileMoneyPaymentInitial(),
+        );
+
+        await pumpScreen(
+          tester,
+          settle: false,
+          scope: scope,
+          initialPhone: '+221771234567',
+        );
+
+        verify(
+          () => bloc.add(
+            const MobileMoneyPaymentOpened(
+              scope: scope,
+              phoneNumber: '+221771234567',
+            ),
+          ),
+        ).called(1);
+      },
+    );
   });
 
   group('Expired', () {
