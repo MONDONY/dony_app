@@ -190,8 +190,30 @@ void main() {
     );
 
     // La devise borne les moyens : pas de puce « Carte » sur une demande en
-    // franc CFA, la carte n'y existe pas.
-    testWidgets('en XOF, la puce Carte disparaît et Espèces reste', (
+    // franc CFA, la carte n'y existe pas ; le mobile money y apparaît.
+    testWidgets('en XOF, les puces Mobile money et Espèces sont proposées, '
+        'sans Carte', (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          const Step3RecapBudget(currency: SupportedCurrency.xof),
+          seed: const PackageRequestFormState(
+            currency: SupportedCurrency.xof,
+            acceptedPaymentMethods: {
+              PaymentMethod.mobileMoney,
+              PaymentMethod.cash,
+            },
+          ),
+          useMock: true,
+        ),
+      );
+      await tester.pump();
+
+      expect(find.text('Mobile money'), findsOneWidget);
+      expect(find.text('Espèces'), findsOneWidget);
+      expect(find.text('Carte'), findsNothing);
+    });
+
+    testWidgets('en XOF, décocher Mobile money envoie le toggle au bloc', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -199,15 +221,26 @@ void main() {
           const Step3RecapBudget(currency: SupportedCurrency.xof),
           seed: const PackageRequestFormState(
             currency: SupportedCurrency.xof,
-            acceptedPaymentMethods: {PaymentMethod.cash},
+            acceptedPaymentMethods: {
+              PaymentMethod.mobileMoney,
+              PaymentMethod.cash,
+            },
           ),
           useMock: true,
         ),
       );
       await tester.pump();
 
-      expect(find.text('Espèces'), findsOneWidget);
-      expect(find.text('Carte'), findsNothing);
+      await tester.ensureVisible(find.text('Mobile money'));
+      await tester.tap(find.text('Mobile money'));
+      await tester.pump();
+
+      // Le bloc est mocké : on vérifie l'événement émis, pas l'état.
+      verify(
+        () => mockBloc.add(
+          const PackageRequestPaymentMethodToggled(PaymentMethod.mobileMoney),
+        ),
+      ).called(1);
     });
 
     testWidgets('en EUR, les puces Carte et Espèces sont proposées', (
@@ -224,6 +257,7 @@ void main() {
 
       expect(find.text('Carte'), findsOneWidget);
       expect(find.text('Espèces'), findsOneWidget);
+      expect(find.text('Mobile money'), findsNothing);
     });
 
     testWidgets('affiche le suffixe et le détail du budget en CAD', (
@@ -374,6 +408,37 @@ void main() {
         expect(find.text('Euro (EUR)'), findsNothing);
       },
     );
+
+    testWidgets('le sélecteur de devise annonce mobile money et espèces pour '
+        'le XOF', (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          const Step3RecapBudget(currency: SupportedCurrency.xof),
+          seed: const PackageRequestFormState(
+            currency: SupportedCurrency.xof,
+            acceptedPaymentMethods: {
+              PaymentMethod.mobileMoney,
+              PaymentMethod.cash,
+            },
+          ),
+          useMock: true,
+        ),
+      );
+      await tester.pump();
+
+      await tester.ensureVisible(
+        find.byKey(const Key('package-request-currency-selector-row')),
+      );
+      await tester.tap(
+        find.byKey(const Key('package-request-currency-selector-row')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Mobile money et espèces disponibles en XOF'),
+        findsOneWidget,
+      );
+    });
 
     testWidgets(
       'devise verrouillée en édition : aucune ligne devise affichée',

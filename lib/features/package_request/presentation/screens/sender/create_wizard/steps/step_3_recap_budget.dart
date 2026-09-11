@@ -477,9 +477,11 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
 
 /// Ligne tappable ouvrant le sélecteur de devise partagé. Aucun voyageur
 /// n'est encore choisi à ce stade (la demande est publiée avant tout
-/// matching) : le rail carte prévisualisé dépend donc seulement de la devise
-/// (`SupportedCurrency.isStripeEligible`), pas d'un compte Connect précis.
-/// Le serveur retranchera ce qu'il faut au moment du paiement réel.
+/// matching) : les rails carte et mobile money prévisualisés dépendent donc
+/// seulement de la devise (`SupportedCurrency.isStripeEligible`,
+/// `SupportedCurrency.isMobileMoneyEligible`), pas d'un compte Connect ou
+/// d'un compte mobile money précis. Le serveur retranchera ce qu'il faut au
+/// moment du paiement réel.
 class _CurrencySelectionRow extends StatelessWidget {
   const _CurrencySelectionRow({required this.currency});
 
@@ -492,6 +494,7 @@ class _CurrencySelectionRow extends StatelessWidget {
         availablePaymentMethods: {
           BidPaymentMethod.cash,
           if (c.isStripeEligible) BidPaymentMethod.stripe,
+          if (c.isMobileMoneyEligible) BidPaymentMethod.mobileMoney,
         },
       ),
   ];
@@ -810,9 +813,10 @@ class _PaymentMethodChips extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    // La devise borne les moyens : pas de carte en franc CFA. Mobile money
-    // retiré des nouvelles demandes ; on garde toutefois les méthodes legacy
-    // déjà cochées (édition) pour pouvoir les décocher.
+    // La devise borne les moyens : pas de carte en franc CFA, pas de mobile
+    // money hors CFA. Les méthodes legacy encore cochées sur une demande en
+    // édition (Wave, Orange Money) restent affichées pour pouvoir les
+    // décocher.
     final selectable = PaymentMethod.selectableIn(currency);
     final methods = [
       ...selectable,
