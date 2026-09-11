@@ -65,6 +65,7 @@ Widget _wrapContent({
   required double gross,
   required double fee,
   required bool isCash,
+  bool isMobileMoney = false,
   _MockNegotiationBloc? bloc,
 }) {
   final mockBloc = bloc ?? _MockNegotiationBloc();
@@ -86,6 +87,7 @@ Widget _wrapContent({
               gross: gross,
               fee: fee,
               isCash: isCash,
+              isMobileMoney: isMobileMoney,
             ),
           ),
         ),
@@ -169,6 +171,45 @@ void main() {
         findsOneWidget,
       );
     });
+  });
+
+  group('PaymentRecapContent — MOBILE MONEY payment', () {
+    testWidgets(
+      'grille du paiement en ligne (net, frais, total) et bannière mobile money',
+      (tester) async {
+        await tester.pumpWidget(
+          _wrapContent(
+            net: 35.0,
+            gross: 39.20,
+            fee: 4.20,
+            isCash: false,
+            isMobileMoney: true,
+          ),
+        );
+
+        // Même grille qu'un paiement en ligne : rien d'« espèces ».
+        expect(find.text('Le voyageur touche'), findsOneWidget);
+        expect(find.text('Frais de service Yadony'), findsOneWidget);
+        expect(find.text('Total à payer'), findsOneWidget);
+        expect(find.text('À remettre au voyageur (en espèces)'), findsNothing);
+
+        // Bannière d'assurance propre au mobile money, icône téléphone.
+        expect(
+          find.text(
+            'Tu valides le paiement sur ton téléphone. Yadony garde l\'argent '
+            'et ne le verse au voyageur qu\'après confirmation de la livraison.',
+          ),
+          findsOneWidget,
+        );
+        expect(find.textContaining('Sécurisé · bloqué jusqu'), findsNothing);
+        expect(
+          find.byWidgetPredicate(
+            (w) => w is DonyIcon && w.name == 'smartphone',
+          ),
+          findsOneWidget,
+        );
+      },
+    );
   });
 
   group('PaymentRecapContent — CTA label derivation (via thread)', () {

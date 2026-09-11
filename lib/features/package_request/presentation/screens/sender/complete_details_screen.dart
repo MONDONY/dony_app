@@ -72,7 +72,8 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
   }
 
   /// Default = the first available method in the server-computed SET, Stripe
-  /// preferred when present. `thread.paymentMethod` is no longer the method
+  /// preferred when present, then mobile money (rail en ligne, séquestre
+  /// Yadony) avant les espèces. `thread.paymentMethod` is no longer the method
   /// the traveler picked at link time, it is now just a placeholder (the
   /// traveler doesn't choose a payment method at trip-linking anymore, cf.
   /// LinkTripScreen) — it's checked first purely as a legacy fallback, in
@@ -85,6 +86,8 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
       _selectedMethod.value = fromThread;
     } else if (available.contains(PaymentMethod.stripe)) {
       _selectedMethod.value = PaymentMethod.stripe;
+    } else if (available.contains(PaymentMethod.mobileMoney)) {
+      _selectedMethod.value = PaymentMethod.mobileMoney;
     } else if (available.isNotEmpty) {
       _selectedMethod.value = available.first;
     } else {
@@ -445,9 +448,10 @@ class _PaymentMethodChoice extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    // Canonical order: STRIPE, CASH, then others.
+    // Ordre canonique : carte, mobile money, espèces, puis les anciens rails.
     final ordered = [
       PaymentMethod.stripe,
+      PaymentMethod.mobileMoney,
       PaymentMethod.cash,
       PaymentMethod.wave,
       PaymentMethod.orangeMoney,

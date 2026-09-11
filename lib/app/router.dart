@@ -104,6 +104,7 @@ import 'package:dony/features/package_request/presentation/screens/sender/comple
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/package_request_create_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/envoyer_hub_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/my_package_requests_screen.dart';
+import 'package:dony/features/package_request/presentation/screens/sender/negotiation_paid_success_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/package_request_detail_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/shared/my_negotiations_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/shared/negotiation_thread_screen.dart';
@@ -585,6 +586,14 @@ final appRouter = GoRouter(
           ),
         );
       },
+    ),
+    // Écran de succès « Offre acceptée et payée ! » d'un fil séquestré (hors
+    // shell) : poussé par la feuille de récapitulatif au retour de l'écran
+    // d'attente mobile money. Le CTA ramène sur le fil via `go`.
+    GoRoute(
+      path: '/negotiations/:id/paid',
+      builder: (_, state) =>
+          NegotiationPaidSuccessScreen(threadId: state.pathParameters['id']!),
     ),
 
     // ── Cancellation (hors shell) ────────────────────────────────────────

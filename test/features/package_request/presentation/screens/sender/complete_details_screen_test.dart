@@ -364,4 +364,128 @@ void main() {
       expect(find.text(PaymentMethod.stripe.displayLabel), findsNothing);
     });
   });
+
+  group('mobile money dans le picker (Tâche 10, lot 2)', () {
+    /// Monte l'écran en faisant TRANSITER le bloc d'un état vide vers l'état
+    /// chargé : `_resolveDefaultMethod` n'est appelé que par le listener du
+    /// `BlocConsumer` (changement de `request`), jamais sur l'état initial.
+    /// C'est le seul moyen d'observer la sélection par défaut.
+    Future<void> pumpLoadedWithTransition(
+      WidgetTester tester, {
+      required NegotiationThread thread,
+    }) async {
+      final loadedState = CompleteDetailsState(
+        loaded: true,
+        request: _fakeRequest(
+          acceptedPaymentMethods: const {
+            PaymentMethod.stripe,
+            PaymentMethod.mobileMoney,
+            PaymentMethod.cash,
+          },
+        ),
+      );
+      final stateController = StreamController<CompleteDetailsState>();
+      addTearDown(stateController.close);
+      when(
+        () => completeDetailsBloc.state,
+      ).thenReturn(const CompleteDetailsState());
+      whenListen(
+        completeDetailsBloc,
+        stateController.stream,
+        initialState: const CompleteDetailsState(),
+      );
+
+      await tester.pumpWidget(_buildApp());
+      await tester.pumpAndSettle();
+      final context = tester.element(find.text('HOME'));
+      unawaited(GoRouter.of(context).push('/complete/pr-1', extra: thread));
+      // Pas de pumpAndSettle ici : l'état initial affiche un spinner infini.
+      await tester.pump();
+      await tester.pump();
+
+      when(() => completeDetailsBloc.state).thenReturn(loadedState);
+      stateController.add(loadedState);
+      await tester.pumpAndSettle();
+    }
+
+    /// Ordre d'affichage des puces = ordre des enfants du `Wrap`.
+    List<Key?> chipKeysInOrder(WidgetTester tester) {
+      final wrap = tester.widget<Wrap>(
+        find.ancestor(
+          of: find.byKey(const Key('complete-pay-cash')),
+          matching: find.byType(Wrap),
+        ),
+      );
+      return wrap.children.map((c) => c.key).toList();
+    }
+
+    /// Une puce sélectionnée porte une bordure de 1,5 (contre 1,0 sinon).
+    bool isChipSelected(WidgetTester tester, Key key) {
+      final container = tester.widget<AnimatedContainer>(
+        find.descendant(
+          of: find.byKey(key),
+          matching: find.byType(AnimatedContainer),
+        ),
+      );
+      final border = (container.decoration! as BoxDecoration).border! as Border;
+      return border.top.width == 1.5;
+    }
+
+    testWidgets(
+      'SET={mobileMoney, cash} → deux puces, mobile money avant espèces, '
+      'mobile money sélectionné par défaut',
+      (tester) async {
+        await pumpLoadedWithTransition(
+          tester,
+          thread: _fakeThread(
+            availablePaymentMethods: const {
+              PaymentMethod.cash,
+              PaymentMethod.mobileMoney,
+            },
+          ),
+        );
+
+        expect(chipKeysInOrder(tester), const [
+          Key('complete-pay-mobile_money'),
+          Key('complete-pay-cash'),
+        ]);
+        expect(
+          isChipSelected(tester, const Key('complete-pay-mobile_money')),
+          isTrue,
+        );
+        expect(isChipSelected(tester, const Key('complete-pay-cash')), isFalse);
+      },
+    );
+
+    testWidgets(
+      'SET={stripe, mobileMoney, cash} → ordre carte, mobile money, espèces, '
+      'carte sélectionnée par défaut',
+      (tester) async {
+        await pumpLoadedWithTransition(
+          tester,
+          thread: _fakeThread(
+            availablePaymentMethods: const {
+              PaymentMethod.cash,
+              PaymentMethod.mobileMoney,
+              PaymentMethod.stripe,
+            },
+          ),
+        );
+
+        expect(chipKeysInOrder(tester), const [
+          Key('complete-pay-stripe'),
+          Key('complete-pay-mobile_money'),
+          Key('complete-pay-cash'),
+        ]);
+        expect(
+          isChipSelected(tester, const Key('complete-pay-stripe')),
+          isTrue,
+        );
+        expect(
+          isChipSelected(tester, const Key('complete-pay-mobile_money')),
+          isFalse,
+        );
+      },
+    );
+  });
 }

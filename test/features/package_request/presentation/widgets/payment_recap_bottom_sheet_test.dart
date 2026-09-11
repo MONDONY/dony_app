@@ -2,12 +2,17 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_event.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_message.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/negotiation_repository.dart';
+import 'package:dony/features/package_request/presentation/screens/sender/negotiation_paid_success_screen.dart';
 import 'package:dony/features/package_request/presentation/widgets/payment_recap_bottom_sheet.dart';
 import 'package:dony/features/payments/data/payment_gateway.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
@@ -33,6 +38,9 @@ class _MockNegotiationBloc extends MockBloc<NegotiationEvent, NegotiationState>
     implements NegotiationBloc {}
 
 class _MockLocalAuthService extends Mock implements LocalAuthService {}
+
+class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
+    implements AuthBloc {}
 
 class _MockBox extends Mock implements Box {}
 
@@ -382,6 +390,314 @@ void main() {
         await tester.pump(const Duration(milliseconds: 300));
 
         expect(find.text('Fil de négociation thread-recap-1'), findsOneWidget);
+      },
+    );
+  });
+
+  // ── Paiement mobile money → écran d'attente → écran de succès ──────────
+
+  group('Paiement mobile money', () {
+    late _MockLocalAuthService authService;
+    late _MockBox userPrefsBox;
+    late _MockAuthBloc authBloc;
+
+    setUpAll(() {
+      registerFallbackValue(const NegotiationFetchRequested('thread-recap-1'));
+    });
+
+    setUp(() {
+      authService = _MockLocalAuthService();
+      userPrefsBox = _MockBox();
+      // Biométrie activée + réussie : requirePaymentAuth répond vrai sans
+      // passer par l'écran PIN.
+      when(
+        () => userPrefsBox.get(
+          HiveService.kBiometricEnabled,
+          defaultValue: any(named: 'defaultValue'),
+        ),
+      ).thenReturn(true);
+      when(
+        () => authService.isBiometricAvailable(),
+      ).thenAnswer((_) async => true);
+      when(
+        () => authService.authenticateWithBiometric(),
+      ).thenAnswer((_) async => true);
+
+      if (getIt.isRegistered<LocalAuthService>()) {
+        getIt.unregister<LocalAuthService>();
+      }
+      getIt.registerFactory<LocalAuthService>(() => authService);
+      if (getIt.isRegistered<HiveService>()) {
+        getIt.unregister<HiveService>();
+      }
+      getIt.registerFactory<HiveService>(() => _FakeHiveService(userPrefsBox));
+
+      // Compte connecté avec un numéro : le champ payeur doit démarrer dessus.
+      authBloc = _MockAuthBloc();
+      whenListen(
+        authBloc,
+        const Stream<AuthState>.empty(),
+        initialState: const AuthAuthenticated(
+          UserModel(
+            id: 'u1',
+            roles: [],
+            kycStatus: 'VERIFIED',
+            status: 'ACTIVE',
+            phoneNumber: '+221771234567',
+          ),
+        ),
+      );
+    });
+
+    tearDown(() {
+      if (getIt.isRegistered<LocalAuthService>()) {
+        getIt.unregister<LocalAuthService>();
+      }
+      if (getIt.isRegistered<HiveService>()) {
+        getIt.unregister<HiveService>();
+      }
+      authBloc.close();
+    });
+
+    /// Routeur de test : la vraie route d'attente est remplacée par un stub qui
+    /// capture `state.extra` (le numéro payeur normalisé) et se referme avec
+    /// le résultat choisi ; la route de succès monte le vrai
+    /// [NegotiationPaidSuccessScreen].
+    Widget buildRoutedApp({required List<Object?> capturedExtras}) {
+      final thread = _makeThread(paymentMethod: PaymentMethod.mobileMoney);
+      final router = GoRouter(
+        initialLocation: '/',
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (ctx, state) => Scaffold(
+              body: BlocProvider.value(
+                value: bloc,
+                child: Builder(
+                  builder: (ctx) => ElevatedButton(
+                    key: const Key('open'),
+                    onPressed: () => PaymentRecapBottomSheet.show(
+                      ctx,
+                      bloc: bloc,
+                      thread: thread,
+                    ),
+                    child: const Text('Ouvrir'),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          GoRoute(
+            path: '/negotiations/:id/mobile-money/awaiting',
+            builder: (ctx, state) {
+              capturedExtras.add(state.extra);
+              return Scaffold(
+                body: Column(
+                  children: [
+                    Text('ATTENTE ${state.pathParameters['id']}'),
+                    ElevatedButton(
+                      key: const Key('deposit-ok'),
+                      onPressed: () => ctx.pop(true),
+                      child: const Text('séquestré'),
+                    ),
+                    ElevatedButton(
+                      key: const Key('deposit-expired'),
+                      onPressed: () => ctx.pop(false),
+                      child: const Text('expiré'),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+          GoRoute(
+            path: '/negotiations/:id/paid',
+            builder: (_, state) => NegotiationPaidSuccessScreen(
+              threadId: state.pathParameters['id']!,
+            ),
+          ),
+          // Repli PIN de requirePaymentAuth quand la biométrie échoue : le
+          // stub refuse (pop false).
+          GoRoute(
+            path: '/auth/local',
+            builder: (ctx, _) => Scaffold(
+              body: ElevatedButton(
+                key: const Key('pin-refuse'),
+                onPressed: () => ctx.pop(false),
+                child: const Text('refuser'),
+              ),
+            ),
+          ),
+          GoRoute(
+            path: '/negotiations/:id',
+            builder: (_, state) => Scaffold(
+              body: Center(
+                child: Text('Fil de négociation ${state.pathParameters['id']}'),
+              ),
+            ),
+          ),
+        ],
+      );
+      return BlocProvider<AuthBloc>.value(
+        value: authBloc,
+        child: MaterialApp.router(
+          routerConfig: router,
+          theme: AppTheme.light(),
+        ),
+      );
+    }
+
+    testWidgets(
+      'la feuille affiche le titre, la bannière, le champ pré-rempli avec le '
+      'numéro du compte et le bouton « Payer … par mobile money »',
+      (tester) async {
+        await tester.pumpWidget(buildRoutedApp(capturedExtras: []));
+        await tester.tap(find.byKey(const Key('open')));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Payer par mobile money'), findsOneWidget);
+        expect(
+          find.textContaining('Tu valides le paiement sur ton téléphone'),
+          findsOneWidget,
+        );
+        expect(find.byKey(const Key('payer-phone-field')), findsOneWidget);
+        expect(find.text('+221771234567'), findsOneWidget);
+        expect(
+          find.widgetWithText(
+            DonyButton,
+            'Payer 39,20\u00A0€ par mobile money',
+          ),
+          findsOneWidget,
+        );
+        // Aucune ligne « espèces », la grille est celle d'un paiement en ligne.
+        expect(find.text('Total à payer'), findsOneWidget);
+        expect(find.text('À remettre au voyageur (en espèces)'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'tap → route d\'attente poussée avec le numéro saisi normalisé en extra ; '
+      'dépôt séquestré → rechargement du fil + écran « Offre acceptée et payée ! » '
+      'puis CTA vers /negotiations/{threadId}',
+      (tester) async {
+        final extras = <Object?>[];
+        await tester.pumpWidget(buildRoutedApp(capturedExtras: extras));
+        await tester.tap(find.byKey(const Key('open')));
+        await tester.pumpAndSettle();
+
+        await tester.enterText(
+          find.byKey(const Key('payer-phone-field')),
+          '+221 77 345 67 89',
+        );
+        // Referme la sélection : sa poignée, dessinée dans l'overlay juste
+        // sous le champ, recouvre sinon le bouton du stickyBottom.
+        FocusManager.instance.primaryFocus?.unfocus();
+        await tester.pumpAndSettle();
+
+        await tester.tap(
+          find.widgetWithText(
+            DonyButton,
+            'Payer 39,20\u00A0€ par mobile money',
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(extras, ['+221773456789']);
+        expect(find.text('ATTENTE thread-recap-1'), findsOneWidget);
+        // Rien n'est envoyé au bloc tant que l'écran d'attente est ouvert.
+        verifyNever(() => bloc.add(any()));
+
+        await tester.tap(find.byKey(const Key('deposit-ok')));
+        await tester.pumpAndSettle();
+
+        verify(
+          () => bloc.add(
+            any(
+              that: isA<NegotiationFetchRequested>().having(
+                (e) => e.threadId,
+                'threadId',
+                'thread-recap-1',
+              ),
+            ),
+          ),
+        ).called(1);
+        expect(find.byType(NegotiationPaidSuccessScreen), findsOneWidget);
+        expect(find.text('Offre acceptée et payée !'), findsOneWidget);
+
+        await tester.ensureVisible(find.text('Voir le suivi'));
+        await tester.tap(find.text('Voir le suivi'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
+
+        expect(find.text('Fil de négociation thread-recap-1'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'champ vidé → extra null (repli backend sur le numéro Firebase) ; '
+      'dépôt expiré → le fil est rechargé mais aucun écran de succès',
+      (tester) async {
+        final extras = <Object?>[];
+        await tester.pumpWidget(buildRoutedApp(capturedExtras: extras));
+        await tester.tap(find.byKey(const Key('open')));
+        await tester.pumpAndSettle();
+
+        await tester.enterText(find.byKey(const Key('payer-phone-field')), '');
+        await tester.pump();
+        await tester.tap(
+          find.widgetWithText(
+            DonyButton,
+            'Payer 39,20\u00A0€ par mobile money',
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(extras, [null]);
+
+        await tester.tap(find.byKey(const Key('deposit-expired')));
+        await tester.pumpAndSettle();
+
+        verify(
+          () => bloc.add(any(that: isA<NegotiationFetchRequested>())),
+        ).called(1);
+        expect(find.byType(NegotiationPaidSuccessScreen), findsNothing);
+        expect(find.byKey(const Key('open')), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'authentification refusée (biométrie puis PIN) → la feuille reste '
+      'ouverte, avertissement, aucune route d\'attente poussée',
+      (tester) async {
+        when(
+          () => authService.authenticateWithBiometric(),
+        ).thenAnswer((_) async => false);
+        when(() => authService.isPinSet()).thenAnswer((_) async => true);
+        final extras = <Object?>[];
+        await tester.pumpWidget(buildRoutedApp(capturedExtras: extras));
+        await tester.tap(find.byKey(const Key('open')));
+        await tester.pumpAndSettle();
+
+        await tester.tap(
+          find.widgetWithText(
+            DonyButton,
+            'Payer 39,20\u00A0€ par mobile money',
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // Biométrie refusée → repli sur l'écran PIN, que l'on refuse aussi.
+        await tester.tap(find.byKey(const Key('pin-refuse')));
+        await tester.pumpAndSettle();
+
+        expect(extras, isEmpty);
+        expect(find.text('Paiement non confirmé, réessayez'), findsOneWidget);
+        expect(find.text('Payer par mobile money'), findsOneWidget);
+        verifyNever(() => bloc.add(any()));
+
+        // Laisse le snackbar se retirer (timer) avant la fin du test.
+        await tester.pump(const Duration(seconds: 6));
+        await tester.pumpAndSettle();
       },
     );
   });
