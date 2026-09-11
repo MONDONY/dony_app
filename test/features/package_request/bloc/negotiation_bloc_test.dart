@@ -1181,5 +1181,41 @@ void main() {
       ],
       verify: (_) => verifyNever(() => repo.getById(any())),
     );
+
+    blocTest<NegotiationBloc, NegotiationState>(
+      '409 negotiation/not-awaiting-deposit (dépôt déjà libéré ou scellé '
+      'côté back) → NegotiationError puis rechargement du fil',
+      build: () {
+        when(() => repo.cancelMobileMoneyDeposit('t-1')).thenThrow(
+          const ConflictException(
+            'Aucun dépôt en attente',
+            code: 'negotiation/not-awaiting-deposit',
+          ),
+        );
+        when(() => repo.getById('t-1')).thenAnswer(
+          (_) async => _fakeThread(status: NegotiationThreadStatus.accepted),
+        );
+        return _makeBloc(repo);
+      },
+      seed: () => NegotiationLoaded(
+        _fakeThread(status: NegotiationThreadStatus.awaitingDeposit),
+      ),
+      act: (b) => b.add(const NegotiationCancelDepositRequested('t-1')),
+      expect: () => [
+        isA<NegotiationActionInProgress>(),
+        isA<NegotiationError>().having(
+          (s) => s.error.code,
+          'code',
+          'negotiation/not-awaiting-deposit',
+        ),
+        isA<NegotiationLoading>(),
+        isA<NegotiationLoaded>().having(
+          (s) => s.thread.status,
+          'status',
+          NegotiationThreadStatus.accepted,
+        ),
+      ],
+      verify: (_) => verify(() => repo.getById('t-1')).called(1),
+    );
   });
 }

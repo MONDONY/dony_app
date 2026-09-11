@@ -1125,7 +1125,19 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
       // le recharge tel quel et la barre CTA redevient « Compléter & payer ».
       add(NegotiationFetchRequested(e.threadId));
     } catch (err) {
-      emit(NegotiationError(unwrapDioError(err)));
+      final failure = unwrapDioError(err);
+      emit(NegotiationError(failure));
+      // Même logique que `_emitCommissionFailure` : si le back a déjà libéré
+      // ou scellé le dépôt (409), le fil affiché est périmé. Sans
+      // rechargement, la barre resterait sur « dépôt en cours » et
+      // l'expéditeur pourrait retaper sans jamais voir le vrai état.
+      if (failure.code == _depositNotAwaitingCode) {
+        add(NegotiationFetchRequested(e.threadId));
+      }
     }
   }
+
+  /// Code renvoyé par le back quand le fil n'attend plus de dépôt mobile
+  /// money : le dépôt suivi a été libéré (échéance, refus) ou scellé.
+  static const _depositNotAwaitingCode = 'negotiation/not-awaiting-deposit';
 }
