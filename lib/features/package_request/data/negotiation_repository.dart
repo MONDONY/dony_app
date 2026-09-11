@@ -319,4 +319,14 @@ class NegotiationRepository {
       '/negotiations/$threadId/decline-commission',
     );
   }
+
+  /// L'expéditeur renonce au dépôt mobile money en cours (fil en
+  /// `AWAITING_DEPOSIT`) : le serveur annule le dépôt pawaPay et ramène le fil
+  /// en `AWAITING_PAYMENT`, pour qu'il puisse choisir un autre moyen de
+  /// paiement. 204 sans corps ; le fil est rechargé ensuite par le bloc.
+  Future<void> cancelMobileMoneyDeposit(String threadId) async {
+    await _apiClient.dio.post<void>(
+      '/negotiations/$threadId/mobile-money/cancel-deposit',
+    );
+  }
 }

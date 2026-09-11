@@ -236,7 +236,8 @@ class _ThreadViewState extends State<_ThreadView> {
   }
 
   // « Mettre fin à la négociation » n'a de sens qu'avant tout paiement engagé
-  // (open/awaitingTrip/awaitingPayment) — statuts terminaux ou déjà acceptés
+  // (open/awaitingTrip/awaitingPayment/awaitingDeposit, le dépôt mobile money
+  // en cours est annulé côté serveur) — statuts terminaux ou déjà acceptés
   // (accepted, rejected, autoRejected, expired, cancelled) : item absent, on
   // masque alors l'ellipsis entier (menu vide sinon).
   bool _canEndNegotiation(NegotiationThread? thread) {
@@ -246,7 +247,8 @@ class _ThreadViewState extends State<_ThreadView> {
     return switch (thread.status) {
       NegotiationThreadStatus.open ||
       NegotiationThreadStatus.awaitingTrip ||
-      NegotiationThreadStatus.awaitingPayment => true,
+      NegotiationThreadStatus.awaitingPayment ||
+      NegotiationThreadStatus.awaitingDeposit => true,
       _ => false,
     };
   }

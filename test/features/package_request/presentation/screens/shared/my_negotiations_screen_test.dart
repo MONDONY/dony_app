@@ -446,6 +446,7 @@ void main() {
     for (final entry in [
       (NegotiationThreadStatus.awaitingTrip, 'ATT. TRAJET'),
       (NegotiationThreadStatus.awaitingPayment, 'PAIEMENT'),
+      (NegotiationThreadStatus.awaitingDeposit, 'DÉPÔT'),
       (NegotiationThreadStatus.accepted, 'ACCEPTÉE'),
       (NegotiationThreadStatus.rejected, 'TERMINÉ'),
       (NegotiationThreadStatus.autoRejected, 'TERMINÉ'),
@@ -470,6 +471,26 @@ void main() {
         ); // may also appear in filter bar label
       });
     }
+  });
+
+  group('_NegoCard — dépôt mobile money en cours', () {
+    testWidgets(
+      'awaitingDeposit : libellé de prix « dépôt en cours », carte active '
+      '(pas terminale)',
+      (tester) async {
+        when(() => bloc.state).thenReturn(
+          NegotiationListState(
+            status: NegotiationListStatus.loaded,
+            threads: [_thread(status: NegotiationThreadStatus.awaitingDeposit)],
+          ),
+        );
+        await tester.pumpWidget(wrap());
+        await tester.pumpAndSettle();
+        expect(find.text('dépôt en cours'), findsOneWidget);
+        expect(find.text('à payer'), findsNothing);
+        expect(find.text('terminé'), findsNothing);
+      },
+    );
   });
 
   group('_NegoCard opacité et badge NOUVEAU', () {

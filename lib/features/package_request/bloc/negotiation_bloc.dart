@@ -363,6 +363,16 @@ class NegotiationDeclineCommissionRequested extends NegotiationEvent {
   List<Object?> get props => [threadId];
 }
 
+/// L'expéditeur renonce au dépôt mobile money en cours pour changer de moyen
+/// de paiement. Le serveur annule le dépôt et ramène le fil en
+/// `AWAITING_PAYMENT` ; le bloc recharge ensuite le fil.
+class NegotiationCancelDepositRequested extends NegotiationEvent {
+  const NegotiationCancelDepositRequested(this.threadId);
+  final String threadId;
+  @override
+  List<Object?> get props => [threadId];
+}
+
 sealed class NegotiationState extends Equatable {
   const NegotiationState();
   @override
@@ -503,6 +513,7 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
     on<NegotiationNudgeRequested>(_onNudge);
     on<NegotiationSettleCommissionRequested>(_onSettleCommission);
     on<NegotiationDeclineCommissionRequested>(_onDeclineCommission);
+    on<NegotiationCancelDepositRequested>(_onCancelDeposit);
   }
 
   final NegotiationRepository _repository;
@@ -1088,6 +1099,33 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
       emit(NegotiationCommissionDeclined(e.threadId));
     } catch (err) {
       _emitCommissionFailure(err, e.threadId, emit);
+    }
+  }
+
+  Future<void> _onCancelDeposit(
+    NegotiationCancelDepositRequested e,
+    Emitter<NegotiationState> emit,
+  ) async {
+    final current = state;
+    // Même garde-fou que le renoncement à la commission : une annulation de
+    // dépôt touche une opération pawaPay en vol, jamais deux appels
+    // concurrents pour un même fil.
+    if (current is NegotiationActionInProgress ||
+        current is NegotiationLoading) {
+      return;
+    }
+    if (current is NegotiationLoaded) {
+      emit(NegotiationActionInProgress(current.thread));
+    } else {
+      emit(const NegotiationLoading());
+    }
+    try {
+      await _repository.cancelMobileMoneyDeposit(e.threadId);
+      // Pas d'état dédié : le serveur a ramené le fil en AWAITING_PAYMENT, on
+      // le recharge tel quel et la barre CTA redevient « Compléter & payer ».
+      add(NegotiationFetchRequested(e.threadId));
+    } catch (err) {
+      emit(NegotiationError(unwrapDioError(err)));
     }
   }
 }

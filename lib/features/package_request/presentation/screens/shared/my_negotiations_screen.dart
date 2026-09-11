@@ -405,7 +405,8 @@ class _NegoCard extends StatelessWidget {
   Color get _stripColor => switch (thread.status) {
     NegotiationThreadStatus.open => DonyColors.primary,
     NegotiationThreadStatus.awaitingTrip => DonyColors.threadStatusAmber,
-    NegotiationThreadStatus.awaitingPayment => DonyColors.threadStatusViolet,
+    NegotiationThreadStatus.awaitingPayment ||
+    NegotiationThreadStatus.awaitingDeposit => DonyColors.threadStatusViolet,
     NegotiationThreadStatus.awaitingCommission => DonyColors.threadStatusOrange,
     NegotiationThreadStatus.accepted => DonyColors.threadStatusGreen,
     _ => DonyColors.neutral300,
@@ -415,6 +416,7 @@ class _NegoCard extends StatelessWidget {
     NegotiationThreadStatus.open => 'proposition',
     NegotiationThreadStatus.awaitingTrip => 'accord',
     NegotiationThreadStatus.awaitingPayment => 'à payer',
+    NegotiationThreadStatus.awaitingDeposit => 'dépôt en cours',
     NegotiationThreadStatus.awaitingCommission => 'commission due',
     NegotiationThreadStatus.accepted => 'payé',
     _ => 'terminé',
@@ -858,6 +860,13 @@ class _StatusPill extends StatelessWidget {
         'COMMISSION',
         DonyColors.threadPillOrangeFg,
         const Color(0xFFFFEDD5),
+      ),
+      // Dépôt mobile money en cours : même violet que le paiement, dont il
+      // est une étape.
+      NegotiationThreadStatus.awaitingDeposit => (
+        'DÉPÔT',
+        DonyColors.threadStatusViolet,
+        const Color(0xFFF5F3FF),
       ),
       NegotiationThreadStatus.accepted => (
         'ACCEPTÉE',

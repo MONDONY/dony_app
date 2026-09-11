@@ -188,6 +188,24 @@ class ThreadStateCtaBar extends StatelessWidget {
                 subtitle: "Tu seras notifié dès qu'il aura réglé.",
               );
 
+      case NegotiationThreadStatus.awaitingDeposit:
+        // Dépôt mobile money lancé par l'expéditeur : le fil attend la
+        // confirmation de l'opérateur (délai court, `depositExpiresAt`). Le
+        // voyageur n'a rien à faire ; l'expéditeur peut rouvrir l'écran
+        // d'attente ou renoncer pour changer de moyen de paiement.
+        if (!_isSender) {
+          return const ThreadStateBanner(
+            iconAsset: 'smartphone',
+            tint: kGreenPrimary,
+            message: "L'expéditeur règle par mobile money",
+            subtitle: 'Tu seras notifié dès que le paiement sera confirmé.',
+          );
+        }
+        return _SenderDepositActions(
+          thread: thread,
+          actionInProgress: actionInProgress,
+        );
+
       case NegotiationThreadStatus.awaitingCommission:
         // Accord en espèces conclu par l'expéditeur, mais rien n'est scellé
         // tant que le voyageur n'a pas réglé la commission Yadony : la
@@ -209,11 +227,13 @@ class ThreadStateCtaBar extends StatelessWidget {
               );
 
       case NegotiationThreadStatus.accepted:
-        // En cash (et autres modes hors Stripe), le paiement se fait en main
-        // propre à la remise : ne pas afficher « payée ».
+        // En cash (et autres modes hors ligne), le paiement se fait en main
+        // propre à la remise : ne pas afficher « payée ». Carte et mobile
+        // money sont tous deux réglés en ligne avant l'acceptation.
         final bool paidOnline =
             thread.paymentMethod == null ||
-            thread.paymentMethod == PaymentMethod.stripe;
+            thread.paymentMethod == PaymentMethod.stripe ||
+            thread.paymentMethod == PaymentMethod.mobileMoney;
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -279,6 +299,81 @@ class _NudgeButton extends StatelessWidget {
           : () => context.read<NegotiationBloc>().add(
               NegotiationNudgeRequested(threadId),
             ),
+    );
+  }
+}
+
+/// Sender · status AWAITING_DEPOSIT → bandeau « dépôt en cours » avec le
+/// délai restant, reprise de l'écran d'attente, renoncement au dépôt.
+///
+/// Le délai est calculé au build (pas de timer) : le bandeau est informatif,
+/// le vrai compte à rebours vit sur l'écran d'attente mobile money. À
+/// l'échéance, le serveur ramène lui-même le fil en `AWAITING_PAYMENT`.
+class _SenderDepositActions extends StatelessWidget {
+  const _SenderDepositActions({
+    required this.thread,
+    required this.actionInProgress,
+  });
+  final NegotiationThread thread;
+  final bool actionInProgress;
+
+  /// Minutes restantes arrondies au supérieur (« Expire dans 1 min » jusqu'à
+  /// la dernière seconde), 0 quand l'échéance est passée ou inconnue.
+  /// `depositExpiresAt` est en UTC : comparer à `DateTime.now().toUtc()`.
+  int get _remainingMinutes {
+    final remaining = thread.depositExpiresAt?.difference(
+      DateTime.now().toUtc(),
+    );
+    if (remaining == null || remaining.isNegative) return 0;
+    return remaining.inMinutes + 1;
+  }
+
+  Future<void> _resume(BuildContext context) async {
+    final bloc = context.read<NegotiationBloc>();
+    // L'écran d'attente rend `true` quand le paiement est séquestré : on
+    // recharge le fil dans tous les cas, et on enchaîne sur l'écran de succès
+    // uniquement si le dépôt a abouti (même parcours que la feuille de
+    // récapitulatif).
+    final paid = await context.push<bool>(
+      '/negotiations/${thread.id}/mobile-money/awaiting',
+    );
+    if (!context.mounted) return;
+    bloc.add(NegotiationFetchRequested(thread.id));
+    if (paid == true) {
+      unawaited(context.push('/negotiations/${thread.id}/paid'));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final minutes = _remainingMinutes;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ThreadStateBanner(
+          iconAsset: 'smartphone',
+          tint: DonyColors.threadStatusViolet,
+          message: 'Dépôt mobile money en cours',
+          subtitle: minutes > 0
+              ? 'Valide le paiement sur ton téléphone. Expire dans $minutes min.'
+              : 'Le délai est écoulé, le fil va revenir à « à payer ».',
+        ),
+        const SizedBox(height: DonySpacing.sm),
+        DonyButton(
+          label: 'Reprendre le paiement',
+          onPressed: actionInProgress ? null : () => _resume(context),
+        ),
+        const SizedBox(height: DonySpacing.sm),
+        DonyButton(
+          label: 'Changer de moyen de paiement',
+          variant: DonyButtonVariant.secondary,
+          onPressed: actionInProgress
+              ? null
+              : () => context.read<NegotiationBloc>().add(
+                  NegotiationCancelDepositRequested(thread.id),
+                ),
+        ),
+      ],
     );
   }
 }

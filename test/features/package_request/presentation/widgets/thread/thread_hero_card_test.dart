@@ -51,6 +51,10 @@ void main() {
         ThreadStatusVariant.awaitingPayment,
       );
       expect(
+        ThreadStatusVariant.fromThread(NegotiationThreadStatus.awaitingDeposit),
+        ThreadStatusVariant.awaitingDeposit,
+      );
+      expect(
         ThreadStatusVariant.fromThread(NegotiationThreadStatus.accepted),
         ThreadStatusVariant.accepted,
       );
@@ -66,6 +70,42 @@ void main() {
         ThreadStatusVariant.fromThread(NegotiationThreadStatus.expired),
         ThreadStatusVariant.terminal,
       );
+    });
+  });
+
+  group('ThreadStatusVariant.awaitingDeposit', () {
+    test('reprend le visuel violet de awaitingPayment', () {
+      expect(
+        ThreadStatusVariant.awaitingDeposit.shadowColor,
+        ThreadStatusVariant.awaitingPayment.shadowColor,
+      );
+      expect(
+        ThreadStatusVariant.awaitingDeposit.gradient,
+        ThreadStatusVariant.awaitingPayment.gradient,
+      );
+    });
+
+    test('libellés : pastille « DÉPÔT », prix « DÉPÔT EN COURS »', () {
+      expect(ThreadStatusVariant.awaitingDeposit.badge, 'DÉPÔT');
+      expect(ThreadStatusVariant.awaitingDeposit.priceLabel, 'DÉPÔT EN COURS');
+      expect(ThreadStatusVariant.awaitingDeposit.iconAsset, 'smartphone');
+    });
+
+    testWidgets('la carte affiche « DÉPÔT EN COURS » et « DÉPÔT »', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrap(
+          ThreadHeroCard(
+            thread: _thread(status: NegotiationThreadStatus.awaitingDeposit),
+            statusVariant: ThreadStatusVariant.awaitingDeposit,
+            isTraveler: false,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('DÉPÔT EN COURS'), findsOneWidget);
+      expect(find.text('DÉPÔT'), findsOneWidget);
     });
   });
 
