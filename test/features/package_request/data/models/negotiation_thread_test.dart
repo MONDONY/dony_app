@@ -393,4 +393,52 @@ void main() {
       expect(NegotiationThread.fromJson(baseJson).commissionDeadline, isNull);
     });
   });
+
+  group('AWAITING_DEPOSIT status', () {
+    test('AWAITING_DEPOSIT est reconnu et compté comme actif', () {
+      expect(
+        NegotiationThreadStatus.fromJson('AWAITING_DEPOSIT'),
+        NegotiationThreadStatus.awaitingDeposit,
+      );
+      expect(NegotiationThreadStatus.awaitingDeposit.isActive, isTrue);
+    });
+  });
+
+  group('depositExpiresAt', () {
+    final baseJson = _baseJson();
+
+    test(
+      'fromJson force l\'UTC sur un LocalDateTime back sans suffixe de zone',
+      () {
+        // Le back renvoie un LocalDateTime UTC sans Z ni offset
+        // (ex. 2026-09-11T10:30:00) : sans forçage, DateTime.parse
+        // l'interpréterait en heure locale du téléphone et décalerait le
+        // compte à rebours du dépôt.
+        final thread = NegotiationThread.fromJson({
+          ...baseJson,
+          'status': 'AWAITING_DEPOSIT',
+          'depositExpiresAt': '2026-09-11T10:30:00',
+        });
+        expect(thread.depositExpiresAt!.isUtc, isTrue);
+        expect(
+          thread.depositExpiresAt!.millisecondsSinceEpoch,
+          DateTime.utc(2026, 9, 11, 10, 30).millisecondsSinceEpoch,
+        );
+      },
+    );
+
+    test('depositExpiresAt absent reste null (ancien contrat back)', () {
+      expect(NegotiationThread.fromJson(baseJson).depositExpiresAt, isNull);
+    });
+
+    test('depositExpiresAt participates in props/equality', () {
+      final t1 = NegotiationThread.fromJson(baseJson);
+      final t2 = NegotiationThread.fromJson({
+        ...baseJson,
+        'status': 'AWAITING_DEPOSIT',
+        'depositExpiresAt': '2026-09-11T10:30:00',
+      });
+      expect(t1, isNot(equals(t2)));
+    });
+  });
 }
