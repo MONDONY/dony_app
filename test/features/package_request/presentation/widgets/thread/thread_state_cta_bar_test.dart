@@ -458,7 +458,8 @@ void main() {
     );
 
     testWidgets(
-      'sender · échéance absente → traité comme écoulé (pas de plantage)',
+      'sender · échéance inconnue → sous-titre neutre, ni « délai écoulé » '
+      'ni « Expire dans », boutons présents',
       (tester) async {
         await tester.pumpWidget(
           wrap(
@@ -466,7 +467,14 @@ void main() {
             _viewerSender,
           ),
         );
-        expect(find.textContaining('Le délai est écoulé'), findsOneWidget);
+        expect(
+          find.text('Valide le paiement sur ton téléphone.'),
+          findsOneWidget,
+        );
+        expect(find.textContaining('Le délai est écoulé'), findsNothing);
+        expect(find.textContaining('Expire dans'), findsNothing);
+        expect(find.text('Reprendre le paiement'), findsOneWidget);
+        expect(find.text('Changer de moyen de paiement'), findsOneWidget);
       },
     );
 

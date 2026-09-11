@@ -318,15 +318,25 @@ class _SenderDepositActions extends StatelessWidget {
   final bool actionInProgress;
 
   /// Minutes restantes arrondies au supérieur (« Expire dans 1 min » jusqu'à
-  /// la dernière seconde), 0 quand l'échéance est passée ou inconnue.
-  /// `depositExpiresAt` est en UTC : comparer à `DateTime.now().toUtc()`.
-  int get _remainingMinutes {
+  /// la dernière seconde), 0 quand l'échéance est passée, `null` quand elle
+  /// est inconnue : le bandeau ne doit alors ni annoncer un délai écoulé ni
+  /// en inventer un. `depositExpiresAt` est en UTC : comparer à
+  /// `DateTime.now().toUtc()`.
+  int? get _remainingMinutes {
     final remaining = thread.depositExpiresAt?.difference(
       DateTime.now().toUtc(),
     );
-    if (remaining == null || remaining.isNegative) return 0;
+    if (remaining == null) return null;
+    if (remaining.isNegative) return 0;
     return remaining.inMinutes + 1;
   }
+
+  String get _subtitle => switch (_remainingMinutes) {
+    null => 'Valide le paiement sur ton téléphone.',
+    0 => 'Le délai est écoulé, le fil va revenir à « à payer ».',
+    final minutes =>
+      'Valide le paiement sur ton téléphone. Expire dans $minutes min.',
+  };
 
   Future<void> _resume(BuildContext context) async {
     final bloc = context.read<NegotiationBloc>();
@@ -346,7 +356,6 @@ class _SenderDepositActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final minutes = _remainingMinutes;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -354,9 +363,7 @@ class _SenderDepositActions extends StatelessWidget {
           iconAsset: 'smartphone',
           tint: DonyColors.threadStatusViolet,
           message: 'Dépôt mobile money en cours',
-          subtitle: minutes > 0
-              ? 'Valide le paiement sur ton téléphone. Expire dans $minutes min.'
-              : 'Le délai est écoulé, le fil va revenir à « à payer ».',
+          subtitle: _subtitle,
         ),
         const SizedBox(height: DonySpacing.sm),
         DonyButton(
