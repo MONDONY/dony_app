@@ -1,3 +1,5 @@
+import 'package:dony/core/services/app_log.dart';
+
 /// Devise utilisable pour un paiement Stripe côté client.
 ///
 /// Le backend reste la source de vérité : ce catalogue sert à parser sa
@@ -112,10 +114,34 @@ class SupportedCurrency {
     return null;
   }
 
+  /// Codes hors catalogue déjà signalés : un seul avertissement par code et par
+  /// lancement, ce repli étant sur le chemin de chaque prix affiché.
+  static final Set<String> _reportedUnknownCodes = <String>{};
+
   /// Repli EUR quand le code est absent ou hors catalogue. Politique de repli
   /// unique : ne jamais réécrire `fromCode(x) ?? eur` sur les sites d'appel.
-  static SupportedCurrency fromCodeOrDefault(String? value) =>
-      fromCode(value) ?? eur;
+  ///
+  /// Un code absent reste muet (réglage pas encore synchronisé, ancien payload
+  /// sans devise). Un code présent mais inconnu est signalé, une fois par code :
+  /// sans ce signal, une devise ajoutée côté backend s'afficherait en euros
+  /// partout sans que personne ne le voie (audit des rails du 2026-09-10,
+  /// « repli euro silencieux »). Le montant reste affiché en euros faute de
+  /// mieux : le backend est seul décideur au paiement, l'app ne fait qu'afficher.
+  static SupportedCurrency fromCodeOrDefault(String? value) {
+    final known = fromCode(value);
+    if (known != null) return known;
+    final normalized = value?.trim().toUpperCase() ?? '';
+    if (normalized.isNotEmpty && _reportedUnknownCodes.add(normalized)) {
+      AppLog.warn(
+        'Devise hors catalogue affichée en euros',
+        data: {'code': normalized},
+      );
+    }
+    return eur;
+  }
+
+  /// Réservé aux tests : oublie les codes déjà signalés.
+  static void resetUnknownCodeReportsForTest() => _reportedUnknownCodes.clear();
 
   /// Symbole d'un code ISO, repli EUR — pour les libellés courts (suffixe de
   /// champ, message de validation) où formater un montant complet n'a pas

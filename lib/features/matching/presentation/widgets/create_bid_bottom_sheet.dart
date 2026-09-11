@@ -1411,7 +1411,10 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                   totalPrice: total,
                   originalTotal: original,
                   promoApplied: promoApplied,
-                  currency: widget.announcement.currency,
+                  // Le devis déclare la devise de ses montants : c'est elle qui
+                  // fait foi dès qu'il existe, l'annonce ne sert que de repli
+                  // (estimation locale, backend antérieur au champ).
+                  currency: quote?.currency ?? widget.announcement.currency,
                 );
               },
             ),

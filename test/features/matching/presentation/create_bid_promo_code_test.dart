@@ -475,6 +475,42 @@ void main() {
     expect(find.textContaining('67,20'), findsOneWidget);
   });
 
+  // ── 7 bis. La devise du devis fait foi ───────────────────────────────────
+
+  testWidgets(
+    'le récapitulatif adopte la devise déclarée par le devis, pas celle de '
+    "l'annonce",
+    (tester) async {
+      await openSheet(tester);
+      await setWeight(tester, 5);
+
+      // L'annonce de la fixture ne déclare pas de devise (repli euro) ; le
+      // devis serveur, lui, dit XOF : ses montants doivent s'afficher en
+      // francs CFA, sans décimales, jamais en euros.
+      bidStream.add(
+        BidQuoteLoaded(
+          const BidQuoteResponse(
+            netEur: 39000,
+            kgNetEur: 39000,
+            rate: 0.12,
+            commissionEur: 4680,
+            totalEur: 43680,
+            promoApplied: false,
+            currency: 'XOF',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final totalFinder = find.byKey(const Key('bid-total-amount'));
+      await scrollTo(tester, totalFinder);
+      final total = tester.widget<Text>(totalFinder).data!;
+      expect(total, contains('F CFA'));
+      expect(total, isNot(contains('€')));
+      expect(total.replaceAll(RegExp(r'\s'), ''), contains('43680'));
+    },
+  );
+
   // ── 8. Détail commission + réduction ─────────────────────────────────────
 
   testWidgets(

@@ -15,6 +15,7 @@ class BidQuoteResponse {
     this.promoLabel,
     this.gridNetEur = 0,
     this.kgNetEur = 0,
+    this.currency,
   });
 
   /// Montant net voyageur total (= gridNetEur + kgNetEur).
@@ -42,6 +43,12 @@ class BidQuoteResponse {
 
   /// Ex. « Code WELCOME10 : 6 % de commission » (null si pas de promo).
   final String? promoLabel;
+
+  /// Devise de tous les montants du devis, celle de l'annonce (code ISO). Le
+  /// suffixe « Eur » des champs est historique : un devis sur un trajet en XOF
+  /// est en XOF. Absent d'un backend antérieur au 2026-09-10 : l'appelant se
+  /// rabat alors sur la devise de l'annonce.
+  final String? currency;
 
   factory BidQuoteResponse.fromJson(Map<String, dynamic> json) =>
       _$BidQuoteResponseFromJson(json);
