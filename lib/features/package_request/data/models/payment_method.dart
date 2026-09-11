@@ -40,20 +40,14 @@ enum PaymentMethod {
     PaymentMethod.orangeMoney,
   ];
 
-  /// Méthodes proposables sur une nouvelle demande. Le mobile money est
-  /// retiré (backend : request/mobile-money-payment-retired) mais reste dans
-  /// l'enum pour désérialiser et afficher les demandes existantes.
-  static const List<PaymentMethod> selectable = [
-    PaymentMethod.stripe,
-    PaymentMethod.cash,
-  ];
-
   /// Méthodes proposables dans [currency] : la devise borne les rails, comme
   /// `CurrencyPaymentRails` côté backend. La carte n'existe pas en zone CFA
-  /// (pas de Stripe Connect), une demande en franc CFA cochait pourtant la
-  /// carte par défaut et le fil la proposait au voyageur.
+  /// (pas de Stripe Connect), le mobile money n'existe qu'en zone CFA
+  /// (pawaPay en XOF et XAF). Une demande en franc CFA cochait la carte par
+  /// défaut et le fil la proposait au voyageur : c'est la devise qui décide.
   static List<PaymentMethod> selectableIn(SupportedCurrency currency) => [
     if (currency.isStripeEligible) PaymentMethod.stripe,
+    if (currency.isMobileMoneyEligible) PaymentMethod.mobileMoney,
     PaymentMethod.cash,
   ];
 
