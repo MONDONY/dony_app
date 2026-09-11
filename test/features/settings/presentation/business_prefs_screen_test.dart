@@ -297,6 +297,25 @@ void main() {
   );
 
   testWidgets(
+    'choisir XOF dans le sélecteur annonce le rail mobile money (I3)',
+    (tester) async {
+      when(() => mockAuthBloc.state).thenReturn(const AuthInitial());
+      await tester.pumpWidget(buildScreen());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Devise'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Franc CFA Ouest (XOF)'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Mobile money et espèces disponibles en XOF'),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
     'solde non nul : la tuile Devise est grisée et explique que le solde '
     'doit être vidé',
     (tester) async {

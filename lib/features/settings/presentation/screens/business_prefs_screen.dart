@@ -250,6 +250,7 @@ Future<void> _openCurrencySelector(
           availablePaymentMethods: {
             BidPaymentMethod.cash,
             if (currency.isStripeEligible) BidPaymentMethod.stripe,
+            if (currency.isMobileMoneyEligible) BidPaymentMethod.mobileMoney,
           },
         ),
     ],
