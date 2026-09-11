@@ -31,11 +31,13 @@ enum PaymentMethod {
       .whereType<PaymentMethod>()
       .toSet();
 
-  /// Ordre canonique d'affichage : carte d'abord, puis cash, puis mobile money.
+  /// Ordre canonique d'affichage : carte, mobile money, espèces, puis les
+  /// rails retirés. Le même ordre qu'à l'étape 3 du wizard, dans l'aperçu
+  /// avant publication et sur l'écran de paiement d'une négociation.
   static const List<PaymentMethod> canonicalOrder = [
     PaymentMethod.stripe,
-    PaymentMethod.cash,
     PaymentMethod.mobileMoney,
+    PaymentMethod.cash,
     PaymentMethod.wave,
     PaymentMethod.orangeMoney,
   ];

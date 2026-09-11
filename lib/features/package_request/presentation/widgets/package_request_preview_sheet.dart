@@ -123,9 +123,10 @@ class _PreviewBody extends StatelessWidget {
     );
   }
 
-  /// Ordre canonique (carte, espèces, mobile money), et non l'ordre de cochage
-  /// du `Set` : l'aperçu annonçait « Espèces, Carte » là où les chips de
-  /// l'étape 3 et la fiche lue par le voyageur affichent « Carte, Espèces ».
+  /// Ordre canonique (carte, mobile money, espèces), et non l'ordre de
+  /// cochage du `Set` : l'aperçu annonçait « Espèces, Carte » là où les chips
+  /// de l'étape 3 et la fiche lue par le voyageur affichent « Carte, Espèces »
+  /// (ou « Mobile money, Espèces » en zone CFA).
   String _paymentLabel(PackageRequestFormState s) => PaymentMethod
       .canonicalOrder
       .where(s.acceptedPaymentMethods.contains)

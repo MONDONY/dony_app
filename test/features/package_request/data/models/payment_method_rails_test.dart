@@ -40,4 +40,17 @@ void main() {
       }
     });
   });
+
+  test(
+    'canonicalOrder : carte, mobile money, espèces, puis les rails retirés',
+    () {
+      expect(PaymentMethod.canonicalOrder, [
+        PaymentMethod.stripe,
+        PaymentMethod.mobileMoney,
+        PaymentMethod.cash,
+        PaymentMethod.wave,
+        PaymentMethod.orangeMoney,
+      ]);
+    },
+  );
 }
