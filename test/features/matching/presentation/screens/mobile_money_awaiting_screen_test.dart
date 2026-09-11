@@ -7,6 +7,7 @@ import 'package:dony/features/matching/bloc/mobile_money_payment_bloc.dart';
 import 'package:dony/features/matching/bloc/mobile_money_payment_event.dart';
 import 'package:dony/features/matching/bloc/mobile_money_payment_state.dart';
 import 'package:dony/features/matching/data/models/mobile_money_payment_status.dart';
+import 'package:dony/features/matching/data/models/mobile_money_scope.dart';
 import 'package:dony/features/matching/presentation/screens/mobile_money_awaiting_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -112,7 +113,9 @@ void main() {
 
   setUpAll(() {
     // MobileMoneyPaymentEvent est sealed : le fallback est un vrai événement.
-    registerFallbackValue(const MobileMoneyPaymentOpened(bidId: bidId));
+    registerFallbackValue(
+      const MobileMoneyPaymentOpened(scope: MobileMoneyScope.bid(bidId)),
+    );
     registerFallbackValue(Uri.parse('https://example.com'));
   });
 
@@ -444,7 +447,7 @@ void main() {
       verify(
         () => bloc.add(
           const MobileMoneyPaymentInitiateRequested(
-            bidId: bidId,
+            scope: MobileMoneyScope.bid(bidId),
             phoneNumber: '0612345678',
           ),
         ),
@@ -459,7 +462,11 @@ void main() {
       await tester.pump();
 
       verify(
-        () => bloc.add(const MobileMoneyPaymentInitiateRequested(bidId: bidId)),
+        () => bloc.add(
+          const MobileMoneyPaymentInitiateRequested(
+            scope: MobileMoneyScope.bid(bidId),
+          ),
+        ),
       ).called(1);
     });
 
@@ -669,7 +676,7 @@ void main() {
         verify(
           () => bloc.add(
             const MobileMoneyPaymentInitiateRequested(
-              bidId: bidId,
+              scope: MobileMoneyScope.bid(bidId),
               phoneNumber: '+221773456789',
             ),
           ),

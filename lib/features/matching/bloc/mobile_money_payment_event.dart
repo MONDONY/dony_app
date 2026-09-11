@@ -1,3 +1,4 @@
+import 'package:dony/features/matching/data/models/mobile_money_scope.dart';
 import 'package:equatable/equatable.dart';
 
 sealed class MobileMoneyPaymentEvent extends Equatable {
@@ -7,37 +8,39 @@ sealed class MobileMoneyPaymentEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-/// Ouverture de l'écran d'attente : lit le statut courant du bid ; sans
-/// dépôt vivant ni séquestre déjà atteint, lance l'initiation d'un premier
-/// dépôt.
+/// Ouverture de l'écran d'attente : lit le statut courant de la portée
+/// ([MobileMoneyScope], un bid ou un fil de négociation) ; sans dépôt vivant
+/// ni séquestre déjà atteint, lance l'initiation d'un premier dépôt avec
+/// [phoneNumber] si l'appelant en connaît déjà un (numéro payeur pré-rempli).
 class MobileMoneyPaymentOpened extends MobileMoneyPaymentEvent {
-  const MobileMoneyPaymentOpened({required this.bidId});
-  final String bidId;
+  const MobileMoneyPaymentOpened({required this.scope, this.phoneNumber});
+  final MobileMoneyScope scope;
+  final String? phoneNumber;
 
   @override
-  List<Object?> get props => [bidId];
+  List<Object?> get props => [scope, phoneNumber];
 }
 
 /// Nouvel essai de dépôt, déclenché par l'utilisateur (lien expiré, dépôt
 /// refusé), éventuellement avec un autre numéro payeur.
 class MobileMoneyPaymentInitiateRequested extends MobileMoneyPaymentEvent {
   const MobileMoneyPaymentInitiateRequested({
-    required this.bidId,
+    required this.scope,
     this.phoneNumber,
   });
-  final String bidId;
+  final MobileMoneyScope scope;
   final String? phoneNumber;
 
   @override
-  List<Object?> get props => [bidId, phoneNumber];
+  List<Object?> get props => [scope, phoneNumber];
 }
 
 /// Sondage périodique du statut : silencieux, ne passe jamais par Loading
 /// pour éviter de faire clignoter l'écran pendant l'attente.
 class MobileMoneyStatusPolled extends MobileMoneyPaymentEvent {
-  const MobileMoneyStatusPolled({required this.bidId});
-  final String bidId;
+  const MobileMoneyStatusPolled({required this.scope});
+  final MobileMoneyScope scope;
 
   @override
-  List<Object?> get props => [bidId];
+  List<Object?> get props => [scope];
 }

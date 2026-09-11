@@ -13,6 +13,7 @@ import 'package:dony/features/matching/bloc/mobile_money_payment_bloc.dart';
 import 'package:dony/features/matching/bloc/mobile_money_payment_event.dart';
 import 'package:dony/features/matching/bloc/mobile_money_payment_state.dart';
 import 'package:dony/features/matching/data/models/mobile_money_payment_status.dart';
+import 'package:dony/features/matching/data/models/mobile_money_scope.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid/payer_phone.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -64,7 +65,7 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
       );
     });
     context.read<MobileMoneyPaymentBloc>().add(
-      MobileMoneyPaymentOpened(bidId: widget.bidId),
+      MobileMoneyPaymentOpened(scope: MobileMoneyScope.bid(widget.bidId)),
     );
     _startPolling();
     _countdownTimer = Timer.periodic(_countdownInterval, (_) {
@@ -78,7 +79,7 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
     _pollingTimer = Timer.periodic(_pollInterval, (_) {
       if (!mounted) return;
       context.read<MobileMoneyPaymentBloc>().add(
-        MobileMoneyStatusPolled(bidId: widget.bidId),
+        MobileMoneyStatusPolled(scope: MobileMoneyScope.bid(widget.bidId)),
       );
     });
   }
@@ -132,7 +133,7 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
   void _retry(String rawPhone) {
     context.read<MobileMoneyPaymentBloc>().add(
       MobileMoneyPaymentInitiateRequested(
-        bidId: widget.bidId,
+        scope: MobileMoneyScope.bid(widget.bidId),
         phoneNumber: normalizePayerPhone(rawPhone),
       ),
     );
@@ -225,7 +226,9 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
               title: 'Une erreur est survenue',
               actionLabel: 'Réessayer',
               onAction: () => context.read<MobileMoneyPaymentBloc>().add(
-                MobileMoneyPaymentOpened(bidId: widget.bidId),
+                MobileMoneyPaymentOpened(
+                  scope: MobileMoneyScope.bid(widget.bidId),
+                ),
               ),
             ),
           },

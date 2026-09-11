@@ -25,6 +25,8 @@ void main() {
 
   const bidId = '550e8400-e29b-41d4-a716-446655440000';
   const scope = MobileMoneyScope.bid(bidId);
+  const threadId = '660e8400-e29b-41d4-a716-446655440111';
+  const negotiationScope = MobileMoneyScope.negotiation(threadId);
 
   const liveDeposit = MobileMoneyDeposit(
     id: 'deposit-1',
@@ -84,7 +86,7 @@ void main() {
         ).thenAnswer((_) async => liveStatus);
         return bloc();
       },
-      act: (b) => b.add(const MobileMoneyPaymentOpened(bidId: bidId)),
+      act: (b) => b.add(const MobileMoneyPaymentOpened(scope: scope)),
       expect: () => [
         isA<MobileMoneyPaymentLoading>(),
         isA<MobileMoneyPaymentAwaitingConfirmation>().having(
@@ -114,7 +116,7 @@ void main() {
         ).thenAnswer((_) async => liveStatus);
         return bloc();
       },
-      act: (b) => b.add(const MobileMoneyPaymentOpened(bidId: bidId)),
+      act: (b) => b.add(const MobileMoneyPaymentOpened(scope: scope)),
       expect: () => [
         isA<MobileMoneyPaymentLoading>(),
         isA<MobileMoneyPaymentAwaitingConfirmation>().having(
@@ -128,7 +130,94 @@ void main() {
         verify(
           () => analytics.logEvent(
             AnalyticsEvents.mobileMoneyInitiated,
-            properties: {'provider': 'Wave', 'wave': true},
+            properties: {'provider': 'Wave', 'wave': true, 'scope': 'bid'},
+          ),
+        ).called(1);
+      },
+    );
+
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'ouverture avec un numéro payeur et sans dépôt vivant : initiate reçoit '
+      'ce numéro',
+      build: () {
+        when(
+          () => repository.getStatus(scope),
+        ).thenAnswer((_) async => noDepositStatus);
+        when(
+          () => repository.initiate(scope, phoneNumber: '+221771234567'),
+        ).thenAnswer((_) async => liveStatus);
+        return bloc();
+      },
+      act: (b) => b.add(
+        const MobileMoneyPaymentOpened(
+          scope: scope,
+          phoneNumber: '+221771234567',
+        ),
+      ),
+      expect: () => [
+        isA<MobileMoneyPaymentLoading>(),
+        isA<MobileMoneyPaymentAwaitingConfirmation>(),
+      ],
+      verify: (_) {
+        verify(
+          () => repository.initiate(scope, phoneNumber: '+221771234567'),
+        ).called(1);
+      },
+    );
+
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'ouverture en portée négociation : getStatus reçoit la portée '
+      'négociation',
+      build: () {
+        when(
+          () => repository.getStatus(negotiationScope),
+        ).thenAnswer((_) async => escrowedStatus);
+        return bloc();
+      },
+      act: (b) =>
+          b.add(const MobileMoneyPaymentOpened(scope: negotiationScope)),
+      expect: () => [
+        isA<MobileMoneyPaymentLoading>(),
+        isA<MobileMoneyPaymentEscrowed>(),
+      ],
+      verify: (_) {
+        verify(() => repository.getStatus(negotiationScope)).called(1);
+        verifyNever(
+          () => repository.initiate(
+            any(),
+            phoneNumber: any(named: 'phoneNumber'),
+          ),
+        );
+      },
+    );
+
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'ouverture en portée négociation, initiation : analytics '
+      'mobileMoneyInitiated porte scope negotiation',
+      build: () {
+        when(
+          () => repository.getStatus(negotiationScope),
+        ).thenAnswer((_) async => noDepositStatus);
+        when(
+          () => repository.initiate(negotiationScope),
+        ).thenAnswer((_) async => liveStatus);
+        return bloc();
+      },
+      act: (b) =>
+          b.add(const MobileMoneyPaymentOpened(scope: negotiationScope)),
+      expect: () => [
+        isA<MobileMoneyPaymentLoading>(),
+        isA<MobileMoneyPaymentAwaitingConfirmation>(),
+      ],
+      verify: (_) {
+        verify(
+          () => analytics.logEvent(
+            AnalyticsEvents.mobileMoneyInitiated,
+            properties: {
+              'provider': 'Wave',
+              'wave': true,
+              'scope': 'negotiation',
+            },
           ),
         ).called(1);
       },
@@ -143,7 +232,7 @@ void main() {
         ).thenAnswer((_) async => escrowedStatus);
         return bloc();
       },
-      act: (b) => b.add(const MobileMoneyPaymentOpened(bidId: bidId)),
+      act: (b) => b.add(const MobileMoneyPaymentOpened(scope: scope)),
       expect: () => [
         isA<MobileMoneyPaymentLoading>(),
         isA<MobileMoneyPaymentEscrowed>(),
@@ -156,7 +245,10 @@ void main() {
           ),
         );
         verify(
-          () => analytics.logEvent(AnalyticsEvents.mobileMoneyConfirmed),
+          () => analytics.logEvent(
+            AnalyticsEvents.mobileMoneyConfirmed,
+            properties: {'scope': 'bid'},
+          ),
         ).called(1);
       },
     );
@@ -169,7 +261,7 @@ void main() {
         ).thenThrow(const OfflineException());
         return bloc();
       },
-      act: (b) => b.add(const MobileMoneyPaymentOpened(bidId: bidId)),
+      act: (b) => b.add(const MobileMoneyPaymentOpened(scope: scope)),
       expect: () => [
         isA<MobileMoneyPaymentLoading>(),
         isA<MobileMoneyPaymentError>().having(
@@ -191,7 +283,7 @@ void main() {
         ).thenThrow(const ServerException());
         return bloc();
       },
-      act: (b) => b.add(const MobileMoneyPaymentOpened(bidId: bidId)),
+      act: (b) => b.add(const MobileMoneyPaymentOpened(scope: scope)),
       expect: () => [
         isA<MobileMoneyPaymentLoading>(),
         isA<MobileMoneyPaymentError>().having(
@@ -213,7 +305,7 @@ void main() {
         );
         return bloc();
       },
-      act: (b) => b.add(const MobileMoneyPaymentOpened(bidId: bidId)),
+      act: (b) => b.add(const MobileMoneyPaymentOpened(scope: scope)),
       expect: () => [
         isA<MobileMoneyPaymentLoading>(),
         isA<MobileMoneyPaymentError>().having(
@@ -241,7 +333,7 @@ void main() {
       },
       act: (b) => b.add(
         const MobileMoneyPaymentInitiateRequested(
-          bidId: bidId,
+          scope: scope,
           phoneNumber: '+221771234567',
         ),
       ),
@@ -265,7 +357,7 @@ void main() {
         return bloc();
       },
       act: (b) =>
-          b.add(const MobileMoneyPaymentInitiateRequested(bidId: bidId)),
+          b.add(const MobileMoneyPaymentInitiateRequested(scope: scope)),
       expect: () => [
         isA<MobileMoneyPaymentLoading>(),
         isA<MobileMoneyPaymentAwaitingConfirmation>(),
@@ -284,7 +376,7 @@ void main() {
         return bloc();
       },
       act: (b) =>
-          b.add(const MobileMoneyPaymentInitiateRequested(bidId: bidId)),
+          b.add(const MobileMoneyPaymentInitiateRequested(scope: scope)),
       expect: () => [
         isA<MobileMoneyPaymentLoading>(),
         isA<MobileMoneyPaymentError>(),
@@ -302,7 +394,7 @@ void main() {
         return bloc();
       },
       seed: () => const MobileMoneyPaymentAwaitingConfirmation(liveStatus),
-      act: (b) => b.add(const MobileMoneyStatusPolled(bidId: bidId)),
+      act: (b) => b.add(const MobileMoneyStatusPolled(scope: scope)),
       expect: () => [isA<MobileMoneyPaymentEscrowed>()],
     );
 
@@ -315,7 +407,7 @@ void main() {
         return bloc();
       },
       seed: () => const MobileMoneyPaymentAwaitingConfirmation(liveStatus),
-      act: (b) => b.add(const MobileMoneyStatusPolled(bidId: bidId)),
+      act: (b) => b.add(const MobileMoneyStatusPolled(scope: scope)),
       expect: () => [],
     );
 
@@ -327,7 +419,7 @@ void main() {
         ).thenThrow(const OfflineException());
         return bloc();
       },
-      act: (b) => b.add(const MobileMoneyStatusPolled(bidId: bidId)),
+      act: (b) => b.add(const MobileMoneyStatusPolled(scope: scope)),
       expect: () => [isA<MobileMoneyPaymentError>()],
     );
 
@@ -340,7 +432,7 @@ void main() {
         return bloc();
       },
       seed: () => const MobileMoneyPaymentLoading(),
-      act: (b) => b.add(const MobileMoneyStatusPolled(bidId: bidId)),
+      act: (b) => b.add(const MobileMoneyStatusPolled(scope: scope)),
       expect: () => [isA<MobileMoneyPaymentError>()],
     );
 
@@ -353,7 +445,7 @@ void main() {
         return bloc();
       },
       seed: () => const MobileMoneyPaymentAwaitingConfirmation(liveStatus),
-      act: (b) => b.add(const MobileMoneyStatusPolled(bidId: bidId)),
+      act: (b) => b.add(const MobileMoneyStatusPolled(scope: scope)),
       expect: () => [],
     );
 
@@ -365,7 +457,7 @@ void main() {
         ).thenAnswer((_) async => statusNearDeadline);
         return bloc(now: () => deadline.subtract(const Duration(minutes: 1)));
       },
-      act: (b) => b.add(const MobileMoneyStatusPolled(bidId: bidId)),
+      act: (b) => b.add(const MobileMoneyStatusPolled(scope: scope)),
       expect: () => [isA<MobileMoneyPaymentAwaitingConfirmation>()],
     );
 
@@ -377,7 +469,7 @@ void main() {
         ).thenAnswer((_) async => statusNearDeadline);
         return bloc(now: () => deadline.add(const Duration(minutes: 1)));
       },
-      act: (b) => b.add(const MobileMoneyStatusPolled(bidId: bidId)),
+      act: (b) => b.add(const MobileMoneyStatusPolled(scope: scope)),
       expect: () => [isA<MobileMoneyPaymentExpired>()],
     );
 
@@ -405,9 +497,9 @@ void main() {
         return bloc();
       },
       act: (b) async {
-        b.add(const MobileMoneyStatusPolled(bidId: bidId));
+        b.add(const MobileMoneyStatusPolled(scope: scope));
         await Future<void>.delayed(Duration.zero);
-        b.add(const MobileMoneyStatusPolled(bidId: bidId));
+        b.add(const MobileMoneyStatusPolled(scope: scope));
       },
       expect: () => [
         isA<MobileMoneyPaymentEscrowed>(),
@@ -415,7 +507,10 @@ void main() {
       ],
       verify: (_) {
         verify(
-          () => analytics.logEvent(AnalyticsEvents.mobileMoneyConfirmed),
+          () => analytics.logEvent(
+            AnalyticsEvents.mobileMoneyConfirmed,
+            properties: {'scope': 'bid'},
+          ),
         ).called(1);
       },
     );
@@ -452,9 +547,9 @@ void main() {
         return bloc();
       },
       act: (b) async {
-        b.add(const MobileMoneyStatusPolled(bidId: bidId));
+        b.add(const MobileMoneyStatusPolled(scope: scope));
         await Future<void>.delayed(Duration.zero);
-        b.add(const MobileMoneyStatusPolled(bidId: bidId));
+        b.add(const MobileMoneyStatusPolled(scope: scope));
       },
       expect: () => [
         isA<MobileMoneyPaymentDepositFailed>(),
@@ -464,7 +559,7 @@ void main() {
         verify(
           () => analytics.logEvent(
             AnalyticsEvents.mobileMoneyFailed,
-            properties: {'failure_code': 'INSUFFICIENT_FUNDS'},
+            properties: {'failure_code': 'INSUFFICIENT_FUNDS', 'scope': 'bid'},
           ),
         ).called(1);
       },
@@ -486,13 +581,13 @@ void main() {
         );
         return bloc();
       },
-      act: (b) => b.add(const MobileMoneyStatusPolled(bidId: bidId)),
+      act: (b) => b.add(const MobileMoneyStatusPolled(scope: scope)),
       expect: () => [isA<MobileMoneyPaymentDepositFailed>()],
       verify: (_) {
         verify(
           () => analytics.logEvent(
             AnalyticsEvents.mobileMoneyFailed,
-            properties: {'failure_code': ''},
+            properties: {'failure_code': '', 'scope': 'bid'},
           ),
         ).called(1);
       },

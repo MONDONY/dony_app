@@ -10,9 +10,9 @@ import 'package:dony/features/matching/data/models/mobile_money_scope.dart';
 import 'package:dony/features/matching/data/repositories/mobile_money_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// Paiement mobile money (Wave / Orange Money via pawaPay) d'un bid :
-/// ouverture de l'écran d'attente, initiation d'un dépôt, sondage
-/// périodique du statut jusqu'au séquestre ou à l'expiration.
+/// Paiement mobile money (Wave / Orange Money via pawaPay) d'un bid ou d'un
+/// fil de négociation : ouverture de l'écran d'attente, initiation d'un
+/// dépôt, sondage périodique du statut jusqu'au séquestre ou à l'expiration.
 ///
 /// Style identique à `MobileMoneyAccountBloc` : le repository ne fait que
 /// passer, c'est ici que les erreurs sont déballées (`unwrapDioError`) et
@@ -40,18 +40,16 @@ class MobileMoneyPaymentBloc
   ) async {
     emit(const MobileMoneyPaymentLoading());
     try {
-      final status = await _repository.getStatus(
-        MobileMoneyScope.bid(event.bidId),
-      );
+      final status = await _repository.getStatus(event.scope);
       final known = _stateFor(status);
       if (known != null) {
-        _emitKnown(known, emit);
+        _emitKnown(known, emit, event.scope);
         return;
       }
-      // Aucun dépôt encore tenté pour ce bid : on en lance un immédiatement,
-      // l'écran d'attente n'a pas de raison d'afficher un état intermédiaire
-      // "rien à payer" avant que l'utilisateur agisse.
-      await _initiateAndEmit(event.bidId, null, emit);
+      // Aucun dépôt encore tenté pour cette portée : on en lance un
+      // immédiatement, l'écran d'attente n'a pas de raison d'afficher un état
+      // intermédiaire "rien à payer" avant que l'utilisateur agisse.
+      await _initiateAndEmit(event.scope, event.phoneNumber, emit);
     } catch (e) {
       emit(MobileMoneyPaymentError(unwrapDioError(e)));
     }
@@ -63,7 +61,7 @@ class MobileMoneyPaymentBloc
   ) async {
     emit(const MobileMoneyPaymentLoading());
     try {
-      await _initiateAndEmit(event.bidId, event.phoneNumber, emit);
+      await _initiateAndEmit(event.scope, event.phoneNumber, emit);
     } catch (e) {
       emit(MobileMoneyPaymentError(unwrapDioError(e)));
     }
@@ -74,14 +72,12 @@ class MobileMoneyPaymentBloc
     Emitter<MobileMoneyPaymentState> emit,
   ) async {
     try {
-      final status = await _repository.getStatus(
-        MobileMoneyScope.bid(event.bidId),
-      );
+      final status = await _repository.getStatus(event.scope);
       final known = _stateFor(status);
       // `null` : aucun dépôt encore renvoyé par le backend (rare en plein
       // sondage) — on garde l'état courant plutôt que de perdre l'écran.
       if (known != null) {
-        _emitKnown(known, emit);
+        _emitKnown(known, emit, event.scope);
       }
     } catch (e) {
       // Sondage silencieux : une erreur réseau transitoire ne casse pas
@@ -98,23 +94,21 @@ class MobileMoneyPaymentBloc
   /// être déjà séquestré ou refusé), l'émet, puis journalise la tentative
   /// d'initiation — après l'émission, comme les autres events analytics.
   Future<void> _initiateAndEmit(
-    String bidId,
+    MobileMoneyScope scope,
     String? phoneNumber,
     Emitter<MobileMoneyPaymentState> emit,
   ) async {
-    final status = await _repository.initiate(
-      MobileMoneyScope.bid(bidId),
-      phoneNumber: phoneNumber,
-    );
+    final status = await _repository.initiate(scope, phoneNumber: phoneNumber);
     final next =
         _stateFor(status) ?? MobileMoneyPaymentAwaitingConfirmation(status);
-    _emitKnown(next, emit);
+    _emitKnown(next, emit, scope);
     unawaited(
       _analytics.logEvent(
         AnalyticsEvents.mobileMoneyInitiated,
         properties: {
           'provider': status.deposit?.providerLabel ?? 'inconnu',
           'wave': status.isWaveRedirect,
+          'scope': scope.analyticsName,
         },
       ),
     );
@@ -127,17 +121,26 @@ class MobileMoneyPaymentBloc
   void _emitKnown(
     MobileMoneyPaymentState next,
     Emitter<MobileMoneyPaymentState> emit,
+    MobileMoneyScope scope,
   ) {
     final wasEscrowed = state is MobileMoneyPaymentEscrowed;
     final wasFailed = state is MobileMoneyPaymentDepositFailed;
     emit(next);
     if (next is MobileMoneyPaymentEscrowed && !wasEscrowed) {
-      unawaited(_analytics.logEvent(AnalyticsEvents.mobileMoneyConfirmed));
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.mobileMoneyConfirmed,
+          properties: {'scope': scope.analyticsName},
+        ),
+      );
     } else if (next is MobileMoneyPaymentDepositFailed && !wasFailed) {
       unawaited(
         _analytics.logEvent(
           AnalyticsEvents.mobileMoneyFailed,
-          properties: {'failure_code': next.status.deposit?.failureCode ?? ''},
+          properties: {
+            'failure_code': next.status.deposit?.failureCode ?? '',
+            'scope': scope.analyticsName,
+          },
         ),
       );
     }
