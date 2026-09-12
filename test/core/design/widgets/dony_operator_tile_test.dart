@@ -94,4 +94,59 @@ void main() {
       greaterThanOrEqualTo(44),
     );
   });
+
+  testWidgets('la ligne ne répète pas le titre en sémantique', (tester) async {
+    final handle = tester.ensureSemantics();
+    await pump(
+      tester,
+      DonyOperatorTile(
+        brand: 'ORANGE',
+        title: 'Orange Money',
+        subtitle: 'Détecté pour ce numéro',
+        control: DonyOperatorControl.checkbox,
+        selected: true,
+        onChanged: (_) {},
+      ),
+    );
+    expect(
+      find.bySemanticsLabel('Orange Money\nDétecté pour ce numéro'),
+      findsOneWidget,
+    );
+    handle.dispose();
+  });
+
+  testWidgets("indéterminée : état mixed exposé au lecteur d'écran", (
+    tester,
+  ) async {
+    final handle = tester.ensureSemantics();
+    await pump(
+      tester,
+      DonyOperatorTile(
+        title: 'Tous les réseaux',
+        control: DonyOperatorControl.checkbox,
+        selected: false,
+        indeterminate: true,
+        onChanged: (_) {},
+      ),
+    );
+    // `matchesSemantics` de cette version de flutter_test n'a pas de
+    // paramètre `mixed` : le tri-state s'appelle `isCheckStateMixed`, et
+    // chaque flag/action omis est vérifié à `false` (matcher exhaustif, pas
+    // partiel) — d'où la liste complète des flags et actions réellement
+    // portés par ce nœud (vérifiés via debugDumpSemanticsTree).
+    expect(
+      tester.getSemantics(find.byType(DonyOperatorTile)),
+      matchesSemantics(
+        label: 'Tous les réseaux',
+        hasCheckedState: true,
+        isCheckStateMixed: true,
+        hasEnabledState: true,
+        isEnabled: true,
+        isFocusable: true,
+        hasTapAction: true,
+        hasFocusAction: true,
+      ),
+    );
+    handle.dispose();
+  });
 }

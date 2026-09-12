@@ -48,9 +48,14 @@ class DonyOperatorTile extends StatelessWidget {
       container: true,
       enabled: enabled,
       checked: isCheckbox ? selected : null,
+      mixed: isCheckbox ? indeterminate : null,
       selected: isCheckbox ? null : selected,
       inMutuallyExclusiveGroup: !isCheckbox,
-      label: title,
+      // Pas de `label:` ici : les Text (titre + sous-titre) descendants ne
+      // sont pas exclus de la sémantique (contrairement à la pastille et au
+      // contrôle), donc Flutter les fusionne dans ce nœud. Un `label`
+      // explicite s'ajouterait à ce texte fusionné au lieu de le remplacer,
+      // dupliquant le titre ("Orange Money\nOrange Money\n...").
       child: InkWell(
         onTap: enabled && onChanged != null
             ? () {
@@ -67,7 +72,7 @@ class DonyOperatorTile extends StatelessWidget {
                 )
               : null,
           child: Opacity(
-            opacity: enabled ? 1 : 0.5,
+            opacity: enabled ? 1 : 0.4,
             child: Row(
               children: [
                 if (brand != null) ...[
@@ -137,7 +142,7 @@ class _CheckBox extends StatelessWidget {
       height: 24,
       decoration: BoxDecoration(
         color: filled ? cs.primary : cs.surface,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(DonyRadius.xs),
         border: filled ? null : Border.all(color: cs.outline, width: 1.5),
       ),
       child: filled
