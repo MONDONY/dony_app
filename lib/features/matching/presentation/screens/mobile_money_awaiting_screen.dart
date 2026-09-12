@@ -16,6 +16,7 @@ import 'package:dony/features/matching/bloc/mobile_money_payment_state.dart';
 import 'package:dony/features/matching/data/models/mobile_money_payment_status.dart';
 import 'package:dony/features/matching/data/models/mobile_money_scope.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid/payer_phone.dart';
+import 'package:dony/features/payments/data/models/mobile_money_provider_catalog.dart';
 import 'package:dony/features/payments/presentation/widgets/mobile_money_networks_checklist.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -171,6 +172,15 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
   /// [_PhoneRequiredBody] : sans aucun numéro connu, il n'y a encore rien à
   /// choisir, seulement un numéro à fournir avant la toute première
   /// initiation.
+  ///
+  /// Ne redémarre PAS le sondage (contrairement à [_retry]) : aucun dépôt
+  /// n'est encore relancé ici, seul le catalogue est rechargé. Le back
+  /// continue de rapporter le dernier dépôt refusé tant qu'un nouveau n'a
+  /// pas été initié (`onPay`) — sonder ici ferait rebondir l'écran sur
+  /// `_FailedBody` avant même que l'utilisateur ait choisi un opérateur. Le
+  /// `listener` du `BlocConsumer` se charge d'arrêter/reprendre le sondage
+  /// selon l'état (`ChooseOperator` l'arrête, `AwaitingConfirmation` le
+  /// reprend).
   void _retryToChooseOperator(String rawPhone) {
     context.read<MobileMoneyPaymentBloc>().add(
       MobileMoneyPaymentProvidersRequested(
@@ -178,7 +188,6 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
         phoneNumber: normalizePayerPhone(rawPhone),
       ),
     );
-    _startPolling();
   }
 
   @override
@@ -229,6 +238,16 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
                 _close(context, paid: true);
               case MobileMoneyPaymentExpired():
                 _cancelAllTimers();
+              case MobileMoneyPaymentChooseOperator():
+                // Aucun dépôt encore initié : sonder reviendrait sur le
+                // dernier dépôt connu (refusé, ou expiré) et éjecterait
+                // l'utilisateur de cette étape avant qu'il ait pu choisir.
+                _pollingTimer?.cancel();
+              case MobileMoneyPaymentAwaitingConfirmation():
+                // Un dépôt redevient vivant (première ouverture avec un
+                // dépôt déjà en cours, ou après « Payer » depuis le choix de
+                // l'opérateur) : le sondage reprend.
+                _startPolling();
               case MobileMoneyPaymentDepositFailed():
                 _pollingTimer?.cancel();
               case final MobileMoneyPaymentError e:
@@ -459,7 +478,11 @@ class _ChooseOperatorBodyState extends State<_ChooseOperatorBody> {
     _timer = Timer(_debounce, () {
       if (!mounted) return;
       _requestedPhone = phone;
-      if (phone != null) widget.onPhoneConfirmed(phone);
+      // Sans condition : `null` signifie déjà « le numéro du bid » pour
+      // `ProvidersRequested`. Ignorer ce cas laissait le catalogue affiché
+      // sur le dernier numéro alternatif tapé après que le champ ait été
+      // vidé, alors que « Payer » était déjà revenu à `phoneNumber: null`.
+      widget.onPhoneConfirmed(phone);
     });
   }
 
@@ -479,6 +502,24 @@ class _ChooseOperatorBodyState extends State<_ChooseOperatorBody> {
     1 => labels.first,
     _ => '${labels.sublist(0, labels.length - 1).join(', ')} et ${labels.last}',
   };
+
+  /// Message du bandeau « aucun réseau commun ». Garde défensive : le bloc
+  /// actuel ne renvoie jamais `travelerAccepts` vide (le voyageur accepte
+  /// toujours au moins un réseau), mais sans cette garde un futur catalogue
+  /// dégénéré produirait « Le voyageur accepte , qui n'existent pas... () »
+  /// — parenthèse vide et virgule orpheline.
+  String _noCommonNetworkMessage(
+    String firstName,
+    MobileMoneyProviderCatalog? catalog,
+  ) {
+    final accepts = catalog?.travelerAccepts ?? const <String>[];
+    if (accepts.isEmpty) {
+      return 'Aucun réseau mobile money disponible pour ce paiement.';
+    }
+    return '$firstName accepte ${_joinLabels(accepts)}, '
+        "qui n'existent pas pour ton numéro (${_country(catalog?.country)}). "
+        'Change de numéro payeur ou écris-lui depuis la conversation.';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -562,10 +603,7 @@ class _ChooseOperatorBodyState extends State<_ChooseOperatorBody> {
                 else if (catalog == null || catalog.isEmpty)
                   DonyStatusBanner(
                     type: DonyStatusBannerType.warning,
-                    message:
-                        '$firstName accepte ${_joinLabels(catalog?.travelerAccepts ?? const [])}, '
-                        "qui n'existent pas pour ton numéro (${_country(catalog?.country)}). "
-                        'Change de numéro payeur ou écris-lui depuis la conversation.',
+                    message: _noCommonNetworkMessage(firstName, catalog),
                   )
                 else ...[
                   ValueListenableBuilder<String?>(
@@ -632,7 +670,11 @@ class _ChooseOperatorBodyState extends State<_ChooseOperatorBody> {
               label: 'Payer $amount',
               iconAsset: 'smartphone',
               isLoading: widget.state.isLoadingCatalog && catalog != null,
-              onPressed: selected == null || catalog == null || catalog.isEmpty
+              onPressed:
+                  selected == null ||
+                      catalog == null ||
+                      catalog.isEmpty ||
+                      widget.state.error != null
                   ? null
                   : () => widget.onPay(selected),
             ),
