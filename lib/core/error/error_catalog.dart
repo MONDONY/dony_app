@@ -100,6 +100,17 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.flag_outlined,
     ),
+    // 422 renvoyée quand le numéro payeur, une fois normalisé côté client
+    // (normalizePayerPhone), reste invalide pour tout opérateur mobile
+    // money (aucun réseau ne le reconnaît).
+    'mobile-money-invalid-phone': ErrorPresentation(
+      title: 'Numéro non reconnu',
+      message:
+          "Ce numéro n'est reconnu par aucun opérateur mobile money. "
+          'Vérifie-le et réessaie.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.flag_outlined,
+    ),
     'mobile-money-deposit-rejected': ErrorPresentation(
       title: 'Paiement refusé',
       message:

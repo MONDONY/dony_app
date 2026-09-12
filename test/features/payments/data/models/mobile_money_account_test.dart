@@ -121,5 +121,56 @@ void main() {
         expect(a, isNot(equals(b)));
       });
     });
+
+    group('providers', () {
+      test('lit la liste des réseaux acceptés', () {
+        final account = MobileMoneyAccount.fromJson(const {
+          'status': 'ACTIVE',
+          'msisdnMasked': '+225 •••• 36',
+          'provider': 'ORANGE_CIV',
+          'providerLabel': 'Orange Money',
+          'providers': [
+            {'code': 'ORANGE_CIV', 'label': 'Orange Money'},
+            {'code': 'WAVE_CIV', 'label': 'Wave'},
+          ],
+        });
+        expect(account.provider, 'ORANGE_CIV');
+        expect(account.providers.map((p) => p.label), ['Orange Money', 'Wave']);
+      });
+
+      test(
+        'providers explicitement vide fait foi, même avec un provider hérité',
+        () {
+          final account = MobileMoneyAccount.fromJson(const {
+            'providers': [],
+            'provider': 'ORANGE_CIV',
+            'providerLabel': 'Orange Money',
+          });
+          expect(account.providers, isEmpty);
+          expect(account.provider, 'ORANGE_CIV');
+        },
+      );
+
+      test(
+        'ancien contrat sans liste : repli sur provider et providerLabel',
+        () {
+          final account = MobileMoneyAccount.fromJson(const {
+            'status': 'ACTIVE',
+            'provider': 'ORANGE_CIV',
+            'providerLabel': 'Orange Money',
+          });
+          expect(account.providers.single.code, 'ORANGE_CIV');
+          expect(account.providers.single.label, 'Orange Money');
+        },
+      );
+
+      test('compte non configuré : aucune liste', () {
+        final account = MobileMoneyAccount.fromJson(const {
+          'status': 'NOT_CONFIGURED',
+        });
+        expect(account.providers, isEmpty);
+        expect(account.provider, isNull);
+      });
+    });
   });
 }

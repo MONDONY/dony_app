@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/external_url_launcher.dart';
@@ -10,6 +13,8 @@ import 'package:dony/features/matching/bloc/mobile_money_payment_state.dart';
 import 'package:dony/features/matching/data/models/mobile_money_payment_status.dart';
 import 'package:dony/features/matching/data/models/mobile_money_scope.dart';
 import 'package:dony/features/matching/presentation/screens/mobile_money_awaiting_screen.dart';
+import 'package:dony/features/payments/data/models/mobile_money_provider_catalog.dart';
+import 'package:dony/features/payments/presentation/widgets/mobile_money_networks_checklist.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -31,6 +36,7 @@ void main() {
 
   const bidId = 'bid-1';
   const threadId = 'thread-1';
+  const scope = MobileMoneyScope.bid(bidId);
   // AppTheme.light() charge des polices via HTTP (google_fonts) : appelée
   // hors d'un testWidgets, la requête tombe hors de la zone de test et
   // plante. On ne la calcule donc jamais au niveau de main(), seulement à
@@ -112,6 +118,38 @@ void main() {
     subjectStatus: 'ACCEPTED',
     paymentStatus: 'ESCROW',
     amount: 50.0,
+  );
+
+  const noDepositStatus = MobileMoneyPaymentStatus(
+    subjectId: bidId,
+    subjectStatus: 'AWAITING_PAYMENT',
+    paymentStatus: 'PENDING',
+    amount: 12500,
+  );
+
+  const catalog = MobileMoneyProviderCatalog(
+    country: 'CI',
+    currency: 'XOF',
+    msisdnMasked: '+225 •••• 77',
+    detected: 'ORANGE_CIV',
+    providers: [
+      MobileMoneyProviderOption(
+        code: 'ORANGE_CIV',
+        label: 'Orange Money',
+        detected: true,
+      ),
+      MobileMoneyProviderOption(code: 'WAVE_CIV', label: 'Wave'),
+    ],
+    travelerAccepts: ['Orange Money', 'Wave'],
+    travelerFirstName: 'Aminata',
+  );
+
+  const emptyCatalog = MobileMoneyProviderCatalog(
+    country: 'BJ',
+    currency: 'XOF',
+    msisdnMasked: '+229 •••• 56',
+    travelerAccepts: ['Orange Money', 'Wave'],
+    travelerFirstName: 'Aminata',
   );
 
   setUpAll(() {
@@ -485,9 +523,15 @@ void main() {
     testWidgets('message du backend affiché, relance avec le numéro saisi', (
       tester,
     ) async {
-      stub(const MobileMoneyPaymentDepositFailed(depositFailedStatus));
+      final controller = StreamController<MobileMoneyPaymentState>.broadcast();
+      addTearDown(controller.close);
+      when(
+        () => bloc.state,
+      ).thenReturn(const MobileMoneyPaymentDepositFailed(depositFailedStatus));
+      when(() => bloc.stream).thenAnswer((_) => controller.stream);
 
-      await pumpScreen(tester);
+      await pumpScreen(tester, settle: false);
+      await tester.pump();
 
       expect(find.text('Solde insuffisant'), findsOneWidget);
 
@@ -498,31 +542,119 @@ void main() {
       await tester.tap(find.text('Réessayer'));
       await tester.pump();
 
+      // Depuis un dépôt refusé, « Réessayer » ramène désormais au choix de
+      // l'opérateur (ProvidersRequested) plutôt que de relancer aveuglément
+      // le même opérateur (InitiateRequested) : voir group('choix de
+      // l\'opérateur') pour le cas sans numéro saisi.
       verify(
         () => bloc.add(
-          const MobileMoneyPaymentInitiateRequested(
+          const MobileMoneyPaymentProvidersRequested(
             scope: MobileMoneyScope.bid(bidId),
             phoneNumber: '0612345678',
           ),
         ),
       ).called(1);
-    });
 
-    testWidgets('relance sans numéro saisi → phoneNumber nul', (tester) async {
-      stub(const MobileMoneyPaymentDepositFailed(depositFailedStatus));
-
-      await pumpScreen(tester);
-      await tester.tap(find.text('Réessayer'));
+      // Le bloc répond avec le catalogue construit pour ce numéro
+      // alternatif : un seul contrôleur de numéro payeur (I1) garde
+      // « 06 12 34 56 78 » affiché dans le champ de _ChooseOperatorBody,
+      // cohérent avec ce catalogue.
+      controller.add(
+        const MobileMoneyPaymentChooseOperator(
+          status: depositFailedStatus,
+          catalog: catalog,
+          payerPhone: '0612345678',
+        ),
+      );
       await tester.pump();
 
+      await tester.tap(find.byKey(const Key('operator-WAVE_CIV')));
+      await tester.pump();
+      await tester.tap(
+        find.widgetWithText(
+          DonyButton,
+          'Payer ${formatPriceIn(depositFailedStatus.amount ?? 0, depositFailedStatus.currency)}',
+        ),
+      );
+      await tester.pump();
+
+      // « Payer » envoie le numéro qui a réellement bâti le catalogue
+      // affiché (`s.payerPhone`), jamais le contenu brut d'un contrôleur
+      // non synchronisé : avant I1, ce test aurait envoyé `phoneNumber:
+      // null` (le numéro du bid) avec l'opérateur du catalogue de
+      // l'alternatif.
       verify(
         () => bloc.add(
           const MobileMoneyPaymentInitiateRequested(
-            scope: MobileMoneyScope.bid(bidId),
+            scope: scope,
+            phoneNumber: '0612345678',
+            provider: 'WAVE_CIV',
           ),
         ),
       ).called(1);
     });
+
+    testWidgets(
+      'numéro alternatif tapé dans le choix de l\'opérateur : "Réessayer" '
+      'après un dépôt refusé relance le même numéro, sans ressaisie',
+      (tester) async {
+        final controller =
+            StreamController<MobileMoneyPaymentState>.broadcast();
+        addTearDown(controller.close);
+        when(() => bloc.state).thenReturn(const MobileMoneyPaymentLoading());
+        when(() => bloc.stream).thenAnswer((_) => controller.stream);
+
+        await pumpScreen(tester, settle: false);
+        controller.add(
+          const MobileMoneyPaymentChooseOperator(
+            status: noDepositStatus,
+            catalog: catalog,
+          ),
+        );
+        await tester.pump();
+
+        await tester.enterText(
+          find.byKey(const Key('mobile-money-payer-phone-field')),
+          '+229 01 97 12 34 56',
+        );
+        await tester.pump(const Duration(milliseconds: 450));
+
+        verify(
+          () => bloc.add(
+            const MobileMoneyPaymentProvidersRequested(
+              scope: scope,
+              phoneNumber: '+2290197123456',
+            ),
+          ),
+        ).called(1);
+
+        // Le dépôt tenté avec ce numéro est refusé : le même contrôleur
+        // (I1), partagé entre le choix de l'opérateur et le dépôt refusé,
+        // garde le numéro alternatif affiché, rien à ressaisir. Deux pumps
+        // supplémentaires : la transition depuis un champ en cours de
+        // saisie prend plus d'une frame pour se matérialiser.
+        controller.add(
+          const MobileMoneyPaymentDepositFailed(depositFailedStatus),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 500));
+
+        await tester.tap(find.text('Réessayer'));
+        await tester.pump();
+
+        // Un seul appel supplémentaire, non ressaisi : mocktail retire les
+        // appels déjà vérifiés ci-dessus des vérifications suivantes, donc
+        // ce `verify` ne porte que sur ce nouvel appel (pas cumulatif).
+        verify(
+          () => bloc.add(
+            const MobileMoneyPaymentProvidersRequested(
+              scope: scope,
+              phoneNumber: '+2290197123456',
+            ),
+          ),
+        ).called(1);
+      },
+    );
 
     testWidgets('sans message backend : repli "Le paiement a été refusé par '
         'l\'opérateur"', (tester) async {
@@ -550,6 +682,563 @@ void main() {
         // Comme pour Escrowed : verifyNever, pas called(0) (mocktail échoue
         // sur called(0) avec "No matching calls").
         verifyNever(() => bloc.add(any(that: isA<MobileMoneyStatusPolled>())));
+      },
+    );
+  });
+
+  group('choix de l\'opérateur', () {
+    // Calculé via formatPriceIn (comme l'écran) plutôt que codé en dur :
+    // NumberFormat sépare les milliers par une espace fine insécable
+    // (U+202F), pas une espace classique — un littéral tapé à la main ne
+    // matcherait jamais le texte réellement rendu.
+    final payAmountLabel =
+        'Payer ${formatPriceIn(noDepositStatus.amount ?? 0, noDepositStatus.currency)}';
+
+    testWidgets(
+      'affiche montant, numéro masqué, réseaux, note et bouton payer',
+      (tester) async {
+        stub(
+          const MobileMoneyPaymentChooseOperator(
+            status: noDepositStatus,
+            catalog: catalog,
+          ),
+        );
+
+        await pumpScreen(tester);
+
+        expect(find.text('Avec quel opérateur ?'), findsOneWidget);
+        expect(find.text('+225 •••• 77'), findsOneWidget);
+        expect(find.text('Orange Money'), findsOneWidget);
+        expect(find.text('Wave'), findsOneWidget);
+        expect(find.text('Détecté pour ce numéro'), findsOneWidget);
+        expect(
+          find.textContaining('Aminata accepte Orange Money et Wave'),
+          findsOneWidget,
+        );
+        expect(find.widgetWithText(DonyButton, payAmountLabel), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'payer envoie l\'initiation avec l\'opérateur détecté par défaut',
+      (tester) async {
+        stub(
+          const MobileMoneyPaymentChooseOperator(
+            status: noDepositStatus,
+            catalog: catalog,
+          ),
+        );
+
+        await pumpScreen(tester);
+        await tester.tap(find.widgetWithText(DonyButton, payAmountLabel));
+        await tester.pump();
+
+        verify(
+          () => bloc.add(
+            const MobileMoneyPaymentInitiateRequested(
+              scope: scope,
+              provider: 'ORANGE_CIV',
+            ),
+          ),
+        ).called(1);
+      },
+    );
+
+    testWidgets('choisir Wave puis payer envoie WAVE_CIV', (tester) async {
+      stub(
+        const MobileMoneyPaymentChooseOperator(
+          status: noDepositStatus,
+          catalog: catalog,
+        ),
+      );
+
+      await pumpScreen(tester);
+      await tester.tap(find.byKey(const Key('operator-WAVE_CIV')));
+      await tester.pump();
+      await tester.tap(find.widgetWithText(DonyButton, payAmountLabel));
+      await tester.pump();
+
+      verify(
+        () => bloc.add(
+          const MobileMoneyPaymentInitiateRequested(
+            scope: scope,
+            provider: 'WAVE_CIV',
+          ),
+        ),
+      ).called(1);
+    });
+
+    testWidgets(
+      'payer désactivé le temps du débounce (400 ms) suivant une frappe',
+      (tester) async {
+        stub(
+          const MobileMoneyPaymentChooseOperator(
+            status: noDepositStatus,
+            catalog: catalog,
+          ),
+        );
+
+        await pumpScreen(tester);
+        expect(
+          tester
+              .widget<DonyButton>(
+                find.widgetWithText(DonyButton, payAmountLabel),
+              )
+              .onPressed,
+          isNotNull,
+        );
+
+        await tester.enterText(
+          find.byKey(const Key('mobile-money-payer-phone-field')),
+          '+229 01 97 12 34 56',
+        );
+        await tester.pump();
+
+        // Une frappe vient de tomber, le débounce de 400 ms ne l'a pas
+        // encore confirmée : payer ne doit ni rester actif sur l'ancienne
+        // paire (numéro, opérateur), ni ignorer silencieusement la frappe
+        // en attente (I1).
+        expect(
+          tester
+              .widget<DonyButton>(
+                find.widgetWithText(DonyButton, payAmountLabel),
+              )
+              .onPressed,
+          isNull,
+        );
+
+        await tester.pump(const Duration(milliseconds: 450));
+
+        expect(
+          tester
+              .widget<DonyButton>(
+                find.widgetWithText(DonyButton, payAmountLabel),
+              )
+              .onPressed,
+          isNotNull,
+        );
+      },
+    );
+
+    testWidgets('saisir un autre numéro recharge le catalogue après le délai', (
+      tester,
+    ) async {
+      stub(
+        const MobileMoneyPaymentChooseOperator(
+          status: noDepositStatus,
+          catalog: catalog,
+        ),
+      );
+
+      await pumpScreen(tester);
+      await tester.enterText(
+        find.byKey(const Key('mobile-money-payer-phone-field')),
+        '+229 01 97 12 34 56',
+      );
+      await tester.pump(const Duration(milliseconds: 450));
+
+      verify(
+        () => bloc.add(
+          const MobileMoneyPaymentProvidersRequested(
+            scope: scope,
+            phoneNumber: '+2290197123456',
+          ),
+        ),
+      ).called(1);
+    });
+
+    testWidgets(
+      'effacer le numéro alternatif recharge le catalogue du numéro du bid',
+      (tester) async {
+        stub(
+          const MobileMoneyPaymentChooseOperator(
+            status: noDepositStatus,
+            catalog: catalog,
+          ),
+        );
+
+        await pumpScreen(tester);
+        await tester.enterText(
+          find.byKey(const Key('mobile-money-payer-phone-field')),
+          '+229 01 97 12 34 56',
+        );
+        await tester.pump(const Duration(milliseconds: 450));
+
+        verify(
+          () => bloc.add(
+            const MobileMoneyPaymentProvidersRequested(
+              scope: scope,
+              phoneNumber: '+2290197123456',
+            ),
+          ),
+        ).called(1);
+
+        // Champ vidé : normalizePayerPhone('') rend `null`, qui doit
+        // désormais être transmis (numéro du bid), pas avalé silencieusement.
+        await tester.enterText(
+          find.byKey(const Key('mobile-money-payer-phone-field')),
+          '',
+        );
+        await tester.pump(const Duration(milliseconds: 450));
+
+        verify(
+          () => bloc.add(
+            const MobileMoneyPaymentProvidersRequested(scope: scope),
+          ),
+        ).called(1);
+      },
+    );
+
+    testWidgets('compte à rebours affiché quand deadlineAt est fourni', (
+      tester,
+    ) async {
+      final deadline = DateTime.now().toUtc().add(const Duration(minutes: 20));
+      stub(
+        MobileMoneyPaymentChooseOperator(
+          status: MobileMoneyPaymentStatus(
+            subjectId: bidId,
+            subjectStatus: 'AWAITING_PAYMENT',
+            paymentStatus: 'PENDING',
+            amount: 12500,
+            deadlineAt: deadline,
+          ),
+          catalog: catalog,
+        ),
+      );
+
+      await pumpScreen(tester, settle: false);
+
+      expect(countdownFinder, findsOneWidget);
+    });
+
+    testWidgets('aucun réseau commun : bandeau explicite, bouton désactivé', (
+      tester,
+    ) async {
+      stub(
+        const MobileMoneyPaymentChooseOperator(
+          status: noDepositStatus,
+          catalog: emptyCatalog,
+        ),
+      );
+
+      await pumpScreen(tester);
+
+      expect(
+        find.textContaining("qui n'existent pas pour ton numéro (Bénin)"),
+        findsOneWidget,
+      );
+      final button = tester.widget<DonyButton>(
+        find.widgetWithText(DonyButton, payAmountLabel),
+      );
+      expect(button.onPressed, isNull);
+    });
+
+    testWidgets('catalogue en chargement : squelette', (tester) async {
+      stub(
+        const MobileMoneyPaymentChooseOperator(
+          status: noDepositStatus,
+          isLoadingCatalog: true,
+        ),
+      );
+
+      await pumpScreen(tester, settle: false);
+      await tester.pump();
+
+      expect(find.byType(MobileMoneyNetworksSkeleton), findsOneWidget);
+    });
+
+    testWidgets(
+      'bandeau d\'erreur : « Réessayer » relance le catalogue avec le même '
+      'numéro',
+      (tester) async {
+        stub(
+          const MobileMoneyPaymentChooseOperator(
+            status: noDepositStatus,
+            payerPhone: '+221771234567',
+            error: NetworkException('boom'),
+          ),
+        );
+
+        await pumpScreen(tester);
+        await tester.tap(find.text('Réessayer'));
+        await tester.pump();
+
+        verify(
+          () => bloc.add(
+            const MobileMoneyPaymentProvidersRequested(
+              scope: scope,
+              phoneNumber: '+221771234567',
+            ),
+          ),
+        ).called(1);
+      },
+    );
+
+    testWidgets(
+      'bandeau d\'erreur sans numéro saisi : « Réessayer » relance sans '
+      'numéro',
+      (tester) async {
+        stub(
+          const MobileMoneyPaymentChooseOperator(
+            status: noDepositStatus,
+            error: NetworkException('boom'),
+          ),
+        );
+
+        await pumpScreen(tester);
+        await tester.tap(find.text('Réessayer'));
+        await tester.pump();
+
+        verify(
+          () => bloc.add(
+            const MobileMoneyPaymentProvidersRequested(scope: scope),
+          ),
+        ).called(1);
+      },
+    );
+
+    testWidgets(
+      'bandeau d\'erreur : le bouton Payer reste inactif malgré un ancien '
+      'catalogue',
+      (tester) async {
+        // Le bloc garde l'ancien catalogue (`catalog: previous`) sur une
+        // recharge en échec : sans la garde sur `error`, le CTA resterait
+        // actif et enverrait InitiateRequested avec le nouveau numéro mais
+        // l'opérateur de l'ANCIEN catalogue — une paire jamais validée.
+        stub(
+          const MobileMoneyPaymentChooseOperator(
+            status: noDepositStatus,
+            catalog: catalog,
+            payerPhone: '+2290197123456',
+            error: NetworkException('boom'),
+          ),
+        );
+
+        await pumpScreen(tester);
+
+        final button = tester.widget<DonyButton>(
+          find.widgetWithText(DonyButton, payAmountLabel),
+        );
+        expect(button.onPressed, isNull);
+      },
+    );
+
+    testWidgets(
+      'catalogue null sans erreur ni chargement (défensif) : message simple '
+      'sans parenthèse vide',
+      (tester) async {
+        // Combinaison que le bloc actuel ne produit jamais (catalog null
+        // implique isLoadingCatalog ou error), mais le widget doit rester
+        // défensif plutôt que d'afficher une parenthèse vide.
+        stub(const MobileMoneyPaymentChooseOperator(status: noDepositStatus));
+
+        await pumpScreen(tester);
+
+        expect(
+          find.text('Aucun réseau mobile money disponible pour ce paiement.'),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'dépôt refusé : « Réessayer » ramène au choix de l\'opérateur, sans '
+      'relancer le sondage',
+      (tester) async {
+        stub(const MobileMoneyPaymentDepositFailed(depositFailedStatus));
+
+        await pumpScreen(tester);
+        await tester.tap(find.text('Réessayer'));
+        await tester.pump();
+
+        verify(
+          () => bloc.add(
+            const MobileMoneyPaymentProvidersRequested(scope: scope),
+          ),
+        ).called(1);
+
+        // Le back rapporte toujours l'ancien dépôt refusé tant qu'aucune
+        // nouvelle initiation n'a eu lieu : sonder ici renverrait
+        // DepositFailed et éjecterait l'utilisateur avant qu'il ait choisi.
+        await tester.pump(const Duration(seconds: 6));
+        verifyNever(() => bloc.add(any(that: isA<MobileMoneyStatusPolled>())));
+      },
+    );
+
+    testWidgets(
+      'entrer dans le choix de l\'opérateur arrête un sondage actif',
+      (tester) async {
+        stub(
+          const MobileMoneyPaymentChooseOperator(
+            status: noDepositStatus,
+            catalog: catalog,
+          ),
+          previous: const MobileMoneyPaymentAwaitingConfirmation(
+            awaitingPinStatus,
+          ),
+        );
+
+        await pumpScreen(tester);
+        await tester.pump(const Duration(seconds: 6));
+
+        verifyNever(() => bloc.add(any(that: isA<MobileMoneyStatusPolled>())));
+      },
+    );
+
+    testWidgets(
+      'après avoir payé (AwaitingConfirmation) : le sondage reprend après '
+      'avoir été arrêté par le choix de l\'opérateur',
+      (tester) async {
+        final controller =
+            StreamController<MobileMoneyPaymentState>.broadcast();
+        addTearDown(controller.close);
+        when(() => bloc.state).thenReturn(const MobileMoneyPaymentLoading());
+        when(() => bloc.stream).thenAnswer((_) => controller.stream);
+
+        await pumpScreen(tester, settle: false);
+        controller.add(
+          const MobileMoneyPaymentChooseOperator(
+            status: noDepositStatus,
+            catalog: catalog,
+          ),
+        );
+        await tester.pump();
+
+        // Le sondage est arrêté pendant le choix de l'opérateur (test
+        // dédié ci-dessus) : on avance quand même 6 s pour partir d'un
+        // sondage réellement coupé, pas seulement jamais démarré.
+        await tester.pump(const Duration(seconds: 6));
+
+        controller.add(
+          const MobileMoneyPaymentAwaitingConfirmation(awaitingPinStatus),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(seconds: 5));
+
+        // Un seul StatusPolled au total : aucun pendant les 6 s en
+        // ChooseOperator, un seul après la reprise en AwaitingConfirmation.
+        verify(
+          () => bloc.add(any(that: isA<MobileMoneyStatusPolled>())),
+        ).called(1);
+      },
+    );
+
+    testWidgets(
+      'didUpdateWidget : la sélection survit si le nouveau catalogue la '
+      'contient encore',
+      (tester) async {
+        const catalogB = MobileMoneyProviderCatalog(
+          country: 'CI',
+          currency: 'XOF',
+          msisdnMasked: '+225 •••• 77',
+          providers: [
+            MobileMoneyProviderOption(
+              code: 'ORANGE_CIV',
+              label: 'Orange Money',
+            ),
+            MobileMoneyProviderOption(code: 'WAVE_CIV', label: 'Wave'),
+          ],
+          travelerAccepts: ['Orange Money', 'Wave'],
+          travelerFirstName: 'Aminata',
+        );
+        final controller =
+            StreamController<MobileMoneyPaymentState>.broadcast();
+        addTearDown(controller.close);
+        when(() => bloc.state).thenReturn(const MobileMoneyPaymentLoading());
+        when(() => bloc.stream).thenAnswer((_) => controller.stream);
+
+        await pumpScreen(tester, settle: false);
+        controller.add(
+          const MobileMoneyPaymentChooseOperator(
+            status: noDepositStatus,
+            catalog: catalog,
+          ),
+        );
+        await tester.pump();
+
+        await tester.tap(find.byKey(const Key('operator-WAVE_CIV')));
+        await tester.pump();
+
+        // Nouveau catalogue (référence différente) contenant toujours
+        // WAVE_CIV : la sélection doit survivre à didUpdateWidget.
+        controller.add(
+          const MobileMoneyPaymentChooseOperator(
+            status: noDepositStatus,
+            catalog: catalogB,
+          ),
+        );
+        await tester.pump();
+
+        await tester.tap(find.widgetWithText(DonyButton, payAmountLabel));
+        await tester.pump();
+
+        verify(
+          () => bloc.add(
+            const MobileMoneyPaymentInitiateRequested(
+              scope: scope,
+              provider: 'WAVE_CIV',
+            ),
+          ),
+        ).called(1);
+      },
+    );
+
+    testWidgets(
+      'didUpdateWidget : la sélection retombe sur le premier opérateur si '
+      'le code choisi disparaît du nouveau catalogue',
+      (tester) async {
+        const catalogWithoutWave = MobileMoneyProviderCatalog(
+          country: 'CI',
+          currency: 'XOF',
+          msisdnMasked: '+225 •••• 77',
+          providers: [
+            MobileMoneyProviderOption(
+              code: 'ORANGE_CIV',
+              label: 'Orange Money',
+            ),
+          ],
+          travelerAccepts: ['Orange Money', 'Wave'],
+          travelerFirstName: 'Aminata',
+        );
+        final controller =
+            StreamController<MobileMoneyPaymentState>.broadcast();
+        addTearDown(controller.close);
+        when(() => bloc.state).thenReturn(const MobileMoneyPaymentLoading());
+        when(() => bloc.stream).thenAnswer((_) => controller.stream);
+
+        await pumpScreen(tester, settle: false);
+        controller.add(
+          const MobileMoneyPaymentChooseOperator(
+            status: noDepositStatus,
+            catalog: catalog,
+          ),
+        );
+        await tester.pump();
+
+        await tester.tap(find.byKey(const Key('operator-WAVE_CIV')));
+        await tester.pump();
+
+        // WAVE_CIV disparaît du nouveau catalogue : la sélection retombe
+        // sur le premier opérateur restant (aucun détecté ici).
+        controller.add(
+          const MobileMoneyPaymentChooseOperator(
+            status: noDepositStatus,
+            catalog: catalogWithoutWave,
+          ),
+        );
+        await tester.pump();
+
+        await tester.tap(find.widgetWithText(DonyButton, payAmountLabel));
+        await tester.pump();
+
+        verify(
+          () => bloc.add(
+            const MobileMoneyPaymentInitiateRequested(
+              scope: scope,
+              provider: 'ORANGE_CIV',
+            ),
+          ),
+        ).called(1);
       },
     );
   });

@@ -1,4 +1,5 @@
 import 'package:dony/features/matching/data/models/mobile_money_payment_status.dart';
+import 'package:dony/features/payments/data/models/mobile_money_provider_catalog.dart';
 import 'package:equatable/equatable.dart';
 
 sealed class MobileMoneyPaymentState extends Equatable {
@@ -14,6 +15,39 @@ class MobileMoneyPaymentInitial extends MobileMoneyPaymentState {
 
 class MobileMoneyPaymentLoading extends MobileMoneyPaymentState {
   const MobileMoneyPaymentLoading();
+}
+
+/// Étape « Avec quel opérateur ? » d'un bid : aucun dépôt encore lancé,
+/// l'expéditeur choisit son numéro payeur et son réseau parmi ceux acceptés
+/// par le voyageur. [catalog] nul pendant le premier chargement ; [error]
+/// porte un échec de catalogue (bandeau dans l'écran, jamais de snackbar).
+/// N'existe pas pour un fil de négociation : le back n'y expose pas de
+/// catalogue, l'initiation y reste directe (lot 2, inchangé).
+class MobileMoneyPaymentChooseOperator extends MobileMoneyPaymentState {
+  const MobileMoneyPaymentChooseOperator({
+    required this.status,
+    this.catalog,
+    this.payerPhone,
+    this.isLoadingCatalog = false,
+    this.error,
+  });
+  final MobileMoneyPaymentStatus status;
+  final MobileMoneyProviderCatalog? catalog;
+
+  /// Numéro payeur normalisé pour lequel le catalogue a été demandé ; nul
+  /// pour le numéro du bid.
+  final String? payerPhone;
+  final bool isLoadingCatalog;
+  final Object? error;
+
+  @override
+  List<Object?> get props => [
+    status,
+    catalog,
+    payerPhone,
+    isLoadingCatalog,
+    error,
+  ];
 }
 
 /// Un dépôt est en cours côté opérateur (PIN à valider, ou redirection Wave

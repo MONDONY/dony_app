@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/app_exception.dart';
@@ -9,7 +11,9 @@ import 'package:dony/features/payments/bloc/mobile_money_account_bloc.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_event.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_state.dart';
 import 'package:dony/features/payments/data/models/mobile_money_account.dart';
+import 'package:dony/features/payments/data/models/mobile_money_provider_catalog.dart';
 import 'package:dony/features/payments/presentation/screens/mobile_money_account_screen.dart';
+import 'package:dony/features/payments/presentation/widgets/mobile_money_networks_checklist.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -48,12 +52,16 @@ void main() {
     status: MobileMoneyAccountStatus.notConfigured,
   );
 
+  // `providers` porte désormais la pastille de réseau affichée dans la carte
+  // « Réseaux acceptés » de la nouvelle vue active : sans elle, `providerLabel`
+  // (champ de repli, non lu par cette carte) ne s'afficherait nulle part.
   const activeAccount = MobileMoneyAccount(
     status: MobileMoneyAccountStatus.active,
     msisdnMasked: '+225 07 ** ** 67',
     providerLabel: 'Wave',
     country: 'CI',
     currency: 'XOF',
+    providers: [MobileMoneyProviderOption(code: 'WAVE_CIV', label: 'Wave')],
   );
 
   const disabledAccount = MobileMoneyAccount(
@@ -66,6 +74,33 @@ void main() {
   const disabledAccountWithNumber = MobileMoneyAccount(
     status: MobileMoneyAccountStatus.disabled,
     msisdnMasked: '+225 07 ** ** 67',
+  );
+
+  const catalog = MobileMoneyProviderCatalog(
+    country: 'CI',
+    currency: 'XOF',
+    msisdnMasked: '+225 •••• 36',
+    detected: 'ORANGE_CIV',
+    providers: [
+      MobileMoneyProviderOption(
+        code: 'ORANGE_CIV',
+        label: 'Orange Money',
+        detected: true,
+      ),
+      MobileMoneyProviderOption(code: 'WAVE_CIV', label: 'Wave'),
+    ],
+  );
+  const activeWithNetworks = MobileMoneyAccount(
+    status: MobileMoneyAccountStatus.active,
+    msisdnMasked: '+225 •••• 36',
+    provider: 'ORANGE_CIV',
+    providerLabel: 'Orange Money',
+    country: 'CI',
+    currency: 'XOF',
+    providers: [
+      MobileMoneyProviderOption(code: 'ORANGE_CIV', label: 'Orange Money'),
+      MobileMoneyProviderOption(code: 'WAVE_CIV', label: 'Wave'),
+    ],
   );
 
   setUpAll(() {
@@ -205,12 +240,33 @@ void main() {
       );
 
       testWidgets(
-        'les deux champs remplis et identiques (normalisés) → le bouton '
-        'envoie ActivateRequested avec le numéro',
+        'les deux champs remplis et identiques (normalisés) : le réseau '
+        'détecté est déjà coché, le bouton envoie ActivateRequested avec '
+        'le numéro et les réseaux',
         (tester) async {
-          stub(const MobileMoneyAccountLoaded(notConfiguredAccount));
+          // Le bouton exige désormais aussi le catalogue et au moins un
+          // réseau coché (voir le groupe « catalogue dans le formulaire ») :
+          // le catalogue est donc déjà chargé au premier pump.
+          stub(
+            const MobileMoneyAccountProvidersLoaded(
+              notConfiguredAccount,
+              catalog,
+            ),
+          );
 
           await pumpScreen(tester);
+
+          // Le réseau détecté est pré-coché dès l'arrivée du catalogue,
+          // avant toute saisie (round 1, Ruling A5 : présélection dès
+          // initState, pas seulement sur une transition ultérieure).
+          expect(
+            tester
+                .widget<DonyOperatorTile>(
+                  find.byKey(const Key('network-ORANGE_CIV')),
+                )
+                .selected,
+            isTrue,
+          );
 
           await tester.enterText(
             find.byKey(const Key('payout-phone-field')),
@@ -223,6 +279,14 @@ void main() {
           );
           await tester.pump();
 
+          final button = tester.widget<DonyButton>(
+            find.widgetWithText(
+              DonyButton,
+              'Activer le versement mobile money',
+            ),
+          );
+          expect(button.onPressed, isNotNull);
+
           await tester.tap(find.text('Activer le versement mobile money'));
           await tester.pump();
 
@@ -230,9 +294,14 @@ void main() {
             () => bloc.add(
               const MobileMoneyAccountActivateRequested(
                 phoneNumber: '+221773456789',
+                providers: ['ORANGE_CIV'],
               ),
             ),
           ).called(1);
+
+          // Purge le timer de re-demande du catalogue (déjà chargé ici) pour
+          // ne pas laisser de Timer en attente à la fin du test.
+          await tester.pump(const Duration(milliseconds: 450));
         },
       );
 
@@ -267,11 +336,28 @@ void main() {
 
       testWidgets(
         'les deux saisies doivent coïncider (normalisées) pour activer le '
-        'bouton, qui envoie alors le numéro normalisé',
+        'bouton (réseau détecté déjà coché), qui envoie alors le numéro '
+        'normalisé et les réseaux',
         (tester) async {
-          stub(const MobileMoneyAccountLoaded(notConfiguredAccount));
+          stub(
+            const MobileMoneyAccountProvidersLoaded(
+              notConfiguredAccount,
+              catalog,
+            ),
+          );
 
           await pumpScreen(tester, authBloc: _authBlocWithPhone(null));
+
+          // Le réseau détecté est pré-coché dès l'arrivée du catalogue,
+          // avant toute saisie.
+          expect(
+            tester
+                .widget<DonyOperatorTile>(
+                  find.byKey(const Key('network-ORANGE_CIV')),
+                )
+                .selected,
+            isTrue,
+          );
 
           await tester.enterText(
             find.byKey(const Key('payout-phone-field')),
@@ -288,8 +374,9 @@ void main() {
           var button = tester.widget<DonyButton>(find.byType(DonyButton));
           expect(button.onPressed, isNull);
 
-          // Même numéro, écrit avec des espaces différents : la normalisation
-          // les fait coïncider.
+          // Même numéro, écrit avec des espaces différents : la
+          // normalisation les fait coïncider. Le réseau détecté reste
+          // coché : le bouton s'active directement.
           await tester.enterText(
             find.byKey(const Key('payout-phone-confirm-field')),
             '+221773456789',
@@ -306,9 +393,14 @@ void main() {
             () => bloc.add(
               const MobileMoneyAccountActivateRequested(
                 phoneNumber: '+221773456789',
+                providers: ['ORANGE_CIV'],
               ),
             ),
           ).called(1);
+
+          // Purge le timer de re-demande du catalogue (déjà chargé ici)
+          // pour ne pas laisser de Timer en attente à la fin du test.
+          await tester.pump(const Duration(milliseconds: 450));
         },
       );
 
@@ -337,10 +429,15 @@ void main() {
 
       testWidgets(
         'utilisateur connecté avec un numéro → premier champ pré-rempli, '
-        'confirmation vide et bouton inactif jusqu\'à confirmation '
-        'identique',
+        'confirmation vide, bouton inactif jusqu\'à confirmation identique '
+        '(réseau détecté déjà coché)',
         (tester) async {
-          stub(const MobileMoneyAccountLoaded(notConfiguredAccount));
+          stub(
+            const MobileMoneyAccountProvidersLoaded(
+              notConfiguredAccount,
+              catalog,
+            ),
+          );
 
           await pumpScreen(
             tester,
@@ -356,6 +453,16 @@ void main() {
               const Key('payout-phone-confirm-field'),
             ).controller!.text,
             isEmpty,
+          );
+          // Le réseau détecté est déjà coché, mais la confirmation est
+          // encore vide : le bouton reste inactif.
+          expect(
+            tester
+                .widget<DonyOperatorTile>(
+                  find.byKey(const Key('network-ORANGE_CIV')),
+                )
+                .selected,
+            isTrue,
           );
 
           var button = tester.widget<DonyButton>(find.byType(DonyButton));
@@ -377,9 +484,14 @@ void main() {
             () => bloc.add(
               const MobileMoneyAccountActivateRequested(
                 phoneNumber: '+221771234567',
+                providers: ['ORANGE_CIV'],
               ),
             ),
           ).called(1);
+
+          // Purge le timer de re-demande du catalogue (déjà chargé ici)
+          // pour ne pas laisser de Timer en attente à la fin du test.
+          await tester.pump(const Duration(milliseconds: 450));
         },
       );
     },
@@ -461,12 +573,24 @@ void main() {
     );
 
     testWidgets(
-      'les deux champs remplis et identiques → le bouton Réactiver envoie '
-      'ActivateRequested avec le numéro',
+      'les deux champs remplis et identiques (réseau détecté déjà coché) → '
+      'le bouton Réactiver envoie ActivateRequested avec le numéro et les '
+      'réseaux',
       (tester) async {
-        stub(const MobileMoneyAccountLoaded(disabledAccount));
+        stub(const MobileMoneyAccountProvidersLoaded(disabledAccount, catalog));
 
         await pumpScreen(tester);
+
+        // Le réseau détecté est pré-coché dès l'arrivée du catalogue, avant
+        // toute saisie.
+        expect(
+          tester
+              .widget<DonyOperatorTile>(
+                find.byKey(const Key('network-ORANGE_CIV')),
+              )
+              .selected,
+          isTrue,
+        );
 
         await tester.enterText(
           find.byKey(const Key('payout-phone-field')),
@@ -479,6 +603,11 @@ void main() {
         );
         await tester.pump();
 
+        final button = tester.widget<DonyButton>(
+          find.widgetWithText(DonyButton, 'Réactiver'),
+        );
+        expect(button.onPressed, isNotNull);
+
         await tester.tap(find.text('Réactiver'));
         await tester.pump();
 
@@ -486,9 +615,14 @@ void main() {
           () => bloc.add(
             const MobileMoneyAccountActivateRequested(
               phoneNumber: '+221773456789',
+              providers: ['ORANGE_CIV'],
             ),
           ),
         ).called(1);
+
+        // Purge le timer de re-demande du catalogue (déjà chargé ici) pour
+        // ne pas laisser de Timer en attente à la fin du test.
+        await tester.pump(const Duration(milliseconds: 450));
       },
     );
   });
@@ -546,4 +680,773 @@ void main() {
       verify(() => bloc.add(const MobileMoneyAccountRequested())).called(1);
     },
   );
+
+  group('catalogue dans le formulaire', () {
+    testWidgets(
+      'non configuré : invite à confirmer le numéro, bouton désactivé',
+      (tester) async {
+        stub(const MobileMoneyAccountLoaded(notConfiguredAccount));
+        await pumpScreen(tester);
+        expect(
+          find.text('Confirme ton numéro pour voir les réseaux disponibles.'),
+          findsOneWidget,
+        );
+        final button = tester.widget<DonyButton>(
+          find.widgetWithText(DonyButton, 'Activer le versement mobile money'),
+        );
+        expect(button.onPressed, isNull);
+      },
+    );
+
+    testWidgets(
+      'saisir deux fois le même numéro demande le catalogue après le délai',
+      (tester) async {
+        stub(const MobileMoneyAccountLoaded(notConfiguredAccount));
+        await pumpScreen(tester);
+        await tester.enterText(
+          find.byKey(const Key('payout-phone-field')),
+          '+225 07 08 09 10 36',
+        );
+        await tester.enterText(
+          find.byKey(const Key('payout-phone-confirm-field')),
+          '+225 07 08 09 10 36',
+        );
+        await tester.pump(const Duration(milliseconds: 450));
+        verify(
+          () => bloc.add(
+            const MobileMoneyAccountProvidersRequested(
+              phoneNumber: '+2250708091036',
+            ),
+          ),
+        ).called(1);
+      },
+    );
+
+    testWidgets(
+      'catalogue chargé : liste des réseaux, détecté pré-coché, bouton actif',
+      (tester) async {
+        stub(
+          const MobileMoneyAccountProvidersLoaded(
+            notConfiguredAccount,
+            catalog,
+          ),
+        );
+        await pumpScreen(tester);
+        expect(find.text('Tous les réseaux'), findsOneWidget);
+        expect(find.text('Orange Money'), findsOneWidget);
+        expect(find.text('Wave'), findsOneWidget);
+        expect(find.text("Côte d'Ivoire, XOF"), findsOneWidget);
+        expect(
+          find.text(
+            "L'expéditeur paie avec l'un des réseaux cochés. Tu reçois sur ce même réseau.",
+          ),
+          findsOneWidget,
+        );
+        expect(
+          tester
+              .widget<DonyOperatorTile>(
+                find.byKey(const Key('network-ORANGE_CIV')),
+              )
+              .selected,
+          isTrue,
+        );
+
+        // Confirme un numéro pour observer le bouton s'activer (réseau
+        // détecté déjà coché). Le timer de re-demande programmé par cette
+        // saisie est purgé après coup, sans effet sur les assertions
+        // ci-dessus.
+        await tester.enterText(
+          find.byKey(const Key('payout-phone-field')),
+          '+221773456789',
+        );
+        await tester.pump();
+        await tester.enterText(
+          find.byKey(const Key('payout-phone-confirm-field')),
+          '+221773456789',
+        );
+        await tester.pump();
+
+        final button = tester.widget<DonyButton>(
+          find.widgetWithText(DonyButton, 'Activer le versement mobile money'),
+        );
+        expect(button.onPressed, isNotNull);
+
+        await tester.pump(const Duration(milliseconds: 450));
+      },
+    );
+
+    testWidgets('catalogue en chargement : squelette', (tester) async {
+      stub(const MobileMoneyAccountProvidersLoading(notConfiguredAccount));
+      await pumpScreen(tester);
+      expect(find.byType(MobileMoneyNetworksSkeleton), findsOneWidget);
+    });
+
+    testWidgets('présélection par marque (M4) : compte ORANGE_SEN + WAVE_SEN, '
+        'changement vers un numéro ivoirien → ORANGE_CIV et WAVE_CIV '
+        'pré-cochés, pas MTN_CIV', (tester) async {
+      const accountSenegal = MobileMoneyAccount(
+        status: MobileMoneyAccountStatus.active,
+        msisdnMasked: '+221 •• •• •• 67',
+        country: 'SN',
+        currency: 'XOF',
+        providers: [
+          MobileMoneyProviderOption(code: 'ORANGE_SEN', label: 'Orange Money'),
+          MobileMoneyProviderOption(code: 'WAVE_SEN', label: 'Wave'),
+        ],
+      );
+      const catalogIvoirien = MobileMoneyProviderCatalog(
+        country: 'CI',
+        currency: 'XOF',
+        msisdnMasked: '+225 •••• 36',
+        providers: [
+          MobileMoneyProviderOption(code: 'ORANGE_CIV', label: 'Orange Money'),
+          MobileMoneyProviderOption(code: 'WAVE_CIV', label: 'Wave'),
+          MobileMoneyProviderOption(code: 'MTN_CIV', label: 'MTN'),
+        ],
+      );
+      stub(
+        const MobileMoneyAccountProvidersLoaded(
+          accountSenegal,
+          catalogIvoirien,
+          editingNumber: true,
+        ),
+      );
+      await pumpScreen(tester);
+
+      expect(
+        tester
+            .widget<DonyOperatorTile>(
+              find.byKey(const Key('network-ORANGE_CIV')),
+            )
+            .selected,
+        isTrue,
+      );
+      expect(
+        tester
+            .widget<DonyOperatorTile>(find.byKey(const Key('network-WAVE_CIV')))
+            .selected,
+        isTrue,
+      );
+      expect(
+        tester
+            .widget<DonyOperatorTile>(find.byKey(const Key('network-MTN_CIV')))
+            .selected,
+        isFalse,
+      );
+    });
+
+    testWidgets('catalogue en erreur : bandeau, pas de snackbar', (
+      tester,
+    ) async {
+      stub(
+        const MobileMoneyAccountProvidersError(
+          notConfiguredAccount,
+          ValidationException('x', code: 'mobile-money-account-unsupported'),
+        ),
+      );
+      await pumpScreen(tester);
+      expect(find.byType(DonyStatusBanner), findsOneWidget);
+      expect(find.byType(SnackBar), findsNothing);
+    });
+
+    testWidgets(
+      'catalogue en erreur : « Réessayer » redemande le catalogue pour le '
+      'numéro confirmé',
+      (tester) async {
+        stub(
+          const MobileMoneyAccountProvidersError(
+            notConfiguredAccount,
+            ValidationException('x', code: 'mobile-money-account-unsupported'),
+          ),
+        );
+        await pumpScreen(tester);
+        await tester.enterText(
+          find.byKey(const Key('payout-phone-field')),
+          '+221773456789',
+        );
+        await tester.pump();
+        await tester.enterText(
+          find.byKey(const Key('payout-phone-confirm-field')),
+          '+221773456789',
+        );
+        await tester.pump();
+
+        await tester.ensureVisible(find.text('Réessayer'));
+        await tester.tap(find.text('Réessayer'));
+        await tester.pump();
+
+        verify(
+          () => bloc.add(
+            const MobileMoneyAccountProvidersRequested(
+              phoneNumber: '+221773456789',
+            ),
+          ),
+        ).called(1);
+
+        // Purge le timer de re-demande programmé par la saisie ci-dessus
+        // pour ne pas laisser de Timer en attente à la fin du test.
+        await tester.pump(const Duration(milliseconds: 450));
+      },
+    );
+
+    testWidgets(
+      'ancien back sans catalogue (404) : bandeau info à la place de la '
+      'checklist, activation possible dès le numéro confirmé, sans réseau',
+      (tester) async {
+        stub(
+          const MobileMoneyAccountProvidersUnavailable(notConfiguredAccount),
+        );
+        await pumpScreen(tester);
+
+        expect(
+          find.text(
+            "Le choix des réseaux n'est pas encore disponible. Ton "
+            'opérateur sera détecté automatiquement.',
+          ),
+          findsOneWidget,
+        );
+        expect(find.byType(MobileMoneyNetworksChecklist), findsNothing);
+
+        expect(
+          tester
+              .widget<DonyButton>(
+                find.widgetWithText(
+                  DonyButton,
+                  'Activer le versement mobile money',
+                ),
+              )
+              .onPressed,
+          isNull,
+        );
+
+        await tester.enterText(
+          find.byKey(const Key('payout-phone-field')),
+          '+221773456789',
+        );
+        await tester.pump();
+        await tester.enterText(
+          find.byKey(const Key('payout-phone-confirm-field')),
+          '+221773456789',
+        );
+        await tester.pump();
+
+        expect(
+          tester
+              .widget<DonyButton>(
+                find.widgetWithText(
+                  DonyButton,
+                  'Activer le versement mobile money',
+                ),
+              )
+              .onPressed,
+          isNotNull,
+        );
+
+        await tester.tap(
+          find.widgetWithText(DonyButton, 'Activer le versement mobile money'),
+        );
+        await tester.pump();
+
+        // Le back ancien accepte {phoneNumber} seul : le repository omet
+        // providers vide plutôt que de l'envoyer explicitement. Valeur
+        // explicite (égale au défaut) pour que mocktail matche exactement
+        // l'appel réel du widget.
+        verify(
+          () => bloc.add(
+            const MobileMoneyAccountActivateRequested(
+              phoneNumber: '+221773456789',
+              // ignore: avoid_redundant_argument_values
+              providers: [],
+            ),
+          ),
+        ).called(1);
+
+        // Purge le timer de re-demande de catalogue programmé par la
+        // saisie ci-dessus, sans effet sur les assertions précédentes.
+        await tester.pump(const Duration(milliseconds: 450));
+      },
+    );
+
+    testWidgets(
+      'catalogue vide : message dédié, aucune checklist, bouton inactif',
+      (tester) async {
+        const emptyCatalog = MobileMoneyProviderCatalog(
+          country: 'CI',
+          currency: 'XOF',
+        );
+        stub(
+          const MobileMoneyAccountProvidersLoaded(
+            notConfiguredAccount,
+            emptyCatalog,
+          ),
+        );
+        await pumpScreen(tester);
+
+        expect(
+          find.text('Aucun réseau disponible sur ce numéro.'),
+          findsOneWidget,
+        );
+        expect(find.byType(MobileMoneyNetworksChecklist), findsNothing);
+
+        await tester.enterText(
+          find.byKey(const Key('payout-phone-field')),
+          '+221773456789',
+        );
+        await tester.pump();
+        await tester.enterText(
+          find.byKey(const Key('payout-phone-confirm-field')),
+          '+221773456789',
+        );
+        await tester.pump();
+
+        final button = tester.widget<DonyButton>(
+          find.widgetWithText(DonyButton, 'Activer le versement mobile money'),
+        );
+        expect(button.onPressed, isNull);
+
+        await tester.pump(const Duration(milliseconds: 450));
+      },
+    );
+
+    testWidgets('les saisies divergent après un catalogue chargé : envoie '
+        'ProvidersCleared', (tester) async {
+      stub(const MobileMoneyAccountLoaded(notConfiguredAccount));
+      await pumpScreen(tester);
+
+      await tester.enterText(
+        find.byKey(const Key('payout-phone-field')),
+        '+221773456789',
+      );
+      await tester.pump();
+      await tester.enterText(
+        find.byKey(const Key('payout-phone-confirm-field')),
+        '+221773456789',
+      );
+      // Laisse le débounce demander le catalogue une première fois.
+      await tester.pump(const Duration(milliseconds: 450));
+      verify(
+        () => bloc.add(
+          const MobileMoneyAccountProvidersRequested(
+            phoneNumber: '+221773456789',
+          ),
+        ),
+      ).called(1);
+
+      // Les saisies divergent à nouveau : le catalogue ne correspond plus
+      // à rien de confirmé.
+      await tester.enterText(
+        find.byKey(const Key('payout-phone-confirm-field')),
+        '+221773456780',
+      );
+      await tester.pump();
+
+      verify(
+        () => bloc.add(const MobileMoneyAccountProvidersCleared()),
+      ).called(1);
+    });
+
+    testWidgets('catalogue et sélection survivent à Updating puis Error : la '
+        'checklist et le bouton actif sont de retour, un nouveau tap renvoie '
+        'les mêmes réseaux', (tester) async {
+      final controller = StreamController<MobileMoneyAccountState>();
+      addTearDown(controller.close);
+      const loaded = MobileMoneyAccountProvidersLoaded(
+        notConfiguredAccount,
+        catalog,
+      );
+      whenListen(bloc, controller.stream, initialState: loaded);
+
+      await pumpScreen(tester);
+
+      await tester.enterText(
+        find.byKey(const Key('payout-phone-field')),
+        '+221773456789',
+      );
+      await tester.pump();
+      await tester.enterText(
+        find.byKey(const Key('payout-phone-confirm-field')),
+        '+221773456789',
+      );
+      await tester.pump();
+
+      // Réseau détecté déjà coché, numéro confirmé : le bouton est actif.
+      var button = tester.widget<DonyButton>(
+        find.widgetWithText(DonyButton, 'Activer le versement mobile money'),
+      );
+      expect(button.onPressed, isNotNull);
+
+      // Simule ce que ferait le vrai bloc après le tap sur ce bouton :
+      // Updating (sans catalogue dans ses props) puis un échec réseau
+      // (Error, sans catalogue non plus).
+      controller.add(const MobileMoneyAccountUpdating(notConfiguredAccount));
+      await tester.pump();
+
+      // La checklist reste visible (catalogue retenu localement) pendant
+      // que le bouton passe en chargement (isLoading remplace le libellé
+      // par un spinner : on cible le bouton par type, pas par texte).
+      expect(find.byType(MobileMoneyNetworksChecklist), findsOneWidget);
+      button = tester.widget<DonyButton>(find.byType(DonyButton));
+      expect(button.isLoading, isTrue);
+
+      controller.add(
+        const MobileMoneyAccountError(
+          NetworkException('boom'),
+          account: notConfiguredAccount,
+        ),
+      );
+      await tester.pump();
+
+      // Le catalogue retenu et la sélection sont toujours là : la
+      // checklist et le bouton actif sont de retour.
+      expect(find.byType(MobileMoneyNetworksChecklist), findsOneWidget);
+      expect(
+        tester
+            .widget<DonyOperatorTile>(
+              find.byKey(const Key('network-ORANGE_CIV')),
+            )
+            .selected,
+        isTrue,
+      );
+      button = tester.widget<DonyButton>(
+        find.widgetWithText(DonyButton, 'Activer le versement mobile money'),
+      );
+      expect(button.onPressed, isNotNull);
+
+      await tester.tap(find.text('Activer le versement mobile money'));
+      await tester.pump();
+
+      verify(
+        () => bloc.add(
+          const MobileMoneyAccountActivateRequested(
+            phoneNumber: '+221773456789',
+            providers: ['ORANGE_CIV'],
+          ),
+        ),
+      ).called(1);
+
+      // Purge le timer de re-demande du catalogue (déjà chargé ici) pour
+      // ne pas laisser de Timer en attente à la fin du test.
+      await tester.pump(const Duration(milliseconds: 450));
+    });
+  });
+
+  group('vue active', () {
+    testWidgets(
+      'affiche numéro, pays, devise, réseaux acceptés et les trois actions',
+      (tester) async {
+        stub(const MobileMoneyAccountLoaded(activeWithNetworks));
+        await pumpScreen(tester);
+        expect(find.text('+225 •••• 36'), findsOneWidget);
+        expect(find.text("Côte d'Ivoire"), findsOneWidget);
+        expect(find.text('XOF'), findsOneWidget);
+        expect(find.text('Réseaux acceptés'), findsOneWidget);
+        expect(find.text('Orange Money'), findsOneWidget);
+        expect(find.text('Wave'), findsOneWidget);
+        expect(find.text('Modifier'), findsOneWidget);
+        expect(find.text('Changer de numéro'), findsOneWidget);
+        expect(find.text('Désactiver'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'réseaux acceptés (M9a) : la pastille de marque est exclue de la '
+      'sémantique, seul le libellé texte reste annoncé',
+      (tester) async {
+        final handle = tester.ensureSemantics();
+        stub(const MobileMoneyAccountLoaded(activeWithNetworks));
+        await pumpScreen(tester);
+
+        expect(find.bySemanticsLabel('ORANGE'), findsNothing);
+        expect(find.bySemanticsLabel('WAVE'), findsNothing);
+        expect(find.text('Orange Money'), findsOneWidget);
+        expect(find.text('Wave'), findsOneWidget);
+
+        handle.dispose();
+      },
+    );
+
+    testWidgets('« Changer de numéro » envoie l\'event', (tester) async {
+      stub(const MobileMoneyAccountLoaded(activeWithNetworks));
+      await pumpScreen(tester);
+      await tester.tap(find.text('Changer de numéro'));
+      verify(
+        () => bloc.add(const MobileMoneyAccountChangeNumberRequested()),
+      ).called(1);
+    });
+
+    testWidgets('en édition du numéro : formulaire avec « Annuler »', (
+      tester,
+    ) async {
+      stub(
+        const MobileMoneyAccountLoaded(activeWithNetworks, editingNumber: true),
+      );
+      await pumpScreen(tester);
+      expect(find.byKey(const Key('payout-phone-field')), findsOneWidget);
+      await tester.tap(find.text('Annuler'));
+      verify(
+        () => bloc.add(const MobileMoneyAccountChangeNumberCancelled()),
+      ).called(1);
+    });
+
+    testWidgets(
+      '« Modifier » ouvre la feuille et demande le catalogue du numéro enregistré',
+      (tester) async {
+        stub(const MobileMoneyAccountLoaded(activeWithNetworks));
+        await pumpScreen(tester);
+        await tester.tap(find.text('Modifier'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 400));
+        verify(
+          () => bloc.add(const MobileMoneyAccountProvidersRequested()),
+        ).called(1);
+        expect(find.text('Enregistrer'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'feuille : décocher/recocher plusieurs réseaux → Enregistrer envoie '
+      'les codes dans l\'ordre du catalogue, inactif sans aucun réseau '
+      'coché',
+      (tester) async {
+        final controller = StreamController<MobileMoneyAccountState>();
+        addTearDown(controller.close);
+        const loaded = MobileMoneyAccountLoaded(activeWithNetworks);
+        whenListen(bloc, controller.stream, initialState: loaded);
+
+        await pumpScreen(tester);
+        await tester.tap(find.text('Modifier'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 400));
+
+        controller.add(
+          const MobileMoneyAccountProvidersLoaded(activeWithNetworks, catalog),
+        );
+        await tester.pump();
+
+        // Les deux réseaux du compte sont déjà cochés par défaut (repris de
+        // account.providers à l'ouverture de la feuille) : les décocher
+        // tous les deux désactive Enregistrer.
+        await tester.ensureVisible(find.byKey(const Key('network-ORANGE_CIV')));
+        await tester.tap(find.byKey(const Key('network-ORANGE_CIV')));
+        await tester.pump();
+        await tester.ensureVisible(find.byKey(const Key('network-WAVE_CIV')));
+        await tester.tap(find.byKey(const Key('network-WAVE_CIV')));
+        await tester.pump();
+
+        var button = tester.widget<DonyButton>(
+          find.widgetWithText(DonyButton, 'Enregistrer'),
+        );
+        expect(button.onPressed, isNull);
+
+        // Recoche dans l'ordre inverse du catalogue (Wave puis Orange).
+        await tester.tap(find.byKey(const Key('network-WAVE_CIV')));
+        await tester.pump();
+        await tester.tap(find.byKey(const Key('network-ORANGE_CIV')));
+        await tester.pump();
+
+        button = tester.widget<DonyButton>(
+          find.widgetWithText(DonyButton, 'Enregistrer'),
+        );
+        expect(button.onPressed, isNotNull);
+
+        await tester.tap(find.text('Enregistrer'));
+        await tester.pump();
+
+        verify(
+          () => bloc.add(
+            const MobileMoneyAccountProvidersUpdateRequested([
+              'ORANGE_CIV',
+              'WAVE_CIV',
+            ]),
+          ),
+        ).called(1);
+      },
+    );
+
+    testWidgets(
+      'feuille : catalogue vide → message dédié, Enregistrer inactif',
+      (tester) async {
+        final controller = StreamController<MobileMoneyAccountState>();
+        addTearDown(controller.close);
+        const loaded = MobileMoneyAccountLoaded(activeWithNetworks);
+        whenListen(bloc, controller.stream, initialState: loaded);
+
+        await pumpScreen(tester);
+        await tester.tap(find.text('Modifier'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 400));
+
+        const emptyCatalog = MobileMoneyProviderCatalog(
+          country: 'CI',
+          currency: 'XOF',
+        );
+        controller.add(
+          const MobileMoneyAccountProvidersLoaded(
+            activeWithNetworks,
+            emptyCatalog,
+          ),
+        );
+        await tester.pump();
+
+        expect(
+          find.text('Aucun réseau disponible sur ce numéro.'),
+          findsOneWidget,
+        );
+        final button = tester.widget<DonyButton>(
+          find.widgetWithText(DonyButton, 'Enregistrer'),
+        );
+        expect(button.onPressed, isNull);
+      },
+    );
+
+    testWidgets(
+      'feuille (M6) : code du compte absent du catalogue rechargé → aucune '
+      'ligne pour lui, sélection filtrée, Enregistrer inactif tant que rien '
+      'n\'est recoché',
+      (tester) async {
+        final controller = StreamController<MobileMoneyAccountState>();
+        addTearDown(controller.close);
+        // MOOV_CIV n'existe plus dans `catalog` (ORANGE_CIV + WAVE_CIV
+        // seulement) : pawaPay a cessé de le proposer pour ce numéro.
+        const accountStaleCode = MobileMoneyAccount(
+          status: MobileMoneyAccountStatus.active,
+          msisdnMasked: '+225 •••• 36',
+          country: 'CI',
+          currency: 'XOF',
+          providers: [
+            MobileMoneyProviderOption(code: 'MOOV_CIV', label: 'Moov Money'),
+          ],
+        );
+        const loaded = MobileMoneyAccountLoaded(accountStaleCode);
+        whenListen(bloc, controller.stream, initialState: loaded);
+
+        await pumpScreen(tester);
+        await tester.tap(find.text('Modifier'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 400));
+
+        controller.add(
+          const MobileMoneyAccountProvidersLoaded(accountStaleCode, catalog),
+        );
+        await tester.pump();
+
+        expect(find.byKey(const Key('network-MOOV_CIV')), findsNothing);
+
+        var button = tester.widget<DonyButton>(
+          find.widgetWithText(DonyButton, 'Enregistrer'),
+        );
+        expect(button.onPressed, isNull);
+
+        // Le reste de la feuille fonctionne normalement : cocher un réseau
+        // du nouveau catalogue réactive Enregistrer.
+        await tester.ensureVisible(find.byKey(const Key('network-ORANGE_CIV')));
+        await tester.tap(find.byKey(const Key('network-ORANGE_CIV')));
+        await tester.pump();
+
+        button = tester.widget<DonyButton>(
+          find.widgetWithText(DonyButton, 'Enregistrer'),
+        );
+        expect(button.onPressed, isNotNull);
+      },
+    );
+
+    testWidgets('feuille : catalogue en erreur → « Réessayer » redemande le '
+        'catalogue du numéro enregistré', (tester) async {
+      final controller = StreamController<MobileMoneyAccountState>();
+      addTearDown(controller.close);
+      const loaded = MobileMoneyAccountLoaded(activeWithNetworks);
+      whenListen(bloc, controller.stream, initialState: loaded);
+
+      await pumpScreen(tester);
+      await tester.tap(find.text('Modifier'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+
+      controller.add(
+        const MobileMoneyAccountProvidersError(
+          activeWithNetworks,
+          NetworkException('boom'),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.byType(DonyStatusBanner), findsOneWidget);
+
+      await tester.tap(find.text('Réessayer'));
+      await tester.pump();
+
+      // La première demande vient de l'ouverture de la feuille, la
+      // seconde du tap « Réessayer ».
+      verify(
+        () => bloc.add(const MobileMoneyAccountProvidersRequested()),
+      ).called(2);
+    });
+
+    testWidgets(
+      'feuille : ancien back sans catalogue (404) → même bandeau info, '
+      'Enregistrer reste inactif',
+      (tester) async {
+        final controller = StreamController<MobileMoneyAccountState>();
+        addTearDown(controller.close);
+        const loaded = MobileMoneyAccountLoaded(activeWithNetworks);
+        whenListen(bloc, controller.stream, initialState: loaded);
+
+        await pumpScreen(tester);
+        await tester.tap(find.text('Modifier'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 400));
+
+        controller.add(
+          const MobileMoneyAccountProvidersUnavailable(activeWithNetworks),
+        );
+        await tester.pump();
+
+        expect(
+          find.text(
+            "Le choix des réseaux n'est pas encore disponible. Ton "
+            'opérateur sera détecté automatiquement.',
+          ),
+          findsOneWidget,
+        );
+        final button = tester.widget<DonyButton>(
+          find.widgetWithText(DonyButton, 'Enregistrer'),
+        );
+        expect(button.onPressed, isNull);
+      },
+    );
+
+    testWidgets('compte actif, changement de numéro puis échec réseau : le '
+        'formulaire reste affiché (editingNumber survit à Error)', (
+      tester,
+    ) async {
+      final controller = StreamController<MobileMoneyAccountState>();
+      addTearDown(controller.close);
+      const loaded = MobileMoneyAccountLoaded(activeWithNetworks);
+      whenListen(bloc, controller.stream, initialState: loaded);
+
+      await pumpScreen(tester);
+      await tester.tap(find.text('Changer de numéro'));
+      await tester.pump();
+
+      controller.add(
+        const MobileMoneyAccountLoaded(activeWithNetworks, editingNumber: true),
+      );
+      await tester.pump();
+      expect(find.byKey(const Key('payout-phone-field')), findsOneWidget);
+
+      controller.add(
+        const MobileMoneyAccountError(
+          NetworkException('boom'),
+          account: activeWithNetworks,
+          editingNumber: true,
+        ),
+      );
+      await tester.pump();
+
+      // Le formulaire de changement de numéro reste affiché malgré
+      // l'échec : pas de retour furtif à la vue active.
+      expect(find.byKey(const Key('payout-phone-field')), findsOneWidget);
+      expect(find.text('Annuler'), findsOneWidget);
+    });
+  });
 }

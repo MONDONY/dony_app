@@ -80,6 +80,11 @@ bool mobileMoneyAccountActiveFrom(MobileMoneyAccountState state) {
     MobileMoneyAccountLoaded() => state.account,
     MobileMoneyAccountUpdating() => state.account,
     MobileMoneyAccountError() => state.account,
+    MobileMoneyAccountPhoneRequired() => state.account,
+    MobileMoneyAccountProvidersLoading() => state.account,
+    MobileMoneyAccountProvidersLoaded() => state.account,
+    MobileMoneyAccountProvidersError() => state.account,
+    MobileMoneyAccountProvidersUnavailable() => state.account,
     _ => null,
   };
   return account?.isActive ?? false;

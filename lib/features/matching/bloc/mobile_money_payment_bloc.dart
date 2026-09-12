@@ -8,11 +8,17 @@ import 'package:dony/features/matching/bloc/mobile_money_payment_state.dart';
 import 'package:dony/features/matching/data/models/mobile_money_payment_status.dart';
 import 'package:dony/features/matching/data/models/mobile_money_scope.dart';
 import 'package:dony/features/matching/data/repositories/mobile_money_repository.dart';
+import 'package:dony/features/payments/data/models/mobile_money_provider_catalog.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Paiement mobile money (Wave / Orange Money via pawaPay) d'un bid ou d'un
 /// fil de négociation : ouverture de l'écran d'attente, initiation d'un
 /// dépôt, sondage périodique du statut jusqu'au séquestre ou à l'expiration.
+///
+/// Côté bid, l'expéditeur choisit d'abord un opérateur parmi ceux acceptés
+/// par le voyageur (`MobileMoneyPaymentChooseOperator`) avant qu'un dépôt ne
+/// soit lancé ; côté fil de négociation, le back n'expose pas de catalogue
+/// et l'initiation reste directe (lot 2, inchangé).
 ///
 /// Style identique à `MobileMoneyAccountBloc` : le repository ne fait que
 /// passer, c'est ici que les erreurs sont déballées (`unwrapDioError`) et
@@ -27,6 +33,7 @@ class MobileMoneyPaymentBloc
        super(const MobileMoneyPaymentInitial()) {
     on<MobileMoneyPaymentOpened>(_onOpened);
     on<MobileMoneyPaymentInitiateRequested>(_onInitiateRequested);
+    on<MobileMoneyPaymentProvidersRequested>(_onProvidersRequested);
     on<MobileMoneyStatusPolled>(_onPolled);
   }
 
@@ -52,13 +59,103 @@ class MobileMoneyPaymentBloc
         _emitKnown(known, emit, event.scope);
         return;
       }
-      // Aucun dépôt encore tenté pour cette portée (ou ligne recyclable) : on
-      // en lance un immédiatement, l'écran d'attente n'a pas de raison
-      // d'afficher un état intermédiaire "rien à payer" avant que
-      // l'utilisateur agisse.
-      await _initiateAndEmit(event.scope, event.phoneNumber, emit);
+      final scope = event.scope;
+      if (scope is BidMobileMoneyScope) {
+        // Aucun dépôt encore tenté (ou ligne recyclable) pour ce bid :
+        // l'expéditeur choisit d'abord son opérateur parmi ceux acceptés par
+        // le voyageur (spec du 2026-09-11).
+        await _loadCatalogAndEmit(scope, status, event.phoneNumber, null, emit);
+      } else {
+        // Fil de négociation : pas de catalogue côté back (lot 2), on initie
+        // directement, comme avant.
+        await _initiateAndEmit(scope, event.phoneNumber, null, emit);
+      }
     } catch (e) {
       emit(MobileMoneyPaymentError(unwrapDioError(e)));
+    }
+  }
+
+  Future<void> _onProvidersRequested(
+    MobileMoneyPaymentProvidersRequested event,
+    Emitter<MobileMoneyPaymentState> emit,
+  ) async {
+    final current = state;
+    final (status, previous) = switch (current) {
+      MobileMoneyPaymentChooseOperator() => (current.status, current.catalog),
+      MobileMoneyPaymentDepositFailed() => (current.status, null),
+      MobileMoneyPaymentAwaitingConfirmation() => (current.status, null),
+      _ => (null, null),
+    };
+    // Sans statut connu, rien à recharger : l'écran repassera par Opened.
+    if (status == null) return;
+    try {
+      await _loadCatalogAndEmit(
+        event.scope,
+        status,
+        event.phoneNumber,
+        previous,
+        emit,
+      );
+    } catch (e) {
+      // Symétrique à _onInitiateRequested : _loadCatalogAndEmit peut
+      // retomber sur _initiateAndEmit (404, ou scope sans catalogue) sans
+      // protection propre, cet appel pouvant lui-même échouer (réseau,
+      // 422...). Sans ce filet, l'écran resterait figé sur
+      // ChooseOperator(isLoadingCatalog: true) sans bandeau ni reprise.
+      emit(MobileMoneyPaymentError(unwrapDioError(e)));
+    }
+  }
+
+  /// Charge le catalogue payeur d'un bid et émet l'étape de choix. Un fil de
+  /// négociation n'a pas de catalogue côté back (lot 2) : initiation directe
+  /// sans opérateur, exactement comme le repli 404 d'un ancien back sur un
+  /// bid. Un 404 sur un bid signale de même un back sans catalogue (ancien
+  /// contrat) : on initie directement, comme avant, sans opérateur.
+  Future<void> _loadCatalogAndEmit(
+    MobileMoneyScope scope,
+    MobileMoneyPaymentStatus status,
+    String? phoneNumber,
+    MobileMoneyProviderCatalog? previous,
+    Emitter<MobileMoneyPaymentState> emit,
+  ) async {
+    emit(
+      MobileMoneyPaymentChooseOperator(
+        status: status,
+        catalog: previous,
+        payerPhone: phoneNumber,
+        isLoadingCatalog: true,
+      ),
+    );
+    if (scope is! BidMobileMoneyScope) {
+      await _initiateAndEmit(scope, phoneNumber, null, emit);
+      return;
+    }
+    try {
+      final catalog = await _repository.providers(
+        scope.id,
+        phoneNumber: phoneNumber,
+      );
+      emit(
+        MobileMoneyPaymentChooseOperator(
+          status: status,
+          catalog: catalog,
+          payerPhone: phoneNumber,
+        ),
+      );
+    } catch (e) {
+      final error = unwrapDioError(e);
+      if (error is NotFoundException) {
+        await _initiateAndEmit(scope, phoneNumber, null, emit);
+        return;
+      }
+      emit(
+        MobileMoneyPaymentChooseOperator(
+          status: status,
+          catalog: previous,
+          payerPhone: phoneNumber,
+          error: error,
+        ),
+      );
     }
   }
 
@@ -68,7 +165,12 @@ class MobileMoneyPaymentBloc
   ) async {
     emit(const MobileMoneyPaymentLoading());
     try {
-      await _initiateAndEmit(event.scope, event.phoneNumber, emit);
+      await _initiateAndEmit(
+        event.scope,
+        event.phoneNumber,
+        event.provider,
+        emit,
+      );
     } catch (e) {
       emit(MobileMoneyPaymentError(unwrapDioError(e)));
     }
@@ -103,9 +205,14 @@ class MobileMoneyPaymentBloc
   Future<void> _initiateAndEmit(
     MobileMoneyScope scope,
     String? phoneNumber,
+    String? provider,
     Emitter<MobileMoneyPaymentState> emit,
   ) async {
-    final status = await _repository.initiate(scope, phoneNumber: phoneNumber);
+    final status = await _repository.initiate(
+      scope,
+      phoneNumber: phoneNumber,
+      provider: provider,
+    );
     final next =
         _stateFor(status) ?? MobileMoneyPaymentAwaitingConfirmation(status);
     _emitKnown(next, emit, scope);
@@ -114,6 +221,7 @@ class MobileMoneyPaymentBloc
         AnalyticsEvents.mobileMoneyInitiated,
         properties: {
           'provider': status.deposit?.providerLabel ?? 'inconnu',
+          'chosen': provider != null,
           'wave': status.isWaveRedirect,
           'scope': scope.analyticsName,
         },
@@ -156,7 +264,8 @@ class MobileMoneyPaymentBloc
   /// Traduit un statut serveur en état d'écran. Ordre de priorité : un
   /// paiement déjà séquestré prime sur l'expiration, qui prime sur l'échec
   /// du dernier dépôt, qui prime sur un dépôt encore en cours. `null` quand
-  /// aucun dépôt n'a jamais été tenté : il faut en initier un.
+  /// aucun dépôt n'a jamais été tenté : il faut en initier un (ou, pour un
+  /// bid, choisir d'abord un opérateur).
   MobileMoneyPaymentState? _stateFor(MobileMoneyPaymentStatus s) {
     if (s.isEscrowed) return MobileMoneyPaymentEscrowed(s);
     if (s.isExpired(_now())) return MobileMoneyPaymentExpired(s);

@@ -2,6 +2,7 @@ import 'package:dony/features/matching/data/datasources/mobile_money_remote_data
 import 'package:dony/features/matching/data/models/mobile_money_payment_status.dart';
 import 'package:dony/features/matching/data/models/mobile_money_scope.dart';
 import 'package:dony/features/matching/data/repositories/mobile_money_repository.dart';
+import 'package:dony/features/payments/data/models/mobile_money_provider_catalog.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -53,6 +54,62 @@ void main() {
       });
     });
 
+    group('providers', () {
+      const catalog = MobileMoneyProviderCatalog(country: 'CI');
+
+      test('délègue à datasource.providers et renvoie le catalogue', () async {
+        when(
+          () => datasource.providers(
+            bidId,
+            // ignore: avoid_redundant_argument_values
+            phoneNumber: null,
+          ),
+        ).thenAnswer((_) async => catalog);
+
+        final result = await repository.providers(bidId);
+
+        verify(
+          () => datasource.providers(
+            bidId,
+            // ignore: avoid_redundant_argument_values
+            phoneNumber: null,
+          ),
+        ).called(1);
+        expect(result, equals(catalog));
+      });
+
+      test('transmet phoneNumber au datasource', () async {
+        when(
+          () => datasource.providers(bidId, phoneNumber: '+221771234567'),
+        ).thenAnswer((_) async => catalog);
+
+        final result = await repository.providers(
+          bidId,
+          phoneNumber: '+221771234567',
+        );
+
+        verify(
+          () => datasource.providers(bidId, phoneNumber: '+221771234567'),
+        ).called(1);
+        expect(result, equals(catalog));
+      });
+
+      test('propage l\'exception du datasource', () async {
+        when(
+          () => datasource.providers(
+            bidId,
+            // ignore: avoid_redundant_argument_values
+            phoneNumber: null,
+          ),
+        ).thenAnswer((_) => Future.error(Exception('Network error')));
+
+        await expectLater(
+          repository.providers(bidId),
+          throwsA(isA<Exception>()),
+        );
+      });
+    });
+
     group('initiate', () {
       test('délègue à datasource.initiate sans phoneNumber', () async {
         when(
@@ -80,6 +137,47 @@ void main() {
         ).called(1);
         expect(result, equals(pendingStatus));
       });
+
+      test('délègue à datasource.initiate avec provider', () async {
+        when(
+          () => datasource.initiate(scope, provider: 'ORANGE_SEN'),
+        ).thenAnswer((_) async => pendingStatus);
+
+        final result = await repository.initiate(scope, provider: 'ORANGE_SEN');
+
+        verify(
+          () => datasource.initiate(scope, provider: 'ORANGE_SEN'),
+        ).called(1);
+        expect(result, equals(pendingStatus));
+      });
+
+      test(
+        'délègue à datasource.initiate avec phoneNumber et provider',
+        () async {
+          when(
+            () => datasource.initiate(
+              scope,
+              phoneNumber: '+221771234567',
+              provider: 'WAVE_SEN',
+            ),
+          ).thenAnswer((_) async => pendingStatus);
+
+          final result = await repository.initiate(
+            scope,
+            phoneNumber: '+221771234567',
+            provider: 'WAVE_SEN',
+          );
+
+          verify(
+            () => datasource.initiate(
+              scope,
+              phoneNumber: '+221771234567',
+              provider: 'WAVE_SEN',
+            ),
+          ).called(1);
+          expect(result, equals(pendingStatus));
+        },
+      );
 
       test('propage l\'exception du datasource', () async {
         when(

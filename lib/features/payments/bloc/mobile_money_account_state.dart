@@ -1,4 +1,5 @@
 import 'package:dony/features/payments/data/models/mobile_money_account.dart';
+import 'package:dony/features/payments/data/models/mobile_money_provider_catalog.dart';
 import 'package:equatable/equatable.dart';
 
 sealed class MobileMoneyAccountState extends Equatable {
@@ -17,24 +18,89 @@ class MobileMoneyAccountLoading extends MobileMoneyAccountState {
 }
 
 class MobileMoneyAccountLoaded extends MobileMoneyAccountState {
-  const MobileMoneyAccountLoaded(this.account);
-
+  const MobileMoneyAccountLoaded(this.account, {this.editingNumber = false});
   final MobileMoneyAccount account;
 
+  /// Vrai quand le voyageur a demandé à changer son numéro depuis la vue
+  /// active : l'écran affiche alors le formulaire malgré un compte actif.
+  final bool editingNumber;
+
   @override
-  List<Object?> get props => [account];
+  List<Object?> get props => [account, editingNumber];
 }
 
 /// Activation ou désactivation en cours. Porte le dernier compte connu (ou
 /// le compte par défaut non configuré) pour que l'écran reste affichable
 /// pendant l'appel réseau, sans clignoter vers un état vide.
 class MobileMoneyAccountUpdating extends MobileMoneyAccountState {
-  const MobileMoneyAccountUpdating(this.account);
-
+  const MobileMoneyAccountUpdating(this.account, {this.editingNumber = false});
   final MobileMoneyAccount account;
+  final bool editingNumber;
 
   @override
-  List<Object?> get props => [account];
+  List<Object?> get props => [account, editingNumber];
+}
+
+/// Catalogue des réseaux en cours de chargement (squelette dans l'écran).
+class MobileMoneyAccountProvidersLoading extends MobileMoneyAccountState {
+  const MobileMoneyAccountProvidersLoading(
+    this.account, {
+    this.editingNumber = false,
+  });
+  final MobileMoneyAccount account;
+  final bool editingNumber;
+
+  @override
+  List<Object?> get props => [account, editingNumber];
+}
+
+/// Catalogue chargé : la liste des réseaux à cocher s'affiche.
+class MobileMoneyAccountProvidersLoaded extends MobileMoneyAccountState {
+  const MobileMoneyAccountProvidersLoaded(
+    this.account,
+    this.catalog, {
+    this.editingNumber = false,
+  });
+  final MobileMoneyAccount account;
+  final MobileMoneyProviderCatalog catalog;
+  final bool editingNumber;
+
+  @override
+  List<Object?> get props => [account, catalog, editingNumber];
+}
+
+/// Catalogue en échec (numéro inconnu, pawaPay muet) : bandeau dans
+/// l'écran, jamais de snackbar, le formulaire reste saisissable.
+class MobileMoneyAccountProvidersError extends MobileMoneyAccountState {
+  const MobileMoneyAccountProvidersError(
+    this.account,
+    this.error, {
+    this.editingNumber = false,
+  });
+  final MobileMoneyAccount account;
+  final Object error;
+  final bool editingNumber;
+
+  @override
+  List<Object?> get props => [account, error, editingNumber];
+}
+
+/// Catalogue indisponible : ancien contrat backend, sans la route
+/// `POST /payments/mobile-money/providers` (prod gelée sans la PR jumelle
+/// dony-back #296). Distinct de [MobileMoneyAccountProvidersError] : ce
+/// n'est pas un aléa réseau à signaler par un bandeau d'erreur, mais un
+/// repli permanent tant que ce backend est en service. Le formulaire reste
+/// utilisable, l'opérateur sera détecté automatiquement par le back.
+class MobileMoneyAccountProvidersUnavailable extends MobileMoneyAccountState {
+  const MobileMoneyAccountProvidersUnavailable(
+    this.account, {
+    this.editingNumber = false,
+  });
+  final MobileMoneyAccount account;
+  final bool editingNumber;
+
+  @override
+  List<Object?> get props => [account, editingNumber];
 }
 
 /// Activation refusée par le backend faute de numéro disponible (compte
@@ -42,19 +108,31 @@ class MobileMoneyAccountUpdating extends MobileMoneyAccountState {
 /// distinct de [MobileMoneyAccountError] pour que l'écran affiche un
 /// formulaire de saisie plutôt qu'une snackbar d'erreur.
 class MobileMoneyAccountPhoneRequired extends MobileMoneyAccountState {
-  const MobileMoneyAccountPhoneRequired(this.account);
+  const MobileMoneyAccountPhoneRequired(
+    this.account, {
+    this.editingNumber = false,
+  });
 
   /// Dernier compte connu (ou le compte par défaut non configuré),
   /// conservé pour que l'écran reste affichable pendant que l'utilisateur
   /// saisit son numéro.
   final MobileMoneyAccount account;
 
+  /// Vrai quand ce refus survient pendant un changement de numéro depuis la
+  /// vue active : l'écran doit rester sur le formulaire plutôt que de
+  /// retomber sur la vue active.
+  final bool editingNumber;
+
   @override
-  List<Object?> get props => [account];
+  List<Object?> get props => [account, editingNumber];
 }
 
 class MobileMoneyAccountError extends MobileMoneyAccountState {
-  const MobileMoneyAccountError(this.error, {this.account});
+  const MobileMoneyAccountError(
+    this.error, {
+    this.account,
+    this.editingNumber = false,
+  });
 
   /// Toujours l'exception issue de `unwrapDioError` (jamais une chaîne), pour
   /// que l'écran appelle `ErrorPresenter.show(context, error)`.
@@ -65,6 +143,11 @@ class MobileMoneyAccountError extends MobileMoneyAccountState {
   /// échec de chargement (`MobileMoneyAccountRequested`).
   final MobileMoneyAccount? account;
 
+  /// Vrai quand cet échec survient pendant un changement de numéro depuis la
+  /// vue active : l'écran doit rester sur le formulaire plutôt que d'éjecter
+  /// l'utilisateur vers la vue active (ou vide) au premier échec réseau.
+  final bool editingNumber;
+
   @override
-  List<Object?> get props => [error, account];
+  List<Object?> get props => [error, account, editingNumber];
 }

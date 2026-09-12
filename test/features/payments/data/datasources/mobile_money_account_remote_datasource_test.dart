@@ -10,6 +10,7 @@ class MockApiClient extends Mock implements ApiClient {}
 class MockDio extends Mock implements Dio {}
 
 const _path = '/payments/mobile-money/account';
+const _providersPath = '/payments/mobile-money/providers';
 
 Response<dynamic> _ok(dynamic data, String path) => Response(
   data: data,
@@ -28,6 +29,17 @@ void main() {
     'providerLabel': 'Orange Money',
     'country': 'SN',
     'currency': 'XOF',
+  };
+
+  final catalogJson = {
+    'country': 'CI',
+    'currency': 'XOF',
+    'msisdnMasked': '+225 •••• 36',
+    'detected': 'ORANGE_CIV',
+    'providers': [
+      {'code': 'ORANGE_CIV', 'label': 'Orange Money', 'detected': true},
+      {'code': 'WAVE_CIV', 'label': 'Wave', 'detected': false},
+    ],
   };
 
   setUp(() {
@@ -148,6 +160,81 @@ void main() {
       );
 
       expect(datasource.disable(), throwsA(isA<DioException>()));
+    });
+  });
+
+  group('providers', () {
+    test('POST /payments/mobile-money/providers avec le numéro', () async {
+      when(
+        () => mockDio.post(
+          _providersPath,
+          data: {'phoneNumber': '+225 07 08 09 10 36'},
+        ),
+      ).thenAnswer((_) async => _ok(catalogJson, _providersPath));
+
+      final result = await datasource.providers(
+        phoneNumber: '+225 07 08 09 10 36',
+      );
+
+      expect(result.detected, 'ORANGE_CIV');
+      expect(result.providers.length, 2);
+    });
+
+    test('sans numéro : POST sans corps', () async {
+      when(
+        () => mockDio.post(_providersPath),
+      ).thenAnswer((_) async => _ok(catalogJson, _providersPath));
+
+      final result = await datasource.providers();
+
+      expect(result.country, 'CI');
+      verify(() => mockDio.post(_providersPath)).called(1);
+    });
+  });
+
+  group('activate avec réseaux', () {
+    test('envoie phoneNumber et providers', () async {
+      when(
+        () => mockDio.post(
+          _path,
+          data: {
+            'phoneNumber': '+225 07 08 09 10 36',
+            'providers': ['ORANGE_CIV', 'WAVE_CIV'],
+          },
+        ),
+      ).thenAnswer((_) async => _ok(accountJson, _path));
+
+      final result = await datasource.activate(
+        phoneNumber: '+225 07 08 09 10 36',
+        providers: ['ORANGE_CIV', 'WAVE_CIV'],
+      );
+
+      expect(result.status, MobileMoneyAccountStatus.active);
+    });
+  });
+
+  group('updateProviders', () {
+    test('PUT /payments/mobile-money/account/providers', () async {
+      when(
+        () => mockDio.put(
+          '$_path/providers',
+          data: {
+            'providers': ['WAVE_CIV'],
+          },
+        ),
+      ).thenAnswer((_) async => _ok(accountJson, '$_path/providers'));
+
+      final result = await datasource.updateProviders(['WAVE_CIV']);
+
+      expect(result.status, MobileMoneyAccountStatus.active);
+      verify(
+        () => mockDio.put(
+          '$_path/providers',
+          data: {
+            'providers': ['WAVE_CIV'],
+          },
+        ),
+      ).called(1);
     });
   });
 }
