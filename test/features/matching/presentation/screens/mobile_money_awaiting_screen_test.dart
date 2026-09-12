@@ -523,9 +523,15 @@ void main() {
     testWidgets('message du backend affiché, relance avec le numéro saisi', (
       tester,
     ) async {
-      stub(const MobileMoneyPaymentDepositFailed(depositFailedStatus));
+      final controller = StreamController<MobileMoneyPaymentState>.broadcast();
+      addTearDown(controller.close);
+      when(
+        () => bloc.state,
+      ).thenReturn(const MobileMoneyPaymentDepositFailed(depositFailedStatus));
+      when(() => bloc.stream).thenAnswer((_) => controller.stream);
 
-      await pumpScreen(tester);
+      await pumpScreen(tester, settle: false);
+      await tester.pump();
 
       expect(find.text('Solde insuffisant'), findsOneWidget);
 
@@ -548,7 +554,107 @@ void main() {
           ),
         ),
       ).called(1);
+
+      // Le bloc répond avec le catalogue construit pour ce numéro
+      // alternatif : un seul contrôleur de numéro payeur (I1) garde
+      // « 06 12 34 56 78 » affiché dans le champ de _ChooseOperatorBody,
+      // cohérent avec ce catalogue.
+      controller.add(
+        const MobileMoneyPaymentChooseOperator(
+          status: depositFailedStatus,
+          catalog: catalog,
+          payerPhone: '0612345678',
+        ),
+      );
+      await tester.pump();
+
+      await tester.tap(find.byKey(const Key('operator-WAVE_CIV')));
+      await tester.pump();
+      await tester.tap(
+        find.widgetWithText(
+          DonyButton,
+          'Payer ${formatPriceIn(depositFailedStatus.amount ?? 0, depositFailedStatus.currency)}',
+        ),
+      );
+      await tester.pump();
+
+      // « Payer » envoie le numéro qui a réellement bâti le catalogue
+      // affiché (`s.payerPhone`), jamais le contenu brut d'un contrôleur
+      // non synchronisé : avant I1, ce test aurait envoyé `phoneNumber:
+      // null` (le numéro du bid) avec l'opérateur du catalogue de
+      // l'alternatif.
+      verify(
+        () => bloc.add(
+          const MobileMoneyPaymentInitiateRequested(
+            scope: scope,
+            phoneNumber: '0612345678',
+            provider: 'WAVE_CIV',
+          ),
+        ),
+      ).called(1);
     });
+
+    testWidgets(
+      'numéro alternatif tapé dans le choix de l\'opérateur : "Réessayer" '
+      'après un dépôt refusé relance le même numéro, sans ressaisie',
+      (tester) async {
+        final controller =
+            StreamController<MobileMoneyPaymentState>.broadcast();
+        addTearDown(controller.close);
+        when(() => bloc.state).thenReturn(const MobileMoneyPaymentLoading());
+        when(() => bloc.stream).thenAnswer((_) => controller.stream);
+
+        await pumpScreen(tester, settle: false);
+        controller.add(
+          const MobileMoneyPaymentChooseOperator(
+            status: noDepositStatus,
+            catalog: catalog,
+          ),
+        );
+        await tester.pump();
+
+        await tester.enterText(
+          find.byKey(const Key('mobile-money-payer-phone-field')),
+          '+229 01 97 12 34 56',
+        );
+        await tester.pump(const Duration(milliseconds: 450));
+
+        verify(
+          () => bloc.add(
+            const MobileMoneyPaymentProvidersRequested(
+              scope: scope,
+              phoneNumber: '+2290197123456',
+            ),
+          ),
+        ).called(1);
+
+        // Le dépôt tenté avec ce numéro est refusé : le même contrôleur
+        // (I1), partagé entre le choix de l'opérateur et le dépôt refusé,
+        // garde le numéro alternatif affiché, rien à ressaisir. Deux pumps
+        // supplémentaires : la transition depuis un champ en cours de
+        // saisie prend plus d'une frame pour se matérialiser.
+        controller.add(
+          const MobileMoneyPaymentDepositFailed(depositFailedStatus),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 500));
+
+        await tester.tap(find.text('Réessayer'));
+        await tester.pump();
+
+        // Un seul appel supplémentaire, non ressaisi : mocktail retire les
+        // appels déjà vérifiés ci-dessus des vérifications suivantes, donc
+        // ce `verify` ne porte que sur ce nouvel appel (pas cumulatif).
+        verify(
+          () => bloc.add(
+            const MobileMoneyPaymentProvidersRequested(
+              scope: scope,
+              phoneNumber: '+2290197123456',
+            ),
+          ),
+        ).called(1);
+      },
+    );
 
     testWidgets('sans message backend : repli "Le paiement a été refusé par '
         'l\'opérateur"', (tester) async {
@@ -661,6 +767,58 @@ void main() {
         ),
       ).called(1);
     });
+
+    testWidgets(
+      'payer désactivé le temps du débounce (400 ms) suivant une frappe',
+      (tester) async {
+        stub(
+          const MobileMoneyPaymentChooseOperator(
+            status: noDepositStatus,
+            catalog: catalog,
+          ),
+        );
+
+        await pumpScreen(tester);
+        expect(
+          tester
+              .widget<DonyButton>(
+                find.widgetWithText(DonyButton, payAmountLabel),
+              )
+              .onPressed,
+          isNotNull,
+        );
+
+        await tester.enterText(
+          find.byKey(const Key('mobile-money-payer-phone-field')),
+          '+229 01 97 12 34 56',
+        );
+        await tester.pump();
+
+        // Une frappe vient de tomber, le débounce de 400 ms ne l'a pas
+        // encore confirmée : payer ne doit ni rester actif sur l'ancienne
+        // paire (numéro, opérateur), ni ignorer silencieusement la frappe
+        // en attente (I1).
+        expect(
+          tester
+              .widget<DonyButton>(
+                find.widgetWithText(DonyButton, payAmountLabel),
+              )
+              .onPressed,
+          isNull,
+        );
+
+        await tester.pump(const Duration(milliseconds: 450));
+
+        expect(
+          tester
+              .widget<DonyButton>(
+                find.widgetWithText(DonyButton, payAmountLabel),
+              )
+              .onPressed,
+          isNotNull,
+        );
+      },
+    );
 
     testWidgets('saisir un autre numéro recharge le catalogue après le délai', (
       tester,

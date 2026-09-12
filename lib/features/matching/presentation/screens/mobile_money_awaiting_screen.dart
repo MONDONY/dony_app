@@ -65,7 +65,11 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
   /// Jamais mis à jour via `setState` : seul `_CountdownLabel` (via
   /// `ValueListenableBuilder`) se redessine à chaque tick, pas tout l'écran.
   final ValueNotifier<Duration> _remaining = ValueNotifier(Duration.zero);
-  final TextEditingController _retryPhoneController = TextEditingController();
+
+  /// Numéro payeur, partagé par `_FailedBody`, `_PhoneRequiredBody` et
+  /// `_ChooseOperatorBody` (I1) : un seul contrôleur pour que le numéro
+  /// saisi lors d'une relance reste affiché, cohérent avec le catalogue
+  /// affiché, quel que soit le corps qui l'a saisi.
   final TextEditingController _payerPhoneController = TextEditingController();
 
   @override
@@ -195,7 +199,6 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
     _pollingTimer?.cancel();
     _countdownTimer?.cancel();
     _remaining.dispose();
-    _retryPhoneController.dispose();
     _payerPhoneController.dispose();
     super.dispose();
   }
@@ -272,7 +275,12 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
               onPay: (provider) => context.read<MobileMoneyPaymentBloc>().add(
                 MobileMoneyPaymentInitiateRequested(
                   scope: widget.scope,
-                  phoneNumber: normalizePayerPhone(_payerPhoneController.text),
+                  // Le numéro qui a réellement bâti le catalogue affiché
+                  // (`s`, déjà en portée), jamais le contenu brut du
+                  // contrôleur : une frappe pas encore débouncée ne doit
+                  // jamais faire payer un numéro et un opérateur qui ne se
+                  // correspondent pas (I1).
+                  phoneNumber: s.payerPhone,
                   provider: provider,
                 ),
               ),
@@ -284,8 +292,8 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
             final MobileMoneyPaymentDepositFailed s => _FailedBody(
               status: s.status,
               remaining: _remaining,
-              phoneController: _retryPhoneController,
-              onRetry: () => _retryToChooseOperator(_retryPhoneController.text),
+              phoneController: _payerPhoneController,
+              onRetry: () => _retryToChooseOperator(_payerPhoneController.text),
             ),
             MobileMoneyPaymentExpired() => _ExpiredBody(
               scope: widget.scope,
@@ -297,8 +305,8 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
             // obligatoire, plutôt que le DonyEmptyState générique.
             final MobileMoneyPaymentError e when _isPhoneRequired(e.error) =>
               _PhoneRequiredBody(
-                phoneController: _retryPhoneController,
-                onRetry: () => _retry(_retryPhoneController.text),
+                phoneController: _payerPhoneController,
+                onRetry: () => _retry(_payerPhoneController.text),
               ),
             MobileMoneyPaymentError() => DonyEmptyState(
               type: DonyEmptyStateType.error,
@@ -441,6 +449,12 @@ class _ChooseOperatorBody extends StatefulWidget {
 class _ChooseOperatorBodyState extends State<_ChooseOperatorBody> {
   static const _debounce = Duration(milliseconds: 400);
   final ValueNotifier<String?> _selected = ValueNotifier(null);
+
+  /// Vrai entre une frappe dans le champ et sa confirmation 400 ms plus
+  /// tard (ou son annulation par une frappe suivante) : « Payer » reste
+  /// inactif pendant cette fenêtre pour qu'une frappe pas encore
+  /// débouncée ne soit jamais ignorée silencieusement (I1).
+  final ValueNotifier<bool> _debouncePending = ValueNotifier(false);
   Timer? _timer;
   String? _requestedPhone;
 
@@ -474,10 +488,15 @@ class _ChooseOperatorBodyState extends State<_ChooseOperatorBody> {
   void _onPhoneChanged() {
     _timer?.cancel();
     final phone = normalizePayerPhone(widget.phoneController.text);
-    if (phone == _requestedPhone) return;
+    if (phone == _requestedPhone) {
+      _debouncePending.value = false;
+      return;
+    }
+    _debouncePending.value = true;
     _timer = Timer(_debounce, () {
       if (!mounted) return;
       _requestedPhone = phone;
+      _debouncePending.value = false;
       // Sans condition : `null` signifie déjà « le numéro du bid » pour
       // `ProvidersRequested`. Ignorer ce cas laissait le catalogue affiché
       // sur le dernier numéro alternatif tapé après que le champ ait été
@@ -491,6 +510,7 @@ class _ChooseOperatorBodyState extends State<_ChooseOperatorBody> {
     _timer?.cancel();
     widget.phoneController.removeListener(_onPhoneChanged);
     _selected.dispose();
+    _debouncePending.dispose();
     super.dispose();
   }
 
@@ -664,19 +684,23 @@ class _ChooseOperatorBodyState extends State<_ChooseOperatorBody> {
             DonySpacing.lg,
             DonySpacing.xl,
           ),
-          child: ValueListenableBuilder<String?>(
-            valueListenable: _selected,
-            builder: (context, selected, _) => DonyButton(
-              label: 'Payer $amount',
-              iconAsset: 'smartphone',
-              isLoading: widget.state.isLoadingCatalog && catalog != null,
-              onPressed:
-                  selected == null ||
-                      catalog == null ||
-                      catalog.isEmpty ||
-                      widget.state.error != null
-                  ? null
-                  : () => widget.onPay(selected),
+          child: ValueListenableBuilder<bool>(
+            valueListenable: _debouncePending,
+            builder: (context, pending, _) => ValueListenableBuilder<String?>(
+              valueListenable: _selected,
+              builder: (context, selected, _) => DonyButton(
+                label: 'Payer $amount',
+                iconAsset: 'smartphone',
+                isLoading: widget.state.isLoadingCatalog && catalog != null,
+                onPressed:
+                    pending ||
+                        selected == null ||
+                        catalog == null ||
+                        catalog.isEmpty ||
+                        widget.state.error != null
+                    ? null
+                    : () => widget.onPay(selected),
+              ),
             ),
           ),
         ),
