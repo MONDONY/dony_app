@@ -687,6 +687,28 @@ void main() {
       ).called(1);
     });
 
+    testWidgets('compte à rebours affiché quand deadlineAt est fourni', (
+      tester,
+    ) async {
+      final deadline = DateTime.now().toUtc().add(const Duration(minutes: 20));
+      stub(
+        MobileMoneyPaymentChooseOperator(
+          status: MobileMoneyPaymentStatus(
+            subjectId: bidId,
+            subjectStatus: 'AWAITING_PAYMENT',
+            paymentStatus: 'PENDING',
+            amount: 12500,
+            deadlineAt: deadline,
+          ),
+          catalog: catalog,
+        ),
+      );
+
+      await pumpScreen(tester, settle: false);
+
+      expect(countdownFinder, findsOneWidget);
+    });
+
     testWidgets('aucun réseau commun : bandeau explicite, bouton désactivé', (
       tester,
     ) async {
