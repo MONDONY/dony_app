@@ -173,7 +173,10 @@ class _AccountBody extends StatelessWidget {
                   ? _FormMode.reactivate
                   : _FormMode.activate,
               previousMasked: account.msisdnMasked,
-              preselect: account.providers.map((p) => p.code).toSet(),
+              // Par marque (ORANGE, WAVE...), pas par code pawaPay
+              // (ORANGE_SEN vs ORANGE_CIV) : un changement de numéro vers
+              // un autre pays ne doit pas perdre la présélection (M4).
+              preselect: account.providers.map((p) => p.brand).toSet(),
               isLoading: isLoading,
               catalog: catalog,
               catalogLoading: catalogLoading,
@@ -269,13 +272,16 @@ class _PayoutNumberFormState extends State<_PayoutNumberForm> {
   }
 
   /// Retient [catalog] et pré-coche le réseau détecté ainsi que les réseaux
-  /// déjà acceptés présents dans ce catalogue ([_PayoutNumberForm.preselect]).
+  /// dont la marque est déjà acceptée ([_PayoutNumberForm.preselect]),
+  /// présents dans ce catalogue (M4 : comparaison par marque, pas par code
+  /// pawaPay, un changement de numéro vers un autre pays change les codes
+  /// mais pas les marques déjà acceptées par l'expéditeur).
   void _applyCatalog(MobileMoneyProviderCatalog? catalog) {
     if (catalog == null) return;
     _retainedCatalog.value = catalog;
-    final codes = catalog.providers.map((p) => p.code).toSet();
     _selection.value = {
-      ...widget.preselect.where(codes.contains),
+      for (final p in catalog.providers)
+        if (widget.preselect.contains(p.brand)) p.code,
       if (catalog.detected != null) catalog.detected!,
     };
   }
@@ -821,7 +827,22 @@ class _ProvidersSheetContent extends StatelessWidget {
         DonySpacing.lg,
         DonySpacing.base,
       ),
-      child: BlocBuilder<MobileMoneyAccountBloc, MobileMoneyAccountState>(
+      child: BlocConsumer<MobileMoneyAccountBloc, MobileMoneyAccountState>(
+        // M6 : à l'arrivée du catalogue, la sélection initiale (réseaux déjà
+        // acceptés par le compte, reprise telle quelle à l'ouverture de la
+        // feuille) est intersectée avec les codes réellement présents dedans
+        // (même principe que _applyCatalog du formulaire) : un code disparu
+        // (pawaPay muet dessus pour ce numéro) ne doit jamais rester coché
+        // sans ligne pour le représenter, au risque d'un 422 à l'enregistrement.
+        listener: (context, state) {
+          if (state is MobileMoneyAccountProvidersLoaded) {
+            final codes = state.catalog.providers.map((p) => p.code).toSet();
+            final filtered = selection.value.where(codes.contains).toSet();
+            if (filtered.length != selection.value.length) {
+              selection.value = filtered;
+            }
+          }
+        },
         builder: (context, state) => switch (state) {
           MobileMoneyAccountProvidersLoaded(:final catalog) =>
             catalog.isEmpty

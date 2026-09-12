@@ -781,6 +781,60 @@ void main() {
       expect(find.byType(MobileMoneyNetworksSkeleton), findsOneWidget);
     });
 
+    testWidgets('présélection par marque (M4) : compte ORANGE_SEN + WAVE_SEN, '
+        'changement vers un numéro ivoirien → ORANGE_CIV et WAVE_CIV '
+        'pré-cochés, pas MTN_CIV', (tester) async {
+      const accountSenegal = MobileMoneyAccount(
+        status: MobileMoneyAccountStatus.active,
+        msisdnMasked: '+221 •• •• •• 67',
+        country: 'SN',
+        currency: 'XOF',
+        providers: [
+          MobileMoneyProviderOption(code: 'ORANGE_SEN', label: 'Orange Money'),
+          MobileMoneyProviderOption(code: 'WAVE_SEN', label: 'Wave'),
+        ],
+      );
+      const catalogIvoirien = MobileMoneyProviderCatalog(
+        country: 'CI',
+        currency: 'XOF',
+        msisdnMasked: '+225 •••• 36',
+        providers: [
+          MobileMoneyProviderOption(code: 'ORANGE_CIV', label: 'Orange Money'),
+          MobileMoneyProviderOption(code: 'WAVE_CIV', label: 'Wave'),
+          MobileMoneyProviderOption(code: 'MTN_CIV', label: 'MTN'),
+        ],
+      );
+      stub(
+        const MobileMoneyAccountProvidersLoaded(
+          accountSenegal,
+          catalogIvoirien,
+          editingNumber: true,
+        ),
+      );
+      await pumpScreen(tester);
+
+      expect(
+        tester
+            .widget<DonyOperatorTile>(
+              find.byKey(const Key('network-ORANGE_CIV')),
+            )
+            .selected,
+        isTrue,
+      );
+      expect(
+        tester
+            .widget<DonyOperatorTile>(find.byKey(const Key('network-WAVE_CIV')))
+            .selected,
+        isTrue,
+      );
+      expect(
+        tester
+            .widget<DonyOperatorTile>(find.byKey(const Key('network-MTN_CIV')))
+            .selected,
+        isFalse,
+      );
+    });
+
     testWidgets('catalogue en erreur : bandeau, pas de snackbar', (
       tester,
     ) async {
@@ -1222,6 +1276,57 @@ void main() {
           find.widgetWithText(DonyButton, 'Enregistrer'),
         );
         expect(button.onPressed, isNull);
+      },
+    );
+
+    testWidgets(
+      'feuille (M6) : code du compte absent du catalogue rechargé → aucune '
+      'ligne pour lui, sélection filtrée, Enregistrer inactif tant que rien '
+      'n\'est recoché',
+      (tester) async {
+        final controller = StreamController<MobileMoneyAccountState>();
+        addTearDown(controller.close);
+        // MOOV_CIV n'existe plus dans `catalog` (ORANGE_CIV + WAVE_CIV
+        // seulement) : pawaPay a cessé de le proposer pour ce numéro.
+        const accountStaleCode = MobileMoneyAccount(
+          status: MobileMoneyAccountStatus.active,
+          msisdnMasked: '+225 •••• 36',
+          country: 'CI',
+          currency: 'XOF',
+          providers: [
+            MobileMoneyProviderOption(code: 'MOOV_CIV', label: 'Moov Money'),
+          ],
+        );
+        const loaded = MobileMoneyAccountLoaded(accountStaleCode);
+        whenListen(bloc, controller.stream, initialState: loaded);
+
+        await pumpScreen(tester);
+        await tester.tap(find.text('Modifier'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 400));
+
+        controller.add(
+          const MobileMoneyAccountProvidersLoaded(accountStaleCode, catalog),
+        );
+        await tester.pump();
+
+        expect(find.byKey(const Key('network-MOOV_CIV')), findsNothing);
+
+        var button = tester.widget<DonyButton>(
+          find.widgetWithText(DonyButton, 'Enregistrer'),
+        );
+        expect(button.onPressed, isNull);
+
+        // Le reste de la feuille fonctionne normalement : cocher un réseau
+        // du nouveau catalogue réactive Enregistrer.
+        await tester.ensureVisible(find.byKey(const Key('network-ORANGE_CIV')));
+        await tester.tap(find.byKey(const Key('network-ORANGE_CIV')));
+        await tester.pump();
+
+        button = tester.widget<DonyButton>(
+          find.widgetWithText(DonyButton, 'Enregistrer'),
+        );
+        expect(button.onPressed, isNotNull);
       },
     );
 
