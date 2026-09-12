@@ -18,5 +18,7 @@ class MobileMoneyRepository {
   Future<MobileMoneyPaymentStatus> initiate(
     MobileMoneyScope scope, {
     String? phoneNumber,
-  }) => _datasource.initiate(scope, phoneNumber: phoneNumber);
+    String? provider,
+  }) =>
+      _datasource.initiate(scope, phoneNumber: phoneNumber, provider: provider);
 }

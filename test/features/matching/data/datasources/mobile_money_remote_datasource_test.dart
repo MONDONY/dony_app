@@ -364,6 +364,119 @@ void main() {
         },
       );
 
+      test(
+        'avec phoneNumber et provider : POST {phoneNumber, provider} après trim()',
+        () async {
+          dynamic capturedData = 'non-appelé';
+          when(
+            () => dio.post<Map<String, dynamic>>(
+              '/bids/$bidId/mobile-money/initiate',
+              data: any(named: 'data'),
+            ),
+          ).thenAnswer((invocation) async {
+            capturedData = invocation.namedArguments[const Symbol('data')];
+            return Response(
+              data: statusJson,
+              statusCode: 200,
+              requestOptions: RequestOptions(
+                path: '/bids/$bidId/mobile-money/initiate',
+              ),
+            );
+          });
+
+          await datasource.initiate(
+            bidScope,
+            phoneNumber: '  +221771234567  ',
+            provider: 'WAVE_SEN',
+          );
+
+          expect(capturedData, {
+            'phoneNumber': '+221771234567',
+            'provider': 'WAVE_SEN',
+          });
+        },
+      );
+
+      test('provider seul, sans numéro : POST {provider}', () async {
+        dynamic capturedData = 'non-appelé';
+        when(
+          () => dio.post<Map<String, dynamic>>(
+            '/bids/$bidId/mobile-money/initiate',
+            data: any(named: 'data'),
+          ),
+        ).thenAnswer((invocation) async {
+          capturedData = invocation.namedArguments[const Symbol('data')];
+          return Response(
+            data: statusJson,
+            statusCode: 200,
+            requestOptions: RequestOptions(
+              path: '/bids/$bidId/mobile-money/initiate',
+            ),
+          );
+        });
+
+        await datasource.initiate(bidScope, provider: 'ORANGE_SEN');
+
+        expect(capturedData, {'provider': 'ORANGE_SEN'});
+      });
+
+      test(
+        'provider composé uniquement d\'espaces : POST sans corps',
+        () async {
+          dynamic capturedData = 'non-appelé';
+          when(
+            () => dio.post<Map<String, dynamic>>(
+              '/bids/$bidId/mobile-money/initiate',
+              data: any(named: 'data'),
+            ),
+          ).thenAnswer((invocation) async {
+            capturedData = invocation.namedArguments[const Symbol('data')];
+            return Response(
+              data: statusJson,
+              statusCode: 200,
+              requestOptions: RequestOptions(
+                path: '/bids/$bidId/mobile-money/initiate',
+              ),
+            );
+          });
+
+          await datasource.initiate(bidScope, provider: '  ');
+
+          expect(capturedData, isNull);
+        },
+      );
+
+      test(
+        'portée négociation avec provider : POST /negotiations/{id}/mobile-money/initiate {provider}',
+        () async {
+          final threadJson = {'threadId': threadId, 'paymentStatus': 'PENDING'};
+          dynamic capturedData = 'non-appelé';
+          when(
+            () => dio.post<Map<String, dynamic>>(
+              '/negotiations/$threadId/mobile-money/initiate',
+              data: any(named: 'data'),
+            ),
+          ).thenAnswer((invocation) async {
+            capturedData = invocation.namedArguments[const Symbol('data')];
+            return Response(
+              data: threadJson,
+              statusCode: 200,
+              requestOptions: RequestOptions(
+                path: '/negotiations/$threadId/mobile-money/initiate',
+              ),
+            );
+          });
+
+          final result = await datasource.initiate(
+            negotiationScope,
+            provider: 'WAVE_SEN',
+          );
+
+          expect(result.subjectId, threadId);
+          expect(capturedData, {'provider': 'WAVE_SEN'});
+        },
+      );
+
       test('propage la DioException', () async {
         when(
           () => dio.post<Map<String, dynamic>>(

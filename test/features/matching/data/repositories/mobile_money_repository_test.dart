@@ -138,6 +138,47 @@ void main() {
         expect(result, equals(pendingStatus));
       });
 
+      test('délègue à datasource.initiate avec provider', () async {
+        when(
+          () => datasource.initiate(scope, provider: 'ORANGE_SEN'),
+        ).thenAnswer((_) async => pendingStatus);
+
+        final result = await repository.initiate(scope, provider: 'ORANGE_SEN');
+
+        verify(
+          () => datasource.initiate(scope, provider: 'ORANGE_SEN'),
+        ).called(1);
+        expect(result, equals(pendingStatus));
+      });
+
+      test(
+        'délègue à datasource.initiate avec phoneNumber et provider',
+        () async {
+          when(
+            () => datasource.initiate(
+              scope,
+              phoneNumber: '+221771234567',
+              provider: 'WAVE_SEN',
+            ),
+          ).thenAnswer((_) async => pendingStatus);
+
+          final result = await repository.initiate(
+            scope,
+            phoneNumber: '+221771234567',
+            provider: 'WAVE_SEN',
+          );
+
+          verify(
+            () => datasource.initiate(
+              scope,
+              phoneNumber: '+221771234567',
+              provider: 'WAVE_SEN',
+            ),
+          ).called(1);
+          expect(result, equals(pendingStatus));
+        },
+      );
+
       test('propage l\'exception du datasource', () async {
         when(
           () => datasource.initiate(scope),
