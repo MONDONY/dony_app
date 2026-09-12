@@ -62,6 +62,8 @@ class MobileMoneyAccountBloc
       MobileMoneyAccountProvidersLoading() => s.editingNumber,
       MobileMoneyAccountProvidersLoaded() => s.editingNumber,
       MobileMoneyAccountProvidersError() => s.editingNumber,
+      MobileMoneyAccountPhoneRequired() => s.editingNumber,
+      MobileMoneyAccountError() => s.editingNumber,
       _ => false,
     };
   }
@@ -84,7 +86,11 @@ class MobileMoneyAccountBloc
     Emitter<MobileMoneyAccountState> emit,
   ) async {
     final base = _currentAccount ?? _fallbackAccount;
-    emit(MobileMoneyAccountUpdating(base, editingNumber: _editingNumber));
+    // Capturé avant l'émission de Updating : un échec doit rendre l'écran au
+    // formulaire de changement de numéro s'il en venait, jamais à la vue
+    // active (ni à un état vide) au premier aléa réseau.
+    final editing = _editingNumber;
+    emit(MobileMoneyAccountUpdating(base, editingNumber: editing));
     try {
       final account = await _repository.activate(
         phoneNumber: event.phoneNumber,
@@ -106,9 +112,11 @@ class MobileMoneyAccountBloc
     } catch (e) {
       final error = unwrapDioError(e);
       if (error.code == 'mobile-money-phone-required') {
-        emit(MobileMoneyAccountPhoneRequired(base));
+        emit(MobileMoneyAccountPhoneRequired(base, editingNumber: editing));
       } else {
-        emit(MobileMoneyAccountError(error, account: base));
+        emit(
+          MobileMoneyAccountError(error, account: base, editingNumber: editing),
+        );
       }
     }
   }
@@ -180,7 +188,8 @@ class MobileMoneyAccountBloc
     Emitter<MobileMoneyAccountState> emit,
   ) async {
     final base = _currentAccount ?? _fallbackAccount;
-    emit(MobileMoneyAccountUpdating(base));
+    final editing = _editingNumber;
+    emit(MobileMoneyAccountUpdating(base, editingNumber: editing));
     try {
       final account = await _repository.updateProviders(event.providers);
       emit(MobileMoneyAccountLoaded(account));
@@ -196,7 +205,13 @@ class MobileMoneyAccountBloc
         ),
       );
     } catch (e) {
-      emit(MobileMoneyAccountError(unwrapDioError(e), account: base));
+      emit(
+        MobileMoneyAccountError(
+          unwrapDioError(e),
+          account: base,
+          editingNumber: editing,
+        ),
+      );
     }
   }
 

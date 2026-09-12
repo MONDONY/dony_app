@@ -90,19 +90,31 @@ class MobileMoneyAccountProvidersError extends MobileMoneyAccountState {
 /// distinct de [MobileMoneyAccountError] pour que l'écran affiche un
 /// formulaire de saisie plutôt qu'une snackbar d'erreur.
 class MobileMoneyAccountPhoneRequired extends MobileMoneyAccountState {
-  const MobileMoneyAccountPhoneRequired(this.account);
+  const MobileMoneyAccountPhoneRequired(
+    this.account, {
+    this.editingNumber = false,
+  });
 
   /// Dernier compte connu (ou le compte par défaut non configuré),
   /// conservé pour que l'écran reste affichable pendant que l'utilisateur
   /// saisit son numéro.
   final MobileMoneyAccount account;
 
+  /// Vrai quand ce refus survient pendant un changement de numéro depuis la
+  /// vue active : l'écran doit rester sur le formulaire plutôt que de
+  /// retomber sur la vue active.
+  final bool editingNumber;
+
   @override
-  List<Object?> get props => [account];
+  List<Object?> get props => [account, editingNumber];
 }
 
 class MobileMoneyAccountError extends MobileMoneyAccountState {
-  const MobileMoneyAccountError(this.error, {this.account});
+  const MobileMoneyAccountError(
+    this.error, {
+    this.account,
+    this.editingNumber = false,
+  });
 
   /// Toujours l'exception issue de `unwrapDioError` (jamais une chaîne), pour
   /// que l'écran appelle `ErrorPresenter.show(context, error)`.
@@ -113,6 +125,11 @@ class MobileMoneyAccountError extends MobileMoneyAccountState {
   /// échec de chargement (`MobileMoneyAccountRequested`).
   final MobileMoneyAccount? account;
 
+  /// Vrai quand cet échec survient pendant un changement de numéro depuis la
+  /// vue active : l'écran doit rester sur le formulaire plutôt que d'éjecter
+  /// l'utilisateur vers la vue active (ou vide) au premier échec réseau.
+  final bool editingNumber;
+
   @override
-  List<Object?> get props => [error, account];
+  List<Object?> get props => [error, account, editingNumber];
 }

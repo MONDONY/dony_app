@@ -64,9 +64,11 @@ class MobileMoneyAccountScreen extends StatelessWidget {
                 editingNumber: editingNumber,
                 isLoading: true,
               ),
-            MobileMoneyAccountPhoneRequired(:final account) => _AccountBody(
-              account: account,
-            ),
+            MobileMoneyAccountPhoneRequired(
+              :final account,
+              :final editingNumber,
+            ) =>
+              _AccountBody(account: account, editingNumber: editingNumber),
             MobileMoneyAccountProvidersLoading(
               :final account,
               :final editingNumber,
@@ -96,8 +98,9 @@ class MobileMoneyAccountScreen extends StatelessWidget {
                 editingNumber: editingNumber,
                 catalogError: error,
               ),
-            MobileMoneyAccountError(:final account) when account != null =>
-              _AccountBody(account: account),
+            MobileMoneyAccountError(:final account, :final editingNumber)
+                when account != null =>
+              _AccountBody(account: account, editingNumber: editingNumber),
             MobileMoneyAccountError() => DonyEmptyState(
               type: DonyEmptyStateType.error,
               title: 'Impossible de charger ton compte',
@@ -207,6 +210,18 @@ class _PayoutNumberFormState extends State<_PayoutNumberForm> {
   final _confirmCtrl = TextEditingController();
   final ValueNotifier<String?> _normalizedPhone = ValueNotifier(null);
   final ValueNotifier<Set<String>> _selection = ValueNotifier({});
+
+  /// Dernier catalogue non nul reçu via [widget.catalog].
+  ///
+  /// `Updating` et `Error` (round 1, Ruling A5) ne portent pas de catalogue
+  /// dans leurs props : sans cette rétention, la checklist disparaîtrait et
+  /// le bouton resterait mort après un échec d'activation, alors que le
+  /// numéro confirmé et la sélection restent valides. Remis à nul dès que le
+  /// numéro normalisé diverge ([MobileMoneyAccountProvidersCleared]) ou
+  /// change pour un numéro pas encore chargé : un catalogue affiché doit
+  /// toujours correspondre au numéro confirmé à l'écran.
+  final ValueNotifier<MobileMoneyProviderCatalog?> _retainedCatalog =
+      ValueNotifier(null);
   Timer? _timer;
 
   /// Numéro pour lequel le catalogue a été demandé, pour ne pas le redemander
@@ -219,6 +234,11 @@ class _PayoutNumberFormState extends State<_PayoutNumberForm> {
     _phoneCtrl = TextEditingController(text: _profilePhone());
     _phoneCtrl.addListener(_syncNormalizedPhone);
     _confirmCtrl.addListener(_syncNormalizedPhone);
+    // Présélectionne dès le premier build, pas seulement sur une transition
+    // ultérieure (didUpdateWidget) : un formulaire monté directement sur un
+    // catalogue déjà chargé (ex. la feuille « Modifier ») doit lui aussi
+    // partir avec le réseau détecté et les réseaux déjà acceptés cochés.
+    _applyCatalog(widget.catalog);
   }
 
   @override
@@ -226,13 +246,20 @@ class _PayoutNumberFormState extends State<_PayoutNumberForm> {
     super.didUpdateWidget(old);
     final catalog = widget.catalog;
     if (catalog != null && catalog != old.catalog) {
-      final codes = catalog.providers.map((p) => p.code).toSet();
-      final next = <String>{
-        ...widget.preselect.where(codes.contains),
-        if (catalog.detected != null) catalog.detected!,
-      };
-      _selection.value = next;
+      _applyCatalog(catalog);
     }
+  }
+
+  /// Retient [catalog] et pré-coche le réseau détecté ainsi que les réseaux
+  /// déjà acceptés présents dans ce catalogue ([_PayoutNumberForm.preselect]).
+  void _applyCatalog(MobileMoneyProviderCatalog? catalog) {
+    if (catalog == null) return;
+    _retainedCatalog.value = catalog;
+    final codes = catalog.providers.map((p) => p.code).toSet();
+    _selection.value = {
+      ...widget.preselect.where(codes.contains),
+      if (catalog.detected != null) catalog.detected!,
+    };
   }
 
   String _profilePhone() {
@@ -253,6 +280,7 @@ class _PayoutNumberFormState extends State<_PayoutNumberForm> {
       if (_requestedPhone != null) {
         _requestedPhone = null;
         _selection.value = {};
+        _retainedCatalog.value = null;
         context.read<MobileMoneyAccountBloc>().add(
           const MobileMoneyAccountProvidersCleared(),
         );
@@ -260,6 +288,15 @@ class _PayoutNumberFormState extends State<_PayoutNumberForm> {
       return;
     }
     if (matched == _requestedPhone) return;
+    // Un catalogue affiché doit toujours correspondre au numéro confirmé :
+    // celui déjà retenu pour un AUTRE numéro (_requestedPhone non nul) ne
+    // vaut plus, avant même que le débounce ci-dessous n'aboutisse. Si aucune
+    // demande n'a encore été faite par ce formulaire (_requestedPhone nul),
+    // le catalogue en props vient d'un montage direct sur un état déjà
+    // chargé : il reste valable tant qu'aucune autre demande ne l'a supplanté.
+    if (_requestedPhone != null) {
+      _retainedCatalog.value = null;
+    }
     _timer = Timer(_debounce, () {
       if (!mounted) return;
       _requestedPhone = matched;
@@ -270,6 +307,16 @@ class _PayoutNumberFormState extends State<_PayoutNumberForm> {
     });
   }
 
+  /// Réémet la demande de catalogue pour le numéro confirmé, depuis le
+  /// bandeau d'erreur (« Réessayer ») du formulaire.
+  void _retryCatalog() {
+    final phone = _normalizedPhone.value;
+    if (phone == null) return;
+    context.read<MobileMoneyAccountBloc>().add(
+      MobileMoneyAccountProvidersRequested(phoneNumber: phone),
+    );
+  }
+
   @override
   void dispose() {
     _timer?.cancel();
@@ -277,6 +324,7 @@ class _PayoutNumberFormState extends State<_PayoutNumberForm> {
     _confirmCtrl.dispose();
     _normalizedPhone.dispose();
     _selection.dispose();
+    _retainedCatalog.dispose();
     super.dispose();
   }
 
@@ -359,12 +407,16 @@ class _PayoutNumberFormState extends State<_PayoutNumberForm> {
                   ),
                 ),
                 const SizedBox(height: DonySpacing.base),
-                _NetworksSection(
-                  catalog: widget.catalog,
-                  loading: widget.catalogLoading,
-                  error: widget.catalogError,
-                  selection: _selection,
-                  onChanged: (s) => _selection.value = s,
+                ValueListenableBuilder<MobileMoneyProviderCatalog?>(
+                  valueListenable: _retainedCatalog,
+                  builder: (context, catalog, _) => _NetworksSection(
+                    catalog: catalog,
+                    loading: widget.catalogLoading,
+                    error: widget.catalogError,
+                    selection: _selection,
+                    onChanged: (s) => _selection.value = s,
+                    onRetry: _retryCatalog,
+                  ),
                 ),
               ],
             ),
@@ -372,12 +424,19 @@ class _PayoutNumberFormState extends State<_PayoutNumberForm> {
         ),
         const SizedBox(height: DonySpacing.lg),
         ListenableBuilder(
-          listenable: Listenable.merge([_normalizedPhone, _selection]),
+          listenable: Listenable.merge([
+            _normalizedPhone,
+            _selection,
+            _retainedCatalog,
+          ]),
           builder: (context, _) {
             final phone = _normalizedPhone.value;
-            final catalog = widget.catalog;
+            final catalog = _retainedCatalog.value;
             final ready =
-                phone != null && catalog != null && _selection.value.isNotEmpty;
+                phone != null &&
+                catalog != null &&
+                !catalog.isEmpty &&
+                _selection.value.isNotEmpty;
             return DonyButton(
               label: _buttonLabel,
               isLoading: widget.isLoading,
@@ -417,6 +476,7 @@ class _NetworksSection extends StatelessWidget {
     required this.error,
     required this.selection,
     required this.onChanged,
+    required this.onRetry,
   });
 
   final MobileMoneyProviderCatalog? catalog;
@@ -424,6 +484,10 @@ class _NetworksSection extends StatelessWidget {
   final Object? error;
   final ValueNotifier<Set<String>> selection;
   final ValueChanged<Set<String>> onChanged;
+
+  /// Réémet la demande de catalogue pour le numéro confirmé (bandeau
+  /// d'erreur, bouton « Réessayer »).
+  final VoidCallback onRetry;
 
   @override
   Widget build(BuildContext context) {
@@ -460,6 +524,15 @@ class _NetworksSection extends StatelessWidget {
           DonyStatusBanner(
             type: DonyStatusBannerType.error,
             message: ErrorPresenter.resolve(error).message,
+            action: TextButton(
+              onPressed: onRetry,
+              child: const Text('Réessayer'),
+            ),
+          )
+        else if (catalog != null && catalog.isEmpty)
+          Text(
+            'Aucun réseau disponible sur ce numéro.',
+            style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
           )
         else if (catalog != null) ...[
           MobileMoneyNetworksChecklist(
@@ -517,7 +590,8 @@ class _ActiveView extends StatelessWidget {
                 return DonyButton(
                   label: 'Enregistrer',
                   isLoading: state is MobileMoneyAccountUpdating,
-                  onPressed: catalog == null || selected.isEmpty
+                  onPressed:
+                      catalog == null || catalog.isEmpty || selected.isEmpty
                       ? null
                       : () {
                           bloc.add(
@@ -700,6 +774,8 @@ class _ProvidersSheetContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         DonySpacing.lg,
@@ -710,14 +786,25 @@ class _ProvidersSheetContent extends StatelessWidget {
       child: BlocBuilder<MobileMoneyAccountBloc, MobileMoneyAccountState>(
         builder: (context, state) => switch (state) {
           MobileMoneyAccountProvidersLoaded(:final catalog) =>
-            MobileMoneyNetworksChecklist(
-              catalog: catalog,
-              selection: selection,
-              onChanged: onChanged,
-            ),
+            catalog.isEmpty
+                ? Text(
+                    'Aucun réseau disponible sur ce numéro.',
+                    style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                  )
+                : MobileMoneyNetworksChecklist(
+                    catalog: catalog,
+                    selection: selection,
+                    onChanged: onChanged,
+                  ),
           MobileMoneyAccountProvidersError(:final error) => DonyStatusBanner(
             type: DonyStatusBannerType.error,
             message: ErrorPresenter.resolve(error).message,
+            action: TextButton(
+              onPressed: () => context.read<MobileMoneyAccountBloc>().add(
+                const MobileMoneyAccountProvidersRequested(),
+              ),
+              child: const Text('Réessayer'),
+            ),
           ),
           _ => const MobileMoneyNetworksSkeleton(),
         },

@@ -284,6 +284,56 @@ void main() {
         const MobileMoneyAccountLoaded(active),
       ],
     );
+
+    // ── Round 1 : editingNumber survit à un échec (Ruling A5) ─────────────
+    // Une erreur pendant un changement de numéro (depuis la vue active) ne
+    // doit jamais éjecter l'écran vers la vue active : PhoneRequired et Error
+    // portent editingNumber pour que le formulaire reste affiché.
+
+    blocTest<MobileMoneyAccountBloc, MobileMoneyAccountState>(
+      'échec mobile-money-phone-required pendant un changement de numéro : '
+      'PhoneRequired garde editingNumber true',
+      build: () {
+        when(
+          () => repository.activate(phoneNumber: any(named: 'phoneNumber')),
+        ).thenThrow(
+          const ValidationException(
+            'Aucun numéro de téléphone disponible',
+            code: 'mobile-money-phone-required',
+          ),
+        );
+        return bloc();
+      },
+      seed: () => const MobileMoneyAccountLoaded(active, editingNumber: true),
+      act: (b) => b.add(
+        const MobileMoneyAccountActivateRequested(phoneNumber: '+221773456789'),
+      ),
+      expect: () => [
+        const MobileMoneyAccountUpdating(active, editingNumber: true),
+        const MobileMoneyAccountPhoneRequired(active, editingNumber: true),
+      ],
+    );
+
+    blocTest<MobileMoneyAccountBloc, MobileMoneyAccountState>(
+      'échec réseau pendant un changement de numéro : Error garde '
+      'editingNumber true (le formulaire reste affiché, pas la vue active)',
+      build: () {
+        when(
+          () => repository.activate(phoneNumber: any(named: 'phoneNumber')),
+        ).thenThrow(const OfflineException());
+        return bloc();
+      },
+      seed: () => const MobileMoneyAccountLoaded(active, editingNumber: true),
+      act: (b) => b.add(
+        const MobileMoneyAccountActivateRequested(phoneNumber: '+221773456789'),
+      ),
+      expect: () => [
+        const MobileMoneyAccountUpdating(active, editingNumber: true),
+        isA<MobileMoneyAccountError>()
+            .having((s) => s.account, 'account', active)
+            .having((s) => s.editingNumber, 'editingNumber', isTrue),
+      ],
+    );
   });
 
   group('MobileMoneyAccountDisableRequested', () {
