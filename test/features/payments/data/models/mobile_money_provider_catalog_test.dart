@@ -3,19 +3,24 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('MobileMoneyProviderOption', () {
-    test('parse le JSON, label replié sur le code, detected faux par défaut', () {
-      final full = MobileMoneyProviderOption.fromJson(const {
-        'code': 'ORANGE_CIV',
-        'label': 'Orange Money',
-        'detected': true,
-      });
-      expect(full.code, 'ORANGE_CIV');
-      expect(full.label, 'Orange Money');
-      expect(full.detected, isTrue);
-      final bare = MobileMoneyProviderOption.fromJson(const {'code': 'WAVE_CIV'});
-      expect(bare.label, 'WAVE_CIV');
-      expect(bare.detected, isFalse);
-    });
+    test(
+      'parse le JSON, label replié sur le code, detected faux par défaut',
+      () {
+        final full = MobileMoneyProviderOption.fromJson(const {
+          'code': 'ORANGE_CIV',
+          'label': 'Orange Money',
+          'detected': true,
+        });
+        expect(full.code, 'ORANGE_CIV');
+        expect(full.label, 'Orange Money');
+        expect(full.detected, isTrue);
+        final bare = MobileMoneyProviderOption.fromJson(const {
+          'code': 'WAVE_CIV',
+        });
+        expect(bare.label, 'WAVE_CIV');
+        expect(bare.detected, isFalse);
+      },
+    );
 
     test('brand est le préfixe avant le premier underscore', () {
       expect(
@@ -26,7 +31,10 @@ void main() {
         const MobileMoneyProviderOption(code: 'MTN_MOMO_CMR', label: 'x').brand,
         'MTN',
       );
-      expect(const MobileMoneyProviderOption(code: 'wave', label: 'x').brand, 'WAVE');
+      expect(
+        const MobileMoneyProviderOption(code: 'wave', label: 'x').brand,
+        'WAVE',
+      );
     });
   });
 
@@ -51,7 +59,11 @@ void main() {
       expect(c.currency, 'XOF');
       expect(c.msisdnMasked, '+225 •••• 36');
       expect(c.detected, 'ORANGE_CIV');
-      expect(c.providers.map((p) => p.code), ['ORANGE_CIV', 'WAVE_CIV', 'MTN_CIV']);
+      expect(c.providers.map((p) => p.code), [
+        'ORANGE_CIV',
+        'WAVE_CIV',
+        'MTN_CIV',
+      ]);
       expect(c.travelerAccepts, ['Orange Money', 'Wave']);
       expect(c.travelerFirstName, 'Aminata');
       expect(c.isEmpty, isFalse);
@@ -59,7 +71,10 @@ void main() {
     });
 
     test('tolère les champs absents (réponse voyageur, liste vide)', () {
-      final c = MobileMoneyProviderCatalog.fromJson(const {'country': 'SN', 'providers': []});
+      final c = MobileMoneyProviderCatalog.fromJson(const {
+        'country': 'SN',
+        'providers': [],
+      });
       expect(c.isEmpty, isTrue);
       expect(c.detected, isNull);
       expect(c.detectedOption, isNull);
@@ -74,27 +89,35 @@ void main() {
       expect(c.ordered({}), isEmpty);
     });
 
-    test('ordered ignore les codes inconnus et conserve l\'ordre du catalogue', () {
-      final c = MobileMoneyProviderCatalog.fromJson(json);
-      expect(c.ordered({'CODE_INEXISTANT', 'ORANGE_CIV'}), ['ORANGE_CIV']);
-    });
+    test(
+      'ordered ignore les codes inconnus et conserve l\'ordre du catalogue',
+      () {
+        final c = MobileMoneyProviderCatalog.fromJson(json);
+        expect(c.ordered({'CODE_INEXISTANT', 'ORANGE_CIV'}), ['ORANGE_CIV']);
+      },
+    );
 
-    test('detectedOption ignore le detected de premier niveau : seul le detected de chaque option compte', () {
-      final codeAbsentDesProviders = MobileMoneyProviderCatalog.fromJson(const {
-        'detected': 'ORANGE_CIV',
-        'providers': [
-          {'code': 'WAVE_CIV', 'label': 'Wave'},
-        ],
-      });
-      expect(codeAbsentDesProviders.detectedOption, isNull);
+    test(
+      'detectedOption ignore le detected de premier niveau : seul le detected de chaque option compte',
+      () {
+        final codeAbsentDesProviders = MobileMoneyProviderCatalog.fromJson(
+          const {
+            'detected': 'ORANGE_CIV',
+            'providers': [
+              {'code': 'WAVE_CIV', 'label': 'Wave'},
+            ],
+          },
+        );
+        expect(codeAbsentDesProviders.detectedOption, isNull);
 
-      final codePresentSansFlag = MobileMoneyProviderCatalog.fromJson(const {
-        'detected': 'ORANGE_CIV',
-        'providers': [
-          {'code': 'ORANGE_CIV', 'label': 'Orange Money'},
-        ],
-      });
-      expect(codePresentSansFlag.detectedOption, isNull);
-    });
+        final codePresentSansFlag = MobileMoneyProviderCatalog.fromJson(const {
+          'detected': 'ORANGE_CIV',
+          'providers': [
+            {'code': 'ORANGE_CIV', 'label': 'Orange Money'},
+          ],
+        });
+        expect(codePresentSansFlag.detectedOption, isNull);
+      },
+    );
   });
 }

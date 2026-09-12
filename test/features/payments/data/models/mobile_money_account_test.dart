@@ -138,28 +138,36 @@ void main() {
         expect(account.providers.map((p) => p.label), ['Orange Money', 'Wave']);
       });
 
-      test('providers explicitement vide fait foi, même avec un provider hérité', () {
-        final account = MobileMoneyAccount.fromJson(const {
-          'providers': [],
-          'provider': 'ORANGE_CIV',
-          'providerLabel': 'Orange Money',
-        });
-        expect(account.providers, isEmpty);
-        expect(account.provider, 'ORANGE_CIV');
-      });
+      test(
+        'providers explicitement vide fait foi, même avec un provider hérité',
+        () {
+          final account = MobileMoneyAccount.fromJson(const {
+            'providers': [],
+            'provider': 'ORANGE_CIV',
+            'providerLabel': 'Orange Money',
+          });
+          expect(account.providers, isEmpty);
+          expect(account.provider, 'ORANGE_CIV');
+        },
+      );
 
-      test('ancien contrat sans liste : repli sur provider et providerLabel', () {
-        final account = MobileMoneyAccount.fromJson(const {
-          'status': 'ACTIVE',
-          'provider': 'ORANGE_CIV',
-          'providerLabel': 'Orange Money',
-        });
-        expect(account.providers.single.code, 'ORANGE_CIV');
-        expect(account.providers.single.label, 'Orange Money');
-      });
+      test(
+        'ancien contrat sans liste : repli sur provider et providerLabel',
+        () {
+          final account = MobileMoneyAccount.fromJson(const {
+            'status': 'ACTIVE',
+            'provider': 'ORANGE_CIV',
+            'providerLabel': 'Orange Money',
+          });
+          expect(account.providers.single.code, 'ORANGE_CIV');
+          expect(account.providers.single.label, 'Orange Money');
+        },
+      );
 
       test('compte non configuré : aucune liste', () {
-        final account = MobileMoneyAccount.fromJson(const {'status': 'NOT_CONFIGURED'});
+        final account = MobileMoneyAccount.fromJson(const {
+          'status': 'NOT_CONFIGURED',
+        });
         expect(account.providers, isEmpty);
         expect(account.provider, isNull);
       });
