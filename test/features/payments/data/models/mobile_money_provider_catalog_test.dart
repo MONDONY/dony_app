@@ -61,6 +61,7 @@ void main() {
     test('tolère les champs absents (réponse voyageur, liste vide)', () {
       final c = MobileMoneyProviderCatalog.fromJson(const {'country': 'SN', 'providers': []});
       expect(c.isEmpty, isTrue);
+      expect(c.detected, isNull);
       expect(c.detectedOption, isNull);
       expect(c.travelerAccepts, isEmpty);
       expect(c.travelerFirstName, isNull);
@@ -71,6 +72,29 @@ void main() {
       final c = MobileMoneyProviderCatalog.fromJson(json);
       expect(c.ordered({'MTN_CIV', 'ORANGE_CIV'}), ['ORANGE_CIV', 'MTN_CIV']);
       expect(c.ordered({}), isEmpty);
+    });
+
+    test('ordered ignore les codes inconnus et conserve l\'ordre du catalogue', () {
+      final c = MobileMoneyProviderCatalog.fromJson(json);
+      expect(c.ordered({'CODE_INEXISTANT', 'ORANGE_CIV'}), ['ORANGE_CIV']);
+    });
+
+    test('detectedOption ignore le detected de premier niveau : seul le detected de chaque option compte', () {
+      final codeAbsentDesProviders = MobileMoneyProviderCatalog.fromJson(const {
+        'detected': 'ORANGE_CIV',
+        'providers': [
+          {'code': 'WAVE_CIV', 'label': 'Wave'},
+        ],
+      });
+      expect(codeAbsentDesProviders.detectedOption, isNull);
+
+      final codePresentSansFlag = MobileMoneyProviderCatalog.fromJson(const {
+        'detected': 'ORANGE_CIV',
+        'providers': [
+          {'code': 'ORANGE_CIV', 'label': 'Orange Money'},
+        ],
+      });
+      expect(codePresentSansFlag.detectedOption, isNull);
     });
   });
 }

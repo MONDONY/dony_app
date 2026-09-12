@@ -29,7 +29,9 @@ class MobileMoneyAccount extends Equatable {
   final String? country;
   final String? currency;
 
-  /// Réseaux acceptés. Ancien contrat sans liste : repli sur [provider].
+  /// Réseaux acceptés. La liste, si présente, fait foi même vide ; repli sur
+  /// [provider]/[providerLabel] uniquement si la clé est absente ou n'est
+  /// pas une liste (ancien contrat, ou JSON mal typé).
   final List<MobileMoneyProviderOption> providers;
 
   factory MobileMoneyAccount.fromJson(Map<String, dynamic> json) =>
@@ -47,7 +49,7 @@ class MobileMoneyAccount extends Equatable {
     Map<String, dynamic> json,
   ) {
     final raw = json['providers'];
-    if (raw is List && raw.isNotEmpty) {
+    if (raw is List) {
       return raw
           .whereType<Map<String, dynamic>>()
           .map(MobileMoneyProviderOption.fromJson)

@@ -138,6 +138,16 @@ void main() {
         expect(account.providers.map((p) => p.label), ['Orange Money', 'Wave']);
       });
 
+      test('providers explicitement vide fait foi, même avec un provider hérité', () {
+        final account = MobileMoneyAccount.fromJson(const {
+          'providers': [],
+          'provider': 'ORANGE_CIV',
+          'providerLabel': 'Orange Money',
+        });
+        expect(account.providers, isEmpty);
+        expect(account.provider, 'ORANGE_CIV');
+      });
+
       test('ancien contrat sans liste : repli sur provider et providerLabel', () {
         final account = MobileMoneyAccount.fromJson(const {
           'status': 'ACTIVE',
