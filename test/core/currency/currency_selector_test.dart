@@ -150,6 +150,62 @@ void main() {
     expect(find.text('Espèces uniquement en GBP'), findsOneWidget);
   });
 
+  testWidgets('une devise avec le rail mobile money annonce mobile money et '
+      'espèces', (tester) async {
+    registerCurrencyPreference('XOF');
+
+    await pumpAndOpen(
+      tester,
+      options: [
+        const CurrencyPaymentOption(
+          currency: SupportedCurrency.xof,
+          availablePaymentMethods: {
+            BidPaymentMethod.mobileMoney,
+            BidPaymentMethod.cash,
+          },
+        ),
+      ],
+    );
+
+    expect(
+      find.text('Mobile money et espèces disponibles en XOF'),
+      findsOneWidget,
+    );
+    expect(find.text('Espèces uniquement en XOF'), findsNothing);
+    expect(
+      find.textContaining('paiement par mobile money ou en espèces'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('le sous-titre de l\'option mentionne le mobile money quand le '
+      'rail est annoncé', (tester) async {
+    registerCurrencyPreference('EUR');
+
+    await pumpAndOpen(
+      tester,
+      options: [
+        const CurrencyPaymentOption(
+          currency: SupportedCurrency.eur,
+          availablePaymentMethods: {
+            BidPaymentMethod.stripe,
+            BidPaymentMethod.cash,
+          },
+        ),
+        const CurrencyPaymentOption(
+          currency: SupportedCurrency.xaf,
+          availablePaymentMethods: {
+            BidPaymentMethod.mobileMoney,
+            BidPaymentMethod.cash,
+          },
+        ),
+      ],
+    );
+
+    expect(find.text('Mobile money et espèces'), findsOneWidget);
+    expect(find.text('Carte et espèces'), findsOneWidget);
+  });
+
   testWidgets('aucun tiret cadratin dans les libellés affichés', (
     tester,
   ) async {
@@ -167,7 +223,10 @@ void main() {
         ),
         const CurrencyPaymentOption(
           currency: SupportedCurrency.xof,
-          availablePaymentMethods: {BidPaymentMethod.cash},
+          availablePaymentMethods: {
+            BidPaymentMethod.mobileMoney,
+            BidPaymentMethod.cash,
+          },
         ),
       ],
     );

@@ -47,6 +47,11 @@ class CurrencyPaymentOption {
   /// Vrai si le serveur a confirmé le rail carte pour cette devise.
   bool get hasCardRail =>
       availablePaymentMethods.contains(BidPaymentMethod.stripe);
+
+  /// Vrai si le serveur a confirmé le rail mobile money (pawaPay) pour cette
+  /// devise.
+  bool get hasMobileMoneyRail =>
+      availablePaymentMethods.contains(BidPaymentMethod.mobileMoney);
 }
 
 /// Sélecteur de devise partagé — utilisé par les formulaires de création
@@ -107,8 +112,10 @@ class _CurrencyOptionList extends StatelessWidget {
   }
 
   String _subtitleFor(SupportedCurrency currency) {
-    final hasCardRail = _optionFor(currency)?.hasCardRail ?? false;
-    return hasCardRail ? 'Carte et espèces' : 'Espèces uniquement';
+    final option = _optionFor(currency);
+    if (option?.hasCardRail ?? false) return 'Carte et espèces';
+    if (option?.hasMobileMoneyRail ?? false) return 'Mobile money et espèces';
+    return 'Espèces uniquement';
   }
 
   @override
@@ -116,7 +123,9 @@ class _CurrencyOptionList extends StatelessWidget {
     return ValueListenableBuilder<SupportedCurrency>(
       valueListenable: selected,
       builder: (context, value, _) {
-        final hasCardRail = _optionFor(value)?.hasCardRail ?? false;
+        final option = _optionFor(value);
+        final hasCardRail = option?.hasCardRail ?? false;
+        final hasMobileMoneyRail = option?.hasMobileMoneyRail ?? false;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -141,6 +150,7 @@ class _CurrencyOptionList extends StatelessWidget {
               key: const Key('currency-payment-methods-notice'),
               currency: value,
               hasCardRail: hasCardRail,
+              hasMobileMoneyRail: hasMobileMoneyRail,
             ),
           ],
         );
@@ -156,27 +166,39 @@ class _PaymentMethodsNotice extends StatelessWidget {
     super.key,
     required this.currency,
     required this.hasCardRail,
+    required this.hasMobileMoneyRail,
   });
 
   final SupportedCurrency currency;
   final bool hasCardRail;
+  final bool hasMobileMoneyRail;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    final title = hasCardRail
-        ? 'Carte et espèces disponibles en ${currency.code}'
-        : 'Espèces uniquement en ${currency.code}';
-    final description = hasCardRail
-        ? 'Le voyageur peut accepter un paiement par carte ou en espèces pour cette devise.'
-        : 'Le paiement par carte n\'est pas proposé pour cette devise : soit le '
-              'voyageur n\'a pas encore activé les paiements Yadony, soit '
-              '${currency.code} n\'est pas prise en charge par Stripe. Seul le '
-              'paiement en espèces sera possible.';
-    final semanticsLabel = hasCardRail
-        ? 'Carte et espèces disponibles en ${currency.displayName}.'
+    final String title;
+    final String description;
+    if (hasCardRail) {
+      title = 'Carte et espèces disponibles en ${currency.code}';
+      description =
+          'Le voyageur peut accepter un paiement par carte ou en espèces pour cette devise.';
+    } else if (hasMobileMoneyRail) {
+      title = 'Mobile money et espèces disponibles en ${currency.code}';
+      description =
+          'Le voyageur peut accepter un paiement par mobile money ou en espèces pour cette devise.';
+    } else {
+      title = 'Espèces uniquement en ${currency.code}';
+      description =
+          'Le paiement par carte n\'est pas proposé pour cette devise : soit le '
+          'voyageur n\'a pas encore activé les paiements Yadony, soit '
+          '${currency.code} n\'est pas prise en charge par Stripe. Seul le '
+          'paiement en espèces sera possible.';
+    }
+    final hasRail = hasCardRail || hasMobileMoneyRail;
+    final semanticsLabel = hasRail
+        ? '$title.'.replaceFirst(currency.code, currency.displayName)
         : 'Espèces uniquement en ${currency.displayName}. $description';
 
     return Semantics(
@@ -186,22 +208,20 @@ class _PaymentMethodsNotice extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(DonySpacing.base),
           decoration: BoxDecoration(
-            color: hasCardRail ? cs.successLight : cs.infoLight,
+            color: hasRail ? cs.successLight : cs.infoLight,
             borderRadius: BorderRadius.circular(DonyRadius.card),
             border: Border.all(
-              color: (hasCardRail ? cs.success : cs.info).withValues(
-                alpha: 0.35,
-              ),
+              color: (hasRail ? cs.success : cs.info).withValues(alpha: 0.35),
             ),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Icon(
-                hasCardRail
+                hasRail
                     ? Icons.check_circle_outline_rounded
                     : Icons.info_outline_rounded,
-                color: hasCardRail ? cs.success : cs.info,
+                color: hasRail ? cs.success : cs.info,
               ),
               const SizedBox(width: DonySpacing.md),
               Expanded(

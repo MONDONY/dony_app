@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -85,6 +86,11 @@ class PackageRequestFormBloc
       totalBudgetEur: gross,
       targetPriceEur: gross,
       promoCode: r.promoCode,
+      // Devise de la demande éditée, pas celle du portefeuille actif : sinon
+      // les puces de l'étape 3 se calent sur ActiveCurrency et proposent
+      // « Mobile money » sur une demande EUR (ou « Carte » sur une XOF) qui
+      // sera silencieusement retirée au PUT (restrictToCurrency côté back).
+      currency: SupportedCurrency.fromCodeOrDefault(r.currency),
     );
   }
 
@@ -252,20 +258,24 @@ class PackageRequestFormBloc
   static bool canDeselectPaymentMethod(Set<PaymentMethod> selected) =>
       selected.length > 1;
 
-  /// La devise borne les moyens de paiement : passer en franc CFA retire la
-  /// carte (le serveur la retirerait de toute façon), repasser en euro la
-  /// remet. Le choix ne reste jamais vide : l'espèce est toujours possible.
+  /// La devise borne les moyens de paiement : entrer en franc CFA retire la
+  /// carte (le serveur la retirerait de toute façon) et coche le mobile money
+  /// avec les espèces, l'expéditeur pouvant le décocher ensuite ; entre XOF
+  /// et XAF le choix est conservé ; repasser en euro retire le mobile money.
+  /// Le choix ne reste jamais vide : l'espèce est toujours possible.
   void _onCurrencyChanged(
     PackageRequestCurrencyChanged e,
     Emitter<PackageRequestFormState> emit,
   ) {
     final allowed = PaymentMethod.selectableIn(e.currency);
-    final next = state.acceptedPaymentMethods.where(allowed.contains).toSet();
-    if (!e.currency.isStripeEligible && next.isEmpty) {
-      next.add(PaymentMethod.cash);
-    }
+    final enteringCfa =
+        e.currency.isMobileMoneyEligible &&
+        !(state.currency?.isMobileMoneyEligible ?? false);
+    final next = enteringCfa
+        ? allowed.toSet()
+        : state.acceptedPaymentMethods.where(allowed.contains).toSet();
     if (next.isEmpty) {
-      next.addAll(state.acceptedPaymentMethods);
+      next.add(PaymentMethod.cash);
     }
     emit(state.copyWith(currency: e.currency, acceptedPaymentMethods: next));
   }

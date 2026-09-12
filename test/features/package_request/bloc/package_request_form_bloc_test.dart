@@ -762,6 +762,35 @@ void main() {
       PaymentMethod.cash,
     });
     expect(s.totalBudgetEur, closeTo(56.0, 0.001));
+    // I1 : la devise de la demande éditée (ici EUR, valeur par défaut de
+    // editRequest), pas celle du portefeuille actif.
+    expect(s.currency, SupportedCurrency.eur);
+    bloc.close();
+  });
+
+  test('I1 : mode édition d\'une demande XOF : state.currency == xof, pas la '
+      'devise du portefeuille', () {
+    final xofEditRequest = PackageRequest(
+      id: 'r-edit-xof',
+      senderId: 's-1',
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      desiredDate: DateTime(2026, 7, 20),
+      dateToleranceDays: 3,
+      weightKg: 5,
+      parcelSize: ParcelSize.small,
+      transportMode: TransportMode.plane,
+      status: PackageRequestStatus.open,
+      createdAt: DateTime(2026, 5, 10),
+      currency: 'XOF',
+      acceptedPaymentMethods: const {PaymentMethod.cash},
+    );
+    final bloc = PackageRequestFormBloc(
+      repo,
+      analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+      editing: xofEditRequest,
+    );
+    expect(bloc.state.currency, SupportedCurrency.xof);
     bloc.close();
   });
 
@@ -1068,10 +1097,13 @@ void main() {
 
   // La devise borne les moyens : une demande en franc CFA ne peut pas cocher
   // la carte, que le serveur retirerait et que le fil proposerait pour rien.
+  // Entrer en zone CFA coche le mobile money avec les espèces : l'expéditeur
+  // n'a pas encore eu l'occasion de le refuser dans cette devise.
   blocTest<PackageRequestFormBloc, PackageRequestFormState>(
-    'passage en XOF retire la carte et garde les espèces',
+    'passage en XOF retire la carte et coche mobile money et espèces',
     build: () => makeBloc(repo),
     seed: () => const PackageRequestFormState(
+      currency: SupportedCurrency.eur,
       acceptedPaymentMethods: {PaymentMethod.stripe, PaymentMethod.cash},
     ),
     act: (b) =>
@@ -1080,13 +1112,14 @@ void main() {
       isA<PackageRequestFormState>()
           .having((s) => s.currency, 'currency', SupportedCurrency.xof)
           .having((s) => s.acceptedPaymentMethods, 'acceptedPaymentMethods', {
+            PaymentMethod.mobileMoney,
             PaymentMethod.cash,
           }),
     ],
   );
 
   blocTest<PackageRequestFormBloc, PackageRequestFormState>(
-    'passage en XOF avec la carte seule cochée bascule sur les espèces',
+    'premier seed en XAF (carte seule par défaut) coche mobile money et espèces',
     build: () => makeBloc(repo),
     seed: () => const PackageRequestFormState(),
     act: (b) =>
@@ -1095,8 +1128,46 @@ void main() {
       isA<PackageRequestFormState>().having(
         (s) => s.acceptedPaymentMethods,
         'acceptedPaymentMethods',
-        {PaymentMethod.cash},
+        {PaymentMethod.mobileMoney, PaymentMethod.cash},
       ),
+    ],
+  );
+
+  blocTest<PackageRequestFormBloc, PackageRequestFormState>(
+    'passage de XOF à XAF garde le choix courant (mobile money décoché reste '
+    'décoché)',
+    build: () => makeBloc(repo),
+    seed: () => const PackageRequestFormState(
+      currency: SupportedCurrency.xof,
+      acceptedPaymentMethods: {PaymentMethod.cash},
+    ),
+    act: (b) =>
+        b.add(const PackageRequestCurrencyChanged(SupportedCurrency.xaf)),
+    expect: () => [
+      isA<PackageRequestFormState>()
+          .having((s) => s.currency, 'currency', SupportedCurrency.xaf)
+          .having((s) => s.acceptedPaymentMethods, 'acceptedPaymentMethods', {
+            PaymentMethod.cash,
+          }),
+    ],
+  );
+
+  blocTest<PackageRequestFormBloc, PackageRequestFormState>(
+    'passage de XOF (mobile money seul) à EUR retombe sur les espèces, jamais '
+    'de mobile money hors zone CFA',
+    build: () => makeBloc(repo),
+    seed: () => const PackageRequestFormState(
+      currency: SupportedCurrency.xof,
+      acceptedPaymentMethods: {PaymentMethod.mobileMoney},
+    ),
+    act: (b) =>
+        b.add(const PackageRequestCurrencyChanged(SupportedCurrency.eur)),
+    expect: () => [
+      isA<PackageRequestFormState>()
+          .having((s) => s.currency, 'currency', SupportedCurrency.eur)
+          .having((s) => s.acceptedPaymentMethods, 'acceptedPaymentMethods', {
+            PaymentMethod.cash,
+          }),
     ],
   );
 
