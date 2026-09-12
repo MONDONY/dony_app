@@ -72,6 +72,19 @@ class MobileMoneyAccountScreen extends StatelessWidget {
             MobileMoneyAccountPhoneRequired(:final account) => _AccountBody(
               account: account,
             ),
+            // Catalogue des réseaux (feuille dédiée, écran Task 6) : cette vue
+            // ne l'exploite pas encore, seul le compte courant est affiché,
+            // sans jamais déclencher de snackbar.
+            MobileMoneyAccountProvidersLoading(:final account) => _AccountBody(
+              account: account,
+              isLoading: true,
+            ),
+            MobileMoneyAccountProvidersLoaded(:final account) => _AccountBody(
+              account: account,
+            ),
+            MobileMoneyAccountProvidersError(:final account) => _AccountBody(
+              account: account,
+            ),
             // Échec d'activation/désactivation : le dernier compte connu reste
             // affiché (le listener ci-dessus a déjà notifié l'erreur).
             MobileMoneyAccountError(:final account) when account != null =>

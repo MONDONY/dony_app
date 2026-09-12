@@ -6,6 +6,7 @@ import 'package:dony/features/payments/bloc/mobile_money_account_bloc.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_event.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_state.dart';
 import 'package:dony/features/payments/data/models/mobile_money_account.dart';
+import 'package:dony/features/payments/data/models/mobile_money_provider_catalog.dart';
 import 'package:dony/features/payments/data/repositories/mobile_money_account_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -34,6 +35,20 @@ void main() {
     providerLabel: 'Orange Money',
     country: 'SN',
     currency: 'XOF',
+  );
+  const catalog = MobileMoneyProviderCatalog(
+    country: 'CI',
+    currency: 'XOF',
+    msisdnMasked: '+225 •••• 36',
+    detected: 'ORANGE_CIV',
+    providers: [
+      MobileMoneyProviderOption(
+        code: 'ORANGE_CIV',
+        label: 'Orange Money',
+        detected: true,
+      ),
+      MobileMoneyProviderOption(code: 'WAVE_CIV', label: 'Wave'),
+    ],
   );
 
   setUp(() {
@@ -103,7 +118,11 @@ void main() {
         verify(
           () => analytics.logEvent(
             AnalyticsEvents.mobileMoneyAccountActivated,
-            properties: {'provider': 'Orange Money', 'currency': 'XOF'},
+            properties: {
+              'provider': 'Orange Money',
+              'providers_count': 0,
+              'currency': 'XOF',
+            },
           ),
         ).called(1);
       },
@@ -159,7 +178,11 @@ void main() {
         verify(
           () => analytics.logEvent(
             AnalyticsEvents.mobileMoneyAccountActivated,
-            properties: {'provider': 'inconnu', 'currency': ''},
+            properties: {
+              'provider': 'inconnu',
+              'providers_count': 0,
+              'currency': '',
+            },
           ),
         ).called(1);
       },
@@ -329,6 +352,179 @@ void main() {
           () => analytics.logEvent(any(), properties: any(named: 'properties')),
         );
       },
+    );
+  });
+
+  group('MobileMoneyAccountProvidersRequested', () {
+    blocTest<MobileMoneyAccountBloc, MobileMoneyAccountState>(
+      'émet ProvidersLoading puis ProvidersLoaded, compte courant conservé',
+      build: () {
+        when(
+          () => repository.providers(phoneNumber: '+225070809'),
+        ).thenAnswer((_) async => catalog);
+        return bloc();
+      },
+      seed: () => const MobileMoneyAccountLoaded(notConfigured),
+      act: (b) => b.add(
+        const MobileMoneyAccountProvidersRequested(phoneNumber: '+225070809'),
+      ),
+      expect: () => [
+        const MobileMoneyAccountProvidersLoading(notConfigured),
+        const MobileMoneyAccountProvidersLoaded(notConfigured, catalog),
+      ],
+    );
+
+    blocTest<MobileMoneyAccountBloc, MobileMoneyAccountState>(
+      'sans numéro (feuille) : interroge le numéro enregistré',
+      build: () {
+        when(() => repository.providers()).thenAnswer((_) async => catalog);
+        return bloc();
+      },
+      seed: () => const MobileMoneyAccountLoaded(active),
+      act: (b) => b.add(const MobileMoneyAccountProvidersRequested()),
+      expect: () => [
+        const MobileMoneyAccountProvidersLoading(active),
+        const MobileMoneyAccountProvidersLoaded(active, catalog),
+      ],
+      verify: (_) => verify(() => repository.providers()).called(1),
+    );
+
+    blocTest<MobileMoneyAccountBloc, MobileMoneyAccountState>(
+      'échec : ProvidersError avec l\'erreur déballée, jamais Error (pas de snackbar)',
+      build: () {
+        when(
+          () => repository.providers(phoneNumber: '+33612'),
+        ).thenThrow(const OfflineException());
+        return bloc();
+      },
+      seed: () => const MobileMoneyAccountLoaded(notConfigured),
+      act: (b) => b.add(
+        const MobileMoneyAccountProvidersRequested(phoneNumber: '+33612'),
+      ),
+      expect: () => [
+        const MobileMoneyAccountProvidersLoading(notConfigured),
+        isA<MobileMoneyAccountProvidersError>()
+            .having((s) => s.error, 'error', isA<OfflineException>())
+            .having((s) => s.account, 'account', notConfigured),
+      ],
+    );
+
+    blocTest<MobileMoneyAccountBloc, MobileMoneyAccountState>(
+      'conserve editingNumber pendant le catalogue',
+      build: () {
+        when(
+          () => repository.providers(phoneNumber: '+225070809'),
+        ).thenAnswer((_) async => catalog);
+        return bloc();
+      },
+      seed: () => const MobileMoneyAccountLoaded(active, editingNumber: true),
+      act: (b) => b.add(
+        const MobileMoneyAccountProvidersRequested(phoneNumber: '+225070809'),
+      ),
+      expect: () => [
+        const MobileMoneyAccountProvidersLoading(active, editingNumber: true),
+        const MobileMoneyAccountProvidersLoaded(
+          active,
+          catalog,
+          editingNumber: true,
+        ),
+      ],
+    );
+  });
+
+  group('MobileMoneyAccountProvidersCleared', () {
+    blocTest<MobileMoneyAccountBloc, MobileMoneyAccountState>(
+      'revient à Loaded avec le compte courant',
+      build: bloc,
+      seed: () =>
+          const MobileMoneyAccountProvidersLoaded(notConfigured, catalog),
+      act: (b) => b.add(const MobileMoneyAccountProvidersCleared()),
+      expect: () => [const MobileMoneyAccountLoaded(notConfigured)],
+    );
+  });
+
+  group('MobileMoneyAccountActivateRequested avec réseaux', () {
+    blocTest<MobileMoneyAccountBloc, MobileMoneyAccountState>(
+      'transmet numéro et réseaux au repository, émet Updating puis Loaded sans édition',
+      build: () {
+        when(
+          () => repository.activate(
+            phoneNumber: '+225070809',
+            providers: ['ORANGE_CIV', 'WAVE_CIV'],
+          ),
+        ).thenAnswer((_) async => active);
+        return bloc();
+      },
+      seed: () => const MobileMoneyAccountProvidersLoaded(
+        notConfigured,
+        catalog,
+        editingNumber: true,
+      ),
+      act: (b) => b.add(
+        const MobileMoneyAccountActivateRequested(
+          phoneNumber: '+225070809',
+          providers: ['ORANGE_CIV', 'WAVE_CIV'],
+        ),
+      ),
+      expect: () => [
+        const MobileMoneyAccountUpdating(notConfigured, editingNumber: true),
+        const MobileMoneyAccountLoaded(active),
+      ],
+    );
+  });
+
+  group('MobileMoneyAccountProvidersUpdateRequested', () {
+    blocTest<MobileMoneyAccountBloc, MobileMoneyAccountState>(
+      'émet Updating puis Loaded avec le compte renvoyé',
+      build: () {
+        when(
+          () => repository.updateProviders(['WAVE_CIV']),
+        ).thenAnswer((_) async => active);
+        return bloc();
+      },
+      seed: () => const MobileMoneyAccountProvidersLoaded(active, catalog),
+      act: (b) =>
+          b.add(const MobileMoneyAccountProvidersUpdateRequested(['WAVE_CIV'])),
+      expect: () => [
+        const MobileMoneyAccountUpdating(active),
+        const MobileMoneyAccountLoaded(active),
+      ],
+    );
+
+    blocTest<MobileMoneyAccountBloc, MobileMoneyAccountState>(
+      'échec : Error avec le compte conservé',
+      build: () {
+        when(
+          () => repository.updateProviders(['WAVE_CIV']),
+        ).thenThrow(const OfflineException());
+        return bloc();
+      },
+      seed: () => const MobileMoneyAccountLoaded(active),
+      act: (b) =>
+          b.add(const MobileMoneyAccountProvidersUpdateRequested(['WAVE_CIV'])),
+      expect: () => [
+        const MobileMoneyAccountUpdating(active),
+        isA<MobileMoneyAccountError>().having(
+          (s) => s.account,
+          'account',
+          active,
+        ),
+      ],
+    );
+  });
+
+  group('changement de numéro', () {
+    blocTest<MobileMoneyAccountBloc, MobileMoneyAccountState>(
+      'ChangeNumberRequested passe en édition, ChangeNumberCancelled en sort',
+      build: bloc,
+      seed: () => const MobileMoneyAccountLoaded(active),
+      act: (b) => b
+        ..add(const MobileMoneyAccountChangeNumberRequested())
+        ..add(const MobileMoneyAccountChangeNumberCancelled()),
+      expect: () => [
+        const MobileMoneyAccountLoaded(active, editingNumber: true),
+        const MobileMoneyAccountLoaded(active),
+      ],
     );
   });
 }

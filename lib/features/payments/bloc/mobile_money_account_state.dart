@@ -1,4 +1,5 @@
 import 'package:dony/features/payments/data/models/mobile_money_account.dart';
+import 'package:dony/features/payments/data/models/mobile_money_provider_catalog.dart';
 import 'package:equatable/equatable.dart';
 
 sealed class MobileMoneyAccountState extends Equatable {
@@ -17,24 +18,71 @@ class MobileMoneyAccountLoading extends MobileMoneyAccountState {
 }
 
 class MobileMoneyAccountLoaded extends MobileMoneyAccountState {
-  const MobileMoneyAccountLoaded(this.account);
-
+  const MobileMoneyAccountLoaded(this.account, {this.editingNumber = false});
   final MobileMoneyAccount account;
 
+  /// Vrai quand le voyageur a demandé à changer son numéro depuis la vue
+  /// active : l'écran affiche alors le formulaire malgré un compte actif.
+  final bool editingNumber;
+
   @override
-  List<Object?> get props => [account];
+  List<Object?> get props => [account, editingNumber];
 }
 
 /// Activation ou désactivation en cours. Porte le dernier compte connu (ou
 /// le compte par défaut non configuré) pour que l'écran reste affichable
 /// pendant l'appel réseau, sans clignoter vers un état vide.
 class MobileMoneyAccountUpdating extends MobileMoneyAccountState {
-  const MobileMoneyAccountUpdating(this.account);
-
+  const MobileMoneyAccountUpdating(this.account, {this.editingNumber = false});
   final MobileMoneyAccount account;
+  final bool editingNumber;
 
   @override
-  List<Object?> get props => [account];
+  List<Object?> get props => [account, editingNumber];
+}
+
+/// Catalogue des réseaux en cours de chargement (squelette dans l'écran).
+class MobileMoneyAccountProvidersLoading extends MobileMoneyAccountState {
+  const MobileMoneyAccountProvidersLoading(
+    this.account, {
+    this.editingNumber = false,
+  });
+  final MobileMoneyAccount account;
+  final bool editingNumber;
+
+  @override
+  List<Object?> get props => [account, editingNumber];
+}
+
+/// Catalogue chargé : la liste des réseaux à cocher s'affiche.
+class MobileMoneyAccountProvidersLoaded extends MobileMoneyAccountState {
+  const MobileMoneyAccountProvidersLoaded(
+    this.account,
+    this.catalog, {
+    this.editingNumber = false,
+  });
+  final MobileMoneyAccount account;
+  final MobileMoneyProviderCatalog catalog;
+  final bool editingNumber;
+
+  @override
+  List<Object?> get props => [account, catalog, editingNumber];
+}
+
+/// Catalogue en échec (numéro inconnu, pawaPay muet) : bandeau dans
+/// l'écran, jamais de snackbar, le formulaire reste saisissable.
+class MobileMoneyAccountProvidersError extends MobileMoneyAccountState {
+  const MobileMoneyAccountProvidersError(
+    this.account,
+    this.error, {
+    this.editingNumber = false,
+  });
+  final MobileMoneyAccount account;
+  final Object error;
+  final bool editingNumber;
+
+  @override
+  List<Object?> get props => [account, error, editingNumber];
 }
 
 /// Activation refusée par le backend faute de numéro disponible (compte
