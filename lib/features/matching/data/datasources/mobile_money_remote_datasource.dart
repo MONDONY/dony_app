@@ -1,6 +1,7 @@
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/matching/data/models/mobile_money_payment_status.dart';
 import 'package:dony/features/matching/data/models/mobile_money_scope.dart';
+import 'package:dony/features/payments/data/models/mobile_money_provider_catalog.dart';
 
 class MobileMoneyRemoteDatasource {
   const MobileMoneyRemoteDatasource(this._client);
@@ -11,6 +12,24 @@ class MobileMoneyRemoteDatasource {
       scope.statusPath,
     );
     return MobileMoneyPaymentStatus.fromJson(response.data!);
+  }
+
+  /// Réseaux avec lesquels l'expéditeur peut payer ce colis : ceux de son
+  /// numéro ([phoneNumber], sinon celui du bid), restreints par le back aux
+  /// marques acceptées par le voyageur. Liste vide = aucun réseau commun.
+  Future<MobileMoneyProviderCatalog> providers(
+    String bidId, {
+    String? phoneNumber,
+  }) async {
+    final trimmed = phoneNumber?.trim();
+    final body = (trimmed != null && trimmed.isNotEmpty)
+        ? {'phoneNumber': trimmed}
+        : null;
+    final response = await _client.dio.post<Map<String, dynamic>>(
+      '/bids/$bidId/mobile-money/providers',
+      data: body,
+    );
+    return MobileMoneyProviderCatalog.fromJson(response.data!);
   }
 
   /// Initie (ou relance) une tentative de paiement mobile money. Le numéro

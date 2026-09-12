@@ -9,6 +9,13 @@ class MockApiClient extends Mock implements ApiClient {}
 
 class MockDio extends Mock implements Dio {}
 
+Response<Map<String, dynamic>> _ok(Map<String, dynamic> data, String path) =>
+    Response(
+      data: data,
+      statusCode: 200,
+      requestOptions: RequestOptions(path: path),
+    );
+
 void main() {
   late MockApiClient apiClient;
   late MockDio dio;
@@ -132,6 +139,95 @@ void main() {
         );
 
         expect(datasource.getStatus(bidScope), throwsA(isA<DioException>()));
+      });
+    });
+
+    group('providers', () {
+      const path = '/bids/$bidId/mobile-money/providers';
+      final catalogJson = {
+        'country': 'CI',
+        'currency': 'XOF',
+        'msisdnMasked': '+225 •••• 77',
+        'detected': 'ORANGE_CIV',
+        'providers': [
+          {'code': 'ORANGE_CIV', 'label': 'Orange Money', 'detected': true},
+        ],
+        'travelerAccepts': ['Orange Money', 'Wave'],
+        'travelerFirstName': 'Aminata',
+      };
+
+      test('sans numéro : corps null', () async {
+        when(
+          () => dio.post<Map<String, dynamic>>(
+            path,
+            // ignore: avoid_redundant_argument_values
+            data: null,
+          ),
+        ).thenAnswer((_) async => _ok(catalogJson, path));
+
+        final result = await datasource.providers(bidId);
+
+        expect(result.travelerFirstName, 'Aminata');
+        expect(result.providers.single.code, 'ORANGE_CIV');
+      });
+
+      test('numéro non vide : envoyé après trim', () async {
+        when(
+          () => dio.post<Map<String, dynamic>>(
+            path,
+            data: {'phoneNumber': '+225 05'},
+          ),
+        ).thenAnswer((_) async => _ok(catalogJson, path));
+
+        await datasource.providers(bidId, phoneNumber: '  +225 05  ');
+
+        verify(
+          () => dio.post<Map<String, dynamic>>(
+            path,
+            data: {'phoneNumber': '+225 05'},
+          ),
+        ).called(1);
+      });
+
+      test('numéro vide après trim : corps null', () async {
+        when(
+          () => dio.post<Map<String, dynamic>>(
+            path,
+            // ignore: avoid_redundant_argument_values
+            data: null,
+          ),
+        ).thenAnswer((_) async => _ok(catalogJson, path));
+
+        await datasource.providers(bidId, phoneNumber: '   ');
+
+        verify(
+          () => dio.post<Map<String, dynamic>>(
+            path,
+            // ignore: avoid_redundant_argument_values
+            data: null,
+          ),
+        ).called(1);
+      });
+
+      test('propage la DioException', () async {
+        when(
+          () => dio.post<Map<String, dynamic>>(
+            path,
+            // ignore: avoid_redundant_argument_values
+            data: null,
+          ),
+        ).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: path),
+            type: DioExceptionType.badResponse,
+            response: Response(
+              statusCode: 422,
+              requestOptions: RequestOptions(path: path),
+            ),
+          ),
+        );
+
+        expect(datasource.providers(bidId), throwsA(isA<DioException>()));
       });
     });
 
