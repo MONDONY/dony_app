@@ -337,6 +337,21 @@ DonyEmptyState(
 - Ne pas mettre `mascotte:` dans un `DonyEmptyState(type: loading)` (la branche loading l'ignore)
 - `withGlow: true` réservé aux écrans de succès / confirmation finale
 
+### `DonyBrandMark` / `DonyOperatorTile`
+
+Pastille d'un réseau mobile money (initiale sur la couleur de la marque, `size` par défaut 40, rayon `size / 4`) et ligne de réseau (pastille, nom, sous-titre, case ou radio dessinée à droite, ligne entière tappable, 44 px minimum). L'état de sélection vit chez l'appelant.
+
+```dart
+DonyOperatorTile(
+  brand: 'ORANGE',                 // null → ligne d'en-tête sans pastille
+  title: 'Orange Money',
+  subtitle: 'Détecté pour ce numéro',
+  control: DonyOperatorControl.checkbox,   // checkbox | radio
+  selected: true,
+  onChanged: (v) => ...,
+)
+```
+
 ---
 
 ## Règles obligatoires
