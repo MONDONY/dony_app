@@ -948,11 +948,14 @@ void main() {
         await tester.pump();
 
         // Le back ancien accepte {phoneNumber} seul : le repository omet
-        // providers vide plutôt que de l'envoyer explicitement.
+        // providers vide plutôt que de l'envoyer explicitement. Valeur
+        // explicite (égale au défaut) pour que mocktail matche exactement
+        // l'appel réel du widget.
         verify(
           () => bloc.add(
             const MobileMoneyAccountActivateRequested(
               phoneNumber: '+221773456789',
+              // ignore: avoid_redundant_argument_values
               providers: [],
             ),
           ),
