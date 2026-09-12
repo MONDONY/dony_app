@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dony/core/currency/country_catalog.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
@@ -15,6 +16,7 @@ import 'package:dony/features/matching/bloc/mobile_money_payment_state.dart';
 import 'package:dony/features/matching/data/models/mobile_money_payment_status.dart';
 import 'package:dony/features/matching/data/models/mobile_money_scope.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid/payer_phone.dart';
+import 'package:dony/features/payments/presentation/widgets/mobile_money_networks_checklist.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -63,6 +65,7 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
   /// `ValueListenableBuilder`) se redessine à chaque tick, pas tout l'écran.
   final ValueNotifier<Duration> _remaining = ValueNotifier(Duration.zero);
   final TextEditingController _retryPhoneController = TextEditingController();
+  final TextEditingController _payerPhoneController = TextEditingController();
 
   @override
   void initState() {
@@ -113,6 +116,7 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
   /// ne l'ont jamais eu).
   static DateTime? _deadlineAtFor(MobileMoneyPaymentState state) =>
       switch (state) {
+        final MobileMoneyPaymentChooseOperator s => s.status.deadlineAt,
         final MobileMoneyPaymentAwaitingConfirmation s => s.status.deadlineAt,
         final MobileMoneyPaymentDepositFailed s => s.status.deadlineAt,
         _ => null,
@@ -161,12 +165,29 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
     _startPolling();
   }
 
+  /// Depuis un dépôt refusé (`_FailedBody`) : retour à l'étape de choix de
+  /// l'opérateur (numéro éventuellement changé), jamais une relance aveugle
+  /// avec l'opérateur prédit. Distinct de [_retry], que garde
+  /// [_PhoneRequiredBody] : sans aucun numéro connu, il n'y a encore rien à
+  /// choisir, seulement un numéro à fournir avant la toute première
+  /// initiation.
+  void _retryToChooseOperator(String rawPhone) {
+    context.read<MobileMoneyPaymentBloc>().add(
+      MobileMoneyPaymentProvidersRequested(
+        scope: widget.scope,
+        phoneNumber: normalizePayerPhone(rawPhone),
+      ),
+    );
+    _startPolling();
+  }
+
   @override
   void dispose() {
     _pollingTimer?.cancel();
     _countdownTimer?.cancel();
     _remaining.dispose();
     _retryPhoneController.dispose();
+    _payerPhoneController.dispose();
     super.dispose();
   }
 
@@ -216,12 +237,26 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
             }
           },
           builder: (context, state) => switch (state) {
-            MobileMoneyPaymentInitial() ||
-            MobileMoneyPaymentLoading() ||
-            // TODO(task-8): écran « Avec quel opérateur ? » — cas minimal
-            // ajouté pour l'exhaustivité du switch scellé (réserve Task 7).
-            MobileMoneyPaymentChooseOperator() => Center(
-              child: CircularProgressIndicator(color: cs.primary),
+            MobileMoneyPaymentInitial() || MobileMoneyPaymentLoading() =>
+              Center(child: CircularProgressIndicator(color: cs.primary)),
+            final MobileMoneyPaymentChooseOperator s => _ChooseOperatorBody(
+              state: s,
+              remaining: _remaining,
+              phoneController: _payerPhoneController,
+              onPhoneConfirmed: (phone) =>
+                  context.read<MobileMoneyPaymentBloc>().add(
+                    MobileMoneyPaymentProvidersRequested(
+                      scope: widget.scope,
+                      phoneNumber: phone,
+                    ),
+                  ),
+              onPay: (provider) => context.read<MobileMoneyPaymentBloc>().add(
+                MobileMoneyPaymentInitiateRequested(
+                  scope: widget.scope,
+                  phoneNumber: normalizePayerPhone(_payerPhoneController.text),
+                  provider: provider,
+                ),
+              ),
             ),
             final MobileMoneyPaymentAwaitingConfirmation s => _AwaitingBody(
               status: s.status,
@@ -231,7 +266,7 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
               status: s.status,
               remaining: _remaining,
               phoneController: _retryPhoneController,
-              onRetry: () => _retry(_retryPhoneController.text),
+              onRetry: () => _retryToChooseOperator(_retryPhoneController.text),
             ),
             MobileMoneyPaymentExpired() => _ExpiredBody(
               scope: widget.scope,
@@ -351,6 +386,259 @@ class _AmountCard extends StatelessWidget {
           ],
         ],
       ),
+    );
+  }
+}
+
+/// Étape « Avec quel opérateur ? » : montant et compte à rebours, numéro
+/// payeur (masqué, modifiable), réseaux acceptés par le voyageur pour ce
+/// numéro, bouton collant « Payer `montant` ». Sélection dans un
+/// [ValueNotifier] (détecté pré-sélectionné), saisie d'un autre numéro
+/// suivie d'un rechargement du catalogue après 400 ms. Aucun `setState`.
+class _ChooseOperatorBody extends StatefulWidget {
+  const _ChooseOperatorBody({
+    required this.state,
+    required this.remaining,
+    required this.phoneController,
+    required this.onPhoneConfirmed,
+    required this.onPay,
+  });
+
+  final MobileMoneyPaymentChooseOperator state;
+  final ValueListenable<Duration> remaining;
+  final TextEditingController phoneController;
+
+  /// Recharge le catalogue pour [phone] (`null` = numéro du bid). Appelé
+  /// après le délai de 400 ms sur une saisie, et immédiatement par le
+  /// bouton « Réessayer » du bandeau d'erreur (même numéro que la tentative
+  /// qui a échoué).
+  final ValueChanged<String?> onPhoneConfirmed;
+  final ValueChanged<String> onPay;
+
+  @override
+  State<_ChooseOperatorBody> createState() => _ChooseOperatorBodyState();
+}
+
+class _ChooseOperatorBodyState extends State<_ChooseOperatorBody> {
+  static const _debounce = Duration(milliseconds: 400);
+  final ValueNotifier<String?> _selected = ValueNotifier(null);
+  Timer? _timer;
+  String? _requestedPhone;
+
+  @override
+  void initState() {
+    super.initState();
+    _selected.value =
+        widget.state.catalog?.detectedOption?.code ?? _firstCode();
+    _requestedPhone = widget.state.payerPhone;
+    widget.phoneController.addListener(_onPhoneChanged);
+  }
+
+  @override
+  void didUpdateWidget(covariant _ChooseOperatorBody old) {
+    super.didUpdateWidget(old);
+    final catalog = widget.state.catalog;
+    if (catalog != old.state.catalog) {
+      final codes = catalog?.providers.map((p) => p.code).toSet() ?? {};
+      final keep = _selected.value != null && codes.contains(_selected.value);
+      _selected.value = keep
+          ? _selected.value
+          : (catalog?.detectedOption?.code ?? _firstCode());
+    }
+  }
+
+  String? _firstCode() {
+    final providers = widget.state.catalog?.providers;
+    return providers == null || providers.isEmpty ? null : providers.first.code;
+  }
+
+  void _onPhoneChanged() {
+    _timer?.cancel();
+    final phone = normalizePayerPhone(widget.phoneController.text);
+    if (phone == _requestedPhone) return;
+    _timer = Timer(_debounce, () {
+      if (!mounted) return;
+      _requestedPhone = phone;
+      if (phone != null) widget.onPhoneConfirmed(phone);
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    widget.phoneController.removeListener(_onPhoneChanged);
+    _selected.dispose();
+    super.dispose();
+  }
+
+  String _country(String? code) =>
+      CountryCatalog.byCode(code)?.name ?? code ?? '';
+
+  String _joinLabels(List<String> labels) => switch (labels.length) {
+    0 => '',
+    1 => labels.first,
+    _ => '${labels.sublist(0, labels.length - 1).join(', ')} et ${labels.last}',
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final status = widget.state.status;
+    final catalog = widget.state.catalog;
+    final firstName = catalog?.travelerFirstName ?? 'Le voyageur';
+    final amount = formatPriceIn(status.amount ?? 0, status.currency);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(
+              DonySpacing.lg,
+              DonySpacing.xl,
+              DonySpacing.lg,
+              0,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _AmountCard(status: status),
+                if (status.deadlineAt != null) ...[
+                  const SizedBox(height: DonySpacing.md),
+                  _CountdownLabel(remaining: widget.remaining),
+                ],
+                const SizedBox(height: DonySpacing.base),
+                DonyCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      DonyInfoRow(
+                        label: 'Numéro qui paie',
+                        value: catalog?.msisdnMasked ?? '…',
+                      ),
+                      const SizedBox(height: DonySpacing.sm),
+                      DonyTextField(
+                        key: const Key('mobile-money-payer-phone-field'),
+                        controller: widget.phoneController,
+                        label: 'Payer avec un autre numéro (facultatif)',
+                        keyboardType: TextInputType.phone,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: DonySpacing.base),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Avec quel opérateur ?',
+                        style: tt.titleLarge,
+                      ),
+                    ),
+                    if (catalog?.country != null)
+                      Text(
+                        _country(catalog!.country),
+                        style: tt.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: DonySpacing.md),
+                if (widget.state.isLoadingCatalog && catalog == null)
+                  const MobileMoneyNetworksSkeleton()
+                else if (widget.state.error != null)
+                  DonyStatusBanner(
+                    type: DonyStatusBannerType.error,
+                    message: ErrorPresenter.resolve(widget.state.error).message,
+                    action: TextButton(
+                      onPressed: () =>
+                          widget.onPhoneConfirmed(widget.state.payerPhone),
+                      child: const Text('Réessayer'),
+                    ),
+                  )
+                else if (catalog == null || catalog.isEmpty)
+                  DonyStatusBanner(
+                    type: DonyStatusBannerType.warning,
+                    message:
+                        '$firstName accepte ${_joinLabels(catalog?.travelerAccepts ?? const [])}, '
+                        "qui n'existent pas pour ton numéro (${_country(catalog?.country)}). "
+                        'Change de numéro payeur ou écris-lui depuis la conversation.',
+                  )
+                else ...[
+                  ValueListenableBuilder<String?>(
+                    valueListenable: _selected,
+                    builder: (context, selected, _) => DonyCard(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: DonySpacing.base,
+                      ),
+                      child: Column(
+                        children: [
+                          for (var i = 0; i < catalog.providers.length; i++)
+                            DonyOperatorTile(
+                              key: Key('operator-${catalog.providers[i].code}'),
+                              brand: catalog.providers[i].brand,
+                              title: catalog.providers[i].label,
+                              subtitle: catalog.providers[i].detected
+                                  ? 'Détecté pour ce numéro'
+                                  : catalog.providers[i].brand == 'WAVE'
+                                  ? "Tu confirmes dans l'application Wave"
+                                  : null,
+                              control: DonyOperatorControl.radio,
+                              selected: selected == catalog.providers[i].code,
+                              showDivider: i < catalog.providers.length - 1,
+                              onChanged: (_) =>
+                                  _selected.value = catalog.providers[i].code,
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: DonySpacing.md),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      DonyIcon('info', size: 16, color: cs.onSurfaceVariant),
+                      const SizedBox(width: DonySpacing.sm),
+                      Expanded(
+                        child: Text(
+                          '$firstName accepte ${_joinLabels(catalog.travelerAccepts)}, '
+                          'et reçoit sur le réseau que tu choisis.',
+                          style: tt.bodySmall?.copyWith(
+                            color: cs.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+                const SizedBox(height: DonySpacing.xl),
+              ],
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            DonySpacing.lg,
+            DonySpacing.lg,
+            DonySpacing.lg,
+            DonySpacing.xl,
+          ),
+          child: ValueListenableBuilder<String?>(
+            valueListenable: _selected,
+            builder: (context, selected, _) => DonyButton(
+              label: 'Payer $amount',
+              iconAsset: 'smartphone',
+              isLoading: widget.state.isLoadingCatalog && catalog != null,
+              onPressed: selected == null || catalog == null || catalog.isEmpty
+                  ? null
+                  : () => widget.onPay(selected),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
