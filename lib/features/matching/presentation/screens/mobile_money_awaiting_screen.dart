@@ -216,8 +216,13 @@ class _MobileMoneyAwaitingScreenState extends State<MobileMoneyAwaitingScreen> {
             }
           },
           builder: (context, state) => switch (state) {
-            MobileMoneyPaymentInitial() || MobileMoneyPaymentLoading() =>
-              Center(child: CircularProgressIndicator(color: cs.primary)),
+            MobileMoneyPaymentInitial() ||
+            MobileMoneyPaymentLoading() ||
+            // TODO(task-8): écran « Avec quel opérateur ? » — cas minimal
+            // ajouté pour l'exhaustivité du switch scellé (réserve Task 7).
+            MobileMoneyPaymentChooseOperator() => Center(
+              child: CircularProgressIndicator(color: cs.primary),
+            ),
             final MobileMoneyPaymentAwaitingConfirmation s => _AwaitingBody(
               status: s.status,
               remaining: _remaining,

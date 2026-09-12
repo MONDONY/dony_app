@@ -337,7 +337,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `mobile_money_awaiting` | MobileMoneyAwaitingScreen.initState |
 | `mobile_money_account_activated` | MobileMoneyAccountBloc._onActivateRequested — compte de versement mobile money du voyageur (Wave/Orange Money) activé avec succès, réseaux cochés compris (propriétés `provider`, `providers_count`, `currency`). Même event réémis par _onProvidersUpdateRequested quand les réseaux acceptés d'un compte déjà actif sont modifiés sans ressaisir le numéro (propriété additionnelle `update: true`) |
 | `mobile_money_account_disabled` | MobileMoneyAccountBloc._onDisableRequested — compte de versement mobile money désactivé (propriétés `provider`, `currency`) |
-| `mobile_money_initiated` | MobileMoneyPaymentBloc._initiateAndEmit — dépôt mobile money initié pour le paiement d'un bid, avant confirmation (propriétés `provider`, `wave` : redirection Wave ou non) |
+| `mobile_money_initiated` | MobileMoneyPaymentBloc._initiateAndEmit — dépôt mobile money initié pour le paiement d'un bid ou d'un fil de négociation, avant confirmation (propriétés `provider`, `wave` : redirection Wave ou non, `chosen` : opérateur explicitement choisi par l'expéditeur à l'étape « Avec quel opérateur ? », sinon celui prédit par le back) |
 | `mobile_money_confirmed` | MobileMoneyPaymentBloc._emitKnown — dépôt mobile money séquestré, une seule fois par transition. Aucune propriété |
 | `mobile_money_failed` | MobileMoneyPaymentBloc._emitKnown — dépôt mobile money refusé par l'opérateur, une seule fois par transition (propriété `failure_code`) |
 | `qr_scan_success` | TrackingBloc._onScanSubmit() |
