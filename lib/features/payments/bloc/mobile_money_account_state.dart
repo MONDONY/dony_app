@@ -89,7 +89,7 @@ class MobileMoneyAccountProvidersError extends MobileMoneyAccountState {
 /// `POST /payments/mobile-money/providers` (prod gelée sans la PR jumelle
 /// dony-back #296). Distinct de [MobileMoneyAccountProvidersError] : ce
 /// n'est pas un aléa réseau à signaler par un bandeau d'erreur, mais un
-/// repli permanent tant que ce backend est en service — le formulaire reste
+/// repli permanent tant que ce backend est en service. Le formulaire reste
 /// utilisable, l'opérateur sera détecté automatiquement par le back.
 class MobileMoneyAccountProvidersUnavailable extends MobileMoneyAccountState {
   const MobileMoneyAccountProvidersUnavailable(
