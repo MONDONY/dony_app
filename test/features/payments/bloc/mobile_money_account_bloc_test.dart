@@ -599,4 +599,118 @@ void main() {
       ],
     );
   });
+
+  group('Equatable des events (T9-cov)', () {
+    test('MobileMoneyAccountProvidersCleared : deux instances égales, jamais '
+        'confondu avec un autre event sans champ', () {
+      expect(
+        const MobileMoneyAccountProvidersCleared(),
+        equals(const MobileMoneyAccountProvidersCleared()),
+      );
+      expect(
+        const MobileMoneyAccountProvidersCleared().hashCode,
+        equals(const MobileMoneyAccountProvidersCleared().hashCode),
+      );
+      expect(
+        const MobileMoneyAccountProvidersCleared(),
+        isNot(equals(const MobileMoneyAccountRequested())),
+      );
+    });
+
+    test('MobileMoneyAccountActivateRequested avec providers : deux instances '
+        'égales, différentes par phoneNumber et par providers', () {
+      const a = MobileMoneyAccountActivateRequested(
+        phoneNumber: '+225070809',
+        providers: ['ORANGE_CIV', 'WAVE_CIV'],
+      );
+      const b = MobileMoneyAccountActivateRequested(
+        phoneNumber: '+225070809',
+        providers: ['ORANGE_CIV', 'WAVE_CIV'],
+      );
+      expect(a, equals(b));
+      expect(a.hashCode, equals(b.hashCode));
+      expect(
+        a,
+        isNot(
+          equals(
+            const MobileMoneyAccountActivateRequested(
+              phoneNumber: '+225070800',
+              providers: ['ORANGE_CIV', 'WAVE_CIV'],
+            ),
+          ),
+        ),
+      );
+      // providers : champ ajouté par le couplage multi-réseaux, il doit
+      // peser dans l'égalité.
+      expect(
+        a,
+        isNot(
+          equals(
+            const MobileMoneyAccountActivateRequested(
+              phoneNumber: '+225070809',
+              providers: ['ORANGE_CIV'],
+            ),
+          ),
+        ),
+      );
+    });
+
+    test('MobileMoneyAccountProvidersUpdateRequested : deux instances égales, '
+        'différentes par providers', () {
+      expect(
+        const MobileMoneyAccountProvidersUpdateRequested(['ORANGE_CIV']),
+        equals(
+          const MobileMoneyAccountProvidersUpdateRequested(['ORANGE_CIV']),
+        ),
+      );
+      expect(
+        const MobileMoneyAccountProvidersUpdateRequested([
+          'ORANGE_CIV',
+        ]).hashCode,
+        equals(
+          const MobileMoneyAccountProvidersUpdateRequested([
+            'ORANGE_CIV',
+          ]).hashCode,
+        ),
+      );
+      expect(
+        const MobileMoneyAccountProvidersUpdateRequested(['ORANGE_CIV']),
+        isNot(
+          equals(
+            const MobileMoneyAccountProvidersUpdateRequested([
+              'ORANGE_CIV',
+              'WAVE_CIV',
+            ]),
+          ),
+        ),
+      );
+    });
+
+    test('MobileMoneyAccountChangeNumberRequested/Cancelled : égaux à '
+        'eux-mêmes, jamais confondus entre eux', () {
+      expect(
+        const MobileMoneyAccountChangeNumberRequested(),
+        equals(const MobileMoneyAccountChangeNumberRequested()),
+      );
+      expect(
+        const MobileMoneyAccountChangeNumberRequested().hashCode,
+        equals(const MobileMoneyAccountChangeNumberRequested().hashCode),
+      );
+      expect(
+        const MobileMoneyAccountChangeNumberCancelled(),
+        equals(const MobileMoneyAccountChangeNumberCancelled()),
+      );
+      expect(
+        const MobileMoneyAccountChangeNumberCancelled().hashCode,
+        equals(const MobileMoneyAccountChangeNumberCancelled().hashCode),
+      );
+      // Deux events distincts sans aucun champ ne doivent pas se
+      // confondre : MockBloc.add les vérifie par égalité dans les tests
+      // d'écran.
+      expect(
+        const MobileMoneyAccountChangeNumberRequested(),
+        isNot(equals(const MobileMoneyAccountChangeNumberCancelled())),
+      );
+    });
+  });
 }

@@ -1169,4 +1169,88 @@ void main() {
       },
     );
   });
+
+  group('Equatable des events (T9-cov)', () {
+    test('MobileMoneyPaymentProvidersRequested : deux instances égales, '
+        'différentes par scope et par phoneNumber', () {
+      const a = MobileMoneyPaymentProvidersRequested(
+        scope: scope,
+        phoneNumber: '+221771234567',
+      );
+      const b = MobileMoneyPaymentProvidersRequested(
+        scope: scope,
+        phoneNumber: '+221771234567',
+      );
+      expect(a, equals(b));
+      expect(a.hashCode, equals(b.hashCode));
+      expect(
+        a,
+        isNot(
+          equals(
+            const MobileMoneyPaymentProvidersRequested(
+              scope: negotiationScope,
+              phoneNumber: '+221771234567',
+            ),
+          ),
+        ),
+      );
+      expect(
+        a,
+        isNot(equals(const MobileMoneyPaymentProvidersRequested(scope: scope))),
+      );
+    });
+
+    test('MobileMoneyPaymentInitiateRequested avec provider : deux instances '
+        'égales, différentes par scope, phoneNumber et provider', () {
+      const a = MobileMoneyPaymentInitiateRequested(
+        scope: scope,
+        phoneNumber: '+221771234567',
+        provider: 'ORANGE_CIV',
+      );
+      const b = MobileMoneyPaymentInitiateRequested(
+        scope: scope,
+        phoneNumber: '+221771234567',
+        provider: 'ORANGE_CIV',
+      );
+      expect(a, equals(b));
+      expect(a.hashCode, equals(b.hashCode));
+      expect(
+        a,
+        isNot(
+          equals(
+            const MobileMoneyPaymentInitiateRequested(
+              scope: negotiationScope,
+              phoneNumber: '+221771234567',
+              provider: 'ORANGE_CIV',
+            ),
+          ),
+        ),
+      );
+      expect(
+        a,
+        isNot(
+          equals(
+            const MobileMoneyPaymentInitiateRequested(
+              scope: scope,
+              provider: 'ORANGE_CIV',
+            ),
+          ),
+        ),
+      );
+      // provider : champ ajouté par le couplage à l'étape « Avec quel
+      // opérateur ? », il doit peser dans l'égalité.
+      expect(
+        a,
+        isNot(
+          equals(
+            const MobileMoneyPaymentInitiateRequested(
+              scope: scope,
+              phoneNumber: '+221771234567',
+              provider: 'WAVE_CIV',
+            ),
+          ),
+        ),
+      );
+    });
+  });
 }
