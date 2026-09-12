@@ -421,6 +421,11 @@ void main() {
         'Vérifie le numéro qui doit payer, ou essaie avec un autre '
             'numéro.',
       ],
+      'mobile-money-invalid-phone': [
+        'Numéro non reconnu',
+        "Ce numéro n'est reconnu par aucun opérateur mobile money. "
+            'Vérifie-le et réessaie.',
+      ],
       'mobile-money-deposit-rejected': [
         'Paiement refusé',
         "L'opérateur a refusé la demande de paiement. Réessaie, "
@@ -479,8 +484,8 @@ void main() {
       });
     }
 
-    test('quatorze codes couverts (liste du brief)', () {
-      expect(attendus.length, 14);
+    test('quinze codes couverts (liste du brief)', () {
+      expect(attendus.length, 15);
     });
   });
   // Lot 2 mobile money sur colis : codes emis par le back sur le depot d'un fil
