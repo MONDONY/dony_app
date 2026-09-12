@@ -88,13 +88,22 @@ class MobileMoneyPaymentBloc
     };
     // Sans statut connu, rien à recharger : l'écran repassera par Opened.
     if (status == null) return;
-    await _loadCatalogAndEmit(
-      event.scope,
-      status,
-      event.phoneNumber,
-      previous,
-      emit,
-    );
+    try {
+      await _loadCatalogAndEmit(
+        event.scope,
+        status,
+        event.phoneNumber,
+        previous,
+        emit,
+      );
+    } catch (e) {
+      // Symétrique à _onInitiateRequested : _loadCatalogAndEmit peut
+      // retomber sur _initiateAndEmit (404, ou scope sans catalogue) sans
+      // protection propre, cet appel pouvant lui-même échouer (réseau,
+      // 422...). Sans ce filet, l'écran resterait figé sur
+      // ChooseOperator(isLoadingCatalog: true) sans bandeau ni reprise.
+      emit(MobileMoneyPaymentError(unwrapDioError(e)));
+    }
   }
 
   /// Charge le catalogue payeur d'un bid et émet l'étape de choix. Un fil de
