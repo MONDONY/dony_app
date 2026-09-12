@@ -460,6 +460,28 @@ void main() {
     );
 
     blocTest<MobileMoneyAccountBloc, MobileMoneyAccountState>(
+      '404 (ancien back, sans la route catalogue) : ProvidersUnavailable, '
+      'jamais ProvidersError, editingNumber conservé',
+      build: () {
+        when(
+          () => repository.providers(phoneNumber: '+225070809'),
+        ).thenThrow(const NotFoundException());
+        return bloc();
+      },
+      seed: () => const MobileMoneyAccountLoaded(active, editingNumber: true),
+      act: (b) => b.add(
+        const MobileMoneyAccountProvidersRequested(phoneNumber: '+225070809'),
+      ),
+      expect: () => [
+        const MobileMoneyAccountProvidersLoading(active, editingNumber: true),
+        const MobileMoneyAccountProvidersUnavailable(
+          active,
+          editingNumber: true,
+        ),
+      ],
+    );
+
+    blocTest<MobileMoneyAccountBloc, MobileMoneyAccountState>(
       'conserve editingNumber pendant le catalogue',
       build: () {
         when(

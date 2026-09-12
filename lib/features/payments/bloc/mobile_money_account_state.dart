@@ -85,6 +85,24 @@ class MobileMoneyAccountProvidersError extends MobileMoneyAccountState {
   List<Object?> get props => [account, error, editingNumber];
 }
 
+/// Catalogue indisponible : ancien contrat backend, sans la route
+/// `POST /payments/mobile-money/providers` (prod gelée sans la PR jumelle
+/// dony-back #296). Distinct de [MobileMoneyAccountProvidersError] : ce
+/// n'est pas un aléa réseau à signaler par un bandeau d'erreur, mais un
+/// repli permanent tant que ce backend est en service — le formulaire reste
+/// utilisable, l'opérateur sera détecté automatiquement par le back.
+class MobileMoneyAccountProvidersUnavailable extends MobileMoneyAccountState {
+  const MobileMoneyAccountProvidersUnavailable(
+    this.account, {
+    this.editingNumber = false,
+  });
+  final MobileMoneyAccount account;
+  final bool editingNumber;
+
+  @override
+  List<Object?> get props => [account, editingNumber];
+}
+
 /// Activation refusée par le backend faute de numéro disponible (compte
 /// Firebase sans téléphone, et aucun `phoneNumber` fourni dans l'event) :
 /// distinct de [MobileMoneyAccountError] pour que l'écran affiche un

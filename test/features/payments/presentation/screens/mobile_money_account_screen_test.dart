@@ -836,6 +836,81 @@ void main() {
     );
 
     testWidgets(
+      'ancien back sans catalogue (404) : bandeau info à la place de la '
+      'checklist, activation possible dès le numéro confirmé, sans réseau',
+      (tester) async {
+        stub(
+          const MobileMoneyAccountProvidersUnavailable(notConfiguredAccount),
+        );
+        await pumpScreen(tester);
+
+        expect(
+          find.text(
+            "Le choix des réseaux n'est pas encore disponible. Ton "
+            'opérateur sera détecté automatiquement.',
+          ),
+          findsOneWidget,
+        );
+        expect(find.byType(MobileMoneyNetworksChecklist), findsNothing);
+
+        expect(
+          tester
+              .widget<DonyButton>(
+                find.widgetWithText(
+                  DonyButton,
+                  'Activer le versement mobile money',
+                ),
+              )
+              .onPressed,
+          isNull,
+        );
+
+        await tester.enterText(
+          find.byKey(const Key('payout-phone-field')),
+          '+221773456789',
+        );
+        await tester.pump();
+        await tester.enterText(
+          find.byKey(const Key('payout-phone-confirm-field')),
+          '+221773456789',
+        );
+        await tester.pump();
+
+        expect(
+          tester
+              .widget<DonyButton>(
+                find.widgetWithText(
+                  DonyButton,
+                  'Activer le versement mobile money',
+                ),
+              )
+              .onPressed,
+          isNotNull,
+        );
+
+        await tester.tap(
+          find.widgetWithText(DonyButton, 'Activer le versement mobile money'),
+        );
+        await tester.pump();
+
+        // Le back ancien accepte {phoneNumber} seul : le repository omet
+        // providers vide plutôt que de l'envoyer explicitement.
+        verify(
+          () => bloc.add(
+            const MobileMoneyAccountActivateRequested(
+              phoneNumber: '+221773456789',
+              providers: [],
+            ),
+          ),
+        ).called(1);
+
+        // Purge le timer de re-demande de catalogue programmé par la
+        // saisie ci-dessus, sans effet sur les assertions précédentes.
+        await tester.pump(const Duration(milliseconds: 450));
+      },
+    );
+
+    testWidgets(
       'catalogue vide : message dédié, aucune checklist, bouton inactif',
       (tester) async {
         const emptyCatalog = MobileMoneyProviderCatalog(
@@ -1181,6 +1256,39 @@ void main() {
         () => bloc.add(const MobileMoneyAccountProvidersRequested()),
       ).called(2);
     });
+
+    testWidgets(
+      'feuille : ancien back sans catalogue (404) → même bandeau info, '
+      'Enregistrer reste inactif',
+      (tester) async {
+        final controller = StreamController<MobileMoneyAccountState>();
+        addTearDown(controller.close);
+        const loaded = MobileMoneyAccountLoaded(activeWithNetworks);
+        whenListen(bloc, controller.stream, initialState: loaded);
+
+        await pumpScreen(tester);
+        await tester.tap(find.text('Modifier'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 400));
+
+        controller.add(
+          const MobileMoneyAccountProvidersUnavailable(activeWithNetworks),
+        );
+        await tester.pump();
+
+        expect(
+          find.text(
+            "Le choix des réseaux n'est pas encore disponible. Ton "
+            'opérateur sera détecté automatiquement.',
+          ),
+          findsOneWidget,
+        );
+        final button = tester.widget<DonyButton>(
+          find.widgetWithText(DonyButton, 'Enregistrer'),
+        );
+        expect(button.onPressed, isNull);
+      },
+    );
 
     testWidgets('compte actif, changement de numéro puis échec réseau : le '
         'formulaire reste affiché (editingNumber survit à Error)', (

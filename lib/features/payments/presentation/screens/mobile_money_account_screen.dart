@@ -98,6 +98,15 @@ class MobileMoneyAccountScreen extends StatelessWidget {
                 editingNumber: editingNumber,
                 catalogError: error,
               ),
+            MobileMoneyAccountProvidersUnavailable(
+              :final account,
+              :final editingNumber,
+            ) =>
+              _AccountBody(
+                account: account,
+                editingNumber: editingNumber,
+                catalogUnavailable: true,
+              ),
             MobileMoneyAccountError(:final account, :final editingNumber)
                 when account != null =>
               _AccountBody(account: account, editingNumber: editingNumber),
@@ -129,6 +138,7 @@ class _AccountBody extends StatelessWidget {
     this.catalog,
     this.catalogLoading = false,
     this.catalogError,
+    this.catalogUnavailable = false,
   });
 
   final MobileMoneyAccount account;
@@ -137,6 +147,11 @@ class _AccountBody extends StatelessWidget {
   final MobileMoneyProviderCatalog? catalog;
   final bool catalogLoading;
   final Object? catalogError;
+
+  /// Ancien contrat backend, sans route catalogue (I2) : le formulaire
+  /// affiche un bandeau d'information à la place de la checklist, et
+  /// l'activation reste possible sans réseau choisi.
+  final bool catalogUnavailable;
 
   @override
   Widget build(BuildContext context) {
@@ -163,6 +178,7 @@ class _AccountBody extends StatelessWidget {
               catalog: catalog,
               catalogLoading: catalogLoading,
               catalogError: catalogError,
+              catalogUnavailable: catalogUnavailable,
             )
           : _ActiveView(account: account, isLoading: isLoading),
     );
@@ -189,6 +205,7 @@ class _PayoutNumberForm extends StatefulWidget {
     this.catalog,
     this.catalogLoading = false,
     this.catalogError,
+    this.catalogUnavailable = false,
   });
 
   final _FormMode mode;
@@ -198,6 +215,7 @@ class _PayoutNumberForm extends StatefulWidget {
   final MobileMoneyProviderCatalog? catalog;
   final bool catalogLoading;
   final Object? catalogError;
+  final bool catalogUnavailable;
 
   @override
   State<_PayoutNumberForm> createState() => _PayoutNumberFormState();
@@ -413,6 +431,7 @@ class _PayoutNumberFormState extends State<_PayoutNumberForm> {
                     catalog: catalog,
                     loading: widget.catalogLoading,
                     error: widget.catalogError,
+                    unavailable: widget.catalogUnavailable,
                     selection: _selection,
                     onChanged: (s) => _selection.value = s,
                     onRetry: _retryCatalog,
@@ -432,11 +451,16 @@ class _PayoutNumberFormState extends State<_PayoutNumberForm> {
           builder: (context, _) {
             final phone = _normalizedPhone.value;
             final catalog = _retainedCatalog.value;
-            final ready =
-                phone != null &&
+            final hasCatalogSelection =
                 catalog != null &&
                 !catalog.isEmpty &&
                 _selection.value.isNotEmpty;
+            // Ancien contrat backend (I2) : aucun catalogue à choisir,
+            // l'activation reste possible dès le numéro confirmé, le back
+            // détecte l'opérateur automatiquement.
+            final ready =
+                phone != null &&
+                (hasCatalogSelection || widget.catalogUnavailable);
             return DonyButton(
               label: _buttonLabel,
               isLoading: widget.isLoading,
@@ -445,7 +469,9 @@ class _PayoutNumberFormState extends State<_PayoutNumberForm> {
                   : () => bloc.add(
                       MobileMoneyAccountActivateRequested(
                         phoneNumber: phone,
-                        providers: catalog.ordered(_selection.value),
+                        providers: hasCatalogSelection
+                            ? catalog.ordered(_selection.value)
+                            : const [],
                       ),
                     ),
             );
@@ -474,6 +500,7 @@ class _NetworksSection extends StatelessWidget {
     required this.catalog,
     required this.loading,
     required this.error,
+    required this.unavailable,
     required this.selection,
     required this.onChanged,
     required this.onRetry,
@@ -482,6 +509,10 @@ class _NetworksSection extends StatelessWidget {
   final MobileMoneyProviderCatalog? catalog;
   final bool loading;
   final Object? error;
+
+  /// Ancien contrat backend (I2) : remplace la checklist par un bandeau
+  /// d'information, quels que soient [loading]/[error]/[catalog].
+  final bool unavailable;
   final ValueNotifier<Set<String>> selection;
   final ValueChanged<Set<String>> onChanged;
 
@@ -518,7 +549,14 @@ class _NetworksSection extends StatelessWidget {
           ],
         ),
         const SizedBox(height: DonySpacing.md),
-        if (loading)
+        if (unavailable)
+          const DonyStatusBanner(
+            type: DonyStatusBannerType.info,
+            message:
+                "Le choix des réseaux n'est pas encore disponible. Ton "
+                'opérateur sera détecté automatiquement.',
+          )
+        else if (loading)
           const MobileMoneyNetworksSkeleton()
         else if (error != null)
           DonyStatusBanner(
@@ -805,6 +843,12 @@ class _ProvidersSheetContent extends StatelessWidget {
               ),
               child: const Text('Réessayer'),
             ),
+          ),
+          MobileMoneyAccountProvidersUnavailable() => const DonyStatusBanner(
+            type: DonyStatusBannerType.info,
+            message:
+                "Le choix des réseaux n'est pas encore disponible. Ton "
+                'opérateur sera détecté automatiquement.',
           ),
           _ => const MobileMoneyNetworksSkeleton(),
         },

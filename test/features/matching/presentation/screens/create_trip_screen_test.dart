@@ -43,6 +43,7 @@ import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_state.dart';
 import 'package:dony/features/payments/cash/data/repositories/commission_method_repository.dart';
 import 'package:dony/features/payments/data/models/mobile_money_account.dart';
+import 'package:dony/features/payments/data/models/mobile_money_provider_catalog.dart';
 import 'package:dony/features/payments/wallet/data/repositories/wallet_repository.dart';
 import 'package:dony/features/price_grid/data/repositories/price_grid_repository.dart';
 import 'package:dony/features/profile/bloc/help_center_bloc.dart';
@@ -610,6 +611,74 @@ void main() {
           ),
         ),
         isTrue,
+      );
+    });
+
+    test('PhoneRequired avec compte actif conservé → true', () {
+      expect(
+        mobileMoneyAccountActiveFrom(
+          const MobileMoneyAccountPhoneRequired(
+            MobileMoneyAccount(status: MobileMoneyAccountStatus.active),
+          ),
+        ),
+        isTrue,
+      );
+    });
+
+    test('ProvidersLoading avec compte non configuré → false', () {
+      expect(
+        mobileMoneyAccountActiveFrom(
+          const MobileMoneyAccountProvidersLoading(
+            MobileMoneyAccount(status: MobileMoneyAccountStatus.notConfigured),
+          ),
+        ),
+        isFalse,
+      );
+    });
+
+    test('ProvidersLoaded avec compte actif → true', () {
+      expect(
+        mobileMoneyAccountActiveFrom(
+          const MobileMoneyAccountProvidersLoaded(
+            MobileMoneyAccount(status: MobileMoneyAccountStatus.active),
+            MobileMoneyProviderCatalog(country: 'CI', currency: 'XOF'),
+          ),
+        ),
+        isTrue,
+      );
+    });
+
+    test('ProvidersError avec compte actif conservé → true', () {
+      expect(
+        mobileMoneyAccountActiveFrom(
+          MobileMoneyAccountProvidersError(
+            const MobileMoneyAccount(status: MobileMoneyAccountStatus.active),
+            Exception('x'),
+          ),
+        ),
+        isTrue,
+      );
+    });
+
+    test('ProvidersUnavailable avec compte actif → true', () {
+      expect(
+        mobileMoneyAccountActiveFrom(
+          const MobileMoneyAccountProvidersUnavailable(
+            MobileMoneyAccount(status: MobileMoneyAccountStatus.active),
+          ),
+        ),
+        isTrue,
+      );
+    });
+
+    test('ProvidersUnavailable avec compte non configuré → false', () {
+      expect(
+        mobileMoneyAccountActiveFrom(
+          const MobileMoneyAccountProvidersUnavailable(
+            MobileMoneyAccount(status: MobileMoneyAccountStatus.notConfigured),
+          ),
+        ),
+        isFalse,
       );
     });
   });
