@@ -664,6 +664,38 @@ void main() {
     );
 
     blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'recharge du catalogue en échec : le catalogue précédent reste '
+      'affiché sous le bandeau d\'erreur',
+      build: () {
+        when(
+          () => repository.providers(bidId, phoneNumber: '+22505'),
+        ).thenThrow(const OfflineException());
+        return bloc();
+      },
+      seed: () => const MobileMoneyPaymentChooseOperator(
+        status: noDepositStatus,
+        catalog: catalog,
+      ),
+      act: (b) => b.add(
+        const MobileMoneyPaymentProvidersRequested(
+          scope: scope,
+          phoneNumber: '+22505',
+        ),
+      ),
+      expect: () => [
+        const MobileMoneyPaymentChooseOperator(
+          status: noDepositStatus,
+          catalog: catalog,
+          payerPhone: '+22505',
+          isLoadingCatalog: true,
+        ),
+        isA<MobileMoneyPaymentChooseOperator>()
+            .having((s) => s.catalog, 'catalog', catalog)
+            .having((s) => s.error, 'error', isA<OfflineException>()),
+      ],
+    );
+
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
       'sans statut connu (état Initial) : rien à recharger, aucune émission',
       build: () => bloc(),
       act: (b) =>
