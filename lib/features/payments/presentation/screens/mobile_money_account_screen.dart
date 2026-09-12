@@ -752,7 +752,17 @@ class _ActiveView extends StatelessWidget {
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  DonyBrandMark(brand: p.brand, size: 24),
+                                  // Le libellé texte voisin suffit (M9a) :
+                                  // sans ça, un lecteur d'écran annonce le
+                                  // nom de marque de la pastille puis le
+                                  // libellé, doublant l'annonce (« ORANGE,
+                                  // Orange Money »).
+                                  ExcludeSemantics(
+                                    child: DonyBrandMark(
+                                      brand: p.brand,
+                                      size: 24,
+                                    ),
+                                  ),
                                   const SizedBox(width: DonySpacing.sm),
                                   Text(
                                     p.label,

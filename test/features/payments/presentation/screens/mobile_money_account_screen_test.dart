@@ -1145,6 +1145,23 @@ void main() {
       },
     );
 
+    testWidgets(
+      'réseaux acceptés (M9a) : la pastille de marque est exclue de la '
+      'sémantique, seul le libellé texte reste annoncé',
+      (tester) async {
+        final handle = tester.ensureSemantics();
+        stub(const MobileMoneyAccountLoaded(activeWithNetworks));
+        await pumpScreen(tester);
+
+        expect(find.bySemanticsLabel('ORANGE'), findsNothing);
+        expect(find.bySemanticsLabel('WAVE'), findsNothing);
+        expect(find.text('Orange Money'), findsOneWidget);
+        expect(find.text('Wave'), findsOneWidget);
+
+        handle.dispose();
+      },
+    );
+
     testWidgets('« Changer de numéro » envoie l\'event', (tester) async {
       stub(const MobileMoneyAccountLoaded(activeWithNetworks));
       await pumpScreen(tester);
