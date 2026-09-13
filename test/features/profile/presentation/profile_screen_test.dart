@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/config/pro_flag.dart';
 import 'package:dony/core/design/widgets/dony_avatar.dart';
+import 'package:dony/core/design/widgets/dony_skeleton.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/models/connect_account_status.dart';
@@ -23,6 +24,7 @@ import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_model.dart';
 import 'package:dony/features/profile/presentation/profile_screen.dart';
 import 'package:dony/features/profile/presentation/widgets/pending_deletion_banner.dart';
+import 'package:dony/features/profile/presentation/widgets/profile_skeleton.dart';
 import 'package:dony/features/profile/presentation/widgets/wallet_balance_card.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
@@ -831,6 +833,145 @@ void main() {
   });
 
   // ── Cycle de vie de la session ──────────────────────────────────────────────
+
+  // ── Profil pas encore connu ────────────────────────────────────────────────
+  //
+  // Au démarrage, `AuthCheckRequested` charge le profil en arrière-plan sans
+  // retenir la navigation : l'onglet Moi peut s'ouvrir pendant `AuthLoading`,
+  // ou après un `AuthError` quand le téléphone est hors ligne. Dans les deux
+  // cas la page ne doit jamais se rendre avec des valeurs de repli
+  // (« Utilisateur », « Email manquant »…) : un squelette, jusqu'au profil.
+
+  group('Profil pas encore connu', () {
+    Future<void> pumpWithAuth(
+      WidgetTester tester, {
+      required AuthState initialState,
+      Stream<AuthState> stream = const Stream.empty(),
+    }) async {
+      whenListen<AuthState>(authBloc, stream, initialState: initialState);
+      whenListen<AccountDeletionState>(
+        deletionBloc,
+        const Stream.empty(),
+        initialState: const AccountDeletionInitial(),
+      );
+
+      await tester.pumpWidget(
+        _buildTestHarness(
+          authBloc: authBloc,
+          deletionBloc: deletionBloc,
+          bidBloc: bidBloc,
+          announcementBloc: announcementBloc,
+          referralBloc: referralBloc,
+          walletBloc: walletBloc,
+          stripeAccountBloc: stripeAccountBloc,
+          businessPrefsBloc: businessPrefsBloc,
+        ),
+      );
+      // Pas de pumpAndSettle : le reflet du squelette est une animation
+      // infinie. Voir pumpWith pour la purge des Timers de flutter_animate.
+      await tester.pump(const Duration(milliseconds: 600));
+      for (var i = 0; i < 6; i++) {
+        await tester.pump(const Duration(milliseconds: 400));
+      }
+    }
+
+    testWidgets(
+      'AuthLoading au montage : aucune valeur de repli, aucune section',
+      (tester) async {
+        await pumpWithAuth(tester, initialState: const AuthLoading());
+
+        expect(find.text('Utilisateur'), findsNothing);
+        expect(find.text('Email manquant'), findsNothing);
+        expect(find.text('MON COMPTE'), findsNothing);
+        expect(find.text('ARGENT'), findsNothing);
+      },
+    );
+
+    testWidgets('AuthLoading au montage : le squelette, avec son reflet', (
+      tester,
+    ) async {
+      await pumpWithAuth(tester, initialState: const AuthLoading());
+
+      expect(find.byType(ProfileScreenSkeleton), findsOneWidget);
+      expect(find.byType(DonyShimmer), findsOneWidget);
+      expect(find.text('Réessayer'), findsNothing);
+    });
+
+    testWidgets('AuthError au montage : la silhouette reste, sans reflet, '
+        'coiffée de « Réessayer »', (tester) async {
+      await pumpWithAuth(
+        tester,
+        initialState: const AuthError(NetworkException('Hors ligne')),
+      );
+
+      expect(find.byType(ProfileScreenSkeleton), findsOneWidget);
+      expect(find.byType(DonyShimmer), findsNothing);
+      expect(find.text('Profil indisponible'), findsOneWidget);
+      expect(find.text('Réessayer'), findsOneWidget);
+      expect(find.text('Utilisateur'), findsNothing);
+      expect(find.text('Email manquant'), findsNothing);
+    });
+
+    testWidgets('« Réessayer » relance le contrôle de session', (tester) async {
+      await pumpWithAuth(
+        tester,
+        initialState: const AuthError(NetworkException('Hors ligne')),
+      );
+
+      await tester.tap(find.text('Réessayer'));
+      await tester.pump();
+
+      verify(() => authBloc.add(const AuthCheckRequested())).called(1);
+    });
+
+    testWidgets('AuthError puis AuthLoading (réessai) : le reflet revient, '
+        'la carte « Réessayer » disparaît', (tester) async {
+      await pumpWithAuth(
+        tester,
+        initialState: const AuthError(NetworkException('Hors ligne')),
+        stream: Stream.value(const AuthLoading()),
+      );
+
+      expect(find.byType(ProfileScreenSkeleton), findsOneWidget);
+      expect(find.byType(DonyShimmer), findsOneWidget);
+      expect(find.text('Réessayer'), findsNothing);
+    });
+
+    testWidgets(
+      'AuthLoading puis AuthAuthenticated : le profil remplace le squelette',
+      (tester) async {
+        await pumpWithAuth(
+          tester,
+          initialState: const AuthLoading(),
+          stream: Stream.value(const AuthAuthenticated(_dualRoleUser)),
+        );
+
+        expect(find.byType(ProfileScreenSkeleton), findsNothing);
+        expect(find.textContaining('Dual'), findsWidgets);
+        expect(find.text('MON COMPTE'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'profil connu, puis AuthLoading et AuthError d\'une action annexe : '
+      'la page garde le profil',
+      (tester) async {
+        await pumpWithAuth(
+          tester,
+          initialState: const AuthAuthenticated(_dualRoleUser),
+          stream: Stream.fromIterable(const [
+            AuthLoading(),
+            AuthError(NetworkException('Envoi impossible')),
+          ]),
+        );
+
+        expect(find.byType(ProfileScreenSkeleton), findsNothing);
+        expect(find.text('Réessayer'), findsNothing);
+        expect(find.textContaining('Dual'), findsWidgets);
+        expect(find.text('MON COMPTE'), findsOneWidget);
+      },
+    );
+  });
 
   group('Session', () {
     testWidgets('AuthInitial renvoie vers /auth/method', (tester) async {
