@@ -166,7 +166,9 @@ class TripsStatsStrip extends StatelessWidget {
         const SizedBox(width: DonySpacing.sm),
         Expanded(
           child: _StatTile(
-            value: formatPriceActive(summary.revenue.roundToDouble()),
+            value: summary.isRevenueConverted
+                ? '≈ ${formatPriceActive(summary.revenue.roundToDouble())}'
+                : formatPriceActive(summary.revenue.roundToDouble()),
             label: 'Revenus',
             valueColor: cs.secondary,
             index: 2,

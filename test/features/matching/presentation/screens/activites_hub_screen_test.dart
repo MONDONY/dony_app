@@ -781,6 +781,40 @@ void main() {
       expect(find.text('Envois'), findsOneWidget);
     });
 
+    testWidgets('la tuile Revenus est préfixée de « ≈ » quand le total est converti', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        summary: const TripsSummaryModel(
+          activeTrips: 1,
+          kgSold: 16,
+          revenue: 1418.7,
+          revenueCurrency: 'EUR',
+          revenueConverted: true,
+        ),
+      );
+
+      expect(find.textContaining('≈ '), findsOneWidget);
+    });
+
+    testWidgets('la tuile Revenus n\'a pas de « ≈ » sans conversion', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        summary: const TripsSummaryModel(
+          activeTrips: 1,
+          kgSold: 16,
+          revenue: 1030,
+          revenueCurrency: 'EUR',
+          revenueConverted: false,
+        ),
+      );
+
+      expect(find.textContaining('≈'), findsNothing);
+    });
+
     testWidgets('la section est masquée tant que tout est à zéro', (
       tester,
     ) async {

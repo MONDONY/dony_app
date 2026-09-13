@@ -21,6 +21,7 @@ import 'package:dony/features/matching/bloc/traveler_bids_event.dart';
 import 'package:dony/features/matching/bloc/traveler_bids_state.dart';
 import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/matching/data/models/tools_completion_model.dart';
+import 'package:dony/features/matching/data/models/trips_summary_model.dart';
 import 'package:dony/features/matching/presentation/screens/mes_colis_screen.dart';
 import 'package:dony/features/matching/presentation/widgets/activites_menu_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/activity_tile.dart';
@@ -873,7 +874,12 @@ class _PeriodChips extends StatelessWidget {
 class _StatsRow extends StatelessWidget {
   const _StatsRow();
 
-  String _money(double v) => formatPriceActive(v);
+  /// « ≈ » dès que le backend dit avoir converti : la somme exacte, devise par
+  /// devise, vit dans la feuille ouverte au tap.
+  String _money(TripsSummaryModel? summary) {
+    final value = formatPriceActive(summary?.revenue ?? 0);
+    return (summary?.isRevenueConverted ?? false) ? '≈ $value' : value;
+  }
 
   String _weight(double v) => '${v.toStringAsFixed(v % 1 == 0 ? 0 : 1)} kg';
 
@@ -890,7 +896,7 @@ class _StatsRow extends StatelessWidget {
           StatTile(
             iconName: 'euro',
             label: 'Revenus',
-            value: _money(summary?.revenue ?? 0),
+            value: _money(summary),
             color: cs.success,
             isLoading: loading,
           ),
