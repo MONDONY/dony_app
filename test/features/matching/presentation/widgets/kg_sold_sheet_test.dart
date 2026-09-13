@@ -89,6 +89,7 @@ void main() {
 
     expect(find.text('16 kg'), findsOneWidget);
     expect(find.text('6 colis livrés'), findsOneWidget);
+    expect(find.text('2 trajets'), findsOneWidget);
     expect(find.text('Paris → Dakar'), findsOneWidget);
     expect(find.textContaining('12 sept.'), findsOneWidget);
     expect(find.textContaining('2 colis'), findsOneWidget);

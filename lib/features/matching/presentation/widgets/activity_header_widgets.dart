@@ -1,3 +1,4 @@
+import 'package:dony/core/currency/active_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
@@ -167,8 +168,8 @@ class TripsStatsStrip extends StatelessWidget {
         Expanded(
           child: _StatTile(
             value: summary.isRevenueConverted
-                ? '≈ ${formatPriceActive(summary.revenue.roundToDouble())}'
-                : formatPriceActive(summary.revenue.roundToDouble()),
+                ? '≈ ${_revenue(summary)}'
+                : _revenue(summary),
             label: 'Revenus',
             valueColor: cs.secondary,
             index: 2,
@@ -180,6 +181,15 @@ class TripsStatsStrip extends StatelessWidget {
 
   /// Format compact : arrondi à l'entier (suffisant pour les stats header).
   String _compact(double v) => v.round().toString();
+
+  /// Dans la devise annoncée par le backend (`revenueCurrency`), pas dans la
+  /// devise active : après un changement de devise, le cache serveur sert
+  /// encore quelques minutes un total dans l'ancienne. Repli sur la devise
+  /// active quand le backend ne dit rien (ancien contrat).
+  String _revenue(TripsSummaryModel summary) => formatPriceIn(
+    summary.revenue.roundToDouble(),
+    summary.revenueCurrency ?? ActiveCurrency.current?.code,
+  );
 }
 
 class _StatTile extends StatelessWidget {

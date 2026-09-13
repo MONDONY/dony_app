@@ -27,10 +27,14 @@ class KgSoldCubit extends Cubit<KgSoldState> {
     emit(const KgSoldState(status: KgSoldStatus.loading));
     try {
       final details = await _repository.getKgSold(period: period.apiValue);
+      // La feuille peut être retirée (glissée vers le bas) pendant la requête :
+      // le cubit est alors fermé et un emit lèverait un StateError vers Sentry.
+      if (isClosed) return;
       emit(KgSoldState(status: KgSoldStatus.loaded, details: details));
     } catch (_) {
       // Ancien backend (404) ou réseau : la feuille montre son état d'erreur
       // avec « Réessayer », rien ne remonte à Sentry.
+      if (isClosed) return;
       emit(const KgSoldState(status: KgSoldStatus.error));
     }
   }

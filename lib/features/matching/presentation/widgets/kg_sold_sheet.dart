@@ -85,6 +85,8 @@ String _kg(double v) {
 
 String _parcels(int count) => count == 1 ? '1 colis' : '$count colis';
 
+String _trips(int count) => count == 1 ? '1 trajet' : '$count trajets';
+
 class _LoadedBody extends StatelessWidget {
   const _LoadedBody({required this.model});
 
@@ -128,9 +130,20 @@ class _LoadedBody extends StatelessWidget {
               const SizedBox(width: DonySpacing.md),
               Padding(
                 padding: const EdgeInsets.only(bottom: DonySpacing.xs),
-                child: Text(
-                  '${_parcels(model.parcels)} livrés',
-                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${_parcels(model.parcels)} livrés',
+                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                    ),
+                    // Le sous-titre de la feuille est statique : le nombre de
+                    // trajets (spec) se lit ici, à côté du total.
+                    Text(
+                      _trips(model.trips.length),
+                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                    ),
+                  ],
                 ),
               ),
             ],

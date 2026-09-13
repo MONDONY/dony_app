@@ -245,6 +245,9 @@ class _CurrencyGroupCard extends StatelessWidget {
           Semantics(
             button: true,
             expanded: expanded,
+            // `excludeSemantics` efface aussi l'action tap de l'InkWell :
+            // sans celle-ci, VoiceOver/TalkBack ne peuvent ni plier ni déplier.
+            onTap: onToggle,
             label:
                 '$displayName, ${_deliveries(group.deliveries)}, '
                 '${CurrencyFormatter.format(group.total, currency)}',

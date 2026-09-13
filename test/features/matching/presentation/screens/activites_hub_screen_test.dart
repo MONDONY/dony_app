@@ -43,6 +43,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/mock_analytics_backend.dart';
@@ -168,6 +169,7 @@ late _MockToolsCompletionRepository _toolsRepoUnderTest;
 Future<void> _pump(
   WidgetTester tester, {
   TripsSummaryModel? summary,
+  KgSoldModel? kgSold,
   BidState? bidState,
   TravelerBidsState? travelerBidsState,
   NegotiationListState? negoState,
@@ -202,6 +204,7 @@ Future<void> _pump(
   );
   when(() => repo.getKgSold(period: any(named: 'period'))).thenAnswer(
     (_) async =>
+        kgSold ??
         const KgSoldModel(period: '30d', totalKg: 0, parcels: 0, trips: []),
   );
   if (getIt.isRegistered<RevenueDetailsCubit>()) {
@@ -323,6 +326,7 @@ Future<void> _pump(
         ),
       ),
       route('/announcements/trips', 'Trajets'),
+      route('/announcements/:id/trip', 'Fiche trajet'),
       route('/envois', 'Écran envois'),
       route('/demandes', 'Écran demandes'),
       route('/negotiations', 'Écran négociations'),
@@ -362,6 +366,8 @@ void main() {
     registerFallbackValue(const TravelerBidsRequested());
     registerFallbackValue(const NegotiationListFetchRequested());
     registerFallbackValue('');
+    // La feuille Kg vendus date ses lignes en français.
+    initializeDateFormatting('fr');
   });
 
   setUp(() {
@@ -832,6 +838,28 @@ void main() {
       },
     );
 
+    testWidgets(
+      'la tuile Revenus est formatée dans la devise annoncée par le backend',
+      (tester) async {
+        // Le cache serveur n'est pas évincé au changement de devise : quand
+        // le backend dit XOF, la tuile affiche des F CFA, quelle que soit la
+        // devise active locale (aucune ici, donc repli EUR si on l'ignorait).
+        await _pump(
+          tester,
+          summary: const TripsSummaryModel(
+            activeTrips: 1,
+            kgSold: 16,
+            revenue: 120000,
+            revenueCurrency: 'XOF',
+            revenueConverted: false,
+          ),
+        );
+
+        expect(find.textContaining('F CFA'), findsOneWidget);
+        expect(find.textContaining('€'), findsNothing);
+      },
+    );
+
     testWidgets('la tuile Revenus n\'a pas de « ≈ » sans conversion', (
       tester,
     ) async {
@@ -892,6 +920,37 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(KgSoldSheet), findsOneWidget);
+    });
+
+    testWidgets('un trajet choisi dans la feuille Kg ouvre sa fiche', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        kgSold: KgSoldModel(
+          period: '30d',
+          totalKg: 4,
+          parcels: 1,
+          trips: [
+            KgSoldTripModel(
+              tripId: 't1',
+              departureCity: 'Paris',
+              arrivalCity: 'Dakar',
+              date: DateTime(2026, 9, 12),
+              parcels: 1,
+              kg: 4,
+            ),
+          ],
+        ),
+      );
+
+      await tester.ensureVisible(find.text('Kg vendus'));
+      await tester.tap(find.text('Kg vendus'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('kg-trip-t1')));
+      await tester.pumpAndSettle();
+
+      expect(visitedUris, contains('/announcements/t1/trip'));
     });
 
     testWidgets('taper Trajets ouvre Mes trajets filtré sur les terminés', (

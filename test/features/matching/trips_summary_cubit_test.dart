@@ -75,6 +75,40 @@ void main() {
     });
   });
 
+  // Sans ces champs dans `props`, un passage EUR → XOF à revenu égal ne
+  // rebâtirait pas la tuile Revenus (BlocBuilder compare les états).
+  test('la devise et le drapeau de conversion distinguent deux états', () {
+    const a = TripsSummaryState.loaded(
+      TripsSummaryModel(
+        activeTrips: 3,
+        kgSold: 10,
+        revenue: 100,
+        revenueCurrency: 'EUR',
+        revenueConverted: false,
+      ),
+    );
+    const b = TripsSummaryState.loaded(
+      TripsSummaryModel(
+        activeTrips: 3,
+        kgSold: 10,
+        revenue: 100,
+        revenueCurrency: 'XOF',
+        revenueConverted: false,
+      ),
+    );
+    const c = TripsSummaryState.loaded(
+      TripsSummaryModel(
+        activeTrips: 3,
+        kgSold: 10,
+        revenue: 100,
+        revenueCurrency: 'EUR',
+        revenueConverted: true,
+      ),
+    );
+    expect(a, isNot(equals(b)));
+    expect(a, isNot(equals(c)));
+  });
+
   blocTest<TripsSummaryCubit, TripsSummaryState>(
     'load en échec laisse le nombre de trajets INCONNU (et non à zéro)',
     build: () {

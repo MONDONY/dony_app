@@ -37,6 +37,8 @@ class TripsSummaryState extends Equatable {
     summary?.activeTrips,
     summary?.kgSold,
     summary?.revenue,
+    summary?.revenueCurrency,
+    summary?.revenueConverted,
     summary?.tripsPublished,
     summary?.parcelsSent,
   ];

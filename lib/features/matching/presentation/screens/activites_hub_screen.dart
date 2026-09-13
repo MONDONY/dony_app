@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dony/app/main_shell.dart';
+import 'package:dony/core/currency/active_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/injection.dart';
@@ -878,8 +879,17 @@ class _StatsRow extends StatelessWidget {
 
   /// « ≈ » dès que le backend dit avoir converti : la somme exacte, devise par
   /// devise, vit dans la feuille ouverte au tap.
+  ///
+  /// Le montant est formaté dans la devise annoncée par le backend
+  /// (`revenueCurrency`), pas dans la devise active locale : le cache serveur
+  /// n'est pas évincé au changement de devise, et pendant quelques minutes
+  /// après un passage EUR → XOF le total arrive encore en euros. Repli sur la
+  /// devise active seulement quand le backend ne dit rien (ancien contrat).
   String _money(TripsSummaryModel? summary) {
-    final value = formatPriceActive(summary?.revenue ?? 0);
+    final value = formatPriceIn(
+      summary?.revenue ?? 0,
+      summary?.revenueCurrency ?? ActiveCurrency.current?.code,
+    );
     return (summary?.isRevenueConverted ?? false) ? '≈ $value' : value;
   }
 
@@ -897,7 +907,8 @@ class _StatsRow extends StatelessWidget {
         Future<void> openKgSold() async {
           _logEvent(AnalyticsEvents.activitesHubStatsKgSoldOpened);
           final tripId = await KgSoldSheet.show(context, period: period);
-          if (tripId != null && context.mounted) {
+          // Un modèle replié sur '' pousserait « /announcements//trip ».
+          if (tripId != null && tripId.isNotEmpty && context.mounted) {
             unawaited(context.push('/announcements/$tripId/trip'));
           }
         }

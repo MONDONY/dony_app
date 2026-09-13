@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/features/matching/bloc/revenue_details_cubit.dart';
 import 'package:dony/features/matching/bloc/stats_period_cubit.dart';
@@ -47,4 +49,48 @@ void main() {
       RevenueDetailsState(status: RevenueDetailsStatus.error),
     ],
   );
+
+  group('feuille retirée pendant le chargement', () {
+    test("n'émet rien après close quand la requête aboutit", () async {
+      final completer = Completer<RevenueDetailsModel>();
+      when(
+        () => repo.getRevenueDetails(period: '7d'),
+      ).thenAnswer((_) => completer.future);
+      final cubit = RevenueDetailsCubit(repo);
+      final emitted = <RevenueDetailsState>[];
+      final sub = cubit.stream.listen(emitted.add);
+
+      final loading = cubit.load(StatsPeriod.sevenDays);
+      await cubit.close();
+      completer.complete(details);
+      await loading;
+
+      expect(emitted, const [
+        RevenueDetailsState(status: RevenueDetailsStatus.loading),
+      ]);
+      expect(cubit.state.status, RevenueDetailsStatus.loading);
+      await sub.cancel();
+    });
+
+    test("n'émet rien après close quand la requête échoue", () async {
+      final completer = Completer<RevenueDetailsModel>();
+      when(
+        () => repo.getRevenueDetails(period: '7d'),
+      ).thenAnswer((_) => completer.future);
+      final cubit = RevenueDetailsCubit(repo);
+      final emitted = <RevenueDetailsState>[];
+      final sub = cubit.stream.listen(emitted.add);
+
+      final loading = cubit.load(StatsPeriod.sevenDays);
+      await cubit.close();
+      completer.completeError(Exception('hors ligne'));
+      await loading;
+
+      expect(emitted, const [
+        RevenueDetailsState(status: RevenueDetailsStatus.loading),
+      ]);
+      expect(cubit.state.status, RevenueDetailsStatus.loading);
+      await sub.cancel();
+    });
+  });
 }

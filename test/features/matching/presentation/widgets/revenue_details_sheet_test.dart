@@ -5,6 +5,7 @@ import 'package:dony/features/matching/bloc/stats_period_cubit.dart';
 import 'package:dony/features/matching/data/models/revenue_details_model.dart';
 import 'package:dony/features/matching/presentation/widgets/revenue_details_sheet.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -136,6 +137,57 @@ void main() {
       expect(find.textContaining('Mobile money'), findsOneWidget);
       // Sans rappel de conversion tant que la tuile n'en porte pas.
       expect(find.textContaining('total converti'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    "un en-tête de groupe est un bouton dépliable actionnable au lecteur d'écran",
+    (tester) async {
+      final handle = tester.ensureSemantics();
+      whenListen(
+        cubit,
+        const Stream<RevenueDetailsState>.empty(),
+        initialState: RevenueDetailsState(
+          status: RevenueDetailsStatus.loaded,
+          details: _details,
+        ),
+      );
+
+      await tester.pumpWidget(_harness(cubit));
+      await tester.pumpAndSettle();
+
+      final header = find.byKey(const Key('revenue-group-EUR'));
+      var node = tester.getSemantics(header);
+      expect(
+        node,
+        isSemantics(
+          isButton: true,
+          hasTapAction: true,
+          hasExpandedState: true,
+          isExpanded: true,
+        ),
+      );
+      expect(node.label, contains('Euro'));
+
+      // L'action tap sémantique (celle que déclenche VoiceOver/TalkBack)
+      // plie bien le groupe, pas seulement le doigt sur l'InkWell.
+      node.owner!.performAction(node.id, SemanticsAction.tap);
+      await tester.pumpAndSettle();
+      node = tester.getSemantics(header);
+      expect(
+        node,
+        isSemantics(
+          isButton: true,
+          hasTapAction: true,
+          hasExpandedState: true,
+          isExpanded: false,
+        ),
+      );
+      expect(
+        tester.getSize(find.byKey(const Key('revenue-group-EUR-items'))).height,
+        0,
+      );
+      handle.dispose();
     },
   );
 

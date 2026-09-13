@@ -73,6 +73,28 @@ void main() {
     expect(find.textContaining('≈ '), findsOneWidget);
   });
 
+  testWidgets('TripsStatsStrip formate le revenu dans la devise du backend', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrap(
+        const TripsStatsStrip(
+          summary: TripsSummaryModel(
+            activeTrips: 2,
+            kgSold: 12,
+            revenue: 120000,
+            revenueCurrency: 'XOF',
+            revenueConverted: false,
+          ),
+        ),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.textContaining('F CFA'), findsOneWidget);
+    expect(find.textContaining('€'), findsNothing);
+  });
+
   testWidgets('StatusChipsRow : chip active mise en avant, tap change', (
     tester,
   ) async {

@@ -32,6 +32,9 @@ class RevenueDetailsCubit extends Cubit<RevenueDetailsState> {
       final details = await _repository.getRevenueDetails(
         period: period.apiValue,
       );
+      // La feuille peut être retirée (glissée vers le bas) pendant la requête :
+      // le cubit est alors fermé et un emit lèverait un StateError vers Sentry.
+      if (isClosed) return;
       emit(
         RevenueDetailsState(
           status: RevenueDetailsStatus.loaded,
@@ -41,6 +44,7 @@ class RevenueDetailsCubit extends Cubit<RevenueDetailsState> {
     } catch (_) {
       // Ancien backend (404) ou réseau : la feuille montre son état d'erreur
       // avec « Réessayer », rien ne remonte à Sentry.
+      if (isClosed) return;
       emit(const RevenueDetailsState(status: RevenueDetailsStatus.error));
     }
   }

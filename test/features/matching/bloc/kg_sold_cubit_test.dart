@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/features/matching/bloc/kg_sold_cubit.dart';
 import 'package:dony/features/matching/bloc/stats_period_cubit.dart';
@@ -42,4 +44,44 @@ void main() {
       KgSoldState(status: KgSoldStatus.error),
     ],
   );
+
+  group('feuille retirée pendant le chargement', () {
+    test("n'émet rien après close quand la requête aboutit", () async {
+      final completer = Completer<KgSoldModel>();
+      when(
+        () => repo.getKgSold(period: '7d'),
+      ).thenAnswer((_) => completer.future);
+      final cubit = KgSoldCubit(repo);
+      final emitted = <KgSoldState>[];
+      final sub = cubit.stream.listen(emitted.add);
+
+      final loading = cubit.load(StatsPeriod.sevenDays);
+      await cubit.close();
+      completer.complete(details);
+      await loading;
+
+      expect(emitted, const [KgSoldState(status: KgSoldStatus.loading)]);
+      expect(cubit.state.status, KgSoldStatus.loading);
+      await sub.cancel();
+    });
+
+    test("n'émet rien après close quand la requête échoue", () async {
+      final completer = Completer<KgSoldModel>();
+      when(
+        () => repo.getKgSold(period: '7d'),
+      ).thenAnswer((_) => completer.future);
+      final cubit = KgSoldCubit(repo);
+      final emitted = <KgSoldState>[];
+      final sub = cubit.stream.listen(emitted.add);
+
+      final loading = cubit.load(StatsPeriod.sevenDays);
+      await cubit.close();
+      completer.completeError(Exception('hors ligne'));
+      await loading;
+
+      expect(emitted, const [KgSoldState(status: KgSoldStatus.loading)]);
+      expect(cubit.state.status, KgSoldStatus.loading);
+      await sub.cancel();
+    });
+  });
 }
