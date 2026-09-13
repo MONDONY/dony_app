@@ -15,6 +15,7 @@ import 'package:dony/features/profile/presentation/widgets/pending_deletion_bann
 import 'package:dony/features/profile/presentation/widgets/profile_header.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_menu_sheet.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_sections.dart';
+import 'package:dony/features/profile/presentation/widgets/profile_skeleton.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:dony/features/settings/presentation/widgets/delete_account_bottom_sheet.dart';
 import 'package:flutter/material.dart';
@@ -40,6 +41,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   final GlobalKey _headerKey = GlobalKey();
   double? _measuredHeaderHeight;
+
+  /// Dernier profil réellement reçu. `null` tant qu'aucun état porteur d'un
+  /// utilisateur n'est passé, et c'est ce vide, lui seul, qui vaut squelette.
+  /// Une fois connu, `AuthLoading` et `AuthError` ne le retirent pas : ce
+  /// sont aussi les états d'une action annexe (mise à jour du profil, ajout
+  /// d'e-mail qui échoue…) pendant laquelle l'utilisateur reste connecté.
+  /// Même distinction que `_informsAboutSession` dans `upgrade_to_pro_screen`.
+  UserModel? _lastUser;
 
   /// Estimation de repli — utilisée uniquement à la 1re frame, avant la
   /// mesure réelle du header (puis remplacée par la hauteur exacte).
@@ -69,11 +78,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   /// Feuille de menu du bouton burger. Elle est montée sur le navigateur
   /// racine, sans GoRouter ni blocs dans son contexte : elle rend une action,
   /// c'est l'écran qui trace et qui agit.
-  Future<void> _openMenu(UserModel? user) async {
+  Future<void> _openMenu(UserModel user) async {
     _logEvent(AnalyticsEvents.profileMenuOpened);
     final action = await ProfileMenuSheet.show(
       context,
-      canDeleteAccount: !(user?.isPendingDeletion ?? false),
+      canDeleteAccount: !user.isPendingDeletion,
     );
     if (action == null || !mounted) return;
     switch (action) {
@@ -134,18 +143,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: BlocBuilder<AuthBloc, AuthState>(
-          buildWhen: (prev, curr) =>
-              curr is AuthAuthenticated || curr is AuthProfileUpdated,
+          // Reconstruit sur tout état porteur d'un profil (chargé, rafraîchi)
+          // et, tant qu'aucun profil n'est connu, sur le va-et-vient
+          // chargement ↔ erreur qui pilote le squelette. Une fois le profil
+          // connu, l'`AuthLoading`/`AuthError` d'une action annexe ne doit
+          // pas remplacer la page par le squelette (voir `_lastUser`).
+          buildWhen: (_, curr) =>
+              curr.currentUser != null ||
+              (_lastUser == null && (curr is AuthLoading || curr is AuthError)),
           builder: (context, authState) {
-            UserModel? user;
-            if (authState is AuthAuthenticated) user = authState.user;
-            if (authState is AuthProfileUpdated) user = authState.user;
+            final user = authState.currentUser ?? _lastUser;
+            // Profil jamais reçu : contrôle de démarrage encore en cours, ou
+            // échoué hors ligne. Un squelette, jamais la page construite sur
+            // des valeurs de repli (« Utilisateur », « Email manquant »…).
+            // `AuthCheckRequested` pour réessayer, et non le rafraîchissement
+            // silencieux : il émet `AuthLoading`, donc redonne le reflet, et
+            // dit son échec.
+            if (user == null) {
+              return ProfileScreenSkeleton(
+                hasError: authState is AuthError,
+                onRetry: () =>
+                    context.read<AuthBloc>().add(const AuthCheckRequested()),
+              );
+            }
+            _lastUser = user;
 
-            final isTraveler = user?.isTraveler ?? false;
-            final isSender = user?.isSender ?? false;
-            final isKycVerified = user?.isKycVerified ?? false;
-            final isProAccount = user?.isProAccount ?? false;
-            final displayName = user?.displayName ?? 'Utilisateur';
+            final isTraveler = user.isTraveler;
+            final isSender = user.isSender;
+            final isKycVerified = user.isKycVerified;
+            final isProAccount = user.isProAccount;
+            final displayName = user.displayName;
 
             return Builder(
               builder: (context) {
@@ -176,10 +203,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   isSender: isSender,
                   isKycVerified: isKycVerified,
                   isProAccount: isProAccount,
-                  avatarUrl: user?.avatarUrl,
-                  phoneNumber: user?.phoneNumber,
-                  email: user?.email,
-                  city: user?.city,
+                  avatarUrl: user.avatarUrl,
+                  phoneNumber: user.phoneNumber,
+                  email: user.email,
+                  city: user.city,
                   topPadding: topPad,
                 );
 
@@ -228,7 +255,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             context: context,
                             expandedHeight: expandedHeight,
                             displayName: displayName,
-                            avatarUrl: user?.avatarUrl,
+                            avatarUrl: user.avatarUrl,
                             isKycVerified: isKycVerified,
                             isProAccount: isProAccount,
                             header: profileHeader,
@@ -377,7 +404,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   /// activer les paiements par carte comme passer en compte PRO.
   List<Widget> _sections({
     required BuildContext context,
-    required UserModel? user,
+    required UserModel user,
     required bool isProAccount,
   }) {
     const gap = SizedBox(height: DonySpacing.lg);
@@ -399,9 +426,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       // il s'additionnerait au padding déjà posé par le `SliverPadding` de
       // cet écran quand rien n'est affiché.
       SubscriptionBannerHost(isProAccount: isProAccount),
-      if (user != null &&
-          user.isPendingDeletion &&
-          user.deletionRequestedAt != null) ...[
+      if (user.isPendingDeletion && user.deletionRequestedAt != null) ...[
         PendingDeletionBanner(
           deletionRequestedAt: user.deletionRequestedAt!,
           onReactivate: () => context.read<AccountDeletionBloc>().add(
@@ -415,11 +440,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       // une seule carte pour y répondre. Elle décide seule de s'afficher —
       // `isProfileComplete` ne connaît pas ces deux étapes-là — et porte son
       // propre écart bas pour ne rien occuper une fois tout complété.
-      if (user != null)
-        ProfileCompletionBanner(
-          user: user,
-          onTap: () => context.push('/profile/edit'),
-        ).animate().fadeIn(delay: 40.ms),
+      ProfileCompletionBanner(
+        user: user,
+        onTap: () => context.push('/profile/edit'),
+      ).animate().fadeIn(delay: 40.ms),
 
       animated(ProfileAccountSection(user: user)),
       // Compte entièrement vérifié → la section se réduit à SizedBox.shrink :
