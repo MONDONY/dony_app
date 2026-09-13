@@ -75,6 +75,7 @@ Future<void> _pump(
   MockAnnouncementBloc bloc, {
   VoidCallback? onSendParcel,
   bool showBackButton = false,
+  TripStatusFilter? initialFilter,
 }) async {
   tester.view.physicalSize = const Size(800, 1400);
   tester.view.devicePixelRatio = 1.0;
@@ -98,6 +99,9 @@ Future<void> _pump(
 
   final summaryCubit = TripsSummaryCubit(mockRepo);
   final filterCubit = TripFilterCubit(mockAnalytics);
+  if (initialFilter != null) {
+    filterCubit.seedFilter(initialFilter);
+  }
   final negoBloc = _MockNegotiationListBloc();
   when(() => negoBloc.state).thenReturn(NegotiationListState());
 
@@ -205,6 +209,29 @@ void main() {
 
       // Only 1 TripCard (completed one)
       expect(find.byType(TripCard), findsOneWidget);
+    });
+
+    testWidgets('un filtre amorcé n\'affiche que les trajets terminés', (
+      tester,
+    ) async {
+      final completed = _makeAnnouncement(id: 'a1', status: 'COMPLETED');
+      final active = _makeAnnouncement(
+        id: 'a2',
+        departureCity: 'Lyon',
+        arrivalCity: 'Abidjan',
+      );
+
+      when(
+        () => bloc.state,
+      ).thenReturn(AnnouncementListLoaded([completed, active]));
+      when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
+
+      await _pump(tester, bloc, initialFilter: TripStatusFilter.completed);
+      await tester.pump(const Duration(milliseconds: 400));
+
+      // Seul le trajet COMPLETED reste ; l'ACTIVE des fixtures a disparu.
+      expect(find.textContaining('Dakar'), findsWidgets);
+      expect(find.textContaining('Abidjan'), findsNothing);
     });
 
     testWidgets(

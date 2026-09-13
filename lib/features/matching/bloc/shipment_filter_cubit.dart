@@ -184,6 +184,11 @@ List<BidModel> applyShipmentFilters(
   return _sortShipments(out.toList());
 }
 
+/// Statuts demandés par l'URL (`/envois?status=delivered`). Une valeur
+/// inconnue laisse la liste sur « Tous ».
+Set<String> resolveShipmentStatuses(String? value) =>
+    value == 'delivered' ? const {'COMPLETED'} : const {};
+
 class ShipmentFilterCubit extends Cubit<ShipmentFilterState> {
   ShipmentFilterCubit(this._analytics) : super(const ShipmentFilterState());
   final AnalyticsService _analytics;
@@ -218,6 +223,12 @@ class ShipmentFilterCubit extends Cubit<ShipmentFilterState> {
   }
 
   void reset() => emit(const ShipmentFilterState());
+
+  /// Statuts posés à l'arrivée sur l'écran, sans événement analytics.
+  void seedStatuses(Set<String> statuses) {
+    if (statuses.isEmpty) return;
+    emit(state.copyWith(statuses: statuses));
+  }
 
   void _track() {
     unawaited(

@@ -11,6 +11,7 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/bloc/shipment_filter_cubit.dart';
+import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/screens/mes_colis_screen.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
@@ -65,6 +66,18 @@ PackageRequest _request(PackageRequestStatus status, {String id = 'pr-1'}) =>
       categories: const ['Vêtements'],
       status: status,
       createdAt: DateTime(2026, 6),
+    );
+
+BidModel _bid({required String id, required String status, String? arrivee}) =>
+    BidModel(
+      id: id,
+      announcementId: 'a1',
+      senderId: 's1',
+      status: status,
+      departureCity: 'Paris',
+      arrivalCity: arrivee,
+      createdAt: DateTime(2026, 5),
+      updatedAt: DateTime(2026, 5),
     );
 
 NegotiationThread _thread({
@@ -161,6 +174,7 @@ void main() {
   Future<void> pump(
     WidgetTester tester, {
     MesColisTab initialTab = MesColisTab.enRoute,
+    Set<String> initialStatuses = const {},
     PackageRequestState? packageState,
     NegotiationListState? negoState,
   }) async {
@@ -203,7 +217,10 @@ void main() {
               BlocProvider<AuthBloc>.value(value: authBloc),
               BlocProvider<PaymentBloc>.value(value: paymentBloc),
             ],
-            child: MesColisScreenTesting(initialTab: initialTab),
+            child: MesColisScreenTesting(
+              initialTab: initialTab,
+              initialStatuses: initialStatuses,
+            ),
           ),
         ),
       ],
@@ -266,6 +283,26 @@ void main() {
       await pump(tester);
 
       verify(() => packageBloc.add(const FetchMyRequests())).called(1);
+    });
+  });
+
+  group('MesColisScreen — amorçage par l\'URL', () {
+    testWidgets('initialStatuses ne montre que les envois livrés (COMPLETED)', (
+      tester,
+    ) async {
+      whenListen<BidState>(
+        bidBloc,
+        const Stream<BidState>.empty(),
+        initialState: BidListLoaded([
+          _bid(id: 'b1', status: 'COMPLETED', arrivee: 'Dakar'),
+          _bid(id: 'b2', status: 'ACCEPTED', arrivee: 'Abidjan'),
+        ]),
+      );
+
+      await pump(tester, initialStatuses: const {'COMPLETED'});
+
+      expect(find.textContaining('Dakar'), findsWidgets);
+      expect(find.textContaining('Abidjan'), findsNothing);
     });
   });
 

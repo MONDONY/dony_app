@@ -8,6 +8,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// Filtre statut de la liste « Mes trajets » (chips type Airbnb).
 enum TripStatusFilter { all, draft, active, completed, cancelled }
 
+/// Filtre demandé par l'URL (`/announcements/trips?filter=completed`). Une
+/// valeur inconnue n'a pas d'effet plutôt que de casser la route.
+TripStatusFilter resolveTripFilter(String? value) =>
+    TripStatusFilter.values.asNameMap()[value] ?? TripStatusFilter.all;
+
 const _activeStatuses = {'ACTIVE', 'FULL', 'IN_PROGRESS'};
 
 class TripFilterState extends Equatable {
@@ -59,4 +64,9 @@ class TripFilterCubit extends Cubit<TripFilterState> {
   }
 
   void setQuery(String query) => emit(state.copyWith(query: query));
+
+  /// Filtre posé à l'arrivée sur l'écran, sans événement analytics : ce n'est
+  /// pas un choix de l'utilisateur, c'est l'appelant qui l'a fixé.
+  void seedFilter(TripStatusFilter filter) =>
+      emit(state.copyWith(filter: filter));
 }
