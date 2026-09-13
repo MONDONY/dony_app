@@ -394,4 +394,24 @@ void main() {
       expect(r.length, 2);
     });
   });
+
+  group('amorçage par l\'URL', () {
+    test('resolveShipmentStatuses : delivered → COMPLETED, sinon tout', () {
+      expect(resolveShipmentStatuses('delivered'), {'COMPLETED'});
+      expect(resolveShipmentStatuses('bidon'), isEmpty);
+      expect(resolveShipmentStatuses(null), isEmpty);
+    });
+
+    test('seedStatuses pose les statuts sans tracer', () {
+      final analytics = _MockAnalytics();
+      final cubit = ShipmentFilterCubit(analytics);
+
+      cubit.seedStatuses({'COMPLETED'});
+
+      expect(cubit.state.statuses, {'COMPLETED'});
+      verifyNever(
+        () => analytics.logEvent(any(), properties: any(named: 'properties')),
+      );
+    });
+  });
 }

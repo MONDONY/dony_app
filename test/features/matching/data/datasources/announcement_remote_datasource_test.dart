@@ -817,4 +817,90 @@ void main() {
       expect(capturedData!.containsKey('arrivalCountryCode'), isFalse);
     });
   });
+
+  group('détails des statistiques', () {
+    test(
+      'getRevenueDetails appelle /travelers/me/trips-summary/revenues avec la période',
+      () async {
+        when(
+          () => mockDio.get(
+            '/travelers/me/trips-summary/revenues',
+            queryParameters: {'period': '7d'},
+          ),
+        ).thenAnswer(
+          (_) async => Response(
+            requestOptions: RequestOptions(
+              path: '/travelers/me/trips-summary/revenues',
+            ),
+            data: {
+              'period': '7d',
+              'deliveries': 1,
+              'groups': [
+                {
+                  'currency': 'EUR',
+                  'total': 480.0,
+                  'deliveries': 1,
+                  'items': [
+                    {
+                      'tripId': 't1',
+                      'departureCity': 'Paris',
+                      'arrivalCity': 'Dakar',
+                      'date': '2026-09-12',
+                      'weightKg': 4,
+                      'rail': 'CARD',
+                      'amount': 480.0,
+                    },
+                  ],
+                },
+              ],
+            },
+          ),
+        );
+
+        final details = await datasource.getRevenueDetails(period: '7d');
+
+        expect(details.period, '7d');
+        expect(details.groups.single.currency, 'EUR');
+        expect(details.groups.single.items.single.amount, 480.0);
+      },
+    );
+
+    test(
+      'getKgSold appelle /travelers/me/trips-summary/kg-sold avec la période',
+      () async {
+        when(
+          () => mockDio.get(
+            '/travelers/me/trips-summary/kg-sold',
+            queryParameters: {'period': '12m'},
+          ),
+        ).thenAnswer(
+          (_) async => Response(
+            requestOptions: RequestOptions(
+              path: '/travelers/me/trips-summary/kg-sold',
+            ),
+            data: {
+              'period': '12m',
+              'totalKg': 6,
+              'parcels': 2,
+              'trips': [
+                {
+                  'tripId': 't1',
+                  'departureCity': 'Paris',
+                  'arrivalCity': 'Dakar',
+                  'date': '2026-09-12',
+                  'parcels': 2,
+                  'kg': 6,
+                },
+              ],
+            },
+          ),
+        );
+
+        final kg = await datasource.getKgSold(period: '12m');
+
+        expect(kg.totalKg, 6);
+        expect(kg.trips.single.tripId, 't1');
+      },
+    );
+  });
 }

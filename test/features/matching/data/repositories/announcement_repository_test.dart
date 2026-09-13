@@ -1,6 +1,8 @@
 import 'package:dony/features/matching/data/datasources/announcement_remote_datasource.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/kg_sold_model.dart';
+import 'package:dony/features/matching/data/models/revenue_details_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -428,5 +430,27 @@ void main() {
         arrivalInstructions: 'instructions',
       ),
     ).called(1);
+  });
+
+  group('détails des statistiques', () {
+    test('getRevenueDetails délègue au datasource', () async {
+      const details = RevenueDetailsModel(
+        period: '30d',
+        deliveries: 0,
+        groups: [],
+      );
+      when(
+        () => mockDs.getRevenueDetails(period: '30d'),
+      ).thenAnswer((_) async => details);
+
+      expect(await repo.getRevenueDetails(period: '30d'), same(details));
+    });
+
+    test('getKgSold délègue au datasource', () async {
+      const kg = KgSoldModel(period: '30d', totalKg: 0, parcels: 0, trips: []);
+      when(() => mockDs.getKgSold(period: '30d')).thenAnswer((_) async => kg);
+
+      expect(await repo.getKgSold(period: '30d'), same(kg));
+    });
   });
 }

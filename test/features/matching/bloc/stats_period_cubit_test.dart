@@ -30,4 +30,10 @@ void main() {
     act: (c) => c.select(StatsPeriod.thirtyDays),
     expect: () => <StatsPeriod>[],
   );
+
+  test('detailLabel nomme la fenêtre pour les feuilles de détail', () {
+    expect(StatsPeriod.sevenDays.detailLabel, '7 derniers jours');
+    expect(StatsPeriod.thirtyDays.detailLabel, '30 derniers jours');
+    expect(StatsPeriod.twelveMonths.detailLabel, '12 derniers mois');
+  });
 }

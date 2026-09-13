@@ -64,6 +64,7 @@ import 'package:dony/features/matching/bloc/bid_negotiation_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_negotiation_event.dart';
 import 'package:dony/features/matching/bloc/contact_reveal/contact_reveal_bloc.dart';
 import 'package:dony/features/matching/bloc/mobile_money_payment_bloc.dart';
+import 'package:dony/features/matching/bloc/shipment_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/trip_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
@@ -750,7 +751,12 @@ final appRouter = GoRouter(
                 getIt<AnnouncementBloc>()..add(AnnouncementListRequested()),
           ),
           BlocProvider(create: (_) => getIt<TripsSummaryCubit>()),
-          BlocProvider(create: (_) => getIt<TripFilterCubit>()),
+          BlocProvider(
+            create: (_) => getIt<TripFilterCubit>()
+              ..seedFilter(
+                resolveTripFilter(state.uri.queryParameters['filter']),
+              ),
+          ),
           BlocProvider.value(value: getIt<NegotiationListBloc>()),
         ],
         child: const AnnouncementListScreen(showBackButton: true),
@@ -1096,7 +1102,14 @@ final appRouter = GoRouter(
     // ── Envois et demandes — destinations du hub Activités ────────────
     // MesColisScreen pose lui-même ses providers (BidBloc + PackageRequestBloc)
     // et laisse chaque volet déclencher son propre chargement.
-    GoRoute(path: '/envois', builder: (_, _) => const MesColisScreen()),
+    GoRoute(
+      path: '/envois',
+      builder: (_, state) => MesColisScreen(
+        initialStatuses: resolveShipmentStatuses(
+          state.uri.queryParameters['status'],
+        ),
+      ),
+    ),
     GoRoute(path: '/demandes', builder: (_, _) => const DemandesScreen()),
 
     // ── Profile — quick wins (hors shell) ────────────────────────────

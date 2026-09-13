@@ -448,6 +448,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `activites_hub_trips_opened` / `activites_hub_envois_opened` / `activites_hub_demandes_opened` / `activites_hub_negotiations_opened` | ActivitesHubScreen — tap sur une tuile d'activité du hub. `activites_hub_envois_opened` porte la tuile « Mes colis », qui ouvre `/envois` (MesColisScreen : envois en route + demandes publiées) |
 | `activites_hub_trip_create_opened` / `activites_hub_request_create_opened` | ActivitesHubScreen — CTA « Publier un trajet » / « Publier un colis » |
 | `activites_hub_stats_period_changed` | ActivitesHubScreen — changement de période des statistiques |
+| `activites_hub_stats_revenues_opened` / `activites_hub_stats_kg_sold_opened` / `activites_hub_stats_trips_opened` / `activites_hub_stats_parcels_opened` | ActivitesHubScreen._StatsRow — tap sur une tuile de statistiques (feuille Revenus, feuille Kg vendus, Mes trajets filtré Terminés, Mes colis filtré Livrés) |
 | `activites_hub_menu_opened` | ActivitesHubScreen._openMenu — bouton burger du header, à l'ouverture de la feuille de menu (`ActivitesMenuSheet`). Émis même si la feuille est refermée sans choisir : c'est l'entrée de l'entonnoir |
 | `activites_hub_search_opened` | ActivitesHubScreen._openMenu — entrée « Suivre un colis » de la feuille de menu (l'ancien bouton du header a été remplacé par le burger) |
 | `activites_hub_scan_opened` | ActivitesHubScreen._openMenu — entrée « Scanner un colis » de la feuille de menu |

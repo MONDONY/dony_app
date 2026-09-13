@@ -33,10 +33,18 @@ enum MesColisTab {
 /// « Envoyées » de l'écran Demandes, au milieu d'un écran voyageur ; il
 /// rejoint ici la liste qui parle du même objet.
 class MesColisScreen extends StatelessWidget {
-  const MesColisScreen({super.key, this.initialTab = MesColisTab.enRoute});
+  const MesColisScreen({
+    super.key,
+    this.initialTab = MesColisTab.enRoute,
+    this.initialStatuses = const {},
+  });
 
   /// Volet ouvert à l'arrivée — permet à un appelant de viser « Publiés ».
   final MesColisTab initialTab;
+
+  /// Statuts amorcés dans la liste d'envois (ex. `{'COMPLETED'}` depuis
+  /// `/envois?status=delivered`). Vide : « Tous », comme avant.
+  final Set<String> initialStatuses;
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +58,10 @@ class MesColisScreen extends StatelessWidget {
         BlocProvider.value(value: getIt<PackageRequestBloc>()),
         BlocProvider.value(value: getIt<NegotiationListBloc>()),
       ],
-      child: _MesColisView(initialTab: initialTab),
+      child: _MesColisView(
+        initialTab: initialTab,
+        initialStatuses: initialStatuses,
+      ),
     );
   }
 }
@@ -61,18 +72,25 @@ class MesColisScreenTesting extends StatelessWidget {
   const MesColisScreenTesting({
     super.key,
     this.initialTab = MesColisTab.enRoute,
+    this.initialStatuses = const {},
   });
 
   final MesColisTab initialTab;
+  final Set<String> initialStatuses;
 
   @override
-  Widget build(BuildContext context) => _MesColisView(initialTab: initialTab);
+  Widget build(BuildContext context) =>
+      _MesColisView(initialTab: initialTab, initialStatuses: initialStatuses);
 }
 
 class _MesColisView extends StatefulWidget {
-  const _MesColisView({required this.initialTab});
+  const _MesColisView({
+    required this.initialTab,
+    required this.initialStatuses,
+  });
 
   final MesColisTab initialTab;
+  final Set<String> initialStatuses;
 
   @override
   State<_MesColisView> createState() => _MesColisViewState();
@@ -152,7 +170,10 @@ class _MesColisViewState extends State<_MesColisView> {
               child: IndexedStack(
                 key: const Key('mes-colis-body'),
                 index: _tab.index,
-                children: const [ShipmentListScreen(), MyPackageRequestsBody()],
+                children: [
+                  ShipmentListScreen(initialStatuses: widget.initialStatuses),
+                  const MyPackageRequestsBody(),
+                ],
               ),
             ),
           ],

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dony/app/main_shell.dart';
+import 'package:dony/core/currency/active_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/injection.dart';
@@ -21,9 +22,12 @@ import 'package:dony/features/matching/bloc/traveler_bids_event.dart';
 import 'package:dony/features/matching/bloc/traveler_bids_state.dart';
 import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/matching/data/models/tools_completion_model.dart';
+import 'package:dony/features/matching/data/models/trips_summary_model.dart';
 import 'package:dony/features/matching/presentation/screens/mes_colis_screen.dart';
 import 'package:dony/features/matching/presentation/widgets/activites_menu_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/activity_tile.dart';
+import 'package:dony/features/matching/presentation/widgets/kg_sold_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/revenue_details_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/stat_tile.dart';
 import 'package:dony/features/matching/presentation/widgets/tool_key_presentation.dart';
 import 'package:dony/features/matching/presentation/widgets/tool_status_badge.dart';
@@ -873,7 +877,21 @@ class _PeriodChips extends StatelessWidget {
 class _StatsRow extends StatelessWidget {
   const _StatsRow();
 
-  String _money(double v) => formatPriceActive(v);
+  /// « ≈ » dès que le backend dit avoir converti : la somme exacte, devise par
+  /// devise, vit dans la feuille ouverte au tap.
+  ///
+  /// Le montant est formaté dans la devise annoncée par le backend
+  /// (`revenueCurrency`), pas dans la devise active locale : le cache serveur
+  /// n'est pas évincé au changement de devise, et pendant quelques minutes
+  /// après un passage EUR → XOF le total arrive encore en euros. Repli sur la
+  /// devise active seulement quand le backend ne dit rien (ancien contrat).
+  String _money(TripsSummaryModel? summary) {
+    final value = formatPriceIn(
+      summary?.revenue ?? 0,
+      summary?.revenueCurrency ?? ActiveCurrency.current?.code,
+    );
+    return (summary?.isRevenueConverted ?? false) ? '≈ $value' : value;
+  }
 
   String _weight(double v) => '${v.toStringAsFixed(v % 1 == 0 ? 0 : 1)} kg';
 
@@ -884,15 +902,38 @@ class _StatsRow extends StatelessWidget {
       builder: (context, state) {
         final summary = state.summary;
         final loading = state.status == TripsSummaryStatus.loading;
+        final period = context.read<StatsPeriodCubit>().state;
+
+        Future<void> openKgSold() async {
+          _logEvent(AnalyticsEvents.activitesHubStatsKgSoldOpened);
+          final tripId = await KgSoldSheet.show(context, period: period);
+          // Un modèle replié sur '' pousserait « /announcements//trip ».
+          if (tripId != null && tripId.isNotEmpty && context.mounted) {
+            unawaited(context.push('/announcements/$tripId/trip'));
+          }
+        }
+
         // Même code couleur que les tuiles d'activité : vert = gains, bleu =
         // volume, violet = trajets, terracotta = envois.
         final tiles = <Widget>[
           StatTile(
             iconName: 'euro',
             label: 'Revenus',
-            value: _money(summary?.revenue ?? 0),
+            value: _money(summary),
             color: cs.success,
             isLoading: loading,
+            onTap: () {
+              _logEvent(AnalyticsEvents.activitesHubStatsRevenuesOpened);
+              unawaited(
+                RevenueDetailsSheet.show(
+                  context,
+                  period: period,
+                  approximateTotal: (summary?.isRevenueConverted ?? false)
+                      ? _money(summary)
+                      : null,
+                ),
+              );
+            },
           ),
           StatTile(
             iconName: 'scale',
@@ -900,6 +941,7 @@ class _StatsRow extends StatelessWidget {
             value: _weight(summary?.kgSold ?? 0),
             color: cs.primary,
             isLoading: loading,
+            onTap: openKgSold,
           ),
           // Un backend antérieur ne renvoie pas ces deux compteurs. Afficher 0
           // laisserait croire à une absence d'activité : on montre « — »,
@@ -912,6 +954,11 @@ class _StatsRow extends StatelessWidget {
                 : '${summary!.tripsPublished} publiés',
             color: DonyColors.violet,
             isLoading: loading,
+            onTap: () => _openRoute(
+              context,
+              AnalyticsEvents.activitesHubStatsTripsOpened,
+              '/announcements/trips?filter=completed',
+            ),
           ),
           StatTile(
             iconName: 'package',
@@ -921,6 +968,11 @@ class _StatsRow extends StatelessWidget {
                 : '${summary!.parcelsSent} envoyés',
             color: cs.secondary,
             isLoading: loading,
+            onTap: () => _openRoute(
+              context,
+              AnalyticsEvents.activitesHubStatsParcelsOpened,
+              '/envois?status=delivered',
+            ),
           ),
         ];
 

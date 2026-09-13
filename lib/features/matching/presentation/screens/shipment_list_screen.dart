@@ -25,14 +25,18 @@ import 'package:go_router/go_router.dart';
 /// qui porte son propre header (« Mes colis », « Envoyer »). Elle n'en a donc
 /// pas : le drapeau `embedded` d'antan n'avait plus qu'une seule valeur.
 class ShipmentListScreen extends StatelessWidget {
-  const ShipmentListScreen({super.key});
+  const ShipmentListScreen({super.key, this.initialStatuses = const {}});
+
+  /// Statuts sélectionnés à l'arrivée (ex. `{'COMPLETED'}` depuis la tuile
+  /// « Envois » du hub). Vide : « Tous », comme avant.
+  final Set<String> initialStatuses;
 
   /// Le `BidBloc` vient du contexte parent — c'est ce qui permet aux tests
   /// d'en injecter un mock. L'écran déclenche lui-même son chargement dans
   /// `initState`, donc l'appelant ne doit pas le faire une seconde fois.
   @override
   Widget build(BuildContext context) => BlocProvider(
-    create: (_) => getIt<ShipmentFilterCubit>(),
+    create: (_) => getIt<ShipmentFilterCubit>()..seedStatuses(initialStatuses),
     child: const _ShipmentListContent(),
   );
 }

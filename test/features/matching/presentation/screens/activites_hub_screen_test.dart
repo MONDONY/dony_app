@@ -12,6 +12,8 @@ import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.d
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
+import 'package:dony/features/matching/bloc/kg_sold_cubit.dart';
+import 'package:dony/features/matching/bloc/revenue_details_cubit.dart';
 import 'package:dony/features/matching/bloc/stats_period_cubit.dart';
 import 'package:dony/features/matching/bloc/tools_completion_cubit.dart';
 import 'package:dony/features/matching/bloc/traveler_bids_bloc.dart';
@@ -19,11 +21,15 @@ import 'package:dony/features/matching/bloc/traveler_bids_event.dart';
 import 'package:dony/features/matching/bloc/traveler_bids_state.dart';
 import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/kg_sold_model.dart';
+import 'package:dony/features/matching/data/models/revenue_details_model.dart';
 import 'package:dony/features/matching/data/models/tools_completion_model.dart';
 import 'package:dony/features/matching/data/models/trips_summary_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/matching/data/repositories/tools_completion_repository.dart';
 import 'package:dony/features/matching/presentation/screens/activites_hub_screen.dart';
+import 'package:dony/features/matching/presentation/widgets/kg_sold_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/revenue_details_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/tool_status_badge.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
@@ -37,6 +43,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/mock_analytics_backend.dart';
@@ -147,6 +154,11 @@ BidModel _bid(String id, String status) => BidModel(
 /// Routes atteintes pendant le test, dans l'ordre.
 late List<String> visited;
 
+/// URIs complètes (avec query string) atteintes pendant le test, dans
+/// l'ordre : `visited` ne garde que le chemin, insuffisant pour vérifier un
+/// filtre poussé en query param (`?filter=completed`).
+late List<String> visitedUris;
+
 /// Exposé pour vérifier le nombre de rechargements déclenchés par
 /// [EnvoisRefreshNotifier] (throttle anti-rafale).
 late _MockTravelerBidsBloc _travelerBidsBlocUnderTest;
@@ -157,6 +169,7 @@ late _MockToolsCompletionRepository _toolsRepoUnderTest;
 Future<void> _pump(
   WidgetTester tester, {
   TripsSummaryModel? summary,
+  KgSoldModel? kgSold,
   BidState? bidState,
   TravelerBidsState? travelerBidsState,
   NegotiationListState? negoState,
@@ -177,6 +190,7 @@ Future<void> _pump(
   addTearDown(tester.view.resetPhysicalSize);
 
   visited = [];
+  visitedUris = [];
 
   final repo = _MockAnnouncementRepository();
   when(() => repo.getTripsSummary(period: any(named: 'period'))).thenAnswer(
@@ -184,6 +198,27 @@ Future<void> _pump(
         summary ??
         const TripsSummaryModel(activeTrips: 6, kgSold: 0, revenue: 0),
   );
+  when(() => repo.getRevenueDetails(period: any(named: 'period'))).thenAnswer(
+    (_) async =>
+        const RevenueDetailsModel(period: '30d', deliveries: 0, groups: []),
+  );
+  when(() => repo.getKgSold(period: any(named: 'period'))).thenAnswer(
+    (_) async =>
+        kgSold ??
+        const KgSoldModel(period: '30d', totalKg: 0, parcels: 0, trips: []),
+  );
+  if (getIt.isRegistered<RevenueDetailsCubit>()) {
+    getIt.unregister<RevenueDetailsCubit>();
+  }
+  getIt.registerFactory<RevenueDetailsCubit>(() => RevenueDetailsCubit(repo));
+  if (getIt.isRegistered<KgSoldCubit>()) {
+    getIt.unregister<KgSoldCubit>();
+  }
+  getIt.registerFactory<KgSoldCubit>(() => KgSoldCubit(repo));
+  addTearDown(() {
+    getIt.unregister<RevenueDetailsCubit>();
+    getIt.unregister<KgSoldCubit>();
+  });
 
   final bidBloc = _MockBidBloc();
   when(() => bidBloc.state).thenReturn(
@@ -253,8 +288,9 @@ Future<void> _pump(
 
   GoRoute route(String path, String label) => GoRoute(
     path: path,
-    builder: (_, _) {
+    builder: (_, state) {
       visited.add(path);
+      visitedUris.add(state.uri.toString());
       return stub(label);
     },
   );
@@ -290,6 +326,7 @@ Future<void> _pump(
         ),
       ),
       route('/announcements/trips', 'Trajets'),
+      route('/announcements/:id/trip', 'Fiche trajet'),
       route('/envois', 'Écran envois'),
       route('/demandes', 'Écran demandes'),
       route('/negotiations', 'Écran négociations'),
@@ -329,6 +366,8 @@ void main() {
     registerFallbackValue(const TravelerBidsRequested());
     registerFallbackValue(const NegotiationListFetchRequested());
     registerFallbackValue('');
+    // La feuille Kg vendus date ses lignes en français.
+    initializeDateFormatting('fr');
   });
 
   setUp(() {
@@ -781,6 +820,63 @@ void main() {
       expect(find.text('Envois'), findsOneWidget);
     });
 
+    testWidgets(
+      'la tuile Revenus est préfixée de « ≈ » quand le total est converti',
+      (tester) async {
+        await _pump(
+          tester,
+          summary: const TripsSummaryModel(
+            activeTrips: 1,
+            kgSold: 16,
+            revenue: 1418.7,
+            revenueCurrency: 'EUR',
+            revenueConverted: true,
+          ),
+        );
+
+        expect(find.textContaining('≈ '), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'la tuile Revenus est formatée dans la devise annoncée par le backend',
+      (tester) async {
+        // Le cache serveur n'est pas évincé au changement de devise : quand
+        // le backend dit XOF, la tuile affiche des F CFA, quelle que soit la
+        // devise active locale (aucune ici, donc repli EUR si on l'ignorait).
+        await _pump(
+          tester,
+          summary: const TripsSummaryModel(
+            activeTrips: 1,
+            kgSold: 16,
+            revenue: 120000,
+            revenueCurrency: 'XOF',
+            revenueConverted: false,
+          ),
+        );
+
+        expect(find.textContaining('F CFA'), findsOneWidget);
+        expect(find.textContaining('€'), findsNothing);
+      },
+    );
+
+    testWidgets('la tuile Revenus n\'a pas de « ≈ » sans conversion', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        summary: const TripsSummaryModel(
+          activeTrips: 1,
+          kgSold: 16,
+          revenue: 1030,
+          revenueCurrency: 'EUR',
+          revenueConverted: false,
+        ),
+      );
+
+      expect(find.textContaining('≈'), findsNothing);
+    });
+
     testWidgets('la section est masquée tant que tout est à zéro', (
       tester,
     ) async {
@@ -803,6 +899,82 @@ void main() {
       // Les tuiles à zéro deviennent des invites à agir.
       expect(find.text('Publiez un trajet'), findsOneWidget);
       expect(find.text('Envoyez un colis'), findsOneWidget);
+    });
+
+    testWidgets('taper Revenus ouvre la feuille des revenus', (tester) async {
+      await _pump(tester);
+
+      await tester.ensureVisible(find.text('Revenus'));
+      await tester.tap(find.text('Revenus'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(RevenueDetailsSheet), findsOneWidget);
+      expect(find.text('30 derniers jours'), findsOneWidget);
+    });
+
+    testWidgets('taper Kg vendus ouvre la feuille des kg', (tester) async {
+      await _pump(tester);
+
+      await tester.ensureVisible(find.text('Kg vendus'));
+      await tester.tap(find.text('Kg vendus'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(KgSoldSheet), findsOneWidget);
+    });
+
+    testWidgets('un trajet choisi dans la feuille Kg ouvre sa fiche', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        kgSold: KgSoldModel(
+          period: '30d',
+          totalKg: 4,
+          parcels: 1,
+          trips: [
+            KgSoldTripModel(
+              tripId: 't1',
+              departureCity: 'Paris',
+              arrivalCity: 'Dakar',
+              date: DateTime(2026, 9, 12),
+              parcels: 1,
+              kg: 4,
+            ),
+          ],
+        ),
+      );
+
+      await tester.ensureVisible(find.text('Kg vendus'));
+      await tester.tap(find.text('Kg vendus'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('kg-trip-t1')));
+      await tester.pumpAndSettle();
+
+      expect(visitedUris, contains('/announcements/t1/trip'));
+    });
+
+    testWidgets('taper Trajets ouvre Mes trajets filtré sur les terminés', (
+      tester,
+    ) async {
+      await _pump(tester);
+
+      await tester.ensureVisible(find.text('Trajets'));
+      await tester.tap(find.text('Trajets'));
+      await tester.pumpAndSettle();
+
+      expect(visitedUris, contains('/announcements/trips?filter=completed'));
+    });
+
+    testWidgets('taper Envois ouvre Mes colis filtré sur les livrés', (
+      tester,
+    ) async {
+      await _pump(tester);
+
+      await tester.ensureVisible(find.text('Envois'));
+      await tester.tap(find.text('Envois'));
+      await tester.pumpAndSettle();
+
+      expect(visitedUris, contains('/envois?status=delivered'));
     });
   });
 

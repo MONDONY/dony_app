@@ -16,6 +16,13 @@ extension StatsPeriodX on StatsPeriod {
     StatsPeriod.thirtyDays => '30 jours',
     StatsPeriod.twelveMonths => '12 mois',
   };
+
+  /// Sous-titre des feuilles de détail : la fenêtre, nommée comme une durée.
+  String get detailLabel => switch (this) {
+    StatsPeriod.sevenDays => '7 derniers jours',
+    StatsPeriod.thirtyDays => '30 derniers jours',
+    StatsPeriod.twelveMonths => '12 derniers mois',
+  };
 }
 
 /// Porte la période sélectionnée. Aucun appel réseau : le hub écoute ce cubit

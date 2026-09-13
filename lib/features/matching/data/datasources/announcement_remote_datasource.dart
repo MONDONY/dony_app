@@ -1,6 +1,8 @@
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/kg_sold_model.dart';
+import 'package:dony/features/matching/data/models/revenue_details_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/trips_summary_model.dart';
 import 'package:intl/intl.dart';
@@ -143,6 +145,24 @@ class AnnouncementRemoteDatasource {
       queryParameters: {'period': period},
     );
     return TripsSummaryModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  Future<RevenueDetailsModel> getRevenueDetails({
+    required String period,
+  }) async {
+    final response = await _apiClient.dio.get(
+      '/travelers/me/trips-summary/revenues',
+      queryParameters: {'period': period},
+    );
+    return RevenueDetailsModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  Future<KgSoldModel> getKgSold({required String period}) async {
+    final response = await _apiClient.dio.get(
+      '/travelers/me/trips-summary/kg-sold',
+      queryParameters: {'period': period},
+    );
+    return KgSoldModel.fromJson(response.data as Map<String, dynamic>);
   }
 
   Future<AnnouncementModel> getAnnouncementDetail(String id) async {
