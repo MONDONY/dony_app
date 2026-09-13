@@ -192,8 +192,16 @@ class _LoadedBody extends StatelessWidget {
 String _deliveries(int count) =>
     count == 1 ? '1 livraison' : '$count livraisons';
 
-String _kg(double v) =>
-    '${v.toStringAsFixed(v % 1 == 0 ? 0 : 1).replaceAll('.', ',')} kg';
+String _kg(double v) {
+  // Arrondir d'abord à une décimale, puis juger l'entier sur la valeur
+  // arrondie : sinon 2.04 (arrondi ultérieur à 1 décimale donnerait 2.0)
+  // passait le test `v % 1 == 0` sur la valeur brute et s'affichait « 2,0 kg ».
+  final rounded = double.parse(v.toStringAsFixed(1));
+  final text = rounded % 1 == 0
+      ? rounded.toStringAsFixed(0)
+      : rounded.toStringAsFixed(1).replaceAll('.', ',');
+  return '$text kg';
+}
 
 /// Un groupe = une devise. L'en-tête porte le sous-total et plie les lignes.
 class _CurrencyGroupCard extends StatelessWidget {
@@ -211,7 +219,16 @@ class _CurrencyGroupCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    // `fromCode` (nullable) distingue une devise reconnue d'un code inconnu ;
+    // `fromCodeOrDefault` reste réservé au seul formatage du montant, qui a
+    // besoin d'un symbole et d'un nombre de décimales même par défaut. Sans
+    // cette distinction, un code hors catalogue s'affichait « EUR »/« Euro »
+    // pour un paiement qui n'en est pas un, et deux groupes (le vrai EUR et
+    // la devise inconnue) portaient tous deux le nom « Euro ».
+    final knownCurrency = SupportedCurrency.fromCode(group.currency);
     final currency = SupportedCurrency.fromCodeOrDefault(group.currency);
+    final pillCode = knownCurrency?.code ?? group.currency;
+    final displayName = knownCurrency?.displayName ?? group.currency;
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
     final duration = reduceMotion ? Duration.zero : DonyDuration.base;
 
@@ -229,87 +246,112 @@ class _CurrencyGroupCard extends StatelessWidget {
             button: true,
             expanded: expanded,
             label:
-                '${currency.displayName}, ${_deliveries(group.deliveries)}, '
+                '$displayName, ${_deliveries(group.deliveries)}, '
                 '${CurrencyFormatter.format(group.total, currency)}',
-            child: InkWell(
-              key: Key('revenue-group-${group.currency}'),
-              onTap: onToggle,
-              child: Container(
-                color: cs.surfaceContainerLow,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: DonySpacing.base,
-                  vertical: DonySpacing.md,
-                ),
-                child: Row(
-                  children: [
-                    _CurrencyPill(code: currency.code),
-                    const SizedBox(width: DonySpacing.sm + DonySpacing.xxs),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            currency.displayName,
-                            style: tt.titleSmall?.copyWith(color: cs.onSurface),
-                          ),
-                          Text(
-                            _deliveries(group.deliveries),
-                            style: tt.bodySmall?.copyWith(
-                              color: cs.onSurfaceVariant,
+            // Le label ci-dessus dit déjà tout : sans ça, un lecteur d'écran
+            // annonce le label puis relit pastille, nom, compteur et montant
+            // une seconde fois via les Text enfants.
+            excludeSemantics: true,
+            child: Material(
+              color: cs.surfaceContainerLow,
+              child: InkWell(
+                key: Key('revenue-group-${group.currency}'),
+                onTap: onToggle,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: DonySpacing.base,
+                    vertical: DonySpacing.md,
+                  ),
+                  child: Row(
+                    children: [
+                      _CurrencyPill(code: pillCode),
+                      const SizedBox(width: DonySpacing.sm + DonySpacing.xxs),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              displayName,
+                              style: tt.titleSmall?.copyWith(
+                                color: cs.onSurface,
+                              ),
                             ),
-                          ),
-                        ],
+                            Text(
+                              _deliveries(group.deliveries),
+                              style: tt.bodySmall?.copyWith(
+                                color: cs.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: DonySpacing.sm),
-                    Text(
-                      CurrencyFormatter.format(group.total, currency),
-                      style: tt.headlineMedium?.copyWith(
-                        color: cs.success,
-                        fontFeatures: const [FontFeature.tabularFigures()],
+                      const SizedBox(width: DonySpacing.sm),
+                      Text(
+                        CurrencyFormatter.format(group.total, currency),
+                        style: tt.headlineMedium?.copyWith(
+                          color: cs.success,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: DonySpacing.xs),
-                    AnimatedRotation(
-                      turns: expanded ? 0.5 : 0,
-                      duration: duration,
-                      curve: DonyCurve.easeOut,
-                      child: DonyIcon(
-                        'chevron-down',
-                        size: 18,
-                        color: cs.onSurfaceVariant,
+                      const SizedBox(width: DonySpacing.xs),
+                      AnimatedRotation(
+                        turns: expanded ? 0.5 : 0,
+                        duration: duration,
+                        curve: DonyCurve.easeOut,
+                        child: DonyIcon(
+                          'chevron-down',
+                          size: 18,
+                          color: cs.onSurfaceVariant,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
+          // `AnimatedSize` reste imposé par la spec, mais le contenu doit
+          // rester monté pour glisser : un enfant échangé (Column ↔ SizedBox
+          // vide) apparaît/disparaît d'un coup pendant que la boîte anime sa
+          // taille. `Align(heightFactor:)` fait varier la hauteur rendue du
+          // même arbre, `ClipRect` coupe le débord pendant la transition.
+          // `ExcludeSemantics`/`IgnorePointer` neutralisent le contenu replié
+          // (annonce et tap) sans le démonter.
           AnimatedSize(
             duration: duration,
             curve: DonyCurve.easeOut,
             alignment: Alignment.topCenter,
-            child: expanded
-                ? Column(
-                    key: Key('revenue-group-${group.currency}-items'),
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Divider(height: 1, color: cs.outline),
-                      for (var i = 0; i < group.items.length; i++) ...[
-                        _RevenueItemRow(
-                          item: group.items[i],
-                          currency: currency,
-                        ),
-                        if (i < group.items.length - 1)
-                          Divider(
-                            height: 1,
-                            indent: DonySpacing.base,
-                            color: cs.outline,
+            child: ClipRect(
+              key: Key('revenue-group-${group.currency}-items'),
+              child: Align(
+                alignment: Alignment.topCenter,
+                heightFactor: expanded ? 1 : 0,
+                child: ExcludeSemantics(
+                  excluding: !expanded,
+                  child: IgnorePointer(
+                    ignoring: !expanded,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Divider(height: 1, color: cs.outline),
+                        for (var i = 0; i < group.items.length; i++) ...[
+                          _RevenueItemRow(
+                            item: group.items[i],
+                            currency: currency,
                           ),
+                          if (i < group.items.length - 1)
+                            Divider(
+                              height: 1,
+                              indent: DonySpacing.base,
+                              color: cs.outline,
+                            ),
+                        ],
                       ],
-                    ],
-                  )
-                : const SizedBox(width: double.infinity, height: 0),
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ),
         ],
       ),
