@@ -1,6 +1,8 @@
 import 'package:dony/features/matching/data/datasources/announcement_remote_datasource.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/kg_sold_model.dart';
+import 'package:dony/features/matching/data/models/revenue_details_model.dart';
 import 'package:dony/features/matching/data/models/trips_summary_model.dart';
 export 'package:dony/features/matching/data/models/transport_mode.dart';
 
@@ -73,6 +75,12 @@ class AnnouncementRepository {
   Future<TripsSummaryModel> getTripsSummary({required String period}) async {
     return _remoteDatasource.getTripsSummary(period: period);
   }
+
+  Future<RevenueDetailsModel> getRevenueDetails({required String period}) =>
+      _remoteDatasource.getRevenueDetails(period: period);
+
+  Future<KgSoldModel> getKgSold({required String period}) =>
+      _remoteDatasource.getKgSold(period: period);
 
   Future<AnnouncementModel> getAnnouncementDetail(String id) async {
     return _remoteDatasource.getAnnouncementDetail(id);
