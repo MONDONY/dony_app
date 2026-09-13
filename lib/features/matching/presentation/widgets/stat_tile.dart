@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 
 /// Carte de statistique du hub — largeur fixe, pensée pour une rangée
 /// horizontale défilante.
+///
+/// Tapable quand `onTap` est fourni : la carte surélevée porte déjà l'état
+/// pressé.
 class StatTile extends StatelessWidget {
   const StatTile({
     super.key,
@@ -12,6 +15,7 @@ class StatTile extends StatelessWidget {
     required this.value,
     required this.color,
     this.isLoading = false,
+    this.onTap,
   });
 
   static const double width = 132;
@@ -26,6 +30,7 @@ class StatTile extends StatelessWidget {
   /// Valeur déjà formatée (`0 €`, `12,5 kg`, `2 publiés`).
   final String value;
   final bool isLoading;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -36,6 +41,7 @@ class StatTile extends StatelessWidget {
       width: width,
       child: DonyCard(
         elevated: true,
+        onTap: onTap,
         padding: const EdgeInsets.all(DonySpacing.base),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

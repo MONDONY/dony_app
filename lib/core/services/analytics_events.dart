@@ -272,6 +272,14 @@ abstract final class AnalyticsEvents {
       'activites_hub_request_create_opened';
   static const activitesHubStatsPeriodChanged =
       'activites_hub_stats_period_changed';
+  static const activitesHubStatsRevenuesOpened =
+      'activites_hub_stats_revenues_opened';
+  static const activitesHubStatsKgSoldOpened =
+      'activites_hub_stats_kg_sold_opened';
+  static const activitesHubStatsTripsOpened =
+      'activites_hub_stats_trips_opened';
+  static const activitesHubStatsParcelsOpened =
+      'activites_hub_stats_parcels_opened';
   static const activitesHubSearchOpened = 'activites_hub_search_opened';
   static const activitesHubMenuOpened = 'activites_hub_menu_opened';
   static const activitesHubScanOpened = 'activites_hub_scan_opened';

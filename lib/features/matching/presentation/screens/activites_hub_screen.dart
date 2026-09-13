@@ -25,6 +25,8 @@ import 'package:dony/features/matching/data/models/trips_summary_model.dart';
 import 'package:dony/features/matching/presentation/screens/mes_colis_screen.dart';
 import 'package:dony/features/matching/presentation/widgets/activites_menu_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/activity_tile.dart';
+import 'package:dony/features/matching/presentation/widgets/kg_sold_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/revenue_details_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/stat_tile.dart';
 import 'package:dony/features/matching/presentation/widgets/tool_key_presentation.dart';
 import 'package:dony/features/matching/presentation/widgets/tool_status_badge.dart';
@@ -890,6 +892,16 @@ class _StatsRow extends StatelessWidget {
       builder: (context, state) {
         final summary = state.summary;
         final loading = state.status == TripsSummaryStatus.loading;
+        final period = context.read<StatsPeriodCubit>().state;
+
+        Future<void> openKgSold() async {
+          _logEvent(AnalyticsEvents.activitesHubStatsKgSoldOpened);
+          final tripId = await KgSoldSheet.show(context, period: period);
+          if (tripId != null && context.mounted) {
+            unawaited(context.push('/announcements/$tripId/trip'));
+          }
+        }
+
         // Même code couleur que les tuiles d'activité : vert = gains, bleu =
         // volume, violet = trajets, terracotta = envois.
         final tiles = <Widget>[
@@ -899,6 +911,18 @@ class _StatsRow extends StatelessWidget {
             value: _money(summary),
             color: cs.success,
             isLoading: loading,
+            onTap: () {
+              _logEvent(AnalyticsEvents.activitesHubStatsRevenuesOpened);
+              unawaited(
+                RevenueDetailsSheet.show(
+                  context,
+                  period: period,
+                  approximateTotal: (summary?.isRevenueConverted ?? false)
+                      ? _money(summary)
+                      : null,
+                ),
+              );
+            },
           ),
           StatTile(
             iconName: 'scale',
@@ -906,6 +930,7 @@ class _StatsRow extends StatelessWidget {
             value: _weight(summary?.kgSold ?? 0),
             color: cs.primary,
             isLoading: loading,
+            onTap: openKgSold,
           ),
           // Un backend antérieur ne renvoie pas ces deux compteurs. Afficher 0
           // laisserait croire à une absence d'activité : on montre « — »,
@@ -918,6 +943,11 @@ class _StatsRow extends StatelessWidget {
                 : '${summary!.tripsPublished} publiés',
             color: DonyColors.violet,
             isLoading: loading,
+            onTap: () => _openRoute(
+              context,
+              AnalyticsEvents.activitesHubStatsTripsOpened,
+              '/announcements/trips?filter=completed',
+            ),
           ),
           StatTile(
             iconName: 'package',
@@ -927,6 +957,11 @@ class _StatsRow extends StatelessWidget {
                 : '${summary!.parcelsSent} envoyés',
             color: cs.secondary,
             isLoading: loading,
+            onTap: () => _openRoute(
+              context,
+              AnalyticsEvents.activitesHubStatsParcelsOpened,
+              '/envois?status=delivered',
+            ),
           ),
         ];
 
