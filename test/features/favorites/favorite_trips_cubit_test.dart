@@ -98,11 +98,11 @@ void main() {
     expect(cubit.state, isA<FavoriteTripsLoaded>());
   });
 
-// -----------------------------------------------------------------------------
-// Cubit fermé pendant la requête (Sentry FLUTTER-1G / FLUTTER-1F) : l'écran
-// Favoris est quitté avant la réponse. Aucun emit ne doit partir sur un cubit
-// fermé, et surtout le catch ne doit pas ré-émettre une erreur dessus.
-// -----------------------------------------------------------------------------
+  // -----------------------------------------------------------------------------
+  // Cubit fermé pendant la requête (Sentry FLUTTER-1G / FLUTTER-1F) : l'écran
+  // Favoris est quitté avant la réponse. Aucun emit ne doit partir sur un cubit
+  // fermé, et surtout le catch ne doit pas ré-émettre une erreur dessus.
+  // -----------------------------------------------------------------------------
   group('cubit fermé pendant load()', () {
     test('réponse arrivée après close() → aucune exception', () async {
       final completer = Completer<List<AnnouncementModel>>();

@@ -31,12 +31,7 @@ void main() {
     authBloc = _MockAuthBloc();
     when(() => authBloc.state).thenReturn(
       const AuthAuthenticated(
-        UserModel(
-          id: 'u1',
-          roles: [],
-          kycStatus: 'PENDING',
-          status: 'ACTIVE',
-        ),
+        UserModel(id: 'u1', roles: [], kycStatus: 'PENDING', status: 'ACTIVE'),
       ),
     );
     when(() => authBloc.stream).thenAnswer((_) => const Stream.empty());
@@ -80,16 +75,17 @@ void main() {
   }
 
   group('KycStatusBottomSheet', () {
-    testWidgets('affiche le statut PENDING et le bouton « Continuer plus tard »', (
-      tester,
-    ) async {
-      await tester.pumpWidget(wrap());
-      await tester.tap(find.text('Open'));
-      await settle(tester);
+    testWidgets(
+      'affiche le statut PENDING et le bouton « Continuer plus tard »',
+      (tester) async {
+        await tester.pumpWidget(wrap());
+        await tester.tap(find.text('Open'));
+        await settle(tester);
 
-      expect(find.text('Vérification d\'identité'), findsOneWidget);
-      expect(find.text('Continuer plus tard'), findsOneWidget);
-    });
+        expect(find.text('Vérification d\'identité'), findsOneWidget);
+        expect(find.text('Continuer plus tard'), findsOneWidget);
+      },
+    );
 
     // Sentry FLUTTER-1C : le bouton collant est piloté par un ValueNotifier
     // que le contenu met à jour après chaque build (post-frame). Le notifier

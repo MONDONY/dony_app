@@ -636,27 +636,30 @@ void main() {
       expect(sink.contexts, isEmpty);
     });
 
-    test('remonte l\'échec de résolution quand l\'appareil est en ligne', () async {
-      final sink = _RecordingErrorSink();
-      final fcm = MockFirebaseMessaging();
-      when(() => fcm.getToken()).thenThrow(
-        FirebaseException(plugin: 'firebase_messaging', code: 'unknown'),
-      );
-      service = NotificationService(
-        apiClient,
-        repository,
-        deviceIdService,
-        ErrorReportingService(sink),
-        const FirebaseSessionProbe(),
-        fcm,
-        () async => true,
-      );
+    test(
+      'remonte l\'échec de résolution quand l\'appareil est en ligne',
+      () async {
+        final sink = _RecordingErrorSink();
+        final fcm = MockFirebaseMessaging();
+        when(() => fcm.getToken()).thenThrow(
+          FirebaseException(plugin: 'firebase_messaging', code: 'unknown'),
+        );
+        service = NotificationService(
+          apiClient,
+          repository,
+          deviceIdService,
+          ErrorReportingService(sink),
+          const FirebaseSessionProbe(),
+          fcm,
+          () async => true,
+        );
 
-      await service.uploadCurrentToken();
-      await Future<void>.delayed(Duration.zero);
+        await service.uploadCurrentToken();
+        await Future<void>.delayed(Duration.zero);
 
-      expect(sink.contexts, hasLength(1));
-    });
+        expect(sink.contexts, hasLength(1));
+      },
+    );
 
     // La sonde de connectivité ne doit jamais faire perdre la remontée : si
     // elle lève, on considère l'appareil en ligne.
