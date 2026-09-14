@@ -1,3 +1,4 @@
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
@@ -46,10 +47,14 @@ class DepartureDateChanged extends AnnouncementFormEvent {
 class PriceChanged extends AnnouncementFormEvent {
   final double price;
 
-  const PriceChanged(this.price);
+  /// Devise de l'annonce : la fourchette « prix raisonnable » en dépend
+  /// (5 à 15 €/kg, 1 000 à 5 000 F CFA/kg).
+  final SupportedCurrency currency;
+
+  const PriceChanged(this.price, {this.currency = SupportedCurrency.eur});
 
   @override
-  List<Object?> get props => [price];
+  List<Object?> get props => [price, currency];
 }
 
 class AvailableKgChanged extends AnnouncementFormEvent {

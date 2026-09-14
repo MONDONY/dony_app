@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
@@ -102,6 +103,47 @@ void main() {
         predicate<AnnouncementFormState>(
           (s) => s.pricePerKg == 15.0 && s.priceWarning == null,
           'state has pricePerKg=15.0 and no warning',
+        ),
+      ],
+    );
+
+    // La fourchette suit la devise de l'annonce : figée à 5–15, elle
+    // signalait « prix élevé » tout tarif en franc CFA.
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'PriceChanged 2000 XOF → pas de warning (élevé en euro)',
+      build: () => _makeBloc(),
+      act: (b) =>
+          b.add(const PriceChanged(2000, currency: SupportedCurrency.xof)),
+      expect: () => [
+        predicate<AnnouncementFormState>(
+          (s) => s.pricePerKg == 2000 && s.priceWarning == null,
+          'state has pricePerKg=2000 and no warning',
+        ),
+      ],
+    );
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'PriceChanged 500 XOF → warning prix trop bas',
+      build: () => _makeBloc(),
+      act: (b) =>
+          b.add(const PriceChanged(500, currency: SupportedCurrency.xof)),
+      expect: () => [
+        predicate<AnnouncementFormState>(
+          (s) => s.priceWarning == PriceWarning.tooLow,
+          'warning=tooLow',
+        ),
+      ],
+    );
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'PriceChanged 6000 XOF → warning prix trop élevé',
+      build: () => _makeBloc(),
+      act: (b) =>
+          b.add(const PriceChanged(6000, currency: SupportedCurrency.xof)),
+      expect: () => [
+        predicate<AnnouncementFormState>(
+          (s) => s.priceWarning == PriceWarning.tooHigh,
+          'warning=tooHigh',
         ),
       ],
     );

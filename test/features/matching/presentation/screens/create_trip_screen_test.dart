@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
@@ -1421,6 +1422,43 @@ void main() {
             ),
           ),
         ).called(1);
+      },
+    );
+
+    testWidgets(
+      'changer de devise resynchronise le prix du bloc : le même chip vaut '
+      '1 500 F CFA en XOF puis 6 € en EUR (_onCurrencyChanged)',
+      (tester) async {
+        await navigateToStep2(
+          tester,
+          announcement: _makeFullAnnouncement(currency: 'XOF'),
+        );
+
+        await tester.ensureVisible(
+          find.text(CurrencyFormatter.format(1500, SupportedCurrency.xof)),
+        );
+        await tester.tap(
+          find.text(CurrencyFormatter.format(1500, SupportedCurrency.xof)),
+        );
+        await tester.pump(const Duration(milliseconds: 600));
+
+        final stepFinder = find.byType(PrixConditionsStep);
+        final formBloc = BlocProvider.of<AnnouncementFormBloc>(
+          tester.element(stepFinder),
+        );
+        expect(formBloc.state.pricePerKg, 1500);
+        expect(formBloc.state.priceWarning, isNull);
+
+        // Même index de chip, autre devise : le bloc doit recevoir 6 €.
+        tester.widget<PrixConditionsStep>(stepFinder).currencyNotifier.value =
+            SupportedCurrency.eur;
+        await tester.pump(const Duration(milliseconds: 600));
+
+        expect(formBloc.state.pricePerKg, 6);
+        expect(
+          find.text(CurrencyFormatter.format(6, SupportedCurrency.eur)),
+          findsOneWidget,
+        );
       },
     );
 

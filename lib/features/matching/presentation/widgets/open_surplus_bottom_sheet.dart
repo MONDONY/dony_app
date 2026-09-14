@@ -8,7 +8,6 @@ import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
-import 'package:dony/features/matching/presentation/widgets/create_announcement/_create_announcement_constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -82,8 +81,12 @@ class _OpenSurplusContentState extends State<_OpenSurplusContent> {
   final _kgCtrl = TextEditingController();
   final _customPriceCtrl = TextEditingController();
 
-  /// Index du chip prix sélectionné. `kPriceOptions.length` = « Autre ».
+  /// Index du chip prix sélectionné. `_presets.length` = « Autre ».
   final _priceOptionNotifier = ValueNotifier<int>(0);
+
+  /// Chips de prix dans la devise de l'annonce (figée à sa création).
+  List<double> get _presets =>
+      KgPriceReference.forCode(widget.announcement.currency).presets;
 
   @override
   void initState() {
@@ -102,14 +105,11 @@ class _OpenSurplusContentState extends State<_OpenSurplusContent> {
     super.dispose();
   }
 
-  bool get _isCustomPrice => _priceOptionNotifier.value == kPriceOptions.length;
+  bool get _isCustomPrice => _priceOptionNotifier.value == _presets.length;
 
   double get _pricePerKg => _isCustomPrice
       ? (double.tryParse(_customPriceCtrl.text.replaceAll(',', '.')) ?? 0)
-      : kPriceOptions[_priceOptionNotifier.value.clamp(
-          0,
-          kPriceOptions.length - 1,
-        )];
+      : _presets[_priceOptionNotifier.value.clamp(0, _presets.length - 1)];
 
   double get _surplusKg =>
       double.tryParse(_kgCtrl.text.replaceAll(',', '.')) ?? 0;
@@ -196,19 +196,17 @@ class _OpenSurplusContentState extends State<_OpenSurplusContent> {
                   children: [
                     Row(
                       children: [
-                        ...List.generate(kPriceOptions.length, (i) {
+                        ...List.generate(_presets.length, (i) {
                           final selected = selectedIdx == i;
                           return Expanded(
                             child: Padding(
                               padding: EdgeInsets.only(
-                                right: i < kPriceOptions.length
-                                    ? DonySpacing.xs
-                                    : 0,
+                                right: i < _presets.length ? DonySpacing.xs : 0,
                               ),
                               child: _PriceChip(
                                 key: Key('surplus-price-chip-$i'),
                                 label: formatPriceIn(
-                                  kPriceOptions[i],
+                                  _presets[i],
                                   widget.announcement.currency,
                                 ),
                                 selected: selected,
@@ -222,8 +220,8 @@ class _OpenSurplusContentState extends State<_OpenSurplusContent> {
                             key: const Key('surplus-price-chip-custom'),
                             label: 'Autre',
                             selected: _isCustomPrice,
-                            onTap: () => _priceOptionNotifier.value =
-                                kPriceOptions.length,
+                            onTap: () =>
+                                _priceOptionNotifier.value = _presets.length,
                           ),
                         ),
                       ],

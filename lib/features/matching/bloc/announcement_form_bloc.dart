@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/bloc/announcement_form_event.dart';
@@ -10,9 +11,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 class AnnouncementFormBloc
     extends Bloc<AnnouncementFormEvent, AnnouncementFormState> {
-  static const double _minReasonablePrice = 5.0;
-  static const double _maxReasonablePrice = 15.0;
-
   final PriceGridRepository? _priceGridRepository;
   final AnalyticsService _analytics;
 
@@ -78,10 +76,11 @@ class AnnouncementFormBloc
     PriceChanged event,
     Emitter<AnnouncementFormState> emit,
   ) {
+    final reference = KgPriceReference.forCurrency(event.currency);
     PriceWarning? warning;
-    if (event.price < _minReasonablePrice) {
+    if (reference.isTooLow(event.price)) {
       warning = PriceWarning.tooLow;
-    } else if (event.price > _maxReasonablePrice) {
+    } else if (reference.isTooHigh(event.price)) {
       warning = PriceWarning.tooHigh;
     }
     emit(

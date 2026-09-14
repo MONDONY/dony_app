@@ -310,3 +310,83 @@ extension AnnouncementSenderPricing on AnnouncementModel {
             .reduce((a, b) => a < b ? a : b)
       : null;
 }
+
+/// Repères de prix au kilo (net voyageur) dans une devise donnée : chips
+/// proposées au formulaire, médiane de marché indicative et fourchette hors de
+/// laquelle le formulaire alerte (« prix bas », « prix élevé »).
+///
+/// Les repères historiques sont en euros : 5 à 8 €/kg proposés, 8 de médiane,
+/// alerte sous 5 et au-dessus de 15. Servis tels quels quelle que soit la
+/// devise, ils donnaient des chips « 5 F CFA » et une médiane « 8 F CFA/kg »
+/// sur un trajet en franc CFA, et signalaient tout prix CFA comme « élevé ».
+///
+/// La zone CFA (XOF, XAF) a sa propre table plutôt qu'une conversion : 5 €/kg
+/// font 3 280 F CFA, très au-dessus des tarifs réellement pratiqués sur les
+/// corridors Afrique de l'Ouest → Europe (1 000 à 3 000 F CFA/kg). Les autres
+/// devises sont mises à l'échelle du taux courant avec un arrondi au demi.
+///
+/// La médiane reste un repère fixe, pas une mesure : aucun endpoint ne sert
+/// encore de médiane par corridor.
+class KgPriceReference {
+  /// Prix proposés sous forme de chips, dans l'ordre d'affichage.
+  final List<double> presets;
+
+  /// Médiane de marché affichée dans l'indice « Marché X – Y ».
+  final double marketMedian;
+
+  /// Sous ce prix, le formulaire alerte « prix bas ».
+  final double minReasonable;
+
+  /// Au-dessus de ce prix, le formulaire alerte « prix élevé ».
+  final double maxReasonable;
+
+  const KgPriceReference._({
+    required this.presets,
+    required this.marketMedian,
+    required this.minReasonable,
+    required this.maxReasonable,
+  });
+
+  static const eur = KgPriceReference._(
+    presets: [5, 6, 7, 8],
+    marketMedian: 8,
+    minReasonable: 5,
+    maxReasonable: 15,
+  );
+
+  static const cfa = KgPriceReference._(
+    presets: [1000, 1500, 2000, 3000],
+    marketMedian: 2000,
+    minReasonable: 1000,
+    maxReasonable: 5000,
+  );
+
+  static const _cfaCodes = {'XOF', 'XAF'};
+
+  static KgPriceReference forCurrency(SupportedCurrency currency) {
+    if (_cfaCodes.contains(currency.code)) return cfa;
+    if (currency == SupportedCurrency.eur) return eur;
+    final rate = ActiveRates.unitsPerEurFor(currency);
+    double half(double eurValue) => (eurValue * rate * 2).round() / 2;
+    return KgPriceReference._(
+      presets: eur.presets.map(half).toList(growable: false),
+      marketMedian: half(eur.marketMedian),
+      minReasonable: half(eur.minReasonable),
+      maxReasonable: half(eur.maxReasonable),
+    );
+  }
+
+  /// Variante par code ISO (devise portée par une annonce). Repli EUR si le
+  /// code est absent ou inconnu, comme [formatPriceIn].
+  static KgPriceReference forCode(String? currencyCode) =>
+      forCurrency(SupportedCurrency.fromCodeOrDefault(currencyCode));
+
+  /// Repères dans la devise active du profil, pour les surfaces sans devise
+  /// propre (modèles de trajet).
+  static KgPriceReference get active =>
+      forCurrency(ActiveCurrency.current ?? SupportedCurrency.eur);
+
+  /// Le prix est-il hors de la fourchette raisonnable ? `null` si dedans.
+  bool isTooLow(double price) => price < minReasonable;
+  bool isTooHigh(double price) => price > maxReasonable;
+}

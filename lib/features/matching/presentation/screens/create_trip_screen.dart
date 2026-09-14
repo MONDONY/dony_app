@@ -27,7 +27,6 @@ import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_preview_sheet.dart';
-import 'package:dony/features/matching/presentation/widgets/create_announcement/_create_announcement_constants.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/lieux_capacite_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/prix_conditions_step.dart';
@@ -643,13 +642,15 @@ class _TripFormContentState extends State<_TripFormContent> {
   /// pas la devise active du profil : une annonce se publie désormais dans la
   /// devise choisie à la création, potentiellement distincte du portefeuille.
   SupportedCurrency get _currency => widget.currencyNotifier.value;
-  bool get _isCustomPrice => _priceOptionNotifier.value == kPriceOptions.length;
+
+  /// Chips de prix de la devise de l'annonce (1 000 à 3 000 F CFA/kg en zone
+  /// CFA, 5 à 8 €/kg en euro). Un même index désigne donc un autre montant
+  /// dès que le sélecteur de devise change.
+  List<double> get _presets => KgPriceReference.forCurrency(_currency).presets;
+  bool get _isCustomPrice => _priceOptionNotifier.value == _presets.length;
   double get _pricePerKg => _isCustomPrice
       ? _customPriceNotifier.value
-      : kPriceOptions[_priceOptionNotifier.value.clamp(
-          0,
-          kPriceOptions.length - 1,
-        )];
+      : _presets[_priceOptionNotifier.value.clamp(0, _presets.length - 1)];
 
   // Vrai si le prix est correctement renseigné :
   // — mode verrouillé → prix fixé par la demande, toujours valide
@@ -763,12 +764,12 @@ class _TripFormContentState extends State<_TripFormContent> {
       // il manquait.
       final price = a.pricePerKg;
       if (price != null) {
-        final presetIdx = kPriceOptions.indexOf(price);
+        final presetIdx = _presets.indexOf(price);
         if (presetIdx != -1) {
           _priceOptionNotifier.value = presetIdx;
         } else {
           // Prix custom — sélectionner "Autre" et pré-remplir le champ
-          _priceOptionNotifier.value = kPriceOptions.length;
+          _priceOptionNotifier.value = _presets.length;
           _customPriceNotifier.value = price;
           _customPriceCtrl.text = price.toStringAsFixed(0);
         }
@@ -1145,7 +1146,9 @@ class _TripFormContentState extends State<_TripFormContent> {
     if (!mounted) return;
     if (!_kgPriceEnabledNotifier.value) return; // évite d'écraser le clear
     if (_priceOptionNotifier.value == -1) return; // pas encore de sélection
-    context.read<AnnouncementFormBloc>().add(PriceChanged(_pricePerKg));
+    context.read<AnnouncementFormBloc>().add(
+      PriceChanged(_pricePerKg, currency: _currency),
+    );
   }
 
   void _syncKgToFormBloc() {
@@ -1188,10 +1191,15 @@ class _TripFormContentState extends State<_TripFormContent> {
   /// Remet la bascule mobile money à `false` quand la devise quitte la zone
   /// CFA (XOF/XAF). Ne fait rien si elle y reste ou y entre — seule la
   /// sortie de zone doit désactiver un choix devenu invalide.
+  ///
+  /// Resynchronise aussi le prix vers le bloc : l'index de chip est conservé
+  /// mais désigne un autre montant dans la nouvelle devise, et la fourchette
+  /// d'alerte change avec elle.
   void _onCurrencyChanged() {
     if (!widget.currencyNotifier.value.isMobileMoneyEligible) {
       _mobileMoneyEnabledNotifier.value = false;
     }
+    _syncPriceToFormBloc();
   }
 
   void _syncAcceptedTypesToFormBloc() {
@@ -1797,11 +1805,11 @@ class _TripFormContentState extends State<_TripFormContent> {
     _availableKgNotifier.value = t.availableKg.toDouble();
 
     _kgPriceEnabledNotifier.value = true;
-    final presetIdx = kPriceOptions.indexOf(t.pricePerKg);
+    final presetIdx = _presets.indexOf(t.pricePerKg);
     if (presetIdx != -1) {
       _priceOptionNotifier.value = presetIdx;
     } else {
-      _priceOptionNotifier.value = kPriceOptions.length; // "Autre prix"
+      _priceOptionNotifier.value = _presets.length; // "Autre prix"
       _customPriceNotifier.value = t.pricePerKg;
       _customPriceCtrl.text = t.pricePerKg.toStringAsFixed(0);
     }

@@ -1,3 +1,4 @@
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/features/matching/bloc/announcement_form_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
@@ -52,6 +53,13 @@ void main() {
 
     test('PriceChanged — not equal when different price', () {
       expect(const PriceChanged(8.0), isNot(equals(const PriceChanged(10.0))));
+    });
+
+    test('PriceChanged — not equal when different currency', () {
+      expect(
+        const PriceChanged(8.0),
+        isNot(equals(const PriceChanged(8.0, currency: SupportedCurrency.xof))),
+      );
     });
 
     test('AvailableKgChanged — equal when same kg', () {
