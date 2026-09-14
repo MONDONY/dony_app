@@ -175,7 +175,8 @@ class _TripTemplateCard extends StatelessWidget {
                     ),
                     const SizedBox(height: DonySpacing.xs),
                     Text(
-                      '${template.departureCity} → ${template.arrivalCity} · ${formatPriceActive(template.pricePerKg)}/kg',
+                      '${template.departureCity} → ${template.arrivalCity} · '
+                      '${template.pricePerKg == null ? 'prix à la grille' : '${formatPriceActive(template.pricePerKg!)}/kg'}',
                       style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                     ),
                   ],

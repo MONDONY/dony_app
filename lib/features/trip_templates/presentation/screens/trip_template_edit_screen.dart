@@ -79,7 +79,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
       int closest = 0;
       double minDiff = double.infinity;
       for (int i = 0; i < _priceOptions.length; i++) {
-        final diff = (t.pricePerKg - _priceOptions[i]).abs();
+        final diff = ((t.pricePerKg ?? 0) - _priceOptions[i]).abs();
         if (diff < minDiff) {
           minDiff = diff;
           closest = i;

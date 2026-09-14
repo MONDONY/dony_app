@@ -1805,13 +1805,17 @@ class _TripFormContentState extends State<_TripFormContent> {
     _availableKgNotifier.value = t.availableKg.toDouble();
 
     _kgPriceEnabledNotifier.value = true;
-    final presetIdx = _presets.indexOf(t.pricePerKg);
+    // pricePerKg nul (modèle en grille seule) : _applyTemplate est réécrit
+    // en Tâche 5 pour gérer pricingMode, ici on se contente de compiler.
+    final presetIdx = t.pricePerKg == null
+        ? -1
+        : _presets.indexOf(t.pricePerKg!);
     if (presetIdx != -1) {
       _priceOptionNotifier.value = presetIdx;
     } else {
       _priceOptionNotifier.value = _presets.length; // "Autre prix"
-      _customPriceNotifier.value = t.pricePerKg;
-      _customPriceCtrl.text = t.pricePerKg.toStringAsFixed(0);
+      _customPriceNotifier.value = t.pricePerKg ?? 0;
+      _customPriceCtrl.text = (t.pricePerKg ?? 0).toStringAsFixed(0);
     }
 
     _selectedContentNotifier.value = t.acceptedCategories
@@ -1870,7 +1874,9 @@ class _TripFormContentState extends State<_TripFormContent> {
                         ? Text(t.emoji!)
                         : DonyIcon('bookmark', size: 16, color: cs.primary),
                     label: Text(
-                      '${t.label} · ${CurrencyFormatter.formatOrPlain(t.pricePerKg, _currency, compact: true)}/kg',
+                      t.pricePerKg == null
+                          ? '${t.label} · prix à la grille'
+                          : '${t.label} · ${CurrencyFormatter.formatOrPlain(t.pricePerKg!, _currency, compact: true)}/kg',
                     ),
                     onPressed: () => _applyTemplate(t),
                   );

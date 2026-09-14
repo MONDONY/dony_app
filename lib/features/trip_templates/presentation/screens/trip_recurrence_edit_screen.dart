@@ -62,7 +62,7 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
       'transportMode': t.transportMode,
       'capacityUnit': t.capacityUnit,
       'availableKg': t.availableKg,
-      'pricePerKg': t.pricePerKg,
+      'pricePerKg': t.pricePerKg ?? 0,
       'acceptedCategories': t.acceptedCategories,
       'pickupAddress': {
         'label': _pickup!.label,
@@ -147,7 +147,7 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
                             ),
                           ),
                           Text(
-                            '${t.departureCity} → ${t.arrivalCity} · ${formatPriceActive(t.pricePerKg)}/kg',
+                            '${t.departureCity} → ${t.arrivalCity} · ${t.pricePerKg == null ? 'prix à la grille' : '${formatPriceActive(t.pricePerKg!)}/kg'}',
                             style: tt.bodySmall?.copyWith(
                               color: cs.onSurfaceVariant,
                             ),
