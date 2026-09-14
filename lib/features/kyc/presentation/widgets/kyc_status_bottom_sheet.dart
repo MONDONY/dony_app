@@ -32,35 +32,31 @@ class KycStatusBottomSheet extends StatefulWidget {
     final initialKycStatus = authState is AuthAuthenticated
         ? authState.user.kycStatus
         : null;
+    // Disposé par _KycStatusContentState, voir son dispose().
     final stickyBtnNotifier = ValueNotifier<_StickyBtnConfig?>(null);
 
-    String? stripeUrl;
-    try {
-      stripeUrl = await DonyBottomSheet.show<String>(
-        context,
-        title: 'Vérification d\'identité',
-        wrapper: (child) =>
-            BlocProvider(create: (_) => getIt<KycBloc>(), child: child),
-        stickyBottom: ValueListenableBuilder<_StickyBtnConfig?>(
-          valueListenable: stickyBtnNotifier,
-          builder: (ctx, config, _) {
-            if (config == null) return const SizedBox.shrink();
-            return DonyButton(
-              label: config.label,
-              onPressed: config.onPressed,
-              variant: config.variant,
-            );
-          },
-        ),
-        child: _KycStatusContent(
-          authBloc: authBloc,
-          initialKycStatus: initialKycStatus,
-          stickyBtnNotifier: stickyBtnNotifier,
-        ),
-      );
-    } finally {
-      stickyBtnNotifier.dispose();
-    }
+    final stripeUrl = await DonyBottomSheet.show<String>(
+      context,
+      title: 'Vérification d\'identité',
+      wrapper: (child) =>
+          BlocProvider(create: (_) => getIt<KycBloc>(), child: child),
+      stickyBottom: ValueListenableBuilder<_StickyBtnConfig?>(
+        valueListenable: stickyBtnNotifier,
+        builder: (ctx, config, _) {
+          if (config == null) return const SizedBox.shrink();
+          return DonyButton(
+            label: config.label,
+            onPressed: config.onPressed,
+            variant: config.variant,
+          );
+        },
+      ),
+      child: _KycStatusContent(
+        authBloc: authBloc,
+        initialKycStatus: initialKycStatus,
+        stickyBtnNotifier: stickyBtnNotifier,
+      ),
+    );
 
     if (stripeUrl != null && context.mounted) {
       GoRouter.of(context).go('/kyc/verify', extra: stripeUrl);
@@ -82,7 +78,7 @@ class _KycStatusContent extends StatefulWidget {
   const _KycStatusContent({
     required this.authBloc,
     this.initialKycStatus,
-    this.stickyBtnNotifier,
+    required this.stickyBtnNotifier,
   });
 
   final AuthBloc authBloc;
@@ -90,7 +86,7 @@ class _KycStatusContent extends StatefulWidget {
   /// Optimistic initial KYC status from AuthBloc — avoids showing an
   /// indeterminate spinner on first open while KycBloc loads fresh data.
   final String? initialKycStatus;
-  final ValueNotifier<_StickyBtnConfig?>? stickyBtnNotifier;
+  final ValueNotifier<_StickyBtnConfig?> stickyBtnNotifier;
 
   @override
   State<_KycStatusContent> createState() => _KycStatusContentState();
@@ -118,6 +114,11 @@ class _KycStatusContentState extends State<_KycStatusContent> {
     _pollingTimer?.cancel();
     _autoNavTimer?.cancel();
     _timeoutTimer?.cancel();
+    // Le contenu écrit dans le notifier après chaque build (post-frame) : il
+    // doit donc vivre jusqu'au démontage, pas jusqu'au Future de show(), qui
+    // se termine au pop, avant la fin de l'animation de sortie (Sentry
+    // FLUTTER-1C).
+    widget.stickyBtnNotifier.dispose();
     super.dispose();
   }
 
@@ -203,7 +204,7 @@ class _KycStatusContentState extends State<_KycStatusContent> {
         variant: DonyButtonVariant.ghost,
       );
     }
-    widget.stickyBtnNotifier?.value = config;
+    widget.stickyBtnNotifier.value = config;
   }
 
   @override

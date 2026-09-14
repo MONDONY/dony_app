@@ -270,6 +270,8 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<DeviceIdService>(),
       getIt<ErrorReportingService>(),
       getIt<FirebaseSessionProbe>(),
+      null,
+      getIt<ConnectivityRepository>().hasConnection,
     ),
     dispose: (s) => s.dispose(),
   );

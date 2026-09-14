@@ -35,12 +35,16 @@ class FavoriteRequestsCubit extends Cubit<FavoriteRequestsState> {
     emit(FavoriteRequestsLoading());
     try {
       final requests = await _repo.packageRequests();
+      // Même garde que FavoriteTripsCubit : l'onglet peut être quitté avant
+      // la réponse, un emit sur un cubit fermé lèverait un StateError.
+      if (isClosed) return;
       if (requests.isEmpty) {
         emit(FavoriteRequestsEmpty());
       } else {
         emit(FavoriteRequestsLoaded(requests));
       }
     } catch (e) {
+      if (isClosed) return;
       emit(FavoriteRequestsError(e.toString()));
     }
   }

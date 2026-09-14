@@ -35,12 +35,16 @@ class FavoriteTripsCubit extends Cubit<FavoriteTripsState> {
     emit(FavoriteTripsLoading());
     try {
       final trips = await _repo.trips();
+      // L'écran Favoris est souvent quitté avant la réponse : le cubit est
+      // alors fermé et un emit lèverait un StateError vers Sentry (FLUTTER-1G).
+      if (isClosed) return;
       if (trips.isEmpty) {
         emit(FavoriteTripsEmpty());
       } else {
         emit(FavoriteTripsLoaded(trips));
       }
     } catch (e) {
+      if (isClosed) return;
       emit(FavoriteTripsError(e.toString()));
     }
   }

@@ -122,6 +122,10 @@ class NotificationService {
   /// et le service est construit par GetIt avant cette initialisation.
   final FirebaseMessaging? _fcmOverride;
 
+  /// Sonde de connectivité (`ConnectivityRepository.hasConnection` en
+  /// production, câblée dans injection.dart). `null` = considéré en ligne.
+  final Future<bool> Function()? _hasConnection;
+
   Future<void>? _inFlightUpload;
   Future<void>? _inFlightTokenUpload;
   bool _permissionDeniedReported = false;
@@ -134,7 +138,17 @@ class NotificationService {
     this._errorReporter,
     this._sessionProbe = const FirebaseSessionProbe(),
     this._fcmOverride,
+    this._hasConnection,
   ]);
+
+  /// `true` dans le doute : la sonde ne doit jamais faire perdre une remontée.
+  Future<bool> _isOnline() async {
+    try {
+      return await _hasConnection?.call() ?? true;
+    } catch (_) {
+      return true;
+    }
+  }
 
   // late: deferred until initialize() so tests can instantiate this class without Firebase
   late final FirebaseMessaging _fcm =
@@ -312,6 +326,12 @@ class NotificationService {
       // identiques (jusqu'à 28 pour un seul utilisateur). Le premier suffit à
       // signaler l'appareil non enregistré.
       if (_tokenResolutionFailureReported) return;
+      // Hors ligne, Firebase Installations ne peut pas fabriquer de jeton et
+      // `getToken()` lève une FirebaseException(code: unknown) : ce n'est pas
+      // un bug (Sentry FLUTTER-Q / FLUTTER-P, tous les événements restants
+      // après #322 avaient `device.online: false`). Le réenregistrement
+      // repart à la reprise réseau via onAppResumed.
+      if (!await _isOnline()) return;
       _tokenResolutionFailureReported = true;
       unawaited(
         _errorReporter?.report(

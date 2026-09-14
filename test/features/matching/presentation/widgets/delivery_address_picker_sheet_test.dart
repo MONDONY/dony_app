@@ -361,4 +361,33 @@ void main() {
       },
     );
   });
+
+  // ---------------------------------------------------------------------------
+  // Sentry FLUTTER-1B, scénario complet (le widget seul est couvert dans
+  // address_picker_empty_state_test.dart) : petit écran, clavier ouvert,
+  // recherche sans résultat. Un débordement est un FlutterError.
+  // ---------------------------------------------------------------------------
+  group('état vide avec le clavier ouvert', () {
+    testWidgets('« Aucun résultat » ne déborde pas sur un petit écran', (
+      tester,
+    ) async {
+      when(
+        () => connectivity.checkConnectivity(),
+      ).thenAnswer((_) async => [ConnectivityResult.wifi]);
+      when(() => service.search(any(), any())).thenAnswer((_) async => []);
+
+      await pump(tester);
+      tester.view.physicalSize = const Size(720, 1640);
+      tester.view.devicePixelRatio = 2.0;
+      tester.view.viewInsets = const FakeViewPadding(bottom: 600);
+      addTearDown(tester.view.resetViewInsets);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pump();
+
+      await search(tester, 'zzzz');
+
+      expect(find.text('Aucun résultat'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  });
 }

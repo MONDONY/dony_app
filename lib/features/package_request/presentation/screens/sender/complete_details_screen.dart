@@ -110,8 +110,7 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
   /// en amont le laissait sans issue alors que le voyageur, lui, ne voyait
   /// qu'un « en attente du paiement » sans savoir quoi faire.
   Set<PaymentMethod> _availableMethods(PackageRequest request) =>
-      widget.thread?.availablePaymentMethods ??
-      request.acceptedPaymentMethods;
+      widget.thread?.availablePaymentMethods ?? request.acceptedPaymentMethods;
 
   void _submit() {
     if (!_form.currentState!.validate()) return;
