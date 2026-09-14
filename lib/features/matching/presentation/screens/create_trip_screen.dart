@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:dony/core/currency/active_currency.dart';
 import 'package:dony/core/currency/currency_formatter.dart';
-import 'package:dony/core/currency/currency_selector.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
@@ -28,6 +27,7 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_preview_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/currency_selection_banner.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/lieux_capacite_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/prix_conditions_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trajet_step.dart';
@@ -286,7 +286,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                       ),
                       const SizedBox(height: DonySpacing.base),
                       if (!isEdit && !isLocked) ...[
-                        _CurrencySelectionBanner(
+                        CurrencySelectionBanner(
                           currencyNotifier: _currencyNotifier,
                         ),
                         const SizedBox(height: DonySpacing.base),
@@ -2149,123 +2149,6 @@ enum _Step1Field {
   const _Step1Field(this.message);
 
   final String message;
-}
-
-// ─── Currency selection banner ────────────────────────────────────────────
-
-/// Bannière interactive : annonce la devise choisie pour la publication et
-/// ouvre le sélecteur partagé (`CurrencySelector`) au tap. Remplace l'ancienne
-/// `CurrencyPublishBanner` statique — la devise n'était encore jamais
-/// envoyée au serveur avant ce lot, elle se choisit désormais explicitement.
-class _CurrencySelectionBanner extends StatelessWidget {
-  const _CurrencySelectionBanner({required this.currencyNotifier});
-
-  final ValueNotifier<SupportedCurrency> currencyNotifier;
-
-  /// Moyens de paiement prévisualisés par devise. `stripeConfigured` reflète
-  /// le compte Connect du créateur (seul voyageur concerné à cette étape) ;
-  /// l'éligibilité Stripe par devise suit `SupportedCurrency.isStripeEligible`
-  /// (verbatim contrainte serveur). Aperçu client uniquement : le serveur
-  /// reste seul décideur au paiement réel.
-  List<CurrencyPaymentOption> _options(bool stripeConfigured) => [
-    for (final currency in SupportedCurrency.values)
-      CurrencyPaymentOption(
-        currency: currency,
-        availablePaymentMethods: {
-          BidPaymentMethod.cash,
-          if (stripeConfigured && currency.isStripeEligible)
-            BidPaymentMethod.stripe,
-        },
-      ),
-  ];
-
-  Future<void> _openSelector(BuildContext context) async {
-    final stripeState = context.read<StripeAccountBloc>().state;
-    final stripeConfigured =
-        stripeState is StripeAccountReady &&
-        stripeState.accountStatus.isComplete;
-    final selected = await CurrencySelector.show(
-      context,
-      options: _options(stripeConfigured),
-      initialCurrency: currencyNotifier.value,
-    );
-    if (selected != null) {
-      currencyNotifier.value = selected;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    return ValueListenableBuilder<SupportedCurrency>(
-      valueListenable: currencyNotifier,
-      builder: (context, currency, _) {
-        final semanticsLabel =
-            'Devise de publication : ${currency.displayName}, '
-            '${currency.code}. Les utilisateurs dans une autre devise voient '
-            'un prix converti. Le paiement reste dans cette devise. '
-            'Bouton, modifier la devise.';
-        return Semantics(
-          container: true,
-          button: true,
-          label: semanticsLabel,
-          child: ExcludeSemantics(
-            child: InkWell(
-              key: const Key('trip-currency-selector-row'),
-              borderRadius: BorderRadius.circular(DonyRadius.card),
-              onTap: () => unawaited(_openSelector(context)),
-              child: Container(
-                padding: const EdgeInsets.all(DonySpacing.base),
-                decoration: BoxDecoration(
-                  color: cs.infoLight,
-                  borderRadius: BorderRadius.circular(DonyRadius.card),
-                  border: Border.all(color: cs.info.withValues(alpha: 0.35)),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(Icons.info_outline_rounded, color: cs.info),
-                    const SizedBox(width: DonySpacing.md),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Publié en ${currency.displayName} (${currency.code})',
-                            style: tt.titleMedium?.copyWith(
-                              color: cs.onSurface,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: DonySpacing.xs),
-                          Text(
-                            'Les utilisateurs dans une autre devise voient un prix '
-                            'converti. Le paiement reste dans cette devise.',
-                            style: tt.bodySmall?.copyWith(
-                              color: cs.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: DonySpacing.sm),
-                    Text(
-                      'Changer',
-                      style: tt.labelLarge?.copyWith(
-                        color: cs.primary,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
 }
 
 // ─── Locked banner & locked-mode helpers ─────────────────────────────────────
