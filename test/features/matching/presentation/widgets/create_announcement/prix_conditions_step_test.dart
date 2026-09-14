@@ -15,13 +15,14 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/models/connect_account_status.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_form_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:dony/features/matching/data/models/grid_preview_item.dart';
-import 'package:dony/features/matching/presentation/widgets/create_announcement/_create_announcement_constants.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/prix_conditions_step.dart';
+import 'package:dony/features/matching/presentation/widgets/price_hint_widget.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_state.dart';
@@ -233,8 +234,8 @@ void main() {
 
     testWidgets('les 4 chips de prix prédéfinis sont affichés', (tester) async {
       await _pump(tester);
-      // kPriceOptions = [5.0, 6.0, 7.0, 8.0], dans la devise active.
-      for (final price in kPriceOptions) {
+      // Repères euro : 5, 6, 7, 8 €/kg.
+      for (final price in KgPriceReference.eur.presets) {
         expect(
           find.text(CurrencyFormatter.format(price, SupportedCurrency.eur)),
           findsOneWidget,
@@ -243,22 +244,56 @@ void main() {
       }
     });
 
-    testWidgets('affiche les montants en CAD sans conversion', (tester) async {
+    testWidgets('affiche les montants en CAD à l\'échelle du taux', (
+      tester,
+    ) async {
       await tester.pumpWidget(_host(currency: SupportedCurrency.cad));
       await tester.pump(const Duration(milliseconds: 200));
 
+      // 5 € × 1,47 = 7,35 → 7,50 CA$ ; 10 kg → 75 CA$ net.
       expect(
-        find.text(CurrencyFormatter.format(5, SupportedCurrency.cad)),
+        find.text(CurrencyFormatter.format(7.5, SupportedCurrency.cad)),
         findsOneWidget,
       );
       expect(find.text('5€'), findsNothing);
       expect(
+        find.text(CurrencyFormatter.format(5, SupportedCurrency.cad)),
+        findsNothing,
+      );
+      expect(
         find.textContaining(
-          CurrencyFormatter.format(50, SupportedCurrency.cad),
+          CurrencyFormatter.format(75, SupportedCurrency.cad),
         ),
         findsOneWidget,
       );
     });
+
+    testWidgets(
+      'XOF : chips 1 000 à 3 000 F CFA et médiane marché 2 000, pas le barème '
+      'euro',
+      (tester) async {
+        await tester.pumpWidget(_host(currency: SupportedCurrency.xof));
+        await tester.pump(const Duration(milliseconds: 200));
+
+        for (final price in KgPriceReference.cfa.presets) {
+          expect(
+            find.text(CurrencyFormatter.format(price, SupportedCurrency.xof)),
+            findsOneWidget,
+            reason: 'Chip ${price.toStringAsFixed(0)} XOF doit être présent',
+          );
+        }
+        expect(
+          find.text(CurrencyFormatter.format(5, SupportedCurrency.xof)),
+          findsNothing,
+        );
+
+        final hint = tester.widget<PriceHintWidget>(
+          find.byType(PriceHintWidget),
+        );
+        expect(hint.marketMedianPrice, 2000);
+        expect(hint.currency, SupportedCurrency.xof);
+      },
+    );
 
     testWidgets('chip "Autre prix" est affiché', (tester) async {
       await _pump(tester);

@@ -15,8 +15,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-const _priceOptions = [5.0, 6.0, 7.0, 8.0];
-
 const _capacityOptions = [
   ('SUITCASE_23KG', '1 valise 23 kg', 'Format standard cabine'),
   ('SUITCASE_32KG', '1 valise 32 kg', 'Grande valise'),
@@ -40,7 +38,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
   TransportMode _transport = TransportMode.plane;
   String _capacityUnit = 'SUITCASE_23KG';
   double _availableKg = 23;
-  int _priceIdx = 3; // 8€ par défaut
+  int _priceIdx = 3; // dernier chip par défaut (8 €, 3 000 F CFA)
   Set<String> _categories = {'Vêtements & tissus', 'Documents & administratif'};
   bool _cashAccepted = false;
   TimeOfDay? _arrivalTime;
@@ -90,6 +88,10 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
       _priceIdx = closest;
     }
   }
+
+  /// Chips de prix dans la devise active : un modèle ne porte pas de devise
+  /// propre, il sert à préremplir un trajet créé depuis ce profil.
+  List<double> get _priceOptions => KgPriceReference.active.presets;
 
   @override
   void dispose() {

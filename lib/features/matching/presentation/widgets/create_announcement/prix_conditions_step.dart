@@ -12,7 +12,6 @@ import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_form_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:dony/features/matching/presentation/widgets/cash_commission_notice.dart';
-import 'package:dony/features/matching/presentation/widgets/create_announcement/_create_announcement_constants.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/grid_preview_card.dart';
 import 'package:dony/features/matching/presentation/widgets/price_hint_widget.dart';
@@ -110,14 +109,17 @@ class PrixConditionsStep extends StatelessWidget {
     this.showPaymentMethods = true,
   });
 
-  bool get _isCustomPrice => priceOptionNotifier.value == kPriceOptions.length;
+  /// Repères de la devise de l'annonce : chips, médiane, fourchette.
+  KgPriceReference get _reference =>
+      KgPriceReference.forCurrency(currency ?? SupportedCurrency.eur);
+
+  List<double> get _presets => _reference.presets;
+
+  bool get _isCustomPrice => priceOptionNotifier.value == _presets.length;
 
   double get _pricePerKg => _isCustomPrice
       ? customPriceNotifier.value
-      : kPriceOptions[priceOptionNotifier.value.clamp(
-          0,
-          kPriceOptions.length - 1,
-        )];
+      : _presets[priceOptionNotifier.value.clamp(0, _presets.length - 1)];
 
   @override
   Widget build(BuildContext context) {
@@ -241,9 +243,7 @@ class PrixConditionsStep extends StatelessWidget {
                             children: [
                               // ── Chips preset ──────────────────────────
                               Row(
-                                children: List.generate(kPriceOptions.length, (
-                                  i,
-                                ) {
+                                children: List.generate(_presets.length, (i) {
                                   final selected = selectedIdx == i;
                                   return Expanded(
                                     child: Padding(
@@ -276,7 +276,7 @@ class PrixConditionsStep extends StatelessWidget {
                                           child: Center(
                                             child: Text(
                                               CurrencyFormatter.formatOrPlain(
-                                                kPriceOptions[i],
+                                                _presets[i],
                                                 currency,
                                               ),
                                               style: tt.titleMedium?.copyWith(
@@ -297,8 +297,7 @@ class PrixConditionsStep extends StatelessWidget {
                               // ── Chip "Autre" ──────────────────────────
                               GestureDetector(
                                 onTap: () {
-                                  priceOptionNotifier.value =
-                                      kPriceOptions.length;
+                                  priceOptionNotifier.value = _presets.length;
                                   WidgetsBinding.instance.addPostFrameCallback((
                                     _,
                                   ) {
@@ -424,7 +423,7 @@ class PrixConditionsStep extends StatelessWidget {
                       ? '$dep – $arr'
                       : null;
                   return PriceHintWidget(
-                    marketMedianPrice: 8.0,
+                    marketMedianPrice: _reference.marketMedian,
                     warning: formState.priceWarning,
                     corridor: corridor,
                     currency: currency,

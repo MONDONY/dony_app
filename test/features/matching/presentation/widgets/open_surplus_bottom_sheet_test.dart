@@ -6,6 +6,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
@@ -19,8 +20,9 @@ class MockAnnouncementBloc
     extends MockBloc<AnnouncementEvent, AnnouncementState>
     implements AnnouncementBloc {}
 
-AnnouncementModel _dedicated() => AnnouncementModel(
+AnnouncementModel _dedicated({String currency = 'EUR'}) => AnnouncementModel(
   id: 'ann-1',
+  currency: currency,
   travelerId: 'trav-1',
   departureCity: 'Paris',
   arrivalCity: 'Dakar',
@@ -68,15 +70,17 @@ void main() {
     }
   });
 
-  Widget host() => MaterialApp(
+  Widget host({String currency = 'EUR'}) => MaterialApp(
     theme: AppTheme.light(),
     home: Builder(
       builder: (ctx) => Scaffold(
         body: Center(
           child: ElevatedButton(
             key: const Key('open-btn'),
-            onPressed: () =>
-                OpenSurplusBottomSheet.show(ctx, announcement: _dedicated()),
+            onPressed: () => OpenSurplusBottomSheet.show(
+              ctx,
+              announcement: _dedicated(currency: currency),
+            ),
             child: const Text('Ouvrir'),
           ),
         ),
@@ -84,8 +88,8 @@ void main() {
     ),
   );
 
-  Future<void> open(WidgetTester tester) async {
-    await tester.pumpWidget(host());
+  Future<void> open(WidgetTester tester, {String currency = 'EUR'}) async {
+    await tester.pumpWidget(host(currency: currency));
     await tester.tap(find.byKey(const Key('open-btn')));
     await tester.pumpAndSettle();
   }
@@ -102,6 +106,16 @@ void main() {
     expect(find.byKey(const Key('surplus-price-chip-3')), findsOneWidget);
     expect(find.byKey(const Key('surplus-price-chip-custom')), findsOneWidget);
     expect(find.text('Publier'), findsOneWidget);
+  });
+
+  testWidgets('trajet en XOF : chips 1 000 à 3 000 F CFA, pas 5 à 8', (
+    tester,
+  ) async {
+    await open(tester, currency: 'XOF');
+
+    expect(find.text(formatPriceIn(1000, 'XOF')), findsOneWidget);
+    expect(find.text(formatPriceIn(3000, 'XOF')), findsOneWidget);
+    expect(find.text(formatPriceIn(5, 'XOF')), findsNothing);
   });
 
   testWidgets('le bouton Publier est désactivé tant que les kg sont absents', (

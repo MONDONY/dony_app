@@ -8,6 +8,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/data/city_repository.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
@@ -22,6 +23,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/currency_test_doubles.dart';
 import '../../../../helpers/mock_recent_city_store.dart';
 
 class _MockTripTemplateBloc
@@ -89,6 +91,25 @@ void main() {
   });
 
   const field = Key('template-content-field');
+
+  testWidgets('devise active XOF : chips 1 000 à 3 000 F CFA', (tester) async {
+    tester.view.physicalSize = const Size(800, 3000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    registerCurrencyPreference('XOF');
+
+    await tester.pumpWidget(_wrap(const TripTemplateEditScreen(), bloc));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text(formatPriceActive(1000)), findsOneWidget);
+    expect(find.text(formatPriceActive(3000)), findsOneWidget);
+    expect(find.text(formatPriceActive(5)), findsNothing);
+    // Dernier chip sélectionné par défaut : 3 000 F CFA, pas 8 €.
+    expect(
+      find.textContaining('Vous touchez ${formatPriceActive(3000)}/kg'),
+      findsOneWidget,
+    );
+  });
 
   testWidgets(
     'le combo affiche le catalogue fourni par le repository (pas une liste '
