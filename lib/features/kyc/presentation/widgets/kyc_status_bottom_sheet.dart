@@ -32,35 +32,35 @@ class KycStatusBottomSheet extends StatefulWidget {
     final initialKycStatus = authState is AuthAuthenticated
         ? authState.user.kycStatus
         : null;
+    // Le notifier appartient au contenu (_KycStatusContentState le dispose
+    // dans son dispose()), pas au Future de show() : ce Future se termine au
+    // pop, alors que la sheet reste montée pendant son animation de sortie et
+    // que le contenu écrit encore dans le notifier après chaque build. Le
+    // disposer ici plantait la frame (Sentry FLUTTER-1C).
     final stickyBtnNotifier = ValueNotifier<_StickyBtnConfig?>(null);
 
-    String? stripeUrl;
-    try {
-      stripeUrl = await DonyBottomSheet.show<String>(
-        context,
-        title: 'Vérification d\'identité',
-        wrapper: (child) =>
-            BlocProvider(create: (_) => getIt<KycBloc>(), child: child),
-        stickyBottom: ValueListenableBuilder<_StickyBtnConfig?>(
-          valueListenable: stickyBtnNotifier,
-          builder: (ctx, config, _) {
-            if (config == null) return const SizedBox.shrink();
-            return DonyButton(
-              label: config.label,
-              onPressed: config.onPressed,
-              variant: config.variant,
-            );
-          },
-        ),
-        child: _KycStatusContent(
-          authBloc: authBloc,
-          initialKycStatus: initialKycStatus,
-          stickyBtnNotifier: stickyBtnNotifier,
-        ),
-      );
-    } finally {
-      stickyBtnNotifier.dispose();
-    }
+    final stripeUrl = await DonyBottomSheet.show<String>(
+      context,
+      title: 'Vérification d\'identité',
+      wrapper: (child) =>
+          BlocProvider(create: (_) => getIt<KycBloc>(), child: child),
+      stickyBottom: ValueListenableBuilder<_StickyBtnConfig?>(
+        valueListenable: stickyBtnNotifier,
+        builder: (ctx, config, _) {
+          if (config == null) return const SizedBox.shrink();
+          return DonyButton(
+            label: config.label,
+            onPressed: config.onPressed,
+            variant: config.variant,
+          );
+        },
+      ),
+      child: _KycStatusContent(
+        authBloc: authBloc,
+        initialKycStatus: initialKycStatus,
+        stickyBtnNotifier: stickyBtnNotifier,
+      ),
+    );
 
     if (stripeUrl != null && context.mounted) {
       GoRouter.of(context).go('/kyc/verify', extra: stripeUrl);
@@ -118,6 +118,9 @@ class _KycStatusContentState extends State<_KycStatusContent> {
     _pollingTimer?.cancel();
     _autoNavTimer?.cancel();
     _timeoutTimer?.cancel();
+    // Le ValueListenableBuilder du stickyBottom se détache dans la même
+    // passe de dispose ; removeListener reste permis après dispose.
+    widget.stickyBtnNotifier?.dispose();
     super.dispose();
   }
 

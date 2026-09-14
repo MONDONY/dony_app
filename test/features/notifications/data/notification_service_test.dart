@@ -607,6 +607,80 @@ void main() {
         'notifications.resolve_fcm_token',
       );
     });
+
+    // Sentry FLUTTER-Q / FLUTTER-P : après #322, tous les événements restants
+    // avaient `device.online: false`. Firebase Installations exige le réseau
+    // pour fabriquer un jeton ; hors ligne, `getToken()` lève une
+    // FirebaseException(code: unknown) qui n'est pas un bug. Le
+    // réenregistrement repart à la reprise réseau (onAppResumed).
+    test('ne remonte pas l\'échec de résolution quand l\'appareil est hors '
+        'ligne', () async {
+      final sink = _RecordingErrorSink();
+      final fcm = MockFirebaseMessaging();
+      when(() => fcm.getToken()).thenThrow(
+        FirebaseException(plugin: 'firebase_messaging', code: 'unknown'),
+      );
+      service = NotificationService(
+        apiClient,
+        repository,
+        deviceIdService,
+        ErrorReportingService(sink),
+        const FirebaseSessionProbe(),
+        fcm,
+        () async => false,
+      );
+
+      await service.uploadCurrentToken();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(sink.contexts, isEmpty);
+    });
+
+    test('remonte l\'échec de résolution quand l\'appareil est en ligne', () async {
+      final sink = _RecordingErrorSink();
+      final fcm = MockFirebaseMessaging();
+      when(() => fcm.getToken()).thenThrow(
+        FirebaseException(plugin: 'firebase_messaging', code: 'unknown'),
+      );
+      service = NotificationService(
+        apiClient,
+        repository,
+        deviceIdService,
+        ErrorReportingService(sink),
+        const FirebaseSessionProbe(),
+        fcm,
+        () async => true,
+      );
+
+      await service.uploadCurrentToken();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(sink.contexts, hasLength(1));
+    });
+
+    // La sonde de connectivité ne doit jamais faire perdre la remontée : si
+    // elle lève, on considère l'appareil en ligne.
+    test('remonte l\'échec si la sonde de connectivité lève', () async {
+      final sink = _RecordingErrorSink();
+      final fcm = MockFirebaseMessaging();
+      when(() => fcm.getToken()).thenThrow(
+        FirebaseException(plugin: 'firebase_messaging', code: 'unknown'),
+      );
+      service = NotificationService(
+        apiClient,
+        repository,
+        deviceIdService,
+        ErrorReportingService(sink),
+        const FirebaseSessionProbe(),
+        fcm,
+        () async => throw StateError('pas de plugin'),
+      );
+
+      await service.uploadCurrentToken();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(sink.contexts, hasLength(1));
+    });
   });
 
   group('NotificationService.formatAndroidName', () {

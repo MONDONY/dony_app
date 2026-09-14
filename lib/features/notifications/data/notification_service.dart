@@ -10,6 +10,7 @@ import 'package:dony/core/network/api_client.dart';
 import 'package:dony/core/services/device_id_service.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
+import 'package:dony/features/connectivity/data/connectivity_repository.dart';
 import 'package:dony/features/notifications/data/notification_repository.dart';
 import 'package:dony/features/notifications/notification_route_resolver.dart';
 import 'package:dony/features/subscriptions/data/subscription_badge_consumer.dart';
@@ -122,6 +123,10 @@ class NotificationService {
   /// et le service est construit par GetIt avant cette initialisation.
   final FirebaseMessaging? _fcmOverride;
 
+  /// Sonde de connectivité, injectée en test. En production, `null` retombe
+  /// sur `ConnectivityRepository` via GetIt au moment de l'appel.
+  final Future<bool> Function()? _hasConnectionOverride;
+
   Future<void>? _inFlightUpload;
   Future<void>? _inFlightTokenUpload;
   bool _permissionDeniedReported = false;
@@ -134,7 +139,20 @@ class NotificationService {
     this._errorReporter,
     this._sessionProbe = const FirebaseSessionProbe(),
     this._fcmOverride,
+    this._hasConnectionOverride,
   ]);
+
+  /// `true` dans le doute : la sonde ne doit jamais faire perdre une remontée.
+  Future<bool> _hasConnection() async {
+    try {
+      final probe = _hasConnectionOverride;
+      if (probe != null) return await probe();
+      if (!getIt.isRegistered<ConnectivityRepository>()) return true;
+      return await getIt<ConnectivityRepository>().hasConnection();
+    } catch (_) {
+      return true;
+    }
+  }
 
   // late: deferred until initialize() so tests can instantiate this class without Firebase
   late final FirebaseMessaging _fcm =
@@ -307,6 +325,12 @@ class NotificationService {
       );
     } catch (e, stackTrace) {
       if (kDebugMode) debugPrint('[FCM] uploadCurrentToken failed: $e');
+      // Hors ligne, Firebase Installations ne peut pas fabriquer de jeton et
+      // `getToken()` lève une FirebaseException(code: unknown) : ce n'est pas
+      // un bug (Sentry FLUTTER-Q / FLUTTER-P, tous les événements restants
+      // après #322 avaient `device.online: false`). Le réenregistrement
+      // repart à la reprise réseau via onAppResumed.
+      if (!await _hasConnection()) return;
       // Une seule remontée par session : l'upload est retenté à chaque reprise
       // de l'app, et un appareil sans réseau produisait une salve d'événements
       // identiques (jusqu'à 28 pour un seul utilisateur). Le premier suffit à

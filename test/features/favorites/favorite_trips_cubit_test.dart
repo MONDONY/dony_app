@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/features/favorites/bloc/favorite_trips_cubit.dart';
 import 'package:dony/features/favorites/data/repositories/favorite_repository.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
@@ -94,5 +96,38 @@ void main() {
     await cubit.load();
 
     expect(cubit.state, isA<FavoriteTripsLoaded>());
+  });
+
+// -----------------------------------------------------------------------------
+// Cubit fermé pendant la requête (Sentry FLUTTER-1G / FLUTTER-1F) : l'écran
+// Favoris est quitté avant la réponse. Aucun emit ne doit partir sur un cubit
+// fermé, et surtout le catch ne doit pas ré-émettre une erreur dessus.
+// -----------------------------------------------------------------------------
+  group('cubit fermé pendant load()', () {
+    test('réponse arrivée après close() → aucune exception', () async {
+      final completer = Completer<List<AnnouncementModel>>();
+      when(() => repo.trips()).thenAnswer((_) => completer.future);
+
+      final cubit = FavoriteTripsCubit(repo);
+      final loading = cubit.load();
+      await cubit.close();
+      completer.complete([_makeTrip()]);
+
+      await expectLater(loading, completes);
+      expect(cubit.state, isA<FavoriteTripsLoading>());
+    });
+
+    test('échec arrivé après close() → aucune exception', () async {
+      final completer = Completer<List<AnnouncementModel>>();
+      when(() => repo.trips()).thenAnswer((_) => completer.future);
+
+      final cubit = FavoriteTripsCubit(repo);
+      final loading = cubit.load();
+      await cubit.close();
+      completer.completeError(Exception('network error'));
+
+      await expectLater(loading, completes);
+      expect(cubit.state, isA<FavoriteTripsLoading>());
+    });
   });
 }

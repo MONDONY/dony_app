@@ -466,13 +466,16 @@ class _PickupAddressPickerSheetState extends State<PickupAddressPickerSheet> {
                       ),
                       child: Row(
                         children: [
-                          Text(
-                            '📦  Adresse de remise',
-                            style: tt.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
+                          Expanded(
+                            child: Text(
+                              '📦  Adresse de remise',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: tt.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                           ),
-                          const Spacer(),
                           IconButton(
                             tooltip: 'Fermer',
                             icon: const DonyIcon('x'),
@@ -885,8 +888,14 @@ class _EmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    // Avec le clavier ouvert, le corps de la sheet ne laisse qu'une centaine
+    // de pixels sur un petit écran : la colonne débordait de 80 px (Sentry
+    // FLUTTER-1B). Le défilement prend la taille du contenu quand il tient
+    // (donc reste centré) et se borne à la hauteur disponible sinon. Physique
+    // clamping : sans dépassement, le geste vertical reste au parent.
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
+        physics: const ClampingScrollPhysics(),
         padding: const EdgeInsets.all(DonySpacing.lg),
         child: Column(
           mainAxisSize: MainAxisSize.min,
