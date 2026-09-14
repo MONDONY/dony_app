@@ -296,5 +296,61 @@ void main() {
         expect(fields.currency.value, SupportedCurrency.xof);
       },
     );
+
+    testWidgets(
+      'flèche retour de l\'AppBar recule d\'une étape (pas un pop du routeur)',
+      (tester) async {
+        tester.view.physicalSize = const Size(800, 3000);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.reset);
+
+        // Étape 0 déjà valide (nom + villes + transport préremplis) pour
+        // atteindre l'étape 1 via « Continuer » sans piloter le champ ville.
+        const template = TripTemplate(
+          id: 't1',
+          label: 'Abidjan-Paris',
+          departureCity: 'Abidjan',
+          arrivalCity: 'Paris',
+          transportMode: 'CAR',
+          capacityUnit: 'SUITCASE_23KG',
+          availableKg: 23,
+          pricePerKg: 2000,
+          acceptedCategories: [],
+        );
+        await tester.pumpWidget(
+          _wrap(const TripTemplateEditScreen(template: template), bloc),
+        );
+        await tester.pump(const Duration(milliseconds: 600));
+
+        await tester.tap(find.text('Continuer'));
+        await tester.pump(const Duration(milliseconds: 300));
+
+        expect(
+          tester
+              .widget<CaStepperHeader>(find.byType(CaStepperHeader))
+              .currentStep,
+          1,
+        );
+
+        // Flèche visible de l'AppBar, pas le geste système (PopScope).
+        await tester.tap(find.byType(DonyAppBarBackButton));
+        // `pumpAndSettle` plutôt qu'un `pump` fixe : le retour à l'étape 0
+        // rejoue le `.animate().fadeIn()` de `DonyTextField` (NOM DU
+        // MODÈLE), dont le timer de démarrage doit se vider avant la fin du
+        // test (sinon `A Timer is still pending` à la clôture du widget).
+        await tester.pumpAndSettle();
+
+        expect(
+          tester
+              .widget<CaStepperHeader>(find.byType(CaStepperHeader))
+              .currentStep,
+          0,
+        );
+        // Toujours sur l'écran du modèle : la flèche a reculé d'une étape,
+        // elle n'a pas fait sortir de l'écran (pas de pop du routeur).
+        expect(find.byType(TripTemplateEditScreen), findsOneWidget);
+        expect(find.text('Continuer'), findsOneWidget);
+      },
+    );
   });
 }

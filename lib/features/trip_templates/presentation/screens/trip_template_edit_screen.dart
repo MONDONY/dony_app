@@ -180,15 +180,30 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
         return ValueListenableBuilder<int>(
           valueListenable: _step,
           builder: (context, step, _) {
+            // Un seul handler de retour, partagé par la flèche visible de
+            // l'AppBar (`onBack`) et par `PopScope` (geste système / swipe
+            // iOS) : sans ça, `DonyAppBarBackButton` appelle `context.pop()`
+            // directement sans consulter `canPop` et fait quitter l'écran au
+            // lieu de reculer d'une étape (cf. `create_trip_screen.dart`,
+            // même pattern avec `_handleExitRequest`).
+            void handleBack() {
+              if (step == 0) {
+                context.pop();
+              } else {
+                _step.value = step - 1;
+              }
+            }
+
             return PopScope(
               canPop: step == 0,
               onPopInvokedWithResult: (didPop, _) {
                 if (!didPop) {
-                  _step.value -= 1;
+                  handleBack();
                 }
               },
               child: DonyPageScaffold(
                 title: _isEditing ? 'Modifier le modèle' : 'Nouveau modèle',
+                onBack: handleBack,
                 stickyBottom: ValueListenableBuilder<bool>(
                   valueListenable: _canContinue,
                   builder: (context, canContinue, _) {
