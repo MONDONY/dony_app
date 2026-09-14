@@ -272,6 +272,11 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                         const SizedBox(height: DonySpacing.base),
                       ],
                       _TripFormContent(
+                        // Réservé aux tests : cf. `handoverDeadlineForTest`
+                        // sur `_TripFormContentState`, atteint via ce Key
+                        // faute de pouvoir nommer `_TripFormContent` (privé)
+                        // depuis un autre fichier.
+                        key: const Key('trip-form-content'),
                         announcement: args?.announcement,
                         lockContext: args?.lockContext,
                         lockCorridorAndDate: args?.lockCorridorAndDate ?? false,
@@ -525,6 +530,7 @@ class _TripFormContent extends StatefulWidget {
   final void Function(void Function({bool saveAsDraft}))? onSubmitReady;
 
   const _TripFormContent({
+    super.key,
     this.announcement,
     this.lockContext,
     this.lockCorridorAndDate = false,
@@ -565,6 +571,13 @@ class _TripFormContentState extends State<_TripFormContent> {
   /// Date limite de dépôt : jour seul choisi par le voyageur, converti en
   /// instant à l'envoi (cf. [_resolveHandoverDeadline]).
   final _handoverDeadlineNotifier = ValueNotifier<DateTime?>(null);
+
+  /// Réservé aux tests : lecture seule de la date limite de dépôt, pour
+  /// vérifier son recalcul après application d'un modèle sans piloter le
+  /// calendrier natif (cf. `handoverDeadlineOf` dans les tests).
+  @visibleForTesting
+  ValueListenable<DateTime?> get handoverDeadlineForTest =>
+      _handoverDeadlineNotifier;
   final _pickupAddressNotifier = ValueNotifier<AddressData?>(null);
   final _deliveryAddressNotifier = ValueNotifier<AddressData?>(null);
   AddressData? get _pickupAddress => _pickupAddressNotifier.value;
@@ -849,6 +862,11 @@ class _TripFormContentState extends State<_TripFormContent> {
     _departureCityNotifier.addListener(_syncCityToFormBloc);
     _arrivalCityNotifier.addListener(_syncCityToFormBloc);
     _departureDateNotifier.addListener(_syncDateToFormBloc);
+    // Recalcule la date limite de dépôt d'un modèle appliqué (délai en jours
+    // avant départ) dès que la date de départ change, tant que l'utilisateur
+    // n'a pas choisi lui-même un jour limite (cf. _applyTemplate,
+    // _applyPendingHandoverLead, _selectHandoverDeadline).
+    _departureDateNotifier.addListener(_applyPendingHandoverLead);
     _priceOptionNotifier.addListener(_syncPriceToFormBloc);
     _customPriceNotifier.addListener(_syncPriceToFormBloc);
     _availableKgNotifier.addListener(_syncKgToFormBloc);
@@ -1222,6 +1240,7 @@ class _TripFormContentState extends State<_TripFormContent> {
     _departureCityNotifier.removeListener(_syncCityToFormBloc);
     _arrivalCityNotifier.removeListener(_syncCityToFormBloc);
     _departureDateNotifier.removeListener(_syncDateToFormBloc);
+    _departureDateNotifier.removeListener(_applyPendingHandoverLead);
     _priceOptionNotifier.removeListener(_syncPriceToFormBloc);
     _customPriceNotifier.removeListener(_syncPriceToFormBloc);
     _availableKgNotifier.removeListener(_syncKgToFormBloc);
@@ -1607,7 +1626,12 @@ class _TripFormContentState extends State<_TripFormContent> {
         child: child!,
       ),
     );
-    if (picked != null) _handoverDeadlineNotifier.value = picked;
+    if (picked != null) {
+      _handoverDeadlineNotifier.value = picked;
+      // Choix manuel : annule le délai en attente d'un modèle appliqué, sinon
+      // un prochain changement de date de départ écraserait ce choix.
+      _pendingHandoverLeadDays = null;
+    }
   }
 
   @override
@@ -1775,27 +1799,43 @@ class _TripFormContentState extends State<_TripFormContent> {
     );
   }
 
-  /// Applique un modèle de trajet enregistré : pré-remplit corridor, transport,
-  /// capacité, poids, prix et contenu (les listeners synchronisent vers le BLoC).
+  /// Applique un modèle de trajet enregistré : tout le formulaire sauf la date.
+  ///
+  /// Un champ nul dans le modèle (modèle antérieur au formulaire complet)
+  /// vaut le défaut du formulaire vierge. La devise est posée en premier :
+  /// les chips de prix en dépendent. Les moyens de paiement impossibles ici
+  /// (mobile money sans compte actif ou hors zone CFA) sont ignorés, comme la
+  /// soumission les retirerait ; la carte reste gérée par la garde existante
+  /// à la soumission (Stripe non configuré), pas dupliquée ici.
   void _applyTemplate(TripTemplate t) {
+    final currency = SupportedCurrency.fromCode(t.currency);
+    if (currency != null) widget.currencyNotifier.value = currency;
+
     _departureCityNotifier.value = t.departureCity;
     _arrivalCityNotifier.value = t.arrivalCity;
+    _departureCountryCodeNotifier.value = t.departureCountryCode;
+    _arrivalCountryCodeNotifier.value = t.arrivalCountryCode;
+    _departureTimeNotifier.value = _timeOfDay(t.departureTime);
+    _arrivalTimeNotifier.value = _timeOfDay(t.arrivalTime);
     _transportModeNotifier.value =
         transportModeFromWire(t.transportMode) ?? TransportMode.plane;
     _availableKgNotifier.value = t.availableKg.toDouble();
+    _pickupAddressNotifier.value = t.pickupAddress;
+    _deliveryAddressNotifier.value = t.deliveryAddress;
 
-    _kgPriceEnabledNotifier.value = true;
-    // pricePerKg nul (modèle en grille seule) : _applyTemplate est réécrit
-    // en Tâche 5 pour gérer pricingMode, ici on se contente de compiler.
-    final presetIdx = t.pricePerKg == null
-        ? -1
-        : _presets.indexOf(t.pricePerKg!);
-    if (presetIdx != -1) {
-      _priceOptionNotifier.value = presetIdx;
+    _kgPriceEnabledNotifier.value = !t.usesPriceGrid || t.pricePerKg != null;
+    final price = t.pricePerKg;
+    if (price == null) {
+      _priceOptionNotifier.value = -1;
     } else {
-      _priceOptionNotifier.value = _presets.length; // "Autre prix"
-      _customPriceNotifier.value = t.pricePerKg ?? 0;
-      _customPriceCtrl.text = (t.pricePerKg ?? 0).toStringAsFixed(0);
+      final presetIdx = _presets.indexOf(price);
+      if (presetIdx != -1) {
+        _priceOptionNotifier.value = presetIdx;
+      } else {
+        _priceOptionNotifier.value = _presets.length; // "Autre prix"
+        _customPriceNotifier.value = price;
+        _customPriceCtrl.text = formatKgPrice(price);
+      }
     }
 
     _selectedContentNotifier.value = t.acceptedCategories
@@ -1804,6 +1844,22 @@ class _TripFormContentState extends State<_TripFormContent> {
     _customAcceptedNotifier.value = t.acceptedCategories
         .where((c) => !_catalogLabelsNotifier.value.contains(c))
         .toSet();
+    _refusedTypesNotifier.value = t.refusedTypes.toSet();
+    _descriptionCtrl.text = t.description ?? '';
+    _negotiableNotifier.value = t.negotiable;
+
+    final mobileMoneyPossible =
+        _currency.isMobileMoneyEligible &&
+        mobileMoneyAccountActiveFrom(
+          context.read<MobileMoneyAccountBloc>().state,
+        );
+    _cashEnabledNotifier.value = t.acceptedPaymentMethods.contains('CASH');
+    _mobileMoneyEnabledNotifier.value =
+        mobileMoneyPossible &&
+        t.acceptedPaymentMethods.contains('MOBILE_MONEY');
+
+    _pendingHandoverLeadDays = t.handoverLeadDays;
+    _applyPendingHandoverLead();
 
     final unit = switch (t.capacityUnit) {
       'KG_FREE' => CapacityUnit.kgFree,
@@ -1811,13 +1867,42 @@ class _TripFormContentState extends State<_TripFormContent> {
       'KG_EXACT' => CapacityUnit.custom,
       _ => CapacityUnit.suitcase23kg,
     };
-    context.read<AnnouncementFormBloc>().add(CapacityUnitChanged(unit));
+    final formBloc = context.read<AnnouncementFormBloc>();
+    formBloc.add(CapacityUnitChanged(unit));
+    formBloc.add(
+      AnnouncementPricingModeSetRequested(
+        t.usesPriceGrid ? PricingMode.mixed : PricingMode.kg,
+      ),
+    );
 
     DonySnackbar.show(
       context,
       message: 'Modèle « ${t.label} » appliqué',
       type: DonySnackbarType.success,
     );
+  }
+
+  /// Délai de remise du dernier modèle appliqué, en jours avant le départ.
+  /// Réappliqué à chaque changement de date tant que l'utilisateur n'a pas
+  /// choisi lui-même un jour limite (le choix manuel l'annule, cf.
+  /// [_selectHandoverDeadline]).
+  int? _pendingHandoverLeadDays;
+
+  void _applyPendingHandoverLead() {
+    final lead = _pendingHandoverLeadDays;
+    final date = _departureDateNotifier.value;
+    if (lead == null || date == null) return;
+    _handoverDeadlineNotifier.value = DateTime(
+      date.year,
+      date.month,
+      date.day,
+    ).subtract(Duration(days: lead));
+  }
+
+  static TimeOfDay? _timeOfDay(String? hhmm) {
+    if (hhmm == null || !hhmm.contains(':')) return null;
+    final parts = hhmm.split(':');
+    return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
   }
 
   Widget _buildTemplatesSuggestionBar(
@@ -1855,8 +1940,8 @@ class _TripFormContentState extends State<_TripFormContent> {
                         : DonyIcon('bookmark', size: 16, color: cs.primary),
                     label: Text(
                       t.pricePerKg == null
-                          ? '${t.label} · prix à la grille'
-                          : '${t.label} · ${CurrencyFormatter.formatOrPlain(t.pricePerKg!, _currency, compact: true)}/kg',
+                          ? '${t.label} · grille'
+                          : '${t.label} · ${CurrencyFormatter.formatOrPlain(t.pricePerKg!, SupportedCurrency.fromCodeOrDefault(t.currency), compact: true)}/kg',
                     ),
                     onPressed: () => _applyTemplate(t),
                   );

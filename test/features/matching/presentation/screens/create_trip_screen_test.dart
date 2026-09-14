@@ -32,6 +32,7 @@ import 'package:dony/features/matching/presentation/screens/create_trip_screen.d
 import 'package:dony/features/matching/presentation/widgets/cash_commission_notice.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/prix_conditions_step.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/trajet_step.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/locked_trip_context.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
@@ -1174,8 +1175,41 @@ void main() {
       acceptedCategories: ['Vêtements', 'Documents'],
     );
 
+    // Modèle complet (formulaire entier, tel qu'enregistré depuis Tâche 1) :
+    // couvre chaque champ que _applyTemplate doit copier.
+    const fullTemplate = TripTemplate(
+      id: 'tmpl-2',
+      label: 'Abidjan → Paris',
+      departureCity: 'Abidjan',
+      arrivalCity: 'Paris',
+      transportMode: 'CAR',
+      // KG_EXACT (capacité libre) : SUITCASE_32KG imposerait 32 kg fixes via
+      // CapacityUnitChanged, quel que soit availableKg du modèle — pas ce
+      // que ce test veut isoler.
+      capacityUnit: 'KG_EXACT',
+      availableKg: 30,
+      pricePerKg: 1500,
+      acceptedCategories: ['Vêtements & tissus'],
+      currency: 'XOF',
+      acceptedPaymentMethods: ['CASH', 'MOBILE_MONEY'],
+      negotiable: true,
+      refusedTypes: ['Téléphone & électronique'],
+      description: 'Pas de liquide',
+      pickupAddress: AddressData(label: 'Cocody', lat: 5.35, lng: -3.99),
+      deliveryAddress: AddressData(
+        label: 'Gare de Lyon',
+        lat: 48.84,
+        lng: 2.37,
+      ),
+      departureTime: '22:00',
+      arrivalTime: '06:30',
+      handoverLeadDays: 2,
+      departureCountryCode: 'CI',
+      arrivalCountryCode: 'FR',
+    );
+
     setUp(() {
-      // Override TripTemplateBloc to return a mock with one template
+      // Override TripTemplateBloc to return a mock avec les deux modèles.
       if (getIt.isRegistered<TripTemplateBloc>()) {
         getIt.unregister<TripTemplateBloc>();
       }
@@ -1184,7 +1218,7 @@ void main() {
         when(() => b.state).thenReturn(
           const TripTemplateState(
             status: TripTemplateStatus.success,
-            templates: [mockTemplate],
+            templates: [mockTemplate, fullTemplate],
           ),
         );
         when(() => b.stream).thenAnswer((_) => const Stream.empty());
@@ -1203,6 +1237,60 @@ void main() {
         return b;
       });
     });
+
+    /// Révèle et tape le modèle « Abidjan → Paris » (`fullTemplate`) : la
+    /// barre de suggestions est une `ListView.separated` horizontale lazy,
+    /// son deuxième item n'est construit qu'une fois scrollé en vue.
+    Future<void> tapFullTemplateChip(WidgetTester tester) async {
+      await tester.drag(find.byType(ListView), const Offset(-400, 0));
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.tap(find.textContaining('Abidjan → Paris'));
+      await tester.pump(const Duration(milliseconds: 600));
+    }
+
+    /// Avance jusqu'à l'étape 2 (Prix & Conditions) depuis l'écran déjà
+    /// monté. Date et heure de départ posées directement via les notifiers
+    /// exposés par `TrajetStep` — pas de calendrier natif à piloter, même
+    /// convention que le reste de ce fichier de test. Le délai de remise,
+    /// lui, reste piloté par le modèle appliqué le cas échéant
+    /// (`handoverLeadDays` → recalculé dès que la date change). Comme les
+    /// trois étapes du formulaire restent montées en permanence (`Offstage`
+    /// dans `_buildForm`), les assertions qui suivent ce helper n'exigent pas
+    /// que « Continuer » ait effectivement réussi à faire avancer le
+    /// stepper : un ancien modèle sans délai de remise reste bloqué à
+    /// l'étape 0, et c'est le comportement attendu (cf. test « ancien
+    /// modèle »).
+    Future<void> navigateToStep2FromCurrentForm(WidgetTester tester) async {
+      final trajet = tester.widget<TrajetStep>(find.byType(TrajetStep));
+      trajet.departureDateNotifier.value ??= DateTime(2026, 11, 10);
+      trajet.departureTimeNotifier.value ??= const TimeOfDay(
+        hour: 9,
+        minute: 0,
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // `warnIfMissed: false` : un modèle sans délai de remise laisse
+      // « Continuer » désactivé (ou recouvert par le DonySnackbar de
+      // `_applyTemplate`) — un tap manqué est alors attendu, pas une erreur.
+      final continueBtn = find.widgetWithText(DonyButton, 'Continuer');
+      await tester.tap(continueBtn, warnIfMissed: false);
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.tap(continueBtn, warnIfMissed: false);
+      await tester.pump(const Duration(milliseconds: 600));
+    }
+
+    /// Lit la date limite de dépôt courante. `_TripFormContentState` est
+    /// privé (comme son widget `_TripFormContent`) : atteint via le `Key`
+    /// posé sur `_TripFormContent` dans `create_trip_screen.dart`, pas par
+    /// son type. `handoverDeadlineForTest` est un nom public porté par une
+    /// classe privée — accessible dynamiquement, comme `fieldsForTest` sur
+    /// `_TripTemplateEditScreenState`.
+    DateTime? handoverDeadlineOf(WidgetTester tester) {
+      final state = tester.state<State<StatefulWidget>>(
+        find.byKey(const Key('trip-form-content')),
+      );
+      return (state as dynamic).handoverDeadlineForTest.value as DateTime?;
+    }
 
     testWidgets('template chip visible au step 0 en mode création', (
       tester,
@@ -1225,12 +1313,14 @@ void main() {
 
       await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
 
+      // Le second modèle n'est pas encore construit : la liste horizontale
+      // est lazy (ListView.separated) et ne bâtit que ses items visibles.
       expect(find.byType(ActionChip), findsOneWidget);
 
       // Tap the chip → _applyTemplate(t) called.
       // _applyTemplate shows a DonySnackbar (SnackBar with ~4s auto-dismiss)
       // → drain all pending timers to avoid the 'timer still pending' assertion.
-      await tester.tap(find.byType(ActionChip));
+      await tester.tap(find.textContaining('Paris → Dakar'));
       await tester.pump(const Duration(milliseconds: 600));
 
       // Screen still present (no navigation triggered)
@@ -1241,6 +1331,101 @@ void main() {
 
       // Drain the SnackBar auto-dismiss timer (~4 s default) so the widget
       // tree can be disposed cleanly at end of test.
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets(
+      'appliquer un modèle complet copie devise, conditions, adresses et heures',
+      (tester) async {
+        registerCurrencyPreference('EUR');
+        setupViewport(tester);
+        await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
+
+        await tapFullTemplateChip(tester);
+
+        final step = tester.widget<TrajetStep>(find.byType(TrajetStep));
+        expect(step.departureCityNotifier.value, 'Abidjan');
+        expect(
+          step.departureTimeNotifier.value,
+          const TimeOfDay(hour: 22, minute: 0),
+        );
+        expect(
+          step.arrivalTimeNotifier.value,
+          const TimeOfDay(hour: 6, minute: 30),
+        );
+        expect(find.text('Publié en Franc CFA Ouest (XOF)'), findsOneWidget);
+
+        // Étape 2 : mêmes notifiers, lus via PrixConditionsStep — présent
+        // dans l'arbre dès le premier build (Offstage), donc valide même si
+        // la navigation ci-dessous ne fait qu'avancer réellement le stepper.
+        await navigateToStep2FromCurrentForm(tester);
+        // skipOffstage: false — un ancien modèle sans délai de remise ne
+        // fait pas nécessairement avancer le stepper jusqu'à l'étape 2 (cf.
+        // navigateToStep2FromCurrentForm) ; PrixConditionsStep reste monté
+        // en Offstage, valeurs déjà synchronisées par _applyTemplate.
+        final prix = tester.widget<PrixConditionsStep>(
+          find.byType(PrixConditionsStep, skipOffstage: false),
+        );
+        expect(prix.currency, SupportedCurrency.xof);
+        expect(prix.priceOptionNotifier.value, 1); // 1 500 F CFA = 2e chip CFA
+        expect(prix.cashEnabledNotifier.value, isTrue);
+        expect(
+          prix.mobileMoneyEnabledNotifier.value,
+          isFalse,
+        ); // compte mobile money inactif dans ce montage
+        expect(prix.negotiableNotifier.value, isTrue);
+        expect(prix.refusedTypesNotifier.value, {'Téléphone & électronique'});
+        expect(prix.descriptionCtrl.text, 'Pas de liquide');
+        expect(prix.availableKgNotifier.value, 30);
+
+        await tester.pump(const Duration(seconds: 5));
+      },
+    );
+
+    testWidgets(
+      'délai de remise du modèle recalculé quand la date est choisie',
+      (tester) async {
+        setupViewport(tester);
+        await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
+
+        await tapFullTemplateChip(tester);
+
+        final step = tester.widget<TrajetStep>(find.byType(TrajetStep));
+        step.departureDateNotifier.value = DateTime(2026, 10, 20);
+        await tester.pump(const Duration(milliseconds: 300));
+
+        // Le jour limite = départ - 2 jours (handoverLeadDays du modèle).
+        expect(handoverDeadlineOf(tester), DateTime(2026, 10, 18));
+
+        await tester.pump(const Duration(seconds: 5));
+      },
+    );
+
+    testWidgets('ancien modèle sans nouveaux champs : formulaire vierge', (
+      tester,
+    ) async {
+      registerCurrencyPreference('EUR');
+      setupViewport(tester);
+      await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
+
+      await tester.tap(find.textContaining('Paris → Dakar'));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      await navigateToStep2FromCurrentForm(tester);
+      // skipOffstage: false — sans handoverLeadDays, le stepper reste
+      // bloqué à l'étape 0 (délai de remise manquant) ; PrixConditionsStep
+      // reste monté en Offstage, valeurs déjà synchronisées par
+      // _applyTemplate.
+      final prix = tester.widget<PrixConditionsStep>(
+        find.byType(PrixConditionsStep, skipOffstage: false),
+      );
+      expect(prix.cashEnabledNotifier.value, isFalse);
+      expect(prix.mobileMoneyEnabledNotifier.value, isFalse);
+      expect(prix.negotiableNotifier.value, isFalse);
+      expect(prix.descriptionCtrl.text, isEmpty);
+      expect(prix.refusedTypesNotifier.value, isEmpty);
+      expect(find.text('Publié en Euro (EUR)'), findsOneWidget);
+
       await tester.pump(const Duration(seconds: 5));
     });
   });
