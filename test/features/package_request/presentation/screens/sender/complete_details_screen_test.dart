@@ -88,20 +88,20 @@ NegotiationThread _fakeThread({
   Set<PaymentMethod>? availablePaymentMethods,
   bool cashCommissionAvailable = true,
 }) => NegotiationThread(
-      id: 'thread-1',
-      packageRequestId: 'pr-1',
-      travelerId: 'traveler-1',
-      travelerTravelDate: DateTime(2026, 8, 15),
-      travelerAvailableKg: 20,
-      status: NegotiationThreadStatus.awaitingPayment,
-      currentPriceEur: 25,
-      roundsCount: 1,
-      lastActivityAt: DateTime(2026),
-      createdAt: DateTime(2026),
-      messages: const [],
-      availablePaymentMethods: availablePaymentMethods,
-      cashCommissionAvailable: cashCommissionAvailable,
-    );
+  id: 'thread-1',
+  packageRequestId: 'pr-1',
+  travelerId: 'traveler-1',
+  travelerTravelDate: DateTime(2026, 8, 15),
+  travelerAvailableKg: 20,
+  status: NegotiationThreadStatus.awaitingPayment,
+  currentPriceEur: 25,
+  roundsCount: 1,
+  lastActivityAt: DateTime(2026),
+  createdAt: DateTime(2026),
+  messages: const [],
+  availablePaymentMethods: availablePaymentMethods,
+  cashCommissionAvailable: cashCommissionAvailable,
+);
 
 void main() {
   setUpAll(() {
