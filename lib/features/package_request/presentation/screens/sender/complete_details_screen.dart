@@ -103,21 +103,15 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
   /// autre. Repli sur `acceptedPaymentMethods` si `availablePaymentMethods`
   /// est `null` (threads legacy, créés avant l'introduction du SET).
   ///
-  /// Si CASH est accepté sur cette demande et que le voyageur ne peut pas
-  /// couvrir la commission Yadony, bloque tout le formulaire — même si une autre
-  /// méthode (ex. STRIPE) est aussi acceptée. Le voyageur doit pouvoir honorer
-  /// le cash avant que l'expéditeur ne s'engage sur cette demande, plutôt que
-  /// de basculer silencieusement vers une méthode que l'expéditeur n'a pas
-  /// forcément privilégiée.
-  Set<PaymentMethod> _availableMethods(PackageRequest request) {
-    final accepted =
-        widget.thread?.availablePaymentMethods ??
-        request.acceptedPaymentMethods;
-    final cashRequested = accepted.contains(PaymentMethod.cash);
-    final cashOk = widget.thread?.cashCommissionAvailable ?? true;
-    if (cashRequested && !cashOk) return const <PaymentMethod>{};
-    return accepted;
-  }
+  /// Le solde du voyageur (`thread.cashCommissionAvailable`) n'entre pas en
+  /// jeu ici : ce n'est pas une capacité mais une modalité de règlement de la
+  /// commission, que le voyageur règle (ou recharge) lui-même à l'étape
+  /// AWAITING_COMMISSION une fois les espèces choisies. Bloquer l'expéditeur
+  /// en amont le laissait sans issue alors que le voyageur, lui, ne voyait
+  /// qu'un « en attente du paiement » sans savoir quoi faire.
+  Set<PaymentMethod> _availableMethods(PackageRequest request) =>
+      widget.thread?.availablePaymentMethods ??
+      request.acceptedPaymentMethods;
 
   void _submit() {
     if (!_form.currentState!.validate()) return;
@@ -171,21 +165,6 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
                   child: CircularProgressIndicator(
                     color: Theme.of(context).colorScheme.primary,
                   ),
-                )
-              : (state.request != null &&
-                    _availableMethods(state.request!).isEmpty)
-              ? DonyEmptyState(
-                  icon: Icons.hourglass_empty_rounded,
-                  type: DonyEmptyStateType.error,
-                  title: 'En attente du voyageur',
-                  description:
-                      'Le paiement en espèces est accepté sur '
-                      'cette demande, mais le voyageur n\'a pas encore les '
-                      'fonds pour régler sa commission. Réessaie un peu '
-                      'plus tard, ou demande-lui de recharger son '
-                      'portefeuille.',
-                  actionLabel: 'Retour',
-                  onAction: () => context.pop(),
                 )
               : Stack(
                   children: [

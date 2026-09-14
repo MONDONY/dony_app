@@ -84,8 +84,10 @@ Widget _buildApp() {
 /// trip-linking choice and instead falls through to the SET-derived default.
 /// Pass `availablePaymentMethods: null` to simulate a legacy thread (created
 /// before trip-linking computed the SET).
-NegotiationThread _fakeThread({Set<PaymentMethod>? availablePaymentMethods}) =>
-    NegotiationThread(
+NegotiationThread _fakeThread({
+  Set<PaymentMethod>? availablePaymentMethods,
+  bool cashCommissionAvailable = true,
+}) => NegotiationThread(
       id: 'thread-1',
       packageRequestId: 'pr-1',
       travelerId: 'traveler-1',
@@ -98,6 +100,7 @@ NegotiationThread _fakeThread({Set<PaymentMethod>? availablePaymentMethods}) =>
       createdAt: DateTime(2026),
       messages: const [],
       availablePaymentMethods: availablePaymentMethods,
+      cashCommissionAvailable: cashCommissionAvailable,
     );
 
 void main() {
@@ -363,6 +366,81 @@ void main() {
       expect(find.text(PaymentMethod.cash.displayLabel), findsOneWidget);
       expect(find.text(PaymentMethod.stripe.displayLabel), findsNothing);
     });
+  });
+
+  group('voyageur sans fonds pour la commission cash', () {
+    Future<void> pumpLoadedWithThread(
+      WidgetTester tester, {
+      required NegotiationThread thread,
+      required Set<PaymentMethod> acceptedPaymentMethods,
+    }) async {
+      final loadedState = CompleteDetailsState(
+        loaded: true,
+        request: _fakeRequest(acceptedPaymentMethods: acceptedPaymentMethods),
+      );
+      when(() => completeDetailsBloc.state).thenReturn(loadedState);
+      whenListen(
+        completeDetailsBloc,
+        const Stream<CompleteDetailsState>.empty(),
+        initialState: loadedState,
+      );
+
+      await tester.pumpWidget(_buildApp());
+      await tester.pumpAndSettle();
+      final context = tester.element(find.text('HOME'));
+      unawaited(GoRouter.of(context).push('/complete/pr-1', extra: thread));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets(
+      'cashCommissionAvailable=false ne bloque plus le formulaire : le picker '
+      'garde toutes les méthodes du SET, espèces comprises',
+      (tester) async {
+        // Le solde du voyageur n'est pas une capacité : l'expéditeur choisit
+        // librement, et c'est le voyageur qui règle (ou recharge) la
+        // commission à l'étape AWAITING_COMMISSION. Aucun écran d'attente ici.
+        await pumpLoadedWithThread(
+          tester,
+          thread: _fakeThread(
+            availablePaymentMethods: const {
+              PaymentMethod.cash,
+              PaymentMethod.mobileMoney,
+            },
+            cashCommissionAvailable: false,
+          ),
+          acceptedPaymentMethods: const {
+            PaymentMethod.cash,
+            PaymentMethod.mobileMoney,
+          },
+        );
+
+        expect(find.text('En attente du voyageur'), findsNothing);
+        expect(find.byKey(const Key('complete-pay-cash')), findsOneWidget);
+        expect(
+          find.byKey(const Key('complete-pay-mobile_money')),
+          findsOneWidget,
+        );
+        expect(find.byType(TextFormField), findsWidgets);
+      },
+    );
+
+    testWidgets(
+      'SET={cash} seul + cashCommissionAvailable=false : espèces toujours '
+      'proposées, pas d\'écran d\'attente',
+      (tester) async {
+        await pumpLoadedWithThread(
+          tester,
+          thread: _fakeThread(
+            availablePaymentMethods: const {PaymentMethod.cash},
+            cashCommissionAvailable: false,
+          ),
+          acceptedPaymentMethods: const {PaymentMethod.cash},
+        );
+
+        expect(find.text('En attente du voyageur'), findsNothing);
+        expect(find.byKey(const Key('complete-pay-cash')), findsOneWidget);
+      },
+    );
   });
 
   group('mobile money dans le picker (Tâche 10, lot 2)', () {
