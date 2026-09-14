@@ -58,6 +58,7 @@ import 'package:dony/features/kyc/presentation/screens/kyc_status_screen.dart';
 import 'package:dony/features/kyc/presentation/screens/kyc_webview_screen.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
+import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_negotiation_bloc.dart';
@@ -784,8 +785,28 @@ final appRouter = GoRouter(
         final template = state.extra is TripTemplate
             ? state.extra as TripTemplate
             : null;
-        return BlocProvider(
-          create: (_) => getIt<TripTemplateBloc>(),
+        return MultiBlocProvider(
+          providers: [
+            BlocProvider<TripTemplateBloc>(
+              create: (_) => getIt<TripTemplateBloc>(),
+            ),
+            BlocProvider<AnnouncementFormBloc>(
+              create: (_) => getIt<AnnouncementFormBloc>(),
+            ),
+            BlocProvider<CommissionMethodBloc>(
+              create: (_) => getIt<CommissionMethodBloc>(),
+            ),
+            BlocProvider<MobileMoneyAccountBloc>(
+              create: (_) =>
+                  getIt<MobileMoneyAccountBloc>()
+                    ..add(const MobileMoneyAccountRequested()),
+            ),
+            // `.value` obligatoire : StripeAccountBloc est un lazySingleton
+            // GetIt partagé par toute l'app (cf. create_trip_screen.dart).
+            BlocProvider<StripeAccountBloc>.value(
+              value: getIt<StripeAccountBloc>(),
+            ),
+          ],
           child: TripTemplateEditScreen(template: template),
         );
       },

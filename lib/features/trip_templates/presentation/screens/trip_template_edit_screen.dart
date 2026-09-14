@@ -1,11 +1,28 @@
+import 'dart:async';
+
 import 'package:dony/core/currency/active_currency.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/city/presentation/widgets/city_corridor_fields.dart';
+import 'package:dony/features/content_categories/data/content_category_repository.dart';
+import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
+import 'package:dony/features/matching/bloc/announcement_form_event.dart';
+import 'package:dony/features/matching/bloc/announcement_form_state.dart';
+import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart'
+    show mobileMoneyAccountActiveFrom;
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/currency_selection_banner.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/lieux_capacite_step.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/prix_conditions_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_form_fields.dart';
+import 'package:dony/features/payments/bloc/mobile_money_account_bloc.dart';
+import 'package:dony/features/payments/bloc/mobile_money_account_state.dart';
+import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_event.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_state.dart';
@@ -66,7 +83,64 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
     _fields.arrivalCity.addListener(_recomputeCanContinue);
     _fields.transportMode.addListener(_recomputeCanContinue);
     _step.addListener(_recomputeCanContinue);
+    _fields.priceOption.addListener(_recomputeCanContinue);
+    _fields.customPriceCtrl.addListener(_recomputeCanContinue);
+    _fields.kgPriceEnabled.addListener(_recomputeCanContinue);
+    _fields.currency.addListener(_recomputeCanContinue);
     _recomputeCanContinue();
+
+    unawaited(_loadCatalog());
+
+    // Synchronisations étape 2 → AnnouncementFormBloc, même règles que
+    // `_TripFormContentState` (create_trip_screen.dart) : LieuxCapaciteStep
+    // (CapacityControl) et PrixConditionsStep (mode de tarification) lisent
+    // et écrivent directement dans ce bloc.
+    _fields.priceOption.addListener(_syncPriceToFormBloc);
+    _fields.customPrice.addListener(_syncPriceToFormBloc);
+    _fields.availableKg.addListener(_syncKgToFormBloc);
+    _fields.kgPriceEnabled.addListener(_onKgToggleChanged);
+    _fields.currency.addListener(_onCurrencyChanged);
+  }
+
+  Future<void> _loadCatalog() async {
+    final categories = await getIt<IContentCategoryRepository>()
+        .getCategories();
+    if (!mounted) return;
+    _fields.catalogLabels.value = categories.map((c) => c.label).toList();
+  }
+
+  void _syncPriceToFormBloc() {
+    if (!mounted) return;
+    if (!_fields.kgPriceEnabled.value) return; // évite d'écraser le clear
+    if (_fields.priceOption.value == -1) return; // pas encore de sélection
+    context.read<AnnouncementFormBloc>().add(
+      PriceChanged(_fields.pricePerKg!, currency: _fields.currency.value),
+    );
+  }
+
+  void _syncKgToFormBloc() {
+    if (!mounted) return;
+    context.read<AnnouncementFormBloc>().add(
+      AvailableKgChanged(_fields.availableKg.value),
+    );
+  }
+
+  void _onKgToggleChanged() {
+    if (!mounted) return;
+    if (!_fields.kgPriceEnabled.value) {
+      context.read<AnnouncementFormBloc>().add(
+        const AnnouncementPricePerKgClearedRequested(),
+      );
+    }
+  }
+
+  /// Remet la bascule mobile money à `false` quand la devise quitte la zone
+  /// CFA (XOF/XAF) — même règle que `_TripFormContentState._onCurrencyChanged`.
+  void _onCurrencyChanged() {
+    if (!_fields.currency.value.isMobileMoneyEligible) {
+      _fields.mobileMoneyEnabled.value = false;
+    }
+    _syncPriceToFormBloc();
   }
 
   void _prefill(TripTemplate t) {
@@ -80,7 +154,52 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
     _fields.departureTime.value = _timeOfDay(t.departureTime);
     _fields.arrivalTime.value = _timeOfDay(t.arrivalTime);
     _handoverLeadDays.value = t.handoverLeadDays;
-    // Étape 1 et 2 : Tâche 4 (_prefillConditions).
+    _prefillConditions(t);
+  }
+
+  /// Préremplissage des étapes 1 (Lieux & capacité) et 2 (Prix & conditions)
+  /// depuis un modèle existant. Le split catalogue/custom des catégories est
+  /// celui de `_applyTemplate` (create_trip_screen.dart) : le catalogue n'est
+  /// pas forcément chargé à cet instant, la liste par défaut de
+  /// [TripFormFields.catalogLabels] (repli embarqué) sert de référence.
+  void _prefillConditions(TripTemplate t) {
+    _fields.pickupAddress.value = t.pickupAddress;
+    _fields.deliveryAddress.value = t.deliveryAddress;
+    _fields.availableKg.value = t.availableKg.toDouble();
+    _fields.kgPriceEnabled.value = !t.usesPriceGrid || t.pricePerKg != null;
+    _fields.selectPrice(t.pricePerKg);
+    _fields.cashEnabled.value = t.acceptedPaymentMethods.contains('CASH');
+    _fields.mobileMoneyEnabled.value = t.acceptedPaymentMethods.contains(
+      'MOBILE_MONEY',
+    );
+    _fields.negotiable.value = t.negotiable;
+    _fields.selectedContent.value = t.acceptedCategories
+        .where(_fields.catalogLabels.value.contains)
+        .toSet();
+    _fields.customAccepted.value = t.acceptedCategories
+        .where((c) => !_fields.catalogLabels.value.contains(c))
+        .toSet();
+    _fields.refusedTypes.value = t.refusedTypes.toSet();
+    _fields.descriptionCtrl.text = t.description ?? '';
+
+    // Sync capacityUnit et pricingMode vers le bloc (requiert context →
+    // postFrame), même pattern que `_applyTemplate` (create_trip_screen.dart).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final formBloc = context.read<AnnouncementFormBloc>();
+      final unit = switch (t.capacityUnit) {
+        'KG_FREE' => CapacityUnit.kgFree,
+        'SUITCASE_32KG' => CapacityUnit.suitcase32kg,
+        'KG_EXACT' => CapacityUnit.custom,
+        _ => CapacityUnit.suitcase23kg,
+      };
+      formBloc.add(CapacityUnitChanged(unit));
+      formBloc.add(
+        AnnouncementPricingModeSetRequested(
+          t.usesPriceGrid ? PricingMode.mixed : PricingMode.kg,
+        ),
+      );
+    });
   }
 
   static TimeOfDay? _timeOfDay(String? hhmm) {
@@ -93,27 +212,40 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
       ? null
       : '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
 
-  /// Étape 0 : nom, villes et transport. Étapes 1 et 2 : voir Tâche 4.
+  /// Étape 0 : nom, villes et transport. Étape 1 (Lieux & capacité) :
+  /// adresses optionnelles dans un modèle, toujours valide. Étape 2 (Prix &
+  /// conditions) : prix requis si le tarif au kilo est actif, borné par
+  /// [maxUnitPriceFor] si c'est un prix libre.
   void _recomputeCanContinue() {
     final step0Ok =
         _labelCtrl.text.trim().isNotEmpty &&
         (_fields.departureCity.value?.trim().isNotEmpty ?? false) &&
         (_fields.arrivalCity.value?.trim().isNotEmpty ?? false) &&
         _fields.transportMode.value != null;
+    var step2Ok = !_fields.kgPriceEnabled.value || _fields.pricePerKg != null;
+    if (step2Ok && _fields.isCustomPrice) {
+      final parsed = parsePriceInput(_fields.customPriceCtrl.text);
+      step2Ok =
+          parsed != null && parsed <= maxUnitPriceFor(_fields.currency.value);
+    }
     _canContinue.value = switch (_step.value) {
       0 => step0Ok,
-      // Étape 1 (Lieux & capacité) : formulaire pas encore branché
-      // (Tâche 4), « Continuer » reste actif tant qu'il n'y a rien à
-      // valider.
       1 => true,
-      // Étape 2 (Prix & conditions) : « Enregistrer le modèle » reste
-      // désactivé tant que la Tâche 4 n'a pas branché la validation du prix.
-      _ => false,
+      _ => step2Ok,
     };
   }
 
   @override
   void dispose() {
+    _fields.priceOption.removeListener(_recomputeCanContinue);
+    _fields.customPriceCtrl.removeListener(_recomputeCanContinue);
+    _fields.kgPriceEnabled.removeListener(_recomputeCanContinue);
+    _fields.currency.removeListener(_recomputeCanContinue);
+    _fields.priceOption.removeListener(_syncPriceToFormBloc);
+    _fields.customPrice.removeListener(_syncPriceToFormBloc);
+    _fields.availableKg.removeListener(_syncKgToFormBloc);
+    _fields.kgPriceEnabled.removeListener(_onKgToggleChanged);
+    _fields.currency.removeListener(_onCurrencyChanged);
     _labelCtrl.dispose();
     _step.dispose();
     _handoverLeadDays.dispose();
@@ -122,23 +254,58 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
     super.dispose();
   }
 
-  /// Payload envoyé au bloc. Seuls les champs de l'étape 0 sont renseignés
-  /// pour l'instant ; les étapes 1 et 2 (lieux/capacité, prix/conditions)
-  /// sont complétées en Tâche 4.
-  Map<String, dynamic> _buildPayload(BuildContext context) => {
-    'label': _labelCtrl.text.trim(),
-    'departureCity': _fields.departureCity.value?.trim(),
-    'arrivalCity': _fields.arrivalCity.value?.trim(),
-    'departureCountryCode': _fields.departureCountryCode.value,
-    'arrivalCountryCode': _fields.arrivalCountryCode.value,
-    'transportMode': transportModeToWire(
-      _fields.transportMode.value ?? TransportMode.plane,
-    ),
-    'departureTime': _wire(_fields.departureTime.value),
-    'arrivalTime': _wire(_fields.arrivalTime.value),
-    'handoverLeadDays': _handoverLeadDays.value,
-    'currency': _fields.currency.value.code,
-  };
+  /// Adresse au format `TripTemplate.toJson` : `{label, lat, lng}` ou `null`.
+  static Map<String, dynamic>? _addressJson(AddressData? address) =>
+      address == null
+      ? null
+      : {'label': address.label, 'lat': address.lat, 'lng': address.lng};
+
+  /// Payload complet envoyé au bloc : les trois étapes (Trajet, Lieux &
+  /// capacité, Prix & conditions).
+  Map<String, dynamic> _buildPayload(BuildContext context) {
+    final formState = context.read<AnnouncementFormBloc>().state;
+    final stripeState = context.read<StripeAccountBloc>().state;
+    final stripeConfigured =
+        stripeState is StripeAccountReady &&
+        stripeState.accountStatus.isComplete;
+    return {
+      'label': _labelCtrl.text.trim(),
+      'departureCity': _fields.departureCity.value?.trim(),
+      'arrivalCity': _fields.arrivalCity.value?.trim(),
+      'departureCountryCode': _fields.departureCountryCode.value,
+      'arrivalCountryCode': _fields.arrivalCountryCode.value,
+      'transportMode': transportModeToWire(
+        _fields.transportMode.value ?? TransportMode.plane,
+      ),
+      'capacityUnit': formState.capacityUnit.toWire(),
+      'availableKg': _fields.availableKg.value.round(),
+      'pricingMode': formState.pricingMode == PricingMode.mixed
+          ? 'MIXED'
+          : 'KG',
+      'pricePerKg': _fields.pricePerKg,
+      'currency': _fields.currency.value.code,
+      'acceptedPaymentMethods': _fields.acceptedPaymentMethodsFor(
+        stripeConfigured: stripeConfigured,
+      ),
+      'cashAccepted':
+          _fields.cashEnabled.value ||
+          !(stripeConfigured && _fields.currency.value.isStripeEligible),
+      'negotiable': _fields.negotiable.value,
+      'acceptedCategories': {
+        ..._fields.selectedContent.value,
+        ..._fields.customAccepted.value,
+      }.toList(),
+      'refusedTypes': _fields.refusedTypes.value.toList(),
+      'description': _fields.descriptionCtrl.text.trim().isEmpty
+          ? null
+          : _fields.descriptionCtrl.text.trim(),
+      'pickupAddress': _addressJson(_fields.pickupAddress.value),
+      'deliveryAddress': _addressJson(_fields.deliveryAddress.value),
+      'departureTime': _wire(_fields.departureTime.value),
+      'arrivalTime': _wire(_fields.arrivalTime.value),
+      'handoverLeadDays': _handoverLeadDays.value,
+    };
+  }
 
   void _submit(BuildContext context) {
     _submitted = true;
@@ -363,11 +530,55 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
     ];
   }
 
-  /// Lieux & capacité — branché en Tâche 4.
-  List<Widget> _buildStep1(BuildContext context) => const [SizedBox.shrink()];
+  /// Lieux & capacité : adresses de remise/livraison optionnelles (jamais
+  /// d'erreur affichée pour un modèle), capacité pilotée par `CapacityControl`
+  /// (autonome, lit/écrit `AnnouncementFormBloc` directement).
+  List<Widget> _buildStep1(BuildContext context) => [
+    LieuxCapaciteStep(
+      initialPickupAddress: _fields.pickupAddress.value,
+      initialDeliveryAddress: _fields.deliveryAddress.value,
+      onPickupSaved: (v) => _fields.pickupAddress.value = v,
+      onDeliverySaved: (v) => _fields.deliveryAddress.value = v,
+      onPickupChanged: (v) => _fields.pickupAddress.value = v,
+      onDeliveryChanged: (v) => _fields.deliveryAddress.value = v,
+    ),
+  ];
 
-  /// Prix & conditions — branché en Tâche 4.
-  List<Widget> _buildStep2(BuildContext context) => const [SizedBox.shrink()];
+  /// Prix & conditions : bandeau devise + étape partagée avec la création de
+  /// trajet, elle-même consciente du mode de tarification et de la bascule
+  /// mobile money via `AnnouncementFormBloc` / `MobileMoneyAccountBloc`.
+  List<Widget> _buildStep2(BuildContext context) => [
+    CurrencySelectionBanner(currencyNotifier: _fields.currency),
+    const SizedBox(height: DonySpacing.lg),
+    BlocBuilder<MobileMoneyAccountBloc, MobileMoneyAccountState>(
+      builder: (context, mobileMoneyState) =>
+          ValueListenableBuilder<SupportedCurrency>(
+            valueListenable: _fields.currency,
+            builder: (context, currency, _) => PrixConditionsStep(
+              currency: currency,
+              priceOptionNotifier: _fields.priceOption,
+              customPriceNotifier: _fields.customPrice,
+              availableKgNotifier: _fields.availableKg,
+              cashEnabledNotifier: _fields.cashEnabled,
+              kgPriceEnabledNotifier: _fields.kgPriceEnabled,
+              mobileMoneyEnabledNotifier: _fields.mobileMoneyEnabled,
+              currencyNotifier: _fields.currency,
+              mobileMoneyAccountActive: mobileMoneyAccountActiveFrom(
+                mobileMoneyState,
+              ),
+              negotiableNotifier: _fields.negotiable,
+              selectedContentNotifier: _fields.selectedContent,
+              customAcceptedNotifier: _fields.customAccepted,
+              refusedTypesNotifier: _fields.refusedTypes,
+              catalogLabelsNotifier: _fields.catalogLabels,
+              descriptionCtrl: _fields.descriptionCtrl,
+              customAcceptedCtrl: _fields.customAcceptedCtrl,
+              refusedCtrl: _fields.refusedCtrl,
+              customPriceCtrl: _fields.customPriceCtrl,
+            ),
+          ),
+    ),
+  ];
 }
 
 /// Rangée d'heure éditable (départ ou arrivée) — reprend le rendu de
