@@ -13,13 +13,12 @@ import 'package:dony/features/matching/bloc/announcement_form_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
-import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart'
-    show mobileMoneyAccountActiveFrom;
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/currency_selection_banner.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/lieux_capacite_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/prix_conditions_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_form_fields.dart';
+import 'package:dony/features/payments/bloc/mobile_money_account_active.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_bloc.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_state.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
@@ -131,6 +130,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
       context.read<AnnouncementFormBloc>().add(
         const AnnouncementPricePerKgClearedRequested(),
       );
+      _fields.priceOption.value = 0; // reset chips visuellement
     }
   }
 

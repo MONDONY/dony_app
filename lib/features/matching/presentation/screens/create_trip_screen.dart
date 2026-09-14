@@ -36,6 +36,7 @@ import 'package:dony/features/package_request/data/models/locked_trip_context.da
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart'
     show NegotiationThreadStatus;
 import 'package:dony/features/package_request/presentation/widgets/payment_capability_block_sheets.dart';
+import 'package:dony/features/payments/bloc/mobile_money_account_active.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_bloc.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_event.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_state.dart';
@@ -66,27 +67,6 @@ class CreateTripArgs {
     this.negotiationBloc,
     this.lockCorridorAndDate = false,
   });
-}
-
-/// Dérive si le compte de versement mobile money du voyageur est actif à
-/// partir de l'état de `MobileMoneyAccountBloc`.
-///
-/// `Initial`, `Loading` ou `Error` sans compte connu valent « non actif » —
-/// seul un état portant un compte dont `isActive` est vrai (`Loaded`,
-/// `Updating`, ou `Error` avec le dernier compte connu conservé) l'active.
-bool mobileMoneyAccountActiveFrom(MobileMoneyAccountState state) {
-  final account = switch (state) {
-    MobileMoneyAccountLoaded() => state.account,
-    MobileMoneyAccountUpdating() => state.account,
-    MobileMoneyAccountError() => state.account,
-    MobileMoneyAccountPhoneRequired() => state.account,
-    MobileMoneyAccountProvidersLoading() => state.account,
-    MobileMoneyAccountProvidersLoaded() => state.account,
-    MobileMoneyAccountProvidersError() => state.account,
-    MobileMoneyAccountProvidersUnavailable() => state.account,
-    _ => null,
-  };
-  return account?.isActive ?? false;
 }
 
 class CreateTripScreen extends StatefulWidget {
