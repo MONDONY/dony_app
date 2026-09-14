@@ -1859,7 +1859,14 @@ class _TripFormContentState extends State<_TripFormContent> {
         t.acceptedPaymentMethods.contains('MOBILE_MONEY');
 
     _pendingHandoverLeadDays = t.handoverLeadDays;
-    _applyPendingHandoverLead();
+    if (_pendingHandoverLeadDays == null) {
+      // Champ nul = défaut du formulaire vierge : sans ce reset, la date
+      // limite d'un modèle précédemment appliqué restait affichée alors que
+      // celui-ci n'en porte aucune.
+      _handoverDeadlineNotifier.value = null;
+    } else {
+      _applyPendingHandoverLead();
+    }
 
     final unit = switch (t.capacityUnit) {
       'KG_FREE' => CapacityUnit.kgFree,

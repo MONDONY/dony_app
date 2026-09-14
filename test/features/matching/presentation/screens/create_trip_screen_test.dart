@@ -31,6 +31,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart'
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
 import 'package:dony/features/matching/presentation/widgets/cash_commission_notice.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/lieux_capacite_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/prix_conditions_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trajet_step.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
@@ -1355,6 +1356,14 @@ void main() {
         );
         expect(find.text('Publié en Franc CFA Ouest (XOF)'), findsOneWidget);
 
+        // Étape 1 : adresses de remise/livraison — LieuxCapaciteStep reste
+        // monté en Offstage tant que le step 1 n'est pas affiché.
+        final lieux = tester.widget<LieuxCapaciteStep>(
+          find.byType(LieuxCapaciteStep, skipOffstage: false),
+        );
+        expect(lieux.initialPickupAddress?.label, 'Cocody');
+        expect(lieux.initialDeliveryAddress?.label, 'Gare de Lyon');
+
         // Étape 2 : mêmes notifiers, lus via PrixConditionsStep — présent
         // dans l'arbre dès le premier build (Offstage), donc valide même si
         // la navigation ci-dessous ne fait qu'avancer réellement le stepper.
@@ -1396,6 +1405,16 @@ void main() {
 
         // Le jour limite = départ - 2 jours (handoverLeadDays du modèle).
         expect(handoverDeadlineOf(tester), DateTime(2026, 10, 18));
+
+        // Enchaîner un modèle SANS délai de remise (mockTemplate) doit
+        // effacer la date limite du modèle précédent : champ nul du modèle
+        // = défaut du formulaire vierge, pas la valeur héritée.
+        await tester.drag(find.byType(ListView), const Offset(400, 0));
+        await tester.pump(const Duration(milliseconds: 300));
+        await tester.tap(find.textContaining('Paris → Dakar'));
+        await tester.pump(const Duration(milliseconds: 600));
+
+        expect(handoverDeadlineOf(tester), isNull);
 
         await tester.pump(const Duration(seconds: 5));
       },
