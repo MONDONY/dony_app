@@ -363,10 +363,9 @@ void main() {
   });
 
   // ---------------------------------------------------------------------------
-  // Sentry FLUTTER-1B : sur un petit écran (360×820 logiques) avec le clavier
-  // ouvert, le corps de la sheet ne laisse qu'une centaine de pixels à l'état
-  // vide « Aucun résultat » (icône, titre, sous-titre, tuile GPS) : la colonne
-  // débordait de 80 px. Un débordement est un FlutterError, le test échoue seul.
+  // Sentry FLUTTER-1B, scénario complet (le widget seul est couvert dans
+  // address_picker_empty_state_test.dart) : petit écran, clavier ouvert,
+  // recherche sans résultat. Un débordement est un FlutterError.
   // ---------------------------------------------------------------------------
   group('état vide avec le clavier ouvert', () {
     testWidgets('« Aucun résultat » ne déborde pas sur un petit écran', (

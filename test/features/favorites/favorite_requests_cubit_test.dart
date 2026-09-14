@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/features/favorites/bloc/favorite_requests_cubit.dart';
 import 'package:dony/features/favorites/data/repositories/favorite_repository.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
@@ -95,5 +97,34 @@ void main() {
 
     final state = cubit.state as FavoriteRequestsLoaded;
     expect(state.requests.length, 2);
+  });
+
+  // Cubit fermé pendant la requête (même cause que FLUTTER-1G sur les trajets).
+  group('cubit fermé pendant load()', () {
+    test('réponse arrivée après close() → aucune exception', () async {
+      final completer = Completer<List<PackageRequestSearchItem>>();
+      when(() => repo.packageRequests()).thenAnswer((_) => completer.future);
+
+      final cubit = FavoriteRequestsCubit(repo);
+      final loading = cubit.load();
+      await cubit.close();
+      completer.complete([_makeItem()]);
+
+      await expectLater(loading, completes);
+      expect(cubit.state, isA<FavoriteRequestsLoading>());
+    });
+
+    test('échec arrivé après close() → aucune exception', () async {
+      final completer = Completer<List<PackageRequestSearchItem>>();
+      when(() => repo.packageRequests()).thenAnswer((_) => completer.future);
+
+      final cubit = FavoriteRequestsCubit(repo);
+      final loading = cubit.load();
+      await cubit.close();
+      completer.completeError(Exception('network error'));
+
+      await expectLater(loading, completes);
+      expect(cubit.state, isA<FavoriteRequestsLoading>());
+    });
   });
 }

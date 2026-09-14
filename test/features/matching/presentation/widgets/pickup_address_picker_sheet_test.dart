@@ -359,34 +359,4 @@ void main() {
       },
     );
   });
-
-  // ---------------------------------------------------------------------------
-  // Sentry FLUTTER-1B : sur un petit écran (360×820 logiques) avec le clavier
-  // ouvert, le corps de la sheet ne laisse qu'une centaine de pixels à l'état
-  // vide « Aucun résultat » (icône, titre, sous-titre, tuile GPS) : la colonne
-  // débordait de 80 px. Un débordement est un FlutterError, le test échoue seul.
-  // ---------------------------------------------------------------------------
-  group('état vide avec le clavier ouvert', () {
-    testWidgets('« Aucun résultat » ne déborde pas sur un petit écran', (
-      tester,
-    ) async {
-      when(
-        () => connectivity.checkConnectivity(),
-      ).thenAnswer((_) async => [ConnectivityResult.wifi]);
-      when(() => service.search(any(), any())).thenAnswer((_) async => []);
-
-      await pump(tester);
-      tester.view.physicalSize = const Size(720, 1640);
-      tester.view.devicePixelRatio = 2.0;
-      tester.view.viewInsets = const FakeViewPadding(bottom: 600);
-      addTearDown(tester.view.resetViewInsets);
-      addTearDown(tester.view.resetDevicePixelRatio);
-      await tester.pump();
-
-      await search(tester, 'zzzz');
-
-      expect(find.text('Aucun résultat'), findsOneWidget);
-      expect(tester.takeException(), isNull);
-    });
-  });
 }

@@ -87,11 +87,9 @@ void main() {
       },
     );
 
-    // Sentry FLUTTER-1C : le bouton collant est piloté par un ValueNotifier
-    // que le contenu met à jour après chaque build (post-frame). Le notifier
-    // était disposé dès le pop, alors que la sheet reste montée pendant son
-    // animation de sortie : un état KYC arrivé à ce moment rebâtissait le
-    // contenu et écrivait dans un notifier disposé (FlutterError fatal).
+    // Sentry FLUTTER-1C : un état KYC reçu après le pop rebâtit le contenu,
+    // qui écrit dans le notifier du bouton collant pendant l'animation de
+    // sortie.
     testWidgets(
       'un état KYC reçu pendant l\'animation de fermeture ne plante pas',
       (tester) async {

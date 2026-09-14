@@ -9,6 +9,7 @@ import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/address_suggestion.dart';
+import 'package:dony/features/matching/presentation/widgets/address_picker_empty_state.dart';
 import 'package:dony/features/pickup_addresses/bloc/pickup_address_bloc.dart';
 import 'package:dony/features/pickup_addresses/data/models/pickup_address.dart';
 import 'package:flutter/material.dart';
@@ -571,7 +572,7 @@ class _PickupAddressPickerSheetState extends State<PickupAddressPickerSheet> {
       return const Center(child: CircularProgressIndicator());
     }
     if (_offline) {
-      return _EmptyState(
+      return AddressPickerEmptyState(
         icon: 'wifi-off',
         color: cs.warning,
         title: 'Connexion requise',
@@ -579,7 +580,7 @@ class _PickupAddressPickerSheetState extends State<PickupAddressPickerSheet> {
       );
     }
     if (_error) {
-      return _EmptyState(
+      return AddressPickerEmptyState(
         icon: 'circle-alert',
         color: cs.error,
         title: 'Erreur',
@@ -587,7 +588,7 @@ class _PickupAddressPickerSheetState extends State<PickupAddressPickerSheet> {
       );
     }
     if (_suggestions.isEmpty) {
-      return _EmptyState(
+      return AddressPickerEmptyState(
         icon: 'map-pin-off',
         color: cs.onSurfaceVariant,
         title: 'Aucun résultat',
@@ -869,60 +870,6 @@ class _GpsTile extends StatelessWidget {
 }
 
 // ── État vide / erreur ─────────────────────────────────────────────────────
-class _EmptyState extends StatelessWidget {
-  const _EmptyState({
-    required this.icon,
-    required this.color,
-    required this.title,
-    required this.subtitle,
-    this.action,
-  });
-
-  final String icon;
-  final Color color;
-  final String title;
-  final String subtitle;
-  final Widget? action;
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    // Avec le clavier ouvert, le corps de la sheet ne laisse qu'une centaine
-    // de pixels sur un petit écran : la colonne débordait de 80 px (Sentry
-    // FLUTTER-1B). Le défilement prend la taille du contenu quand il tient
-    // (donc reste centré) et se borne à la hauteur disponible sinon. Physique
-    // clamping : sans dépassement, le geste vertical reste au parent.
-    return Center(
-      child: SingleChildScrollView(
-        physics: const ClampingScrollPhysics(),
-        padding: const EdgeInsets.all(DonySpacing.lg),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            DonyIcon(icon, size: 40, color: color),
-            const SizedBox(height: DonySpacing.md),
-            Text(
-              title,
-              style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: DonySpacing.xs),
-            Text(
-              subtitle,
-              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-              textAlign: TextAlign.center,
-            ),
-            if (action != null) ...[
-              const SizedBox(height: DonySpacing.md),
-              action!,
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 // ── Ligne « adresse récente » (cache local, aucun appel API) ───────────────
 class _RecentAddressRow extends StatelessWidget {
   const _RecentAddressRow({

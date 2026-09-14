@@ -32,11 +32,7 @@ class KycStatusBottomSheet extends StatefulWidget {
     final initialKycStatus = authState is AuthAuthenticated
         ? authState.user.kycStatus
         : null;
-    // Le notifier appartient au contenu (_KycStatusContentState le dispose
-    // dans son dispose()), pas au Future de show() : ce Future se termine au
-    // pop, alors que la sheet reste montée pendant son animation de sortie et
-    // que le contenu écrit encore dans le notifier après chaque build. Le
-    // disposer ici plantait la frame (Sentry FLUTTER-1C).
+    // Disposé par _KycStatusContentState, voir son dispose().
     final stickyBtnNotifier = ValueNotifier<_StickyBtnConfig?>(null);
 
     final stripeUrl = await DonyBottomSheet.show<String>(
@@ -82,7 +78,7 @@ class _KycStatusContent extends StatefulWidget {
   const _KycStatusContent({
     required this.authBloc,
     this.initialKycStatus,
-    this.stickyBtnNotifier,
+    required this.stickyBtnNotifier,
   });
 
   final AuthBloc authBloc;
@@ -90,7 +86,7 @@ class _KycStatusContent extends StatefulWidget {
   /// Optimistic initial KYC status from AuthBloc — avoids showing an
   /// indeterminate spinner on first open while KycBloc loads fresh data.
   final String? initialKycStatus;
-  final ValueNotifier<_StickyBtnConfig?>? stickyBtnNotifier;
+  final ValueNotifier<_StickyBtnConfig?> stickyBtnNotifier;
 
   @override
   State<_KycStatusContent> createState() => _KycStatusContentState();
@@ -118,9 +114,11 @@ class _KycStatusContentState extends State<_KycStatusContent> {
     _pollingTimer?.cancel();
     _autoNavTimer?.cancel();
     _timeoutTimer?.cancel();
-    // Le ValueListenableBuilder du stickyBottom se détache dans la même
-    // passe de dispose ; removeListener reste permis après dispose.
-    widget.stickyBtnNotifier?.dispose();
+    // Le contenu écrit dans le notifier après chaque build (post-frame) : il
+    // doit donc vivre jusqu'au démontage, pas jusqu'au Future de show(), qui
+    // se termine au pop, avant la fin de l'animation de sortie (Sentry
+    // FLUTTER-1C).
+    widget.stickyBtnNotifier.dispose();
     super.dispose();
   }
 
@@ -206,7 +204,7 @@ class _KycStatusContentState extends State<_KycStatusContent> {
         variant: DonyButtonVariant.ghost,
       );
     }
-    widget.stickyBtnNotifier?.value = config;
+    widget.stickyBtnNotifier.value = config;
   }
 
   @override
