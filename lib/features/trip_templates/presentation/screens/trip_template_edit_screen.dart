@@ -1,11 +1,11 @@
+import 'package:dony/core/currency/active_currency.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/di/injection.dart';
-import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/city/presentation/widgets/city_corridor_fields.dart';
-import 'package:dony/features/content_categories/data/content_category_repository.dart';
-import 'package:dony/features/content_categories/presentation/content_category_selector.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/trip_form_fields.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_event.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_state.dart';
@@ -14,12 +14,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-
-const _capacityOptions = [
-  ('SUITCASE_23KG', '1 valise 23 kg', 'Format standard cabine'),
-  ('SUITCASE_32KG', '1 valise 32 kg', 'Grande valise'),
-  ('KG_FREE', 'Kg libre', 'Au kilo, sans contrainte'),
-];
 
 class TripTemplateEditScreen extends StatefulWidget {
   const TripTemplateEditScreen({super.key, this.template});
@@ -31,91 +25,124 @@ class TripTemplateEditScreen extends StatefulWidget {
 }
 
 class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
+  static const _totalSteps = 3;
+  static const _handoverChoices = <(int?, String)>[
+    (null, 'Aucun'),
+    (0, 'Le jour même'),
+    (1, '1 jour avant'),
+    (2, '2 jours avant'),
+    (3, '3 jours avant'),
+    (7, '7 jours avant'),
+  ];
+
+  late final TripFormFields _fields;
   final _labelCtrl = TextEditingController();
-
-  String? _departureCity;
-  String? _arrivalCity;
-  TransportMode _transport = TransportMode.plane;
-  String _capacityUnit = 'SUITCASE_23KG';
-  double _availableKg = 23;
-  int _priceIdx = 3; // dernier chip par défaut (8 €, 3 000 F CFA)
-  Set<String> _categories = {'Vêtements & tissus', 'Documents & administratif'};
-  bool _cashAccepted = false;
-  TimeOfDay? _arrivalTime;
+  final _step = ValueNotifier<int>(0);
+  final _handoverLeadDays = ValueNotifier<int?>(null);
+  final _canContinue = ValueNotifier<bool>(false);
   bool _submitted = false;
-
-  String? get _arrivalWire => _arrivalTime == null
-      ? null
-      : '${_arrivalTime!.hour.toString().padLeft(2, '0')}:${_arrivalTime!.minute.toString().padLeft(2, '0')}';
 
   bool get _isEditing => widget.template != null;
 
-  bool get _isValid =>
-      _labelCtrl.text.trim().isNotEmpty &&
-      (_departureCity?.trim().isNotEmpty ?? false) &&
-      (_arrivalCity?.trim().isNotEmpty ?? false);
+  @visibleForTesting
+  int? get handoverLeadDaysForTest => _handoverLeadDays.value;
+  @visibleForTesting
+  TripFormFields get fieldsForTest => _fields;
 
   @override
   void initState() {
     super.initState();
     final t = widget.template;
-    if (t != null) {
-      _labelCtrl.text = t.label;
-      _departureCity = t.departureCity;
-      _arrivalCity = t.arrivalCity;
-      _transport =
-          transportModeFromWire(t.transportMode) ?? TransportMode.plane;
-      _capacityUnit = t.capacityUnit;
-      _availableKg = t.availableKg.toDouble().clamp(1.0, 23.0);
-      _categories = Set<String>.from(t.acceptedCategories);
-      _cashAccepted = t.cashAccepted;
-      if (t.arrivalTime != null && t.arrivalTime!.contains(':')) {
-        final parts = t.arrivalTime!.split(':');
-        _arrivalTime = TimeOfDay(
-          hour: int.parse(parts[0]),
-          minute: int.parse(parts[1]),
-        );
-      }
-      int closest = 0;
-      double minDiff = double.infinity;
-      for (int i = 0; i < _priceOptions.length; i++) {
-        final diff = ((t.pricePerKg ?? 0) - _priceOptions[i]).abs();
-        if (diff < minDiff) {
-          minDiff = diff;
-          closest = i;
-        }
-      }
-      _priceIdx = closest;
-    }
+    _fields = TripFormFields(
+      initialCurrency:
+          SupportedCurrency.fromCode(t?.currency) ??
+          ActiveCurrency.current ??
+          SupportedCurrency.eur,
+    );
+    _fields.transportMode.value = TransportMode.plane;
+    if (t != null) _prefill(t);
+    _labelCtrl.addListener(_recomputeCanContinue);
+    _fields.departureCity.addListener(_recomputeCanContinue);
+    _fields.arrivalCity.addListener(_recomputeCanContinue);
+    _fields.transportMode.addListener(_recomputeCanContinue);
+    _step.addListener(_recomputeCanContinue);
+    _recomputeCanContinue();
   }
 
-  /// Chips de prix dans la devise active : un modèle ne porte pas de devise
-  /// propre, il sert à préremplir un trajet créé depuis ce profil.
-  List<double> get _priceOptions => KgPriceReference.active.presets;
+  void _prefill(TripTemplate t) {
+    _labelCtrl.text = t.label;
+    _fields.departureCity.value = t.departureCity;
+    _fields.arrivalCity.value = t.arrivalCity;
+    _fields.departureCountryCode.value = t.departureCountryCode;
+    _fields.arrivalCountryCode.value = t.arrivalCountryCode;
+    _fields.transportMode.value =
+        transportModeFromWire(t.transportMode) ?? TransportMode.plane;
+    _fields.departureTime.value = _timeOfDay(t.departureTime);
+    _fields.arrivalTime.value = _timeOfDay(t.arrivalTime);
+    _handoverLeadDays.value = t.handoverLeadDays;
+    // Étape 1 et 2 : Tâche 4 (_prefillConditions).
+  }
+
+  static TimeOfDay? _timeOfDay(String? hhmm) {
+    if (hhmm == null || !hhmm.contains(':')) return null;
+    final parts = hhmm.split(':');
+    return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+  }
+
+  static String? _wire(TimeOfDay? t) => t == null
+      ? null
+      : '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
+
+  /// Étape 0 : nom, villes et transport. Étapes 1 et 2 : voir Tâche 4.
+  void _recomputeCanContinue() {
+    final step0Ok =
+        _labelCtrl.text.trim().isNotEmpty &&
+        (_fields.departureCity.value?.trim().isNotEmpty ?? false) &&
+        (_fields.arrivalCity.value?.trim().isNotEmpty ?? false) &&
+        _fields.transportMode.value != null;
+    _canContinue.value = switch (_step.value) {
+      0 => step0Ok,
+      // Étape 1 (Lieux & capacité) : formulaire pas encore branché
+      // (Tâche 4), « Continuer » reste actif tant qu'il n'y a rien à
+      // valider.
+      1 => true,
+      // Étape 2 (Prix & conditions) : « Enregistrer le modèle » reste
+      // désactivé tant que la Tâche 4 n'a pas branché la validation du prix.
+      _ => false,
+    };
+  }
 
   @override
   void dispose() {
     _labelCtrl.dispose();
+    _step.dispose();
+    _handoverLeadDays.dispose();
+    _canContinue.dispose();
+    _fields.dispose();
     super.dispose();
   }
 
+  /// Payload envoyé au bloc. Seuls les champs de l'étape 0 sont renseignés
+  /// pour l'instant ; les étapes 1 et 2 (lieux/capacité, prix/conditions)
+  /// sont complétées en Tâche 4.
+  Map<String, dynamic> _buildPayload(BuildContext context) => {
+    'label': _labelCtrl.text.trim(),
+    'departureCity': _fields.departureCity.value?.trim(),
+    'arrivalCity': _fields.arrivalCity.value?.trim(),
+    'departureCountryCode': _fields.departureCountryCode.value,
+    'arrivalCountryCode': _fields.arrivalCountryCode.value,
+    'transportMode': transportModeToWire(
+      _fields.transportMode.value ?? TransportMode.plane,
+    ),
+    'departureTime': _wire(_fields.departureTime.value),
+    'arrivalTime': _wire(_fields.arrivalTime.value),
+    'handoverLeadDays': _handoverLeadDays.value,
+    'currency': _fields.currency.value.code,
+  };
+
   void _submit(BuildContext context) {
-    if (!_isValid) {
-      return;
-    }
     _submitted = true;
-    final data = <String, dynamic>{
-      'label': _labelCtrl.text.trim(),
-      'departureCity': _departureCity!.trim(),
-      'arrivalCity': _arrivalCity!.trim(),
-      'transportMode': transportModeToWire(_transport),
-      'capacityUnit': _capacityUnit,
-      'availableKg': _availableKg.round(),
-      'pricePerKg': _priceOptions[_priceIdx],
-      'acceptedCategories': _categories.toList(),
-      'cashAccepted': _cashAccepted,
-      'arrivalTime': _arrivalWire,
-    };
+    final data = _buildPayload(context);
     final bloc = context.read<TripTemplateBloc>();
     if (_isEditing) {
       bloc.add(TripTemplateUpdated(widget.template!.id, data));
@@ -126,9 +153,6 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
     return BlocConsumer<TripTemplateBloc, TripTemplateState>(
       listener: (context, state) {
         if (_submitted && state.status == TripTemplateStatus.success) {
@@ -150,394 +174,258 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
       },
       builder: (context, state) {
         final isLoading = state.status == TripTemplateStatus.loading;
-        return DonyPageScaffold(
-          title: _isEditing ? 'Modifier le modèle' : 'Nouveau modèle',
-          stickyBottom: DonyButton(
-            label: 'Enregistrer le modèle',
-            onPressed: (_isValid && !isLoading) ? () => _submit(context) : null,
-            isLoading: isLoading,
-          ),
-          body: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ── NOM DU MODÈLE ───────────────────────────────────────────
-              const _SectionLabel(
-                label: 'NOM DU MODÈLE',
-                iconAsset: 'bookmark',
-              ),
-              const SizedBox(height: DonySpacing.sm),
-              DonyTextField(
-                controller: _labelCtrl,
-                label: 'Nom',
-                hint: 'Ex : Mon Paris → Dakar',
-                prefixWidget: DonyIcon(
-                  'tag',
-                  size: 20,
-                  color: cs.onSurfaceVariant,
+        // Un seul ValueListenableBuilder sur `_step` pour tout l'écran :
+        // PopScope.canPop doit se recalculer au changement d'étape, pas
+        // seulement au changement d'état du bloc.
+        return ValueListenableBuilder<int>(
+          valueListenable: _step,
+          builder: (context, step, _) {
+            return PopScope(
+              canPop: step == 0,
+              onPopInvokedWithResult: (didPop, _) {
+                if (!didPop) {
+                  _step.value -= 1;
+                }
+              },
+              child: DonyPageScaffold(
+                title: _isEditing ? 'Modifier le modèle' : 'Nouveau modèle',
+                stickyBottom: ValueListenableBuilder<bool>(
+                  valueListenable: _canContinue,
+                  builder: (context, canContinue, _) {
+                    final enabled = canContinue && !isLoading;
+                    return DonyButton(
+                      label: step < 2 ? 'Continuer' : 'Enregistrer le modèle',
+                      onPressed: enabled
+                          ? (step < 2
+                                ? () => _step.value = step + 1
+                                : () => _submit(context))
+                          : null,
+                      isLoading: isLoading,
+                    );
+                  },
                 ),
-                onChanged: (_) => setState(() {}),
-              ).animate().fadeIn(duration: 280.ms).slideY(begin: 0.03),
-              const SizedBox(height: DonySpacing.xxl),
-
-              // ── TRAJET ──────────────────────────────────────────────────
-              const _SectionLabel(label: 'TRAJET', iconAsset: 'plane-takeoff'),
-              const SizedBox(height: DonySpacing.sm),
-              CityCorridorFields(
-                departureValue: _departureCity,
-                arrivalValue: _arrivalCity,
-                departureFieldKey: const Key('trip-template-departure-city'),
-                arrivalFieldKey: const Key('trip-template-arrival-city'),
-                requiredLabels: true,
-                onDepartureSelected: (city) =>
-                    setState(() => _departureCity = city.name),
-                onArrivalSelected: (city) =>
-                    setState(() => _arrivalCity = city.name),
-                onDepartureCleared: () => setState(() => _departureCity = null),
-                onArrivalCleared: () => setState(() => _arrivalCity = null),
-                onSwap: () => setState(() {
-                  final departure = _departureCity;
-                  _departureCity = _arrivalCity;
-                  _arrivalCity = departure;
-                }),
+                body: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    CaStepperHeader(currentStep: step, totalSteps: _totalSteps),
+                    const SizedBox(height: DonySpacing.xxl),
+                    ...switch (step) {
+                      0 => _buildStep0(context),
+                      1 => _buildStep1(context),
+                      _ => _buildStep2(context),
+                    },
+                  ],
+                ),
               ),
-              const SizedBox(height: DonySpacing.xxl),
+            );
+          },
+        );
+      },
+    );
+  }
 
-              // ── TYPE DE CAPACITÉ ────────────────────────────────────────
-              const _SectionLabel(
-                label: 'TYPE DE CAPACITÉ',
-                iconAsset: 'luggage',
+  List<Widget> _buildStep0(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return [
+      // ── NOM DU MODÈLE ───────────────────────────────────────────
+      const _SectionLabel(label: 'NOM DU MODÈLE', iconAsset: 'bookmark'),
+      const SizedBox(height: DonySpacing.sm),
+      DonyTextField(
+        controller: _labelCtrl,
+        label: 'Nom',
+        hint: 'Ex : Mon Paris → Dakar',
+        prefixWidget: DonyIcon('tag', size: 20, color: cs.onSurfaceVariant),
+      ).animate().fadeIn(duration: 280.ms).slideY(begin: 0.03),
+      const SizedBox(height: DonySpacing.xxl),
+
+      // ── TRAJET ──────────────────────────────────────────────────
+      const _SectionLabel(label: 'TRAJET', iconAsset: 'plane-takeoff'),
+      const SizedBox(height: DonySpacing.sm),
+      ListenableBuilder(
+        listenable: Listenable.merge([
+          _fields.departureCity,
+          _fields.arrivalCity,
+        ]),
+        builder: (context, _) => CityCorridorFields(
+          departureValue: _fields.departureCity.value,
+          arrivalValue: _fields.arrivalCity.value,
+          departureFieldKey: const Key('trip-template-departure-city'),
+          arrivalFieldKey: const Key('trip-template-arrival-city'),
+          requiredLabels: true,
+          onDepartureSelected: (city) {
+            _fields.departureCity.value = city.name;
+            _fields.departureCountryCode.value = city.countryCode;
+          },
+          onArrivalSelected: (city) {
+            _fields.arrivalCity.value = city.name;
+            _fields.arrivalCountryCode.value = city.countryCode;
+          },
+          onDepartureCleared: () {
+            _fields.departureCity.value = null;
+            _fields.departureCountryCode.value = null;
+          },
+          onArrivalCleared: () {
+            _fields.arrivalCity.value = null;
+            _fields.arrivalCountryCode.value = null;
+          },
+          onSwap: () {
+            final city = _fields.departureCity.value;
+            _fields.departureCity.value = _fields.arrivalCity.value;
+            _fields.arrivalCity.value = city;
+            final code = _fields.departureCountryCode.value;
+            _fields.departureCountryCode.value =
+                _fields.arrivalCountryCode.value;
+            _fields.arrivalCountryCode.value = code;
+          },
+        ),
+      ),
+      const SizedBox(height: DonySpacing.xxl),
+
+      // ── MODE DE TRANSPORT ───────────────────────────────────────
+      const _SectionLabel(label: 'MODE DE TRANSPORT', iconAsset: 'route'),
+      const SizedBox(height: DonySpacing.sm),
+      ListenableBuilder(
+        listenable: _fields.transportMode,
+        builder: (context, _) => Wrap(
+          spacing: DonySpacing.sm,
+          runSpacing: DonySpacing.sm,
+          children: [
+            for (final mode in TransportMode.values)
+              DonyChip(
+                label: mode.label,
+                icon: mode.icon,
+                selected: _fields.transportMode.value == mode,
+                onTap: () => _fields.transportMode.value = mode,
               ),
-              const SizedBox(height: DonySpacing.sm),
-              Column(
-                children: _capacityOptions.map((opt) {
-                  final selected = _capacityUnit == opt.$1;
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: DonySpacing.sm),
+          ],
+        ),
+      ),
+      const SizedBox(height: DonySpacing.xxl),
+
+      // ── HORAIRES ─────────────────────────────────────────────────
+      const _SectionLabel(label: 'HORAIRES', iconAsset: 'clock'),
+      const SizedBox(height: DonySpacing.sm),
+      _TimeRow(
+        icon: 'plane-takeoff',
+        label: 'Heure de départ',
+        time: _fields.departureTime,
+      ),
+      const SizedBox(height: DonySpacing.sm),
+      _TimeRow(
+        icon: 'plane-landing',
+        label: "Heure d'arrivée",
+        time: _fields.arrivalTime,
+      ),
+      const SizedBox(height: DonySpacing.xxl),
+
+      // ── DÉLAI DE REMISE ─────────────────────────────────────────
+      const _SectionLabel(label: 'DÉLAI DE REMISE', iconAsset: 'timer'),
+      const SizedBox(height: DonySpacing.sm),
+      Text(
+        'Au plus tard combien de jours avant le départ le colis doit être '
+        'remis ?',
+        style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+      ),
+      const SizedBox(height: DonySpacing.sm),
+      ValueListenableBuilder<int?>(
+        valueListenable: _handoverLeadDays,
+        builder: (context, selected, _) => Wrap(
+          spacing: DonySpacing.sm,
+          runSpacing: DonySpacing.sm,
+          children: [
+            for (final choice in _handoverChoices)
+              DonyChip(
+                label: choice.$2,
+                selected: _handoverLeadDays.value == choice.$1,
+                onTap: () => _handoverLeadDays.value = choice.$1,
+              ),
+          ],
+        ),
+      ),
+      const SizedBox(height: DonySpacing.md),
+    ];
+  }
+
+  /// Lieux & capacité — branché en Tâche 4.
+  List<Widget> _buildStep1(BuildContext context) => const [SizedBox.shrink()];
+
+  /// Prix & conditions — branché en Tâche 4.
+  List<Widget> _buildStep2(BuildContext context) => const [SizedBox.shrink()];
+}
+
+/// Rangée d'heure éditable (départ ou arrivée) — reprend le rendu de
+/// l'ancienne section HEURE D'ARRIVÉE : un seul texte qui bascule entre le
+/// placeholder et la valeur formatée, avec un bouton d'effacement quand une
+/// heure est choisie.
+class _TimeRow extends StatelessWidget {
+  const _TimeRow({required this.icon, required this.label, required this.time});
+
+  final String icon;
+  final String label;
+  final ValueNotifier<TimeOfDay?> time;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return ValueListenableBuilder<TimeOfDay?>(
+      valueListenable: time,
+      builder: (context, value, _) {
+        final wire = value == null
+            ? null
+            : '${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}';
+        return GestureDetector(
+          onTap: () async {
+            final picked = await showTimePicker(
+              context: context,
+              initialTime: value ?? const TimeOfDay(hour: 12, minute: 0),
+            );
+            if (picked != null) time.value = picked;
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: DonySpacing.base,
+              vertical: DonySpacing.md,
+            ),
+            decoration: BoxDecoration(
+              color: cs.surface,
+              border: Border.all(color: cs.outline),
+              borderRadius: BorderRadius.circular(DonyRadius.md),
+            ),
+            child: Row(
+              children: [
+                DonyIcon(icon, color: cs.primary, size: 20),
+                const SizedBox(width: DonySpacing.md),
+                Expanded(
+                  child: Text(
+                    wire ?? '$label (optionnel)',
+                    style: tt.bodyMedium?.copyWith(
+                      color: wire == null ? cs.onSurfaceVariant : cs.onSurface,
+                      fontWeight: wire == null
+                          ? FontWeight.w400
+                          : FontWeight.w600,
+                    ),
+                  ),
+                ),
+                if (wire != null)
+                  Semantics(
+                    button: true,
+                    container: true,
+                    excludeSemantics: true,
+                    label: 'Effacer $label',
                     child: GestureDetector(
-                      onTap: () => setState(() => _capacityUnit = opt.$1),
-                      child: AnimatedContainer(
-                        duration: 160.ms,
-                        padding: const EdgeInsets.all(DonySpacing.base),
-                        decoration: BoxDecoration(
-                          color: selected ? cs.primaryContainer : cs.surface,
-                          borderRadius: BorderRadius.circular(DonyRadius.lg),
-                          border: Border.all(
-                            color: selected ? cs.primary : cs.outline,
-                            width: selected ? 1.5 : 1,
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    opt.$2,
-                                    style: tt.bodyMedium?.copyWith(
-                                      fontWeight: FontWeight.w700,
-                                      color: selected
-                                          ? cs.primary
-                                          : cs.onSurface,
-                                    ),
-                                  ),
-                                  Text(
-                                    opt.$3,
-                                    style: tt.bodySmall?.copyWith(
-                                      color: cs.onSurfaceVariant,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            DonyIcon(
-                              selected ? 'circle-dot' : 'circle',
-                              color: selected ? cs.primary : cs.outline,
-                              size: 22,
-                            ),
-                          ],
-                        ),
+                      onTap: () => time.value = null,
+                      child: DonyIcon(
+                        'x',
+                        size: 18,
+                        color: cs.onSurfaceVariant,
                       ),
                     ),
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: DonySpacing.lg),
-
-              // ── POIDS DISPONIBLE ────────────────────────────────────────
-              const _SectionLabel(
-                label: 'POIDS DISPONIBLE',
-                iconAsset: 'scale',
-              ),
-              const SizedBox(height: DonySpacing.base),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.baseline,
-                textBaseline: TextBaseline.alphabetic,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    _availableKg.toStringAsFixed(0),
-                    style: tt.displayLarge?.copyWith(
-                      fontSize: 56,
-                      fontWeight: FontWeight.w800,
-                      color: cs.onSurface,
-                    ),
                   ),
-                  Text(
-                    ' kg',
-                    style: tt.headlineMedium?.copyWith(
-                      color: cs.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: DonySpacing.xs),
-              SliderTheme(
-                data: SliderTheme.of(context).copyWith(
-                  activeTrackColor: cs.primary,
-                  inactiveTrackColor: cs.outline,
-                  thumbColor: cs.primary,
-                  overlayColor: cs.primary.withValues(alpha: 0.1),
-                  trackHeight: 5,
-                ),
-                child: Slider(
-                  value: _availableKg,
-                  min: 1,
-                  max: 23,
-                  divisions: 22,
-                  onChanged: (v) => setState(() => _availableKg = v),
-                ),
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '1 kg',
-                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                  ),
-                  Text(
-                    'max 23 kg',
-                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                  ),
-                ],
-              ),
-              const SizedBox(height: DonySpacing.xxl),
-
-              // ── PRIX PAR KG ─────────────────────────────────────────────
-              const _SectionLabel(label: 'PRIX PAR KG', iconAsset: 'tag'),
-              const SizedBox(height: DonySpacing.md),
-              Row(
-                children: List.generate(_priceOptions.length, (i) {
-                  final selected = _priceIdx == i;
-                  return Expanded(
-                    child: Padding(
-                      padding: EdgeInsets.only(
-                        left: i == 0 ? 0 : DonySpacing.xs,
-                        right: i == _priceOptions.length - 1
-                            ? 0
-                            : DonySpacing.xs,
-                      ),
-                      child: GestureDetector(
-                        onTap: () => setState(() => _priceIdx = i),
-                        child: AnimatedContainer(
-                          duration: 180.ms,
-                          padding: const EdgeInsets.symmetric(
-                            vertical: DonySpacing.md,
-                          ),
-                          decoration: BoxDecoration(
-                            color: selected ? cs.successLight : cs.surface,
-                            borderRadius: BorderRadius.circular(DonyRadius.lg),
-                            border: Border.all(
-                              color: selected ? cs.success : cs.outline,
-                              width: selected ? 1.5 : 1,
-                            ),
-                          ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                formatPriceActive(_priceOptions[i]),
-                                style: tt.titleMedium?.copyWith(
-                                  color: selected ? cs.success : cs.onSurface,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                '${formatPriceActive(netToSenderPrice(_priceOptions[i]))} exp.',
-                                style: tt.labelSmall?.copyWith(
-                                  color: selected
-                                      ? cs.success
-                                      : cs.onSurfaceVariant,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                }),
-              ),
-              const SizedBox(height: DonySpacing.sm),
-              Text(
-                'Vous touchez ${formatPriceActive(_priceOptions[_priceIdx])}/kg · l\'expéditeur paie ${formatPriceActive(netToSenderPrice(_priceOptions[_priceIdx]))}/kg (commission Yadony $donyCommissionPercentLabel% incluse)',
-                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-              ),
-              const SizedBox(height: DonySpacing.xxl),
-
-              // ── MODE DE TRANSPORT ───────────────────────────────────────
-              const _SectionLabel(
-                label: 'MODE DE TRANSPORT',
-                iconAsset: 'route',
-              ),
-              const SizedBox(height: DonySpacing.sm),
-              Wrap(
-                spacing: DonySpacing.sm,
-                runSpacing: DonySpacing.sm,
-                children: [
-                  for (final mode in TransportMode.values)
-                    DonyChip(
-                      label: mode.label,
-                      icon: mode.icon,
-                      selected: _transport == mode,
-                      onTap: () => setState(() => _transport = mode),
-                    ),
-                ],
-              ),
-              const SizedBox(height: DonySpacing.xxl),
-
-              // ── CE QUE J'ACCEPTE ────────────────────────────────────────
-              const _SectionLabel(
-                label: "CE QUE J'ACCEPTE",
-                iconAsset: 'circle-check',
-              ),
-              const SizedBox(height: DonySpacing.sm),
-              // Même combobox que la création de trajet et le wizard colis :
-              // catalogue déroulant, tags supprimables, saisie libre par la
-              // ligne « Ajouter ». Remplace la grille de chips + le champ
-              // d'ajout séparé, qui divergeaient du reste de l'app.
-              ContentCategorySelector(
-                repository: getIt<IContentCategoryRepository>(),
-                selected: _categories.toList(),
-                keyPrefix: 'template-content',
-                alwaysAllowCustom: true,
-                onChanged: (labels) =>
-                    setState(() => _categories = labels.toSet()),
-              ),
-              const SizedBox(height: DonySpacing.xxl),
-
-              // ── HEURE D'ARRIVÉE ─────────────────────────────────────────
-              const _SectionLabel(
-                label: "HEURE D'ARRIVÉE",
-                iconAsset: 'plane-landing',
-              ),
-              const SizedBox(height: DonySpacing.sm),
-              GestureDetector(
-                onTap: () async {
-                  final picked = await showTimePicker(
-                    context: context,
-                    initialTime:
-                        _arrivalTime ?? const TimeOfDay(hour: 12, minute: 0),
-                  );
-                  if (picked != null) setState(() => _arrivalTime = picked);
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: DonySpacing.base,
-                    vertical: DonySpacing.md,
-                  ),
-                  decoration: BoxDecoration(
-                    color: cs.surface,
-                    border: Border.all(color: cs.outline),
-                    borderRadius: BorderRadius.circular(DonyRadius.md),
-                  ),
-                  child: Row(
-                    children: [
-                      DonyIcon('clock', color: cs.primary, size: 20),
-                      const SizedBox(width: DonySpacing.md),
-                      Expanded(
-                        child: Text(
-                          _arrivalTime == null
-                              ? 'Optionnel : choisir une heure'
-                              : _arrivalWire!,
-                          style: tt.bodyMedium?.copyWith(
-                            color: _arrivalTime == null
-                                ? cs.onSurfaceVariant
-                                : cs.onSurface,
-                          ),
-                        ),
-                      ),
-                      if (_arrivalTime != null)
-                        Semantics(
-                          button: true,
-                          container: true,
-                          excludeSemantics: true,
-                          label: "Effacer l'heure d'arrivée",
-                          child: GestureDetector(
-                            onTap: () => setState(() => _arrivalTime = null),
-                            child: DonyIcon(
-                              'x',
-                              size: 18,
-                              color: cs.onSurfaceVariant,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: DonySpacing.xxl),
-
-              // ── PAIEMENT ────────────────────────────────────────────────
-              const _SectionLabel(label: 'PAIEMENT', iconAsset: 'banknote'),
-              const SizedBox(height: DonySpacing.sm),
-              GestureDetector(
-                onTap: () => setState(() => _cashAccepted = !_cashAccepted),
-                child: Container(
-                  padding: const EdgeInsets.all(DonySpacing.base),
-                  decoration: BoxDecoration(
-                    color: _cashAccepted
-                        ? cs.primary.withValues(alpha: 0.08)
-                        : cs.surface,
-                    borderRadius: BorderRadius.circular(DonyRadius.card),
-                    border: Border.all(
-                      color: _cashAccepted
-                          ? cs.primary.withValues(alpha: 0.4)
-                          : cs.outline,
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Accepter le paiement en espèces',
-                              style: tt.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            Text(
-                              'La carte Stripe reste toujours activée',
-                              style: tt.bodySmall?.copyWith(
-                                color: cs.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Switch(
-                        value: _cashAccepted,
-                        onChanged: (v) => setState(() => _cashAccepted = v),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: DonySpacing.md),
-            ],
+              ],
+            ),
           ),
         );
       },
