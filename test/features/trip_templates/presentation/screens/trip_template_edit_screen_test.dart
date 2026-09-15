@@ -20,6 +20,8 @@ import 'package:dony/features/city/data/city_repository.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/content_categories/data/content_category_repository.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
+import 'package:dony/features/matching/bloc/announcement_form_event.dart';
+import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
@@ -29,9 +31,6 @@ import 'package:dony/features/matching/presentation/widgets/create_announcement/
 import 'package:dony/features/payments/bloc/mobile_money_account_bloc.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_event.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_state.dart';
-import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
-import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
-import 'package:dony/features/payments/cash/bloc/commission_method_state.dart';
 import 'package:dony/features/price_grid/data/repositories/price_grid_repository.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
@@ -60,10 +59,6 @@ class _MockStripeAccountBloc
     extends MockBloc<StripeAccountEvent, StripeAccountState>
     implements StripeAccountBloc {}
 
-class _MockCommissionMethodBloc
-    extends MockBloc<CommissionMethodEvent, CommissionMethodState>
-    implements CommissionMethodBloc {}
-
 class _MockMobileMoneyAccountBloc
     extends MockBloc<MobileMoneyAccountEvent, MobileMoneyAccountState>
     implements MobileMoneyAccountBloc {}
@@ -84,9 +79,6 @@ Widget _wrap(Widget child, TripTemplateBloc bloc) {
             BlocProvider<TripTemplateBloc>.value(value: bloc),
             BlocProvider<AnnouncementFormBloc>(
               create: (_) => getIt<AnnouncementFormBloc>(),
-            ),
-            BlocProvider<CommissionMethodBloc>(
-              create: (_) => getIt<CommissionMethodBloc>(),
             ),
             BlocProvider<MobileMoneyAccountBloc>(
               create: (_) =>
@@ -146,13 +138,6 @@ void main() {
       return b;
     });
 
-    getIt.registerFactory<CommissionMethodBloc>(() {
-      final b = _MockCommissionMethodBloc();
-      when(() => b.state).thenReturn(CommissionMethodInitial());
-      when(() => b.stream).thenAnswer((_) => const Stream.empty());
-      return b;
-    });
-
     getIt.registerFactory<MobileMoneyAccountBloc>(() {
       final b = _MockMobileMoneyAccountBloc();
       // Compte inactif par défaut : mobileMoneyAccountActiveFrom(...) → false.
@@ -168,9 +153,6 @@ void main() {
     }
     if (getIt.isRegistered<StripeAccountBloc>()) {
       getIt.unregister<StripeAccountBloc>();
-    }
-    if (getIt.isRegistered<CommissionMethodBloc>()) {
-      getIt.unregister<CommissionMethodBloc>();
     }
     if (getIt.isRegistered<MobileMoneyAccountBloc>()) {
       getIt.unregister<MobileMoneyAccountBloc>();
@@ -219,9 +201,11 @@ void main() {
     unregisterFormBlocs();
   });
 
-  /// Amène le formulaire à l'étape 2 (Prix & conditions) : nom + villes
-  /// renseignés à l'étape 0, "Continuer" tapé deux fois.
-  Future<void> goToStep2(WidgetTester tester) async {
+  /// Amène le formulaire à l'étape [step] : nom + villes renseignés à
+  /// l'étape 0, "Continuer" tapé [step] fois. Seul helper de navigation du
+  /// fichier (constat #12) — `goToStep(tester, 2)` remplace l'ancien
+  /// `goToStep2`.
+  Future<void> goToStep(WidgetTester tester, int step) async {
     await tester.enterText(find.byType(DonyTextField).first, 'Abidjan-Paris');
     final fields =
         (tester.state<State<TripTemplateEditScreen>>(
@@ -233,7 +217,7 @@ void main() {
     fields.departureCity.value = 'Abidjan';
     fields.arrivalCity.value = 'Paris';
     await tester.pump(const Duration(milliseconds: 300));
-    for (var i = 0; i < 2; i++) {
+    for (var i = 0; i < step; i++) {
       await tester.tap(find.widgetWithText(DonyButton, 'Continuer'));
       await tester.pump(const Duration(milliseconds: 600));
     }
@@ -250,7 +234,7 @@ void main() {
       await tester.pumpWidget(_wrap(const TripTemplateEditScreen(), bloc));
       await tester.pump(const Duration(milliseconds: 600));
 
-      await goToStep2(tester);
+      await goToStep(tester, 2);
       final fields =
           (tester.state<State<TripTemplateEditScreen>>(
                         find.byType(TripTemplateEditScreen),
@@ -286,7 +270,7 @@ void main() {
         await tester.pumpWidget(_wrap(const TripTemplateEditScreen(), bloc));
         await tester.pump(const Duration(milliseconds: 600));
 
-        await goToStep2(tester);
+        await goToStep(tester, 2);
         await tester.ensureVisible(find.byKey(field));
         await tester.tap(find.byKey(field));
         await tester.pumpAndSettle();
@@ -311,7 +295,7 @@ void main() {
       await tester.pumpWidget(_wrap(const TripTemplateEditScreen(), bloc));
       await tester.pump(const Duration(milliseconds: 600));
 
-      await goToStep2(tester);
+      await goToStep(tester, 2);
       await tester.ensureVisible(find.byKey(field));
       await tester.tap(find.byKey(field));
       await tester.pumpAndSettle();
@@ -337,7 +321,7 @@ void main() {
       await tester.pumpWidget(_wrap(const TripTemplateEditScreen(), bloc));
       await tester.pump(const Duration(milliseconds: 600));
 
-      await goToStep2(tester);
+      await goToStep(tester, 2);
       await tester.ensureVisible(find.byKey(field));
       await tester.tap(find.byKey(field));
       await tester.pumpAndSettle();
@@ -431,8 +415,10 @@ void main() {
         expect(find.text('Modifier le modèle'), findsOneWidget);
         expect(find.text('Abidjan-Paris'), findsOneWidget);
         expect(find.text('Abidjan'), findsOneWidget);
-        expect(find.text('22:00'), findsOneWidget);
-        expect(find.text('06:30'), findsOneWidget);
+        // _TimeRow affiche désormais « Départ · 22:00 » / « Arrivée · 06:30 »
+        // (le libellé reste visible une fois l'heure posée, constat #6).
+        expect(find.textContaining('22:00'), findsOneWidget);
+        expect(find.textContaining('06:30'), findsOneWidget);
         final fields =
             (tester.state<State<TripTemplateEditScreen>>(
                           find.byType(TripTemplateEditScreen),
@@ -503,24 +489,6 @@ void main() {
   });
 
   group('étapes Lieux et Prix, payload', () {
-    Future<void> goToStep(WidgetTester tester, int step) async {
-      await tester.enterText(find.byType(DonyTextField).first, 'Abidjan-Paris');
-      final fields =
-          (tester.state<State<TripTemplateEditScreen>>(
-                        find.byType(TripTemplateEditScreen),
-                      )
-                      as dynamic)
-                  .fieldsForTest
-              as TripFormFields;
-      fields.departureCity.value = 'Abidjan';
-      fields.arrivalCity.value = 'Paris';
-      await tester.pump(const Duration(milliseconds: 300));
-      for (var i = 0; i < step; i++) {
-        await tester.tap(find.widgetWithText(DonyButton, 'Continuer'));
-        await tester.pump(const Duration(milliseconds: 600));
-      }
-    }
-
     testWidgets(
       'étape 1 : LieuxCapaciteStep sans adresse obligatoire, Continuer actif',
       (tester) async {
@@ -603,6 +571,15 @@ void main() {
         lng: -3.99,
       );
       fields.departureTime.value = const TimeOfDay(hour: 22, minute: 0);
+      // Capacité par défaut du bloc (SUITCASE_23KG, 23 kg) explicitement
+      // posée : sans dispatch, `_fields.availableKg` ne serait jamais
+      // synchronisé par le `BlocListener` (constat #1) et resterait au
+      // défaut local de `TripFormFields` (15), qui ne correspond à rien de
+      // métier — figer cette valeur cacherait le bug plutôt que de le
+      // couvrir.
+      BlocProvider.of<AnnouncementFormBloc>(
+        tester.element(find.byType(PrixConditionsStep)),
+      ).add(const CapacityUnitChanged(CapacityUnit.suitcase23kg));
       // `pumpAndSettle` plutôt qu'un `pump` fixe : le changement de devise
       // remonte `PrixConditionsStep` (ValueListenableBuilder), qui rejoue les
       // `.animate().fadeIn()` de l'étape — leurs timers de démarrage doivent
@@ -636,8 +613,56 @@ void main() {
       expect(data['deliveryAddress'], isNull);
       expect(data['departureTime'], '22:00');
       expect(data['handoverLeadDays'], isNull);
-      expect(data['availableKg'], 15);
+      expect(data['capacityUnit'], 'SUITCASE_23KG');
+      expect(data['availableKg'], 23);
     });
+
+    testWidgets(
+      'changer la capacité à l\'étape 1 atteint le payload (constat #1 — '
+      'CapacityControl écrivait dans le bloc sans jamais être relu)',
+      (tester) async {
+        tester.view.physicalSize = const Size(800, 3000);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.reset);
+        await tester.pumpWidget(_wrap(const TripTemplateEditScreen(), bloc));
+        await tester.pump(const Duration(milliseconds: 600));
+        // Un prix doit être choisi pour que « Enregistrer le modèle » soit
+        // actif à l'étape 2 (sinon le tap final ne fait rien et le test
+        // échoue sur « No matching calls »).
+        final fields =
+            (tester.state<State<TripTemplateEditScreen>>(
+                          find.byType(TripTemplateEditScreen),
+                        )
+                        as dynamic)
+                    .fieldsForTest
+                as TripFormFields;
+        fields.selectPrice(6.0);
+
+        await goToStep(tester, 1);
+        await tester.pumpAndSettle();
+
+        // Chip « 1 valise 32 kg » de `CapacityControl`.
+        await tester.ensureVisible(find.text('1 valise 32 kg'));
+        await tester.tap(find.text('1 valise 32 kg'));
+        await tester.pump(const Duration(milliseconds: 300));
+
+        await tester.tap(find.widgetWithText(DonyButton, 'Continuer'));
+        await tester.pump(const Duration(milliseconds: 600));
+
+        await tester.pumpAndSettle();
+
+        await tester.tap(
+          find.widgetWithText(DonyButton, 'Enregistrer le modèle'),
+        );
+        await tester.pump();
+
+        final captured = verify(
+          () => bloc.add(captureAny()),
+        ).captured.whereType<TripTemplateCreated>().single;
+        expect(captured.data['capacityUnit'], 'SUITCASE_32KG');
+        expect(captured.data['availableKg'], 32);
+      },
+    );
 
     testWidgets(
       'édition : prix hors chips sélectionne Autre prix, paiement et note '
@@ -681,5 +706,89 @@ void main() {
         expect(fields.availableKg.value, 10);
       },
     );
+
+    testWidgets(
+      'édition valise 32 kg / 64 kg : la capacité du modèle prime sur le '
+      'maxKg de l\'unité, sans boucle de synchronisation',
+      (tester) async {
+        tester.view.physicalSize = const Size(800, 3000);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.reset);
+        // Cas qui faisait tourner la suite indéfiniment : `_prefill` émet
+        // `CapacityUnitChanged(SUITCASE_32KG)` (le bloc pose 32) puis
+        // `AvailableKgChanged(64)`. Sans la garde d'écho de
+        // `_syncKgToFormBloc`, les deux valeurs se renvoyaient l'une l'autre
+        // en microtâches : le processus de test saturait un cœur sans que
+        // `--timeout` puisse l'interrompre (aucun timer ne s'exécute).
+        const template = TripTemplate(
+          id: 't1',
+          label: 'Abidjan-Paris',
+          departureCity: 'Abidjan',
+          arrivalCity: 'Paris',
+          transportMode: 'PLANE',
+          capacityUnit: 'SUITCASE_32KG',
+          availableKg: 64,
+          pricePerKg: 6,
+          acceptedCategories: ['Vêtements & tissus'],
+          currency: 'EUR',
+        );
+        await tester.pumpWidget(
+          _wrap(const TripTemplateEditScreen(template: template), bloc),
+        );
+        // `pump` bornés : si la synchronisation reboucle, ce test pend ici.
+        for (var i = 0; i < 5; i++) {
+          await tester.pump(const Duration(milliseconds: 200));
+        }
+
+        final fields =
+            (tester.state<State<TripTemplateEditScreen>>(
+                          find.byType(TripTemplateEditScreen),
+                        )
+                        as dynamic)
+                    .fieldsForTest
+                as TripFormFields;
+        final formState = BlocProvider.of<AnnouncementFormBloc>(
+          tester.element(find.byType(TripTemplateEditScreen)),
+        ).state;
+        expect(fields.availableKg.value, 64);
+        expect(formState.availableKg, 64);
+        expect(formState.capacityUnit, CapacityUnit.suitcase32kg);
+      },
+    );
+
+    testWidgets('prix libre à 0 désactive Enregistrer le modèle (constat #5)', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(800, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(_wrap(const TripTemplateEditScreen(), bloc));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      await goToStep(tester, 2);
+      final fields =
+          (tester.state<State<TripTemplateEditScreen>>(
+                        find.byType(TripTemplateEditScreen),
+                      )
+                      as dynamic)
+                  .fieldsForTest
+              as TripFormFields;
+
+      await tester.ensureVisible(find.text('Autre prix'));
+      await tester.tap(find.text('Autre prix'));
+      await tester.pump(const Duration(milliseconds: 300));
+
+      final priceField = find.byWidgetPredicate(
+        (w) => w is DonyTextField && w.controller == fields.customPriceCtrl,
+      );
+      await tester.ensureVisible(priceField);
+      await tester.enterText(priceField, '0');
+      await tester.pump(const Duration(milliseconds: 300));
+
+      final button = tester.widget<DonyButton>(
+        find.widgetWithText(DonyButton, 'Enregistrer le modèle'),
+      );
+      expect(button.onPressed, isNull);
+    });
   });
 }

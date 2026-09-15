@@ -793,9 +793,6 @@ final appRouter = GoRouter(
             BlocProvider<AnnouncementFormBloc>(
               create: (_) => getIt<AnnouncementFormBloc>(),
             ),
-            BlocProvider<CommissionMethodBloc>(
-              create: (_) => getIt<CommissionMethodBloc>(),
-            ),
             BlocProvider<MobileMoneyAccountBloc>(
               create: (_) =>
                   getIt<MobileMoneyAccountBloc>()

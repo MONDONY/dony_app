@@ -1184,10 +1184,10 @@ void main() {
       departureCity: 'Abidjan',
       arrivalCity: 'Paris',
       transportMode: 'CAR',
-      // KG_EXACT (capacité libre) : SUITCASE_32KG imposerait 32 kg fixes via
-      // CapacityUnitChanged, quel que soit availableKg du modèle — pas ce
-      // que ce test veut isoler.
-      capacityUnit: 'KG_EXACT',
+      // SUITCASE_32KG (imposerait 32 kg fixes via CapacityUnitChanged) :
+      // couvre le bug #2 — _applyTemplate doit émettre AvailableKgChanged
+      // APRÈS CapacityUnitChanged pour que la valeur du modèle (30) prime.
+      capacityUnit: 'SUITCASE_32KG',
       availableKg: 30,
       pricePerKg: 1500,
       acceptedCategories: ['Vêtements & tissus'],
@@ -1246,37 +1246,6 @@ void main() {
       await tester.drag(find.byType(ListView), const Offset(-400, 0));
       await tester.pump(const Duration(milliseconds: 300));
       await tester.tap(find.textContaining('Abidjan → Paris'));
-      await tester.pump(const Duration(milliseconds: 600));
-    }
-
-    /// Avance jusqu'à l'étape 2 (Prix & Conditions) depuis l'écran déjà
-    /// monté. Date et heure de départ posées directement via les notifiers
-    /// exposés par `TrajetStep` — pas de calendrier natif à piloter, même
-    /// convention que le reste de ce fichier de test. Le délai de remise,
-    /// lui, reste piloté par le modèle appliqué le cas échéant
-    /// (`handoverLeadDays` → recalculé dès que la date change). Comme les
-    /// trois étapes du formulaire restent montées en permanence (`Offstage`
-    /// dans `_buildForm`), les assertions qui suivent ce helper n'exigent pas
-    /// que « Continuer » ait effectivement réussi à faire avancer le
-    /// stepper : un ancien modèle sans délai de remise reste bloqué à
-    /// l'étape 0, et c'est le comportement attendu (cf. test « ancien
-    /// modèle »).
-    Future<void> navigateToStep2FromCurrentForm(WidgetTester tester) async {
-      final trajet = tester.widget<TrajetStep>(find.byType(TrajetStep));
-      trajet.departureDateNotifier.value ??= DateTime(2026, 11, 10);
-      trajet.departureTimeNotifier.value ??= const TimeOfDay(
-        hour: 9,
-        minute: 0,
-      );
-      await tester.pump(const Duration(milliseconds: 300));
-
-      // `warnIfMissed: false` : un modèle sans délai de remise laisse
-      // « Continuer » désactivé (ou recouvert par le DonySnackbar de
-      // `_applyTemplate`) — un tap manqué est alors attendu, pas une erreur.
-      final continueBtn = find.widgetWithText(DonyButton, 'Continuer');
-      await tester.tap(continueBtn, warnIfMissed: false);
-      await tester.pump(const Duration(milliseconds: 600));
-      await tester.tap(continueBtn, warnIfMissed: false);
       await tester.pump(const Duration(milliseconds: 600));
     }
 
@@ -1367,11 +1336,8 @@ void main() {
         // Étape 2 : mêmes notifiers, lus via PrixConditionsStep — présent
         // dans l'arbre dès le premier build (Offstage), donc valide même si
         // la navigation ci-dessous ne fait qu'avancer réellement le stepper.
-        await navigateToStep2FromCurrentForm(tester);
-        // skipOffstage: false — un ancien modèle sans délai de remise ne
-        // fait pas nécessairement avancer le stepper jusqu'à l'étape 2 (cf.
-        // navigateToStep2FromCurrentForm) ; PrixConditionsStep reste monté
-        // en Offstage, valeurs déjà synchronisées par _applyTemplate.
+        // skipOffstage: false — les notifiers sont partagés, l'étape
+        // affichée n'importe pas.
         final prix = tester.widget<PrixConditionsStep>(
           find.byType(PrixConditionsStep, skipOffstage: false),
         );
@@ -1430,11 +1396,8 @@ void main() {
       await tester.tap(find.textContaining('Paris → Dakar'));
       await tester.pump(const Duration(milliseconds: 600));
 
-      await navigateToStep2FromCurrentForm(tester);
-      // skipOffstage: false — sans handoverLeadDays, le stepper reste
-      // bloqué à l'étape 0 (délai de remise manquant) ; PrixConditionsStep
-      // reste monté en Offstage, valeurs déjà synchronisées par
-      // _applyTemplate.
+      // skipOffstage: false — les notifiers sont partagés, l'étape affichée
+      // n'importe pas.
       final prix = tester.widget<PrixConditionsStep>(
         find.byType(PrixConditionsStep, skipOffstage: false),
       );
