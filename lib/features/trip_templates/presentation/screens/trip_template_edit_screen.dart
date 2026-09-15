@@ -11,7 +11,6 @@ import 'package:dony/features/content_categories/data/content_category_repositor
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_form_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
-import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/currency_selection_banner.dart';
@@ -76,7 +75,14 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
           SupportedCurrency.eur,
     );
     _fields.transportMode.value = TransportMode.plane;
-    if (t != null) _prefill(t);
+    if (t != null) {
+      _prefill(t);
+      // Remet mobile money à faux si la devise du modèle n'est pas éligible
+      // (même garde que la bascule manuelle du sélecteur de devise) : un
+      // modèle enregistré avant une restriction de zone CFA ne doit pas
+      // rester coché.
+      _onCurrencyChanged();
+    }
     _labelCtrl.addListener(_recomputeCanContinue);
     _fields.departureCity.addListener(_recomputeCanContinue);
     _fields.arrivalCity.addListener(_recomputeCanContinue);
@@ -117,11 +123,20 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
     );
   }
 
+  /// Vrai le temps que le `BlocListener` du `build()` recopie
+  /// `state.availableKg` dans `_fields.availableKg` : cette écriture vient du
+  /// bloc, la lui renvoyer serait un écho. Sans cette garde, le préremplissage
+  /// (`CapacityUnitChanged` puis `AvailableKgChanged`) laisse deux valeurs
+  /// différentes en file qui se relancent l'une l'autre sans fin — une boucle
+  /// de microtâches où les timers ne tournent jamais, donc que `--timeout` ne
+  /// coupe pas (le run de tests part à 100 % de CPU indéfiniment).
+  bool _applyingKgFromBloc = false;
+
   void _syncKgToFormBloc() {
-    if (!mounted) return;
-    context.read<AnnouncementFormBloc>().add(
-      AvailableKgChanged(_fields.availableKg.value),
-    );
+    if (!mounted || _applyingKgFromBloc) return;
+    final bloc = context.read<AnnouncementFormBloc>();
+    if (bloc.state.availableKg == _fields.availableKg.value) return;
+    bloc.add(AvailableKgChanged(_fields.availableKg.value));
   }
 
   void _onKgToggleChanged() {
@@ -182,8 +197,15 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
     _fields.refusedTypes.value = t.refusedTypes.toSet();
     _fields.descriptionCtrl.text = t.description ?? '';
 
-    // Sync capacityUnit et pricingMode vers le bloc (requiert context →
+    // Sync capacityUnit et availableKg vers le bloc (requiert context →
     // postFrame), même pattern que `_applyTemplate` (create_trip_screen.dart).
+    // Ordre impératif : `CapacityUnitChanged` réécrit `availableKg` à
+    // `unit.maxKg` (valise 23/32 kg) — `AvailableKgChanged` doit donc être
+    // émis APRÈS pour que la valeur du modèle prime (sinon un modèle
+    // « valise 32 kg, 64 kg » s'appliquerait à 32 kg). Le `BlocListener`
+    // du `build()` recopie ensuite `state.availableKg` dans
+    // `_fields.availableKg`, seul point d'écriture attendu par
+    // `CapacityControl` (Tâche 1, constat #1).
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final formBloc = context.read<AnnouncementFormBloc>();
@@ -194,6 +216,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
         _ => CapacityUnit.suitcase23kg,
       };
       formBloc.add(CapacityUnitChanged(unit));
+      formBloc.add(AvailableKgChanged(t.availableKg.toDouble()));
       formBloc.add(
         AnnouncementPricingModeSetRequested(
           t.usesPriceGrid ? PricingMode.mixed : PricingMode.kg,
@@ -226,7 +249,9 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
     if (step2Ok && _fields.isCustomPrice) {
       final parsed = parsePriceInput(_fields.customPriceCtrl.text);
       step2Ok =
-          parsed != null && parsed <= maxUnitPriceFor(_fields.currency.value);
+          parsed != null &&
+          parsed > 0 &&
+          parsed <= maxUnitPriceFor(_fields.currency.value);
     }
     _canContinue.value = switch (_step.value) {
       0 => step0Ok,
@@ -254,57 +279,55 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
     super.dispose();
   }
 
-  /// Adresse au format `TripTemplate.toJson` : `{label, lat, lng}` ou `null`.
-  static Map<String, dynamic>? _addressJson(AddressData? address) =>
-      address == null
-      ? null
-      : {'label': address.label, 'lat': address.lat, 'lng': address.lng};
-
   /// Payload complet envoyé au bloc : les trois étapes (Trajet, Lieux &
-  /// capacité, Prix & conditions).
+  /// capacité, Prix & conditions), sérialisées par `TripTemplate.toJson` —
+  /// même mapping adresse/champs que le modèle chargé depuis le repository,
+  /// pas de duplication locale (constat #10).
   Map<String, dynamic> _buildPayload(BuildContext context) {
     final formState = context.read<AnnouncementFormBloc>().state;
     final stripeState = context.read<StripeAccountBloc>().state;
     final stripeConfigured =
         stripeState is StripeAccountReady &&
         stripeState.accountStatus.isComplete;
-    return {
-      'label': _labelCtrl.text.trim(),
-      'departureCity': _fields.departureCity.value?.trim(),
-      'arrivalCity': _fields.arrivalCity.value?.trim(),
-      'departureCountryCode': _fields.departureCountryCode.value,
-      'arrivalCountryCode': _fields.arrivalCountryCode.value,
-      'transportMode': transportModeToWire(
+    final template = TripTemplate(
+      id: widget.template?.id ?? '',
+      label: _labelCtrl.text.trim(),
+      emoji: widget.template?.emoji,
+      departureCity: _fields.departureCity.value?.trim() ?? '',
+      departureLat: widget.template?.departureLat,
+      departureLng: widget.template?.departureLng,
+      arrivalCity: _fields.arrivalCity.value?.trim() ?? '',
+      arrivalLat: widget.template?.arrivalLat,
+      arrivalLng: widget.template?.arrivalLng,
+      departureCountryCode: _fields.departureCountryCode.value,
+      arrivalCountryCode: _fields.arrivalCountryCode.value,
+      transportMode: transportModeToWire(
         _fields.transportMode.value ?? TransportMode.plane,
       ),
-      'capacityUnit': formState.capacityUnit.toWire(),
-      'availableKg': _fields.availableKg.value.round(),
-      'pricingMode': formState.pricingMode == PricingMode.mixed
-          ? 'MIXED'
-          : 'KG',
-      'pricePerKg': _fields.pricePerKg,
-      'currency': _fields.currency.value.code,
-      'acceptedPaymentMethods': _fields.acceptedPaymentMethodsFor(
-        stripeConfigured: stripeConfigured,
-      ),
-      'cashAccepted':
-          _fields.cashEnabled.value ||
-          !(stripeConfigured && _fields.currency.value.isStripeEligible),
-      'negotiable': _fields.negotiable.value,
-      'acceptedCategories': {
+      capacityUnit: formState.capacityUnit.toWire(),
+      availableKg: _fields.availableKg.value.round(),
+      pricingMode: formState.pricingMode == PricingMode.mixed ? 'MIXED' : 'KG',
+      pricePerKg: _fields.pricePerKg,
+      acceptedCategories: {
         ..._fields.selectedContent.value,
         ..._fields.customAccepted.value,
       }.toList(),
-      'refusedTypes': _fields.refusedTypes.value.toList(),
-      'description': _fields.descriptionCtrl.text.trim().isEmpty
+      currency: _fields.currency.value.code,
+      acceptedPaymentMethods: _fields.acceptedPaymentMethodsFor(
+        stripeConfigured: stripeConfigured,
+      ),
+      negotiable: _fields.negotiable.value,
+      refusedTypes: _fields.refusedTypes.value.toList(),
+      description: _fields.descriptionCtrl.text.trim().isEmpty
           ? null
           : _fields.descriptionCtrl.text.trim(),
-      'pickupAddress': _addressJson(_fields.pickupAddress.value),
-      'deliveryAddress': _addressJson(_fields.deliveryAddress.value),
-      'departureTime': _wire(_fields.departureTime.value),
-      'arrivalTime': _wire(_fields.arrivalTime.value),
-      'handoverLeadDays': _handoverLeadDays.value,
-    };
+      pickupAddress: _fields.pickupAddress.value,
+      deliveryAddress: _fields.deliveryAddress.value,
+      departureTime: _wire(_fields.departureTime.value),
+      arrivalTime: _wire(_fields.arrivalTime.value),
+      handoverLeadDays: _handoverLeadDays.value,
+    );
+    return template.toJson();
   }
 
   void _submit(BuildContext context) {
@@ -320,89 +343,109 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<TripTemplateBloc, TripTemplateState>(
-      listener: (context, state) {
-        if (_submitted && state.status == TripTemplateStatus.success) {
-          DonySnackbar.show(
-            context,
-            message: _isEditing ? 'Modèle mis à jour' : 'Modèle enregistré',
-            type: DonySnackbarType.success,
-          );
-          context.pop(true);
-        }
-        if (state.status == TripTemplateStatus.error && state.error != null) {
-          _submitted = false;
-          DonySnackbar.show(
-            context,
-            message: state.error!,
-            type: DonySnackbarType.error,
-          );
-        }
+    // Recopie `state.availableKg` (écrit par `CapacityControl`, dans
+    // `LieuxCapaciteStep` étape 1) dans `_fields.availableKg` — même pattern
+    // que le `BlocListener` de `create_trip_screen.dart` (~L1788-1797).
+    // Sans lui, la capacité saisie à l'étape 1 n'atteignait jamais le
+    // payload (constat #1) : `CapacityControl` n'écrit que dans le bloc,
+    // `_buildPayload` ne lisait que `_fields.availableKg`.
+    return BlocListener<AnnouncementFormBloc, AnnouncementFormState>(
+      listenWhen: (prev, curr) => prev.availableKg != curr.availableKg,
+      listener: (context, formState) {
+        final kg = formState.availableKg ?? 0.0;
+        if (kg == _fields.availableKg.value) return;
+        _applyingKgFromBloc = true;
+        _fields.availableKg.value = kg;
+        _applyingKgFromBloc = false;
       },
-      builder: (context, state) {
-        final isLoading = state.status == TripTemplateStatus.loading;
-        // Un seul ValueListenableBuilder sur `_step` pour tout l'écran :
-        // PopScope.canPop doit se recalculer au changement d'étape, pas
-        // seulement au changement d'état du bloc.
-        return ValueListenableBuilder<int>(
-          valueListenable: _step,
-          builder: (context, step, _) {
-            // Un seul handler de retour, partagé par la flèche visible de
-            // l'AppBar (`onBack`) et par `PopScope` (geste système / swipe
-            // iOS) : sans ça, `DonyAppBarBackButton` appelle `context.pop()`
-            // directement sans consulter `canPop` et fait quitter l'écran au
-            // lieu de reculer d'une étape (cf. `create_trip_screen.dart`,
-            // même pattern avec `_handleExitRequest`).
-            void handleBack() {
-              if (step == 0) {
-                context.pop();
-              } else {
-                _step.value = step - 1;
-              }
-            }
-
-            return PopScope(
-              canPop: step == 0,
-              onPopInvokedWithResult: (didPop, _) {
-                if (!didPop) {
-                  handleBack();
-                }
-              },
-              child: DonyPageScaffold(
-                title: _isEditing ? 'Modifier le modèle' : 'Nouveau modèle',
-                onBack: handleBack,
-                stickyBottom: ValueListenableBuilder<bool>(
-                  valueListenable: _canContinue,
-                  builder: (context, canContinue, _) {
-                    final enabled = canContinue && !isLoading;
-                    return DonyButton(
-                      label: step < 2 ? 'Continuer' : 'Enregistrer le modèle',
-                      onPressed: enabled
-                          ? (step < 2
-                                ? () => _step.value = step + 1
-                                : () => _submit(context))
-                          : null,
-                      isLoading: isLoading,
-                    );
-                  },
-                ),
-                body: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    CaStepperHeader(currentStep: step, totalSteps: _totalSteps),
-                    const SizedBox(height: DonySpacing.xxl),
-                    ...switch (step) {
-                      0 => _buildStep0(context),
-                      1 => _buildStep1(context),
-                      _ => _buildStep2(context),
-                    },
-                  ],
-                ),
-              ),
+      child: BlocConsumer<TripTemplateBloc, TripTemplateState>(
+        listener: (context, state) {
+          if (_submitted && state.status == TripTemplateStatus.success) {
+            DonySnackbar.show(
+              context,
+              message: _isEditing ? 'Modèle mis à jour' : 'Modèle enregistré',
+              type: DonySnackbarType.success,
             );
-          },
-        );
-      },
+            context.pop(true);
+          }
+          if (state.status == TripTemplateStatus.error && state.error != null) {
+            _submitted = false;
+            DonySnackbar.show(
+              context,
+              message: state.error!,
+              type: DonySnackbarType.error,
+            );
+          }
+        },
+        builder: (context, state) {
+          final isLoading = state.status == TripTemplateStatus.loading;
+          // Un seul ValueListenableBuilder sur `_step` pour tout l'écran :
+          // PopScope.canPop doit se recalculer au changement d'étape, pas
+          // seulement au changement d'état du bloc.
+          return ValueListenableBuilder<int>(
+            valueListenable: _step,
+            builder: (context, step, _) {
+              // Un seul handler de retour, partagé par la flèche visible de
+              // l'AppBar (`onBack`) et par `PopScope` (geste système / swipe
+              // iOS) : sans ça, `DonyAppBarBackButton` appelle
+              // `context.pop()` directement sans consulter `canPop` et fait
+              // quitter l'écran au lieu de reculer d'une étape (cf.
+              // `create_trip_screen.dart`, même pattern avec
+              // `_handleExitRequest`).
+              void handleBack() {
+                if (step == 0) {
+                  context.pop();
+                } else {
+                  _step.value = step - 1;
+                }
+              }
+
+              return PopScope(
+                canPop: step == 0,
+                onPopInvokedWithResult: (didPop, _) {
+                  if (!didPop) {
+                    handleBack();
+                  }
+                },
+                child: DonyPageScaffold(
+                  title: _isEditing ? 'Modifier le modèle' : 'Nouveau modèle',
+                  onBack: handleBack,
+                  stickyBottom: ValueListenableBuilder<bool>(
+                    valueListenable: _canContinue,
+                    builder: (context, canContinue, _) {
+                      final enabled = canContinue && !isLoading;
+                      return DonyButton(
+                        label: step < 2 ? 'Continuer' : 'Enregistrer le modèle',
+                        onPressed: enabled
+                            ? (step < 2
+                                  ? () => _step.value = step + 1
+                                  : () => _submit(context))
+                            : null,
+                        isLoading: isLoading,
+                      );
+                    },
+                  ),
+                  body: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CaStepperHeader(
+                        currentStep: step,
+                        totalSteps: _totalSteps,
+                      ),
+                      const SizedBox(height: DonySpacing.xxl),
+                      ...switch (step) {
+                        0 => _buildStep0(context),
+                        1 => _buildStep1(),
+                        _ => _buildStep2(),
+                      },
+                    ],
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      ),
     );
   }
 
@@ -492,12 +535,14 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
       _TimeRow(
         icon: 'plane-takeoff',
         label: 'Heure de départ',
+        shortLabel: 'Départ',
         time: _fields.departureTime,
       ),
       const SizedBox(height: DonySpacing.sm),
       _TimeRow(
         icon: 'plane-landing',
         label: "Heure d'arrivée",
+        shortLabel: 'Arrivée',
         time: _fields.arrivalTime,
       ),
       const SizedBox(height: DonySpacing.xxl),
@@ -520,7 +565,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
             for (final choice in _handoverChoices)
               DonyChip(
                 label: choice.$2,
-                selected: _handoverLeadDays.value == choice.$1,
+                selected: selected == choice.$1,
                 onTap: () => _handoverLeadDays.value = choice.$1,
               ),
           ],
@@ -533,7 +578,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
   /// Lieux & capacité : adresses de remise/livraison optionnelles (jamais
   /// d'erreur affichée pour un modèle), capacité pilotée par `CapacityControl`
   /// (autonome, lit/écrit `AnnouncementFormBloc` directement).
-  List<Widget> _buildStep1(BuildContext context) => [
+  List<Widget> _buildStep1() => [
     LieuxCapaciteStep(
       initialPickupAddress: _fields.pickupAddress.value,
       initialDeliveryAddress: _fields.deliveryAddress.value,
@@ -547,7 +592,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
   /// Prix & conditions : bandeau devise + étape partagée avec la création de
   /// trajet, elle-même consciente du mode de tarification et de la bascule
   /// mobile money via `AnnouncementFormBloc` / `MobileMoneyAccountBloc`.
-  List<Widget> _buildStep2(BuildContext context) => [
+  List<Widget> _buildStep2() => [
     CurrencySelectionBanner(currencyNotifier: _fields.currency),
     const SizedBox(height: DonySpacing.lg),
     BlocBuilder<MobileMoneyAccountBloc, MobileMoneyAccountState>(
@@ -583,13 +628,25 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
 
 /// Rangée d'heure éditable (départ ou arrivée) — reprend le rendu de
 /// l'ancienne section HEURE D'ARRIVÉE : un seul texte qui bascule entre le
-/// placeholder et la valeur formatée, avec un bouton d'effacement quand une
-/// heure est choisie.
+/// placeholder et la valeur formatée (préfixée du libellé court, ex.
+/// « Départ · 22:00 » — le libellé reste visible une fois l'heure posée),
+/// avec un bouton d'effacement quand une heure est choisie.
 class _TimeRow extends StatelessWidget {
-  const _TimeRow({required this.icon, required this.label, required this.time});
+  const _TimeRow({
+    required this.icon,
+    required this.label,
+    required this.shortLabel,
+    required this.time,
+  });
 
   final String icon;
+
+  /// Libellé complet, utilisé au placeholder et dans l'annonce d'accessibilité.
   final String label;
+
+  /// Libellé court affiché en préfixe une fois l'heure posée (« Départ »,
+  /// « Arrivée »).
+  final String shortLabel;
   final ValueNotifier<TimeOfDay?> time;
 
   @override
@@ -599,58 +656,65 @@ class _TimeRow extends StatelessWidget {
     return ValueListenableBuilder<TimeOfDay?>(
       valueListenable: time,
       builder: (context, value, _) {
-        final wire = value == null
+        final heure = value == null
             ? null
             : '${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}';
-        return GestureDetector(
-          onTap: () async {
-            final picked = await showTimePicker(
-              context: context,
-              initialTime: value ?? const TimeOfDay(hour: 12, minute: 0),
-            );
-            if (picked != null) time.value = picked;
-          },
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: DonySpacing.base,
-              vertical: DonySpacing.md,
-            ),
-            decoration: BoxDecoration(
-              color: cs.surface,
-              border: Border.all(color: cs.outline),
-              borderRadius: BorderRadius.circular(DonyRadius.md),
-            ),
-            child: Row(
-              children: [
-                DonyIcon(icon, color: cs.primary, size: 20),
-                const SizedBox(width: DonySpacing.md),
-                Expanded(
-                  child: Text(
-                    wire ?? '$label (optionnel)',
-                    style: tt.bodyMedium?.copyWith(
-                      color: wire == null ? cs.onSurfaceVariant : cs.onSurface,
-                      fontWeight: wire == null
-                          ? FontWeight.w400
-                          : FontWeight.w600,
-                    ),
-                  ),
-                ),
-                if (wire != null)
-                  Semantics(
-                    button: true,
-                    container: true,
-                    excludeSemantics: true,
-                    label: 'Effacer $label',
-                    child: GestureDetector(
-                      onTap: () => time.value = null,
-                      child: DonyIcon(
-                        'x',
-                        size: 18,
-                        color: cs.onSurfaceVariant,
+        return Semantics(
+          label: heure == null ? null : '$label, $heure',
+          child: GestureDetector(
+            onTap: () async {
+              final picked = await showTimePicker(
+                context: context,
+                initialTime: value ?? const TimeOfDay(hour: 12, minute: 0),
+              );
+              if (picked != null) time.value = picked;
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: DonySpacing.base,
+                vertical: DonySpacing.md,
+              ),
+              decoration: BoxDecoration(
+                color: cs.surface,
+                border: Border.all(color: cs.outline),
+                borderRadius: BorderRadius.circular(DonyRadius.md),
+              ),
+              child: Row(
+                children: [
+                  DonyIcon(icon, color: cs.primary, size: 20),
+                  const SizedBox(width: DonySpacing.md),
+                  Expanded(
+                    child: Text(
+                      heure == null
+                          ? '$label (optionnel)'
+                          : '$shortLabel · $heure',
+                      style: tt.bodyMedium?.copyWith(
+                        color: heure == null
+                            ? cs.onSurfaceVariant
+                            : cs.onSurface,
+                        fontWeight: heure == null
+                            ? FontWeight.w400
+                            : FontWeight.w600,
                       ),
                     ),
                   ),
-              ],
+                  if (heure != null)
+                    Semantics(
+                      button: true,
+                      container: true,
+                      excludeSemantics: true,
+                      label: 'Effacer $label',
+                      child: GestureDetector(
+                        onTap: () => time.value = null,
+                        child: DonyIcon(
+                          'x',
+                          size: 18,
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
         );

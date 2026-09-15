@@ -34,8 +34,16 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
   bool _active = true;
   bool _submitted = false;
 
+  /// Le modèle n'a pas de prix au kilo (grille seule) : cet écran n'a pas de
+  /// champ prix éditable, une récurrence ne doit donc jamais envoyer 0
+  /// (constat #3).
+  bool get _hasPricePerKg => widget.template.pricePerKg != null;
+
   bool get _isValid =>
-      _days.contains(true) && _pickup != null && _delivery != null;
+      _hasPricePerKg &&
+      _days.contains(true) &&
+      _pickup != null &&
+      _delivery != null;
 
   String get _weekdaysString => _days.map((d) => d ? '1' : '0').join();
 
@@ -62,7 +70,9 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
       'transportMode': t.transportMode,
       'capacityUnit': t.capacityUnit,
       'availableKg': t.availableKg,
-      'pricePerKg': t.pricePerKg ?? 0,
+      // Jamais de repli à 0 : `_isValid` (et donc le CTA) bloque déjà la
+      // soumission tant que `t.pricePerKg` est nul (constat #3).
+      'pricePerKg': t.pricePerKg,
       'acceptedCategories': t.acceptedCategories,
       'pickupAddress': {
         'label': _pickup!.label,
@@ -158,6 +168,22 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
                   ],
                 ),
               ).animate().fadeIn(duration: 280.ms),
+              if (!_hasPricePerKg) ...[
+                const SizedBox(height: DonySpacing.sm),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    DonyIcon('triangle-alert', size: 16, color: cs.error),
+                    const SizedBox(width: DonySpacing.xs),
+                    Expanded(
+                      child: Text(
+                        "Ce modèle n'a pas de prix au kilo",
+                        style: tt.bodySmall?.copyWith(color: cs.error),
+                      ),
+                    ),
+                  ],
+                ).animate().fadeIn(delay: 20.ms, duration: 280.ms),
+              ],
               const SizedBox(height: DonySpacing.xxl),
 
               const _SectionLabel(

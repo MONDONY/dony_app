@@ -1149,11 +1149,19 @@ class _TripFormContentState extends State<_TripFormContent> {
     );
   }
 
+  /// Vrai le temps que le `BlocListener` recopie `state.availableKg` dans
+  /// `_availableKgNotifier` : cette écriture vient du bloc, la lui renvoyer
+  /// serait un écho. Sans cette garde, `_applyTemplate` laisse deux valeurs
+  /// différentes en file (le maxKg de l'unité, puis le kg du modèle) qui se
+  /// relancent l'une l'autre sans fin — une boucle de microtâches où les
+  /// timers ne tournent jamais, donc que `--timeout` ne coupe pas.
+  bool _applyingKgFromBloc = false;
+
   void _syncKgToFormBloc() {
-    if (!mounted) return;
-    context.read<AnnouncementFormBloc>().add(
-      AvailableKgChanged(_availableKgNotifier.value),
-    );
+    if (!mounted || _applyingKgFromBloc) return;
+    final bloc = context.read<AnnouncementFormBloc>();
+    if (bloc.state.availableKg == _availableKgNotifier.value) return;
+    bloc.add(AvailableKgChanged(_availableKgNotifier.value));
   }
 
   void _syncDescriptionToFormBloc() {
@@ -1789,9 +1797,10 @@ class _TripFormContentState extends State<_TripFormContent> {
               listenWhen: (prev, curr) => prev.availableKg != curr.availableKg,
               listener: (context, formState) {
                 final kg = formState.availableKg ?? 0.0;
-                if (kg != _availableKgNotifier.value) {
-                  _availableKgNotifier.value = kg;
-                }
+                if (kg == _availableKgNotifier.value) return;
+                _applyingKgFromBloc = true;
+                _availableKgNotifier.value = kg;
+                _applyingKgFromBloc = false;
               },
               child: formChild,
             ),
@@ -1819,6 +1828,11 @@ class _TripFormContentState extends State<_TripFormContent> {
     _arrivalTimeNotifier.value = _timeOfDay(t.arrivalTime);
     _transportModeNotifier.value =
         transportModeFromWire(t.transportMode) ?? TransportMode.plane;
+    // Valeur optimiste immédiate ; `CapacityUnitChanged` ci-dessous réécrit
+    // `availableKg` à `unit.maxKg` (valise 23/32 kg) côté bloc — l'event
+    // `AvailableKgChanged` émis juste après restaure la valeur du modèle via
+    // le `BlocListener` existant (constat #2 : sans lui, un modèle « valise
+    // 32 kg, 64 kg » s'appliquait à 32 kg).
     _availableKgNotifier.value = t.availableKg.toDouble();
     _pickupAddressNotifier.value = t.pickupAddress;
     _deliveryAddressNotifier.value = t.deliveryAddress;
@@ -1876,6 +1890,7 @@ class _TripFormContentState extends State<_TripFormContent> {
     };
     final formBloc = context.read<AnnouncementFormBloc>();
     formBloc.add(CapacityUnitChanged(unit));
+    formBloc.add(AvailableKgChanged(t.availableKg.toDouble()));
     formBloc.add(
       AnnouncementPricingModeSetRequested(
         t.usesPriceGrid ? PricingMode.mixed : PricingMode.kg,
