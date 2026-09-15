@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:dony/core/currency/active_currency.dart';
 import 'package:dony/core/currency/currency_formatter.dart';
-import 'package:dony/core/currency/currency_selector.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
@@ -28,6 +27,7 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_preview_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/currency_selection_banner.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/lieux_capacite_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/prix_conditions_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trajet_step.dart';
@@ -36,6 +36,7 @@ import 'package:dony/features/package_request/data/models/locked_trip_context.da
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart'
     show NegotiationThreadStatus;
 import 'package:dony/features/package_request/presentation/widgets/payment_capability_block_sheets.dart';
+import 'package:dony/features/payments/bloc/mobile_money_account_active.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_bloc.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_event.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_state.dart';
@@ -66,27 +67,6 @@ class CreateTripArgs {
     this.negotiationBloc,
     this.lockCorridorAndDate = false,
   });
-}
-
-/// Dérive si le compte de versement mobile money du voyageur est actif à
-/// partir de l'état de `MobileMoneyAccountBloc`.
-///
-/// `Initial`, `Loading` ou `Error` sans compte connu valent « non actif » —
-/// seul un état portant un compte dont `isActive` est vrai (`Loaded`,
-/// `Updating`, ou `Error` avec le dernier compte connu conservé) l'active.
-bool mobileMoneyAccountActiveFrom(MobileMoneyAccountState state) {
-  final account = switch (state) {
-    MobileMoneyAccountLoaded() => state.account,
-    MobileMoneyAccountUpdating() => state.account,
-    MobileMoneyAccountError() => state.account,
-    MobileMoneyAccountPhoneRequired() => state.account,
-    MobileMoneyAccountProvidersLoading() => state.account,
-    MobileMoneyAccountProvidersLoaded() => state.account,
-    MobileMoneyAccountProvidersError() => state.account,
-    MobileMoneyAccountProvidersUnavailable() => state.account,
-    _ => null,
-  };
-  return account?.isActive ?? false;
 }
 
 class CreateTripScreen extends StatefulWidget {
@@ -286,12 +266,17 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                       ),
                       const SizedBox(height: DonySpacing.base),
                       if (!isEdit && !isLocked) ...[
-                        _CurrencySelectionBanner(
+                        CurrencySelectionBanner(
                           currencyNotifier: _currencyNotifier,
                         ),
                         const SizedBox(height: DonySpacing.base),
                       ],
                       _TripFormContent(
+                        // Réservé aux tests : cf. `handoverDeadlineForTest`
+                        // sur `_TripFormContentState`, atteint via ce Key
+                        // faute de pouvoir nommer `_TripFormContent` (privé)
+                        // depuis un autre fichier.
+                        key: const Key('trip-form-content'),
                         announcement: args?.announcement,
                         lockContext: args?.lockContext,
                         lockCorridorAndDate: args?.lockCorridorAndDate ?? false,
@@ -545,6 +530,7 @@ class _TripFormContent extends StatefulWidget {
   final void Function(void Function({bool saveAsDraft}))? onSubmitReady;
 
   const _TripFormContent({
+    super.key,
     this.announcement,
     this.lockContext,
     this.lockCorridorAndDate = false,
@@ -585,6 +571,13 @@ class _TripFormContentState extends State<_TripFormContent> {
   /// Date limite de dépôt : jour seul choisi par le voyageur, converti en
   /// instant à l'envoi (cf. [_resolveHandoverDeadline]).
   final _handoverDeadlineNotifier = ValueNotifier<DateTime?>(null);
+
+  /// Réservé aux tests : lecture seule de la date limite de dépôt, pour
+  /// vérifier son recalcul après application d'un modèle sans piloter le
+  /// calendrier natif (cf. `handoverDeadlineOf` dans les tests).
+  @visibleForTesting
+  ValueListenable<DateTime?> get handoverDeadlineForTest =>
+      _handoverDeadlineNotifier;
   final _pickupAddressNotifier = ValueNotifier<AddressData?>(null);
   final _deliveryAddressNotifier = ValueNotifier<AddressData?>(null);
   AddressData? get _pickupAddress => _pickupAddressNotifier.value;
@@ -869,6 +862,11 @@ class _TripFormContentState extends State<_TripFormContent> {
     _departureCityNotifier.addListener(_syncCityToFormBloc);
     _arrivalCityNotifier.addListener(_syncCityToFormBloc);
     _departureDateNotifier.addListener(_syncDateToFormBloc);
+    // Recalcule la date limite de dépôt d'un modèle appliqué (délai en jours
+    // avant départ) dès que la date de départ change, tant que l'utilisateur
+    // n'a pas choisi lui-même un jour limite (cf. _applyTemplate,
+    // _applyPendingHandoverLead, _selectHandoverDeadline).
+    _departureDateNotifier.addListener(_applyPendingHandoverLead);
     _priceOptionNotifier.addListener(_syncPriceToFormBloc);
     _customPriceNotifier.addListener(_syncPriceToFormBloc);
     _availableKgNotifier.addListener(_syncKgToFormBloc);
@@ -1151,11 +1149,19 @@ class _TripFormContentState extends State<_TripFormContent> {
     );
   }
 
+  /// Vrai le temps que le `BlocListener` recopie `state.availableKg` dans
+  /// `_availableKgNotifier` : cette écriture vient du bloc, la lui renvoyer
+  /// serait un écho. Sans cette garde, `_applyTemplate` laisse deux valeurs
+  /// différentes en file (le maxKg de l'unité, puis le kg du modèle) qui se
+  /// relancent l'une l'autre sans fin — une boucle de microtâches où les
+  /// timers ne tournent jamais, donc que `--timeout` ne coupe pas.
+  bool _applyingKgFromBloc = false;
+
   void _syncKgToFormBloc() {
-    if (!mounted) return;
-    context.read<AnnouncementFormBloc>().add(
-      AvailableKgChanged(_availableKgNotifier.value),
-    );
+    if (!mounted || _applyingKgFromBloc) return;
+    final bloc = context.read<AnnouncementFormBloc>();
+    if (bloc.state.availableKg == _availableKgNotifier.value) return;
+    bloc.add(AvailableKgChanged(_availableKgNotifier.value));
   }
 
   void _syncDescriptionToFormBloc() {
@@ -1242,6 +1248,7 @@ class _TripFormContentState extends State<_TripFormContent> {
     _departureCityNotifier.removeListener(_syncCityToFormBloc);
     _arrivalCityNotifier.removeListener(_syncCityToFormBloc);
     _departureDateNotifier.removeListener(_syncDateToFormBloc);
+    _departureDateNotifier.removeListener(_applyPendingHandoverLead);
     _priceOptionNotifier.removeListener(_syncPriceToFormBloc);
     _customPriceNotifier.removeListener(_syncPriceToFormBloc);
     _availableKgNotifier.removeListener(_syncKgToFormBloc);
@@ -1627,7 +1634,12 @@ class _TripFormContentState extends State<_TripFormContent> {
         child: child!,
       ),
     );
-    if (picked != null) _handoverDeadlineNotifier.value = picked;
+    if (picked != null) {
+      _handoverDeadlineNotifier.value = picked;
+      // Choix manuel : annule le délai en attente d'un modèle appliqué, sinon
+      // un prochain changement de date de départ écraserait ce choix.
+      _pendingHandoverLeadDays = null;
+    }
   }
 
   @override
@@ -1785,9 +1797,10 @@ class _TripFormContentState extends State<_TripFormContent> {
               listenWhen: (prev, curr) => prev.availableKg != curr.availableKg,
               listener: (context, formState) {
                 final kg = formState.availableKg ?? 0.0;
-                if (kg != _availableKgNotifier.value) {
-                  _availableKgNotifier.value = kg;
-                }
+                if (kg == _availableKgNotifier.value) return;
+                _applyingKgFromBloc = true;
+                _availableKgNotifier.value = kg;
+                _applyingKgFromBloc = false;
               },
               child: formChild,
             ),
@@ -1795,23 +1808,48 @@ class _TripFormContentState extends State<_TripFormContent> {
     );
   }
 
-  /// Applique un modèle de trajet enregistré : pré-remplit corridor, transport,
-  /// capacité, poids, prix et contenu (les listeners synchronisent vers le BLoC).
+  /// Applique un modèle de trajet enregistré : tout le formulaire sauf la date.
+  ///
+  /// Un champ nul dans le modèle (modèle antérieur au formulaire complet)
+  /// vaut le défaut du formulaire vierge. La devise est posée en premier :
+  /// les chips de prix en dépendent. Les moyens de paiement impossibles ici
+  /// (mobile money sans compte actif ou hors zone CFA) sont ignorés, comme la
+  /// soumission les retirerait ; la carte reste gérée par la garde existante
+  /// à la soumission (Stripe non configuré), pas dupliquée ici.
   void _applyTemplate(TripTemplate t) {
+    final currency = SupportedCurrency.fromCode(t.currency);
+    if (currency != null) widget.currencyNotifier.value = currency;
+
     _departureCityNotifier.value = t.departureCity;
     _arrivalCityNotifier.value = t.arrivalCity;
+    _departureCountryCodeNotifier.value = t.departureCountryCode;
+    _arrivalCountryCodeNotifier.value = t.arrivalCountryCode;
+    _departureTimeNotifier.value = _timeOfDay(t.departureTime);
+    _arrivalTimeNotifier.value = _timeOfDay(t.arrivalTime);
     _transportModeNotifier.value =
         transportModeFromWire(t.transportMode) ?? TransportMode.plane;
+    // Valeur optimiste immédiate ; `CapacityUnitChanged` ci-dessous réécrit
+    // `availableKg` à `unit.maxKg` (valise 23/32 kg) côté bloc — l'event
+    // `AvailableKgChanged` émis juste après restaure la valeur du modèle via
+    // le `BlocListener` existant (constat #2 : sans lui, un modèle « valise
+    // 32 kg, 64 kg » s'appliquait à 32 kg).
     _availableKgNotifier.value = t.availableKg.toDouble();
+    _pickupAddressNotifier.value = t.pickupAddress;
+    _deliveryAddressNotifier.value = t.deliveryAddress;
 
-    _kgPriceEnabledNotifier.value = true;
-    final presetIdx = _presets.indexOf(t.pricePerKg);
-    if (presetIdx != -1) {
-      _priceOptionNotifier.value = presetIdx;
+    _kgPriceEnabledNotifier.value = !t.usesPriceGrid || t.pricePerKg != null;
+    final price = t.pricePerKg;
+    if (price == null) {
+      _priceOptionNotifier.value = -1;
     } else {
-      _priceOptionNotifier.value = _presets.length; // "Autre prix"
-      _customPriceNotifier.value = t.pricePerKg;
-      _customPriceCtrl.text = t.pricePerKg.toStringAsFixed(0);
+      final presetIdx = _presets.indexOf(price);
+      if (presetIdx != -1) {
+        _priceOptionNotifier.value = presetIdx;
+      } else {
+        _priceOptionNotifier.value = _presets.length; // "Autre prix"
+        _customPriceNotifier.value = price;
+        _customPriceCtrl.text = formatKgPrice(price);
+      }
     }
 
     _selectedContentNotifier.value = t.acceptedCategories
@@ -1820,6 +1858,29 @@ class _TripFormContentState extends State<_TripFormContent> {
     _customAcceptedNotifier.value = t.acceptedCategories
         .where((c) => !_catalogLabelsNotifier.value.contains(c))
         .toSet();
+    _refusedTypesNotifier.value = t.refusedTypes.toSet();
+    _descriptionCtrl.text = t.description ?? '';
+    _negotiableNotifier.value = t.negotiable;
+
+    final mobileMoneyPossible =
+        _currency.isMobileMoneyEligible &&
+        mobileMoneyAccountActiveFrom(
+          context.read<MobileMoneyAccountBloc>().state,
+        );
+    _cashEnabledNotifier.value = t.acceptedPaymentMethods.contains('CASH');
+    _mobileMoneyEnabledNotifier.value =
+        mobileMoneyPossible &&
+        t.acceptedPaymentMethods.contains('MOBILE_MONEY');
+
+    _pendingHandoverLeadDays = t.handoverLeadDays;
+    if (_pendingHandoverLeadDays == null) {
+      // Champ nul = défaut du formulaire vierge : sans ce reset, la date
+      // limite d'un modèle précédemment appliqué restait affichée alors que
+      // celui-ci n'en porte aucune.
+      _handoverDeadlineNotifier.value = null;
+    } else {
+      _applyPendingHandoverLead();
+    }
 
     final unit = switch (t.capacityUnit) {
       'KG_FREE' => CapacityUnit.kgFree,
@@ -1827,13 +1888,43 @@ class _TripFormContentState extends State<_TripFormContent> {
       'KG_EXACT' => CapacityUnit.custom,
       _ => CapacityUnit.suitcase23kg,
     };
-    context.read<AnnouncementFormBloc>().add(CapacityUnitChanged(unit));
+    final formBloc = context.read<AnnouncementFormBloc>();
+    formBloc.add(CapacityUnitChanged(unit));
+    formBloc.add(AvailableKgChanged(t.availableKg.toDouble()));
+    formBloc.add(
+      AnnouncementPricingModeSetRequested(
+        t.usesPriceGrid ? PricingMode.mixed : PricingMode.kg,
+      ),
+    );
 
     DonySnackbar.show(
       context,
       message: 'Modèle « ${t.label} » appliqué',
       type: DonySnackbarType.success,
     );
+  }
+
+  /// Délai de remise du dernier modèle appliqué, en jours avant le départ.
+  /// Réappliqué à chaque changement de date tant que l'utilisateur n'a pas
+  /// choisi lui-même un jour limite (le choix manuel l'annule, cf.
+  /// [_selectHandoverDeadline]).
+  int? _pendingHandoverLeadDays;
+
+  void _applyPendingHandoverLead() {
+    final lead = _pendingHandoverLeadDays;
+    final date = _departureDateNotifier.value;
+    if (lead == null || date == null) return;
+    _handoverDeadlineNotifier.value = DateTime(
+      date.year,
+      date.month,
+      date.day,
+    ).subtract(Duration(days: lead));
+  }
+
+  static TimeOfDay? _timeOfDay(String? hhmm) {
+    if (hhmm == null || !hhmm.contains(':')) return null;
+    final parts = hhmm.split(':');
+    return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
   }
 
   Widget _buildTemplatesSuggestionBar(
@@ -1870,7 +1961,9 @@ class _TripFormContentState extends State<_TripFormContent> {
                         ? Text(t.emoji!)
                         : DonyIcon('bookmark', size: 16, color: cs.primary),
                     label: Text(
-                      '${t.label} · ${CurrencyFormatter.formatOrPlain(t.pricePerKg, _currency, compact: true)}/kg',
+                      t.pricePerKg == null
+                          ? '${t.label} · grille'
+                          : '${t.label} · ${CurrencyFormatter.formatOrPlain(t.pricePerKg!, SupportedCurrency.fromCodeOrDefault(t.currency), compact: true)}/kg',
                     ),
                     onPressed: () => _applyTemplate(t),
                   );
@@ -2143,123 +2236,6 @@ enum _Step1Field {
   const _Step1Field(this.message);
 
   final String message;
-}
-
-// ─── Currency selection banner ────────────────────────────────────────────
-
-/// Bannière interactive : annonce la devise choisie pour la publication et
-/// ouvre le sélecteur partagé (`CurrencySelector`) au tap. Remplace l'ancienne
-/// `CurrencyPublishBanner` statique — la devise n'était encore jamais
-/// envoyée au serveur avant ce lot, elle se choisit désormais explicitement.
-class _CurrencySelectionBanner extends StatelessWidget {
-  const _CurrencySelectionBanner({required this.currencyNotifier});
-
-  final ValueNotifier<SupportedCurrency> currencyNotifier;
-
-  /// Moyens de paiement prévisualisés par devise. `stripeConfigured` reflète
-  /// le compte Connect du créateur (seul voyageur concerné à cette étape) ;
-  /// l'éligibilité Stripe par devise suit `SupportedCurrency.isStripeEligible`
-  /// (verbatim contrainte serveur). Aperçu client uniquement : le serveur
-  /// reste seul décideur au paiement réel.
-  List<CurrencyPaymentOption> _options(bool stripeConfigured) => [
-    for (final currency in SupportedCurrency.values)
-      CurrencyPaymentOption(
-        currency: currency,
-        availablePaymentMethods: {
-          BidPaymentMethod.cash,
-          if (stripeConfigured && currency.isStripeEligible)
-            BidPaymentMethod.stripe,
-        },
-      ),
-  ];
-
-  Future<void> _openSelector(BuildContext context) async {
-    final stripeState = context.read<StripeAccountBloc>().state;
-    final stripeConfigured =
-        stripeState is StripeAccountReady &&
-        stripeState.accountStatus.isComplete;
-    final selected = await CurrencySelector.show(
-      context,
-      options: _options(stripeConfigured),
-      initialCurrency: currencyNotifier.value,
-    );
-    if (selected != null) {
-      currencyNotifier.value = selected;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    return ValueListenableBuilder<SupportedCurrency>(
-      valueListenable: currencyNotifier,
-      builder: (context, currency, _) {
-        final semanticsLabel =
-            'Devise de publication : ${currency.displayName}, '
-            '${currency.code}. Les utilisateurs dans une autre devise voient '
-            'un prix converti. Le paiement reste dans cette devise. '
-            'Bouton, modifier la devise.';
-        return Semantics(
-          container: true,
-          button: true,
-          label: semanticsLabel,
-          child: ExcludeSemantics(
-            child: InkWell(
-              key: const Key('trip-currency-selector-row'),
-              borderRadius: BorderRadius.circular(DonyRadius.card),
-              onTap: () => unawaited(_openSelector(context)),
-              child: Container(
-                padding: const EdgeInsets.all(DonySpacing.base),
-                decoration: BoxDecoration(
-                  color: cs.infoLight,
-                  borderRadius: BorderRadius.circular(DonyRadius.card),
-                  border: Border.all(color: cs.info.withValues(alpha: 0.35)),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(Icons.info_outline_rounded, color: cs.info),
-                    const SizedBox(width: DonySpacing.md),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Publié en ${currency.displayName} (${currency.code})',
-                            style: tt.titleMedium?.copyWith(
-                              color: cs.onSurface,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: DonySpacing.xs),
-                          Text(
-                            'Les utilisateurs dans une autre devise voient un prix '
-                            'converti. Le paiement reste dans cette devise.',
-                            style: tt.bodySmall?.copyWith(
-                              color: cs.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: DonySpacing.sm),
-                    Text(
-                      'Changer',
-                      style: tt.labelLarge?.copyWith(
-                        color: cs.primary,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
 }
 
 // ─── Locked banner & locked-mode helpers ─────────────────────────────────────

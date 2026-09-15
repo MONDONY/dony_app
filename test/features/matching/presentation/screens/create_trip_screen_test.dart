@@ -31,11 +31,14 @@ import 'package:dony/features/matching/data/models/bid_model.dart'
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
 import 'package:dony/features/matching/presentation/widgets/cash_commission_notice.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/lieux_capacite_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/prix_conditions_step.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/trajet_step.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/locked_trip_context.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
+import 'package:dony/features/payments/bloc/mobile_money_account_active.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_bloc.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_event.dart';
 import 'package:dony/features/payments/bloc/mobile_money_account_state.dart';
@@ -1173,8 +1176,41 @@ void main() {
       acceptedCategories: ['Vêtements', 'Documents'],
     );
 
+    // Modèle complet (formulaire entier, tel qu'enregistré depuis Tâche 1) :
+    // couvre chaque champ que _applyTemplate doit copier.
+    const fullTemplate = TripTemplate(
+      id: 'tmpl-2',
+      label: 'Abidjan → Paris',
+      departureCity: 'Abidjan',
+      arrivalCity: 'Paris',
+      transportMode: 'CAR',
+      // SUITCASE_32KG (imposerait 32 kg fixes via CapacityUnitChanged) :
+      // couvre le bug #2 — _applyTemplate doit émettre AvailableKgChanged
+      // APRÈS CapacityUnitChanged pour que la valeur du modèle (30) prime.
+      capacityUnit: 'SUITCASE_32KG',
+      availableKg: 30,
+      pricePerKg: 1500,
+      acceptedCategories: ['Vêtements & tissus'],
+      currency: 'XOF',
+      acceptedPaymentMethods: ['CASH', 'MOBILE_MONEY'],
+      negotiable: true,
+      refusedTypes: ['Téléphone & électronique'],
+      description: 'Pas de liquide',
+      pickupAddress: AddressData(label: 'Cocody', lat: 5.35, lng: -3.99),
+      deliveryAddress: AddressData(
+        label: 'Gare de Lyon',
+        lat: 48.84,
+        lng: 2.37,
+      ),
+      departureTime: '22:00',
+      arrivalTime: '06:30',
+      handoverLeadDays: 2,
+      departureCountryCode: 'CI',
+      arrivalCountryCode: 'FR',
+    );
+
     setUp(() {
-      // Override TripTemplateBloc to return a mock with one template
+      // Override TripTemplateBloc to return a mock avec les deux modèles.
       if (getIt.isRegistered<TripTemplateBloc>()) {
         getIt.unregister<TripTemplateBloc>();
       }
@@ -1183,7 +1219,7 @@ void main() {
         when(() => b.state).thenReturn(
           const TripTemplateState(
             status: TripTemplateStatus.success,
-            templates: [mockTemplate],
+            templates: [mockTemplate, fullTemplate],
           ),
         );
         when(() => b.stream).thenAnswer((_) => const Stream.empty());
@@ -1202,6 +1238,29 @@ void main() {
         return b;
       });
     });
+
+    /// Révèle et tape le modèle « Abidjan → Paris » (`fullTemplate`) : la
+    /// barre de suggestions est une `ListView.separated` horizontale lazy,
+    /// son deuxième item n'est construit qu'une fois scrollé en vue.
+    Future<void> tapFullTemplateChip(WidgetTester tester) async {
+      await tester.drag(find.byType(ListView), const Offset(-400, 0));
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.tap(find.textContaining('Abidjan → Paris'));
+      await tester.pump(const Duration(milliseconds: 600));
+    }
+
+    /// Lit la date limite de dépôt courante. `_TripFormContentState` est
+    /// privé (comme son widget `_TripFormContent`) : atteint via le `Key`
+    /// posé sur `_TripFormContent` dans `create_trip_screen.dart`, pas par
+    /// son type. `handoverDeadlineForTest` est un nom public porté par une
+    /// classe privée — accessible dynamiquement, comme `fieldsForTest` sur
+    /// `_TripTemplateEditScreenState`.
+    DateTime? handoverDeadlineOf(WidgetTester tester) {
+      final state = tester.state<State<StatefulWidget>>(
+        find.byKey(const Key('trip-form-content')),
+      );
+      return (state as dynamic).handoverDeadlineForTest.value as DateTime?;
+    }
 
     testWidgets('template chip visible au step 0 en mode création', (
       tester,
@@ -1224,12 +1283,14 @@ void main() {
 
       await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
 
+      // Le second modèle n'est pas encore construit : la liste horizontale
+      // est lazy (ListView.separated) et ne bâtit que ses items visibles.
       expect(find.byType(ActionChip), findsOneWidget);
 
       // Tap the chip → _applyTemplate(t) called.
       // _applyTemplate shows a DonySnackbar (SnackBar with ~4s auto-dismiss)
       // → drain all pending timers to avoid the 'timer still pending' assertion.
-      await tester.tap(find.byType(ActionChip));
+      await tester.tap(find.textContaining('Paris → Dakar'));
       await tester.pump(const Duration(milliseconds: 600));
 
       // Screen still present (no navigation triggered)
@@ -1240,6 +1301,113 @@ void main() {
 
       // Drain the SnackBar auto-dismiss timer (~4 s default) so the widget
       // tree can be disposed cleanly at end of test.
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets(
+      'appliquer un modèle complet copie devise, conditions, adresses et heures',
+      (tester) async {
+        registerCurrencyPreference('EUR');
+        setupViewport(tester);
+        await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
+
+        await tapFullTemplateChip(tester);
+
+        final step = tester.widget<TrajetStep>(find.byType(TrajetStep));
+        expect(step.departureCityNotifier.value, 'Abidjan');
+        expect(
+          step.departureTimeNotifier.value,
+          const TimeOfDay(hour: 22, minute: 0),
+        );
+        expect(
+          step.arrivalTimeNotifier.value,
+          const TimeOfDay(hour: 6, minute: 30),
+        );
+        expect(find.text('Publié en Franc CFA Ouest (XOF)'), findsOneWidget);
+
+        // Étape 1 : adresses de remise/livraison — LieuxCapaciteStep reste
+        // monté en Offstage tant que le step 1 n'est pas affiché.
+        final lieux = tester.widget<LieuxCapaciteStep>(
+          find.byType(LieuxCapaciteStep, skipOffstage: false),
+        );
+        expect(lieux.initialPickupAddress?.label, 'Cocody');
+        expect(lieux.initialDeliveryAddress?.label, 'Gare de Lyon');
+
+        // Étape 2 : mêmes notifiers, lus via PrixConditionsStep — présent
+        // dans l'arbre dès le premier build (Offstage), donc valide même si
+        // la navigation ci-dessous ne fait qu'avancer réellement le stepper.
+        // skipOffstage: false — les notifiers sont partagés, l'étape
+        // affichée n'importe pas.
+        final prix = tester.widget<PrixConditionsStep>(
+          find.byType(PrixConditionsStep, skipOffstage: false),
+        );
+        expect(prix.currency, SupportedCurrency.xof);
+        expect(prix.priceOptionNotifier.value, 1); // 1 500 F CFA = 2e chip CFA
+        expect(prix.cashEnabledNotifier.value, isTrue);
+        expect(
+          prix.mobileMoneyEnabledNotifier.value,
+          isFalse,
+        ); // compte mobile money inactif dans ce montage
+        expect(prix.negotiableNotifier.value, isTrue);
+        expect(prix.refusedTypesNotifier.value, {'Téléphone & électronique'});
+        expect(prix.descriptionCtrl.text, 'Pas de liquide');
+        expect(prix.availableKgNotifier.value, 30);
+
+        await tester.pump(const Duration(seconds: 5));
+      },
+    );
+
+    testWidgets(
+      'délai de remise du modèle recalculé quand la date est choisie',
+      (tester) async {
+        setupViewport(tester);
+        await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
+
+        await tapFullTemplateChip(tester);
+
+        final step = tester.widget<TrajetStep>(find.byType(TrajetStep));
+        step.departureDateNotifier.value = DateTime(2026, 10, 20);
+        await tester.pump(const Duration(milliseconds: 300));
+
+        // Le jour limite = départ - 2 jours (handoverLeadDays du modèle).
+        expect(handoverDeadlineOf(tester), DateTime(2026, 10, 18));
+
+        // Enchaîner un modèle SANS délai de remise (mockTemplate) doit
+        // effacer la date limite du modèle précédent : champ nul du modèle
+        // = défaut du formulaire vierge, pas la valeur héritée.
+        await tester.drag(find.byType(ListView), const Offset(400, 0));
+        await tester.pump(const Duration(milliseconds: 300));
+        await tester.tap(find.textContaining('Paris → Dakar'));
+        await tester.pump(const Duration(milliseconds: 600));
+
+        expect(handoverDeadlineOf(tester), isNull);
+
+        await tester.pump(const Duration(seconds: 5));
+      },
+    );
+
+    testWidgets('ancien modèle sans nouveaux champs : formulaire vierge', (
+      tester,
+    ) async {
+      registerCurrencyPreference('EUR');
+      setupViewport(tester);
+      await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
+
+      await tester.tap(find.textContaining('Paris → Dakar'));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      // skipOffstage: false — les notifiers sont partagés, l'étape affichée
+      // n'importe pas.
+      final prix = tester.widget<PrixConditionsStep>(
+        find.byType(PrixConditionsStep, skipOffstage: false),
+      );
+      expect(prix.cashEnabledNotifier.value, isFalse);
+      expect(prix.mobileMoneyEnabledNotifier.value, isFalse);
+      expect(prix.negotiableNotifier.value, isFalse);
+      expect(prix.descriptionCtrl.text, isEmpty);
+      expect(prix.refusedTypesNotifier.value, isEmpty);
+      expect(find.text('Publié en Euro (EUR)'), findsOneWidget);
+
       await tester.pump(const Duration(seconds: 5));
     });
   });
