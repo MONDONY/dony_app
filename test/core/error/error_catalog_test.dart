@@ -393,11 +393,10 @@ void main() {
         'Numéro manquant',
         'Indique le numéro mobile money à utiliser pour continuer.',
       ],
-      'mobile-money-account-unsupported': [
-        'Numéro non pris en charge',
-        "Ton numéro n'est pas rattaché à un opérateur mobile money "
-            'compatible, ou sa devise ne correspond pas à ta zone.',
-      ],
+      // 'mobile-money-account-unsupported' est retire de cette boucle : ce
+      // code fait desormais exception (voir le groupe dedie plus bas), le
+      // detail brut backend y est attendu tel quel pour un message
+      // exploitable, ce que cette boucle interdit explicitement.
       'mobile-money-account-required': [
         'Compte de versement requis',
         "Active ton versement mobile money avant d'accepter cette offre.",
@@ -484,9 +483,78 @@ void main() {
       });
     }
 
-    test('quinze codes couverts (liste du brief)', () {
-      expect(attendus.length, 15);
+    test('quatorze codes couverts (liste du brief moins l exception)', () {
+      expect(attendus.length, 14);
     });
+  });
+
+  // 'mobile-money-account-unsupported' : le back renvoie un detail redige
+  // pour l'utilisateur (devise du portefeuille, reseau indisponible...),
+  // plus precis que le texte fixe du catalogue. Precedent : la boucle
+  // ci-dessus verifie que le detail brut backend est toujours masque, ce
+  // groupe verifie l'exception controlee a cette regle, pour ce seul code.
+  group('ErrorCatalog — mobile-money-account-unsupported : detail serveur', () {
+    const genericTitle = 'Numéro non pris en charge';
+    const genericMessage =
+        "Ton numéro n'est pas rattaché à un opérateur mobile money "
+        'compatible, ou sa devise ne correspond pas à ta zone.';
+
+    test('detail serveur exploitable → affiche tel quel', () {
+      const error = ValidationException(
+        'Réseau Wave indisponible pour ce numéro.',
+        code: 'mobile-money-account-unsupported',
+      );
+
+      final p = ErrorCatalog.lookup(error);
+
+      expect(p.message, 'Réseau Wave indisponible pour ce numéro.');
+      expect(p.title, genericTitle);
+      expect(p.severity, ErrorSeverity.warning);
+    });
+
+    test('message vide → texte generique du catalogue', () {
+      const error = ValidationException(
+        '',
+        code: 'mobile-money-account-unsupported',
+      );
+
+      final p = ErrorCatalog.lookup(error);
+
+      expect(p.message, genericMessage);
+      expect(p.title, genericTitle);
+    });
+
+    test('message technique echappe → texte generique du catalogue', () {
+      const error = ValidationException(
+        'DioException [bad response]: This exception was thrown because '
+        'the response has a status code of 422',
+        code: 'mobile-money-account-unsupported',
+      );
+
+      final p = ErrorCatalog.lookup(error);
+
+      expect(p.message, genericMessage);
+      expect(p.title, genericTitle);
+    });
+
+    test(
+      'autre code du catalogue (ensemble ferme) → texte generique inchange '
+      'malgre un detail serveur exploitable',
+      () {
+        const error = ValidationException(
+          'Un detail parfaitement exploitable envoye par le back.',
+          code: 'mobile-money-account-required',
+        );
+
+        final p = ErrorCatalog.lookup(error);
+
+        expect(
+          p.message,
+          "Active ton versement mobile money avant d'accepter cette offre.",
+        );
+        expect(p.title, 'Compte de versement requis');
+      },
+    );
   });
   // Lot 2 mobile money sur colis : codes emis par le back sur le depot d'un fil
   // de negociation (POST /negotiations/{id}/mobile-money/*) et par la
