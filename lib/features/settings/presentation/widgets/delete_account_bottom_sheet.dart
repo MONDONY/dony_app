@@ -110,6 +110,10 @@ class _DeleteAccountBottomSheetState extends State<DeleteAccountBottomSheet> {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final walletSettlement = context
+        .watch<DeletionEligibilityCubit>()
+        .state
+        .walletSettlement;
 
     return BlocListener<AccountDeletionBloc, AccountDeletionState>(
       listener: (context, state) {
@@ -118,7 +122,9 @@ class _DeleteAccountBottomSheetState extends State<DeleteAccountBottomSheet> {
           DonySnackbar.show(
             context,
             message:
-                'Votre compte sera supprimé dans 30 jours. Vous pouvez annuler depuis votre profil.',
+                'Votre compte sera supprimé dans 30 jours. Vous pouvez annuler '
+                'depuis votre profil. Les remboursements déjà lancés ne sont pas '
+                'annulés.',
           );
         } else if (state is AccountDeletionError && state.isEscrowBlocked) {
           EscrowBlockDialog.show(context);
@@ -129,6 +135,10 @@ class _DeleteAccountBottomSheetState extends State<DeleteAccountBottomSheet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (walletSettlement != null && walletSettlement.isNotEmpty) ...[
+            _WalletSettlementSummary(walletSettlement),
+            const SizedBox(height: DonySpacing.lg),
+          ],
           _ModeCard(
             mode: DeleteMode.soft,
             modeNotifier: widget.modeNotifier,
@@ -209,7 +219,8 @@ class _DeleteActions extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.sm),
         ],
-        if (eligibility.hasWalletBalance) ...[
+        if (eligibility.hasWalletBalance &&
+            eligibility.walletSettlement == null) ...[
           _WalletRefundRequestCta(),
           const SizedBox(height: DonySpacing.sm),
         ],
@@ -318,6 +329,70 @@ class _WalletRefundRequestCta extends StatelessWidget {
       },
     );
   }
+}
+
+/// Récapitulatif par devise de ce que la suppression fera du solde wallet :
+/// remboursé sur la carte (rail STRIPE), repris par un membre de l'équipe
+/// (rail MANUAL), et bonus perdu à la finalisation. Purement informatif, la
+/// suppression déclenche tout côté serveur.
+class _WalletSettlementSummary extends StatelessWidget {
+  const _WalletSettlementSummary(this.settlement);
+
+  final List<WalletSettlement> settlement;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final s in settlement) ...[
+          if (s.isManual)
+            DonyStatusBanner(
+              type: DonyStatusBannerType.info,
+              iconAsset: 'wallet',
+              message:
+                  'Solde de ${_fmt(s.refundableAmount, s.currency)} : un membre '
+                  'de l\'équipe vous recontacte pour le remboursement.',
+            )
+          else if (s.refundableAmount > 0)
+            DonyStatusBanner(
+              type: DonyStatusBannerType.info,
+              iconAsset: 'wallet',
+              message:
+                  '${_fmt(s.refundableAmount, s.currency)} seront remboursés '
+                  'sur votre carte dès la demande de suppression.',
+            ),
+          if (s.inFlightAmount > 0) ...[
+            const SizedBox(height: DonySpacing.xs),
+            DonyStatusBanner(
+              type: DonyStatusBannerType.info,
+              iconAsset: 'history',
+              message:
+                  '${_fmt(s.inFlightAmount, s.currency)} sont déjà en cours '
+                  'de remboursement.',
+            ),
+          ],
+          if (s.forfeitedAmount > 0) ...[
+            const SizedBox(height: DonySpacing.xs),
+            DonyStatusBanner(
+              type: DonyStatusBannerType.warning,
+              iconAsset: 'circle-alert',
+              message:
+                  '${_fmt(s.forfeitedAmount, s.currency)} de bonus seront '
+                  'perdus définitivement à la suppression du compte.',
+            ),
+          ],
+          const SizedBox(height: DonySpacing.xs),
+        ],
+      ],
+    );
+  }
+
+  static String _fmt(double amount, String currency) =>
+      CurrencyFormatter.format(
+        amount,
+        SupportedCurrency.fromCodeOrDefault(currency),
+      );
 }
 
 class _ModeCard extends StatelessWidget {

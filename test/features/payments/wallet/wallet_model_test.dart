@@ -52,5 +52,54 @@ void main() {
 
       expect(wallet.refundEligible, isFalse);
     });
+
+    test('parses refundableAmount and nonRefundableAmount per currency', () {
+      final wallet = WalletModel.fromJson({
+        'balance': 40.00,
+        'currency': 'EUR',
+        'transactions': [],
+        'balances': [
+          {
+            'currency': 'EUR',
+            'balance': 40.00,
+            'active': true,
+            'refundEligible': true,
+            'refundableAmount': 35.00,
+            'nonRefundableAmount': 5.00,
+          },
+        ],
+      });
+
+      expect(wallet.balances[0].refundableAmount, 35.00);
+      expect(wallet.balances[0].nonRefundableAmount, 5.00);
+      expect(wallet.activeBalance?.currency, 'EUR');
+    });
+
+    test('refundableAmount stays null on the old contract', () {
+      final wallet = WalletModel.fromJson({
+        'balance': 40.00,
+        'currency': 'EUR',
+        'transactions': [],
+        'balances': [
+          {'currency': 'EUR', 'balance': 40.00, 'active': true},
+        ],
+      });
+
+      expect(wallet.balances[0].refundableAmount, isNull);
+      expect(wallet.balances[0].nonRefundableAmount, isNull);
+    });
+
+    test('activeBalance is null when no currency is active', () {
+      final wallet = WalletModel.fromJson({
+        'balance': 0,
+        'currency': 'EUR',
+        'transactions': [],
+        'balances': [
+          {'currency': 'CAD', 'balance': 15.00, 'active': false},
+        ],
+      });
+
+      expect(wallet.activeBalance, isNull);
+    });
   });
 }

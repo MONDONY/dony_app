@@ -27,5 +27,24 @@ void main() {
 
       expect(model.paymentRef, isNull);
     });
+
+    test('parses originalAmount when present, null otherwise', () {
+      final withOriginal = WalletEligibleTopupModel.fromJson({
+        'id': 't1',
+        'amount': 35.00,
+        'originalAmount': 40.00,
+        'paymentRef': 'pi_1',
+        'createdAt': '2026-09-15T10:00:00Z',
+      });
+      final without = WalletEligibleTopupModel.fromJson({
+        'id': 't2',
+        'amount': 40.00,
+        'paymentRef': 'pi_2',
+        'createdAt': '2026-09-15T10:00:00Z',
+      });
+
+      expect(withOriginal.originalAmount, 40.00);
+      expect(without.originalAmount, isNull);
+    });
   });
 }

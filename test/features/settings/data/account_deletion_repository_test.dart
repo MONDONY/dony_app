@@ -76,6 +76,55 @@ void main() {
 
       await expectLater(repo.checkEligibility(), throwsA(isA<AppException>()));
     });
+
+    test('parse walletSettlement quand le back l\'expose', () async {
+      when(
+        () => mockDio.get<dynamic>('/auth/me/deletion-eligibility'),
+      ).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(path: '/auth/me/deletion-eligibility'),
+          statusCode: 200,
+          data: {
+            'canDelete': true,
+            'blockedReasonCode': null,
+            'hasWalletBalance': true,
+            'walletSettlement': [
+              {
+                'currency': 'EUR',
+                'refundableAmount': 35.00,
+                'forfeitedAmount': 5.00,
+                'inFlightAmount': 0,
+                'rail': 'STRIPE',
+              },
+            ],
+          },
+        ),
+      );
+
+      final result = await repo.checkEligibility();
+
+      expect(result.walletSettlement, hasLength(1));
+      expect(result.walletSettlement![0].currency, 'EUR');
+      expect(result.walletSettlement![0].refundableAmount, 35.00);
+      expect(result.walletSettlement![0].forfeitedAmount, 5.00);
+      expect(result.walletSettlement![0].isManual, isFalse);
+    });
+
+    test('walletSettlement reste null sur l\'ancien contrat', () async {
+      when(
+        () => mockDio.get<dynamic>('/auth/me/deletion-eligibility'),
+      ).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(path: '/auth/me/deletion-eligibility'),
+          statusCode: 200,
+          data: {'canDelete': true, 'hasWalletBalance': true},
+        ),
+      );
+
+      final result = await repo.checkEligibility();
+
+      expect(result.walletSettlement, isNull);
+    });
   });
 
   group('requestDeletion', () {

@@ -49,9 +49,9 @@ class WalletRepository {
   }
 
   Future<WalletRefundRequestModel> requestRefund(
-    String currency,
-    List<String> transactionIds,
-  ) async {
+    String currency, [
+    List<String> transactionIds = const [],
+  ]) async {
     try {
       final data = await _datasource.requestRefund(currency, transactionIds);
       return WalletRefundRequestModel.fromJson(data);

@@ -1,7 +1,10 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/widgets/dony_skeleton.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
+import 'package:dony/features/payments/wallet/bloc/wallet_eligible_topups_cubit.dart';
+import 'package:dony/features/payments/wallet/bloc/wallet_refund_request_cubit.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_currency_balance_model.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_model.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_transaction_model.dart';
@@ -19,36 +22,73 @@ import '../../../helpers/currency_test_doubles.dart';
 class MockWalletBloc extends MockBloc<WalletEvent, WalletState>
     implements WalletBloc {}
 
-Widget buildSubject(WalletBloc bloc, BusinessPrefsBloc prefsBloc) =>
-    MaterialApp.router(
-      routerConfig: GoRouter(
-        routes: [
-          GoRoute(
-            path: '/',
-            builder: (_, _) => MultiBlocProvider(
-              providers: [
-                BlocProvider<WalletBloc>.value(value: bloc),
-                BlocProvider<BusinessPrefsBloc>.value(value: prefsBloc),
-              ],
-              child: const WalletScreen(),
-            ),
-          ),
-        ],
+class MockWalletRefundRequestCubit extends MockCubit<WalletRefundRequestState>
+    implements WalletRefundRequestCubit {}
+
+class MockWalletEligibleTopupsCubit extends MockCubit<WalletEligibleTopupsState>
+    implements WalletEligibleTopupsCubit {}
+
+// Réassigné à chaque test : la sheet de sélection (contrat legacy) le
+// récupère via `getIt<WalletEligibleTopupsCubit>()`.
+late MockWalletEligibleTopupsCubit _currentTopupsCubit;
+
+Widget buildSubject(
+  WalletBloc bloc,
+  BusinessPrefsBloc prefsBloc, [
+  WalletRefundRequestCubit? refundCubit,
+]) => MaterialApp.router(
+  routerConfig: GoRouter(
+    routes: [
+      GoRoute(
+        path: '/',
+        builder: (_, _) => MultiBlocProvider(
+          providers: [
+            BlocProvider<WalletBloc>.value(value: bloc),
+            BlocProvider<BusinessPrefsBloc>.value(value: prefsBloc),
+            if (refundCubit != null)
+              BlocProvider<WalletRefundRequestCubit>.value(value: refundCubit),
+          ],
+          child: const WalletScreen(),
+        ),
       ),
-    );
+    ],
+  ),
+);
 
 void main() {
   late MockWalletBloc bloc;
   late MockBusinessPrefsBloc prefsBloc;
+  late MockWalletRefundRequestCubit refundCubit;
 
   setUpAll(() async {
     await initializeDateFormatting('fr_FR');
     registerFallbackValue(WalletLoadRequested());
+    if (!getIt.isRegistered<WalletEligibleTopupsCubit>()) {
+      getIt.registerFactory<WalletEligibleTopupsCubit>(
+        () => _currentTopupsCubit,
+      );
+    }
   });
 
   setUp(() {
     bloc = MockWalletBloc();
     prefsBloc = stubBusinessPrefsBloc();
+
+    refundCubit = MockWalletRefundRequestCubit();
+    when(() => refundCubit.state).thenReturn(const WalletRefundRequestState());
+    when(() => refundCubit.stream).thenAnswer((_) => const Stream.empty());
+    when(() => refundCubit.close()).thenAnswer((_) async {});
+    when(() => refundCubit.submit(any())).thenAnswer((_) async {});
+
+    _currentTopupsCubit = MockWalletEligibleTopupsCubit();
+    when(
+      () => _currentTopupsCubit.state,
+    ).thenReturn(const WalletEligibleTopupsState());
+    when(
+      () => _currentTopupsCubit.stream,
+    ).thenAnswer((_) => const Stream.empty());
+    when(() => _currentTopupsCubit.close()).thenAnswer((_) async {});
+    when(() => _currentTopupsCubit.load(any())).thenAnswer((_) async {});
   });
 
   testWidgets('affiche le solde quand WalletLoaded', (tester) async {
@@ -449,5 +489,79 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Aucune transaction pour l\'instant'), findsOneWidget);
+  });
+
+  testWidgets(
+    'Rembourser ouvre la sheet de confirmation quand refundableAmount est connu',
+    (tester) async {
+      const wallet = WalletModel(
+        balance: 40,
+        currency: 'EUR',
+        transactions: [],
+        refundEligible: true,
+        balances: [
+          WalletCurrencyBalanceModel(
+            currency: 'EUR',
+            balance: 40,
+            active: true,
+            refundEligible: true,
+            refundableAmount: 35,
+            nonRefundableAmount: 5,
+          ),
+        ],
+      );
+      whenListen(
+        bloc,
+        Stream.value(WalletLoaded(wallet)),
+        initialState: WalletInitial(),
+      );
+
+      await tester.pumpWidget(buildSubject(bloc, prefsBloc, refundCubit));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Rembourser'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Rembourser mon solde'), findsOneWidget);
+      expect(find.text('Choisir une recharge'), findsNothing);
+    },
+  );
+
+  testWidgets('Rembourser ouvre la sheet de sélection sur l\'ancien contrat', (
+    tester,
+  ) async {
+    const wallet = WalletModel(
+      balance: 40,
+      currency: 'EUR',
+      transactions: [],
+      refundEligible: true,
+      balances: [
+        WalletCurrencyBalanceModel(
+          currency: 'EUR',
+          balance: 40,
+          active: true,
+          refundEligible: true,
+        ),
+      ],
+    );
+    whenListen(
+      bloc,
+      Stream.value(WalletLoaded(wallet)),
+      initialState: WalletInitial(),
+    );
+    // Sans ça, `WalletEligibleTopupsState()` par défaut (isLoading: true)
+    // fait tourner un spinner en boucle et `pumpAndSettle` n'aboutit
+    // jamais.
+    when(
+      () => _currentTopupsCubit.state,
+    ).thenReturn(const WalletEligibleTopupsState(isLoading: false));
+
+    await tester.pumpWidget(buildSubject(bloc, prefsBloc, refundCubit));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Rembourser'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Choisir une recharge'), findsOneWidget);
   });
 }

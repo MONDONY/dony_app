@@ -7,6 +7,7 @@ import 'package:dony/features/payments/wallet/bloc/wallet_refund_request_cubit.d
 import 'package:dony/features/payments/wallet/data/models/wallet_currency_balance_model.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_model.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_transaction_model.dart';
+import 'package:dony/features/payments/wallet/presentation/widgets/wallet_refund_confirm_sheet.dart';
 import 'package:dony/features/payments/wallet/presentation/widgets/wallet_refund_selection_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -209,6 +210,8 @@ class _LoadedView extends StatelessWidget {
                 balance: wallet.balance,
                 currency: activeCurrency,
                 refundEligible: wallet.refundEligible,
+                refundableAmount: wallet.activeBalance?.refundableAmount,
+                nonRefundableAmount: wallet.activeBalance?.nonRefundableAmount,
               ),
             ),
           ),
@@ -304,11 +307,15 @@ class _HeroHeader extends StatelessWidget {
     required this.balance,
     required this.currency,
     required this.refundEligible,
+    this.refundableAmount,
+    this.nonRefundableAmount,
   });
 
   final double balance;
   final SupportedCurrency currency;
   final bool refundEligible;
+  final double? refundableAmount;
+  final double? nonRefundableAmount;
 
   @override
   Widget build(BuildContext context) {
@@ -412,8 +419,20 @@ class _HeroHeader extends StatelessWidget {
         _HeroAction(
           iconAsset: 'arrow-up',
           label: 'Rembourser',
-          onTap: () =>
-              WalletRefundSelectionSheet.show(context, currency: currency.code),
+          onTap: () {
+            final refundable = refundableAmount;
+            if (refundable != null && refundable > 0) {
+              WalletRefundConfirmSheet.show(
+                context,
+                currency: currency.code,
+                refundableAmount: refundable,
+                nonRefundableAmount: nonRefundableAmount ?? 0,
+              );
+            } else {
+              // Ancien contrat back : sélection de recharges intactes.
+              WalletRefundSelectionSheet.show(context, currency: currency.code);
+            }
+          },
         ),
       _HeroAction(
         iconAsset: 'history',

@@ -49,6 +49,28 @@ void main() {
   );
 
   blocTest<WalletRefundRequestCubit, WalletRefundRequestState>(
+    'submit sans sélection appelle le repository avec une liste vide',
+    build: () {
+      when(() => repo.requestRefund('EUR')).thenAnswer((_) async => result);
+      return cubit;
+    },
+    act: (c) => c.submit('EUR'),
+    expect: () => [
+      isA<WalletRefundRequestState>().having(
+        (s) => s.isSubmitting,
+        'isSubmitting',
+        isTrue,
+      ),
+      isA<WalletRefundRequestState>()
+          .having((s) => s.isSubmitting, 'isSubmitting', isFalse)
+          .having((s) => s.result, 'result', result),
+    ],
+    verify: (_) {
+      verify(() => repo.requestRefund('EUR')).called(1);
+    },
+  );
+
+  blocTest<WalletRefundRequestCubit, WalletRefundRequestState>(
     'submit() échec',
     build: () {
       when(

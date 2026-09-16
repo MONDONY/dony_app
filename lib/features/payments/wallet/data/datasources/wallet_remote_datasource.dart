@@ -34,13 +34,16 @@ class WalletRemoteDatasource {
     return response.data as List<dynamic>;
   }
 
+  /// Liste vide : corps omis, le back rembourse tout le remboursable de la
+  /// devise (contrat depuis dony-back #302). Liste non vide : contrat
+  /// historique de sélection par recharge, toujours accepté.
   Future<Map<String, dynamic>> requestRefund(
     String currency,
     List<String> transactionIds,
   ) async {
     final response = await _client.dio.post(
       '/wallet/${currency.toUpperCase()}/refund-request',
-      data: {'transactionIds': transactionIds},
+      data: transactionIds.isEmpty ? null : {'transactionIds': transactionIds},
     );
     return response.data as Map<String, dynamic>;
   }
