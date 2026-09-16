@@ -537,24 +537,21 @@ void main() {
       expect(p.title, genericTitle);
     });
 
-    test(
-      'autre code du catalogue (ensemble ferme) → texte generique inchange '
-      'malgre un detail serveur exploitable',
-      () {
-        const error = ValidationException(
-          'Un detail parfaitement exploitable envoye par le back.',
-          code: 'mobile-money-account-required',
-        );
+    test('autre code du catalogue (ensemble ferme) → texte generique inchange '
+        'malgre un detail serveur exploitable', () {
+      const error = ValidationException(
+        'Un detail parfaitement exploitable envoye par le back.',
+        code: 'mobile-money-account-required',
+      );
 
-        final p = ErrorCatalog.lookup(error);
+      final p = ErrorCatalog.lookup(error);
 
-        expect(
-          p.message,
-          "Active ton versement mobile money avant d'accepter cette offre.",
-        );
-        expect(p.title, 'Compte de versement requis');
-      },
-    );
+      expect(
+        p.message,
+        "Active ton versement mobile money avant d'accepter cette offre.",
+      );
+      expect(p.title, 'Compte de versement requis');
+    });
   });
   // Lot 2 mobile money sur colis : codes emis par le back sur le depot d'un fil
   // de negociation (POST /negotiations/{id}/mobile-money/*) et par la
