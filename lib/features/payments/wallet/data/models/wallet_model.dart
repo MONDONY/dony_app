@@ -29,4 +29,12 @@ class WalletModel {
         .toList(),
     refundEligible: json['refundEligible'] as bool? ?? false,
   );
+
+  /// Portefeuille de la devise active, s'il est listé dans [balances].
+  WalletCurrencyBalanceModel? get activeBalance {
+    for (final b in balances) {
+      if (b.active) return b;
+    }
+    return null;
+  }
 }
