@@ -397,7 +397,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `user_blocked` | BlockedUsersBloc._onBlock — blocage confirmé par le serveur, depuis une fiche profil, un profil public ou une conversation. Aucune propriété : l'identité de la personne bloquée est sensible |
 | `user_unblocked` | BlockedUsersBloc._onUnblock — déblocage confirmé depuis Confidentialité › Utilisateurs bloqués |
 | `account_deletion_requested` | AccountDeletionBloc._onRequestDeletion() |
-| `wallet_refund_requested` | DeletionEligibilityCubit.requestWalletRefund() — solde wallet bloquant la suppression, ticket de remboursement manuel ouvert (aucune propriété : ni montant ni devise, PII financière) |
+| `wallet_refund_requested` | DeletionEligibilityCubit.requestWalletRefund() — unique émetteur, depuis la sheet « Supprimer mon compte ». Demande de remboursement du montant remboursable du portefeuille (partiel : le bonus non remboursable reste sur le solde), automatique par Stripe quand la recharge d'origine le permet, manuelle sinon. L'écran wallet ouvre la même demande via WalletRefundRequestCubit.submit() mais ne trace rien. Aucune propriété : ni montant ni devise, PII financière |
 | `shipment_filter_applied` | ShipmentFilterCubit (statut/période/preset, sans PII) |
 | `shipment_new_request_opened` | ShipmentListScreen et MesColisScreen — pill « Envoyer » du header ouvre le wizard de demande d'envoi |
 | `publish_intro_stripe_reminder_tapped` | PublishIntroScreen (trajet) — tap sur le rappel « Activez les paiements par carte » → onboarding Stripe Connect |

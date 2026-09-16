@@ -155,4 +155,60 @@ void main() {
     // La sheet est toujours affichée (pas de pop) : son titre reste visible.
     expect(find.text('Rembourser mon solde'), findsOneWidget);
   });
+
+  testWidgets(
+    'succès alors qu\'une route est empilée par-dessus : ne dépop pas la route du dessus',
+    (tester) async {
+      final controller = StreamController<WalletRefundRequestState>.broadcast();
+      addTearDown(controller.close);
+      when(() => cubit.stream).thenAnswer(
+        (_) => controller.stream.map((state) {
+          when(() => cubit.state).thenReturn(state);
+          return state;
+        }),
+      );
+
+      await tester.pumpWidget(host(refundable: 35, nonRefundable: 0));
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      // Une autre route arrive au-dessus de la sheet pendant que la demande
+      // est en vol (notification tapée, deep link, retour de webview).
+      final navigator = tester.state<NavigatorState>(find.byType(Navigator));
+      unawaited(
+        navigator.push<void>(
+          MaterialPageRoute<void>(
+            builder: (_) => const Scaffold(body: Text('Par dessus')),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Par dessus'), findsOneWidget);
+
+      controller.add(const WalletRefundRequestState(isSubmitting: true));
+      await tester.pump();
+      controller.add(
+        WalletRefundRequestState(
+          result: WalletRefundRequestModel(
+            id: 'r1',
+            currency: 'EUR',
+            amount: 35,
+            channel: 'AUTOMATIC_STRIPE',
+            status: 'PROCESSING',
+            requestedAt: DateTime(2026, 9, 15),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // La route du dessus est intacte : le listener n'a rien dépilé.
+      expect(find.text('Par dessus'), findsOneWidget);
+
+      // Et la sheet est toujours là, dessous : refermer la route du dessus
+      // la révèle encore.
+      navigator.pop();
+      await tester.pumpAndSettle();
+      expect(find.text('Rembourser mon solde'), findsOneWidget);
+    },
+  );
 }

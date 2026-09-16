@@ -527,9 +527,8 @@ void main() {
     },
   );
 
-  testWidgets('Rembourser ouvre la sheet de sélection sur l\'ancien contrat', (
-    tester,
-  ) async {
+  testWidgets('refundableAmount absent (ancien contrat back) : repli sur la '
+      'sheet de sélection', (tester) async {
     const wallet = WalletModel(
       balance: 40,
       currency: 'EUR',
@@ -563,5 +562,53 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Choisir une recharge'), findsOneWidget);
+    expect(find.text('Rembourser mon solde'), findsNothing);
   });
+
+  testWidgets(
+    'refundableAmount à 0 avec un solde positif : le bouton reste affiché et '
+    'le repli annonce qu\'aucune recharge n\'est remboursable',
+    (tester) async {
+      // Comportement réel du code : seul `wallet.refundEligible` conditionne
+      // l'affichage du bouton. Un `refundableAmount` à 0 (tout le solde est
+      // du bonus) ne le masque pas, il tombe dans la même branche que
+      // l'ancien contrat et la sheet de sélection affiche son état vide.
+      const wallet = WalletModel(
+        balance: 40,
+        currency: 'EUR',
+        transactions: [],
+        refundEligible: true,
+        balances: [
+          WalletCurrencyBalanceModel(
+            currency: 'EUR',
+            balance: 40,
+            active: true,
+            refundEligible: true,
+            refundableAmount: 0,
+            nonRefundableAmount: 40,
+          ),
+        ],
+      );
+      whenListen(
+        bloc,
+        Stream.value(WalletLoaded(wallet)),
+        initialState: WalletInitial(),
+      );
+      when(
+        () => _currentTopupsCubit.state,
+      ).thenReturn(const WalletEligibleTopupsState(isLoading: false));
+
+      await tester.pumpWidget(buildSubject(bloc, prefsBloc, refundCubit));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Rembourser'), findsOneWidget);
+
+      await tester.tap(find.text('Rembourser'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Rembourser mon solde'), findsNothing);
+      expect(find.text('Choisir une recharge'), findsOneWidget);
+      expect(find.textContaining('Aucune recharge disponible'), findsOneWidget);
+    },
+  );
 }
