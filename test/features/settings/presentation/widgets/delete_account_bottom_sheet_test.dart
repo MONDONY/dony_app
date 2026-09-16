@@ -546,32 +546,31 @@ void main() {
     },
   );
 
-  testWidgets(
-    'inFlightAmount > 0 affiche « déjà en cours de remboursement »',
-    (tester) async {
-      when(() => mockEligibilityCubit.state).thenReturn(
-        const DeletionEligibilityState(
-          isLoading: false,
-          hasWalletBalance: true,
-          walletSettlement: [
-            WalletSettlement(
-              currency: 'EUR',
-              refundableAmount: 10,
-              forfeitedAmount: 0,
-              inFlightAmount: 20,
-              rail: 'STRIPE',
-            ),
-          ],
-        ),
-      );
-      await tester.pumpWidget(buildWidget());
-      await tester.tap(find.text('Open'));
-      await tester.pumpAndSettle();
+  testWidgets('inFlightAmount > 0 affiche « déjà en cours de remboursement »', (
+    tester,
+  ) async {
+    when(() => mockEligibilityCubit.state).thenReturn(
+      const DeletionEligibilityState(
+        isLoading: false,
+        hasWalletBalance: true,
+        walletSettlement: [
+          WalletSettlement(
+            currency: 'EUR',
+            refundableAmount: 10,
+            forfeitedAmount: 0,
+            inFlightAmount: 20,
+            rail: 'STRIPE',
+          ),
+        ],
+      ),
+    );
+    await tester.pumpWidget(buildWidget());
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
 
-      expect(
-        find.textContaining('déjà en cours de remboursement'),
-        findsOneWidget,
-      );
-    },
-  );
+    expect(
+      find.textContaining('déjà en cours de remboursement'),
+      findsOneWidget,
+    );
+  });
 }

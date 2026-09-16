@@ -146,9 +146,7 @@ void main() {
     controller.add(const WalletRefundRequestState(isSubmitting: true));
     await tester.pump();
     controller.add(
-      const WalletRefundRequestState(
-        error: NetworkException('Erreur réseau'),
-      ),
+      const WalletRefundRequestState(error: NetworkException('Erreur réseau')),
     );
     await tester.pumpAndSettle();
 

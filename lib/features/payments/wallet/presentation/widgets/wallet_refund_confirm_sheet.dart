@@ -22,8 +22,7 @@ abstract final class WalletRefundConfirmSheet {
     return DonyBottomSheet.show<bool>(
       context,
       title: 'Rembourser mon solde',
-      wrapper: (child) =>
-          BlocProvider.value(value: refundCubit, child: child),
+      wrapper: (child) => BlocProvider.value(value: refundCubit, child: child),
       child: _ConfirmContent(
         currency: displayCurrency,
         refundableAmount: refundableAmount,
@@ -118,8 +117,9 @@ class _ConfirmStickyBottom extends StatelessWidget {
             isLoading: state.isSubmitting,
             onPressed: state.isSubmitting
                 ? null
-                : () =>
-                      context.read<WalletRefundRequestCubit>().submit(currencyCode),
+                : () => context.read<WalletRefundRequestCubit>().submit(
+                    currencyCode,
+                  ),
           ),
         ],
       ),

@@ -219,7 +219,8 @@ class _DeleteActions extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.sm),
         ],
-        if (eligibility.hasWalletBalance && eligibility.walletSettlement == null) ...[
+        if (eligibility.hasWalletBalance &&
+            eligibility.walletSettlement == null) ...[
           _WalletRefundRequestCta(),
           const SizedBox(height: DonySpacing.sm),
         ],
@@ -387,10 +388,11 @@ class _WalletSettlementSummary extends StatelessWidget {
     );
   }
 
-  static String _fmt(double amount, String currency) => CurrencyFormatter.format(
-    amount,
-    SupportedCurrency.fromCodeOrDefault(currency),
-  );
+  static String _fmt(double amount, String currency) =>
+      CurrencyFormatter.format(
+        amount,
+        SupportedCurrency.fromCodeOrDefault(currency),
+      );
 }
 
 class _ModeCard extends StatelessWidget {

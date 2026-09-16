@@ -66,80 +66,74 @@ void main() {
   });
 
   group('requestRefund', () {
-    test(
-      'requestRefund("EUR", []) poste sur /wallet/EUR/refund-request avec '
-      'data: null',
-      () async {
-        when(
-          () => mockDio.post<dynamic>(
-            '/wallet/EUR/refund-request',
-            data: any(named: 'data'),
-          ),
-        ).thenAnswer(
-          (_) async => Response(
-            requestOptions: RequestOptions(path: '/wallet/EUR/refund-request'),
-            statusCode: 200,
-            data: {
-              'id': 'r1',
-              'currency': 'EUR',
-              'amount': 35.0,
-              'channel': 'AUTOMATIC_STRIPE',
-              'status': 'PROCESSING',
-              'requestedAt': '2026-09-15T00:00:00.000Z',
-            },
-          ),
-        );
+    test('requestRefund("EUR", []) poste sur /wallet/EUR/refund-request avec '
+        'data: null', () async {
+      when(
+        () => mockDio.post<dynamic>(
+          '/wallet/EUR/refund-request',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(path: '/wallet/EUR/refund-request'),
+          statusCode: 200,
+          data: {
+            'id': 'r1',
+            'currency': 'EUR',
+            'amount': 35.0,
+            'channel': 'AUTOMATIC_STRIPE',
+            'status': 'PROCESSING',
+            'requestedAt': '2026-09-15T00:00:00.000Z',
+          },
+        ),
+      );
 
-        await datasource.requestRefund('EUR', const []);
+      await datasource.requestRefund('EUR', const []);
 
-        // `data: null` explicite : le code réel passe toujours ce paramètre
-        // nommé (même null), la vérification doit reproduire l'invocation
-        // exacte plutôt que l'omettre.
-        verify(
-          () => mockDio.post<dynamic>(
-            '/wallet/EUR/refund-request',
-            // ignore: avoid_redundant_argument_values
-            data: null,
-          ),
-        ).called(1);
-      },
-    );
+      // `data: null` explicite : le code réel passe toujours ce paramètre
+      // nommé (même null), la vérification doit reproduire l'invocation
+      // exacte plutôt que l'omettre.
+      verify(
+        () => mockDio.post<dynamic>(
+          '/wallet/EUR/refund-request',
+          // ignore: avoid_redundant_argument_values
+          data: null,
+        ),
+      ).called(1);
+    });
 
-    test(
-      'requestRefund("eur", ["t1"]) poste {transactionIds:[t1]} et '
-      'majuscule la devise',
-      () async {
-        when(
-          () => mockDio.post<dynamic>(
-            '/wallet/EUR/refund-request',
-            data: any(named: 'data'),
-          ),
-        ).thenAnswer(
-          (_) async => Response(
-            requestOptions: RequestOptions(path: '/wallet/EUR/refund-request'),
-            statusCode: 200,
-            data: {
-              'id': 'r1',
-              'currency': 'EUR',
-              'amount': 35.0,
-              'channel': 'AUTOMATIC_STRIPE',
-              'status': 'PROCESSING',
-              'requestedAt': '2026-09-15T00:00:00.000Z',
-            },
-          ),
-        );
+    test('requestRefund("eur", ["t1"]) poste {transactionIds:[t1]} et '
+        'majuscule la devise', () async {
+      when(
+        () => mockDio.post<dynamic>(
+          '/wallet/EUR/refund-request',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(path: '/wallet/EUR/refund-request'),
+          statusCode: 200,
+          data: {
+            'id': 'r1',
+            'currency': 'EUR',
+            'amount': 35.0,
+            'channel': 'AUTOMATIC_STRIPE',
+            'status': 'PROCESSING',
+            'requestedAt': '2026-09-15T00:00:00.000Z',
+          },
+        ),
+      );
 
-        await datasource.requestRefund('eur', const ['t1']);
+      await datasource.requestRefund('eur', const ['t1']);
 
-        verify(
-          () => mockDio.post<dynamic>(
-            '/wallet/EUR/refund-request',
-            data: {
-              'transactionIds': ['t1'],
-            },
-          ),
-        ).called(1);
-      },
-    );
+      verify(
+        () => mockDio.post<dynamic>(
+          '/wallet/EUR/refund-request',
+          data: {
+            'transactionIds': ['t1'],
+          },
+        ),
+      ).called(1);
+    });
   });
 }

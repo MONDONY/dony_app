@@ -51,9 +51,7 @@ void main() {
   blocTest<WalletRefundRequestCubit, WalletRefundRequestState>(
     'submit sans sélection appelle le repository avec une liste vide',
     build: () {
-      when(
-        () => repo.requestRefund('EUR'),
-      ).thenAnswer((_) async => result);
+      when(() => repo.requestRefund('EUR')).thenAnswer((_) async => result);
       return cubit;
     },
     act: (c) => c.submit('EUR'),

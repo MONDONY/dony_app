@@ -34,23 +34,24 @@ void main() {
     expect(find.text('Annuler la suppression'), findsOneWidget);
   });
 
-  testWidgets('prévient que les remboursements déjà lancés ne sont pas annulés', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      _wrap(
-        PendingDeletionBanner(
-          deletionRequestedAt: deletionDate,
-          onReactivate: () {},
+  testWidgets(
+    'prévient que les remboursements déjà lancés ne sont pas annulés',
+    (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          PendingDeletionBanner(
+            deletionRequestedAt: deletionDate,
+            onReactivate: () {},
+          ),
         ),
-      ),
-    );
+      );
 
-    expect(
-      find.text('Les remboursements déjà lancés ne sont pas annulés.'),
-      findsOneWidget,
-    );
-  });
+      expect(
+        find.text('Les remboursements déjà lancés ne sont pas annulés.'),
+        findsOneWidget,
+      );
+    },
+  );
 
   testWidgets('calls onReactivate when cancel button tapped', (tester) async {
     var called = false;

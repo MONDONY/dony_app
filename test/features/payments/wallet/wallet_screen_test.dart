@@ -25,8 +25,7 @@ class MockWalletBloc extends MockBloc<WalletEvent, WalletState>
 class MockWalletRefundRequestCubit extends MockCubit<WalletRefundRequestState>
     implements WalletRefundRequestCubit {}
 
-class MockWalletEligibleTopupsCubit
-    extends MockCubit<WalletEligibleTopupsState>
+class MockWalletEligibleTopupsCubit extends MockCubit<WalletEligibleTopupsState>
     implements WalletEligibleTopupsCubit {}
 
 // Réassigné à chaque test : la sheet de sélection (contrat legacy) le
@@ -528,42 +527,41 @@ void main() {
     },
   );
 
-  testWidgets(
-    'Rembourser ouvre la sheet de sélection sur l\'ancien contrat',
-    (tester) async {
-      const wallet = WalletModel(
-        balance: 40,
-        currency: 'EUR',
-        transactions: [],
-        refundEligible: true,
-        balances: [
-          WalletCurrencyBalanceModel(
-            currency: 'EUR',
-            balance: 40,
-            active: true,
-            refundEligible: true,
-          ),
-        ],
-      );
-      whenListen(
-        bloc,
-        Stream.value(WalletLoaded(wallet)),
-        initialState: WalletInitial(),
-      );
-      // Sans ça, `WalletEligibleTopupsState()` par défaut (isLoading: true)
-      // fait tourner un spinner en boucle et `pumpAndSettle` n'aboutit
-      // jamais.
-      when(
-        () => _currentTopupsCubit.state,
-      ).thenReturn(const WalletEligibleTopupsState(isLoading: false));
+  testWidgets('Rembourser ouvre la sheet de sélection sur l\'ancien contrat', (
+    tester,
+  ) async {
+    const wallet = WalletModel(
+      balance: 40,
+      currency: 'EUR',
+      transactions: [],
+      refundEligible: true,
+      balances: [
+        WalletCurrencyBalanceModel(
+          currency: 'EUR',
+          balance: 40,
+          active: true,
+          refundEligible: true,
+        ),
+      ],
+    );
+    whenListen(
+      bloc,
+      Stream.value(WalletLoaded(wallet)),
+      initialState: WalletInitial(),
+    );
+    // Sans ça, `WalletEligibleTopupsState()` par défaut (isLoading: true)
+    // fait tourner un spinner en boucle et `pumpAndSettle` n'aboutit
+    // jamais.
+    when(
+      () => _currentTopupsCubit.state,
+    ).thenReturn(const WalletEligibleTopupsState(isLoading: false));
 
-      await tester.pumpWidget(buildSubject(bloc, prefsBloc, refundCubit));
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(buildSubject(bloc, prefsBloc, refundCubit));
+    await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Rembourser'));
-      await tester.pumpAndSettle();
+    await tester.tap(find.text('Rembourser'));
+    await tester.pumpAndSettle();
 
-      expect(find.text('Choisir une recharge'), findsOneWidget);
-    },
-  );
+    expect(find.text('Choisir une recharge'), findsOneWidget);
+  });
 }

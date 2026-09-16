@@ -18,31 +18,26 @@ void main() {
   });
 
   group('requestRefund', () {
-    test(
-      'requestRefund(currency) délègue au datasource avec const [] et '
-      'renvoie un WalletRefundRequestModel',
-      () async {
-        when(
-          () => mockDatasource.requestRefund('EUR', const []),
-        ).thenAnswer(
-          (_) async => {
-            'id': 'r1',
-            'currency': 'EUR',
-            'amount': 35.0,
-            'channel': 'AUTOMATIC_STRIPE',
-            'status': 'PROCESSING',
-            'requestedAt': '2026-09-15T00:00:00.000Z',
-          },
-        );
+    test('requestRefund(currency) délègue au datasource avec const [] et '
+        'renvoie un WalletRefundRequestModel', () async {
+      when(() => mockDatasource.requestRefund('EUR', const [])).thenAnswer(
+        (_) async => {
+          'id': 'r1',
+          'currency': 'EUR',
+          'amount': 35.0,
+          'channel': 'AUTOMATIC_STRIPE',
+          'status': 'PROCESSING',
+          'requestedAt': '2026-09-15T00:00:00.000Z',
+        },
+      );
 
-        final result = await repo.requestRefund('EUR');
+      final result = await repo.requestRefund('EUR');
 
-        expect(result.id, 'r1');
-        expect(result.currency, 'EUR');
-        expect(result.amount, 35.0);
-        verify(() => mockDatasource.requestRefund('EUR', const [])).called(1);
-      },
-    );
+      expect(result.id, 'r1');
+      expect(result.currency, 'EUR');
+      expect(result.amount, 35.0);
+      verify(() => mockDatasource.requestRefund('EUR', const [])).called(1);
+    });
 
     test('une DioException est convertie en AppException', () async {
       when(() => mockDatasource.requestRefund('EUR', const [])).thenThrow(
@@ -63,16 +58,8 @@ void main() {
     test('mappe la liste en WalletEligibleTopupModel', () async {
       when(() => mockDatasource.getRefundEligibleTopups('EUR')).thenAnswer(
         (_) async => [
-          {
-            'id': 't1',
-            'amount': 20.0,
-            'createdAt': '2026-09-01T00:00:00.000Z',
-          },
-          {
-            'id': 't2',
-            'amount': 15.0,
-            'createdAt': '2026-09-02T00:00:00.000Z',
-          },
+          {'id': 't1', 'amount': 20.0, 'createdAt': '2026-09-01T00:00:00.000Z'},
+          {'id': 't2', 'amount': 15.0, 'createdAt': '2026-09-02T00:00:00.000Z'},
         ],
       );
 
