@@ -96,9 +96,21 @@ class _ConfirmStickyBottom extends StatelessWidget {
       listenWhen: (previous, current) =>
           previous.result != current.result || previous.error != current.error,
       listener: (context, state) {
-        if (state.result != null) {
-          Navigator.of(context).pop(true);
+        if (state.result == null) {
+          return;
         }
+        // Le pop vient d'un listener de BLoC, pas d'un geste : la sheet peut
+        // avoir déjà été fermée (glissement, bouton retour) ou avoir une autre
+        // route empilée par-dessus quand la réponse arrive. Sans cette garde,
+        // le `pop` détruirait la route du dessus.
+        if (!context.mounted) {
+          return;
+        }
+        final route = ModalRoute.of(context);
+        if (route == null || !route.isCurrent) {
+          return;
+        }
+        Navigator.of(context).pop(true);
       },
       builder: (context, state) => Column(
         mainAxisSize: MainAxisSize.min,
