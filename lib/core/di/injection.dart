@@ -524,7 +524,10 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => WalletBloc(getIt<WalletRepository>(), getIt<AnalyticsService>()),
   );
   getIt.registerFactory<WalletRefundRequestCubit>(
-    () => WalletRefundRequestCubit(getIt<WalletRepository>()),
+    () => WalletRefundRequestCubit(
+      getIt<WalletRepository>(),
+      getIt<AnalyticsService>(),
+    ),
   );
   getIt.registerFactory<WalletEligibleTopupsCubit>(
     () => WalletEligibleTopupsCubit(getIt<WalletRepository>()),
