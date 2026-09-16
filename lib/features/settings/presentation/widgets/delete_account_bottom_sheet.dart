@@ -110,6 +110,10 @@ class _DeleteAccountBottomSheetState extends State<DeleteAccountBottomSheet> {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final walletSettlement = context
+        .watch<DeletionEligibilityCubit>()
+        .state
+        .walletSettlement;
 
     return BlocListener<AccountDeletionBloc, AccountDeletionState>(
       listener: (context, state) {
@@ -131,6 +135,10 @@ class _DeleteAccountBottomSheetState extends State<DeleteAccountBottomSheet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (walletSettlement != null && walletSettlement.isNotEmpty) ...[
+            _WalletSettlementSummary(walletSettlement),
+            const SizedBox(height: DonySpacing.lg),
+          ],
           _ModeCard(
             mode: DeleteMode.soft,
             modeNotifier: widget.modeNotifier,
@@ -211,11 +219,7 @@ class _DeleteActions extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.sm),
         ],
-        if (eligibility.walletSettlement != null &&
-            eligibility.walletSettlement!.isNotEmpty) ...[
-          _WalletSettlementSummary(eligibility.walletSettlement!),
-          const SizedBox(height: DonySpacing.sm),
-        ] else if (eligibility.hasWalletBalance) ...[
+        if (eligibility.hasWalletBalance && eligibility.walletSettlement == null) ...[
           _WalletRefundRequestCta(),
           const SizedBox(height: DonySpacing.sm),
         ],

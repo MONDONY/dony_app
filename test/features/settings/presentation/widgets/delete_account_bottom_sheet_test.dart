@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
@@ -496,4 +498,80 @@ void main() {
 
     expect(find.text('Demander le remboursement maintenant'), findsOneWidget);
   });
+
+  testWidgets(
+    'deux devises (EUR STRIPE + XOF MANUAL) : les deux blocs sont rendus, '
+    'XOF formaté sans décimales',
+    (tester) async {
+      when(() => mockEligibilityCubit.state).thenReturn(
+        const DeletionEligibilityState(
+          isLoading: false,
+          hasWalletBalance: true,
+          walletSettlement: [
+            WalletSettlement(
+              currency: 'EUR',
+              refundableAmount: 35,
+              forfeitedAmount: 0,
+              inFlightAmount: 0,
+              rail: 'STRIPE',
+            ),
+            WalletSettlement(
+              currency: 'XOF',
+              refundableAmount: 10000,
+              forfeitedAmount: 0,
+              inFlightAmount: 0,
+              rail: 'MANUAL',
+            ),
+          ],
+        ),
+      );
+      await tester.pumpWidget(buildWidget());
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.textContaining('seront remboursés sur votre carte'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('vous recontacte'), findsOneWidget);
+      // XOF sans décimales : on part du formateur réel plutôt que de deviner
+      // le séparateur de milliers (espace fine insécable, pas une espace ASCII).
+      final formattedXof = CurrencyFormatter.format(
+        10000,
+        SupportedCurrency.xof,
+      );
+      expect(find.textContaining(formattedXof), findsOneWidget);
+      expect(formattedXof, isNot(contains('.00')));
+      expect(formattedXof, isNot(contains(',00')));
+    },
+  );
+
+  testWidgets(
+    'inFlightAmount > 0 affiche « déjà en cours de remboursement »',
+    (tester) async {
+      when(() => mockEligibilityCubit.state).thenReturn(
+        const DeletionEligibilityState(
+          isLoading: false,
+          hasWalletBalance: true,
+          walletSettlement: [
+            WalletSettlement(
+              currency: 'EUR',
+              refundableAmount: 10,
+              forfeitedAmount: 0,
+              inFlightAmount: 20,
+              rail: 'STRIPE',
+            ),
+          ],
+        ),
+      );
+      await tester.pumpWidget(buildWidget());
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.textContaining('déjà en cours de remboursement'),
+        findsOneWidget,
+      );
+    },
+  );
 }
