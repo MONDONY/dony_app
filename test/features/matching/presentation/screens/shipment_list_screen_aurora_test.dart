@@ -540,7 +540,7 @@ void main() {
     expect(find.text('LIVRÉ'), findsOneWidget);
   });
 
-  testWidgets('card REJECTED : affiche badge "TERMINÉ" (visible sous Tous)', (
+  testWidgets('card REJECTED : affiche badge "REFUSÉ" (visible sous Tous)', (
     tester,
   ) async {
     final bid = _makeBid(status: 'REJECTED');
@@ -559,10 +559,10 @@ void main() {
     await tester.pump(_kSettle);
 
     // REJECTED shows under default "Tous" (no chip selected)
-    expect(find.text('TERMINÉ'), findsOneWidget);
+    expect(find.text('REFUSÉ'), findsOneWidget);
   });
 
-  testWidgets('card CANCELLED : affiche badge "TERMINÉ" (visible sous Tous)', (
+  testWidgets('card CANCELLED : affiche badge "ANNULÉ" (visible sous Tous)', (
     tester,
   ) async {
     final bid = _makeBid(status: 'CANCELLED');
@@ -581,7 +581,7 @@ void main() {
     await tester.pump(_kSettle);
 
     // CANCELLED shows under default "Tous" (no chip selected)
-    expect(find.text('TERMINÉ'), findsOneWidget);
+    expect(find.text('ANNULÉ'), findsOneWidget);
   });
 
   // ── Rafraîchissement en cours ─────────────────────────────────────────────
@@ -698,7 +698,7 @@ void main() {
 
   // ── Statuts supplémentaires ───────────────────────────────────────────────
 
-  testWidgets('card NO_SHOW : affiche badge "TERMINÉ" (visible sous Tous)', (
+  testWidgets('card NO_SHOW : affiche badge "ABSENT" (visible sous Tous)', (
     tester,
   ) async {
     final bid = _makeBid(status: 'NO_SHOW');
@@ -717,10 +717,10 @@ void main() {
     await tester.pump(_kSettle);
 
     // NO_SHOW shows under default "Tous"
-    expect(find.text('TERMINÉ'), findsOneWidget);
+    expect(find.text('ABSENT'), findsOneWidget);
   });
 
-  testWidgets('card EXPIRED : affiche badge "TERMINÉ" (visible sous Tous)', (
+  testWidgets('card EXPIRED : affiche badge "EXPIRÉ" (visible sous Tous)', (
     tester,
   ) async {
     final bid = _makeBid(status: 'EXPIRED');
@@ -739,11 +739,11 @@ void main() {
     await tester.pump(_kSettle);
 
     // EXPIRED shows under default "Tous"
-    expect(find.text('TERMINÉ'), findsOneWidget);
+    expect(find.text('EXPIRÉ'), findsOneWidget);
   });
 
   testWidgets(
-    'card PARCEL_REFUSED : affiche badge "TERMINÉ" (visible sous Tous)',
+    'card PARCEL_REFUSED : affiche badge "COLIS REFUSÉ" (visible sous Tous)',
     (tester) async {
       final bid = _makeBid(status: 'PARCEL_REFUSED');
       final ctrl = StreamController<BidState>.broadcast();
@@ -761,7 +761,7 @@ void main() {
       await tester.pump(_kSettle);
 
       // PARCEL_REFUSED shows under default "Tous"
-      expect(find.text('TERMINÉ'), findsAtLeastNWidgets(1));
+      expect(find.text('COLIS REFUSÉ'), findsAtLeastNWidgets(1));
     },
   );
 
@@ -959,7 +959,7 @@ void main() {
 
   // ── Séparateur (2+ items) ─────────────────────────────────────────────────
 
-  testWidgets('liste "Tous" avec 2 items : LIVRÉ et TERMINÉ visibles', (
+  testWidgets('liste "Tous" avec 2 items : LIVRÉ et REFUSÉ visibles', (
     tester,
   ) async {
     final bids = [
@@ -980,9 +980,9 @@ void main() {
     await tester.pump();
     await tester.pump(_kSettle);
 
-    // Default "Tous" shows both: LIVRÉ (COMPLETED) and TERMINÉ (REJECTED)
+    // Default "Tous" shows both: LIVRÉ (COMPLETED) and REFUSÉ (REJECTED)
     expect(find.text('LIVRÉ'), findsOneWidget);
-    expect(find.text('TERMINÉ'), findsOneWidget);
+    expect(find.text('REFUSÉ'), findsOneWidget);
   });
 
   // ── Puces En attente et En cours ────────────────────────────────────────

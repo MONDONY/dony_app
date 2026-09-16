@@ -137,4 +137,33 @@ void main() {
 
     expect(result, contains('ARRIVED'));
   });
+
+  testWidgets('groupes et libellés alignés sur les badges des cards', (
+    tester,
+  ) async {
+    sizeView(tester);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Builder(
+            builder: (context) => ElevatedButton(
+              onPressed: () =>
+                  ShipmentStatusFilterSheet.show(context, const {}),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('LIVRÉS'), findsOneWidget);
+    expect(find.text('NON ABOUTIS'), findsOneWidget);
+    expect(find.text('TERMINÉS'), findsNothing);
+    expect(find.text('CLÔTURÉS'), findsNothing);
+    expect(find.text('À remettre'), findsOneWidget);
+    expect(find.text('Remis'), findsOneWidget);
+    expect(find.text('En route'), findsNothing);
+  });
 }

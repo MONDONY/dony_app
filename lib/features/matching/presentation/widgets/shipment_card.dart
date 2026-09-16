@@ -52,30 +52,40 @@ class ShipmentCard extends StatelessWidget {
   final int index;
 
   /// Returns (bgColor, fgColor, label) for the status badge pill.
-  ({Color bg, Color fg, String label}) _badge(
+  ({Color bg, Color fg, String label}) _badge(ColorScheme cs) =>
+      switch (bid.status) {
+        'IN_TRANSIT' => (bg: cs.infoLight, fg: cs.info, label: 'EN TRANSIT'),
+        'ARRIVED' => (bg: cs.infoLight, fg: cs.info, label: 'ARRIVÉ'),
+        'HANDED_OVER' => (bg: cs.infoLight, fg: cs.info, label: 'REMIS'),
+        'ACCEPTED' => (
+          bg: cs.warningLight,
+          fg: cs.warning,
+          label: 'À REMETTRE',
+        ),
+        'PENDING' || 'AWAITING_PAYMENT' || 'PAYMENT_ESCROWED' => (
+          bg: cs.warningLight,
+          fg: cs.warning,
+          label: 'EN ATTENTE',
+        ),
+        'COMPLETED' => (bg: cs.successLight, fg: cs.success, label: 'LIVRÉ'),
+        // Le motif réel plutôt qu'un « TERMINÉ » générique, qui ne disait pas
+        // ce qui s'était passé. Vocabulaire aligné sur la feuille de filtre.
+        'CANCELLED' => _closed(cs, 'ANNULÉ'),
+        'REJECTED' => _closed(cs, 'REFUSÉ'),
+        'NO_SHOW' => _closed(cs, 'ABSENT'),
+        'EXPIRED' => _closed(cs, 'EXPIRÉ'),
+        'PARCEL_REFUSED' => _closed(cs, 'COLIS REFUSÉ'),
+        _ => (
+          bg: DonyColors.neutral100,
+          fg: cs.onSurfaceVariant,
+          label: bid.status,
+        ),
+      };
+
+  static ({Color bg, Color fg, String label}) _closed(
     ColorScheme cs,
-  ) => switch (bid.status) {
-    'IN_TRANSIT' => (bg: cs.infoLight, fg: cs.info, label: 'EN TRANSIT'),
-    'ARRIVED' => (bg: cs.infoLight, fg: cs.info, label: 'ARRIVÉ'),
-    'HANDED_OVER' => (bg: cs.infoLight, fg: cs.info, label: 'REMIS'),
-    'ACCEPTED' => (bg: cs.warningLight, fg: cs.warning, label: 'À REMETTRE'),
-    'PENDING' || 'AWAITING_PAYMENT' || 'PAYMENT_ESCROWED' => (
-      bg: cs.warningLight,
-      fg: cs.warning,
-      label: 'EN ATTENTE',
-    ),
-    'COMPLETED' => (bg: cs.successLight, fg: cs.success, label: 'LIVRÉ'),
-    'CANCELLED' || 'REJECTED' || 'NO_SHOW' || 'EXPIRED' || 'PARCEL_REFUSED' => (
-      bg: DonyColors.neutral100,
-      fg: cs.onSurfaceVariant,
-      label: 'TERMINÉ',
-    ),
-    _ => (
-      bg: DonyColors.neutral100,
-      fg: cs.onSurfaceVariant,
-      label: bid.status,
-    ),
-  };
+    String label,
+  ) => (bg: DonyColors.neutral100, fg: cs.onSurfaceVariant, label: label);
 
   /// Label describing the current stepper step.
   String _stepLabel() => switch (bid.status) {
