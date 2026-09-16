@@ -12,6 +12,7 @@ import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/bloc/dial_code_cubit.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_flow_chrome.dart';
+import 'package:dony/features/auth/presentation/widgets/dial_code_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -62,38 +63,13 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
       context,
       title: 'Indicatif pays',
       child: Builder(
-        builder: (innerContext) {
-          final selectedCode = _dialCodeCubit.state.dialCode;
-          final cs = Theme.of(innerContext).colorScheme;
-          final tt = Theme.of(innerContext).textTheme;
-          return Column(
-            mainAxisSize: MainAxisSize.min,
-            children: kPhoneCountries
-                .map(
-                  (c) => Material(
-                    type: MaterialType.transparency,
-                    child: ListTile(
-                      leading: Text(
-                        c.flag,
-                        style: const TextStyle(fontSize: 22),
-                      ),
-                      title: Text(
-                        '${c.name} (${c.dialCode})',
-                        style: tt.titleMedium,
-                      ),
-                      trailing: selectedCode == c.dialCode
-                          ? DonyIcon('check', color: cs.primary)
-                          : null,
-                      onTap: () {
-                        _dialCodeCubit.select(c);
-                        innerContext.pop();
-                      },
-                    ),
-                  ),
-                )
-                .toList(),
-          );
-        },
+        builder: (innerContext) => DialCodePicker(
+          selectedCode: _dialCodeCubit.state.code,
+          onSelected: (country) {
+            _dialCodeCubit.select(country);
+            innerContext.pop();
+          },
+        ),
       ),
     );
   }

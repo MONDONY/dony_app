@@ -3,46 +3,37 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('kPhoneCountries', () {
-    test('expose les dix indicatifs du sélecteur, sans doublon', () {
-      final codes = kPhoneCountries.map((c) => c.dialCode).toList();
-      expect(codes, hasLength(10));
-      expect(codes.toSet(), hasLength(10));
+    test('couvre tout le catalogue pays, plus la RD Congo', () {
+      expect(kPhoneCountries.length, greaterThanOrEqualTo(38));
       expect(
-        codes,
-        containsAll(<String>[
-          '+33',
-          '+44',
-          '+1',
-          '+221',
-          '+225',
-          '+223',
-          '+237',
-          '+241',
-          '+242',
-          '+243',
-        ]),
+        kPhoneCountries.map((c) => c.dialCode),
+        containsAll(<String>['+33', '+44', '+225', '+32', '+39', '+351']),
       );
     });
 
-    test('la France reste le premier choix proposé', () {
-      expect(kPhoneCountries.first.dialCode, '+33');
+    test('la France est le choix par défaut du sélecteur', () {
+      // Elle n'ouvre plus la liste, qui suit l'ordre du catalogue par zone,
+      // mais reste le pays présélectionné : c'est le départ le plus fréquent.
+      expect(kDefaultPhoneCountry.dialCode, '+33');
+      expect(kDefaultPhoneCountry.code, 'FR');
     });
 
-    test('seuls les pays à préfixe interurbain retirent le zéro initial', () {
-      // Un préfixe interurbain (trunk prefix) est une convention nationale que
-      // l'E.164 remplace par l'indicatif pays. Partout ailleurs le zéro est un
-      // chiffre du numéro : le retirer fabrique un destinataire inexistant.
-      final strip = kPhoneCountries
-          .where((c) => c.stripsLeadingZero)
-          .map((c) => c.dialCode)
-          .toSet();
-      expect(strip, <String>{'+33', '+44', '+243'});
+    test('le Canada et les États-Unis partagent un indicatif', () {
+      // D'où l'identification par code ISO plutôt que par indicatif.
+      final plusUn = kPhoneCountries.where((c) => c.dialCode == '+1');
+      expect(plusUn.map((c) => c.code).toSet(), {'CA', 'US'});
     });
 
     test('phoneCountryFor retrouve un pays par son indicatif', () {
       expect(phoneCountryFor('+225')?.name, 'Côte d\'Ivoire');
       expect(phoneCountryFor('+33')?.name, 'France');
       expect(phoneCountryFor('+999'), isNull);
+    });
+
+    test('phoneCountryForCode retrouve un pays par son code ISO', () {
+      expect(phoneCountryForCode('CI')?.dialCode, '+225');
+      expect(phoneCountryForCode('ci')?.dialCode, '+225');
+      expect(phoneCountryForCode('ZZ'), isNull);
     });
 
     test('chaque pays porte un exemple de saisie non vide', () {

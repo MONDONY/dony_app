@@ -5,6 +5,7 @@ import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/auth/presentation/widgets/dial_code_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -37,7 +38,6 @@ class EditPhoneScreen extends StatelessWidget {
         children: [
           Expanded(
             child: _AddPhoneContent(
-              codes: AddPhoneSheet._codes,
               onSubmitReady: (fn) => submit = fn,
               stepNotifier: stepNotifier,
             ),
@@ -125,11 +125,6 @@ class EditEmailScreen extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 abstract final class AddPhoneSheet {
-  /// Dérivée du catalogue partagé : cet écran portait sa propre copie de la
-  /// liste, et une règle du zéro initial opposée à celle de la connexion. Le
-  /// même numéro y produisait deux valeurs différentes.
-  static final _codes = [for (final c in kPhoneCountries) (c.dialCode, c.flag)];
-
   static Future<void> show(BuildContext context) {
     final authBloc = context.read<AuthBloc>();
     VoidCallback? submit;
@@ -150,7 +145,6 @@ abstract final class AddPhoneSheet {
         ),
       ),
       child: _AddPhoneContent(
-        codes: _codes,
         onSubmitReady: (fn) => submit = fn,
         stepNotifier: stepNotifier,
       ),
@@ -160,12 +154,10 @@ abstract final class AddPhoneSheet {
 
 class _AddPhoneContent extends StatefulWidget {
   const _AddPhoneContent({
-    required this.codes,
     required this.onSubmitReady,
     required this.stepNotifier,
   });
 
-  final List<(String, String)> codes;
   final void Function(VoidCallback) onSubmitReady;
   final ValueNotifier<_ContactStep> stepNotifier;
 
@@ -180,7 +172,7 @@ class _AddPhoneContentState extends State<_AddPhoneContent> {
     (_) => TextEditingController(),
   );
   final List<FocusNode> _otpFocus = List.generate(6, (_) => FocusNode());
-  String _dialCode = '+33';
+  PhoneCountry _country = kDefaultPhoneCountry;
   String _pendingPhone = '';
 
   @override
@@ -212,7 +204,7 @@ class _AddPhoneContentState extends State<_AddPhoneContent> {
   void _sendOtp() {
     final number = _phoneCtrl.text.trim();
     if (number.isEmpty) return;
-    _pendingPhone = toE164(_dialCode, number);
+    _pendingPhone = toE164(_country.dialCode, number);
     context.read<AuthBloc>().add(AuthSendOtpRequested(_pendingPhone));
   }
 
@@ -251,9 +243,8 @@ class _AddPhoneContentState extends State<_AddPhoneContent> {
           if (step == _ContactStep.input) {
             return _PhoneInputStep(
               controller: _phoneCtrl,
-              dialCode: _dialCode,
-              codes: widget.codes,
-              onDialCodeChanged: (code) => setState(() => _dialCode = code),
+              country: _country,
+              onCountryChanged: (c) => setState(() => _country = c),
               tt: tt,
               cs: cs,
             );
@@ -274,17 +265,15 @@ class _AddPhoneContentState extends State<_AddPhoneContent> {
 class _PhoneInputStep extends StatelessWidget {
   const _PhoneInputStep({
     required this.controller,
-    required this.dialCode,
-    required this.codes,
-    required this.onDialCodeChanged,
+    required this.country,
+    required this.onCountryChanged,
     required this.tt,
     required this.cs,
   });
 
   final TextEditingController controller;
-  final String dialCode;
-  final List<(String, String)> codes;
-  final void Function(String) onDialCodeChanged;
+  final PhoneCountry country;
+  final void Function(PhoneCountry) onCountryChanged;
   final TextTheme tt;
   final ColorScheme cs;
 
@@ -328,17 +317,12 @@ class _PhoneInputStep extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          codes
-                              .firstWhere(
-                                (c) => c.$1 == dialCode,
-                                orElse: () => codes.first,
-                              )
-                              .$2,
+                          country.flag,
                           style: const TextStyle(fontSize: 18),
                         ),
                         const SizedBox(width: DonySpacing.xs),
                         Text(
-                          dialCode,
+                          country.dialCode,
                           style: tt.bodyMedium?.copyWith(
                             color: cs.onSurface,
                             fontWeight: FontWeight.w600,
@@ -362,7 +346,7 @@ class _PhoneInputStep extends StatelessWidget {
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     style: tt.bodyLarge?.copyWith(color: cs.onSurface),
                     decoration: InputDecoration(
-                      hintText: '6 12 34 56 78',
+                      hintText: country.hint,
                       hintStyle: tt.bodyLarge?.copyWith(
                         color: cs.onSurfaceVariant,
                       ),
@@ -390,26 +374,14 @@ class _PhoneInputStep extends StatelessWidget {
     DonyBottomSheet.show<void>(
       context,
       title: 'Indicatif',
-      child: ListView(
-        shrinkWrap: true,
-        children: codes
-            .map(
-              (c) => ListTile(
-                leading: Text(c.$2, style: const TextStyle(fontSize: 22)),
-                title: Text(c.$1),
-                trailing: c.$1 == dialCode
-                    ? DonyIcon(
-                        'check',
-                        color: Theme.of(context).colorScheme.primary,
-                      )
-                    : null,
-                onTap: () {
-                  onDialCodeChanged(c.$1);
-                  Navigator.of(context).pop();
-                },
-              ),
-            )
-            .toList(),
+      child: Builder(
+        builder: (innerContext) => DialCodePicker(
+          selectedCode: country.code,
+          onSelected: (c) {
+            onCountryChanged(c);
+            Navigator.of(innerContext).pop();
+          },
+        ),
       ),
     );
   }
