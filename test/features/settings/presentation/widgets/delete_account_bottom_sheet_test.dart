@@ -397,4 +397,103 @@ void main() {
       expect(submitInkWells.any((w) => w.onTap != null), isTrue);
     },
   );
+
+  testWidgets('récapitulatif STRIPE : remboursé sur la carte et bonus perdu', (
+    tester,
+  ) async {
+    when(() => mockEligibilityCubit.state).thenReturn(
+      const DeletionEligibilityState(
+        isLoading: false,
+        hasWalletBalance: true,
+        walletSettlement: [
+          WalletSettlement(
+            currency: 'EUR',
+            refundableAmount: 35,
+            forfeitedAmount: 5,
+            inFlightAmount: 0,
+            rail: 'STRIPE',
+          ),
+        ],
+      ),
+    );
+    await tester.pumpWidget(buildWidget());
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('35,00'), findsOneWidget);
+    expect(
+      find.textContaining('seront remboursés sur votre carte'),
+      findsOneWidget,
+    );
+    // '5,00' seul matcherait aussi '35,00' (sous-chaîne) : bordure de mot
+    // pour cibler le montant du bonus perdu, pas le montant remboursé.
+    expect(find.textContaining(RegExp(r'(?<!\d)5,00')), findsOneWidget);
+    expect(find.textContaining('seront perdus'), findsOneWidget);
+    expect(find.text('Demander le remboursement maintenant'), findsNothing);
+  });
+
+  testWidgets('récapitulatif MANUAL : un membre de l\'équipe recontacte', (
+    tester,
+  ) async {
+    when(() => mockEligibilityCubit.state).thenReturn(
+      const DeletionEligibilityState(
+        isLoading: false,
+        hasWalletBalance: true,
+        walletSettlement: [
+          WalletSettlement(
+            currency: 'XOF',
+            refundableAmount: 10000,
+            forfeitedAmount: 0,
+            inFlightAmount: 0,
+            rail: 'MANUAL',
+          ),
+        ],
+      ),
+    );
+    await tester.pumpWidget(buildWidget());
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('vous recontacte'), findsOneWidget);
+    expect(find.textContaining('seront perdus'), findsNothing);
+  });
+
+  testWidgets('solde uniquement non-cash : seulement la ligne perdue', (
+    tester,
+  ) async {
+    when(() => mockEligibilityCubit.state).thenReturn(
+      const DeletionEligibilityState(
+        isLoading: false,
+        hasWalletBalance: true,
+        walletSettlement: [
+          WalletSettlement(
+            currency: 'EUR',
+            refundableAmount: 0,
+            forfeitedAmount: 5,
+            inFlightAmount: 0,
+            rail: 'STRIPE',
+          ),
+        ],
+      ),
+    );
+    await tester.pumpWidget(buildWidget());
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('seront remboursés'), findsNothing);
+    expect(find.textContaining('seront perdus'), findsOneWidget);
+  });
+
+  testWidgets('ancien contrat : le CTA de remboursement manuel reste', (
+    tester,
+  ) async {
+    when(() => mockEligibilityCubit.state).thenReturn(
+      const DeletionEligibilityState(isLoading: false, hasWalletBalance: true),
+    );
+    await tester.pumpWidget(buildWidget());
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Demander le remboursement maintenant'), findsOneWidget);
+  });
 }
