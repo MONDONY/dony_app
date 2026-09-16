@@ -317,6 +317,14 @@ class _HeroHeader extends StatelessWidget {
   final double? refundableAmount;
   final double? nonRefundableAmount;
 
+  /// « Rembourser » n'apparaît que s'il y a quelque chose à rembourser.
+  /// `refundableAmount` absent = ancien contrat back : on garde l'affichage
+  /// sur le seul `refundEligible`, la sheet de sélection sert de repli.
+  bool get _canRefund {
+    final refundable = refundableAmount;
+    return refundEligible && (refundable == null || refundable > 0);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -361,7 +369,7 @@ class _HeroHeader extends StatelessWidget {
                   .fadeIn(duration: 300.ms)
                   .slideY(begin: 0.1, curve: Curves.easeOutCubic),
               const SizedBox(height: DonySpacing.base),
-              if (refundEligible)
+              if (_canRefund)
                 BlocConsumer<
                   WalletRefundRequestCubit,
                   WalletRefundRequestState
@@ -415,13 +423,14 @@ class _HeroHeader extends StatelessWidget {
           );
         },
       ),
-      if (refundEligible)
+      if (_canRefund)
         _HeroAction(
           iconAsset: 'arrow-up',
           label: 'Rembourser',
           onTap: () {
             final refundable = refundableAmount;
-            if (refundable != null && refundable > 0) {
+            // `_canRefund` garantit ici un montant strictement positif.
+            if (refundable != null) {
               WalletRefundConfirmSheet.show(
                 context,
                 currency: currency.code,
