@@ -106,5 +106,4 @@ void main() {
       expect(OnboardingCompleted().props, isEmpty);
     });
   });
-
 }

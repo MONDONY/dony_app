@@ -253,32 +253,29 @@ void main() {
         await tester.tap(find.text('Recevoir le code SMS'));
         await tester.pump();
         verify(
-          () => mockAuthBloc.add(
-            const AuthSendOtpRequested('+2250748840874'),
-          ),
+          () => mockAuthBloc.add(const AuthSendOtpRequested('+2250748840874')),
         ).called(1);
       },
     );
 
-    testWidgets(
-      'l\'indicatif choisi survit à une erreur d\'authentification',
-      (tester) async {
-        // Régression : AuthError réémettait un AuthInitial nu, l'écran
-        // retombait sur la France et la soumission suivante partait en +33.
-        await _pump(tester, mockAuthBloc);
-        await tester.ensureVisible(find.text('+33'));
-        await tester.tap(find.text('+33'));
-        await tester.pumpAndSettle();
-        await tester.tap(find.textContaining('Côte d\'Ivoire'));
-        await tester.pumpAndSettle();
-        expect(find.text('+225'), findsOneWidget);
+    testWidgets('l\'indicatif choisi survit à une erreur d\'authentification', (
+      tester,
+    ) async {
+      // Régression : AuthError réémettait un AuthInitial nu, l'écran
+      // retombait sur la France et la soumission suivante partait en +33.
+      await _pump(tester, mockAuthBloc);
+      await tester.ensureVisible(find.text('+33'));
+      await tester.tap(find.text('+33'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.textContaining('Côte d\'Ivoire'));
+      await tester.pumpAndSettle();
+      expect(find.text('+225'), findsOneWidget);
 
-        when(() => mockAuthBloc.state).thenReturn(const AuthInitial());
-        await tester.pump();
-        expect(find.text('+225'), findsOneWidget);
-        expect(find.text('+33'), findsNothing);
-      },
-    );
+      when(() => mockAuthBloc.state).thenReturn(const AuthInitial());
+      await tester.pump();
+      expect(find.text('+225'), findsOneWidget);
+      expect(find.text('+33'), findsNothing);
+    });
   });
 
   group('PhoneAuthScreen — email link et OAuth new user', () {
