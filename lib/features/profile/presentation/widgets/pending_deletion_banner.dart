@@ -65,6 +65,11 @@ class PendingDeletionBanner extends StatelessWidget {
                     ),
                   ),
                 ),
+                const SizedBox(height: DonySpacing.xs),
+                Text(
+                  'Les remboursements déjà lancés ne sont pas annulés.',
+                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                ),
               ],
             ),
           ),
