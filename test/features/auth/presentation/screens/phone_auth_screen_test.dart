@@ -230,7 +230,12 @@ void main() {
         await tester.ensureVisible(find.text('+33'));
         await tester.tap(find.text('+33'));
         await tester.pumpAndSettle();
-        await tester.tap(find.textContaining('Sénégal'));
+        await tester.enterText(
+          find.byKey(const Key('dial_code_search')),
+          'Sénégal',
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Sénégal (+221)'));
         await tester.pumpAndSettle();
         expect(find.text('+221'), findsOneWidget);
         expect(find.text('+33'), findsNothing);
@@ -246,7 +251,12 @@ void main() {
         await tester.ensureVisible(find.text('+33'));
         await tester.tap(find.text('+33'));
         await tester.pumpAndSettle();
-        await tester.tap(find.textContaining('Côte d\'Ivoire'));
+        await tester.enterText(
+          find.byKey(const Key('dial_code_search')),
+          'Ivoire',
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Côte d\'Ivoire (+225)'));
         await tester.pumpAndSettle();
         await tester.enterText(find.byType(TextFormField), '0748840874');
         await tester.pump();
@@ -267,7 +277,12 @@ void main() {
       await tester.ensureVisible(find.text('+33'));
       await tester.tap(find.text('+33'));
       await tester.pumpAndSettle();
-      await tester.tap(find.textContaining('Côte d\'Ivoire'));
+      await tester.enterText(
+        find.byKey(const Key('dial_code_search')),
+        'Ivoire',
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Côte d\'Ivoire (+225)'));
       await tester.pumpAndSettle();
       expect(find.text('+225'), findsOneWidget);
 

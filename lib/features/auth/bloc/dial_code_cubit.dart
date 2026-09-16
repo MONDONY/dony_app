@@ -12,7 +12,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// Choisir un pays n'est pas un fait d'authentification, c'est une préférence
 /// de saisie. Elle mérite son propre cycle de vie.
 class DialCodeCubit extends Cubit<PhoneCountry> {
-  DialCodeCubit() : super(kPhoneCountries.first);
+  DialCodeCubit() : super(kDefaultPhoneCountry);
 
   void select(PhoneCountry country) => emit(country);
 }
