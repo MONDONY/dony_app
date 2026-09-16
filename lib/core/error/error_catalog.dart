@@ -906,16 +906,51 @@ abstract final class ErrorCatalog {
     ),
   };
 
+  /// Codes dont le `detail` renvoyé par le back est déjà rédigé pour
+  /// l'utilisateur (ex: devise du portefeuille, réseau indisponible) et plus
+  /// précis que le texte fixe du catalogue. Ensemble fermé : tout autre code
+  /// garde son texte de catalogue même si le serveur fournit un detail.
+  static const Set<String> _serverDetailCodes = {
+    'mobile-money-account-unsupported',
+  };
+
   /// Resolves an exception to its presentation. Never returns null:
   /// always falls back to a generic message rather than leaking technical
   /// details to the user.
   static ErrorPresentation lookup(Object? error) {
     if (error is AppException) {
       final byCode = _byCode[error.code];
-      if (byCode != null) return byCode;
+      if (byCode != null) {
+        // Précédent : `_validationPresentation` construit déjà le message
+        // depuis les violations du back plutôt que depuis un texte fixe.
+        if (_serverDetailCodes.contains(error.code) &&
+            _isUserFacingDetail(error.message)) {
+          return ErrorPresentation(
+            title: byCode.title,
+            message: error.message.trim(),
+            severity: byCode.severity,
+            icon: byCode.icon,
+          );
+        }
+        return byCode;
+      }
       return _byType(error);
     }
     return _generic;
+  }
+
+  /// Garde simple : un detail rédigé pour l'utilisateur est court, tient sur
+  /// une ligne, et ne ressemble pas à une exception technique échappée
+  /// jusqu'à l'UI.
+  static bool _isUserFacingDetail(String message) {
+    final trimmed = message.trim();
+    if (trimmed.isEmpty || trimmed.length > 200) return false;
+    if (trimmed.startsWith('DioException') ||
+        trimmed.startsWith('Exception') ||
+        trimmed.startsWith('HttpException')) {
+      return false;
+    }
+    return !trimmed.contains('\n') && !trimmed.contains('{');
   }
 
   /// Whether a given error has a dedicated entry in the catalog.
