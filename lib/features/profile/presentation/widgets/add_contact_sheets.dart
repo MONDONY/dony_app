@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/phone/phone_country.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
@@ -124,18 +125,10 @@ class EditEmailScreen extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 abstract final class AddPhoneSheet {
-  static const _codes = [
-    ('+33', '🇫🇷'),
-    ('+44', '🇬🇧'),
-    ('+1', '🇺🇸'),
-    ('+221', '🇸🇳'),
-    ('+225', '🇨🇮'),
-    ('+223', '🇲🇱'),
-    ('+237', '🇨🇲'),
-    ('+241', '🇬🇦'),
-    ('+242', '🇨🇬'),
-    ('+243', '🇨🇩'),
-  ];
+  /// Dérivée du catalogue partagé : cet écran portait sa propre copie de la
+  /// liste, et une règle du zéro initial opposée à celle de la connexion. Le
+  /// même numéro y produisait deux valeurs différentes.
+  static final _codes = [for (final c in kPhoneCountries) (c.dialCode, c.flag)];
 
   static Future<void> show(BuildContext context) {
     final authBloc = context.read<AuthBloc>();
@@ -219,7 +212,7 @@ class _AddPhoneContentState extends State<_AddPhoneContent> {
   void _sendOtp() {
     final number = _phoneCtrl.text.trim();
     if (number.isEmpty) return;
-    _pendingPhone = '$_dialCode$number';
+    _pendingPhone = toE164(_dialCode, number);
     context.read<AuthBloc>().add(AuthSendOtpRequested(_pendingPhone));
   }
 

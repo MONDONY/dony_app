@@ -94,14 +94,6 @@ class OnboardingCompleted extends AuthEvent {
   const OnboardingCompleted();
 }
 
-class AuthDialCodeChanged extends AuthEvent {
-  final String code;
-  final String flag;
-  const AuthDialCodeChanged({required this.code, required this.flag});
-  @override
-  List<Object?> get props => [code, flag];
-}
-
 class AuthOtpTimerTicked extends AuthEvent {
   const AuthOtpTimerTicked();
 }

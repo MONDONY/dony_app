@@ -853,27 +853,6 @@ void main() {
     });
   });
 
-  // ─── AuthDialCodeChanged ─────────────────────────────────────────────────────
-
-  group('AuthDialCodeChanged', () {
-    blocTest<AuthBloc, AuthState>(
-      'emits AuthInitial with new dial code',
-      build: buildBloc,
-      act: (bloc) =>
-          bloc.add(const AuthDialCodeChanged(code: '+221', flag: '🇸🇳')),
-      expect: () => [const AuthInitial(dialCode: '+221', dialFlag: '🇸🇳')],
-    );
-
-    blocTest<AuthBloc, AuthState>(
-      'preserves dial code when emitted from error state',
-      build: buildBloc,
-      seed: () => const AuthError(NetworkException('Erreur réseau')),
-      act: (bloc) =>
-          bloc.add(const AuthDialCodeChanged(code: '+237', flag: '🇨🇲')),
-      expect: () => [const AuthInitial(dialCode: '+237', dialFlag: '🇨🇲')],
-    );
-  });
-
   // ─── AuthOtpTimerTicked ──────────────────────────────────────────────────────
 
   group('AuthOtpTimerTicked', () {
