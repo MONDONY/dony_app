@@ -107,17 +107,4 @@ void main() {
     });
   });
 
-  group('AuthDialCodeChanged', () {
-    test('props contains code and flag', () {
-      final e = AuthDialCodeChanged(code: '+33', flag: '🇫🇷');
-      expect(e.props, ['+33', '🇫🇷']);
-    });
-
-    test('equality', () {
-      expect(
-        AuthDialCodeChanged(code: '+221', flag: '🇸🇳'),
-        AuthDialCodeChanged(code: '+221', flag: '🇸🇳'),
-      );
-    });
-  });
 }

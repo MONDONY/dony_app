@@ -83,7 +83,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthDeleteAccountRequested>(_onDeleteAccountRequested);
     on<AuthUpdateProfileRequested>(_onUpdateProfileRequested);
     on<OnboardingCompleted>(_onOnboardingCompleted);
-    on<AuthDialCodeChanged>(_onDialCodeChanged);
     on<AuthOtpTimerTicked>(_onOtpTimerTicked);
     on<AuthGoogleSignInRequested>(_onGoogleSignInRequested);
     on<AuthAppleSignInRequested>(_onAppleSignInRequested);
@@ -397,12 +396,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     await Hive.box('user_prefs').put('onboarding_done', true);
-  }
-
-  // ─── Code pays téléphone ─────────────────────────────────────────────────
-
-  void _onDialCodeChanged(AuthDialCodeChanged event, Emitter<AuthState> emit) {
-    emit(AuthInitial(dialCode: event.code, dialFlag: event.flag));
   }
 
   // ─── Timer OTP ───────────────────────────────────────────────────────────

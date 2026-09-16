@@ -9,12 +9,14 @@ abstract class AuthState extends Equatable {
   List<Object?> get props => [];
 }
 
+/// Aucun parcours d'authentification en cours.
+///
+/// N'a volontairement plus de champ : l'indicatif téléphonique y vivait, or cet
+/// état est réémis nu à chaque échec, déconnexion ou changement de compte, ce
+/// qui ramenait le pays choisi à la France sans geste de l'utilisateur. Il est
+/// désormais porté par `DialCodeCubit`.
 class AuthInitial extends AuthState {
-  final String dialCode;
-  final String dialFlag;
-  const AuthInitial({this.dialCode = '+33', this.dialFlag = '🇫🇷'});
-  @override
-  List<Object?> get props => [dialCode, dialFlag];
+  const AuthInitial();
 }
 
 class AuthLoading extends AuthState {

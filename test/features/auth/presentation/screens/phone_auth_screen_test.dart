@@ -224,24 +224,59 @@ void main() {
     });
 
     testWidgets(
-      'sélection d\'un indicatif dans le bottom sheet dispatche AuthDialCodeChanged',
+      'sélection d\'un indicatif dans le bottom sheet met à jour l\'affichage',
       (tester) async {
-        registerFallbackValue(
-          const AuthDialCodeChanged(code: '+221', flag: '🇸🇳'),
-        );
         await _pump(tester, mockAuthBloc);
-        // Ouvrir le bottom sheet
         await tester.ensureVisible(find.text('+33'));
         await tester.tap(find.text('+33'));
         await tester.pumpAndSettle();
-        // Appuyer sur Sénégal
         await tester.tap(find.textContaining('Sénégal'));
+        await tester.pumpAndSettle();
+        expect(find.text('+221'), findsOneWidget);
+        expect(find.text('+33'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'numéro ivoirien : le zéro initial est conservé dans le format E.164',
+      (tester) async {
+        // Régression : le zéro sautait pour tous les pays, et le code SMS
+        // partait vers +225748840874 au lieu de +2250748840874.
+        await _pump(tester, mockAuthBloc);
+        await tester.ensureVisible(find.text('+33'));
+        await tester.tap(find.text('+33'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.textContaining('Côte d\'Ivoire'));
+        await tester.pumpAndSettle();
+        await tester.enterText(find.byType(TextFormField), '0748840874');
+        await tester.pump();
+        await tester.tap(find.text('Recevoir le code SMS'));
         await tester.pump();
         verify(
           () => mockAuthBloc.add(
-            const AuthDialCodeChanged(code: '+221', flag: '🇸🇳'),
+            const AuthSendOtpRequested('+2250748840874'),
           ),
         ).called(1);
+      },
+    );
+
+    testWidgets(
+      'l\'indicatif choisi survit à une erreur d\'authentification',
+      (tester) async {
+        // Régression : AuthError réémettait un AuthInitial nu, l'écran
+        // retombait sur la France et la soumission suivante partait en +33.
+        await _pump(tester, mockAuthBloc);
+        await tester.ensureVisible(find.text('+33'));
+        await tester.tap(find.text('+33'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.textContaining('Côte d\'Ivoire'));
+        await tester.pumpAndSettle();
+        expect(find.text('+225'), findsOneWidget);
+
+        when(() => mockAuthBloc.state).thenReturn(const AuthInitial());
+        await tester.pump();
+        expect(find.text('+225'), findsOneWidget);
+        expect(find.text('+33'), findsNothing);
       },
     );
   });
