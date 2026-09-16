@@ -136,4 +136,107 @@ void main() {
       ).called(1);
     });
   });
+
+  group('topup', () {
+    Response<dynamic> okResponse() => Response(
+      requestOptions: RequestOptions(path: '/wallet/topup'),
+      statusCode: 200,
+      data: {'clientSecret': 'pi_123_secret'},
+    );
+
+    test('EUR : le corps omet currencyCode (devise par défaut du back)', () async {
+      when(
+        () => mockDio.post<dynamic>('/wallet/topup', data: any(named: 'data')),
+      ).thenAnswer((_) async => okResponse());
+
+      final result = await datasource.topup(amount: 20, paymentMethod: 'STRIPE');
+
+      expect(result['clientSecret'], 'pi_123_secret');
+      verify(
+        () => mockDio.post<dynamic>(
+          '/wallet/topup',
+          data: {'amount': 20.0, 'paymentMethod': 'STRIPE'},
+        ),
+      ).called(1);
+    });
+
+    test('devise non EUR : currencyCode ajouté et mis en majuscules', () async {
+      when(
+        () => mockDio.post<dynamic>('/wallet/topup', data: any(named: 'data')),
+      ).thenAnswer((_) async => okResponse());
+
+      await datasource.topup(
+        amount: 10,
+        paymentMethod: 'STRIPE',
+        currencyCode: 'cad',
+      );
+
+      verify(
+        () => mockDio.post<dynamic>(
+          '/wallet/topup',
+          data: {
+            'amount': 10.0,
+            'paymentMethod': 'STRIPE',
+            'currencyCode': 'CAD',
+          },
+        ),
+      ).called(1);
+    });
+
+    test('le montant est arrondi à 2 décimales avant l\'envoi', () async {
+      when(
+        () => mockDio.post<dynamic>('/wallet/topup', data: any(named: 'data')),
+      ).thenAnswer((_) async => okResponse());
+
+      // Sans le toStringAsFixed(2) du datasource, le back recevrait un
+      // montant à plus de 2 décimales (les centimes n'existent pas côté
+      // Stripe au-delà du centième).
+      await datasource.topup(amount: 20.456, paymentMethod: 'STRIPE');
+
+      final data =
+          verify(
+                () => mockDio.post<dynamic>(
+                  '/wallet/topup',
+                  data: captureAny(named: 'data'),
+                ),
+              ).captured.single
+              as Map<String, dynamic>;
+      expect(data['amount'], 20.46);
+    });
+  });
+
+  group('getRefundRequests', () {
+    test('renvoie la liste brute de /wallet/refund-requests', () async {
+      when(() => mockDio.get<dynamic>('/wallet/refund-requests')).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(path: '/wallet/refund-requests'),
+          statusCode: 200,
+          data: <dynamic>[
+            {
+              'id': 'r1',
+              'currency': 'EUR',
+              'amount': 35.0,
+              'channel': 'AUTOMATIC_STRIPE',
+              'status': 'PROCESSING',
+              'requestedAt': '2026-09-15T00:00:00.000Z',
+            },
+          ],
+        ),
+      );
+
+      final result = await datasource.getRefundRequests();
+
+      expect(result, hasLength(1));
+      verify(() => mockDio.get<dynamic>('/wallet/refund-requests')).called(1);
+    });
+  });
+
+  test('le datasource ne convertit rien : la DioException remonte telle '
+      'quelle (le repository seul la traduit)', () async {
+    when(() => mockDio.get<dynamic>('/wallet/balance')).thenThrow(
+      DioException(requestOptions: RequestOptions(path: '/wallet/balance')),
+    );
+
+    await expectLater(datasource.getBalance(), throwsA(isA<DioException>()));
+  });
 }
