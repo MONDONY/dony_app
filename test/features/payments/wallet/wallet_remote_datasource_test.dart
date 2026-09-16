@@ -144,21 +144,28 @@ void main() {
       data: {'clientSecret': 'pi_123_secret'},
     );
 
-    test('EUR : le corps omet currencyCode (devise par défaut du back)', () async {
-      when(
-        () => mockDio.post<dynamic>('/wallet/topup', data: any(named: 'data')),
-      ).thenAnswer((_) async => okResponse());
+    test(
+      'EUR : le corps omet currencyCode (devise par défaut du back)',
+      () async {
+        when(
+          () =>
+              mockDio.post<dynamic>('/wallet/topup', data: any(named: 'data')),
+        ).thenAnswer((_) async => okResponse());
 
-      final result = await datasource.topup(amount: 20, paymentMethod: 'STRIPE');
+        final result = await datasource.topup(
+          amount: 20,
+          paymentMethod: 'STRIPE',
+        );
 
-      expect(result['clientSecret'], 'pi_123_secret');
-      verify(
-        () => mockDio.post<dynamic>(
-          '/wallet/topup',
-          data: {'amount': 20.0, 'paymentMethod': 'STRIPE'},
-        ),
-      ).called(1);
-    });
+        expect(result['clientSecret'], 'pi_123_secret');
+        verify(
+          () => mockDio.post<dynamic>(
+            '/wallet/topup',
+            data: {'amount': 20.0, 'paymentMethod': 'STRIPE'},
+          ),
+        ).called(1);
+      },
+    );
 
     test('devise non EUR : currencyCode ajouté et mis en majuscules', () async {
       when(

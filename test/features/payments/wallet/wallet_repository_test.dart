@@ -91,11 +91,8 @@ void main() {
   group('getBalance', () {
     test('délègue au datasource et renvoie le WalletModel', () async {
       when(() => mockDatasource.getBalance()).thenAnswer(
-        (_) async => const WalletModel(
-          balance: 47.5,
-          currency: 'EUR',
-          transactions: [],
-        ),
+        (_) async =>
+            const WalletModel(balance: 47.5, currency: 'EUR', transactions: []),
       );
 
       final result = await repo.getBalance();
@@ -118,26 +115,29 @@ void main() {
   });
 
   group('topupStripe', () {
-    test('force le moyen de paiement STRIPE et extrait le clientSecret', () async {
-      when(
-        () => mockDatasource.topup(
-          amount: any(named: 'amount'),
-          paymentMethod: any(named: 'paymentMethod'),
-          currencyCode: any(named: 'currencyCode'),
-        ),
-      ).thenAnswer((_) async => {'clientSecret': 'pi_123_secret'});
+    test(
+      'force le moyen de paiement STRIPE et extrait le clientSecret',
+      () async {
+        when(
+          () => mockDatasource.topup(
+            amount: any(named: 'amount'),
+            paymentMethod: any(named: 'paymentMethod'),
+            currencyCode: any(named: 'currencyCode'),
+          ),
+        ).thenAnswer((_) async => {'clientSecret': 'pi_123_secret'});
 
-      final result = await repo.topupStripe(amount: 20, currencyCode: 'CAD');
+        final result = await repo.topupStripe(amount: 20, currencyCode: 'CAD');
 
-      expect(result, 'pi_123_secret');
-      verify(
-        () => mockDatasource.topup(
-          amount: 20,
-          paymentMethod: 'STRIPE',
-          currencyCode: 'CAD',
-        ),
-      ).called(1);
-    });
+        expect(result, 'pi_123_secret');
+        verify(
+          () => mockDatasource.topup(
+            amount: 20,
+            paymentMethod: 'STRIPE',
+            currencyCode: 'CAD',
+          ),
+        ).called(1);
+      },
+    );
 
     test('renvoie null quand le back omet clientSecret', () async {
       when(
@@ -213,10 +213,7 @@ void main() {
         ),
       );
 
-      await expectLater(
-        repo.getRefundRequests(),
-        throwsA(isA<AppException>()),
-      );
+      await expectLater(repo.getRefundRequests(), throwsA(isA<AppException>()));
     });
   });
 }

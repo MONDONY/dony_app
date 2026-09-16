@@ -528,9 +528,7 @@ void main() {
   );
 
   testWidgets('refundableAmount absent (ancien contrat back) : repli sur la '
-      'sheet de sélection', (
-    tester,
-  ) async {
+      'sheet de sélection', (tester) async {
     const wallet = WalletModel(
       balance: 40,
       currency: 'EUR',
@@ -610,10 +608,7 @@ void main() {
 
       expect(find.text('Rembourser mon solde'), findsNothing);
       expect(find.text('Choisir une recharge'), findsOneWidget);
-      expect(
-        find.textContaining('Aucune recharge disponible'),
-        findsOneWidget,
-      );
+      expect(find.textContaining('Aucune recharge disponible'), findsOneWidget);
     },
   );
 }
