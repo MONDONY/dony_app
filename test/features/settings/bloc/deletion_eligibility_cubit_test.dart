@@ -233,7 +233,10 @@ void main() {
       ],
       verify: (_) {
         verify(
-          () => mockAnalytics.logEvent(AnalyticsEvents.walletRefundRequested),
+          () => mockAnalytics.logEvent(
+            AnalyticsEvents.walletRefundRequested,
+            properties: {'source': 'account_deletion'},
+          ),
         ).called(1);
       },
     );
@@ -268,7 +271,10 @@ void main() {
       ],
       verify: (_) {
         verifyNever(
-          () => mockAnalytics.logEvent(AnalyticsEvents.walletRefundRequested),
+          () => mockAnalytics.logEvent(
+            AnalyticsEvents.walletRefundRequested,
+            properties: any(named: 'properties'),
+          ),
         );
       },
     );

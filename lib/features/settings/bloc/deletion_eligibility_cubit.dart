@@ -112,9 +112,11 @@ class DeletionEligibilityCubit extends Cubit<DeletionEligibilityState> {
     }
   }
 
-  /// Ouvre le ticket de remboursement manuel — ne débloque jamais la
-  /// suppression elle-même, seul un admin peut le faire en résolvant le
-  /// ticket après avoir remboursé via Stripe hors-app.
+  /// Demande le remboursement du montant remboursable du portefeuille :
+  /// automatique par Stripe sur les recharges d'origine quand elles le
+  /// permettent, ticket manuel traité par un admin seulement en repli. Le
+  /// bonus non remboursable reste sur le solde. Ne conditionne jamais la
+  /// suppression du compte.
   Future<void> requestWalletRefund() async {
     emit(
       state.copyWith(
@@ -132,7 +134,12 @@ class DeletionEligibilityCubit extends Cubit<DeletionEligibilityState> {
           ),
         );
       }
-      unawaited(_analytics.logEvent(AnalyticsEvents.walletRefundRequested));
+      unawaited(
+        _analytics.logEvent(
+          AnalyticsEvents.walletRefundRequested,
+          properties: const {'source': 'account_deletion'},
+        ),
+      );
     } catch (e) {
       if (!isClosed) {
         emit(

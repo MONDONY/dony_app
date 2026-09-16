@@ -566,13 +566,11 @@ void main() {
   });
 
   testWidgets(
-    'refundableAmount à 0 avec un solde positif : le bouton reste affiché et '
-    'le repli annonce qu\'aucune recharge n\'est remboursable',
+    'refundableAmount à 0 avec un solde positif : le bouton Rembourser est '
+    'masqué, rien n\'est remboursable',
     (tester) async {
-      // Comportement réel du code : seul `wallet.refundEligible` conditionne
-      // l'affichage du bouton. Un `refundableAmount` à 0 (tout le solde est
-      // du bonus) ne le masque pas, il tombe dans la même branche que
-      // l'ancien contrat et la sheet de sélection affiche son état vide.
+      // Tout le solde est du bonus non remboursable : afficher le bouton
+      // mènerait à une sheet vide. `Recharger` et `Demandes` restent.
       const wallet = WalletModel(
         balance: 40,
         currency: 'EUR',
@@ -594,21 +592,40 @@ void main() {
         Stream.value(WalletLoaded(wallet)),
         initialState: WalletInitial(),
       );
-      when(
-        () => _currentTopupsCubit.state,
-      ).thenReturn(const WalletEligibleTopupsState(isLoading: false));
 
       await tester.pumpWidget(buildSubject(bloc, prefsBloc, refundCubit));
       await tester.pumpAndSettle();
 
-      expect(find.text('Rembourser'), findsOneWidget);
-
-      await tester.tap(find.text('Rembourser'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Rembourser mon solde'), findsNothing);
-      expect(find.text('Choisir une recharge'), findsOneWidget);
-      expect(find.textContaining('Aucune recharge disponible'), findsOneWidget);
+      expect(find.text('Rembourser'), findsNothing);
+      expect(find.text('Recharger'), findsOneWidget);
+      expect(find.text('Demandes'), findsOneWidget);
     },
   );
+
+  testWidgets('refundEligible faux : le bouton Rembourser est masqué même avec '
+      'un montant remboursable', (tester) async {
+    const wallet = WalletModel(
+      balance: 40,
+      currency: 'EUR',
+      transactions: [],
+      balances: [
+        WalletCurrencyBalanceModel(
+          currency: 'EUR',
+          balance: 40,
+          active: true,
+          refundableAmount: 35,
+        ),
+      ],
+    );
+    whenListen(
+      bloc,
+      Stream.value(WalletLoaded(wallet)),
+      initialState: WalletInitial(),
+    );
+
+    await tester.pumpWidget(buildSubject(bloc, prefsBloc, refundCubit));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Rembourser'), findsNothing);
+  });
 }
