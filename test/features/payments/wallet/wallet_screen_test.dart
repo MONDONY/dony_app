@@ -79,7 +79,7 @@ void main() {
     when(() => refundCubit.state).thenReturn(const WalletRefundRequestState());
     when(() => refundCubit.stream).thenAnswer((_) => const Stream.empty());
     when(() => refundCubit.close()).thenAnswer((_) async {});
-    when(() => refundCubit.submit(any(), any())).thenAnswer((_) async {});
+    when(() => refundCubit.submit(any())).thenAnswer((_) async {});
 
     _currentTopupsCubit = MockWalletEligibleTopupsCubit();
     when(

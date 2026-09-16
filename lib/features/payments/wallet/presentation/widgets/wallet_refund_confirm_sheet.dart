@@ -94,18 +94,34 @@ class _ConfirmStickyBottom extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<WalletRefundRequestCubit, WalletRefundRequestState>(
-      listenWhen: (previous, current) => previous.result != current.result,
+      listenWhen: (previous, current) =>
+          previous.result != current.result || previous.error != current.error,
       listener: (context, state) {
         if (state.result != null) {
           Navigator.of(context).pop(true);
         }
       },
-      builder: (context, state) => DonyButton(
-        label: label,
-        isLoading: state.isSubmitting,
-        onPressed: state.isSubmitting
-            ? null
-            : () => context.read<WalletRefundRequestCubit>().submit(currencyCode),
+      builder: (context, state) => Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (state.error != null) ...[
+            DonyStatusBanner(
+              type: DonyStatusBannerType.error,
+              iconAsset: 'circle-alert',
+              message: state.error!.message,
+            ),
+            const SizedBox(height: DonySpacing.sm),
+          ],
+          DonyButton(
+            label: label,
+            isLoading: state.isSubmitting,
+            onPressed: state.isSubmitting
+                ? null
+                : () =>
+                      context.read<WalletRefundRequestCubit>().submit(currencyCode),
+          ),
+        ],
       ),
     );
   }

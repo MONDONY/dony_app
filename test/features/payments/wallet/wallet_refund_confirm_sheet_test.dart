@@ -4,6 +4,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_refund_request_cubit.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_refund_request_model.dart';
 import 'package:dony/features/payments/wallet/presentation/widgets/wallet_refund_confirm_sheet.dart';
@@ -27,7 +28,7 @@ void main() {
   setUp(() {
     cubit = MockWalletRefundRequestCubit();
     when(() => cubit.state).thenReturn(const WalletRefundRequestState());
-    when(() => cubit.submit(any(), any())).thenAnswer((_) async {});
+    when(() => cubit.submit(any())).thenAnswer((_) async {});
   });
 
   Widget host({required double refundable, required double nonRefundable}) =>
@@ -124,5 +125,36 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text(expectedButtonLabel), findsNothing);
+  });
+
+  testWidgets('affiche l\'erreur et reste ouverte quand la demande échoue', (
+    tester,
+  ) async {
+    final controller = StreamController<WalletRefundRequestState>.broadcast();
+    addTearDown(controller.close);
+    when(() => cubit.stream).thenAnswer(
+      (_) => controller.stream.map((state) {
+        when(() => cubit.state).thenReturn(state);
+        return state;
+      }),
+    );
+
+    await tester.pumpWidget(host(refundable: 35, nonRefundable: 0));
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+
+    controller.add(const WalletRefundRequestState(isSubmitting: true));
+    await tester.pump();
+    controller.add(
+      const WalletRefundRequestState(
+        error: NetworkException('Erreur réseau'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Erreur réseau'), findsOneWidget);
+    expect(find.text(expectedButtonLabel), findsOneWidget);
+    // La sheet est toujours affichée (pas de pop) : son titre reste visible.
+    expect(find.text('Rembourser mon solde'), findsOneWidget);
   });
 }

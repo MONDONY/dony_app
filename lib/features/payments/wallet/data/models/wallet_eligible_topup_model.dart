@@ -4,8 +4,9 @@ class WalletEligibleTopupModel {
   final String? paymentRef;
   final DateTime createdAt;
 
-  /// Montant initial du dépôt avant frais/négociations éventuels. `null`
-  /// tant que le back n'expose pas encore le champ.
+  /// Montant d'origine de la recharge. `amount` est le reliquat encore
+  /// remboursable après les dépenses (rejeu du ledger côté back). `null` sur
+  /// l'ancien contrat.
   final double? originalAmount;
 
   const WalletEligibleTopupModel({
