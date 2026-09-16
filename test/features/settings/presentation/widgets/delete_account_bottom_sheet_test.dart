@@ -4,6 +4,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
+import 'package:dony/core/design/widgets/dony_snackbar.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:dony/features/settings/bloc/deletion_eligibility_cubit.dart';
@@ -26,6 +27,10 @@ void main() {
   late MockDeletionEligibilityCubit mockEligibilityCubit;
 
   setUp(() {
+    // `DonySnackbar` déduplique les messages identiques pendant 5 secondes :
+    // sans ce reset, le message de grâce ne serait affiché que pour le
+    // premier test qui le déclenche.
+    DonySnackbar.clearDedup();
     mockBloc = MockAccountDeletionBloc();
     when(() => mockBloc.state).thenReturn(const AccountDeletionInitial());
     mockEligibilityCubit = MockDeletionEligibilityCubit();
@@ -573,4 +578,39 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets(
+    'AccountDeletionRequested : le snackbar rappelle mot pour mot que les '
+    'remboursements lancés ne sont pas annulés',
+    (tester) async {
+      final controller = StreamController<AccountDeletionState>();
+      addTearDown(controller.close);
+      whenListen<AccountDeletionState>(
+        mockBloc,
+        controller.stream,
+        initialState: const AccountDeletionInitial(),
+      );
+
+      await tester.pumpWidget(buildWidget());
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      controller.add(const AccountDeletionRequested());
+      await tester.pump();
+      await tester.pump();
+
+      // Phrase exacte : c'est la seule garantie donnée à qui annule sa
+      // suppression après avoir demandé un remboursement.
+      expect(
+        find.textContaining(
+          'Les remboursements déjà lancés ne sont pas annulés.',
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.textContaining('Votre compte sera supprimé dans 30 jours.'),
+        findsOneWidget,
+      );
+    },
+  );
 }
