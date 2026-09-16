@@ -24,6 +24,7 @@ class DeletionEligibilityState {
     this.walletRefundRequests = const [],
     this.isRequestingWalletRefund = false,
     this.walletRefundError,
+    this.walletSettlement,
   });
 
   final bool isLoading;
@@ -44,6 +45,10 @@ class DeletionEligibilityState {
   final bool isRequestingWalletRefund;
   final AppException? walletRefundError;
 
+  /// Récapitulatif de règlement du wallet par devise, `null` sur l'ancien
+  /// contrat back (sheet de suppression : tâche 5).
+  final List<WalletSettlement>? walletSettlement;
+
   bool get canDelete => blockedReasonMessage == null;
 
   bool get walletRefundRequested => walletRefundRequests.isNotEmpty;
@@ -57,6 +62,7 @@ class DeletionEligibilityState {
     bool? isRequestingWalletRefund,
     AppException? walletRefundError,
     bool clearWalletRefundError = false,
+    List<WalletSettlement>? walletSettlement,
   }) {
     return DeletionEligibilityState(
       isLoading: isLoading ?? this.isLoading,
@@ -69,6 +75,7 @@ class DeletionEligibilityState {
       walletRefundError: clearWalletRefundError
           ? null
           : (walletRefundError ?? this.walletRefundError),
+      walletSettlement: walletSettlement ?? this.walletSettlement,
     );
   }
 }
@@ -92,6 +99,7 @@ class DeletionEligibilityCubit extends Cubit<DeletionEligibilityState> {
                 ? null
                 : _messageFor(eligibility.blockedReasonCode),
             hasWalletBalance: eligibility.hasWalletBalance,
+            walletSettlement: eligibility.walletSettlement,
           ),
         );
       }

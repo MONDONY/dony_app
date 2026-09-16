@@ -162,6 +162,38 @@ void main() {
             .having((s) => s.canDelete, 'canDelete', isTrue),
       ],
     );
+
+    blocTest<DeletionEligibilityCubit, DeletionEligibilityState>(
+      'walletSettlement est porté dans l\'état',
+      build: () {
+        when(() => mockRepo.checkEligibility()).thenAnswer(
+          (_) async => const DeletionEligibility(
+            canDelete: true,
+            hasWalletBalance: true,
+            walletSettlement: [
+              WalletSettlement(
+                currency: 'EUR',
+                refundableAmount: 35,
+                forfeitedAmount: 5,
+                inFlightAmount: 0,
+                rail: 'STRIPE',
+              ),
+            ],
+          ),
+        );
+        return cubit;
+      },
+      act: (c) => c.check(),
+      expect: () => [
+        isA<DeletionEligibilityState>()
+            .having((s) => s.hasWalletBalance, 'hasWalletBalance', isTrue)
+            .having(
+              (s) => s.walletSettlement?.single.refundableAmount,
+              'refundable',
+              35,
+            ),
+      ],
+    );
   });
 
   group('requestWalletRefund()', () {
