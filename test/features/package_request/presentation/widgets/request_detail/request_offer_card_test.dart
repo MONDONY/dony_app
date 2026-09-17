@@ -9,7 +9,7 @@ NegotiationThread _t(NegotiationThreadStatus s, {bool myTurn = false}) => Negoti
   id: 't', packageRequestId: 'pr', travelerId: 'tr', travelerTravelDate: DateTime(2026, 9, 26),
   travelerAvailableKg: 8, status: s, currentPriceEur: 25, roundsCount: 1,
   lastActivityAt: DateTime(2026, 9, 17), createdAt: DateTime(2026, 9, 17), messages: const [],
-  travelerName: 'Awa K.', travelerRating: 4.9, isMyTurn: myTurn, grossPriceEur: 28, currency: 'EUR',
+  travelerName: 'Awa K.', travelerRating: 4.9, isMyTurn: myTurn, grossPriceEur: 28,
 );
 
 void main() {
