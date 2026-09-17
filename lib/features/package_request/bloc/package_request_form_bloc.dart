@@ -7,11 +7,10 @@ import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
+import 'package:dony/features/package_request/data/models/package_request_duplicate.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
-import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/package_request_create_screen.dart'
-    show PackageRequestDuplicate;
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class PackageRequestFormBloc

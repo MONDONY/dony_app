@@ -12,6 +12,7 @@ import 'package:dony/features/package_request/bloc/package_request_form_event.da
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
 import 'package:dony/features/package_request/bloc/package_request_photos_cubit.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
+import 'package:dony/features/package_request/data/models/package_request_duplicate.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/steps/step_1_trajet_colis.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/steps/step_2_details.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/steps/step_3_recap_budget.dart';
@@ -24,6 +25,10 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+
+// Réexporté pour les appelants existants (router, DI, T9) qui importaient
+// PackageRequestDuplicate via cet écran avant son déplacement dans data/models.
+export 'package:dony/features/package_request/data/models/package_request_duplicate.dart';
 
 abstract final class PackageRequestCreateWizard {
   static bool requiresEditWarning(PackageRequest? initial) =>
@@ -86,13 +91,6 @@ abstract final class PackageRequestCreateWizard {
     '/package-requests/new',
     extra: PackageRequestDuplicate(source, clearDate: clearDate),
   );
-}
-
-/// Création pré-remplie depuis une demande existante (dupliquer, republier).
-class PackageRequestDuplicate {
-  const PackageRequestDuplicate(this.source, {this.clearDate = false});
-  final PackageRequest source;
-  final bool clearDate;
 }
 
 // ─── Screen ─────────────────────────────────────────────────────────────────
