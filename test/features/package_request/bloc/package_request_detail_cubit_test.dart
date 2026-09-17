@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dio/dio.dart';
 import 'package:dony/core/services/analytics_events.dart';
@@ -208,12 +210,64 @@ void main() {
       await c.load();
       await c.publish();
     },
-    verify: (_) {
+    verify: (cubit) {
       verify(() => requests.publish('pr-1')).called(1);
       verify(() => analytics.logEvent(AnalyticsEvents.packageRequestPublished)).called(1);
       verify(() => requests.getById('pr-1')).called(2);
+      expect(cubit.state,
+          isA<PackageRequestDetailLoaded>().having((s) => s.actionInFlight, 'busy', isFalse));
     },
   );
+
+  blocTest<PackageRequestDetailCubit, PackageRequestDetailState>(
+    'publish réussi puis rechargement en échec : actionInFlight repasse à false avec une notice',
+    build: build,
+    setUp: () {
+      var getCalls = 0;
+      when(() => requests.getById('pr-1')).thenAnswer((_) async {
+        getCalls++;
+        if (getCalls == 1) return _req(PackageRequestStatus.draft);
+        throw _http(500);
+      });
+      when(() => requests.publish('pr-1')).thenAnswer((_) async => _req(PackageRequestStatus.open));
+    },
+    act: (c) async {
+      await c.load();
+      await c.publish();
+    },
+    skip: 3,
+    expect: () => [
+      isA<PackageRequestDetailLoaded>()
+          .having((s) => s.actionInFlight, 'busy', isFalse)
+          .having((s) => s.notice?.kind, 'notice', RequestDetailNoticeKind.actionFailed),
+    ],
+  );
+
+  test('invite et cancel entrelacés : l état relu après chaque await, pas l état capturé avant', () async {
+    final inviteCompleter = Completer<InvitationOutcome>();
+    final cancelCompleter = Completer<void>();
+    when(() => requests.inviteTraveler('pr-1', 'a-2')).thenAnswer((_) => inviteCompleter.future);
+    when(() => requests.cancel('pr-1')).thenAnswer((_) => cancelCompleter.future);
+
+    final c = build();
+    await c.load();
+
+    final invitePending = c.invite('a-2');
+    final cancelPending = c.cancel();
+
+    inviteCompleter.complete(InvitationOutcome.sent);
+    await invitePending;
+
+    cancelCompleter.complete();
+    await cancelPending;
+
+    final state = c.state as PackageRequestDetailLoaded;
+    expect(state.cancelledLocally, isTrue);
+    expect(state.invitingAnnouncementIds, isEmpty);
+    expect(state.invitedAnnouncementIds, contains('a-2'));
+
+    await c.close();
+  });
 
   blocTest<PackageRequestDetailCubit, PackageRequestDetailState>(
     'invite : envoi réussi → invité + notice',

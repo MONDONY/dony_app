@@ -62,7 +62,10 @@ class PackageRequestDetailCubit extends Cubit<PackageRequestDetailState> {
       ));
     } catch (_) {
       if (previous is PackageRequestDetailLoaded) {
-        emit(previous.copyWith(notice: _notice(RequestDetailNoticeKind.actionFailed)));
+        emit(previous.copyWith(
+          actionInFlight: false,
+          notice: _notice(RequestDetailNoticeKind.actionFailed),
+        ));
       } else {
         emit(const PackageRequestDetailError());
       }
@@ -87,9 +90,13 @@ class PackageRequestDetailCubit extends Cubit<PackageRequestDetailState> {
     try {
       await _requests.cancel(requestId);
       unawaited(_analytics.logEvent(AnalyticsEvents.packageRequestCancelled));
-      emit(s.copyWith(actionInFlight: false, cancelledLocally: true));
+      final current = state;
+      if (current is! PackageRequestDetailLoaded) return;
+      emit(current.copyWith(actionInFlight: false, cancelledLocally: true));
     } catch (_) {
-      emit(s.copyWith(actionInFlight: false, notice: _notice(RequestDetailNoticeKind.actionFailed)));
+      final current = state;
+      if (current is! PackageRequestDetailLoaded) return;
+      emit(current.copyWith(actionInFlight: false, notice: _notice(RequestDetailNoticeKind.actionFailed)));
     }
   }
 
@@ -101,7 +108,8 @@ class PackageRequestDetailCubit extends Cubit<PackageRequestDetailState> {
     emit(s.copyWith(invitingAnnouncementIds: {...s.invitingAnnouncementIds, announcementId}));
     try {
       final outcome = await _requests.inviteTraveler(requestId, announcementId);
-      final current = state as PackageRequestDetailLoaded;
+      final current = state;
+      if (current is! PackageRequestDetailLoaded) return;
       final inviting = {...current.invitingAnnouncementIds}..remove(announcementId);
       switch (outcome) {
         case InvitationOutcome.unsupported:
@@ -120,7 +128,8 @@ class PackageRequestDetailCubit extends Cubit<PackageRequestDetailState> {
           ));
       }
     } on DioException catch (e) {
-      final current = state as PackageRequestDetailLoaded;
+      final current = state;
+      if (current is! PackageRequestDetailLoaded) return;
       emit(current.copyWith(
         invitingAnnouncementIds: {...current.invitingAnnouncementIds}..remove(announcementId),
         notice: _notice(e.response?.statusCode == 422
@@ -148,7 +157,9 @@ class PackageRequestDetailCubit extends Cubit<PackageRequestDetailState> {
       await action();
       unawaited(_analytics.logEvent(successEvent));
     } catch (_) {
-      emit(s.copyWith(actionInFlight: false, notice: _notice(RequestDetailNoticeKind.actionFailed)));
+      final current = state;
+      if (current is! PackageRequestDetailLoaded) return;
+      emit(current.copyWith(actionInFlight: false, notice: _notice(RequestDetailNoticeKind.actionFailed)));
       return;
     }
     await load();
