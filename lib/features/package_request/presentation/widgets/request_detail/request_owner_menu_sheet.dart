@@ -15,7 +15,10 @@ abstract final class RequestOwnerMenuSheet {
           mainAxisSize: MainAxisSize.min,
           children: [
             for (final item in items)
-              _MenuRow(item: item, onTap: () => Navigator.of(sheetContext).pop(item)),
+              _MenuRow(
+                item: item,
+                onTap: () => Navigator.of(sheetContext).pop(item),
+              ),
           ],
         ),
       ),
@@ -32,9 +35,24 @@ class _MenuRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final (icon, label, consequence, danger) = switch (item) {
-      RequestMenuAction.unpublish => ('eye-off', 'Dépublier', 'Redevient un brouillon, invisible des voyageurs', false),
-      RequestMenuAction.duplicate => ('copy', 'Dupliquer la demande', 'Même colis, nouvelles dates ou nouveau trajet', false),
-      RequestMenuAction.cancel => ('circle-x', 'Annuler la demande', 'Irréversible', true),
+      RequestMenuAction.unpublish => (
+        'eye-off',
+        'Dépublier',
+        'Redevient un brouillon, invisible des voyageurs',
+        false,
+      ),
+      RequestMenuAction.duplicate => (
+        'copy',
+        'Dupliquer la demande',
+        'Même colis, nouvelles dates ou nouveau trajet',
+        false,
+      ),
+      RequestMenuAction.cancel => (
+        'circle-x',
+        'Annuler la demande',
+        'Irréversible',
+        true,
+      ),
     };
     final color = danger ? cs.error : cs.onSurface;
     return InkWell(
@@ -42,7 +60,10 @@ class _MenuRow extends StatelessWidget {
       borderRadius: BorderRadius.circular(DonyRadius.md),
       child: Container(
         constraints: const BoxConstraints(minHeight: 56),
-        padding: const EdgeInsets.symmetric(horizontal: DonySpacing.sm, vertical: DonySpacing.sm),
+        padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.sm,
+          vertical: DonySpacing.sm,
+        ),
         child: Row(
           children: [
             DonyIcon(icon, size: 20, color: color),
@@ -51,9 +72,23 @@ class _MenuRow extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(label, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: color)),
-                  Text(consequence, style: TextStyle(fontSize: 12,
-                      color: danger ? cs.error.withValues(alpha: 0.8) : cs.onSurfaceVariant)),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: color,
+                    ),
+                  ),
+                  Text(
+                    consequence,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: danger
+                          ? cs.error.withValues(alpha: 0.8)
+                          : cs.onSurfaceVariant,
+                    ),
+                  ),
                 ],
               ),
             ),

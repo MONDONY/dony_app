@@ -32,19 +32,39 @@ void main() {
     initializeDateFormatting('fr');
   });
 
-  Widget wrapDark(Widget child) =>
-      MaterialApp(theme: AppTheme.dark(), home: Scaffold(body: Center(child: child)));
+  Widget wrapDark(Widget child) => MaterialApp(
+    theme: AppTheme.dark(),
+    home: Scaffold(body: Center(child: child)),
+  );
 
-  testWidgets('RequestStatusPill (succès) : couleurs du thème sombre', (tester) async {
+  testWidgets('RequestStatusPill (succès) : couleurs du thème sombre', (
+    tester,
+  ) async {
     final darkCs = AppTheme.dark().colorScheme;
-    await tester.pumpWidget(wrapDark(
-      const RequestStatusPill(screenCase: RequestScreenCase.accepted),
-    ));
+    await tester.pumpWidget(
+      wrapDark(const RequestStatusPill(screenCase: RequestScreenCase.accepted)),
+    );
 
-    final bg = tester
-        .widget<Container>(find.descendant(of: find.byType(RequestStatusPill), matching: find.byType(Container)).first)
-        .decoration as BoxDecoration;
-    final label = tester.widget<Text>(find.descendant(of: find.byType(RequestStatusPill), matching: find.byType(Text)).first);
+    final bg =
+        tester
+                .widget<Container>(
+                  find
+                      .descendant(
+                        of: find.byType(RequestStatusPill),
+                        matching: find.byType(Container),
+                      )
+                      .first,
+                )
+                .decoration
+            as BoxDecoration;
+    final label = tester.widget<Text>(
+      find
+          .descendant(
+            of: find.byType(RequestStatusPill),
+            matching: find.byType(Text),
+          )
+          .first,
+    );
 
     expect(bg.color, darkCs.successLight);
     expect(label.style?.color, darkCs.success);
@@ -53,40 +73,77 @@ void main() {
     expect(label.style?.color, isNot(DonyColors.success500));
   });
 
-  testWidgets('RequestStatusPill (attente commission) : ton warning du thème sombre', (tester) async {
-    final darkCs = AppTheme.dark().colorScheme;
-    await tester.pumpWidget(wrapDark(
-      const RequestStatusPill(screenCase: RequestScreenCase.cashCommissionPending),
-    ));
+  testWidgets(
+    'RequestStatusPill (attente commission) : ton warning du thème sombre',
+    (tester) async {
+      final darkCs = AppTheme.dark().colorScheme;
+      await tester.pumpWidget(
+        wrapDark(
+          const RequestStatusPill(
+            screenCase: RequestScreenCase.cashCommissionPending,
+          ),
+        ),
+      );
 
-    final bg = tester
-        .widget<Container>(find.descendant(of: find.byType(RequestStatusPill), matching: find.byType(Container)).first)
-        .decoration as BoxDecoration;
+      final bg =
+          tester
+                  .widget<Container>(
+                    find
+                        .descendant(
+                          of: find.byType(RequestStatusPill),
+                          matching: find.byType(Container),
+                        )
+                        .first,
+                  )
+                  .decoration
+              as BoxDecoration;
 
-    expect(bg.color, darkCs.warningLight);
-    expect(bg.color, isNot(DonyColors.warning50));
-  });
+      expect(bg.color, darkCs.warningLight);
+      expect(bg.color, isNot(DonyColors.warning50));
+    },
+  );
 
-  testWidgets('Billet sans photo : vignette placeholder en couleurs du thème sombre', (tester) async {
-    final darkCs = AppTheme.dark().colorScheme;
-    await tester.pumpWidget(wrapDark(RequestTicketCard(
-      request: PackageRequest(
-        id: 'pr-1', senderId: 's', departureCity: 'Divo', arrivalCity: 'Annemasse',
-        desiredDate: DateTime(2026, 9, 27), dateToleranceDays: 0, weightKg: 2,
-        parcelSize: ParcelSize.small, transportMode: TransportMode.plane,
-        status: PackageRequestStatus.open, createdAt: DateTime.utc(2026, 9, 17)),
-      statusPill: const SizedBox(), metaLabel: '',
-    )));
+  testWidgets(
+    'Billet sans photo : vignette placeholder en couleurs du thème sombre',
+    (tester) async {
+      final darkCs = AppTheme.dark().colorScheme;
+      await tester.pumpWidget(
+        wrapDark(
+          RequestTicketCard(
+            request: PackageRequest(
+              id: 'pr-1',
+              senderId: 's',
+              departureCity: 'Divo',
+              arrivalCity: 'Annemasse',
+              desiredDate: DateTime(2026, 9, 27),
+              dateToleranceDays: 0,
+              weightKg: 2,
+              parcelSize: ParcelSize.small,
+              transportMode: TransportMode.plane,
+              status: PackageRequestStatus.open,
+              createdAt: DateTime.utc(2026, 9, 17),
+            ),
+            statusPill: const SizedBox(),
+            metaLabel: '',
+          ),
+        ),
+      );
 
-    final placeholder = find.byKey(const Key('request-ticket-photo-placeholder'));
-    final deco = tester.widget<Container>(placeholder).decoration as BoxDecoration;
-    final icon = tester.widget<DonyIcon>(find.descendant(of: placeholder, matching: find.byType(DonyIcon)));
+      final placeholder = find.byKey(
+        const Key('request-ticket-photo-placeholder'),
+      );
+      final deco =
+          tester.widget<Container>(placeholder).decoration as BoxDecoration;
+      final icon = tester.widget<DonyIcon>(
+        find.descendant(of: placeholder, matching: find.byType(DonyIcon)),
+      );
 
-    expect(deco.color, darkCs.surfaceContainerHighest);
-    expect(icon.color, darkCs.onSurfaceVariant);
-    expect(deco.color, isNot(DonyColors.sand200));
-    expect(icon.color, isNot(DonyColors.terra700));
-  });
+      expect(deco.color, darkCs.surfaceContainerHighest);
+      expect(icon.color, darkCs.onSurfaceVariant);
+      expect(deco.color, isNot(DonyColors.sand200));
+      expect(icon.color, isNot(DonyColors.terra700));
+    },
+  );
 
   // NOTE (point 4 de la fiche, vignette en erreur) : `CachedNetworkImage`
   // s'appuie sur `flutter_cache_manager`, dont le chemin d'échec réseau ne se
@@ -99,31 +156,69 @@ void main() {
   // token que la vignette placeholder juste au-dessus, déjà couverte par
   // « Billet sans photo : vignette placeholder… ».
 
-  testWidgets('Billet quartiers : puce de localisation en couleurs du thème sombre', (tester) async {
+  testWidgets(
+    'Billet quartiers : puce de localisation en couleurs du thème sombre',
+    (tester) async {
+      final darkCs = AppTheme.dark().colorScheme;
+      await tester.pumpWidget(
+        wrapDark(
+          RequestTicketCard(
+            request: PackageRequest(
+              id: 'pr-1',
+              senderId: 's',
+              departureCity: 'Divo',
+              arrivalCity: 'Annemasse',
+              desiredDate: DateTime(2026, 9, 27),
+              dateToleranceDays: 0,
+              weightKg: 2,
+              parcelSize: ParcelSize.small,
+              transportMode: TransportMode.plane,
+              status: PackageRequestStatus.open,
+              createdAt: DateTime.utc(2026, 9, 17),
+              pickupNeighborhood: 'Commerce',
+              deliveryNeighborhood: 'Centre-ville',
+            ),
+            statusPill: const SizedBox(),
+            metaLabel: '',
+          ),
+        ),
+      );
+
+      final pin = tester.widget<DonyIcon>(
+        find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'map-pin'),
+      );
+      expect(pin.color, darkCs.secondary);
+      expect(pin.color, isNot(DonyColors.terra600));
+    },
+  );
+
+  testWidgets('RequestStateBanner (info) : couleurs du thème sombre', (
+    tester,
+  ) async {
     final darkCs = AppTheme.dark().colorScheme;
-    await tester.pumpWidget(wrapDark(RequestTicketCard(
-      request: PackageRequest(
-        id: 'pr-1', senderId: 's', departureCity: 'Divo', arrivalCity: 'Annemasse',
-        desiredDate: DateTime(2026, 9, 27), dateToleranceDays: 0, weightKg: 2,
-        parcelSize: ParcelSize.small, transportMode: TransportMode.plane,
-        status: PackageRequestStatus.open, createdAt: DateTime.utc(2026, 9, 17),
-        pickupNeighborhood: 'Commerce', deliveryNeighborhood: 'Centre-ville'),
-      statusPill: const SizedBox(), metaLabel: '',
-    )));
+    await tester.pumpWidget(
+      wrapDark(
+        const RequestStateBanner(
+          tone: RequestBannerTone.info,
+          icon: 'info',
+          title: 'Titre',
+          message: 'Message.',
+        ),
+      ),
+    );
 
-    final pin = tester.widget<DonyIcon>(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'map-pin'));
-    expect(pin.color, darkCs.secondary);
-    expect(pin.color, isNot(DonyColors.terra600));
-  });
-
-  testWidgets('RequestStateBanner (info) : couleurs du thème sombre', (tester) async {
-    final darkCs = AppTheme.dark().colorScheme;
-    await tester.pumpWidget(wrapDark(const RequestStateBanner(
-      tone: RequestBannerTone.info, icon: 'info', title: 'Titre', message: 'Message.')));
-
-    final bg = tester
-        .widget<Container>(find.descendant(of: find.byType(RequestStateBanner), matching: find.byType(Container)).first)
-        .decoration as BoxDecoration;
+    final bg =
+        tester
+                .widget<Container>(
+                  find
+                      .descendant(
+                        of: find.byType(RequestStateBanner),
+                        matching: find.byType(Container),
+                      )
+                      .first,
+                )
+                .decoration
+            as BoxDecoration;
     final title = tester.widget<Text>(find.text('Titre'));
 
     expect(bg.color, darkCs.primaryContainer);
@@ -132,20 +227,41 @@ void main() {
     expect(title.style?.color, isNot(DonyColors.blue700));
   });
 
-  testWidgets('RequestOfferCard : ton et bordure surlignée du thème sombre', (tester) async {
+  testWidgets('RequestOfferCard : ton et bordure surlignée du thème sombre', (
+    tester,
+  ) async {
     final darkCs = AppTheme.dark().colorScheme;
     final thread = NegotiationThread(
-      id: 't', packageRequestId: 'pr', travelerId: 'tr', travelerTravelDate: DateTime(2026, 9, 26),
-      travelerAvailableKg: 8, status: NegotiationThreadStatus.open, currentPriceEur: 25, roundsCount: 1,
-      lastActivityAt: DateTime(2026, 9, 17), createdAt: DateTime(2026, 9, 17), messages: const [],
-      travelerName: 'Awa K.', isMyTurn: true, grossPriceEur: 28,
+      id: 't',
+      packageRequestId: 'pr',
+      travelerId: 'tr',
+      travelerTravelDate: DateTime(2026, 9, 26),
+      travelerAvailableKg: 8,
+      status: NegotiationThreadStatus.open,
+      currentPriceEur: 25,
+      roundsCount: 1,
+      lastActivityAt: DateTime(2026, 9, 17),
+      createdAt: DateTime(2026, 9, 17),
+      messages: const [],
+      travelerName: 'Awa K.',
+      isMyTurn: true,
+      grossPriceEur: 28,
     );
-    await tester.pumpWidget(wrapDark(RequestOfferCard(thread: thread, firmPrice: false, highlighted: true)));
+    await tester.pumpWidget(
+      wrapDark(
+        RequestOfferCard(thread: thread, firmPrice: false, highlighted: true),
+      ),
+    );
 
     final tagLabel = tester.widget<Text>(find.text('À toi de répondre'));
-    final card = tester.widget<Container>(find.byWidgetPredicate(
-      (w) => w is Container && w.decoration is BoxDecoration && (w.decoration! as BoxDecoration).border != null,
-    ));
+    final card = tester.widget<Container>(
+      find.byWidgetPredicate(
+        (w) =>
+            w is Container &&
+            w.decoration is BoxDecoration &&
+            (w.decoration! as BoxDecoration).border != null,
+      ),
+    );
     final border = (card.decoration! as BoxDecoration).border! as Border;
 
     expect(tagLabel.style?.color, darkCs.primary);
@@ -154,41 +270,85 @@ void main() {
     expect(border.top.color, isNot(DonyColors.blue200));
   });
 
-  testWidgets('CompatibleTravelerCard : bouton Inviter en couleurs du thème sombre', (tester) async {
+  testWidgets(
+    'CompatibleTravelerCard : bouton Inviter en couleurs du thème sombre',
+    (tester) async {
+      final darkCs = AppTheme.dark().colorScheme;
+      final trip = AnnouncementModel(
+        id: 'a-1',
+        travelerId: 'tr',
+        departureCity: 'Divo',
+        arrivalCity: 'Annemasse',
+        departureDate: DateTime(2026, 9, 26),
+        availableKg: 8,
+        totalKg: 10,
+        pricePerKg: 7,
+        status: 'ACTIVE',
+        createdAt: DateTime(2026, 9),
+        updatedAt: DateTime(2026, 9),
+      );
+      await tester.pumpWidget(
+        wrapDark(
+          CompatibleTravelerCard(
+            trip: trip,
+            requestWeightKg: 2,
+            inviteState: TravelerInviteState.idle,
+            onInvite: () {},
+          ),
+        ),
+      );
+
+      final button = tester.widget<TextButton>(
+        find.widgetWithText(TextButton, 'Inviter'),
+      );
+      final style = button.style!;
+      expect(style.backgroundColor?.resolve({}), darkCs.primaryContainer);
+      expect(style.foregroundColor?.resolve({}), darkCs.primary);
+      expect(style.backgroundColor?.resolve({}), isNot(DonyColors.primarySoft));
+    },
+  );
+
+  testWidgets('RequestNoTravelersEmpty : fond communautaire du thème sombre', (
+    tester,
+  ) async {
     final darkCs = AppTheme.dark().colorScheme;
-    final trip = AnnouncementModel(
-      id: 'a-1', travelerId: 'tr', departureCity: 'Divo', arrivalCity: 'Annemasse',
-      departureDate: DateTime(2026, 9, 26), availableKg: 8, totalKg: 10, pricePerKg: 7,
-      status: 'ACTIVE', createdAt: DateTime(2026, 9), updatedAt: DateTime(2026, 9),
+    await tester.pumpWidget(
+      wrapDark(
+        RequestNoTravelersEmpty(
+          corridor: 'Divo → Annemasse',
+          onCreateAlert: () {},
+          onWidenDates: () {},
+        ),
+      ),
     );
-    await tester.pumpWidget(wrapDark(CompatibleTravelerCard(
-      trip: trip, requestWeightKg: 2, inviteState: TravelerInviteState.idle, onInvite: () {})));
 
-    final button = tester.widget<TextButton>(find.widgetWithText(TextButton, 'Inviter'));
-    final style = button.style!;
-    expect(style.backgroundColor?.resolve({}), darkCs.primaryContainer);
-    expect(style.foregroundColor?.resolve({}), darkCs.primary);
-    expect(style.backgroundColor?.resolve({}), isNot(DonyColors.primarySoft));
-  });
-
-  testWidgets('RequestNoTravelersEmpty : fond communautaire du thème sombre', (tester) async {
-    final darkCs = AppTheme.dark().colorScheme;
-    await tester.pumpWidget(wrapDark(RequestNoTravelersEmpty(
-      corridor: 'Divo → Annemasse', onCreateAlert: () {}, onWidenDates: () {})));
-
-    final action = tester
-        .widget<Material>(find.ancestor(of: find.text('Être alerté des nouveaux trajets'), matching: find.byType(Material)).first);
+    final action = tester.widget<Material>(
+      find
+          .ancestor(
+            of: find.text('Être alerté des nouveaux trajets'),
+            matching: find.byType(Material),
+          )
+          .first,
+    );
 
     expect(action.color, darkCs.surfaceWarm);
     expect(action.color, isNot(DonyColors.sand100));
   });
 
-  testWidgets('RequestDetailSkeleton : blocs en couleurs du thème sombre', (tester) async {
+  testWidgets('RequestDetailSkeleton : blocs en couleurs du thème sombre', (
+    tester,
+  ) async {
     final darkCs = AppTheme.dark().colorScheme;
     await tester.pumpWidget(wrapDark(const RequestDetailSkeleton()));
 
-    final block = tester
-        .widget<Container>(find.descendant(of: find.byType(RequestDetailSkeleton), matching: find.byType(Container)).first);
+    final block = tester.widget<Container>(
+      find
+          .descendant(
+            of: find.byType(RequestDetailSkeleton),
+            matching: find.byType(Container),
+          )
+          .first,
+    );
     final deco = block.decoration as BoxDecoration;
 
     expect(deco.color, darkCs.surfaceContainerHighest);

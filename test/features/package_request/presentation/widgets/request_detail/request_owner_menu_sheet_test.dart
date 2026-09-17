@@ -5,17 +5,37 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('liste les actions avec leur conséquence et rend le choix', (tester) async {
+  testWidgets('liste les actions avec leur conséquence et rend le choix', (
+    tester,
+  ) async {
     RequestMenuAction? picked;
-    await tester.pumpWidget(MaterialApp(theme: AppTheme.light(), home: Builder(
-      builder: (ctx) => Scaffold(body: TextButton(
-        onPressed: () async => picked = await RequestOwnerMenuSheet.show(ctx,
-            items: const [RequestMenuAction.unpublish, RequestMenuAction.duplicate, RequestMenuAction.cancel]),
-        child: const Text('open'))))));
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: Builder(
+          builder: (ctx) => Scaffold(
+            body: TextButton(
+              onPressed: () async => picked = await RequestOwnerMenuSheet.show(
+                ctx,
+                items: const [
+                  RequestMenuAction.unpublish,
+                  RequestMenuAction.duplicate,
+                  RequestMenuAction.cancel,
+                ],
+              ),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      ),
+    );
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
     expect(find.text('Dépublier'), findsOneWidget);
-    expect(find.text('Redevient un brouillon, invisible des voyageurs'), findsOneWidget);
+    expect(
+      find.text('Redevient un brouillon, invisible des voyageurs'),
+      findsOneWidget,
+    );
     expect(find.text('Dupliquer la demande'), findsOneWidget);
     expect(find.text('Irréversible'), findsOneWidget);
     await tester.tap(find.text('Annuler la demande'));

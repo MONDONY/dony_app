@@ -9,15 +9,51 @@ import 'package:flutter/material.dart';
 }) {
   final name = travelerName ?? 'le voyageur';
   return switch (action) {
-    RequestPrimaryAction.publish => (label: 'Publier', icon: 'send', enabled: true),
-    RequestPrimaryAction.share => (label: 'Partager', icon: 'share-2', enabled: true),
-    RequestPrimaryAction.openThread => (label: 'Ouvrir la discussion', icon: 'message-circle', enabled: true),
-    RequestPrimaryAction.pay => (label: amount == null ? 'Payer' : 'Payer $amount', icon: 'credit-card', enabled: true),
-    RequestPrimaryAction.waitTrip => (label: '$name ajoute son trajet', icon: 'clock', enabled: false),
-    RequestPrimaryAction.trackParcel => (label: 'Suivre mon colis', icon: 'package', enabled: true),
-    RequestPrimaryAction.rate => (label: 'Noter $name', icon: 'star', enabled: true),
-    RequestPrimaryAction.republish => (label: 'Republier avec de nouvelles dates', icon: 'refresh-cw', enabled: true),
-    RequestPrimaryAction.publishSimilar => (label: 'Publier une demande similaire', icon: 'copy', enabled: true),
+    RequestPrimaryAction.publish => (
+      label: 'Publier',
+      icon: 'send',
+      enabled: true,
+    ),
+    RequestPrimaryAction.share => (
+      label: 'Partager',
+      icon: 'share-2',
+      enabled: true,
+    ),
+    RequestPrimaryAction.openThread => (
+      label: 'Ouvrir la discussion',
+      icon: 'message-circle',
+      enabled: true,
+    ),
+    RequestPrimaryAction.pay => (
+      label: amount == null ? 'Payer' : 'Payer $amount',
+      icon: 'credit-card',
+      enabled: true,
+    ),
+    RequestPrimaryAction.waitTrip => (
+      label: '$name ajoute son trajet',
+      icon: 'clock',
+      enabled: false,
+    ),
+    RequestPrimaryAction.trackParcel => (
+      label: 'Suivre mon colis',
+      icon: 'package',
+      enabled: true,
+    ),
+    RequestPrimaryAction.rate => (
+      label: 'Noter $name',
+      icon: 'star',
+      enabled: true,
+    ),
+    RequestPrimaryAction.republish => (
+      label: 'Republier avec de nouvelles dates',
+      icon: 'refresh-cw',
+      enabled: true,
+    ),
+    RequestPrimaryAction.publishSimilar => (
+      label: 'Publier une demande similaire',
+      icon: 'copy',
+      enabled: true,
+    ),
   };
 }
 
@@ -51,8 +87,16 @@ class RequestDetailBottomBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final rawPrimary = primaryButtonFor(actions.primary, travelerName: travelerName, amount: amount);
-    final primary = (label: rawPrimary.label, icon: rawPrimary.icon, enabled: rawPrimary.enabled && primaryEnabled);
+    final rawPrimary = primaryButtonFor(
+      actions.primary,
+      travelerName: travelerName,
+      amount: amount,
+    );
+    final primary = (
+      label: rawPrimary.label,
+      icon: rawPrimary.icon,
+      enabled: rawPrimary.enabled && primaryEnabled,
+    );
     final secondary = actions.showEdit
         ? (label: 'Modifier', icon: 'square-pen', onTap: onEdit)
         : actions.showMessage
@@ -60,9 +104,16 @@ class RequestDetailBottomBar extends StatelessWidget {
         : null;
 
     return Container(
-      padding: EdgeInsets.fromLTRB(DonySpacing.lg, DonySpacing.md, DonySpacing.lg,
-          DonySpacing.md + MediaQuery.of(context).padding.bottom),
-      decoration: BoxDecoration(color: cs.surface, border: Border(top: BorderSide(color: cs.outline))),
+      padding: EdgeInsets.fromLTRB(
+        DonySpacing.lg,
+        DonySpacing.md,
+        DonySpacing.lg,
+        DonySpacing.md + MediaQuery.of(context).padding.bottom,
+      ),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        border: Border(top: BorderSide(color: cs.outline)),
+      ),
       child: Row(
         children: [
           if (secondary != null) ...[

@@ -7,10 +7,7 @@ import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/presentation/request_screen_case.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-PackageRequest req(
-  PackageRequestStatus status, {
-  bool negotiable = true,
-}) =>
+PackageRequest req(PackageRequestStatus status, {bool negotiable = true}) =>
     PackageRequest(
       id: 'pr-1',
       senderId: 'sender-1',
@@ -30,54 +27,50 @@ NegotiationThread thread(
   NegotiationThreadStatus status, {
   String id = 't-1',
   String? bidId,
-}) =>
-    NegotiationThread(
-      id: id,
-      packageRequestId: 'pr-1',
-      travelerId: 'trav-$id',
-      travelerTravelDate: DateTime(2026, 9, 26),
-      travelerAvailableKg: 8,
-      status: status,
-      currentPriceEur: 25,
-      roundsCount: 1,
-      lastActivityAt: DateTime(2026, 9, 17),
-      createdAt: DateTime(2026, 9, 17),
-      messages: const [],
-      materializedBidId: bidId,
-    );
+}) => NegotiationThread(
+  id: id,
+  packageRequestId: 'pr-1',
+  travelerId: 'trav-$id',
+  travelerTravelDate: DateTime(2026, 9, 26),
+  travelerAvailableKg: 8,
+  status: status,
+  currentPriceEur: 25,
+  roundsCount: 1,
+  lastActivityAt: DateTime(2026, 9, 17),
+  createdAt: DateTime(2026, 9, 17),
+  messages: const [],
+  materializedBidId: bidId,
+);
 
-AnnouncementModel trip(String id) =>
-    AnnouncementModel(
-      id: id,
-      travelerId: 'trav-$id',
-      departureCity: 'Divo',
-      arrivalCity: 'Annemasse',
-      departureDate: DateTime(2026, 9, 26),
-      availableKg: 8,
-      totalKg: 10,
-      pricePerKg: 7,
-      status: 'ACTIVE',
-      createdAt: DateTime(2026, 9),
-      updatedAt: DateTime(2026, 9),
-    );
+AnnouncementModel trip(String id) => AnnouncementModel(
+  id: id,
+  travelerId: 'trav-$id',
+  departureCity: 'Divo',
+  arrivalCity: 'Annemasse',
+  departureDate: DateTime(2026, 9, 26),
+  availableKg: 8,
+  totalKg: 10,
+  pricePerKg: 7,
+  status: 'ACTIVE',
+  createdAt: DateTime(2026, 9),
+  updatedAt: DateTime(2026, 9),
+);
 
-BidModel bid(String status) =>
-    BidModel(
-      id: 'bid-1',
-      announcementId: 'a',
-      senderId: 'sender-1',
-      weightKg: 2,
-      status: status,
-      createdAt: DateTime(2026, 9),
-      updatedAt: DateTime(2026, 9),
-    );
+BidModel bid(String status) => BidModel(
+  id: 'bid-1',
+  announcementId: 'a',
+  senderId: 'sender-1',
+  weightKg: 2,
+  status: status,
+  createdAt: DateTime(2026, 9),
+  updatedAt: DateTime(2026, 9),
+);
 
 void main() {
   RequestScreenCase resolve(
     PackageRequest r, [
     List<NegotiationThread> t = const [],
-  ]) =>
-      resolveRequestScreenCase(request: r, threads: t);
+  ]) => resolveRequestScreenCase(request: r, threads: t);
 
   group('resolveRequestScreenCase', () {
     test('annulée localement prime sur le statut', () {
@@ -92,9 +85,18 @@ void main() {
     });
     test('statuts simples', () {
       expect(resolve(req(PackageRequestStatus.draft)), RequestScreenCase.draft);
-      expect(resolve(req(PackageRequestStatus.expired)), RequestScreenCase.expired);
-      expect(resolve(req(PackageRequestStatus.cancelled)), RequestScreenCase.cancelled);
-      expect(resolve(req(PackageRequestStatus.completed)), RequestScreenCase.delivered);
+      expect(
+        resolve(req(PackageRequestStatus.expired)),
+        RequestScreenCase.expired,
+      );
+      expect(
+        resolve(req(PackageRequestStatus.cancelled)),
+        RequestScreenCase.cancelled,
+      );
+      expect(
+        resolve(req(PackageRequestStatus.completed)),
+        RequestScreenCase.delivered,
+      );
     });
     test('acceptée : livrée seulement si le bid est COMPLETED', () {
       expect(
@@ -113,48 +115,45 @@ void main() {
         ),
         RequestScreenCase.delivered,
       );
-      expect(resolve(req(PackageRequestStatus.accepted)), RequestScreenCase.accepted);
+      expect(
+        resolve(req(PackageRequestStatus.accepted)),
+        RequestScreenCase.accepted,
+      );
     });
     test('fil choisi prime sur tout le reste', () {
       for (final s in [
         NegotiationThreadStatus.awaitingTrip,
         NegotiationThreadStatus.awaitingPayment,
-        NegotiationThreadStatus.awaitingDeposit
+        NegotiationThreadStatus.awaitingDeposit,
       ]) {
         expect(
-          resolve(
-            req(PackageRequestStatus.negotiating),
-            [
-              thread(NegotiationThreadStatus.open, id: 'a'),
-              thread(s, id: 'b')
-            ],
-          ),
+          resolve(req(PackageRequestStatus.negotiating), [
+            thread(NegotiationThreadStatus.open, id: 'a'),
+            thread(s, id: 'b'),
+          ]),
           RequestScreenCase.toFinalize,
         );
       }
     });
     test('commission espèces en attente', () {
       expect(
-        resolve(
-          req(PackageRequestStatus.negotiating),
-          [thread(NegotiationThreadStatus.awaitingCommission)],
-        ),
+        resolve(req(PackageRequestStatus.negotiating), [
+          thread(NegotiationThreadStatus.awaitingCommission),
+        ]),
         RequestScreenCase.cashCommissionPending,
       );
     });
     test('offres reçues selon négociable ou prix ferme', () {
       expect(
-        resolve(
-          req(PackageRequestStatus.negotiating),
-          [thread(NegotiationThreadStatus.open)],
-        ),
+        resolve(req(PackageRequestStatus.negotiating), [
+          thread(NegotiationThreadStatus.open),
+        ]),
         RequestScreenCase.offersReceived,
       );
       expect(
-        resolve(
-          req(PackageRequestStatus.open, negotiable: false),
-          [thread(NegotiationThreadStatus.open)],
-        ),
+        resolve(req(PackageRequestStatus.open, negotiable: false), [
+          thread(NegotiationThreadStatus.open),
+        ]),
         RequestScreenCase.firmCandidates,
       );
     });
@@ -177,7 +176,10 @@ void main() {
         ),
         RequestScreenCase.noTravelers,
       );
-      expect(resolve(req(PackageRequestStatus.open)), RequestScreenCase.noOffers);
+      expect(
+        resolve(req(PackageRequestStatus.open)),
+        RequestScreenCase.noOffers,
+      );
     });
   });
 
@@ -186,35 +188,40 @@ void main() {
       RequestScreenCase c,
       PackageRequest r, [
       List<NegotiationThread> t = const [],
-    ]) =>
-        requestActionsFor(c, request: r, threads: t);
+    ]) => requestActionsFor(c, request: r, threads: t);
 
     test('brouillon : Modifier + Publier, menu Dupliquer', () {
-      final a = actions(RequestScreenCase.draft, req(PackageRequestStatus.draft));
+      final a = actions(
+        RequestScreenCase.draft,
+        req(PackageRequestStatus.draft),
+      );
       expect(a.primary, RequestPrimaryAction.publish);
       expect(a.showEdit, isTrue);
       expect(a.menu, [RequestMenuAction.duplicate]);
     });
     test('publiée sans aucun fil : Dépublier proposé', () {
-      final a = actions(RequestScreenCase.noOffers, req(PackageRequestStatus.open));
-      expect(a.primary, RequestPrimaryAction.share);
-      expect(
-        a.menu,
-        [
-          RequestMenuAction.unpublish,
-          RequestMenuAction.duplicate,
-          RequestMenuAction.cancel
-        ],
-      );
-    });
-    test('publiée avec un fil terminé : plus de Dépublier (409 has-offers)', () {
       final a = actions(
         RequestScreenCase.noOffers,
         req(PackageRequestStatus.open),
-        [thread(NegotiationThreadStatus.rejected)],
       );
-      expect(a.menu, [RequestMenuAction.duplicate, RequestMenuAction.cancel]);
+      expect(a.primary, RequestPrimaryAction.share);
+      expect(a.menu, [
+        RequestMenuAction.unpublish,
+        RequestMenuAction.duplicate,
+        RequestMenuAction.cancel,
+      ]);
     });
+    test(
+      'publiée avec un fil terminé : plus de Dépublier (409 has-offers)',
+      () {
+        final a = actions(
+          RequestScreenCase.noOffers,
+          req(PackageRequestStatus.open),
+          [thread(NegotiationThreadStatus.rejected)],
+        );
+        expect(a.menu, [RequestMenuAction.duplicate, RequestMenuAction.cancel]);
+      },
+    );
     test('à finaliser : Payer, ou attente du trajet', () {
       expect(
         actions(
@@ -241,21 +248,31 @@ void main() {
         ).primary,
         RequestPrimaryAction.openThread,
       );
-      final accepted =
-          actions(RequestScreenCase.accepted, req(PackageRequestStatus.accepted));
+      final accepted = actions(
+        RequestScreenCase.accepted,
+        req(PackageRequestStatus.accepted),
+      );
       expect(accepted.primary, RequestPrimaryAction.trackParcel);
       expect(accepted.showMessage, isTrue);
       expect(accepted.showEdit, isFalse);
       expect(
-        actions(RequestScreenCase.delivered, req(PackageRequestStatus.accepted))
-            .primary,
+        actions(
+          RequestScreenCase.delivered,
+          req(PackageRequestStatus.accepted),
+        ).primary,
         RequestPrimaryAction.rate,
       );
-      final expired = actions(RequestScreenCase.expired, req(PackageRequestStatus.expired));
+      final expired = actions(
+        RequestScreenCase.expired,
+        req(PackageRequestStatus.expired),
+      );
       expect(expired.primary, RequestPrimaryAction.republish);
       expect(expired.menu, isEmpty);
       expect(
-        actions(RequestScreenCase.cancelled, req(PackageRequestStatus.open)).primary,
+        actions(
+          RequestScreenCase.cancelled,
+          req(PackageRequestStatus.open),
+        ).primary,
         RequestPrimaryAction.publishSimilar,
       );
     });
@@ -274,41 +291,63 @@ void main() {
         request: req(PackageRequestStatus.accepted),
         threads: const [],
         materializedBid: BidModel(
-          id: 'bid-1', announcementId: 'a', senderId: 'sender-1', weightKg: 2,
-          status: 'COMPLETED', senderHasRated: true,
-          createdAt: DateTime(2026, 9), updatedAt: DateTime(2026, 9),
+          id: 'bid-1',
+          announcementId: 'a',
+          senderId: 'sender-1',
+          weightKg: 2,
+          status: 'COMPLETED',
+          senderHasRated: true,
+          createdAt: DateTime(2026, 9),
+          updatedAt: DateTime(2026, 9),
         ),
       );
       expect(rated.primary, RequestPrimaryAction.publishSimilar);
       expect(rated.menu, [RequestMenuAction.duplicate]);
     });
 
-    test('acceptée : bid annulé/no-show/refusé → demande similaire au lieu de suivre', () {
-      for (final status in ['CANCELLED', 'NO_SHOW', 'PARCEL_REFUSED', 'REJECTED', 'EXPIRED']) {
-        final a = requestActionsFor(
+    test(
+      'acceptée : bid annulé/no-show/refusé → demande similaire au lieu de suivre',
+      () {
+        for (final status in [
+          'CANCELLED',
+          'NO_SHOW',
+          'PARCEL_REFUSED',
+          'REJECTED',
+          'EXPIRED',
+        ]) {
+          final a = requestActionsFor(
+            RequestScreenCase.accepted,
+            request: req(PackageRequestStatus.accepted),
+            threads: const [],
+            materializedBid: bid(status),
+          );
+          expect(
+            a.primary,
+            RequestPrimaryAction.publishSimilar,
+            reason: status,
+          );
+        }
+        final onTrack = requestActionsFor(
           RequestScreenCase.accepted,
           request: req(PackageRequestStatus.accepted),
           threads: const [],
-          materializedBid: bid(status),
+          materializedBid: bid('HANDED_OVER'),
         );
-        expect(a.primary, RequestPrimaryAction.publishSimilar, reason: status);
-      }
-      final onTrack = requestActionsFor(
-        RequestScreenCase.accepted,
-        request: req(PackageRequestStatus.accepted),
-        threads: const [],
-        materializedBid: bid('HANDED_OVER'),
-      );
-      expect(onTrack.primary, RequestPrimaryAction.trackParcel);
-      expect(onTrack.showMessage, isTrue);
-    });
+        expect(onTrack.primary, RequestPrimaryAction.trackParcel);
+        expect(onTrack.showMessage, isTrue);
+      },
+    );
   });
 
   test('focusThreadFor', () {
     final chosen = thread(NegotiationThreadStatus.awaitingPayment, id: 'c');
     final threads = [thread(NegotiationThreadStatus.open, id: 'o'), chosen];
     expect(focusThreadFor(RequestScreenCase.toFinalize, threads), chosen);
-    final accepted = thread(NegotiationThreadStatus.accepted, id: 'acc', bidId: 'bid-1');
+    final accepted = thread(
+      NegotiationThreadStatus.accepted,
+      id: 'acc',
+      bidId: 'bid-1',
+    );
     expect(focusThreadFor(RequestScreenCase.accepted, [accepted]), accepted);
     expect(focusThreadFor(RequestScreenCase.noOffers, threads), isNull);
   });

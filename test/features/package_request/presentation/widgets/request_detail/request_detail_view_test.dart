@@ -17,49 +17,111 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
-PackageRequest _req(PackageRequestStatus s, {bool negotiable = true}) => PackageRequest(
-  id: 'pr-1', senderId: 'sender-1', departureCity: 'Divo', arrivalCity: 'Annemasse',
-  desiredDate: DateTime(2026, 9, 27), dateToleranceDays: 2, weightKg: 2,
-  parcelSize: ParcelSize.small, transportMode: TransportMode.plane,
-  status: s, createdAt: DateTime.utc(2026, 9, 17, 6, 25), negotiable: negotiable,
-);
+PackageRequest _req(PackageRequestStatus s, {bool negotiable = true}) =>
+    PackageRequest(
+      id: 'pr-1',
+      senderId: 'sender-1',
+      departureCity: 'Divo',
+      arrivalCity: 'Annemasse',
+      desiredDate: DateTime(2026, 9, 27),
+      dateToleranceDays: 2,
+      weightKg: 2,
+      parcelSize: ParcelSize.small,
+      transportMode: TransportMode.plane,
+      status: s,
+      createdAt: DateTime.utc(2026, 9, 17, 6, 25),
+      negotiable: negotiable,
+    );
 
-NegotiationThread _t(NegotiationThreadStatus s,
-    {String id = 'a', bool myTurn = false, String? bidId, PaymentMethod? paymentMethod}) => NegotiationThread(
-  id: 't-$id', packageRequestId: 'pr-1', travelerId: 'tr-$id', travelerTravelDate: DateTime(2026, 9, 26),
-  travelerAvailableKg: 8, status: s, currentPriceEur: 25, roundsCount: 1,
-  lastActivityAt: DateTime(2026, 9, 17), createdAt: DateTime(2026, 9, 17), messages: const [],
-  travelerName: 'Awa K.', isMyTurn: myTurn, grossPriceEur: 28, materializedBidId: bidId,
+NegotiationThread _t(
+  NegotiationThreadStatus s, {
+  String id = 'a',
+  bool myTurn = false,
+  String? bidId,
+  PaymentMethod? paymentMethod,
+}) => NegotiationThread(
+  id: 't-$id',
+  packageRequestId: 'pr-1',
+  travelerId: 'tr-$id',
+  travelerTravelDate: DateTime(2026, 9, 26),
+  travelerAvailableKg: 8,
+  status: s,
+  currentPriceEur: 25,
+  roundsCount: 1,
+  lastActivityAt: DateTime(2026, 9, 17),
+  createdAt: DateTime(2026, 9, 17),
+  messages: const [],
+  travelerName: 'Awa K.',
+  isMyTurn: myTurn,
+  grossPriceEur: 28,
+  materializedBidId: bidId,
   paymentMethod: paymentMethod,
 );
 
 AnnouncementModel _trip(String id) => AnnouncementModel(
-  id: id, travelerId: 'trav-$id', departureCity: 'Divo', arrivalCity: 'Annemasse',
-  departureDate: DateTime(2026, 9, 26), availableKg: 8, totalKg: 10, pricePerKg: 7,
-  status: 'ACTIVE', createdAt: DateTime(2026, 9), updatedAt: DateTime(2026, 9),
+  id: id,
+  travelerId: 'trav-$id',
+  departureCity: 'Divo',
+  arrivalCity: 'Annemasse',
+  departureDate: DateTime(2026, 9, 26),
+  availableKg: 8,
+  totalKg: 10,
+  pricePerKg: 7,
+  status: 'ACTIVE',
+  createdAt: DateTime(2026, 9),
+  updatedAt: DateTime(2026, 9),
 );
 
 final _noop = RequestDetailCallbacks.noop();
 
-Future<void> _pump(WidgetTester tester, PackageRequestDetailLoaded state, {RequestDetailCallbacks? cb}) =>
-    tester.pumpWidget(MaterialApp(theme: AppTheme.light(), home: Scaffold(
-      body: SingleChildScrollView(child: RequestDetailView(state: state, callbacks: cb ?? _noop)))));
+Future<void> _pump(
+  WidgetTester tester,
+  PackageRequestDetailLoaded state, {
+  RequestDetailCallbacks? cb,
+}) => tester.pumpWidget(
+  MaterialApp(
+    theme: AppTheme.light(),
+    home: Scaffold(
+      body: SingleChildScrollView(
+        child: RequestDetailView(state: state, callbacks: cb ?? _noop),
+      ),
+    ),
+  ),
+);
 
 void main() {
   setUpAll(() => initializeDateFormatting('fr'));
 
-  testWidgets('1 brouillon : bandeau pas visible + aperçu repliée', (tester) async {
-    await _pump(tester, PackageRequestDetailLoaded(request: _req(PackageRequestStatus.draft), threads: const [],
-        compatibleTrips: [_trip('x'), _trip('y')]));
+  testWidgets('1 brouillon : bandeau pas visible + aperçu repliée', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      PackageRequestDetailLoaded(
+        request: _req(PackageRequestStatus.draft),
+        threads: const [],
+        compatibleTrips: [_trip('x'), _trip('y')],
+      ),
+    );
     expect(find.text('Brouillon'), findsOneWidget);
     expect(find.text('Pas encore visible'), findsOneWidget);
     expect(find.text('2 voyageurs la verront'), findsOneWidget);
   });
 
   testWidgets('2 publiée sans offre : vues + liste + Inviter', (tester) async {
-    await _pump(tester, PackageRequestDetailLoaded(request: _req(PackageRequestStatus.open), threads: const [],
-        insights: const PackageRequestInsights(viewCount: 14, invitedAnnouncementIds: {}),
-        invitationsSupported: true, compatibleTrips: [_trip('x')]));
+    await _pump(
+      tester,
+      PackageRequestDetailLoaded(
+        request: _req(PackageRequestStatus.open),
+        threads: const [],
+        insights: const PackageRequestInsights(
+          viewCount: 14,
+          invitedAnnouncementIds: {},
+        ),
+        invitationsSupported: true,
+        compatibleTrips: [_trip('x')],
+      ),
+    );
     expect(find.textContaining('14 vues'), findsOneWidget);
     expect(find.byType(RequestTravelersList), findsOneWidget);
     expect(find.text('Inviter'), findsOneWidget);
@@ -69,38 +131,87 @@ void main() {
     expect(find.textContaining('8 kg libres'), findsOneWidget);
   });
 
-  testWidgets('2 bis : back sans invitations → pas de bouton Inviter', (tester) async {
-    await _pump(tester, PackageRequestDetailLoaded(request: _req(PackageRequestStatus.open), threads: const [],
-        compatibleTrips: [_trip('x')]));
+  testWidgets('2 bis : back sans invitations → pas de bouton Inviter', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      PackageRequestDetailLoaded(
+        request: _req(PackageRequestStatus.open),
+        threads: const [],
+        compatibleTrips: [_trip('x')],
+      ),
+    );
     expect(find.text('Inviter'), findsNothing);
   });
 
-  testWidgets('2 ter publiée : recherche voyageurs en échec (compatibleTrips null) → état visible', (tester) async {
-    await _pump(tester, PackageRequestDetailLoaded(request: _req(PackageRequestStatus.open), threads: const []));
-    expect(find.text('Impossible de charger les voyageurs pour le moment'), findsOneWidget);
-  });
+  testWidgets(
+    '2 ter publiée : recherche voyageurs en échec (compatibleTrips null) → état visible',
+    (tester) async {
+      await _pump(
+        tester,
+        PackageRequestDetailLoaded(
+          request: _req(PackageRequestStatus.open),
+          threads: const [],
+        ),
+      );
+      expect(
+        find.text('Impossible de charger les voyageurs pour le moment'),
+        findsOneWidget,
+      );
+    },
+  );
 
   testWidgets('3 personne sur l axe : état vide', (tester) async {
-    await _pump(tester, PackageRequestDetailLoaded(request: _req(PackageRequestStatus.open), threads: const [],
-        compatibleTrips: const []));
+    await _pump(
+      tester,
+      PackageRequestDetailLoaded(
+        request: _req(PackageRequestStatus.open),
+        threads: const [],
+        compatibleTrips: const [],
+      ),
+    );
     expect(find.byType(RequestNoTravelersEmpty), findsOneWidget);
   });
 
-  testWidgets('4 offres reçues : à répondre en tête, voyageurs repliés', (tester) async {
-    await _pump(tester, PackageRequestDetailLoaded(request: _req(PackageRequestStatus.negotiating),
-        threads: [_t(NegotiationThreadStatus.open, id: 'b'), _t(NegotiationThreadStatus.open, myTurn: true)],
-        compatibleTrips: [_trip('x')]));
+  testWidgets('4 offres reçues : à répondre en tête, voyageurs repliés', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      PackageRequestDetailLoaded(
+        request: _req(PackageRequestStatus.negotiating),
+        threads: [
+          _t(NegotiationThreadStatus.open, id: 'b'),
+          _t(NegotiationThreadStatus.open, myTurn: true),
+        ],
+        compatibleTrips: [_trip('x')],
+      ),
+    );
     expect(find.text('2 offres'), findsOneWidget);
-    final cards = tester.widgetList<RequestOfferCard>(find.byType(RequestOfferCard)).toList();
+    final cards = tester
+        .widgetList<RequestOfferCard>(find.byType(RequestOfferCard))
+        .toList();
     expect(cards.first.thread.isMyTurn, isTrue);
     expect(find.byType(RequestTravelersFold), findsOneWidget);
   });
 
-  testWidgets('5 prix ferme : Choisir + rappel + pastille + voyageurs masqués', (tester) async {
-    await _pump(tester, PackageRequestDetailLoaded(request: _req(PackageRequestStatus.open, negotiable: false),
-        threads: [_t(NegotiationThreadStatus.open)], compatibleTrips: [_trip('x'), _trip('y')]));
+  testWidgets('5 prix ferme : Choisir + rappel + pastille + voyageurs masqués', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      PackageRequestDetailLoaded(
+        request: _req(PackageRequestStatus.open, negotiable: false),
+        threads: [_t(NegotiationThreadStatus.open)],
+        compatibleTrips: [_trip('x'), _trip('y')],
+      ),
+    );
     expect(find.text('Choisir'), findsOneWidget);
-    expect(find.text('Les autres candidats seront déclinés automatiquement.'), findsOneWidget);
+    expect(
+      find.text('Les autres candidats seront déclinés automatiquement.'),
+      findsOneWidget,
+    );
     expect(find.text('1 candidat'), findsOneWidget);
     // La liste complète (avec Inviter) ne doit jamais apparaître ici : seul le
     // pli replié résume les voyageurs sur l'axe.
@@ -108,94 +219,230 @@ void main() {
     expect(find.byType(RequestTravelersFold), findsOneWidget);
   });
 
-  testWidgets('6 commission espèces : bandeau ambre, autres offres visibles', (tester) async {
-    await _pump(tester, PackageRequestDetailLoaded(request: _req(PackageRequestStatus.negotiating),
-        threads: [_t(NegotiationThreadStatus.open, id: 'b'), _t(NegotiationThreadStatus.awaitingCommission)]));
+  testWidgets('6 commission espèces : bandeau ambre, autres offres visibles', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      PackageRequestDetailLoaded(
+        request: _req(PackageRequestStatus.negotiating),
+        threads: [
+          _t(NegotiationThreadStatus.open, id: 'b'),
+          _t(NegotiationThreadStatus.awaitingCommission),
+        ],
+      ),
+    );
     expect(find.text('Awa K. règle sa commission Yadony'), findsOneWidget);
     expect(find.byType(RequestOfferCard), findsNWidgets(2));
   });
 
-  testWidgets('7 à finaliser : une seule offre + pastille + voyageurs masqués', (tester) async {
-    await _pump(tester, PackageRequestDetailLoaded(request: _req(PackageRequestStatus.negotiating),
-        threads: [_t(NegotiationThreadStatus.open, id: 'b'), _t(NegotiationThreadStatus.awaitingPayment)],
-        compatibleTrips: [_trip('x')]));
-    expect(find.text('Finalise pour réserver sa place'), findsOneWidget);
-    expect(find.byType(RequestOfferCard), findsOneWidget);
-    expect(find.text('À finaliser'), findsOneWidget);
-    // Aucune trace des voyageurs sur l'axe : une seule offre compte ici.
-    expect(find.byType(RequestTravelersList), findsNothing);
-    expect(find.byType(RequestTravelersFold), findsNothing);
-    expect(find.byType(CompatibleTravelerCard), findsNothing);
-  });
+  testWidgets(
+    '7 à finaliser : une seule offre + pastille + voyageurs masqués',
+    (tester) async {
+      await _pump(
+        tester,
+        PackageRequestDetailLoaded(
+          request: _req(PackageRequestStatus.negotiating),
+          threads: [
+            _t(NegotiationThreadStatus.open, id: 'b'),
+            _t(NegotiationThreadStatus.awaitingPayment),
+          ],
+          compatibleTrips: [_trip('x')],
+        ),
+      );
+      expect(find.text('Finalise pour réserver sa place'), findsOneWidget);
+      expect(find.byType(RequestOfferCard), findsOneWidget);
+      expect(find.text('À finaliser'), findsOneWidget);
+      // Aucune trace des voyageurs sur l'axe : une seule offre compte ici.
+      expect(find.byType(RequestTravelersList), findsNothing);
+      expect(find.byType(RequestTravelersFold), findsNothing);
+      expect(find.byType(CompatibleTravelerCard), findsNothing);
+    },
+  );
 
   testWidgets('8 acceptée : talon voyageur + frise', (tester) async {
-    await _pump(tester, PackageRequestDetailLoaded(request: _req(PackageRequestStatus.accepted),
+    await _pump(
+      tester,
+      PackageRequestDetailLoaded(
+        request: _req(PackageRequestStatus.accepted),
         threads: [_t(NegotiationThreadStatus.accepted, bidId: 'bid-1')],
-        materializedBid: BidModel(id: 'bid-1', announcementId: 'x', senderId: 'sender-1', weightKg: 2,
-            status: 'HANDED_OVER', createdAt: DateTime(2026, 9), updatedAt: DateTime(2026, 9))));
+        materializedBid: BidModel(
+          id: 'bid-1',
+          announcementId: 'x',
+          senderId: 'sender-1',
+          weightKg: 2,
+          status: 'HANDED_OVER',
+          createdAt: DateTime(2026, 9),
+          updatedAt: DateTime(2026, 9),
+        ),
+      ),
+    );
     expect(find.text('Confirmée'), findsOneWidget);
-    expect(find.byKey(const Key('request-ticket-traveler-stub')), findsOneWidget);
-    expect(tester.widget<RequestProgressTimeline>(find.byType(RequestProgressTimeline)).currentStep, 2);
+    expect(
+      find.byKey(const Key('request-ticket-traveler-stub')),
+      findsOneWidget,
+    );
+    expect(
+      tester
+          .widget<RequestProgressTimeline>(find.byType(RequestProgressTimeline))
+          .currentStep,
+      2,
+    );
     expect(find.text('payé, bloqué chez Yadony'), findsOneWidget);
   });
 
-  testWidgets('8 ter acceptée : bid annulé → bandeau au lieu de la frise', (tester) async {
-    await _pump(tester, PackageRequestDetailLoaded(request: _req(PackageRequestStatus.accepted),
+  testWidgets('8 ter acceptée : bid annulé → bandeau au lieu de la frise', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      PackageRequestDetailLoaded(
+        request: _req(PackageRequestStatus.accepted),
         threads: [_t(NegotiationThreadStatus.accepted, bidId: 'bid-1')],
-        materializedBid: BidModel(id: 'bid-1', announcementId: 'x', senderId: 'sender-1', weightKg: 2,
-            status: 'CANCELLED', createdAt: DateTime(2026, 9), updatedAt: DateTime(2026, 9))));
+        materializedBid: BidModel(
+          id: 'bid-1',
+          announcementId: 'x',
+          senderId: 'sender-1',
+          weightKg: 2,
+          status: 'CANCELLED',
+          createdAt: DateTime(2026, 9),
+          updatedAt: DateTime(2026, 9),
+        ),
+      ),
+    );
     expect(find.byType(RequestProgressTimeline), findsNothing);
     expect(find.text('Ce trajet n\'a pas abouti'), findsOneWidget);
   });
 
-  testWidgets('8 bis acceptée en espèces : talon « à régler en main propre »', (tester) async {
-    await _pump(tester, PackageRequestDetailLoaded(request: _req(PackageRequestStatus.accepted),
-        threads: [_t(NegotiationThreadStatus.accepted, bidId: 'bid-1', paymentMethod: PaymentMethod.cash)],
-        materializedBid: BidModel(id: 'bid-1', announcementId: 'x', senderId: 'sender-1', weightKg: 2,
-            status: 'HANDED_OVER', createdAt: DateTime(2026, 9), updatedAt: DateTime(2026, 9))));
-    expect(find.byKey(const Key('request-ticket-traveler-stub')), findsOneWidget);
+  testWidgets('8 bis acceptée en espèces : talon « à régler en main propre »', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      PackageRequestDetailLoaded(
+        request: _req(PackageRequestStatus.accepted),
+        threads: [
+          _t(
+            NegotiationThreadStatus.accepted,
+            bidId: 'bid-1',
+            paymentMethod: PaymentMethod.cash,
+          ),
+        ],
+        materializedBid: BidModel(
+          id: 'bid-1',
+          announcementId: 'x',
+          senderId: 'sender-1',
+          weightKg: 2,
+          status: 'HANDED_OVER',
+          createdAt: DateTime(2026, 9),
+          updatedAt: DateTime(2026, 9),
+        ),
+      ),
+    );
+    expect(
+      find.byKey(const Key('request-ticket-traveler-stub')),
+      findsOneWidget,
+    );
     expect(find.text('à régler en main propre à la remise'), findsOneWidget);
     expect(find.text('payé, bloqué chez Yadony'), findsNothing);
   });
 
   testWidgets('9 livrée : talon, pas de frise', (tester) async {
-    await _pump(tester, PackageRequestDetailLoaded(request: _req(PackageRequestStatus.accepted),
+    await _pump(
+      tester,
+      PackageRequestDetailLoaded(
+        request: _req(PackageRequestStatus.accepted),
         threads: [_t(NegotiationThreadStatus.accepted, bidId: 'bid-1')],
-        materializedBid: BidModel(id: 'bid-1', announcementId: 'x', senderId: 'sender-1', weightKg: 2,
-            status: 'COMPLETED', createdAt: DateTime(2026, 9), updatedAt: DateTime(2026, 9))));
+        materializedBid: BidModel(
+          id: 'bid-1',
+          announcementId: 'x',
+          senderId: 'sender-1',
+          weightKg: 2,
+          status: 'COMPLETED',
+          createdAt: DateTime(2026, 9),
+          updatedAt: DateTime(2026, 9),
+        ),
+      ),
+    );
     expect(find.text('Livrée'), findsOneWidget);
     expect(find.byType(RequestProgressTimeline), findsNothing);
-    expect(find.byKey(const Key('request-ticket-traveler-stub')), findsOneWidget);
+    expect(
+      find.byKey(const Key('request-ticket-traveler-stub')),
+      findsOneWidget,
+    );
     expect(find.text('versé au voyageur'), findsOneWidget);
   });
 
-  testWidgets('9 bis livrée en espèces : talon « réglé en main propre »', (tester) async {
-    await _pump(tester, PackageRequestDetailLoaded(request: _req(PackageRequestStatus.accepted),
-        threads: [_t(NegotiationThreadStatus.accepted, bidId: 'bid-1', paymentMethod: PaymentMethod.cash)],
-        materializedBid: BidModel(id: 'bid-1', announcementId: 'x', senderId: 'sender-1', weightKg: 2,
-            status: 'COMPLETED', createdAt: DateTime(2026, 9), updatedAt: DateTime(2026, 9))));
-    expect(find.byKey(const Key('request-ticket-traveler-stub')), findsOneWidget);
+  testWidgets('9 bis livrée en espèces : talon « réglé en main propre »', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      PackageRequestDetailLoaded(
+        request: _req(PackageRequestStatus.accepted),
+        threads: [
+          _t(
+            NegotiationThreadStatus.accepted,
+            bidId: 'bid-1',
+            paymentMethod: PaymentMethod.cash,
+          ),
+        ],
+        materializedBid: BidModel(
+          id: 'bid-1',
+          announcementId: 'x',
+          senderId: 'sender-1',
+          weightKg: 2,
+          status: 'COMPLETED',
+          createdAt: DateTime(2026, 9),
+          updatedAt: DateTime(2026, 9),
+        ),
+      ),
+    );
+    expect(
+      find.byKey(const Key('request-ticket-traveler-stub')),
+      findsOneWidget,
+    );
     expect(find.text('réglé en main propre'), findsOneWidget);
     expect(find.text('versé au voyageur'), findsNothing);
   });
 
   testWidgets('10 expirée : bandeau', (tester) async {
-    await _pump(tester, PackageRequestDetailLoaded(request: _req(PackageRequestStatus.expired), threads: const []));
+    await _pump(
+      tester,
+      PackageRequestDetailLoaded(
+        request: _req(PackageRequestStatus.expired),
+        threads: const [],
+      ),
+    );
     expect(find.text('Date dépassée sans accord'), findsOneWidget);
   });
 
   testWidgets('11 annulée : bandeau, aucune liste', (tester) async {
-    await _pump(tester, PackageRequestDetailLoaded(request: _req(PackageRequestStatus.open), threads: const [],
-        cancelledLocally: true, compatibleTrips: [_trip('x')]));
+    await _pump(
+      tester,
+      PackageRequestDetailLoaded(
+        request: _req(PackageRequestStatus.open),
+        threads: const [],
+        cancelledLocally: true,
+        compatibleTrips: [_trip('x')],
+      ),
+    );
     expect(find.text('Tu as annulé cette demande'), findsOneWidget);
     expect(find.byType(CompatibleTravelerCard), findsNothing);
   });
 
   testWidgets('tap sur une offre ouvre le fil', (tester) async {
     String? opened;
-    await _pump(tester, PackageRequestDetailLoaded(request: _req(PackageRequestStatus.negotiating),
-        threads: [_t(NegotiationThreadStatus.open)]),
-        cb: RequestDetailCallbacks.noop().copyWith(onOpenThread: (id) => opened = id));
+    await _pump(
+      tester,
+      PackageRequestDetailLoaded(
+        request: _req(PackageRequestStatus.negotiating),
+        threads: [_t(NegotiationThreadStatus.open)],
+      ),
+      cb: RequestDetailCallbacks.noop().copyWith(
+        onOpenThread: (id) => opened = id,
+      ),
+    );
     await tester.tap(find.byType(RequestOfferCard));
     expect(opened, 't-a');
   });

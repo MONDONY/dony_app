@@ -6,15 +6,41 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 AnnouncementModel _trip() => AnnouncementModel(
-  id: 'a-1', travelerId: 'tr', departureCity: 'Divo', arrivalCity: 'Annemasse',
-  departureDate: DateTime(2026, 9, 26), availableKg: 8, totalKg: 10, pricePerKg: 7,
-  status: 'ACTIVE', createdAt: DateTime(2026, 9), updatedAt: DateTime(2026, 9),
-  traveler: const TravelerProfile(id: 'tr', displayName: 'Awa K.', averageRating: 4.9),
+  id: 'a-1',
+  travelerId: 'tr',
+  departureCity: 'Divo',
+  arrivalCity: 'Annemasse',
+  departureDate: DateTime(2026, 9, 26),
+  availableKg: 8,
+  totalKg: 10,
+  pricePerKg: 7,
+  status: 'ACTIVE',
+  createdAt: DateTime(2026, 9),
+  updatedAt: DateTime(2026, 9),
+  traveler: const TravelerProfile(
+    id: 'tr',
+    displayName: 'Awa K.',
+    averageRating: 4.9,
+  ),
 );
 
-Future<void> _pump(WidgetTester tester, TravelerInviteState state, {VoidCallback? onInvite}) =>
-    tester.pumpWidget(MaterialApp(theme: AppTheme.light(), home: Scaffold(body: CompatibleTravelerCard(
-      trip: _trip(), requestWeightKg: 2, inviteState: state, onInvite: onInvite))));
+Future<void> _pump(
+  WidgetTester tester,
+  TravelerInviteState state, {
+  VoidCallback? onInvite,
+}) => tester.pumpWidget(
+  MaterialApp(
+    theme: AppTheme.light(),
+    home: Scaffold(
+      body: CompatibleTravelerCard(
+        trip: _trip(),
+        requestWeightKg: 2,
+        inviteState: state,
+        onInvite: onInvite,
+      ),
+    ),
+  ),
+);
 
 void main() {
   setUpAll(() => initializeDateFormatting('fr'));

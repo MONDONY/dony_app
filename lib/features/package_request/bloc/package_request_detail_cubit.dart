@@ -58,26 +58,34 @@ class PackageRequestDetailCubit extends Cubit<PackageRequestDetailState> {
         _compatibleTrips(request, threads),
         _materializedBid(request, threads),
       ).wait;
-      emit(PackageRequestDetailLoaded(
-        request: request,
-        threads: threads,
-        insights: insights,
-        compatibleTrips: trips,
-        materializedBid: bid,
-        invitationsSupported: insights != null,
-        invitedAnnouncementIds: insights?.invitedAnnouncementIds ?? const {},
-      ));
+      emit(
+        PackageRequestDetailLoaded(
+          request: request,
+          threads: threads,
+          insights: insights,
+          compatibleTrips: trips,
+          materializedBid: bid,
+          invitationsSupported: insights != null,
+          invitedAnnouncementIds: insights?.invitedAnnouncementIds ?? const {},
+        ),
+      );
     } catch (e) {
       if (previous is PackageRequestDetailLoaded) {
-        emit(previous.copyWith(
-          actionInFlight: false,
-          notice: _notice(RequestDetailNoticeKind.actionFailed),
-        ));
+        emit(
+          previous.copyWith(
+            actionInFlight: false,
+            notice: _notice(RequestDetailNoticeKind.actionFailed),
+          ),
+        );
       } else {
         // 404 au premier chargement (ex. lien de notification vers une
         // demande annulée/supprimée entre-temps, back soft-delete) : message
         // dédié plutôt que le générique « vérifie ta connexion ».
-        emit(PackageRequestDetailError(notFound: e is DioException && e.response?.statusCode == 404));
+        emit(
+          PackageRequestDetailError(
+            notFound: e is DioException && e.response?.statusCode == 404,
+          ),
+        );
       }
     }
   }
@@ -106,55 +114,86 @@ class PackageRequestDetailCubit extends Cubit<PackageRequestDetailState> {
     } catch (_) {
       final current = state;
       if (current is! PackageRequestDetailLoaded) return;
-      emit(current.copyWith(actionInFlight: false, notice: _notice(RequestDetailNoticeKind.actionFailed)));
+      emit(
+        current.copyWith(
+          actionInFlight: false,
+          notice: _notice(RequestDetailNoticeKind.actionFailed),
+        ),
+      );
     }
   }
 
   Future<void> invite(String announcementId) async {
     final s = state;
-    if (s is! PackageRequestDetailLoaded || s.invitingAnnouncementIds.contains(announcementId)) {
+    if (s is! PackageRequestDetailLoaded ||
+        s.invitingAnnouncementIds.contains(announcementId)) {
       return;
     }
-    emit(s.copyWith(invitingAnnouncementIds: {...s.invitingAnnouncementIds, announcementId}));
+    emit(
+      s.copyWith(
+        invitingAnnouncementIds: {...s.invitingAnnouncementIds, announcementId},
+      ),
+    );
     try {
       final outcome = await _requests.inviteTraveler(requestId, announcementId);
       final current = state;
       if (current is! PackageRequestDetailLoaded) return;
-      final inviting = {...current.invitingAnnouncementIds}..remove(announcementId);
+      final inviting = {...current.invitingAnnouncementIds}
+        ..remove(announcementId);
       switch (outcome) {
         case InvitationOutcome.notFound:
           // Insights déjà répondu (back à jour) : la route existe, c'est le
           // trajet qui a disparu entre-temps → un refus normal, on n'éteint
           // pas les invitations. Insights jamais répondu (ancien back) :
           // garder le comportement historique, masquer les invitations.
-          emit(current.invitationsSupported
-              ? current.copyWith(
-                  invitingAnnouncementIds: inviting,
-                  notice: _notice(RequestDetailNoticeKind.invitationRefused),
-                )
-              : current.copyWith(invitingAnnouncementIds: inviting, invitationsSupported: false));
+          emit(
+            current.invitationsSupported
+                ? current.copyWith(
+                    invitingAnnouncementIds: inviting,
+                    notice: _notice(RequestDetailNoticeKind.invitationRefused),
+                  )
+                : current.copyWith(
+                    invitingAnnouncementIds: inviting,
+                    invitationsSupported: false,
+                  ),
+          );
         case InvitationOutcome.notInvitable:
-          emit(current.copyWith(
-            invitingAnnouncementIds: inviting,
-            notice: _notice(RequestDetailNoticeKind.invitationNotInvitable),
-          ));
+          emit(
+            current.copyWith(
+              invitingAnnouncementIds: inviting,
+              notice: _notice(RequestDetailNoticeKind.invitationNotInvitable),
+            ),
+          );
         case InvitationOutcome.limitReached:
-          emit(current.copyWith(
-            invitingAnnouncementIds: inviting,
-            notice: _notice(RequestDetailNoticeKind.invitationLimitReached),
-          ));
+          emit(
+            current.copyWith(
+              invitingAnnouncementIds: inviting,
+              notice: _notice(RequestDetailNoticeKind.invitationLimitReached),
+            ),
+          );
         case InvitationOutcome.sent || InvitationOutcome.alreadySent:
-          unawaited(_analytics.logEvent(
-            AnalyticsEvents.packageRequestTravelerInvited,
-            properties: {'outcome': outcome == InvitationOutcome.sent ? 'sent' : 'already_sent'},
-          ));
-          emit(current.copyWith(
-            invitingAnnouncementIds: inviting,
-            invitedAnnouncementIds: {...current.invitedAnnouncementIds, announcementId},
-            notice: outcome == InvitationOutcome.sent
-                ? _notice(RequestDetailNoticeKind.invitationSent)
-                : null,
-          ));
+          unawaited(
+            _analytics.logEvent(
+              AnalyticsEvents.packageRequestTravelerInvited,
+              properties: {
+                'outcome': outcome == InvitationOutcome.sent
+                    ? 'sent'
+                    : 'already_sent',
+              },
+            ),
+          );
+          emit(
+            current.copyWith(
+              invitingAnnouncementIds: inviting,
+              invitedAnnouncementIds: {
+                ...current.invitedAnnouncementIds,
+                announcementId,
+              },
+              notice: outcome == InvitationOutcome.sent
+                  ? _notice(RequestDetailNoticeKind.invitationSent)
+                  : null,
+            ),
+          );
       }
     } on DioException catch (e) {
       // Le repository ne traduit que les statuts qu'il reconnaît (404/409/422
@@ -163,35 +202,49 @@ class PackageRequestDetailCubit extends Cubit<PackageRequestDetailState> {
       // générique.
       final current = state;
       if (current is! PackageRequestDetailLoaded) return;
-      emit(current.copyWith(
-        invitingAnnouncementIds: {...current.invitingAnnouncementIds}..remove(announcementId),
-        notice: _notice(e.response?.statusCode == 422
-            ? RequestDetailNoticeKind.invitationRefused
-            : RequestDetailNoticeKind.actionFailed),
-      ));
+      emit(
+        current.copyWith(
+          invitingAnnouncementIds: {...current.invitingAnnouncementIds}
+            ..remove(announcementId),
+          notice: _notice(
+            e.response?.statusCode == 422
+                ? RequestDetailNoticeKind.invitationRefused
+                : RequestDetailNoticeKind.actionFailed,
+          ),
+        ),
+      );
     } catch (_) {
       // Exception non-Dio (ex. timeout, erreur inattendue) : ne jamais
       // laisser l'id « en cours d'invitation » orphelin.
       final current = state;
       if (current is! PackageRequestDetailLoaded) return;
-      emit(current.copyWith(
-        invitingAnnouncementIds: {...current.invitingAnnouncementIds}..remove(announcementId),
-        notice: _notice(RequestDetailNoticeKind.actionFailed),
-      ));
+      emit(
+        current.copyWith(
+          invitingAnnouncementIds: {...current.invitingAnnouncementIds}
+            ..remove(announcementId),
+          notice: _notice(RequestDetailNoticeKind.actionFailed),
+        ),
+      );
     }
   }
 
-  void trackShared() => unawaited(_analytics.logEvent(AnalyticsEvents.packageRequestShared));
+  void trackShared() =>
+      unawaited(_analytics.logEvent(AnalyticsEvents.packageRequestShared));
 
   void trackMenuOpened() =>
       unawaited(_analytics.logEvent(AnalyticsEvents.packageRequestMenuOpened));
 
-  void trackDuplicateStarted(String source) => unawaited(_analytics.logEvent(
-    AnalyticsEvents.packageRequestDuplicateStarted,
-    properties: {'source': source},
-  ));
+  void trackDuplicateStarted(String source) => unawaited(
+    _analytics.logEvent(
+      AnalyticsEvents.packageRequestDuplicateStarted,
+      properties: {'source': source},
+    ),
+  );
 
-  Future<void> _runThenReload(Future<Object?> Function() action, String successEvent) async {
+  Future<void> _runThenReload(
+    Future<Object?> Function() action,
+    String successEvent,
+  ) async {
     final s = state;
     if (s is! PackageRequestDetailLoaded || s.actionInFlight) return;
     emit(s.copyWith(actionInFlight: true));
@@ -201,13 +254,19 @@ class PackageRequestDetailCubit extends Cubit<PackageRequestDetailState> {
     } catch (_) {
       final current = state;
       if (current is! PackageRequestDetailLoaded) return;
-      emit(current.copyWith(actionInFlight: false, notice: _notice(RequestDetailNoticeKind.actionFailed)));
+      emit(
+        current.copyWith(
+          actionInFlight: false,
+          notice: _notice(RequestDetailNoticeKind.actionFailed),
+        ),
+      );
       return;
     }
     await load();
   }
 
-  RequestDetailNotice _notice(RequestDetailNoticeKind kind) => RequestDetailNotice(kind, ++_noticeSerial);
+  RequestDetailNotice _notice(RequestDetailNoticeKind kind) =>
+      RequestDetailNotice(kind, ++_noticeSerial);
 
   Future<List<NegotiationThread>> _threads() async {
     try {
@@ -240,20 +299,32 @@ class PackageRequestDetailCubit extends Cubit<PackageRequestDetailState> {
         departureDateTo: request.desiredDate.add(tolerance),
         minAvailableKg: request.weightKg,
       );
-      final excluded = {request.senderId, for (final t in threads) t.travelerId};
-      return trips.where((a) => !excluded.contains(a.travelerId)).take(kMaxCompatibleTrips).toList();
+      final excluded = {
+        request.senderId,
+        for (final t in threads) t.travelerId,
+      };
+      return trips
+          .where((a) => !excluded.contains(a.travelerId))
+          .take(kMaxCompatibleTrips)
+          .toList();
     } catch (_) {
       // Zone secondaire : son échec ne doit ni bloquer l'écran ni afficher « personne ».
       return null;
     }
   }
 
-  Future<BidModel?> _materializedBid(PackageRequest request, List<NegotiationThread> threads) async {
+  Future<BidModel?> _materializedBid(
+    PackageRequest request,
+    List<NegotiationThread> threads,
+  ) async {
     if (request.status != PackageRequestStatus.accepted &&
         request.status != PackageRequestStatus.completed) {
       return null;
     }
-    final bidId = threads.map((t) => t.materializedBidId).whereType<String>().firstOrNull;
+    final bidId = threads
+        .map((t) => t.materializedBidId)
+        .whereType<String>()
+        .firstOrNull;
     if (bidId == null) return null;
     try {
       return await _bids.getBidById(bidId);

@@ -84,8 +84,12 @@ final class PackageRequestDetailLoaded extends PackageRequestDetailState {
     compatibleTrips: compatibleTrips,
   );
 
-  RequestScreenActions get actions =>
-      requestActionsFor(screenCase, request: request, threads: threads, materializedBid: materializedBid);
+  RequestScreenActions get actions => requestActionsFor(
+    screenCase,
+    request: request,
+    threads: threads,
+    materializedBid: materializedBid,
+  );
 
   PackageRequestDetailLoaded copyWith({
     bool? cancelledLocally,
@@ -103,7 +107,8 @@ final class PackageRequestDetailLoaded extends PackageRequestDetailState {
     cancelledLocally: cancelledLocally ?? this.cancelledLocally,
     actionInFlight: actionInFlight ?? this.actionInFlight,
     invitationsSupported: invitationsSupported ?? this.invitationsSupported,
-    invitedAnnouncementIds: invitedAnnouncementIds ?? this.invitedAnnouncementIds,
+    invitedAnnouncementIds:
+        invitedAnnouncementIds ?? this.invitedAnnouncementIds,
     invitingAnnouncementIds:
         invitingAnnouncementIds ?? this.invitingAnnouncementIds,
     notice: notice ?? this.notice,
@@ -111,7 +116,16 @@ final class PackageRequestDetailLoaded extends PackageRequestDetailState {
 
   @override
   List<Object?> get props => [
-    request, threads, insights, compatibleTrips, materializedBid, cancelledLocally,
-    actionInFlight, invitationsSupported, invitedAnnouncementIds, invitingAnnouncementIds, notice,
+    request,
+    threads,
+    insights,
+    compatibleTrips,
+    materializedBid,
+    cancelledLocally,
+    actionInFlight,
+    invitationsSupported,
+    invitedAnnouncementIds,
+    invitingAnnouncementIds,
+    notice,
   ];
 }

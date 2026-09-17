@@ -13,28 +13,37 @@ void main() {
   // couvre donc l'exigence vérifiable : ouvrir le visionneur avec une URL
   // invalide ne lève aucune exception (le contrat `errorWidget` existe et
   // est vérifié par lecture de code + `flutter analyze`).
-  testWidgets('URL invalide : ouverture du visionneur sans exception', (tester) async {
-    await tester.pumpWidget(MaterialApp(
-      theme: AppTheme.light(),
-      home: Scaffold(
-        body: Builder(
-          builder: (context) => ElevatedButton(
-            onPressed: () => RequestPhotoViewer.show(
-              context,
-              urls: const ['https://host.invalid/introuvable.jpg'],
+  testWidgets(
+    'URL invalide : ouverture du visionneur sans exception',
+    (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => ElevatedButton(
+                onPressed: () => RequestPhotoViewer.show(
+                  context,
+                  urls: const ['https://host.invalid/introuvable.jpg'],
+                ),
+                child: const Text('ouvrir'),
+              ),
             ),
-            child: const Text('ouvrir'),
           ),
         ),
-      ),
-    ));
+      );
 
-    await tester.tap(find.text('ouvrir'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
+      await tester.tap(find.text('ouvrir'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
 
-    expect(tester.takeException(), isNull);
-    expect(find.text('Fermer'), findsNothing); // tooltip, pas un texte affiché
-    expect(find.byTooltip('Fermer'), findsOneWidget);
-  }, timeout: const Timeout(Duration(seconds: 30)));
+      expect(tester.takeException(), isNull);
+      expect(
+        find.text('Fermer'),
+        findsNothing,
+      ); // tooltip, pas un texte affiché
+      expect(find.byTooltip('Fermer'), findsOneWidget);
+    },
+    timeout: const Timeout(Duration(seconds: 30)),
+  );
 }

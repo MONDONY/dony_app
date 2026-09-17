@@ -32,13 +32,19 @@ class PackageRequestDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider(create: (_) => getIt<PackageRequestDetailCubit>(param1: requestId)..load()),
+        BlocProvider(
+          create: (_) =>
+              getIt<PackageRequestDetailCubit>(param1: requestId)..load(),
+        ),
         BlocProvider(create: (_) => getIt<RatingBloc>()),
       ],
       child: Builder(
         builder: (context) => Scaffold(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          appBar: const DonyAppBar(title: 'Ma demande', actions: [_MenuButton()]),
+          appBar: const DonyAppBar(
+            title: 'Ma demande',
+            actions: [_MenuButton()],
+          ),
           body: const _DetailBody(),
           bottomNavigationBar: const _DetailBottomBar(),
         ),
@@ -56,7 +62,10 @@ abstract final class PackageRequestDetailBottomSheet {
       backgroundColor: Colors.transparent,
       builder: (_) => MultiBlocProvider(
         providers: [
-          BlocProvider(create: (_) => getIt<PackageRequestDetailCubit>(param1: requestId)..load()),
+          BlocProvider(
+            create: (_) =>
+                getIt<PackageRequestDetailCubit>(param1: requestId)..load(),
+          ),
           BlocProvider(create: (_) => getIt<RatingBloc>()),
         ],
         child: const _SheetFrame(),
@@ -77,7 +86,9 @@ class _SheetFrame extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: cs.surfaceWarm,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(DonyRadius.sheet)),
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(DonyRadius.sheet),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -85,7 +96,8 @@ class _SheetFrame extends StatelessWidget {
           Center(
             child: Container(
               margin: const EdgeInsets.only(top: DonySpacing.md),
-              width: 40, height: 4,
+              width: 40,
+              height: 4,
               // Même formule que la poignée standard `DonyBottomSheet`
               // (lib/core/design/widgets/dony_bottom_sheet.dart) : couleur du
               // thème, jamais `DonyColors.neutral300` (light-only).
@@ -96,10 +108,20 @@ class _SheetFrame extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(DonySpacing.lg, DonySpacing.sm, DonySpacing.sm, 0),
+            padding: const EdgeInsets.fromLTRB(
+              DonySpacing.lg,
+              DonySpacing.sm,
+              DonySpacing.sm,
+              0,
+            ),
             child: Row(
               children: [
-                Expanded(child: Text('Ma demande', style: Theme.of(context).textTheme.headlineSmall)),
+                Expanded(
+                  child: Text(
+                    'Ma demande',
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                ),
                 const _MenuButton(),
                 IconButton(
                   tooltip: 'Fermer',
@@ -125,18 +147,24 @@ class _DetailBody extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocConsumer<PackageRequestDetailCubit, PackageRequestDetailState>(
       listenWhen: (prev, curr) =>
-          curr is PackageRequestDetailLoaded && curr.notice != null &&
+          curr is PackageRequestDetailLoaded &&
+          curr.notice != null &&
           (prev is! PackageRequestDetailLoaded || prev.notice != curr.notice),
       listener: (context, state) {
         final notice = (state as PackageRequestDetailLoaded).notice!;
         DonySnackbar.show(
           context,
           message: switch (notice.kind) {
-            RequestDetailNoticeKind.actionFailed => 'Une erreur est survenue. Réessaie dans un instant.',
-            RequestDetailNoticeKind.invitationSent => 'Invitation envoyée. Le voyageur est prévenu.',
-            RequestDetailNoticeKind.invitationRefused => 'Ce voyageur ne peut pas être invité.',
-            RequestDetailNoticeKind.invitationNotInvitable => 'Cette demande n\'accepte plus d\'invitations.',
-            RequestDetailNoticeKind.invitationLimitReached => 'Limite d\'invitations atteinte pour cette demande.',
+            RequestDetailNoticeKind.actionFailed =>
+              'Une erreur est survenue. Réessaie dans un instant.',
+            RequestDetailNoticeKind.invitationSent =>
+              'Invitation envoyée. Le voyageur est prévenu.',
+            RequestDetailNoticeKind.invitationRefused =>
+              'Ce voyageur ne peut pas être invité.',
+            RequestDetailNoticeKind.invitationNotInvitable =>
+              'Cette demande n\'accepte plus d\'invitations.',
+            RequestDetailNoticeKind.invitationLimitReached =>
+              'Limite d\'invitations atteinte pour cette demande.',
           },
           type: notice.kind == RequestDetailNoticeKind.invitationSent
               ? DonySnackbarType.success
@@ -147,7 +175,9 @@ class _DetailBody extends StatelessWidget {
         // Scrollables (comme l'état chargé) : dans la sheet, hauteur fixe à
         // 92 % de l'écran — sans scroll, le squelette ou l'erreur peuvent
         // dépasser l'espace laissé par l'entête et la barre fixe.
-        PackageRequestDetailLoading() => const SingleChildScrollView(child: RequestDetailSkeleton()),
+        PackageRequestDetailLoading() => const SingleChildScrollView(
+          child: RequestDetailSkeleton(),
+        ),
         // LayoutBuilder + ConstrainedBox(minHeight) : reste centrée quand
         // l'espace disponible dépasse son contenu, mais peut aussi scroller
         // (sheet à hauteur fixe) sans jamais déborder. Widget de feature, pas
@@ -156,7 +186,10 @@ class _DetailBody extends StatelessWidget {
           builder: (context, constraints) => SingleChildScrollView(
             child: ConstrainedBox(
               constraints: BoxConstraints(minHeight: constraints.maxHeight),
-              child: _ErrorView(notFound: notFound, onRetry: context.read<PackageRequestDetailCubit>().load),
+              child: _ErrorView(
+                notFound: notFound,
+                onRetry: context.read<PackageRequestDetailCubit>().load,
+              ),
             ),
           ),
         ),
@@ -164,15 +197,26 @@ class _DetailBody extends StatelessWidget {
           onRefresh: context.read<PackageRequestDetailCubit>().load,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(DonySpacing.lg, DonySpacing.lg, DonySpacing.lg, DonySpacing.xl),
-            child: RequestDetailView(state: loaded, callbacks: _callbacks(context, loaded)),
+            padding: const EdgeInsets.fromLTRB(
+              DonySpacing.lg,
+              DonySpacing.lg,
+              DonySpacing.lg,
+              DonySpacing.xl,
+            ),
+            child: RequestDetailView(
+              state: loaded,
+              callbacks: _callbacks(context, loaded),
+            ),
           ),
         ),
       },
     );
   }
 
-  RequestDetailCallbacks _callbacks(BuildContext context, PackageRequestDetailLoaded s) {
+  RequestDetailCallbacks _callbacks(
+    BuildContext context,
+    PackageRequestDetailLoaded s,
+  ) {
     final cubit = context.read<PackageRequestDetailCubit>();
     return RequestDetailCallbacks(
       onOpenThread: (threadId) => _openThread(context, threadId),
@@ -184,8 +228,12 @@ class _DetailBody extends StatelessWidget {
         prefill: CorridorAlertDraft(
           departureCity: s.request.departureCity,
           arrivalCity: s.request.arrivalCity,
-          dateFrom: s.request.desiredDate.subtract(Duration(days: s.request.dateToleranceDays)),
-          dateTo: s.request.desiredDate.add(Duration(days: s.request.dateToleranceDays)),
+          dateFrom: s.request.desiredDate.subtract(
+            Duration(days: s.request.dateToleranceDays),
+          ),
+          dateTo: s.request.desiredDate.add(
+            Duration(days: s.request.dateToleranceDays),
+          ),
           minWeightKg: s.request.weightKg,
           direction: AlertDirection.senderWantsTrips,
         ),
@@ -197,7 +245,10 @@ class _DetailBody extends StatelessWidget {
 
 Future<void> _edit(BuildContext context, PackageRequestDetailLoaded s) async {
   final cubit = context.read<PackageRequestDetailCubit>();
-  final changed = await PackageRequestCreateWizard.showEditing(context, s.request);
+  final changed = await PackageRequestCreateWizard.showEditing(
+    context,
+    s.request,
+  );
   if ((changed ?? false) && context.mounted) unawaited(cubit.load());
 }
 
@@ -206,15 +257,27 @@ Future<void> _edit(BuildContext context, PackageRequestDetailLoaded s) async {
 /// — elle ne pourrait plus être publiée telle quelle. Comparaison au jour, en
 /// heure locale (jamais UTC : une date à minuit UTC peut déjà être « hier »
 /// pour un fuseau africain).
-bool clearDateForDuplicate(String source, DateTime desiredDate, {DateTime? now}) {
+bool clearDateForDuplicate(
+  String source,
+  DateTime desiredDate, {
+  DateTime? now,
+}) {
   if (source == 'republish') return true;
   final today = (now ?? DateTime.now()).toLocal();
-  final desiredDay = DateTime(desiredDate.toLocal().year, desiredDate.toLocal().month, desiredDate.toLocal().day);
+  final desiredDay = DateTime(
+    desiredDate.toLocal().year,
+    desiredDate.toLocal().month,
+    desiredDate.toLocal().day,
+  );
   final todayDay = DateTime(today.year, today.month, today.day);
   return desiredDay.isBefore(todayDay);
 }
 
-Future<void> _duplicate(BuildContext context, PackageRequestDetailLoaded s, String source) async {
+Future<void> _duplicate(
+  BuildContext context,
+  PackageRequestDetailLoaded s,
+  String source,
+) async {
   context.read<PackageRequestDetailCubit>().trackDuplicateStarted(source);
   // Dupliquer/republier/publier une demande similaire créent toujours une
   // NOUVELLE demande ailleurs — la source affichée ici n'est jamais modifiée,
@@ -233,17 +296,24 @@ class _DetailBottomBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<PackageRequestDetailCubit, PackageRequestDetailState>(
       builder: (context, state) {
-        if (state is! PackageRequestDetailLoaded) return const SizedBox.shrink();
+        if (state is! PackageRequestDetailLoaded) {
+          return const SizedBox.shrink();
+        }
         final focus = focusThreadFor(state.screenCase, state.threads);
         final amount = focus == null
             ? null
-            : PriceDisplay.money(focus.grossPriceEur ?? PriceDisplay.grossFromNet(focus.currentPriceEur), focus.currency);
+            : PriceDisplay.money(
+                focus.grossPriceEur ??
+                    PriceDisplay.grossFromNet(focus.currentPriceEur),
+                focus.currency,
+              );
         // Le bid matérialisé (fetch dédié du cubit) prime sur celui porté par
         // le fil : c'est la même donnée, mais elle peut manquer côté fil si le
         // fetch a échoué. Sans identifiant, « Suivre mon colis »/« Noter »
         // seraient des boutons actifs qui ne font rien au tap.
         final bidId = state.materializedBid?.id ?? focus?.materializedBidId;
-        final needsBidId = state.actions.primary == RequestPrimaryAction.trackParcel ||
+        final needsBidId =
+            state.actions.primary == RequestPrimaryAction.trackParcel ||
             state.actions.primary == RequestPrimaryAction.rate;
         return RequestDetailBottomBar(
           actions: state.actions,
@@ -252,15 +322,23 @@ class _DetailBottomBar extends StatelessWidget {
           amount: amount,
           primaryEnabled: !needsBidId || bidId != null,
           onEdit: () => _edit(context, state),
-          onMessage: focus == null ? null : () => _openThread(context, focus.id),
-          onPrimary: () => _onPrimary(context, state, focus?.id, bidId, focus?.travelerName),
+          onMessage: focus == null
+              ? null
+              : () => _openThread(context, focus.id),
+          onPrimary: () =>
+              _onPrimary(context, state, focus?.id, bidId, focus?.travelerName),
         );
       },
     );
   }
 
-  Future<void> _onPrimary(BuildContext context, PackageRequestDetailLoaded s, String? threadId,
-      String? bidId, String? travelerName) async {
+  Future<void> _onPrimary(
+    BuildContext context,
+    PackageRequestDetailLoaded s,
+    String? threadId,
+    String? bidId,
+    String? travelerName,
+  ) async {
     final cubit = context.read<PackageRequestDetailCubit>();
     switch (s.actions.primary) {
       case RequestPrimaryAction.publish:
@@ -269,11 +347,13 @@ class _DetailBottomBar extends StatelessWidget {
         final r = s.request;
         final date = DateFormat('d MMMM', 'fr').format(r.desiredDate);
         cubit.trackShared();
-        unawaited(Share.share(
-          'J\'envoie un colis de ${r.weightKg.toStringAsFixed(0)} kg ${r.departureCity} → ${r.arrivalCity} '
-          'autour du $date. Tu voyages sur cet axe ? Réponds à ma demande sur Yadony.',
-          sharePositionOrigin: sharePositionOriginFor(context),
-        ));
+        unawaited(
+          Share.share(
+            'J\'envoie un colis de ${r.weightKg.toStringAsFixed(0)} kg ${r.departureCity} → ${r.arrivalCity} '
+            'autour du $date. Tu voyages sur cet axe ? Réponds à ma demande sur Yadony.',
+            sharePositionOrigin: sharePositionOriginFor(context),
+          ),
+        );
       case RequestPrimaryAction.openThread || RequestPrimaryAction.pay:
         if (threadId == null) return;
         await _openThread(context, threadId);
@@ -285,7 +365,11 @@ class _DetailBottomBar extends StatelessWidget {
         if (context.mounted) unawaited(cubit.load());
       case RequestPrimaryAction.rate:
         if (bidId == null) return;
-        await RatingBottomSheet.show(context, bidId: bidId, travelerName: travelerName ?? 'le voyageur');
+        await RatingBottomSheet.show(
+          context,
+          bidId: bidId,
+          travelerName: travelerName ?? 'le voyageur',
+        );
         if (context.mounted) unawaited(cubit.load());
       case RequestPrimaryAction.republish:
         await _duplicate(context, s, 'republish');
@@ -310,7 +394,10 @@ class _MenuButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<PackageRequestDetailCubit, PackageRequestDetailState>(
       builder: (context, state) {
-        if (state is! PackageRequestDetailLoaded || state.actions.menu.isEmpty) return const SizedBox.shrink();
+        if (state is! PackageRequestDetailLoaded ||
+            state.actions.menu.isEmpty) {
+          return const SizedBox.shrink();
+        }
         return IconButton(
           tooltip: 'Plus d\'actions',
           icon: const DonyIcon('ellipsis', size: 22),
@@ -322,7 +409,10 @@ class _MenuButton extends StatelessWidget {
 
   Future<void> _open(BuildContext context, PackageRequestDetailLoaded s) async {
     final cubit = context.read<PackageRequestDetailCubit>()..trackMenuOpened();
-    final picked = await RequestOwnerMenuSheet.show(context, items: s.actions.menu);
+    final picked = await RequestOwnerMenuSheet.show(
+      context,
+      items: s.actions.menu,
+    );
     if (picked == null || !context.mounted) return;
     switch (picked) {
       case RequestMenuAction.unpublish:
@@ -333,7 +423,8 @@ class _MenuButton extends StatelessWidget {
         final confirmed = await DonyDialog.show(
           context,
           title: 'Annuler cette demande ?',
-          message: 'Cette action est irréversible. Les voyageurs ne pourront plus y répondre.',
+          message:
+              'Cette action est irréversible. Les voyageurs ne pourront plus y répondre.',
           confirmLabel: 'Annuler la demande',
           variant: DonyDialogVariant.destructive,
           iconAsset: 'circle-x',
@@ -362,25 +453,45 @@ class _ErrorView extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 56, height: 56,
+              width: 56,
+              height: 56,
               // errorLight/error : équivalents theme-aware des primitives
               // danger50/danger500 (voir lib/core/design/CLAUDE.md).
-              decoration: BoxDecoration(color: cs.errorLight, borderRadius: BorderRadius.circular(16)),
-              child: Center(child: DonyIcon(notFound ? 'circle-x' : 'wifi-off', color: cs.error)),
+              decoration: BoxDecoration(
+                color: cs.errorLight,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Center(
+                child: DonyIcon(
+                  notFound ? 'circle-x' : 'wifi-off',
+                  color: cs.error,
+                ),
+              ),
             ),
             const SizedBox(height: DonySpacing.base),
-            Text(notFound ? 'Cette demande n\'existe plus' : 'Impossible de charger ta demande',
-                textAlign: TextAlign.center, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+            Text(
+              notFound
+                  ? 'Cette demande n\'existe plus'
+                  : 'Impossible de charger ta demande',
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+            ),
             const SizedBox(height: DonySpacing.xs),
             Text(
               notFound
                   ? 'Elle a peut-être été annulée ou supprimée.'
                   : 'Vérifie ta connexion, puis réessaie. Ta demande n\'a pas été modifiée.',
-              textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
             ),
             if (!notFound) ...[
               const SizedBox(height: DonySpacing.lg),
-              DonyButton(label: 'Réessayer', iconAsset: 'refresh-cw', fullWidth: false, onPressed: onRetry),
+              DonyButton(
+                label: 'Réessayer',
+                iconAsset: 'refresh-cw',
+                fullWidth: false,
+                onPressed: onRetry,
+              ),
             ],
           ],
         ),

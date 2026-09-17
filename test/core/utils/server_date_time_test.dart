@@ -15,11 +15,17 @@ void main() {
   });
 
   test('avec Z : inchangée', () {
-    expect(parseServerDateTime('2026-09-17T06:25:00Z'), DateTime.utc(2026, 9, 17, 6, 25));
+    expect(
+      parseServerDateTime('2026-09-17T06:25:00Z'),
+      DateTime.utc(2026, 9, 17, 6, 25),
+    );
   });
 
   test('avec décalage : convertie en UTC', () {
-    expect(parseServerDateTime('2026-09-17T08:25:00+02:00'), DateTime.utc(2026, 9, 17, 6, 25));
+    expect(
+      parseServerDateTime('2026-09-17T08:25:00+02:00'),
+      DateTime.utc(2026, 9, 17, 6, 25),
+    );
   });
 
   test('date seule : parse standard', () {

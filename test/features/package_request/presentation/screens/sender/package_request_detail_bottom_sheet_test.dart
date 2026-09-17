@@ -18,11 +18,18 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
-class _MockPackageRequestRepository extends Mock implements PackageRequestRepository {}
-class _MockAnnouncementRepository extends Mock implements AnnouncementRepository {}
+class _MockPackageRequestRepository extends Mock
+    implements PackageRequestRepository {}
+
+class _MockAnnouncementRepository extends Mock
+    implements AnnouncementRepository {}
+
 class _MockBidRepository extends Mock implements BidRepository {}
+
 class _MockAnalyticsService extends Mock implements AnalyticsService {}
-class _MockRatingBloc extends MockBloc<RatingEvent, RatingState> implements RatingBloc {}
+
+class _MockRatingBloc extends MockBloc<RatingEvent, RatingState>
+    implements RatingBloc {}
 
 PackageRequest _fakeRequest({
   PackageRequestStatus status = PackageRequestStatus.open,
@@ -74,9 +81,13 @@ void main() {
     analytics = _MockAnalyticsService();
     ratingBloc = _MockRatingBloc();
 
-    when(() => analytics.logEvent(any(), properties: any(named: 'properties'))).thenAnswer((_) async {});
+    when(
+      () => analytics.logEvent(any(), properties: any(named: 'properties')),
+    ).thenAnswer((_) async {});
     when(() => ratingBloc.state).thenReturn(const RatingInitial());
-    when(() => ratingBloc.stream).thenAnswer((_) => const Stream<RatingState>.empty());
+    when(
+      () => ratingBloc.stream,
+    ).thenAnswer((_) => const Stream<RatingState>.empty());
     when(
       () => announcements.searchAnnouncements(
         departureCity: any(named: 'departureCity'),
@@ -87,16 +98,26 @@ void main() {
       ),
     ).thenAnswer((_) async => const []);
 
-    if (getIt.isRegistered<PackageRequestDetailCubit>()) getIt.unregister<PackageRequestDetailCubit>();
+    if (getIt.isRegistered<PackageRequestDetailCubit>()) {
+      getIt.unregister<PackageRequestDetailCubit>();
+    }
     getIt.registerFactoryParam<PackageRequestDetailCubit, String, void>(
-      (requestId, _) => PackageRequestDetailCubit(repo, announcements, bids, analytics, requestId: requestId),
+      (requestId, _) => PackageRequestDetailCubit(
+        repo,
+        announcements,
+        bids,
+        analytics,
+        requestId: requestId,
+      ),
     );
     if (getIt.isRegistered<RatingBloc>()) getIt.unregister<RatingBloc>();
     getIt.registerFactory<RatingBloc>(() => ratingBloc);
   });
 
   tearDown(() async {
-    if (getIt.isRegistered<PackageRequestDetailCubit>()) await getIt.unregister<PackageRequestDetailCubit>();
+    if (getIt.isRegistered<PackageRequestDetailCubit>()) {
+      await getIt.unregister<PackageRequestDetailCubit>();
+    }
     if (getIt.isRegistered<RatingBloc>()) await getIt.unregister<RatingBloc>();
   });
 
@@ -106,16 +127,21 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('ouvre avec poignée, titre « Ma demande », billet et barre fixe', (tester) async {
-    when(() => repo.getById('pr-1')).thenAnswer((_) async => _fakeRequest());
-    when(() => repo.listThreadsForRequest('pr-1')).thenAnswer((_) async => []);
+  testWidgets(
+    'ouvre avec poignée, titre « Ma demande », billet et barre fixe',
+    (tester) async {
+      when(() => repo.getById('pr-1')).thenAnswer((_) async => _fakeRequest());
+      when(
+        () => repo.listThreadsForRequest('pr-1'),
+      ).thenAnswer((_) async => []);
 
-    await openSheet(tester);
+      await openSheet(tester);
 
-    expect(find.text('Ma demande'), findsOneWidget);
-    expect(find.text('DIV'), findsOneWidget);
-    expect(find.byType(RequestDetailBottomBar), findsOneWidget);
-  });
+      expect(find.text('Ma demande'), findsOneWidget);
+      expect(find.text('DIV'), findsOneWidget);
+      expect(find.byType(RequestDetailBottomBar), findsOneWidget);
+    },
+  );
 
   testWidgets('Fermer ferme la sheet', (tester) async {
     when(() => repo.getById('pr-1')).thenAnswer((_) async => _fakeRequest());

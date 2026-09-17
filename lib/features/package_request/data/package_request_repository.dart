@@ -309,7 +309,9 @@ class PackageRequestRepository {
       if (status == 422) {
         final data = e.response?.data;
         final code = data is Map ? data['code'] as String? : null;
-        if (code == 'invitation/limit-reached') return InvitationOutcome.limitReached;
+        if (code == 'invitation/limit-reached') {
+          return InvitationOutcome.limitReached;
+        }
       }
       rethrow;
     }

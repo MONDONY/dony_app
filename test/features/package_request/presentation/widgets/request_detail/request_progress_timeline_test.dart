@@ -14,8 +14,18 @@ void main() {
   });
 
   testWidgets('étapes nommées', (tester) async {
-    await tester.pumpWidget(MaterialApp(theme: AppTheme.light(), home: const Scaffold(body: RequestProgressTimeline(
-      travelerName: 'Awa K.', arrivalCity: 'Annemasse', currentStep: 1))));
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: const Scaffold(
+          body: RequestProgressTimeline(
+            travelerName: 'Awa K.',
+            arrivalCity: 'Annemasse',
+            currentStep: 1,
+          ),
+        ),
+      ),
+    );
     expect(find.text('Accord et paiement'), findsOneWidget);
     expect(find.text('Remise du colis à Awa K.'), findsOneWidget);
     expect(find.text('En voyage'), findsOneWidget);

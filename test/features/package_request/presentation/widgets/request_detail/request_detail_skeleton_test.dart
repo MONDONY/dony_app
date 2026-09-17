@@ -6,7 +6,12 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   testWidgets('se construit et s annonce comme chargement', (tester) async {
     final semantics = tester.ensureSemantics();
-    await tester.pumpWidget(MaterialApp(theme: AppTheme.light(), home: const Scaffold(body: RequestDetailSkeleton())));
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: const Scaffold(body: RequestDetailSkeleton()),
+      ),
+    );
     expect(find.bySemanticsLabel('Chargement de ta demande'), findsOneWidget);
     semantics.dispose();
   });

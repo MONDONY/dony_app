@@ -25,7 +25,12 @@ enum RequestScreenCase {
 /// signifie que le trajet n'a pas abouti — miroir de `sender_sticky_bar.dart`
 /// côté bid, qui distingue déjà ces statuts pour son propre bouton.
 const _bidOnTrackStatuses = {
-  'ACCEPTED', 'PAYMENT_ESCROWED', 'HANDED_OVER', 'IN_TRANSIT', 'ARRIVED', 'COMPLETED',
+  'ACCEPTED',
+  'PAYMENT_ESCROWED',
+  'HANDED_OVER',
+  'IN_TRANSIT',
+  'ARRIVED',
+  'COMPLETED',
 };
 
 bool isBidOnTrack(String status) => _bidOnTrackStatuses.contains(status);
@@ -67,7 +72,9 @@ RequestScreenCase resolveRequestScreenCase({
   if (threads.any((t) => _chosenStatuses.contains(t.status))) {
     return RequestScreenCase.toFinalize;
   }
-  if (threads.any((t) => t.status == NegotiationThreadStatus.awaitingCommission)) {
+  if (threads.any(
+    (t) => t.status == NegotiationThreadStatus.awaitingCommission,
+  )) {
     return RequestScreenCase.cashCommissionPending;
   }
   if (threads.any((t) => t.status.isActive)) {
@@ -120,20 +127,26 @@ RequestScreenActions requestActionsFor(
 }) {
   // Miroirs des gardes serveur : unpublish exige OPEN sans aucun fil (409 has-offers),
   // cancel refuse ACCEPTED/COMPLETED, update refuse hors DRAFT/OPEN/NEGOTIATING.
-  final canUnpublish = request.status == PackageRequestStatus.open && threads.isEmpty;
-  const inProgressMenu = [RequestMenuAction.duplicate, RequestMenuAction.cancel];
+  final canUnpublish =
+      request.status == PackageRequestStatus.open && threads.isEmpty;
+  const inProgressMenu = [
+    RequestMenuAction.duplicate,
+    RequestMenuAction.cancel,
+  ];
   return switch (screenCase) {
     RequestScreenCase.draft => const RequestScreenActions(
       primary: RequestPrimaryAction.publish,
       showEdit: true,
       menu: [RequestMenuAction.duplicate],
     ),
-    RequestScreenCase.noOffers || RequestScreenCase.noTravelers => RequestScreenActions(
+    RequestScreenCase.noOffers ||
+    RequestScreenCase.noTravelers => RequestScreenActions(
       primary: RequestPrimaryAction.share,
       showEdit: true,
       menu: [if (canUnpublish) RequestMenuAction.unpublish, ...inProgressMenu],
     ),
-    RequestScreenCase.offersReceived || RequestScreenCase.firmCandidates => const RequestScreenActions(
+    RequestScreenCase.offersReceived ||
+    RequestScreenCase.firmCandidates => const RequestScreenActions(
       primary: RequestPrimaryAction.share,
       showEdit: true,
       menu: inProgressMenu,
@@ -143,7 +156,8 @@ RequestScreenActions requestActionsFor(
       menu: inProgressMenu,
     ),
     RequestScreenCase.toFinalize => RequestScreenActions(
-      primary: threads.any((t) => t.status == NegotiationThreadStatus.awaitingTrip)
+      primary:
+          threads.any((t) => t.status == NegotiationThreadStatus.awaitingTrip)
           ? RequestPrimaryAction.waitTrip
           : RequestPrimaryAction.pay,
       menu: inProgressMenu,
@@ -151,24 +165,36 @@ RequestScreenActions requestActionsFor(
     // Bid annulé/absent/refusé/no-show entre-temps : le trajet n'a pas abouti,
     // « Suivre mon colis » n'a plus de sens → même action logique suivante
     // que expired/cancelled (publier une demande similaire).
-    RequestScreenCase.accepted => materializedBid != null && !isBidOnTrack(materializedBid.status)
-        ? const RequestScreenActions(primary: RequestPrimaryAction.publishSimilar, menu: [RequestMenuAction.duplicate])
-        : const RequestScreenActions(
-            primary: RequestPrimaryAction.trackParcel,
-            showMessage: true,
-            menu: [RequestMenuAction.duplicate],
-          ),
+    RequestScreenCase.accepted =>
+      materializedBid != null && !isBidOnTrack(materializedBid.status)
+          ? const RequestScreenActions(
+              primary: RequestPrimaryAction.publishSimilar,
+              menu: [RequestMenuAction.duplicate],
+            )
+          : const RequestScreenActions(
+              primary: RequestPrimaryAction.trackParcel,
+              showMessage: true,
+              menu: [RequestMenuAction.duplicate],
+            ),
     // Déjà noté (sender_sticky_bar.dart respecte la même garde côté bid) :
     // proposer de noter à nouveau n'a pas de sens, l'action suivante logique
     // est de publier une demande similaire.
-    RequestScreenCase.delivered => materializedBid?.senderHasRated ?? false
-        ? const RequestScreenActions(primary: RequestPrimaryAction.publishSimilar, menu: [RequestMenuAction.duplicate])
-        : const RequestScreenActions(
-            primary: RequestPrimaryAction.rate,
-            menu: [RequestMenuAction.duplicate],
-          ),
-    RequestScreenCase.expired => const RequestScreenActions(primary: RequestPrimaryAction.republish),
-    RequestScreenCase.cancelled => const RequestScreenActions(primary: RequestPrimaryAction.publishSimilar),
+    RequestScreenCase.delivered =>
+      materializedBid?.senderHasRated ?? false
+          ? const RequestScreenActions(
+              primary: RequestPrimaryAction.publishSimilar,
+              menu: [RequestMenuAction.duplicate],
+            )
+          : const RequestScreenActions(
+              primary: RequestPrimaryAction.rate,
+              menu: [RequestMenuAction.duplicate],
+            ),
+    RequestScreenCase.expired => const RequestScreenActions(
+      primary: RequestPrimaryAction.republish,
+    ),
+    RequestScreenCase.cancelled => const RequestScreenActions(
+      primary: RequestPrimaryAction.publishSimilar,
+    ),
   };
 }
 
@@ -184,9 +210,12 @@ NegotiationThread? focusThreadFor(
   }
 
   return switch (screenCase) {
-    RequestScreenCase.toFinalize => first((t) => _chosenStatuses.contains(t.status)),
-    RequestScreenCase.cashCommissionPending =>
-      first((t) => t.status == NegotiationThreadStatus.awaitingCommission),
+    RequestScreenCase.toFinalize => first(
+      (t) => _chosenStatuses.contains(t.status),
+    ),
+    RequestScreenCase.cashCommissionPending => first(
+      (t) => t.status == NegotiationThreadStatus.awaitingCommission,
+    ),
     RequestScreenCase.accepted || RequestScreenCase.delivered =>
       first((t) => t.materializedBidId != null) ??
           first((t) => t.status == NegotiationThreadStatus.accepted),

@@ -127,9 +127,16 @@ void main() {
 
   test('createdAt sans fuseau est lu en UTC (bug « publié à 06:25 »)', () {
     final r = PackageRequest.fromJson(const {
-      'id': 'pr-1', 'senderId': 's', 'departureCity': 'Divo', 'arrivalCity': 'Annemasse',
-      'desiredDate': '2026-09-27', 'dateToleranceDays': 2, 'weightKg': 2,
-      'parcelSize': 'SMALL', 'status': 'OPEN', 'createdAt': '2026-09-17T06:25:00',
+      'id': 'pr-1',
+      'senderId': 's',
+      'departureCity': 'Divo',
+      'arrivalCity': 'Annemasse',
+      'desiredDate': '2026-09-27',
+      'dateToleranceDays': 2,
+      'weightKg': 2,
+      'parcelSize': 'SMALL',
+      'status': 'OPEN',
+      'createdAt': '2026-09-17T06:25:00',
     });
     expect(r.createdAt.isUtc, isTrue);
     expect(r.createdAt, DateTime.utc(2026, 9, 17, 6, 25));

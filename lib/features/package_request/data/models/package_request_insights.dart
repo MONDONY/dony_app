@@ -11,7 +11,8 @@ class PackageRequestInsights extends Equatable {
       PackageRequestInsights(
         viewCount: (json['viewCount'] as num?)?.toInt() ?? 0,
         invitedAnnouncementIds: {
-          for (final id in (json['invitedAnnouncementIds'] as List<dynamic>? ?? const []))
+          for (final id
+              in (json['invitedAnnouncementIds'] as List<dynamic>? ?? const []))
             id as String,
         },
       );
@@ -28,4 +29,10 @@ class PackageRequestInsights extends Equatable {
 /// (ancien back, insights jamais répondu) ou trajet disparu entre-temps
 /// (back à jour, insights déjà répondu avec succès). Voir
 /// `PackageRequestDetailCubit.invite`.
-enum InvitationOutcome { sent, alreadySent, notFound, notInvitable, limitReached }
+enum InvitationOutcome {
+  sent,
+  alreadySent,
+  notFound,
+  notInvitable,
+  limitReached,
+}

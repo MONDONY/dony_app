@@ -25,42 +25,70 @@ class RequestProgressTimeline extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final labels = ['Accord et paiement', 'Remise du colis à $travelerName', 'En voyage', 'Livraison à $arrivalCity'];
+    final labels = [
+      'Accord et paiement',
+      'Remise du colis à $travelerName',
+      'En voyage',
+      'Livraison à $arrivalCity',
+    ];
     return Container(
       padding: const EdgeInsets.all(DonySpacing.base),
-      decoration: BoxDecoration(color: cs.surface, borderRadius: BorderRadius.circular(DonyRadius.card),
-          border: Border.all(color: cs.outline)),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: cs.outline),
+      ),
       child: Column(
         children: [
           for (final (i, label) in labels.indexed)
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Column(children: [
-                  Container(
-                    width: 20, height: 20,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: i < currentStep ? cs.success : cs.surface,
-                      border: Border.all(
-                        width: 2,
-                        color: i < currentStep ? cs.success
-                            : i == currentStep ? cs.primary : cs.outline,
+                Column(
+                  children: [
+                    Container(
+                      width: 20,
+                      height: 20,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: i < currentStep ? cs.success : cs.surface,
+                        border: Border.all(
+                          width: 2,
+                          color: i < currentStep
+                              ? cs.success
+                              : i == currentStep
+                              ? cs.primary
+                              : cs.outline,
+                        ),
                       ),
+                      child: i < currentStep
+                          ? const Center(
+                              child: DonyIcon(
+                                'check',
+                                size: 11,
+                                color: Colors.white,
+                              ),
+                            )
+                          : null,
                     ),
-                    child: i < currentStep
-                        ? const Center(child: DonyIcon('check', size: 11, color: Colors.white))
-                        : null,
-                  ),
-                  if (i < labels.length - 1) Container(width: 2, height: 22, color: cs.outlineVariant),
-                ]),
+                    if (i < labels.length - 1)
+                      Container(width: 2, height: 22, color: cs.outlineVariant),
+                  ],
+                ),
                 const SizedBox(width: DonySpacing.md),
                 Expanded(
-                  child: Text(label, style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: i <= currentStep ? FontWeight.w700 : FontWeight.w500,
-                    color: i <= currentStep ? cs.onSurface : cs.onSurfaceVariant,
-                  )),
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: i <= currentStep
+                          ? FontWeight.w700
+                          : FontWeight.w500,
+                      color: i <= currentStep
+                          ? cs.onSurface
+                          : cs.onSurfaceVariant,
+                    ),
+                  ),
                 ),
               ],
             ),

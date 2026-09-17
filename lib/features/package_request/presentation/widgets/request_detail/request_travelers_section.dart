@@ -14,8 +14,12 @@ class RequestSectionTitle extends StatelessWidget {
     header: true,
     child: Text(
       count == null ? label : '$label ($count)',
-      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 0.8,
-          color: Theme.of(context).colorScheme.onSurfaceVariant),
+      style: TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0.8,
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+      ),
     ),
   );
 }
@@ -57,7 +61,12 @@ class RequestTravelersList extends StatelessWidget {
 }
 
 class RequestTravelersFold extends StatelessWidget {
-  const RequestTravelersFold({required this.trips, required this.label, this.onTap, super.key});
+  const RequestTravelersFold({
+    required this.trips,
+    required this.label,
+    this.onTap,
+    super.key,
+  });
 
   final List<AnnouncementModel> trips;
   final String label;
@@ -71,21 +80,36 @@ class RequestTravelersFold extends StatelessWidget {
         for (final (i, trip) in trips.take(3).indexed)
           Transform.translate(
             offset: Offset(-8.0 * i, 0),
-            child: DonyAvatar(name: trip.traveler?.displayName ?? 'Voyageur',
-                imageUrl: trip.traveler?.avatarUrl, size: DonyAvatarSize.sm),
+            child: DonyAvatar(
+              name: trip.traveler?.displayName ?? 'Voyageur',
+              imageUrl: trip.traveler?.avatarUrl,
+              size: DonyAvatarSize.sm,
+            ),
           ),
         const SizedBox(width: DonySpacing.sm),
-        Expanded(child: Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600))),
+        Expanded(
+          child: Text(
+            label,
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+          ),
+        ),
         // Chevron seulement si la ligne est réellement tapable : sinon elle
         // laisserait croire à un dépliage qui n'existe pas.
-        if (onTap != null) DonyIcon('chevron-right', size: 18, color: cs.onSurfaceVariant),
+        if (onTap != null)
+          DonyIcon('chevron-right', size: 18, color: cs.onSurfaceVariant),
       ],
     );
     final content = Container(
       constraints: const BoxConstraints(minHeight: 48),
-      padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md, vertical: DonySpacing.sm),
-      decoration: BoxDecoration(color: cs.surface, borderRadius: BorderRadius.circular(DonyRadius.md),
-          border: Border.all(color: cs.outline)),
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.md,
+        vertical: DonySpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(DonyRadius.md),
+        border: Border.all(color: cs.outline),
+      ),
       child: row,
     );
     // Sans onTap, ni Material ni InkWell : pas de ripple pour un geste qui n'existe pas.
@@ -128,35 +152,64 @@ class RequestNoTravelersEmpty extends StatelessWidget {
         child: Container(
           constraints: const BoxConstraints(minHeight: 48),
           padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md),
-          child: Row(children: [
-            // terra600 = DonyColors.accent = cs.secondary (app_theme.dart) :
-            // équivalent theme-aware de la primitive DonyColors.terra600.
-            DonyIcon(icon, size: 18, color: cs.secondary),
-            const SizedBox(width: DonySpacing.sm),
-            Expanded(child: Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600))),
-            DonyIcon('chevron-right', size: 18, color: cs.onSurfaceVariant),
-          ]),
+          child: Row(
+            children: [
+              // terra600 = DonyColors.accent = cs.secondary (app_theme.dart) :
+              // équivalent theme-aware de la primitive DonyColors.terra600.
+              DonyIcon(icon, size: 18, color: cs.secondary),
+              const SizedBox(width: DonySpacing.sm),
+              Expanded(
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              DonyIcon('chevron-right', size: 18, color: cs.onSurfaceVariant),
+            ],
+          ),
         ),
       ),
     );
 
     return Container(
       padding: const EdgeInsets.all(DonySpacing.base),
-      decoration: BoxDecoration(color: cs.surface, borderRadius: BorderRadius.circular(DonyRadius.card),
-          border: Border.all(color: cs.outline)),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: cs.outline),
+      ),
       child: Column(
         children: [
           Container(
-            width: 48, height: 48,
-            decoration: BoxDecoration(color: cs.primaryContainer, borderRadius: BorderRadius.circular(14)),
-            child: Center(child: DonyIcon('plane', size: 22, color: cs.primary)),
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: cs.primaryContainer,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Center(
+              child: DonyIcon('plane', size: 22, color: cs.primary),
+            ),
           ),
           const SizedBox(height: DonySpacing.sm),
-          Text('Aucun voyageur sur $corridor pour l\'instant', textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+          Text(
+            'Aucun voyageur sur $corridor pour l\'instant',
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+          ),
           const SizedBox(height: 4),
-          Text('Les trajets arrivent souvent la semaine du départ. On te prévient dès qu\'un voyageur publie.',
-              textAlign: TextAlign.center, style: TextStyle(fontSize: 13, height: 1.5, color: cs.onSurfaceVariant)),
+          Text(
+            'Les trajets arrivent souvent la semaine du départ. On te prévient dès qu\'un voyageur publie.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 13,
+              height: 1.5,
+              color: cs.onSurfaceVariant,
+            ),
+          ),
           const SizedBox(height: DonySpacing.md),
           action('bell', 'Être alerté des nouveaux trajets', onCreateAlert),
           const SizedBox(height: DonySpacing.sm),

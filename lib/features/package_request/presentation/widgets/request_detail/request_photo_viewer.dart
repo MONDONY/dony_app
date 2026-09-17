@@ -4,7 +4,11 @@ import 'package:flutter/material.dart';
 
 /// Photos du colis en plein écran, balayables.
 abstract final class RequestPhotoViewer {
-  static Future<void> show(BuildContext context, {required List<String> urls, int initialIndex = 0}) {
+  static Future<void> show(
+    BuildContext context, {
+    required List<String> urls,
+    int initialIndex = 0,
+  }) {
     return showDialog<void>(
       context: context,
       barrierColor: Colors.black87,

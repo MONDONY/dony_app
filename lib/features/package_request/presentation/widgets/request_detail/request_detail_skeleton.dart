@@ -9,8 +9,12 @@ class RequestDetailSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     Widget block(double height, {double? width}) => Container(
-      height: height, width: width,
-      decoration: BoxDecoration(color: cs.surfaceContainerHighest, borderRadius: BorderRadius.circular(DonyRadius.md)),
+      height: height,
+      width: width,
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(DonyRadius.md),
+      ),
     );
     return Semantics(
       label: 'Chargement de ta demande',

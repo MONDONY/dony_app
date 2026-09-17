@@ -24,19 +24,29 @@ class RequestStateBanner extends StatelessWidget {
     // Même table de tons que RequestPillTone (request_status_pill.dart) :
     // couleurs lues dans le ColorScheme, jamais de primitive DonyColors figée.
     final (bg, fg) = switch (tone) {
-      RequestBannerTone.neutral => (cs.surfaceContainerHighest, cs.onSurfaceVariant),
+      RequestBannerTone.neutral => (
+        cs.surfaceContainerHighest,
+        cs.onSurfaceVariant,
+      ),
       RequestBannerTone.warning => (cs.warningLight, cs.warning),
       RequestBannerTone.info => (cs.primaryContainer, cs.primary),
     };
     return Container(
       padding: const EdgeInsets.all(DonySpacing.md),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(DonyRadius.md)),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(DonyRadius.md),
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 32, height: 32,
-            decoration: BoxDecoration(color: cs.surface, borderRadius: BorderRadius.circular(10)),
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: cs.surface,
+              borderRadius: BorderRadius.circular(10),
+            ),
             child: Center(child: DonyIcon(icon, size: 18, color: fg)),
           ),
           const SizedBox(width: DonySpacing.md),
@@ -44,9 +54,19 @@ class RequestStateBanner extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: fg)),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: fg,
+                  ),
+                ),
                 const SizedBox(height: 2),
-                Text(message, style: TextStyle(fontSize: 13, height: 1.45, color: fg)),
+                Text(
+                  message,
+                  style: TextStyle(fontSize: 13, height: 1.45, color: fg),
+                ),
               ],
             ),
           ),

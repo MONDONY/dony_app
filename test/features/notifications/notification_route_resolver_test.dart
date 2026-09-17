@@ -215,7 +215,10 @@ void main() {
     });
 
     test('requestId invalide → pas de route', () {
-      expect(resolveNotificationRoute('SENDER_INVITE', {'requestId': 'x'}), isNull);
+      expect(
+        resolveNotificationRoute('SENDER_INVITE', {'requestId': 'x'}),
+        isNull,
+      );
     });
   });
 
