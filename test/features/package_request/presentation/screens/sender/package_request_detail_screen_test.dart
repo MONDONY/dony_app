@@ -6,6 +6,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
@@ -807,6 +808,23 @@ void main() {
         () => analytics.logEvent(AnalyticsEvents.packageRequestShared),
       ).called(1);
       expect(find.byType(SnackBar), findsNothing);
+    });
+  });
+
+  // Régression : la sheet d'alerte recevait minWeightKg, que le back refuse
+  // sur une alerte trajet (422 alert-trip-filters-unsupported) : le bouton
+  // « Être alerté des nouveaux trajets » échouait à chaque tentative.
+  group('tripAlertPrefillFor', () {
+    test('axe et fenêtre de dates, sans filtre poids ni catégories', () {
+      final prefill = tripAlertPrefillFor(_fakeRequest());
+
+      expect(prefill.direction, AlertDirection.senderWantsTrips);
+      expect(prefill.departureCity, 'Divo');
+      expect(prefill.arrivalCity, 'Annemasse');
+      expect(prefill.dateFrom, DateTime(2026, 9, 25));
+      expect(prefill.dateTo, DateTime(2026, 9, 29));
+      expect(prefill.minWeightKg, isNull);
+      expect(prefill.contentCategories, anyOf(isNull, isEmpty));
     });
   });
 }

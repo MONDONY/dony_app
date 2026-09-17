@@ -9,6 +9,7 @@ import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.d
 import 'package:dony/features/corridor_alerts/presentation/widgets/corridor_alert_form_sheet.dart';
 import 'package:dony/features/package_request/bloc/package_request_detail_cubit.dart';
 import 'package:dony/features/package_request/bloc/package_request_detail_state.dart';
+import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/presentation/request_screen_case.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/package_request_create_screen.dart';
@@ -225,22 +226,29 @@ class _DetailBody extends StatelessWidget {
       onCreateAlert: () => CorridorAlertFormSheet.show(
         context,
         isSender: true,
-        prefill: CorridorAlertDraft(
-          departureCity: s.request.departureCity,
-          arrivalCity: s.request.arrivalCity,
-          dateFrom: s.request.desiredDate.subtract(
-            Duration(days: s.request.dateToleranceDays),
-          ),
-          dateTo: s.request.desiredDate.add(
-            Duration(days: s.request.dateToleranceDays),
-          ),
-          minWeightKg: s.request.weightKg,
-          direction: AlertDirection.senderWantsTrips,
-        ),
+        prefill: tripAlertPrefillFor(s.request),
       ),
       onWidenDates: () => _edit(context, s),
     );
   }
+}
+
+/// Alerte « préviens-moi des nouveaux trajets » pré-remplie depuis la demande :
+/// axe et fenêtre de dates seulement.
+///
+/// Ni poids ni catégories : le back les refuse sur une alerte trajet
+/// (422 `alert-trip-filters-unsupported`, `AlertService.validateDirection`),
+/// ils ne valent que dans l'autre sens, le voyageur qui cherche des colis.
+@visibleForTesting
+CorridorAlertDraft tripAlertPrefillFor(PackageRequest request) {
+  final tolerance = Duration(days: request.dateToleranceDays);
+  return CorridorAlertDraft(
+    departureCity: request.departureCity,
+    arrivalCity: request.arrivalCity,
+    dateFrom: request.desiredDate.subtract(tolerance),
+    dateTo: request.desiredDate.add(tolerance),
+    direction: AlertDirection.senderWantsTrips,
+  );
 }
 
 Future<void> _edit(BuildContext context, PackageRequestDetailLoaded s) async {
