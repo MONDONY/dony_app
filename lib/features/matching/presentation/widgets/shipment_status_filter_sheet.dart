@@ -9,8 +9,8 @@ class _StatusOption {
 
 const _groups = <String, List<_StatusOption>>{
   'En cours': [
-    _StatusOption('ACCEPTED', 'Confirmé'),
-    _StatusOption('HANDED_OVER', 'En route'),
+    _StatusOption('ACCEPTED', 'À remettre'),
+    _StatusOption('HANDED_OVER', 'Remis'),
     _StatusOption('IN_TRANSIT', 'En transit'),
     _StatusOption('ARRIVED', 'Arrivé'),
   ],
@@ -19,8 +19,8 @@ const _groups = <String, List<_StatusOption>>{
     _StatusOption('AWAITING_PAYMENT', 'À payer'),
     _StatusOption('PAYMENT_ESCROWED', 'Payé'),
   ],
-  'Terminés': [_StatusOption('COMPLETED', 'Livré')],
-  'Clôturés': [
+  'Livrés': [_StatusOption('COMPLETED', 'Livré')],
+  'Non aboutis': [
     _StatusOption('CANCELLED', 'Annulé'),
     _StatusOption('REJECTED', 'Refusé'),
     _StatusOption('PARCEL_REFUSED', 'Colis refusé'),

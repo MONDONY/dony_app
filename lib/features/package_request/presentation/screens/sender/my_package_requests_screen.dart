@@ -338,9 +338,9 @@ class _FilterRow extends StatelessWidget {
             ),
             const SizedBox(width: DonySpacing.xs + 2),
             SizedBox(
-              width: 128,
+              width: 140,
               child: _FilterChip(
-                label: 'Terminées ($closedCount)',
+                label: 'Non abouties ($closedCount)',
                 active: current == RequestQuickFilter.closed,
                 onTap: () => onChanged(RequestQuickFilter.closed),
               ),
@@ -440,7 +440,7 @@ class _FilterEmptyState extends StatelessWidget {
     } else {
       label = switch (preset) {
         RequestQuickFilter.open => 'Aucune demande ouverte',
-        RequestQuickFilter.closed => 'Aucune demande terminée',
+        RequestQuickFilter.closed => 'Aucune demande non aboutie',
         RequestQuickFilter.draft => 'Aucun brouillon',
         RequestQuickFilter.all => 'Aucune demande',
       };

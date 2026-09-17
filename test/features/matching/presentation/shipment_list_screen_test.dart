@@ -379,7 +379,7 @@ void main() {
     },
   );
 
-  testWidgets('carte REJECTED affiche badge TERMINÉ', (tester) async {
+  testWidgets('carte REJECTED affiche badge REFUSÉ', (tester) async {
     final bids = [_bid('REJECTED', 'Dakar')];
     whenListen(
       bidBloc,
@@ -389,10 +389,10 @@ void main() {
     await tester.pumpWidget(subject());
     await tester.pumpAndSettle();
 
-    expect(find.text('TERMINÉ'), findsOneWidget);
+    expect(find.text('REFUSÉ'), findsOneWidget);
   });
 
-  testWidgets('carte CANCELLED affiche badge TERMINÉ', (tester) async {
+  testWidgets('carte CANCELLED affiche badge ANNULÉ', (tester) async {
     final bids = [_bid('CANCELLED', 'Dakar')];
     whenListen(
       bidBloc,
@@ -402,7 +402,7 @@ void main() {
     await tester.pumpWidget(subject());
     await tester.pumpAndSettle();
 
-    expect(find.text('TERMINÉ'), findsOneWidget);
+    expect(find.text('ANNULÉ'), findsOneWidget);
   });
 
   testWidgets('carte IN_TRANSIT affiche badge EN TRANSIT', (tester) async {
@@ -418,7 +418,7 @@ void main() {
     expect(find.text('EN TRANSIT'), findsOneWidget);
   });
 
-  testWidgets('carte NO_SHOW affiche badge TERMINÉ', (tester) async {
+  testWidgets('carte NO_SHOW affiche badge ABSENT', (tester) async {
     final bids = [_bid('NO_SHOW', 'Dakar')];
     whenListen(
       bidBloc,
@@ -428,10 +428,10 @@ void main() {
     await tester.pumpWidget(subject());
     await tester.pumpAndSettle();
 
-    expect(find.text('TERMINÉ'), findsOneWidget);
+    expect(find.text('ABSENT'), findsOneWidget);
   });
 
-  testWidgets('carte EXPIRED affiche badge TERMINÉ', (tester) async {
+  testWidgets('carte EXPIRED affiche badge EXPIRÉ', (tester) async {
     final bids = [_bid('EXPIRED', 'Dakar')];
     whenListen(
       bidBloc,
@@ -441,10 +441,12 @@ void main() {
     await tester.pumpWidget(subject());
     await tester.pumpAndSettle();
 
-    expect(find.text('TERMINÉ'), findsOneWidget);
+    expect(find.text('EXPIRÉ'), findsOneWidget);
   });
 
-  testWidgets('carte PARCEL_REFUSED affiche badge TERMINÉ', (tester) async {
+  testWidgets('carte PARCEL_REFUSED affiche badge COLIS REFUSÉ', (
+    tester,
+  ) async {
     final bids = [_bid('PARCEL_REFUSED', 'Dakar')];
     whenListen(
       bidBloc,
@@ -454,7 +456,7 @@ void main() {
     await tester.pumpWidget(subject());
     await tester.pumpAndSettle();
 
-    expect(find.text('TERMINÉ'), findsOneWidget);
+    expect(find.text('COLIS REFUSÉ'), findsOneWidget);
   });
 
   testWidgets(
@@ -546,6 +548,7 @@ void main() {
     expect(find.text('En cours'), findsOneWidget);
     expect(find.text('En attente'), findsOneWidget);
     expect(find.text('Livrés'), findsOneWidget);
+    expect(find.text('Non aboutis'), findsOneWidget);
   });
 
   testWidgets('tapper « Livrés » → cubit statuses == {COMPLETED}', (
@@ -565,5 +568,34 @@ void main() {
 
     expect(find.text('Dakar'), findsOneWidget);
     expect(find.text('Abidjan'), findsNothing);
+  });
+
+  testWidgets('tapper « Non aboutis » → seuls les envois clos sans livraison', (
+    tester,
+  ) async {
+    final bids = [
+      _bid('COMPLETED', 'Dakar'),
+      _bid('ACCEPTED', 'Abidjan'),
+      _bid('CANCELLED', 'Bamako'),
+      _bid('PARCEL_REFUSED', 'Douala'),
+    ];
+    whenListen(
+      bidBloc,
+      Stream<BidState>.fromIterable([BidListLoaded(bids)]),
+      initialState: BidListLoaded(bids),
+    );
+    await tester.pumpWidget(subject());
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.text('Non aboutis'));
+    await tester.tap(find.text('Non aboutis'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Bamako'), findsOneWidget);
+    expect(find.text('Douala'), findsOneWidget);
+    expect(find.text('Dakar'), findsNothing);
+    expect(find.text('Abidjan'), findsNothing);
+    expect(find.text('ANNULÉ'), findsOneWidget);
+    expect(find.text('COLIS REFUSÉ'), findsOneWidget);
   });
 }

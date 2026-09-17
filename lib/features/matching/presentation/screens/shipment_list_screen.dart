@@ -212,6 +212,7 @@ List<StatusChipData<Set<String>>> _buildChips(
     value: const {'COMPLETED'},
     dotColor: cs.success,
   ),
+  const StatusChipData(label: 'Non aboutis', value: kEnvoisNonAboutis),
 ];
 
 class _ShipmentFilterBar extends StatelessWidget {

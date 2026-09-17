@@ -275,7 +275,7 @@ void main() {
     });
 
     testWidgets(
-      'le chip Terminées filtre les demandes terminées (annulées/expirées)',
+      'le chip Non abouties filtre les demandes annulées ou expirées',
       (tester) async {
         await tester.pumpWidget(wrap());
         await tester.pumpAndSettle();
@@ -284,8 +284,8 @@ void main() {
         expect(find.text('Paris → Dakar'), findsOneWidget);
         expect(find.text('Paris → Abidjan'), findsOneWidget);
 
-        // Tap "Terminées" chip (1 = Abidjan annulée)
-        await tester.tap(find.text('Terminées (1)'));
+        // Tap "Non abouties" chip (1 = Abidjan annulée)
+        await tester.tap(find.text('Non abouties (1)'));
         await tester.pumpAndSettle();
 
         // Only the closed request (Abidjan cancelled) should be visible
@@ -508,7 +508,7 @@ void main() {
     );
 
     testWidgets(
-      'chip Terminées + aucune terminée affiche « Aucune demande terminée »',
+      'chip Non abouties vide affiche « Aucune demande non aboutie »',
       (tester) async {
         when(() => bloc.state).thenReturn(
           PackageRequestState(
@@ -519,10 +519,10 @@ void main() {
         await tester.pumpWidget(wrap());
         await tester.pumpAndSettle();
 
-        await tester.tap(find.text('Terminées (0)'));
+        await tester.tap(find.text('Non abouties (0)'));
         await tester.pumpAndSettle();
 
-        expect(find.text('Aucune demande terminée'), findsOneWidget);
+        expect(find.text('Aucune demande non aboutie'), findsOneWidget);
       },
     );
 
@@ -624,7 +624,7 @@ void main() {
   });
 
   group('chip Toutes et onClear', () {
-    testWidgets('chip Toutes réinitialise le filtre depuis Terminées', (
+    testWidgets('chip Toutes réinitialise le filtre depuis Non abouties', (
       tester,
     ) async {
       final requests = [
@@ -643,8 +643,8 @@ void main() {
       await tester.pumpWidget(wrap());
       await tester.pumpAndSettle();
 
-      // Filtrer sur Terminées (Abidjan annulée)
-      await tester.tap(find.text('Terminées (1)'));
+      // Filtrer sur Non abouties (Abidjan annulée)
+      await tester.tap(find.text('Non abouties (1)'));
       await tester.pumpAndSettle();
       expect(find.text('Paris → Dakar'), findsNothing);
 

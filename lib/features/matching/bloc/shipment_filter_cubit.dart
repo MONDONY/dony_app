@@ -31,14 +31,17 @@ const kEnvoisAVenir = <String>{
   'AWAITING_PAYMENT',
   'PAYMENT_ESCROWED',
 };
-const kEnvoisPasses = <String>{
-  'COMPLETED',
+
+/// Envois clos sans livraison. Puce « Non aboutis » : sans elle, ces colis
+/// n'étaient visibles que sous « Tous ».
+const kEnvoisNonAboutis = <String>{
   'REJECTED',
   'CANCELLED',
   'NO_SHOW',
   'EXPIRED',
   'PARCEL_REFUSED',
 };
+const kEnvoisPasses = <String>{'COMPLETED', ...kEnvoisNonAboutis};
 
 const _statusPriority = {
   // ARRIVED est l'étape la plus avancée avant la livraison → priorité la plus
