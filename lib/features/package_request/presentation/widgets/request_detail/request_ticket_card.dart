@@ -217,12 +217,13 @@ class _Thumb extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const size = 72.0;
+    final cs = Theme.of(context).colorScheme;
     if (urls.isEmpty) {
       return Container(
         key: const Key('request-ticket-photo-placeholder'),
         width: size, height: size,
-        decoration: BoxDecoration(color: DonyColors.sand200, borderRadius: BorderRadius.circular(DonyRadius.md)),
-        child: const Center(child: DonyIcon('package', size: 28, color: DonyColors.terra700)),
+        decoration: BoxDecoration(color: cs.surfaceContainerHighest, borderRadius: BorderRadius.circular(DonyRadius.md)),
+        child: Center(child: DonyIcon('package', size: 28, color: cs.onSurfaceVariant)),
       );
     }
     return Semantics(
@@ -244,7 +245,7 @@ class _Thumb extends StatelessWidget {
                     right: 4, bottom: 4,
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                      decoration: BoxDecoration(color: DonyColors.ink800.withValues(alpha: 0.75),
+                      decoration: BoxDecoration(color: DonyColors.scrimDark,
                           borderRadius: BorderRadius.circular(6)),
                       child: Text('+${urls.length - 1}',
                           style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w800)),

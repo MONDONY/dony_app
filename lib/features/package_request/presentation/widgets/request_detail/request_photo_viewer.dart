@@ -14,7 +14,26 @@ abstract final class RequestPhotoViewer {
             controller: PageController(initialPage: initialIndex),
             itemCount: urls.length,
             itemBuilder: (_, i) => InteractiveViewer(
-              child: Center(child: CachedNetworkImage(imageUrl: urls[i], fit: BoxFit.contain)),
+              child: Center(
+                child: CachedNetworkImage(
+                  imageUrl: urls[i],
+                  fit: BoxFit.contain,
+                  // Fond du visionneur figé en noir (barrierColor) quel que soit
+                  // le thème : couleurs fixes claires, pas cs.X (illisibles sur
+                  // ce fond sombre en thème clair).
+                  placeholder: (_, _) => const Center(
+                    child: CircularProgressIndicator(color: Colors.white),
+                  ),
+                  errorWidget: (_, _, _) => const Center(
+                    child: DonyIcon(
+                      'image-off',
+                      key: Key('request-photo-viewer-error'),
+                      size: 40,
+                      color: Colors.white70,
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
           Positioned(

@@ -25,13 +25,14 @@ class RequestStatusPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final pill = requestPillFor(screenCase, count: count);
     final (fg, bg) = switch (pill.tone) {
-      RequestPillTone.live || RequestPillTone.success => (DonyColors.success500, DonyColors.success50),
-      RequestPillTone.neutral => (DonyColors.neutral600, DonyColors.neutral100),
-      RequestPillTone.info => (DonyColors.primary, DonyColors.primarySoft),
-      RequestPillTone.warning => (DonyColors.warning500, DonyColors.warning50),
-      RequestPillTone.danger => (DonyColors.danger500, DonyColors.danger50),
+      RequestPillTone.live || RequestPillTone.success => (cs.success, cs.successLight),
+      RequestPillTone.neutral => (cs.onSurfaceVariant, cs.surfaceContainerHighest),
+      RequestPillTone.info => (cs.primary, cs.primaryContainer),
+      RequestPillTone.warning => (cs.warning, cs.warningLight),
+      RequestPillTone.danger => (cs.error, cs.errorLight),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
