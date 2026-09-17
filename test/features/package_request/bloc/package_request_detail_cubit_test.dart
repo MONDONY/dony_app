@@ -183,6 +183,24 @@ void main() {
     verify: (_) => verify(() => analytics.logEvent(AnalyticsEvents.packageRequestCancelled)).called(1),
   );
 
+  test(
+    'load après cancel : soft-delete → aucun appel getById, aucun nouvel état '
+    '(sinon un rafraîchissement produirait une fausse erreur 404)',
+    () async {
+      when(() => requests.cancel('pr-1')).thenAnswer((_) async {});
+      final c = build();
+      await c.load();
+      await c.cancel();
+      final stateAfterCancel = c.state;
+
+      await c.load();
+
+      expect(c.state, same(stateAfterCancel));
+      verify(() => requests.getById('pr-1')).called(1);
+      await c.close();
+    },
+  );
+
   blocTest<PackageRequestDetailCubit, PackageRequestDetailState>(
     'cancel en échec : notice actionFailed, pas d état annulé',
     build: build,

@@ -49,4 +49,12 @@ void main() {
     expect(find.text('Awa K. ajoute son trajet'), findsOneWidget);
     expect(tester.widget<DonyButton>(find.byType(DonyButton)).onPressed, isNull);
   });
+
+  testWidgets('primaryEnabled: false désactive le bouton malgré une action normalement active', (tester) async {
+    await tester.pumpWidget(MaterialApp(theme: AppTheme.light(), home: Scaffold(bottomNavigationBar: RequestDetailBottomBar(
+      actions: const RequestScreenActions(primary: RequestPrimaryAction.trackParcel),
+      busy: false, primaryEnabled: false, onPrimary: () {}))));
+    expect(find.text('Suivre mon colis'), findsOneWidget);
+    expect(tester.widget<DonyButton>(find.byType(DonyButton)).onPressed, isNull);
+  });
 }

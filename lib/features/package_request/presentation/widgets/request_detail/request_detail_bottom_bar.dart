@@ -31,6 +31,7 @@ class RequestDetailBottomBar extends StatelessWidget {
     this.onMessage,
     this.travelerName,
     this.amount,
+    this.primaryEnabled = true,
     super.key,
   });
 
@@ -42,10 +43,16 @@ class RequestDetailBottomBar extends StatelessWidget {
   final String? travelerName;
   final String? amount;
 
+  /// Garde supplémentaire de l'appelant : `trackParcel`/`rate` ont besoin d'un
+  /// identifiant (bid) qui peut manquer même quand l'action semble normale —
+  /// mieux vaut désactiver le bouton qu'un bouton muet qui ne fait rien.
+  final bool primaryEnabled;
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final primary = primaryButtonFor(actions.primary, travelerName: travelerName, amount: amount);
+    final rawPrimary = primaryButtonFor(actions.primary, travelerName: travelerName, amount: amount);
+    final primary = (label: rawPrimary.label, icon: rawPrimary.icon, enabled: rawPrimary.enabled && primaryEnabled);
     final secondary = actions.showEdit
         ? (label: 'Modifier', icon: 'square-pen', onTap: onEdit)
         : actions.showMessage

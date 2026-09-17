@@ -146,8 +146,17 @@ class _DetailBody extends StatelessWidget {
         // 92 % de l'écran — sans scroll, le squelette ou l'erreur peuvent
         // dépasser l'espace laissé par l'entête et la barre fixe.
         PackageRequestDetailLoading() => const SingleChildScrollView(child: RequestDetailSkeleton()),
-        PackageRequestDetailError() => SingleChildScrollView(
-          child: _ErrorView(onRetry: context.read<PackageRequestDetailCubit>().load),
+        // LayoutBuilder + ConstrainedBox(minHeight) : reste centrée quand
+        // l'espace disponible dépasse son contenu, mais peut aussi scroller
+        // (sheet à hauteur fixe) sans jamais déborder. Widget de feature, pas
+        // du design system : LayoutBuilder y est autorisé.
+        PackageRequestDetailError() => LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: _ErrorView(onRetry: context.read<PackageRequestDetailCubit>().load),
+            ),
+          ),
         ),
         final PackageRequestDetailLoaded loaded => RefreshIndicator(
           onRefresh: context.read<PackageRequestDetailCubit>().load,
@@ -164,10 +173,7 @@ class _DetailBody extends StatelessWidget {
   RequestDetailCallbacks _callbacks(BuildContext context, PackageRequestDetailLoaded s) {
     final cubit = context.read<PackageRequestDetailCubit>();
     return RequestDetailCallbacks(
-      onOpenThread: (threadId) async {
-        await context.push('/negotiations/$threadId');
-        if (context.mounted) unawaited(cubit.load());
-      },
+      onOpenThread: (threadId) => _openThread(context, threadId),
       onOpenTrip: (trip) => context.push('/traveler/${trip.id}'),
       onInvite: cubit.invite,
       onCreateAlert: () => CorridorAlertFormSheet.show(
@@ -207,13 +213,15 @@ bool clearDateForDuplicate(String source, DateTime desiredDate, {DateTime? now})
 }
 
 Future<void> _duplicate(BuildContext context, PackageRequestDetailLoaded s, String source) async {
-  final cubit = context.read<PackageRequestDetailCubit>()..trackDuplicateStarted(source);
+  context.read<PackageRequestDetailCubit>().trackDuplicateStarted(source);
+  // Dupliquer/republier/publier une demande similaire créent toujours une
+  // NOUVELLE demande ailleurs — la source affichée ici n'est jamais modifiée,
+  // donc pas de rechargement à son retour.
   await PackageRequestCreateWizard.showDuplicate(
     context,
     s.request,
     clearDate: clearDateForDuplicate(source, s.request.desiredDate),
   );
-  if (context.mounted && source != 'similar') unawaited(cubit.load());
 }
 
 class _DetailBottomBar extends StatelessWidget {
@@ -228,14 +236,22 @@ class _DetailBottomBar extends StatelessWidget {
         final amount = focus == null
             ? null
             : PriceDisplay.money(focus.grossPriceEur ?? PriceDisplay.grossFromNet(focus.currentPriceEur), focus.currency);
+        // Le bid matérialisé (fetch dédié du cubit) prime sur celui porté par
+        // le fil : c'est la même donnée, mais elle peut manquer côté fil si le
+        // fetch a échoué. Sans identifiant, « Suivre mon colis »/« Noter »
+        // seraient des boutons actifs qui ne font rien au tap.
+        final bidId = state.materializedBid?.id ?? focus?.materializedBidId;
+        final needsBidId = state.actions.primary == RequestPrimaryAction.trackParcel ||
+            state.actions.primary == RequestPrimaryAction.rate;
         return RequestDetailBottomBar(
           actions: state.actions,
           busy: state.actionInFlight,
           travelerName: focus?.travelerName,
           amount: amount,
+          primaryEnabled: !needsBidId || bidId != null,
           onEdit: () => _edit(context, state),
-          onMessage: focus == null ? null : () => context.push('/negotiations/${focus.id}'),
-          onPrimary: () => _onPrimary(context, state, focus?.id, focus?.materializedBidId, focus?.travelerName),
+          onMessage: focus == null ? null : () => _openThread(context, focus.id),
+          onPrimary: () => _onPrimary(context, state, focus?.id, bidId, focus?.travelerName),
         );
       },
     );
@@ -258,22 +274,31 @@ class _DetailBottomBar extends StatelessWidget {
         ));
       case RequestPrimaryAction.openThread || RequestPrimaryAction.pay:
         if (threadId == null) return;
-        await context.push('/negotiations/$threadId');
-        if (context.mounted) unawaited(cubit.load());
+        await _openThread(context, threadId);
       case RequestPrimaryAction.waitTrip:
         return;
       case RequestPrimaryAction.trackParcel:
-        if (bidId != null) await context.push('/bids/$bidId');
+        if (bidId == null) return;
+        await context.push('/bids/$bidId');
+        if (context.mounted) unawaited(cubit.load());
       case RequestPrimaryAction.rate:
-        if (bidId != null) {
-          await RatingBottomSheet.show(context, bidId: bidId, travelerName: travelerName ?? 'le voyageur');
-        }
+        if (bidId == null) return;
+        await RatingBottomSheet.show(context, bidId: bidId, travelerName: travelerName ?? 'le voyageur');
+        if (context.mounted) unawaited(cubit.load());
       case RequestPrimaryAction.republish:
         await _duplicate(context, s, 'republish');
       case RequestPrimaryAction.publishSimilar:
         await _duplicate(context, s, 'similar');
     }
   }
+}
+
+/// Ouvre un fil de négociation et recharge au retour — partagé par « Ouvrir la
+/// discussion »/« Payer » (bouton principal) et « Message » (bouton secondaire).
+Future<void> _openThread(BuildContext context, String threadId) async {
+  final cubit = context.read<PackageRequestDetailCubit>();
+  await context.push('/negotiations/$threadId');
+  if (context.mounted) unawaited(cubit.load());
 }
 
 class _MenuButton extends StatelessWidget {

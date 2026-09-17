@@ -41,6 +41,13 @@ class PackageRequestDetailCubit extends Cubit<PackageRequestDetailState> {
 
   Future<void> load() async {
     final previous = state;
+    // Le back soft-delete une demande annulée : un rafraîchissement (pull-to-
+    // refresh, retour de navigation) appellerait getById → 404, et afficherait
+    // à tort une notice d'erreur sur un écran pourtant déjà correct. L'état
+    // local annulé reste la seule vérité une fois posé.
+    if (previous is PackageRequestDetailLoaded && previous.cancelledLocally) {
+      return;
+    }
     if (previous is! PackageRequestDetailLoaded) {
       emit(const PackageRequestDetailLoading());
     }

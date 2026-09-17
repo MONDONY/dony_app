@@ -7,6 +7,7 @@ import 'package:dony/features/package_request/data/models/negotiation_thread.dar
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/package_request_insights.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
+import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/presentation/widgets/request_detail/compatible_traveler_card.dart';
 import 'package:dony/features/package_request/presentation/widgets/request_detail/request_detail_view.dart';
 import 'package:dony/features/package_request/presentation/widgets/request_detail/request_offer_card.dart';
@@ -23,11 +24,13 @@ PackageRequest _req(PackageRequestStatus s, {bool negotiable = true}) => Package
   status: s, createdAt: DateTime.utc(2026, 9, 17, 6, 25), negotiable: negotiable,
 );
 
-NegotiationThread _t(NegotiationThreadStatus s, {String id = 'a', bool myTurn = false, String? bidId}) => NegotiationThread(
+NegotiationThread _t(NegotiationThreadStatus s,
+    {String id = 'a', bool myTurn = false, String? bidId, PaymentMethod? paymentMethod}) => NegotiationThread(
   id: 't-$id', packageRequestId: 'pr-1', travelerId: 'tr-$id', travelerTravelDate: DateTime(2026, 9, 26),
   travelerAvailableKg: 8, status: s, currentPriceEur: 25, roundsCount: 1,
   lastActivityAt: DateTime(2026, 9, 17), createdAt: DateTime(2026, 9, 17), messages: const [],
-  travelerName: 'Awa K.', isMyTurn: myTurn, grossPriceEur: 28, currency: 'EUR', materializedBidId: bidId,
+  travelerName: 'Awa K.', isMyTurn: myTurn, grossPriceEur: 28, materializedBidId: bidId,
+  paymentMethod: paymentMethod,
 );
 
 AnnouncementModel _trip(String id) => AnnouncementModel(
@@ -60,6 +63,10 @@ void main() {
     expect(find.textContaining('14 vues'), findsOneWidget);
     expect(find.byType(RequestTravelersList), findsOneWidget);
     expect(find.text('Inviter'), findsOneWidget);
+    // Jauge de la carte voyageur : reflète bien le poids de LA demande (2 kg,
+    // fixture `_req`), pas une valeur en dur.
+    expect(find.textContaining('ton colis : 2 kg'), findsOneWidget);
+    expect(find.textContaining('8 kg libres'), findsOneWidget);
   });
 
   testWidgets('2 bis : back sans invitations → pas de bouton Inviter', (tester) async {
@@ -76,7 +83,7 @@ void main() {
 
   testWidgets('4 offres reçues : à répondre en tête, voyageurs repliés', (tester) async {
     await _pump(tester, PackageRequestDetailLoaded(request: _req(PackageRequestStatus.negotiating),
-        threads: [_t(NegotiationThreadStatus.open, id: 'b'), _t(NegotiationThreadStatus.open, id: 'a', myTurn: true)],
+        threads: [_t(NegotiationThreadStatus.open, id: 'b'), _t(NegotiationThreadStatus.open, myTurn: true)],
         compatibleTrips: [_trip('x')]));
     expect(find.text('2 offres'), findsOneWidget);
     final cards = tester.widgetList<RequestOfferCard>(find.byType(RequestOfferCard)).toList();
@@ -84,25 +91,36 @@ void main() {
     expect(find.byType(RequestTravelersFold), findsOneWidget);
   });
 
-  testWidgets('5 prix ferme : Choisir + rappel', (tester) async {
+  testWidgets('5 prix ferme : Choisir + rappel + pastille + voyageurs masqués', (tester) async {
     await _pump(tester, PackageRequestDetailLoaded(request: _req(PackageRequestStatus.open, negotiable: false),
-        threads: [_t(NegotiationThreadStatus.open)]));
+        threads: [_t(NegotiationThreadStatus.open)], compatibleTrips: [_trip('x'), _trip('y')]));
     expect(find.text('Choisir'), findsOneWidget);
     expect(find.text('Les autres candidats seront déclinés automatiquement.'), findsOneWidget);
+    expect(find.text('1 candidat'), findsOneWidget);
+    // La liste complète (avec Inviter) ne doit jamais apparaître ici : seul le
+    // pli replié résume les voyageurs sur l'axe.
+    expect(find.byType(RequestTravelersList), findsNothing);
+    expect(find.byType(RequestTravelersFold), findsOneWidget);
   });
 
   testWidgets('6 commission espèces : bandeau ambre, autres offres visibles', (tester) async {
     await _pump(tester, PackageRequestDetailLoaded(request: _req(PackageRequestStatus.negotiating),
-        threads: [_t(NegotiationThreadStatus.open, id: 'b'), _t(NegotiationThreadStatus.awaitingCommission, id: 'a')]));
+        threads: [_t(NegotiationThreadStatus.open, id: 'b'), _t(NegotiationThreadStatus.awaitingCommission)]));
     expect(find.text('Awa K. règle sa commission Yadony'), findsOneWidget);
     expect(find.byType(RequestOfferCard), findsNWidgets(2));
   });
 
-  testWidgets('7 à finaliser : une seule offre', (tester) async {
+  testWidgets('7 à finaliser : une seule offre + pastille + voyageurs masqués', (tester) async {
     await _pump(tester, PackageRequestDetailLoaded(request: _req(PackageRequestStatus.negotiating),
-        threads: [_t(NegotiationThreadStatus.open, id: 'b'), _t(NegotiationThreadStatus.awaitingPayment, id: 'a')]));
+        threads: [_t(NegotiationThreadStatus.open, id: 'b'), _t(NegotiationThreadStatus.awaitingPayment)],
+        compatibleTrips: [_trip('x')]));
     expect(find.text('Finalise pour réserver sa place'), findsOneWidget);
     expect(find.byType(RequestOfferCard), findsOneWidget);
+    expect(find.text('À finaliser'), findsOneWidget);
+    // Aucune trace des voyageurs sur l'axe : une seule offre compte ici.
+    expect(find.byType(RequestTravelersList), findsNothing);
+    expect(find.byType(RequestTravelersFold), findsNothing);
+    expect(find.byType(CompatibleTravelerCard), findsNothing);
   });
 
   testWidgets('8 acceptée : talon voyageur + frise', (tester) async {
@@ -113,6 +131,17 @@ void main() {
     expect(find.text('Confirmée'), findsOneWidget);
     expect(find.byKey(const Key('request-ticket-traveler-stub')), findsOneWidget);
     expect(tester.widget<RequestProgressTimeline>(find.byType(RequestProgressTimeline)).currentStep, 2);
+    expect(find.text('payé, bloqué chez Yadony'), findsOneWidget);
+  });
+
+  testWidgets('8 bis acceptée en espèces : talon « à régler en main propre »', (tester) async {
+    await _pump(tester, PackageRequestDetailLoaded(request: _req(PackageRequestStatus.accepted),
+        threads: [_t(NegotiationThreadStatus.accepted, bidId: 'bid-1', paymentMethod: PaymentMethod.cash)],
+        materializedBid: BidModel(id: 'bid-1', announcementId: 'x', senderId: 'sender-1', weightKg: 2,
+            status: 'HANDED_OVER', createdAt: DateTime(2026, 9), updatedAt: DateTime(2026, 9))));
+    expect(find.byKey(const Key('request-ticket-traveler-stub')), findsOneWidget);
+    expect(find.text('à régler en main propre à la remise'), findsOneWidget);
+    expect(find.text('payé, bloqué chez Yadony'), findsNothing);
   });
 
   testWidgets('9 livrée : talon, pas de frise', (tester) async {
@@ -122,6 +151,18 @@ void main() {
             status: 'COMPLETED', createdAt: DateTime(2026, 9), updatedAt: DateTime(2026, 9))));
     expect(find.text('Livrée'), findsOneWidget);
     expect(find.byType(RequestProgressTimeline), findsNothing);
+    expect(find.byKey(const Key('request-ticket-traveler-stub')), findsOneWidget);
+    expect(find.text('versé au voyageur'), findsOneWidget);
+  });
+
+  testWidgets('9 bis livrée en espèces : talon « réglé en main propre »', (tester) async {
+    await _pump(tester, PackageRequestDetailLoaded(request: _req(PackageRequestStatus.accepted),
+        threads: [_t(NegotiationThreadStatus.accepted, bidId: 'bid-1', paymentMethod: PaymentMethod.cash)],
+        materializedBid: BidModel(id: 'bid-1', announcementId: 'x', senderId: 'sender-1', weightKg: 2,
+            status: 'COMPLETED', createdAt: DateTime(2026, 9), updatedAt: DateTime(2026, 9))));
+    expect(find.byKey(const Key('request-ticket-traveler-stub')), findsOneWidget);
+    expect(find.text('réglé en main propre'), findsOneWidget);
+    expect(find.text('versé au voyageur'), findsNothing);
   });
 
   testWidgets('10 expirée : bandeau', (tester) async {

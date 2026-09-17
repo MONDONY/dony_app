@@ -2,6 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/package_request/bloc/package_request_detail_state.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
+import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/presentation/request_screen_case.dart';
 import 'package:dony/features/package_request/presentation/request_time_label.dart';
@@ -220,6 +221,13 @@ class _TravelerStub extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final name = thread.travelerName ?? 'Voyageur';
     final price = PriceDisplay.money(thread.grossPriceEur ?? PriceDisplay.grossFromNet(thread.currentPriceEur), thread.currency);
+    // Espèces : aucun argent ne transite par Yadony, le libellé « bloqué chez
+    // Yadony »/« versé au voyageur » serait faux. Cf. le vocabulaire déjà
+    // établi (payment_recap_bottom_sheet.dart) : « en main propre ».
+    final isCash = thread.paymentMethod == PaymentMethod.cash;
+    final statusLabel = isCash
+        ? (delivered ? 'réglé en main propre' : 'à régler en main propre à la remise')
+        : (delivered ? 'versé au voyageur' : 'payé, bloqué chez Yadony');
     return Container(
       key: const Key('request-ticket-traveler-stub'),
       padding: const EdgeInsets.all(DonySpacing.base),
@@ -233,8 +241,7 @@ class _TravelerStub extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(price, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
-              Text(delivered ? 'versé au voyageur' : 'payé, bloqué chez Yadony',
-                  style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant)),
+              Text(statusLabel, style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant)),
             ],
           ),
         ],
