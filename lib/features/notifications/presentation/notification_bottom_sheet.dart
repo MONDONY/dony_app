@@ -671,6 +671,7 @@ class _NotificationIcon extends StatelessWidget {
       'negotiation_counter' => (cs.info, 'arrow-left-right'),
       'negotiation' => (cs.info, 'arrow-left-right'),
       'TRAVELER_INVITE' => (cs.info, 'handshake'),
+      'SENDER_INVITE' => (cs.info, 'package'),
       'CORRIDOR_ALERT' => (cs.info, 'plane'),
       'TRAVELER_NEW_ANNOUNCEMENT' => (cs.info, 'plane'),
       'automation_capacity_free' => (cs.info, 'zap'),

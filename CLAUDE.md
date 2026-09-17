@@ -344,8 +344,13 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `delivery_confirmed` | ReceptionConfirmScreen._confirm() |
 | `package_request_created` | PackageRequestFormBloc |
 | `package_request_updated` | PackageRequestFormBloc._onStep3() (mode édition) |
-| `package_request_published` | PackageRequestDetailScreen._publish() / PackageRequestDetailBottomSheet._publish() — tuile « Publier » de la grille propriétaire (brouillon → OPEN) |
-| `package_request_unpublished` | PackageRequestDetailScreen._unpublish() / PackageRequestDetailBottomSheet._unpublish() — tuile « Dépublier » de la grille propriétaire (OPEN → brouillon) |
+| `package_request_published` | PackageRequestDetailCubit.publish() — bouton « Publier » de la barre fixe de « Ma demande » (écran ou sheet), brouillon → OPEN |
+| `package_request_unpublished` | PackageRequestDetailCubit.unpublish() — entrée « Dépublier » du menu « … » de « Ma demande » (OPEN → brouillon) |
+| `package_request_cancelled` | PackageRequestDetailCubit.cancel() — annulation confirmée par le serveur depuis le menu « … » ; l'écran reste ouvert sur l'état « Annulée » |
+| `package_request_shared` | PackageRequestDetailCubit.trackShared() — bouton « Partager » de « Ma demande » (partage texte système) |
+| `package_request_traveler_invited` | PackageRequestDetailCubit.invite() — invitation d'un voyageur sur l'axe acceptée par le serveur (propriété `outcome` : `sent` / `already_sent`) |
+| `package_request_menu_opened` | PackageRequestDetailCubit.trackMenuOpened() — ouverture du menu « … » de « Ma demande » |
+| `package_request_duplicate_started` | PackageRequestDetailCubit.trackDuplicateStarted() — formulaire de création pré-rempli ouvert depuis une demande (propriété `source` : `duplicate` / `similar` / `republish`) |
 | `package_request_photo_added` | PackageRequestPhotosCubit.add() — photo colis uploadée au wizard |
 | `package_request_photo_removed` | PackageRequestPhotosCubit.remove() — photo retirée avant publication |
 | `package_request_detail_opened` | PackageRequestPublicDetailScreen.initState — ouverture du détail plein écran |

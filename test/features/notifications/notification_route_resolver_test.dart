@@ -203,6 +203,22 @@ void main() {
     });
   });
 
+  group('resolveNotificationRoute — SENDER_INVITE', () {
+    test('voyageur invité → détail public de la demande', () {
+      expect(
+        resolveNotificationRoute('SENDER_INVITE', {
+          'requestId': '3f2b8a4e-1d2c-4b5a-9e8f-0a1b2c3d4e5f',
+          'announcementId': '9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d',
+        }),
+        '/package-requests/3f2b8a4e-1d2c-4b5a-9e8f-0a1b2c3d4e5f/public',
+      );
+    });
+
+    test('requestId invalide → pas de route', () {
+      expect(resolveNotificationRoute('SENDER_INVITE', {'requestId': 'x'}), isNull);
+    });
+  });
+
   group('resolveNotificationRoute — TRIP_IN_PROGRESS', () {
     test('routes to the traveler\'s own trip detail', () {
       expect(
