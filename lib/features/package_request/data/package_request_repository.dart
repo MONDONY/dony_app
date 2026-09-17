@@ -6,6 +6,7 @@ import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/data/models/negotiation_quote.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
+import 'package:dony/features/package_request/data/models/package_request_insights.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
@@ -265,6 +266,55 @@ class PackageRequestRepository {
       '/package-requests/$id/unpublish',
     );
     return PackageRequest.fromJson(response.data!);
+  }
+
+  /// Vues et trajets déjà invités. `null` si le back ne connaît pas encore la
+  /// route (404) : l'écran masque alors le compteur au lieu d'échouer.
+  Future<PackageRequestInsights?> getInsights(String requestId) async {
+    try {
+      final response = await _apiClient.dio.get<Map<String, dynamic>>(
+        '/package-requests/$requestId/insights',
+      );
+      return PackageRequestInsights.fromJson(response.data!);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) return null;
+      rethrow;
+    }
+  }
+
+  /// Invite le voyageur d'un trajet. 201 = push envoyé, 200 = déjà invité.
+  /// 404 = route absente (ancien back) OU trajet disparu entre-temps (back à
+  /// jour) : seul l'appelant sait lequel via l'historique de `getInsights`
+  /// (voir `InvitationOutcome.notFound`). 409 `request/not-invitable` =
+  /// demande qui n'accepte plus d'invitations. 422 `invitation/limit-reached`
+  /// = quota d'invitations atteint ; les autres 422 (own-trip,
+  /// trip-not-active, off-corridor) remontent tels quels, l'appelant les
+  /// traite comme un refus générique.
+  Future<InvitationOutcome> inviteTraveler(
+    String requestId,
+    String announcementId,
+  ) async {
+    try {
+      final response = await _apiClient.dio.post<Map<String, dynamic>>(
+        '/package-requests/$requestId/invitations',
+        data: {'announcementId': announcementId},
+      );
+      return response.statusCode == 201
+          ? InvitationOutcome.sent
+          : InvitationOutcome.alreadySent;
+    } on DioException catch (e) {
+      final status = e.response?.statusCode;
+      if (status == 404) return InvitationOutcome.notFound;
+      if (status == 409) return InvitationOutcome.notInvitable;
+      if (status == 422) {
+        final data = e.response?.data;
+        final code = data is Map ? data['code'] as String? : null;
+        if (code == 'invitation/limit-reached') {
+          return InvitationOutcome.limitReached;
+        }
+      }
+      rethrow;
+    }
   }
 
   /// Signale une demande (modération). reason = code court (SCAM, PROHIBITED…).

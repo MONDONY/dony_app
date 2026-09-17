@@ -115,11 +115,13 @@ import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/bloc/negotiation_filter_cubit.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
+import 'package:dony/features/package_request/bloc/package_request_detail_cubit.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_photos_cubit.dart';
 import 'package:dony/features/package_request/bloc/package_request_search_bloc.dart';
 import 'package:dony/features/package_request/bloc/request_filter_cubit.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
+import 'package:dony/features/package_request/data/models/package_request_duplicate.dart';
 import 'package:dony/features/package_request/data/negotiation_repository.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/package_request/data/price_estimation_repository.dart';
@@ -1001,11 +1003,27 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => PriceEstimationRepository(getIt<ApiClient>()),
   );
   // param1 = demande à éditer (null → mode création).
-  getIt.registerFactoryParam<PackageRequestFormBloc, PackageRequest?, void>(
-    (editing, _) => PackageRequestFormBloc(
+  // param2 = source de duplication (dupliquer, republier ; null sinon).
+  getIt.registerFactoryParam<
+    PackageRequestFormBloc,
+    PackageRequest?,
+    PackageRequestDuplicate?
+  >(
+    (editing, duplicating) => PackageRequestFormBloc(
       getIt<PackageRequestRepository>(),
       analytics: getIt<AnalyticsService>(),
       editing: editing,
+      duplicating: duplicating,
+    ),
+  );
+  // param1 = id de la demande à afficher (écran et sheet « Ma demande »).
+  getIt.registerFactoryParam<PackageRequestDetailCubit, String, void>(
+    (requestId, _) => PackageRequestDetailCubit(
+      getIt<PackageRequestRepository>(),
+      getIt<AnnouncementRepository>(),
+      getIt<BidRepository>(),
+      getIt<AnalyticsService>(),
+      requestId: requestId,
     ),
   );
   getIt.registerFactory<PackageRequestSearchBloc>(

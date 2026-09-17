@@ -8,6 +8,7 @@ import 'package:dony/features/package_request/bloc/package_request_form_bloc.dar
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
+import 'package:dony/features/package_request/data/models/package_request_duplicate.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
@@ -1348,4 +1349,50 @@ void main() {
       expect(bloc.state.promoCode, 'WELCOME6');
     },
   );
+
+  // ── Duplication (dupliquer / republier) ─────────────────────────────────
+  group('duplicating', () {
+    final source = PackageRequest(
+      id: 'pr-old',
+      senderId: 's',
+      departureCity: 'Divo',
+      arrivalCity: 'Annemasse',
+      desiredDate: DateTime(2026, 9, 27),
+      dateToleranceDays: 2,
+      weightKg: 2,
+      parcelSize: ParcelSize.small,
+      transportMode: TransportMode.plane,
+      status: PackageRequestStatus.expired,
+      createdAt: DateTime.utc(2026, 9, 17),
+      photoUrls: const ['https://x/1.jpg'],
+      photoKeys: const ['k1'],
+      // Un code promo ne se réutilise pas d'office (cf. _duplicatedFrom).
+      promoCode: 'WELCOME6',
+    );
+
+    test('pré-remplit sans id d\'édition, ni photos, ni code promo', () {
+      final bloc = PackageRequestFormBloc(
+        repo,
+        analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+        duplicating: PackageRequestDuplicate(source),
+      );
+      expect(bloc.state.editingRequestId, isNull);
+      expect(bloc.state.departureCity, 'Divo');
+      expect(bloc.state.desiredDate, DateTime(2026, 9, 27));
+      expect(bloc.state.photoUrl, isNull);
+      expect(bloc.state.promoCode, isNull);
+      bloc.close();
+    });
+
+    test('republier : date vidée', () {
+      final bloc = PackageRequestFormBloc(
+        repo,
+        analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+        duplicating: PackageRequestDuplicate(source, clearDate: true),
+      );
+      expect(bloc.state.desiredDate, isNull);
+      expect(bloc.state.arrivalCity, 'Annemasse');
+      bloc.close();
+    });
+  });
 }

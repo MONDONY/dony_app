@@ -12,6 +12,7 @@ import 'package:dony/features/package_request/bloc/package_request_form_event.da
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
 import 'package:dony/features/package_request/bloc/package_request_photos_cubit.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
+import 'package:dony/features/package_request/data/models/package_request_duplicate.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/steps/step_1_trajet_colis.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/steps/step_2_details.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/steps/step_3_recap_budget.dart';
@@ -24,6 +25,10 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+
+// Réexporté pour les appelants existants (router, DI, T9) qui importaient
+// PackageRequestDuplicate via cet écran avant son déplacement dans data/models.
+export 'package:dony/features/package_request/data/models/package_request_duplicate.dart';
 
 abstract final class PackageRequestCreateWizard {
   static bool requiresEditWarning(PackageRequest? initial) =>
@@ -73,15 +78,32 @@ abstract final class PackageRequestCreateWizard {
     }
     return context.push<bool>('/package-requests/new', extra: request);
   }
+
+  /// Création pré-remplie depuis une demande existante (dupliquer, republier).
+  /// Le back n'accepte `publish` que sur un brouillon : republier une demande
+  /// déjà publiée (expirée, refusée, etc.) passe donc par une toute nouvelle
+  /// demande, sans photos (une clé R2 n'appartient qu'à une seule demande).
+  static Future<bool?> showDuplicate(
+    BuildContext context,
+    PackageRequest source, {
+    bool clearDate = false,
+  }) => context.push<bool>(
+    '/package-requests/new',
+    extra: PackageRequestDuplicate(source, clearDate: clearDate),
+  );
 }
 
 // ─── Screen ─────────────────────────────────────────────────────────────────
 
 class PackageRequestCreateScreen extends StatefulWidget {
-  const PackageRequestCreateScreen({super.key, this.initial});
+  const PackageRequestCreateScreen({super.key, this.initial, this.duplicating});
 
   /// Non-null en mode édition.
   final PackageRequest? initial;
+
+  /// Non-null en création pré-remplie (dupliquer, republier). Mutuellement
+  /// exclusif avec [initial] : le router ne peuple jamais les deux.
+  final PackageRequestDuplicate? duplicating;
 
   @override
   State<PackageRequestCreateScreen> createState() =>
@@ -186,7 +208,10 @@ class _PackageRequestCreateScreenState
     return MultiBlocProvider(
       providers: [
         BlocProvider(
-          create: (_) => getIt<PackageRequestFormBloc>(param1: widget.initial),
+          create: (_) => getIt<PackageRequestFormBloc>(
+            param1: widget.initial,
+            param2: widget.duplicating,
+          ),
         ),
         BlocProvider(
           create: (_) {

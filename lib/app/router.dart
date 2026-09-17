@@ -1613,8 +1613,14 @@ final appRouter = GoRouter(
     // ── Marketplace de demandes d'envoi (package requests) ─────────────────
     GoRoute(
       path: '/package-requests/new',
-      builder: (_, state) =>
-          PackageRequestCreateScreen(initial: state.extra as PackageRequest?),
+      builder: (_, state) => PackageRequestCreateScreen(
+        initial: state.extra is PackageRequest
+            ? state.extra as PackageRequest
+            : null,
+        duplicating: state.extra is PackageRequestDuplicate
+            ? state.extra as PackageRequestDuplicate
+            : null,
+      ),
     ),
     GoRoute(
       path: '/package-requests/me',

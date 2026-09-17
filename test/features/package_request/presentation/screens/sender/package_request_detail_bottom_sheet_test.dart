@@ -1,19 +1,18 @@
-// Task 5 fix-up — PackageRequestDetailBottomSheet (chemin principal, ouvert
-// depuis my_package_requests_screen.dart) n'avait aucun test dans
-// l'implémentation initiale de la Task 5, alors que c'est la partie la plus
-// réécrite du diff (_SheetBody + ValueNotifier<_SheetBtnConfig?> → un seul
-// _SheetFrame stateful). Ces tests exercent réellement les tuiles de la
-// grille (Publier/Dépublier/Annuler), pas seulement leur présence.
-
+import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
-import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
-import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
+import 'package:dony/features/matching/data/repositories/bid_repository.dart';
+import 'package:dony/features/package_request/bloc/package_request_detail_cubit.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/package_request_detail_screen.dart';
+import 'package:dony/features/package_request/presentation/widgets/request_detail/request_detail_bottom_bar.dart';
+import 'package:dony/features/ratings/bloc/rating_bloc.dart';
+import 'package:dony/features/ratings/bloc/rating_event.dart';
+import 'package:dony/features/ratings/bloc/rating_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -22,23 +21,31 @@ import 'package:mocktail/mocktail.dart';
 class _MockPackageRequestRepository extends Mock
     implements PackageRequestRepository {}
 
+class _MockAnnouncementRepository extends Mock
+    implements AnnouncementRepository {}
+
+class _MockBidRepository extends Mock implements BidRepository {}
+
 class _MockAnalyticsService extends Mock implements AnalyticsService {}
+
+class _MockRatingBloc extends MockBloc<RatingEvent, RatingState>
+    implements RatingBloc {}
 
 PackageRequest _fakeRequest({
   PackageRequestStatus status = PackageRequestStatus.open,
 }) => PackageRequest(
   id: 'pr-1',
   senderId: 'sender-1',
-  departureCity: 'Paris',
-  arrivalCity: 'Dakar',
-  desiredDate: DateTime(2026, 8, 15),
-  dateToleranceDays: 3,
-  weightKg: 5.0,
+  departureCity: 'Divo',
+  arrivalCity: 'Annemasse',
+  desiredDate: DateTime(2026, 9, 27),
+  dateToleranceDays: 2,
+  weightKg: 5,
   parcelSize: ParcelSize.medium,
   transportMode: TransportMode.plane,
   categories: const ['Vêtements'],
   status: status,
-  createdAt: DateTime(2026),
+  createdAt: DateTime.utc(2026, 9, 17, 6, 25),
 );
 
 Widget _buildApp() {
@@ -61,33 +68,57 @@ void main() {
   setUpAll(() => initializeDateFormatting('fr'));
 
   late _MockPackageRequestRepository repo;
+  late _MockAnnouncementRepository announcements;
+  late _MockBidRepository bids;
   late _MockAnalyticsService analytics;
+  late _MockRatingBloc ratingBloc;
 
   setUp(() {
     DonySnackbar.clearDedup();
     repo = _MockPackageRequestRepository();
+    announcements = _MockAnnouncementRepository();
+    bids = _MockBidRepository();
     analytics = _MockAnalyticsService();
+    ratingBloc = _MockRatingBloc();
 
     when(
       () => analytics.logEvent(any(), properties: any(named: 'properties')),
     ).thenAnswer((_) async {});
+    when(() => ratingBloc.state).thenReturn(const RatingInitial());
+    when(
+      () => ratingBloc.stream,
+    ).thenAnswer((_) => const Stream<RatingState>.empty());
+    when(
+      () => announcements.searchAnnouncements(
+        departureCity: any(named: 'departureCity'),
+        arrivalCity: any(named: 'arrivalCity'),
+        departureDateFrom: any(named: 'departureDateFrom'),
+        departureDateTo: any(named: 'departureDateTo'),
+        minAvailableKg: any(named: 'minAvailableKg'),
+      ),
+    ).thenAnswer((_) async => const []);
 
-    if (!getIt.isRegistered<PackageRequestRepository>()) {
-      getIt.registerSingleton<PackageRequestRepository>(repo);
+    if (getIt.isRegistered<PackageRequestDetailCubit>()) {
+      getIt.unregister<PackageRequestDetailCubit>();
     }
-    if (getIt.isRegistered<AnalyticsService>()) {
-      getIt.unregister<AnalyticsService>();
-    }
-    getIt.registerSingleton<AnalyticsService>(analytics);
+    getIt.registerFactoryParam<PackageRequestDetailCubit, String, void>(
+      (requestId, _) => PackageRequestDetailCubit(
+        repo,
+        announcements,
+        bids,
+        analytics,
+        requestId: requestId,
+      ),
+    );
+    if (getIt.isRegistered<RatingBloc>()) getIt.unregister<RatingBloc>();
+    getIt.registerFactory<RatingBloc>(() => ratingBloc);
   });
 
   tearDown(() async {
-    if (getIt.isRegistered<PackageRequestRepository>()) {
-      await getIt.unregister<PackageRequestRepository>();
+    if (getIt.isRegistered<PackageRequestDetailCubit>()) {
+      await getIt.unregister<PackageRequestDetailCubit>();
     }
-    if (getIt.isRegistered<AnalyticsService>()) {
-      await getIt.unregister<AnalyticsService>();
-    }
+    if (getIt.isRegistered<RatingBloc>()) await getIt.unregister<RatingBloc>();
   });
 
   Future<void> openSheet(WidgetTester tester) async {
@@ -96,118 +127,33 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('opens showing the header title and hero card', (tester) async {
-    when(() => repo.getById('pr-1')).thenAnswer((_) async => _fakeRequest());
-    when(() => repo.listThreadsForRequest('pr-1')).thenAnswer((_) async => []);
-
-    await openSheet(tester);
-
-    expect(find.text('Ma demande'), findsOneWidget);
-    expect(find.textContaining('Paris'), findsWidgets);
-  });
-
-  testWidgets('tapping Publier tile calls repo.publish and reloads', (
-    tester,
-  ) async {
-    var status = PackageRequestStatus.draft;
-    when(
-      () => repo.getById('pr-1'),
-    ).thenAnswer((_) async => _fakeRequest(status: status));
-    when(() => repo.listThreadsForRequest('pr-1')).thenAnswer((_) async => []);
-    when(() => repo.publish('pr-1')).thenAnswer((_) async {
-      status = PackageRequestStatus.open;
-      return _fakeRequest(status: status);
-    });
-
-    await openSheet(tester);
-
-    expect(find.text('Publier'), findsOneWidget);
-
-    await tester.tap(find.text('Publier'));
-    await tester.pumpAndSettle();
-
-    verify(() => repo.publish('pr-1')).called(1);
-    verify(() => repo.getById('pr-1')).called(2);
-    verify(
-      () => analytics.logEvent(AnalyticsEvents.packageRequestPublished),
-    ).called(1);
-    expect(find.text('Publier'), findsNothing);
-    // La sheet est restée ouverte (rechargement, pas fermeture).
-    expect(find.text('Ma demande'), findsOneWidget);
-  });
-
-  testWidgets('tapping Dépublier tile calls repo.unpublish and reloads', (
-    tester,
-  ) async {
-    var status = PackageRequestStatus.open;
-    when(
-      () => repo.getById('pr-1'),
-    ).thenAnswer((_) async => _fakeRequest(status: status));
-    when(() => repo.listThreadsForRequest('pr-1')).thenAnswer((_) async => []);
-    when(() => repo.unpublish('pr-1')).thenAnswer((_) async {
-      status = PackageRequestStatus.draft;
-      return _fakeRequest(status: status);
-    });
-
-    await openSheet(tester);
-
-    expect(find.text('Dépublier'), findsOneWidget);
-
-    await tester.tap(find.text('Dépublier'));
-    await tester.pumpAndSettle();
-
-    verify(() => repo.unpublish('pr-1')).called(1);
-    verify(
-      () => analytics.logEvent(AnalyticsEvents.packageRequestUnpublished),
-    ).called(1);
-    expect(find.text('Publier'), findsOneWidget);
-  });
-
   testWidgets(
-    'confirming Annuler tile calls repo.cancel and closes the sheet',
+    'ouvre avec poignée, titre « Ma demande », billet et barre fixe',
     (tester) async {
       when(() => repo.getById('pr-1')).thenAnswer((_) async => _fakeRequest());
       when(
         () => repo.listThreadsForRequest('pr-1'),
       ).thenAnswer((_) async => []);
-      when(() => repo.cancel('pr-1')).thenAnswer((_) async {});
 
       await openSheet(tester);
+
       expect(find.text('Ma demande'), findsOneWidget);
-
-      await tester.tap(find.text('Annuler'));
-      await tester.pumpAndSettle();
-      expect(find.text('Annuler cette demande ?'), findsOneWidget);
-
-      await tester.tap(find.text('Annuler la demande'));
-      await tester.pumpAndSettle();
-
-      verify(() => repo.cancel('pr-1')).called(1);
-      // La sheet s'est fermée — on retrouve le bouton d'ouverture.
-      expect(find.text('Ma demande'), findsNothing);
-      expect(find.text('open sheet'), findsOneWidget);
+      expect(find.text('DIV'), findsOneWidget);
+      expect(find.byType(RequestDetailBottomBar), findsOneWidget);
     },
   );
 
-  testWidgets('cancel failure keeps the sheet open and shows an error snackbar '
-      '(régression : le pop ne doit pas s\'exécuter sur échec)', (
-    tester,
-  ) async {
+  testWidgets('Fermer ferme la sheet', (tester) async {
     when(() => repo.getById('pr-1')).thenAnswer((_) async => _fakeRequest());
     when(() => repo.listThreadsForRequest('pr-1')).thenAnswer((_) async => []);
-    when(() => repo.cancel('pr-1')).thenThrow(Exception('boom'));
 
     await openSheet(tester);
-
-    await tester.tap(find.text('Annuler'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Annuler la demande'));
-    await tester.pumpAndSettle();
-
-    verify(() => repo.cancel('pr-1')).called(1);
-    // La sheet doit rester ouverte — pas de fermeture silencieuse pendant
-    // que le snackbar d'erreur s'affiche.
     expect(find.text('Ma demande'), findsOneWidget);
-    expect(find.byType(SnackBar), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Fermer'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Ma demande'), findsNothing);
+    expect(find.text('open sheet'), findsOneWidget);
   });
 }

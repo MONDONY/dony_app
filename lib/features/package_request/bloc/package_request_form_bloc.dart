@@ -7,6 +7,7 @@ import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
+import 'package:dony/features/package_request/data/models/package_request_duplicate.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
@@ -18,14 +19,20 @@ class PackageRequestFormBloc
   /// demande existante (de façon synchrone, pour que les steps puissent lire ces
   /// valeurs dans leur `initState`). La soumission de l'étape 3 appellera alors
   /// `update` au lieu de `create`.
+  ///
+  /// [duplicating] non-null → création pré-remplie depuis une demande
+  /// existante (dupliquer / republier) : pas d'id d'édition, pas de photos.
   PackageRequestFormBloc(
     this._repository, {
     required AnalyticsService analytics,
     PackageRequest? editing,
+    PackageRequestDuplicate? duplicating,
   }) : _analytics = analytics,
        super(
          editing != null
              ? _prefilledFrom(editing)
+             : duplicating != null
+             ? _duplicatedFrom(duplicating)
              : const PackageRequestFormState(),
        ) {
     on<FormStep1Submitted>(_onStep1);
@@ -91,6 +98,31 @@ class PackageRequestFormBloc
       // « Mobile money » sur une demande EUR (ou « Carte » sur une XOF) qui
       // sera silencieusement retirée au PUT (restrictToCurrency côté back).
       currency: SupportedCurrency.fromCodeOrDefault(r.currency),
+    );
+  }
+
+  /// Création pré-remplie depuis une demande existante. Pas d'id d'édition (la
+  /// soumission appelle `create`), pas de photos (une clé R2 n'appartient qu'à
+  /// une demande), date vidée pour « Republier avec de nouvelles dates ».
+  static PackageRequestFormState _duplicatedFrom(PackageRequestDuplicate d) {
+    final base = _prefilledFrom(d.source);
+    return PackageRequestFormState(
+      departureCity: base.departureCity,
+      arrivalCity: base.arrivalCity,
+      desiredDate: d.clearDate ? null : base.desiredDate,
+      dateToleranceDays: base.dateToleranceDays,
+      transportMode: base.transportMode,
+      weightKg: base.weightKg,
+      parcelSize: base.parcelSize,
+      categories: base.categories,
+      description: base.description,
+      pickupNeighborhood: base.pickupNeighborhood,
+      deliveryNeighborhood: base.deliveryNeighborhood,
+      negotiable: base.negotiable,
+      acceptedPaymentMethods: base.acceptedPaymentMethods,
+      totalBudgetEur: base.totalBudgetEur,
+      targetPriceEur: base.targetPriceEur,
+      currency: base.currency,
     );
   }
 

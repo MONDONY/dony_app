@@ -106,8 +106,9 @@ String? resolveNotificationRoute(String? type, Map<String, dynamic> data) {
     'request_expired' when _isUuid(packageRequestId) =>
       '/package-requests/$packageRequestId',
 
-    // Voyageur invité à répondre à une demande → même écran que PACKAGE_MATCH
-    'TRAVELER_INVITE' when _isUuid(requestId) =>
+    // Voyageur invité à répondre à une demande (par un voyageur PRO, ou par
+    // l'expéditeur lui-même depuis « Ma demande ») → même écran que PACKAGE_MATCH
+    'TRAVELER_INVITE' || 'SENDER_INVITE' when _isUuid(requestId) =>
       '/package-requests/$requestId/public',
 
     // Voyageur abonné → détail de l'annonce publiée
