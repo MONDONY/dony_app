@@ -1,3 +1,4 @@
+import 'package:dony/core/utils/server_date_time.dart';
 import 'package:dony/features/content_categories/data/content_category_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
@@ -163,7 +164,7 @@ class PackageRequest extends Equatable {
         json['status'] as String? ?? 'OPEN',
       ),
       createdAt: switch (json['createdAt']) {
-        final String value => DateTime.parse(value),
+        final String value => parseServerDateTime(value),
         _ => DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
       },
       negotiable: json['negotiable'] as bool? ?? true,
