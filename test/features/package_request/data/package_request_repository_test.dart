@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
+import 'package:dony/features/package_request/data/models/package_request_insights.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
@@ -1002,5 +1003,59 @@ void main() {
         expect(PackageRequestSearchItem.fromJson(base).photoUrls, isEmpty);
       },
     );
+  });
+
+  DioException httpError(String path, int status) => DioException(
+    requestOptions: RequestOptions(path: path),
+    response: Response(statusCode: status, requestOptions: RequestOptions(path: path)),
+  );
+
+  group('getInsights', () {
+    test('GET /package-requests/{id}/insights', () async {
+      when(() => mockDio.get<Map<String, dynamic>>('/package-requests/pr-1/insights'))
+          .thenAnswer((_) async => _ok(<String, dynamic>{'viewCount': 3, 'invitedAnnouncementIds': <String>[]}, '/x'));
+      final insights = await repo.getInsights('pr-1');
+      expect(insights!.viewCount, 3);
+    });
+
+    test('404 (back pas encore déployé) → null', () async {
+      when(() => mockDio.get<Map<String, dynamic>>('/package-requests/pr-1/insights'))
+          .thenThrow(httpError('/package-requests/pr-1/insights', 404));
+      expect(await repo.getInsights('pr-1'), isNull);
+    });
+
+    test('500 → relancée', () async {
+      when(() => mockDio.get<Map<String, dynamic>>('/package-requests/pr-1/insights'))
+          .thenThrow(httpError('/package-requests/pr-1/insights', 500));
+      expect(() => repo.getInsights('pr-1'), throwsA(isA<DioException>()));
+    });
+  });
+
+  group('inviteTraveler', () {
+    const path = '/package-requests/pr-1/invitations';
+
+    test('201 → sent', () async {
+      when(() => mockDio.post<Map<String, dynamic>>(path, data: {'announcementId': 'a-1'}))
+          .thenAnswer((_) async => Response(statusCode: 201, data: <String, dynamic>{}, requestOptions: RequestOptions(path: path)));
+      expect(await repo.inviteTraveler('pr-1', 'a-1'), InvitationOutcome.sent);
+    });
+
+    test('200 → alreadySent', () async {
+      when(() => mockDio.post<Map<String, dynamic>>(path, data: {'announcementId': 'a-1'}))
+          .thenAnswer((_) async => _ok(<String, dynamic>{}, path));
+      expect(await repo.inviteTraveler('pr-1', 'a-1'), InvitationOutcome.alreadySent);
+    });
+
+    test('404 → unsupported', () async {
+      when(() => mockDio.post<Map<String, dynamic>>(path, data: {'announcementId': 'a-1'}))
+          .thenThrow(httpError(path, 404));
+      expect(await repo.inviteTraveler('pr-1', 'a-1'), InvitationOutcome.unsupported);
+    });
+
+    test('422 → relancée', () async {
+      when(() => mockDio.post<Map<String, dynamic>>(path, data: {'announcementId': 'a-1'}))
+          .thenThrow(httpError(path, 422));
+      expect(() => repo.inviteTraveler('pr-1', 'a-1'), throwsA(isA<DioException>()));
+    });
   });
 }
