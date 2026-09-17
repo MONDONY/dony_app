@@ -88,6 +88,24 @@ abstract final class AnalyticsEvents {
   /// Demande retirée de la circulation sans l'annuler (OPEN → DRAFT), avant
   /// la première offre — même origine que ci-dessus.
   static const packageRequestUnpublished = 'package_request_unpublished';
+
+  /// Partage texte de la demande depuis la barre fixe de « Ma demande ».
+  static const packageRequestShared = 'package_request_shared';
+
+  /// Annulation confirmée par le serveur depuis le menu « … » de « Ma demande ».
+  static const packageRequestCancelled = 'package_request_cancelled';
+
+  /// Invitation d'un voyageur sur l'axe (propriété `outcome` : sent / already_sent).
+  static const packageRequestTravelerInvited =
+      'package_request_traveler_invited';
+
+  /// Ouverture du menu « … » de « Ma demande ».
+  static const packageRequestMenuOpened = 'package_request_menu_opened';
+
+  /// Ouverture du formulaire pré-rempli depuis une demande existante
+  /// (propriété `source` : duplicate / similar / republish).
+  static const packageRequestDuplicateStarted =
+      'package_request_duplicate_started';
   static const packageRequestPhotoAdded = 'package_request_photo_added';
   static const packageRequestPhotoRemoved = 'package_request_photo_removed';
   static const packageRequestDetailOpened = 'package_request_detail_opened';

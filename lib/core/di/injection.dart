@@ -115,6 +115,7 @@ import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/bloc/negotiation_filter_cubit.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
+import 'package:dony/features/package_request/bloc/package_request_detail_cubit.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_photos_cubit.dart';
 import 'package:dony/features/package_request/bloc/package_request_search_bloc.dart';
@@ -1006,6 +1007,16 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<PackageRequestRepository>(),
       analytics: getIt<AnalyticsService>(),
       editing: editing,
+    ),
+  );
+  // param1 = id de la demande à afficher (écran et sheet « Ma demande »).
+  getIt.registerFactoryParam<PackageRequestDetailCubit, String, void>(
+    (requestId, _) => PackageRequestDetailCubit(
+      getIt<PackageRequestRepository>(),
+      getIt<AnnouncementRepository>(),
+      getIt<BidRepository>(),
+      getIt<AnalyticsService>(),
+      requestId: requestId,
     ),
   );
   getIt.registerFactory<PackageRequestSearchBloc>(
