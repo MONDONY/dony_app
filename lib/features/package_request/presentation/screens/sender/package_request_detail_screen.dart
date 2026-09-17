@@ -1,191 +1,51 @@
 import 'dart:async';
 
-import 'package:dio/dio.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
-import 'package:dony/core/services/analytics_events.dart';
-import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
-import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
-import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
-import 'package:dony/features/package_request/data/models/package_request.dart';
-import 'package:dony/features/package_request/data/package_request_repository.dart';
+import 'package:dony/features/corridor_alerts/data/models/alert_direction.dart';
+import 'package:dony/features/corridor_alerts/data/models/corridor_alert_model.dart';
+import 'package:dony/features/corridor_alerts/presentation/widgets/corridor_alert_form_sheet.dart';
+import 'package:dony/features/package_request/bloc/package_request_detail_cubit.dart';
+import 'package:dony/features/package_request/bloc/package_request_detail_state.dart';
+import 'package:dony/features/package_request/data/models/price_display.dart';
+import 'package:dony/features/package_request/presentation/request_screen_case.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/package_request_create_screen.dart';
-import 'package:dony/features/package_request/presentation/widgets/package_request_detail_body.dart';
+import 'package:dony/features/package_request/presentation/widgets/request_detail/request_detail_bottom_bar.dart';
+import 'package:dony/features/package_request/presentation/widgets/request_detail/request_detail_skeleton.dart';
+import 'package:dony/features/package_request/presentation/widgets/request_detail/request_detail_view.dart';
+import 'package:dony/features/package_request/presentation/widgets/request_detail/request_owner_menu_sheet.dart';
+import 'package:dony/features/ratings/bloc/rating_bloc.dart';
+import 'package:dony/features/ratings/presentation/widgets/rating_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
 
-class PackageRequestDetailScreen extends StatefulWidget {
+class PackageRequestDetailScreen extends StatelessWidget {
   const PackageRequestDetailScreen({required this.requestId, super.key});
   final String requestId;
 
   @override
-  State<PackageRequestDetailScreen> createState() =>
-      _PackageRequestDetailScreenState();
-}
-
-class _PackageRequestDetailScreenState
-    extends State<PackageRequestDetailScreen> {
-  PackageRequest? _request;
-  List<NegotiationThread> _threads = const [];
-  String? _error;
-  bool _loading = true;
-  bool _actionInFlight = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-    try {
-      final repo = getIt<PackageRequestRepository>();
-      final r = await repo.getById(widget.requestId);
-      List<NegotiationThread> threads = const [];
-      try {
-        threads = await repo.listThreadsForRequest(widget.requestId);
-      } catch (_) {}
-      if (mounted) {
-        setState(() {
-          _request = r;
-          _threads = threads;
-        });
-      }
-    } on DioException catch (e) {
-      if (mounted) setState(() => _error = e.message ?? 'Erreur');
-    } catch (e) {
-      if (mounted) setState(() => _error = e.toString());
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
-  }
-
-  /// Retourne `true` si `action` a réussi (et l'écran a rechargé), `false`
-  /// si elle a levé — l'appelant conditionne sur ce résultat toute suite qui
-  /// suppose le succès (ex: fermer l'écran après annulation).
-  Future<bool> _runAction(Future<void> Function() action) async {
-    setState(() => _actionInFlight = true);
-    var success = false;
-    try {
-      await action();
-      success = true;
-      if (mounted) await _load();
-    } catch (e) {
-      if (mounted) {
-        DonySnackbar.show(
-          context,
-          message: 'Une erreur est survenue. Veuillez réessayer.',
-          type: DonySnackbarType.error,
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _actionInFlight = false);
-    }
-    return success;
-  }
-
-  Future<void> _edit() async {
-    final changed = await PackageRequestCreateWizard.showEditing(
-      context,
-      _request!,
-    );
-    if ((changed ?? false) && mounted) await _load();
-  }
-
-  Future<void> _publish() async {
-    final success = await _runAction(
-      () => getIt<PackageRequestRepository>().publish(widget.requestId),
-    );
-    if (success) {
-      unawaited(
-        getIt<AnalyticsService>().logEvent(
-          AnalyticsEvents.packageRequestPublished,
-        ),
-      );
-    }
-  }
-
-  Future<void> _unpublish() async {
-    final success = await _runAction(
-      () => getIt<PackageRequestRepository>().unpublish(widget.requestId),
-    );
-    if (success) {
-      unawaited(
-        getIt<AnalyticsService>().logEvent(
-          AnalyticsEvents.packageRequestUnpublished,
-        ),
-      );
-    }
-  }
-
-  Future<void> _cancel() async {
-    final confirmed = await DonyDialog.show(
-      context,
-      title: 'Annuler cette demande ?',
-      message:
-          'Cette action est irréversible. Les voyageurs ne pourront '
-          'plus y répondre.',
-      confirmLabel: 'Annuler la demande',
-      variant: DonyDialogVariant.destructive,
-      iconAsset: 'circle-x',
-    );
-    if (confirmed != true || !mounted) return;
-    final success = await _runAction(
-      () => getIt<PackageRequestRepository>().cancel(widget.requestId),
-    );
-    // Ne ferme l'écran que si l'annulation a réellement abouti — sinon
-    // l'utilisateur verrait le snackbar d'erreur pendant que l'écran se
-    // ferme, en croyant l'annulation faite alors qu'elle a échoué.
-    if (success && mounted) context.pop();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: const DonyAppBar(title: 'Ma demande'),
-      body: _loading
-          ? const DonyDetailSkeleton()
-          : _error != null
-          ? _ErrorView(message: _error!, onRetry: _load)
-          : _request == null
-          ? const SizedBox.shrink()
-          : BlocProvider<NegotiationBloc>(
-              create: (_) => getIt<NegotiationBloc>(),
-              child: BlocListener<NegotiationBloc, NegotiationState>(
-                listenWhen: (prev, curr) =>
-                    curr is NegotiationLoaded && prev is! NegotiationLoaded,
-                listener: (_, _) => _load(),
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.fromLTRB(
-                    DonySpacing.lg,
-                    DonySpacing.xl,
-                    DonySpacing.lg,
-                    MediaQuery.of(context).padding.bottom + DonySpacing.xl,
-                  ),
-                  child: PackageRequestDetailBody(
-                    request: _request!,
-                    threads: _threads,
-                    actionInFlight: _actionInFlight,
-                    onEdit: _edit,
-                    onPublish: _publish,
-                    onUnpublish: _unpublish,
-                    onCancel: _cancel,
-                  ),
-                ),
-              ),
-            ),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => getIt<PackageRequestDetailCubit>(param1: requestId)..load()),
+        BlocProvider(create: (_) => getIt<RatingBloc>()),
+      ],
+      child: Builder(
+        builder: (context) => Scaffold(
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          appBar: const DonyAppBar(title: 'Ma demande', actions: [_MenuButton()]),
+          body: const _DetailBody(),
+          bottomNavigationBar: const _DetailBottomBar(),
+        ),
+      ),
     );
   }
 }
-
-// ── Bottom sheet detail ───────────────────────────────────────────────────────
 
 abstract final class PackageRequestDetailBottomSheet {
   static Future<void> show(BuildContext context, String requestId) {
@@ -194,154 +54,30 @@ abstract final class PackageRequestDetailBottomSheet {
       useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _SheetFrame(requestId: requestId),
+      builder: (_) => MultiBlocProvider(
+        providers: [
+          BlocProvider(create: (_) => getIt<PackageRequestDetailCubit>(param1: requestId)..load()),
+          BlocProvider(create: (_) => getIt<RatingBloc>()),
+        ],
+        child: const _SheetFrame(),
+      ),
     );
   }
 }
 
-class _SheetFrame extends StatefulWidget {
-  const _SheetFrame({required this.requestId});
-  final String requestId;
-
-  @override
-  State<_SheetFrame> createState() => _SheetFrameState();
-}
-
-class _SheetFrameState extends State<_SheetFrame> {
-  PackageRequest? _request;
-  List<NegotiationThread> _threads = const [];
-  String? _error;
-  bool _loading = true;
-  bool _actionInFlight = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    if (mounted) {
-      setState(() {
-        _loading = true;
-        _error = null;
-      });
-    }
-    try {
-      final repo = getIt<PackageRequestRepository>();
-      final r = await repo.getById(widget.requestId);
-      List<NegotiationThread> threads = const [];
-      try {
-        threads = await repo.listThreadsForRequest(widget.requestId);
-      } catch (_) {}
-      if (mounted) {
-        setState(() {
-          _request = r;
-          _threads = threads;
-        });
-      }
-    } on DioException catch (e) {
-      if (mounted) setState(() => _error = e.message ?? 'Erreur');
-    } catch (e) {
-      if (mounted) setState(() => _error = e.toString());
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
-  }
-
-  /// Retourne `true` si `action` a réussi (et la sheet a rechargé), `false`
-  /// si elle a levé — l'appelant conditionne sur ce résultat toute suite qui
-  /// suppose le succès (ex: fermer la sheet après annulation).
-  Future<bool> _runAction(Future<void> Function() action) async {
-    setState(() => _actionInFlight = true);
-    var success = false;
-    try {
-      await action();
-      success = true;
-      if (mounted) await _load();
-    } catch (e) {
-      if (mounted) {
-        DonySnackbar.show(
-          context,
-          message: 'Une erreur est survenue. Veuillez réessayer.',
-          type: DonySnackbarType.error,
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _actionInFlight = false);
-    }
-    return success;
-  }
-
-  Future<void> _edit() async {
-    final changed = await PackageRequestCreateWizard.showEditing(
-      context,
-      _request!,
-    );
-    if ((changed ?? false) && mounted) await _load();
-  }
-
-  Future<void> _publish() async {
-    final success = await _runAction(
-      () => getIt<PackageRequestRepository>().publish(widget.requestId),
-    );
-    if (success) {
-      unawaited(
-        getIt<AnalyticsService>().logEvent(
-          AnalyticsEvents.packageRequestPublished,
-        ),
-      );
-    }
-  }
-
-  Future<void> _unpublish() async {
-    final success = await _runAction(
-      () => getIt<PackageRequestRepository>().unpublish(widget.requestId),
-    );
-    if (success) {
-      unawaited(
-        getIt<AnalyticsService>().logEvent(
-          AnalyticsEvents.packageRequestUnpublished,
-        ),
-      );
-    }
-  }
-
-  Future<void> _cancel() async {
-    final confirmed = await DonyDialog.show(
-      context,
-      title: 'Annuler cette demande ?',
-      message:
-          'Cette action est irréversible. Les voyageurs ne pourront '
-          'plus y répondre.',
-      confirmLabel: 'Annuler la demande',
-      variant: DonyDialogVariant.destructive,
-      iconAsset: 'circle-x',
-    );
-    if (confirmed != true || !mounted) return;
-    final success = await _runAction(
-      () => getIt<PackageRequestRepository>().cancel(widget.requestId),
-    );
-    // Ne ferme la sheet que si l'annulation a réellement abouti — sinon
-    // l'utilisateur verrait le snackbar d'erreur pendant que la sheet se
-    // ferme, en croyant l'annulation faite alors qu'elle a échoué.
-    if (success && mounted) Navigator.of(context, rootNavigator: true).pop();
-  }
+class _SheetFrame extends StatelessWidget {
+  const _SheetFrame();
 
   @override
   Widget build(BuildContext context) {
     final mq = MediaQuery.of(context);
-    final bottomInset = mq.viewInsets.bottom + mq.viewPadding.bottom;
     final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
     return Container(
       height: mq.size.height * 0.92,
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: cs.surfaceWarm,
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(DonyRadius.sheet),
-        ),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(DonyRadius.sheet)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -349,95 +85,265 @@ class _SheetFrameState extends State<_SheetFrame> {
           Center(
             child: Container(
               margin: const EdgeInsets.only(top: DonySpacing.md),
-              width: 40,
-              height: 4,
+              width: 40, height: 4,
+              // Même formule que la poignée standard `DonyBottomSheet`
+              // (lib/core/design/widgets/dony_bottom_sheet.dart) : couleur du
+              // thème, jamais `DonyColors.neutral300` (light-only).
               decoration: BoxDecoration(
-                color: DonyColors.neutral300,
+                color: cs.onSurfaceVariant.withValues(alpha: 0.4),
                 borderRadius: BorderRadius.circular(DonyRadius.full),
               ),
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(
-              DonySpacing.lg,
-              DonySpacing.sm,
-              DonySpacing.base,
-              0,
-            ),
+            padding: const EdgeInsets.fromLTRB(DonySpacing.lg, DonySpacing.sm, DonySpacing.sm, 0),
             child: Row(
               children: [
-                Expanded(child: Text('Ma demande', style: tt.headlineSmall)),
+                Expanded(child: Text('Ma demande', style: Theme.of(context).textTheme.headlineSmall)),
+                const _MenuButton(),
                 IconButton(
                   tooltip: 'Fermer',
                   onPressed: () => Navigator.of(context).pop(),
                   icon: const DonyIcon('x', size: 20),
-                  style: IconButton.styleFrom(
-                    foregroundColor: cs.onSurfaceVariant,
-                  ),
                 ),
               ],
             ),
           ),
           Divider(height: DonySpacing.base, color: cs.outline),
-          Expanded(
-            child: _loading
-                ? const DonyDetailSkeleton()
-                : _error != null
-                ? _ErrorView(message: _error!, onRetry: _load)
-                : _request == null
-                ? const SizedBox.shrink()
-                : SingleChildScrollView(
-                    padding: EdgeInsets.fromLTRB(
-                      DonySpacing.lg,
-                      0,
-                      DonySpacing.lg,
-                      DonySpacing.xl + bottomInset,
-                    ),
-                    child: PackageRequestDetailBody(
-                      request: _request!,
-                      threads: _threads,
-                      actionInFlight: _actionInFlight,
-                      onEdit: _edit,
-                      onPublish: _publish,
-                      onUnpublish: _unpublish,
-                      onCancel: _cancel,
-                    ),
-                  ),
-          ),
+          const Expanded(child: _DetailBody()),
+          const _DetailBottomBar(),
         ],
       ),
     );
   }
 }
 
-class _ErrorView extends StatelessWidget {
-  const _ErrorView({required this.message, required this.onRetry});
-  final String message;
-  final VoidCallback onRetry;
+class _DetailBody extends StatelessWidget {
+  const _DetailBody();
 
   @override
   Widget build(BuildContext context) {
+    return BlocConsumer<PackageRequestDetailCubit, PackageRequestDetailState>(
+      listenWhen: (prev, curr) =>
+          curr is PackageRequestDetailLoaded && curr.notice != null &&
+          (prev is! PackageRequestDetailLoaded || prev.notice != curr.notice),
+      listener: (context, state) {
+        final notice = (state as PackageRequestDetailLoaded).notice!;
+        DonySnackbar.show(
+          context,
+          message: switch (notice.kind) {
+            RequestDetailNoticeKind.actionFailed => 'Une erreur est survenue. Réessaie dans un instant.',
+            RequestDetailNoticeKind.invitationSent => 'Invitation envoyée. Le voyageur est prévenu.',
+            RequestDetailNoticeKind.invitationRefused => 'Ce voyageur ne peut pas être invité.',
+          },
+          type: notice.kind == RequestDetailNoticeKind.invitationSent
+              ? DonySnackbarType.success
+              : DonySnackbarType.error,
+        );
+      },
+      builder: (context, state) => switch (state) {
+        // Scrollables (comme l'état chargé) : dans la sheet, hauteur fixe à
+        // 92 % de l'écran — sans scroll, le squelette ou l'erreur peuvent
+        // dépasser l'espace laissé par l'entête et la barre fixe.
+        PackageRequestDetailLoading() => const SingleChildScrollView(child: RequestDetailSkeleton()),
+        PackageRequestDetailError() => SingleChildScrollView(
+          child: _ErrorView(onRetry: context.read<PackageRequestDetailCubit>().load),
+        ),
+        final PackageRequestDetailLoaded loaded => RefreshIndicator(
+          onRefresh: context.read<PackageRequestDetailCubit>().load,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(DonySpacing.lg, DonySpacing.lg, DonySpacing.lg, DonySpacing.xl),
+            child: RequestDetailView(state: loaded, callbacks: _callbacks(context, loaded)),
+          ),
+        ),
+      },
+    );
+  }
+
+  RequestDetailCallbacks _callbacks(BuildContext context, PackageRequestDetailLoaded s) {
+    final cubit = context.read<PackageRequestDetailCubit>();
+    return RequestDetailCallbacks(
+      onOpenThread: (threadId) async {
+        await context.push('/negotiations/$threadId');
+        if (context.mounted) unawaited(cubit.load());
+      },
+      onOpenTrip: (trip) => context.push('/traveler/${trip.id}'),
+      onInvite: cubit.invite,
+      onCreateAlert: () => CorridorAlertFormSheet.show(
+        context,
+        isSender: true,
+        prefill: CorridorAlertDraft(
+          departureCity: s.request.departureCity,
+          arrivalCity: s.request.arrivalCity,
+          dateFrom: s.request.desiredDate.subtract(Duration(days: s.request.dateToleranceDays)),
+          dateTo: s.request.desiredDate.add(Duration(days: s.request.dateToleranceDays)),
+          minWeightKg: s.request.weightKg,
+          direction: AlertDirection.senderWantsTrips,
+        ),
+      ),
+      onWidenDates: () => _edit(context, s),
+    );
+  }
+}
+
+Future<void> _edit(BuildContext context, PackageRequestDetailLoaded s) async {
+  final cubit = context.read<PackageRequestDetailCubit>();
+  final changed = await PackageRequestCreateWizard.showEditing(context, s.request);
+  if ((changed ?? false) && context.mounted) unawaited(cubit.load());
+}
+
+/// La date vidée à la duplication : « republier » vide toujours la date, et
+/// dupliquer une demande dont la date souhaitée est déjà passée fait de même
+/// — elle ne pourrait plus être publiée telle quelle. Comparaison au jour, en
+/// heure locale (jamais UTC : une date à minuit UTC peut déjà être « hier »
+/// pour un fuseau africain).
+bool clearDateForDuplicate(String source, DateTime desiredDate, {DateTime? now}) {
+  if (source == 'republish') return true;
+  final today = (now ?? DateTime.now()).toLocal();
+  final desiredDay = DateTime(desiredDate.toLocal().year, desiredDate.toLocal().month, desiredDate.toLocal().day);
+  final todayDay = DateTime(today.year, today.month, today.day);
+  return desiredDay.isBefore(todayDay);
+}
+
+Future<void> _duplicate(BuildContext context, PackageRequestDetailLoaded s, String source) async {
+  final cubit = context.read<PackageRequestDetailCubit>()..trackDuplicateStarted(source);
+  await PackageRequestCreateWizard.showDuplicate(
+    context,
+    s.request,
+    clearDate: clearDateForDuplicate(source, s.request.desiredDate),
+  );
+  if (context.mounted && source != 'similar') unawaited(cubit.load());
+}
+
+class _DetailBottomBar extends StatelessWidget {
+  const _DetailBottomBar();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<PackageRequestDetailCubit, PackageRequestDetailState>(
+      builder: (context, state) {
+        if (state is! PackageRequestDetailLoaded) return const SizedBox.shrink();
+        final focus = focusThreadFor(state.screenCase, state.threads);
+        final amount = focus == null
+            ? null
+            : PriceDisplay.money(focus.grossPriceEur ?? PriceDisplay.grossFromNet(focus.currentPriceEur), focus.currency);
+        return RequestDetailBottomBar(
+          actions: state.actions,
+          busy: state.actionInFlight,
+          travelerName: focus?.travelerName,
+          amount: amount,
+          onEdit: () => _edit(context, state),
+          onMessage: focus == null ? null : () => context.push('/negotiations/${focus.id}'),
+          onPrimary: () => _onPrimary(context, state, focus?.id, focus?.materializedBidId, focus?.travelerName),
+        );
+      },
+    );
+  }
+
+  Future<void> _onPrimary(BuildContext context, PackageRequestDetailLoaded s, String? threadId,
+      String? bidId, String? travelerName) async {
+    final cubit = context.read<PackageRequestDetailCubit>();
+    switch (s.actions.primary) {
+      case RequestPrimaryAction.publish:
+        await cubit.publish();
+      case RequestPrimaryAction.share:
+        final r = s.request;
+        final date = DateFormat('d MMMM', 'fr').format(r.desiredDate);
+        cubit.trackShared();
+        unawaited(Share.share(
+          'J\'envoie un colis de ${r.weightKg.toStringAsFixed(0)} kg ${r.departureCity} → ${r.arrivalCity} '
+          'autour du $date. Tu voyages sur cet axe ? Réponds à ma demande sur Yadony.',
+          sharePositionOrigin: sharePositionOriginFor(context),
+        ));
+      case RequestPrimaryAction.openThread || RequestPrimaryAction.pay:
+        if (threadId == null) return;
+        await context.push('/negotiations/$threadId');
+        if (context.mounted) unawaited(cubit.load());
+      case RequestPrimaryAction.waitTrip:
+        return;
+      case RequestPrimaryAction.trackParcel:
+        if (bidId != null) await context.push('/bids/$bidId');
+      case RequestPrimaryAction.rate:
+        if (bidId != null) {
+          await RatingBottomSheet.show(context, bidId: bidId, travelerName: travelerName ?? 'le voyageur');
+        }
+      case RequestPrimaryAction.republish:
+        await _duplicate(context, s, 'republish');
+      case RequestPrimaryAction.publishSimilar:
+        await _duplicate(context, s, 'similar');
+    }
+  }
+}
+
+class _MenuButton extends StatelessWidget {
+  const _MenuButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<PackageRequestDetailCubit, PackageRequestDetailState>(
+      builder: (context, state) {
+        if (state is! PackageRequestDetailLoaded || state.actions.menu.isEmpty) return const SizedBox.shrink();
+        return IconButton(
+          tooltip: 'Plus d\'actions',
+          icon: const DonyIcon('ellipsis', size: 22),
+          onPressed: state.actionInFlight ? null : () => _open(context, state),
+        );
+      },
+    );
+  }
+
+  Future<void> _open(BuildContext context, PackageRequestDetailLoaded s) async {
+    final cubit = context.read<PackageRequestDetailCubit>()..trackMenuOpened();
+    final picked = await RequestOwnerMenuSheet.show(context, items: s.actions.menu);
+    if (picked == null || !context.mounted) return;
+    switch (picked) {
+      case RequestMenuAction.unpublish:
+        await cubit.unpublish();
+      case RequestMenuAction.duplicate:
+        await _duplicate(context, s, 'duplicate');
+      case RequestMenuAction.cancel:
+        final confirmed = await DonyDialog.show(
+          context,
+          title: 'Annuler cette demande ?',
+          message: 'Cette action est irréversible. Les voyageurs ne pourront plus y répondre.',
+          confirmLabel: 'Annuler la demande',
+          variant: DonyDialogVariant.destructive,
+          iconAsset: 'circle-x',
+        );
+        if (confirmed == true) await cubit.cancel();
+    }
+  }
+}
+
+class _ErrorView extends StatelessWidget {
+  const _ErrorView({required this.onRetry});
+  final Future<void> Function() onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(40),
+        padding: const EdgeInsets.all(DonySpacing.xl),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            const DonyIcon(
-              'circle-alert',
-              size: 48,
-              color: DonyColors.danger500,
+            Container(
+              width: 56, height: 56,
+              // errorLight/error : équivalents theme-aware des primitives
+              // danger50/danger500 (voir lib/core/design/CLAUDE.md).
+              decoration: BoxDecoration(color: cs.errorLight, borderRadius: BorderRadius.circular(16)),
+              child: Center(child: DonyIcon('wifi-off', color: cs.error)),
             ),
             const SizedBox(height: DonySpacing.base),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: DonySpacing.base),
-            DonyButton(label: 'Réessayer', onPressed: onRetry),
+            const Text('Impossible de charger ta demande', textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+            const SizedBox(height: DonySpacing.xs),
+            Text('Vérifie ta connexion, puis réessaie. Ta demande n\'a pas été modifiée.',
+                textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant)),
+            const SizedBox(height: DonySpacing.lg),
+            DonyButton(label: 'Réessayer', iconAsset: 'refresh-cw', fullWidth: false, onPressed: onRetry),
           ],
         ),
       ),

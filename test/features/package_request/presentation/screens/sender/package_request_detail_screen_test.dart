@@ -1,58 +1,63 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
-import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
-import 'package:dony/features/matching/data/models/transport_mode.dart';
-import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
-import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
+import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
+import 'package:dony/features/matching/data/repositories/bid_repository.dart';
+import 'package:dony/features/package_request/bloc/package_request_detail_cubit.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
+import 'package:dony/features/package_request/data/models/package_request_insights.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/package_request_detail_screen.dart';
+import 'package:dony/features/package_request/presentation/widgets/request_detail/request_detail_skeleton.dart';
+import 'package:dony/features/ratings/bloc/rating_bloc.dart';
+import 'package:dony/features/ratings/bloc/rating_event.dart';
+import 'package:dony/features/ratings/bloc/rating_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
-class _MockPackageRequestRepository extends Mock
-    implements PackageRequestRepository {}
-
-class _MockNegotiationBloc extends MockBloc<NegotiationEvent, NegotiationState>
-    implements NegotiationBloc {}
-
+class _MockPackageRequestRepository extends Mock implements PackageRequestRepository {}
+class _MockAnnouncementRepository extends Mock implements AnnouncementRepository {}
+class _MockBidRepository extends Mock implements BidRepository {}
 class _MockAnalyticsService extends Mock implements AnalyticsService {}
+class _MockRatingBloc extends MockBloc<RatingEvent, RatingState> implements RatingBloc {}
 
 PackageRequest _fakeRequest({
   PackageRequestStatus status = PackageRequestStatus.open,
 }) => PackageRequest(
   id: 'pr-1',
   senderId: 'sender-1',
-  departureCity: 'Paris',
-  arrivalCity: 'Dakar',
-  desiredDate: DateTime(2026, 8, 15),
-  dateToleranceDays: 3,
-  weightKg: 5.0,
+  departureCity: 'Divo',
+  arrivalCity: 'Annemasse',
+  desiredDate: DateTime(2026, 9, 27),
+  dateToleranceDays: 2,
+  weightKg: 5,
   parcelSize: ParcelSize.medium,
   transportMode: TransportMode.plane,
   categories: const ['Vêtements'],
   status: status,
-  createdAt: DateTime(2026),
+  createdAt: DateTime.utc(2026, 9, 17, 6, 25),
 );
 
-NegotiationThread _terminalThread() => NegotiationThread(
-  id: 'thread-1',
-  packageRequestId: 'pr-1',
-  travelerId: 'traveler-1',
-  travelerTravelDate: DateTime(2026, 8, 15),
-  travelerAvailableKg: 10,
-  status: NegotiationThreadStatus.rejected,
-  currentPriceEur: 25,
-  roundsCount: 1,
-  lastActivityAt: DateTime(2026, 8),
-  createdAt: DateTime(2026, 8),
-  messages: const [],
+AnnouncementModel _trip(String id) => AnnouncementModel(
+  id: id,
+  travelerId: 'trav-$id',
+  departureCity: 'Divo',
+  arrivalCity: 'Annemasse',
+  departureDate: DateTime(2026, 9, 26),
+  availableKg: 8,
+  totalKg: 10,
+  pricePerKg: 7,
+  status: 'ACTIVE',
+  createdAt: DateTime(2026, 9),
+  updatedAt: DateTime(2026, 9),
 );
 
 Widget _buildApp({required String requestId}) {
@@ -61,36 +66,19 @@ Widget _buildApp({required String requestId}) {
     routes: [
       GoRoute(
         path: '/package-requests/:id',
-        builder: (ctx, state) =>
-            PackageRequestDetailScreen(requestId: state.pathParameters['id']!),
-      ),
-    ],
-  );
-  return MaterialApp.router(routerConfig: router, theme: AppTheme.light());
-}
-
-/// Harness avec une route parente réelle, poussée avant le détail — permet
-/// d'observer si `context.pop()` ferme bien l'écran (retour sur "open") ou
-/// si l'écran reste ouvert (ex: annulation échouée).
-Widget _buildPushableApp({required String requestId}) {
-  final router = GoRouter(
-    initialLocation: '/list',
-    routes: [
-      GoRoute(
-        path: '/list',
-        builder: (ctx, _) => Scaffold(
-          body: Center(
-            child: TextButton(
-              onPressed: () => ctx.push('/package-requests/$requestId'),
-              child: const Text('open'),
-            ),
-          ),
-        ),
+        builder: (ctx, state) => PackageRequestDetailScreen(requestId: state.pathParameters['id']!),
       ),
       GoRoute(
-        path: '/package-requests/:id',
-        builder: (ctx, state) =>
-            PackageRequestDetailScreen(requestId: state.pathParameters['id']!),
+        path: '/negotiations/:id',
+        builder: (_, state) => Scaffold(body: Text('THREAD ${state.pathParameters['id']}')),
+      ),
+      GoRoute(
+        path: '/bids/:id',
+        builder: (_, state) => Scaffold(body: Text('BID ${state.pathParameters['id']}')),
+      ),
+      GoRoute(
+        path: '/traveler/:id',
+        builder: (_, state) => Scaffold(body: Text('TRIP ${state.pathParameters['id']}')),
       ),
     ],
   );
@@ -100,275 +88,93 @@ Widget _buildPushableApp({required String requestId}) {
 void main() {
   setUpAll(() => initializeDateFormatting('fr'));
 
+  group('clearDateForDuplicate', () {
+    final now = DateTime(2026, 9, 17);
+
+    test('republier vide toujours la date, même future', () {
+      expect(clearDateForDuplicate('republish', DateTime(2026, 12, 25), now: now), isTrue);
+    });
+
+    test('dupliquer une date déjà passée vide aussi la date', () {
+      expect(clearDateForDuplicate('duplicate', DateTime(2026, 9, 10), now: now), isTrue);
+    });
+
+    test('dupliquer avec la date du jour même ne la vide pas', () {
+      expect(clearDateForDuplicate('duplicate', DateTime(2026, 9, 17), now: now), isFalse);
+    });
+
+    test('dupliquer une date future garde la date', () {
+      expect(clearDateForDuplicate('duplicate', DateTime(2026, 12, 25), now: now), isFalse);
+    });
+
+    test('publier une demande similaire suit la même règle de date passée', () {
+      expect(clearDateForDuplicate('similar', DateTime(2026, 9), now: now), isTrue);
+      expect(clearDateForDuplicate('similar', DateTime(2026, 12), now: now), isFalse);
+    });
+  });
+
   late _MockPackageRequestRepository repo;
-  late _MockNegotiationBloc negotiationBloc;
+  late _MockAnnouncementRepository announcements;
+  late _MockBidRepository bids;
   late _MockAnalyticsService analytics;
+  late _MockRatingBloc ratingBloc;
+
+  void stubSearch(List<AnnouncementModel> trips) => when(
+    () => announcements.searchAnnouncements(
+      departureCity: any(named: 'departureCity'),
+      arrivalCity: any(named: 'arrivalCity'),
+      departureDateFrom: any(named: 'departureDateFrom'),
+      departureDateTo: any(named: 'departureDateTo'),
+      minAvailableKg: any(named: 'minAvailableKg'),
+    ),
+  ).thenAnswer((_) async => trips);
 
   setUp(() {
     DonySnackbar.clearDedup();
     repo = _MockPackageRequestRepository();
-    negotiationBloc = _MockNegotiationBloc();
+    announcements = _MockAnnouncementRepository();
+    bids = _MockBidRepository();
     analytics = _MockAnalyticsService();
+    ratingBloc = _MockRatingBloc();
 
-    when(() => negotiationBloc.state).thenReturn(const NegotiationInitial());
-    when(
-      () => negotiationBloc.stream,
-    ).thenAnswer((_) => const Stream<NegotiationState>.empty());
-    when(
-      () => analytics.logEvent(any(), properties: any(named: 'properties')),
-    ).thenAnswer((_) async {});
+    when(() => analytics.logEvent(any(), properties: any(named: 'properties'))).thenAnswer((_) async {});
+    when(() => ratingBloc.state).thenReturn(const RatingInitial());
+    when(() => ratingBloc.stream).thenAnswer((_) => const Stream<RatingState>.empty());
+    stubSearch(const []);
 
-    if (!getIt.isRegistered<PackageRequestRepository>()) {
-      getIt.registerSingleton<PackageRequestRepository>(repo);
+    if (getIt.isRegistered<PackageRequestDetailCubit>()) {
+      getIt.unregister<PackageRequestDetailCubit>();
     }
-    if (!getIt.isRegistered<NegotiationBloc>()) {
-      getIt.registerSingleton<NegotiationBloc>(negotiationBloc);
-    }
-    if (getIt.isRegistered<AnalyticsService>()) {
-      getIt.unregister<AnalyticsService>();
-    }
-    getIt.registerSingleton<AnalyticsService>(analytics);
+    getIt.registerFactoryParam<PackageRequestDetailCubit, String, void>(
+      (requestId, _) => PackageRequestDetailCubit(repo, announcements, bids, analytics, requestId: requestId),
+    );
+    if (getIt.isRegistered<RatingBloc>()) getIt.unregister<RatingBloc>();
+    getIt.registerFactory<RatingBloc>(() => ratingBloc);
   });
 
   tearDown(() async {
-    if (getIt.isRegistered<PackageRequestRepository>()) {
-      await getIt.unregister<PackageRequestRepository>();
-    }
-    if (getIt.isRegistered<NegotiationBloc>()) {
-      await getIt.unregister<NegotiationBloc>();
-    }
-    if (getIt.isRegistered<AnalyticsService>()) {
-      await getIt.unregister<AnalyticsService>();
-    }
+    if (getIt.isRegistered<PackageRequestDetailCubit>()) await getIt.unregister<PackageRequestDetailCubit>();
+    if (getIt.isRegistered<RatingBloc>()) await getIt.unregister<RatingBloc>();
   });
 
-  testWidgets('renders app bar title "Ma demande"', (tester) async {
-    when(() => repo.getById('pr-1')).thenAnswer((_) async => _fakeRequest());
+  testWidgets('1. chargement : squelette puis billet', (tester) async {
+    final completer = Completer<PackageRequest>();
+    when(() => repo.getById('pr-1')).thenAnswer((_) => completer.future);
     when(() => repo.listThreadsForRequest('pr-1')).thenAnswer((_) async => []);
 
     await tester.pumpWidget(_buildApp(requestId: 'pr-1'));
+    await tester.pump();
+
+    expect(find.byType(RequestDetailSkeleton), findsOneWidget);
+
+    completer.complete(_fakeRequest());
     await tester.pumpAndSettle();
 
-    expect(find.text('Ma demande'), findsOneWidget);
+    expect(find.byType(RequestDetailSkeleton), findsNothing);
+    expect(find.text('DIV'), findsOneWidget);
   });
 
-  testWidgets('shows error view when getById throws', (tester) async {
-    when(() => repo.getById('pr-1')).thenThrow(Exception('Network error'));
-    when(() => repo.listThreadsForRequest('pr-1')).thenAnswer((_) async => []);
-
-    await tester.pumpWidget(_buildApp(requestId: 'pr-1'));
-    await tester.pumpAndSettle();
-
-    expect(find.textContaining('Exception: Network error'), findsOneWidget);
-  });
-
-  testWidgets('shows request details when loaded', (tester) async {
-    tester.view.physicalSize = const Size(800, 2000);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.reset);
-
-    when(() => repo.getById('pr-1')).thenAnswer((_) async => _fakeRequest());
-    when(() => repo.listThreadsForRequest('pr-1')).thenAnswer((_) async => []);
-
-    await tester.pumpWidget(_buildApp(requestId: 'pr-1'));
-    await tester.pumpAndSettle();
-
-    // The app bar title should be visible
-    expect(find.text('Ma demande'), findsOneWidget);
-    // The corridor text should appear somewhere
-    expect(find.textContaining('Paris'), findsWidgets);
-  });
-
-  testWidgets('les négociations terminées ne comptent plus comme offres', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(800, 2000);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.reset);
-    when(() => repo.getById('pr-1')).thenAnswer((_) async => _fakeRequest());
-    when(
-      () => repo.listThreadsForRequest('pr-1'),
-    ).thenAnswer((_) async => [_terminalThread()]);
-
-    await tester.pumpWidget(_buildApp(requestId: 'pr-1'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('1 OFFRE'), findsNothing);
-    expect(find.text('OFFRES REÇUES'), findsNothing);
-    expect(find.text('Aucune offre pour l\'instant'), findsOneWidget);
-  });
-
-  testWidgets('shows Annuler tile when status is open', (tester) async {
-    when(() => repo.getById('pr-1')).thenAnswer((_) async => _fakeRequest());
-    when(() => repo.listThreadsForRequest('pr-1')).thenAnswer((_) async => []);
-
-    await tester.pumpWidget(_buildApp(requestId: 'pr-1'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Annuler'), findsOneWidget);
-  });
-
-  testWidgets('aucun CTA « Compléter les détails » pour une demande acceptée', (
-    tester,
-  ) async {
-    when(() => repo.getById('pr-1')).thenAnswer(
-      (_) async => _fakeRequest(status: PackageRequestStatus.accepted),
-    );
-    when(() => repo.listThreadsForRequest('pr-1')).thenAnswer((_) async => []);
-
-    await tester.pumpWidget(_buildApp(requestId: 'pr-1'));
-    await tester.pumpAndSettle();
-
-    // Détails + paiement se font dans le fil de négo : plus de CTA ici une fois
-    // la demande acceptée (elle vit désormais dans l'onglet Envois).
-    expect(find.textContaining('Compléter'), findsNothing);
-    expect(find.text('Annuler'), findsNothing);
-  });
-
-  testWidgets('draft request shows Publier tile', (tester) async {
-    when(
-      () => repo.getById('pr-1'),
-    ).thenAnswer((_) async => _fakeRequest(status: PackageRequestStatus.draft));
-    when(() => repo.listThreadsForRequest('pr-1')).thenAnswer((_) async => []);
-
-    await tester.pumpWidget(_buildApp(requestId: 'pr-1'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Publier'), findsOneWidget);
-  });
-
-  testWidgets('AppBar has no more overflow menu', (tester) async {
-    when(() => repo.getById('pr-1')).thenAnswer((_) async => _fakeRequest());
-    when(() => repo.listThreadsForRequest('pr-1')).thenAnswer((_) async => []);
-
-    await tester.pumpWidget(_buildApp(requestId: 'pr-1'));
-    await tester.pumpAndSettle();
-
-    // L'ancien "..." était une DonyIcon (SVG), jamais un Icons.more_horiz
-    // Material — vérifier son vrai tooltip, seul signal fiable qu'il a
-    // disparu (byIcon(Icons.more_horiz) serait vacuous, déjà vrai avant).
-    expect(find.byTooltip("Plus d'options"), findsNothing);
-  });
-
-  testWidgets('tapping Publier tile calls repo.publish and reloads', (
-    tester,
-  ) async {
-    var status = PackageRequestStatus.draft;
-    when(
-      () => repo.getById('pr-1'),
-    ).thenAnswer((_) async => _fakeRequest(status: status));
-    when(() => repo.listThreadsForRequest('pr-1')).thenAnswer((_) async => []);
-    when(() => repo.publish('pr-1')).thenAnswer((_) async {
-      status = PackageRequestStatus.open;
-      return _fakeRequest(status: status);
-    });
-
-    await tester.pumpWidget(_buildApp(requestId: 'pr-1'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Publier'), findsOneWidget);
-
-    await tester.tap(find.text('Publier'));
-    await tester.pumpAndSettle();
-
-    verify(() => repo.publish('pr-1')).called(1);
-    // Chargement initial + rechargement après succès de l'action.
-    verify(() => repo.getById('pr-1')).called(2);
-    verify(
-      () => analytics.logEvent(AnalyticsEvents.packageRequestPublished),
-    ).called(1);
-    // Rechargé en OPEN : la tuile Publier n'a plus lieu d'être.
-    expect(find.text('Publier'), findsNothing);
-  });
-
-  testWidgets('tapping Dépublier tile calls repo.unpublish and reloads', (
-    tester,
-  ) async {
-    var status = PackageRequestStatus.open;
-    when(
-      () => repo.getById('pr-1'),
-    ).thenAnswer((_) async => _fakeRequest(status: status));
-    when(() => repo.listThreadsForRequest('pr-1')).thenAnswer((_) async => []);
-    when(() => repo.unpublish('pr-1')).thenAnswer((_) async {
-      status = PackageRequestStatus.draft;
-      return _fakeRequest(status: status);
-    });
-
-    await tester.pumpWidget(_buildApp(requestId: 'pr-1'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Dépublier'), findsOneWidget);
-
-    await tester.tap(find.text('Dépublier'));
-    await tester.pumpAndSettle();
-
-    verify(() => repo.unpublish('pr-1')).called(1);
-    verify(
-      () => analytics.logEvent(AnalyticsEvents.packageRequestUnpublished),
-    ).called(1);
-    // Rechargé en DRAFT : la grille montre de nouveau Publier.
-    expect(find.text('Publier'), findsOneWidget);
-  });
-
-  testWidgets(
-    'confirming Annuler tile calls repo.cancel and closes the screen',
-    (tester) async {
-      when(() => repo.getById('pr-1')).thenAnswer((_) async => _fakeRequest());
-      when(
-        () => repo.listThreadsForRequest('pr-1'),
-      ).thenAnswer((_) async => []);
-      when(() => repo.cancel('pr-1')).thenAnswer((_) async {});
-
-      await tester.pumpWidget(_buildPushableApp(requestId: 'pr-1'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('open'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Ma demande'), findsOneWidget);
-
-      await tester.tap(find.text('Annuler'));
-      await tester.pumpAndSettle();
-      expect(find.text('Annuler cette demande ?'), findsOneWidget);
-
-      await tester.tap(find.text('Annuler la demande'));
-      await tester.pumpAndSettle();
-
-      verify(() => repo.cancel('pr-1')).called(1);
-      // L'écran s'est bien fermé — retour sur la route parente.
-      expect(find.text('Ma demande'), findsNothing);
-      expect(find.text('open'), findsOneWidget);
-    },
-  );
-
-  testWidgets(
-    'cancel failure keeps the screen open and shows an error snackbar '
-    '(régression : le pop ne doit pas s\'exécuter sur échec)',
-    (tester) async {
-      when(() => repo.getById('pr-1')).thenAnswer((_) async => _fakeRequest());
-      when(
-        () => repo.listThreadsForRequest('pr-1'),
-      ).thenAnswer((_) async => []);
-      when(() => repo.cancel('pr-1')).thenThrow(Exception('boom'));
-
-      await tester.pumpWidget(_buildPushableApp(requestId: 'pr-1'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('open'));
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('Annuler'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Annuler la demande'));
-      await tester.pumpAndSettle();
-
-      verify(() => repo.cancel('pr-1')).called(1);
-      // L'annulation a échoué : l'écran doit rester ouvert, pas se fermer
-      // silencieusement pendant que le snackbar d'erreur s'affiche.
-      expect(find.text('Ma demande'), findsOneWidget);
-      expect(find.byType(SnackBar), findsOneWidget);
-    },
-  );
-
-  testWidgets('retry button reloads data after error', (tester) async {
+  testWidgets('2. erreur de getById → message, Réessayer recharge le billet', (tester) async {
     var callCount = 0;
     when(() => repo.getById('pr-1')).thenAnswer((_) async {
       callCount++;
@@ -380,14 +186,141 @@ void main() {
     await tester.pumpWidget(_buildApp(requestId: 'pr-1'));
     await tester.pumpAndSettle();
 
-    // Should show error
-    expect(find.text('Réessayer'), findsOneWidget);
+    expect(find.text('Impossible de charger ta demande'), findsOneWidget);
 
-    // Tap retry
     await tester.tap(find.text('Réessayer'));
     await tester.pumpAndSettle();
 
-    // Should now show the request
-    expect(find.text('Ma demande'), findsOneWidget);
+    expect(find.text('DIV'), findsOneWidget);
+  });
+
+  testWidgets('3. brouillon → tap Publier appelle repo.publish', (tester) async {
+    when(() => repo.getById('pr-1')).thenAnswer((_) async => _fakeRequest(status: PackageRequestStatus.draft));
+    when(() => repo.listThreadsForRequest('pr-1')).thenAnswer((_) async => []);
+    when(() => repo.publish('pr-1')).thenAnswer((_) async => _fakeRequest(status: PackageRequestStatus.draft));
+
+    await tester.pumpWidget(_buildApp(requestId: 'pr-1'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Publier'));
+    await tester.pumpAndSettle();
+
+    verify(() => repo.publish('pr-1')).called(1);
+  });
+
+  testWidgets('4. publiée → « … » → Dépublier appelle repo.unpublish', (tester) async {
+    when(() => repo.getById('pr-1')).thenAnswer((_) async => _fakeRequest());
+    when(() => repo.listThreadsForRequest('pr-1')).thenAnswer((_) async => []);
+    when(() => repo.unpublish('pr-1')).thenAnswer((_) async => _fakeRequest(status: PackageRequestStatus.draft));
+
+    await tester.pumpWidget(_buildApp(requestId: 'pr-1'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip("Plus d'actions"));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Dépublier'));
+    await tester.pumpAndSettle();
+
+    verify(() => repo.unpublish('pr-1')).called(1);
+  });
+
+  testWidgets(
+    '5. publiée → « … » → Annuler la demande → dialogue → confirmer : bandeau '
+    'annulée + Publier une demande similaire, écran ne se ferme pas',
+    (tester) async {
+      when(() => repo.getById('pr-1')).thenAnswer((_) async => _fakeRequest());
+      when(() => repo.listThreadsForRequest('pr-1')).thenAnswer((_) async => []);
+      when(() => repo.cancel('pr-1')).thenAnswer((_) async {});
+
+      await tester.pumpWidget(_buildApp(requestId: 'pr-1'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip("Plus d'actions"));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Annuler la demande'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Annuler cette demande ?'), findsOneWidget);
+
+      await tester.tap(find.text('Annuler la demande'));
+      await tester.pumpAndSettle();
+
+      verify(() => repo.cancel('pr-1')).called(1);
+      expect(find.text('Tu as annulé cette demande'), findsOneWidget);
+      expect(find.text('Publier une demande similaire'), findsOneWidget);
+      // L'écran ne se ferme plus (pas de context.pop() après annulation).
+      expect(find.text('Ma demande'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    "6. annulation en échec : snackbar d'erreur, écran reste sur le cas publié",
+    (tester) async {
+      when(() => repo.getById('pr-1')).thenAnswer((_) async => _fakeRequest());
+      when(() => repo.listThreadsForRequest('pr-1')).thenAnswer((_) async => []);
+      when(() => repo.cancel('pr-1')).thenThrow(Exception('409 has-offers'));
+
+      await tester.pumpWidget(_buildApp(requestId: 'pr-1'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip("Plus d'actions"));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Annuler la demande'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Annuler la demande'));
+      await tester.pumpAndSettle();
+
+      verify(() => repo.cancel('pr-1')).called(1);
+      expect(find.text('Une erreur est survenue. Réessaie dans un instant.'), findsOneWidget);
+      expect(find.byType(SnackBar), findsOneWidget);
+      // Toujours le cas publié (pas annulé) : le billet reste affiché.
+      expect(find.text('Tu as annulé cette demande'), findsNothing);
+      expect(find.text('DIV'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    '7. publiée avec voyageurs → tap Inviter appelle repo.inviteTraveler puis affiche Invité',
+    (tester) async {
+      when(() => repo.getById('pr-1')).thenAnswer((_) async => _fakeRequest());
+      when(() => repo.listThreadsForRequest('pr-1')).thenAnswer((_) async => []);
+      when(() => repo.getInsights('pr-1')).thenAnswer(
+        (_) async => const PackageRequestInsights(viewCount: 3, invitedAnnouncementIds: {}),
+      );
+      stubSearch([_trip('a-1')]);
+      when(() => repo.inviteTraveler('pr-1', 'a-1')).thenAnswer((_) async => InvitationOutcome.sent);
+
+      await tester.pumpWidget(_buildApp(requestId: 'pr-1'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Inviter'), findsOneWidget);
+      await tester.tap(find.text('Inviter'));
+      await tester.pumpAndSettle();
+
+      verify(() => repo.inviteTraveler('pr-1', 'a-1')).called(1);
+      expect(find.text('Invité'), findsOneWidget);
+      expect(find.text('Invitation envoyée. Le voyageur est prévenu.'), findsOneWidget);
+    },
+  );
+
+  testWidgets('8. acceptée : pas de Modifier, bouton Suivre mon colis présent', (tester) async {
+    when(() => repo.getById('pr-1')).thenAnswer((_) async => _fakeRequest(status: PackageRequestStatus.accepted));
+    when(() => repo.listThreadsForRequest('pr-1')).thenAnswer((_) async => []);
+
+    await tester.pumpWidget(_buildApp(requestId: 'pr-1'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Modifier'), findsNothing);
+    expect(find.text('Suivre mon colis'), findsOneWidget);
+  });
+
+  testWidgets('9. expirée : pas de bouton « … » (menu vide)', (tester) async {
+    when(() => repo.getById('pr-1')).thenAnswer((_) async => _fakeRequest(status: PackageRequestStatus.expired));
+    when(() => repo.listThreadsForRequest('pr-1')).thenAnswer((_) async => []);
+
+    await tester.pumpWidget(_buildApp(requestId: 'pr-1'));
+    await tester.pumpAndSettle();
+
+    expect(find.byTooltip("Plus d'actions"), findsNothing);
   });
 }
