@@ -124,6 +124,8 @@ import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/negotiation_repository.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/package_request/data/price_estimation_repository.dart';
+import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/package_request_create_screen.dart'
+    show PackageRequestDuplicate;
 import 'package:dony/features/payments/bloc/mobile_money_account_bloc.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
@@ -1002,11 +1004,17 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => PriceEstimationRepository(getIt<ApiClient>()),
   );
   // param1 = demande à éditer (null → mode création).
-  getIt.registerFactoryParam<PackageRequestFormBloc, PackageRequest?, void>(
-    (editing, _) => PackageRequestFormBloc(
+  // param2 = source de duplication (dupliquer, republier ; null sinon).
+  getIt.registerFactoryParam<
+    PackageRequestFormBloc,
+    PackageRequest?,
+    PackageRequestDuplicate?
+  >(
+    (editing, duplicating) => PackageRequestFormBloc(
       getIt<PackageRequestRepository>(),
       analytics: getIt<AnalyticsService>(),
       editing: editing,
+      duplicating: duplicating,
     ),
   );
   // param1 = id de la demande à afficher (écran et sheet « Ma demande »).

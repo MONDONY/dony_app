@@ -73,15 +73,39 @@ abstract final class PackageRequestCreateWizard {
     }
     return context.push<bool>('/package-requests/new', extra: request);
   }
+
+  /// Création pré-remplie depuis une demande existante (dupliquer, republier).
+  /// Le back n'accepte `publish` que sur un brouillon : republier une demande
+  /// déjà publiée (expirée, refusée, etc.) passe donc par une toute nouvelle
+  /// demande, sans photos (une clé R2 n'appartient qu'à une seule demande).
+  static Future<bool?> showDuplicate(
+    BuildContext context,
+    PackageRequest source, {
+    bool clearDate = false,
+  }) => context.push<bool>(
+    '/package-requests/new',
+    extra: PackageRequestDuplicate(source, clearDate: clearDate),
+  );
+}
+
+/// Création pré-remplie depuis une demande existante (dupliquer, republier).
+class PackageRequestDuplicate {
+  const PackageRequestDuplicate(this.source, {this.clearDate = false});
+  final PackageRequest source;
+  final bool clearDate;
 }
 
 // ─── Screen ─────────────────────────────────────────────────────────────────
 
 class PackageRequestCreateScreen extends StatefulWidget {
-  const PackageRequestCreateScreen({super.key, this.initial});
+  const PackageRequestCreateScreen({super.key, this.initial, this.duplicating});
 
   /// Non-null en mode édition.
   final PackageRequest? initial;
+
+  /// Non-null en création pré-remplie (dupliquer, republier). Mutuellement
+  /// exclusif avec [initial] : le router ne peuple jamais les deux.
+  final PackageRequestDuplicate? duplicating;
 
   @override
   State<PackageRequestCreateScreen> createState() =>
@@ -186,7 +210,10 @@ class _PackageRequestCreateScreenState
     return MultiBlocProvider(
       providers: [
         BlocProvider(
-          create: (_) => getIt<PackageRequestFormBloc>(param1: widget.initial),
+          create: (_) => getIt<PackageRequestFormBloc>(
+            param1: widget.initial,
+            param2: widget.duplicating,
+          ),
         ),
         BlocProvider(
           create: (_) {

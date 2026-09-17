@@ -11,6 +11,8 @@ import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
+import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/package_request_create_screen.dart'
+    show PackageRequestDuplicate;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import '../../../helpers/mock_analytics_backend.dart';
@@ -1348,4 +1350,47 @@ void main() {
       expect(bloc.state.promoCode, 'WELCOME6');
     },
   );
+
+  // ── Duplication (dupliquer / republier) ─────────────────────────────────
+  group('duplicating', () {
+    final source = PackageRequest(
+      id: 'pr-old',
+      senderId: 's',
+      departureCity: 'Divo',
+      arrivalCity: 'Annemasse',
+      desiredDate: DateTime(2026, 9, 27),
+      dateToleranceDays: 2,
+      weightKg: 2,
+      parcelSize: ParcelSize.small,
+      transportMode: TransportMode.plane,
+      status: PackageRequestStatus.expired,
+      createdAt: DateTime.utc(2026, 9, 17),
+      photoUrls: const ['https://x/1.jpg'],
+      photoKeys: const ['k1'],
+    );
+
+    test('pré-remplit sans id d\'édition ni photos', () {
+      final bloc = PackageRequestFormBloc(
+        repo,
+        analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+        duplicating: PackageRequestDuplicate(source),
+      );
+      expect(bloc.state.editingRequestId, isNull);
+      expect(bloc.state.departureCity, 'Divo');
+      expect(bloc.state.desiredDate, DateTime(2026, 9, 27));
+      expect(bloc.state.photoUrl, isNull);
+      bloc.close();
+    });
+
+    test('republier : date vidée', () {
+      final bloc = PackageRequestFormBloc(
+        repo,
+        analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+        duplicating: PackageRequestDuplicate(source, clearDate: true),
+      );
+      expect(bloc.state.desiredDate, isNull);
+      expect(bloc.state.arrivalCity, 'Annemasse');
+      bloc.close();
+    });
+  });
 }
