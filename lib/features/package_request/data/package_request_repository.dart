@@ -283,7 +283,13 @@ class PackageRequestRepository {
   }
 
   /// Invite le voyageur d'un trajet. 201 = push envoyé, 200 = déjà invité.
-  /// 404 (route absente ou trajet disparu) = invitation indisponible.
+  /// 404 = route absente (ancien back) OU trajet disparu entre-temps (back à
+  /// jour) : seul l'appelant sait lequel via l'historique de `getInsights`
+  /// (voir `InvitationOutcome.notFound`). 409 `request/not-invitable` =
+  /// demande qui n'accepte plus d'invitations. 422 `invitation/limit-reached`
+  /// = quota d'invitations atteint ; les autres 422 (own-trip,
+  /// trip-not-active, off-corridor) remontent tels quels, l'appelant les
+  /// traite comme un refus générique.
   Future<InvitationOutcome> inviteTraveler(
     String requestId,
     String announcementId,
@@ -297,7 +303,14 @@ class PackageRequestRepository {
           ? InvitationOutcome.sent
           : InvitationOutcome.alreadySent;
     } on DioException catch (e) {
-      if (e.response?.statusCode == 404) return InvitationOutcome.unsupported;
+      final status = e.response?.statusCode;
+      if (status == 404) return InvitationOutcome.notFound;
+      if (status == 409) return InvitationOutcome.notInvitable;
+      if (status == 422) {
+        final data = e.response?.data;
+        final code = data is Map ? data['code'] as String? : null;
+        if (code == 'invitation/limit-reached') return InvitationOutcome.limitReached;
+      }
       rethrow;
     }
   }

@@ -166,6 +166,17 @@ void main() {
   );
 
   blocTest<PackageRequestDetailCubit, PackageRequestDetailState>(
+    'load : 404 au premier chargement (demande annulée/supprimée) → erreur notFound',
+    build: build,
+    setUp: () => when(() => requests.getById('pr-1')).thenThrow(_http(404)),
+    act: (c) => c.load(),
+    expect: () => [
+      const PackageRequestDetailLoading(),
+      const PackageRequestDetailError(notFound: true),
+    ],
+  );
+
+  blocTest<PackageRequestDetailCubit, PackageRequestDetailState>(
     'cancel : état annulé local, analytics',
     build: build,
     setUp: () => when(() => requests.cancel('pr-1')).thenAnswer((_) async {}),
@@ -308,21 +319,73 @@ void main() {
   );
 
   blocTest<PackageRequestDetailCubit, PackageRequestDetailState>(
-    'invite : route absente → invitations masquées',
+    'invite : 404 après insights KO (ancien back) → invitations masquées',
     build: build,
-    setUp: () => when(() => requests.inviteTraveler('pr-1', 'a-2')).thenAnswer((_) async => InvitationOutcome.unsupported),
+    setUp: () {
+      when(() => requests.getInsights('pr-1')).thenAnswer((_) async => null);
+      when(() => requests.inviteTraveler('pr-1', 'a-2')).thenAnswer((_) async => InvitationOutcome.notFound);
+    },
     act: (c) async {
       await c.load();
       await c.invite('a-2');
     },
     skip: 3,
     expect: () => [
-      isA<PackageRequestDetailLoaded>().having((s) => s.invitationsSupported, 'supported', isFalse),
+      isA<PackageRequestDetailLoaded>()
+          .having((s) => s.invitationsSupported, 'supported', isFalse)
+          .having((s) => s.notice, 'notice', isNull),
     ],
   );
 
   blocTest<PackageRequestDetailCubit, PackageRequestDetailState>(
-    'invite : 422 → notice invitationRefused',
+    'invite : 404 après insights OK (back à jour) → trajet disparu, notice invitationRefused',
+    build: build,
+    // setUp par défaut : getInsights répond déjà (invitationsSupported=true).
+    setUp: () => when(() => requests.inviteTraveler('pr-1', 'a-2')).thenAnswer((_) async => InvitationOutcome.notFound),
+    act: (c) async {
+      await c.load();
+      await c.invite('a-2');
+    },
+    skip: 3,
+    expect: () => [
+      isA<PackageRequestDetailLoaded>()
+          .having((s) => s.invitationsSupported, 'supported', isTrue)
+          .having((s) => s.notice?.kind, 'notice', RequestDetailNoticeKind.invitationRefused),
+    ],
+  );
+
+  blocTest<PackageRequestDetailCubit, PackageRequestDetailState>(
+    'invite : 409 request/not-invitable → notice dédiée',
+    build: build,
+    setUp: () => when(() => requests.inviteTraveler('pr-1', 'a-2')).thenAnswer((_) async => InvitationOutcome.notInvitable),
+    act: (c) async {
+      await c.load();
+      await c.invite('a-2');
+    },
+    skip: 3,
+    expect: () => [
+      isA<PackageRequestDetailLoaded>()
+          .having((s) => s.invitingAnnouncementIds, 'inviting', isEmpty)
+          .having((s) => s.notice?.kind, 'notice', RequestDetailNoticeKind.invitationNotInvitable),
+    ],
+  );
+
+  blocTest<PackageRequestDetailCubit, PackageRequestDetailState>(
+    'invite : 422 limite atteinte → notice dédiée',
+    build: build,
+    setUp: () => when(() => requests.inviteTraveler('pr-1', 'a-2')).thenAnswer((_) async => InvitationOutcome.limitReached),
+    act: (c) async {
+      await c.load();
+      await c.invite('a-2');
+    },
+    skip: 3,
+    expect: () => [
+      isA<PackageRequestDetailLoaded>().having((s) => s.notice?.kind, 'notice', RequestDetailNoticeKind.invitationLimitReached),
+    ],
+  );
+
+  blocTest<PackageRequestDetailCubit, PackageRequestDetailState>(
+    'invite : 422 générique (autre raison) → notice invitationRefused',
     build: build,
     setUp: () => when(() => requests.inviteTraveler('pr-1', 'a-2')).thenThrow(_http(422)),
     act: (c) async {
@@ -332,6 +395,22 @@ void main() {
     skip: 3,
     expect: () => [
       isA<PackageRequestDetailLoaded>().having((s) => s.notice?.kind, 'notice', RequestDetailNoticeKind.invitationRefused),
+    ],
+  );
+
+  blocTest<PackageRequestDetailCubit, PackageRequestDetailState>(
+    'invite : exception non-Dio → id retiré + notice actionFailed',
+    build: build,
+    setUp: () => when(() => requests.inviteTraveler('pr-1', 'a-2')).thenThrow(Exception('boom')),
+    act: (c) async {
+      await c.load();
+      await c.invite('a-2');
+    },
+    skip: 3,
+    expect: () => [
+      isA<PackageRequestDetailLoaded>()
+          .having((s) => s.invitingAnnouncementIds, 'inviting', isEmpty)
+          .having((s) => s.notice?.kind, 'notice', RequestDetailNoticeKind.actionFailed),
     ],
   );
 

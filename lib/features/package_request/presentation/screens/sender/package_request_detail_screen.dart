@@ -135,6 +135,8 @@ class _DetailBody extends StatelessWidget {
             RequestDetailNoticeKind.actionFailed => 'Une erreur est survenue. Réessaie dans un instant.',
             RequestDetailNoticeKind.invitationSent => 'Invitation envoyée. Le voyageur est prévenu.',
             RequestDetailNoticeKind.invitationRefused => 'Ce voyageur ne peut pas être invité.',
+            RequestDetailNoticeKind.invitationNotInvitable => 'Cette demande n\'accepte plus d\'invitations.',
+            RequestDetailNoticeKind.invitationLimitReached => 'Limite d\'invitations atteinte pour cette demande.',
           },
           type: notice.kind == RequestDetailNoticeKind.invitationSent
               ? DonySnackbarType.success
@@ -150,11 +152,11 @@ class _DetailBody extends StatelessWidget {
         // l'espace disponible dépasse son contenu, mais peut aussi scroller
         // (sheet à hauteur fixe) sans jamais déborder. Widget de feature, pas
         // du design system : LayoutBuilder y est autorisé.
-        PackageRequestDetailError() => LayoutBuilder(
+        PackageRequestDetailError(notFound: final notFound) => LayoutBuilder(
           builder: (context, constraints) => SingleChildScrollView(
             child: ConstrainedBox(
               constraints: BoxConstraints(minHeight: constraints.maxHeight),
-              child: _ErrorView(onRetry: context.read<PackageRequestDetailCubit>().load),
+              child: _ErrorView(notFound: notFound, onRetry: context.read<PackageRequestDetailCubit>().load),
             ),
           ),
         ),
@@ -342,8 +344,13 @@ class _MenuButton extends StatelessWidget {
 }
 
 class _ErrorView extends StatelessWidget {
-  const _ErrorView({required this.onRetry});
+  const _ErrorView({required this.onRetry, this.notFound = false});
   final Future<void> Function() onRetry;
+
+  /// 404 (demande annulée/supprimée entre-temps, ex. lien de notification
+  /// périmé) : message dédié, sans bouton Réessayer (un nouvel essai
+  /// échouerait de la même façon, la ressource n'existe plus).
+  final bool notFound;
 
   @override
   Widget build(BuildContext context) {
@@ -359,16 +366,22 @@ class _ErrorView extends StatelessWidget {
               // errorLight/error : équivalents theme-aware des primitives
               // danger50/danger500 (voir lib/core/design/CLAUDE.md).
               decoration: BoxDecoration(color: cs.errorLight, borderRadius: BorderRadius.circular(16)),
-              child: Center(child: DonyIcon('wifi-off', color: cs.error)),
+              child: Center(child: DonyIcon(notFound ? 'circle-x' : 'wifi-off', color: cs.error)),
             ),
             const SizedBox(height: DonySpacing.base),
-            const Text('Impossible de charger ta demande', textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+            Text(notFound ? 'Cette demande n\'existe plus' : 'Impossible de charger ta demande',
+                textAlign: TextAlign.center, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
             const SizedBox(height: DonySpacing.xs),
-            Text('Vérifie ta connexion, puis réessaie. Ta demande n\'a pas été modifiée.',
-                textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant)),
-            const SizedBox(height: DonySpacing.lg),
-            DonyButton(label: 'Réessayer', iconAsset: 'refresh-cw', fullWidth: false, onPressed: onRetry),
+            Text(
+              notFound
+                  ? 'Elle a peut-être été annulée ou supprimée.'
+                  : 'Vérifie ta connexion, puis réessaie. Ta demande n\'a pas été modifiée.',
+              textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
+            ),
+            if (!notFound) ...[
+              const SizedBox(height: DonySpacing.lg),
+              DonyButton(label: 'Réessayer', iconAsset: 'refresh-cw', fullWidth: false, onPressed: onRetry),
+            ],
           ],
         ),
       ),

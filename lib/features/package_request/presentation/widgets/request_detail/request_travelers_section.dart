@@ -66,30 +66,37 @@ class RequestTravelersFold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final row = Row(
+      children: [
+        for (final (i, trip) in trips.take(3).indexed)
+          Transform.translate(
+            offset: Offset(-8.0 * i, 0),
+            child: DonyAvatar(name: trip.traveler?.displayName ?? 'Voyageur',
+                imageUrl: trip.traveler?.avatarUrl, size: DonyAvatarSize.sm),
+          ),
+        const SizedBox(width: DonySpacing.sm),
+        Expanded(child: Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600))),
+        // Chevron seulement si la ligne est réellement tapable : sinon elle
+        // laisserait croire à un dépliage qui n'existe pas.
+        if (onTap != null) DonyIcon('chevron-right', size: 18, color: cs.onSurfaceVariant),
+      ],
+    );
+    final content = Container(
+      constraints: const BoxConstraints(minHeight: 48),
+      padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md, vertical: DonySpacing.sm),
+      decoration: BoxDecoration(color: cs.surface, borderRadius: BorderRadius.circular(DonyRadius.md),
+          border: Border.all(color: cs.outline)),
+      child: row,
+    );
+    // Sans onTap, ni Material ni InkWell : pas de ripple pour un geste qui n'existe pas.
+    if (onTap == null) return content;
     return Material(
       color: cs.surface,
       borderRadius: BorderRadius.circular(DonyRadius.md),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(DonyRadius.md),
-        child: Container(
-          constraints: const BoxConstraints(minHeight: 48),
-          padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md, vertical: DonySpacing.sm),
-          decoration: BoxDecoration(borderRadius: BorderRadius.circular(DonyRadius.md), border: Border.all(color: cs.outline)),
-          child: Row(
-            children: [
-              for (final (i, trip) in trips.take(3).indexed)
-                Transform.translate(
-                  offset: Offset(-8.0 * i, 0),
-                  child: DonyAvatar(name: trip.traveler?.displayName ?? 'Voyageur',
-                      imageUrl: trip.traveler?.avatarUrl, size: DonyAvatarSize.sm),
-                ),
-              const SizedBox(width: DonySpacing.sm),
-              Expanded(child: Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600))),
-              if (onTap != null) DonyIcon('chevron-right', size: 18, color: cs.onSurfaceVariant),
-            ],
-          ),
-        ),
+        child: content,
       ),
     );
   }

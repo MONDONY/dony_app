@@ -75,6 +75,11 @@ void main() {
     expect(find.text('Inviter'), findsNothing);
   });
 
+  testWidgets('2 ter publiée : recherche voyageurs en échec (compatibleTrips null) → état visible', (tester) async {
+    await _pump(tester, PackageRequestDetailLoaded(request: _req(PackageRequestStatus.open), threads: const []));
+    expect(find.text('Impossible de charger les voyageurs pour le moment'), findsOneWidget);
+  });
+
   testWidgets('3 personne sur l axe : état vide', (tester) async {
     await _pump(tester, PackageRequestDetailLoaded(request: _req(PackageRequestStatus.open), threads: const [],
         compatibleTrips: const []));
@@ -132,6 +137,15 @@ void main() {
     expect(find.byKey(const Key('request-ticket-traveler-stub')), findsOneWidget);
     expect(tester.widget<RequestProgressTimeline>(find.byType(RequestProgressTimeline)).currentStep, 2);
     expect(find.text('payé, bloqué chez Yadony'), findsOneWidget);
+  });
+
+  testWidgets('8 ter acceptée : bid annulé → bandeau au lieu de la frise', (tester) async {
+    await _pump(tester, PackageRequestDetailLoaded(request: _req(PackageRequestStatus.accepted),
+        threads: [_t(NegotiationThreadStatus.accepted, bidId: 'bid-1')],
+        materializedBid: BidModel(id: 'bid-1', announcementId: 'x', senderId: 'sender-1', weightKg: 2,
+            status: 'CANCELLED', createdAt: DateTime(2026, 9), updatedAt: DateTime(2026, 9))));
+    expect(find.byType(RequestProgressTimeline), findsNothing);
+    expect(find.text('Ce trajet n\'a pas abouti'), findsOneWidget);
   });
 
   testWidgets('8 bis acceptée en espèces : talon « à régler en main propre »', (tester) async {

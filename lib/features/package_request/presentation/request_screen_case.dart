@@ -19,6 +19,17 @@ enum RequestScreenCase {
   cancelled,
 }
 
+/// Statuts de bid qui autorisent encore la frise de progression côté
+/// expéditeur (`RequestProgressTimeline`) : le trajet est toujours en cours.
+/// Tout le reste (CANCELLED, NO_SHOW, PARCEL_REFUSED, REJECTED, EXPIRED…)
+/// signifie que le trajet n'a pas abouti — miroir de `sender_sticky_bar.dart`
+/// côté bid, qui distingue déjà ces statuts pour son propre bouton.
+const _bidOnTrackStatuses = {
+  'ACCEPTED', 'PAYMENT_ESCROWED', 'HANDED_OVER', 'IN_TRANSIT', 'ARRIVED', 'COMPLETED',
+};
+
+bool isBidOnTrack(String status) => _bidOnTrackStatuses.contains(status);
+
 const _chosenStatuses = {
   NegotiationThreadStatus.awaitingTrip,
   NegotiationThreadStatus.awaitingPayment,
@@ -105,6 +116,7 @@ RequestScreenActions requestActionsFor(
   RequestScreenCase screenCase, {
   required PackageRequest request,
   required List<NegotiationThread> threads,
+  BidModel? materializedBid,
 }) {
   // Miroirs des gardes serveur : unpublish exige OPEN sans aucun fil (409 has-offers),
   // cancel refuse ACCEPTED/COMPLETED, update refuse hors DRAFT/OPEN/NEGOTIATING.
@@ -136,15 +148,25 @@ RequestScreenActions requestActionsFor(
           : RequestPrimaryAction.pay,
       menu: inProgressMenu,
     ),
-    RequestScreenCase.accepted => const RequestScreenActions(
-      primary: RequestPrimaryAction.trackParcel,
-      showMessage: true,
-      menu: [RequestMenuAction.duplicate],
-    ),
-    RequestScreenCase.delivered => const RequestScreenActions(
-      primary: RequestPrimaryAction.rate,
-      menu: [RequestMenuAction.duplicate],
-    ),
+    // Bid annulé/absent/refusé/no-show entre-temps : le trajet n'a pas abouti,
+    // « Suivre mon colis » n'a plus de sens → même action logique suivante
+    // que expired/cancelled (publier une demande similaire).
+    RequestScreenCase.accepted => materializedBid != null && !isBidOnTrack(materializedBid.status)
+        ? const RequestScreenActions(primary: RequestPrimaryAction.publishSimilar, menu: [RequestMenuAction.duplicate])
+        : const RequestScreenActions(
+            primary: RequestPrimaryAction.trackParcel,
+            showMessage: true,
+            menu: [RequestMenuAction.duplicate],
+          ),
+    // Déjà noté (sender_sticky_bar.dart respecte la même garde côté bid) :
+    // proposer de noter à nouveau n'a pas de sens, l'action suivante logique
+    // est de publier une demande similaire.
+    RequestScreenCase.delivered => materializedBid?.senderHasRated ?? false
+        ? const RequestScreenActions(primary: RequestPrimaryAction.publishSimilar, menu: [RequestMenuAction.duplicate])
+        : const RequestScreenActions(
+            primary: RequestPrimaryAction.rate,
+            menu: [RequestMenuAction.duplicate],
+          ),
     RequestScreenCase.expired => const RequestScreenActions(primary: RequestPrimaryAction.republish),
     RequestScreenCase.cancelled => const RequestScreenActions(primary: RequestPrimaryAction.publishSimilar),
   };

@@ -259,6 +259,49 @@ void main() {
         RequestPrimaryAction.publishSimilar,
       );
     });
+
+    test('livrée déjà notée : plus de Noter, demande similaire à la place', () {
+      final notRated = requestActionsFor(
+        RequestScreenCase.delivered,
+        request: req(PackageRequestStatus.accepted),
+        threads: const [],
+        materializedBid: bid('COMPLETED'),
+      );
+      expect(notRated.primary, RequestPrimaryAction.rate);
+
+      final rated = requestActionsFor(
+        RequestScreenCase.delivered,
+        request: req(PackageRequestStatus.accepted),
+        threads: const [],
+        materializedBid: BidModel(
+          id: 'bid-1', announcementId: 'a', senderId: 'sender-1', weightKg: 2,
+          status: 'COMPLETED', senderHasRated: true,
+          createdAt: DateTime(2026, 9), updatedAt: DateTime(2026, 9),
+        ),
+      );
+      expect(rated.primary, RequestPrimaryAction.publishSimilar);
+      expect(rated.menu, [RequestMenuAction.duplicate]);
+    });
+
+    test('acceptée : bid annulé/no-show/refusé → demande similaire au lieu de suivre', () {
+      for (final status in ['CANCELLED', 'NO_SHOW', 'PARCEL_REFUSED', 'REJECTED', 'EXPIRED']) {
+        final a = requestActionsFor(
+          RequestScreenCase.accepted,
+          request: req(PackageRequestStatus.accepted),
+          threads: const [],
+          materializedBid: bid(status),
+        );
+        expect(a.primary, RequestPrimaryAction.publishSimilar, reason: status);
+      }
+      final onTrack = requestActionsFor(
+        RequestScreenCase.accepted,
+        request: req(PackageRequestStatus.accepted),
+        threads: const [],
+        materializedBid: bid('HANDED_OVER'),
+      );
+      expect(onTrack.primary, RequestPrimaryAction.trackParcel);
+      expect(onTrack.showMessage, isTrue);
+    });
   });
 
   test('focusThreadFor', () {

@@ -144,6 +144,16 @@ class RequestDetailView extends StatelessWidget {
       case RequestScreenCase.draft:
         return [?fold('${trips.length} voyageur$plural la verr${trips.length > 1 ? 'ont' : 'a'}')];
       case RequestScreenCase.noOffers:
+        // `trips` fusionne `null` (recherche en échec) et `[]` (aucun
+        // voyageur) : distinguer explicitement via `s.compatibleTrips` pour
+        // ne pas afficher un silence identique à une vraie absence.
+        if (s.compatibleTrips == null) {
+          return const [
+            RequestStateBanner(tone: RequestBannerTone.neutral, icon: 'wifi-off',
+                title: 'Impossible de charger les voyageurs pour le moment',
+                message: 'Réessaie plus tard, ou partage directement ta demande en attendant.'),
+          ];
+        }
         if (trips.isEmpty) return const [];
         return [
           RequestTravelersList(
@@ -196,6 +206,18 @@ class RequestDetailView extends StatelessWidget {
           if (focus != null) offer(focus, highlighted: true),
         ];
       case RequestScreenCase.accepted:
+        final bidStatus = s.materializedBid?.status;
+        // Bid null (pas encore chargé/échec) : comportement inchangé, on
+        // affiche la frise par défaut. Bid connu mais hors des statuts « sur
+        // les rails » (CANCELLED, NO_SHOW, PARCEL_REFUSED…) : le trajet n'a
+        // pas abouti, la frise de progression n'a plus de sens.
+        if (bidStatus != null && !isBidOnTrack(bidStatus)) {
+          return const [
+            RequestStateBanner(tone: RequestBannerTone.neutral, icon: 'circle-x',
+                title: 'Ce trajet n\'a pas abouti',
+                message: 'Le voyageur n\'a pas pu assurer la livraison. Publie une demande similaire pour retrouver quelqu\'un.'),
+          ];
+        }
         return [
           RequestProgressTimeline(
             travelerName: focus?.travelerName ?? 'ton voyageur',

@@ -88,6 +88,34 @@ void main() {
     expect(icon.color, isNot(DonyColors.terra700));
   });
 
+  // NOTE (point 4 de la fiche, vignette en erreur) : `CachedNetworkImage`
+  // s'appuie sur `flutter_cache_manager`, dont le chemin d'échec réseau ne se
+  // déclenche pas de façon fiable dans ce harnais de widget test (échec du
+  // `HttpClient` simulé + accès disque du cache non mocké) — ni `pump`
+  // répétés, ni `pumpAndSettle`, ni `runAsync` + délai réel ne font apparaître
+  // le `ColoredBox` de l'errorWidget dans l'arbre. La correction elle-même
+  // (`cs.surfaceContainerHighest` au lieu de `DonyColors.sand200`, avec la clé
+  // `request-ticket-photo-error` pour un futur test) suit exactement le même
+  // token que la vignette placeholder juste au-dessus, déjà couverte par
+  // « Billet sans photo : vignette placeholder… ».
+
+  testWidgets('Billet quartiers : puce de localisation en couleurs du thème sombre', (tester) async {
+    final darkCs = AppTheme.dark().colorScheme;
+    await tester.pumpWidget(wrapDark(RequestTicketCard(
+      request: PackageRequest(
+        id: 'pr-1', senderId: 's', departureCity: 'Divo', arrivalCity: 'Annemasse',
+        desiredDate: DateTime(2026, 9, 27), dateToleranceDays: 0, weightKg: 2,
+        parcelSize: ParcelSize.small, transportMode: TransportMode.plane,
+        status: PackageRequestStatus.open, createdAt: DateTime.utc(2026, 9, 17),
+        pickupNeighborhood: 'Commerce', deliveryNeighborhood: 'Centre-ville'),
+      statusPill: const SizedBox(), metaLabel: '',
+    )));
+
+    final pin = tester.widget<DonyIcon>(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'map-pin'));
+    expect(pin.color, darkCs.secondary);
+    expect(pin.color, isNot(DonyColors.terra600));
+  });
+
   testWidgets('RequestStateBanner (info) : couleurs du thème sombre', (tester) async {
     final darkCs = AppTheme.dark().colorScheme;
     await tester.pumpWidget(wrapDark(const RequestStateBanner(

@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/package_request/presentation/widgets/request_detail/compatible_traveler_card.dart';
 import 'package:dony/features/package_request/presentation/widgets/request_detail/request_travelers_section.dart';
@@ -34,6 +35,15 @@ void main() {
       trips: [_trip('a'), _trip('b')], label: '2 voyageurs sur ton axe', onTap: () => taps++)));
     await tester.tap(find.text('2 voyageurs sur ton axe'));
     expect(taps, 1);
+  });
+
+  testWidgets('ligne repliée sans onTap : non interactive, pas de chevron', (tester) async {
+    await tester.pumpWidget(_wrap(RequestTravelersFold(
+      trips: [_trip('a'), _trip('b')], label: '2 voyageurs la verront')));
+    expect(find.byType(InkWell), findsNothing);
+    expect(find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'chevron-right'), findsNothing);
+    // Le contenu (avatars + libellé) reste bien affiché malgré l'absence de geste.
+    expect(find.text('2 voyageurs la verront'), findsOneWidget);
   });
 
   testWidgets('état vide : alerte et dates', (tester) async {

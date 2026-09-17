@@ -6,7 +6,13 @@ import 'package:dony/features/package_request/data/models/package_request_insigh
 import 'package:dony/features/package_request/presentation/request_screen_case.dart';
 import 'package:equatable/equatable.dart';
 
-enum RequestDetailNoticeKind { actionFailed, invitationSent, invitationRefused }
+enum RequestDetailNoticeKind {
+  actionFailed,
+  invitationSent,
+  invitationRefused,
+  invitationNotInvitable,
+  invitationLimitReached,
+}
 
 /// Message ponctuel (snackbar). `serial` distingue deux notices identiques successives.
 class RequestDetailNotice extends Equatable {
@@ -30,7 +36,15 @@ final class PackageRequestDetailLoading extends PackageRequestDetailState {
 }
 
 final class PackageRequestDetailError extends PackageRequestDetailState {
-  const PackageRequestDetailError();
+  const PackageRequestDetailError({this.notFound = false});
+
+  /// 404 sur le chargement initial : la demande a été annulée/supprimée
+  /// (soft-delete) entre le moment où le lien a été ouvert (ex. notification)
+  /// et l'affichage de l'écran. Distinct d'un échec réseau générique.
+  final bool notFound;
+
+  @override
+  List<Object?> get props => [notFound];
 }
 
 final class PackageRequestDetailLoaded extends PackageRequestDetailState {
@@ -71,7 +85,7 @@ final class PackageRequestDetailLoaded extends PackageRequestDetailState {
   );
 
   RequestScreenActions get actions =>
-      requestActionsFor(screenCase, request: request, threads: threads);
+      requestActionsFor(screenCase, request: request, threads: threads, materializedBid: materializedBid);
 
   PackageRequestDetailLoaded copyWith({
     bool? cancelledLocally,

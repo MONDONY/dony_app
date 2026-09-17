@@ -23,4 +23,9 @@ class PackageRequestInsights extends Equatable {
   List<Object?> get props => [viewCount, invitedAnnouncementIds];
 }
 
-enum InvitationOutcome { sent, alreadySent, unsupported }
+/// `notFound` couvre deux cas distincts côté 404, que seul l'appelant (qui
+/// connaît l'historique de `getInsights`) peut départager : route absente
+/// (ancien back, insights jamais répondu) ou trajet disparu entre-temps
+/// (back à jour, insights déjà répondu avec succès). Voir
+/// `PackageRequestDetailCubit.invite`.
+enum InvitationOutcome { sent, alreadySent, notFound, notInvitable, limitReached }

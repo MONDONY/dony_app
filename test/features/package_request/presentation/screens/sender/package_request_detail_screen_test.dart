@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dio/dio.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
@@ -252,6 +253,22 @@ void main() {
 
     expect(find.byType(RequestDetailSkeleton), findsNothing);
     expect(find.text('DIV'), findsOneWidget);
+  });
+
+  testWidgets('2 bis. 404 au chargement (lien de notification périmé) → message dédié, pas de Réessayer',
+      (tester) async {
+    when(() => repo.getById('pr-1')).thenThrow(DioException(
+      requestOptions: RequestOptions(path: '/package-requests/pr-1'),
+      response: Response(statusCode: 404, requestOptions: RequestOptions(path: '/package-requests/pr-1')),
+    ));
+    when(() => repo.listThreadsForRequest('pr-1')).thenAnswer((_) async => []);
+
+    await tester.pumpWidget(_buildApp(requestId: 'pr-1'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Cette demande n\'existe plus'), findsOneWidget);
+    expect(find.text('Réessayer'), findsNothing);
+    expect(find.text('Impossible de charger ta demande'), findsNothing);
   });
 
   testWidgets('2. erreur de getById → message, Réessayer recharge le billet', (tester) async {

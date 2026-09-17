@@ -1046,13 +1046,47 @@ void main() {
       expect(await repo.inviteTraveler('pr-1', 'a-1'), InvitationOutcome.alreadySent);
     });
 
-    test('404 → unsupported', () async {
+    test('404 → notFound (route absente OU trajet disparu, à l\'appelant de trancher)', () async {
       when(() => mockDio.post<Map<String, dynamic>>(path, data: {'announcementId': 'a-1'}))
           .thenThrow(httpError(path, 404));
-      expect(await repo.inviteTraveler('pr-1', 'a-1'), InvitationOutcome.unsupported);
+      expect(await repo.inviteTraveler('pr-1', 'a-1'), InvitationOutcome.notFound);
     });
 
-    test('422 → relancée', () async {
+    test('409 request/not-invitable → notInvitable', () async {
+      when(() => mockDio.post<Map<String, dynamic>>(path, data: {'announcementId': 'a-1'}))
+          .thenThrow(httpError(path, 409));
+      expect(await repo.inviteTraveler('pr-1', 'a-1'), InvitationOutcome.notInvitable);
+    });
+
+    test('422 invitation/limit-reached → limitReached', () async {
+      when(() => mockDio.post<Map<String, dynamic>>(path, data: {'announcementId': 'a-1'})).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(path: path),
+          response: Response(
+            statusCode: 422,
+            data: <String, dynamic>{'code': 'invitation/limit-reached'},
+            requestOptions: RequestOptions(path: path),
+          ),
+        ),
+      );
+      expect(await repo.inviteTraveler('pr-1', 'a-1'), InvitationOutcome.limitReached);
+    });
+
+    test('422 autre raison (ex. off-corridor) → relancée', () async {
+      when(() => mockDio.post<Map<String, dynamic>>(path, data: {'announcementId': 'a-1'})).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(path: path),
+          response: Response(
+            statusCode: 422,
+            data: <String, dynamic>{'code': 'invitation/off-corridor'},
+            requestOptions: RequestOptions(path: path),
+          ),
+        ),
+      );
+      expect(() => repo.inviteTraveler('pr-1', 'a-1'), throwsA(isA<DioException>()));
+    });
+
+    test('422 sans corps → relancée', () async {
       when(() => mockDio.post<Map<String, dynamic>>(path, data: {'announcementId': 'a-1'}))
           .thenThrow(httpError(path, 422));
       expect(() => repo.inviteTraveler('pr-1', 'a-1'), throwsA(isA<DioException>()));

@@ -239,7 +239,8 @@ class _Thumb extends StatelessWidget {
               fit: StackFit.expand,
               children: [
                 CachedNetworkImage(imageUrl: urls.first, fit: BoxFit.cover,
-                    errorWidget: (_, _, _) => const ColoredBox(color: DonyColors.sand200)),
+                    errorWidget: (_, _, _) => ColoredBox(
+                        key: const Key('request-ticket-photo-error'), color: cs.surfaceContainerHighest)),
                 if (urls.length > 1)
                   Positioned(
                     right: 4, bottom: 4,
@@ -278,7 +279,7 @@ class _FooterDetails extends StatelessWidget {
           if (zones.any((z) => z != null)) ...[
             Row(
               children: [
-                const DonyIcon('map-pin', size: 14, color: DonyColors.terra600),
+                DonyIcon('map-pin', size: 14, color: cs.secondary),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text('${zones[0] ?? r.departureCity} → ${zones[1] ?? r.arrivalCity}',

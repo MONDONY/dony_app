@@ -67,14 +67,17 @@ class PackageRequestDetailCubit extends Cubit<PackageRequestDetailState> {
         invitationsSupported: insights != null,
         invitedAnnouncementIds: insights?.invitedAnnouncementIds ?? const {},
       ));
-    } catch (_) {
+    } catch (e) {
       if (previous is PackageRequestDetailLoaded) {
         emit(previous.copyWith(
           actionInFlight: false,
           notice: _notice(RequestDetailNoticeKind.actionFailed),
         ));
       } else {
-        emit(const PackageRequestDetailError());
+        // 404 au premier chargement (ex. lien de notification vers une
+        // demande annulée/supprimée entre-temps, back soft-delete) : message
+        // dédié plutôt que le générique « vérifie ta connexion ».
+        emit(PackageRequestDetailError(notFound: e is DioException && e.response?.statusCode == 404));
       }
     }
   }
@@ -119,8 +122,27 @@ class PackageRequestDetailCubit extends Cubit<PackageRequestDetailState> {
       if (current is! PackageRequestDetailLoaded) return;
       final inviting = {...current.invitingAnnouncementIds}..remove(announcementId);
       switch (outcome) {
-        case InvitationOutcome.unsupported:
-          emit(current.copyWith(invitingAnnouncementIds: inviting, invitationsSupported: false));
+        case InvitationOutcome.notFound:
+          // Insights déjà répondu (back à jour) : la route existe, c'est le
+          // trajet qui a disparu entre-temps → un refus normal, on n'éteint
+          // pas les invitations. Insights jamais répondu (ancien back) :
+          // garder le comportement historique, masquer les invitations.
+          emit(current.invitationsSupported
+              ? current.copyWith(
+                  invitingAnnouncementIds: inviting,
+                  notice: _notice(RequestDetailNoticeKind.invitationRefused),
+                )
+              : current.copyWith(invitingAnnouncementIds: inviting, invitationsSupported: false));
+        case InvitationOutcome.notInvitable:
+          emit(current.copyWith(
+            invitingAnnouncementIds: inviting,
+            notice: _notice(RequestDetailNoticeKind.invitationNotInvitable),
+          ));
+        case InvitationOutcome.limitReached:
+          emit(current.copyWith(
+            invitingAnnouncementIds: inviting,
+            notice: _notice(RequestDetailNoticeKind.invitationLimitReached),
+          ));
         case InvitationOutcome.sent || InvitationOutcome.alreadySent:
           unawaited(_analytics.logEvent(
             AnalyticsEvents.packageRequestTravelerInvited,
@@ -135,6 +157,10 @@ class PackageRequestDetailCubit extends Cubit<PackageRequestDetailState> {
           ));
       }
     } on DioException catch (e) {
+      // Le repository ne traduit que les statuts qu'il reconnaît (404/409/422
+      // limite) : tout le reste (autre raison 422, 500…) remonte ici tel
+      // quel. Un 422 non spécifique reste un refus ; le reste, un échec
+      // générique.
       final current = state;
       if (current is! PackageRequestDetailLoaded) return;
       emit(current.copyWith(
@@ -142,6 +168,15 @@ class PackageRequestDetailCubit extends Cubit<PackageRequestDetailState> {
         notice: _notice(e.response?.statusCode == 422
             ? RequestDetailNoticeKind.invitationRefused
             : RequestDetailNoticeKind.actionFailed),
+      ));
+    } catch (_) {
+      // Exception non-Dio (ex. timeout, erreur inattendue) : ne jamais
+      // laisser l'id « en cours d'invitation » orphelin.
+      final current = state;
+      if (current is! PackageRequestDetailLoaded) return;
+      emit(current.copyWith(
+        invitingAnnouncementIds: {...current.invitingAnnouncementIds}..remove(announcementId),
+        notice: _notice(RequestDetailNoticeKind.actionFailed),
       ));
     }
   }
