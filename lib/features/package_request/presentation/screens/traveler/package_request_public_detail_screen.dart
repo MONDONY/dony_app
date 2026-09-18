@@ -44,6 +44,11 @@ class _PackageRequestPublicDetailScreenState
   String? _error;
   bool _loading = true;
 
+  /// L'écran a déjà été quitté au profit de l'écran propriétaire (« Ma
+  /// demande ») — ne jamais rediriger deux fois (le chargement de la demande
+  /// et le listener Auth peuvent tous deux aboutir au même verdict).
+  bool _leftForOwnerView = false;
+
   @override
   void initState() {
     super.initState();
@@ -66,6 +71,7 @@ class _PackageRequestPublicDetailScreenState
       );
       if (mounted) {
         setState(() => _request = r);
+        _evaluateViewer(context);
       }
     } catch (e) {
       if (mounted) {
@@ -76,6 +82,54 @@ class _PackageRequestPublicDetailScreenState
         setState(() => _loading = false);
       }
     }
+  }
+
+  /// Verdict d'appartenance : `true`/`false` quand l'état d'auth est tranché,
+  /// `null` tant qu'il ne l'est pas. Au démarrage à froid via le lien partagé
+  /// (`yadony://demande/{id}`), l'AuthBloc peut encore être en cours de
+  /// résolution : classer alors le propriétaire en visiteur le laisserait à
+  /// tort sur la vue visiteur, donc on attend un état définitif (authentifié
+  /// ou session invité). Même schéma que `TripOwnerDetailScreen`.
+  bool? _ownershipVerdict(AuthState authState, PackageRequest r) {
+    final currentUserId = authState.currentUserId;
+    if (currentUserId != null) {
+      return r.senderId == currentUserId;
+    }
+    if (authState is AuthGuestSessionReady) {
+      return false;
+    }
+    return null;
+  }
+
+  /// Le lien partagé (`yadony://demande/{id}`) fait atterrir tout le monde
+  /// ici, y compris l'expéditeur propriétaire de la demande s'il clique son
+  /// propre lien. Il ne doit pas se retrouver à pouvoir faire une offre sur
+  /// sa propre demande : on le renvoie vers son écran « Ma demande ». Tout
+  /// autre visiteur (y compris un invité, verdict `false`) reste ici.
+  void _evaluateViewer(BuildContext context) {
+    if (_leftForOwnerView) {
+      return;
+    }
+    final r = _request;
+    if (r == null) {
+      return;
+    }
+    AuthState authState;
+    try {
+      authState = context.read<AuthBloc>().state;
+    } catch (_) {
+      return;
+    }
+    final verdict = _ownershipVerdict(authState, r);
+    if (verdict != true) {
+      return;
+    }
+    _leftForOwnerView = true;
+    final router = GoRouter.of(context);
+    if (router.canPop()) {
+      router.pop();
+    }
+    router.push('/package-requests/${r.id}');
   }
 
   Future<void> _report(String reason) async {
@@ -172,42 +226,50 @@ class _PackageRequestPublicDetailScreenState
         : authState is AuthProfileUpdated
         ? authState.user.id
         : null;
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: DonyAppBar(
-        title: 'Demande d\'envoi',
-        actions: [
-          const DonyFeedbackButton(),
-          IconButton(
-            tooltip: 'Signaler',
-            icon: const DonyIcon('flag', size: 20),
-            onPressed: _showReportSheet,
-          ),
-        ],
-      ),
-      body: _loading
-          ? Center(child: CircularProgressIndicator(color: cs.primary))
-          : _error != null
-          ? Center(
-              child: Padding(
-                padding: const EdgeInsets.all(40),
-                child: Text(
-                  _error!,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium!.copyWith(fontSize: 14, color: kError),
-                ),
-              ),
-            )
-          : _request == null
-          ? const SizedBox.shrink()
-          : PackageRequestPublicDetailBody(
-              request: _request!,
-              announcement: announcement,
-              currentUserId: currentUserId,
-              onChanged: _load,
+    return BlocListener<AuthBloc, AuthState>(
+      // L'auth peut se résoudre APRÈS le chargement de la demande (démarrage à
+      // froid via lien partagé) : on réévalue le verdict d'appartenance à
+      // chaque changement d'état d'auth, pas seulement une fois la demande
+      // chargée.
+      listener: (context, _) => _evaluateViewer(context),
+      child: Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        appBar: DonyAppBar(
+          title: 'Demande d\'envoi',
+          actions: [
+            const DonyFeedbackButton(),
+            IconButton(
+              tooltip: 'Signaler',
+              icon: const DonyIcon('flag', size: 20),
+              onPressed: _showReportSheet,
             ),
+          ],
+        ),
+        body: _loading
+            ? Center(child: CircularProgressIndicator(color: cs.primary))
+            : _error != null
+            ? Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(40),
+                  child: Text(
+                    _error!,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      fontSize: 14,
+                      color: kError,
+                    ),
+                  ),
+                ),
+              )
+            : _request == null
+            ? const SizedBox.shrink()
+            : PackageRequestPublicDetailBody(
+                request: _request!,
+                announcement: announcement,
+                currentUserId: currentUserId,
+                onChanged: _load,
+              ),
+      ),
     );
   }
 }
