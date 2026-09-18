@@ -267,6 +267,51 @@ void main() {
     },
   );
 
+  testWidgets(
+    'une recharge XOF dans un portefeuille actif EUR est affichée en F CFA',
+    (tester) async {
+      final xofTopup = WalletTransactionModel(
+        type: 'TOP_UP',
+        amount: 10000,
+        currency: 'XOF',
+        balanceAfter: 10000,
+        paymentRef: 'pawapay:11111111-1111-1111-1111-111111111111',
+        createdAt: DateTime(2026, 9, 18, 12, 26),
+      );
+      final eurRefund = WalletTransactionModel(
+        type: 'REFUND',
+        amount: 1.33,
+        balanceAfter: 1.33,
+        createdAt: DateTime(2026, 9, 18, 14, 34),
+      );
+      final wallet = WalletModel(
+        balance: 1.33,
+        currency: 'EUR',
+        transactions: [xofTopup, eurRefund],
+      );
+      whenListen(
+        bloc,
+        Stream.value(WalletLoaded(wallet)),
+        initialState: WalletInitial(),
+      );
+
+      await tester.pumpWidget(buildSubject(bloc, prefsBloc));
+      await tester.pumpAndSettle();
+
+      final amounts = tester
+          .widgetList<Text>(find.byType(Text))
+          .map((t) => t.data ?? '')
+          .where((d) => d.startsWith('+'))
+          .toList();
+      expect(amounts, hasLength(2));
+      expect(amounts[0], contains('F CFA'));
+      expect(amounts[0], isNot(contains('€')));
+      expect(amounts[0], isNot(contains('10 000,00')));
+      // Ligne sans devise (ancien contrat back) : repli sur la devise active.
+      expect(amounts[1], contains('€'));
+    },
+  );
+
   testWidgets('affiche le solde dans la devise active, pas toujours en EUR', (
     tester,
   ) async {

@@ -656,6 +656,12 @@ class _TxTile extends StatelessWidget {
     final isRefundProcessing = tx.isRefundProcessing;
     final amountColor = isCredit ? DonyColors.success500 : DonyColors.terra600;
     final amountPrefix = isCredit ? '+' : '';
+    // La ligne porte sa propre devise (une recharge XOF dans un portefeuille
+    // actif EUR reste en F CFA). Sans devise (ancien contrat back) : devise
+    // active ; code inconnu : repli signalé de `fromCodeOrDefault`.
+    final lineCurrency = tx.currency == null
+        ? currency
+        : SupportedCurrency.fromCodeOrDefault(tx.currency);
 
     return Padding(
           padding: const EdgeInsets.symmetric(
@@ -719,7 +725,7 @@ class _TxTile extends StatelessWidget {
                 ),
                 // Amount
                 Text(
-                  '$amountPrefix${CurrencyFormatter.format(tx.amount.abs(), currency)}',
+                  '$amountPrefix${CurrencyFormatter.format(tx.amount.abs(), lineCurrency)}',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     color: amountColor,
                     fontWeight: FontWeight.w700,
