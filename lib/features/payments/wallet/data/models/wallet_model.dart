@@ -60,15 +60,13 @@ class WalletModel {
       balances.where((b) => b.active || b.balance != 0).toList();
 
   /// Devises dont une demande de remboursement est possible : éligibles et
-  /// dont le net après frais est strictement positif (même règle que
-  /// `_HeroHeader._canRefund` avant ce chantier, étendue à toutes les
-  /// devises). `refundNetAmount` prime, repli `refundableAmount`, ancien
-  /// contrat (les deux nuls) laissé à `refundEligible` seul.
-  List<WalletCurrencyBalanceModel> get eligibleBalances => balances
-      .where(
-        (b) =>
-            b.refundEligible &&
-            (b.refundNetAmount ?? b.refundableAmount ?? 1) > 0,
-      )
-      .toList();
+  /// dont le montant remboursable est connu et strictement positif.
+  /// `refundNetAmount` prime, repli `refundableAmount`. Sur l'ancien
+  /// contrat back (ni l'un ni l'autre renseigné) la devise est exclue :
+  /// `_HeroHeader._canRefund` retombe alors sur la règle historique basée
+  /// sur la seule devise active.
+  List<WalletCurrencyBalanceModel> get eligibleBalances => balances.where((b) {
+    final amount = b.refundNetAmount ?? b.refundableAmount;
+    return b.refundEligible && amount != null && amount > 0;
+  }).toList();
 }

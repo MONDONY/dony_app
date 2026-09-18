@@ -255,9 +255,7 @@ class _LoadedView extends StatelessWidget {
                 nonRefundableAmount: wallet.activeBalance?.nonRefundableAmount,
                 refundFeeAmount: wallet.activeBalance?.refundFeeAmount,
                 refundNetAmount: wallet.activeBalance?.refundNetAmount,
-                estimatedTotal: wallet.hasEstimate
-                    ? wallet.estimatedTotal
-                    : null,
+                estimatedTotal: wallet.estimatedTotal,
                 estimateComplete: wallet.estimateComplete,
                 multiCurrency: wallet.heldBalances.length > 1,
                 eligibleBalances: wallet.eligibleBalances,
@@ -317,7 +315,7 @@ class _LoadedView extends StatelessWidget {
                   message:
                       'Ce solde ne peut pas être remboursé : les frais du '
                       'prestataire de paiement l\'absorbent entièrement. Il '
-                      'reste utilisable pour payer vos envois.',
+                      'reste utilisable pour payer tes envois.',
                 ),
               ),
             ),
@@ -469,15 +467,11 @@ class _HeroHeader extends StatelessWidget {
   /// estimé » et le sous-titre, sinon rien à estimer.
   final bool multiCurrency;
 
-  /// « Rembourser » n'apparaît que s'il y a quelque chose à rembourser une
-  /// fois les frais retenus. `refundNetAmount` prime quand il est connu (les
-  /// frais de remboursement mobile money peuvent ramener le net à zéro même
-  /// si le brut est positif) ; sinon repli sur `refundableAmount` comme
-  /// avant, `null` sur les deux (ancien contrat back) laissant l'affichage
-  /// géré par le seul `refundEligible`.
-  /// « Rembourser » apparaît dès qu'une devise, active ou non, est
-  /// remboursable au net positif (`WalletModel.eligibleBalances`). Ancien
-  /// contrat (liste vide) : règle historique sur la devise active.
+  /// « Rembourser » apparaît dès qu'une devise, active ou non, a un montant
+  /// remboursable connu et positif (`WalletModel.eligibleBalances`). Sur
+  /// l'ancien contrat back (liste toujours vide, aucun montant exposé),
+  /// repli sur la règle historique : `refundEligible` seul sur la devise
+  /// active.
   bool get _canRefund =>
       eligibleBalances.isNotEmpty ||
       (refundEligible && (refundNetAmount ?? refundableAmount ?? 1) > 0);
@@ -501,79 +495,94 @@ class _HeroHeader extends StatelessWidget {
             DonySpacing.lg,
             DonySpacing.xl,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Text(
-                estimatedTotal != null && multiCurrency
-                    ? 'Total estimé'
-                    : 'Solde disponible',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: DonyColors.neutral0.withValues(alpha: 0.75),
-                  fontSize: 13,
-                ),
-              ),
-              const SizedBox(height: DonySpacing.xs),
-              Text(
-                    CurrencyFormatter.format(
-                      estimatedTotal ?? balance,
-                      currency,
-                    ),
-                    key: const Key('wallet-estimated-total'),
-                    style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                      color: DonyColors.neutral0,
-                      fontSize: 36,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.5,
-                    ),
-                  )
-                  .animate()
-                  .fadeIn(duration: 300.ms)
-                  .slideY(begin: 0.1, curve: Curves.easeOutCubic),
-              if (estimatedTotal != null && multiCurrency) ...[
-                const SizedBox(height: 2),
+          // `SingleChildScrollView` en `reverse: true` : le contenu se
+          // colle au bas de la zone disponible (comme le faisait
+          // `mainAxisAlignment.end`) quand il tient, et se laisse
+          // simplement scroller sans erreur `RenderFlex overflowed` quand
+          // une grande police système le dépasse (`NeverScrollableScrollPhysics`
+          // désactive le geste, même protection que la ligne d'actions
+          // horizontale ci-dessous).
+          child: SingleChildScrollView(
+            reverse: true,
+            physics: const NeverScrollableScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
                 Text(
-                  estimateComplete
-                      ? 'Estimation au taux du jour. Chaque devise reste séparée.'
-                      : 'Estimation partielle : une devise n\'a pas de taux du jour.',
-                  key: estimateComplete
-                      ? null
-                      : const Key('wallet-estimate-partial'),
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  estimatedTotal != null && multiCurrency
+                      ? 'Total estimé'
+                      : 'Solde disponible',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: DonyColors.neutral0.withValues(alpha: 0.75),
+                    fontSize: 13,
                   ),
                 ),
+                const SizedBox(height: DonySpacing.xs),
+                Text(
+                      CurrencyFormatter.format(
+                        estimatedTotal ?? balance,
+                        currency,
+                      ),
+                      key: const Key('wallet-estimated-total'),
+                      style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                        color: DonyColors.neutral0,
+                        fontSize: 36,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.5,
+                      ),
+                    )
+                    .animate()
+                    .fadeIn(duration: 300.ms)
+                    .slideY(begin: 0.1, curve: Curves.easeOutCubic),
+                if (estimatedTotal != null && multiCurrency) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    estimateComplete
+                        ? 'Estimé au taux du jour, devises séparées.'
+                        : 'Estimation partielle : une devise sans taux.',
+                    key: estimateComplete
+                        ? null
+                        : const Key('wallet-estimate-partial'),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: DonyColors.neutral0.withValues(alpha: 0.75),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: DonySpacing.base),
+                if (_canRefund)
+                  BlocConsumer<
+                    WalletRefundRequestCubit,
+                    WalletRefundRequestState
+                  >(
+                    listenWhen: (previous, current) =>
+                        previous.result != current.result ||
+                        previous.error != current.error,
+                    listener: (context, state) {
+                      if (state.result != null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Demande de remboursement envoyée.'),
+                          ),
+                        );
+                        context.read<WalletBloc>().add(
+                          WalletRefreshRequested(),
+                        );
+                      }
+                      if (state.error != null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(state.error!.message)),
+                        );
+                      }
+                    },
+                    builder: (context, refundState) => _buildActions(context),
+                  )
+                else
+                  _buildActions(context),
               ],
-              const SizedBox(height: DonySpacing.base),
-              if (_canRefund)
-                BlocConsumer<
-                  WalletRefundRequestCubit,
-                  WalletRefundRequestState
-                >(
-                  listenWhen: (previous, current) =>
-                      previous.result != current.result ||
-                      previous.error != current.error,
-                  listener: (context, state) {
-                    if (state.result != null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Demande de remboursement envoyée.'),
-                        ),
-                      );
-                      context.read<WalletBloc>().add(WalletRefreshRequested());
-                    }
-                    if (state.error != null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(state.error!.message)),
-                      );
-                    }
-                  },
-                  builder: (context, refundState) => _buildActions(context),
-                )
-              else
-                _buildActions(context),
-            ],
+            ),
           ),
         ),
       ),
@@ -620,17 +629,13 @@ class _HeroHeader extends StatelessWidget {
               _openConfirm(context, chosen);
               return;
             }
-            // Une seule devise éligible dont le montant remboursable est
-            // déjà connu (`WalletModel.eligibleBalances`) : direct vers la
+            // Une seule devise éligible : `WalletModel.eligibleBalances` ne
+            // retient que les montants remboursables connus, direct vers la
             // confirmation, active ou non. Sinon (ancien contrat : le champ
             // `refundEligible` existe mais pas encore les montants), repli
             // sur les champs historiques de la devise active ci-dessous.
-            final single = eligibleBalances.length == 1
-                ? eligibleBalances.first
-                : null;
-            if (single != null &&
-                (single.refundNetAmount ?? single.refundableAmount) != null) {
-              _openConfirm(context, single);
+            if (eligibleBalances.length == 1) {
+              _openConfirm(context, eligibleBalances.first);
               return;
             }
             final refundable = refundableAmount;
@@ -648,7 +653,10 @@ class _HeroHeader extends StatelessWidget {
             } else {
               // Ancien contrat back : sélection de recharges intactes.
               unawaited(
-                WalletRefundSelectionSheet.show(context, currency: currency.code),
+                WalletRefundSelectionSheet.show(
+                  context,
+                  currency: currency.code,
+                ),
               );
             }
           },
@@ -666,7 +674,7 @@ class _HeroHeader extends StatelessWidget {
     WalletRefundConfirmSheet.show(
       context,
       currency: b.currency,
-      refundableAmount: b.refundableAmount ?? b.balance,
+      refundableAmount: b.refundableAmount ?? 0,
       nonRefundableAmount: b.nonRefundableAmount ?? 0,
       feeAmount: b.refundFeeAmount,
       netAmount: b.refundNetAmount,
@@ -1109,21 +1117,21 @@ class _WalletInfoContent extends StatelessWidget {
           iconAsset: 'plus',
           title: 'Recharger',
           description:
-              'Ajoutez des fonds par carte bancaire. Le crédit apparaît dès '
+              'Ajoute des fonds par carte bancaire. Le crédit apparaît dès '
               'la validation du paiement.',
         ),
         _WalletInfoRow(
           iconAsset: 'arrow-up',
           title: 'Rembourser',
           description:
-              'Demandez le remboursement de votre solde vers votre moyen de '
+              'Demande le remboursement de ton solde vers ton moyen de '
               'paiement d\'origine.',
         ),
         _WalletInfoRow(
           iconAsset: 'history',
           title: 'Demandes',
           description:
-              'Retrouvez le suivi de vos demandes de remboursement envoyées.',
+              'Retrouve le suivi de tes demandes de remboursement envoyées.',
         ),
         _WalletInfoRow(
           iconAsset: 'wallet',

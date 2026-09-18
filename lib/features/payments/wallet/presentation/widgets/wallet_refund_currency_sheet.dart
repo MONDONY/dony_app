@@ -31,10 +31,15 @@ class WalletRefundCurrencySheet extends StatelessWidget {
         valueListenable: selected,
         builder: (context, value, _) => DonyButton(
           label: 'Continuer',
-          onPressed: value == null ? null : () => Navigator.of(context).pop(value),
+          onPressed: value == null
+              ? null
+              : () => Navigator.of(context).pop(value),
         ),
       ),
-      child: WalletRefundCurrencySheet._(balances: balances, selected: selected),
+      child: WalletRefundCurrencySheet._(
+        balances: balances,
+        selected: selected,
+      ),
     ).whenComplete(selected.dispose);
   }
 
@@ -65,12 +70,17 @@ class WalletRefundCurrencySheet extends StatelessWidget {
 
   static DonyChoice<String?> _choice(WalletCurrencyBalanceModel b) {
     final currency = SupportedCurrency.fromCodeOrDefault(b.currency);
-    final gross = b.refundableAmount ?? b.balance;
+    final gross = b.refundableAmount ?? 0;
     final fee = b.refundFeeAmount;
     final net = b.refundNetAmount ?? gross;
-    final feeText = fee == null || fee == 0
-        ? 'Frais de remboursement : Offerts'
-        : 'Frais de remboursement : ${CurrencyFormatter.format(fee, currency)}';
+    // `fee == null` : le back ne renseigne pas encore ce champ (ancien
+    // contrat) — on ne dit rien plutôt que d'inventer une valeur. `fee == 0`
+    // seul cas où « Offerts » s'affiche.
+    final feeText = fee == null
+        ? null
+        : (fee == 0
+              ? 'Frais de remboursement : Offerts'
+              : 'Frais de remboursement : ${CurrencyFormatter.format(fee, currency)}');
     return DonyChoice<String?>(
       key: Key('wallet-refund-currency-${b.currency.toUpperCase()}'),
       value: b.currency,
@@ -78,7 +88,9 @@ class WalletRefundCurrencySheet extends StatelessWidget {
       subtitle: 'tu reçois ${CurrencyFormatter.format(net, currency)}',
       iconAsset: b.active ? 'wallet' : 'globe',
       expanded: (context) => Text(
-        '$feeText. ${currency.displayName}.',
+        feeText == null
+            ? '${currency.displayName}.'
+            : '$feeText. ${currency.displayName}.',
         style: Theme.of(context).textTheme.bodySmall,
       ),
     );

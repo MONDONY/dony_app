@@ -329,58 +329,63 @@ void main() {
     expect(find.textContaining('Dollar canadien'), findsOneWidget);
   });
 
-  WalletModel walletWithEstimate({bool complete = true, double? xofEstimate = 15.24}) =>
-      WalletModel(
-        balance: 1.33,
+  WalletModel walletWithEstimate({
+    bool complete = true,
+    double? xofEstimate = 15.24,
+  }) => WalletModel(
+    balance: 1.33,
+    currency: 'EUR',
+    estimatedTotal: 16.57,
+    estimateComplete: complete,
+    transactions: const [],
+    balances: [
+      const WalletCurrencyBalanceModel(
         currency: 'EUR',
-        estimatedTotal: 16.57,
-        estimateComplete: complete,
-        transactions: const [],
-        balances: [
-          const WalletCurrencyBalanceModel(
-            currency: 'EUR',
-            balance: 1.33,
-            active: true,
-            estimatedInActive: 1.33,
-          ),
-          WalletCurrencyBalanceModel(
-            currency: 'XOF',
-            balance: 10000,
-            active: false,
-            estimatedInActive: xofEstimate,
-          ),
-        ],
+        balance: 1.33,
+        active: true,
+        estimatedInActive: 1.33,
+      ),
+      WalletCurrencyBalanceModel(
+        currency: 'XOF',
+        balance: 10000,
+        active: false,
+        estimatedInActive: xofEstimate,
+      ),
+    ],
+  );
+
+  testWidgets(
+    'nouveau contrat : total estimé en grand et une ligne par devise',
+    (tester) async {
+      whenListen(
+        bloc,
+        Stream.value(WalletLoaded(walletWithEstimate())),
+        initialState: WalletInitial(),
       );
 
-  testWidgets('nouveau contrat : total estimé en grand et une ligne par devise', (
-    tester,
-  ) async {
-    whenListen(
-      bloc,
-      Stream.value(WalletLoaded(walletWithEstimate())),
-      initialState: WalletInitial(),
-    );
+      await tester.pumpWidget(buildSubject(bloc, prefsBloc));
+      await tester.pumpAndSettle();
 
-    await tester.pumpWidget(buildSubject(bloc, prefsBloc));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Total estimé'), findsOneWidget);
-    expect(find.text('Solde disponible'), findsNothing);
-    expect(find.byKey(const Key('wallet-estimated-total')), findsOneWidget);
-    expect(find.byKey(const Key('wallet-currency-row-EUR')), findsOneWidget);
-    expect(find.byKey(const Key('wallet-currency-row-XOF')), findsOneWidget);
-    expect(find.text('active'), findsOneWidget);
-    expect(find.textContaining('≈'), findsOneWidget);
-    expect(find.text('verrouillé'), findsNothing);
-    expect(find.byKey(const Key('wallet-estimate-partial')), findsNothing);
-  });
+      expect(find.text('Total estimé'), findsOneWidget);
+      expect(find.text('Solde disponible'), findsNothing);
+      expect(find.byKey(const Key('wallet-estimated-total')), findsOneWidget);
+      expect(find.byKey(const Key('wallet-currency-row-EUR')), findsOneWidget);
+      expect(find.byKey(const Key('wallet-currency-row-XOF')), findsOneWidget);
+      expect(find.text('active'), findsOneWidget);
+      expect(find.textContaining('≈'), findsOneWidget);
+      expect(find.text('verrouillé'), findsNothing);
+      expect(find.byKey(const Key('wallet-estimate-partial')), findsNothing);
+    },
+  );
 
   testWidgets('estimation partielle quand une devise n\'a pas de taux', (
     tester,
   ) async {
     whenListen(
       bloc,
-      Stream.value(WalletLoaded(walletWithEstimate(complete: false, xofEstimate: null))),
+      Stream.value(
+        WalletLoaded(walletWithEstimate(complete: false, xofEstimate: null)),
+      ),
       initialState: WalletInitial(),
     );
 
@@ -391,31 +396,65 @@ void main() {
     expect(find.text('taux indisponible'), findsOneWidget);
   });
 
-  testWidgets('ancien contrat (pas de total estimé) : en-tête Solde disponible conservé', (
-    tester,
-  ) async {
-    const wallet = WalletModel(
-      balance: 1.33,
-      currency: 'EUR',
-      transactions: [],
-      balances: [
-        WalletCurrencyBalanceModel(currency: 'EUR', balance: 1.33, active: true),
-        WalletCurrencyBalanceModel(currency: 'XOF', balance: 10000, active: false),
-      ],
-    );
+  testWidgets('grande police système (1.3x) sur estimation partielle : pas de '
+      'RenderFlex overflowed, l\'en-tête est toujours rendu', (tester) async {
     whenListen(
       bloc,
-      Stream.value(WalletLoaded(wallet)),
+      Stream.value(
+        WalletLoaded(walletWithEstimate(complete: false, xofEstimate: null)),
+      ),
       initialState: WalletInitial(),
     );
 
-    await tester.pumpWidget(buildSubject(bloc, prefsBloc));
+    await tester.pumpWidget(
+      MediaQuery(
+        data: const MediaQueryData(
+          size: Size(360, 800),
+          textScaler: TextScaler.linear(1.3),
+        ),
+        child: buildSubject(bloc, prefsBloc),
+      ),
+    );
     await tester.pumpAndSettle();
 
-    expect(find.text('Solde disponible'), findsOneWidget);
-    expect(find.text('Total estimé'), findsNothing);
-    expect(find.byKey(const Key('wallet-currency-row-XOF')), findsNothing);
+    expect(tester.takeException(), isNull);
+    expect(find.byKey(const Key('wallet-estimated-total')), findsOneWidget);
   });
+
+  testWidgets(
+    'ancien contrat (pas de total estimé) : en-tête Solde disponible conservé',
+    (tester) async {
+      const wallet = WalletModel(
+        balance: 1.33,
+        currency: 'EUR',
+        transactions: [],
+        balances: [
+          WalletCurrencyBalanceModel(
+            currency: 'EUR',
+            balance: 1.33,
+            active: true,
+          ),
+          WalletCurrencyBalanceModel(
+            currency: 'XOF',
+            balance: 10000,
+            active: false,
+          ),
+        ],
+      );
+      whenListen(
+        bloc,
+        Stream.value(WalletLoaded(wallet)),
+        initialState: WalletInitial(),
+      );
+
+      await tester.pumpWidget(buildSubject(bloc, prefsBloc));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Solde disponible'), findsOneWidget);
+      expect(find.text('Total estimé'), findsNothing);
+      expect(find.byKey(const Key('wallet-currency-row-XOF')), findsNothing);
+    },
+  );
 
   testWidgets('une seule devise détenue : total sans mention d\'estimation', (
     tester,
@@ -689,6 +728,54 @@ void main() {
   });
 
   testWidgets(
+    'ancien contrat, deux devises refundEligible sans montant : repli sur '
+    'la sheet de sélection de la devise active, pas le choix de devise',
+    (tester) async {
+      const wallet = WalletModel(
+        balance: 40,
+        currency: 'EUR',
+        transactions: [],
+        refundEligible: true,
+        balances: [
+          WalletCurrencyBalanceModel(
+            currency: 'EUR',
+            balance: 40,
+            active: true,
+            refundEligible: true,
+          ),
+          WalletCurrencyBalanceModel(
+            currency: 'XOF',
+            balance: 10000,
+            active: false,
+            refundEligible: true,
+          ),
+        ],
+      );
+      whenListen(
+        bloc,
+        Stream.value(WalletLoaded(wallet)),
+        initialState: WalletInitial(),
+      );
+      // Sans ça, `WalletEligibleTopupsState()` par défaut (isLoading: true)
+      // fait tourner un spinner en boucle et `pumpAndSettle` n'aboutit
+      // jamais.
+      when(
+        () => _currentTopupsCubit.state,
+      ).thenReturn(const WalletEligibleTopupsState(isLoading: false));
+
+      await tester.pumpWidget(buildSubject(bloc, prefsBloc, refundCubit));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Rembourser'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Choisir une recharge'), findsOneWidget);
+      expect(find.text('Rembourser mon solde'), findsNothing);
+      expect(find.text('Quelle devise rembourser ?'), findsNothing);
+    },
+  );
+
+  testWidgets(
     'refundableAmount à 0 avec un solde positif : le bouton Rembourser est '
     'masqué, rien n\'est remboursable',
     (tester) async {
@@ -868,35 +955,45 @@ void main() {
     },
   );
 
-  testWidgets('Rembourser visible quand seule une devise non active est éligible', (
-    tester,
-  ) async {
-    const wallet = WalletModel(
-      balance: 0,
-      currency: 'EUR',
-      estimatedTotal: 15.24,
-      transactions: [],
-      balances: [
-        WalletCurrencyBalanceModel(currency: 'EUR', balance: 0, active: true, estimatedInActive: 0),
-        WalletCurrencyBalanceModel(
-          currency: 'XOF',
-          balance: 10000,
-          active: false,
-          refundEligible: true,
-          refundableAmount: 10000,
-          refundFeeAmount: 100,
-          refundNetAmount: 9900,
-          estimatedInActive: 15.24,
-        ),
-      ],
-    );
-    whenListen(bloc, Stream.value(WalletLoaded(wallet)), initialState: WalletInitial());
+  testWidgets(
+    'Rembourser visible quand seule une devise non active est éligible',
+    (tester) async {
+      const wallet = WalletModel(
+        balance: 0,
+        currency: 'EUR',
+        estimatedTotal: 15.24,
+        transactions: [],
+        balances: [
+          WalletCurrencyBalanceModel(
+            currency: 'EUR',
+            balance: 0,
+            active: true,
+            estimatedInActive: 0,
+          ),
+          WalletCurrencyBalanceModel(
+            currency: 'XOF',
+            balance: 10000,
+            active: false,
+            refundEligible: true,
+            refundableAmount: 10000,
+            refundFeeAmount: 100,
+            refundNetAmount: 9900,
+            estimatedInActive: 15.24,
+          ),
+        ],
+      );
+      whenListen(
+        bloc,
+        Stream.value(WalletLoaded(wallet)),
+        initialState: WalletInitial(),
+      );
 
-    await tester.pumpWidget(buildSubject(bloc, prefsBloc, refundCubit));
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(buildSubject(bloc, prefsBloc, refundCubit));
+      await tester.pumpAndSettle();
 
-    expect(find.text('Rembourser'), findsOneWidget);
-  });
+      expect(find.text('Rembourser'), findsOneWidget);
+    },
+  );
 
   testWidgets(
     'une seule devise non active éligible : Rembourser ouvre la confirmation pour cette devise',
@@ -948,47 +1045,52 @@ void main() {
     },
   );
 
-  testWidgets('deux devises éligibles : tap Rembourser ouvre le choix de devise', (
-    tester,
-  ) async {
-    const wallet = WalletModel(
-      balance: 40,
-      currency: 'EUR',
-      refundEligible: true,
-      estimatedTotal: 55.24,
-      transactions: [],
-      balances: [
-        WalletCurrencyBalanceModel(
-          currency: 'EUR',
-          balance: 40,
-          active: true,
-          refundEligible: true,
-          refundableAmount: 40,
-          refundFeeAmount: 1.5,
-          refundNetAmount: 38.5,
-          estimatedInActive: 40,
-        ),
-        WalletCurrencyBalanceModel(
-          currency: 'XOF',
-          balance: 10000,
-          active: false,
-          refundEligible: true,
-          refundableAmount: 10000,
-          refundFeeAmount: 100,
-          refundNetAmount: 9900,
-          estimatedInActive: 15.24,
-        ),
-      ],
-    );
-    whenListen(bloc, Stream.value(WalletLoaded(wallet)), initialState: WalletInitial());
+  testWidgets(
+    'deux devises éligibles : tap Rembourser ouvre le choix de devise',
+    (tester) async {
+      const wallet = WalletModel(
+        balance: 40,
+        currency: 'EUR',
+        refundEligible: true,
+        estimatedTotal: 55.24,
+        transactions: [],
+        balances: [
+          WalletCurrencyBalanceModel(
+            currency: 'EUR',
+            balance: 40,
+            active: true,
+            refundEligible: true,
+            refundableAmount: 40,
+            refundFeeAmount: 1.5,
+            refundNetAmount: 38.5,
+            estimatedInActive: 40,
+          ),
+          WalletCurrencyBalanceModel(
+            currency: 'XOF',
+            balance: 10000,
+            active: false,
+            refundEligible: true,
+            refundableAmount: 10000,
+            refundFeeAmount: 100,
+            refundNetAmount: 9900,
+            estimatedInActive: 15.24,
+          ),
+        ],
+      );
+      whenListen(
+        bloc,
+        Stream.value(WalletLoaded(wallet)),
+        initialState: WalletInitial(),
+      );
 
-    await tester.pumpWidget(buildSubject(bloc, prefsBloc, refundCubit));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Rembourser'));
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(buildSubject(bloc, prefsBloc, refundCubit));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Rembourser'));
+      await tester.pumpAndSettle();
 
-    expect(find.text('Quelle devise rembourser ?'), findsOneWidget);
-  });
+      expect(find.text('Quelle devise rembourser ?'), findsOneWidget);
+    },
+  );
 
   testWidgets(
     'historique : libellé "Recharge mobile money" pour un paymentRef pawapay:',

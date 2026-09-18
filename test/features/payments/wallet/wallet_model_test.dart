@@ -238,35 +238,68 @@ void main() {
       expect(wallet.balances[0].estimatedInActive, isNull);
     });
 
-    test('eligibleBalances ne garde que les devises remboursables au net positif', () {
+    test(
+      'eligibleBalances ne garde que les devises remboursables au net positif',
+      () {
+        final wallet = WalletModel.fromJson({
+          'balance': 0,
+          'currency': 'EUR',
+          'transactions': [],
+          'balances': [
+            {
+              'currency': 'EUR',
+              'balance': 0,
+              'active': true,
+              'refundEligible': false,
+            },
+            {
+              'currency': 'XOF',
+              'balance': 10000,
+              'active': false,
+              'refundEligible': true,
+              'refundableAmount': 10000,
+              'refundFeeAmount': 100,
+              'refundNetAmount': 9900,
+            },
+            {
+              'currency': 'XAF',
+              'balance': 50,
+              'active': false,
+              'refundEligible': true,
+              'refundableAmount': 50,
+              'refundFeeAmount': 50,
+              'refundNetAmount': 0,
+            },
+          ],
+        });
+
+        expect(wallet.eligibleBalances.map((b) => b.currency), ['XOF']);
+      },
+    );
+
+    test('eligibleBalances est vide sur l\'ancien contrat (refundEligible sans '
+        'aucun montant)', () {
       final wallet = WalletModel.fromJson({
-        'balance': 0,
+        'balance': 40.00,
         'currency': 'EUR',
         'transactions': [],
         'balances': [
-          {'currency': 'EUR', 'balance': 0, 'active': true, 'refundEligible': false},
+          {
+            'currency': 'EUR',
+            'balance': 40.00,
+            'active': true,
+            'refundEligible': true,
+          },
           {
             'currency': 'XOF',
             'balance': 10000,
             'active': false,
             'refundEligible': true,
-            'refundableAmount': 10000,
-            'refundFeeAmount': 100,
-            'refundNetAmount': 9900,
-          },
-          {
-            'currency': 'XAF',
-            'balance': 50,
-            'active': false,
-            'refundEligible': true,
-            'refundableAmount': 50,
-            'refundFeeAmount': 50,
-            'refundNetAmount': 0,
           },
         ],
       });
 
-      expect(wallet.eligibleBalances.map((b) => b.currency), ['XOF']);
+      expect(wallet.eligibleBalances, isEmpty);
     });
   });
 }
