@@ -30,4 +30,10 @@ class WalletTransactionModel {
 
   bool get isCredit => amount > 0;
   bool get isRefundProcessing => refundStatus == 'PROCESSING';
+
+  /// `paymentRef` d'un dépôt pawaPay : préfixe `pawapay:` suivi de l'UUID de
+  /// l'opération `pawapay_operations` (cf. `WalletRefundRail` côté back,
+  /// `WalletTopupOutcomeListener`). Un rail Stripe (`pi_...`) ou un
+  /// `paymentRef` nul rendent faux.
+  bool get isMobileMoneyTopup => paymentRef?.startsWith('pawapay:') ?? false;
 }

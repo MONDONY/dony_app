@@ -206,8 +206,9 @@ class _BidDetailViewState extends State<_BidDetailView> {
             label: 'Recharger mon portefeuille',
             onPressed: () async {
               context.pop();
-              // /topup/method est le point d'entrée correct : sélectionne la méthode
-              // avant de pousser /topup/amount avec extra (String), qui crasherait si null.
+              // /topup/method est le point d'entrée correct : il compose le
+              // WalletTopupMethodSelection attendu en extra par
+              // /topup/amount, qui crasherait sans lui.
               final recharged = await context.push<bool>(
                 '/payments/wallet/topup/method',
               );

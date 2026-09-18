@@ -9,12 +9,17 @@ class WalletEligibleTopupModel {
   /// l'ancien contrat.
   final double? originalAmount;
 
+  /// Frais qui seraient retenus si cette recharge est remboursée (mobile
+  /// money : pawaPay). `null` tant que le back n'expose pas encore le champ.
+  final double? feeAmount;
+
   const WalletEligibleTopupModel({
     required this.id,
     required this.amount,
     this.paymentRef,
     required this.createdAt,
     this.originalAmount,
+    this.feeAmount,
   });
 
   factory WalletEligibleTopupModel.fromJson(Map<String, dynamic> json) =>
@@ -24,5 +29,12 @@ class WalletEligibleTopupModel {
         paymentRef: json['paymentRef'] as String?,
         createdAt: DateTime.parse(json['createdAt'] as String),
         originalAmount: (json['originalAmount'] as num?)?.toDouble(),
+        feeAmount: (json['feeAmount'] as num?)?.toDouble(),
       );
+
+  /// `paymentRef` d'un dépôt pawaPay : préfixe `pawapay:` (cf.
+  /// `WalletTransactionModel.isMobileMoneyTopup`, même convention côté back).
+  /// Un rail Stripe (`pi_...`) ou un `paymentRef` nul (ancien contrat)
+  /// rendent faux.
+  bool get isMobileMoneyTopup => paymentRef?.startsWith('pawapay:') ?? false;
 }

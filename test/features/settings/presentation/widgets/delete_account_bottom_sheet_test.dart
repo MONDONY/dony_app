@@ -613,4 +613,257 @@ void main() {
       );
     },
   );
+
+  testWidgets(
+    'deux rails (carte + mobile money) avec frais : étiquettes, montants '
+    'nets et bandeau récapitulatif joint',
+    (tester) async {
+      when(() => mockEligibilityCubit.state).thenReturn(
+        const DeletionEligibilityState(
+          isLoading: false,
+          hasWalletBalance: true,
+          walletSettlement: [
+            WalletSettlement(
+              currency: 'EUR',
+              refundableAmount: 35,
+              forfeitedAmount: 0,
+              inFlightAmount: 0,
+              rail: 'STRIPE',
+              feeAmount: 0,
+              netAmount: 35,
+            ),
+            WalletSettlement(
+              currency: 'XOF',
+              refundableAmount: 10000,
+              forfeitedAmount: 0,
+              inFlightAmount: 0,
+              rail: 'PAWAPAY',
+              feeAmount: 250,
+              netAmount: 9750,
+              destinationMasked: '+225 XX XX XX 45',
+            ),
+          ],
+        ),
+      );
+
+      await tester.pumpWidget(buildWidget());
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Carte'), findsOneWidget);
+      expect(find.text('Mobile money'), findsOneWidget);
+
+      final eurNet = CurrencyFormatter.format(35, SupportedCurrency.eur);
+      final xofNet = CurrencyFormatter.format(9750, SupportedCurrency.xof);
+      final xofGross = CurrencyFormatter.format(10000, SupportedCurrency.xof);
+      final xofFee = CurrencyFormatter.format(250, SupportedCurrency.xof);
+
+      // Montant net affiché en valeur principale pour chaque devise.
+      expect(find.text(eurNet), findsWidgets);
+      expect(find.text(xofNet), findsWidgets);
+
+      // Détail des frais mobile money.
+      expect(
+        find.text('$xofGross remboursables, $xofFee de frais'),
+        findsOneWidget,
+      );
+
+      // Bandeau récapitulatif : les deux nets joints par « et ».
+      expect(
+        find.textContaining(
+          '$eurNet et $xofNet seront remboursés dès la demande.',
+        ),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    'mobile money sans frais avec destination masquée : « Vers X, sans frais »',
+    (tester) async {
+      when(() => mockEligibilityCubit.state).thenReturn(
+        const DeletionEligibilityState(
+          isLoading: false,
+          hasWalletBalance: true,
+          walletSettlement: [
+            WalletSettlement(
+              currency: 'XOF',
+              refundableAmount: 10000,
+              forfeitedAmount: 0,
+              inFlightAmount: 0,
+              rail: 'PAWAPAY',
+              feeAmount: 0,
+              netAmount: 10000,
+              destinationMasked: '+225 XX XX XX 45',
+            ),
+          ],
+        ),
+      );
+
+      await tester.pumpWidget(buildWidget());
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Vers +225 XX XX XX 45, sans frais'), findsOneWidget);
+    },
+  );
+
+  testWidgets('bonus parrainage perdu (nouveau contrat) : ligne rouge « Bonus '
+      'parrainage perdu : X »', (tester) async {
+    when(() => mockEligibilityCubit.state).thenReturn(
+      const DeletionEligibilityState(
+        isLoading: false,
+        hasWalletBalance: true,
+        walletSettlement: [
+          WalletSettlement(
+            currency: 'EUR',
+            refundableAmount: 35,
+            forfeitedAmount: 5,
+            inFlightAmount: 0,
+            rail: 'STRIPE',
+            feeAmount: 0,
+            netAmount: 35,
+          ),
+        ],
+      ),
+    );
+
+    await tester.pumpWidget(buildWidget());
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+
+    final forfeited = CurrencyFormatter.format(5, SupportedCurrency.eur);
+    expect(find.text('Bonus parrainage perdu : $forfeited'), findsOneWidget);
+    // Le bandeau reprend aussi le bonus perdu.
+    expect(
+      find.textContaining(
+        '$forfeited de bonus seront perdus définitivement à la suppression.',
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets(
+    'rail MANUAL avec frais nuls (double alimentation) : message inchangé, '
+    'pas d\'étiquette ni de bandeau',
+    (tester) async {
+      when(() => mockEligibilityCubit.state).thenReturn(
+        const DeletionEligibilityState(
+          isLoading: false,
+          hasWalletBalance: true,
+          walletSettlement: [
+            WalletSettlement(
+              currency: 'XOF',
+              refundableAmount: 15000,
+              forfeitedAmount: 0,
+              inFlightAmount: 0,
+              rail: 'MANUAL',
+              feeAmount: 0,
+              netAmount: 15000,
+            ),
+          ],
+        ),
+      );
+
+      await tester.pumpWidget(buildWidget());
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('vous recontacte'), findsOneWidget);
+      expect(find.text('Carte'), findsNothing);
+      expect(find.text('Mobile money'), findsNothing);
+      expect(
+        find.textContaining('seront remboursés dès la demande'),
+        findsNothing,
+      );
+    },
+  );
+
+  testWidgets(
+    'ancien contrat (aucun nouveau champ) : aucune étiquette de rail ni '
+    'bandeau récapitulatif, affichage rigoureusement identique',
+    (tester) async {
+      when(() => mockEligibilityCubit.state).thenReturn(
+        const DeletionEligibilityState(
+          isLoading: false,
+          hasWalletBalance: true,
+          walletSettlement: [
+            WalletSettlement(
+              currency: 'EUR',
+              refundableAmount: 35,
+              forfeitedAmount: 5,
+              inFlightAmount: 0,
+              rail: 'STRIPE',
+            ),
+          ],
+        ),
+      );
+
+      await tester.pumpWidget(buildWidget());
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Carte'), findsNothing);
+      expect(find.text('Mobile money'), findsNothing);
+      expect(
+        find.textContaining('seront remboursés dès la demande'),
+        findsNothing,
+      );
+      expect(find.textContaining('Bonus parrainage perdu'), findsNothing);
+      // L'affichage d'hier reste intact.
+      expect(
+        find.textContaining('seront remboursés sur votre carte'),
+        findsOneWidget,
+      );
+      expect(
+        find.textContaining(
+          'perdus définitivement à la suppression du compte.',
+        ),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    'IMPORTANT — devise dont les frais absorbent tout le solde : elle reste '
+    'au récapitulatif, avec sa raison, au lieu de disparaître',
+    (tester) async {
+      when(() => mockEligibilityCubit.state).thenReturn(
+        const DeletionEligibilityState(
+          isLoading: false,
+          hasWalletBalance: true,
+          walletSettlement: [
+            WalletSettlement(
+              currency: 'XOF',
+              refundableAmount: 300,
+              forfeitedAmount: 0,
+              inFlightAmount: 0,
+              rail: 'PAWAPAY',
+              feeAmount: 300,
+              netAmount: 0,
+            ),
+          ],
+        ),
+      );
+
+      await tester.pumpWidget(buildWidget());
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      final gross = CurrencyFormatter.format(300, SupportedCurrency.xof);
+      expect(
+        find.textContaining('Solde de $gross non remboursable'),
+        findsOneWidget,
+      );
+      expect(
+        find.textContaining('les frais du prestataire de paiement'),
+        findsOneWidget,
+      );
+      // Rien n'est promis : aucun bandeau « seront remboursés ».
+      expect(
+        find.textContaining('seront remboursés dès la demande'),
+        findsNothing,
+      );
+    },
+  );
 }

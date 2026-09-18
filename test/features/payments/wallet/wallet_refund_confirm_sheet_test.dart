@@ -4,8 +4,11 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/features/payments/wallet/bloc/wallet_eligible_topups_cubit.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_refund_request_cubit.dart';
+import 'package:dony/features/payments/wallet/data/models/wallet_eligible_topup_model.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_refund_request_model.dart';
 import 'package:dony/features/payments/wallet/presentation/widgets/wallet_refund_confirm_sheet.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +19,14 @@ import 'package:mocktail/mocktail.dart';
 class MockWalletRefundRequestCubit extends MockCubit<WalletRefundRequestState>
     implements WalletRefundRequestCubit {}
 
+class MockWalletEligibleTopupsCubit extends MockCubit<WalletEligibleTopupsState>
+    implements WalletEligibleTopupsCubit {}
+
+// Réassignée à chaque test : la sheet la récupère via
+// `getIt<WalletEligibleTopupsCubit>()` pour dériver le rail des recharges
+// éligibles concernées (cf. `WalletRefundSelectionSheet`, même pattern).
+late MockWalletEligibleTopupsCubit _currentTopupsCubit;
+
 void main() {
   late MockWalletRefundRequestCubit cubit;
 
@@ -25,31 +36,66 @@ void main() {
   final expectedButtonLabel =
       'Rembourser ${CurrencyFormatter.format(35, SupportedCurrency.eur)}';
 
+  setUpAll(() {
+    if (!getIt.isRegistered<WalletEligibleTopupsCubit>()) {
+      getIt.registerFactory<WalletEligibleTopupsCubit>(
+        () => _currentTopupsCubit,
+      );
+    }
+  });
+
   setUp(() {
     cubit = MockWalletRefundRequestCubit();
     when(() => cubit.state).thenReturn(const WalletRefundRequestState());
     when(() => cubit.submit(any())).thenAnswer((_) async {});
+
+    _currentTopupsCubit = MockWalletEligibleTopupsCubit();
+    when(
+      () => _currentTopupsCubit.state,
+    ).thenReturn(const WalletEligibleTopupsState(isLoading: false));
+    when(
+      () => _currentTopupsCubit.stream,
+    ).thenAnswer((_) => const Stream.empty());
+    when(() => _currentTopupsCubit.close()).thenAnswer((_) async {});
+    when(() => _currentTopupsCubit.load(any())).thenAnswer((_) async {});
   });
 
-  Widget host({required double refundable, required double nonRefundable}) =>
-      MaterialApp(
-        home: BlocProvider<WalletRefundRequestCubit>.value(
-          value: cubit,
-          child: Builder(
-            builder: (context) => Scaffold(
-              body: ElevatedButton(
-                onPressed: () => WalletRefundConfirmSheet.show(
-                  context,
-                  currency: 'EUR',
-                  refundableAmount: refundable,
-                  nonRefundableAmount: nonRefundable,
-                ),
-                child: const Text('Open'),
+  /// `topups` pilote le rail dérivé par la sheet : par défaut vide, donc
+  /// rail carte (comportement inchangé sur l'ancien contrat, où `paymentRef`
+  /// n'est jamais renseigné).
+  Widget host({
+    required double refundable,
+    required double nonRefundable,
+    double? feeAmount,
+    double? netAmount,
+    List<WalletEligibleTopupModel>? topups,
+  }) {
+    if (topups != null) {
+      when(
+        () => _currentTopupsCubit.state,
+      ).thenReturn(WalletEligibleTopupsState(isLoading: false, topups: topups));
+    }
+    return MaterialApp(
+      home: BlocProvider<WalletRefundRequestCubit>.value(
+        value: cubit,
+        child: Builder(
+          builder: (context) => Scaffold(
+            body: ElevatedButton(
+              onPressed: () => WalletRefundConfirmSheet.show(
+                context,
+                currency: 'EUR',
+                refundableAmount: refundable,
+                nonRefundableAmount: nonRefundable,
+                feeAmount: feeAmount,
+                netAmount: netAmount,
               ),
+              child: const Text('Open'),
             ),
           ),
         ),
-      );
+      ),
+    );
+  }
 
   testWidgets('affiche le montant remboursable et le bouton avec le montant', (
     tester,
@@ -211,4 +257,243 @@ void main() {
       expect(find.text('Rembourser mon solde'), findsOneWidget);
     },
   );
+
+  group('frais de remboursement', () {
+    testWidgets('feeAmount > 0 : montant affiché, bouton sur le net', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        host(refundable: 35, nonRefundable: 0, feeAmount: 3, netAmount: 32),
+      );
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Frais de remboursement'), findsOneWidget);
+      expect(find.textContaining('3,00'), findsWidgets);
+      expect(find.text('Vous recevrez'), findsOneWidget);
+      expect(find.textContaining('32,00'), findsWidgets);
+      expect(
+        find.text(
+          'Rembourser ${CurrencyFormatter.format(32, SupportedCurrency.eur)}',
+        ),
+        findsOneWidget,
+      );
+      // Bandeau d'avertissement sur les frais retenus, texte figé du plan.
+      expect(
+        find.text(
+          'Cette recharge n\'a jamais servi : les frais du prestataire de '
+          'paiement sont retenus. Ils sont annulés dès qu\'une recharge a '
+          'payé un envoi.',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('feeAmount == 0 : "Offerts", pas de bandeau d\'avertissement', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        host(refundable: 35, nonRefundable: 0, feeAmount: 0, netAmount: 35),
+      );
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Frais de remboursement'), findsOneWidget);
+      expect(find.text('Offerts'), findsOneWidget);
+      expect(find.text('Vous recevrez'), findsOneWidget);
+      expect(
+        find.textContaining('Cette recharge n\'a jamais servi'),
+        findsNothing,
+      );
+    });
+
+    testWidgets(
+      'feeAmount et netAmount absents (ancien contrat) : affichage actuel '
+      'inchangé, aucune ligne de frais',
+      (tester) async {
+        await tester.pumpWidget(host(refundable: 35, nonRefundable: 0));
+        await tester.tap(find.text('Open'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Frais de remboursement'), findsNothing);
+        expect(find.text('Vous recevrez'), findsNothing);
+        expect(find.text('Offerts'), findsNothing);
+        expect(find.text(expectedButtonLabel), findsOneWidget);
+      },
+    );
+  });
+
+  group('rail dérivé des recharges éligibles', () {
+    testWidgets(
+      'toutes les recharges concernées sont pawaPay : rail mobile money, '
+      'aucun numéro affiché',
+      (tester) async {
+        await tester.pumpWidget(
+          host(
+            refundable: 35,
+            nonRefundable: 0,
+            topups: [
+              WalletEligibleTopupModel(
+                id: 't1',
+                amount: 35,
+                paymentRef: 'pawapay:op-123',
+                createdAt: DateTime(2026, 9),
+              ),
+            ],
+          ),
+        );
+        await tester.tap(find.text('Open'));
+        await tester.pumpAndSettle();
+
+        expect(
+          find.textContaining('Remboursable sur mobile money'),
+          findsOneWidget,
+        );
+        expect(
+          find.text(
+            'Le montant revient sur le numéro qui a payé la recharge, en '
+            'général en quelques minutes. Votre solde EUR est gelé le '
+            'temps du traitement.',
+          ),
+          findsOneWidget,
+        );
+        // Aucun numéro (masqué ou non) n'apparaît : inconnu avant la demande.
+        expect(find.textContaining('+'), findsNothing);
+        expect(
+          find.textContaining('Le montant revient sur la carte'),
+          findsNothing,
+        );
+      },
+    );
+
+    testWidgets(
+      'recharges concernées sur Stripe : rail carte, texte inchangé',
+      (tester) async {
+        await tester.pumpWidget(
+          host(
+            refundable: 35,
+            nonRefundable: 0,
+            topups: [
+              WalletEligibleTopupModel(
+                id: 't1',
+                amount: 35,
+                paymentRef: 'pi_123',
+                createdAt: DateTime(2026, 9),
+              ),
+            ],
+          ),
+        );
+        await tester.tap(find.text('Open'));
+        await tester.pumpAndSettle();
+
+        expect(
+          find.textContaining('Remboursable sur votre carte'),
+          findsOneWidget,
+        );
+        expect(
+          find.textContaining('Le montant revient sur la carte utilisée'),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'mix pawaPay et Stripe : pas toutes pawaPay, rail carte par défaut',
+      (tester) async {
+        await tester.pumpWidget(
+          host(
+            refundable: 35,
+            nonRefundable: 0,
+            topups: [
+              WalletEligibleTopupModel(
+                id: 't1',
+                amount: 20,
+                paymentRef: 'pawapay:op-123',
+                createdAt: DateTime(2026, 9),
+              ),
+              WalletEligibleTopupModel(
+                id: 't2',
+                amount: 15,
+                paymentRef: 'pi_123',
+                createdAt: DateTime(2026, 9, 2),
+              ),
+            ],
+          ),
+        );
+        await tester.tap(find.text('Open'));
+        await tester.pumpAndSettle();
+
+        expect(
+          find.textContaining('Remboursable sur votre carte'),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets('liste reçue mais vide : aucun rail annoncé, phrase neutre', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        host(refundable: 35, nonRefundable: 0, topups: const []),
+      );
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Remboursable :'), findsOneWidget);
+      expect(find.textContaining('sur votre carte'), findsNothing);
+      expect(find.textContaining('sur mobile money'), findsNothing);
+      expect(
+        find.textContaining(
+          'Le montant revient sur le moyen de paiement utilisé',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets(
+      'chargement en cours : aucun rail annoncé, ni carte ni mobile money',
+      (tester) async {
+        when(
+          () => _currentTopupsCubit.state,
+        ).thenReturn(const WalletEligibleTopupsState());
+
+        await tester.pumpWidget(host(refundable: 35, nonRefundable: 0));
+        await tester.tap(find.text('Open'));
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('Remboursable :'), findsOneWidget);
+        expect(find.textContaining('sur votre carte'), findsNothing);
+        expect(find.textContaining('sur mobile money'), findsNothing);
+        expect(
+          find.textContaining('sous 5 à 10 jours selon votre banque'),
+          findsNothing,
+        );
+      },
+    );
+
+    testWidgets(
+      'chargement en échec : aucun rail annoncé plutôt qu\'un repli carte',
+      (tester) async {
+        when(() => _currentTopupsCubit.state).thenReturn(
+          const WalletEligibleTopupsState(
+            isLoading: false,
+            error: NetworkException('hors ligne'),
+          ),
+        );
+
+        await tester.pumpWidget(host(refundable: 35, nonRefundable: 0));
+        await tester.tap(find.text('Open'));
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('Remboursable :'), findsOneWidget);
+        expect(find.textContaining('sur votre carte'), findsNothing);
+        expect(
+          find.textContaining(
+            'Le montant revient sur le moyen de paiement utilisé',
+          ),
+          findsOneWidget,
+        );
+      },
+    );
+  });
 }

@@ -52,4 +52,55 @@ class WalletRemoteDatasource {
     final response = await _client.dio.get('/wallet/refund-requests');
     return response.data as List<dynamic>;
   }
+
+  /// Sonde de disponibilité du rail mobile money : même endpoint que
+  /// [topupProviders], appelé SANS corps.
+  ///
+  /// Cet appel n'aboutit jamais en succès sur un backend à jour : sans
+  /// numéro, la validation refuse la requête en 422 `topup-phone-required`.
+  /// C'est justement ce refus qui prouve que la route existe et que le rail
+  /// est servi — un backend sans le lot 2 répond 404. La discrimination se
+  /// fait donc sur le code métier, côté
+  /// `WalletRepository.isMobileMoneyTopupAvailable`.
+  Future<void> topupProvidersProbe() async {
+    await _client.dio.post('/wallet/topup/providers');
+  }
+
+  /// Réseaux mobile money utilisables pour payer une recharge depuis
+  /// [phoneNumber]. Même contrat que
+  /// `/payments/mobile-money/providers` : le numéro voyage dans le corps,
+  /// jamais dans l'URL.
+  Future<Map<String, dynamic>> topupProviders(String phoneNumber) async {
+    final response = await _client.dio.post(
+      '/wallet/topup/providers',
+      data: {'phoneNumber': phoneNumber},
+    );
+    return response.data as Map<String, dynamic>;
+  }
+
+  /// Initie une recharge mobile money. [provider] omis quand nul : sans lui,
+  /// l'opérateur prédit par pawaPay pour ce numéro s'applique.
+  Future<Map<String, dynamic>> topupMobileMoney({
+    required double amount,
+    required String phoneNumber,
+    String? provider,
+  }) async {
+    final data = <String, dynamic>{
+      'amount': double.parse(amount.toStringAsFixed(2)),
+      'paymentMethod': 'MOBILE_MONEY',
+      'phoneNumber': phoneNumber,
+    };
+    if (provider != null) {
+      data['provider'] = provider;
+    }
+    final response = await _client.dio.post('/wallet/topup', data: data);
+    return response.data as Map<String, dynamic>;
+  }
+
+  /// Statut d'une recharge mobile money, relu en boucle pendant l'attente du
+  /// PIN opérateur.
+  Future<Map<String, dynamic>> topupStatus(String topupId) async {
+    final response = await _client.dio.get('/wallet/topup/$topupId/status');
+    return response.data as Map<String, dynamic>;
+  }
 }

@@ -712,6 +712,66 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.error,
       icon: Icons.account_balance_wallet_outlined,
     ),
+    // ─── Recharge du portefeuille par mobile money ───────────────────
+    // `WalletMobileMoneyTopupService` (back). Principe retenu en relecture :
+    // le detail du serveur n'est affiché que lorsqu'il porte une information
+    // que l'app ne possède pas déjà. Sinon l'app écrit son propre message,
+    // dans son ton (tutoiement, comme le reste du parcours de recharge).
+    //
+    // `topup-amount-out-of-range` et `topup-phone-unsupported` sont dans
+    // `_serverDetailCodes` : le premier porte les bornes réelles dans la
+    // devise de l'opérateur, le second la liste des opérateurs réellement
+    // couverts pour ce numéro (même nature que
+    // `mobile-money-account-unsupported`, déjà dans l'ensemble). Le texte
+    // ci-dessous ne sert que de repli si le detail n'est pas exploitable.
+    'topup-amount-out-of-range': ErrorPresentation(
+      title: 'Montant hors limites',
+      message:
+          'Ce montant ne respecte pas les limites de recharge autorisées. '
+          'Ajuste le montant puis réessaie.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.rule_rounded,
+    ),
+    // `topup-already-pending` et `topup-phone-required` sont volontairement
+    // absents de `_serverDetailCodes` : leur detail backend n'apporte rien
+    // que l'app ne sache déjà, et il est rédigé en vouvoiement alors que tout
+    // le parcours de recharge tutoie (« Valide le paiement sur ton
+    // téléphone », « Payer avec un autre numéro »). L'app écrit donc son
+    // propre texte plutôt que d'afficher le detail brut.
+    'topup-already-pending': ErrorPresentation(
+      title: 'Recharge déjà en cours',
+      // Aucun écran ne permet d'annuler une recharge en cours : ne demande
+      // que ce qui est faisable — valider la demande reçue sur le téléphone,
+      // ou laisser le délai s'écouler.
+      message:
+          'Une recharge est déjà en cours. Valide-la sur ton téléphone, ou '
+          'attends qu\'elle expire avant d\'en lancer une nouvelle.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.pending_rounded,
+    ),
+    'topup-phone-required': ErrorPresentation(
+      title: 'Numéro manquant',
+      message: 'Indique le numéro qui va payer la recharge.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.flag_outlined,
+    ),
+    // Numéro reconnu mais inexploitable pour une recharge (réseau fermé,
+    // devise non prise en charge, pays inconnu...). Dans
+    // `_serverDetailCodes` : voir le commentaire de groupe ci-dessus.
+    'topup-phone-unsupported': ErrorPresentation(
+      title: 'Numéro non pris en charge',
+      message:
+          'Ce numéro n\'est pas exploitable pour une recharge mobile money. '
+          'Vérifie-le ou essaie avec un autre numéro.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.flag_outlined,
+    ),
+    'topup-not-found': ErrorPresentation(
+      title: 'Recharge introuvable',
+      message: 'Cette recharge n\'existe plus ou son lien a expiré.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.search_off_rounded,
+    ),
     'payment-method-unavailable-for-currency': ErrorPresentation(
       title: 'Moyen de paiement indisponible',
       message:
@@ -912,6 +972,8 @@ abstract final class ErrorCatalog {
   /// garde son texte de catalogue même si le serveur fournit un detail.
   static const Set<String> _serverDetailCodes = {
     'mobile-money-account-unsupported',
+    'topup-amount-out-of-range',
+    'topup-phone-unsupported',
   };
 
   /// Resolves an exception to its presentation. Never returns null:

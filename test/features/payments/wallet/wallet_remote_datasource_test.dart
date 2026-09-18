@@ -238,6 +238,166 @@ void main() {
     });
   });
 
+  group('topupProvidersProbe', () {
+    test('poste sur /wallet/topup/providers SANS corps', () async {
+      when(() => mockDio.post<dynamic>('/wallet/topup/providers')).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(path: '/wallet/topup/providers'),
+          statusCode: 200,
+          data: <String, dynamic>{},
+        ),
+      );
+
+      await datasource.topupProvidersProbe();
+
+      verify(() => mockDio.post<dynamic>('/wallet/topup/providers')).called(1);
+    });
+  });
+
+  group('topupProviders', () {
+    test('poste le numéro sur /wallet/topup/providers', () async {
+      when(
+        () => mockDio.post<dynamic>(
+          '/wallet/topup/providers',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(path: '/wallet/topup/providers'),
+          statusCode: 200,
+          data: {
+            'country': 'CI',
+            'currency': 'XOF',
+            'msisdnMasked': '+225 •• •• 56 78',
+            'detected': 'ORANGE_CIV',
+            'providers': <dynamic>[],
+          },
+        ),
+      );
+
+      final result = await datasource.topupProviders('+2250700000000');
+
+      expect(result['currency'], 'XOF');
+      verify(
+        () => mockDio.post<dynamic>(
+          '/wallet/topup/providers',
+          data: {'phoneNumber': '+2250700000000'},
+        ),
+      ).called(1);
+    });
+  });
+
+  group('topupMobileMoney', () {
+    Response<dynamic> okResponse() => Response(
+      requestOptions: RequestOptions(path: '/wallet/topup'),
+      statusCode: 200,
+      data: {
+        'topupId': 't-1',
+        'currency': 'XOF',
+        'provider': 'ORANGE_CIV',
+        'providerLabel': 'Orange Money',
+        'msisdnMasked': '+225 •• •• 56 78',
+      },
+    );
+
+    test(
+      'force paymentMethod MOBILE_MONEY et omet provider quand null',
+      () async {
+        when(
+          () =>
+              mockDio.post<dynamic>('/wallet/topup', data: any(named: 'data')),
+        ).thenAnswer((_) async => okResponse());
+
+        final result = await datasource.topupMobileMoney(
+          amount: 5000,
+          phoneNumber: '+2250700000000',
+        );
+
+        expect(result['topupId'], 't-1');
+        verify(
+          () => mockDio.post<dynamic>(
+            '/wallet/topup',
+            data: {
+              'amount': 5000.0,
+              'paymentMethod': 'MOBILE_MONEY',
+              'phoneNumber': '+2250700000000',
+            },
+          ),
+        ).called(1);
+      },
+    );
+
+    test('provider transmis quand fourni', () async {
+      when(
+        () => mockDio.post<dynamic>('/wallet/topup', data: any(named: 'data')),
+      ).thenAnswer((_) async => okResponse());
+
+      await datasource.topupMobileMoney(
+        amount: 5000,
+        phoneNumber: '+2250700000000',
+        provider: 'WAVE_CIV',
+      );
+
+      verify(
+        () => mockDio.post<dynamic>(
+          '/wallet/topup',
+          data: {
+            'amount': 5000.0,
+            'paymentMethod': 'MOBILE_MONEY',
+            'phoneNumber': '+2250700000000',
+            'provider': 'WAVE_CIV',
+          },
+        ),
+      ).called(1);
+    });
+
+    test('le montant est arrondi à 2 décimales avant l\'envoi', () async {
+      when(
+        () => mockDio.post<dynamic>('/wallet/topup', data: any(named: 'data')),
+      ).thenAnswer((_) async => okResponse());
+
+      await datasource.topupMobileMoney(
+        amount: 5000.456,
+        phoneNumber: '+2250700000000',
+      );
+
+      final data =
+          verify(
+                () => mockDio.post<dynamic>(
+                  '/wallet/topup',
+                  data: captureAny(named: 'data'),
+                ),
+              ).captured.single
+              as Map<String, dynamic>;
+      expect(data['amount'], 5000.46);
+    });
+  });
+
+  group('topupStatus', () {
+    test('appelle GET /wallet/topup/{id}/status', () async {
+      when(() => mockDio.get<dynamic>('/wallet/topup/t-1/status')).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(path: '/wallet/topup/t-1/status'),
+          statusCode: 200,
+          data: {
+            'topupId': 't-1',
+            'status': 'PENDING',
+            'amount': 5000.0,
+            'currency': 'XOF',
+            'provider': 'ORANGE_CIV',
+            'providerLabel': 'Orange Money',
+            'msisdnMasked': '+225 •• •• 56 78',
+          },
+        ),
+      );
+
+      final result = await datasource.topupStatus('t-1');
+
+      expect(result['status'], 'PENDING');
+      verify(() => mockDio.get<dynamic>('/wallet/topup/t-1/status')).called(1);
+    });
+  });
+
   test('le datasource ne convertit rien : la DioException remonte telle '
       'quelle (le repository seul la traduit)', () async {
     when(() => mockDio.get<dynamic>('/wallet/balance')).thenThrow(

@@ -12,7 +12,10 @@ import 'package:dony/core/widgets/dony_keypad.dart';
 import 'package:dony/features/payments/bloc/payment_sheet_bloc.dart';
 import 'package:dony/features/payments/presentation/widgets/dony_payment_sheet.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
+import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_cubit.dart';
+import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_state.dart';
 import 'package:dony/features/payments/wallet/data/repositories/wallet_repository.dart';
+import 'package:dony/features/payments/wallet/presentation/screens/wallet_topup_mobile_money_awaiting_args.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -23,12 +26,32 @@ import 'package:go_router/go_router.dart';
 /// convertit systématiquement vers l'EUR via `unitsPerEur` pour bloquer côté
 /// client avant l'appel réseau, plutôt que de laisser Stripe renvoyer une
 /// erreur.
+///
+/// Ne s'applique jamais au mobile money (voir [WalletTopupAmountScreen.
+/// mobileMoneyPhoneNumber]) : le backend n'expose aucune borne min/max pour
+/// ce rail, une borne devinée ici serait fausse. Le serveur reste seul
+/// décideur (422 `topup-amount-out-of-range`).
 const double _minTopupEur = 5.0;
 
 class WalletTopupAmountScreen extends StatefulWidget {
   final String paymentMethod;
 
-  const WalletTopupAmountScreen({super.key, required this.paymentMethod});
+  /// Numéro payeur déjà confirmé à l'étape précédente — non nul quand
+  /// [paymentMethod] vaut `'MOBILE_MONEY'`.
+  final String? mobileMoneyPhoneNumber;
+
+  /// Devise renvoyée par le catalogue d'opérateurs — non nulle quand
+  /// [paymentMethod] vaut `'MOBILE_MONEY'`. Remplace la devise active pour
+  /// cet écran : le solde est toujours crédité dans la devise de
+  /// l'opérateur, jamais dans la devise préférée de l'utilisateur.
+  final String? mobileMoneyCurrency;
+
+  const WalletTopupAmountScreen({
+    super.key,
+    required this.paymentMethod,
+    this.mobileMoneyPhoneNumber,
+    this.mobileMoneyCurrency,
+  });
 
   @override
   State<WalletTopupAmountScreen> createState() =>
@@ -46,7 +69,14 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
   /// un utilisateur dont le wallet est dans une autre devise.
   SupportedCurrency? _walletCurrency;
 
-  static const _quickAmounts = [10, 20, 50, 100];
+  /// Raccourcis de montant adaptés à la devise : 10/20/50/100 n'a aucun sens
+  /// en franc CFA (100 F CFA ≈ 0,15 €). Une devise sans décimale reçoit donc
+  /// des montants entiers plausibles pour elle.
+  List<int> get _quickAmounts => _currency.minorUnit == 0
+      ? const [1000, 2000, 5000, 10000]
+      : const [10, 20, 50, 100];
+
+  bool get _isMobileMoney => widget.paymentMethod == 'MOBILE_MONEY';
 
   @override
   void initState() {
@@ -59,6 +89,11 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
         getIt<AnalyticsService>().logEvent(AnalyticsEvents.walletTopupStarted),
       );
     });
+    // Le mobile money n'AFFICHE jamais la devise du wallet (c'est celle du
+    // catalogue d'opérateurs, déjà connue via
+    // [widget.mobileMoneyCurrency]), mais il a besoin de la connaître pour
+    // avertir quand l'opérateur crédite une autre devise que la devise
+    // active — un solde qui arriverait alors verrouillé.
     unawaited(_loadWalletCurrency());
   }
 
@@ -85,8 +120,16 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
     _ => widget.paymentMethod,
   };
 
-  SupportedCurrency get _currency =>
-      _walletCurrency ?? ActiveCurrency.current ?? SupportedCurrency.eur;
+  SupportedCurrency get _currency => _isMobileMoney
+      ? SupportedCurrency.fromCodeOrDefault(widget.mobileMoneyCurrency)
+      : _activeCurrency ?? SupportedCurrency.eur;
+
+  /// Devise active du portefeuille : celle du serveur dès qu'elle est
+  /// chargée, sinon le cache de préférence. `null` tant qu'aucune des deux
+  /// n'est connue — on ne devine alors rien, et aucun avertissement de
+  /// devise n'est affiché.
+  SupportedCurrency? get _activeCurrency =>
+      _walletCurrency ?? ActiveCurrency.current;
 
   void _onDigit(String d) {
     // Max 6 chiffres, pas de 0 en tête
@@ -176,6 +219,14 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Chemin Stripe intact (parcours et tests inchangés) : la branche mobile
+    // money vit entièrement dans _buildMobileMoney, avec son propre bloc
+    // (WalletTopupMobileMoneyCubit) — jamais WalletBloc, absent de l'arbre
+    // pour cette méthode de paiement.
+    return _isMobileMoney ? _buildMobileMoney(context) : _buildStripe(context);
+  }
+
+  Widget _buildStripe(BuildContext context) {
     final tt = Theme.of(context).textTheme;
 
     return BlocListener<WalletBloc, WalletState>(
@@ -280,6 +331,201 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  /// Étape 2/2 mobile money : mêmes `_AmountDisplay`/`_QuickAmountRow`/
+  /// `DonyKeypad` que Stripe, mais liés à [WalletTopupMobileMoneyCubit]
+  /// (jamais [WalletBloc]). `initiate()` déclenche la recharge ; la
+  /// transition vers [WalletTopupMobileMoneyAwaiting] pousse l'écran
+  /// d'attente en remplaçant cet écran de montant dans la pile
+  /// (`pushReplacement`) — un `pop()` depuis l'attente revient alors
+  /// directement à l'écran de choix, pas à cet écran de montant.
+  Widget _buildMobileMoney(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final currency = _currency;
+    final activeCurrency = _activeCurrency;
+    final phoneNumber = widget.mobileMoneyPhoneNumber ?? '';
+
+    return BlocListener<
+      WalletTopupMobileMoneyCubit,
+      WalletTopupMobileMoneyState
+    >(
+      listenWhen: (previous, current) =>
+          previous.runtimeType != current.runtimeType,
+      listener: (context, state) {
+        switch (state) {
+          case WalletTopupMobileMoneyAwaiting():
+            context.pushReplacement(
+              '/payments/wallet/topup/mobile-money/awaiting',
+              extra: WalletTopupMobileMoneyAwaitingArgs(
+                cubit: context.read<WalletTopupMobileMoneyCubit>(),
+                phoneNumber: phoneNumber,
+                amount: _amount,
+              ),
+            );
+          case final WalletTopupMobileMoneyError e:
+            unawaited(ErrorPresenter.show(context, e.error));
+          default:
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        appBar: AppBar(
+          backgroundColor: DonyColors.blue700,
+          foregroundColor: DonyColors.neutral0,
+          elevation: 0,
+          surfaceTintColor: Colors.transparent,
+          centerTitle: false,
+          leading: const DonyAppBarBackButton(),
+          title: Text(
+            'Recharger · Étape 2/2',
+            style: tt.headlineLarge?.copyWith(
+              color: DonyColors.neutral0,
+              fontSize: 17,
+            ),
+          ),
+          bottom: const PreferredSize(
+            preferredSize: Size.fromHeight(4),
+            child: _StepProgressBar(value: 1.0, color: DonyColors.blue300),
+          ),
+        ),
+        body: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(
+                  DonySpacing.lg,
+                  DonySpacing.xxl,
+                  DonySpacing.lg,
+                  DonySpacing.xl,
+                ),
+                child: Column(
+                  children: [
+                    _AmountDisplay(
+                          displayAmount: _displayAmount,
+                          currency: currency,
+                        )
+                        .animate()
+                        .fadeIn(duration: 250.ms)
+                        .slideY(begin: -0.05, curve: Curves.easeOutCubic),
+
+                    const SizedBox(height: DonySpacing.xl),
+
+                    Text(
+                      'Le solde Yadony sera crédité en ${currency.code} après confirmation.',
+                      textAlign: TextAlign.center,
+                      style: tt.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    if (currency.minorUnit == 0) ...[
+                      const SizedBox(height: DonySpacing.xs),
+                      Text(
+                        'Le ${currency.symbol} ne connaît pas les centimes : '
+                        'indique un montant entier.',
+                        textAlign: TextAlign.center,
+                        style: tt.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                    // La recharge crédite la devise de l'opérateur. Si ce
+                    // n'est pas la devise active du portefeuille, le solde
+                    // arrive VERROUILLÉ : « Recharge confirmée » au-dessus
+                    // d'un solde inchangé. On le dit avant de payer.
+                    if (activeCurrency != null &&
+                        activeCurrency.code != currency.code) ...[
+                      const SizedBox(height: DonySpacing.base),
+                      DonyStatusBanner(
+                        key: const Key('wallet-topup-currency-mismatch'),
+                        type: DonyStatusBannerType.warning,
+                        iconAsset: 'circle-alert',
+                        message:
+                            'Ton portefeuille est en ${activeCurrency.code}. '
+                            'Ce montant sera crédité en ${currency.code} et '
+                            'ne sera utilisable qu\'en changeant la devise '
+                            'active dans Préférences.',
+                      ),
+                    ],
+
+                    _QuickAmountRow(
+                          amounts: _quickAmounts,
+                          currentAmount: _amount,
+                          currency: currency,
+                          onSelect: _setQuickAmount,
+                        )
+                        .animate(delay: 60.ms)
+                        .fadeIn(duration: 250.ms)
+                        .slideY(begin: 0.04, curve: Curves.easeOutCubic),
+
+                    const SizedBox(height: DonySpacing.xxl),
+
+                    DonyKeypad(onDigit: _onDigit, onDelete: _onDelete),
+                  ],
+                ),
+              ),
+            ),
+            _MobileMoneyStickyButton(
+              amount: _amount,
+              currency: currency,
+              phoneNumber: phoneNumber,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Sticky bottom CTA (mobile money) ─────────────────────────────────────────
+
+class _MobileMoneyStickyButton extends StatelessWidget {
+  const _MobileMoneyStickyButton({
+    required this.amount,
+    required this.currency,
+    required this.phoneNumber,
+  });
+
+  final double amount;
+  final SupportedCurrency currency;
+  final String phoneNumber;
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<
+      WalletTopupMobileMoneyCubit,
+      WalletTopupMobileMoneyState
+    >(
+      builder: (context, state) {
+        final isLoading = state is WalletTopupMobileMoneyInitiating;
+        final canSubmit = amount > 0 && !isLoading && phoneNumber.isNotEmpty;
+
+        final label = isLoading
+            ? 'Traitement en cours…'
+            : amount <= 0
+            ? 'Entrez un montant'
+            : 'Payer ${amount.toInt()} ${currency.symbol}';
+
+        return Padding(
+          padding: EdgeInsets.fromLTRB(
+            DonySpacing.lg,
+            0,
+            DonySpacing.lg,
+            MediaQuery.paddingOf(context).bottom + DonySpacing.lg,
+          ),
+          child: DonyButton(
+            label: label,
+            isLoading: isLoading,
+            onPressed: canSubmit
+                ? () => context.read<WalletTopupMobileMoneyCubit>().initiate(
+                    amount: amount,
+                    phoneNumber: phoneNumber,
+                  )
+                : null,
+          ),
+        );
+      },
     );
   }
 }

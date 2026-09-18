@@ -216,4 +216,218 @@ void main() {
       await expectLater(repo.getRefundRequests(), throwsA(isA<AppException>()));
     });
   });
+
+  group('isMobileMoneyTopupAvailable', () {
+    /// L'intercepteur pose l'AppException (code métier du ProblemDetail)
+    /// dans `DioException.error` : c'est ce que `unwrapDioError` relit.
+    DioException wrapped(AppException e) => DioException(
+      requestOptions: RequestOptions(path: '/wallet/topup/providers'),
+      error: e,
+    );
+
+    test('CRITIQUE — 422 topup-phone-required : la route existe, le rail est '
+        'servi (la sonde sans corps échoue TOUJOURS ainsi)', () async {
+      when(() => mockDatasource.topupProvidersProbe()).thenThrow(
+        wrapped(
+          const ValidationException(
+            'Indiquez le numéro mobile money qui paie la recharge.',
+            code: 'topup-phone-required',
+          ),
+        ),
+      );
+
+      expect(await repo.isMobileMoneyTopupAvailable(), isTrue);
+    });
+
+    test('422 mobile-money-invalid-phone : rail servi aussi', () async {
+      when(() => mockDatasource.topupProvidersProbe()).thenThrow(
+        wrapped(
+          const ValidationException(
+            'Numéro invalide',
+            code: 'mobile-money-invalid-phone',
+          ),
+        ),
+      );
+
+      expect(await repo.isMobileMoneyTopupAvailable(), isTrue);
+    });
+
+    test('mobile-money-disabled : rail non servi', () async {
+      when(() => mockDatasource.topupProvidersProbe()).thenThrow(
+        wrapped(
+          const ValidationException(
+            'Rail désactivé',
+            code: 'mobile-money-disabled',
+          ),
+        ),
+      );
+
+      expect(await repo.isMobileMoneyTopupAvailable(), isFalse);
+    });
+
+    test('404 (backend sans le lot 2) : rail non servi, sans lever', () async {
+      when(() => mockDatasource.topupProvidersProbe()).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(path: '/wallet/topup/providers'),
+          response: Response(
+            requestOptions: RequestOptions(path: '/wallet/topup/providers'),
+            statusCode: 404,
+          ),
+        ),
+      );
+
+      expect(await repo.isMobileMoneyTopupAvailable(), isFalse);
+    });
+
+    test('403 : rail non servi', () async {
+      when(
+        () => mockDatasource.topupProvidersProbe(),
+      ).thenThrow(wrapped(const ForbiddenException()));
+
+      expect(await repo.isMobileMoneyTopupAvailable(), isFalse);
+    });
+
+    test('erreur réseau : rail non servi', () async {
+      when(
+        () => mockDatasource.topupProvidersProbe(),
+      ).thenThrow(wrapped(const OfflineException()));
+
+      expect(await repo.isMobileMoneyTopupAvailable(), isFalse);
+    });
+
+    test('succès inattendu (corps accepté) : rail servi', () async {
+      when(() => mockDatasource.topupProvidersProbe()).thenAnswer((_) async {});
+
+      expect(await repo.isMobileMoneyTopupAvailable(), isTrue);
+    });
+  });
+
+  group('topupProviders', () {
+    test(
+      'délègue au datasource et mappe en MobileMoneyProviderCatalog',
+      () async {
+        when(() => mockDatasource.topupProviders('+2250700000000')).thenAnswer(
+          (_) async => {
+            'country': 'CI',
+            'currency': 'XOF',
+            'msisdnMasked': '+225 •• •• 56 78',
+            'detected': 'ORANGE_CIV',
+            'providers': [
+              {'code': 'ORANGE_CIV', 'label': 'Orange Money', 'detected': true},
+            ],
+          },
+        );
+
+        final result = await repo.topupProviders('+2250700000000');
+
+        expect(result.country, 'CI');
+        expect(result.currency, 'XOF');
+        expect(result.detected, 'ORANGE_CIV');
+        expect(result.providers, hasLength(1));
+        verify(() => mockDatasource.topupProviders('+2250700000000')).called(1);
+      },
+    );
+
+    test('une DioException est convertie en AppException', () async {
+      when(() => mockDatasource.topupProviders('+2250700000000')).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(path: '/wallet/topup/providers'),
+          error: const NetworkException('Erreur réseau'),
+        ),
+      );
+
+      await expectLater(
+        repo.topupProviders('+2250700000000'),
+        throwsA(isA<AppException>()),
+      );
+    });
+  });
+
+  group('topupMobileMoney', () {
+    test('délègue au datasource et mappe en WalletTopupModel', () async {
+      when(
+        () => mockDatasource.topupMobileMoney(
+          amount: any(named: 'amount'),
+          phoneNumber: any(named: 'phoneNumber'),
+          provider: any(named: 'provider'),
+        ),
+      ).thenAnswer(
+        (_) async => {
+          'topupId': 't-1',
+          'currency': 'XOF',
+          'provider': 'ORANGE_CIV',
+          'providerLabel': 'Orange Money',
+          'msisdnMasked': '+225 •• •• 56 78',
+        },
+      );
+
+      final result = await repo.topupMobileMoney(
+        amount: 5000,
+        phoneNumber: '+2250700000000',
+        provider: 'ORANGE_CIV',
+      );
+
+      expect(result.topupId, 't-1');
+      expect(result.provider, 'ORANGE_CIV');
+      verify(
+        () => mockDatasource.topupMobileMoney(
+          amount: 5000,
+          phoneNumber: '+2250700000000',
+          provider: 'ORANGE_CIV',
+        ),
+      ).called(1);
+    });
+
+    test('une DioException est convertie en AppException', () async {
+      when(
+        () => mockDatasource.topupMobileMoney(
+          amount: any(named: 'amount'),
+          phoneNumber: any(named: 'phoneNumber'),
+          provider: any(named: 'provider'),
+        ),
+      ).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(path: '/wallet/topup'),
+          error: const NetworkException('Erreur réseau'),
+        ),
+      );
+
+      await expectLater(
+        repo.topupMobileMoney(amount: 5000, phoneNumber: '+2250700000000'),
+        throwsA(isA<AppException>()),
+      );
+    });
+  });
+
+  group('topupStatus', () {
+    test('délègue au datasource et mappe en WalletTopupStatusModel', () async {
+      when(() => mockDatasource.topupStatus('t-1')).thenAnswer(
+        (_) async => {
+          'topupId': 't-1',
+          'status': 'PENDING',
+          'amount': 5000.0,
+          'currency': 'XOF',
+          'provider': 'ORANGE_CIV',
+          'providerLabel': 'Orange Money',
+          'msisdnMasked': '+225 •• •• 56 78',
+        },
+      );
+
+      final result = await repo.topupStatus('t-1');
+
+      expect(result.status, 'PENDING');
+      verify(() => mockDatasource.topupStatus('t-1')).called(1);
+    });
+
+    test('une DioException est convertie en AppException', () async {
+      when(() => mockDatasource.topupStatus('t-1')).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(path: '/wallet/topup/t-1/status'),
+          error: const NetworkException('Erreur réseau'),
+        ),
+      );
+
+      await expectLater(repo.topupStatus('t-1'), throwsA(isA<AppException>()));
+    });
+  });
 }

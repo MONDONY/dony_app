@@ -6,6 +6,7 @@ import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_refund_request_cubit.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_currency_balance_model.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_model.dart';
+import 'package:dony/features/payments/wallet/data/models/wallet_topup_status_model.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_transaction_model.dart';
 import 'package:dony/features/payments/wallet/presentation/widgets/wallet_refund_confirm_sheet.dart';
 import 'package:dony/features/payments/wallet/presentation/widgets/wallet_refund_selection_sheet.dart';
@@ -16,17 +17,35 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 class WalletScreen extends StatefulWidget {
-  const WalletScreen({super.key});
+  const WalletScreen({super.key, this.topupConfirmed});
+
+  /// Statut de la recharge mobile money qui vient d'aboutir, transmis par
+  /// l'écran d'attente via `context.go('/payments/wallet', extra: {...})`.
+  /// Affiché une seule fois (bandeau de confirmation) : jamais relu au
+  /// rebuild, seul l'`initState` de cet écran le prend en compte.
+  final WalletTopupStatusModel? topupConfirmed;
 
   @override
   State<WalletScreen> createState() => _WalletScreenState();
 }
 
 class _WalletScreenState extends State<WalletScreen> {
+  /// Vit dans ce `State`, pas dans un bottom sheet : pas de contrainte
+  /// `whenComplete`. Un seul écrit possible, le tap sur la croix du
+  /// bandeau, qui survient forcément avant que ce `State` ne soit détruit.
+  late final ValueNotifier<WalletTopupStatusModel?> _topupBanner =
+      ValueNotifier(widget.topupConfirmed);
+
   @override
   void initState() {
     super.initState();
     context.read<WalletBloc>().add(WalletLoadRequested());
+  }
+
+  @override
+  void dispose() {
+    _topupBanner.dispose();
+    super.dispose();
   }
 
   @override
@@ -38,7 +57,10 @@ class _WalletScreenState extends State<WalletScreen> {
           return switch (state) {
             WalletInitial() || WalletLoading() => const _LoadingView(),
             WalletError(:final message) => _ErrorView(message: message),
-            WalletLoaded(:final wallet) => _LoadedView(wallet: wallet),
+            WalletLoaded(:final wallet) => _LoadedView(
+              wallet: wallet,
+              topupBanner: _topupBanner,
+            ),
             _ => const SizedBox.shrink(),
           };
         },
@@ -147,9 +169,22 @@ class _ErrorView extends StatelessWidget {
 // ─── Loaded ───────────────────────────────────────────────────────────────────
 
 class _LoadedView extends StatelessWidget {
-  const _LoadedView({required this.wallet});
+  const _LoadedView({required this.wallet, required this.topupBanner});
 
   final WalletModel wallet;
+  final ValueNotifier<WalletTopupStatusModel?> topupBanner;
+
+  /// Il y a bien un montant remboursable, mais les frais de remboursement le
+  /// ramènent à zéro : rien à demander, et la raison mérite d'être dite.
+  /// `null` des deux côtés (ancien contrat back) ne déclenche jamais rien.
+  static bool _refundFullyAbsorbedByFees(WalletModel wallet) {
+    final balance = wallet.activeBalance;
+    if (balance == null || !wallet.refundEligible) return false;
+    final gross = balance.refundableAmount;
+    final net = balance.refundNetAmount;
+    if (gross == null || net == null) return false;
+    return gross > 0 && net <= 0;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -212,9 +247,68 @@ class _LoadedView extends StatelessWidget {
                 refundEligible: wallet.refundEligible,
                 refundableAmount: wallet.activeBalance?.refundableAmount,
                 nonRefundableAmount: wallet.activeBalance?.nonRefundableAmount,
+                refundFeeAmount: wallet.activeBalance?.refundFeeAmount,
+                refundNetAmount: wallet.activeBalance?.refundNetAmount,
               ),
             ),
           ),
+
+          // ── Bandeau de confirmation d'une recharge mobile money ──────────────
+          SliverToBoxAdapter(
+            child: ValueListenableBuilder<WalletTopupStatusModel?>(
+              valueListenable: topupBanner,
+              builder: (context, status, _) {
+                if (status == null) {
+                  return const SizedBox.shrink();
+                }
+                final topupCurrency = SupportedCurrency.fromCodeOrDefault(
+                  status.currency,
+                );
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    DonySpacing.lg,
+                    DonySpacing.lg,
+                    DonySpacing.lg,
+                    0,
+                  ),
+                  child: DonyStatusBanner(
+                    type: DonyStatusBannerType.success,
+                    iconAsset: 'circle-check',
+                    message:
+                        'Recharge de '
+                        '${CurrencyFormatter.format(status.amount, topupCurrency)} '
+                        'confirmée par ${status.providerLabel}.',
+                    onDismiss: () => topupBanner.value = null,
+                  ),
+                );
+              },
+            ),
+          ),
+
+          // ── Solde remboursable entièrement absorbé par les frais ────────────
+          // Le bouton « Rembourser » disparaît dans ce cas (net à 0) : sans
+          // un mot, l'utilisateur ne comprend pas pourquoi. On le dit,
+          // plutôt que de masquer en silence.
+          if (_refundFullyAbsorbedByFees(wallet))
+            const SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  DonySpacing.lg,
+                  DonySpacing.lg,
+                  DonySpacing.lg,
+                  0,
+                ),
+                child: DonyStatusBanner(
+                  key: Key('wallet-refund-absorbed-by-fees'),
+                  type: DonyStatusBannerType.info,
+                  iconAsset: 'circle-alert',
+                  message:
+                      'Ce solde ne peut pas être remboursé : les frais du '
+                      'prestataire de paiement l\'absorbent entièrement. Il '
+                      'reste utilisable pour payer vos envois.',
+                ),
+              ),
+            ),
 
           // ── Locked (non-active currency) balances ────────────────────────────
           if (lockedBalances.isNotEmpty)
@@ -309,6 +403,8 @@ class _HeroHeader extends StatelessWidget {
     required this.refundEligible,
     this.refundableAmount,
     this.nonRefundableAmount,
+    this.refundFeeAmount,
+    this.refundNetAmount,
   });
 
   final double balance;
@@ -316,14 +412,17 @@ class _HeroHeader extends StatelessWidget {
   final bool refundEligible;
   final double? refundableAmount;
   final double? nonRefundableAmount;
+  final double? refundFeeAmount;
+  final double? refundNetAmount;
 
-  /// « Rembourser » n'apparaît que s'il y a quelque chose à rembourser.
-  /// `refundableAmount` absent = ancien contrat back : on garde l'affichage
-  /// sur le seul `refundEligible`, la sheet de sélection sert de repli.
-  bool get _canRefund {
-    final refundable = refundableAmount;
-    return refundEligible && (refundable == null || refundable > 0);
-  }
+  /// « Rembourser » n'apparaît que s'il y a quelque chose à rembourser une
+  /// fois les frais retenus. `refundNetAmount` prime quand il est connu (les
+  /// frais de remboursement mobile money peuvent ramener le net à zéro même
+  /// si le brut est positif) ; sinon repli sur `refundableAmount` comme
+  /// avant, `null` sur les deux (ancien contrat back) laissant l'affichage
+  /// géré par le seul `refundEligible`.
+  bool get _canRefund =>
+      refundEligible && (refundNetAmount ?? refundableAmount ?? 1) > 0;
 
   @override
   Widget build(BuildContext context) {
@@ -429,13 +528,15 @@ class _HeroHeader extends StatelessWidget {
           label: 'Rembourser',
           onTap: () {
             final refundable = refundableAmount;
-            // `_canRefund` garantit ici un montant strictement positif.
+            // `_canRefund` garantit ici un montant net strictement positif.
             if (refundable != null) {
               WalletRefundConfirmSheet.show(
                 context,
                 currency: currency.code,
                 refundableAmount: refundable,
                 nonRefundableAmount: nonRefundableAmount ?? 0,
+                feeAmount: refundFeeAmount,
+                netAmount: refundNetAmount,
               );
             } else {
               // Ancien contrat back : sélection de recharges intactes.
@@ -533,7 +634,13 @@ class _TxTile extends StatelessWidget {
   final SupportedCurrency currency;
   final int index;
 
+  // Le back n'expose ni l'opérateur ni le numéro sur les lignes de
+  // transaction (contrairement à `WalletTopupStatusModel`, propre au
+  // sondage de la recharge en cours) : impossible d'afficher
+  // « Recharge {providerLabel} · {msisdnMasked} », seul `isMobileMoneyTopup`
+  // (dérivé du préfixe `pawapay:` du `paymentRef`) distingue le rail.
   String get _label => switch (tx.type) {
+    'TOP_UP' when tx.isMobileMoneyTopup => 'Recharge mobile money',
     'TOP_UP' => 'Recharge',
     'BID_PAYMENT' => 'Paiement colis',
     'COMMISSION_DEDUCTED' => 'Commission',

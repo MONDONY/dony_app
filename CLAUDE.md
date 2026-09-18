@@ -368,6 +368,8 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `message_blocked` | ChatScreen._sendText() — message refusé par ChatMessageValidator (propriété `reason`) |
 | `wallet_topup_started` | WalletTopupAmountScreen.initState |
 | `wallet_topup_completed` | WalletBloc (après topup réussi) |
+| `wallet_topup_mobile_money_initiated` | WalletTopupMobileMoneyCubit.initiate() — dépôt pawaPay lancé pour une recharge du portefeuille, avant confirmation (propriétés `provider`, `currency`). Jamais le montant ni le numéro de téléphone, même masqué |
+| `wallet_topup_mobile_money_confirmed` | WalletTopupMobileMoneyCubit._poll() — recharge confirmée par pawaPay, portefeuille crédité, une seule fois par recharge (mêmes propriétés `provider`, `currency`) |
 | `disputes_opened` | DisputeListBloc._onLoad — premier chargement de « Mes litiges » (propriété `count`) |
 | `dispute_detail_opened` | DisputeDetailScreen.initState — ouverture du détail d'un litige (propriété `status`) |
 | `rating_submitted` | RatingBloc._onSubmit()/_onTravelerSubmit() |
