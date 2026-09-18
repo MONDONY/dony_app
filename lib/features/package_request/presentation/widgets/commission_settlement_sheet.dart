@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/features/matching/data/models/commission_shortfall.dart';
+import 'package:dony/features/payments/wallet/presentation/commission_shortfall_text.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -21,6 +22,7 @@ Future<void> showCommissionSettlementSheet(
   required bool hasCard,
   required String currency,
   required void Function({required bool useCard}) onRetry,
+  CommissionShortfall? breakdown,
 }) {
   final cs = Theme.of(context).colorScheme;
   return DonyBottomSheet.show<void>(
@@ -29,22 +31,27 @@ Future<void> showCommissionSettlementSheet(
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Commission requise : ${formatPriceIn(requiredCommission, currency)}',
-          style: Theme.of(
-            context,
-          ).textTheme.bodyMedium?.copyWith(color: cs.onSurface),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          'Solde du portefeuille : ${formatPriceIn(availableBalance, currency)}',
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-        ),
+        for (final (i, line) in commissionShortfallLines(
+          breakdown: breakdown,
+          requiredCommission: requiredCommission,
+          availableBalance: availableBalance,
+          currency: currency,
+        ).indexed) ...[
+          if (i > 0) const SizedBox(height: 4),
+          Text(
+            line,
+            style: i == 0
+                ? Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: cs.onSurface)
+                : Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+          ),
+        ],
         const SizedBox(height: 8),
         Text(
-          'Rechargez votre portefeuille ou payez la commission directement par carte.',
+          'Recharge ton portefeuille ou paie la commission directement par carte.',
           style: Theme.of(
             context,
           ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),

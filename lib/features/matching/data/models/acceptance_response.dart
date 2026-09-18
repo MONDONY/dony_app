@@ -1,3 +1,5 @@
+import 'package:dony/features/matching/data/models/commission_shortfall.dart';
+
 enum AcceptanceStatus { accepted, requires3ds, insufficientWallet, failed }
 
 class AcceptanceResponse {
@@ -9,6 +11,7 @@ class AcceptanceResponse {
   final double? requiredCommission;
   final bool? hasCard;
   final String? currency;
+  final CommissionShortfall? breakdown;
 
   const AcceptanceResponse({
     required this.status,
@@ -19,6 +22,7 @@ class AcceptanceResponse {
     this.requiredCommission,
     this.hasCard,
     this.currency,
+    this.breakdown,
   });
 
   factory AcceptanceResponse.fromJson(Map<String, dynamic> json) {
@@ -37,6 +41,11 @@ class AcceptanceResponse {
       requiredCommission: (json['requiredCommission'] as num?)?.toDouble(),
       hasCard: json['hasCard'] as bool?,
       currency: json['currency'] as String?,
+      breakdown: json['breakdown'] is Map<String, dynamic>
+          ? CommissionShortfall.fromJson(
+              json['breakdown'] as Map<String, dynamic>,
+            )
+          : null,
     );
   }
 }

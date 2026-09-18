@@ -6,6 +6,7 @@ import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/data/models/acceptance_response.dart';
+import 'package:dony/features/matching/data/models/commission_shortfall.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/negotiation_repository.dart';
@@ -465,12 +466,14 @@ class NegotiationCommissionInsufficientWallet extends NegotiationState {
     required this.hasCard,
     required this.threadId,
     this.currency,
+    this.breakdown,
   });
   final double availableBalance;
   final double requiredCommission;
   final bool hasCard;
   final String threadId;
   final String? currency;
+  final CommissionShortfall? breakdown;
   @override
   List<Object?> get props => [
     availableBalance,
@@ -478,6 +481,7 @@ class NegotiationCommissionInsufficientWallet extends NegotiationState {
     hasCard,
     threadId,
     currency,
+    breakdown,
   ];
 }
 
@@ -1058,6 +1062,7 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
             hasCard: r.hasCard ?? false,
             threadId: threadId,
             currency: r.currency,
+            breakdown: r.breakdown,
           ),
         );
         return;
