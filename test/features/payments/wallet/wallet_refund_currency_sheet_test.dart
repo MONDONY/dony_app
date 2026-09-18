@@ -34,7 +34,10 @@ void main() {
             body: DonyButton(
               label: 'Ouvrir',
               onPressed: () {
-                result = WalletRefundCurrencySheet.show(context, balances: const [eur, xof]);
+                result = WalletRefundCurrencySheet.show(
+                  context,
+                  balances: const [eur, xof],
+                );
                 result.then((v) => chosen = v);
               },
             ),
@@ -47,7 +50,9 @@ void main() {
     return Future.value(chosen);
   }
 
-  testWidgets('liste une ligne par devise éligible avec brut, frais et net', (tester) async {
+  testWidgets('liste une ligne par devise éligible avec brut, frais et net', (
+    tester,
+  ) async {
     await pumpAndOpen(tester);
 
     expect(find.text('Quelle devise rembourser ?'), findsOneWidget);
@@ -63,7 +68,9 @@ void main() {
     expect(find.widgetWithText(DonyButton, 'Continuer'), findsOneWidget);
   });
 
-  testWidgets('le bouton reste inactif tant qu\'aucune devise n\'est choisie', (tester) async {
+  testWidgets('le bouton reste inactif tant qu\'aucune devise n\'est choisie', (
+    tester,
+  ) async {
     await pumpAndOpen(tester);
 
     final button = tester.widget<DonyButton>(
@@ -72,7 +79,9 @@ void main() {
     expect(button.onPressed, isNull);
   });
 
-  testWidgets('choisir une devise puis continuer renvoie ce solde', (tester) async {
+  testWidgets('choisir une devise puis continuer renvoie ce solde', (
+    tester,
+  ) async {
     WalletCurrencyBalanceModel? chosen;
     await tester.pumpWidget(
       MaterialApp(
@@ -81,7 +90,10 @@ void main() {
             body: DonyButton(
               label: 'Ouvrir',
               onPressed: () async {
-                chosen = await WalletRefundCurrencySheet.show(context, balances: const [eur, xof]);
+                chosen = await WalletRefundCurrencySheet.show(
+                  context,
+                  balances: const [eur, xof],
+                );
               },
             ),
           ),
