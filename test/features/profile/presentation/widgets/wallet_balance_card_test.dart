@@ -2,6 +2,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/widgets/dony_skeleton.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
+import 'package:dony/features/payments/wallet/data/models/wallet_currency_balance_model.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_model.dart';
 import 'package:dony/features/profile/presentation/widgets/wallet_balance_card.dart';
 import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
@@ -103,6 +104,80 @@ void main() {
     expect(find.textContaining('128,50'), findsOneWidget);
     expect(find.text('EUR'), findsWidgets);
     expect(find.text('Recharger'), findsOneWidget);
+  });
+
+  testWidgets(
+    'nouveau contrat, deux devises : total estimé et détail par devise',
+    (tester) async {
+      whenListen<WalletState>(
+        bloc,
+        const Stream.empty(),
+        initialState: WalletLoaded(
+          const WalletModel(
+            balance: 1.33,
+            currency: 'EUR',
+            estimatedTotal: 16.57,
+            transactions: [],
+            balances: [
+              WalletCurrencyBalanceModel(
+                currency: 'EUR',
+                balance: 1.33,
+                active: true,
+                estimatedInActive: 1.33,
+              ),
+              WalletCurrencyBalanceModel(
+                currency: 'XOF',
+                balance: 10000,
+                active: false,
+                estimatedInActive: 15.24,
+              ),
+            ],
+          ),
+        ),
+      );
+
+      await tester.pumpWidget(_wrap(bloc, prefsBloc));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Total estimé'), findsOneWidget);
+      expect(find.text('Solde'), findsNothing);
+      expect(find.textContaining('16,57'), findsOneWidget);
+      expect(find.byKey(const Key('profile-wallet-breakdown')), findsOneWidget);
+      expect(find.textContaining('10'), findsWidgets);
+      expect(find.text('Recharger'), findsOneWidget);
+    },
+  );
+
+  testWidgets('nouveau contrat, une seule devise : carte Solde classique', (
+    tester,
+  ) async {
+    whenListen<WalletState>(
+      bloc,
+      const Stream.empty(),
+      initialState: WalletLoaded(
+        const WalletModel(
+          balance: 40,
+          currency: 'EUR',
+          estimatedTotal: 40,
+          transactions: [],
+          balances: [
+            WalletCurrencyBalanceModel(
+              currency: 'EUR',
+              balance: 40,
+              active: true,
+              estimatedInActive: 40,
+            ),
+          ],
+        ),
+      ),
+    );
+
+    await tester.pumpWidget(_wrap(bloc, prefsBloc));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Solde'), findsOneWidget);
+    expect(find.text('Total estimé'), findsNothing);
+    expect(find.byKey(const Key('profile-wallet-breakdown')), findsNothing);
   });
 
   testWidgets('devise USD affichée telle quelle (pas de valeur en dur)', (

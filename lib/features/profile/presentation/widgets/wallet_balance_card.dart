@@ -3,6 +3,7 @@ import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
+import 'package:dony/features/payments/wallet/data/models/wallet_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -16,6 +17,11 @@ import 'package:go_router/go_router.dart';
 /// dérivée par le serveur du pays de l'utilisateur (Réglages › Préférences).
 /// Elle n'est pas modifiable directement depuis cette carte : changer de
 /// devise passe par le pays.
+///
+/// Plusieurs devises détenues (nouveau contrat, `estimatedTotal` présent) :
+/// la carte montre le même « Total estimé » que l'écran portefeuille, avec le
+/// détail par devise dessous, pour ne jamais contredire cet écran. Une seule
+/// devise, ou ancien back : solde de la devise active, comme avant.
 class WalletBalanceCard extends StatelessWidget {
   const WalletBalanceCard({super.key});
 
@@ -24,10 +30,7 @@ class WalletBalanceCard extends StatelessWidget {
     return BlocBuilder<WalletBloc, WalletState>(
       builder: (context, state) {
         return switch (state) {
-          WalletLoaded(:final wallet) => _LoadedCard(
-            balance: wallet.balance,
-            currency: wallet.currency,
-          ),
+          WalletLoaded(:final wallet) => _LoadedCard(wallet: wallet),
           WalletError() => _ErrorCard(
             onRetry: () =>
                 context.read<WalletBloc>().add(WalletLoadRequested()),
@@ -42,14 +45,18 @@ class WalletBalanceCard extends StatelessWidget {
 // ─── Carte chargée ──────────────────────────────────────────────────────────
 
 class _LoadedCard extends StatelessWidget {
-  const _LoadedCard({required this.balance, required this.currency});
+  const _LoadedCard({required this.wallet});
 
-  final double balance;
-  final String currency;
+  final WalletModel wallet;
+
+  bool get _multiCurrency =>
+      wallet.hasEstimate && wallet.heldBalances.length > 1;
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final currency = wallet.currency;
+    final shown = _multiCurrency ? wallet.estimatedTotal! : wallet.balance;
 
     return _CardShell(
       onTap: () async {
@@ -73,7 +80,7 @@ class _LoadedCard extends StatelessWidget {
               ),
               const SizedBox(width: DonySpacing.xs),
               Text(
-                'Solde',
+                _multiCurrency ? 'Total estimé' : 'Solde',
                 style: tt.bodySmall?.copyWith(
                   color: Colors.white.withValues(alpha: 0.75),
                   fontWeight: FontWeight.w600,
@@ -90,7 +97,7 @@ class _LoadedCard extends StatelessWidget {
                 children: [
                   Text(
                     CurrencyFormatter.formatAmountOnly(
-                      balance,
+                      shown,
                       SupportedCurrency.fromCodeOrDefault(currency),
                     ),
                     style: tt.displayLarge?.copyWith(
@@ -107,8 +114,29 @@ class _LoadedCard extends StatelessWidget {
               .animate()
               .fadeIn(duration: 250.ms)
               .slideY(begin: 0.08, curve: Curves.easeOutCubic),
+          if (_multiCurrency) ...[
+            const SizedBox(height: DonySpacing.xs),
+            // Détail par devise : l'argent reste dans chaque devise, le
+            // total n'est qu'une estimation au taux du jour.
+            Text(
+              wallet.heldBalances
+                  .map(
+                    (b) => CurrencyFormatter.format(
+                      b.balance,
+                      SupportedCurrency.fromCodeOrDefault(b.currency),
+                    ),
+                  )
+                  .join(' + '),
+              key: const Key('profile-wallet-breakdown'),
+              style: tt.bodySmall?.copyWith(
+                color: Colors.white.withValues(alpha: 0.75),
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
           const SizedBox(height: DonySpacing.md),
-          _RechargeButton(previousBalance: balance),
+          _RechargeButton(previousBalance: wallet.balance),
         ],
       ),
     );
