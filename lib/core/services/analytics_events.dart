@@ -229,6 +229,10 @@ abstract final class AnalyticsEvents {
   static const analyticsConsentChanged = 'analytics_consent_changed';
   static const accountDeletionRequested = 'account_deletion_requested';
   static const walletRefundRequested = 'wallet_refund_requested';
+
+  /// Devise choisie dans la sheet « Quelle devise rembourser ? » quand
+  /// plusieurs devises sont remboursables. Propriété `currency` uniquement.
+  static const walletRefundCurrencyChosen = 'wallet_refund_currency_chosen';
   static const phoneVisibilityToggled = 'phone_visibility_toggled';
   static const userBlocked = 'user_blocked';
   static const userUnblocked = 'user_unblocked';

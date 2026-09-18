@@ -866,6 +866,78 @@ void main() {
     },
   );
 
+  testWidgets('Rembourser visible quand seule une devise non active est éligible', (
+    tester,
+  ) async {
+    const wallet = WalletModel(
+      balance: 0,
+      currency: 'EUR',
+      estimatedTotal: 15.24,
+      transactions: [],
+      balances: [
+        WalletCurrencyBalanceModel(currency: 'EUR', balance: 0, active: true, estimatedInActive: 0),
+        WalletCurrencyBalanceModel(
+          currency: 'XOF',
+          balance: 10000,
+          active: false,
+          refundEligible: true,
+          refundableAmount: 10000,
+          refundFeeAmount: 100,
+          refundNetAmount: 9900,
+          estimatedInActive: 15.24,
+        ),
+      ],
+    );
+    whenListen(bloc, Stream.value(WalletLoaded(wallet)), initialState: WalletInitial());
+
+    await tester.pumpWidget(buildSubject(bloc, prefsBloc, refundCubit));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Rembourser'), findsOneWidget);
+  });
+
+  testWidgets('deux devises éligibles : tap Rembourser ouvre le choix de devise', (
+    tester,
+  ) async {
+    const wallet = WalletModel(
+      balance: 40,
+      currency: 'EUR',
+      refundEligible: true,
+      estimatedTotal: 55.24,
+      transactions: [],
+      balances: [
+        WalletCurrencyBalanceModel(
+          currency: 'EUR',
+          balance: 40,
+          active: true,
+          refundEligible: true,
+          refundableAmount: 40,
+          refundFeeAmount: 1.5,
+          refundNetAmount: 38.5,
+          estimatedInActive: 40,
+        ),
+        WalletCurrencyBalanceModel(
+          currency: 'XOF',
+          balance: 10000,
+          active: false,
+          refundEligible: true,
+          refundableAmount: 10000,
+          refundFeeAmount: 100,
+          refundNetAmount: 9900,
+          estimatedInActive: 15.24,
+        ),
+      ],
+    );
+    whenListen(bloc, Stream.value(WalletLoaded(wallet)), initialState: WalletInitial());
+
+    await tester.pumpWidget(buildSubject(bloc, prefsBloc, refundCubit));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Rembourser'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Quelle devise rembourser ?'), findsOneWidget);
+  });
+
   testWidgets(
     'historique : libellé "Recharge mobile money" pour un paymentRef pawapay:',
     (tester) async {

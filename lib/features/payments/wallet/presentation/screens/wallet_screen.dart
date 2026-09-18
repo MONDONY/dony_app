@@ -1,6 +1,11 @@
+import 'dart:async';
+
 import 'package:dony/core/currency/currency_formatter.dart';
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_refund_request_cubit.dart';
@@ -9,6 +14,7 @@ import 'package:dony/features/payments/wallet/data/models/wallet_model.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_topup_status_model.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_transaction_model.dart';
 import 'package:dony/features/payments/wallet/presentation/widgets/wallet_refund_confirm_sheet.dart';
+import 'package:dony/features/payments/wallet/presentation/widgets/wallet_refund_currency_sheet.dart';
 import 'package:dony/features/payments/wallet/presentation/widgets/wallet_refund_selection_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -254,6 +260,7 @@ class _LoadedView extends StatelessWidget {
                     : null,
                 estimateComplete: wallet.estimateComplete,
                 multiCurrency: wallet.heldBalances.length > 1,
+                eligibleBalances: wallet.eligibleBalances,
               ),
             ),
           ),
@@ -431,6 +438,7 @@ class _HeroHeader extends StatelessWidget {
     this.estimatedTotal,
     this.estimateComplete = true,
     this.multiCurrency = false,
+    required this.eligibleBalances,
   });
 
   final double balance;
@@ -440,6 +448,11 @@ class _HeroHeader extends StatelessWidget {
   final double? nonRefundableAmount;
   final double? refundFeeAmount;
   final double? refundNetAmount;
+
+  /// Devises remboursables au net positif (`WalletModel.eligibleBalances`),
+  /// active ou non. Vide sur l'ancien contrat back : le reste des champs
+  /// ci-dessus reprend alors seul.
+  final List<WalletCurrencyBalanceModel> eligibleBalances;
 
   /// Somme estimée de tous les portefeuilles dans [currency], `null` sur
   /// l'ancien contrat (l'en-tête retombe alors sur « Solde disponible »).
@@ -459,8 +472,12 @@ class _HeroHeader extends StatelessWidget {
   /// si le brut est positif) ; sinon repli sur `refundableAmount` comme
   /// avant, `null` sur les deux (ancien contrat back) laissant l'affichage
   /// géré par le seul `refundEligible`.
+  /// « Rembourser » apparaît dès qu'une devise, active ou non, est
+  /// remboursable au net positif (`WalletModel.eligibleBalances`). Ancien
+  /// contrat (liste vide) : règle historique sur la devise active.
   bool get _canRefund =>
-      refundEligible && (refundNetAmount ?? refundableAmount ?? 1) > 0;
+      eligibleBalances.isNotEmpty ||
+      (refundEligible && (refundNetAmount ?? refundableAmount ?? 1) > 0);
 
   @override
   Widget build(BuildContext context) {
@@ -584,21 +601,52 @@ class _HeroHeader extends StatelessWidget {
         _HeroAction(
           iconAsset: 'arrow-up',
           label: 'Rembourser',
-          onTap: () {
-            final refundable = refundableAmount;
-            // `_canRefund` garantit ici un montant net strictement positif.
-            if (refundable != null) {
-              WalletRefundConfirmSheet.show(
+          onTap: () async {
+            if (eligibleBalances.length > 1) {
+              final chosen = await WalletRefundCurrencySheet.show(
                 context,
-                currency: currency.code,
-                refundableAmount: refundable,
-                nonRefundableAmount: nonRefundableAmount ?? 0,
-                feeAmount: refundFeeAmount,
-                netAmount: refundNetAmount,
+                balances: eligibleBalances,
+              );
+              if (chosen == null || !context.mounted) return;
+              unawaited(
+                getIt<AnalyticsService>().logEvent(
+                  AnalyticsEvents.walletRefundCurrencyChosen,
+                  properties: {'currency': chosen.currency},
+                ),
+              );
+              _openConfirm(context, chosen);
+              return;
+            }
+            // Une seule devise éligible dont le montant remboursable est
+            // déjà connu (`WalletModel.eligibleBalances`) : direct vers la
+            // confirmation, active ou non. Sinon (ancien contrat : le champ
+            // `refundEligible` existe mais pas encore les montants), repli
+            // sur les champs historiques de la devise active ci-dessous.
+            final single = eligibleBalances.length == 1
+                ? eligibleBalances.first
+                : null;
+            if (single != null &&
+                (single.refundNetAmount ?? single.refundableAmount) != null) {
+              _openConfirm(context, single);
+              return;
+            }
+            final refundable = refundableAmount;
+            if (refundable != null) {
+              unawaited(
+                WalletRefundConfirmSheet.show(
+                  context,
+                  currency: currency.code,
+                  refundableAmount: refundable,
+                  nonRefundableAmount: nonRefundableAmount ?? 0,
+                  feeAmount: refundFeeAmount,
+                  netAmount: refundNetAmount,
+                ),
               );
             } else {
               // Ancien contrat back : sélection de recharges intactes.
-              WalletRefundSelectionSheet.show(context, currency: currency.code);
+              unawaited(
+                WalletRefundSelectionSheet.show(context, currency: currency.code),
+              );
             }
           },
         ),
@@ -608,6 +656,21 @@ class _HeroHeader extends StatelessWidget {
         onTap: () => context.push('/payments/wallet/refunds'),
       ),
     ];
+    return _actionsRow(actions);
+  }
+
+  void _openConfirm(BuildContext context, WalletCurrencyBalanceModel b) {
+    WalletRefundConfirmSheet.show(
+      context,
+      currency: b.currency,
+      refundableAmount: b.refundableAmount ?? b.balance,
+      nonRefundableAmount: b.nonRefundableAmount ?? 0,
+      feeAmount: b.refundFeeAmount,
+      netAmount: b.refundNetAmount,
+    );
+  }
+
+  Widget _actionsRow(List<Widget> actions) {
     // Row scrollable horizontalement (jamais de retour à la ligne) : un
     // Wrap ici passerait sur 2 lignes sur les écrans étroits ou avec une
     // police système agrandie, ce qui dépasse la hauteur fixe du
