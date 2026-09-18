@@ -430,22 +430,22 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
                         ),
                       ),
                     ],
-                    // La recharge crédite la devise de l'opérateur. Si ce
-                    // n'est pas la devise active du portefeuille, le solde
-                    // arrive VERROUILLÉ : « Recharge confirmée » au-dessus
-                    // d'un solde inchangé. On le dit avant de payer.
+                    // La recharge crédite le portefeuille de la devise de
+                    // l'opérateur, jamais le portefeuille actif : on nomme
+                    // la destination avant de payer, montant compris.
                     if (activeCurrency != null &&
                         activeCurrency.code != currency.code) ...[
                       const SizedBox(height: DonySpacing.base),
                       DonyStatusBanner(
                         key: const Key('wallet-topup-currency-mismatch'),
-                        type: DonyStatusBannerType.warning,
-                        iconAsset: 'circle-alert',
+                        type: DonyStatusBannerType.info,
+                        iconAsset: 'wallet',
+                        // Avant toute saisie, pas de « crédité de 0 F CFA ».
                         message:
-                            'Ton portefeuille est en ${activeCurrency.code}. '
-                            'Ce montant sera crédité en ${currency.code} et '
-                            'ne sera utilisable qu\'en changeant la devise '
-                            'active dans Préférences.',
+                            'Ton portefeuille ${currency.displayName} sera '
+                            'crédité ${_amount > 0 ? 'de ${CurrencyFormatter.format(_amount, currency)}' : 'du montant que tu saisis'}. '
+                            'Ton portefeuille ${activeCurrency.displayName} '
+                            'ne bouge pas.',
                       ),
                     ],
 

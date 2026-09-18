@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/widgets/dony_skeleton.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
@@ -372,6 +374,163 @@ void main() {
     expect(find.textContaining('Dollar canadien'), findsOneWidget);
   });
 
+  WalletModel walletWithEstimate({
+    bool complete = true,
+    double? xofEstimate = 15.24,
+  }) => WalletModel(
+    balance: 1.33,
+    currency: 'EUR',
+    estimatedTotal: 16.57,
+    estimateComplete: complete,
+    transactions: const [],
+    balances: [
+      const WalletCurrencyBalanceModel(
+        currency: 'EUR',
+        balance: 1.33,
+        active: true,
+        estimatedInActive: 1.33,
+      ),
+      WalletCurrencyBalanceModel(
+        currency: 'XOF',
+        balance: 10000,
+        active: false,
+        estimatedInActive: xofEstimate,
+      ),
+    ],
+  );
+
+  testWidgets(
+    'nouveau contrat : total estimé en grand et une ligne par devise',
+    (tester) async {
+      whenListen(
+        bloc,
+        Stream.value(WalletLoaded(walletWithEstimate())),
+        initialState: WalletInitial(),
+      );
+
+      await tester.pumpWidget(buildSubject(bloc, prefsBloc));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Total estimé'), findsOneWidget);
+      expect(find.text('Solde disponible'), findsNothing);
+      expect(find.byKey(const Key('wallet-estimated-total')), findsOneWidget);
+      expect(find.byKey(const Key('wallet-currency-row-EUR')), findsOneWidget);
+      expect(find.byKey(const Key('wallet-currency-row-XOF')), findsOneWidget);
+      expect(find.text('active'), findsOneWidget);
+      expect(find.textContaining('≈'), findsOneWidget);
+      expect(find.text('verrouillé'), findsNothing);
+      expect(find.byKey(const Key('wallet-estimate-partial')), findsNothing);
+    },
+  );
+
+  testWidgets('estimation partielle quand une devise n\'a pas de taux', (
+    tester,
+  ) async {
+    whenListen(
+      bloc,
+      Stream.value(
+        WalletLoaded(walletWithEstimate(complete: false, xofEstimate: null)),
+      ),
+      initialState: WalletInitial(),
+    );
+
+    await tester.pumpWidget(buildSubject(bloc, prefsBloc));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('wallet-estimate-partial')), findsOneWidget);
+    expect(find.text('taux indisponible'), findsOneWidget);
+  });
+
+  testWidgets('grande police système (1.3x) sur estimation partielle : pas de '
+      'RenderFlex overflowed, l\'en-tête est toujours rendu', (tester) async {
+    whenListen(
+      bloc,
+      Stream.value(
+        WalletLoaded(walletWithEstimate(complete: false, xofEstimate: null)),
+      ),
+      initialState: WalletInitial(),
+    );
+
+    await tester.pumpWidget(
+      MediaQuery(
+        data: const MediaQueryData(
+          size: Size(360, 800),
+          textScaler: TextScaler.linear(1.3),
+        ),
+        child: buildSubject(bloc, prefsBloc),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(find.byKey(const Key('wallet-estimated-total')), findsOneWidget);
+  });
+
+  testWidgets(
+    'ancien contrat (pas de total estimé) : en-tête Solde disponible conservé',
+    (tester) async {
+      const wallet = WalletModel(
+        balance: 1.33,
+        currency: 'EUR',
+        transactions: [],
+        balances: [
+          WalletCurrencyBalanceModel(
+            currency: 'EUR',
+            balance: 1.33,
+            active: true,
+          ),
+          WalletCurrencyBalanceModel(
+            currency: 'XOF',
+            balance: 10000,
+            active: false,
+          ),
+        ],
+      );
+      whenListen(
+        bloc,
+        Stream.value(WalletLoaded(wallet)),
+        initialState: WalletInitial(),
+      );
+
+      await tester.pumpWidget(buildSubject(bloc, prefsBloc));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Solde disponible'), findsOneWidget);
+      expect(find.text('Total estimé'), findsNothing);
+      expect(find.byKey(const Key('wallet-currency-row-XOF')), findsNothing);
+    },
+  );
+
+  testWidgets('une seule devise détenue : total sans mention d\'estimation', (
+    tester,
+  ) async {
+    const wallet = WalletModel(
+      balance: 40,
+      currency: 'EUR',
+      estimatedTotal: 40,
+      transactions: [],
+      balances: [
+        WalletCurrencyBalanceModel(
+          currency: 'EUR',
+          balance: 40,
+          active: true,
+          estimatedInActive: 40,
+        ),
+      ],
+    );
+    whenListen(
+      bloc,
+      Stream.value(WalletLoaded(wallet)),
+      initialState: WalletInitial(),
+    );
+
+    await tester.pumpWidget(buildSubject(bloc, prefsBloc));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Solde disponible'), findsOneWidget);
+    expect(find.textContaining('Estimation au taux du jour'), findsNothing);
+  });
+
   testWidgets(
     'ne montre pas une devise non active à solde 0 comme verrouillée',
     (tester) async {
@@ -429,8 +588,7 @@ void main() {
 
       expect(find.text('Comment fonctionne le portefeuille'), findsOneWidget);
       expect(find.text('Changer de devise'), findsOneWidget);
-      // Plus de « 0 € » codé en dur : le portefeuille peut être en XOF.
-      expect(find.text('Devise à zéro'), findsOneWidget);
+      expect(find.text('Plusieurs devises'), findsOneWidget);
     },
   );
 
@@ -615,6 +773,54 @@ void main() {
   });
 
   testWidgets(
+    'ancien contrat, deux devises refundEligible sans montant : repli sur '
+    'la sheet de sélection de la devise active, pas le choix de devise',
+    (tester) async {
+      const wallet = WalletModel(
+        balance: 40,
+        currency: 'EUR',
+        transactions: [],
+        refundEligible: true,
+        balances: [
+          WalletCurrencyBalanceModel(
+            currency: 'EUR',
+            balance: 40,
+            active: true,
+            refundEligible: true,
+          ),
+          WalletCurrencyBalanceModel(
+            currency: 'XOF',
+            balance: 10000,
+            active: false,
+            refundEligible: true,
+          ),
+        ],
+      );
+      whenListen(
+        bloc,
+        Stream.value(WalletLoaded(wallet)),
+        initialState: WalletInitial(),
+      );
+      // Sans ça, `WalletEligibleTopupsState()` par défaut (isLoading: true)
+      // fait tourner un spinner en boucle et `pumpAndSettle` n'aboutit
+      // jamais.
+      when(
+        () => _currentTopupsCubit.state,
+      ).thenReturn(const WalletEligibleTopupsState(isLoading: false));
+
+      await tester.pumpWidget(buildSubject(bloc, prefsBloc, refundCubit));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Rembourser'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Choisir une recharge'), findsOneWidget);
+      expect(find.text('Rembourser mon solde'), findsNothing);
+      expect(find.text('Quelle devise rembourser ?'), findsNothing);
+    },
+  );
+
+  testWidgets(
     'refundableAmount à 0 avec un solde positif : le bouton Rembourser est '
     'masqué, rien n\'est remboursable',
     (tester) async {
@@ -795,6 +1001,143 @@ void main() {
   );
 
   testWidgets(
+    'Rembourser visible quand seule une devise non active est éligible',
+    (tester) async {
+      const wallet = WalletModel(
+        balance: 0,
+        currency: 'EUR',
+        estimatedTotal: 15.24,
+        transactions: [],
+        balances: [
+          WalletCurrencyBalanceModel(
+            currency: 'EUR',
+            balance: 0,
+            active: true,
+            estimatedInActive: 0,
+          ),
+          WalletCurrencyBalanceModel(
+            currency: 'XOF',
+            balance: 10000,
+            active: false,
+            refundEligible: true,
+            refundableAmount: 10000,
+            refundFeeAmount: 100,
+            refundNetAmount: 9900,
+            estimatedInActive: 15.24,
+          ),
+        ],
+      );
+      whenListen(
+        bloc,
+        Stream.value(WalletLoaded(wallet)),
+        initialState: WalletInitial(),
+      );
+
+      await tester.pumpWidget(buildSubject(bloc, prefsBloc, refundCubit));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Rembourser'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'une seule devise non active éligible : Rembourser ouvre la confirmation pour cette devise',
+    (tester) async {
+      const wallet = WalletModel(
+        balance: 0,
+        currency: 'EUR',
+        estimatedTotal: 15.24,
+        transactions: [],
+        balances: [
+          WalletCurrencyBalanceModel(
+            currency: 'EUR',
+            balance: 0,
+            active: true,
+            estimatedInActive: 0,
+          ),
+          WalletCurrencyBalanceModel(
+            currency: 'XOF',
+            balance: 10000,
+            active: false,
+            refundEligible: true,
+            refundableAmount: 10000,
+            refundFeeAmount: 100,
+            refundNetAmount: 9900,
+            estimatedInActive: 15.24,
+          ),
+        ],
+      );
+      whenListen(
+        bloc,
+        Stream.value(WalletLoaded(wallet)),
+        initialState: WalletInitial(),
+      );
+
+      await tester.pumpWidget(buildSubject(bloc, prefsBloc, refundCubit));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Rembourser'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Rembourser mon solde'), findsOneWidget);
+      // Preuve que la sheet a bien ouvert pour XOF (et non EUR) : le montant
+      // net formaté en F CFA apparaît dans la confirmation.
+      final expectedNet = CurrencyFormatter.format(
+        9900,
+        SupportedCurrency.fromCodeOrDefault('XOF'),
+      );
+      expect(find.textContaining(expectedNet), findsWidgets);
+    },
+  );
+
+  testWidgets(
+    'deux devises éligibles : tap Rembourser ouvre le choix de devise',
+    (tester) async {
+      const wallet = WalletModel(
+        balance: 40,
+        currency: 'EUR',
+        refundEligible: true,
+        estimatedTotal: 55.24,
+        transactions: [],
+        balances: [
+          WalletCurrencyBalanceModel(
+            currency: 'EUR',
+            balance: 40,
+            active: true,
+            refundEligible: true,
+            refundableAmount: 40,
+            refundFeeAmount: 1.5,
+            refundNetAmount: 38.5,
+            estimatedInActive: 40,
+          ),
+          WalletCurrencyBalanceModel(
+            currency: 'XOF',
+            balance: 10000,
+            active: false,
+            refundEligible: true,
+            refundableAmount: 10000,
+            refundFeeAmount: 100,
+            refundNetAmount: 9900,
+            estimatedInActive: 15.24,
+          ),
+        ],
+      );
+      whenListen(
+        bloc,
+        Stream.value(WalletLoaded(wallet)),
+        initialState: WalletInitial(),
+      );
+
+      await tester.pumpWidget(buildSubject(bloc, prefsBloc, refundCubit));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Rembourser'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Quelle devise rembourser ?'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
     'historique : libellé "Recharge mobile money" pour un paymentRef pawapay:',
     (tester) async {
       final tx = WalletTransactionModel(
@@ -879,7 +1222,7 @@ void main() {
       await tester.pumpWidget(buildSubject(bloc, prefsBloc, null, topupStatus));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('confirmée par Orange Money'), findsOneWidget);
+      expect(find.textContaining('confirmé par Orange Money'), findsOneWidget);
     });
 
     testWidgets('absent quand aucun topupConfirmed n\'est fourni', (
@@ -899,7 +1242,7 @@ void main() {
       await tester.pumpWidget(buildSubject(bloc, prefsBloc));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('confirmée par'), findsNothing);
+      expect(find.textContaining('confirmé par'), findsNothing);
     });
 
     testWidgets('ne réapparaît pas à un rebuild déclenché par le WalletBloc', (
@@ -917,12 +1260,12 @@ void main() {
 
       await tester.pumpWidget(buildSubject(bloc, prefsBloc, null, topupStatus));
       await tester.pumpAndSettle();
-      expect(find.textContaining('confirmée par Orange Money'), findsOneWidget);
+      expect(find.textContaining('confirmé par Orange Money'), findsOneWidget);
 
       // Fermeture manuelle du bandeau.
       await tester.tap(find.bySemanticsLabel('Fermer le message'));
       await tester.pumpAndSettle();
-      expect(find.textContaining('confirmée par'), findsNothing);
+      expect(find.textContaining('confirmé par'), findsNothing);
 
       // Un nouvel état (rafraîchissement) rebuild l'écran : le bandeau ne
       // doit pas revenir seul.
@@ -934,7 +1277,38 @@ void main() {
       controller.add(WalletLoaded(refreshedWallet));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('confirmée par'), findsNothing);
+      expect(find.textContaining('confirmé par'), findsNothing);
     });
+
+    testWidgets(
+      'recharge mobile money confirmée : bandeau nommant le portefeuille et ligne surlignée',
+      (tester) async {
+        whenListen(
+          bloc,
+          Stream.value(WalletLoaded(walletWithEstimate())),
+          initialState: WalletInitial(),
+        );
+        const confirmed = WalletTopupStatusModel(
+          topupId: 't1',
+          status: 'CONFIRMED',
+          amount: 10000,
+          currency: 'XOF',
+          provider: 'ORANGE_CIV',
+          providerLabel: 'Orange Money',
+          msisdnMasked: '+225 07 ** ** 89',
+        );
+
+        await tester.pumpWidget(buildSubject(bloc, prefsBloc, null, confirmed));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 100));
+
+        expect(
+          find.textContaining('sur ton portefeuille Franc CFA Ouest'),
+          findsOneWidget,
+        );
+        expect(find.byType(TweenAnimationBuilder<double>), findsOneWidget);
+        await tester.pumpAndSettle();
+      },
+    );
   });
 }

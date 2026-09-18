@@ -8,12 +8,23 @@ class WalletModel {
   final List<WalletCurrencyBalanceModel> balances;
   final bool refundEligible;
 
+  /// Somme de tous les portefeuilles convertie dans [currency] au taux du
+  /// jour (back). `null` sur l'ancien contrat : l'écran retombe alors sur
+  /// l'en-tête « Solde disponible ».
+  final double? estimatedTotal;
+
+  /// `false` quand une devise détenue n'a pas de taux et a été exclue du
+  /// total (le back le signale ; l'écran dit « estimation partielle »).
+  final bool estimateComplete;
+
   const WalletModel({
     required this.balance,
     required this.currency,
     required this.transactions,
     this.balances = const [],
     this.refundEligible = false,
+    this.estimatedTotal,
+    this.estimateComplete = true,
   });
 
   factory WalletModel.fromJson(Map<String, dynamic> json) => WalletModel(
@@ -28,6 +39,8 @@ class WalletModel {
         )
         .toList(),
     refundEligible: json['refundEligible'] as bool? ?? false,
+    estimatedTotal: (json['estimatedTotal'] as num?)?.toDouble(),
+    estimateComplete: json['estimateComplete'] as bool? ?? true,
   );
 
   /// Portefeuille de la devise active, s'il est listé dans [balances].
@@ -37,4 +50,23 @@ class WalletModel {
     }
     return null;
   }
+
+  bool get hasEstimate => estimatedTotal != null;
+
+  /// Devises réellement détenues : solde non nul, plus la devise active même
+  /// à zéro (elle porte l'en-tête). Une seule source pour l'en-tête et la
+  /// carte des soldes, qui doivent se contredire nulle part.
+  List<WalletCurrencyBalanceModel> get heldBalances =>
+      balances.where((b) => b.active || b.balance != 0).toList();
+
+  /// Devises dont une demande de remboursement est possible : éligibles et
+  /// dont le montant remboursable est connu et strictement positif.
+  /// `refundNetAmount` prime, repli `refundableAmount`. Sur l'ancien
+  /// contrat back (ni l'un ni l'autre renseigné) la devise est exclue :
+  /// `_HeroHeader._canRefund` retombe alors sur la règle historique basée
+  /// sur la seule devise active.
+  List<WalletCurrencyBalanceModel> get eligibleBalances => balances.where((b) {
+    final amount = b.refundNetAmount ?? b.refundableAmount;
+    return b.refundEligible && amount != null && amount > 0;
+  }).toList();
 }

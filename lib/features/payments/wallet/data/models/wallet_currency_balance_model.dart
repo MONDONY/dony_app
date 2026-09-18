@@ -20,6 +20,11 @@ class WalletCurrencyBalanceModel {
   /// (`refundableAmount - refundFeeAmount`). `null` sur l'ancien contrat.
   final double? refundNetAmount;
 
+  /// Équivalent de [balance] dans la devise active du portefeuille, calculé
+  /// par le back au taux du jour. Purement informatif : l'argent reste dans
+  /// sa devise. `null` sur l'ancien contrat ou quand le taux manque.
+  final double? estimatedInActive;
+
   const WalletCurrencyBalanceModel({
     required this.currency,
     required this.balance,
@@ -29,6 +34,7 @@ class WalletCurrencyBalanceModel {
     this.nonRefundableAmount,
     this.refundFeeAmount,
     this.refundNetAmount,
+    this.estimatedInActive,
   });
 
   factory WalletCurrencyBalanceModel.fromJson(Map<String, dynamic> json) =>
@@ -41,5 +47,6 @@ class WalletCurrencyBalanceModel {
         nonRefundableAmount: (json['nonRefundableAmount'] as num?)?.toDouble(),
         refundFeeAmount: (json['refundFeeAmount'] as num?)?.toDouble(),
         refundNetAmount: (json['refundNetAmount'] as num?)?.toDouble(),
+        estimatedInActive: (json['estimatedInActive'] as num?)?.toDouble(),
       );
 }
