@@ -44,17 +44,28 @@ void main() {
     msisdnMasked: '+221 ** ** 12 34',
   );
 
-  WalletTopupStatusModel statusFor(String status, {String? failureReason}) =>
-      WalletTopupStatusModel(
-        topupId: 'topup-1',
-        status: status,
-        amount: 20000,
-        currency: 'XOF',
-        provider: 'ORANGE_SEN',
-        providerLabel: 'Orange Money',
-        msisdnMasked: '+221 ** ** 12 34',
-        failureReason: failureReason,
-      );
+  const topup2 = WalletTopupModel(
+    topupId: 'topup-2',
+    currency: 'XOF',
+    provider: 'WAVE_SEN',
+    providerLabel: 'Wave',
+    msisdnMasked: '+221 ** ** 56 78',
+  );
+
+  WalletTopupStatusModel statusFor(
+    String status, {
+    String topupId = 'topup-1',
+    String? failureReason,
+  }) => WalletTopupStatusModel(
+    topupId: topupId,
+    status: status,
+    amount: 20000,
+    currency: 'XOF',
+    provider: 'ORANGE_SEN',
+    providerLabel: 'Orange Money',
+    msisdnMasked: '+221 ** ** 12 34',
+    failureReason: failureReason,
+  );
 
   group('loadProviders / initiate (sans minuterie)', () {
     late MockWalletRepository repo;
@@ -366,5 +377,188 @@ void main() {
         });
       },
     );
+
+    test('close() pendant une requête topupStatus EN VOL : aucun emit '
+        'ultérieur, aucun timer ne survit', () {
+      fakeAsync((async) {
+        final slowStatus = Completer<WalletTopupStatusModel>();
+        when(
+          () => repo.topupStatus('topup-1'),
+        ).thenAnswer((_) => slowStatus.future);
+
+        final cubit = WalletTopupMobileMoneyCubit(
+          repo,
+          analytics,
+          now: () => clock.now(),
+        );
+        final states = <WalletTopupMobileMoneyState>[];
+        final sub = cubit.stream.listen(states.add);
+
+        unawaited(cubit.initiate(amount: 20000, phoneNumber: phoneNumber));
+        async.flushMicrotasks();
+
+        // Le tick fait partir la requête de statut, qui reste en vol
+        // (le Completer n'est jamais résolu avant la fermeture).
+        async.elapse(WalletTopupMobileMoneyCubit.pollInterval);
+
+        unawaited(cubit.close());
+        expect(async.periodicTimerCount, 0);
+
+        final statesAtClose = List.of(states);
+
+        // La réponse tardive arrive après la fermeture : aucun effet.
+        slowStatus.complete(statusFor('CONFIRMED'));
+        async.flushMicrotasks();
+
+        expect(states, statesAtClose);
+        expect(async.periodicTimerCount, 0);
+        verifyNever(
+          () => analytics.logEvent(
+            AnalyticsEvents.walletTopupMobileMoneyConfirmed,
+            properties: any(named: 'properties'),
+          ),
+        );
+
+        unawaited(sub.cancel());
+      });
+    });
+
+    test("motif d'échec entouré d'espaces : nettoyé avant affichage", () {
+      fakeAsync((async) {
+        when(() => repo.topupStatus('topup-1')).thenAnswer(
+          (_) async =>
+              statusFor('FAILED', failureReason: '   Solde insuffisant   '),
+        );
+
+        final cubit = WalletTopupMobileMoneyCubit(
+          repo,
+          analytics,
+          now: () => clock.now(),
+        );
+
+        unawaited(cubit.initiate(amount: 20000, phoneNumber: phoneNumber));
+        async.flushMicrotasks();
+        async.elapse(WalletTopupMobileMoneyCubit.pollInterval);
+
+        expect(
+          cubit.state,
+          isA<WalletTopupMobileMoneyFailed>().having(
+            (s) => s.message,
+            'message',
+            'Solde insuffisant',
+          ),
+        );
+
+        unawaited(cubit.close());
+      });
+    });
+
+    test("motif d'échec composé uniquement d'espaces : traité comme absent, "
+        'message générique', () {
+      fakeAsync((async) {
+        when(
+          () => repo.topupStatus('topup-1'),
+        ).thenAnswer((_) async => statusFor('FAILED', failureReason: '   '));
+
+        final cubit = WalletTopupMobileMoneyCubit(
+          repo,
+          analytics,
+          now: () => clock.now(),
+        );
+
+        unawaited(cubit.initiate(amount: 20000, phoneNumber: phoneNumber));
+        async.flushMicrotasks();
+        async.elapse(WalletTopupMobileMoneyCubit.pollInterval);
+
+        expect(
+          cubit.state,
+          isA<WalletTopupMobileMoneyFailed>().having(
+            (s) => s.message,
+            'message',
+            "Le paiement a été refusé par l'opérateur.",
+          ),
+        );
+
+        unawaited(cubit.close());
+      });
+    });
+
+    test('IMPORTANT — sondage obsolète : initiate() n°2 pendant qu\'une '
+        'réponse de sondage de la session n°1 est encore en vol ne doit ni '
+        "écraser l'état de la session 2, ni tuer son timer, ni émettre "
+        'confirmed pour la session 1', () {
+      fakeAsync((async) {
+        var topupCall = 0;
+        when(
+          () => repo.topupMobileMoney(
+            amount: any(named: 'amount'),
+            phoneNumber: any(named: 'phoneNumber'),
+            provider: any(named: 'provider'),
+          ),
+        ).thenAnswer((_) async {
+          topupCall++;
+          return topupCall == 1 ? topup : topup2;
+        });
+
+        final slowStatus1 = Completer<WalletTopupStatusModel>();
+        when(
+          () => repo.topupStatus('topup-1'),
+        ).thenAnswer((_) => slowStatus1.future);
+
+        final cubit = WalletTopupMobileMoneyCubit(
+          repo,
+          analytics,
+          now: () => clock.now(),
+        );
+
+        // Session 1 : initiée, son sondage démarre.
+        unawaited(cubit.initiate(amount: 20000, phoneNumber: phoneNumber));
+        async.flushMicrotasks();
+        expect(
+          (cubit.state as WalletTopupMobileMoneyAwaiting).topup.topupId,
+          'topup-1',
+        );
+
+        // Premier tick : la requête de statut de la session 1 part et
+        // reste en vol (le Completer n'est résolu que plus bas).
+        async.elapse(WalletTopupMobileMoneyCubit.pollInterval);
+
+        // Pendant que la session 1 attend toujours sa réponse, une
+        // nouvelle recharge démarre (relance depuis l'écran, par ex.).
+        unawaited(cubit.initiate(amount: 15000, phoneNumber: phoneNumber));
+        async.flushMicrotasks();
+        expect(
+          (cubit.state as WalletTopupMobileMoneyAwaiting).topup.topupId,
+          'topup-2',
+        );
+        // Le timer de la session 1 a bien été coupé par le nouvel
+        // initiate(), remplacé par celui de la session 2 : un seul timer
+        // actif.
+        expect(async.periodicTimerCount, 1);
+
+        // La réponse tardive de la session 1 arrive enfin : CONFIRMED.
+        slowStatus1.complete(statusFor('CONFIRMED'));
+        async.flushMicrotasks();
+
+        // L'état reste celui de la session 2, jamais écrasé par la
+        // réponse obsolète de la session 1.
+        expect(
+          (cubit.state as WalletTopupMobileMoneyAwaiting).topup.topupId,
+          'topup-2',
+        );
+        // Le timer de la session 2 est toujours actif : la réponse
+        // obsolète n'a pas appelé stopPolling().
+        expect(async.periodicTimerCount, 1);
+        // Aucun event confirmed n'est parti pour la recharge abandonnée.
+        verifyNever(
+          () => analytics.logEvent(
+            AnalyticsEvents.walletTopupMobileMoneyConfirmed,
+            properties: any(named: 'properties'),
+          ),
+        );
+
+        unawaited(cubit.close());
+      });
+    });
   });
 }

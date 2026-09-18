@@ -34,7 +34,21 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
   final DateTime Function() _now;
 
   Timer? _pollTimer;
-  bool _pollInFlight = false;
+
+  /// Incrémenté à chaque [initiate] : identifie la « session » de recharge
+  /// courante. Une réponse réseau (initiation ou sondage) qui résout après
+  /// qu'une nouvelle recharge a démarré porte un jeton périmé — elle ne doit
+  /// alors ni émettre, ni toucher au timer de la nouvelle session (sinon la
+  /// nouvelle session reste bloquée en `Awaiting`, plus jamais sondée, et un
+  /// event `confirmed` peut partir pour une recharge abandonnée).
+  int _generation = 0;
+
+  /// Génération pour laquelle une requête `topupStatus` est en vol, ou
+  /// `null` si aucune. Empêche deux tentatives de sondage concurrentes pour
+  /// la MÊME génération (tick suivant plus rapide que la réponse) sans
+  /// bloquer le sondage d'une génération plus récente pendant qu'une réponse
+  /// obsolète traîne encore.
+  int? _inFlightGeneration;
 
   /// Catalogue des opérateurs utilisables sur [phoneNumber], pré-sélectionne
   /// celui détecté par pawaPay pour ce numéro.
@@ -71,6 +85,7 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
     required String phoneNumber,
   }) async {
     stopPolling();
+    final generation = ++_generation;
     final current = state;
     final provider = current is WalletTopupMobileMoneyProvidersReady
         ? current.selectedProvider
@@ -82,7 +97,9 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
         phoneNumber: phoneNumber,
         provider: provider,
       );
-      if (isClosed) return;
+      // Une recharge plus récente (ou une fermeture) a déjà pris le relais
+      // pendant cet appel : cette réponse est périmée, on ne l'affiche pas.
+      if (isClosed || generation != _generation) return;
       emit(WalletTopupMobileMoneyAwaiting(topup: topup, startedAt: _now()));
       unawaited(
         _analytics.logEvent(
@@ -92,7 +109,7 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
       );
       startPolling();
     } catch (e) {
-      if (isClosed) return;
+      if (isClosed || generation != _generation) return;
       emit(WalletTopupMobileMoneyError(unwrapDioError(e)));
     }
   }
@@ -111,7 +128,11 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
   }
 
   Future<void> _poll() async {
-    if (_pollInFlight || isClosed) return;
+    if (isClosed) return;
+    // Capturé avant tout `await` : identifie la session à laquelle cette
+    // invocation appartient, quoi qu'il se passe pendant l'appel réseau.
+    final generation = _generation;
+    if (_inFlightGeneration == generation) return;
     final current = state;
     if (current is! WalletTopupMobileMoneyAwaiting) {
       stopPolling();
@@ -122,10 +143,14 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
       if (!isClosed) emit(const WalletTopupMobileMoneyFailed(_expiredMessage));
       return;
     }
-    _pollInFlight = true;
+    _inFlightGeneration = generation;
     try {
       final status = await _repository.topupStatus(current.topup.topupId);
-      if (isClosed) return;
+      // Une nouvelle recharge a démarré (ou le cubit a fermé) pendant cet
+      // appel : cette réponse est périmée pour la session en cours. Ne rien
+      // émettre, ne pas toucher au timer (qui appartient déjà à la nouvelle
+      // session), simplement sortir.
+      if (isClosed || generation != _generation) return;
       switch (status.status) {
         case 'CONFIRMED':
           stopPolling();
@@ -150,17 +175,24 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
         // PENDING : rien à faire, le prochain tick relira le statut.
       }
     } catch (_) {
+      // Même garde côté échec réseau : une erreur pour une session déjà
+      // remplacée ne doit rien faire (sinon, en théorie sans effet ici
+      // puisque la branche est déjà silencieuse, mais on reste homogène avec
+      // la branche succès et robuste à une future évolution).
+      if (isClosed || generation != _generation) return;
       // Sondage silencieux : une erreur réseau transitoire ne casse pas
       // l'écran, le prochain sondage réessaiera.
     } finally {
-      _pollInFlight = false;
+      if (_inFlightGeneration == generation) _inFlightGeneration = null;
     }
   }
 
-  String _presentableFailure(String? reason) =>
-      (reason == null || reason.trim().isEmpty)
-      ? _genericFailureMessage
-      : reason;
+  String _presentableFailure(String? reason) {
+    final trimmed = reason?.trim();
+    return (trimmed == null || trimmed.isEmpty)
+        ? _genericFailureMessage
+        : trimmed;
+  }
 
   @override
   Future<void> close() {
