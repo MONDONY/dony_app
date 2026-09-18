@@ -212,7 +212,7 @@ class _LoadedView extends StatelessWidget {
         slivers: [
           // ── Hero SliverAppBar ──────────────────────────────────────────────
           SliverAppBar(
-            expandedHeight: 220,
+            expandedHeight: 236,
             pinned: true,
             surfaceTintColor: Colors.transparent,
             backgroundColor: DonyColors.blue700,
@@ -249,6 +249,10 @@ class _LoadedView extends StatelessWidget {
                 nonRefundableAmount: wallet.activeBalance?.nonRefundableAmount,
                 refundFeeAmount: wallet.activeBalance?.refundFeeAmount,
                 refundNetAmount: wallet.activeBalance?.refundNetAmount,
+                estimatedTotal: wallet.hasEstimate ? wallet.estimatedTotal : null,
+                estimateComplete: wallet.estimateComplete,
+                multiCurrency:
+                    wallet.balances.where((b) => b.balance != 0).length > 1,
               ),
             ),
           ),
@@ -310,8 +314,30 @@ class _LoadedView extends StatelessWidget {
               ),
             ),
 
-          // ── Locked (non-active currency) balances ────────────────────────────
-          if (lockedBalances.isNotEmpty)
+          // ── Soldes par devise ─────────────────────────────────────────────
+          // Nouveau contrat : toutes les devises détenues, chacune dans sa
+          // devise, avec son équivalent estimé. Ancien contrat : tuiles des
+          // devises non actives comme avant.
+          if (wallet.hasEstimate &&
+              wallet.balances
+                      .where((b) => b.balance != 0 || b.active)
+                      .length >
+                  1)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  DonySpacing.lg,
+                  DonySpacing.xl,
+                  DonySpacing.lg,
+                  0,
+                ),
+                child: _CurrencyBalancesCard(
+                  wallet: wallet,
+                  highlightCurrency: null,
+                ),
+              ),
+            )
+          else if (!wallet.hasEstimate && lockedBalances.isNotEmpty)
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
@@ -405,6 +431,9 @@ class _HeroHeader extends StatelessWidget {
     this.nonRefundableAmount,
     this.refundFeeAmount,
     this.refundNetAmount,
+    this.estimatedTotal,
+    this.estimateComplete = true,
+    this.multiCurrency = false,
   });
 
   final double balance;
@@ -414,6 +443,18 @@ class _HeroHeader extends StatelessWidget {
   final double? nonRefundableAmount;
   final double? refundFeeAmount;
   final double? refundNetAmount;
+
+  /// Somme estimée de tous les portefeuilles dans [currency], `null` sur
+  /// l'ancien contrat (l'en-tête retombe alors sur « Solde disponible »).
+  final double? estimatedTotal;
+
+  /// `false` quand une devise détenue n'a pas de taux du jour : le sous-titre
+  /// avertit que l'estimation est partielle.
+  final bool estimateComplete;
+
+  /// Plus d'une devise réellement détenue : seul ce cas affiche « Total
+  /// estimé » et le sous-titre, sinon rien à estimer.
+  final bool multiCurrency;
 
   /// « Rembourser » n'apparaît que s'il y a quelque chose à rembourser une
   /// fois les frais retenus. `refundNetAmount` prime quand il est connu (les
@@ -448,7 +489,9 @@ class _HeroHeader extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               Text(
-                'Solde disponible',
+                estimatedTotal != null && multiCurrency
+                    ? 'Total estimé'
+                    : 'Solde disponible',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: DonyColors.neutral0.withValues(alpha: 0.75),
                   fontSize: 13,
@@ -456,7 +499,8 @@ class _HeroHeader extends StatelessWidget {
               ),
               const SizedBox(height: DonySpacing.xs),
               Text(
-                    CurrencyFormatter.format(balance, currency),
+                    CurrencyFormatter.format(estimatedTotal ?? balance, currency),
+                    key: const Key('wallet-estimated-total'),
                     style: Theme.of(context).textTheme.displayLarge?.copyWith(
                       color: DonyColors.neutral0,
                       fontSize: 36,
@@ -467,6 +511,20 @@ class _HeroHeader extends StatelessWidget {
                   .animate()
                   .fadeIn(duration: 300.ms)
                   .slideY(begin: 0.1, curve: Curves.easeOutCubic),
+              if (estimatedTotal != null && multiCurrency) ...[
+                const SizedBox(height: 2),
+                Text(
+                  estimateComplete
+                      ? 'Estimation au taux du jour. Chaque devise reste séparée.'
+                      : 'Estimation partielle : une devise n\'a pas de taux du jour.',
+                  key: estimateComplete
+                      ? null
+                      : const Key('wallet-estimate-partial'),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: DonyColors.neutral0.withValues(alpha: 0.75),
+                  ),
+                ),
+              ],
               const SizedBox(height: DonySpacing.base),
               if (_canRefund)
                 BlocConsumer<
@@ -735,6 +793,143 @@ class _TxTile extends StatelessWidget {
   }
 }
 
+// ─── Soldes par devise (nouveau contrat) ──────────────────────────────────────
+
+class _CurrencyBalancesCard extends StatelessWidget {
+  const _CurrencyBalancesCard({
+    required this.wallet,
+    required this.highlightCurrency,
+  });
+
+  final WalletModel wallet;
+
+  /// Code devise à mettre en surbrillance brièvement (recharge qui vient
+  /// d'être confirmée), `null` sinon.
+  final String? highlightCurrency;
+
+  List<WalletCurrencyBalanceModel> get _rows {
+    final rows = wallet.balances.where((b) => b.active || b.balance != 0).toList()
+      ..sort((a, b) {
+        if (a.active != b.active) return a.active ? -1 : 1;
+        return (b.estimatedInActive ?? 0).compareTo(a.estimatedInActive ?? 0);
+      });
+    return rows;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final active = SupportedCurrency.fromCodeOrDefault(wallet.currency);
+    return DonyCard(
+      child: Column(
+        children: [
+          for (final (i, row) in _rows.indexed) ...[
+            if (i > 0) const Divider(height: DonySpacing.lg),
+            _CurrencyBalanceRow(
+              key: Key('wallet-currency-row-${row.currency.toUpperCase()}'),
+              balance: row,
+              activeCurrency: active,
+              highlighted:
+                  highlightCurrency != null &&
+                  highlightCurrency!.toUpperCase() == row.currency.toUpperCase(),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _CurrencyBalanceRow extends StatelessWidget {
+  const _CurrencyBalanceRow({
+    super.key,
+    required this.balance,
+    required this.activeCurrency,
+    required this.highlighted,
+  });
+
+  final WalletCurrencyBalanceModel balance;
+  final SupportedCurrency activeCurrency;
+  final bool highlighted;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final currency = SupportedCurrency.fromCodeOrDefault(balance.currency);
+    final estimate = balance.estimatedInActive;
+
+    final Widget trailing;
+    if (balance.active) {
+      trailing = Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.xs,
+          vertical: 2,
+        ),
+        decoration: BoxDecoration(
+          color: DonyColors.blue50,
+          borderRadius: BorderRadius.circular(DonyRadius.sm),
+        ),
+        child: Text('active', style: tt.labelSmall?.copyWith(color: cs.primary)),
+      );
+    } else if (estimate == null) {
+      trailing = Text(
+        'taux indisponible',
+        style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+      );
+    } else {
+      trailing = Text(
+        '≈ ${CurrencyFormatter.format(estimate, activeCurrency)}',
+        style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+      );
+    }
+
+    final row = Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                CurrencyFormatter.format(balance.balance, currency),
+                style: tt.titleLarge?.copyWith(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                currency.displayName,
+                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+              ),
+            ],
+          ),
+        ),
+        trailing,
+      ],
+    );
+
+    if (!highlighted || MediaQuery.of(context).disableAnimations) {
+      return row;
+    }
+    // Surbrillance courte de la devise qui vient d'être créditée : le fond
+    // part de blue50 et s'estompe en 1,2 s. Rejouée à chaque nouvelle clé.
+    return TweenAnimationBuilder<double>(
+      key: ValueKey('highlight-${balance.currency}'),
+      tween: Tween(begin: 1, end: 0),
+      duration: 1200.ms,
+      curve: Curves.easeOut,
+      builder: (context, t, child) => DecoratedBox(
+        decoration: BoxDecoration(
+          color: Color.lerp(Colors.transparent, DonyColors.blue50, t),
+          borderRadius: BorderRadius.circular(DonyRadius.sm),
+        ),
+        child: child,
+      ),
+      child: row,
+    );
+  }
+}
+
 // ─── Locked (non-active currency) balance tile ─────────────────────────────────
 
 class _LockedBalanceTile extends StatelessWidget {
@@ -857,18 +1052,18 @@ class _WalletInfoContent extends StatelessWidget {
               'Retrouvez le suivi de vos demandes de remboursement envoyées.',
         ),
         _WalletInfoRow(
+          iconAsset: 'wallet',
+          title: 'Plusieurs devises',
+          description:
+              'Ton argent reste dans la devise où il a été reçu. Le total en '
+              'haut est une estimation au taux du jour, il ne convertit rien.',
+        ),
+        _WalletInfoRow(
           iconAsset: 'lock',
           title: 'Changer de devise',
           description:
-              'Impossible une fois que votre solde total n\'est plus à zéro. '
-              'Verrouillée : videz votre portefeuille pour en changer.',
-        ),
-        _WalletInfoRow(
-          iconAsset: 'circle-alert',
-          title: 'Devise à zéro',
-          description:
-              'N\'est jamais considérée comme verrouillée : elle n\'apparaît '
-              'que si vous y détenez réellement des fonds.',
+              'La devise active se change dans Préférences tant que ton solde '
+              'total est à zéro. Sinon, vide d\'abord tes portefeuilles.',
         ),
       ],
     );

@@ -327,6 +327,124 @@ void main() {
     expect(find.textContaining('Dollar canadien'), findsOneWidget);
   });
 
+  WalletModel walletWithEstimate({bool complete = true, double? xofEstimate = 15.24}) =>
+      WalletModel(
+        balance: 1.33,
+        currency: 'EUR',
+        estimatedTotal: 16.57,
+        estimateComplete: complete,
+        transactions: const [],
+        balances: [
+          const WalletCurrencyBalanceModel(
+            currency: 'EUR',
+            balance: 1.33,
+            active: true,
+            estimatedInActive: 1.33,
+          ),
+          WalletCurrencyBalanceModel(
+            currency: 'XOF',
+            balance: 10000,
+            active: false,
+            estimatedInActive: xofEstimate,
+          ),
+        ],
+      );
+
+  testWidgets('nouveau contrat : total estimé en grand et une ligne par devise', (
+    tester,
+  ) async {
+    whenListen(
+      bloc,
+      Stream.value(WalletLoaded(walletWithEstimate())),
+      initialState: WalletInitial(),
+    );
+
+    await tester.pumpWidget(buildSubject(bloc, prefsBloc));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Total estimé'), findsOneWidget);
+    expect(find.text('Solde disponible'), findsNothing);
+    expect(find.byKey(const Key('wallet-estimated-total')), findsOneWidget);
+    expect(find.byKey(const Key('wallet-currency-row-EUR')), findsOneWidget);
+    expect(find.byKey(const Key('wallet-currency-row-XOF')), findsOneWidget);
+    expect(find.text('active'), findsOneWidget);
+    expect(find.textContaining('≈'), findsOneWidget);
+    expect(find.text('verrouillé'), findsNothing);
+    expect(find.byKey(const Key('wallet-estimate-partial')), findsNothing);
+  });
+
+  testWidgets('estimation partielle quand une devise n\'a pas de taux', (
+    tester,
+  ) async {
+    whenListen(
+      bloc,
+      Stream.value(WalletLoaded(walletWithEstimate(complete: false, xofEstimate: null))),
+      initialState: WalletInitial(),
+    );
+
+    await tester.pumpWidget(buildSubject(bloc, prefsBloc));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('wallet-estimate-partial')), findsOneWidget);
+    expect(find.text('taux indisponible'), findsOneWidget);
+  });
+
+  testWidgets('ancien contrat (pas de total estimé) : en-tête Solde disponible conservé', (
+    tester,
+  ) async {
+    const wallet = WalletModel(
+      balance: 1.33,
+      currency: 'EUR',
+      transactions: [],
+      balances: [
+        WalletCurrencyBalanceModel(currency: 'EUR', balance: 1.33, active: true),
+        WalletCurrencyBalanceModel(currency: 'XOF', balance: 10000, active: false),
+      ],
+    );
+    whenListen(
+      bloc,
+      Stream.value(WalletLoaded(wallet)),
+      initialState: WalletInitial(),
+    );
+
+    await tester.pumpWidget(buildSubject(bloc, prefsBloc));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Solde disponible'), findsOneWidget);
+    expect(find.text('Total estimé'), findsNothing);
+    expect(find.byKey(const Key('wallet-currency-row-XOF')), findsNothing);
+  });
+
+  testWidgets('une seule devise détenue : total sans mention d\'estimation', (
+    tester,
+  ) async {
+    const wallet = WalletModel(
+      balance: 40,
+      currency: 'EUR',
+      estimatedTotal: 40,
+      transactions: [],
+      balances: [
+        WalletCurrencyBalanceModel(
+          currency: 'EUR',
+          balance: 40,
+          active: true,
+          estimatedInActive: 40,
+        ),
+      ],
+    );
+    whenListen(
+      bloc,
+      Stream.value(WalletLoaded(wallet)),
+      initialState: WalletInitial(),
+    );
+
+    await tester.pumpWidget(buildSubject(bloc, prefsBloc));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Solde disponible'), findsOneWidget);
+    expect(find.textContaining('Estimation au taux du jour'), findsNothing);
+  });
+
   testWidgets(
     'ne montre pas une devise non active à solde 0 comme verrouillée',
     (tester) async {
@@ -384,8 +502,7 @@ void main() {
 
       expect(find.text('Comment fonctionne le portefeuille'), findsOneWidget);
       expect(find.text('Changer de devise'), findsOneWidget);
-      // Plus de « 0 € » codé en dur : le portefeuille peut être en XOF.
-      expect(find.text('Devise à zéro'), findsOneWidget);
+      expect(find.text('Plusieurs devises'), findsOneWidget);
     },
   );
 
