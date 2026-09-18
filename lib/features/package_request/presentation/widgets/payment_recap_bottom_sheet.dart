@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/phone/normalize_payer_phone.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
-import 'package:dony/features/matching/presentation/widgets/create_bid/payer_phone.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid/payer_phone_field.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';

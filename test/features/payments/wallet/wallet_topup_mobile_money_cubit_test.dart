@@ -120,6 +120,33 @@ void main() {
     );
 
     blocTest<WalletTopupMobileMoneyCubit, WalletTopupMobileMoneyState>(
+      'selectProvider(null) efface la sélection (décochée dans la checklist)',
+      build: () {
+        when(
+          () => repo.topupProviders(phoneNumber),
+        ).thenAnswer((_) async => catalog);
+        return cubit;
+      },
+      act: (c) async {
+        await c.loadProviders(phoneNumber);
+        c.selectProvider(null);
+      },
+      expect: () => [
+        isA<WalletTopupMobileMoneyProvidersLoading>(),
+        isA<WalletTopupMobileMoneyProvidersReady>().having(
+          (s) => s.selectedProvider,
+          'selectedProvider',
+          'ORANGE_SEN',
+        ),
+        isA<WalletTopupMobileMoneyProvidersReady>().having(
+          (s) => s.selectedProvider,
+          'selectedProvider',
+          isNull,
+        ),
+      ],
+    );
+
+    blocTest<WalletTopupMobileMoneyCubit, WalletTopupMobileMoneyState>(
       "initiate() : Initiating puis Awaiting, event 'initiated' avec "
       'exactement provider et currency',
       build: () {
@@ -556,6 +583,48 @@ void main() {
             properties: any(named: 'properties'),
           ),
         );
+
+        unawaited(cubit.close());
+      });
+    });
+
+    test('IMPORTANT — garde par génération sur loadProviders : une réponse de '
+        'catalogue en vol (numéro changé juste avant un « Payer ») ne doit '
+        "jamais écraser l'Awaiting déjà en cours de sondage", () {
+      fakeAsync((async) {
+        final slowProviders = Completer<MobileMoneyProviderCatalog>();
+        when(
+          () => repo.topupProviders(phoneNumber),
+        ).thenAnswer((_) => slowProviders.future);
+        when(
+          () => repo.topupStatus('topup-1'),
+        ).thenAnswer((_) async => statusFor('PENDING'));
+
+        final cubit = WalletTopupMobileMoneyCubit(
+          repo,
+          analytics,
+          now: () => clock.now(),
+        );
+
+        // Le catalogue est demandé mais ne répond pas encore.
+        unawaited(cubit.loadProviders(phoneNumber));
+        async.flushMicrotasks();
+        expect(cubit.state, isA<WalletTopupMobileMoneyProvidersLoading>());
+
+        // Avant que la réponse n'arrive, la recharge est initiée (ex :
+        // l'utilisateur avait déjà un opérateur détecté) et son sondage
+        // démarre.
+        unawaited(cubit.initiate(amount: 20000, phoneNumber: phoneNumber));
+        async.flushMicrotasks();
+        expect(cubit.state, isA<WalletTopupMobileMoneyAwaiting>());
+
+        // La réponse tardive du catalogue arrive enfin : elle ne doit ni
+        // écraser l'Awaiting, ni relancer quoi que ce soit.
+        slowProviders.complete(catalog);
+        async.flushMicrotasks();
+
+        expect(cubit.state, isA<WalletTopupMobileMoneyAwaiting>());
+        expect(async.periodicTimerCount, 1);
 
         unawaited(cubit.close());
       });

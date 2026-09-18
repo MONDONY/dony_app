@@ -125,10 +125,14 @@ import 'package:dony/features/payments/presentation/screens/payout_onboarding_sc
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_refund_request_cubit.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_refund_requests_list_cubit.dart';
+import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_cubit.dart';
 import 'package:dony/features/payments/wallet/presentation/screens/wallet_refund_requests_screen.dart';
 import 'package:dony/features/payments/wallet/presentation/screens/wallet_screen.dart';
 import 'package:dony/features/payments/wallet/presentation/screens/wallet_topup_amount_screen.dart';
 import 'package:dony/features/payments/wallet/presentation/screens/wallet_topup_method_screen.dart';
+import 'package:dony/features/payments/wallet/presentation/screens/wallet_topup_method_selection.dart';
+import 'package:dony/features/payments/wallet/presentation/screens/wallet_topup_mobile_money_awaiting_args.dart';
+import 'package:dony/features/payments/wallet/presentation/screens/wallet_topup_mobile_money_awaiting_screen.dart';
 import 'package:dony/features/pickup_addresses/bloc/pickup_address_bloc.dart';
 import 'package:dony/features/pickup_addresses/presentation/screens/pickup_address_edit_screen.dart';
 import 'package:dony/features/pickup_addresses/presentation/screens/pickup_addresses_screen.dart';
@@ -898,14 +902,48 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/payments/wallet/topup/method',
-      builder: (context, state) => const WalletTopupMethodScreen(),
+      // Le cubit mobile money vit ici, au niveau de la route : cet écran
+      // reste empilé (jamais dépilé) tant que l'écran de montant puis
+      // d'attente sont poussés par-dessus, si bien que la même instance
+      // survit à tout le parcours de recharge — elle est transmise en aval
+      // via WalletTopupMethodSelection.cubit, jamais recréée.
+      builder: (context, state) => BlocProvider<WalletTopupMobileMoneyCubit>(
+        create: (_) => getIt<WalletTopupMobileMoneyCubit>(),
+        child: const WalletTopupMethodScreen(),
+      ),
     ),
     GoRoute(
       path: '/payments/wallet/topup/amount',
-      builder: (context, state) => BlocProvider(
-        create: (_) => getIt<WalletBloc>(),
-        child: WalletTopupAmountScreen(paymentMethod: state.extra as String),
-      ),
+      builder: (context, state) {
+        final selection = state.extra as WalletTopupMethodSelection;
+        if (selection.method == 'MOBILE_MONEY') {
+          return BlocProvider<WalletTopupMobileMoneyCubit>.value(
+            value: selection.cubit!,
+            child: WalletTopupAmountScreen(
+              paymentMethod: selection.method,
+              mobileMoneyPhoneNumber: selection.phoneNumber,
+              mobileMoneyCurrency: selection.currency,
+            ),
+          );
+        }
+        return BlocProvider(
+          create: (_) => getIt<WalletBloc>(),
+          child: WalletTopupAmountScreen(paymentMethod: selection.method),
+        );
+      },
+    ),
+    GoRoute(
+      path: '/payments/wallet/topup/mobile-money/awaiting',
+      builder: (context, state) {
+        final args = state.extra as WalletTopupMobileMoneyAwaitingArgs;
+        return BlocProvider<WalletTopupMobileMoneyCubit>.value(
+          value: args.cubit,
+          child: WalletTopupMobileMoneyAwaitingScreen(
+            phoneNumber: args.phoneNumber,
+            amount: args.amount,
+          ),
+        );
+      },
     ),
 
     GoRoute(

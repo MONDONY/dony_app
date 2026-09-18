@@ -37,12 +37,6 @@ class WalletTopupMobileMoneyProvidersReady extends WalletTopupMobileMoneyState {
   final MobileMoneyProviderCatalog catalog;
   final String? selectedProvider;
 
-  WalletTopupMobileMoneyProvidersReady copyWith({String? selectedProvider}) =>
-      WalletTopupMobileMoneyProvidersReady(
-        catalog: catalog,
-        selectedProvider: selectedProvider ?? this.selectedProvider,
-      );
-
   @override
   List<Object?> get props => [catalog, selectedProvider];
 }

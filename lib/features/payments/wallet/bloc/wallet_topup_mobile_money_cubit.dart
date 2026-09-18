@@ -52,11 +52,17 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
 
   /// Catalogue des opérateurs utilisables sur [phoneNumber], pré-sélectionne
   /// celui détecté par pawaPay pour ce numéro.
+  ///
+  /// Garde par génération, comme [initiate]/[_poll] : une réponse tardive
+  /// (numéro modifié puis une recharge initiée avant que ce catalogue ne
+  /// revienne) ne doit jamais écraser un [WalletTopupMobileMoneyAwaiting]
+  /// déjà en cours de sondage.
   Future<void> loadProviders(String phoneNumber) async {
+    final generation = _generation;
     emit(const WalletTopupMobileMoneyProvidersLoading());
     try {
       final catalog = await _repository.topupProviders(phoneNumber);
-      if (isClosed) return;
+      if (isClosed || generation != _generation) return;
       emit(
         WalletTopupMobileMoneyProvidersReady(
           catalog: catalog,
@@ -64,16 +70,22 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
         ),
       );
     } catch (e) {
-      if (isClosed) return;
+      if (isClosed || generation != _generation) return;
       emit(WalletTopupMobileMoneyError(unwrapDioError(e)));
     }
   }
 
-  /// Change l'opérateur choisi. Sans effet hors de [WalletTopupMobileMoneyProvidersReady].
-  void selectProvider(String code) {
+  /// Change l'opérateur choisi, ou l'efface (`null`, ex : décoché dans la
+  /// checklist). Sans effet hors de [WalletTopupMobileMoneyProvidersReady].
+  void selectProvider(String? code) {
     final current = state;
     if (current is WalletTopupMobileMoneyProvidersReady) {
-      emit(current.copyWith(selectedProvider: code));
+      emit(
+        WalletTopupMobileMoneyProvidersReady(
+          catalog: current.catalog,
+          selectedProvider: code,
+        ),
+      );
     }
   }
 
