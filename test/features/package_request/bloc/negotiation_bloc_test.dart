@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/matching/data/models/acceptance_response.dart';
+import 'package:dony/features/matching/data/models/commission_shortfall.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/linked_trip_summary.dart';
 import 'package:dony/features/package_request/data/models/negotiation_message.dart';
@@ -856,6 +857,15 @@ void main() {
             requiredCommission: 5.0,
             hasCard: true,
             currency: 'EUR',
+            breakdown: CommissionShortfall(
+              bidCurrency: 'XOF',
+              commission: 1050,
+              coveredByBidWallet: 600,
+              remainingBid: 450,
+              remainingInActive: 0.69,
+              activeCurrency: 'EUR',
+              activeBalance: 1.33,
+            ),
           ),
         );
         return _makeBloc(repo);
@@ -869,7 +879,20 @@ void main() {
             .having((s) => s.requiredCommission, 'requiredCommission', 5.0)
             .having((s) => s.hasCard, 'hasCard', true)
             .having((s) => s.currency, 'currency', 'EUR')
-            .having((s) => s.threadId, 'threadId', 't-1'),
+            .having((s) => s.threadId, 'threadId', 't-1')
+            .having(
+              (s) => s.breakdown,
+              'breakdown',
+              const CommissionShortfall(
+                bidCurrency: 'XOF',
+                commission: 1050,
+                coveredByBidWallet: 600,
+                remainingBid: 450,
+                remainingInActive: 0.69,
+                activeCurrency: 'EUR',
+                activeBalance: 1.33,
+              ),
+            ),
       ],
     );
 

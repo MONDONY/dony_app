@@ -1,3 +1,5 @@
+import 'package:dony/features/matching/data/models/commission_shortfall.dart';
+
 abstract class BidAcceptanceState {}
 
 class BidAcceptanceInitial extends BidAcceptanceState {}
@@ -18,6 +20,7 @@ class BidWalletInsufficient extends BidAcceptanceState {
   final bool hasCard;
   final String bidId;
   final String? currency;
+  final CommissionShortfall? breakdown;
 
   BidWalletInsufficient({
     required this.availableBalance,
@@ -25,5 +28,6 @@ class BidWalletInsufficient extends BidAcceptanceState {
     required this.hasCard,
     required this.bidId,
     this.currency,
+    this.breakdown,
   });
 }

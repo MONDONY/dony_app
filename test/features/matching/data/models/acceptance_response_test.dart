@@ -79,4 +79,46 @@ void main() {
     expect(r.accepted, isFalse);
     expect(r.error, '3DS échoué');
   });
+
+  test('INSUFFICIENT_WALLET avec breakdown : parsé', () {
+    final r = AcceptanceResponse.fromJson({
+      'status': 'INSUFFICIENT_WALLET',
+      'availableBalance': 1.33,
+      'requiredCommission': 1.60,
+      'hasCard': false,
+      'currency': 'EUR',
+      'breakdown': {
+        'bidCurrency': 'XOF',
+        'commission': 1050,
+        'coveredByBidWallet': 600,
+        'remainingBid': 450,
+        'remainingInActive': 0.69,
+        'activeCurrency': 'EUR',
+        'activeBalance': 1.33,
+      },
+    });
+
+    expect(r.status, AcceptanceStatus.insufficientWallet);
+    expect(r.breakdown, isNotNull);
+    expect(r.breakdown!.bidCurrency, 'XOF');
+    expect(r.breakdown!.commission, 1050);
+    expect(r.breakdown!.coveredByBidWallet, 600);
+    expect(r.breakdown!.remainingBid, 450);
+    expect(r.breakdown!.remainingInActive, 0.69);
+    expect(r.breakdown!.activeCurrency, 'EUR');
+    expect(r.breakdown!.activeBalance, 1.33);
+  });
+
+  test('INSUFFICIENT_WALLET sans breakdown (ancien back) : null', () {
+    final r = AcceptanceResponse.fromJson({
+      'status': 'INSUFFICIENT_WALLET',
+      'availableBalance': 1.33,
+      'requiredCommission': 1.60,
+      'hasCard': true,
+      'currency': 'EUR',
+    });
+
+    expect(r.breakdown, isNull);
+    expect(r.hasCard, isTrue);
+  });
 }

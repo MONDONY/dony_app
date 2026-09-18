@@ -3,6 +3,7 @@ import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_event.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_state.dart';
 import 'package:dony/features/matching/data/models/acceptance_response.dart';
+import 'package:dony/features/matching/data/models/commission_shortfall.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -126,6 +127,15 @@ void main() {
           availableBalance: 3.0,
           requiredCommission: 12.0,
           hasCard: true,
+          breakdown: CommissionShortfall(
+            bidCurrency: 'XOF',
+            commission: 1050,
+            coveredByBidWallet: 600,
+            remainingBid: 450,
+            remainingInActive: 0.69,
+            activeCurrency: 'EUR',
+            activeBalance: 1.33,
+          ),
         ),
       );
       return BidAcceptanceBloc(repo, stripe);
@@ -138,7 +148,14 @@ void main() {
             s.availableBalance == 3.0 &&
             s.requiredCommission == 12.0 &&
             s.hasCard == true &&
-            s.bidId == 'bid_x',
+            s.bidId == 'bid_x' &&
+            s.breakdown?.bidCurrency == 'XOF' &&
+            s.breakdown?.commission == 1050 &&
+            s.breakdown?.coveredByBidWallet == 600 &&
+            s.breakdown?.remainingBid == 450 &&
+            s.breakdown?.remainingInActive == 0.69 &&
+            s.breakdown?.activeCurrency == 'EUR' &&
+            s.breakdown?.activeBalance == 1.33,
       ),
     ],
   );

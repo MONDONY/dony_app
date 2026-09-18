@@ -92,6 +92,7 @@ class BidAcceptanceBloc extends Bloc<BidAcceptanceEvent, BidAcceptanceState> {
             hasCard: r.hasCard ?? false,
             bidId: bidId,
             currency: r.currency,
+            breakdown: r.breakdown,
           ),
         );
         return;
