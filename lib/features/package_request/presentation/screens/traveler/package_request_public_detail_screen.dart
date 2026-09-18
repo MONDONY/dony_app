@@ -220,12 +220,7 @@ class _PackageRequestPublicDetailScreenState
     final extra = GoRouterState.of(context).extra as Map<String, dynamic>?;
     final announcement = extra?['announcement'] as AnnouncementModel?;
     final cs = Theme.of(context).colorScheme;
-    final authState = context.read<AuthBloc>().state;
-    final currentUserId = authState is AuthAuthenticated
-        ? authState.user.id
-        : authState is AuthProfileUpdated
-        ? authState.user.id
-        : null;
+    final currentUserId = context.read<AuthBloc>().state.currentUserId;
     return BlocListener<AuthBloc, AuthState>(
       // L'auth peut se résoudre APRÈS le chargement de la demande (démarrage à
       // froid via lien partagé) : on réévalue le verdict d'appartenance à
