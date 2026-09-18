@@ -53,6 +53,12 @@ class WalletModel {
 
   bool get hasEstimate => estimatedTotal != null;
 
+  /// Devises réellement détenues : solde non nul, plus la devise active même
+  /// à zéro (elle porte l'en-tête). Une seule source pour l'en-tête et la
+  /// carte des soldes, qui doivent se contredire nulle part.
+  List<WalletCurrencyBalanceModel> get heldBalances =>
+      balances.where((b) => b.active || b.balance != 0).toList();
+
   /// Devises dont une demande de remboursement est possible : éligibles et
   /// dont le net après frais est strictement positif (même règle que
   /// `_HeroHeader._canRefund` avant ce chantier, étendue à toutes les
@@ -60,7 +66,9 @@ class WalletModel {
   /// contrat (les deux nuls) laissé à `refundEligible` seul.
   List<WalletCurrencyBalanceModel> get eligibleBalances => balances
       .where(
-        (b) => b.refundEligible && (b.refundNetAmount ?? b.refundableAmount ?? 1) > 0,
+        (b) =>
+            b.refundEligible &&
+            (b.refundNetAmount ?? b.refundableAmount ?? 1) > 0,
       )
       .toList();
 }

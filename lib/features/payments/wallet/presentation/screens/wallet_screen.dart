@@ -249,10 +249,11 @@ class _LoadedView extends StatelessWidget {
                 nonRefundableAmount: wallet.activeBalance?.nonRefundableAmount,
                 refundFeeAmount: wallet.activeBalance?.refundFeeAmount,
                 refundNetAmount: wallet.activeBalance?.refundNetAmount,
-                estimatedTotal: wallet.hasEstimate ? wallet.estimatedTotal : null,
+                estimatedTotal: wallet.hasEstimate
+                    ? wallet.estimatedTotal
+                    : null,
                 estimateComplete: wallet.estimateComplete,
-                multiCurrency:
-                    wallet.balances.where((b) => b.balance != 0).length > 1,
+                multiCurrency: wallet.heldBalances.length > 1,
               ),
             ),
           ),
@@ -318,11 +319,7 @@ class _LoadedView extends StatelessWidget {
           // Nouveau contrat : toutes les devises détenues, chacune dans sa
           // devise, avec son équivalent estimé. Ancien contrat : tuiles des
           // devises non actives comme avant.
-          if (wallet.hasEstimate &&
-              wallet.balances
-                      .where((b) => b.balance != 0 || b.active)
-                      .length >
-                  1)
+          if (wallet.hasEstimate && wallet.heldBalances.length > 1)
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
@@ -499,7 +496,10 @@ class _HeroHeader extends StatelessWidget {
               ),
               const SizedBox(height: DonySpacing.xs),
               Text(
-                    CurrencyFormatter.format(estimatedTotal ?? balance, currency),
+                    CurrencyFormatter.format(
+                      estimatedTotal ?? balance,
+                      currency,
+                    ),
                     key: const Key('wallet-estimated-total'),
                     style: Theme.of(context).textTheme.displayLarge?.copyWith(
                       color: DonyColors.neutral0,
@@ -808,10 +808,14 @@ class _CurrencyBalancesCard extends StatelessWidget {
   final String? highlightCurrency;
 
   List<WalletCurrencyBalanceModel> get _rows {
-    final rows = wallet.balances.where((b) => b.active || b.balance != 0).toList()
+    final rows = wallet.heldBalances
       ..sort((a, b) {
         if (a.active != b.active) return a.active ? -1 : 1;
-        return (b.estimatedInActive ?? 0).compareTo(a.estimatedInActive ?? 0);
+        final byEstimate = (b.estimatedInActive ?? 0).compareTo(
+          a.estimatedInActive ?? 0,
+        );
+        // Tri secondaire par code : List.sort n'est pas stable.
+        return byEstimate != 0 ? byEstimate : a.currency.compareTo(b.currency);
       });
     return rows;
   }
@@ -830,7 +834,8 @@ class _CurrencyBalancesCard extends StatelessWidget {
               activeCurrency: active,
               highlighted:
                   highlightCurrency != null &&
-                  highlightCurrency!.toUpperCase() == row.currency.toUpperCase(),
+                  highlightCurrency!.toUpperCase() ==
+                      row.currency.toUpperCase(),
             ),
           ],
         ],
@@ -866,10 +871,13 @@ class _CurrencyBalanceRow extends StatelessWidget {
           vertical: 2,
         ),
         decoration: BoxDecoration(
-          color: DonyColors.blue50,
+          color: cs.primaryContainer,
           borderRadius: BorderRadius.circular(DonyRadius.sm),
         ),
-        child: Text('active', style: tt.labelSmall?.copyWith(color: cs.primary)),
+        child: Text(
+          'active',
+          style: tt.labelSmall?.copyWith(color: cs.onPrimaryContainer),
+        ),
       );
     } else if (estimate == null) {
       trailing = Text(
