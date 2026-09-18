@@ -1,6 +1,12 @@
 class WalletTransactionModel {
   final String type;
   final double amount;
+
+  /// Code ISO de la devise de cette ligne (`XOF`, `EUR`...). La liste du back
+  /// mêle tous les portefeuilles de l'utilisateur : une recharge mobile money
+  /// en XOF côtoie un remboursement Stripe en EUR. `null` avec un ancien
+  /// contrat back, l'écran retombe alors sur la devise du portefeuille actif.
+  final String? currency;
   final double balanceAfter;
   final String? paymentRef;
   final DateTime createdAt;
@@ -12,6 +18,7 @@ class WalletTransactionModel {
   const WalletTransactionModel({
     required this.type,
     required this.amount,
+    this.currency,
     required this.balanceAfter,
     this.paymentRef,
     required this.createdAt,
@@ -22,6 +29,7 @@ class WalletTransactionModel {
       WalletTransactionModel(
         type: json['type'] as String,
         amount: (json['amount'] as num).toDouble(),
+        currency: (json['currency'] as String?)?.toUpperCase(),
         balanceAfter: (json['balanceAfter'] as num).toDouble(),
         paymentRef: json['paymentRef'] as String?,
         createdAt: DateTime.parse(json['createdAt'] as String),

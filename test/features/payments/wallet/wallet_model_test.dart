@@ -127,6 +127,32 @@ void main() {
       expect(wallet.balances[0].refundNetAmount, isNull);
     });
 
+    test('la devise de chaque ligne vient du back, pas du portefeuille actif', () {
+      final wallet = WalletModel.fromJson({
+        'balance': 1.33,
+        'currency': 'EUR',
+        'transactions': [
+          {
+            'type': 'TOP_UP',
+            'amount': 10000.0,
+            'currency': 'xof',
+            'balanceAfter': 10000.0,
+            'paymentRef': 'pawapay:11111111-1111-1111-1111-111111111111',
+            'createdAt': '2026-09-18T12:26:00.000Z',
+          },
+          {
+            'type': 'REFUND',
+            'amount': 1.33,
+            'balanceAfter': 1.33,
+            'createdAt': '2026-09-18T14:34:00.000Z',
+          },
+        ],
+      });
+
+      expect(wallet.transactions[0].currency, 'XOF');
+      expect(wallet.transactions[1].currency, isNull);
+    });
+
     test('isMobileMoneyTopup est vrai pour un paymentRef préfixé pawapay:', () {
       final wallet = WalletModel.fromJson({
         'balance': 5000.0,
