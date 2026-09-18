@@ -8,12 +8,23 @@ class WalletModel {
   final List<WalletCurrencyBalanceModel> balances;
   final bool refundEligible;
 
+  /// Somme de tous les portefeuilles convertie dans [currency] au taux du
+  /// jour (back). `null` sur l'ancien contrat : l'écran retombe alors sur
+  /// l'en-tête « Solde disponible ».
+  final double? estimatedTotal;
+
+  /// `false` quand une devise détenue n'a pas de taux et a été exclue du
+  /// total (le back le signale ; l'écran dit « estimation partielle »).
+  final bool estimateComplete;
+
   const WalletModel({
     required this.balance,
     required this.currency,
     required this.transactions,
     this.balances = const [],
     this.refundEligible = false,
+    this.estimatedTotal,
+    this.estimateComplete = true,
   });
 
   factory WalletModel.fromJson(Map<String, dynamic> json) => WalletModel(
@@ -28,6 +39,8 @@ class WalletModel {
         )
         .toList(),
     refundEligible: json['refundEligible'] as bool? ?? false,
+    estimatedTotal: (json['estimatedTotal'] as num?)?.toDouble(),
+    estimateComplete: json['estimateComplete'] as bool? ?? true,
   );
 
   /// Portefeuille de la devise active, s'il est listé dans [balances].
@@ -37,4 +50,17 @@ class WalletModel {
     }
     return null;
   }
+
+  bool get hasEstimate => estimatedTotal != null;
+
+  /// Devises dont une demande de remboursement est possible : éligibles et
+  /// dont le net après frais est strictement positif (même règle que
+  /// `_HeroHeader._canRefund` avant ce chantier, étendue à toutes les
+  /// devises). `refundNetAmount` prime, repli `refundableAmount`, ancien
+  /// contrat (les deux nuls) laissé à `refundEligible` seul.
+  List<WalletCurrencyBalanceModel> get eligibleBalances => balances
+      .where(
+        (b) => b.refundEligible && (b.refundNetAmount ?? b.refundableAmount ?? 1) > 0,
+      )
+      .toList();
 }
