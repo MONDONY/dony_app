@@ -15,6 +15,10 @@ abstract final class WalletRefundConfirmSheet {
     required String currency,
     required double refundableAmount,
     required double nonRefundableAmount,
+    double? feeAmount,
+    double? netAmount,
+    String? rail,
+    String? destinationMasked,
   }) {
     final refundCubit = context.read<WalletRefundRequestCubit>();
     final displayCurrency = SupportedCurrency.fromCodeOrDefault(currency);
@@ -27,11 +31,15 @@ abstract final class WalletRefundConfirmSheet {
         currency: displayCurrency,
         refundableAmount: refundableAmount,
         nonRefundableAmount: nonRefundableAmount,
+        feeAmount: feeAmount,
+        netAmount: netAmount,
+        rail: rail,
+        destinationMasked: destinationMasked,
       ),
       stickyBottom: _ConfirmStickyBottom(
         currencyCode: currency,
         label:
-            'Rembourser ${CurrencyFormatter.format(refundableAmount, displayCurrency)}',
+            'Rembourser ${CurrencyFormatter.format(netAmount ?? refundableAmount, displayCurrency)}',
       ),
     );
   }
@@ -42,32 +50,82 @@ class _ConfirmContent extends StatelessWidget {
     required this.currency,
     required this.refundableAmount,
     required this.nonRefundableAmount,
+    this.feeAmount,
+    this.netAmount,
+    this.rail,
+    this.destinationMasked,
   });
 
   final SupportedCurrency currency;
   final double refundableAmount;
   final double nonRefundableAmount;
+  final double? feeAmount;
+  final double? netAmount;
+  final String? rail;
+  final String? destinationMasked;
+
+  bool get _isPawapay => rail == 'PAWAPAY';
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final fee = feeAmount;
+    final hasFeeInfo = feeAmount != null || netAmount != null;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          'Remboursable sur votre carte : '
+          'Remboursable sur ${_isPawapay ? 'mobile money' : 'votre carte'} : '
           '${CurrencyFormatter.format(refundableAmount, currency)}',
           style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: DonySpacing.sm),
         Text(
-          'Le montant revient sur la carte utilisée pour la recharge, sous 5 à '
-          '10 jours selon votre banque. Votre solde est gelé le temps du '
-          'traitement.',
+          _isPawapay
+              ? (destinationMasked != null
+                    ? 'Le montant repart vers $destinationMasked. Votre '
+                          'solde est gelé le temps du traitement.'
+                    : 'Le montant repart vers votre compte mobile money. '
+                          'Votre solde est gelé le temps du traitement.')
+              : 'Le montant revient sur la carte utilisée pour la recharge, '
+                    'sous 5 à 10 jours selon votre banque. Votre solde est '
+                    'gelé le temps du traitement.',
           style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
         ),
+        if (fee != null) ...[
+          const SizedBox(height: DonySpacing.base),
+          DonyInfoRow(
+            label: 'Frais de remboursement',
+            value: fee > 0
+                ? CurrencyFormatter.format(fee, currency)
+                : 'Offerts',
+            valueStyle: fee > 0
+                ? DonyInfoRowValueStyle.warning
+                : DonyInfoRowValueStyle.success,
+          ),
+        ],
+        if (hasFeeInfo) ...[
+          const SizedBox(height: DonySpacing.xs),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Vous recevrez',
+                style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+              ),
+              Text(
+                CurrencyFormatter.format(
+                  netAmount ?? refundableAmount,
+                  currency,
+                ),
+                style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w700),
+              ),
+            ],
+          ),
+        ],
         if (nonRefundableAmount > 0) ...[
           const SizedBox(height: DonySpacing.base),
           DonyStatusBanner(
@@ -77,6 +135,16 @@ class _ConfirmContent extends StatelessWidget {
                 '${CurrencyFormatter.format(nonRefundableAmount, currency)} '
                 'de bonus ne sont pas remboursables et restent sur votre '
                 'portefeuille.',
+          ),
+        ],
+        if (fee != null && fee > 0) ...[
+          const SizedBox(height: DonySpacing.base),
+          DonyStatusBanner(
+            type: DonyStatusBannerType.warning,
+            iconAsset: 'circle-alert',
+            message:
+                'Des frais de ${CurrencyFormatter.format(fee, currency)} sont '
+                'retenus par l\'opérateur pour ce remboursement.',
           ),
         ],
       ],

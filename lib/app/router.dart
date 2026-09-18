@@ -126,6 +126,7 @@ import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_refund_request_cubit.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_refund_requests_list_cubit.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_cubit.dart';
+import 'package:dony/features/payments/wallet/data/models/wallet_topup_status_model.dart';
 import 'package:dony/features/payments/wallet/presentation/screens/wallet_refund_requests_screen.dart';
 import 'package:dony/features/payments/wallet/presentation/screens/wallet_screen.dart';
 import 'package:dony/features/payments/wallet/presentation/screens/wallet_topup_amount_screen.dart';
@@ -883,15 +884,24 @@ final appRouter = GoRouter(
     // ── Wallet (hors shell) ──────────────────────────────────────────────
     GoRoute(
       path: '/payments/wallet',
-      builder: (context, state) => MultiBlocProvider(
-        providers: [
-          BlocProvider(
-            create: (_) => getIt<WalletBloc>()..add(WalletLoadRequested()),
-          ),
-          BlocProvider(create: (_) => getIt<WalletRefundRequestCubit>()),
-        ],
-        child: const WalletScreen(),
-      ),
+      builder: (context, state) {
+        // Poussé par l'écran d'attente mobile money via `context.go(extra:
+        // {'topupConfirmed': status})` : bandeau de confirmation affiché une
+        // fois par `WalletScreen`. Absent sur toute autre entrée (menu,
+        // retour arrière).
+        final extra = state.extra as Map<String, dynamic>?;
+        final topupConfirmed =
+            extra?['topupConfirmed'] as WalletTopupStatusModel?;
+        return MultiBlocProvider(
+          providers: [
+            BlocProvider(
+              create: (_) => getIt<WalletBloc>()..add(WalletLoadRequested()),
+            ),
+            BlocProvider(create: (_) => getIt<WalletRefundRequestCubit>()),
+          ],
+          child: WalletScreen(topupConfirmed: topupConfirmed),
+        );
+      },
     ),
     GoRoute(
       path: '/payments/wallet/refunds',

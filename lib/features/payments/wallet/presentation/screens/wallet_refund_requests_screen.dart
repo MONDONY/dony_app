@@ -103,61 +103,124 @@ class _RefundRequestTile extends StatelessWidget {
     _ => cs.primary,
   };
 
+  /// Icône selon le rail. `null` (ancien contrat) garde l'icône générique
+  /// d'avant.
+  IconData get _railIcon => switch (request.rail) {
+    'PAWAPAY' => Icons.smartphone_rounded,
+    'STRIPE' => Icons.credit_card_rounded,
+    _ => Icons.receipt_long,
+  };
+
+  /// Le back n'expose pas le nom de l'opérateur sur une demande de
+  /// remboursement, seul le rail (`STRIPE`/`PAWAPAY`/`MANUAL`) : le
+  /// sous-titre reste générique, jamais un nom inventé.
+  String? get _railLabel => switch (request.rail) {
+    'PAWAPAY' => 'Mobile money',
+    'STRIPE' => 'Carte',
+    'MANUAL' => 'Manuel',
+    _ => null,
+  };
+
+  /// Le back n'expose pas de drapeau « versement de repli en cours » : la
+  /// phrase n'apparaît que si les trois conditions vérifiables sont réunies
+  /// (rail pawaPay, demande non terminale, destination connue) — jamais
+  /// inventée à partir d'un statut seul.
+  bool get _showFallbackNotice =>
+      request.rail == 'PAWAPAY' &&
+      !request.isTerminal &&
+      request.destinationMasked != null;
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final currency = SupportedCurrency.fromCodeOrDefault(request.currency);
     final date = DateFormat('dd MMM yyyy', 'fr_FR').format(request.requestedAt);
     final statusColor = _statusColor(cs);
+    final fee = request.feeAmount;
+    final subtitle = [
+      ?_railLabel,
+      ?request.destinationMasked,
+      date,
+    ].join(' · ');
 
     return DonyCard(
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: statusColor.withValues(alpha: 0.10),
-              borderRadius: BorderRadius.circular(DonyRadius.md),
-            ),
-            child: Icon(Icons.receipt_long, color: statusColor, size: 20),
-          ),
-          const SizedBox(width: DonySpacing.base),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  CurrencyFormatter.format(request.amount, currency),
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontSize: 15,
+          Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(DonyRadius.md),
+                ),
+                child: Icon(_railIcon, color: statusColor, size: 20),
+              ),
+              const SizedBox(width: DonySpacing.base),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      CurrencyFormatter.format(request.amount, currency),
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(DonyRadius.full),
+                ),
+                child: Text(
+                  _statusLabel,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: statusColor,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  date,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: statusColor.withValues(alpha: 0.10),
-              borderRadius: BorderRadius.circular(DonyRadius.full),
-            ),
-            child: Text(
-              _statusLabel,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: statusColor,
-                fontWeight: FontWeight.w700,
               ),
-            ),
+            ],
           ),
+          if (_showFallbackNotice) ...[
+            const SizedBox(height: DonySpacing.sm),
+            Text(
+              'Le remboursement part vers ${request.destinationMasked}. En '
+              'cas de refus de l\'opérateur, l\'argent est renvoyé par un '
+              'versement sur le même numéro.',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
+          ],
+          if (fee != null && fee > 0) ...[
+            const SizedBox(height: DonySpacing.sm),
+            Text(
+              '${CurrencyFormatter.format(request.amount, currency)} '
+              'remboursables, ${CurrencyFormatter.format(fee, currency)} de '
+              'frais retenus',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: cs.warning),
+            ),
+          ],
         ],
       ),
     );

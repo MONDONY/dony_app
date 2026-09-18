@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/widgets/dony_skeleton.dart';
 import 'package:dony/core/di/injection.dart';
@@ -7,6 +9,7 @@ import 'package:dony/features/payments/wallet/bloc/wallet_eligible_topups_cubit.
 import 'package:dony/features/payments/wallet/bloc/wallet_refund_request_cubit.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_currency_balance_model.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_model.dart';
+import 'package:dony/features/payments/wallet/data/models/wallet_topup_status_model.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_transaction_model.dart';
 import 'package:dony/features/payments/wallet/presentation/screens/wallet_screen.dart';
 import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
@@ -36,6 +39,7 @@ Widget buildSubject(
   WalletBloc bloc,
   BusinessPrefsBloc prefsBloc, [
   WalletRefundRequestCubit? refundCubit,
+  WalletTopupStatusModel? topupConfirmed,
 ]) => MaterialApp.router(
   routerConfig: GoRouter(
     routes: [
@@ -48,7 +52,7 @@ Widget buildSubject(
             if (refundCubit != null)
               BlocProvider<WalletRefundRequestCubit>.value(value: refundCubit),
           ],
-          child: const WalletScreen(),
+          child: WalletScreen(topupConfirmed: topupConfirmed),
         ),
       ),
     ],
@@ -627,5 +631,220 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Rembourser'), findsNothing);
+  });
+
+  testWidgets(
+    'refundNetAmount à 0 avec un refundableAmount positif : le bouton '
+    'Rembourser est masqué (les frais mangent tout le brut)',
+    (tester) async {
+      const wallet = WalletModel(
+        balance: 40,
+        currency: 'EUR',
+        transactions: [],
+        refundEligible: true,
+        balances: [
+          WalletCurrencyBalanceModel(
+            currency: 'EUR',
+            balance: 40,
+            active: true,
+            refundEligible: true,
+            refundableAmount: 3,
+            refundFeeAmount: 3,
+            refundNetAmount: 0,
+          ),
+        ],
+      );
+      whenListen(
+        bloc,
+        Stream.value(WalletLoaded(wallet)),
+        initialState: WalletInitial(),
+      );
+
+      await tester.pumpWidget(buildSubject(bloc, prefsBloc, refundCubit));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Rembourser'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'Rembourser transmet feeAmount et netAmount à la sheet de confirmation',
+    (tester) async {
+      const wallet = WalletModel(
+        balance: 40,
+        currency: 'EUR',
+        transactions: [],
+        refundEligible: true,
+        balances: [
+          WalletCurrencyBalanceModel(
+            currency: 'EUR',
+            balance: 40,
+            active: true,
+            refundEligible: true,
+            refundableAmount: 35,
+            refundFeeAmount: 3,
+            refundNetAmount: 32,
+          ),
+        ],
+      );
+      whenListen(
+        bloc,
+        Stream.value(WalletLoaded(wallet)),
+        initialState: WalletInitial(),
+      );
+
+      await tester.pumpWidget(buildSubject(bloc, prefsBloc, refundCubit));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Rembourser'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Frais de remboursement'), findsOneWidget);
+      expect(find.text('Vous recevrez'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'historique : libellé "Recharge mobile money" pour un paymentRef pawapay:',
+    (tester) async {
+      final tx = WalletTransactionModel(
+        type: 'TOP_UP',
+        amount: 20.0,
+        balanceAfter: 20.0,
+        paymentRef: 'pawapay:op-123',
+        createdAt: DateTime(2026, 9, 1, 10, 30),
+      );
+      final wallet = WalletModel(
+        balance: 20.0,
+        currency: 'EUR',
+        transactions: [tx],
+      );
+      whenListen(
+        bloc,
+        Stream.value(WalletLoaded(wallet)),
+        initialState: WalletInitial(),
+      );
+
+      await tester.pumpWidget(buildSubject(bloc, prefsBloc));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Recharge mobile money'), findsOneWidget);
+      expect(find.text('Recharge'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'historique : libellé "Recharge" inchangé pour une recharge par carte',
+    (tester) async {
+      final tx = WalletTransactionModel(
+        type: 'TOP_UP',
+        amount: 20.0,
+        balanceAfter: 20.0,
+        paymentRef: 'pi_123',
+        createdAt: DateTime(2026, 9, 1, 10, 30),
+      );
+      final wallet = WalletModel(
+        balance: 20.0,
+        currency: 'EUR',
+        transactions: [tx],
+      );
+      whenListen(
+        bloc,
+        Stream.value(WalletLoaded(wallet)),
+        initialState: WalletInitial(),
+      );
+
+      await tester.pumpWidget(buildSubject(bloc, prefsBloc));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Recharge'), findsOneWidget);
+      expect(find.text('Recharge mobile money'), findsNothing);
+    },
+  );
+
+  group('bandeau de confirmation de recharge mobile money', () {
+    const topupStatus = WalletTopupStatusModel(
+      topupId: 't1',
+      status: 'CONFIRMED',
+      amount: 25,
+      currency: 'EUR',
+      provider: 'ORANGE',
+      providerLabel: 'Orange Money',
+      msisdnMasked: '+225 07 ** ** 89',
+      walletBalance: 65,
+    );
+
+    testWidgets('affiché quand topupConfirmed est fourni', (tester) async {
+      const wallet = WalletModel(
+        balance: 65,
+        currency: 'EUR',
+        transactions: [],
+      );
+      whenListen(
+        bloc,
+        Stream.value(WalletLoaded(wallet)),
+        initialState: WalletInitial(),
+      );
+
+      await tester.pumpWidget(buildSubject(bloc, prefsBloc, null, topupStatus));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('confirmée par Orange Money'), findsOneWidget);
+    });
+
+    testWidgets('absent quand aucun topupConfirmed n\'est fourni', (
+      tester,
+    ) async {
+      const wallet = WalletModel(
+        balance: 65,
+        currency: 'EUR',
+        transactions: [],
+      );
+      whenListen(
+        bloc,
+        Stream.value(WalletLoaded(wallet)),
+        initialState: WalletInitial(),
+      );
+
+      await tester.pumpWidget(buildSubject(bloc, prefsBloc));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('confirmée par'), findsNothing);
+    });
+
+    testWidgets('ne réapparaît pas à un rebuild déclenché par le WalletBloc', (
+      tester,
+    ) async {
+      const wallet = WalletModel(
+        balance: 65,
+        currency: 'EUR',
+        transactions: [],
+      );
+      final controller = StreamController<WalletState>.broadcast();
+      addTearDown(controller.close);
+      when(() => bloc.state).thenReturn(WalletLoaded(wallet));
+      when(() => bloc.stream).thenAnswer((_) => controller.stream);
+
+      await tester.pumpWidget(buildSubject(bloc, prefsBloc, null, topupStatus));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('confirmée par Orange Money'), findsOneWidget);
+
+      // Fermeture manuelle du bandeau.
+      await tester.tap(find.bySemanticsLabel('Fermer le message'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('confirmée par'), findsNothing);
+
+      // Un nouvel état (rafraîchissement) rebuild l'écran : le bandeau ne
+      // doit pas revenir seul.
+      const refreshedWallet = WalletModel(
+        balance: 70,
+        currency: 'EUR',
+        transactions: [],
+      );
+      controller.add(WalletLoaded(refreshedWallet));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('confirmée par'), findsNothing);
+    });
   });
 }

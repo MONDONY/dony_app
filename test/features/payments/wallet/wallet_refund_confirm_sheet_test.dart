@@ -31,25 +31,35 @@ void main() {
     when(() => cubit.submit(any())).thenAnswer((_) async {});
   });
 
-  Widget host({required double refundable, required double nonRefundable}) =>
-      MaterialApp(
-        home: BlocProvider<WalletRefundRequestCubit>.value(
-          value: cubit,
-          child: Builder(
-            builder: (context) => Scaffold(
-              body: ElevatedButton(
-                onPressed: () => WalletRefundConfirmSheet.show(
-                  context,
-                  currency: 'EUR',
-                  refundableAmount: refundable,
-                  nonRefundableAmount: nonRefundable,
-                ),
-                child: const Text('Open'),
-              ),
+  Widget host({
+    required double refundable,
+    required double nonRefundable,
+    double? feeAmount,
+    double? netAmount,
+    String? rail,
+    String? destinationMasked,
+  }) => MaterialApp(
+    home: BlocProvider<WalletRefundRequestCubit>.value(
+      value: cubit,
+      child: Builder(
+        builder: (context) => Scaffold(
+          body: ElevatedButton(
+            onPressed: () => WalletRefundConfirmSheet.show(
+              context,
+              currency: 'EUR',
+              refundableAmount: refundable,
+              nonRefundableAmount: nonRefundable,
+              feeAmount: feeAmount,
+              netAmount: netAmount,
+              rail: rail,
+              destinationMasked: destinationMasked,
             ),
+            child: const Text('Open'),
           ),
         ),
-      );
+      ),
+    ),
+  );
 
   testWidgets('affiche le montant remboursable et le bouton avec le montant', (
     tester,
@@ -211,4 +221,86 @@ void main() {
       expect(find.text('Rembourser mon solde'), findsOneWidget);
     },
   );
+
+  group('frais de remboursement', () {
+    testWidgets('feeAmount > 0 : montant affiché, bouton sur le net', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        host(refundable: 35, nonRefundable: 0, feeAmount: 3, netAmount: 32),
+      );
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Frais de remboursement'), findsOneWidget);
+      expect(find.textContaining('3,00'), findsWidgets);
+      expect(find.text('Vous recevrez'), findsOneWidget);
+      expect(find.textContaining('32,00'), findsWidgets);
+      expect(
+        find.text(
+          'Rembourser ${CurrencyFormatter.format(32, SupportedCurrency.eur)}',
+        ),
+        findsOneWidget,
+      );
+      // Bandeau d'avertissement sur les frais retenus.
+      expect(find.textContaining('Des frais de'), findsOneWidget);
+    });
+
+    testWidgets('feeAmount == 0 : "Offerts", pas de bandeau d\'avertissement', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        host(refundable: 35, nonRefundable: 0, feeAmount: 0, netAmount: 35),
+      );
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Frais de remboursement'), findsOneWidget);
+      expect(find.text('Offerts'), findsOneWidget);
+      expect(find.text('Vous recevrez'), findsOneWidget);
+      expect(find.textContaining('Des frais de'), findsNothing);
+    });
+
+    testWidgets(
+      'feeAmount et netAmount absents (ancien contrat) : affichage actuel '
+      'inchangé, aucune ligne de frais',
+      (tester) async {
+        await tester.pumpWidget(host(refundable: 35, nonRefundable: 0));
+        await tester.tap(find.text('Open'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Frais de remboursement'), findsNothing);
+        expect(find.text('Vous recevrez'), findsNothing);
+        expect(find.text('Offerts'), findsNothing);
+        expect(find.text(expectedButtonLabel), findsOneWidget);
+      },
+    );
+
+    testWidgets('rail pawaPay avec destination masquée : texte mobile money', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        host(
+          refundable: 35,
+          nonRefundable: 0,
+          feeAmount: 3,
+          netAmount: 32,
+          rail: 'PAWAPAY',
+          destinationMasked: '+225 07 ** ** 89',
+        ),
+      );
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.textContaining('Remboursable sur mobile money'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('+225 07 ** ** 89'), findsOneWidget);
+      expect(
+        find.textContaining('Le montant revient sur la carte'),
+        findsNothing,
+      );
+    });
+  });
 }
