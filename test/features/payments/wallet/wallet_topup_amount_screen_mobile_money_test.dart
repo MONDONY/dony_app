@@ -231,9 +231,12 @@ void main() {
           findsOneWidget,
         );
         expect(
-          find.textContaining('Ton portefeuille Franc CFA Ouest sera crédité de'),
+          find.textContaining(
+            'Ton portefeuille Franc CFA Ouest sera crédité du montant que tu saisis',
+          ),
           findsOneWidget,
         );
+        expect(find.textContaining('crédité de 0'), findsNothing);
         expect(
           find.textContaining('Ton portefeuille Euro ne bouge pas'),
           findsOneWidget,
@@ -269,10 +272,7 @@ void main() {
         5000,
         SupportedCurrency.fromCodeOrDefault('XOF'),
       );
-      expect(
-        find.textContaining('sera crédité de $formatted'),
-        findsOneWidget,
-      );
+      expect(find.textContaining('sera crédité de $formatted'), findsOneWidget);
     });
   });
 }

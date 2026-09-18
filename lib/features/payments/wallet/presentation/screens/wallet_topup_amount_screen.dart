@@ -440,9 +440,10 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
                         key: const Key('wallet-topup-currency-mismatch'),
                         type: DonyStatusBannerType.info,
                         iconAsset: 'wallet',
+                        // Avant toute saisie, pas de « crédité de 0 F CFA ».
                         message:
                             'Ton portefeuille ${currency.displayName} sera '
-                            'crédité de ${CurrencyFormatter.format(_amount, currency)}. '
+                            'crédité ${_amount > 0 ? 'de ${CurrencyFormatter.format(_amount, currency)}' : 'du montant que tu saisis'}. '
                             'Ton portefeuille ${activeCurrency.displayName} '
                             'ne bouge pas.',
                       ),
