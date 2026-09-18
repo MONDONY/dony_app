@@ -1,8 +1,10 @@
+import 'package:equatable/equatable.dart';
+
 /// Détail d'un « solde insuffisant » quand la devise du colis diffère de la
 /// devise active : ce que le portefeuille de la devise du colis couvre, ce qui
 /// manque (dans les deux devises) et le solde actif. Absent quand les deux
 /// devises sont identiques ou avec un ancien back.
-class CommissionShortfall {
+class CommissionShortfall extends Equatable {
   final String bidCurrency;
   final double commission;
   final double coveredByBidWallet;
@@ -20,6 +22,17 @@ class CommissionShortfall {
     required this.activeCurrency,
     required this.activeBalance,
   });
+
+  @override
+  List<Object?> get props => [
+    bidCurrency,
+    commission,
+    coveredByBidWallet,
+    remainingBid,
+    remainingInActive,
+    activeCurrency,
+    activeBalance,
+  ];
 
   factory CommissionShortfall.fromJson(Map<String, dynamic> json) =>
       CommissionShortfall(

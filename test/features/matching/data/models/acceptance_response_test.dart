@@ -1,4 +1,5 @@
 import 'package:dony/features/matching/data/models/acceptance_response.dart';
+import 'package:dony/features/matching/data/models/commission_shortfall.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -107,6 +108,23 @@ void main() {
     expect(r.breakdown!.remainingInActive, 0.69);
     expect(r.breakdown!.activeCurrency, 'EUR');
     expect(r.breakdown!.activeBalance, 1.33);
+  });
+
+  test('deux breakdown de même valeur sont égaux (états Equatable)', () {
+    Map<String, dynamic> json() => {
+      'bidCurrency': 'XOF',
+      'commission': 1050,
+      'coveredByBidWallet': 600,
+      'remainingBid': 450,
+      'remainingInActive': 0.69,
+      'activeCurrency': 'EUR',
+      'activeBalance': 1.33,
+    };
+
+    expect(
+      CommissionShortfall.fromJson(json()),
+      equals(CommissionShortfall.fromJson(json())),
+    );
   });
 
   test('INSUFFICIENT_WALLET sans breakdown (ancien back) : null', () {
