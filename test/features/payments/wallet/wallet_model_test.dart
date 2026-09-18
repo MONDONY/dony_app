@@ -127,7 +127,7 @@ void main() {
       expect(wallet.balances[0].refundNetAmount, isNull);
     });
 
-    test('parses provider and msisdnMasked on a transaction', () {
+    test('isMobileMoneyTopup est vrai pour un paymentRef préfixé pawapay:', () {
       final wallet = WalletModel.fromJson({
         'balance': 5000.0,
         'currency': 'XOF',
@@ -136,19 +136,34 @@ void main() {
             'type': 'TOPUP',
             'amount': 5000.0,
             'balanceAfter': 5000.0,
+            'paymentRef': 'pawapay:11111111-1111-1111-1111-111111111111',
             'createdAt': '2026-09-15T10:00:00.000Z',
-            'provider': 'ORANGE_CIV',
-            'msisdnMasked': '+225 •• •• 56 78',
           },
         ],
       });
 
-      expect(wallet.transactions[0].provider, 'ORANGE_CIV');
-      expect(wallet.transactions[0].msisdnMasked, '+225 •• •• 56 78');
+      expect(wallet.transactions[0].isMobileMoneyTopup, isTrue);
     });
 
-    test('provider et msisdnMasked restent null sur une transaction sans '
-        'ces champs', () {
+    test('isMobileMoneyTopup est faux pour un paymentRef Stripe (pi_...)', () {
+      final wallet = WalletModel.fromJson({
+        'balance': 40.00,
+        'currency': 'EUR',
+        'transactions': [
+          {
+            'type': 'TOPUP',
+            'amount': 40.00,
+            'balanceAfter': 40.00,
+            'paymentRef': 'pi_123',
+            'createdAt': '2026-09-15T10:00:00.000Z',
+          },
+        ],
+      });
+
+      expect(wallet.transactions[0].isMobileMoneyTopup, isFalse);
+    });
+
+    test('isMobileMoneyTopup est faux quand paymentRef est absent', () {
       final wallet = WalletModel.fromJson({
         'balance': 40.00,
         'currency': 'EUR',
@@ -162,8 +177,7 @@ void main() {
         ],
       });
 
-      expect(wallet.transactions[0].provider, isNull);
-      expect(wallet.transactions[0].msisdnMasked, isNull);
+      expect(wallet.transactions[0].isMobileMoneyTopup, isFalse);
     });
 
     test('activeBalance is null when no currency is active', () {
