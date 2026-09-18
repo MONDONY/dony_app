@@ -713,11 +713,17 @@ abstract final class ErrorCatalog {
       icon: Icons.account_balance_wallet_outlined,
     ),
     // ─── Recharge du portefeuille par mobile money ───────────────────
-    // `WalletMobileMoneyTopupService` (back). `topup-amount-out-of-range`,
-    // `topup-already-pending` et `topup-phone-required` sont dans
-    // `_serverDetailCodes` : le detail du back porte une information que
-    // l'app n'a pas (les bornes exactes dans la devise de l'opérateur, par
-    // exemple), le texte ci-dessous ne sert que de repli.
+    // `WalletMobileMoneyTopupService` (back). Principe retenu en relecture :
+    // le detail du serveur n'est affiché que lorsqu'il porte une information
+    // que l'app ne possède pas déjà. Sinon l'app écrit son propre message,
+    // dans son ton (tutoiement, comme le reste du parcours de recharge).
+    //
+    // `topup-amount-out-of-range` et `topup-phone-unsupported` sont dans
+    // `_serverDetailCodes` : le premier porte les bornes réelles dans la
+    // devise de l'opérateur, le second la liste des opérateurs réellement
+    // couverts pour ce numéro (même nature que
+    // `mobile-money-account-unsupported`, déjà dans l'ensemble). Le texte
+    // ci-dessous ne sert que de repli si le detail n'est pas exploitable.
     'topup-amount-out-of-range': ErrorPresentation(
       title: 'Montant hors limites',
       message:
@@ -726,24 +732,29 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.warning,
       icon: Icons.rule_rounded,
     ),
+    // `topup-already-pending` et `topup-phone-required` sont volontairement
+    // absents de `_serverDetailCodes` : leur detail backend n'apporte rien
+    // que l'app ne sache déjà, et il est rédigé en vouvoiement alors que tout
+    // le parcours de recharge tutoie (« Valide le paiement sur ton
+    // téléphone », « Payer avec un autre numéro »). L'app écrit donc son
+    // propre texte plutôt que d'afficher le detail brut.
     'topup-already-pending': ErrorPresentation(
       title: 'Recharge déjà en cours',
       message:
-          'Une recharge est déjà en attente de validation sur ton '
-          'téléphone. Patiente avant d\'en lancer une nouvelle.',
+          'Une recharge est déjà en cours. Termine-la ou annule-la avant '
+          'd\'en lancer une nouvelle.',
       severity: ErrorSeverity.warning,
       icon: Icons.pending_rounded,
     ),
     'topup-phone-required': ErrorPresentation(
       title: 'Numéro manquant',
-      message: 'Indique le numéro mobile money qui doit payer la recharge.',
+      message: 'Indique le numéro qui va payer la recharge.',
       severity: ErrorSeverity.warning,
       icon: Icons.flag_outlined,
     ),
     // Numéro reconnu mais inexploitable pour une recharge (réseau fermé,
-    // devise non prise en charge, pays inconnu...). Pas dans
-    // `_serverDetailCodes` : contrairement à `mobile-money-account-unsupported`,
-    // le detail n'a pas été jugé nécessaire ici, le texte générique suffit.
+    // devise non prise en charge, pays inconnu...). Dans
+    // `_serverDetailCodes` : voir le commentaire de groupe ci-dessus.
     'topup-phone-unsupported': ErrorPresentation(
       title: 'Numéro non pris en charge',
       message:
@@ -959,8 +970,7 @@ abstract final class ErrorCatalog {
   static const Set<String> _serverDetailCodes = {
     'mobile-money-account-unsupported',
     'topup-amount-out-of-range',
-    'topup-already-pending',
-    'topup-phone-required',
+    'topup-phone-unsupported',
   };
 
   /// Resolves an exception to its presentation. Never returns null:

@@ -553,6 +553,135 @@ void main() {
       expect(p.title, 'Compte de versement requis');
     });
   });
+  // Tache 6 (tour 1) : recharge du portefeuille par mobile money
+  // (WalletMobileMoneyTopupService). Principe retenu en relecture : le
+  // detail serveur n'est affiche que lorsqu'il porte une information que
+  // l'app ne possede pas deja (bornes de montant, operateurs couverts) ;
+  // sinon l'app ecrit son propre texte, en tutoiement.
+  group('ErrorCatalog — recharge mobile money : detail serveur reserve aux '
+      'codes qui apportent une information', () {
+    test('topup-amount-out-of-range : detail serveur exploitable → affiche tel '
+        'quel (bornes reelles dans la devise de l operateur)', () {
+      const error = ValidationException(
+        'Entre 1 000 FCFA et 3 000 000 FCFA par recharge, sans centimes.',
+        code: 'topup-amount-out-of-range',
+      );
+
+      final p = ErrorCatalog.lookup(error);
+
+      expect(
+        p.message,
+        'Entre 1 000 FCFA et 3 000 000 FCFA par recharge, sans centimes.',
+      );
+      expect(p.title, 'Montant hors limites');
+      expect(p.severity, ErrorSeverity.warning);
+    });
+
+    test('topup-amount-out-of-range : detail vide → texte generique du '
+        'catalogue', () {
+      const error = ValidationException('', code: 'topup-amount-out-of-range');
+
+      final p = ErrorCatalog.lookup(error);
+
+      expect(
+        p.message,
+        'Ce montant ne respecte pas les limites de recharge autorisées. '
+        'Ajuste le montant puis réessaie.',
+      );
+    });
+
+    test('topup-phone-unsupported : detail serveur exploitable → affiche tel '
+        'quel (operateurs reellement couverts pour ce numero)', () {
+      const error = ValidationException(
+        'Réseau Orange Money indisponible pour ce numéro.',
+        code: 'topup-phone-unsupported',
+      );
+
+      final p = ErrorCatalog.lookup(error);
+
+      expect(p.message, 'Réseau Orange Money indisponible pour ce numéro.');
+      expect(p.title, 'Numéro non pris en charge');
+    });
+
+    test('topup-phone-unsupported : detail technique echappe → texte generique '
+        'du catalogue', () {
+      const error = ValidationException(
+        'DioException [bad response]: status code 422',
+        code: 'topup-phone-unsupported',
+      );
+
+      final p = ErrorCatalog.lookup(error);
+
+      expect(
+        p.message,
+        'Ce numéro n\'est pas exploitable pour une recharge mobile '
+        'money. Vérifie-le ou essaie avec un autre numéro.',
+      );
+    });
+
+    test('topup-already-pending : texte app en tutoiement, jamais le detail '
+        'serveur (vouvoiement) meme exploitable', () {
+      const error = ValidationException(
+        'Une recharge est déjà en attente de validation sur votre '
+        'téléphone.',
+        code: 'topup-already-pending',
+      );
+
+      final p = ErrorCatalog.lookup(error);
+
+      expect(
+        p.message,
+        'Une recharge est déjà en cours. Termine-la ou annule-la avant '
+        'd\'en lancer une nouvelle.',
+      );
+      expect(p.message, isNot(contains('votre')));
+      expect(p.title, 'Recharge déjà en cours');
+    });
+
+    test('topup-phone-required : texte app en tutoiement, jamais le detail '
+        'serveur (vouvoiement) meme exploitable', () {
+      const error = ValidationException(
+        'Indiquez le numéro mobile money qui paie la recharge.',
+        code: 'topup-phone-required',
+      );
+
+      final p = ErrorCatalog.lookup(error);
+
+      expect(p.message, 'Indique le numéro qui va payer la recharge.');
+      expect(p.message, isNot(contains('Indiquez')));
+      expect(p.title, 'Numéro manquant');
+    });
+
+    // Les autres codes du meme service ont deja un texte fixe, en tutoiement
+    // ou neutre (aucun pronom) : verifie ici pour ne rien laisser en
+    // vouvoiement sans le savoir.
+    const autresCodesEtMessages = <String, String>{
+      'mobile-money-invalid-phone':
+          "Ce numéro n'est reconnu par aucun opérateur mobile money. "
+          'Vérifie-le et réessaie.',
+      'mobile-money-disabled':
+          "Le paiement mobile money n'est pas ouvert pour le moment. "
+          'Choisis un autre moyen de paiement.',
+      'topup-not-found':
+          'Cette recharge n\'existe plus ou son lien a '
+          'expiré.',
+    };
+
+    autresCodesEtMessages.forEach((code, message) {
+      test('$code : entree existante et coherente avec le tutoiement', () {
+        final error = ValidationException('detail brut backend', code: code);
+
+        expect(ErrorCatalog.isKnown(error), isTrue, reason: code);
+
+        final p = ErrorCatalog.lookup(error);
+        expect(p.message, message, reason: code);
+        expect(p.message, isNot(contains('vous')), reason: code);
+        expect(p.message, isNot(contains('votre')), reason: code);
+        expect(p.message, isNot(contains('—')), reason: code);
+      });
+    });
+  });
+
   // Lot 2 mobile money sur colis : codes emis par le back sur le depot d'un fil
   // de negociation (POST /negotiations/{id}/mobile-money/*) et par la
   // resolution du moyen de paiement (PR back #295).
