@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -229,9 +231,14 @@ void main() {
           findsOneWidget,
         );
         expect(
-          find.textContaining('changeant la devise active dans Préférences'),
+          find.textContaining('Ton portefeuille Franc CFA Ouest sera crédité de'),
           findsOneWidget,
         );
+        expect(
+          find.textContaining('Ton portefeuille Euro ne bouge pas'),
+          findsOneWidget,
+        );
+        expect(find.textContaining('verrouillé'), findsNothing);
       },
     );
 
@@ -246,6 +253,25 @@ void main() {
       expect(
         find.byKey(const Key('wallet-topup-currency-mismatch')),
         findsNothing,
+      );
+    });
+
+    testWidgets('le bandeau de destination suit le montant saisi', (
+      tester,
+    ) async {
+      registerWallet('EUR');
+
+      await tester.pumpWidget(buildHarness());
+      await tester.pumpAndSettle();
+      await tapQuickAmount(tester, 5000);
+
+      final formatted = CurrencyFormatter.format(
+        5000,
+        SupportedCurrency.fromCodeOrDefault('XOF'),
+      );
+      expect(
+        find.textContaining('sera crédité de $formatted'),
+        findsOneWidget,
       );
     });
   });

@@ -287,9 +287,9 @@ class _LoadedView extends StatelessWidget {
                     type: DonyStatusBannerType.success,
                     iconAsset: 'circle-check',
                     message:
-                        'Recharge de '
-                        '${CurrencyFormatter.format(status.amount, topupCurrency)} '
-                        'confirmée par ${status.providerLabel}.',
+                        '+${CurrencyFormatter.format(status.amount, topupCurrency)} '
+                        'sur ton portefeuille ${topupCurrency.displayName}, '
+                        'confirmé par ${status.providerLabel}.',
                     onDismiss: () => topupBanner.value = null,
                   ),
                 );
@@ -335,9 +335,12 @@ class _LoadedView extends StatelessWidget {
                   DonySpacing.lg,
                   0,
                 ),
-                child: _CurrencyBalancesCard(
-                  wallet: wallet,
-                  highlightCurrency: null,
+                child: ValueListenableBuilder<WalletTopupStatusModel?>(
+                  valueListenable: topupBanner,
+                  builder: (context, status, _) => _CurrencyBalancesCard(
+                    wallet: wallet,
+                    highlightCurrency: status?.currency,
+                  ),
                 ),
               ),
             )

@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/widgets/dony_skeleton.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
@@ -896,6 +898,56 @@ void main() {
     expect(find.text('Rembourser'), findsOneWidget);
   });
 
+  testWidgets(
+    'une seule devise non active éligible : Rembourser ouvre la confirmation pour cette devise',
+    (tester) async {
+      const wallet = WalletModel(
+        balance: 0,
+        currency: 'EUR',
+        estimatedTotal: 15.24,
+        transactions: [],
+        balances: [
+          WalletCurrencyBalanceModel(
+            currency: 'EUR',
+            balance: 0,
+            active: true,
+            estimatedInActive: 0,
+          ),
+          WalletCurrencyBalanceModel(
+            currency: 'XOF',
+            balance: 10000,
+            active: false,
+            refundEligible: true,
+            refundableAmount: 10000,
+            refundFeeAmount: 100,
+            refundNetAmount: 9900,
+            estimatedInActive: 15.24,
+          ),
+        ],
+      );
+      whenListen(
+        bloc,
+        Stream.value(WalletLoaded(wallet)),
+        initialState: WalletInitial(),
+      );
+
+      await tester.pumpWidget(buildSubject(bloc, prefsBloc, refundCubit));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Rembourser'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Rembourser mon solde'), findsOneWidget);
+      // Preuve que la sheet a bien ouvert pour XOF (et non EUR) : le montant
+      // net formaté en F CFA apparaît dans la confirmation.
+      final expectedNet = CurrencyFormatter.format(
+        9900,
+        SupportedCurrency.fromCodeOrDefault('XOF'),
+      );
+      expect(find.textContaining(expectedNet), findsWidgets);
+    },
+  );
+
   testWidgets('deux devises éligibles : tap Rembourser ouvre le choix de devise', (
     tester,
   ) async {
@@ -1023,7 +1075,7 @@ void main() {
       await tester.pumpWidget(buildSubject(bloc, prefsBloc, null, topupStatus));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('confirmée par Orange Money'), findsOneWidget);
+      expect(find.textContaining('confirmé par Orange Money'), findsOneWidget);
     });
 
     testWidgets('absent quand aucun topupConfirmed n\'est fourni', (
@@ -1043,7 +1095,7 @@ void main() {
       await tester.pumpWidget(buildSubject(bloc, prefsBloc));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('confirmée par'), findsNothing);
+      expect(find.textContaining('confirmé par'), findsNothing);
     });
 
     testWidgets('ne réapparaît pas à un rebuild déclenché par le WalletBloc', (
@@ -1061,12 +1113,12 @@ void main() {
 
       await tester.pumpWidget(buildSubject(bloc, prefsBloc, null, topupStatus));
       await tester.pumpAndSettle();
-      expect(find.textContaining('confirmée par Orange Money'), findsOneWidget);
+      expect(find.textContaining('confirmé par Orange Money'), findsOneWidget);
 
       // Fermeture manuelle du bandeau.
       await tester.tap(find.bySemanticsLabel('Fermer le message'));
       await tester.pumpAndSettle();
-      expect(find.textContaining('confirmée par'), findsNothing);
+      expect(find.textContaining('confirmé par'), findsNothing);
 
       // Un nouvel état (rafraîchissement) rebuild l'écran : le bandeau ne
       // doit pas revenir seul.
@@ -1078,7 +1130,38 @@ void main() {
       controller.add(WalletLoaded(refreshedWallet));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('confirmée par'), findsNothing);
+      expect(find.textContaining('confirmé par'), findsNothing);
     });
+
+    testWidgets(
+      'recharge mobile money confirmée : bandeau nommant le portefeuille et ligne surlignée',
+      (tester) async {
+        whenListen(
+          bloc,
+          Stream.value(WalletLoaded(walletWithEstimate())),
+          initialState: WalletInitial(),
+        );
+        const confirmed = WalletTopupStatusModel(
+          topupId: 't1',
+          status: 'CONFIRMED',
+          amount: 10000,
+          currency: 'XOF',
+          provider: 'ORANGE_CIV',
+          providerLabel: 'Orange Money',
+          msisdnMasked: '+225 07 ** ** 89',
+        );
+
+        await tester.pumpWidget(buildSubject(bloc, prefsBloc, null, confirmed));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 100));
+
+        expect(
+          find.textContaining('sur ton portefeuille Franc CFA Ouest'),
+          findsOneWidget,
+        );
+        expect(find.byType(TweenAnimationBuilder<double>), findsOneWidget);
+        await tester.pumpAndSettle();
+      },
+    );
   });
 }
