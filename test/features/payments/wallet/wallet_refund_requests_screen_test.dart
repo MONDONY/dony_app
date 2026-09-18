@@ -314,4 +314,39 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets(
+    'IMPORTANT — feeAmount présent mais netAmount absent : aucune clause '
+    '« vous recevez » (elle annoncerait le brut comme montant reçu)',
+    (tester) async {
+      stub(
+        WalletRefundRequestsListState(
+          isLoading: false,
+          requests: [
+            WalletRefundRequestModel(
+              id: 'req-9',
+              currency: 'EUR',
+              amount: 35,
+              channel: 'MANUAL',
+              status: 'PROCESSING',
+              requestedAt: DateTime(2026, 9, 12),
+              rail: 'PAWAPAY',
+              feeAmount: 3,
+            ),
+          ],
+        ),
+      );
+
+      await tester.pumpWidget(host());
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('vous recevez'), findsNothing);
+      expect(find.textContaining('de frais retenus'), findsNothing);
+      // Le brut reste la seule valeur affichée, et elle est juste.
+      expect(
+        find.text(CurrencyFormatter.format(35, SupportedCurrency.eur)),
+        findsOneWidget,
+      );
+    },
+  );
 }

@@ -218,28 +218,88 @@ void main() {
   });
 
   group('isMobileMoneyTopupAvailable', () {
-    test('true quand la sonde aboutit', () async {
-      when(() => mockDatasource.topupProvidersProbe()).thenAnswer((_) async {});
+    /// L'intercepteur pose l'AppException (code métier du ProblemDetail)
+    /// dans `DioException.error` : c'est ce que `unwrapDioError` relit.
+    DioException wrapped(AppException e) => DioException(
+      requestOptions: RequestOptions(path: '/wallet/topup/providers'),
+      error: e,
+    );
+
+    test('CRITIQUE — 422 topup-phone-required : la route existe, le rail est '
+        'servi (la sonde sans corps échoue TOUJOURS ainsi)', () async {
+      when(() => mockDatasource.topupProvidersProbe()).thenThrow(
+        wrapped(
+          const ValidationException(
+            'Indiquez le numéro mobile money qui paie la recharge.',
+            code: 'topup-phone-required',
+          ),
+        ),
+      );
 
       expect(await repo.isMobileMoneyTopupAvailable(), isTrue);
     });
 
-    test(
-      'false quand le backend ne sert pas le rail (404), sans lever',
-      () async {
-        when(() => mockDatasource.topupProvidersProbe()).thenThrow(
-          DioException(
-            requestOptions: RequestOptions(path: '/wallet/topup/providers'),
-            response: Response(
-              requestOptions: RequestOptions(path: '/wallet/topup/providers'),
-              statusCode: 404,
-            ),
+    test('422 mobile-money-invalid-phone : rail servi aussi', () async {
+      when(() => mockDatasource.topupProvidersProbe()).thenThrow(
+        wrapped(
+          const ValidationException(
+            'Numéro invalide',
+            code: 'mobile-money-invalid-phone',
           ),
-        );
+        ),
+      );
 
-        expect(await repo.isMobileMoneyTopupAvailable(), isFalse);
-      },
-    );
+      expect(await repo.isMobileMoneyTopupAvailable(), isTrue);
+    });
+
+    test('mobile-money-disabled : rail non servi', () async {
+      when(() => mockDatasource.topupProvidersProbe()).thenThrow(
+        wrapped(
+          const ValidationException(
+            'Rail désactivé',
+            code: 'mobile-money-disabled',
+          ),
+        ),
+      );
+
+      expect(await repo.isMobileMoneyTopupAvailable(), isFalse);
+    });
+
+    test('404 (backend sans le lot 2) : rail non servi, sans lever', () async {
+      when(() => mockDatasource.topupProvidersProbe()).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(path: '/wallet/topup/providers'),
+          response: Response(
+            requestOptions: RequestOptions(path: '/wallet/topup/providers'),
+            statusCode: 404,
+          ),
+        ),
+      );
+
+      expect(await repo.isMobileMoneyTopupAvailable(), isFalse);
+    });
+
+    test('403 : rail non servi', () async {
+      when(
+        () => mockDatasource.topupProvidersProbe(),
+      ).thenThrow(wrapped(const ForbiddenException()));
+
+      expect(await repo.isMobileMoneyTopupAvailable(), isFalse);
+    });
+
+    test('erreur réseau : rail non servi', () async {
+      when(
+        () => mockDatasource.topupProvidersProbe(),
+      ).thenThrow(wrapped(const OfflineException()));
+
+      expect(await repo.isMobileMoneyTopupAvailable(), isFalse);
+    });
+
+    test('succès inattendu (corps accepté) : rail servi', () async {
+      when(() => mockDatasource.topupProvidersProbe()).thenAnswer((_) async {});
+
+      expect(await repo.isMobileMoneyTopupAvailable(), isTrue);
+    });
   });
 
   group('topupProviders', () {

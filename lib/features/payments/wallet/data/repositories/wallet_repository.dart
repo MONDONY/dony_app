@@ -76,20 +76,40 @@ class WalletRepository {
     }
   }
 
+  /// Codes métier qui prouvent que la route de catalogue EXISTE et que le
+  /// rail mobile money est servi : le back a bien exécuté sa validation du
+  /// numéro payeur, il n'a donc pas pu répondre un 404 de route absente ni
+  /// un rail désactivé.
+  static const _mobileMoneyServedCodes = {
+    'topup-phone-required',
+    'mobile-money-invalid-phone',
+  };
+
   /// Le backend déployé sert-il le rail mobile money pour les recharges ?
   ///
   /// La prod peut être gelée sur une version antérieure au lot 2 : proposer
   /// la tuile « Mobile money » y mènerait à un 404 puis à un « Réessayer »
   /// qui ne réussira jamais. Aucun drapeau serveur dédié n'existe, donc on
-  /// sonde l'endpoint lui-même, sans corps. Toute erreur (404, réseau,
-  /// `mobile-money-disabled`) rend `false` : l'app se rabat sur l'écran
-  /// d'avant, carte bancaire seule, jamais d'exception remontée à l'UI.
+  /// sonde l'endpoint lui-même, sans corps.
+  ///
+  /// La sonde ABOUTIT NORMALEMENT EN ERREUR : sans numéro, le back valide et
+  /// répond 422 `topup-phone-required` (figé côté back par un test
+  /// d'intégration). Juger sur « ça a levé » masquerait donc la tuile même
+  /// sur un backend qui sert le rail — la décision se prend sur le CODE
+  /// métier de l'erreur ([AppException.code], renseigné depuis le `code` du
+  /// ProblemDetail par l'intercepteur) :
+  /// - `topup-phone-required` / `mobile-money-invalid-phone` → servi ;
+  /// - `mobile-money-disabled`, 404, 403, réseau, tout le reste → non servi.
+  ///
+  /// Jamais d'exception remontée à l'UI : l'app se rabat sur l'écran
+  /// d'avant, carte bancaire seule.
   Future<bool> isMobileMoneyTopupAvailable() async {
     try {
       await _datasource.topupProvidersProbe();
+      // Un back qui accepte la sonde sans corps sert forcément le rail.
       return true;
-    } catch (_) {
-      return false;
+    } catch (e) {
+      return _mobileMoneyServedCodes.contains(unwrapDioError(e).code);
     }
   }
 

@@ -137,6 +137,7 @@ class _RefundRequestTile extends StatelessWidget {
     final date = DateFormat('dd MMM yyyy', 'fr_FR').format(request.requestedAt);
     final statusColor = _statusColor(cs);
     final fee = request.feeAmount;
+    final net = request.netAmount;
     final subtitle = [
       ?_railLabel,
       ?request.destinationMasked,
@@ -168,10 +169,7 @@ class _RefundRequestTile extends StatelessWidget {
                     // ici donnerait deux chiffres pour la même demande. Le
                     // brut reste lisible dans la ligne de détail des frais.
                     Text(
-                      CurrencyFormatter.format(
-                        request.netAmount ?? request.amount,
-                        currency,
-                      ),
+                      CurrencyFormatter.format(net ?? request.amount, currency),
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
@@ -217,13 +215,17 @@ class _RefundRequestTile extends StatelessWidget {
               ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             ),
           ],
-          if (fee != null && fee > 0) ...[
+          // `feeAmount` et `netAmount` sont nullables INDÉPENDAMMENT : sans
+          // le net, annoncer « vous recevez » à partir du brut affirmerait
+          // un montant faux. Le détail n'est donc écrit que lorsque les deux
+          // sont connus.
+          if (fee != null && fee > 0 && net != null) ...[
             const SizedBox(height: DonySpacing.sm),
             Text(
               '${CurrencyFormatter.format(request.amount, currency)} '
               'remboursables, ${CurrencyFormatter.format(fee, currency)} de '
               'frais retenus, vous recevez '
-              '${CurrencyFormatter.format(request.netAmount ?? request.amount, currency)}',
+              '${CurrencyFormatter.format(net, currency)}',
               style: Theme.of(
                 context,
               ).textTheme.bodySmall?.copyWith(color: cs.warning),

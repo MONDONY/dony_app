@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dio/dio.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/error/error_presenter.dart';
@@ -8,6 +9,7 @@ import 'package:dony/features/payments/data/models/mobile_money_provider_catalog
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_availability_cubit.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_cubit.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_state.dart';
+import 'package:dony/features/payments/wallet/data/datasources/wallet_remote_datasource.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_topup_model.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_topup_status_model.dart';
 import 'package:dony/features/payments/wallet/data/repositories/wallet_repository.dart';
@@ -27,8 +29,16 @@ import '../../../helpers/mock_analytics_backend.dart';
 /// inchangé.
 class _MockWalletRepository extends Mock implements WalletRepository {}
 
+class _MockWalletRemoteDatasource extends Mock
+    implements WalletRemoteDatasource {}
+
 void main() {
   late _MockWalletRepository repo;
+
+  /// Dépôt utilisé par la SONDE de disponibilité : le mock par défaut, ou un
+  /// vrai [WalletRepository] quand un test veut vérifier la décision réelle
+  /// prise sur le code d'erreur du backend.
+  late WalletRepository availabilityRepo;
   late MockAnalyticsBackend analyticsBackend;
   WalletTopupMethodSelection? capturedSelection;
 
@@ -82,6 +92,7 @@ void main() {
 
   setUp(() {
     repo = _MockWalletRepository();
+    availabilityRepo = repo;
     analyticsBackend = MockAnalyticsBackend();
     capturedSelection = null;
     when(
@@ -105,7 +116,9 @@ void main() {
       providers: [
         BlocProvider<WalletTopupMobileMoneyCubit>.value(value: mmCubit),
         BlocProvider<WalletTopupMobileMoneyAvailabilityCubit>(
-          create: (_) => WalletTopupMobileMoneyAvailabilityCubit(repo)..probe(),
+          create: (_) =>
+              WalletTopupMobileMoneyAvailabilityCubit(availabilityRepo)
+                ..probe(),
         ),
       ],
       child: const WalletTopupMethodScreen(),
@@ -732,4 +745,74 @@ void main() {
       expect(find.byKey(const Key('network-ORANGE_SEN')), findsOneWidget);
     },
   );
+
+  group('sonde de capacité jugée sur le code d\'erreur du backend', () {
+    /// Vraie chaîne repository → datasource : la sonde sans corps échoue
+    /// toujours, c'est le CODE de l'erreur qui décide.
+    void probeFails(Object error) {
+      final datasource = _MockWalletRemoteDatasource();
+      when(() => datasource.topupProvidersProbe()).thenThrow(error);
+      availabilityRepo = WalletRepository(datasource);
+    }
+
+    DioException wrapped(AppException e) => DioException(
+      requestOptions: RequestOptions(path: '/wallet/topup/providers'),
+      error: e,
+    );
+
+    testWidgets(
+      'CRITIQUE — 422 topup-phone-required (réponse normale de la sonde) : '
+      'la tuile mobile money est bien affichée',
+      (tester) async {
+        probeFails(
+          wrapped(
+            const ValidationException(
+              'Indiquez le numéro mobile money qui paie la recharge.',
+              code: 'topup-phone-required',
+            ),
+          ),
+        );
+
+        await tester.pumpWidget(buildHarness());
+        await tester.pumpAndSettle();
+
+        expect(find.text('Mobile money'), findsOneWidget);
+      },
+    );
+
+    testWidgets('422 mobile-money-disabled : tuile masquée', (tester) async {
+      probeFails(
+        wrapped(
+          const ValidationException(
+            'Rail désactivé',
+            code: 'mobile-money-disabled',
+          ),
+        ),
+      );
+
+      await tester.pumpWidget(buildHarness());
+      await tester.pumpAndSettle();
+
+      expect(find.text('Mobile money'), findsNothing);
+      expect(find.text('Carte bancaire'), findsOneWidget);
+    });
+
+    testWidgets('404 (backend sans le lot 2) : tuile masquée', (tester) async {
+      probeFails(
+        DioException(
+          requestOptions: RequestOptions(path: '/wallet/topup/providers'),
+          response: Response(
+            requestOptions: RequestOptions(path: '/wallet/topup/providers'),
+            statusCode: 404,
+          ),
+        ),
+      );
+
+      await tester.pumpWidget(buildHarness());
+      await tester.pumpAndSettle();
+
+      expect(find.text('Mobile money'), findsNothing);
+      expect(find.text('Carte bancaire'), findsOneWidget);
+    });
+  });
 }

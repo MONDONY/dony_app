@@ -54,10 +54,14 @@ class WalletRemoteDatasource {
   }
 
   /// Sonde de disponibilité du rail mobile money : même endpoint que
-  /// [topupProviders], appelé SANS corps (le back accepte un corps
-  /// facultatif et répond alors le catalogue par défaut). Un backend qui
-  /// n'a pas le lot 2 répond 404 — l'appelant en déduit que le rail n'est
-  /// pas servi et masque la tuile plutôt que de mener à une impasse.
+  /// [topupProviders], appelé SANS corps.
+  ///
+  /// Cet appel n'aboutit jamais en succès sur un backend à jour : sans
+  /// numéro, la validation refuse la requête en 422 `topup-phone-required`.
+  /// C'est justement ce refus qui prouve que la route existe et que le rail
+  /// est servi — un backend sans le lot 2 répond 404. La discrimination se
+  /// fait donc sur le code métier, côté
+  /// `WalletRepository.isMobileMoneyTopupAvailable`.
   Future<void> topupProvidersProbe() async {
     await _client.dio.post('/wallet/topup/providers');
   }
