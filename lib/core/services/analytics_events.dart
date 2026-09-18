@@ -150,6 +150,17 @@ abstract final class AnalyticsEvents {
   static const walletTopupStarted = 'wallet_topup_started';
   static const walletTopupCompleted = 'wallet_topup_completed';
 
+  /// Recharge mobile money initiée (dépôt pawaPay lancé, avant confirmation).
+  /// Propriétés `provider` et `currency` uniquement : jamais le montant, ni
+  /// le numéro de téléphone (même masqué).
+  static const walletTopupMobileMoneyInitiated =
+      'wallet_topup_mobile_money_initiated';
+
+  /// Recharge mobile money confirmée (portefeuille crédité), une seule fois
+  /// par recharge. Mêmes propriétés que [walletTopupMobileMoneyInitiated].
+  static const walletTopupMobileMoneyConfirmed =
+      'wallet_topup_mobile_money_confirmed';
+
   // Ratings
   static const ratingSubmitted = 'rating_submitted';
 
