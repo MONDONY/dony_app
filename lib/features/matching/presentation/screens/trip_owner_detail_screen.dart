@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dony/core/config/api_config.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
@@ -267,7 +268,8 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
                           '${state.announcement.arrivalCity} le '
                           '${DateFormat('d MMMM', 'fr').format(state.announcement.departureDate)} '
                           'avec de la place dans mes bagages !\n'
-                          'Réserve tes kilos sur Yadony 📦',
+                          'Réserve tes kilos sur Yadony 📦\n'
+                          '$posterShareBaseUrl/annonce/${state.announcement.id}',
                           sharePositionOrigin: sharePositionOriginFor(
                             routeContext,
                           ),

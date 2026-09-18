@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dony/core/config/api_config.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/utils/share_position.dart';
@@ -358,7 +359,8 @@ class _DetailBottomBar extends StatelessWidget {
         unawaited(
           Share.share(
             'J\'envoie un colis de ${r.weightKg.toStringAsFixed(0)} kg ${r.departureCity} → ${r.arrivalCity} '
-            'autour du $date. Tu voyages sur cet axe ? Réponds à ma demande sur Yadony.',
+            'autour du $date. Tu voyages sur cet axe ? Réponds à ma demande sur Yadony.\n'
+            '$posterShareBaseUrl/demande/${r.id}',
             sharePositionOrigin: sharePositionOriginFor(context),
           ),
         );
