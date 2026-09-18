@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:app_links/app_links.dart';
 import 'package:dony/app/announcement_deep_link.dart';
 import 'package:dony/app/mobile_money_deep_link.dart';
+import 'package:dony/app/package_request_deep_link.dart';
 import 'package:dony/app/reduced_motion_priming.dart';
 import 'package:dony/app/router.dart';
 import 'package:dony/core/design/design_system.dart';
@@ -153,6 +154,7 @@ class _DonyAppState extends State<DonyApp> {
   // s'ajoute à cette liste, jamais comme un bras séparé dans _handleDeepLink.
   static final _parameterizedResolvers = <String? Function(Uri)>[
     resolveAnnouncementDeepLink,
+    resolvePackageRequestDeepLink,
     resolveMobileMoneyAwaitingDeepLink,
   ];
 
