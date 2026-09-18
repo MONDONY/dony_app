@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
-import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
@@ -21,6 +20,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_accept_dispatch.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_list/bid_card.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_list/bid_list_chrome.dart';
+import 'package:dony/features/payments/wallet/presentation/commission_shortfall_text.dart';
 import 'package:dony/features/profile/data/models/help_center_config.dart';
 import 'package:dony/features/profile/presentation/widgets/contextual_tutorial_card.dart';
 import 'package:flutter/material.dart';
@@ -267,18 +267,23 @@ class _DemandesRecuesBodyState extends State<_DemandesRecuesBody> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Commission requise : ${formatPriceIn(state.requiredCommission, state.currency)}',
-            style: tt.bodyMedium?.copyWith(color: cs.onSurface),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Solde du portefeuille : ${formatPriceIn(state.availableBalance, state.currency)}',
-            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-          ),
+          for (final (i, line) in commissionShortfallLines(
+            breakdown: state.breakdown,
+            requiredCommission: state.requiredCommission,
+            availableBalance: state.availableBalance,
+            currency: state.currency,
+          ).indexed) ...[
+            if (i > 0) const SizedBox(height: 4),
+            Text(
+              line,
+              style: i == 0
+                  ? tt.bodyMedium?.copyWith(color: cs.onSurface)
+                  : tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
+          ],
           const SizedBox(height: 8),
           Text(
-            'Rechargez votre portefeuille ou payez la commission directement par carte.',
+            'Recharge ton portefeuille ou paie la commission directement par carte.',
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
         ],

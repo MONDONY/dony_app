@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
-import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -29,6 +28,7 @@ import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
 import 'package:dony/features/payments/data/models/payment_model.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
+import 'package:dony/features/payments/wallet/presentation/commission_shortfall_text.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_state.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
@@ -177,22 +177,27 @@ class _BidDetailViewState extends State<_BidDetailView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Commission requise : ${formatPriceIn(state.requiredCommission, state.currency)}',
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: cs.onSurface),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Solde du portefeuille : ${formatPriceIn(state.availableBalance, state.currency)}',
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-          ),
+          for (final (i, line) in commissionShortfallLines(
+            breakdown: state.breakdown,
+            requiredCommission: state.requiredCommission,
+            availableBalance: state.availableBalance,
+            currency: state.currency,
+          ).indexed) ...[
+            if (i > 0) const SizedBox(height: 4),
+            Text(
+              line,
+              style: i == 0
+                  ? Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: cs.onSurface)
+                  : Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
+          ],
           const SizedBox(height: 8),
           Text(
-            'Rechargez votre portefeuille ou payez la commission directement par carte.',
+            'Recharge ton portefeuille ou paie la commission directement par carte.',
             style: Theme.of(
               context,
             ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),

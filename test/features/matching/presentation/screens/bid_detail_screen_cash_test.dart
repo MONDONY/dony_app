@@ -17,6 +17,7 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/commission_shortfall.dart';
 import 'package:dony/features/matching/presentation/screens/bid_detail_screen.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/colis_billet.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
@@ -789,6 +790,90 @@ void main() {
       await tester.pump(const Duration(seconds: 10));
 
       verify(() => bidBloc.add(any(that: isA<BidDetailRequested>()))).called(1);
+    });
+  });
+
+  // ── Sheet « Solde insuffisant » (BidWalletInsufficient) ─────────────────────
+
+  group('Sheet « Solde insuffisant » (BidWalletInsufficient)', () {
+    testWidgets('sans breakdown → textes historiques', (tester) async {
+      final authBloc = _MockAuthBloc();
+      when(
+        () => authBloc.state,
+      ).thenReturn(AuthAuthenticated(_user(_kTravelerId)));
+      when(
+        () => authBloc.stream,
+      ).thenAnswer((_) => const Stream<AuthState>.empty());
+
+      final controller = StreamController<acs.BidAcceptanceState>();
+      addTearDown(controller.close);
+      whenListen(
+        acceptanceBloc,
+        controller.stream,
+        initialState: acs.BidAcceptanceInitial(),
+      );
+
+      await _pump(tester, bid: _makeBid(), authBloc: authBloc);
+
+      controller.add(
+        acs.BidWalletInsufficient(
+          availableBalance: 1.33,
+          requiredCommission: 1.60,
+          hasCard: true,
+          bidId: 'bid-001',
+          currency: 'EUR',
+        ),
+      );
+      await tester.pump();
+
+      expect(find.text('Solde insuffisant'), findsOneWidget);
+      expect(find.textContaining('Commission requise'), findsOneWidget);
+      expect(find.textContaining('Solde du portefeuille'), findsOneWidget);
+    });
+
+    testWidgets('avec breakdown → détail portefeuille par portefeuille', (
+      tester,
+    ) async {
+      final authBloc = _MockAuthBloc();
+      when(
+        () => authBloc.state,
+      ).thenReturn(AuthAuthenticated(_user(_kTravelerId)));
+      when(
+        () => authBloc.stream,
+      ).thenAnswer((_) => const Stream<AuthState>.empty());
+
+      final controller = StreamController<acs.BidAcceptanceState>();
+      addTearDown(controller.close);
+      whenListen(
+        acceptanceBloc,
+        controller.stream,
+        initialState: acs.BidAcceptanceInitial(),
+      );
+
+      await _pump(tester, bid: _makeBid(), authBloc: authBloc);
+
+      controller.add(
+        acs.BidWalletInsufficient(
+          availableBalance: 1.33,
+          requiredCommission: 1.60,
+          hasCard: true,
+          bidId: 'bid-001',
+          currency: 'EUR',
+          breakdown: const CommissionShortfall(
+            bidCurrency: 'XOF',
+            commission: 1050,
+            coveredByBidWallet: 600,
+            remainingBid: 450,
+            remainingInActive: 0.69,
+            activeCurrency: 'EUR',
+            activeBalance: 1.33,
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.text('Solde insuffisant'), findsOneWidget);
+      expect(find.textContaining('en couvre'), findsOneWidget);
     });
   });
 }

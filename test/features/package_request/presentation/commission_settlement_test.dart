@@ -11,6 +11,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/features/matching/data/models/commission_shortfall.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
@@ -333,6 +334,7 @@ void main() {
       required bool hasCard,
       double requiredCommission = 5,
       double availableBalance = 1,
+      CommissionShortfall? breakdown,
     }) {
       final router = GoRouter(
         initialLocation: '/',
@@ -348,6 +350,7 @@ void main() {
                     availableBalance: availableBalance,
                     hasCard: hasCard,
                     currency: 'EUR',
+                    breakdown: breakdown,
                     onRetry: ({required useCard}) {
                       retryCalled = true;
                       retryUseCard = useCard;
@@ -395,6 +398,31 @@ void main() {
 
       expect(find.text('Payer par carte'), findsNothing);
       expect(find.text('Ajouter une carte'), findsOneWidget);
+    });
+
+    testWidgets('avec breakdown → détail portefeuille par portefeuille', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrapSheet(
+          hasCard: true,
+          breakdown: const CommissionShortfall(
+            bidCurrency: 'XOF',
+            commission: 1050,
+            coveredByBidWallet: 600,
+            remainingBid: 450,
+            remainingInActive: 0.69,
+            activeCurrency: 'EUR',
+            activeBalance: 1.33,
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Solde insuffisant'), findsOneWidget);
+      expect(find.textContaining('en couvre'), findsOneWidget);
+      expect(find.textContaining('Commission requise'), findsNothing);
     });
 
     testWidgets(
@@ -508,6 +536,53 @@ void main() {
       expect(find.text('Recharger mon portefeuille'), findsOneWidget);
       expect(find.text('Payer par carte'), findsOneWidget);
     });
+
+    testWidgets(
+      'solde insuffisant avec breakdown → détail portefeuille par portefeuille',
+      (tester) async {
+        final controller = StreamController<NegotiationState>();
+        addTearDown(controller.close);
+        whenListen(
+          bloc,
+          controller.stream,
+          initialState: NegotiationLoaded(
+            _thread(
+              status: NegotiationThreadStatus.awaitingCommission,
+              commissionStatus: 'PENDING',
+            ),
+          ),
+        );
+
+        await tester.pumpWidget(wrap());
+        await tester.pumpAndSettle();
+
+        controller.add(
+          const NegotiationCommissionInsufficientWallet(
+            availableBalance: 1.33,
+            requiredCommission: 1.60,
+            hasCard: true,
+            threadId: 't1',
+            currency: 'EUR',
+            breakdown: CommissionShortfall(
+              bidCurrency: 'XOF',
+              commission: 1050,
+              coveredByBidWallet: 600,
+              remainingBid: 450,
+              remainingInActive: 0.69,
+              activeCurrency: 'EUR',
+              activeBalance: 1.33,
+            ),
+          ),
+        );
+        // pump() cible, jamais pumpAndSettle : l ecran porte des timers (compte a
+        // rebours, auto-fermeture de la snackbar) qui empechent toute stabilisation.
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 400));
+
+        expect(find.text('Solde insuffisant'), findsOneWidget);
+        expect(find.textContaining('en couvre'), findsOneWidget);
+      },
+    );
 
     testWidgets('commission réglée → snackbar de succès et rafraîchit le fil', (
       tester,

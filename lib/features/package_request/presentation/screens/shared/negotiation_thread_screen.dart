@@ -93,6 +93,7 @@ class _ThreadViewState extends State<_ThreadView> {
             availableBalance: state.availableBalance,
             hasCard: state.hasCard,
             currency: state.currency ?? 'EUR',
+            breakdown: state.breakdown,
             onRetry: ({required useCard}) => ctx.read<NegotiationBloc>().add(
               NegotiationSettleCommissionRequested(
                 state.threadId,
