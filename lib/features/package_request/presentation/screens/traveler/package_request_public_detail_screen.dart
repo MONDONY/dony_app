@@ -61,8 +61,13 @@ class _PackageRequestPublicDetailScreenState
   }
 
   Future<void> _load() async {
+    // Rechargement silencieux quand une demande est déjà affichée (retour de
+    // la sheet d'offre, de la négociation ou d'une action propriétaire) : on
+    // garde le contenu à l'écran plutôt que de repasser par le spinner, et un
+    // échec réseau ne remplace pas une fiche déjà lisible.
+    final silent = _request != null;
     setState(() {
-      _loading = true;
+      _loading = !silent;
       _error = null;
     });
     try {
@@ -74,7 +79,7 @@ class _PackageRequestPublicDetailScreenState
         _evaluateViewer(context);
       }
     } catch (e) {
-      if (mounted) {
+      if (mounted && !silent) {
         setState(() => _error = e.toString());
       }
     } finally {
@@ -287,8 +292,10 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
   /// de la demande (`currentUserId == request.senderId`). Null si non connecté.
   final String? currentUserId;
 
-  /// Appelé après une action propriétaire (édition de la demande ou retour
-  /// depuis l'écran « Offres reçues ») pour rafraîchir le détail.
+  /// Appelé pour rafraîchir le détail après toute action susceptible d'avoir
+  /// changé son état : édition ou retour de « Offres reçues » côté
+  /// propriétaire, fermeture de la sheet d'offre ou retour de la négociation
+  /// côté voyageur (le CTA dépend de [PackageRequest.viewerThreadId]).
   final VoidCallback? onChanged;
 
   String get _sizeLabel => switch (request.parcelSize.name.toUpperCase()) {
@@ -551,31 +558,55 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
                   // négociation (négociable) / proposition de trajet (prix ferme).
                   label: r.negotiable
                       ? 'Voir ma négociation'
-                      : 'Proposer mon trajet',
-                  onPressed: () =>
-                      context.push('/negotiations/${r.viewerThreadId}'),
+                      : 'Voir ma proposition',
+                  onPressed: () => _openThread(context, r.viewerThreadId!),
                 )
               : r.negotiable
               ? DonyButton(
                   label: 'Proposer mon trajet',
-                  onPressed: () => MakeOfferBottomSheet.show(
-                    context,
-                    packageRequestId: r.id,
-                    targetPriceEur: r.targetPriceEur,
-                    weightKg: announcement?.availableKg ?? r.weightKg,
-                    departureCity: r.departureCity,
-                    arrivalCity: r.arrivalCity,
-                    desiredDate: r.desiredDate,
-                    dateToleranceDays: r.dateToleranceDays,
-                    transportMode: r.transportMode,
-                    initialDate: announcement?.departureDate,
-                    currency: r.currency,
-                  ),
+                  onPressed: () => _makeOffer(context),
                 )
-              : _FirmPriceCta(request: r, announcement: announcement),
+              : _FirmPriceCta(
+                  request: r,
+                  announcement: announcement,
+                  onChanged: onChanged,
+                ),
         ),
       ],
     );
+  }
+
+  /// Le thread peut être annulé depuis la négociation : au retour on recharge
+  /// pour que le CTA redevienne « Proposer mon trajet ».
+  Future<void> _openThread(BuildContext context, String threadId) async {
+    await context.push('/negotiations/$threadId');
+    if (context.mounted) {
+      onChanged?.call();
+    }
+  }
+
+  /// Une offre envoyée crée un thread côté serveur : le détail doit se
+  /// recharger dès la fermeture de la sheet, sinon il garde
+  /// `viewerThreadId == null` et propose à nouveau un trajet au retour de la
+  /// négociation poussée par-dessus.
+  Future<void> _makeOffer(BuildContext context) async {
+    final r = request;
+    await MakeOfferBottomSheet.show(
+      context,
+      packageRequestId: r.id,
+      targetPriceEur: r.targetPriceEur,
+      weightKg: announcement?.availableKg ?? r.weightKg,
+      departureCity: r.departureCity,
+      arrivalCity: r.arrivalCity,
+      desiredDate: r.desiredDate,
+      dateToleranceDays: r.dateToleranceDays,
+      transportMode: r.transportMode,
+      initialDate: announcement?.departureDate,
+      currency: r.currency,
+    );
+    if (context.mounted) {
+      onChanged?.call();
+    }
   }
 
   static Widget _detailCard(
@@ -917,10 +948,37 @@ class _OwnerCta extends StatelessWidget {
 /// CTA button for firm-price requests — tapping dispatches
 /// [NegotiationStartRequested] with [proposedPriceEur = targetPriceEur].
 class _FirmPriceCta extends StatelessWidget {
-  const _FirmPriceCta({required this.request, this.announcement});
+  const _FirmPriceCta({
+    required this.request,
+    this.announcement,
+    this.onChanged,
+  });
 
   final PackageRequest request;
   final AnnouncementModel? announcement;
+
+  /// Rappelé à la fermeture de la sheet, cf. [PackageRequestPublicDetailBody.onChanged].
+  final VoidCallback? onChanged;
+
+  Future<void> _take(BuildContext context, double price) async {
+    await MakeOfferBottomSheet.show(
+      context,
+      packageRequestId: request.id,
+      targetPriceEur: price,
+      weightKg: announcement?.availableKg ?? request.weightKg,
+      departureCity: request.departureCity,
+      arrivalCity: request.arrivalCity,
+      desiredDate: request.desiredDate,
+      dateToleranceDays: request.dateToleranceDays,
+      transportMode: request.transportMode,
+      initialDate: announcement?.departureDate,
+      isFirmPrice: true,
+      currency: request.currency,
+    );
+    if (context.mounted) {
+      onChanged?.call();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -956,22 +1014,7 @@ class _FirmPriceCta extends StatelessWidget {
               isLoading: isLoading,
               onPressed: isLoading || price == null
                   ? null
-                  : () {
-                      MakeOfferBottomSheet.show(
-                        ctx,
-                        packageRequestId: request.id,
-                        targetPriceEur: price,
-                        weightKg: announcement?.availableKg ?? request.weightKg,
-                        departureCity: request.departureCity,
-                        arrivalCity: request.arrivalCity,
-                        desiredDate: request.desiredDate,
-                        dateToleranceDays: request.dateToleranceDays,
-                        transportMode: request.transportMode,
-                        initialDate: announcement?.departureDate,
-                        isFirmPrice: true,
-                        currency: request.currency,
-                      );
-                    },
+                  : () => _take(ctx, price),
             );
           },
         ),

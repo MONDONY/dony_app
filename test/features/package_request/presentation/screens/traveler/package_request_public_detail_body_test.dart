@@ -1,11 +1,28 @@
+import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
+import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
+import 'package:dony/features/package_request/data/price_estimation_repository.dart';
 import 'package:dony/features/package_request/presentation/screens/traveler/package_request_public_detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:mocktail/mocktail.dart';
+
+class _MockNegotiationBloc extends MockBloc<NegotiationEvent, NegotiationState>
+    implements NegotiationBloc {}
+
+class _MockPriceEstimationRepository extends Mock
+    implements PriceEstimationRepository {}
+
+class _MockAnnouncementRepository extends Mock
+    implements AnnouncementRepository {}
 
 PackageRequest _req({
   List<String> photoUrls = const [],
@@ -91,14 +108,15 @@ void main() {
     expect(find.text('Proposer mon trajet'), findsNothing);
   });
 
-  testWidgets('offre en cours (prix ferme) → bouton « Proposer mon trajet »', (
+  testWidgets('offre en cours (prix ferme) → bouton « Voir ma proposition »', (
     tester,
   ) async {
     await tester.pumpWidget(
       wrapLogged(_req(viewerThreadId: 'thread-1', negotiable: false)),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Proposer mon trajet'), findsOneWidget);
+    expect(find.text('Voir ma proposition'), findsOneWidget);
+    expect(find.text('Proposer mon trajet'), findsNothing);
     expect(find.text('Voir ma négociation'), findsNothing);
   });
 
@@ -129,6 +147,183 @@ void main() {
     await tester.tap(find.text('Voir ma négociation'));
     await tester.pumpAndSettle();
     expect(find.text('NEGO t-9'), findsOneWidget);
+  });
+
+  // Le thread peut être annulé depuis l'écran de négociation : au retour, le
+  // détail doit se recharger pour que le CTA redevienne « Proposer mon trajet ».
+  testWidgets('retour de /negotiations/:id → onChanged rappelé', (
+    tester,
+  ) async {
+    var changed = 0;
+    final router = GoRouter(
+      initialLocation: '/',
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (_, _) => Scaffold(
+            body: PackageRequestPublicDetailBody(
+              request: _req(viewerThreadId: 't-9'),
+              currentUserId: 'traveler-1',
+              onChanged: () => changed++,
+            ),
+          ),
+        ),
+        GoRoute(
+          path: '/negotiations/:id',
+          builder: (ctx, st) => Scaffold(
+            body: TextButton(
+              onPressed: () => ctx.pop(),
+              child: const Text('RETOUR'),
+            ),
+          ),
+        ),
+      ],
+    );
+    await tester.pumpWidget(
+      MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Voir ma négociation'));
+    await tester.pumpAndSettle();
+    expect(changed, 0);
+
+    await tester.tap(find.text('RETOUR'));
+    await tester.pumpAndSettle();
+    expect(changed, 1);
+  });
+
+  // ── Sheet d'offre : rechargement à la fermeture ───────────────────────────
+  //
+  // Bug terrain (2026-09-18) : après « Offre envoyée », la sheet se ferme et
+  // la négo est poussée par-dessus le détail, qui garde son ancien
+  // `viewerThreadId == null`. Au retour, « Proposer mon trajet » réapparaissait
+  // au lieu de « Voir ma négociation ». Le détail doit se recharger dès que la
+  // sheet se ferme, quelle qu'en soit la raison.
+  group('sheet d\'offre', () {
+    late _MockNegotiationBloc negoBloc;
+    late _MockPriceEstimationRepository priceRepo;
+    late _MockAnnouncementRepository announcementRepo;
+
+    setUpAll(() async {
+      await initializeDateFormatting('fr');
+    });
+
+    setUp(() {
+      negoBloc = _MockNegotiationBloc();
+      priceRepo = _MockPriceEstimationRepository();
+      announcementRepo = _MockAnnouncementRepository();
+      when(() => negoBloc.state).thenReturn(const NegotiationInitial());
+      when(
+        () => negoBloc.stream,
+      ).thenAnswer((_) => const Stream<NegotiationState>.empty());
+      when(
+        () => priceRepo.estimate(
+          from: any(named: 'from'),
+          to: any(named: 'to'),
+          weight: any(named: 'weight'),
+          currency: any(named: 'currency'),
+        ),
+      ).thenThrow(Exception('no estimate'));
+      when(() => announcementRepo.getMyAnnouncements()).thenAnswer(
+        (_) async => (announcements: <AnnouncementModel>[], totalElements: 0),
+      );
+      if (getIt.isRegistered<NegotiationBloc>()) {
+        getIt.unregister<NegotiationBloc>();
+      }
+      if (getIt.isRegistered<PriceEstimationRepository>()) {
+        getIt.unregister<PriceEstimationRepository>();
+      }
+      if (getIt.isRegistered<AnnouncementRepository>()) {
+        getIt.unregister<AnnouncementRepository>();
+      }
+      getIt.registerFactory<NegotiationBloc>(() => negoBloc);
+      getIt.registerLazySingleton<PriceEstimationRepository>(() => priceRepo);
+      getIt.registerLazySingleton<AnnouncementRepository>(
+        () => announcementRepo,
+      );
+    });
+
+    tearDown(() {
+      if (getIt.isRegistered<NegotiationBloc>()) {
+        getIt.unregister<NegotiationBloc>();
+      }
+      if (getIt.isRegistered<PriceEstimationRepository>()) {
+        getIt.unregister<PriceEstimationRepository>();
+      }
+      if (getIt.isRegistered<AnnouncementRepository>()) {
+        getIt.unregister<AnnouncementRepository>();
+      }
+    });
+
+    // La sheet capture `GoRouter.of(context)` à l'ouverture : il faut un
+    // routeur dans l'arbre, même si aucune navigation n'a lieu ici.
+    Future<void> pumpRouted(
+      WidgetTester tester,
+      PackageRequest request,
+      VoidCallback onChanged,
+    ) async {
+      final router = GoRouter(
+        initialLocation: '/',
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (_, _) => Scaffold(
+              body: PackageRequestPublicDetailBody(
+                request: request,
+                currentUserId: 'traveler-1',
+                onChanged: onChanged,
+              ),
+            ),
+          ),
+        ],
+      );
+      await tester.pumpWidget(
+        MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    Future<void> closeSheet(WidgetTester tester) async {
+      final closeBtn = find.ancestor(
+        of: find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'x'),
+        matching: find.byType(IconButton),
+      );
+      expect(closeBtn, findsOneWidget);
+      await tester.tap(closeBtn);
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('négociable : sheet fermée → onChanged rappelé', (
+      tester,
+    ) async {
+      var changed = 0;
+      await pumpRouted(tester, _req(), () => changed++);
+
+      await tester.tap(find.text('Proposer mon trajet'));
+      await tester.pumpAndSettle();
+      expect(find.text('Faire une offre'), findsOneWidget);
+      expect(changed, 0);
+
+      await closeSheet(tester);
+      expect(find.text('Faire une offre'), findsNothing);
+      expect(changed, 1);
+    });
+
+    testWidgets('prix ferme : sheet fermée → onChanged rappelé', (
+      tester,
+    ) async {
+      var changed = 0;
+      await pumpRouted(tester, _req(negotiable: false), () => changed++);
+
+      await tester.tap(find.byKey(const Key('take-firm-price')));
+      await tester.pumpAndSettle();
+      expect(find.text('Prendre ce colis'), findsOneWidget);
+      expect(changed, 0);
+
+      await closeSheet(tester);
+      expect(find.text('Prendre ce colis'), findsNothing);
+      expect(changed, 1);
+    });
   });
 
   testWidgets('invité : tap CTA ouvre la sheet de connexion', (tester) async {

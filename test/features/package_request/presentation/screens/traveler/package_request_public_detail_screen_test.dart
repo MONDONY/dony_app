@@ -4,19 +4,24 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
-import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
+import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
+import 'package:dony/features/package_request/data/price_estimation_repository.dart';
 import 'package:dony/features/package_request/presentation/screens/traveler/package_request_public_detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
@@ -29,6 +34,15 @@ class _MockAnalyticsService extends Mock implements AnalyticsService {}
 class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
     implements AuthBloc {}
 
+class _MockNegotiationBloc extends MockBloc<NegotiationEvent, NegotiationState>
+    implements NegotiationBloc {}
+
+class _MockPriceEstimationRepository extends Mock
+    implements PriceEstimationRepository {}
+
+class _MockAnnouncementRepository extends Mock
+    implements AnnouncementRepository {}
+
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 
 const _senderId = 'sender-001';
@@ -40,7 +54,7 @@ const _sender = UserModel(
   status: 'ACTIVE',
 );
 
-PackageRequest _makeRequest() => PackageRequest(
+PackageRequest _makeRequest({String? viewerThreadId}) => PackageRequest(
   id: 'pr-owner-test',
   senderId: _senderId,
   departureCity: 'Paris',
@@ -53,6 +67,7 @@ PackageRequest _makeRequest() => PackageRequest(
   categories: const ['Vêtements'],
   status: PackageRequestStatus.open,
   createdAt: DateTime(2026, 6),
+  viewerThreadId: viewerThreadId,
 );
 
 // ── Pump helper (pile navigable) ─────────────────────────────────────────────
@@ -250,4 +265,116 @@ void main() {
       expect(router.canPop(), isTrue);
     },
   );
+
+  // ── Voyageur : CTA rechargé à la fermeture de la sheet d'offre ────────────
+  //
+  // Bug terrain (2026-09-18) : le détail n'était chargé qu'une fois. Après
+  // « Offre envoyée », la négo était poussée par-dessus et, au retour, le
+  // CTA proposait encore un trajet alors qu'un thread existait déjà.
+  group('voyageur, sheet d\'offre', () {
+    late _MockNegotiationBloc negoBloc;
+    late _MockPriceEstimationRepository priceRepo;
+    late _MockAnnouncementRepository announcementRepo;
+
+    setUpAll(() async {
+      await initializeDateFormatting('fr');
+    });
+
+    setUp(() {
+      negoBloc = _MockNegotiationBloc();
+      priceRepo = _MockPriceEstimationRepository();
+      announcementRepo = _MockAnnouncementRepository();
+      when(() => negoBloc.state).thenReturn(const NegotiationInitial());
+      when(
+        () => negoBloc.stream,
+      ).thenAnswer((_) => const Stream<NegotiationState>.empty());
+      when(
+        () => priceRepo.estimate(
+          from: any(named: 'from'),
+          to: any(named: 'to'),
+          weight: any(named: 'weight'),
+          currency: any(named: 'currency'),
+        ),
+      ).thenThrow(Exception('no estimate'));
+      when(() => announcementRepo.getMyAnnouncements()).thenAnswer(
+        (_) async => (announcements: <AnnouncementModel>[], totalElements: 0),
+      );
+      if (getIt.isRegistered<NegotiationBloc>()) {
+        getIt.unregister<NegotiationBloc>();
+      }
+      if (getIt.isRegistered<PriceEstimationRepository>()) {
+        getIt.unregister<PriceEstimationRepository>();
+      }
+      if (getIt.isRegistered<AnnouncementRepository>()) {
+        getIt.unregister<AnnouncementRepository>();
+      }
+      getIt.registerFactory<NegotiationBloc>(() => negoBloc);
+      getIt.registerLazySingleton<PriceEstimationRepository>(() => priceRepo);
+      getIt.registerLazySingleton<AnnouncementRepository>(
+        () => announcementRepo,
+      );
+    });
+
+    tearDown(() {
+      if (getIt.isRegistered<NegotiationBloc>()) {
+        getIt.unregister<NegotiationBloc>();
+      }
+      if (getIt.isRegistered<PriceEstimationRepository>()) {
+        getIt.unregister<PriceEstimationRepository>();
+      }
+      if (getIt.isRegistered<AnnouncementRepository>()) {
+        getIt.unregister<AnnouncementRepository>();
+      }
+    });
+
+    testWidgets(
+      'sheet fermée → détail rechargé, CTA « Voir ma négociation », sans spinner',
+      (tester) async {
+        const visitor = UserModel(
+          id: 'visitor-042',
+          roles: [],
+          kycStatus: 'VERIFIED',
+          status: 'ACTIVE',
+        );
+        when(() => authBloc.state).thenReturn(const AuthAuthenticated(visitor));
+        whenListen(
+          authBloc,
+          const Stream<AuthState>.empty(),
+          initialState: const AuthAuthenticated(visitor),
+        );
+        // 1er appel : pas de thread. 2e appel (rechargement) : thread créé.
+        var calls = 0;
+        final reloadGate = Completer<PackageRequest>();
+        when(() => repo.getById(any())).thenAnswer((_) {
+          calls++;
+          return calls == 1 ? Future.value(_makeRequest()) : reloadGate.future;
+        });
+
+        await _pumpRouted(tester, authBloc: authBloc);
+        await tester.pumpAndSettle();
+        expect(find.text('Proposer mon trajet'), findsOneWidget);
+
+        await tester.tap(find.text('Proposer mon trajet'));
+        await tester.pumpAndSettle();
+        expect(find.text('Faire une offre'), findsOneWidget);
+
+        final closeBtn = find.ancestor(
+          of: find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'x'),
+          matching: find.byType(IconButton),
+        );
+        await tester.tap(closeBtn);
+        await tester.pumpAndSettle();
+
+        // Rechargement en vol : la fiche reste affichée, pas de spinner.
+        expect(calls, 2);
+        expect(find.byType(CircularProgressIndicator), findsNothing);
+        expect(find.text('Proposer mon trajet'), findsOneWidget);
+
+        reloadGate.complete(_makeRequest(viewerThreadId: 'thread-1'));
+        await tester.pumpAndSettle();
+        expect(find.text('Voir ma négociation'), findsOneWidget);
+        expect(find.text('Proposer mon trajet'), findsNothing);
+      },
+    );
+  });
 }
