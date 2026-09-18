@@ -712,6 +712,52 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.error,
       icon: Icons.account_balance_wallet_outlined,
     ),
+    // ─── Recharge du portefeuille par mobile money ───────────────────
+    // `WalletMobileMoneyTopupService` (back). `topup-amount-out-of-range`,
+    // `topup-already-pending` et `topup-phone-required` sont dans
+    // `_serverDetailCodes` : le detail du back porte une information que
+    // l'app n'a pas (les bornes exactes dans la devise de l'opérateur, par
+    // exemple), le texte ci-dessous ne sert que de repli.
+    'topup-amount-out-of-range': ErrorPresentation(
+      title: 'Montant hors limites',
+      message:
+          'Ce montant ne respecte pas les limites de recharge autorisées. '
+          'Ajuste le montant puis réessaie.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.rule_rounded,
+    ),
+    'topup-already-pending': ErrorPresentation(
+      title: 'Recharge déjà en cours',
+      message:
+          'Une recharge est déjà en attente de validation sur ton '
+          'téléphone. Patiente avant d\'en lancer une nouvelle.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.pending_rounded,
+    ),
+    'topup-phone-required': ErrorPresentation(
+      title: 'Numéro manquant',
+      message: 'Indique le numéro mobile money qui doit payer la recharge.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.flag_outlined,
+    ),
+    // Numéro reconnu mais inexploitable pour une recharge (réseau fermé,
+    // devise non prise en charge, pays inconnu...). Pas dans
+    // `_serverDetailCodes` : contrairement à `mobile-money-account-unsupported`,
+    // le detail n'a pas été jugé nécessaire ici, le texte générique suffit.
+    'topup-phone-unsupported': ErrorPresentation(
+      title: 'Numéro non pris en charge',
+      message:
+          'Ce numéro n\'est pas exploitable pour une recharge mobile money. '
+          'Vérifie-le ou essaie avec un autre numéro.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.flag_outlined,
+    ),
+    'topup-not-found': ErrorPresentation(
+      title: 'Recharge introuvable',
+      message: 'Cette recharge n\'existe plus ou son lien a expiré.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.search_off_rounded,
+    ),
     'payment-method-unavailable-for-currency': ErrorPresentation(
       title: 'Moyen de paiement indisponible',
       message:
@@ -912,6 +958,9 @@ abstract final class ErrorCatalog {
   /// garde son texte de catalogue même si le serveur fournit un detail.
   static const Set<String> _serverDetailCodes = {
     'mobile-money-account-unsupported',
+    'topup-amount-out-of-range',
+    'topup-already-pending',
+    'topup-phone-required',
   };
 
   /// Resolves an exception to its presentation. Never returns null:
