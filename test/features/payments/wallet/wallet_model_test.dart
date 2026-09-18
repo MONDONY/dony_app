@@ -89,6 +89,83 @@ void main() {
       expect(wallet.balances[0].nonRefundableAmount, isNull);
     });
 
+    test('parses refundFeeAmount and refundNetAmount per currency', () {
+      final wallet = WalletModel.fromJson({
+        'balance': 40.00,
+        'currency': 'EUR',
+        'transactions': [],
+        'balances': [
+          {
+            'currency': 'EUR',
+            'balance': 40.00,
+            'active': true,
+            'refundEligible': true,
+            'refundableAmount': 35.00,
+            'nonRefundableAmount': 5.00,
+            'refundFeeAmount': 2.00,
+            'refundNetAmount': 33.00,
+          },
+        ],
+      });
+
+      expect(wallet.balances[0].refundFeeAmount, 2.00);
+      expect(wallet.balances[0].refundNetAmount, 33.00);
+    });
+
+    test('refundFeeAmount et refundNetAmount restent null sur l\'ancien '
+        'contrat', () {
+      final wallet = WalletModel.fromJson({
+        'balance': 40.00,
+        'currency': 'EUR',
+        'transactions': [],
+        'balances': [
+          {'currency': 'EUR', 'balance': 40.00, 'active': true},
+        ],
+      });
+
+      expect(wallet.balances[0].refundFeeAmount, isNull);
+      expect(wallet.balances[0].refundNetAmount, isNull);
+    });
+
+    test('parses provider and msisdnMasked on a transaction', () {
+      final wallet = WalletModel.fromJson({
+        'balance': 5000.0,
+        'currency': 'XOF',
+        'transactions': [
+          {
+            'type': 'TOPUP',
+            'amount': 5000.0,
+            'balanceAfter': 5000.0,
+            'createdAt': '2026-09-15T10:00:00.000Z',
+            'provider': 'ORANGE_CIV',
+            'msisdnMasked': '+225 •• •• 56 78',
+          },
+        ],
+      });
+
+      expect(wallet.transactions[0].provider, 'ORANGE_CIV');
+      expect(wallet.transactions[0].msisdnMasked, '+225 •• •• 56 78');
+    });
+
+    test('provider et msisdnMasked restent null sur une transaction sans '
+        'ces champs', () {
+      final wallet = WalletModel.fromJson({
+        'balance': 40.00,
+        'currency': 'EUR',
+        'transactions': [
+          {
+            'type': 'TOPUP',
+            'amount': 40.00,
+            'balanceAfter': 40.00,
+            'createdAt': '2026-09-15T10:00:00.000Z',
+          },
+        ],
+      });
+
+      expect(wallet.transactions[0].provider, isNull);
+      expect(wallet.transactions[0].msisdnMasked, isNull);
+    });
+
     test('activeBalance is null when no currency is active', () {
       final wallet = WalletModel.fromJson({
         'balance': 0,
