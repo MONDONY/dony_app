@@ -208,6 +208,67 @@ void main() {
     );
   });
 
+  group('garde anti double tap sur « Payer »', () {
+    late MockWalletRepository repo;
+    late MockAnalyticsService analytics;
+    late WalletTopupMobileMoneyCubit cubit;
+
+    setUp(() {
+      repo = MockWalletRepository();
+      analytics = MockAnalyticsService();
+      when(
+        () => analytics.logEvent(any(), properties: any(named: 'properties')),
+      ).thenAnswer((_) async {});
+      cubit = WalletTopupMobileMoneyCubit(repo, analytics);
+    });
+
+    tearDown(() {
+      cubit.stopPolling();
+      return cubit.close();
+    });
+
+    test('deux initiate() dans la même frame n\'ouvrent qu\'UN dépôt côté '
+        'serveur (sinon deux débits)', () async {
+      final gate = Completer<WalletTopupModel>();
+      when(
+        () => repo.topupMobileMoney(
+          amount: any(named: 'amount'),
+          phoneNumber: any(named: 'phoneNumber'),
+          provider: any(named: 'provider'),
+        ),
+      ).thenAnswer((_) => gate.future);
+
+      final first = cubit.initiate(amount: 20000, phoneNumber: phoneNumber);
+      final second = cubit.initiate(amount: 20000, phoneNumber: phoneNumber);
+
+      gate.complete(topup);
+      await Future.wait([first, second]);
+
+      verify(
+        () => repo.topupMobileMoney(amount: 20000, phoneNumber: phoneNumber),
+      ).called(1);
+      expect(cubit.state, isA<WalletTopupMobileMoneyAwaiting>());
+    });
+
+    test('le verrou est relâché : une reprise après coup fonctionne', () async {
+      when(
+        () => repo.topupMobileMoney(
+          amount: any(named: 'amount'),
+          phoneNumber: any(named: 'phoneNumber'),
+          provider: any(named: 'provider'),
+        ),
+      ).thenAnswer((_) async => topup);
+
+      await cubit.initiate(amount: 20000, phoneNumber: phoneNumber);
+      cubit.reset();
+      await cubit.initiate(amount: 20000, phoneNumber: phoneNumber);
+
+      verify(
+        () => repo.topupMobileMoney(amount: 20000, phoneNumber: phoneNumber),
+      ).called(2);
+    });
+  });
+
   group('sondage (fakeAsync)', () {
     late MockWalletRepository repo;
     late MockAnalyticsService analytics;

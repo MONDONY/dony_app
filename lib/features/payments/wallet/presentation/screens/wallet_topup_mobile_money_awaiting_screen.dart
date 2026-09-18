@@ -55,14 +55,38 @@ class _WalletTopupMobileMoneyAwaitingScreenState
   /// `ValueListenableBuilder`) se redessine à chaque tick.
   final ValueNotifier<Duration> _remaining = ValueNotifier(Duration.zero);
 
+  /// Capturé à l'ouverture : `onPopInvokedWithResult` se déclenche alors que
+  /// cette route est déjà dépilée, un `context.read` y serait trop tard.
+  late final WalletTopupMobileMoneyCubit _cubit = context
+      .read<WalletTopupMobileMoneyCubit>();
+
   @override
   void initState() {
     super.initState();
-    _syncCountdown(context.read<WalletTopupMobileMoneyCubit>().state);
+    _syncCountdown(_cubit.state);
     _countdownTimer = Timer.periodic(_tick, (_) {
       if (!mounted) return;
-      _syncCountdown(context.read<WalletTopupMobileMoneyCubit>().state);
+      _syncCountdown(_cubit.state);
     });
+  }
+
+  /// Sortie par le bouton retour de l'AppBar ou par le geste système : même
+  /// traitement que « Payer avec un autre numéro ». Sans ce reset, le cubit
+  /// (partagé avec l'écran de choix) resterait `Awaiting` et continuerait de
+  /// sonder : l'écran de choix n'a pas de bras pour cet état (plus d'
+  /// opérateurs, « Suivant » mort, `loadProviders` refusé), et la
+  /// confirmation qui finirait par arriver n'aurait plus personne pour
+  /// l'annoncer — l'utilisateur croirait à un échec alors que l'argent est
+  /// débité, et paierait une seconde fois.
+  void _onPopped(bool didPop, Object? result) {
+    if (!didPop) return;
+    // Rien à abandonner : recharge confirmée (le portefeuille est crédité),
+    // ou déjà réinitialisée par « Payer avec un autre numéro ».
+    if (_cubit.state is WalletTopupMobileMoneyConfirmed ||
+        _cubit.state is WalletTopupMobileMoneyIdle) {
+      return;
+    }
+    _cubit.reset();
   }
 
   void _syncCountdown(WalletTopupMobileMoneyState state) {
@@ -90,6 +114,13 @@ class _WalletTopupMobileMoneyAwaitingScreenState
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
+    return PopScope(
+      onPopInvokedWithResult: _onPopped,
+      child: _buildScaffold(context, cs),
+    );
+  }
+
+  Widget _buildScaffold(BuildContext context, ColorScheme cs) {
     return Scaffold(
       backgroundColor: cs.surfaceContainerLowest,
       appBar: AppBar(
@@ -120,8 +151,9 @@ class _WalletTopupMobileMoneyAwaitingScreenState
                       '/payments/wallet',
                       extra: {'topupConfirmed': s.status},
                     );
-                  case final WalletTopupMobileMoneyError e:
-                    unawaited(ErrorPresenter.show(context, e.error));
+                  // L'erreur technique n'est plus présentée en surimpression :
+                  // le corps de l'écran l'affiche avec son bouton
+                  // « Réessayer », un second message dirait la même chose.
                   default:
                 }
               },
@@ -137,6 +169,13 @@ class _WalletTopupMobileMoneyAwaitingScreenState
                       final WalletTopupMobileMoneyFailed f => _FailedBody(
                         message: f.message,
                       ),
+                      // Une erreur technique (réseau coupé pendant une
+                      // reprise) se traite comme un échec : sans ce bras,
+                      // l'écran restait sur une roue infinie et sans bouton,
+                      // le retour arrière pour seule issue.
+                      final WalletTopupMobileMoneyError e => _FailedBody(
+                        message: ErrorPresenter.resolve(e.error).message,
+                      ),
                       _ => Center(
                         child: CircularProgressIndicator(color: cs.primary),
                       ),
@@ -151,7 +190,8 @@ class _WalletTopupMobileMoneyAwaitingScreenState
   }
 
   Widget _bottomFor(BuildContext context, WalletTopupMobileMoneyState state) {
-    if (state is WalletTopupMobileMoneyFailed) {
+    if (state is WalletTopupMobileMoneyFailed ||
+        state is WalletTopupMobileMoneyError) {
       return Padding(
         padding: EdgeInsets.fromLTRB(
           DonySpacing.lg,
@@ -178,15 +218,10 @@ class _WalletTopupMobileMoneyAwaitingScreenState
           key: const Key('mobile-money-awaiting-other-number'),
           label: 'Payer avec un autre numéro',
           variant: DonyButtonVariant.ghost,
-          onPressed: () {
-            // Abandonne la recharge en cours AVANT de dépiler : sans ce
-            // reset, le cubit (partagé avec l'écran de choix) resterait
-            // Awaiting et continuerait de sonder jusqu'à 15 min, laissant
-            // l'écran de choix figé (loadProviders refusé tant que
-            // Awaiting, Suivant exigeant un ProvidersReady jamais atteint).
-            context.read<WalletTopupMobileMoneyCubit>().reset();
-            context.pop();
-          },
+          // L'abandon de la recharge n'est pas écrit ici : il vit dans le
+          // [PopScope] de l'écran, seul endroit traversé par TOUTES les
+          // sorties (ce bouton, le retour de l'AppBar, le geste système).
+          onPressed: () => context.pop(),
         ),
       );
     }

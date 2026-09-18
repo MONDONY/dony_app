@@ -163,8 +163,15 @@ class _RefundRequestTile extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Le net, jamais le brut : la sheet de confirmation a
+                    // promis « Vous recevrez X », mettre le brut en avant
+                    // ici donnerait deux chiffres pour la même demande. Le
+                    // brut reste lisible dans la ligne de détail des frais.
                     Text(
-                      CurrencyFormatter.format(request.amount, currency),
+                      CurrencyFormatter.format(
+                        request.netAmount ?? request.amount,
+                        currency,
+                      ),
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
@@ -215,7 +222,8 @@ class _RefundRequestTile extends StatelessWidget {
             Text(
               '${CurrencyFormatter.format(request.amount, currency)} '
               'remboursables, ${CurrencyFormatter.format(fee, currency)} de '
-              'frais retenus',
+              'frais retenus, vous recevez '
+              '${CurrencyFormatter.format(request.netAmount ?? request.amount, currency)}',
               style: Theme.of(
                 context,
               ).textTheme.bodySmall?.copyWith(color: cs.warning),

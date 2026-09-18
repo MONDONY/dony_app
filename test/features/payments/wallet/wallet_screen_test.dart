@@ -664,8 +664,53 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Rembourser'), findsNothing);
+      // IMPORTANT — le bouton disparaît, mais jamais en silence : la raison
+      // est écrite, sinon le solde semble s'évanouir sans explication.
+      expect(
+        find.byKey(const Key('wallet-refund-absorbed-by-fees')),
+        findsOneWidget,
+      );
+      expect(
+        find.textContaining('les frais du prestataire de paiement'),
+        findsOneWidget,
+      );
     },
   );
+
+  testWidgets('net positif : aucun message de solde absorbé par les frais', (
+    tester,
+  ) async {
+    const wallet = WalletModel(
+      balance: 40,
+      currency: 'EUR',
+      transactions: [],
+      refundEligible: true,
+      balances: [
+        WalletCurrencyBalanceModel(
+          currency: 'EUR',
+          balance: 40,
+          active: true,
+          refundEligible: true,
+          refundableAmount: 35,
+          refundFeeAmount: 3,
+          refundNetAmount: 32,
+        ),
+      ],
+    );
+    whenListen(
+      bloc,
+      Stream.value(WalletLoaded(wallet)),
+      initialState: WalletInitial(),
+    );
+
+    await tester.pumpWidget(buildSubject(bloc, prefsBloc, refundCubit));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const Key('wallet-refund-absorbed-by-fees')),
+      findsNothing,
+    );
+  });
 
   testWidgets(
     'Rembourser transmet feeAmount et netAmount à la sheet de confirmation',

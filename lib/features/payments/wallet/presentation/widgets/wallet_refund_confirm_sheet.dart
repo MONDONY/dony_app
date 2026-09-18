@@ -81,25 +81,43 @@ class _ConfirmContent extends StatelessWidget {
 
     return BlocBuilder<WalletEligibleTopupsCubit, WalletEligibleTopupsState>(
       builder: (context, topupsState) {
-        // Toutes les recharges éligibles concernées sont pawaPay → rail
-        // mobile money ; sinon (mix, Stripe, ou ancien contrat où
-        // `paymentRef` n'est jamais renseigné) → carte, affichage inchangé.
+        // Trois états, jamais deux : tant que les recharges éligibles ne
+        // sont pas arrivées (chargement en cours, ou appel en échec), le
+        // rail est INCONNU et la sheet n'en annonce aucun — promettre
+        // « votre carte, sous 5 à 10 jours » à quelqu'un qui sera remboursé
+        // sur son numéro en quelques minutes est un mensonge. Le rail n'est
+        // décidé qu'une fois la liste reçue et non vide : toutes pawaPay →
+        // mobile money, sinon (mix, Stripe, ou ancien contrat où
+        // `paymentRef` n'est jamais renseigné) → carte.
+        final railKnown =
+            !topupsState.isLoading &&
+            topupsState.error == null &&
+            topupsState.topups.isNotEmpty;
         final isPawapay =
-            topupsState.topups.isNotEmpty &&
-            topupsState.topups.every((t) => t.isMobileMoneyTopup);
+            railKnown && topupsState.topups.every((t) => t.isMobileMoneyTopup);
+
+        final railSuffix = !railKnown
+            ? ''
+            : isPawapay
+            ? ' sur mobile money'
+            : ' sur votre carte';
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Remboursable sur ${isPawapay ? 'mobile money' : 'votre carte'} '
-              ': ${CurrencyFormatter.format(refundableAmount, currency)}',
+              'Remboursable$railSuffix : '
+              '${CurrencyFormatter.format(refundableAmount, currency)}',
               style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: DonySpacing.sm),
             Text(
-              isPawapay
+              !railKnown
+                  ? 'Le montant revient sur le moyen de paiement utilisé '
+                        'pour la recharge. Votre solde ${currency.code} est '
+                        'gelé le temps du traitement.'
+                  : isPawapay
                   ? 'Le montant revient sur le numéro qui a payé la '
                         'recharge, en général en quelques minutes. Votre '
                         'solde ${currency.code} est gelé le temps du '

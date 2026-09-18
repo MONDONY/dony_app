@@ -1,4 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/currency/currency_formatter.dart';
+import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_refund_requests_list_cubit.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_refund_request_model.dart';
 import 'package:dony/features/payments/wallet/presentation/screens/wallet_refund_requests_screen.dart';
@@ -241,5 +243,75 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('de frais retenus'), findsNothing);
+  });
+
+  testWidgets(
+    'IMPORTANT — le montant mis en avant est le NET promis par la sheet, le '
+    'brut restant lisible dans le détail des frais',
+    (tester) async {
+      stub(
+        WalletRefundRequestsListState(
+          isLoading: false,
+          requests: [
+            WalletRefundRequestModel(
+              id: 'req-7',
+              currency: 'EUR',
+              amount: 35,
+              channel: 'MANUAL',
+              status: 'PROCESSING',
+              requestedAt: DateTime(2026, 9, 12),
+              rail: 'PAWAPAY',
+              destinationMasked: '+225 07 ** ** 89',
+              feeAmount: 3,
+              netAmount: 32,
+            ),
+          ],
+        ),
+      );
+
+      await tester.pumpWidget(host());
+      await tester.pumpAndSettle();
+
+      final gross = CurrencyFormatter.format(35, SupportedCurrency.eur);
+      final net = CurrencyFormatter.format(32, SupportedCurrency.eur);
+      final fee = CurrencyFormatter.format(3, SupportedCurrency.eur);
+
+      expect(find.text(net), findsOneWidget);
+      expect(
+        find.text(
+          '$gross remboursables, $fee de frais retenus, vous '
+          'recevez $net',
+        ),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets('ancien contrat (netAmount absent) : le brut reste affiché', (
+    tester,
+  ) async {
+    stub(
+      WalletRefundRequestsListState(
+        isLoading: false,
+        requests: [
+          WalletRefundRequestModel(
+            id: 'req-8',
+            currency: 'EUR',
+            amount: 35,
+            channel: 'MANUAL',
+            status: 'PROCESSING',
+            requestedAt: DateTime(2026, 9, 12),
+          ),
+        ],
+      ),
+    );
+
+    await tester.pumpWidget(host());
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text(CurrencyFormatter.format(35, SupportedCurrency.eur)),
+      findsOneWidget,
+    );
   });
 }

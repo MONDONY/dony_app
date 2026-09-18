@@ -53,6 +53,15 @@ class WalletRemoteDatasource {
     return response.data as List<dynamic>;
   }
 
+  /// Sonde de disponibilité du rail mobile money : même endpoint que
+  /// [topupProviders], appelé SANS corps (le back accepte un corps
+  /// facultatif et répond alors le catalogue par défaut). Un backend qui
+  /// n'a pas le lot 2 répond 404 — l'appelant en déduit que le rail n'est
+  /// pas servi et masque la tuile plutôt que de mener à une impasse.
+  Future<void> topupProvidersProbe() async {
+    await _client.dio.post('/wallet/topup/providers');
+  }
+
   /// Réseaux mobile money utilisables pour payer une recharge depuis
   /// [phoneNumber]. Même contrat que
   /// `/payments/mobile-money/providers` : le numéro voyage dans le corps,

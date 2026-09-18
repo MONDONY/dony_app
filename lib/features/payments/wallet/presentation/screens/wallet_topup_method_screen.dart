@@ -7,6 +7,7 @@ import 'package:dony/core/phone/normalize_payer_phone.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/payments/data/models/mobile_money_provider_catalog.dart';
 import 'package:dony/features/payments/presentation/widgets/mobile_money_networks_checklist.dart';
+import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_availability_cubit.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_cubit.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_state.dart';
 import 'package:dony/features/payments/wallet/presentation/screens/wallet_topup_method_selection.dart';
@@ -45,20 +46,19 @@ class _WalletTopupMethodScreenState extends State<WalletTopupMethodScreen> {
   /// changé depuis.
   String? _lastLoadedPhone;
 
-  static const _methods = [
-    _MethodDef(
-      iconAsset: 'credit-card',
-      label: 'Carte bancaire',
-      subtitle: 'Via Stripe · Visa, Mastercard',
-      value: 'STRIPE',
-    ),
-    _MethodDef(
-      iconAsset: 'smartphone',
-      label: 'Mobile money',
-      subtitle: 'Orange Money, Wave, MTN MoMo',
-      value: 'MOBILE_MONEY',
-    ),
-  ];
+  static const _cardMethod = _MethodDef(
+    iconAsset: 'credit-card',
+    label: 'Carte bancaire',
+    subtitle: 'Via Stripe · Visa, Mastercard',
+    value: 'STRIPE',
+  );
+
+  static const _mobileMoneyMethod = _MethodDef(
+    iconAsset: 'smartphone',
+    label: 'Mobile money',
+    subtitle: 'Orange Money, Wave, MTN MoMo',
+    value: 'MOBILE_MONEY',
+  );
 
   @override
   void initState() {
@@ -70,17 +70,18 @@ class _WalletTopupMethodScreenState extends State<WalletTopupMethodScreen> {
     if (_phoneFocusNode.hasFocus) return;
     final normalized = normalizePayerPhone(_phoneController.text);
     if (normalized == null || normalized.isEmpty) return;
-    final cubit = context.read<WalletTopupMobileMoneyCubit>();
-    // Le numéro n'a pas changé depuis le dernier chargement : inutile de
-    // relancer, SAUF si le cubit est revenu à `Idle` (recharge abandonnée
-    // via `reset()` — « Payer avec un autre numéro » depuis l'écran
-    // d'attente). Sans cette exception, revenir sur l'écran de choix avec
-    // le même numéro pré-rempli ne rechargerait jamais les opérateurs.
-    final alreadyLoaded =
-        normalized == _lastLoadedPhone &&
-        cubit.state is! WalletTopupMobileMoneyIdle;
-    if (alreadyLoaded) return;
     _requestProviders(normalized);
+  }
+
+  /// Le catalogue affiché correspond-il encore à [phoneNumber] ? Seuls les
+  /// deux états qui PORTENT ce catalogue comptent : après un `Failed`, une
+  /// erreur ou un `reset()` (retour arrière, « Payer avec un autre
+  /// numéro »), il n'y a plus rien à l'écran et ressaisir le même numéro
+  /// doit relancer le chargement.
+  bool _hasCatalogFor(String phoneNumber, WalletTopupMobileMoneyState state) {
+    if (phoneNumber != _lastLoadedPhone) return false;
+    return state is WalletTopupMobileMoneyProvidersReady ||
+        state is WalletTopupMobileMoneyProvidersLoading;
   }
 
   /// Ne relance jamais `loadProviders` pendant qu'une recharge est déjà en
@@ -93,8 +94,22 @@ class _WalletTopupMethodScreenState extends State<WalletTopupMethodScreen> {
         cubit.state is WalletTopupMobileMoneyInitiating ||
         cubit.state is WalletTopupMobileMoneyAwaiting;
     if (busy) return;
+    if (_hasCatalogFor(phoneNumber, cubit.state)) return;
     _lastLoadedPhone = phoneNumber;
     cubit.loadProviders(phoneNumber);
+  }
+
+  /// Le cubit est revenu à [WalletTopupMobileMoneyIdle] (retour arrière
+  /// depuis l'écran d'attente, ou « Payer avec un autre numéro ») alors que
+  /// le numéro saisi est toujours là : recharge le catalogue pour que cet
+  /// écran redevienne utilisable sans geste supplémentaire.
+  void _reloadAfterReset() {
+    final normalized = normalizePayerPhone(_phoneController.text);
+    if (normalized == null || normalized.isEmpty) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _requestProviders(normalized);
+    });
   }
 
   @override
@@ -120,9 +135,9 @@ class _WalletTopupMethodScreenState extends State<WalletTopupMethodScreen> {
         ? WalletTopupMethodSelection(
             method: selected,
             phoneNumber: normalizePayerPhone(_phoneController.text),
-            provider: (mobileMoneyState as WalletTopupMobileMoneyProvidersReady)
-                .selectedProvider,
-            currency: mobileMoneyState.catalog.currency,
+            currency: (mobileMoneyState as WalletTopupMobileMoneyProvidersReady)
+                .catalog
+                .currency,
             cubit: context.read<WalletTopupMobileMoneyCubit>(),
           )
         : WalletTopupMethodSelection(method: selected);
@@ -142,15 +157,48 @@ class _WalletTopupMethodScreenState extends State<WalletTopupMethodScreen> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    // La tuile mobile money n'existe que si le backend déployé sert ce rail
+    // (sonde lancée à l'ouverture de la route) : sur une prod gelée avant le
+    // lot 2, l'écran reste celui d'avant, carte bancaire seule.
+    final mobileMoneyAvailable = context
+        .watch<WalletTopupMobileMoneyAvailabilityCubit>()
+        .state;
+    final methods = [_cardMethod, if (mobileMoneyAvailable) _mobileMoneyMethod];
 
     return BlocConsumer<
       WalletTopupMobileMoneyCubit,
       WalletTopupMobileMoneyState
     >(
-      listenWhen: (previous, current) => current is WalletTopupMobileMoneyError,
+      // Cet écran reste monté sous l'écran de montant et sous l'écran
+      // d'attente : sans filtre, il présenterait une deuxième fois les
+      // erreurs d'initiation que ces écrans montrent déjà (ErrorPresenter
+      // ne déduplique pas). Seules les erreurs qu'il a lui-même provoquées
+      // (chargement du catalogue) le concernent — celles qui viennent d'un
+      // `Initiating` appartiennent à l'écran du dessus.
+      listenWhen: (previous, current) {
+        if (current is WalletTopupMobileMoneyError) {
+          return previous is! WalletTopupMobileMoneyInitiating;
+        }
+        return current is WalletTopupMobileMoneyConfirmed ||
+            current is WalletTopupMobileMoneyIdle;
+      },
       listener: (context, state) {
-        if (state is WalletTopupMobileMoneyError) {
-          unawaited(ErrorPresenter.show(context, state.error));
+        switch (state) {
+          case final WalletTopupMobileMoneyError e:
+            unawaited(ErrorPresenter.show(context, e.error));
+          case final WalletTopupMobileMoneyConfirmed s:
+            // Filet de sécurité : si l'écran d'attente n'est plus là quand
+            // la confirmation arrive (retour arrière), personne d'autre ne
+            // l'annoncerait et l'utilisateur croirait à un échec alors que
+            // son argent est débité et crédité. La garde `isCurrent` évite
+            // la double navigation quand l'écran d'attente est encore au
+            // sommet : c'est lui qui emmène au portefeuille.
+            final route = ModalRoute.of(context);
+            if (route == null || !route.isCurrent) return;
+            context.go('/payments/wallet', extra: {'topupConfirmed': s.status});
+          case WalletTopupMobileMoneyIdle():
+            _reloadAfterReset();
+          default:
         }
       },
       builder: (context, mobileMoneyState) {
@@ -194,8 +242,8 @@ class _WalletTopupMethodScreenState extends State<WalletTopupMethodScreen> {
                       ),
                     ),
                     const SizedBox(height: DonySpacing.md),
-                    ...List.generate(_methods.length, (i) {
-                      final m = _methods[i];
+                    ...List.generate(methods.length, (i) {
+                      final m = methods[i];
                       return Padding(
                         padding: const EdgeInsets.only(bottom: DonySpacing.sm),
                         child:
@@ -276,14 +324,16 @@ class _MobileMoneySection extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    final currencySymbol = state is WalletTopupMobileMoneyProvidersReady
+    // Jamais de devise nommée avant de la connaître : tant que le catalogue
+    // n'est pas chargé, la phrase disparaît plutôt que d'annoncer un
+    // « F CFA » deviné (l'opérateur peut être en XAF, et le back reste seul
+    // décideur). Le code ISO, comme sur l'écran de montant et l'écran
+    // d'attente, plutôt que le symbole.
+    final currencyCode = state is WalletTopupMobileMoneyProvidersReady
         ? SupportedCurrency.fromCode(
-                (state as WalletTopupMobileMoneyProvidersReady)
-                    .catalog
-                    .currency,
-              )?.symbol ??
-              'F CFA'
-        : 'F CFA';
+            (state as WalletTopupMobileMoneyProvidersReady).catalog.currency,
+          )?.code
+        : null;
 
     return Padding(
       padding: const EdgeInsets.only(top: DonySpacing.base),
@@ -297,21 +347,23 @@ class _MobileMoneySection extends StatelessWidget {
             label: 'Numéro qui paie',
             keyboardType: TextInputType.phone,
           ),
-          const SizedBox(height: DonySpacing.xs),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              DonyIcon('smartphone', size: 14, color: cs.onSurfaceVariant),
-              const SizedBox(width: DonySpacing.xs),
-              Expanded(
-                child: Text(
-                  'Le solde est crédité en $currencySymbol, la devise de '
-                  "l'opérateur.",
-                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+          if (currencyCode != null) ...[
+            const SizedBox(height: DonySpacing.xs),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                DonyIcon('smartphone', size: 14, color: cs.onSurfaceVariant),
+                const SizedBox(width: DonySpacing.xs),
+                Expanded(
+                  child: Text(
+                    'Le solde est crédité en $currencyCode, la devise de '
+                    "l'opérateur.",
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
+          ],
           const SizedBox(height: DonySpacing.base),
           switch (state) {
             WalletTopupMobileMoneyProvidersLoading() =>

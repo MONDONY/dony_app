@@ -69,7 +69,12 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
   /// un utilisateur dont le wallet est dans une autre devise.
   SupportedCurrency? _walletCurrency;
 
-  static const _quickAmounts = [10, 20, 50, 100];
+  /// Raccourcis de montant adaptés à la devise : 10/20/50/100 n'a aucun sens
+  /// en franc CFA (100 F CFA ≈ 0,15 €). Une devise sans décimale reçoit donc
+  /// des montants entiers plausibles pour elle.
+  List<int> get _quickAmounts => _currency.minorUnit == 0
+      ? const [1000, 2000, 5000, 10000]
+      : const [10, 20, 50, 100];
 
   bool get _isMobileMoney => widget.paymentMethod == 'MOBILE_MONEY';
 
@@ -84,12 +89,12 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
         getIt<AnalyticsService>().logEvent(AnalyticsEvents.walletTopupStarted),
       );
     });
-    // Le mobile money ne dépend jamais de la devise du wallet : la devise à
-    // afficher est celle du catalogue d'opérateurs, déjà connue
-    // ([widget.mobileMoneyCurrency]).
-    if (!_isMobileMoney) {
-      unawaited(_loadWalletCurrency());
-    }
+    // Le mobile money n'AFFICHE jamais la devise du wallet (c'est celle du
+    // catalogue d'opérateurs, déjà connue via
+    // [widget.mobileMoneyCurrency]), mais il a besoin de la connaître pour
+    // avertir quand l'opérateur crédite une autre devise que la devise
+    // active — un solde qui arriverait alors verrouillé.
+    unawaited(_loadWalletCurrency());
   }
 
   Future<void> _loadWalletCurrency() async {
@@ -117,7 +122,14 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
 
   SupportedCurrency get _currency => _isMobileMoney
       ? SupportedCurrency.fromCodeOrDefault(widget.mobileMoneyCurrency)
-      : _walletCurrency ?? ActiveCurrency.current ?? SupportedCurrency.eur;
+      : _activeCurrency ?? SupportedCurrency.eur;
+
+  /// Devise active du portefeuille : celle du serveur dès qu'elle est
+  /// chargée, sinon le cache de préférence. `null` tant qu'aucune des deux
+  /// n'est connue — on ne devine alors rien, et aucun avertissement de
+  /// devise n'est affiché.
+  SupportedCurrency? get _activeCurrency =>
+      _walletCurrency ?? ActiveCurrency.current;
 
   void _onDigit(String d) {
     // Max 6 chiffres, pas de 0 en tête
@@ -332,6 +344,7 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
   Widget _buildMobileMoney(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final currency = _currency;
+    final activeCurrency = _activeCurrency;
     final phoneNumber = widget.mobileMoneyPhoneNumber ?? '';
 
     return BlocListener<
@@ -409,12 +422,30 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
                     if (currency.minorUnit == 0) ...[
                       const SizedBox(height: DonySpacing.xs),
                       Text(
-                        'Le F CFA ne connaît pas les centimes : indique un '
-                        'montant entier.',
+                        'Le ${currency.symbol} ne connaît pas les centimes : '
+                        'indique un montant entier.',
                         textAlign: TextAlign.center,
                         style: tt.bodySmall?.copyWith(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
+                      ),
+                    ],
+                    // La recharge crédite la devise de l'opérateur. Si ce
+                    // n'est pas la devise active du portefeuille, le solde
+                    // arrive VERROUILLÉ : « Recharge confirmée » au-dessus
+                    // d'un solde inchangé. On le dit avant de payer.
+                    if (activeCurrency != null &&
+                        activeCurrency.code != currency.code) ...[
+                      const SizedBox(height: DonySpacing.base),
+                      DonyStatusBanner(
+                        key: const Key('wallet-topup-currency-mismatch'),
+                        type: DonyStatusBannerType.warning,
+                        iconAsset: 'circle-alert',
+                        message:
+                            'Ton portefeuille est en ${activeCurrency.code}. '
+                            'Ce montant sera crédité en ${currency.code} et '
+                            'ne sera utilisable qu\'en changeant la devise '
+                            'active dans Préférences.',
                       ),
                     ],
 

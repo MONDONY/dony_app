@@ -238,6 +238,22 @@ void main() {
     });
   });
 
+  group('topupProvidersProbe', () {
+    test('poste sur /wallet/topup/providers SANS corps', () async {
+      when(() => mockDio.post<dynamic>('/wallet/topup/providers')).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(path: '/wallet/topup/providers'),
+          statusCode: 200,
+          data: <String, dynamic>{},
+        ),
+      );
+
+      await datasource.topupProvidersProbe();
+
+      verify(() => mockDio.post<dynamic>('/wallet/topup/providers')).called(1);
+    });
+  });
+
   group('topupProviders', () {
     test('poste le numéro sur /wallet/topup/providers', () async {
       when(

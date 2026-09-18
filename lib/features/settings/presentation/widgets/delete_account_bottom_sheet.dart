@@ -437,7 +437,21 @@ class _RailAmountBlock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final net = settlement.netAmount ?? settlement.refundableAmount;
-    if (net <= 0) return const SizedBox.shrink();
+    if (net <= 0) {
+      // Un solde entièrement absorbé par les frais ne disparaît pas du
+      // récapitulatif : il s'affichait avant les frais, il doit continuer à
+      // se voir — avec sa raison, plutôt qu'un vide inexplicable.
+      if (settlement.refundableAmount <= 0) return const SizedBox.shrink();
+      return DonyStatusBanner(
+        type: DonyStatusBannerType.warning,
+        iconAsset: 'circle-alert',
+        message:
+            'Solde de '
+            '${_WalletSettlementSummary._fmt(settlement.refundableAmount, settlement.currency)} '
+            'non remboursable : les frais du prestataire de paiement '
+            'l\'absorbent entièrement.',
+      );
+    }
 
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;

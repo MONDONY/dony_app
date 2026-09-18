@@ -823,4 +823,47 @@ void main() {
       );
     },
   );
+
+  testWidgets(
+    'IMPORTANT — devise dont les frais absorbent tout le solde : elle reste '
+    'au récapitulatif, avec sa raison, au lieu de disparaître',
+    (tester) async {
+      when(() => mockEligibilityCubit.state).thenReturn(
+        const DeletionEligibilityState(
+          isLoading: false,
+          hasWalletBalance: true,
+          walletSettlement: [
+            WalletSettlement(
+              currency: 'XOF',
+              refundableAmount: 300,
+              forfeitedAmount: 0,
+              inFlightAmount: 0,
+              rail: 'PAWAPAY',
+              feeAmount: 300,
+              netAmount: 0,
+            ),
+          ],
+        ),
+      );
+
+      await tester.pumpWidget(buildWidget());
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      final gross = CurrencyFormatter.format(300, SupportedCurrency.xof);
+      expect(
+        find.textContaining('Solde de $gross non remboursable'),
+        findsOneWidget,
+      );
+      expect(
+        find.textContaining('les frais du prestataire de paiement'),
+        findsOneWidget,
+      );
+      // Rien n'est promis : aucun bandeau « seront remboursés ».
+      expect(
+        find.textContaining('seront remboursés dès la demande'),
+        findsNothing,
+      );
+    },
+  );
 }

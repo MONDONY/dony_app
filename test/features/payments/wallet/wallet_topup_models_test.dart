@@ -81,22 +81,5 @@ void main() {
 
       expect(model.failureReason, 'INSUFFICIENT_BALANCE');
     });
-
-    test('isTerminal est faux sur PENDING', () {
-      final model = WalletTopupStatusModel.fromJson(baseJson());
-      expect(model.isTerminal, isFalse);
-    });
-
-    test('isTerminal est vrai sur CONFIRMED', () {
-      final model = WalletTopupStatusModel.fromJson(
-        baseJson(status: 'CONFIRMED'),
-      );
-      expect(model.isTerminal, isTrue);
-    });
-
-    test('isTerminal est vrai sur FAILED', () {
-      final model = WalletTopupStatusModel.fromJson(baseJson(status: 'FAILED'));
-      expect(model.isTerminal, isTrue);
-    });
   });
 }

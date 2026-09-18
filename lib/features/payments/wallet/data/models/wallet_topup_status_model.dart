@@ -48,6 +48,4 @@ class WalletTopupStatusModel {
         failureReason: json['failureReason'] as String?,
         walletBalance: (json['walletBalance'] as num?)?.toDouble(),
       );
-
-  bool get isTerminal => status != 'PENDING';
 }

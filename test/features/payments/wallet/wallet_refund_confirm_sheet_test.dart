@@ -430,22 +430,70 @@ void main() {
       },
     );
 
-    testWidgets('information absente (ancien contrat, aucune recharge éligible '
-        'chargée) : garde l\'affichage actuel', (tester) async {
+    testWidgets('liste reçue mais vide : aucun rail annoncé, phrase neutre', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         host(refundable: 35, nonRefundable: 0, topups: const []),
       );
       await tester.tap(find.text('Open'));
       await tester.pumpAndSettle();
 
+      expect(find.textContaining('Remboursable :'), findsOneWidget);
+      expect(find.textContaining('sur votre carte'), findsNothing);
+      expect(find.textContaining('sur mobile money'), findsNothing);
       expect(
-        find.textContaining('Remboursable sur votre carte'),
-        findsOneWidget,
-      );
-      expect(
-        find.textContaining('Le montant revient sur la carte utilisée'),
+        find.textContaining(
+          'Le montant revient sur le moyen de paiement utilisé',
+        ),
         findsOneWidget,
       );
     });
+
+    testWidgets(
+      'chargement en cours : aucun rail annoncé, ni carte ni mobile money',
+      (tester) async {
+        when(
+          () => _currentTopupsCubit.state,
+        ).thenReturn(const WalletEligibleTopupsState());
+
+        await tester.pumpWidget(host(refundable: 35, nonRefundable: 0));
+        await tester.tap(find.text('Open'));
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('Remboursable :'), findsOneWidget);
+        expect(find.textContaining('sur votre carte'), findsNothing);
+        expect(find.textContaining('sur mobile money'), findsNothing);
+        expect(
+          find.textContaining('sous 5 à 10 jours selon votre banque'),
+          findsNothing,
+        );
+      },
+    );
+
+    testWidgets(
+      'chargement en échec : aucun rail annoncé plutôt qu\'un repli carte',
+      (tester) async {
+        when(() => _currentTopupsCubit.state).thenReturn(
+          const WalletEligibleTopupsState(
+            isLoading: false,
+            error: NetworkException('hors ligne'),
+          ),
+        );
+
+        await tester.pumpWidget(host(refundable: 35, nonRefundable: 0));
+        await tester.tap(find.text('Open'));
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('Remboursable :'), findsOneWidget);
+        expect(find.textContaining('sur votre carte'), findsNothing);
+        expect(
+          find.textContaining(
+            'Le montant revient sur le moyen de paiement utilisé',
+          ),
+          findsOneWidget,
+        );
+      },
+    );
   });
 }

@@ -174,6 +174,18 @@ class _LoadedView extends StatelessWidget {
   final WalletModel wallet;
   final ValueNotifier<WalletTopupStatusModel?> topupBanner;
 
+  /// Il y a bien un montant remboursable, mais les frais de remboursement le
+  /// ramènent à zéro : rien à demander, et la raison mérite d'être dite.
+  /// `null` des deux côtés (ancien contrat back) ne déclenche jamais rien.
+  static bool _refundFullyAbsorbedByFees(WalletModel wallet) {
+    final balance = wallet.activeBalance;
+    if (balance == null || !wallet.refundEligible) return false;
+    final gross = balance.refundableAmount;
+    final net = balance.refundNetAmount;
+    if (gross == null || net == null) return false;
+    return gross > 0 && net <= 0;
+  }
+
   @override
   Widget build(BuildContext context) {
     final transactions = wallet.transactions;
@@ -272,6 +284,31 @@ class _LoadedView extends StatelessWidget {
               },
             ),
           ),
+
+          // ── Solde remboursable entièrement absorbé par les frais ────────────
+          // Le bouton « Rembourser » disparaît dans ce cas (net à 0) : sans
+          // un mot, l'utilisateur ne comprend pas pourquoi. On le dit,
+          // plutôt que de masquer en silence.
+          if (_refundFullyAbsorbedByFees(wallet))
+            const SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  DonySpacing.lg,
+                  DonySpacing.lg,
+                  DonySpacing.lg,
+                  0,
+                ),
+                child: DonyStatusBanner(
+                  key: Key('wallet-refund-absorbed-by-fees'),
+                  type: DonyStatusBannerType.info,
+                  iconAsset: 'circle-alert',
+                  message:
+                      'Ce solde ne peut pas être remboursé : les frais du '
+                      'prestataire de paiement l\'absorbent entièrement. Il '
+                      'reste utilisable pour payer vos envois.',
+                ),
+              ),
+            ),
 
           // ── Locked (non-active currency) balances ────────────────────────────
           if (lockedBalances.isNotEmpty)

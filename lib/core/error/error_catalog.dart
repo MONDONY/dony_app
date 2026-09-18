@@ -740,9 +740,12 @@ abstract final class ErrorCatalog {
     // propre texte plutôt que d'afficher le detail brut.
     'topup-already-pending': ErrorPresentation(
       title: 'Recharge déjà en cours',
+      // Aucun écran ne permet d'annuler une recharge en cours : ne demande
+      // que ce qui est faisable — valider la demande reçue sur le téléphone,
+      // ou laisser le délai s'écouler.
       message:
-          'Une recharge est déjà en cours. Termine-la ou annule-la avant '
-          'd\'en lancer une nouvelle.',
+          'Une recharge est déjà en cours. Valide-la sur ton téléphone, ou '
+          'attends qu\'elle expire avant d\'en lancer une nouvelle.',
       severity: ErrorSeverity.warning,
       icon: Icons.pending_rounded,
     ),

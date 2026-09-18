@@ -76,6 +76,23 @@ class WalletRepository {
     }
   }
 
+  /// Le backend déployé sert-il le rail mobile money pour les recharges ?
+  ///
+  /// La prod peut être gelée sur une version antérieure au lot 2 : proposer
+  /// la tuile « Mobile money » y mènerait à un 404 puis à un « Réessayer »
+  /// qui ne réussira jamais. Aucun drapeau serveur dédié n'existe, donc on
+  /// sonde l'endpoint lui-même, sans corps. Toute erreur (404, réseau,
+  /// `mobile-money-disabled`) rend `false` : l'app se rabat sur l'écran
+  /// d'avant, carte bancaire seule, jamais d'exception remontée à l'UI.
+  Future<bool> isMobileMoneyTopupAvailable() async {
+    try {
+      await _datasource.topupProvidersProbe();
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// Réseaux mobile money utilisables pour payer une recharge depuis
   /// [phoneNumber]. Même DTO côté back que le catalogue mobile money du
   /// paiement d'un colis : réutilise [MobileMoneyProviderCatalog].

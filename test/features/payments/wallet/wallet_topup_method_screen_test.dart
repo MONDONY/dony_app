@@ -1,8 +1,11 @@
 import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/features/payments/data/models/mobile_money_provider_catalog.dart';
+import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_availability_cubit.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_cubit.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_state.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_topup_model.dart';
@@ -81,6 +84,9 @@ void main() {
     repo = _MockWalletRepository();
     analyticsBackend = MockAnalyticsBackend();
     capturedSelection = null;
+    when(
+      () => repo.isMobileMoneyTopupAvailable(),
+    ).thenAnswer((_) async => true);
     when(() => repo.topupProviders(any())).thenAnswer((_) async => catalog);
     when(
       () => repo.topupMobileMoney(
@@ -91,20 +97,33 @@ void main() {
     ).thenAnswer((_) async => topup);
   });
 
+  /// L'écran de choix a besoin des deux cubits que pose sa route réelle :
+  /// celui de la recharge et celui de la sonde de disponibilité du rail
+  /// mobile money (sans quoi la tuile n'apparaît jamais).
+  Widget wrapMethodScreen(WalletTopupMobileMoneyCubit mmCubit) {
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<WalletTopupMobileMoneyCubit>.value(value: mmCubit),
+        BlocProvider<WalletTopupMobileMoneyAvailabilityCubit>(
+          create: (_) => WalletTopupMobileMoneyAvailabilityCubit(repo)..probe(),
+        ),
+      ],
+      child: const WalletTopupMethodScreen(),
+    );
+  }
+
   Widget buildHarness() {
+    final mmCubit = WalletTopupMobileMoneyCubit(
+      repo,
+      makeEnabledAnalytics(analyticsBackend),
+    );
+    addTearDown(mmCubit.close);
     final router = GoRouter(
       initialLocation: '/payments/wallet/topup/method',
       routes: [
         GoRoute(
           path: '/payments/wallet/topup/method',
-          builder: (context, state) =>
-              BlocProvider<WalletTopupMobileMoneyCubit>(
-                create: (_) => WalletTopupMobileMoneyCubit(
-                  repo,
-                  makeEnabledAnalytics(analyticsBackend),
-                ),
-                child: const WalletTopupMethodScreen(),
-              ),
+          builder: (context, state) => wrapMethodScreen(mmCubit),
         ),
         GoRoute(
           path: '/payments/wallet/topup/amount',
@@ -238,7 +257,6 @@ void main() {
       expect(capturedSelection, isNotNull);
       expect(capturedSelection!.method, 'MOBILE_MONEY');
       expect(capturedSelection!.phoneNumber, '+221771234567');
-      expect(capturedSelection!.provider, 'ORANGE_SEN');
       expect(capturedSelection!.currency, 'XOF');
       expect(capturedSelection!.cubit, same(cubit));
     },
@@ -262,11 +280,7 @@ void main() {
       routes: [
         GoRoute(
           path: '/payments/wallet/topup/method',
-          builder: (context, state) =>
-              BlocProvider<WalletTopupMobileMoneyCubit>.value(
-                value: cubit,
-                child: const WalletTopupMethodScreen(),
-              ),
+          builder: (context, state) => wrapMethodScreen(cubit),
         ),
         GoRoute(
           path: '/payments/wallet/topup/mobile-money/awaiting',
@@ -324,33 +338,18 @@ void main() {
     await tester.pump();
 
     // De retour sur l'écran de choix RÉEL (jamais dépilé, `_selected` et
-    // le numéro tapé y survivent), le cubit est bien revenu à Idle.
+    // le numéro tapé y survivent) : la recharge est abandonnée (le sondage
+    // est coupé) et le catalogue se recharge tout seul, si bien que l'écran
+    // est immédiatement réutilisable — y compris pour repartir sur un autre
+    // numéro, qu'il suffit de saisir.
+    await tester.pumpAndSettle();
     expect(find.byType(WalletTopupMethodScreen), findsOneWidget);
-    expect(cubit.state, isA<WalletTopupMobileMoneyIdle>());
+    expect(cubit.state, isA<WalletTopupMobileMoneyProvidersReady>());
     expect(
       find.text('+221 77 123 45 67'),
       findsOneWidget,
       reason: 'le champ numéro garde ce qui avait été saisi',
     );
-    // Aucun opérateur : Suivant redevient inactif tant que rien n'est
-    // rechargé.
-    expect(
-      tester.widget<DonyButton>(find.byType(DonyButton).last).onPressed,
-      isNull,
-    );
-
-    // Reperdre le focus SANS changer le numéro relance loadProviders :
-    // le cubit est Idle (recharge abandonnée), pas ProvidersReady.
-    // `enterText` (re-saisie de la même valeur) prend le focus par
-    // recherche de State, sans dépendre d'un tap sur des coordonnées
-    // écran — robuste même si un reliquat d'overlay de sélection texte
-    // (barre à outils / poignées) survit encore à cet endroit après la
-    // navigation aller-retour.
-    final phoneField = find.byKey(const Key('wallet-topup-payer-phone-field'));
-    await tester.enterText(phoneField, '+221 77 123 45 67');
-    await tester.pump();
-    FocusManager.instance.primaryFocus?.unfocus();
-    await tester.pumpAndSettle();
 
     verify(() => repo.topupProviders('+221771234567')).called(2);
     expect(find.byKey(const Key('network-ORANGE_SEN')), findsOneWidget);
@@ -447,6 +446,290 @@ void main() {
         tester.widget<DonyButton>(find.byType(DonyButton).last).onPressed,
         isNotNull,
       );
+    },
+  );
+
+  testWidgets(
+    'CRITIQUE — backend sans le rail mobile money : la tuile est absente, '
+    "l'écran reste celui d'avant (carte bancaire seule, utilisable)",
+    (tester) async {
+      when(
+        () => repo.isMobileMoneyTopupAvailable(),
+      ).thenAnswer((_) async => false);
+
+      await tester.pumpWidget(buildHarness());
+      await tester.pumpAndSettle();
+
+      expect(find.text('Mobile money'), findsNothing);
+      expect(find.text('Carte bancaire'), findsOneWidget);
+
+      await tester.tap(find.text('Carte bancaire'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Suivant → Montant'));
+      await tester.pumpAndSettle();
+
+      expect(capturedSelection?.method, 'STRIPE');
+    },
+  );
+
+  testWidgets('la tuile mobile money apparaît dès que la sonde réussit', (
+    tester,
+  ) async {
+    await tester.pumpWidget(buildHarness());
+    await tester.pumpAndSettle();
+
+    expect(find.text('Mobile money'), findsOneWidget);
+    verify(() => repo.isMobileMoneyTopupAvailable()).called(1);
+  });
+
+  testWidgets(
+    'CRITIQUE — sortie par le bouton retour de l\'écran d\'attente : écran de '
+    'choix pleinement utilisable, plus aucun sondage, confirmation tardive '
+    'sans effet',
+    (tester) async {
+      final slowStatus = Completer<WalletTopupStatusModel>();
+      when(() => repo.topupStatus(any())).thenAnswer((_) => slowStatus.future);
+
+      final cubit = WalletTopupMobileMoneyCubit(
+        repo,
+        makeEnabledAnalytics(analyticsBackend),
+      );
+      addTearDown(cubit.close);
+
+      final router = GoRouter(
+        initialLocation: '/payments/wallet/topup/method',
+        routes: [
+          GoRoute(
+            path: '/payments/wallet/topup/method',
+            builder: (context, state) => wrapMethodScreen(cubit),
+          ),
+          GoRoute(
+            path: '/payments/wallet/topup/mobile-money/awaiting',
+            builder: (context, state) =>
+                BlocProvider<WalletTopupMobileMoneyCubit>.value(
+                  value: cubit,
+                  child: const WalletTopupMobileMoneyAwaitingScreen(
+                    phoneNumber: '+221771234567',
+                    amount: 5000,
+                  ),
+                ),
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
+      );
+      await tester.pumpAndSettle();
+
+      await selectMobileMoneyAndTypePhone(tester);
+      expect(cubit.state, isA<WalletTopupMobileMoneyProvidersReady>());
+
+      unawaited(cubit.initiate(amount: 5000, phoneNumber: '+221771234567'));
+      await tester.pump();
+      await tester.pump();
+      expect(cubit.state, isA<WalletTopupMobileMoneyAwaiting>());
+
+      // Le sondage tourne : une requête de statut part et reste en vol.
+      await tester.pump(WalletTopupMobileMoneyCubit.pollInterval);
+
+      unawaited(router.push('/payments/wallet/topup/mobile-money/awaiting'));
+      // Jamais pumpAndSettle() : l'icône pulsée tourne en boucle.
+      await tester.pump(const Duration(milliseconds: 350));
+      await tester.pump();
+      expect(find.text('Valide le paiement sur ton téléphone'), findsOneWidget);
+
+      // LE geste corrigé : le bouton retour de l'AppBar, pas « Payer avec un
+      // autre numéro ».
+      await tester.tap(
+        find.descendant(
+          of: find.byType(WalletTopupMobileMoneyAwaitingScreen),
+          matching: find.byType(DonyAppBarBackButton),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 350));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(WalletTopupMethodScreen), findsOneWidget);
+      expect(cubit.state, isA<WalletTopupMobileMoneyProvidersReady>());
+      // Le catalogue est rechargé tout seul : l'écran est utilisable sans
+      // devoir ressaisir quoi que ce soit.
+      verify(() => repo.topupProviders('+221771234567')).called(2);
+      expect(find.byKey(const Key('network-ORANGE_SEN')), findsOneWidget);
+      expect(
+        tester.widget<DonyButton>(find.byType(DonyButton).last).onPressed,
+        isNotNull,
+      );
+
+      // Plus aucun sondage : la réponse tardive du dépôt abandonné n'a plus
+      // d'effet, et aucun tick supplémentaire ne part.
+      slowStatus.complete(statusFor('CONFIRMED'));
+      await tester.pump();
+      expect(cubit.state, isNot(isA<WalletTopupMobileMoneyConfirmed>()));
+      await tester.pump(WalletTopupMobileMoneyCubit.pollInterval);
+      // Un seul sondage au total : celui parti avant le retour arrière.
+      verify(() => repo.topupStatus(any())).called(1);
+    },
+  );
+
+  testWidgets(
+    'CRITIQUE — la confirmation qui arrive alors que l\'utilisateur est revenu '
+    "sur l'écran de choix emmène au portefeuille avec le bandeau",
+    (tester) async {
+      when(
+        () => repo.topupStatus(any()),
+      ).thenAnswer((_) async => statusFor('CONFIRMED'));
+
+      Object? walletExtra;
+      final cubit = WalletTopupMobileMoneyCubit(
+        repo,
+        makeEnabledAnalytics(analyticsBackend),
+      );
+      addTearDown(cubit.close);
+
+      final router = GoRouter(
+        initialLocation: '/payments/wallet/topup/method',
+        routes: [
+          GoRoute(
+            path: '/payments/wallet/topup/method',
+            builder: (context, state) => wrapMethodScreen(cubit),
+          ),
+          GoRoute(
+            path: '/payments/wallet',
+            builder: (context, state) {
+              walletExtra = state.extra;
+              return const Scaffold(body: Text('Portefeuille'));
+            },
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
+      );
+      await tester.pumpAndSettle();
+      await selectMobileMoneyAndTypePhone(tester);
+
+      unawaited(cubit.initiate(amount: 5000, phoneNumber: '+221771234567'));
+      await tester.pump();
+      await tester.pump();
+      expect(cubit.state, isA<WalletTopupMobileMoneyAwaiting>());
+
+      // L'écran d'attente n'est pas (ou plus) là : sans ce filet, personne
+      // n'annoncerait la confirmation et l'utilisateur croirait à un échec.
+      await tester.pump(WalletTopupMobileMoneyCubit.pollInterval);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Portefeuille'), findsOneWidget);
+      expect(
+        (walletExtra as Map<String, dynamic>?)?['topupConfirmed'],
+        isA<WalletTopupStatusModel>(),
+      );
+    },
+  );
+
+  testWidgets(
+    'IMPORTANT — une erreur d\'initiation ne produit qu\'un seul message : '
+    "l'écran de choix, resté monté dessous, se tait",
+    (tester) async {
+      const failure = NetworkException('boom');
+      when(
+        () => repo.topupMobileMoney(
+          amount: any(named: 'amount'),
+          phoneNumber: any(named: 'phoneNumber'),
+          provider: any(named: 'provider'),
+        ),
+      ).thenThrow(failure);
+
+      final cubit = WalletTopupMobileMoneyCubit(
+        repo,
+        makeEnabledAnalytics(analyticsBackend),
+      );
+      addTearDown(cubit.close);
+
+      final router = GoRouter(
+        initialLocation: '/payments/wallet/topup/method',
+        routes: [
+          GoRoute(
+            path: '/payments/wallet/topup/method',
+            builder: (context, state) => wrapMethodScreen(cubit),
+          ),
+          // Mime l'écran de montant : lui aussi présente l'erreur.
+          GoRoute(
+            path: '/payments/wallet/topup/amount',
+            builder: (context, state) =>
+                BlocProvider<WalletTopupMobileMoneyCubit>.value(
+                  value: cubit,
+                  child:
+                      BlocListener<
+                        WalletTopupMobileMoneyCubit,
+                        WalletTopupMobileMoneyState
+                      >(
+                        listenWhen: (previous, current) =>
+                            previous.runtimeType != current.runtimeType,
+                        listener: (context, state) {
+                          if (state is WalletTopupMobileMoneyError) {
+                            unawaited(
+                              ErrorPresenter.show(context, state.error),
+                            );
+                          }
+                        },
+                        child: const Scaffold(body: Text('Montant')),
+                      ),
+                ),
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
+      );
+      await tester.pumpAndSettle();
+      await selectMobileMoneyAndTypePhone(tester);
+
+      unawaited(router.push('/payments/wallet/topup/amount'));
+      await tester.pumpAndSettle();
+
+      unawaited(cubit.initiate(amount: 5000, phoneNumber: '+221771234567'));
+      await tester.pump();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+
+      final message = ErrorPresenter.resolve(failure).message;
+      expect(find.text(message), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'IMPORTANT — après un échec, ressaisir LE MÊME numéro recharge bien les '
+    'opérateurs',
+    (tester) async {
+      var calls = 0;
+      when(() => repo.topupProviders('+221771234567')).thenAnswer((_) async {
+        calls++;
+        if (calls == 1) {
+          throw const NetworkException('boom');
+        }
+        return catalog;
+      });
+
+      await tester.pumpWidget(buildHarness());
+      await tester.pumpAndSettle();
+      await selectMobileMoneyAndTypePhone(tester);
+
+      expect(find.byKey(const Key('network-ORANGE_SEN')), findsNothing);
+
+      // Même numéro, même geste : le cache de numéro ne doit pas bloquer la
+      // relance puisque plus aucun catalogue n'est affiché.
+      await tester.enterText(
+        find.byKey(const Key('wallet-topup-payer-phone-field')),
+        '+221 77 123 45 67',
+      );
+      FocusManager.instance.primaryFocus?.unfocus();
+      await tester.pumpAndSettle();
+
+      expect(calls, 2);
+      expect(find.byKey(const Key('network-ORANGE_SEN')), findsOneWidget);
     },
   );
 }

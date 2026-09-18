@@ -1,5 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_cubit.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_state.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_topup_model.dart';
@@ -272,4 +274,99 @@ void main() {
       () => cubit.initiate(amount: 5000, phoneNumber: '+221771234567'),
     ).called(1);
   });
+
+  testWidgets(
+    'IMPORTANT — Error (réseau coupé pendant « Réessayer ») : message et '
+    'bouton de reprise, jamais une roue infinie',
+    (tester) async {
+      const failure = NetworkException('boom');
+      whenListen(
+        cubit,
+        Stream.fromIterable([const WalletTopupMobileMoneyError(failure)]),
+        initialState: const WalletTopupMobileMoneyFailed('Refusé.'),
+      );
+
+      await tester.pumpWidget(buildHarness());
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+      expect(
+        find.text(ErrorPresenter.resolve(failure).message),
+        findsOneWidget,
+      );
+      expect(find.text('Réessayer'), findsOneWidget);
+
+      await tester.tap(find.text('Réessayer'));
+      await tester.pump();
+
+      verify(
+        () => cubit.initiate(amount: 5000, phoneNumber: '+221771234567'),
+      ).called(1);
+    },
+  );
+
+  testWidgets(
+    'CRITIQUE — le bouton retour de l\'AppBar abandonne la recharge, comme '
+    '« Payer avec un autre numéro »',
+    (tester) async {
+      whenListen(
+        cubit,
+        const Stream<WalletTopupMobileMoneyState>.empty(),
+        initialState: WalletTopupMobileMoneyAwaiting(
+          topup: topup,
+          startedAt: startedAt,
+        ),
+      );
+
+      final router = GoRouter(
+        initialLocation: '/choice',
+        routes: [
+          GoRoute(
+            path: '/choice',
+            builder: (context, state) => Scaffold(
+              body: Center(
+                child: TextButton(
+                  onPressed: () => context.push(
+                    '/payments/wallet/topup/mobile-money/awaiting',
+                  ),
+                  child: const Text('Ouvrir attente'),
+                ),
+              ),
+            ),
+          ),
+          GoRoute(
+            path: '/payments/wallet/topup/mobile-money/awaiting',
+            builder: (context, state) =>
+                BlocProvider<WalletTopupMobileMoneyCubit>.value(
+                  value: cubit,
+                  child: const WalletTopupMobileMoneyAwaitingScreen(
+                    phoneNumber: '+221771234567',
+                    amount: 5000,
+                  ),
+                ),
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
+      );
+      await tester.pump();
+
+      await tester.tap(find.text('Ouvrir attente'));
+      // Jamais pumpAndSettle() : l'icône pulsée tourne en boucle.
+      await tester.pump(const Duration(milliseconds: 350));
+      await tester.pump();
+      await tester.pump();
+      expect(find.text('Valide le paiement sur ton téléphone'), findsOneWidget);
+
+      await tester.tap(find.byType(DonyAppBarBackButton));
+      await tester.pump(const Duration(milliseconds: 350));
+      await tester.pump();
+
+      expect(find.text('Ouvrir attente'), findsOneWidget);
+      verify(() => cubit.reset()).called(1);
+    },
+  );
 }

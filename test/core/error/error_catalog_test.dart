@@ -631,10 +631,12 @@ void main() {
 
       expect(
         p.message,
-        'Une recharge est déjà en cours. Termine-la ou annule-la avant '
-        'd\'en lancer une nouvelle.',
+        'Une recharge est déjà en cours. Valide-la sur ton téléphone, ou '
+        'attends qu\'elle expire avant d\'en lancer une nouvelle.',
       );
       expect(p.message, isNot(contains('votre')));
+      // Aucun écran ne permet d'annuler une recharge : ne jamais le demander.
+      expect(p.message, isNot(contains('annule')));
       expect(p.title, 'Recharge déjà en cours');
     });
 

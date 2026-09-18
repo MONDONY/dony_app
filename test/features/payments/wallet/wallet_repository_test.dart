@@ -217,6 +217,31 @@ void main() {
     });
   });
 
+  group('isMobileMoneyTopupAvailable', () {
+    test('true quand la sonde aboutit', () async {
+      when(() => mockDatasource.topupProvidersProbe()).thenAnswer((_) async {});
+
+      expect(await repo.isMobileMoneyTopupAvailable(), isTrue);
+    });
+
+    test(
+      'false quand le backend ne sert pas le rail (404), sans lever',
+      () async {
+        when(() => mockDatasource.topupProvidersProbe()).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/wallet/topup/providers'),
+            response: Response(
+              requestOptions: RequestOptions(path: '/wallet/topup/providers'),
+              statusCode: 404,
+            ),
+          ),
+        );
+
+        expect(await repo.isMobileMoneyTopupAvailable(), isFalse);
+      },
+    );
+  });
+
   group('topupProviders', () {
     test(
       'délègue au datasource et mappe en MobileMoneyProviderCatalog',
@@ -331,7 +356,6 @@ void main() {
       final result = await repo.topupStatus('t-1');
 
       expect(result.status, 'PENDING');
-      expect(result.isTerminal, isFalse);
       verify(() => mockDatasource.topupStatus('t-1')).called(1);
     });
 

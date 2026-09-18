@@ -50,6 +50,12 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
   /// obsolète traîne encore.
   int? _inFlightGeneration;
 
+  /// Verrou local d'[initiate], posé AVANT le premier `await` : deux taps
+  /// sur « Payer » dans la même frame passent tous deux la garde d'état du
+  /// bouton (l'`emit` synchrone n'a pas encore reconstruit l'UI) et
+  /// ouvriraient deux dépôts côté serveur, donc deux débits.
+  bool _initiating = false;
+
   /// Catalogue des opérateurs utilisables sur [phoneNumber], pré-sélectionne
   /// celui détecté par pawaPay pour ce numéro.
   ///
@@ -93,6 +99,19 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
   /// [loadProviders] n'a jamais été appelé : le back retient alors celui
   /// qu'il détecte lui-même), puis démarre le sondage du statut.
   Future<void> initiate({
+    required double amount,
+    required String phoneNumber,
+  }) async {
+    if (_initiating) return;
+    _initiating = true;
+    try {
+      await _initiate(amount: amount, phoneNumber: phoneNumber);
+    } finally {
+      _initiating = false;
+    }
+  }
+
+  Future<void> _initiate({
     required double amount,
     required String phoneNumber,
   }) async {

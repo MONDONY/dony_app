@@ -5,6 +5,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_keypad.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_cubit.dart';
+import 'package:dony/features/payments/wallet/data/models/wallet_model.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_topup_model.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_topup_status_model.dart';
 import 'package:dony/features/payments/wallet/data/repositories/wallet_repository.dart';
@@ -110,7 +111,8 @@ void main() {
     return MaterialApp.router(routerConfig: router, theme: AppTheme.light());
   }
 
-  /// Tape un raccourci de montant rapide (10/20/50/100) — évite de taper le
+  /// Tape un raccourci de montant rapide (1000/2000/5000/10000 en F CFA) —
+  /// évite de taper le
   /// clavier numérique, dont la dernière rangée (« 0 ») déborde du viewport
   /// de test par défaut (800×600) une fois le contenu scrollable pris en
   /// compte.
@@ -129,7 +131,7 @@ void main() {
 
       expect(find.text('Recharger · Étape 2/2'), findsOneWidget);
 
-      await tapQuickAmount(tester, 50);
+      await tapQuickAmount(tester, 5000);
 
       expect(find.textContaining('F CFA'), findsWidgets);
       // Le clavier ne propose jamais de virgule décimale.
@@ -151,11 +153,11 @@ void main() {
 
       expect(find.text('Entrez un montant'), findsOneWidget);
 
-      await tapQuickAmount(tester, 10);
+      await tapQuickAmount(tester, 1000);
 
-      // 10 F CFA (≈ 0,015 €) reste actif : aucune borne devinée côté client,
-      // contrairement à Stripe (minimum 5 € codé en dur).
-      expect(find.text('Payer 10 F CFA'), findsOneWidget);
+      // 1000 F CFA (≈ 1,50 €) reste actif : aucune borne devinée côté
+      // client, contrairement à Stripe (minimum 5 € codé en dur).
+      expect(find.text('Payer 1000 F CFA'), findsOneWidget);
     },
   );
 
@@ -166,22 +168,23 @@ void main() {
       await tester.pumpWidget(buildHarness());
       await tester.pumpAndSettle();
 
-      await tapQuickAmount(tester, 100);
+      await tapQuickAmount(tester, 10000);
 
-      final payButton = find.text('Payer 100 F CFA');
+      final payButton = find.text('Payer 10000 F CFA');
       await tester.ensureVisible(payButton);
       await tester.tap(payButton);
       await tester.pumpAndSettle();
 
       verify(
-        () => repo.topupMobileMoney(amount: 100, phoneNumber: '+221771234567'),
+        () =>
+            repo.topupMobileMoney(amount: 10000, phoneNumber: '+221771234567'),
       ).called(1);
 
       expect(find.text('Attente'), findsOneWidget);
       expect(capturedArgs, isNotNull);
       expect(capturedArgs!.cubit, same(cubit));
       expect(capturedArgs!.phoneNumber, '+221771234567');
-      expect(capturedArgs!.amount, 100);
+      expect(capturedArgs!.amount, 10000);
       // L'écran de montant a bien été remplacé (pushReplacement), pas
       // simplement empilé par-dessus.
       expect(find.text('Recharger · Étape 2/2'), findsNothing);
@@ -192,4 +195,58 @@ void main() {
       cubit.stopPolling();
     },
   );
+
+  group('devise de l\'opérateur différente de la devise active', () {
+    /// Enregistre le dépôt wallet dans GetIt : c'est lui que l'écran
+    /// interroge pour connaître la devise réelle du portefeuille.
+    void registerWallet(String currency) {
+      if (getIt.isRegistered<WalletRepository>()) {
+        getIt.unregister<WalletRepository>();
+      }
+      when(() => repo.getBalance()).thenAnswer(
+        (_) async =>
+            WalletModel(balance: 0, currency: currency, transactions: const []),
+      );
+      getIt.registerSingleton<WalletRepository>(repo);
+      addTearDown(() {
+        if (getIt.isRegistered<WalletRepository>()) {
+          getIt.unregister<WalletRepository>();
+        }
+      });
+    }
+
+    testWidgets(
+      'IMPORTANT — portefeuille en EUR, opérateur en XOF : avertissement '
+      'avant de payer (le solde arriverait verrouillé)',
+      (tester) async {
+        registerWallet('EUR');
+
+        await tester.pumpWidget(buildHarness());
+        await tester.pumpAndSettle();
+
+        expect(
+          find.byKey(const Key('wallet-topup-currency-mismatch')),
+          findsOneWidget,
+        );
+        expect(
+          find.textContaining('changeant la devise active dans Préférences'),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets('portefeuille déjà en XOF : aucun avertissement', (
+      tester,
+    ) async {
+      registerWallet('XOF');
+
+      await tester.pumpWidget(buildHarness());
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const Key('wallet-topup-currency-mismatch')),
+        findsNothing,
+      );
+    });
+  });
 }

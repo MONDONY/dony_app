@@ -125,6 +125,7 @@ import 'package:dony/features/payments/presentation/screens/payout_onboarding_sc
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_refund_request_cubit.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_refund_requests_list_cubit.dart';
+import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_availability_cubit.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_topup_mobile_money_cubit.dart';
 import 'package:dony/features/payments/wallet/data/models/wallet_topup_status_model.dart';
 import 'package:dony/features/payments/wallet/presentation/screens/wallet_refund_requests_screen.dart';
@@ -917,8 +918,18 @@ final appRouter = GoRouter(
       // d'attente sont poussés par-dessus, si bien que la même instance
       // survit à tout le parcours de recharge — elle est transmise en aval
       // via WalletTopupMethodSelection.cubit, jamais recréée.
-      builder: (context, state) => BlocProvider<WalletTopupMobileMoneyCubit>(
-        create: (_) => getIt<WalletTopupMobileMoneyCubit>(),
+      builder: (context, state) => MultiBlocProvider(
+        providers: [
+          BlocProvider<WalletTopupMobileMoneyCubit>(
+            create: (_) => getIt<WalletTopupMobileMoneyCubit>(),
+          ),
+          // Sonde la disponibilité du rail mobile money côté backend dès
+          // l'ouverture : la tuile n'apparaît qu'en cas de réponse positive.
+          BlocProvider<WalletTopupMobileMoneyAvailabilityCubit>(
+            create: (_) =>
+                getIt<WalletTopupMobileMoneyAvailabilityCubit>()..probe(),
+          ),
+        ],
         child: const WalletTopupMethodScreen(),
       ),
     ),
