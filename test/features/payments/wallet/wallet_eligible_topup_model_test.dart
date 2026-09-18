@@ -67,4 +67,38 @@ void main() {
       expect(without.feeAmount, isNull);
     });
   });
+
+  group('isMobileMoneyTopup', () {
+    test('vrai pour un paymentRef préfixé pawapay:', () {
+      final model = WalletEligibleTopupModel.fromJson({
+        'id': 't1',
+        'amount': 35.00,
+        'paymentRef': 'pawapay:op-123',
+        'createdAt': '2026-09-15T10:00:00Z',
+      });
+
+      expect(model.isMobileMoneyTopup, isTrue);
+    });
+
+    test('faux pour un paymentRef Stripe', () {
+      final model = WalletEligibleTopupModel.fromJson({
+        'id': 't2',
+        'amount': 35.00,
+        'paymentRef': 'pi_123',
+        'createdAt': '2026-09-15T10:00:00Z',
+      });
+
+      expect(model.isMobileMoneyTopup, isFalse);
+    });
+
+    test('faux quand paymentRef est absent (ancien contrat)', () {
+      final model = WalletEligibleTopupModel.fromJson({
+        'id': 't3',
+        'amount': 35.00,
+        'createdAt': '2026-09-15T10:00:00Z',
+      });
+
+      expect(model.isMobileMoneyTopup, isFalse);
+    });
+  });
 }

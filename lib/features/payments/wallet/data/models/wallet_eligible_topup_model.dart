@@ -31,4 +31,10 @@ class WalletEligibleTopupModel {
         originalAmount: (json['originalAmount'] as num?)?.toDouble(),
         feeAmount: (json['feeAmount'] as num?)?.toDouble(),
       );
+
+  /// `paymentRef` d'un dépôt pawaPay : préfixe `pawapay:` (cf.
+  /// `WalletTransactionModel.isMobileMoneyTopup`, même convention côté back).
+  /// Un rail Stripe (`pi_...`) ou un `paymentRef` nul (ancien contrat)
+  /// rendent faux.
+  bool get isMobileMoneyTopup => paymentRef?.startsWith('pawapay:') ?? false;
 }
