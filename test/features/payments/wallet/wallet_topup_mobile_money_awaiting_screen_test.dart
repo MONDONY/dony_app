@@ -206,6 +206,11 @@ void main() {
       await tester.pump();
 
       expect(find.text('Ouvrir attente'), findsOneWidget);
+      // La recharge en cours doit être abandonnée AVANT le pop, sans quoi
+      // le cubit (partagé avec l'écran de choix) resterait Awaiting et
+      // continuerait de sonder — voir la vraie réinitialisation testée sur
+      // le cubit lui-même et sur l'écran de choix réel ci-dessous.
+      verify(() => cubit.reset()).called(1);
     },
   );
 

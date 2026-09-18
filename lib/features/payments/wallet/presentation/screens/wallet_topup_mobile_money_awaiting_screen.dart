@@ -178,7 +178,15 @@ class _WalletTopupMobileMoneyAwaitingScreenState
           key: const Key('mobile-money-awaiting-other-number'),
           label: 'Payer avec un autre numéro',
           variant: DonyButtonVariant.ghost,
-          onPressed: () => context.pop(),
+          onPressed: () {
+            // Abandonne la recharge en cours AVANT de dépiler : sans ce
+            // reset, le cubit (partagé avec l'écran de choix) resterait
+            // Awaiting et continuerait de sonder jusqu'à 15 min, laissant
+            // l'écran de choix figé (loadProviders refusé tant que
+            // Awaiting, Suivant exigeant un ProvidersReady jamais atteint).
+            context.read<WalletTopupMobileMoneyCubit>().reset();
+            context.pop();
+          },
         ),
       );
     }

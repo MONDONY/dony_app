@@ -139,6 +139,21 @@ class WalletTopupMobileMoneyCubit extends Cubit<WalletTopupMobileMoneyState> {
     _pollTimer = null;
   }
 
+  /// Abandonne la recharge en cours (« Payer avec un autre numéro » depuis
+  /// l'écran d'attente) : arrête le sondage et revient à
+  /// [WalletTopupMobileMoneyIdle] pour permettre de repartir de zéro.
+  ///
+  /// Incrémente [_generation] comme [initiate] : une réponse encore en vol
+  /// (sondage ou initiation de la recharge abandonnée) ne doit ni émettre,
+  /// ni faire revivre cette recharge, ni toucher au timer (déjà arrêté ici).
+  /// Sans effet après [close] — aucun `emit` n'a lieu.
+  void reset() {
+    stopPolling();
+    _generation++;
+    if (isClosed) return;
+    emit(const WalletTopupMobileMoneyIdle());
+  }
+
   Future<void> _poll() async {
     if (isClosed) return;
     // Capturé avant tout `await` : identifie la session à laquelle cette

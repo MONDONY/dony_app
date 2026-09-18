@@ -629,5 +629,95 @@ void main() {
         unawaited(cubit.close());
       });
     });
+
+    test('reset() pendant Awaiting : arrête le sondage, revient à Idle', () {
+      fakeAsync((async) {
+        when(
+          () => repo.topupStatus('topup-1'),
+        ).thenAnswer((_) async => statusFor('PENDING'));
+
+        final cubit = WalletTopupMobileMoneyCubit(
+          repo,
+          analytics,
+          now: () => clock.now(),
+        );
+
+        unawaited(cubit.initiate(amount: 20000, phoneNumber: phoneNumber));
+        async.flushMicrotasks();
+        expect(cubit.state, isA<WalletTopupMobileMoneyAwaiting>());
+
+        cubit.reset();
+
+        expect(cubit.state, isA<WalletTopupMobileMoneyIdle>());
+        expect(async.periodicTimerCount, 0);
+
+        unawaited(cubit.close());
+      });
+    });
+
+    test('IMPORTANT — reset() pendant un sondage EN VOL : la réponse tardive '
+        '(même CONFIRMED) ne ressuscite pas la recharge abandonnée, aucun '
+        'event confirmed', () {
+      fakeAsync((async) {
+        final slowStatus = Completer<WalletTopupStatusModel>();
+        when(
+          () => repo.topupStatus('topup-1'),
+        ).thenAnswer((_) => slowStatus.future);
+
+        final cubit = WalletTopupMobileMoneyCubit(
+          repo,
+          analytics,
+          now: () => clock.now(),
+        );
+
+        unawaited(cubit.initiate(amount: 20000, phoneNumber: phoneNumber));
+        async.flushMicrotasks();
+
+        // Le tick fait partir la requête de statut, encore en vol quand
+        // l'utilisateur abandonne (« Payer avec un autre numéro »).
+        async.elapse(WalletTopupMobileMoneyCubit.pollInterval);
+
+        cubit.reset();
+        expect(cubit.state, isA<WalletTopupMobileMoneyIdle>());
+        expect(async.periodicTimerCount, 0);
+
+        // La réponse tardive arrive enfin, en CONFIRMED : elle ne doit
+        // rien changer, l'état reste Idle.
+        slowStatus.complete(statusFor('CONFIRMED'));
+        async.flushMicrotasks();
+
+        expect(cubit.state, isA<WalletTopupMobileMoneyIdle>());
+        expect(async.periodicTimerCount, 0);
+        verifyNever(
+          () => analytics.logEvent(
+            AnalyticsEvents.walletTopupMobileMoneyConfirmed,
+            properties: any(named: 'properties'),
+          ),
+        );
+
+        unawaited(cubit.close());
+      });
+    });
+
+    test('reset() après close() : sans effet, aucune exception', () {
+      fakeAsync((async) {
+        when(
+          () => repo.topupStatus('topup-1'),
+        ).thenAnswer((_) async => statusFor('PENDING'));
+
+        final cubit = WalletTopupMobileMoneyCubit(
+          repo,
+          analytics,
+          now: () => clock.now(),
+        );
+
+        unawaited(cubit.initiate(amount: 20000, phoneNumber: phoneNumber));
+        async.flushMicrotasks();
+
+        unawaited(cubit.close());
+        expect(() => cubit.reset(), returnsNormally);
+        expect(async.periodicTimerCount, 0);
+      });
+    });
   });
 }

@@ -70,7 +70,16 @@ class _WalletTopupMethodScreenState extends State<WalletTopupMethodScreen> {
     if (_phoneFocusNode.hasFocus) return;
     final normalized = normalizePayerPhone(_phoneController.text);
     if (normalized == null || normalized.isEmpty) return;
-    if (normalized == _lastLoadedPhone) return;
+    final cubit = context.read<WalletTopupMobileMoneyCubit>();
+    // Le numéro n'a pas changé depuis le dernier chargement : inutile de
+    // relancer, SAUF si le cubit est revenu à `Idle` (recharge abandonnée
+    // via `reset()` — « Payer avec un autre numéro » depuis l'écran
+    // d'attente). Sans cette exception, revenir sur l'écran de choix avec
+    // le même numéro pré-rempli ne rechargerait jamais les opérateurs.
+    final alreadyLoaded =
+        normalized == _lastLoadedPhone &&
+        cubit.state is! WalletTopupMobileMoneyIdle;
+    if (alreadyLoaded) return;
     _requestProviders(normalized);
   }
 
@@ -385,6 +394,11 @@ class _SingleProviderSelectorState extends State<_SingleProviderSelector> {
       selection: _selection,
       onChanged: (next) {
         final added = next.difference(_selection.value);
+        // La tuile « Tous les réseaux » du widget partagé (pensé pour une
+        // sélection multiple) coche plusieurs réseaux à la fois : ambigu
+        // pour un choix exclusif, ce geste ne change donc rien plutôt que
+        // de retenir arbitrairement le premier réseau du catalogue.
+        if (added.length > 1) return;
         final chosen = added.isNotEmpty
             ? added.first
             : (next.length == 1 ? next.first : null);
