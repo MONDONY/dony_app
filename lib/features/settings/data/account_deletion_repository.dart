@@ -4,14 +4,23 @@ import 'package:dony/features/auth/data/models/user_model.dart';
 
 /// Ce que la suppression du compte fera d'un solde wallet, par devise :
 /// [refundableAmount] repart vers l'utilisateur par [rail] (`STRIPE`
-/// automatique, `MANUAL` par ticket admin), [forfeitedAmount] est perdu à la
-/// finalisation, [inFlightAmount] est déjà en cours de remboursement.
+/// automatique, `PAWAPAY` mobile money, `MANUAL` par ticket admin),
+/// [forfeitedAmount] est perdu à la finalisation, [inFlightAmount] est déjà
+/// en cours de remboursement.
+///
+/// [feeAmount], [netAmount] et [destinationMasked] viennent de dony-back lot
+/// 2 (frais de remboursement mobile money). `null` sur l'ancien contrat — à
+/// ne jamais confondre avec 0 : la sérialisation backend est `NON_NULL`, un
+/// champ absent du JSON reste `null` ici, jamais 0.
 class WalletSettlement {
   final String currency;
   final double refundableAmount;
   final double forfeitedAmount;
   final double inFlightAmount;
   final String rail;
+  final double? feeAmount;
+  final double? netAmount;
+  final String? destinationMasked;
 
   const WalletSettlement({
     required this.currency,
@@ -19,9 +28,15 @@ class WalletSettlement {
     required this.forfeitedAmount,
     required this.inFlightAmount,
     required this.rail,
+    this.feeAmount,
+    this.netAmount,
+    this.destinationMasked,
   });
 
   bool get isManual => rail == 'MANUAL';
+
+  /// `true` quand le back expose les champs du lot 2 pour cette devise.
+  bool get hasFeeInfo => feeAmount != null;
 
   factory WalletSettlement.fromJson(Map<String, dynamic> json) =>
       WalletSettlement(
@@ -30,6 +45,9 @@ class WalletSettlement {
         forfeitedAmount: (json['forfeitedAmount'] as num?)?.toDouble() ?? 0,
         inFlightAmount: (json['inFlightAmount'] as num?)?.toDouble() ?? 0,
         rail: json['rail'] as String? ?? 'STRIPE',
+        feeAmount: (json['feeAmount'] as num?)?.toDouble(),
+        netAmount: (json['netAmount'] as num?)?.toDouble(),
+        destinationMasked: json['destinationMasked'] as String?,
       );
 }
 

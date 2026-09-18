@@ -332,9 +332,20 @@ class _WalletRefundRequestCta extends StatelessWidget {
 }
 
 /// Récapitulatif par devise de ce que la suppression fera du solde wallet :
-/// remboursé sur la carte (rail STRIPE), repris par un membre de l'équipe
-/// (rail MANUAL), et bonus perdu à la finalisation. Purement informatif, la
-/// suppression déclenche tout côté serveur.
+/// remboursé sur la carte (rail STRIPE) ou par mobile money (rail PAWAPAY),
+/// repris par un membre de l'équipe (rail MANUAL), et bonus perdu à la
+/// finalisation. Purement informatif, la suppression déclenche tout côté
+/// serveur.
+///
+/// Deux affichages coexistent par devise, choisis par [WalletSettlement.
+/// hasFeeInfo] : tant que le back n'expose pas les frais de remboursement
+/// (lot 2 — ancien contrat, ou prod backend gelée), l'écran reste
+/// RIGOUREUSEMENT identique à avant (aucun `!`, aucun `?? 0`). Dès que
+/// [WalletSettlement.feeAmount] est présent, la devise passe au nouvel
+/// affichage (étiquette de rail, montant net, détail des frais ou
+/// destination). Le rail MANUAL garde son message inchangé dans tous les cas
+/// — même quand le back y attache des frais nuls (devise alimentée à la fois
+/// par carte et mobile money, ticket support ouvert côté back).
 class _WalletSettlementSummary extends StatelessWidget {
   const _WalletSettlementSummary(this.settlement);
 
@@ -342,6 +353,13 @@ class _WalletSettlementSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Alimente le bandeau récapitulatif du bas : seules les devises au
+    // nouveau contrat et automatiquement remboursées (jamais MANUAL, qui
+    // dépend d'un ticket support) y entrent.
+    final banner = settlement
+        .where((s) => !s.isManual && s.hasFeeInfo)
+        .toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -354,14 +372,17 @@ class _WalletSettlementSummary extends StatelessWidget {
                   'Solde de ${_fmt(s.refundableAmount, s.currency)} : un membre '
                   'de l\'équipe vous recontacte pour le remboursement.',
             )
-          else if (s.refundableAmount > 0)
-            DonyStatusBanner(
-              type: DonyStatusBannerType.info,
-              iconAsset: 'wallet',
-              message:
-                  '${_fmt(s.refundableAmount, s.currency)} seront remboursés '
-                  'sur votre carte dès la demande de suppression.',
-            ),
+          else if (!s.hasFeeInfo) ...[
+            if (s.refundableAmount > 0)
+              DonyStatusBanner(
+                type: DonyStatusBannerType.info,
+                iconAsset: 'wallet',
+                message:
+                    '${_fmt(s.refundableAmount, s.currency)} seront remboursés '
+                    'sur votre carte dès la demande de suppression.',
+              ),
+          ] else
+            _RailAmountBlock(s),
           if (s.inFlightAmount > 0) ...[
             const SizedBox(height: DonySpacing.xs),
             DonyStatusBanner(
@@ -374,16 +395,26 @@ class _WalletSettlementSummary extends StatelessWidget {
           ],
           if (s.forfeitedAmount > 0) ...[
             const SizedBox(height: DonySpacing.xs),
-            DonyStatusBanner(
-              type: DonyStatusBannerType.warning,
-              iconAsset: 'circle-alert',
-              message:
-                  '${_fmt(s.forfeitedAmount, s.currency)} de bonus seront '
-                  'perdus définitivement à la suppression du compte.',
-            ),
+            if (!s.isManual && s.hasFeeInfo)
+              Text(
+                'Bonus parrainage perdu : ${_fmt(s.forfeitedAmount, s.currency)}',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.error,
+                  fontWeight: FontWeight.w600,
+                ),
+              )
+            else
+              DonyStatusBanner(
+                type: DonyStatusBannerType.warning,
+                iconAsset: 'circle-alert',
+                message:
+                    '${_fmt(s.forfeitedAmount, s.currency)} de bonus seront '
+                    'perdus définitivement à la suppression du compte.',
+              ),
           ],
           const SizedBox(height: DonySpacing.xs),
         ],
+        if (banner.isNotEmpty) _SettlementBanner(banner),
       ],
     );
   }
@@ -393,6 +424,134 @@ class _WalletSettlementSummary extends StatelessWidget {
         amount,
         SupportedCurrency.fromCodeOrDefault(currency),
       );
+}
+
+/// Bloc « nouveau contrat » d'une devise : étiquette de rail, montant net en
+/// valeur principale, puis le détail des frais (mobile money) ou la
+/// destination masquée quand le versement est sans frais.
+class _RailAmountBlock extends StatelessWidget {
+  const _RailAmountBlock(this.settlement);
+
+  final WalletSettlement settlement;
+
+  @override
+  Widget build(BuildContext context) {
+    final net = settlement.netAmount ?? settlement.refundableAmount;
+    if (net <= 0) return const SizedBox.shrink();
+
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    final fee = settlement.feeAmount ?? 0;
+
+    final (railLabel, railColor) = switch (settlement.rail) {
+      'PAWAPAY' => ('Mobile money', cs.secondary),
+      'STRIPE' => ('Carte', cs.primary),
+      _ => (null, null),
+    };
+
+    String? detail;
+    if (fee > 0) {
+      detail =
+          '${_WalletSettlementSummary._fmt(settlement.refundableAmount, settlement.currency)} '
+          'remboursables, ${_WalletSettlementSummary._fmt(fee, settlement.currency)} de frais';
+    } else if (settlement.rail == 'PAWAPAY' &&
+        settlement.destinationMasked != null) {
+      detail = 'Vers ${settlement.destinationMasked}, sans frais';
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: DonySpacing.xs),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (railLabel != null && railColor != null) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: DonySpacing.sm,
+                vertical: 3,
+              ),
+              decoration: BoxDecoration(
+                color: railColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(DonyRadius.full),
+              ),
+              child: Text(
+                railLabel,
+                style: tt.labelSmall?.copyWith(
+                  color: railColor,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            const SizedBox(height: DonySpacing.xs),
+          ],
+          Text(
+            _WalletSettlementSummary._fmt(net, settlement.currency),
+            style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          if (detail != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              detail,
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Bandeau récapitulatif combinant toutes les devises au nouveau contrat
+/// (hors MANUAL) : les montants nets joints par « et », puis le bonus perdu
+/// le cas échéant. Absent tant qu'aucune devise n'expose les frais (ancien
+/// contrat).
+class _SettlementBanner extends StatelessWidget {
+  const _SettlementBanner(this.items);
+
+  final List<WalletSettlement> items;
+
+  static String _join(List<String> parts) {
+    if (parts.length == 1) return parts.first;
+    return '${parts.sublist(0, parts.length - 1).join(', ')} et ${parts.last}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final netTexts = items
+        .map((s) => s.netAmount ?? s.refundableAmount)
+        .toList();
+    final nonZeroNets = <String>[
+      for (var i = 0; i < items.length; i++)
+        if (netTexts[i] > 0)
+          _WalletSettlementSummary._fmt(netTexts[i], items[i].currency),
+    ];
+    if (nonZeroNets.isEmpty) return const SizedBox.shrink();
+
+    final forfeitedTexts = [
+      for (final s in items)
+        if (s.forfeitedAmount > 0)
+          _WalletSettlementSummary._fmt(s.forfeitedAmount, s.currency),
+    ];
+
+    final message = StringBuffer(
+      '${_join(nonZeroNets)} seront remboursés dès la demande.',
+    );
+    if (forfeitedTexts.isNotEmpty) {
+      message.write(
+        ' ${_join(forfeitedTexts)} de bonus seront perdus définitivement à '
+        'la suppression.',
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(top: DonySpacing.xs),
+      child: DonyStatusBanner(
+        type: DonyStatusBannerType.info,
+        iconAsset: 'wallet',
+        message: message.toString(),
+      ),
+    );
+  }
 }
 
 class _ModeCard extends StatelessWidget {

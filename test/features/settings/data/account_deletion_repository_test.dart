@@ -110,6 +110,85 @@ void main() {
       expect(result.walletSettlement![0].isManual, isFalse);
     });
 
+    test(
+      'parse feeAmount/netAmount/destinationMasked quand le back les expose (lot 2)',
+      () async {
+        when(
+          () => mockDio.get<dynamic>('/auth/me/deletion-eligibility'),
+        ).thenAnswer(
+          (_) async => Response(
+            requestOptions: RequestOptions(
+              path: '/auth/me/deletion-eligibility',
+            ),
+            statusCode: 200,
+            data: {
+              'canDelete': true,
+              'blockedReasonCode': null,
+              'hasWalletBalance': true,
+              'walletSettlement': [
+                {
+                  'currency': 'XOF',
+                  'refundableAmount': 10000.0,
+                  'forfeitedAmount': 0.0,
+                  'inFlightAmount': 0.0,
+                  'rail': 'PAWAPAY',
+                  'feeAmount': 250.0,
+                  'netAmount': 9750.0,
+                  'destinationMasked': '+225 XX XX XX 45',
+                },
+              ],
+            },
+          ),
+        );
+
+        final result = await repo.checkEligibility();
+
+        final s = result.walletSettlement![0];
+        expect(s.feeAmount, 250.0);
+        expect(s.netAmount, 9750.0);
+        expect(s.destinationMasked, '+225 XX XX XX 45');
+        expect(s.hasFeeInfo, isTrue);
+      },
+    );
+
+    test(
+      'feeAmount/netAmount/destinationMasked restent null quand absents (ancien contrat)',
+      () async {
+        when(
+          () => mockDio.get<dynamic>('/auth/me/deletion-eligibility'),
+        ).thenAnswer(
+          (_) async => Response(
+            requestOptions: RequestOptions(
+              path: '/auth/me/deletion-eligibility',
+            ),
+            statusCode: 200,
+            data: {
+              'canDelete': true,
+              'blockedReasonCode': null,
+              'hasWalletBalance': true,
+              'walletSettlement': [
+                {
+                  'currency': 'EUR',
+                  'refundableAmount': 35.00,
+                  'forfeitedAmount': 5.00,
+                  'inFlightAmount': 0,
+                  'rail': 'STRIPE',
+                },
+              ],
+            },
+          ),
+        );
+
+        final result = await repo.checkEligibility();
+
+        final s = result.walletSettlement![0];
+        expect(s.feeAmount, isNull);
+        expect(s.netAmount, isNull);
+        expect(s.destinationMasked, isNull);
+        expect(s.hasFeeInfo, isFalse);
+      },
+    );
+
     test('walletSettlement reste null sur l\'ancien contrat', () async {
       when(
         () => mockDio.get<dynamic>('/auth/me/deletion-eligibility'),
