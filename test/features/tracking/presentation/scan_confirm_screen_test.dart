@@ -169,6 +169,28 @@ void main() {
     ).called(1);
   });
 
+  testWidgets(
+    'ARRIVEE — la photo prise est transmise à ConfirmDeliveryRequested',
+    (tester) async {
+      final bloc = MockTrackingBloc();
+      when(() => bloc.state).thenReturn(TrackingInitial());
+      whenListen(bloc, const Stream<TrackingState>.empty());
+      await tester.pumpWidget(
+        _wrap('ARRIVEE', bloc, photoPath: '/tmp/arrivee_photo.jpg'),
+      );
+      await tester.pump();
+      await tester.enterText(find.byType(TextField), '654321');
+      await tester.pump();
+      await tester.tap(find.text('Confirmer la livraison'));
+      await tester.pump();
+      final event =
+          verify(() => bloc.add(captureAny())).captured.single
+              as ConfirmDeliveryRequested;
+      expect(event.code, '654321');
+      expect(event.photo?.path, '/tmp/arrivee_photo.jpg');
+    },
+  );
+
   // ─── Loading state — CircularProgressIndicator shown ────────────────────
   testWidgets('état QrScanSubmitting — spinner affiché dans le bouton', (
     tester,

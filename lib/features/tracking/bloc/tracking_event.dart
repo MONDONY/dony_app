@@ -38,7 +38,15 @@ class QrScanSubmitRequested extends TrackingEvent {
 class ConfirmDeliveryRequested extends TrackingEvent {
   final String bidId;
   final String code;
-  ConfirmDeliveryRequested({required this.bidId, required this.code});
+
+  /// Photo de preuve de l'arrivée, uploadée avant la confirmation.
+  final XFile? photo;
+
+  ConfirmDeliveryRequested({
+    required this.bidId,
+    required this.code,
+    this.photo,
+  });
 }
 
 class TrackingRefreshCodeRequested extends TrackingEvent {

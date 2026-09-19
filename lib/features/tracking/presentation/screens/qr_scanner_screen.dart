@@ -794,7 +794,11 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
       final code = _codeController.text.trim();
       if (code.length != 6) return;
       context.read<TrackingBloc>().add(
-        ConfirmDeliveryRequested(bidId: widget.bidId, code: code),
+        ConfirmDeliveryRequested(
+          bidId: widget.bidId,
+          code: code,
+          photo: _photo,
+        ),
       );
     } else {
       context.read<TrackingBloc>().add(

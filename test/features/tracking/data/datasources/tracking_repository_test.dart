@@ -193,6 +193,45 @@ void main() {
       final result = await repo.confirmDelivery(bidId: 'bid-001', code: '4721');
 
       expect(result.id, 'ev-001');
+      final captured =
+          verify(
+                () => mockDio.post(
+                  '/tracking/bid-001/confirm-delivery',
+                  data: captureAny(named: 'data'),
+                ),
+              ).captured.single
+              as Map<String, dynamic>;
+      expect(captured, {'confirmationCode': '4721'});
+    });
+
+    test('envoie la clé photo quand elle est fournie', () async {
+      when(
+        () => mockDio.post(
+          '/tracking/bid-001/confirm-delivery',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer(
+        (_) async => _ok(_eventJson, '/tracking/bid-001/confirm-delivery'),
+      );
+
+      await repo.confirmDelivery(
+        bidId: 'bid-001',
+        code: '4721',
+        photoUrl: 'tracking/bid-001/1_ARRIVEE.jpg',
+      );
+
+      final captured =
+          verify(
+                () => mockDio.post(
+                  '/tracking/bid-001/confirm-delivery',
+                  data: captureAny(named: 'data'),
+                ),
+              ).captured.single
+              as Map<String, dynamic>;
+      expect(captured, {
+        'confirmationCode': '4721',
+        'photoUrl': 'tracking/bid-001/1_ARRIVEE.jpg',
+      });
     });
   });
 }

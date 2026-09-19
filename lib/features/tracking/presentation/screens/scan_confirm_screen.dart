@@ -57,14 +57,14 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
   }
 
   void _submit(BuildContext context) {
+    final photo = widget.photoPath != null ? XFile(widget.photoPath!) : null;
     if (_isArrivee) {
       final code = _codeCtrl.text.trim();
       if (code.length != 6) return;
       context.read<TrackingBloc>().add(
-        ConfirmDeliveryRequested(bidId: widget.bidId, code: code),
+        ConfirmDeliveryRequested(bidId: widget.bidId, code: code, photo: photo),
       );
     } else {
-      final photo = widget.photoPath != null ? XFile(widget.photoPath!) : null;
       context.read<TrackingBloc>().add(
         QrScanSubmitRequested(
           bidId: widget.bidId,

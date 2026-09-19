@@ -170,9 +170,17 @@ class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
   ) async {
     emit(DeliveryConfirmLoading());
     try {
+      String? photoKey;
+      if (event.photo != null) {
+        photoKey = await _repository.uploadTrackingPhoto(
+          event.bidId,
+          event.photo!.path,
+        );
+      }
       final result = await _repository.confirmDelivery(
         bidId: event.bidId,
         code: event.code,
+        photoUrl: photoKey,
       );
       emit(DeliveryConfirmSuccess(result));
     } catch (e) {
