@@ -119,10 +119,11 @@ class TrackingRepository {
   Future<TrackingEventModel> confirmDelivery({
     required String bidId,
     required String code,
+    String? photoUrl,
   }) async {
     final response = await _apiClient.dio.post(
       '/tracking/$bidId/confirm-delivery',
-      data: {'confirmationCode': code},
+      data: {'confirmationCode': code, 'photoUrl': ?photoUrl},
     );
     return TrackingEventModel.fromJson(response.data as Map<String, dynamic>);
   }

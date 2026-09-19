@@ -10,6 +10,7 @@ import 'package:dony/features/tracking/data/models/tracking_search_model.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:mocktail/mocktail.dart';
 import '../../../helpers/mock_analytics_backend.dart';
 
@@ -258,6 +259,94 @@ void main() {
           'bid-1',
         ),
       ],
+    );
+
+    blocTest<TrackingBloc, TrackingState>(
+      'sans photo : confirme sans passer par l\'upload',
+      build: buildBloc,
+      setUp: () {
+        when(
+          () => mockRepo.confirmDelivery(bidId: 'bid-1', code: '4721'),
+        ).thenAnswer((_) async => _event);
+      },
+      act: (b) => b.add(ConfirmDeliveryRequested(bidId: 'bid-1', code: '4721')),
+      verify: (_) {
+        verifyNever(() => mockRepo.uploadTrackingPhoto(any(), any()));
+        verify(
+          () => mockRepo.confirmDelivery(bidId: 'bid-1', code: '4721'),
+        ).called(1);
+      },
+    );
+
+    blocTest<TrackingBloc, TrackingState>(
+      'avec photo : uploade puis confirme avec la clé de la photo',
+      build: buildBloc,
+      setUp: () {
+        when(
+          () => mockRepo.uploadTrackingPhoto('bid-1', '/tmp/arrivee.jpg'),
+        ).thenAnswer((_) async => 'tracking/bid-1/1_ARRIVEE.jpg');
+        when(
+          () => mockRepo.confirmDelivery(
+            bidId: 'bid-1',
+            code: '4721',
+            photoUrl: 'tracking/bid-1/1_ARRIVEE.jpg',
+          ),
+        ).thenAnswer((_) async => _event);
+      },
+      act: (b) => b.add(
+        ConfirmDeliveryRequested(
+          bidId: 'bid-1',
+          code: '4721',
+          photo: XFile('/tmp/arrivee.jpg'),
+        ),
+      ),
+      expect: () => [
+        isA<DeliveryConfirmLoading>(),
+        isA<DeliveryConfirmSuccess>(),
+      ],
+      verify: (_) {
+        verify(
+          () => mockRepo.confirmDelivery(
+            bidId: 'bid-1',
+            code: '4721',
+            photoUrl: 'tracking/bid-1/1_ARRIVEE.jpg',
+          ),
+        ).called(1);
+      },
+    );
+
+    blocTest<TrackingBloc, TrackingState>(
+      'avec photo : un upload en échec émet DeliveryConfirmError sans confirmer',
+      build: buildBloc,
+      setUp: () {
+        when(
+          () => mockRepo.uploadTrackingPhoto(any(), any()),
+        ).thenThrow(const ValidationException('Photo trop lourde'));
+      },
+      act: (b) => b.add(
+        ConfirmDeliveryRequested(
+          bidId: 'bid-1',
+          code: '4721',
+          photo: XFile('/tmp/arrivee.jpg'),
+        ),
+      ),
+      expect: () => [
+        isA<DeliveryConfirmLoading>(),
+        isA<DeliveryConfirmError>().having(
+          (s) => s.error.message,
+          'message',
+          'Photo trop lourde',
+        ),
+      ],
+      verify: (_) {
+        verifyNever(
+          () => mockRepo.confirmDelivery(
+            bidId: any(named: 'bidId'),
+            code: any(named: 'code'),
+            photoUrl: any(named: 'photoUrl'),
+          ),
+        );
+      },
     );
 
     blocTest<TrackingBloc, TrackingState>(
