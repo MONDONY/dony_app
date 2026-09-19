@@ -87,24 +87,6 @@ void main() {
   );
 
   testWidgets(
-    'ThreadMessageBubble — sender with proposedPriceEur=35, grossPriceEur=39.20 shows "Tu paies 39,20 €"',
-    (tester) async {
-      await tester.pumpWidget(
-        wrap(
-          ThreadMessageBubble(
-            message: makeMessage(proposedPriceEur: 35),
-            mine: false,
-            isTraveler: false,
-            grossPriceEur: 39.20,
-          ),
-        ),
-      );
-
-      expect(find.text('Tu paies 39,20\u00A0€'), findsOneWidget);
-    },
-  );
-
-  testWidgets(
     'ThreadMessageBubble — sender with grossPriceEur=null computes gross from net (35 → 39,20 €)',
     (tester) async {
       await tester.pumpWidget(

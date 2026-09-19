@@ -3,8 +3,10 @@ import 'dart:async';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/linked_trip_summary.dart';
+import 'package:dony/features/package_request/data/models/negotiation_message.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/presentation/screens/shared/negotiation_thread_screen.dart';
 import 'package:dony/features/package_request/presentation/widgets/thread/linked_trip_card.dart';
@@ -66,6 +68,8 @@ NegotiationThread _thread({
   int? travelerTripsCount = 24,
   NegotiationThreadStatus status = NegotiationThreadStatus.open,
   LinkedTripSummary? linkedTrip,
+  List<NegotiationMessage> messages = const [],
+  double? grossPriceEur,
 }) => NegotiationThread(
   id: 't-1',
   packageRequestId: 'pr-1',
@@ -77,7 +81,8 @@ NegotiationThread _thread({
   roundsCount: 1,
   lastActivityAt: DateTime(2026, 5, 10),
   createdAt: DateTime(2026, 5, 10),
-  messages: const [],
+  messages: messages,
+  grossPriceEur: grossPriceEur,
   travelerName: travelerName,
   travelerRating: travelerRating,
   travelerTripsCount: travelerTripsCount,
@@ -95,6 +100,10 @@ const _sampleLinkedTrip = LinkedTripSummary(
 
 void main() {
   late _MockNegotiationBloc bloc;
+
+  // Épingle le taux : les bulles assertent des bruts calculés à 12 %.
+  setUpAll(() => setDonyCommissionRate(0.12));
+  tearDownAll(() => setDonyCommissionRate(kDonyCommissionRateDefault));
 
   setUpAll(() {
     registerFallbackValue(const NegotiationFetchRequested('t-1'));
@@ -176,6 +185,43 @@ void main() {
   }
 
   group('NegotiationThreadScreen', () {
+    testWidgets(
+      'côté expéditeur, chaque bulle affiche le brut de SON prix, pas celui du fil',
+      (tester) async {
+        // Recette TestFlight du 2026-09-19 : toutes les bulles reprenaient le
+        // brut du prix courant du fil, la proposition initiale semblait
+        // « prendre la valeur » de la dernière contre-offre.
+        final messages = [
+          NegotiationMessage(
+            id: 'm-1',
+            threadId: 't-1',
+            fromUserId: 'tr-1',
+            kind: NegotiationMessageKind.proposal,
+            proposedPriceEur: 30,
+            createdAt: DateTime(2026, 5, 10, 9),
+          ),
+          NegotiationMessage(
+            id: 'm-2',
+            threadId: 't-1',
+            fromUserId: 'sender-1',
+            kind: NegotiationMessageKind.counter,
+            proposedPriceEur: 50,
+            createdAt: DateTime(2026, 5, 10, 9, 5),
+          ),
+        ];
+        when(() => bloc.state).thenReturn(
+          NegotiationLoaded(_thread(messages: messages, grossPriceEur: 56)),
+        );
+        await tester.pumpWidget(wrap());
+        await tester.pumpAndSettle();
+
+        // Proposition du voyageur : 30 × 1,12.
+        expect(find.text('Tu paies 33,60\u00A0€'), findsOneWidget);
+        // Contre-offre de l'expéditeur : 50 × 1,12 (bulle + carte PRIX ACTUEL).
+        expect(find.text('Tu paies 56,00\u00A0€'), findsNWidgets(2));
+      },
+    );
+
     testWidgets('affiche un skeleton en état Initial', (tester) async {
       when(() => bloc.state).thenReturn(const NegotiationInitial());
       await tester.pumpWidget(wrap());

@@ -464,7 +464,6 @@ class _LoadedViewState extends State<_LoadedView> {
                       mine: mine,
                       highlight: shouldHighlight,
                       isTraveler: viewerUserId == thread.travelerId,
-                      grossPriceEur: thread.grossPriceEur,
                       currency: thread.currency,
                     )
                     .animate()

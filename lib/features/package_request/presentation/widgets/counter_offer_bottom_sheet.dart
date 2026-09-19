@@ -1,9 +1,7 @@
 import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
-import 'package:dony/features/package_request/data/package_request_limits.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -88,7 +86,8 @@ class _CounterOfferContentState extends State<_CounterOfferContent> {
 
   void _validate() {
     final d = double.tryParse(_priceCtrl.text.replaceAll(',', '.'));
-    final isValid = d != null && d > 0 && d <= 500;
+    // Aucun plafond métier : le garde-fou technique (1 000 000) vit côté serveur.
+    final isValid = d != null && d > 0;
     if (isValid != _valid) {
       setState(() => _valid = isValid);
       widget.onSubmitReady(isValid ? _submit : null);
@@ -191,14 +190,6 @@ class _CounterOfferContentState extends State<_CounterOfferContent> {
             validator: (v) {
               final d = double.tryParse((v ?? '').replaceAll(',', '.'));
               if (d == null || d <= 0) return 'Valeur invalide';
-              // Plafond à l'échelle de la devise du fil : 500 en dur refusait
-              // toute contre-offre en franc CFA.
-              final maxOffer = PackageRequestLimits.maxOfferFor(
-                SupportedCurrency.fromCodeOrDefault(widget.currency),
-              );
-              if (d > maxOffer) {
-                return 'Maximum ${formatPriceIn(maxOffer, widget.currency)}';
-              }
               return null;
             },
           ),

@@ -22,7 +22,6 @@ class ThreadMessageBubble extends StatelessWidget {
     required this.mine,
     this.highlight = false,
     required this.isTraveler,
-    this.grossPriceEur,
     this.currency = 'EUR',
   });
 
@@ -36,11 +35,13 @@ class ThreadMessageBubble extends StatelessWidget {
   /// Whether the current viewer is the traveler.
   /// - Traveler sees "Tu reçois X €" (net)
   /// - Sender sees "Tu paies X €" (gross)
+  ///
+  /// Le brut se dérive toujours du prix DU MESSAGE
+  /// ([NegotiationMessage.proposedPriceEur]) via [PriceDisplay.grossFromNet],
+  /// même calcul que le serveur (net × taux global). La bulle recevait
+  /// auparavant le brut du prix courant du fil : côté expéditeur, toutes les
+  /// bulles affichaient alors le montant de la dernière offre.
   final bool isTraveler;
-
-  /// Pre-computed gross price from the server. When null, gross is derived
-  /// from the net using [PriceDisplay.grossFromNet].
-  final double? grossPriceEur;
 
   final String currency;
 
@@ -99,7 +100,7 @@ class ThreadMessageBubble extends StatelessWidget {
                     Text(
                       PriceDisplay.threadPriceLabel(
                         message.proposedPriceEur!,
-                        grossPriceEur,
+                        null,
                         isTraveler,
                         currency,
                       ),
