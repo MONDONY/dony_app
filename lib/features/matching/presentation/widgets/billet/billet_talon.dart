@@ -44,7 +44,10 @@ class BilletTalon extends StatelessWidget {
           _buildActionZone(context),
           if (bid.trackingNumber != null) ...[
             const SizedBox(height: DonySpacing.md),
-            TalonTrackingStrip(trackingNumber: bid.trackingNumber!),
+            TalonTrackingStrip(
+              trackingNumber: bid.trackingNumber!,
+              trackingToken: bid.trackingToken,
+            ),
           ],
         ],
       ),

@@ -116,6 +116,31 @@ void _platformDeepLinkConfig() {
       );
     });
 
+    test('chaque hôte yadony:// émis par le back a son filtre d\'intent', () {
+      final manifest = File(
+        'android/app/src/main/AndroidManifest.xml',
+      ).readAsStringSync();
+
+      // Android ne route un schéma personnalisé que vers une activité dont
+      // un filtre déclare l'hôte. Liste = hôtes présents dans les liens que
+      // le back émet (pages publiques annonce/demande, retours Stripe et
+      // pawaPay) ; un hôte oublié ici laisse Chrome sur une erreur.
+      for (final host in const [
+        'stripe',
+        'annonce',
+        'demande',
+        'bids',
+        'negotiations',
+        'payments',
+      ]) {
+        expect(
+          manifest,
+          contains('android:scheme="yadony" android:host="$host"'),
+          reason: 'hôte yadony://$host sans filtre d\'intent',
+        );
+      }
+    });
+
     test('les deux retours Stripe restent déclarés dans le manifeste', () {
       final manifest = File(
         'android/app/src/main/AndroidManifest.xml',

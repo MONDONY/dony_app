@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/utils/share_position.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
@@ -9,7 +10,26 @@ import 'package:share_plus/share_plus.dart';
 /// numéro, et actions Copier / Partager.
 class TalonTrackingStrip extends StatelessWidget {
   final String trackingNumber;
-  const TalonTrackingStrip({super.key, required this.trackingNumber});
+
+  /// Jeton de la page publique de suivi (`BidModel.trackingToken`). Quand il
+  /// est connu, le partage porte le lien https en plus du numéro : sans lui,
+  /// le destinataire recevait un numéro seul et n'avait rien à ouvrir.
+  final String? trackingToken;
+
+  const TalonTrackingStrip({
+    super.key,
+    required this.trackingNumber,
+    this.trackingToken,
+  });
+
+  String get _shareText {
+    final token = trackingToken;
+    if (token == null || token.isEmpty) {
+      return 'Suivez mon colis Yadony #$trackingNumber';
+    }
+    return 'Suivez mon colis Yadony #$trackingNumber en temps réel :\n'
+        '${trackingPublicUrl(token)}';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -67,7 +87,7 @@ class TalonTrackingStrip extends StatelessWidget {
             icon: DonyIcon('share-2', color: cs.primary, size: 20),
             tooltip: 'Partager',
             onPressed: () => Share.share(
-              'Suivez mon colis Yadony #$trackingNumber',
+              _shareText,
               sharePositionOrigin: sharePositionOriginFor(context),
             ),
           ),
