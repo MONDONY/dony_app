@@ -44,6 +44,20 @@ void main() {
       // Les favoris sont le seul contenu qu'un visiteur peut conserver :
       // le backend et le routeur les autorisent déjà à un invité.
       expect(GuestAccessGuard.isPublicGuestPath('/favoris'), isTrue);
+      // Cible du lien d'affiche yadony://annonce/{id} : ouverte au visiteur,
+      // l'écran renvoie lui-même le non-propriétaire vers la vue expéditeur.
+      expect(
+        GuestAccessGuard.isPublicGuestPath('/announcements/abc/trip'),
+        isTrue,
+      );
+      expect(
+        GuestAccessGuard.isPublicGuestPath('/announcements/abc/bids'),
+        isFalse,
+      );
+      expect(
+        GuestAccessGuard.isPublicGuestPath('/announcements/abc/affiche'),
+        isFalse,
+      );
       expect(GuestAccessGuard.isPublicGuestPath('/messages'), isFalse);
       expect(GuestAccessGuard.isPublicGuestPath('/profile'), isFalse);
       expect(GuestAccessGuard.isPublicGuestPath('/announcements'), isFalse);

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:app_links/app_links.dart';
 import 'package:dony/app/announcement_deep_link.dart';
+import 'package:dony/app/deep_link_gate.dart';
 import 'package:dony/app/mobile_money_deep_link.dart';
 import 'package:dony/app/package_request_deep_link.dart';
 import 'package:dony/app/reduced_motion_priming.dart';
@@ -61,6 +62,27 @@ class _DonyAppState extends State<DonyApp> {
   AppLifecycleListener? _lifecycleListener;
   final _appLinks = AppLinks();
 
+  /// Porte des liens profonds : retient un lien arrivé sur le verrou PIN, la
+  /// connexion ou l'onboarding, et le rejoue une fois cet écran quitté (voir
+  /// `deep_link_gate.dart`). Rejoué après la frame : `go()`/`push()` depuis
+  /// le listener du `routerDelegate` re-notifierait en pleine notification.
+  late final DeepLinkGate _deepLinkGate = DeepLinkGate(
+    currentLocation: () =>
+        appRouter.routerDelegate.currentConfiguration.uri.path,
+    navigate: _navigateToRoute,
+  );
+
+  void _onRouterChanged() {
+    if (_deepLinkGate.pendingRoute == null) {
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _deepLinkGate.onLocationChanged();
+      }
+    });
+  }
+
   /// Le premier verdict de `AuthCheckRequested` a été traité. Le garde-fou
   /// « compte absent côté backend » ne doit jouer qu'à ce moment-là, pas sur
   /// les `AuthInitial` ultérieurs (déconnexion volontaire, changement de
@@ -98,6 +120,7 @@ class _DonyAppState extends State<DonyApp> {
         unawaited(getIt<NotificationService>().onAppResumed());
       },
     );
+    appRouter.routerDelegate.addListener(_onRouterChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Le splash natif était maintenu depuis `_bootstrap` : on le retire dès
       // que le premier écran réel est peint. C'est le seul splash de l'app.
@@ -180,7 +203,7 @@ class _DonyAppState extends State<DonyApp> {
       final route = resolver(uri);
       if (route != null) {
         try {
-          _navigateToRoute(route);
+          _deepLinkGate.dispatch(route);
         } catch (_) {
           // Route indisponible — no-op, comme pour les autres liens profonds.
         }
@@ -193,7 +216,7 @@ class _DonyAppState extends State<DonyApp> {
       return;
     }
     try {
-      _navigateToRoute(routePath);
+      _deepLinkGate.dispatch(routePath);
     } catch (_) {
       // Unknown deep link path — no-op
     }
@@ -204,6 +227,7 @@ class _DonyAppState extends State<DonyApp> {
     _navSub?.cancel();
     _authSub?.cancel();
     _deepLinkSub?.cancel();
+    appRouter.routerDelegate.removeListener(_onRouterChanged);
     _lifecycleListener?.dispose();
     super.dispose();
   }
