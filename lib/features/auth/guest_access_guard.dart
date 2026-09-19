@@ -6,12 +6,20 @@ abstract final class GuestAccessGuard {
 
   /// Favoris inclus : c'est le seul contenu qu'un visiteur peut conserver, et
   /// le backend autorise déjà un invité sur `GET/PUT/DELETE /favorites/*`.
+  ///
+  /// Le détail d'un trajet (`/announcements/{id}/trip`) est la cible du lien
+  /// d'affiche `yadony://annonce/{id}` : comme la page publique d'une demande,
+  /// il doit s'ouvrir à un visiteur (le backend sert `GET /announcements/{id}`
+  /// à un invité) ; l'écran renvoie lui-même le non-propriétaire vers la vue
+  /// expéditeur, dont le CTA exige un compte. Sans cette entrée, le lien
+  /// tombait sur la connexion et se perdait.
   static bool isPublicGuestPath(String path) =>
       path == '/home' ||
       path == '/recherche/composer' ||
       path == '/package-requests/search' ||
       path == '/favoris' ||
-      RegExp(r'^/package-requests/[^/]+/public$').hasMatch(path);
+      RegExp(r'^/package-requests/[^/]+/public$').hasMatch(path) ||
+      RegExp(r'^/announcements/[^/]+/trip$').hasMatch(path);
 
   /// Un visiteur qui rouvre l'app avec une session anonyme déjà ouverte n'a
   /// jamais son `AuthBloc` qui bouge : `AuthCheckRequested` ne part que pour

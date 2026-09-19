@@ -74,9 +74,12 @@ jobs:
       # lib/core/firebase/firebase_options.dart, lib/main.dart,
       # lib/core/network/api_client.dart) — env.prod.json.example n'en
       # listait qu'une partie et a été complété en conséquence. Omises
-      # volontairement : POSTER_SHARE_BASE_URL, TRACKING_PUBLIC_URL,
-      # POSTHOG_HOST, qui ont un repli applicatif correct par défaut et
-      # n'ont donc pas besoin d'un secret dédié.
+      # volontairement : TRACKING_PUBLIC_URL, POSTHOG_HOST, qui ont un repli
+      # applicatif correct par défaut et n'ont donc pas besoin d'un secret
+      # dédié. POSTER_SHARE_BASE_URL n'en fait PAS partie : son repli est
+      # l'origine de l'API, et un binaire bâti sans elle partageait
+      # https://api.yadony.com/api/v1/annonce/{id} au lieu du domaine nu
+      # (constaté le 2026-09-19). Valeur publique et fixe, donc en clair ici.
       - name: Create env.prod.json from secrets
         env:
           API_BASE_URL: ${{ secrets.FLUTTER_API_BASE_URL }}
@@ -116,6 +119,7 @@ jobs:
           cat > env.prod.json <<EOF
           {
             "API_BASE_URL": "$API_BASE_URL",
+            "POSTER_SHARE_BASE_URL": "https://yadony.com",
             "ENVIRONMENT": "production",
             "TLS_PINNING": "on",
             "FIREBASE_PROJECT_ID": "$FIREBASE_PROJECT_ID",
