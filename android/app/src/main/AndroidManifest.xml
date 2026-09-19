@@ -107,6 +107,33 @@
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data android:scheme="yadony" android:host="demande"/>
             </intent-filter>
+            <!-- Retours du back après un paiement mobile money (302 émis par
+                 PawapayReturnController) : yadony://bids/{uuid}/mobile-money/awaiting,
+                 yadony://negotiations/{uuid}/mobile-money/awaiting et
+                 yadony://payments/wallet (recharge). Android ne route un schéma
+                 personnalisé que si un filtre déclare l'hôte : sans ces trois
+                 entrées, Chrome affichait une erreur au retour de Wave et la
+                 personne revenait dans l'app à la main. Les chemins sont ensuite
+                 filtrés par app.dart (résolveur UUID strict pour bids et
+                 negotiations, liste blanche pour le reste). -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="yadony" android:host="bids"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="yadony" android:host="negotiations"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="yadony" android:host="payments"/>
+            </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
