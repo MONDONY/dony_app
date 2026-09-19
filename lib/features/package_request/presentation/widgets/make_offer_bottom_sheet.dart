@@ -13,7 +13,6 @@ import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/locked_trip_context.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/data/models/price_estimate.dart';
-import 'package:dony/features/package_request/data/package_request_limits.dart';
 import 'package:dony/features/package_request/data/price_estimation_repository.dart';
 import 'package:dony/features/package_request/presentation/widgets/trip_picker_section.dart';
 import 'package:flutter/material.dart';
@@ -394,17 +393,9 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
                             final d = double.tryParse(
                               (v ?? '').replaceAll(',', '.'),
                             );
-                            if (d == null) return 'Invalide';
-                            // Plafond à l'échelle de la devise de la demande :
-                            // 500 en dur refusait toute offre en franc CFA.
-                            final maxOffer = PackageRequestLimits.maxOfferFor(
-                              SupportedCurrency.fromCodeOrDefault(
-                                widget.currency,
-                              ),
-                            );
-                            if (d <= 0 || d > maxOffer) {
-                              return '0 à ${formatPriceIn(maxOffer, widget.currency)}';
-                            }
+                            // Aucun plafond métier : seul le garde-fou
+                            // technique du serveur (1 000 000) subsiste.
+                            if (d == null || d <= 0) return 'Invalide';
                             return null;
                           },
                         ),

@@ -37,6 +37,7 @@ void main() {
     WidgetTester tester, {
     double currentPriceEur = 50,
     int roundsCount = 2,
+    String currency = 'EUR',
   }) async {
     await tester.pumpWidget(
       MaterialApp(
@@ -51,6 +52,7 @@ void main() {
                 threadId: 't-1',
                 currentPriceEur: currentPriceEur,
                 roundsCount: roundsCount,
+                currency: currency,
               ),
               child: const Text('Ouvrir'),
             ),
@@ -119,6 +121,61 @@ void main() {
         ).called(1);
       },
     );
+
+    testWidgets(
+      'une contre-offre de 35 000 F CFA active le bouton et part telle quelle',
+      (tester) async {
+        // Recette TestFlight du 2026-09-19 : le listener qui active le bouton
+        // gardait un plafond de 500 en dur (en euros), toute contre-offre en
+        // franc CFA restait grisée. Le plafond métier a été retiré.
+        await openSheet(tester, currentPriceEur: 18708, currency: 'XOF');
+
+        final priceField = find.byType(TextFormField).first;
+        await tester.enterText(priceField, '35000');
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 50));
+
+        await tester.tap(find.text('Envoyer ma contre-offre'));
+        await tester.pumpAndSettle();
+
+        final captured = verify(() => bloc.add(captureAny())).captured;
+        expect(captured, hasLength(1));
+        final event = captured.single as NegotiationCounterRequested;
+        expect(event.proposedPriceEur, 35000);
+        expect(event.threadId, 't-1');
+      },
+    );
+
+    testWidgets('aucun plafond en euros non plus : 800 € part', (tester) async {
+      await openSheet(tester);
+
+      final priceField = find.byType(TextFormField).first;
+      await tester.enterText(priceField, '800');
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+      expect(find.textContaining('Maximum'), findsNothing);
+
+      await tester.tap(find.text('Envoyer ma contre-offre'));
+      await tester.pumpAndSettle();
+
+      final captured = verify(() => bloc.add(captureAny())).captured;
+      final event = captured.single as NegotiationCounterRequested;
+      expect(event.proposedPriceEur, 800);
+    });
+
+    testWidgets('un montant nul laisse le bouton inactif', (tester) async {
+      await openSheet(tester);
+
+      final priceField = find.byType(TextFormField).first;
+      await tester.enterText(priceField, '0');
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+
+      await tester.tap(find.text('Envoyer ma contre-offre'));
+      await tester.pumpAndSettle();
+
+      verifyNever(() => bloc.add(any()));
+    });
 
     testWidgets('le compteur de caractères affiche 0/280 initialement', (
       tester,
