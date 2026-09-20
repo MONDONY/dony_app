@@ -596,6 +596,50 @@ void main() {
     );
   });
 
+  testWidgets(
+    'la capture automatique est prise au tap, avant la feuille, et part au backend',
+    (tester) async {
+      final sender = _RecordingSender();
+      getIt.registerSingleton<ScreenFeedbackSender>(sender);
+      addTearDown(() => getIt.unregister<ScreenFeedbackSender>());
+      final bytes = Uint8List.fromList([137, 80, 78, 71, 1, 2, 3]);
+      bool? sheetOpenAtCapture;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            appBar: AppBar(
+              actions: [
+                DonyFeedbackButton(
+                  captureOverride: () async {
+                    // Prise à l'envoi, la capture montrait la feuille de
+                    // signalement au lieu de l'écran (build 73) : au moment
+                    // de la capture, la feuille ne doit pas exister.
+                    sheetOpenAtCapture = find
+                        .text('Un problème sur cet écran ?')
+                        .evaluate()
+                        .isNotEmpty;
+                    return bytes;
+                  },
+                ),
+              ],
+            ),
+            body: const Center(child: Text('Écran à capturer')),
+          ),
+        ),
+      );
+      await tester.tap(find.byType(DonyFeedbackButton));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'Capture');
+      await tester.pump();
+      await tester.tap(find.text('Envoyer le rapport'));
+      await tester.pumpAndSettle();
+
+      expect(sheetOpenAtCapture, isFalse);
+      expect(sender.screenshots.single, same(bytes));
+    },
+  );
+
   testWidgets('un backend en échec ne bloque pas le succès du rapport', (
     tester,
   ) async {
@@ -621,6 +665,7 @@ void main() {
 class _RecordingSender extends Fake implements ScreenFeedbackSender {
   final reports = <FeedbackReport>[];
   final routes = <String>[];
+  final screenshots = <Uint8List?>[];
 
   @override
   Future<String> send({
@@ -630,6 +675,7 @@ class _RecordingSender extends Fake implements ScreenFeedbackSender {
   }) async {
     reports.add(report);
     routes.add(route);
+    screenshots.add(screenshot);
     return 'r-1';
   }
 }

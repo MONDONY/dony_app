@@ -38,7 +38,7 @@ class ProfileHeader extends StatelessWidget {
   /// Largeur, à droite, laissée libre par la ligne nom + badge. Ce header est
   /// le fond d'une `SliverAppBar` : les boutons d'action (scarabée, burger)
   /// se dessinent PAR-DESSUS, en haut à droite. Sans cette réserve, un nom
-  /// long ou le badge VÉRIFIÉ passe sous les boutons (vu sur le build 72).
+  /// long ou le badge PRO passe sous les boutons (vu sur le build 72).
   /// L'écran passe la largeur réelle de ses actions.
   final double trailingInset;
 
@@ -79,7 +79,7 @@ class ProfileHeader extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Nom + badge VÉRIFIÉ / PRO, à l'écart des actions de
+                    // Nom + badge PRO, à l'écart des actions de
                     // la SliverAppBar (voir [trailingInset]).
                     Padding(
                       padding: EdgeInsets.only(right: trailingInset),
@@ -96,9 +96,11 @@ class ProfileHeader extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          if (isKycVerified) ...[
+                          // Pas de badge « VÉRIFIÉ » ici : la puce « Identité ✓ »
+                          // en dessous le dit déjà. Seul PRO reste à côté du nom.
+                          if (isKycVerified && isProAccount) ...[
                             const SizedBox(width: DonySpacing.xs),
-                            _BadgeLabel(isPro: isProAccount),
+                            const _ProBadge(),
                           ],
                         ],
                       ),
@@ -130,11 +132,10 @@ class ProfileHeader extends StatelessWidget {
   }
 }
 
-// ── Badge label VÉRIFIÉ / PRO ─────────────────────────────────────────────────
+// ── Badge PRO ─────────────────────────────────────────────────────────────────
 
-class _BadgeLabel extends StatelessWidget {
-  const _BadgeLabel({required this.isPro});
-  final bool isPro;
+class _ProBadge extends StatelessWidget {
+  const _ProBadge();
 
   @override
   Widget build(BuildContext context) {
@@ -145,13 +146,13 @@ class _BadgeLabel extends StatelessWidget {
         vertical: DonySpacing.xxs,
       ),
       decoration: BoxDecoration(
-        color: isPro ? DonyColors.amberLight : DonyColors.blue50,
+        color: DonyColors.amberLight,
         borderRadius: BorderRadius.circular(DonyRadius.full),
       ),
       child: Text(
-        isPro ? 'PRO' : 'VÉRIFIÉ',
+        'PRO',
         style: tt.labelSmall?.copyWith(
-          color: isPro ? DonyColors.amberDark : DonyColors.blue700,
+          color: DonyColors.amberDark,
           fontWeight: FontWeight.w800,
           letterSpacing: 0.5,
         ),

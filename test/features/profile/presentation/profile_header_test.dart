@@ -52,6 +52,7 @@ void main() {
         _buildHeader(
           displayName: 'aboubakar Siriki DIAKITE KONATÉ TRAORÉ',
           isKycVerified: true,
+          isProAccount: true,
           trailingInset: inset,
         ),
       );
@@ -59,7 +60,7 @@ void main() {
 
       // Le badge est le dernier élément de la ligne : son bord droit borne
       // toute la ligne, et il doit rester dans la zone hors actions.
-      final badgeRight = tester.getTopRight(find.text('VÉRIFIÉ')).dx;
+      final badgeRight = tester.getTopRight(find.text('PRO')).dx;
       expect(badgeRight, lessThanOrEqualTo(400 - inset - DonySpacing.lg));
     });
 
@@ -69,11 +70,15 @@ void main() {
       expect(find.text('Ibrahima Diallo'), findsOneWidget);
     });
 
-    testWidgets('shows VÉRIFIÉ badge when isKycVerified true', (tester) async {
-      await tester.pumpWidget(_buildHeader(isKycVerified: true));
-      await tester.pump();
-      expect(find.text('VÉRIFIÉ'), findsOneWidget);
-    });
+    testWidgets(
+      'pas de badge VÉRIFIÉ à côté du nom : la puce Identité suffit',
+      (tester) async {
+        await tester.pumpWidget(_buildHeader(isKycVerified: true));
+        await tester.pump();
+        expect(find.text('VÉRIFIÉ'), findsNothing);
+        expect(find.text('PRO'), findsNothing);
+      },
+    );
 
     testWidgets('does NOT show VÉRIFIÉ badge when isKycVerified false', (
       tester,

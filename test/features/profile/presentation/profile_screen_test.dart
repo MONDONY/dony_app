@@ -745,7 +745,7 @@ void main() {
     });
 
     testWidgets(
-      'nom long + VÉRIFIÉ : le badge ne passe pas sous le scarabée ni le burger',
+      'nom long + badge PRO : le badge ne passe pas sous le scarabée ni le burger',
       (tester) async {
         // Largeur d'un iPhone 12, où le chevauchement a été vu (build 72) :
         // le fond de la SliverAppBar est dessiné sous ses actions.
@@ -761,11 +761,12 @@ void main() {
             lastName: 'DIAKITE KONATÉ',
             roles: ['TRAVELER', 'SENDER'],
             kycStatus: 'VERIFIED',
+            isProAccount: true,
             status: 'ACTIVE',
           ),
         );
 
-        final badge = tester.getRect(find.text('VÉRIFIÉ'));
+        final badge = tester.getRect(find.text('PRO'));
         final bug = tester.getRect(find.byType(DonyFeedbackButton));
         final menu = tester.getRect(
           find.byKey(const Key('profile-menu-button')),
