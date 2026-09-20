@@ -225,6 +225,8 @@ Le `PosthogObserver` est attaché au GoRouter dans `lib/app/router.dart`. Chaque
 
 Exception : si un écran a plusieurs états visuels distincts qui valent la peine d'être distingués (ex: step 1 / step 2 d'un wizard), utiliser `logScreen()` manuellement au changement d'état.
 
+**Route imbriquée (path relatif, enfant d'une `GoRoute`) → `name:` obligatoire, égal au chemin complet** (ex. `path: 'preferences'` sous `/settings` → `name: '/settings/preferences'`). go_router nomme la page `state.name ?? state.path`, et `state.path` d'un enfant n'est que son segment : sans `name`, PostHog reçoit `preferences`, `new` ou `:id`, sans parent. Le test `test/app/router_screen_names_test.dart` fait échouer toute route imbriquée non nommée.
+
 ### Custom events — règles
 
 **1. Tout nom d'event doit d'abord être déclaré dans `AnalyticsEvents` :**
