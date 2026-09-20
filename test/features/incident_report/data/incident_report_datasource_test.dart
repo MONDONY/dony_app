@@ -77,6 +77,49 @@ void main() {
     });
   });
 
+  group('createReport — screenRoute (rapport du scarabée)', () {
+    test('envoie screenRoute quand fourni', () async {
+      when(
+        () => mockDio.post(any(), data: any(named: 'data')),
+      ).thenAnswer((_) async => _created({'id': 'r-7'}, '/reports'));
+
+      await datasource.createReport(
+        targetType: 'APP',
+        reason: 'SCREEN_BUG',
+        description: 'Le badge passe sous le bouton',
+        photoKeys: const ['reports/u/shot.png'],
+        screenRoute: '/profile',
+      );
+
+      final captured =
+          verify(
+                () => mockDio.post(any(), data: captureAny(named: 'data')),
+              ).captured.single
+              as Map<String, dynamic>;
+      expect(captured['reason'], 'SCREEN_BUG');
+      expect(captured['screenRoute'], '/profile');
+    });
+
+    test('omet screenRoute quand absent', () async {
+      when(
+        () => mockDio.post(any(), data: any(named: 'data')),
+      ).thenAnswer((_) async => _created({'id': 'r-8'}, '/reports'));
+
+      await datasource.createReport(
+        targetType: 'APP',
+        reason: 'APP_BUG',
+        photoKeys: const [],
+      );
+
+      final captured =
+          verify(
+                () => mockDio.post(any(), data: captureAny(named: 'data')),
+              ).captured.single
+              as Map<String, dynamic>;
+      expect(captured.containsKey('screenRoute'), isFalse);
+    });
+  });
+
   group('uploadPhoto', () {
     test('renvoie la clé S3', () async {
       when(

@@ -1,9 +1,14 @@
+import 'dart:typed_data';
+
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/screen_feedback_sender.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -530,4 +535,110 @@ void main() {
     const report = FeedbackReport(message: 'x');
     expect(report.attachments, isEmpty);
   });
+
+  // ── Route lue au tap + envoi backend ───────────────────────────────────────
+
+  testWidgets('la route de l\'écran est lue au tap, pas depuis la feuille', (
+    tester,
+  ) async {
+    FeedbackReport? sent;
+    final router = GoRouter(
+      initialLocation: '/profile',
+      routes: [
+        GoRoute(
+          path: '/profile',
+          builder: (_, _) => Scaffold(
+            appBar: AppBar(
+              actions: [
+                DonyFeedbackButton(onSubmitOverride: (r) async => sent = r),
+              ],
+            ),
+            body: const SizedBox(),
+          ),
+        ),
+      ],
+    );
+    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byType(DonyFeedbackButton));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'Bug ici');
+    await tester.pump();
+    await tester.tap(find.text('Envoyer le rapport'));
+    await tester.pumpAndSettle();
+
+    // La feuille vit sur le navigateur racine : sans lecture au tap, la route
+    // vaudrait 'unknown' (cas des premiers rapports reçus en bêta).
+    expect(sent!.route, '/profile');
+  });
+
+  testWidgets('sans override, le rapport part aussi au backend avec sa route', (
+    tester,
+  ) async {
+    final sender = _RecordingSender();
+    getIt.registerSingleton<ScreenFeedbackSender>(sender);
+    addTearDown(() => getIt.unregister<ScreenFeedbackSender>());
+
+    await tester.pumpWidget(subject());
+    await tester.tap(find.byType(DonyFeedbackButton));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'Vers le back');
+    await tester.pump();
+    await tester.tap(find.text('Envoyer le rapport'));
+    await tester.pumpAndSettle();
+
+    expect(sender.reports.single.message, 'Vers le back');
+    expect(sender.routes.single, 'unknown');
+    expect(
+      find.text('Merci ! Votre rapport a bien été envoyé.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('un backend en échec ne bloque pas le succès du rapport', (
+    tester,
+  ) async {
+    getIt.registerSingleton<ScreenFeedbackSender>(_FailingSender());
+    addTearDown(() => getIt.unregister<ScreenFeedbackSender>());
+
+    await tester.pumpWidget(subject());
+    await tester.tap(find.byType(DonyFeedbackButton));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'Hors ligne');
+    await tester.pump();
+    await tester.tap(find.text('Envoyer le rapport'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Un problème sur cet écran ?'), findsNothing);
+    expect(
+      find.text('Merci ! Votre rapport a bien été envoyé.'),
+      findsOneWidget,
+    );
+  });
+}
+
+class _RecordingSender extends Fake implements ScreenFeedbackSender {
+  final reports = <FeedbackReport>[];
+  final routes = <String>[];
+
+  @override
+  Future<String> send({
+    required FeedbackReport report,
+    required String route,
+    Uint8List? screenshot,
+  }) async {
+    reports.add(report);
+    routes.add(route);
+    return 'r-1';
+  }
+}
+
+class _FailingSender extends Fake implements ScreenFeedbackSender {
+  @override
+  Future<String> send({
+    required FeedbackReport report,
+    required String route,
+    Uint8List? screenshot,
+  }) async => throw Exception('hors ligne');
 }

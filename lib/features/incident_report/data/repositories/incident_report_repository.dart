@@ -28,11 +28,13 @@ class IncidentReportRepository {
     required String reason,
     String? description,
     List<String> photoKeys = const [],
+    String? screenRoute,
   }) => _datasource.createReport(
     targetType: targetType.apiValue,
     targetId: targetId,
     reason: reason,
     description: description,
     photoKeys: photoKeys,
+    screenRoute: screenRoute,
   );
 }
