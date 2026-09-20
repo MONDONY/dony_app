@@ -210,6 +210,7 @@ class _BidListView extends StatelessWidget {
                   ],
                 ),
               ),
+              const DonyFeedbackButton(),
             ],
             bottom: PreferredSize(
               preferredSize: const Size.fromHeight(1),

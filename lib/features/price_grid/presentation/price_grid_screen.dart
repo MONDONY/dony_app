@@ -33,6 +33,7 @@ class PriceGridScreen extends StatelessWidget {
           // comptoir, pas une page de réglages.
           backgroundColor: cs.surfaceWarm,
           appBar: AppBar(
+            actions: const [DonyFeedbackButton()],
             leading: const DonyAppBarBackButton(),
             title: const Text('Ma grille de prix'),
             centerTitle: false,

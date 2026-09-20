@@ -90,7 +90,6 @@ class _BidDetailViewState extends State<_BidDetailView> {
   bool _skeletonLoading = false;
   Timer? _refreshTimer;
 
-  final _screenBoundaryKey = GlobalKey();
   final _existingPaymentNotifier = ValueNotifier<PaymentModel?>(null);
   final _paymentLoadedNotifier = ValueNotifier<bool>(false);
 
@@ -487,9 +486,6 @@ class _BidDetailViewState extends State<_BidDetailView> {
                       }
                     },
                     actions: [
-                      DonyFeedbackButton(
-                        repaintBoundaryKey: _screenBoundaryKey,
-                      ),
                       if (isSender && _bid.trackingToken != null)
                         IconButton(
                           icon: DonyIcon('share-2', color: cs.onSurface),
@@ -523,14 +519,11 @@ class _BidDetailViewState extends State<_BidDetailView> {
                         ),
                     ],
                   ),
-                  body: RepaintBoundary(
-                    key: _screenBoundaryKey,
-                    child: _skeletonLoading
-                        ? const DonyDetailSkeleton()
-                        : isSender
-                        ? SenderDetailBody(bid: _bid)
-                        : TravelerDetailBody(bid: _bid),
-                  ),
+                  body: _skeletonLoading
+                      ? const DonyDetailSkeleton()
+                      : isSender
+                      ? SenderDetailBody(bid: _bid)
+                      : TravelerDetailBody(bid: _bid),
                   bottomNavigationBar: isSender
                       ? (SenderStickyBar.hasAction(_bid)
                             ? ListenableBuilder(

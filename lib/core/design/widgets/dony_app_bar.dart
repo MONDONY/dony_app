@@ -22,6 +22,7 @@ class DonyAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.leadingIconAsset,
     this.actions,
     this.bottom,
+    this.showFeedback = true,
   }) : assert(
          variant == DonyAppBarVariant.compact,
          'Use DonySliverAppBar for the large variant inside a CustomScrollView.',
@@ -40,6 +41,11 @@ class DonyAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String? leadingIconAsset;
   final List<Widget>? actions;
   final PreferredSizeWidget? bottom;
+
+  /// Scarabée de signalement de bug ([DonyFeedbackButton]) en fin d'actions.
+  /// Actif partout par défaut : le désactiver seulement pour un écran où un
+  /// rapport n'a pas de sens (verrouillage, splash…).
+  final bool showFeedback;
 
   @override
   Size get preferredSize =>
@@ -66,7 +72,7 @@ class DonyAppBar extends StatelessWidget implements PreferredSizeWidget {
             )
           : null,
       automaticallyImplyLeading: showBackButton,
-      actions: actions,
+      actions: withFeedbackButton(actions, showFeedback),
       bottom:
           bottom ??
           const PreferredSize(
@@ -136,6 +142,7 @@ class DonySliverAppBar extends StatelessWidget {
     this.actions,
     this.bottom,
     this.expandedHeight = 110,
+    this.showFeedback = true,
   });
 
   final String title;
@@ -144,6 +151,9 @@ class DonySliverAppBar extends StatelessWidget {
   final List<Widget>? actions;
   final PreferredSizeWidget? bottom;
   final double expandedHeight;
+
+  /// Scarabée de signalement de bug en fin d'actions, comme [DonyAppBar].
+  final bool showFeedback;
 
   @override
   Widget build(BuildContext context) {
@@ -184,7 +194,7 @@ class DonySliverAppBar extends StatelessWidget {
             )
           : null,
       automaticallyImplyLeading: showBackButton,
-      actions: actions,
+      actions: withFeedbackButton(actions, showFeedback),
       flexibleSpace: FlexibleSpaceBar(
         titlePadding: const EdgeInsets.fromLTRB(
           DonySpacing.lg,
@@ -211,4 +221,17 @@ class DonySliverAppBar extends StatelessWidget {
           ),
     );
   }
+}
+
+/// Ajoute le [DonyFeedbackButton] en fin d'[actions] quand [showFeedback]
+/// est vrai, sans doublon si l'appelant l'a déjà placé lui-même.
+List<Widget>? withFeedbackButton(List<Widget>? actions, bool showFeedback) {
+  if (!showFeedback) {
+    return actions;
+  }
+  final current = actions ?? const <Widget>[];
+  if (current.any((w) => w is DonyFeedbackButton)) {
+    return current;
+  }
+  return [...current, const DonyFeedbackButton()];
 }

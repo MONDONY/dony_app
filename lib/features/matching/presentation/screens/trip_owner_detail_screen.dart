@@ -91,9 +91,6 @@ class TripOwnerDetailScreen extends StatefulWidget {
 }
 
 class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
-  /// Clé du [RepaintBoundary] enveloppant l'écran — capture d'écran du bouton bug.
-  final GlobalKey _boundaryKey = GlobalKey();
-
   /// Dernière annonce connue (chargée ou passée en `extra`) — sert de repli
   /// pour construire les [CreateTripArgs] quand le listener reçoit un state
   /// d'erreur (ex. [AnnouncementDepartureDatePassed]) qui ne porte pas le
@@ -189,183 +186,172 @@ class _TripOwnerDetailScreenState extends State<TripOwnerDetailScreen> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: DonyAppBar(
-        title: 'Trajet',
-        actions: [DonyFeedbackButton(repaintBoundaryKey: _boundaryKey)],
-      ),
-      body: RepaintBoundary(
-        key: _boundaryKey,
-        // L'auth peut se résoudre APRÈS le chargement de l'annonce (démarrage à
-        // froid via deep link) : on réévalue le verdict d'appartenance à chaque
-        // changement d'état d'auth, pas seulement au chargement du détail.
-        child: BlocListener<AuthBloc, AuthState>(
-          listener: (context, _) {
-            final a = _current;
-            if (a != null) {
-              _evaluateViewer(context, a);
+      appBar: const DonyAppBar(title: 'Trajet'),
+      body: BlocListener<AuthBloc, AuthState>(
+        listener: (context, _) {
+          final a = _current;
+          if (a != null) {
+            _evaluateViewer(context, a);
+          }
+        },
+        child: BlocConsumer<AnnouncementBloc, AnnouncementState>(
+          listener: (context, state) {
+            if (state is AnnouncementDetailLoaded) {
+              _current = state.announcement;
+              _evaluateViewer(context, state.announcement);
+            } else if (state is AnnouncementUpdated) {
+              _current = state.announcement;
+            } else if (state is AnnouncementTripArrived) {
+              _current = state.announcement;
+              context.read<BidBloc>().add(
+                BidListRequested(widget.announcementId),
+              );
+            } else if (state is AnnouncementArrivalInstructionsUpdated) {
+              _current = state.announcement;
+              context.read<BidBloc>().add(
+                BidListRequested(widget.announcementId),
+              );
             }
-          },
-          child: BlocConsumer<AnnouncementBloc, AnnouncementState>(
-            listener: (context, state) {
-              if (state is AnnouncementDetailLoaded) {
-                _current = state.announcement;
-                _evaluateViewer(context, state.announcement);
-              } else if (state is AnnouncementUpdated) {
-                _current = state.announcement;
-              } else if (state is AnnouncementTripArrived) {
-                _current = state.announcement;
-                context.read<BidBloc>().add(
-                  BidListRequested(widget.announcementId),
-                );
-              } else if (state is AnnouncementArrivalInstructionsUpdated) {
-                _current = state.announcement;
-                context.read<BidBloc>().add(
-                  BidListRequested(widget.announcementId),
-                );
+            if (state is AnnouncementDeleted) {
+              DonySnackbar.show(
+                context,
+                message: 'Trajet supprimé',
+                type: DonySnackbarType.success,
+              );
+              if (context.mounted) {
+                context.pop(true);
               }
-              if (state is AnnouncementDeleted) {
-                DonySnackbar.show(
-                  context,
-                  message: 'Trajet supprimé',
-                  type: DonySnackbarType.success,
-                );
-                if (context.mounted) {
-                  context.pop(true);
-                }
-              } else if (state is AnnouncementNotFound) {
-                DonySnackbar.show(
-                  context,
-                  message: 'Cette annonce n\'existe plus',
-                  type: DonySnackbarType.warning,
-                );
-                if (context.mounted) {
-                  context.pop(true);
-                }
-              } else if (state is AnnouncementDeleteBlockedByAcceptedBid) {
-                unawaited(_onDeleteBlocked(context, state.announcementId));
-              } else if (state is AnnouncementPublished) {
-                _current = state.announcement;
-                context.read<AnnouncementBloc>().add(
-                  AnnouncementDetailRequested(widget.announcementId),
-                );
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (routeContext) => DonySuccessScreen(
-                      mascotteType: DonyMascotteType.succes,
-                      title: 'Trajet publié !',
-                      subtitle:
-                          'Ton trajet ${state.announcement.departureCity} → ${state.announcement.arrivalCity} est en ligne.',
-                      ctaLabel: 'Continuer',
-                      ctaVariant: DonyButtonVariant.accent,
-                      onCta: () => Navigator.of(
-                        routeContext,
-                      ).pop(), // revient au détail, déjà rafraîchi
-                      analyticsContext: 'trip_draft_published',
-                      secondaryLabel: 'Partager mon trajet',
-                      onSecondary: () => unawaited(
-                        Share.share(
-                          '✈️ Je voyage ${state.announcement.departureCity} → '
-                          '${state.announcement.arrivalCity} le '
-                          '${DateFormat('d MMMM', 'fr').format(state.announcement.departureDate)} '
-                          'avec de la place dans mes bagages !\n'
-                          'Réserve tes kilos sur Yadony 📦\n'
-                          '$posterShareBaseUrl/annonce/${state.announcement.id}',
-                          sharePositionOrigin: sharePositionOriginFor(
-                            routeContext,
-                          ),
+            } else if (state is AnnouncementNotFound) {
+              DonySnackbar.show(
+                context,
+                message: 'Cette annonce n\'existe plus',
+                type: DonySnackbarType.warning,
+              );
+              if (context.mounted) {
+                context.pop(true);
+              }
+            } else if (state is AnnouncementDeleteBlockedByAcceptedBid) {
+              unawaited(_onDeleteBlocked(context, state.announcementId));
+            } else if (state is AnnouncementPublished) {
+              _current = state.announcement;
+              context.read<AnnouncementBloc>().add(
+                AnnouncementDetailRequested(widget.announcementId),
+              );
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (routeContext) => DonySuccessScreen(
+                    mascotteType: DonyMascotteType.succes,
+                    title: 'Trajet publié !',
+                    subtitle:
+                        'Ton trajet ${state.announcement.departureCity} → ${state.announcement.arrivalCity} est en ligne.',
+                    ctaLabel: 'Continuer',
+                    ctaVariant: DonyButtonVariant.accent,
+                    onCta: () => Navigator.of(
+                      routeContext,
+                    ).pop(), // revient au détail, déjà rafraîchi
+                    analyticsContext: 'trip_draft_published',
+                    secondaryLabel: 'Partager mon trajet',
+                    onSecondary: () => unawaited(
+                      Share.share(
+                        '✈️ Je voyage ${state.announcement.departureCity} → '
+                        '${state.announcement.arrivalCity} le '
+                        '${DateFormat('d MMMM', 'fr').format(state.announcement.departureDate)} '
+                        'avec de la place dans mes bagages !\n'
+                        'Réserve tes kilos sur Yadony 📦\n'
+                        '$posterShareBaseUrl/annonce/${state.announcement.id}',
+                        sharePositionOrigin: sharePositionOriginFor(
+                          routeContext,
                         ),
                       ),
                     ),
                   ),
-                );
-              } else if (state is AnnouncementKycRequired) {
-                DonySnackbar.show(
-                  context,
-                  message: state.message,
-                  type: DonySnackbarType.warning,
-                );
-                context.push('/kyc/status');
-              } else if (state is AnnouncementDepartureDatePassed) {
-                DonySnackbar.show(
-                  context,
-                  message: state.message,
-                  type: DonySnackbarType.warning,
-                );
-                unawaited(_onDepartureDatePassed(context));
-              } else if (state is AnnouncementProLimitReached) {
-                unawaited(_onProLimitReached(context, state.message));
-              } else if (state is AnnouncementError) {
-                ErrorPresenter.show(context, state.error);
-              }
-            },
-            builder: (context, state) {
-              final a = state is AnnouncementDetailLoaded
-                  ? state.announcement
-                  : (_current ?? widget.initial);
-              if (a == null) {
-                return const DonyDetailSkeleton();
-              }
-              final isOwner = _isOwner(context, a);
-              return SingleChildScrollView(
-                padding: EdgeInsets.fromLTRB(
-                  DonySpacing.lg,
-                  DonySpacing.md,
-                  DonySpacing.lg,
-                  DonySpacing.lg + safeBottom,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    if (a.status == 'DRAFT') ...[
-                      const DonyStatusBanner(
-                        type: DonyStatusBannerType.warning,
-                        title: 'Ce trajet est un brouillon',
-                        message:
-                            'Il est invisible pour les expéditeurs tant qu\'il n\'est pas publié.',
-                      ),
-                      const SizedBox(height: DonySpacing.md),
-                    ],
-                    AnnouncementDetailBody(a: a),
-                    const SizedBox(height: DonySpacing.lg),
-                    OwnerActionGrid(a: a, isOwner: isOwner),
-                    const SizedBox(height: DonySpacing.lg),
-                    const TripParcelsSection(),
-                    BlocBuilder<BidBloc, BidState>(
-                      builder: (context, bidState) {
-                        if (!isOwner || bidState is! BidListLoaded) {
-                          return const SizedBox.shrink();
-                        }
-                        final cta = tripArrivalCtaFor(bidState.bids);
-                        if (cta == null) {
-                          return const SizedBox.shrink();
-                        }
-                        final isEditing =
-                            cta == TripArrivalCta.editInstructions;
-                        return Padding(
-                          padding: const EdgeInsets.only(top: DonySpacing.md),
-                          child: DonyButton(
-                            label: isEditing
-                                ? 'Modifier les instructions de retrait'
-                                : 'Arrivé à destination',
-                            variant: isEditing
-                                ? DonyButtonVariant.secondary
-                                : DonyButtonVariant.primary,
-                            onPressed: () =>
-                                ArrivalInstructionsBottomSheet.show(
-                                  context,
-                                  announcementId: a.id,
-                                  initialInstructions: a.arrivalInstructions,
-                                  isEditing: isEditing,
-                                ),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
                 ),
               );
-            },
-          ),
+            } else if (state is AnnouncementKycRequired) {
+              DonySnackbar.show(
+                context,
+                message: state.message,
+                type: DonySnackbarType.warning,
+              );
+              context.push('/kyc/status');
+            } else if (state is AnnouncementDepartureDatePassed) {
+              DonySnackbar.show(
+                context,
+                message: state.message,
+                type: DonySnackbarType.warning,
+              );
+              unawaited(_onDepartureDatePassed(context));
+            } else if (state is AnnouncementProLimitReached) {
+              unawaited(_onProLimitReached(context, state.message));
+            } else if (state is AnnouncementError) {
+              ErrorPresenter.show(context, state.error);
+            }
+          },
+          builder: (context, state) {
+            final a = state is AnnouncementDetailLoaded
+                ? state.announcement
+                : (_current ?? widget.initial);
+            if (a == null) {
+              return const DonyDetailSkeleton();
+            }
+            final isOwner = _isOwner(context, a);
+            return SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(
+                DonySpacing.lg,
+                DonySpacing.md,
+                DonySpacing.lg,
+                DonySpacing.lg + safeBottom,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (a.status == 'DRAFT') ...[
+                    const DonyStatusBanner(
+                      type: DonyStatusBannerType.warning,
+                      title: 'Ce trajet est un brouillon',
+                      message:
+                          'Il est invisible pour les expéditeurs tant qu\'il n\'est pas publié.',
+                    ),
+                    const SizedBox(height: DonySpacing.md),
+                  ],
+                  AnnouncementDetailBody(a: a),
+                  const SizedBox(height: DonySpacing.lg),
+                  OwnerActionGrid(a: a, isOwner: isOwner),
+                  const SizedBox(height: DonySpacing.lg),
+                  const TripParcelsSection(),
+                  BlocBuilder<BidBloc, BidState>(
+                    builder: (context, bidState) {
+                      if (!isOwner || bidState is! BidListLoaded) {
+                        return const SizedBox.shrink();
+                      }
+                      final cta = tripArrivalCtaFor(bidState.bids);
+                      if (cta == null) {
+                        return const SizedBox.shrink();
+                      }
+                      final isEditing = cta == TripArrivalCta.editInstructions;
+                      return Padding(
+                        padding: const EdgeInsets.only(top: DonySpacing.md),
+                        child: DonyButton(
+                          label: isEditing
+                              ? 'Modifier les instructions de retrait'
+                              : 'Arrivé à destination',
+                          variant: isEditing
+                              ? DonyButtonVariant.secondary
+                              : DonyButtonVariant.primary,
+                          onPressed: () => ArrivalInstructionsBottomSheet.show(
+                            context,
+                            announcementId: a.id,
+                            initialInstructions: a.arrivalInstructions,
+                            isEditing: isEditing,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            );
+          },
         ),
       ),
     );

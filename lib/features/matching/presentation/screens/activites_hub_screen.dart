@@ -585,6 +585,7 @@ class _Header extends StatelessWidget {
         ),
         const SizedBox(width: DonySpacing.sm),
         Expanded(child: Text('Activités', style: tt.headlineLarge)),
+        const DonyFeedbackButton(),
       ],
     );
   }

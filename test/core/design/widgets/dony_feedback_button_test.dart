@@ -4,6 +4,7 @@ import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:mocktail/mocktail.dart';
 
 // ── Test doubles ─────────────────────────────────────────────────────────────
@@ -18,7 +19,7 @@ class _MockAnalyticsService extends Mock implements AnalyticsService {}
 // ─────────────────────────────────────────────────────────────────────────────
 
 void main() {
-  Widget subject({Future<void> Function(String message)? onSubmit}) {
+  Widget subject({Future<void> Function(FeedbackReport report)? onSubmit}) {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
@@ -59,7 +60,9 @@ void main() {
     tester,
   ) async {
     String? submitted;
-    await tester.pumpWidget(subject(onSubmit: (m) async => submitted = m));
+    await tester.pumpWidget(
+      subject(onSubmit: (m) async => submitted = m.message),
+    );
     await tester.tap(
       find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bug'),
     );
@@ -126,7 +129,9 @@ void main() {
       // Ce test vérifie que la soumission complète fonctionne lorsqu'il n'y a
       // pas de GoRouter ancêtre. resolveRoute() retourne 'unknown' silencieusement.
       String? submitted;
-      await tester.pumpWidget(subject(onSubmit: (m) async => submitted = m));
+      await tester.pumpWidget(
+        subject(onSubmit: (m) async => submitted = m.message),
+      );
       await tester.tap(
         find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bug'),
       );
@@ -152,7 +157,9 @@ void main() {
     // doit se terminer normalement.
     String? submitted;
     // subject() ne passe pas de repaintBoundaryKey → null par défaut.
-    await tester.pumpWidget(subject(onSubmit: (m) async => submitted = m));
+    await tester.pumpWidget(
+      subject(onSubmit: (m) async => submitted = m.message),
+    );
     await tester.tap(
       find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bug'),
     );
@@ -205,7 +212,7 @@ void main() {
                 actions: [
                   DonyFeedbackButton(
                     repaintBoundaryKey: key,
-                    onSubmitOverride: (m) async => submitted = m,
+                    onSubmitOverride: (r) async => submitted = r.message,
                   ),
                 ],
               ),
@@ -347,7 +354,9 @@ void main() {
       addTearDown(DonyFeedbackButton.resetAnalyticsResolver);
 
       String? submitted;
-      await tester.pumpWidget(subject(onSubmit: (m) async => submitted = m));
+      await tester.pumpWidget(
+        subject(onSubmit: (m) async => submitted = m.message),
+      );
       await tester.tap(
         find.byWidgetPredicate((w) => w is DonyIcon && w.name == 'bug'),
       );
@@ -375,4 +384,150 @@ void main() {
       );
     },
   );
+
+  // ── Captures jointes par le testeur ────────────────────────────────────────
+
+  Widget withPicker({
+    required Future<String?> Function(ImageSource) pick,
+    Future<void> Function(FeedbackReport report)? onSubmit,
+  }) {
+    return MaterialApp(
+      home: Scaffold(
+        appBar: AppBar(
+          actions: [
+            DonyFeedbackButton(
+              pickImageOverride: pick,
+              onSubmitOverride: onSubmit ?? (_) async {},
+            ),
+          ],
+        ),
+        body: const SizedBox(),
+      ),
+    );
+  }
+
+  Future<void> openSheet(WidgetTester tester) async {
+    await tester.tap(find.byType(DonyFeedbackButton));
+    await tester.pumpAndSettle();
+    expect(find.text('Un problème sur cet écran ?'), findsOneWidget);
+  }
+
+  Future<void> addFromGallery(WidgetTester tester) async {
+    await tester.tap(find.bySemanticsLabel('Ajouter une capture'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Choisir dans la galerie'));
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets(
+    'une capture choisie apparaît en vignette et part dans le rapport',
+    (tester) async {
+      FeedbackReport? sent;
+      ImageSource? askedSource;
+      await tester.pumpWidget(
+        withPicker(
+          pick: (source) async {
+            askedSource = source;
+            return '/tmp/capture-test.jpg';
+          },
+          onSubmit: (r) async => sent = r,
+        ),
+      );
+      await openSheet(tester);
+      expect(find.bySemanticsLabel('Retirer la capture'), findsNothing);
+
+      await addFromGallery(tester);
+
+      expect(askedSource, ImageSource.gallery);
+      expect(find.bySemanticsLabel('Retirer la capture'), findsOneWidget);
+
+      await tester.enterText(find.byType(TextField), 'Le bouton ne répond pas');
+      await tester.pump();
+      await tester.tap(find.text('Envoyer le rapport'));
+      await tester.pumpAndSettle();
+
+      expect(sent, isNotNull);
+      expect(sent!.message, 'Le bouton ne répond pas');
+      expect(sent!.attachments, ['/tmp/capture-test.jpg']);
+    },
+  );
+
+  testWidgets('« Prendre une photo » demande la caméra', (tester) async {
+    ImageSource? askedSource;
+    await tester.pumpWidget(
+      withPicker(
+        pick: (source) async {
+          askedSource = source;
+          return null;
+        },
+      ),
+    );
+    await openSheet(tester);
+    await tester.tap(find.bySemanticsLabel('Ajouter une capture'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Prendre une photo'));
+    await tester.pumpAndSettle();
+    expect(askedSource, ImageSource.camera);
+    // Annulé (null) : aucune vignette.
+    expect(find.bySemanticsLabel('Retirer la capture'), findsNothing);
+  });
+
+  testWidgets('retirer une capture la sort du rapport', (tester) async {
+    FeedbackReport? sent;
+    await tester.pumpWidget(
+      withPicker(
+        pick: (_) async => '/tmp/a.jpg',
+        onSubmit: (r) async => sent = r,
+      ),
+    );
+    await openSheet(tester);
+    await addFromGallery(tester);
+    expect(find.bySemanticsLabel('Retirer la capture'), findsOneWidget);
+
+    await tester.tap(find.bySemanticsLabel('Retirer la capture'));
+    await tester.pumpAndSettle();
+    expect(find.bySemanticsLabel('Retirer la capture'), findsNothing);
+
+    await tester.enterText(find.byType(TextField), 'Bug');
+    await tester.pump();
+    await tester.tap(find.text('Envoyer le rapport'));
+    await tester.pumpAndSettle();
+    expect(sent!.attachments, isEmpty);
+  });
+
+  testWidgets('la tuile « Ajouter » disparaît au-delà de 4 captures', (
+    tester,
+  ) async {
+    var n = 0;
+    await tester.pumpWidget(withPicker(pick: (_) async => '/tmp/${n++}.jpg'));
+    await openSheet(tester);
+    for (var i = 0; i < DonyFeedbackButton.maxAttachments; i++) {
+      await addFromGallery(tester);
+    }
+    expect(
+      find.bySemanticsLabel('Retirer la capture'),
+      findsNWidgets(DonyFeedbackButton.maxAttachments),
+    );
+    expect(find.bySemanticsLabel('Ajouter une capture'), findsNothing);
+  });
+
+  testWidgets('un sélecteur qui échoue affiche une erreur, sans vignette', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      withPicker(pick: (_) async => throw Exception('trop gros')),
+    );
+    await openSheet(tester);
+    await addFromGallery(tester);
+    expect(
+      find.text('Image non supportée ou trop volumineuse'),
+      findsOneWidget,
+    );
+    expect(find.bySemanticsLabel('Retirer la capture'), findsNothing);
+  });
+
+  test('FeedbackReport n\'a pas de pièce jointe par défaut', () {
+    const report = FeedbackReport(message: 'x');
+    expect(report.attachments, isEmpty);
+  });
 }

@@ -279,6 +279,7 @@ class _MessagesHeader extends StatelessWidget {
               children: [
                 Text('Messages', style: tt.headlineLarge),
                 const Spacer(),
+                const DonyFeedbackButton(),
                 IconButton(
                   tooltip: 'Voir les conversations archivées',
                   onPressed: () => context.push('/messages/archives'),

@@ -238,6 +238,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
         ),
         child: Scaffold(
           appBar: AppBar(
+            actions: const [DonyFeedbackButton()],
             leading: DonyAppBarBackButton(
               leadingIconAsset: 'x',
               onBack: () => unawaited(_handleExitRequest()),

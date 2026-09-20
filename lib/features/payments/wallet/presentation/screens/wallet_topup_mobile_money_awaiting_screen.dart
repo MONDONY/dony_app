@@ -124,6 +124,7 @@ class _WalletTopupMobileMoneyAwaitingScreenState
     return Scaffold(
       backgroundColor: cs.surfaceContainerLowest,
       appBar: AppBar(
+        actions: const [DonyFeedbackButton()],
         leading: const DonyAppBarBackButton(),
         title: const Text('Recharge mobile money'),
         backgroundColor: cs.surface,

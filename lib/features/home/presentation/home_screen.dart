@@ -1205,6 +1205,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                       ),
                                     ),
                                     const SizedBox(width: DonySpacing.sm),
+                                    const DonyFeedbackButton(),
                                     const _NotificationBell(),
                                   ],
                                 ),

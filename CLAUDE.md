@@ -227,6 +227,14 @@ Exception : si un écran a plusieurs états visuels distincts qui valent la pein
 
 **Route imbriquée (path relatif, enfant d'une `GoRoute`) → `name:` obligatoire, égal au chemin complet** (ex. `path: 'preferences'` sous `/settings` → `name: '/settings/preferences'`). go_router nomme la page `state.name ?? state.path`, et `state.path` d'un enfant n'est que son segment : sans `name`, PostHog reçoit `preferences`, `new` ou `:id`, sans parent. Le test `test/app/router_screen_names_test.dart` fait échouer toute route imbriquée non nommée.
 
+### Scarabée de signalement — sur chaque écran
+
+`DonyFeedbackButton` (🐞, `lib/core/design/widgets/dony_feedback_button.dart`) envoie à Sentry un message + la capture automatique de l'écran + jusqu'à 4 captures choisies par le testeur (galerie ou appareil photo, via `DonyMediaService`). La capture automatique passe par le `RepaintBoundary` global posé dans `app.dart` (`DonyFeedbackButton.appBoundaryKey`) : **aucun écran n'a besoin de son propre `RepaintBoundary`**.
+
+- `DonyAppBar` et `DonySliverAppBar` l'ajoutent **par défaut** en fin d'`actions` (`showFeedback: false` pour l'exclure : verrouillage, splash…). Un écran qui le place lui-même dans `actions` n'est pas doublé.
+- Un `AppBar` brut ou un header maison (onglets Recherche, Activités, Messages, Moi) doit le poser explicitement : `actions: const [DonyFeedbackButton()]`, en dernière position.
+- Tests : `test/core/design/widgets/dony_app_bar_feedback_test.dart` (présence par défaut) et `dony_feedback_button_test.dart` (pièces jointes via `pickImageOverride`, envoi via `onSubmitOverride(FeedbackReport)`).
+
 ### Custom events — règles
 
 **1. Tout nom d'event doit d'abord être déclaré dans `AnalyticsEvents` :**
@@ -426,7 +434,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `pending_requests_opened` | PendingBidsScreen — ouverture de l'écran « À traiter » depuis le bouton de la liste des demandes (propriété `count`) |
 | `traveler_call_initiated` | Tap 📞 sur la carte voyageur (propriété `status`) |
 | `tracking_link_shared` | Partage de l'URL de suivi (app bar ou carte) |
-| `screen_feedback_submitted` | Envoi du rapport 🐞 DonyFeedbackButton (propriété `route`) |
+| `screen_feedback_submitted` | Envoi du rapport 🐞 DonyFeedbackButton (propriétés `route`, `attachment_count` : captures jointes par le testeur, jamais leur contenu) |
 | `profile_photo_updated` | AuthBloc._onAvatarUploadRequested() — upload photo de profil réussi |
 | `profile_about_updated` | AuthBloc._onUpdateProfileRequested() — bio « À propos » renseignée |
 | `public_reviews_opened` | UserReviewsCubit — ouverture de la bottom sheet « tous les avis » (propriété `rating_count`) |

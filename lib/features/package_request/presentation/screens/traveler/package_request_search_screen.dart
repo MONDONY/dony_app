@@ -57,6 +57,7 @@ class _SearchViewState extends State<_SearchView> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
+        actions: const [DonyFeedbackButton()],
         leading: const DonyAppBarBackButton(),
         backgroundColor: cs.surface,
         elevation: 0,

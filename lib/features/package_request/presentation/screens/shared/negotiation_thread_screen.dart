@@ -228,6 +228,7 @@ class _ThreadViewState extends State<_ThreadView> {
               ],
             ),
           ),
+        const DonyFeedbackButton(),
       ],
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(1),

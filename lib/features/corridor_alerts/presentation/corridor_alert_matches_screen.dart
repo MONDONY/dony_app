@@ -99,6 +99,7 @@ class _CorridorAlertMatchesView extends StatelessWidget {
                 isSender: isSender,
               ),
             ),
+          const DonyFeedbackButton(),
         ],
       ),
       body: BlocBuilder<CorridorAlertMatchesCubit, CorridorAlertMatchesState>(

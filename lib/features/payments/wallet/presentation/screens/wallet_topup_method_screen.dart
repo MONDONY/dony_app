@@ -205,6 +205,7 @@ class _WalletTopupMethodScreenState extends State<WalletTopupMethodScreen> {
         return Scaffold(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           appBar: AppBar(
+            actions: const [DonyFeedbackButton()],
             backgroundColor: DonyColors.blue700,
             foregroundColor: DonyColors.neutral0,
             elevation: 0,

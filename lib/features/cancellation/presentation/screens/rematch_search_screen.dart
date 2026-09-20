@@ -55,10 +55,6 @@ class _RematchSearchScreenState extends State<RematchSearchScreen> {
   /// l'event analytics `rematch_accepted`, tiré seulement au succès du fetch.
   int _pendingSuggestionsCount = 0;
 
-  /// Clé du [RepaintBoundary] enveloppant l'écran — capture d'écran du
-  /// bouton de signalement de bug ([DonyFeedbackButton]).
-  final GlobalKey _boundaryKey = GlobalKey();
-
   @override
   void initState() {
     super.initState();
@@ -136,61 +132,53 @@ class _RematchSearchScreenState extends State<RematchSearchScreen> {
     return BlocListener<AnnouncementBloc, AnnouncementState>(
       listener: _onAnnouncementState,
       child: Scaffold(
-        appBar: DonyAppBar(
-          title: 'Alternatives disponibles',
-          actions: [DonyFeedbackButton(repaintBoundaryKey: _boundaryKey)],
-        ),
-        body: RepaintBoundary(
-          key: _boundaryKey,
-          child: cancellation != null
-              ? _RematchBody(
-                  suggestions: cancellation.rematchSuggestions,
-                  affectedBidsCount: cancellation.affectedBidsCount,
-                  loadingSuggestionId: _loadingSuggestionId,
-                  onSuggestionTap: _onSuggestionTap,
-                )
-              : BlocBuilder<CancellationBloc, CancellationState>(
-                  builder: (context, state) {
-                    if (state is RematchSuggestionsLoaded) {
-                      return _RematchBody(
-                        suggestions: state.suggestions,
-                        affectedBidsCount: null,
-                        loadingSuggestionId: _loadingSuggestionId,
-                        onSuggestionTap: _onSuggestionTap,
-                      );
-                    }
-                    if (state is CancellationError) {
-                      return DonyEmptyState(
-                        type: DonyEmptyStateType.error,
-                        mascotte: DonyMascotteType.erreurLegere,
-                        title: 'Erreur de chargement',
-                        description: ErrorPresenter.resolve(
-                          state.error,
-                        ).message,
-                        actionLabel: 'Réessayer',
-                        onAction: () => context.read<CancellationBloc>().add(
-                          RematchSuggestionsRequested(widget.cancellationId),
-                        ),
-                      );
-                    }
-                    // CancellationInitial / CancellationLoading / tout autre état
-                    // transitoire du même bloc (registerFactory → instance dédiée
-                    // à cette route).
-                    return ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(
-                        DonySpacing.lg,
-                        DonySpacing.lg,
-                        DonySpacing.lg,
-                        DonySpacing.huge,
-                      ),
-                      itemCount: 3,
-                      separatorBuilder: (_, _) =>
-                          const SizedBox(height: DonySpacing.md),
-                      itemBuilder: (_, _) => const DonyTripCardSkeleton(),
+        appBar: const DonyAppBar(title: 'Alternatives disponibles'),
+        body: cancellation != null
+            ? _RematchBody(
+                suggestions: cancellation.rematchSuggestions,
+                affectedBidsCount: cancellation.affectedBidsCount,
+                loadingSuggestionId: _loadingSuggestionId,
+                onSuggestionTap: _onSuggestionTap,
+              )
+            : BlocBuilder<CancellationBloc, CancellationState>(
+                builder: (context, state) {
+                  if (state is RematchSuggestionsLoaded) {
+                    return _RematchBody(
+                      suggestions: state.suggestions,
+                      affectedBidsCount: null,
+                      loadingSuggestionId: _loadingSuggestionId,
+                      onSuggestionTap: _onSuggestionTap,
                     );
-                  },
-                ),
-        ),
+                  }
+                  if (state is CancellationError) {
+                    return DonyEmptyState(
+                      type: DonyEmptyStateType.error,
+                      mascotte: DonyMascotteType.erreurLegere,
+                      title: 'Erreur de chargement',
+                      description: ErrorPresenter.resolve(state.error).message,
+                      actionLabel: 'Réessayer',
+                      onAction: () => context.read<CancellationBloc>().add(
+                        RematchSuggestionsRequested(widget.cancellationId),
+                      ),
+                    );
+                  }
+                  // CancellationInitial / CancellationLoading / tout autre état
+                  // transitoire du même bloc (registerFactory → instance dédiée
+                  // à cette route).
+                  return ListView.separated(
+                    padding: const EdgeInsets.fromLTRB(
+                      DonySpacing.lg,
+                      DonySpacing.lg,
+                      DonySpacing.lg,
+                      DonySpacing.huge,
+                    ),
+                    itemCount: 3,
+                    separatorBuilder: (_, _) =>
+                        const SizedBox(height: DonySpacing.md),
+                    itemBuilder: (_, _) => const DonyTripCardSkeleton(),
+                  );
+                },
+              ),
       ),
     );
   }

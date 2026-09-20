@@ -56,6 +56,7 @@ class _DisputeDetailScreenState extends State<DisputeDetailScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
+        actions: const [DonyFeedbackButton()],
         leading: const DonyAppBarBackButton(),
         title: const Text('Litige'),
       ),

@@ -51,6 +51,7 @@ class _TravelerProfileHubScreenState extends State<TravelerProfileHubScreen>
             child: NestedScrollView(
               headerSliverBuilder: (context, _) => [
                 SliverAppBar(
+                  actions: const [DonyFeedbackButton()],
                   pinned: true,
                   expandedHeight: 200,
                   backgroundColor: Theme.of(context).scaffoldBackgroundColor,

@@ -365,6 +365,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       // reste sous le doigt une fois le header replié, là où le crayon
       // disparaissait au défilement. Même icône, même feuille qu'Activités.
       actions: [
+        const DonyFeedbackButton(),
         SizedBox(
           width: kDonyMinTapTarget,
           height: kDonyMinTapTarget,

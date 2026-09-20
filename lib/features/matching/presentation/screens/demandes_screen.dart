@@ -76,6 +76,7 @@ class _DemandesView extends StatelessWidget {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
+        actions: const [DonyFeedbackButton()],
         backgroundColor: cs.surface,
         elevation: 0,
         scrolledUnderElevation: 0,

@@ -391,6 +391,7 @@ class _PackageRequestCreateScreenState
                 ),
               ),
             ),
+            const DonyFeedbackButton(),
           ],
           bottom: PreferredSize(
             // 1 (divider) + 8 (top pad) + 4 (bar) + 12 (bottom pad)

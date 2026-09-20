@@ -27,6 +27,7 @@ class _WalletRefundRequestsScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        actions: const [DonyFeedbackButton()],
         leading: const DonyAppBarBackButton(),
         title: const Text('Mes remboursements'),
       ),

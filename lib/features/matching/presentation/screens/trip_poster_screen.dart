@@ -74,6 +74,7 @@ class TripPosterRoute extends StatelessWidget {
 
         return Scaffold(
           appBar: AppBar(
+            actions: const [DonyFeedbackButton()],
             leading: const DonyAppBarBackButton(),
             title: const Text('Mon affiche'),
             centerTitle: false,
@@ -380,6 +381,7 @@ class _TripPosterScreenState extends State<TripPosterScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        actions: const [DonyFeedbackButton()],
         leading: const DonyAppBarBackButton(),
         title: const Text('Mon affiche'),
         centerTitle: false,

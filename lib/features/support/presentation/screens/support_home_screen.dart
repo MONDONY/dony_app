@@ -1,11 +1,4 @@
-import 'package:dony/core/design/widgets/dony_app_bar.dart';
-import 'package:dony/core/design/widgets/dony_badge.dart';
-import 'package:dony/core/design/widgets/dony_bottom_sheet.dart';
-import 'package:dony/core/design/widgets/dony_button.dart';
-import 'package:dony/core/design/widgets/dony_card.dart';
-import 'package:dony/core/design/widgets/dony_empty_state.dart';
-import 'package:dony/core/design/widgets/dony_snackbar.dart';
-import 'package:dony/core/design/widgets/dony_text_field.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/support/bloc/support_bloc.dart';
 import 'package:dony/features/support/data/support_models.dart';
 import 'package:flutter/material.dart';
@@ -54,6 +47,7 @@ class SupportHomeScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
+        actions: const [DonyFeedbackButton()],
         leading: const DonyAppBarBackButton(),
         title: const Text('Support'),
       ),

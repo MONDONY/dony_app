@@ -16,6 +16,7 @@ class BlockedUsersScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
+        actions: const [DonyFeedbackButton()],
         leading: const DonyAppBarBackButton(),
         backgroundColor: Theme.of(context).colorScheme.surface,
         elevation: 0,
