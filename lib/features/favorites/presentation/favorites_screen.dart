@@ -6,6 +6,7 @@ import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/favorites/bloc/favorite_ids_cubit.dart';
 import 'package:dony/features/favorites/bloc/favorite_requests_cubit.dart';
 import 'package:dony/features/favorites/bloc/favorite_trips_cubit.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
@@ -45,6 +46,13 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         getIt<AnalyticsService>().logEvent(AnalyticsEvents.favoritesOpened),
       );
       final isTraveler = _isTravelerCapable(context.read<AuthBloc>().state);
+      // Le badge de l'accueil est la taille de FavoriteIdsState, chargée au
+      // lancement : un favori dont la cible s'est éteinte depuis (trajet
+      // annulé, retiré, supprimé) y resterait compté jusqu'au prochain
+      // démarrage, pastille « 1 » au-dessus d'une liste vide. Ouvrir l'écran
+      // est le moment naturel pour resynchroniser (idempotent, erreurs
+      // avalées par le cubit).
+      context.read<FavoriteIdsCubit>().load();
       context.read<FavoriteTripsCubit>().load();
       if (isTraveler) {
         context.read<FavoriteRequestsCubit>().load();
