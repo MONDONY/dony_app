@@ -33,6 +33,7 @@ class MobileMoneyAccountScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: cs.surfaceContainerLowest,
       appBar: AppBar(
+        actions: const [DonyFeedbackButton()],
         leading: const DonyAppBarBackButton(),
         title: Text('Versement mobile money', style: tt.headlineMedium),
         backgroundColor: cs.surface,

@@ -244,6 +244,7 @@ class _LoadedView extends StatelessWidget {
                   size: 22,
                 ),
               ),
+              const DonyFeedbackButton(),
             ],
             flexibleSpace: FlexibleSpaceBar(
               collapseMode: CollapseMode.pin,

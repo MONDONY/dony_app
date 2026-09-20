@@ -476,18 +476,25 @@ class _DonyAppState extends State<DonyApp> {
                           // « Terminé » au-dessus des claviers sans touche de
                           // validation (pavé numérique, champs multilignes).
                           child: DonyKeyboardScope(
-                            child: Column(
-                              children: [
-                                // Bandeau réseau global : au-dessus de
-                                // TOUTE route (shell ou pushée), jamais
-                                // seulement les onglets du shell.
-                                const ConnectivityBanner(),
-                                Expanded(
-                                  child: AnalyticsConsentGate(
-                                    child: child ?? const SizedBox.shrink(),
+                            // Capture d'écran du scarabée de signalement
+                            // ([DonyFeedbackButton]) : une seule frontière
+                            // de rendu pour toute l'app, quel que soit
+                            // l'écran affiché.
+                            child: RepaintBoundary(
+                              key: DonyFeedbackButton.appBoundaryKey,
+                              child: Column(
+                                children: [
+                                  // Bandeau réseau global : au-dessus de
+                                  // TOUTE route (shell ou pushée), jamais
+                                  // seulement les onglets du shell.
+                                  const ConnectivityBanner(),
+                                  Expanded(
+                                    child: AnalyticsConsentGate(
+                                      child: child ?? const SizedBox.shrink(),
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         ),

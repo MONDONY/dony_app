@@ -31,6 +31,7 @@ class _AccountRejectedScreenState extends State<AccountRejectedScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        actions: const [DonyFeedbackButton()],
         leading: const DonyAppBarBackButton(leadingIconAsset: 'x'),
         title: const Text('Compte rejeté'),
       ),

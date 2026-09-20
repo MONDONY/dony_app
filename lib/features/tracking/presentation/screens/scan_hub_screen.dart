@@ -95,6 +95,7 @@ class ScanHubView extends StatelessWidget {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
+        actions: const [DonyFeedbackButton()],
         leading: const DonyAppBarBackButton(),
         backgroundColor: cs.surface,
         elevation: 0,

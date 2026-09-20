@@ -252,6 +252,7 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
+          actions: const [DonyFeedbackButton()],
           backgroundColor: DonyColors.blue700,
           foregroundColor: DonyColors.neutral0,
           elevation: 0,
@@ -372,6 +373,7 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
+          actions: const [DonyFeedbackButton()],
           backgroundColor: DonyColors.blue700,
           foregroundColor: DonyColors.neutral0,
           elevation: 0,

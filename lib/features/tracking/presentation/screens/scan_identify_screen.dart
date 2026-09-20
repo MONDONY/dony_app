@@ -165,6 +165,7 @@ class _ScanIdentifyScreenState extends State<ScanIdentifyScreen> {
                     ),
                   ),
                 ),
+              const DonyFeedbackButton(),
             ],
           ),
           body: SingleChildScrollView(

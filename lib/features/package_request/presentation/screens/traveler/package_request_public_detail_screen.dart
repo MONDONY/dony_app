@@ -237,7 +237,6 @@ class _PackageRequestPublicDetailScreenState
         appBar: DonyAppBar(
           title: 'Demande d\'envoi',
           actions: [
-            const DonyFeedbackButton(),
             IconButton(
               tooltip: 'Signaler',
               icon: const DonyIcon('flag', size: 20),

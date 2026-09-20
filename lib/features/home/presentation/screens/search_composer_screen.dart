@@ -141,6 +141,7 @@ class _SearchComposerScreenState extends State<SearchComposerScreen> {
             ),
             child: const Text('Tout effacer'),
           ),
+          const DonyFeedbackButton(),
         ],
       ),
       body: BlocConsumer<SearchComposerBloc, SearchComposerState>(

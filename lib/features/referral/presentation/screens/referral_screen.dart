@@ -54,6 +54,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
         return Scaffold(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           appBar: AppBar(
+            actions: const [DonyFeedbackButton()],
             title: Text(
               'Parrainage',
               style: Theme.of(context).textTheme.headlineLarge,

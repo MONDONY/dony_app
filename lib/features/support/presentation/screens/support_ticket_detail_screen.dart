@@ -40,6 +40,7 @@ class _SupportTicketDetailScreenState extends State<SupportTicketDetailScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
+        actions: const [DonyFeedbackButton()],
         leading: const DonyAppBarBackButton(),
         title: BlocBuilder<SupportBloc, SupportState>(
           builder: (context, state) =>

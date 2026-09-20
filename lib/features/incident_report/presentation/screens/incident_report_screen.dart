@@ -70,7 +70,10 @@ class _IncidentReportScreenState extends State<IncidentReportScreen> {
         }
       },
       child: Scaffold(
-        appBar: AppBar(title: const Text('Signaler un problème')),
+        appBar: AppBar(
+          actions: const [DonyFeedbackButton()],
+          title: const Text('Signaler un problème'),
+        ),
         body: SafeArea(
           child: SingleChildScrollView(
             keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,

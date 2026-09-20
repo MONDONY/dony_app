@@ -19,6 +19,7 @@ class DisputeListScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
+        actions: const [DonyFeedbackButton()],
         leading: const DonyAppBarBackButton(),
         title: const Text('Mes litiges'),
       ),

@@ -407,6 +407,7 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             ],
           ),
+          const DonyFeedbackButton(),
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),

@@ -19,6 +19,7 @@ class AccountDisabledScreen extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     return Scaffold(
       appBar: AppBar(
+        actions: const [DonyFeedbackButton()],
         leading: const DonyAppBarBackButton(leadingIconAsset: 'x'),
         title: const Text('Paiements à activer'),
       ),

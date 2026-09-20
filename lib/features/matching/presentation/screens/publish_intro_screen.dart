@@ -49,6 +49,7 @@ class PublishIntroScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: cs.surfaceContainerLowest,
       appBar: AppBar(
+        actions: const [DonyFeedbackButton()],
         backgroundColor: cs.surface,
         surfaceTintColor: Colors.transparent,
         scrolledUnderElevation: 0,

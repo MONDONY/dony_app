@@ -114,6 +114,7 @@ class _MesAbonnementsScreenState extends State<MesAbonnementsScreen> {
               );
             },
           ),
+          const DonyFeedbackButton(),
         ],
       ),
       body: BlocBuilder<SubscriptionsBloc, SubscriptionsState>(

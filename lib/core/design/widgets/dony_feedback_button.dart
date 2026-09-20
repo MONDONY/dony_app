@@ -1,38 +1,71 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/media_service.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
-/// Bouton global de signalement de bug vers Sentry.
+/// Contenu d'un rapport de bug d'écran : le message du testeur et les
+/// captures qu'il a jointes lui-même (chemins locaux, max
+/// [DonyFeedbackButton.maxAttachments]). La capture automatique de l'écran
+/// n'en fait pas partie : elle est prise au moment de l'envoi.
+class FeedbackReport {
+  const FeedbackReport({required this.message, this.attachments = const []});
+
+  final String message;
+  final List<String> attachments;
+}
+
+/// Bouton global de signalement de bug vers Sentry (le « scarabée »).
 ///
-/// S'utilise dans les `actions` d'un AppBar :
+/// Présent par défaut dans les `actions` de [DonyAppBar] et
+/// [DonySliverAppBar] ; pour un `AppBar` brut ou un header maison :
 /// ```dart
-/// AppBar(actions: [DonyFeedbackButton()])
+/// AppBar(actions: const [DonyFeedbackButton()])
 /// ```
 ///
-/// En production, capture automatiquement l'écran (si [repaintBoundaryKey] est
-/// fourni) et envoie un message + feedback à Sentry. En test, [onSubmitOverride]
-/// remplace la logique Sentry pour permettre les tests unitaires.
+/// À l'envoi, capture l'écran via le [RepaintBoundary] global posé dans
+/// `app.dart` ([appBoundaryKey]), y ajoute les captures choisies par le
+/// testeur, puis envoie un message + feedback à Sentry. En test,
+/// [onSubmitOverride] remplace la logique Sentry et [pickImageOverride]
+/// remplace le sélecteur d'images.
 class DonyFeedbackButton extends StatelessWidget {
   const DonyFeedbackButton({
     super.key,
     this.onSubmitOverride,
+    this.pickImageOverride,
     this.repaintBoundaryKey,
   });
 
-  /// Remplace `_submitToSentry` dans les tests.
-  final Future<void> Function(String message)? onSubmitOverride;
+  /// Nombre maximal de captures jointes par le testeur.
+  static const int maxAttachments = 4;
 
-  /// Clé d'un [RepaintBoundary] wrappant l'écran — utilisée pour la capture
-  /// d'écran. Si null, la capture est ignorée.
+  /// Clé du [RepaintBoundary] qui enveloppe toute l'app (posé dans
+  /// `app.dart`). Utilisée par défaut pour la capture d'écran : aucun écran
+  /// n'a plus besoin de son propre `RepaintBoundary`.
+  static final GlobalKey appBoundaryKey = GlobalKey(
+    debugLabel: 'dony_feedback_capture',
+  );
+
+  /// Remplace `_submitToSentry` dans les tests.
+  final Future<void> Function(FeedbackReport report)? onSubmitOverride;
+
+  /// Remplace le sélecteur d'images ([DonyMediaService]) dans les tests.
+  /// Rend le chemin local de l'image, ou `null` si l'utilisateur annule.
+  final Future<String?> Function(ImageSource source)? pickImageOverride;
+
+  /// Clé d'un [RepaintBoundary] à capturer à la place de [appBoundaryKey]
+  /// (écran qui veut une capture plus resserrée). Sinon la capture globale.
   final GlobalKey? repaintBoundaryKey;
 
   // ── Analytics resolver ────────────────────────────────────────────────────
@@ -64,13 +97,10 @@ class DonyFeedbackButton extends StatelessWidget {
   // ── Screen capture ────────────────────────────────────────────────────────
 
   Future<Uint8List?> _captureScreen() async {
-    if (repaintBoundaryKey == null) {
-      return null;
-    }
+    final key = repaintBoundaryKey ?? appBoundaryKey;
     try {
       final boundary =
-          repaintBoundaryKey!.currentContext?.findRenderObject()
-              as RenderRepaintBoundary?;
+          key.currentContext?.findRenderObject() as RenderRepaintBoundary?;
       if (boundary == null) {
         return null;
       }
@@ -82,14 +112,40 @@ class DonyFeedbackButton extends StatelessWidget {
     }
   }
 
+  static String _contentTypeFor(String path) {
+    final dot = path.lastIndexOf('.');
+    final ext = dot == -1 ? '' : path.substring(dot + 1).toLowerCase();
+    return ext == 'png' ? 'image/png' : 'image/jpeg';
+  }
+
   // ── Sentry submission ─────────────────────────────────────────────────────
 
-  Future<void> _submitToSentry(BuildContext context, String message) async {
+  Future<void> _submitToSentry(
+    BuildContext context,
+    FeedbackReport report,
+  ) async {
     // IMPORTANT : lire la route AVANT le premier `await` — le contexte ne peut
     // pas être utilisé de façon sûre après une suspension asynchrone.
     final route = resolveRoute(context);
 
     final bytes = await _captureScreen();
+
+    // Captures jointes par le testeur : une pièce illisible ne bloque pas
+    // l'envoi du rapport.
+    final attachments = <SentryAttachment>[];
+    for (var i = 0; i < report.attachments.length; i++) {
+      final path = report.attachments[i];
+      try {
+        final data = await File(path).readAsBytes();
+        attachments.add(
+          SentryAttachment.fromUint8List(
+            data,
+            'capture_${i + 1}.${_contentTypeFor(path) == 'image/png' ? 'png' : 'jpg'}',
+            contentType: _contentTypeFor(path),
+          ),
+        );
+      } catch (_) {}
+    }
 
     final eventId = await Sentry.captureMessage(
       'screen_feedback: $route',
@@ -103,12 +159,16 @@ class DonyFeedbackButton extends StatelessWidget {
             ),
           );
         }
+        for (final attachment in attachments) {
+          scope.addAttachment(attachment);
+        }
         await scope.setTag('feedback_route', route);
+        await scope.setTag('feedback_attachments', '${attachments.length}');
       },
     );
 
     await Sentry.captureFeedback(
-      SentryFeedback(message: message, associatedEventId: eventId),
+      SentryFeedback(message: report.message, associatedEventId: eventId),
     );
 
     // Analytics — best-effort
@@ -118,11 +178,25 @@ class DonyFeedbackButton extends StatelessWidget {
         unawaited(
           analytics.logEvent(
             AnalyticsEvents.screenFeedbackSubmitted,
-            properties: {'route': route},
+            properties: {
+              'route': route,
+              'attachment_count': report.attachments.length,
+            },
           ),
         );
       }
     } catch (_) {}
+  }
+
+  // ── Image picking ─────────────────────────────────────────────────────────
+
+  Future<String?> _pickImage(ImageSource source) async {
+    final override = pickImageOverride;
+    if (override != null) {
+      return override(source);
+    }
+    final file = await getIt<DonyMediaService>().pick(source: source);
+    return file?.path;
   }
 
   // ── Sheet ─────────────────────────────────────────────────────────────────
@@ -138,18 +212,20 @@ class DonyFeedbackButton extends StatelessWidget {
       outerContext,
       title: 'Un problème sur cet écran ?',
       subtitle:
-          'Décrivez le bug : une capture de l\'écran sera jointe automatiquement.',
+          'Décrivez le bug. Une capture de l\'écran est jointe automatiquement, '
+          'vous pouvez en ajouter d\'autres.',
       // wrapper provides the shared form state to both child (TextField) and
       // stickyBottom (DonyButton) — pattern recommandé CLAUDE.md pour état local.
       wrapper: (content) => _FeedbackFormProvider(
         onSubmitOverride: onSubmitOverride,
         submitToSentry: _submitToSentry,
+        pickImage: _pickImage,
         scaffoldMessenger: scaffoldMessenger,
         child: content,
       ),
       // ✅ DonyButton dans stickyBottom, jamais dans child
       stickyBottom: const _FeedbackSubmitButton(),
-      child: const _FeedbackTextField(),
+      child: const _FeedbackFormBody(),
     );
   }
 
@@ -172,16 +248,20 @@ class _FeedbackFormState {
     required this.controller,
     required this.canSend,
     required this.sending,
+    required this.attachments,
     required this.onSubmitOverride,
     required this.submitToSentry,
+    required this.pickImage,
     required this.scaffoldMessenger,
   });
 
   final TextEditingController controller;
   final ValueNotifier<bool> canSend;
   final ValueNotifier<bool> sending;
-  final Future<void> Function(String message)? onSubmitOverride;
-  final Future<void> Function(BuildContext, String) submitToSentry;
+  final ValueNotifier<List<String>> attachments;
+  final Future<void> Function(FeedbackReport report)? onSubmitOverride;
+  final Future<void> Function(BuildContext, FeedbackReport) submitToSentry;
+  final Future<String?> Function(ImageSource source) pickImage;
   final ScaffoldMessengerState? scaffoldMessenger;
 }
 
@@ -206,12 +286,14 @@ class _FeedbackFormProvider extends StatefulWidget {
   const _FeedbackFormProvider({
     required this.onSubmitOverride,
     required this.submitToSentry,
+    required this.pickImage,
     required this.scaffoldMessenger,
     required this.child,
   });
 
-  final Future<void> Function(String message)? onSubmitOverride;
-  final Future<void> Function(BuildContext, String) submitToSentry;
+  final Future<void> Function(FeedbackReport report)? onSubmitOverride;
+  final Future<void> Function(BuildContext, FeedbackReport) submitToSentry;
+  final Future<String?> Function(ImageSource source) pickImage;
   final ScaffoldMessengerState? scaffoldMessenger;
   final Widget child;
 
@@ -223,6 +305,7 @@ class _FeedbackFormProviderState extends State<_FeedbackFormProvider> {
   late final TextEditingController _controller;
   late final ValueNotifier<bool> _canSend;
   late final ValueNotifier<bool> _sending;
+  late final ValueNotifier<List<String>> _attachments;
 
   @override
   void initState() {
@@ -230,6 +313,7 @@ class _FeedbackFormProviderState extends State<_FeedbackFormProvider> {
     _controller = TextEditingController();
     _canSend = ValueNotifier<bool>(false);
     _sending = ValueNotifier<bool>(false);
+    _attachments = ValueNotifier<List<String>>(const []);
     _controller.addListener(_onTextChanged);
   }
 
@@ -243,6 +327,7 @@ class _FeedbackFormProviderState extends State<_FeedbackFormProvider> {
     _controller.dispose();
     _canSend.dispose();
     _sending.dispose();
+    _attachments.dispose();
     super.dispose();
   }
 
@@ -253,8 +338,10 @@ class _FeedbackFormProviderState extends State<_FeedbackFormProvider> {
         controller: _controller,
         canSend: _canSend,
         sending: _sending,
+        attachments: _attachments,
         onSubmitOverride: widget.onSubmitOverride,
         submitToSentry: widget.submitToSentry,
+        pickImage: widget.pickImage,
         scaffoldMessenger: widget.scaffoldMessenger,
       ),
       child: widget.child,
@@ -262,23 +349,203 @@ class _FeedbackFormProviderState extends State<_FeedbackFormProvider> {
   }
 }
 
-// ── TextField (child) ──────────────────────────────────────────────────────
+// ── Corps du formulaire (child) ────────────────────────────────────────────
 
-class _FeedbackTextField extends StatelessWidget {
-  const _FeedbackTextField();
+class _FeedbackFormBody extends StatelessWidget {
+  const _FeedbackFormBody();
 
   @override
   Widget build(BuildContext context) {
     final formState = _FeedbackFormInherited.of(context);
-    return TextField(
-      controller: formState.controller,
-      minLines: 3,
-      maxLines: 4,
-      decoration: const InputDecoration(
-        hintText: 'Ex : le code retrait ne s\'affiche pas…',
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        TextField(
+          controller: formState.controller,
+          minLines: 3,
+          maxLines: 4,
+          decoration: const InputDecoration(
+            hintText: 'Ex : le code retrait ne s\'affiche pas…',
+          ),
+          autofocus: true,
+          textInputAction: TextInputAction.newline,
+        ),
+        const SizedBox(height: DonySpacing.base),
+        Text(
+          'Vos captures (facultatif)',
+          style: Theme.of(context).textTheme.labelLarge,
+        ),
+        const SizedBox(height: DonySpacing.sm),
+        const _FeedbackAttachments(),
+      ],
+    );
+  }
+}
+
+/// Vignettes des captures jointes + tuile « Ajouter ». Max
+/// [DonyFeedbackButton.maxAttachments].
+class _FeedbackAttachments extends StatelessWidget {
+  const _FeedbackAttachments();
+
+  Future<void> _pick(BuildContext context, ImageSource source) async {
+    final formState = _FeedbackFormInherited.of(context);
+    try {
+      final path = await formState.pickImage(source);
+      if (path == null) {
+        return;
+      }
+      final current = formState.attachments.value;
+      if (current.length >= DonyFeedbackButton.maxAttachments) {
+        return;
+      }
+      formState.attachments.value = [...current, path];
+    } catch (_) {
+      if (context.mounted) {
+        DonySnackbar.show(
+          context,
+          message: 'Image non supportée ou trop volumineuse',
+          type: DonySnackbarType.error,
+        );
+      }
+    }
+  }
+
+  void _showSourceSheet(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      useRootNavigator: true,
+      builder: (sheetCtx) {
+        final cs = Theme.of(context).colorScheme;
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: Icon(Icons.photo_library_rounded, color: cs.primary),
+                title: const Text('Choisir dans la galerie'),
+                onTap: () {
+                  Navigator.of(sheetCtx).pop();
+                  _pick(context, ImageSource.gallery);
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.photo_camera_rounded, color: cs.primary),
+                title: const Text('Prendre une photo'),
+                onTap: () {
+                  Navigator.of(sheetCtx).pop();
+                  _pick(context, ImageSource.camera);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final formState = _FeedbackFormInherited.of(context);
+    final cs = Theme.of(context).colorScheme;
+    return ValueListenableBuilder<List<String>>(
+      valueListenable: formState.attachments,
+      builder: (context, attachments, _) {
+        final canAdd = attachments.length < DonyFeedbackButton.maxAttachments;
+        return Wrap(
+          spacing: DonySpacing.sm,
+          runSpacing: DonySpacing.sm,
+          children: [
+            for (final path in attachments)
+              _AttachmentThumb(
+                path: path,
+                onRemove: () {
+                  formState.attachments.value = attachments
+                      .where((p) => p != path)
+                      .toList();
+                },
+              ),
+            if (canAdd)
+              Semantics(
+                button: true,
+                container: true,
+                excludeSemantics: true,
+                label: 'Ajouter une capture',
+                child: GestureDetector(
+                  onTap: () => _showSourceSheet(context),
+                  child: Container(
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      color: cs.primaryContainer,
+                      borderRadius: BorderRadius.circular(DonyRadius.md),
+                      border: Border.all(color: cs.primary, width: 1.5),
+                    ),
+                    child: Icon(Icons.add_rounded, color: cs.primary),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _AttachmentThumb extends StatelessWidget {
+  const _AttachmentThumb({required this.path, required this.onRemove});
+
+  final String path;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return SizedBox(
+      width: 64,
+      height: 64,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(DonyRadius.md),
+            child: Image.file(
+              File(path),
+              width: 64,
+              height: 64,
+              fit: BoxFit.cover,
+              // Fichier illisible (ou chemin factice en test) : on garde une
+              // vignette neutre plutôt qu'une exception de rendu.
+              errorBuilder: (_, _, _) => Container(
+                width: 64,
+                height: 64,
+                color: cs.surfaceContainerHighest,
+                child: Icon(Icons.image_rounded, color: cs.onSurfaceVariant),
+              ),
+            ),
+          ),
+          Positioned(
+            top: -6,
+            right: -6,
+            child: Semantics(
+              button: true,
+              label: 'Retirer la capture',
+              child: GestureDetector(
+                onTap: onRemove,
+                child: Container(
+                  width: 22,
+                  height: 22,
+                  decoration: BoxDecoration(
+                    color: cs.error,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.close_rounded, size: 14, color: cs.onError),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
-      autofocus: true,
-      textInputAction: TextInputAction.newline,
     );
   }
 }
@@ -296,13 +563,16 @@ class _FeedbackSubmitButton extends StatefulWidget {
 class _FeedbackSubmitButtonState extends State<_FeedbackSubmitButton> {
   Future<void> _handleSubmit() async {
     final formState = _FeedbackFormInherited.of(context);
-    final text = formState.controller.text.trim();
+    final report = FeedbackReport(
+      message: formState.controller.text.trim(),
+      attachments: List<String>.unmodifiable(formState.attachments.value),
+    );
     formState.sending.value = true;
     try {
       if (formState.onSubmitOverride != null) {
-        await formState.onSubmitOverride!(text);
+        await formState.onSubmitOverride!(report);
       } else {
-        await formState.submitToSentry(context, text);
+        await formState.submitToSentry(context, report);
       }
       // Succès : fermer le sheet, afficher le snackbar dans le scaffold parent
       if (mounted) {
