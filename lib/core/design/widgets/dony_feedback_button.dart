@@ -57,6 +57,7 @@ class DonyFeedbackButton extends StatelessWidget {
     super.key,
     this.onSubmitOverride,
     this.pickImageOverride,
+    this.captureOverride,
     this.repaintBoundaryKey,
   });
 
@@ -76,6 +77,10 @@ class DonyFeedbackButton extends StatelessWidget {
   /// Remplace le sélecteur d'images ([DonyMediaService]) dans les tests.
   /// Rend le chemin local de l'image, ou `null` si l'utilisateur annule.
   final Future<String?> Function(ImageSource source)? pickImageOverride;
+
+  /// Remplace la capture d'écran dans les tests : le binding de test ne
+  /// rasterise jamais, `toImage` y échoue toujours.
+  final Future<Uint8List?> Function()? captureOverride;
 
   /// Clé d'un [RepaintBoundary] à capturer à la place de [appBoundaryKey]
   /// (écran qui veut une capture plus resserrée). Sinon la capture globale.
@@ -110,6 +115,10 @@ class DonyFeedbackButton extends StatelessWidget {
   // ── Screen capture ────────────────────────────────────────────────────────
 
   Future<Uint8List?> _captureScreen() async {
+    final override = captureOverride;
+    if (override != null) {
+      return override();
+    }
     final key = repaintBoundaryKey ?? appBoundaryKey;
     try {
       final boundary =
@@ -133,10 +142,12 @@ class DonyFeedbackButton extends StatelessWidget {
 
   // ── Sentry submission ─────────────────────────────────────────────────────
 
-  Future<void> _submit(BuildContext context, FeedbackReport report) async {
+  Future<void> _submit(
+    BuildContext context,
+    FeedbackReport report,
+    Uint8List? bytes,
+  ) async {
     final route = report.route;
-
-    final bytes = await _captureScreen();
     await _submitToSentry(route, report, bytes);
     await _submitToBackend(route, report, bytes);
   }
@@ -248,6 +259,12 @@ class DonyFeedbackButton extends StatelessWidget {
     // La route se lit ici, depuis l'écran : le contexte de la feuille (navigateur
     // racine) ne la connaît pas.
     final route = resolveRoute(outerContext);
+    // La capture aussi se prend ICI, avant que la feuille ne s'ouvre : prise à
+    // l'envoi, elle montrait la feuille de signalement au lieu de l'écran.
+    final screenshot = await _captureScreen();
+    if (!outerContext.mounted) {
+      return;
+    }
 
     await DonyBottomSheet.show<void>(
       outerContext,
@@ -259,6 +276,7 @@ class DonyFeedbackButton extends StatelessWidget {
       // stickyBottom (DonyButton) — pattern recommandé CLAUDE.md pour état local.
       wrapper: (content) => _FeedbackFormProvider(
         route: route,
+        screenshot: screenshot,
         onSubmitOverride: onSubmitOverride,
         submit: _submit,
         pickImage: _pickImage,
@@ -292,6 +310,7 @@ class _FeedbackFormState {
     required this.sending,
     required this.attachments,
     required this.route,
+    required this.screenshot,
     required this.onSubmitOverride,
     required this.submit,
     required this.pickImage,
@@ -303,8 +322,11 @@ class _FeedbackFormState {
   final ValueNotifier<bool> sending;
   final ValueNotifier<List<String>> attachments;
   final String route;
+
+  /// Capture de l'écran prise au tap sur le scarabée, avant la feuille.
+  final Uint8List? screenshot;
   final Future<void> Function(FeedbackReport report)? onSubmitOverride;
-  final Future<void> Function(BuildContext, FeedbackReport) submit;
+  final Future<void> Function(BuildContext, FeedbackReport, Uint8List?) submit;
   final Future<String?> Function(ImageSource source) pickImage;
   final ScaffoldMessengerState? scaffoldMessenger;
 }
@@ -329,6 +351,7 @@ class _FeedbackFormInherited extends InheritedWidget {
 class _FeedbackFormProvider extends StatefulWidget {
   const _FeedbackFormProvider({
     required this.route,
+    required this.screenshot,
     required this.onSubmitOverride,
     required this.submit,
     required this.pickImage,
@@ -337,8 +360,9 @@ class _FeedbackFormProvider extends StatefulWidget {
   });
 
   final String route;
+  final Uint8List? screenshot;
   final Future<void> Function(FeedbackReport report)? onSubmitOverride;
-  final Future<void> Function(BuildContext, FeedbackReport) submit;
+  final Future<void> Function(BuildContext, FeedbackReport, Uint8List?) submit;
   final Future<String?> Function(ImageSource source) pickImage;
   final ScaffoldMessengerState? scaffoldMessenger;
   final Widget child;
@@ -386,6 +410,7 @@ class _FeedbackFormProviderState extends State<_FeedbackFormProvider> {
         sending: _sending,
         attachments: _attachments,
         route: widget.route,
+        screenshot: widget.screenshot,
         onSubmitOverride: widget.onSubmitOverride,
         submit: widget.submit,
         pickImage: widget.pickImage,
@@ -620,7 +645,7 @@ class _FeedbackSubmitButtonState extends State<_FeedbackSubmitButton> {
       if (formState.onSubmitOverride != null) {
         await formState.onSubmitOverride!(report);
       } else {
-        await formState.submit(context, report);
+        await formState.submit(context, report, formState.screenshot);
       }
       // Succès : fermer le sheet, afficher le snackbar dans le scaffold parent
       if (mounted) {
