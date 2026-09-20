@@ -1,5 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
-import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -1098,6 +1098,48 @@ void main() {
 
       expect(find.text('Aucun voyageur sur ce corridor'), findsOneWidget);
     });
+
+    testWidgets(
+      'scarabée : à côté de « Trier » replié, à côté de la recherche déplié, '
+      'jamais sur la carte',
+      (tester) async {
+        await pumpHome(tester);
+        await tester.pump(const Duration(milliseconds: 1000));
+
+        // Replié : un seul scarabée, dans la ligne des résultats.
+        expect(
+          find.byKey(const Key('feedback-sheet-collapsed')),
+          findsOneWidget,
+        );
+        expect(find.byKey(const Key('feedback-sheet-expanded')), findsNothing);
+        expect(find.byType(DonyFeedbackButton), findsOneWidget);
+        final bug = tester.getCenter(
+          find.byKey(const Key('feedback-sheet-collapsed')),
+        );
+        // « Trier » n'existe qu'avec des résultats : on se cale sur le libellé
+        // de la ligne, toujours présent en mode Trajets.
+        final header = tester.getCenter(find.text('VOYAGEURS DISPONIBLES'));
+        expect((bug.dy - header.dy).abs(), lessThan(kDonyMinTapTarget));
+        expect(bug.dx, greaterThan(header.dx));
+
+        // Déplié : il rejoint la barre de recherche de la feuille.
+        await tester.tap(find.textContaining('Tirer pour voir'));
+        await tester.pumpAndSettle();
+        expect(
+          find.byKey(const Key('feedback-sheet-expanded')),
+          findsOneWidget,
+        );
+        expect(find.byKey(const Key('feedback-sheet-collapsed')), findsNothing);
+        expect(find.byType(DonyFeedbackButton), findsOneWidget);
+        final bugTop = tester.getCenter(
+          find.byKey(const Key('feedback-sheet-expanded')),
+        );
+        final search = tester.getCenter(
+          find.byKey(const Key('corridor-bar-sheet')),
+        );
+        expect((bugTop.dy - search.dy).abs(), lessThan(kDonyMinTapTarget));
+      },
+    );
 
     testWidgets('shows DraggableScrollableSheet by default (regression)', (
       tester,

@@ -1205,7 +1205,6 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                       ),
                                     ),
                                     const SizedBox(width: DonySpacing.sm),
-                                    const DonyFeedbackButton(),
                                     const _NotificationBell(),
                                   ],
                                 ),
@@ -1651,11 +1650,23 @@ class _MapSenderViewState extends State<_MapSenderView> {
                 DonySpacing.lg,
                 DonySpacing.sm,
               ),
-              child: _CorridorBar(
-                key: const Key('corridor-bar-sheet'),
-                label: _corridorLabel,
-                activeFilterCount: _activeFilterCount,
-                onTap: () => _openComposer(ctx),
+              // Le scarabée de signalement vit dans la feuille, jamais sur la
+              // carte où il se perd dans le fond : à côté de la barre de
+              // recherche quand la feuille est dépliée, à côté de « Trier »
+              // quand elle est repliée (voir plus bas).
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _CorridorBar(
+                      key: const Key('corridor-bar-sheet'),
+                      label: _corridorLabel,
+                      activeFilterCount: _activeFilterCount,
+                      onTap: () => _openComposer(ctx),
+                    ),
+                  ),
+                  const SizedBox(width: DonySpacing.sm),
+                  const DonyFeedbackButton(key: Key('feedback-sheet-expanded')),
+                ],
               ),
             ),
             Padding(
@@ -1735,6 +1746,15 @@ class _MapSenderViewState extends State<_MapSenderView> {
                       ),
                     ),
                   ),
+                if (!_isMapHidden) ...[
+                  const SizedBox(width: DonySpacing.xs),
+                  const SizedBox.square(
+                    dimension: kDonyMinTapTarget,
+                    child: DonyFeedbackButton(
+                      key: Key('feedback-sheet-collapsed'),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
