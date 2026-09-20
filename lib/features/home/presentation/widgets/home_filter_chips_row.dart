@@ -6,17 +6,20 @@
 // divergence : la date, commune aux deux modes, y était rendue par deux
 // widgets différents et effacée par deux chemins différents.
 //
-// Ordre imposé : le sélecteur de mode d'abord, puis les chips COMMUNS (urgent,
-// date) à `key` stable, puis ceux du mode courant. Les clés stables évitent
-// qu'un chip commun soit détruit/reconstruit à la bascule, ce qui perdrait son
-// animation et, plus grave, ferait clignoter un état identique.
+// Ordre imposé : les chips COMMUNS (urgent, date) à `key` stable d'abord, puis
+// ceux du mode courant. Les clés stables évitent qu'un chip commun soit
+// détruit/reconstruit à la bascule, ce qui perdrait son animation et, plus
+// grave, ferait clignoter un état identique.
+//
+// Le sélecteur de mode ne vit plus ici : rendu au milieu des chips, il se
+// lisait comme un filtre de plus. Il a sa propre ligne, sous la barre de
+// recherche (`SearchModeSelector`).
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
-import 'package:dony/features/home/presentation/widgets/search_mode_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -25,7 +28,6 @@ class HomeFilterChipsRow extends StatelessWidget {
     super.key,
     required this.mode,
     required this.filters,
-    required this.onModeChanged,
     required this.onUrgentToggle,
     required this.onDateTap,
     required this.onDateClear,
@@ -42,18 +44,11 @@ class HomeFilterChipsRow extends StatelessWidget {
     required this.onParcelSizeClear,
     required this.onMatchingMyTripsToggle,
     required this.onMatchingMyTripsBlocked,
-    this.otherModeCount,
     this.activeTrips,
   });
 
   final SearchMode mode;
   final HomeSearchFilters filters;
-  final ValueChanged<SearchMode> onModeChanged;
-
-  /// Nombre de résultats de l'autre mode. `null` quand il n'est pas informatif
-  /// (aucun filtre géographique ni temporel posé) : le segment inactif n'est
-  /// alors pas badgé du tout.
-  final int? otherModeCount;
 
   // Communs
   final VoidCallback onUrgentToggle;
@@ -147,18 +142,6 @@ class HomeFilterChipsRow extends StatelessWidget {
       scrollDirection: Axis.horizontal,
       child: Row(
         children: [
-          // Clé STABLE : elle ne doit pas encoder la présence du compteur,
-          // sinon l'arrivée du nombre démonte le sélecteur et emporte
-          // l'animation de 200 ms du segment actif. La clé du badge vit dans
-          // `SearchModeSelector`, sur le badge lui-même.
-          SearchModeSelector(
-            key: const Key('search-mode-selector'),
-            mode: mode,
-            onChanged: onModeChanged,
-            otherModeCount: otherModeCount,
-          ),
-          const SizedBox(width: DonySpacing.sm),
-
           // ── Communs ─────────────────────────────────────────────────────────
           HomeSmallChip(
             key: const Key('chip-urgent'),

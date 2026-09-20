@@ -5,20 +5,28 @@ import 'package:flutter_test/flutter_test.dart';
 
 const _trajetsKey = Key('search_mode_segment_trips');
 const _colisKey = Key('search_mode_segment_colis');
+const _compteurKey = Key('mode-other-count');
 
 void main() {
   Widget wrap(Widget child) => MaterialApp(
-    home: Scaffold(body: Center(child: child)),
+    home: Scaffold(
+      body: Padding(padding: const EdgeInsets.all(16), child: child),
+    ),
   );
 
-  testWidgets('affiche les deux segments', (tester) async {
-    await tester.pumpWidget(
-      wrap(SearchModeSelector(mode: SearchMode.trips, onChanged: (_) {})),
-    );
+  testWidgets(
+    'les deux segments nomment l\'intention et ce que la liste montre',
+    (tester) async {
+      await tester.pumpWidget(
+        wrap(SearchModeSelector(mode: SearchMode.trips, onChanged: (_) {})),
+      );
 
-    expect(find.text('Trajets'), findsOneWidget);
-    expect(find.text('Colis'), findsOneWidget);
-  });
+      expect(find.text('J\'envoie un colis'), findsOneWidget);
+      expect(find.text('Voyageurs disponibles'), findsOneWidget);
+      expect(find.text('Je voyage'), findsOneWidget);
+      expect(find.text('Colis à transporter'), findsOneWidget);
+    },
+  );
 
   testWidgets('taper sur le segment inactif notifie le nouveau mode', (
     tester,
@@ -30,7 +38,7 @@ void main() {
       ),
     );
 
-    await tester.tap(find.text('Colis'));
+    await tester.tap(find.byKey(_colisKey));
     await tester.pumpAndSettle();
 
     expect(recu, SearchMode.parcels);
@@ -44,27 +52,48 @@ void main() {
       ),
     );
 
-    await tester.tap(find.text('Trajets'));
+    await tester.tap(find.byKey(_trajetsKey));
     await tester.pumpAndSettle();
 
     expect(appels, 0);
   });
 
-  testWidgets('le compteur est rendu sur le segment inactif', (tester) async {
-    await tester.pumpWidget(
-      wrap(
-        SearchModeSelector(
-          mode: SearchMode.trips,
-          onChanged: (_) {},
-          otherModeCount: 8,
+  testWidgets(
+    'le compteur s\'inscrit dans le sous-titre du segment inactif seulement',
+    (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          SearchModeSelector(
+            mode: SearchMode.trips,
+            onChanged: (_) {},
+            otherModeCount: 8,
+          ),
         ),
-      ),
-    );
+      );
 
-    expect(find.text('8'), findsOneWidget);
-  });
+      expect(find.text('8 colis à transporter'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byKey(_colisKey),
+          matching: find.byKey(_compteurKey),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: find.byKey(_trajetsKey),
+          matching: find.byKey(_compteurKey),
+        ),
+        findsNothing,
+      );
+      // Le segment actif garde son sous-titre sans nombre.
+      expect(find.text('Voyageurs disponibles'), findsOneWidget);
+    },
+  );
 
-  testWidgets('compteur nul ou zéro : rien rendu', (tester) async {
+  testWidgets('compteur nul ou zéro : sous-titre sans nombre, sans clé', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       wrap(
         SearchModeSelector(
@@ -75,11 +104,29 @@ void main() {
       ),
     );
 
-    expect(find.text('0'), findsNothing);
+    expect(find.byKey(_compteurKey), findsNothing);
+    expect(find.text('Colis à transporter'), findsOneWidget);
+    expect(find.textContaining('0 colis'), findsNothing);
+  });
+
+  testWidgets('un seul résultat de l\'autre côté : accord au singulier', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      wrap(
+        SearchModeSelector(
+          mode: SearchMode.parcels,
+          onChanged: (_) {},
+          otherModeCount: 1,
+        ),
+      ),
+    );
+
+    expect(find.text('1 voyageur disponible'), findsOneWidget);
   });
 
   testWidgets(
-    'le libellé sémantique ne duplique pas emoji/texte/compteur (mode trips)',
+    'le libellé sémantique porte l\'intention et le sous-titre, sans doublon',
     (tester) async {
       final handle = tester.ensureSemantics();
       await tester.pumpWidget(
@@ -92,24 +139,19 @@ void main() {
         ),
       );
 
-      // Segment actif (Trajets) : pas de compteur, libellé simple.
       expect(
         tester.getSemantics(find.byKey(_trajetsKey)),
         matchesSemantics(
-          label: 'Trajets',
+          label: 'J\'envoie un colis, Voyageurs disponibles',
           isButton: true,
           hasSelectedState: true,
           isSelected: true,
         ),
       );
-
-      // Segment inactif (Colis) avec compteur : le libellé explicite ne
-      // doit apparaître qu'une seule fois, sans doublon de l'emoji brut,
-      // du texte ou du nombre lus séparément par les enfants.
       expect(
         tester.getSemantics(find.byKey(_colisKey)),
         matchesSemantics(
-          label: 'Colis, 8 résultats',
+          label: 'Je voyage, 8 colis à transporter',
           isButton: true,
           hasSelectedState: true,
         ),
@@ -120,57 +162,26 @@ void main() {
   );
 
   testWidgets(
-    'le compteur est un descendant du segment inactif, pas de l\'actif',
-    (tester) async {
-      await tester.pumpWidget(
-        wrap(
-          SearchModeSelector(
-            mode: SearchMode.trips,
-            onChanged: (_) {},
-            otherModeCount: 8,
-          ),
-        ),
-      );
-
-      // mode trips actif → le compteur doit être posé sur Colis, pas Trajets.
-      expect(
-        find.descendant(of: find.byKey(_colisKey), matching: find.text('8')),
-        findsOneWidget,
-      );
-      expect(
-        find.descendant(of: find.byKey(_trajetsKey), matching: find.text('8')),
-        findsNothing,
-      );
-    },
-  );
-
-  testWidgets(
-    'chaque segment a une zone tactile d\'au moins 38 points de haut',
+    'chaque segment a une zone tactile d\'au moins 44 points de haut',
     (tester) async {
       await tester.pumpWidget(
         wrap(SearchModeSelector(mode: SearchMode.trips, onChanged: (_) {})),
       );
 
-      final trajetsSize = tester.getSize(
-        find.descendant(
-          of: find.byKey(_trajetsKey),
-          matching: find.byType(GestureDetector),
-        ),
-      );
-      final colisSize = tester.getSize(
-        find.descendant(
-          of: find.byKey(_colisKey),
-          matching: find.byType(GestureDetector),
-        ),
-      );
-
-      expect(trajetsSize.height, greaterThanOrEqualTo(38));
-      expect(colisSize.height, greaterThanOrEqualTo(38));
+      for (final key in [_trajetsKey, _colisKey]) {
+        final size = tester.getSize(
+          find.descendant(
+            of: find.byKey(key),
+            matching: find.byType(GestureDetector),
+          ),
+        );
+        expect(size.height, greaterThanOrEqualTo(44));
+      }
     },
   );
 
   testWidgets(
-    'mode parcels : le segment Colis est actif et le compteur se pose sur Trajets',
+    'mode parcels : « Je voyage » est actif et le compteur se pose sur l\'autre segment',
     (tester) async {
       final handle = tester.ensureSemantics();
       await tester.pumpWidget(
@@ -186,7 +197,7 @@ void main() {
       expect(
         tester.getSemantics(find.byKey(_colisKey)),
         matchesSemantics(
-          label: 'Colis',
+          label: 'Je voyage, Colis à transporter',
           isButton: true,
           hasSelectedState: true,
           isSelected: true,
@@ -195,22 +206,30 @@ void main() {
       expect(
         tester.getSemantics(find.byKey(_trajetsKey)),
         matchesSemantics(
-          label: 'Trajets, 5 résultats',
+          label: 'J\'envoie un colis, 5 voyageurs disponibles',
           isButton: true,
           hasSelectedState: true,
         ),
       );
-
       expect(
-        find.descendant(of: find.byKey(_trajetsKey), matching: find.text('5')),
+        find.descendant(
+          of: find.byKey(_trajetsKey),
+          matching: find.byKey(_compteurKey),
+        ),
         findsOneWidget,
-      );
-      expect(
-        find.descendant(of: find.byKey(_colisKey), matching: find.text('5')),
-        findsNothing,
       );
 
       handle.dispose();
     },
   );
+
+  testWidgets('le sélecteur prend toute la largeur disponible', (tester) async {
+    await tester.pumpWidget(
+      wrap(SearchModeSelector(mode: SearchMode.trips, onChanged: (_) {})),
+    );
+
+    final largeur = tester.getSize(find.byType(SearchModeSelector)).width;
+    final ecran = tester.getSize(find.byType(Scaffold)).width;
+    expect(largeur, ecran - 32);
+  });
 }
