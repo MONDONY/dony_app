@@ -1,6 +1,5 @@
 import 'package:dony/core/config/sms_auth_flag.dart';
-import 'package:dony/core/design/theme/app_theme.dart';
-import 'package:dony/core/design/widgets/dony_avatar.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_header.dart';
 import 'package:flutter/material.dart';
@@ -15,12 +14,14 @@ Widget _buildHeader({
   String? phoneNumber,
   String? email,
   String? city,
+  String displayName = 'Ibrahima Diallo',
+  double trailingInset = 0,
 }) {
   return MaterialApp(
     theme: AppTheme.light(),
     home: Scaffold(
       body: ProfileHeader(
-        displayName: 'Ibrahima Diallo',
+        displayName: displayName,
         isTraveler: isTraveler,
         isSender: isSender,
         isKycVerified: isKycVerified,
@@ -29,6 +30,7 @@ Widget _buildHeader({
         phoneNumber: phoneNumber,
         email: email,
         city: city,
+        trailingInset: trailingInset,
       ),
     ),
   );
@@ -38,6 +40,29 @@ void main() {
   group('ProfileHeader', () {
     setUp(() => setSmsAuthEnabled(kSmsAuthEnabledDefault));
     tearDown(() => setSmsAuthEnabled(kSmsAuthEnabledDefault));
+    testWidgets('trailingInset garde le nom et le badge à gauche des actions', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(400, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      const inset = 80.0;
+      await tester.pumpWidget(
+        _buildHeader(
+          displayName: 'aboubakar Siriki DIAKITE KONATÉ TRAORÉ',
+          isKycVerified: true,
+          trailingInset: inset,
+        ),
+      );
+      await tester.pump();
+
+      // Le badge est le dernier élément de la ligne : son bord droit borne
+      // toute la ligne, et il doit rester dans la zone hors actions.
+      final badgeRight = tester.getTopRight(find.text('VÉRIFIÉ')).dx;
+      expect(badgeRight, lessThanOrEqualTo(400 - inset - DonySpacing.lg));
+    });
+
     testWidgets('shows display name', (tester) async {
       await tester.pumpWidget(_buildHeader());
       await tester.pump();

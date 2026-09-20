@@ -29,6 +29,17 @@ import 'package:go_router/go_router.dart';
 /// retirés. Une fois « Mes trajets et colis » parti vers le hub Activités,
 /// chaque onglet ne portait plus que trois ou quatre lignes — la navigation
 /// coûtait plus cher que le contenu qu'elle séparait.
+/// Largeur des actions de la SliverAppBar de l'onglet Moi (scarabée de
+/// signalement + burger + espaceur), moins la marge droite déjà prise par
+/// [ProfileHeader] : c'est ce que la ligne nom + badge doit laisser libre
+/// pour ne pas passer sous les boutons. À tenir alignée sur `actions` de
+/// `_appBar`.
+const double _kHeaderActionsInset =
+    kMinInteractiveDimension +
+    kDonyMinTapTarget +
+    DonySpacing.sm -
+    DonySpacing.lg;
+
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -208,6 +219,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   email: user.email,
                   city: user.city,
                   topPadding: topPad,
+                  trailingInset: _kHeaderActionsInset,
                 );
 
                 // Mesure la hauteur réelle du header (sonde hors-écran) pour

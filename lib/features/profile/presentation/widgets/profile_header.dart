@@ -16,6 +16,7 @@ class ProfileHeader extends StatelessWidget {
     this.email,
     this.city,
     this.topPadding,
+    this.trailingInset = 0,
   });
 
   final String displayName;
@@ -33,6 +34,13 @@ class ProfileHeader extends StatelessWidget {
   /// dans des sous-arbres au `MediaQuery` différent). Repli sur le MediaQuery
   /// local si non fourni.
   final double? topPadding;
+
+  /// Largeur, à droite, laissée libre par la ligne nom + badge. Ce header est
+  /// le fond d'une `SliverAppBar` : les boutons d'action (scarabée, burger)
+  /// se dessinent PAR-DESSUS, en haut à droite. Sans cette réserve, un nom
+  /// long ou le badge VÉRIFIÉ passe sous les boutons (vu sur le build 72).
+  /// L'écran passe la largeur réelle de ses actions.
+  final double trailingInset;
 
   @override
   Widget build(BuildContext context) {
@@ -71,25 +79,29 @@ class ProfileHeader extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Nom + badge VÉRIFIÉ / PRO
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            displayName,
-                            style: tt.headlineMedium?.copyWith(
-                              color: cs.onSurface,
-                              fontWeight: FontWeight.w800,
+                    // Nom + badge VÉRIFIÉ / PRO, à l'écart des actions de
+                    // la SliverAppBar (voir [trailingInset]).
+                    Padding(
+                      padding: EdgeInsets.only(right: trailingInset),
+                      child: Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              displayName,
+                              style: tt.headlineMedium?.copyWith(
+                                color: cs.onSurface,
+                                fontWeight: FontWeight.w800,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                        if (isKycVerified) ...[
-                          const SizedBox(width: DonySpacing.xs),
-                          _BadgeLabel(isPro: isProAccount),
+                          if (isKycVerified) ...[
+                            const SizedBox(width: DonySpacing.xs),
+                            _BadgeLabel(isPro: isProAccount),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
                     if (city != null && city!.isNotEmpty) ...[
                       const SizedBox(height: DonySpacing.xxs),
