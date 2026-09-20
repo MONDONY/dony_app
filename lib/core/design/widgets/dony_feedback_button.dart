@@ -6,7 +6,9 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/app_log.dart';
 import 'package:dony/core/services/media_service.dart';
+import 'package:dony/core/services/screen_feedback_sender.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -20,10 +22,21 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 /// [DonyFeedbackButton.maxAttachments]). La capture automatique de l'écran
 /// n'en fait pas partie : elle est prise au moment de l'envoi.
 class FeedbackReport {
-  const FeedbackReport({required this.message, this.attachments = const []});
+  const FeedbackReport({
+    required this.message,
+    this.attachments = const [],
+    this.route = 'unknown',
+  });
 
   final String message;
   final List<String> attachments;
+
+  /// Route GoRouter de l'écran d'où part le rapport, lue AU TAP sur le
+  /// scarabée : la feuille vit sur le navigateur racine, hors de tout écran,
+  /// et son contexte ne connaît pas la route (tous les premiers rapports
+  /// arrivaient en `unknown`). `'unknown'` si le contexte n'était pas dans
+  /// un GoRouter.
+  final String route;
 }
 
 /// Bouton global de signalement de bug vers Sentry (le « scarabée »).
@@ -120,16 +133,41 @@ class DonyFeedbackButton extends StatelessWidget {
 
   // ── Sentry submission ─────────────────────────────────────────────────────
 
-  Future<void> _submitToSentry(
-    BuildContext context,
-    FeedbackReport report,
-  ) async {
-    // IMPORTANT : lire la route AVANT le premier `await` — le contexte ne peut
-    // pas être utilisé de façon sûre après une suspension asynchrone.
-    final route = resolveRoute(context);
+  Future<void> _submit(BuildContext context, FeedbackReport report) async {
+    final route = report.route;
 
     final bytes = await _captureScreen();
+    await _submitToSentry(route, report, bytes);
+    await _submitToBackend(route, report, bytes);
+  }
 
+  /// Backend (admin › Signalements), en plus de Sentry. Jamais bloquant :
+  /// hors ligne, backend ancien ou service absent (tests), le rapport Sentry
+  /// est déjà parti et le testeur voit le succès.
+  Future<void> _submitToBackend(
+    String route,
+    FeedbackReport report,
+    Uint8List? bytes,
+  ) async {
+    if (!getIt.isRegistered<ScreenFeedbackSender>()) {
+      return;
+    }
+    try {
+      await getIt<ScreenFeedbackSender>().send(
+        report: report,
+        route: route,
+        screenshot: bytes,
+      );
+    } catch (e) {
+      AppLog.warn('Rapport d\'écran non transmis au backend : $e');
+    }
+  }
+
+  Future<void> _submitToSentry(
+    String route,
+    FeedbackReport report,
+    Uint8List? bytes,
+  ) async {
     // Captures jointes par le testeur : une pièce illisible ne bloque pas
     // l'envoi du rapport.
     final attachments = <SentryAttachment>[];
@@ -207,6 +245,9 @@ class DonyFeedbackButton extends StatelessWidget {
     // Capture the ScaffoldMessenger before the sheet opens so that the success
     // snackbar can be shown in the parent scaffold after the sheet is popped.
     final scaffoldMessenger = ScaffoldMessenger.maybeOf(outerContext);
+    // La route se lit ici, depuis l'écran : le contexte de la feuille (navigateur
+    // racine) ne la connaît pas.
+    final route = resolveRoute(outerContext);
 
     await DonyBottomSheet.show<void>(
       outerContext,
@@ -217,8 +258,9 @@ class DonyFeedbackButton extends StatelessWidget {
       // wrapper provides the shared form state to both child (TextField) and
       // stickyBottom (DonyButton) — pattern recommandé CLAUDE.md pour état local.
       wrapper: (content) => _FeedbackFormProvider(
+        route: route,
         onSubmitOverride: onSubmitOverride,
-        submitToSentry: _submitToSentry,
+        submit: _submit,
         pickImage: _pickImage,
         scaffoldMessenger: scaffoldMessenger,
         child: content,
@@ -249,8 +291,9 @@ class _FeedbackFormState {
     required this.canSend,
     required this.sending,
     required this.attachments,
+    required this.route,
     required this.onSubmitOverride,
-    required this.submitToSentry,
+    required this.submit,
     required this.pickImage,
     required this.scaffoldMessenger,
   });
@@ -259,8 +302,9 @@ class _FeedbackFormState {
   final ValueNotifier<bool> canSend;
   final ValueNotifier<bool> sending;
   final ValueNotifier<List<String>> attachments;
+  final String route;
   final Future<void> Function(FeedbackReport report)? onSubmitOverride;
-  final Future<void> Function(BuildContext, FeedbackReport) submitToSentry;
+  final Future<void> Function(BuildContext, FeedbackReport) submit;
   final Future<String?> Function(ImageSource source) pickImage;
   final ScaffoldMessengerState? scaffoldMessenger;
 }
@@ -284,15 +328,17 @@ class _FeedbackFormInherited extends InheritedWidget {
 /// Gère le cycle de vie de tous les objets mutables du formulaire.
 class _FeedbackFormProvider extends StatefulWidget {
   const _FeedbackFormProvider({
+    required this.route,
     required this.onSubmitOverride,
-    required this.submitToSentry,
+    required this.submit,
     required this.pickImage,
     required this.scaffoldMessenger,
     required this.child,
   });
 
+  final String route;
   final Future<void> Function(FeedbackReport report)? onSubmitOverride;
-  final Future<void> Function(BuildContext, FeedbackReport) submitToSentry;
+  final Future<void> Function(BuildContext, FeedbackReport) submit;
   final Future<String?> Function(ImageSource source) pickImage;
   final ScaffoldMessengerState? scaffoldMessenger;
   final Widget child;
@@ -339,8 +385,9 @@ class _FeedbackFormProviderState extends State<_FeedbackFormProvider> {
         canSend: _canSend,
         sending: _sending,
         attachments: _attachments,
+        route: widget.route,
         onSubmitOverride: widget.onSubmitOverride,
-        submitToSentry: widget.submitToSentry,
+        submit: widget.submit,
         pickImage: widget.pickImage,
         scaffoldMessenger: widget.scaffoldMessenger,
       ),
@@ -566,13 +613,14 @@ class _FeedbackSubmitButtonState extends State<_FeedbackSubmitButton> {
     final report = FeedbackReport(
       message: formState.controller.text.trim(),
       attachments: List<String>.unmodifiable(formState.attachments.value),
+      route: formState.route,
     );
     formState.sending.value = true;
     try {
       if (formState.onSubmitOverride != null) {
         await formState.onSubmitOverride!(report);
       } else {
-        await formState.submitToSentry(context, report);
+        await formState.submit(context, report);
       }
       // Succès : fermer le sheet, afficher le snackbar dans le scaffold parent
       if (mounted) {

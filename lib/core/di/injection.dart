@@ -14,6 +14,7 @@ import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/core/services/external_url_launcher.dart';
 import 'package:dony/core/services/firebase_session_probe.dart';
 import 'package:dony/core/services/media_service.dart';
+import 'package:dony/core/services/screen_feedback_sender.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/app_update/data/datasources/app_update_remote_config_datasource.dart';
 import 'package:dony/features/app_update/data/services/app_update_service.dart';
@@ -578,6 +579,11 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerLazySingleton<IncidentReportRepository>(
     () => IncidentReportRepository(getIt<IncidentReportRemoteDatasource>()),
+  );
+  // Rapports du scarabée vers le backend (admin › Signalements), en plus de
+  // Sentry. Résolu à la demande par DonyFeedbackButton.
+  getIt.registerLazySingleton<ScreenFeedbackSender>(
+    () => ScreenFeedbackSender(getIt<IncidentReportRepository>()),
   );
   getIt.registerFactory<IncidentReportCubit>(
     () => IncidentReportCubit(

@@ -234,6 +234,8 @@ Exception : si un écran a plusieurs états visuels distincts qui valent la pein
 - `DonyAppBar` et `DonySliverAppBar` l'ajoutent **par défaut** en fin d'`actions` (`showFeedback: false` pour l'exclure : verrouillage, splash…). Un écran qui le place lui-même dans `actions` n'est pas doublé.
 - Un `AppBar` brut ou un header maison (onglets Recherche, Activités, Messages, Moi) doit le poser explicitement : `actions: const [DonyFeedbackButton()]`, en dernière position.
 - Tests : `test/core/design/widgets/dony_app_bar_feedback_test.dart` (présence par défaut) et `dony_feedback_button_test.dart` (pièces jointes via `pickImageOverride`, envoi via `onSubmitOverride(FeedbackReport)`).
+- **Deux destinations** : Sentry (message `screen_feedback: <route>` + User Feedback + pièces jointes) ET le backend, par `ScreenFeedbackSender` (`lib/core/services/screen_feedback_sender.dart`) : `POST /reports/photos` pour la capture automatique (PNG temporaire) et les captures du testeur, puis `POST /reports` cible `APP`, motif `SCREEN_BUG`, `screenRoute` (yadony-back #317). Le rapport apparaît dans l'admin › Signalements. L'envoi backend n'est **jamais bloquant** : hors ligne ou backend ancien, Sentry a déjà reçu le rapport et le testeur voit le succès.
+- **La route se lit au tap** sur le scarabée (`resolveRoute(outerContext)`), jamais depuis la feuille : elle vit sur le navigateur racine, hors de tout écran GoRouter, et rendait `unknown`.
 
 ### Custom events — règles
 
