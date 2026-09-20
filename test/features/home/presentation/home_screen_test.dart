@@ -2544,6 +2544,44 @@ void main() {
     );
   });
 
+  group('état vide au-dessus de la pastille « Carte »', () {
+    testWidgets(
+      'feuille plein écran, 0 trajet : l\'état vide réserve la zone des '
+      'contrôles flottants et son bouton reste au-dessus de « Carte »',
+      (tester) async {
+        await pumpHome(tester, tripResults: const [], otherModeCount: 0);
+        await ouvrirSheetEtSaisirCorridor(tester, 'Abidjan', 'Usangi');
+        expect(find.text('Aucun voyageur avec ces filtres'), findsOneWidget);
+
+        // Déplie la feuille en plein écran par l'indication de drag : la
+        // pastille « Carte » descend alors dans la feuille.
+        await tester.tap(find.textContaining('Tirer pour voir'));
+        await tester.pump(const Duration(milliseconds: 400));
+        await tester.pump(const Duration(milliseconds: 400));
+
+        // Même marge que les listes : l'état vide s'arrête au-dessus de la
+        // pastille et de la barre flottante (recette Redmi, bouton « Effacer
+        // les filtres » caché sous « Carte »).
+        final marge = tester.widget<SliverPadding>(
+          find
+              .ancestor(
+                of: find.byType(SliverFillRemaining),
+                matching: find.byType(SliverPadding),
+              )
+              .first,
+        );
+        expect(
+          marge.padding.resolve(TextDirection.ltr).bottom,
+          greaterThanOrEqualTo(96),
+        );
+
+        final bouton = tester.getRect(find.text('Effacer les filtres'));
+        final pastille = tester.getRect(find.text('Carte'));
+        expect(bouton.bottom, lessThan(pastille.top));
+      },
+    );
+  });
+
   group('découverte croisée — bouton "Effacer les filtres"', () {
     testWidgets(
       'filtres actifs, autre mode vide : le bouton est visible et efface '
