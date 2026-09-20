@@ -1230,6 +1230,7 @@ final appRouter = GoRouter(
       routes: [
         GoRoute(
           path: 'new',
+          name: '/profile/addresses/new',
           builder: (context, state) => BlocProvider(
             create: (_) =>
                 getIt<PickupAddressBloc>()..add(const PickupAddressLoaded()),
@@ -1238,6 +1239,7 @@ final appRouter = GoRouter(
         ),
         GoRoute(
           path: ':id',
+          name: '/profile/addresses/:id',
           builder: (context, state) => BlocProvider(
             create: (_) =>
                 getIt<PickupAddressBloc>()..add(const PickupAddressLoaded()),
@@ -1248,6 +1250,7 @@ final appRouter = GoRouter(
         ),
         GoRoute(
           path: 'delivery/new',
+          name: '/profile/addresses/delivery/new',
           builder: (context, state) => BlocProvider(
             create: (_) =>
                 getIt<DeliveryAddressBloc>()
@@ -1257,6 +1260,7 @@ final appRouter = GoRouter(
         ),
         GoRoute(
           path: 'delivery/:id',
+          name: '/profile/addresses/delivery/:id',
           builder: (context, state) => BlocProvider(
             create: (_) =>
                 getIt<DeliveryAddressBloc>()
@@ -1279,6 +1283,7 @@ final appRouter = GoRouter(
       routes: [
         GoRoute(
           path: 'new',
+          name: '/profile/recipients/new',
           builder: (context, state) {
             final extra = state.extra as Map<String, dynamic>?;
             return BlocProvider(
@@ -1293,6 +1298,7 @@ final appRouter = GoRouter(
         ),
         GoRoute(
           path: ':id',
+          name: '/profile/recipients/:id',
           builder: (context, state) => BlocProvider(
             create: (_) => getIt<RecipientBloc>()..add(const RecipientLoaded()),
             child: RecipientEditScreen(recipientId: state.pathParameters['id']),
@@ -1420,6 +1426,7 @@ final appRouter = GoRouter(
       routes: [
         GoRoute(
           path: 'security',
+          name: '/settings/security',
           builder: (context, state) => BlocProvider(
             create: (_) => getIt<PinStatusCubit>()..refresh(),
             child: const SecuritySettingsScreen(),
@@ -1427,12 +1434,14 @@ final appRouter = GoRouter(
           routes: [
             GoRoute(
               path: 'change-pin',
+              name: '/settings/security/change-pin',
               builder: (context, state) =>
                   ChangePinScreen(authService: getIt<LocalAuthService>()),
             ),
             // Première configuration : aucun code actuel à vérifier.
             GoRoute(
               path: 'create-pin',
+              name: '/settings/security/create-pin',
               builder: (context, state) => ChangePinScreen(
                 authService: getIt<LocalAuthService>(),
                 isCreation: true,
@@ -1440,6 +1449,7 @@ final appRouter = GoRouter(
             ),
             GoRoute(
               path: 'devices',
+              name: '/settings/security/devices',
               builder: (context, state) => BlocProvider(
                 create: (_) =>
                     getIt<ConnectedDevicesBloc>()
@@ -1451,6 +1461,7 @@ final appRouter = GoRouter(
         ),
         GoRoute(
           path: 'privacy',
+          name: '/settings/privacy',
           builder: (context, state) => BlocProvider(
             create: (_) =>
                 getIt<PrivacySettingsBloc>()
@@ -1460,6 +1471,7 @@ final appRouter = GoRouter(
           routes: [
             GoRoute(
               path: 'blocked-users',
+              name: '/settings/privacy/blocked-users',
               builder: (context, state) => BlocProvider(
                 create: (_) =>
                     getIt<BlockedUsersBloc>()
@@ -1471,6 +1483,7 @@ final appRouter = GoRouter(
         ),
         GoRoute(
           path: 'data',
+          name: '/settings/data',
           builder: (context, state) => MultiBlocProvider(
             providers: [
               BlocProvider(create: (_) => getIt<AccountDeletionBloc>()),
@@ -1481,6 +1494,7 @@ final appRouter = GoRouter(
         ),
         GoRoute(
           path: 'notifications',
+          name: '/settings/notifications',
           builder: (context, state) => BlocProvider(
             create: (_) => getIt<NotificationPrefsBloc>(),
             child: const NotificationSettingsScreen(),
@@ -1488,10 +1502,12 @@ final appRouter = GoRouter(
         ),
         GoRoute(
           path: 'preferences',
+          name: '/settings/preferences',
           builder: (context, state) => const BusinessPrefsScreen(),
         ),
         GoRoute(
           path: 'accessibility',
+          name: '/settings/accessibility',
           builder: (context, state) => BlocProvider.value(
             value: getIt<AccessibilityBloc>(),
             child: const AccessibilitySettingsScreen(),
@@ -1499,6 +1515,7 @@ final appRouter = GoRouter(
         ),
         GoRoute(
           path: 'diagnostics',
+          name: '/settings/diagnostics',
           builder: (context, state) => BlocProvider(
             create: (_) => getIt<DiagnosticsBloc>(),
             child: const DiagnosticsScreen(),
@@ -1506,6 +1523,7 @@ final appRouter = GoRouter(
         ),
         GoRoute(
           path: 'report-incident',
+          name: '/settings/report-incident',
           builder: (context, state) {
             final extra = state.extra as Map<String, dynamic>?;
             final targetType =
