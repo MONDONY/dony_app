@@ -1595,6 +1595,16 @@ class _MapSenderViewState extends State<_MapSenderView> {
     return '$resultats, $compatible avec $avecTrajets';
   }
 
+  /// Les états vides remplissent le reste de la feuille et se centrent. Comme
+  /// les listes, ils s'arrêtent au-dessus de la pastille « Carte » (feuille
+  /// plein écran) et de la barre flottante : sans cette marge, le bouton
+  /// « Effacer les filtres » passait sous la pastille sur un téléphone.
+  Widget _aboveFloatingControls(double bottomPad, Widget sliver) =>
+      SliverPadding(
+        padding: EdgeInsets.only(bottom: bottomPad + _kFloatingNavClearance),
+        sliver: sliver,
+      );
+
   Widget _buildSheet(
     BuildContext ctx,
     ScrollController scrollCtrl,
@@ -1798,41 +1808,47 @@ class _MapSenderViewState extends State<_MapSenderView> {
                       // résultat », qui laisserait croire que le corridor est
                       // vide. On propose un réessai explicite.
                       if (prState.status == SearchStatus.error) {
-                        return SliverFillRemaining(
-                          hasScrollBody: false,
-                          child: DonyEmptyState(
-                            type: DonyEmptyStateType.error,
-                            title: 'Connexion impossible',
-                            description:
-                                'Impossible de charger les demandes. Vérifie ta connexion puis réessaie.',
-                            mascotte: DonyMascotteType.erreurLegere,
-                            actionLabel: 'Réessayer',
-                            onAction: () => ctx
-                                .read<PackageRequestSearchBloc>()
-                                .add(const SearchRefresh()),
+                        return _aboveFloatingControls(
+                          bottomPad,
+                          SliverFillRemaining(
+                            hasScrollBody: false,
+                            child: DonyEmptyState(
+                              type: DonyEmptyStateType.error,
+                              title: 'Connexion impossible',
+                              description:
+                                  'Impossible de charger les demandes. Vérifie ta connexion puis réessaie.',
+                              mascotte: DonyMascotteType.erreurLegere,
+                              actionLabel: 'Réessayer',
+                              onAction: () => ctx
+                                  .read<PackageRequestSearchBloc>()
+                                  .add(const SearchRefresh()),
+                            ),
                           ),
                         );
                       }
                       final visibleResults = _visibleRequests(prState.results);
                       if (visibleResults.isEmpty) {
                         final hasFilters = _activeFilterCount > 0;
-                        return SliverFillRemaining(
-                          hasScrollBody: false,
-                          // L'autre mode a des résultats sur les mêmes filtres :
-                          // la bascule est proposée sous le message.
-                          child: _emptyWithCrossDiscovery(
-                            DonyEmptyState(
-                              title: hasFilters
-                                  ? 'Aucun colis avec ces filtres'
-                                  : 'Demandes bientôt disponibles',
-                              description: hasFilters
-                                  ? 'Modifie ou supprime tes filtres pour voir plus de demandes.'
-                                  : 'Tu pourras bientôt consulter les demandes d\'envoi postées par les expéditeurs.',
-                              mascotte: DonyMascotteType.aucunResultat,
-                              actionLabel: hasFilters
-                                  ? 'Effacer les filtres'
-                                  : null,
-                              onAction: hasFilters ? _resetFilters : null,
+                        return _aboveFloatingControls(
+                          bottomPad,
+                          SliverFillRemaining(
+                            hasScrollBody: false,
+                            // L'autre mode a des résultats sur les mêmes filtres :
+                            // la bascule est proposée sous le message.
+                            child: _emptyWithCrossDiscovery(
+                              DonyEmptyState(
+                                title: hasFilters
+                                    ? 'Aucun colis avec ces filtres'
+                                    : 'Demandes bientôt disponibles',
+                                description: hasFilters
+                                    ? 'Modifie ou supprime tes filtres pour voir plus de demandes.'
+                                    : 'Tu pourras bientôt consulter les demandes d\'envoi postées par les expéditeurs.',
+                                mascotte: DonyMascotteType.aucunResultat,
+                                actionLabel: hasFilters
+                                    ? 'Effacer les filtres'
+                                    : null,
+                                onAction: hasFilters ? _resetFilters : null,
+                              ),
                             ),
                           ),
                         );
@@ -1905,40 +1921,47 @@ class _MapSenderViewState extends State<_MapSenderView> {
                   )
                 // Backend injoignable : « aucun voyageur » serait un mensonge.
                 else if (tripsFailed && count == 0)
-                  SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: DonyEmptyState(
-                      type: DonyEmptyStateType.error,
-                      title: 'Connexion impossible',
-                      description:
-                          'Impossible de charger les trajets. Vérifie ta connexion puis réessaie.',
-                      mascotte: DonyMascotteType.erreurLegere,
-                      actionLabel: 'Réessayer',
-                      onAction: _dispatchSearch,
+                  _aboveFloatingControls(
+                    bottomPad,
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: DonyEmptyState(
+                        type: DonyEmptyStateType.error,
+                        title: 'Connexion impossible',
+                        description:
+                            'Impossible de charger les trajets. Vérifie ta connexion puis réessaie.',
+                        mascotte: DonyMascotteType.erreurLegere,
+                        actionLabel: 'Réessayer',
+                        onAction: _dispatchSearch,
+                      ),
                     ),
                   )
                 else if (count == 0)
-                  SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: _emptyWithCrossDiscovery(
-                      DonyEmptyState(
-                        title: _isNearMeActive
-                            ? 'Aucun voyageur à proximité'
-                            : _activeFilterCount > 0
-                            ? 'Aucun voyageur avec ces filtres'
-                            : 'Aucun voyageur sur ce corridor',
-                        description: _isNearMeActive
-                            ? 'Élargis ta zone ou désactive "Près de moi"'
-                            : _activeFilterCount > 0
-                            ? 'Modifie tes filtres pour voir plus de voyageurs.'
-                            : 'De nouveaux trajets sont publiés chaque jour. Reviens bientôt.',
-                        mascotte: DonyMascotteType.aucunResultat,
-                        actionLabel: !_isNearMeActive && _activeFilterCount > 0
-                            ? 'Effacer les filtres'
-                            : null,
-                        onAction: !_isNearMeActive && _activeFilterCount > 0
-                            ? _resetFilters
-                            : null,
+                  _aboveFloatingControls(
+                    bottomPad,
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: _emptyWithCrossDiscovery(
+                        DonyEmptyState(
+                          title: _isNearMeActive
+                              ? 'Aucun voyageur à proximité'
+                              : _activeFilterCount > 0
+                              ? 'Aucun voyageur avec ces filtres'
+                              : 'Aucun voyageur sur ce corridor',
+                          description: _isNearMeActive
+                              ? 'Élargis ta zone ou désactive "Près de moi"'
+                              : _activeFilterCount > 0
+                              ? 'Modifie tes filtres pour voir plus de voyageurs.'
+                              : 'De nouveaux trajets sont publiés chaque jour. Reviens bientôt.',
+                          mascotte: DonyMascotteType.aucunResultat,
+                          actionLabel:
+                              !_isNearMeActive && _activeFilterCount > 0
+                              ? 'Effacer les filtres'
+                              : null,
+                          onAction: !_isNearMeActive && _activeFilterCount > 0
+                              ? _resetFilters
+                              : null,
+                        ),
                       ),
                     ),
                   )
