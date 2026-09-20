@@ -25,6 +25,8 @@ import 'package:dony/features/home/domain/home_search_filters.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
 import 'package:dony/features/home/presentation/home_screen.dart';
 import 'package:dony/features/home/presentation/screens/search_composer_screen.dart';
+import 'package:dony/features/home/presentation/widgets/home_filter_chips_row.dart';
+import 'package:dony/features/home/presentation/widgets/search_mode_selector.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
@@ -481,6 +483,16 @@ Widget _buildHome({
 /// [summaryState] remplace l'état du résumé d'activité (par défaut : chargé
 /// avec [activeTrips]). Sert au cas « résumé en échec », où le nombre de
 /// trajets est INCONNU et non nul.
+/// Titre de l'en-tête de liste (« 4 voyageurs pour Lyon → Bamako »). Il porte
+/// une clé stable : les tests ne s'accrochent pas à un texte en capitales qui
+/// change avec le mode, le corridor et le nombre.
+String titreListe(WidgetTester tester) =>
+    tester.widget<Text>(find.byKey(const Key('results-header-title'))).data!;
+
+/// Sous-titre de l'en-tête de liste (« Ils peuvent emporter ton colis »).
+String sousTitreListe(WidgetTester tester) =>
+    tester.widget<Text>(find.byKey(const Key('results-header-subtitle'))).data!;
+
 Future<void> pumpHome(
   WidgetTester tester, {
   bool isTraveler = true,
@@ -1116,9 +1128,11 @@ void main() {
         final bug = tester.getCenter(
           find.byKey(const Key('feedback-sheet-collapsed')),
         );
-        // « Trier » n'existe qu'avec des résultats : on se cale sur le libellé
-        // de la ligne, toujours présent en mode Trajets.
-        final header = tester.getCenter(find.text('VOYAGEURS DISPONIBLES'));
+        // « Trier » n'existe qu'avec des résultats : on se cale sur le titre
+        // de la ligne, toujours présent.
+        final header = tester.getCenter(
+          find.byKey(const Key('results-header-title')),
+        );
         expect((bug.dy - header.dy).abs(), lessThan(kDonyMinTapTarget));
         expect(bug.dx, greaterThan(header.dx));
 
@@ -1169,19 +1183,19 @@ void main() {
         await pumpHome(tester, tripResults: [_makeAnn()]);
 
         expect(
-          find.textContaining('Tirer pour voir les 1 résultat'),
+          find.textContaining('Tirer pour voir le voyageur'),
           findsOneWidget,
         );
 
-        await tester.tap(find.text('Colis'));
+        await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
         await tester.pumpAndSettle();
 
         expect(
-          find.textContaining('Tirer pour voir les 3 résultats'),
+          find.textContaining('Tirer pour voir les 3 colis'),
           findsOneWidget,
         );
         expect(
-          find.textContaining('Tirer pour voir les 1 résultat'),
+          find.textContaining('Tirer pour voir le voyageur'),
           findsNothing,
         );
       },
@@ -1203,15 +1217,15 @@ void main() {
         );
 
         await pumpHome(tester, tripResults: [_makeAnn()]);
-        await tester.tap(find.text('Colis'));
+        await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
         await tester.pumpAndSettle();
 
         expect(
-          find.textContaining('Tirer pour voir les 2 résultats'),
+          find.textContaining('Tirer pour voir les 2 colis'),
           findsOneWidget,
         );
         expect(
-          find.textContaining('Tirer pour voir les 3 résultats'),
+          find.textContaining('Tirer pour voir les 3 colis'),
           findsNothing,
         );
       },
@@ -1339,7 +1353,7 @@ void main() {
 
         // La recherche suit le mode : « près de moi » ne touche les demandes
         // que si c'est bien la liste affichée.
-        await tester.tap(find.text('Colis'));
+        await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
         await tester.pumpAndSettle();
 
         await tester.tap(find.byKey(const Key('near-me-fab')));
@@ -1428,7 +1442,7 @@ void main() {
         );
         await tester.pump(const Duration(milliseconds: 1000));
 
-        await tester.tap(find.text('Colis'));
+        await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
         await tester.pumpAndSettle();
 
         await tester.tap(find.text('🔥 Urgent').first);
@@ -1524,12 +1538,60 @@ void main() {
     );
   });
 
+  group('sélecteur de mode', () {
+    testWidgets(
+      'sur sa propre ligne sous la barre de recherche, hors de la rangée de '
+      'chips',
+      (tester) async {
+        await pumpHome(tester);
+
+        // Rendu dans les chips, il se lisait comme un filtre de plus.
+        expect(find.byType(SearchModeSelector), findsOneWidget);
+        expect(
+          find.descendant(
+            of: find.byType(HomeFilterChipsRow),
+            matching: find.byType(SearchModeSelector),
+          ),
+          findsNothing,
+        );
+
+        final barre = tester.getBottomLeft(
+          find.byKey(const Key('corridor-bar')),
+        );
+        final selecteur = tester.getRect(find.byType(SearchModeSelector));
+        final chips = tester.getTopLeft(find.byType(HomeFilterChipsRow));
+        expect(selecteur.top, greaterThanOrEqualTo(barre.dy));
+        expect(selecteur.bottom, lessThanOrEqualTo(chips.dy));
+      },
+    );
+
+    testWidgets('feuille dépliée : le sélecteur est dans son en-tête', (
+      tester,
+    ) async {
+      await pumpHome(tester, tripResults: [_makeAnn()]);
+
+      await tester.tap(find.textContaining('Tirer pour voir'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('home-sheet')),
+          matching: find.byType(SearchModeSelector),
+        ),
+        findsOneWidget,
+      );
+    });
+  });
+
   group('modes de recherche', () {
     testWidgets('ouvre en mode Trajets', (tester) async {
       await pumpHome(tester);
 
-      expect(find.text('Trajets'), findsOneWidget);
-      expect(find.text('VOYAGEURS DISPONIBLES'), findsOneWidget);
+      expect(
+        find.byKey(const Key('search_mode_segment_trips')),
+        findsOneWidget,
+      );
+      expect(titreListe(tester), contains('voyageur'));
     });
 
     testWidgets(
@@ -1545,8 +1607,11 @@ void main() {
 
         await pumpHome(tester, authState: const AuthGuestSessionReady());
 
-        expect(find.text('Trajets'), findsOneWidget);
-        expect(find.text('VOYAGEURS DISPONIBLES'), findsOneWidget);
+        expect(
+          find.byKey(const Key('search_mode_segment_trips')),
+          findsOneWidget,
+        );
+        expect(titreListe(tester), contains('voyageur'));
       },
     );
 
@@ -1582,7 +1647,10 @@ void main() {
       // Anciennement conditionné à isTraveler. Le rôle voyageur est universel.
       await pumpHome(tester, isTraveler: false);
 
-      expect(find.text('Colis'), findsOneWidget);
+      expect(
+        find.byKey(const Key('search_mode_segment_colis')),
+        findsOneWidget,
+      );
     });
 
     testWidgets('basculer sur Colis change le header de la liste', (
@@ -1590,11 +1658,11 @@ void main() {
     ) async {
       await pumpHome(tester);
 
-      await tester.tap(find.text('Colis'));
+      await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
       await tester.pumpAndSettle();
 
-      expect(find.text("DEMANDES D'ENVOI"), findsOneWidget);
-      expect(find.text('VOYAGEURS DISPONIBLES'), findsNothing);
+      expect(titreListe(tester), contains('colis à transporter'));
+      expect(titreListe(tester), isNot(contains('voyageur')));
     });
 
     testWidgets('le corridor survit à la bascule de mode', (tester) async {
@@ -1602,7 +1670,7 @@ void main() {
       // Poser Paris → Dakar via la sheet de filtres en mode trajets.
       await ouvrirSheetEtSaisirCorridor(tester, 'Paris', 'Dakar');
 
-      await tester.tap(find.text('Colis'));
+      await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
       await tester.pumpAndSettle();
 
       expect(find.text('Paris → Dakar'), findsOneWidget);
@@ -1639,7 +1707,7 @@ void main() {
       await tester.tap(find.text('Appliquer'));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Colis'));
+      await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
       await tester.pumpAndSettle();
 
       final now = DateTime.now();
@@ -1678,7 +1746,7 @@ void main() {
 
       await pumpHome(tester);
 
-      await tester.tap(find.text('Colis'));
+      await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
       await tester.pumpAndSettle();
 
       verify(
@@ -1692,7 +1760,7 @@ void main() {
       await pumpHome(tester);
       expect(find.text('Kilo Pro'), findsOneWidget);
 
-      await tester.tap(find.text('Colis'));
+      await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
       await tester.pumpAndSettle();
 
       expect(find.text('Kilo Pro'), findsNothing);
@@ -1752,7 +1820,7 @@ void main() {
         await pumpHome(tester);
 
         // Mode courant Colis → le compteur annoncé est celui des trajets.
-        await tester.tap(find.text('Colis'));
+        await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
         await tester.pumpAndSettle();
 
         await ouvrirSheetEtSaisirCorridor(tester, 'Paris', 'Dakar');
@@ -1787,7 +1855,7 @@ void main() {
       (tester) async {
         await pumpHome(tester);
 
-        await tester.tap(find.text('Colis'));
+        await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
         await tester.pumpAndSettle();
 
         // Pastille inactive : le filtre ne doit pas être envoyé du tout.
@@ -1860,7 +1928,7 @@ void main() {
 
     testWidgets('sans trajet actif : la pastille est grisée', (tester) async {
       await pumpHome(tester, activeTrips: 0);
-      await tester.tap(find.text('Colis'));
+      await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
       await tester.pumpAndSettle();
       await ouvrirPastille(tester);
 
@@ -1871,7 +1939,7 @@ void main() {
       tester,
     ) async {
       await pumpHome(tester, activeTrips: 3);
-      await tester.tap(find.text('Colis'));
+      await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
       await tester.pumpAndSettle();
       await ouvrirPastille(tester);
 
@@ -1882,7 +1950,7 @@ void main() {
       'sans trajet actif : le tap explique et ne filtre pas la recherche',
       (tester) async {
         await pumpHome(tester, activeTrips: 0);
-        await tester.tap(find.text('Colis'));
+        await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
         await tester.pumpAndSettle();
         await ouvrirPastille(tester);
 
@@ -1908,7 +1976,7 @@ void main() {
       tester,
     ) async {
       await pumpHome(tester, activeTrips: 0);
-      await tester.tap(find.text('Colis'));
+      await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
       await tester.pumpAndSettle();
       await ouvrirPastille(tester);
       await tester.tap(find.byKey(const Key('chip-matching-my-trips')));
@@ -1938,7 +2006,7 @@ void main() {
       'résumé en échec : la pastille reste utilisable, aucune contre-vérité',
       (tester) async {
         await pumpHome(tester, summaryState: const TripsSummaryState.hidden());
-        await tester.tap(find.text('Colis'));
+        await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
         await tester.pumpAndSettle();
         await ouvrirPastille(tester);
 
@@ -1986,10 +2054,10 @@ void main() {
       );
       await pumpHome(tester, summaryState: const TripsSummaryState.hidden());
 
-      await tester.tap(find.text('Colis'));
+      await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
       await tester.pumpAndSettle();
 
-      expect(find.text('2 résultats'), findsOneWidget);
+      expect(titreListe(tester), '2 colis compatibles');
       expect(find.textContaining('0 trajet'), findsNothing);
     });
 
@@ -1997,7 +2065,7 @@ void main() {
       'activer la pastille trace la bascule et le nombre de trajets',
       (tester) async {
         await pumpHome(tester, activeTrips: 3);
-        await tester.tap(find.text('Colis'));
+        await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
         await tester.pumpAndSettle();
         await ouvrirPastille(tester);
 
@@ -2019,7 +2087,7 @@ void main() {
       tester,
     ) async {
       await pumpHome(tester, activeTrips: 3);
-      await tester.tap(find.text('Colis'));
+      await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
       await tester.pumpAndSettle();
 
       await tester.tap(find.byKey(const Key('corridor-bar')));
@@ -2045,15 +2113,12 @@ void main() {
       );
       await pumpHome(tester, activeTrips: 3);
 
-      await tester.tap(find.text('Colis'));
+      await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
       await tester.pumpAndSettle();
 
-      expect(find.text('COLIS COMPATIBLES'), findsOneWidget);
-      expect(find.text("DEMANDES D'ENVOI"), findsNothing);
-      expect(
-        find.text('2 résultats, compatibles avec tes 3 trajets'),
-        findsOneWidget,
-      );
+      expect(titreListe(tester), '2 colis compatibles');
+      expect(titreListe(tester), isNot(contains('à transporter')));
+      expect(find.text('Avec tes 3 trajets actifs'), findsOneWidget);
     });
 
     testWidgets('un seul résultat et un seul trajet : accord au singulier', (
@@ -2066,13 +2131,11 @@ void main() {
       );
       await pumpHome(tester, activeTrips: 1);
 
-      await tester.tap(find.text('Colis'));
+      await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
       await tester.pumpAndSettle();
 
-      expect(
-        find.text('1 résultat, compatible avec ton trajet'),
-        findsOneWidget,
-      );
+      expect(titreListe(tester), '1 colis compatible');
+      expect(sousTitreListe(tester), 'Avec ton trajet actif');
     });
 
     testWidgets('filtre inactif : l\'en-tête reste celui des demandes', (
@@ -2084,11 +2147,11 @@ void main() {
       );
       await pumpHome(tester, activeTrips: 3);
 
-      await tester.tap(find.text('Colis'));
+      await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
       await tester.pumpAndSettle();
 
-      expect(find.text("DEMANDES D'ENVOI"), findsOneWidget);
-      expect(find.text('COLIS COMPATIBLES'), findsNothing);
+      expect(titreListe(tester), contains('colis à transporter'));
+      expect(titreListe(tester), isNot(contains('compatible')));
     });
   });
 
@@ -2106,11 +2169,11 @@ void main() {
     ) async {
       await pumpHome(tester, isTraveler: false);
 
-      await tester.tap(find.text('Colis'));
+      await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
       await tester.pumpAndSettle();
 
       expect(find.text('Ouvrir les réglages'), findsNothing);
-      expect(find.text("DEMANDES D'ENVOI"), findsOneWidget);
+      expect(titreListe(tester), contains('colis à transporter'));
     });
 
     MockPackageRequestRepository enregistrerCompteurColis() {
@@ -2191,7 +2254,7 @@ void main() {
       );
       await tester.pump(const Duration(milliseconds: 1000));
 
-      await tester.tap(find.text('Colis'));
+      await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('corridor-bar')));
       await tester.pumpAndSettle();
@@ -2231,7 +2294,7 @@ void main() {
         );
         await tester.pump(const Duration(milliseconds: 1000));
 
-        await tester.tap(find.text('Colis'));
+        await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
         await tester.pumpAndSettle();
         await tester.tap(find.byKey(const Key('corridor-bar')));
         await tester.pumpAndSettle();
@@ -2356,7 +2419,7 @@ void main() {
       await tester.tap(find.byKey(const Key('cross-discovery')));
       await tester.pumpAndSettle();
 
-      expect(find.text("DEMANDES D'ENVOI"), findsOneWidget);
+      expect(titreListe(tester), contains('colis à transporter'));
       expect(find.text('Lyon → Bamako'), findsOneWidget);
 
       // L'étiquette affichée ne prouve que le rendu. La garantie porte sur le
@@ -2499,7 +2562,7 @@ void main() {
 
       await pumpHome(tester);
 
-      await tester.tap(find.text('Colis'));
+      await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
       await tester.pumpAndSettle();
       await ouvrirSheetEtSaisirCorridor(tester, 'Lyon', 'Bamako');
 
@@ -2535,7 +2598,7 @@ void main() {
 
         await pumpHome(tester);
 
-        await tester.tap(find.text('Colis'));
+        await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
         await tester.pumpAndSettle();
         await ouvrirSheetEtSaisirCorridor(tester, 'Lyon', 'Bamako');
 
@@ -2615,7 +2678,7 @@ void main() {
 
         // Mode Colis : autre mode (Trajets) à 0 via le mock ci-dessus →
         // aucune tuile de découverte croisée, donc rien ne masque le bouton.
-        await tester.tap(find.text('Colis'));
+        await tester.tap(find.byKey(const Key('search_mode_segment_colis')));
         await tester.pumpAndSettle();
         await ouvrirSheetEtSaisirCorridor(tester, 'Lyon', 'Bamako');
 

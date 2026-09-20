@@ -21,6 +21,7 @@ import 'package:dony/features/home/domain/search_mode.dart';
 import 'package:dony/features/home/presentation/widgets/evergreen_guidance_carousel.dart';
 import 'package:dony/features/home/presentation/widgets/home_filter_chips_row.dart';
 import 'package:dony/features/home/presentation/widgets/no_active_trip_sheet.dart';
+import 'package:dony/features/home/presentation/widgets/search_mode_selector.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
@@ -304,12 +305,29 @@ class _MapSenderViewState extends State<_MapSenderView> {
     );
   }
 
+  /// « Tirer pour voir les 4 voyageurs » : la poignée nomme ce qu'il y a
+  /// dessous, dans les mots du sélecteur de mode, jamais « résultats ».
+  String _pullUpLabel(int count) {
+    if (count == 0) {
+      return 'Tirer pour voir la liste';
+    }
+    if (_mode.isTrips) {
+      return count == 1
+          ? 'Tirer pour voir le voyageur'
+          : 'Tirer pour voir les $count voyageurs';
+    }
+    return count == 1
+        ? 'Tirer pour voir le colis'
+        : 'Tirer pour voir les $count colis';
+  }
+
   /// Indication de drag dans le header du sheet selon l'état : peek → « tirer
-  /// pour voir les N résultats », plein écran → « tirer pour voir la carte ».
+  /// pour voir les N voyageurs/colis », plein écran → « tirer pour voir la
+  /// carte ».
   Widget _pullHint(ColorScheme cs, {required bool down, required int count}) {
     final text = down
         ? 'Tirer vers le bas pour voir la carte'
-        : 'Tirer pour voir les $count résultat${count > 1 ? 's' : ''}';
+        : _pullUpLabel(count);
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () {
@@ -1208,7 +1226,9 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                     const _NotificationBell(),
                                   ],
                                 ),
-                                const SizedBox(height: DonySpacing.xs),
+                                const SizedBox(height: DonySpacing.sm),
+                                _modeSelector(),
+                                const SizedBox(height: DonySpacing.sm),
                                 _filterChipsRow(),
                               ],
                             ),
@@ -1492,12 +1512,24 @@ class _MapSenderViewState extends State<_MapSenderView> {
   /// Une seule rangée de chips, pilotée par le mode. Le sélecteur de mode en
   /// est le premier enfant : il défile avec elle plutôt que d'occuper une
   /// bande propre au-dessus de la carte.
+  /// Sélecteur d'intention, sur sa propre ligne sous la barre de recherche,
+  /// à l'écart des chips de filtre. Clé STABLE : elle ne doit pas encoder la
+  /// présence du compteur, sinon l'arrivée du nombre démonte le sélecteur et
+  /// emporte l'animation de 200 ms du segment actif. La clé du compteur vit
+  /// dans `SearchModeSelector`, sur le compteur lui-même.
+  Widget _modeSelector() {
+    return SearchModeSelector(
+      key: const Key('search-mode-selector'),
+      mode: _mode,
+      onChanged: _onModeChanged,
+      otherModeCount: _otherModeCount,
+    );
+  }
+
   Widget _filterChipsRow() {
     return HomeFilterChipsRow(
       mode: _mode,
       filters: _filters,
-      otherModeCount: _otherModeCount,
-      onModeChanged: _onModeChanged,
       onUrgentToggle: _onUrgentToggle,
       onDateTap: _showDatePresetSheet,
       onDateClear: () => _onFiltersChanged(
@@ -1582,17 +1614,64 @@ class _MapSenderViewState extends State<_MapSenderView> {
   ///
   /// [trips] à `null` = nombre de trajets actifs inconnu : on annonce les
   /// résultats sans inventer un « 0 trajet actif » que rien ne prouve.
-  String _matchingSubtitle(PackageRequestSearchState prState, int? trips) {
-    final n = _visibleRequests(prState.results).length;
-    final resultats = '$n résultat${n > 1 ? 's' : ''}';
-    if (trips == null) {
-      return resultats;
+  /// Titre de la liste : le nombre, ce que la liste contient et le corridor.
+  /// Il répète l'intention du sélecteur de mode (« voyageurs » / « colis à
+  /// transporter ») pour que le contenu de la liste ne soit jamais à deviner.
+  String _listTitle({
+    required int trips,
+    required int parcels,
+    required bool matching,
+  }) {
+    if (_mode.isTrips) {
+      final voyageurs = '$trips voyageur${trips > 1 ? 's' : ''}';
+      if (_isNearMeActive) {
+        return '$voyageurs à proximité';
+      }
+      return '$voyageurs $_corridorSuffix';
     }
-    // « compatible » s'accorde avec le nombre de résultats, « trajet » avec le
-    // nombre de trajets : les deux varient indépendamment.
-    final compatible = 'compatible${n > 1 ? 's' : ''}';
-    final avecTrajets = trips > 1 ? 'tes $trips trajets' : 'ton trajet';
-    return '$resultats, $compatible avec $avecTrajets';
+    if (matching) {
+      return '$parcels colis compatible${parcels > 1 ? 's' : ''}';
+    }
+    return '$parcels colis à transporter $_corridorSuffix';
+  }
+
+  /// Sous-titre de la liste : ce que l'utilisateur peut en faire, ou pourquoi
+  /// elle est vide. En mode « Pour mes trajets », l'accord porte sur le
+  /// nombre de trajets actifs, connu ou non (voir `knownActiveTrips`).
+  String _listSubtitle({
+    required int trips,
+    required int parcels,
+    required bool matching,
+    required int? activeTrips,
+  }) {
+    if (_mode.isTrips) {
+      return trips == 0
+          ? 'Personne ne propose ce trajet pour l\'instant'
+          : 'Ils peuvent emporter ton colis';
+    }
+    if (matching) {
+      if (activeTrips == null) {
+        return 'Avec tes trajets actifs';
+      }
+      return activeTrips > 1
+          ? 'Avec tes $activeTrips trajets actifs'
+          : 'Avec ton trajet actif';
+    }
+    return parcels == 0
+        ? 'Aucune demande d\'envoi pour l\'instant'
+        : 'Tu peux les emporter sur ton trajet';
+  }
+
+  /// « pour Abidjan → Paris » quand les deux villes sont posées, sinon le
+  /// libellé de corridor tel quel (« Départ de Lyon », « Tous les corridors »)
+  /// derrière un point médian.
+  String get _corridorSuffix {
+    final dep = _filters.departureCity;
+    final arr = _filters.arrivalCity;
+    if (dep != null && arr != null) {
+      return 'pour $dep → $arr';
+    }
+    return '· $_corridorLabel';
   }
 
   /// Les états vides remplissent le reste de la feuille et se centrent. Comme
@@ -1685,6 +1764,14 @@ class _MapSenderViewState extends State<_MapSenderView> {
                 right: DonySpacing.lg,
                 bottom: DonySpacing.sm,
               ),
+              child: _modeSelector(),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(
+                left: DonySpacing.lg,
+                right: DonySpacing.lg,
+                bottom: DonySpacing.sm,
+              ),
               child: _filterChipsRow(),
             ),
           ],
@@ -1712,31 +1799,40 @@ class _MapSenderViewState extends State<_MapSenderView> {
                             final matching = prState.matchingMyTrips == true;
                             // Inconnu reste inconnu : voir `knownActiveTrips`.
                             final trips = summaryState.knownActiveTrips;
+                            final parcels = _visibleRequests(
+                              prState.results,
+                            ).length;
                             return Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  !_mode.isParcels
-                                      ? 'VOYAGEURS DISPONIBLES'
-                                      : matching
-                                      ? 'COLIS COMPATIBLES'
-                                      : 'DEMANDES D\'ENVOI',
-                                  style: tt.labelSmall?.copyWith(
-                                    color: cs.onSurfaceVariant,
-                                    letterSpacing: 0.8,
+                                  key: const Key('results-header-title'),
+                                  _listTitle(
+                                    trips: count,
+                                    parcels: parcels,
+                                    matching: matching,
+                                  ),
+                                  style: tt.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w700,
                                   ),
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  !_mode.isParcels
-                                      ? (_isNearMeActive
-                                            ? '$count voyageur${count > 1 ? 's' : ''} à proximité'
-                                            : '$count résultat${count > 1 ? 's' : ''} · $_corridorLabel')
-                                      : matching
-                                      ? _matchingSubtitle(prState, trips)
-                                      : 'Demandes · $_corridorLabel',
-                                  style: tt.titleSmall?.copyWith(
-                                    fontWeight: FontWeight.w700,
+                                  key: const Key('results-header-subtitle'),
+                                  _listSubtitle(
+                                    trips: count,
+                                    parcels: parcels,
+                                    matching: matching,
+                                    activeTrips: trips,
+                                  ),
+                                  // Une ligne : la feuille repliée a une
+                                  // hauteur fixe, un sous-titre qui passerait
+                                  // sur deux lignes à 200 % de taille de texte
+                                  // ferait déborder sa colonne.
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: tt.labelSmall?.copyWith(
+                                    color: cs.onSurfaceVariant,
                                   ),
                                 ),
                               ],

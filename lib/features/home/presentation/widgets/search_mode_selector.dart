@@ -4,12 +4,17 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/home/domain/search_mode.dart';
 import 'package:flutter/material.dart';
 
-/// Sélecteur de mode de la recherche : deux états exclusifs, un toujours actif.
+/// Sélecteur de mode de la recherche : deux intentions exclusives, une
+/// toujours active.
 ///
-/// Premier élément de la rangée de chips, qui défile avec elle. Le compteur
-/// [otherModeCount] renseigne sur l'autre mode sans occuper de surface propre ;
-/// l'appelant ne le passe que lorsqu'il porte une information, c'est-à-dire
-/// quand un filtre commun est posé.
+/// Contrôle segmenté pleine largeur, posé sous la barre de recherche et à
+/// l'écart des chips de filtre. Les testeurs lisaient « Trajets » / « Colis »,
+/// dessinés comme les chips voisines, comme deux filtres de plus et non comme
+/// l'interrupteur qui change ce que la liste contient. Chaque segment nomme
+/// donc l'intention (« J'envoie un colis », « Je voyage ») et dit en sous-titre
+/// ce que la liste montrera. Le compteur [otherModeCount] s'inscrit dans le
+/// sous-titre du segment inactif ; l'appelant ne le passe que lorsqu'il porte
+/// une information, c'est-à-dire quand un filtre commun est posé.
 class SearchModeSelector extends StatelessWidget {
   const SearchModeSelector({
     super.key,
@@ -22,18 +27,38 @@ class SearchModeSelector extends StatelessWidget {
   final ValueChanged<SearchMode> onChanged;
   final int? otherModeCount;
 
+  static const String tripsTitle = 'J\'envoie un colis';
+  static const String parcelsTitle = 'Je voyage';
+
+  /// Ce que la liste montre dans ce mode ; sur le segment inactif, avec le
+  /// nombre quand il est connu et non nul.
+  String _subtitle(SearchMode segment) {
+    final n = segment == mode ? null : otherModeCount;
+    final withCount = n != null && n > 0;
+    return switch (segment) {
+      SearchMode.trips =>
+        withCount
+            ? '$n voyageur${n > 1 ? 's' : ''} disponible${n > 1 ? 's' : ''}'
+            : 'Voyageurs disponibles',
+      SearchMode.parcels =>
+        withCount ? '$n colis à transporter' : 'Colis à transporter',
+    };
+  }
+
+  bool _countShown(SearchMode segment) =>
+      segment != mode && (otherModeCount ?? 0) > 0;
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return ClipRRect(
-      borderRadius: BorderRadius.circular(DonyRadius.full),
+      borderRadius: BorderRadius.circular(DonyRadius.card),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
-          height: 44,
           decoration: BoxDecoration(
-            color: cs.surface.withValues(alpha: 0.80),
-            borderRadius: BorderRadius.circular(DonyRadius.full),
+            color: cs.surfaceContainerHighest.withValues(alpha: 0.88),
+            borderRadius: BorderRadius.circular(DonyRadius.card),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.10),
@@ -42,29 +67,39 @@ class SearchModeSelector extends StatelessWidget {
               ),
             ],
           ),
-          padding: const EdgeInsets.all(3),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _Segment(
-                key: const Key('search_mode_segment_trips'),
-                label: 'Trajets',
-                emoji: '✈️',
-                isActive: mode.isTrips,
-                badge: mode.isTrips ? null : otherModeCount,
-                onTap: () => mode.isTrips ? null : onChanged(SearchMode.trips),
-              ),
-              _Segment(
-                key: const Key('search_mode_segment_colis'),
-                label: 'Colis',
-                emoji: '📦',
-                isActive: mode.isParcels,
-                badge: mode.isParcels ? null : otherModeCount,
-                onTap: () =>
-                    mode.isParcels ? null : onChanged(SearchMode.parcels),
-              ),
-            ],
+          padding: const EdgeInsets.all(DonySpacing.xs),
+          // Les deux segments prennent la même hauteur (celle du plus haut)
+          // même dans un parent sans hauteur bornée, comme le bandeau
+          // défilant au-dessus de la carte.
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: _Segment(
+                    key: const Key('search_mode_segment_trips'),
+                    title: tripsTitle,
+                    subtitle: _subtitle(SearchMode.trips),
+                    countShown: _countShown(SearchMode.trips),
+                    isActive: mode.isTrips,
+                    onTap: () =>
+                        mode.isTrips ? null : onChanged(SearchMode.trips),
+                  ),
+                ),
+                const SizedBox(width: DonySpacing.xs),
+                Expanded(
+                  child: _Segment(
+                    key: const Key('search_mode_segment_colis'),
+                    title: parcelsTitle,
+                    subtitle: _subtitle(SearchMode.parcels),
+                    countShown: _countShown(SearchMode.parcels),
+                    isActive: mode.isParcels,
+                    onTap: () =>
+                        mode.isParcels ? null : onChanged(SearchMode.parcels),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -75,79 +110,83 @@ class SearchModeSelector extends StatelessWidget {
 class _Segment extends StatelessWidget {
   const _Segment({
     super.key,
-    required this.label,
-    required this.emoji,
+    required this.title,
+    required this.subtitle,
+    required this.countShown,
     required this.isActive,
     required this.onTap,
-    this.badge,
   });
 
-  final String label;
-  final String emoji;
+  final String title;
+  final String subtitle;
+
+  /// Vrai quand le sous-titre porte le compteur de l'autre mode.
+  final bool countShown;
   final bool isActive;
   final VoidCallback onTap;
-  final int? badge;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final showBadge = badge != null && badge! > 0;
     return Semantics(
       button: true,
       selected: isActive,
-      label: '$label${showBadge ? ', $badge résultats' : ''}',
+      label: '$title, $subtitle',
       excludeSemantics: true,
       child: GestureDetector(
         onTap: onTap,
+        behavior: HitTestBehavior.opaque,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeOutCubic,
+          constraints: const BoxConstraints(minHeight: kDonyMinTapTarget),
           padding: const EdgeInsets.symmetric(
-            horizontal: DonySpacing.md,
+            horizontal: DonySpacing.sm,
             vertical: DonySpacing.xs,
           ),
           decoration: BoxDecoration(
-            color: isActive ? cs.primary : Colors.transparent,
-            borderRadius: BorderRadius.circular(DonyRadius.full),
+            color: isActive ? cs.surface : Colors.transparent,
+            borderRadius: BorderRadius.circular(DonyRadius.md),
+            boxShadow: isActive
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.08),
+                      blurRadius: 4,
+                      offset: const Offset(0, 1),
+                    ),
+                  ]
+                : const [],
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(emoji, style: const TextStyle(fontSize: 12)),
-              const SizedBox(width: DonySpacing.xs),
               Text(
-                label,
-                style: tt.labelMedium?.copyWith(
-                  color: isActive ? cs.onPrimary : cs.onSurfaceVariant,
-                  fontWeight: FontWeight.w600,
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: tt.labelLarge?.copyWith(
+                  color: isActive ? cs.onSurface : cs.onSurfaceVariant,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-              if (showBadge) ...[
-                const SizedBox(width: DonySpacing.xs),
-                Container(
-                  // Le badge, et lui seul, porte cette clé : un seul segment
-                  // (l'inactif) peut l'afficher à la fois. Vérifier son absence
-                  // vérifie bien l'absence du compteur, pas celle du sélecteur.
-                  key: const Key('mode-other-count'),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 5,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: cs.primary.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(DonyRadius.full),
-                  ),
-                  child: Text(
-                    '$badge',
-                    style: tt.labelSmall?.copyWith(
-                      color: cs.primary,
-                      fontWeight: FontWeight.w800,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
-                  ),
+              const SizedBox(height: DonySpacing.xxs),
+              Text(
+                subtitle,
+                // Le compteur, et lui seul, porte cette clé : un seul segment
+                // (l'inactif) peut l'afficher à la fois. Vérifier son absence
+                // vérifie bien l'absence du compteur, pas celle du sélecteur.
+                key: countShown ? const Key('mode-other-count') : null,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: tt.labelSmall?.copyWith(
+                  color: isActive ? cs.primary : cs.onSurfaceVariant,
+                  fontWeight: FontWeight.w500,
+                  fontFeatures: const [FontFeature.tabularFigures()],
                 ),
-              ],
+              ),
             ],
           ),
         ),
