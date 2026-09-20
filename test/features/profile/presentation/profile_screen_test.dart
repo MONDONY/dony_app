@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/config/pro_flag.dart';
 import 'package:dony/core/design/widgets/dony_avatar.dart';
+import 'package:dony/core/design/widgets/dony_feedback_button.dart';
 import 'package:dony/core/design/widgets/dony_skeleton.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
@@ -742,6 +743,38 @@ void main() {
 
       expect(find.text('Documents d\'identité'), findsNothing);
     });
+
+    testWidgets(
+      'nom long + VÉRIFIÉ : le badge ne passe pas sous le scarabée ni le burger',
+      (tester) async {
+        // Largeur d'un iPhone 12, où le chevauchement a été vu (build 72) :
+        // le fond de la SliverAppBar est dessiné sous ses actions.
+        tester.view.physicalSize = const Size(390, 844);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        await pumpWith(
+          tester,
+          const UserModel(
+            id: 'kyc-user',
+            firstName: 'aboubakar Siriki',
+            lastName: 'DIAKITE KONATÉ',
+            roles: ['TRAVELER', 'SENDER'],
+            kycStatus: 'VERIFIED',
+            status: 'ACTIVE',
+          ),
+        );
+
+        final badge = tester.getRect(find.text('VÉRIFIÉ'));
+        final bug = tester.getRect(find.byType(DonyFeedbackButton));
+        final menu = tester.getRect(
+          find.byKey(const Key('profile-menu-button')),
+        );
+        expect(badge.overlaps(bug), isFalse, reason: 'badge sous le scarabée');
+        expect(badge.overlaps(menu), isFalse, reason: 'badge sous le burger');
+        expect(badge.right, lessThanOrEqualTo(bug.left));
+      },
+    );
   });
 
   // ── Bannières et suppression de compte ──────────────────────────────────────
