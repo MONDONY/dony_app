@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/services/error_reporting_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
@@ -81,7 +82,16 @@ class OfflineSyncService {
           );
           await _hive.offlineQueue.delete(key);
         } catch (error, stackTrace) {
-          // leave in queue for next retry
+          if (isDefinitiveRejection(unwrapDioError(error))) {
+            // Le serveur a tranché (409 départ déjà scanné, 422, 404, 403) :
+            // rejouer l'entrée à chaque retour du réseau ne changera rien et
+            // gonflait Sentry côté back d'un 500 par tentative
+            // (YADONY-BACK-STAGING-8, deux évènements à 8 s d'écart).
+            await _hive.offlineQueue.delete(key);
+            continue;
+          }
+          // Panne réseau, délai, 5xx, session expirée : on garde l'entrée
+          // pour la prochaine tentative.
           failedCount++;
           lastError = error;
           lastStackTrace = stackTrace;
@@ -104,5 +114,14 @@ class OfflineSyncService {
     } finally {
       _syncing = false;
     }
+  }
+
+  /// Vrai quand le back a refusé le scan pour une raison qui ne dépend pas
+  /// du réseau ni du moment : la même requête échouerait à l'identique.
+  static bool isDefinitiveRejection(AppException error) {
+    return error is ConflictException ||
+        error is ValidationException ||
+        error is NotFoundException ||
+        error is ForbiddenException;
   }
 }

@@ -117,6 +117,49 @@ void main() {
     });
   });
 
+  group('ErrorCatalog — invalid-phone-number', () {
+    // Twilio refuse le numéro (21211) : le back répond 422 au lieu d'un
+    // « code envoyé » fantôme. Le message doit orienter vers la saisie.
+    test('code dédié → message clair sur le numéro (warning)', () {
+      const error = ValidationException(
+        'Ce numéro n\'est pas joignable par SMS',
+        code: 'invalid-phone-number',
+      );
+
+      final p = ErrorCatalog.lookup(error);
+
+      expect(p.title, 'Numéro injoignable');
+      expect(p.message, contains('indicatif'));
+      expect(p.severity, ErrorSeverity.warning);
+    });
+
+    test('isKnown reconnaît le code', () {
+      const error = ValidationException('x', code: 'invalid-phone-number');
+      expect(ErrorCatalog.isKnown(error), isTrue);
+    });
+  });
+
+  group('ErrorCatalog — depart-already-scanned', () {
+    // Second scan DEPART : 409 du back. Pas une erreur pour l'utilisateur,
+    // juste une étape déjà faite.
+    test('code dédié → info, pas warning', () {
+      const error = ConflictException(
+        'Le départ de ce colis a déjà été scanné',
+        code: 'depart-already-scanned',
+      );
+
+      final p = ErrorCatalog.lookup(error);
+
+      expect(p.title, 'Départ déjà scanné');
+      expect(p.severity, ErrorSeverity.info);
+    });
+
+    test('isKnown reconnaît le code', () {
+      const error = ConflictException('x', code: 'depart-already-scanned');
+      expect(ErrorCatalog.isKnown(error), isTrue);
+    });
+  });
+
   group('ErrorCatalog — sms-otp-disabled', () {
     // Le backend renvoie 503 quand app.sms.enabled=false en prod alors que
     // l'écran de connexion par téléphone reste accessible (build client

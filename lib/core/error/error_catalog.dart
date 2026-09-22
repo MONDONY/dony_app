@@ -339,6 +339,18 @@ abstract final class ErrorCatalog {
       icon: Icons.phone_disabled_rounded,
     ),
 
+    // Le transporteur SMS (Twilio 21211/21614) refuse le numéro lui-même : le
+    // back répond désormais 422 au lieu d'un « code envoyé » qui n'arrivait
+    // jamais (Sentry YADONY-BACK-STAGING-2, +225 à neuf chiffres).
+    'invalid-phone-number': ErrorPresentation(
+      title: 'Numéro injoignable',
+      message:
+          'Ce numéro ne peut pas recevoir de SMS. Vérifie l\'indicatif et le '
+          'nombre de chiffres, puis réessaie.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.phone_disabled_rounded,
+    ),
+
     // ─── Annonces / trajets ──────────────────────────────────────────
     'announcement-not-found': ErrorPresentation(
       title: 'Trajet introuvable',
@@ -479,6 +491,16 @@ abstract final class ErrorCatalog {
           'Le QR sera disponible une fois que l\'expéditeur aura finalisé le paiement.',
       severity: ErrorSeverity.info,
       icon: Icons.qr_code_2_rounded,
+    ),
+    // Second scan DEPART sur un colis déjà remis : le back répond 409 au lieu
+    // du 500 d'index unique (Sentry YADONY-BACK-STAGING-8). Rien à refaire.
+    'depart-already-scanned': ErrorPresentation(
+      title: 'Départ déjà scanné',
+      message:
+          'Le départ de ce colis est déjà enregistré. Tu peux passer à l\'étape '
+          'suivante.',
+      severity: ErrorSeverity.info,
+      icon: Icons.check_circle_outline_rounded,
     ),
     'code-not-generated': ErrorPresentation(
       title: 'Code non généré',

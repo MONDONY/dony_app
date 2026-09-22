@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:dio/dio.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
@@ -152,6 +154,102 @@ void main() {
       await service.syncAll();
 
       expect(service.pendingCount, 1);
+    });
+
+    test('drops the entry when the server rejects it for good (409)', () async {
+      // Un DEPART déjà enregistré côté serveur (409 depart-already-scanned)
+      // ne doit pas être rejoué à chaque retour du réseau : chaque tentative
+      // finissait en 500 côté back (Sentry YADONY-BACK-STAGING-8).
+      when(
+        () => mockRepo.postScan(
+          bidId: any(named: 'bidId'),
+          eventType: any(named: 'eventType'),
+          gpsLat: any(named: 'gpsLat'),
+          gpsLon: any(named: 'gpsLon'),
+          gpsLabel: any(named: 'gpsLabel'),
+          photoUrl: any(named: 'photoUrl'),
+          offlineTimestamp: any(named: 'offlineTimestamp'),
+        ),
+      ).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(path: '/tracking/events'),
+          error: const ConflictException(
+            'Le départ de ce colis a déjà été scanné',
+            code: 'depart-already-scanned',
+          ),
+        ),
+      );
+
+      await service.queueScan(bidId: 'bid-3', eventType: 'DEPART');
+      await service.syncAll();
+
+      expect(service.pendingCount, 0);
+    });
+
+    test(
+      'keeps the entry on a server error (5xx) or expired session',
+      () async {
+        when(
+          () => mockRepo.postScan(
+            bidId: any(named: 'bidId'),
+            eventType: any(named: 'eventType'),
+            gpsLat: any(named: 'gpsLat'),
+            gpsLon: any(named: 'gpsLon'),
+            gpsLabel: any(named: 'gpsLabel'),
+            photoUrl: any(named: 'photoUrl'),
+            offlineTimestamp: any(named: 'offlineTimestamp'),
+          ),
+        ).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/tracking/events'),
+            error: const ServerException('Erreur serveur'),
+          ),
+        );
+
+        await service.queueScan(bidId: 'bid-4', eventType: 'DEPART');
+        await service.syncAll();
+
+        expect(service.pendingCount, 1);
+      },
+    );
+
+    test('isDefinitiveRejection classe les erreurs', () {
+      expect(
+        OfflineSyncService.isDefinitiveRejection(
+          const ConflictException('x', code: 'depart-already-scanned'),
+        ),
+        isTrue,
+      );
+      expect(
+        OfflineSyncService.isDefinitiveRejection(
+          const ValidationException('x', code: 'invalid-timestamp'),
+        ),
+        isTrue,
+      );
+      expect(
+        OfflineSyncService.isDefinitiveRejection(const NotFoundException()),
+        isTrue,
+      );
+      expect(
+        OfflineSyncService.isDefinitiveRejection(const ForbiddenException()),
+        isTrue,
+      );
+      expect(
+        OfflineSyncService.isDefinitiveRejection(const UnauthorizedException()),
+        isFalse,
+      );
+      expect(
+        OfflineSyncService.isDefinitiveRejection(const ServerException()),
+        isFalse,
+      );
+      expect(
+        OfflineSyncService.isDefinitiveRejection(const OfflineException()),
+        isFalse,
+      );
+      expect(
+        OfflineSyncService.isDefinitiveRejection(const TimeoutException()),
+        isFalse,
+      );
     });
 
     test('syncs multiple entries successfully, empties the queue', () async {
