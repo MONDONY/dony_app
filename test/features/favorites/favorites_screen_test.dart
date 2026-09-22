@@ -50,8 +50,9 @@ Widget _buildScreen({
   required bool isTraveler,
   required FavoriteTripsState tripsState,
   required FavoriteRequestsState requestsState,
+  _MockFavoriteIdsCubit? idsCubitOverride,
 }) {
-  final favoriteIdsCubit = _MockFavoriteIdsCubit();
+  final favoriteIdsCubit = idsCubitOverride ?? _MockFavoriteIdsCubit();
   when(() => favoriteIdsCubit.state).thenReturn(const FavoriteIdsState({}, {}));
   when(() => favoriteIdsCubit.load()).thenAnswer((_) async {});
 
@@ -284,6 +285,33 @@ void main() {
       await tester.pump();
 
       expect(find.text('Mes favoris'), findsOneWidget);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Resynchronisation du badge
+  // ---------------------------------------------------------------------------
+  group('FavoritesScreen — badge', () {
+    testWidgets('recharge les ids de favoris à l\'ouverture', (tester) async {
+      // Le badge de l'accueil est la taille de FavoriteIdsState, chargée au
+      // lancement. Un favori dont la cible s'est éteinte en cours de session
+      // laisserait une pastille « 1 » au-dessus d'une liste vide : ouvrir
+      // l'écran est le moment naturel pour resynchroniser.
+      final idsCubit = _MockFavoriteIdsCubit();
+      when(() => idsCubit.state).thenReturn(const FavoriteIdsState({}, {}));
+      when(() => idsCubit.load()).thenAnswer((_) async {});
+
+      await tester.pumpWidget(
+        _buildScreen(
+          isTraveler: false,
+          tripsState: FavoriteTripsLoading(),
+          requestsState: FavoriteRequestsLoading(),
+          idsCubitOverride: idsCubit,
+        ),
+      );
+      await tester.pump();
+
+      verify(() => idsCubit.load()).called(1);
     });
   });
 }
