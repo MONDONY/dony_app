@@ -6,6 +6,7 @@ export 'package:dony/core/models/connect_account_status.dart';
 
 abstract class IConnectOnboardingRepository {
   Future<ConnectAccountStatus> getAccountStatus();
+  Future<ConnectAccountStatus> createConnectAccount();
   Future<String> createOnboardingLink();
 }
 
@@ -18,6 +19,15 @@ class ConnectOnboardingRepository implements IConnectOnboardingRepository {
   Future<ConnectAccountStatus> getAccountStatus() async {
     try {
       return await _datasource.getAccountStatus();
+    } catch (e) {
+      throw unwrapDioError(e);
+    }
+  }
+
+  @override
+  Future<ConnectAccountStatus> createConnectAccount() async {
+    try {
+      return await _datasource.createConnectAccount();
     } catch (e) {
       throw unwrapDioError(e);
     }
