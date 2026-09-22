@@ -46,6 +46,19 @@ class ConnectOnboardingBloc
   ) async {
     emit(const ConnectOnboardingLoading());
     try {
+      // Le lien d'onboarding suppose un compte Connect déjà provisionné : sans
+      // lui le serveur répond 409 `stripe-account-required`, que le catalogue
+      // d'erreurs rend par « L'état actuel ne permet pas cette action ». Tous
+      // les points d'entrée qui mènent ici (publication d'un trajet, détail
+      // d'annonce, étape prix, feuilles de blocage…) tombaient dessus, alors
+      // que le parcours « Recevoir mes paiements » du profil, lui, créait bien
+      // le compte avant de demander le lien. La création est idempotente côté
+      // serveur : on l'aligne ici plutôt que sur chaque appelant.
+      final account = await _repository.createConnectAccount();
+      if (account.isComplete) {
+        emit(const ConnectOnboardingComplete());
+        return;
+      }
       final url = await _repository.createOnboardingLink();
       emit(ConnectOnboardingUrlReady(url));
     } catch (e) {

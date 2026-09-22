@@ -789,6 +789,27 @@ abstract final class ErrorCatalog {
     ),
 
     // ─── Externes (Stripe, Google) ───────────────────────────────────
+    // Les deux 409 du compte Connect. Le client crée désormais le compte
+    // avant de demander le lien d'onboarding, mais un compte effacé côté
+    // Stripe ou un client pas à jour peut encore les rencontrer : sans ces
+    // entrées, l'utilisateur lit « L'état actuel ne permet pas cette action »
+    // sur un écran qui ne lui propose qu'un seul bouton.
+    'stripe-account-required': ErrorPresentation(
+      title: 'Compte Stripe à créer',
+      message:
+          'Ton compte de paiement n\'a pas encore été créé. Retape sur le '
+          'bouton pour lancer l\'activation.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.account_balance_outlined,
+    ),
+    'stripe-account-invalid': ErrorPresentation(
+      title: 'Compte de paiement invalide',
+      message:
+          'Ton compte de paiement n\'est plus valide. Retape sur le bouton '
+          'pour en créer un nouveau.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.account_balance_outlined,
+    ),
     'stripe-error': ErrorPresentation(
       title: 'Paiement refusé',
       message:
