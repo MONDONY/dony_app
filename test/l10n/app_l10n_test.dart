@@ -37,12 +37,22 @@ void main() {
       expect(AppL10n.resolve(const []), AppL10n.fr);
       expect(AppL10n.resolve(null), AppL10n.fr);
     });
-    test('localeListResolution recopie la langue dans Intl', () {
+    test("localeListResolution est pure (n'écrit pas Intl)", () {
+      Intl.defaultLocale = 'fr';
       final l = AppL10n.localeListResolution(const [
         Locale('en'),
       ], AppLocalizations.supportedLocales);
       expect(l, AppL10n.en);
+      expect(Intl.defaultLocale, 'fr');
+    });
+  });
+
+  group('AppL10n.syncIntl', () {
+    test('recopie la langue effective dans Intl', () {
+      AppL10n.syncIntl(AppL10n.en);
       expect(Intl.defaultLocale, 'en');
+      AppL10n.syncIntl(const Locale('fr', 'FR'));
+      expect(Intl.defaultLocale, 'fr');
     });
   });
 

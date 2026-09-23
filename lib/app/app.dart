@@ -451,6 +451,7 @@ class _DonyAppState extends State<DonyApp> {
                     // 'system' → null : la langue vient du téléphone, via
                     // localeListResolutionCallback. Un choix manuel passe
                     // par le même callback, qui applique l'interrupteur.
+                    // Intl.defaultLocale est synchronisé dans le builder.
                     locale:
                         prefsState.preferences.languageCode ==
                             UserPreferencesModel.kLanguageSystem
@@ -460,6 +461,9 @@ class _DonyAppState extends State<DonyApp> {
                     routerConfig: appRouter,
                     debugShowCheckedModeBanner: false,
                     builder: (context, child) {
+                      // Sous Localizations, rebâti à chaque langue effective ;
+                      // le callback, lui, voit parfois une langue périmée.
+                      AppL10n.syncIntl(Localizations.localeOf(context));
                       final mq = MediaQuery.of(context);
                       return MediaQuery(
                         data: mq.copyWith(

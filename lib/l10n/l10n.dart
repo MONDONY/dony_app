@@ -32,17 +32,23 @@ abstract final class AppL10n {
     return preferred.first.languageCode == 'en' ? en : fr;
   }
 
-  /// Branché sur `MaterialApp.localeListResolutionCallback`. Recopie la
-  /// langue résolue dans `Intl.defaultLocale`, que lit le code sans
-  /// `BuildContext` (formats de date, catalogue d'erreurs, client réseau).
+  /// Branché sur `MaterialApp.localeListResolutionCallback`. Fonction pure :
+  /// elle n'écrit pas `Intl.defaultLocale`, car Flutter ne l'appelle pas
+  /// toujours avec la langue effective (résultat en cache avec
+  /// `locale: null`, liste du téléphone passée malgré un choix manuel). La
+  /// synchro passe par [syncIntl].
   static Locale localeListResolution(
     List<Locale>? preferred,
     Iterable<Locale> supported,
-  ) {
-    final locale = resolve(preferred);
-    Intl.defaultLocale = locale.languageCode;
-    return locale;
-  }
+  ) => resolve(preferred);
+
+  /// Recopie la langue effective dans `Intl.defaultLocale`, que lit le code
+  /// sans `BuildContext` (formats de date, catalogue d'erreurs, client
+  /// réseau). Appelée depuis le `builder` de `MaterialApp`, sous
+  /// `Localizations` : il se reconstruit à chaque changement de langue
+  /// effective, choix manuel comme langue du téléphone.
+  static void syncIntl(Locale effective) =>
+      Intl.defaultLocale = effective.languageCode;
 
   /// Langue courante hors contexte. Français tant que l'app n'a rien résolu
   /// (démarrage, tests unitaires).
