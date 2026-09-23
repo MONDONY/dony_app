@@ -140,7 +140,7 @@ void main() {
     act: (cubit) => cubit.select('CI'),
     expect: () => const [
       CountryOnboardingSaving('CI'),
-      CountryOnboardingError('Impossible d’enregistrer le pays. Réessayez.'),
+      CountryOnboardingError(),
     ],
     verify: (_) {
       verifyNever(() => repository.updatePrefs(any()));
@@ -167,9 +167,7 @@ void main() {
         cubit.stream.take(2),
         emitsInOrder(const [
           CountryOnboardingSaving('CA'),
-          CountryOnboardingError(
-            'Impossible d’enregistrer le pays. Réessayez.',
-          ),
+          CountryOnboardingError(),
         ]),
       );
 
@@ -177,12 +175,7 @@ void main() {
 
       await failedStates;
 
-      expect(
-        cubit.state,
-        const CountryOnboardingError(
-          'Impossible d’enregistrer le pays. Réessayez.',
-        ),
-      );
+      expect(cubit.state, const CountryOnboardingError());
       verifyNever(
         () => analytics.logEvent(AnalyticsEvents.countryOnboardingSelected),
       );

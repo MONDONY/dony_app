@@ -311,5 +311,20 @@
   "countryZoneEurope": "Europe",
   "countryZoneNorthAmerica": "Amérique du Nord",
   "countryZoneWestAfrica": "Afrique de l'Ouest",
-  "countryZoneCentralAfrica": "Afrique centrale"
+  "countryZoneCentralAfrica": "Afrique centrale",
+  "errorGuestSessionFailedTitle": "Navigation indisponible",
+  "errorGuestSessionFailedMessage": "Impossible de démarrer la navigation sans compte. Vérifiez votre connexion.",
+  "errorPhoneAlreadyRegisteredTitle": "Numéro déjà utilisé",
+  "errorPhoneAlreadyRegisteredMessage": "Ce numéro est déjà associé à un compte",
+  "errorAuthGenericErrorTitle": "Une erreur est survenue",
+  "errorAuthGenericErrorMessage": "Une erreur est survenue. Réessayez.",
+  "authCountrySaveError": "Impossible d’enregistrer le pays. Réessayez.",
+  "authPersonalInfoSaveError": "Impossible d'enregistrer ces informations. Réessayez.",
+  "authUserFallbackName": "Utilisateur",
+  "authBiometricUnlockReason": "Déverrouillez Yadony pour accéder à votre compte",
+  "authStepConsent": "Confidentialité",
+  "authStepCountry": "Pays",
+  "authStepIdentity": "Identité",
+  "authStepPersonalInfo": "Vos infos",
+  "authStepPayouts": "Paiements"
 }

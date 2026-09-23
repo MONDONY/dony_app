@@ -6,6 +6,7 @@ import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/country_onboarding_cubit.dart';
 import 'package:dony/features/auth/presentation/onboarding_step.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_flow_chrome.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -70,7 +71,7 @@ class _CountrySelectionScreenState extends State<CountrySelectionScreen> {
         } else if (state is CountryOnboardingError) {
           DonySnackbar.show(
             context,
-            message: state.message,
+            message: context.l10n.authCountrySaveError,
             type: DonySnackbarType.error,
           );
         }

@@ -33,12 +33,10 @@ class CountryOnboardingSuccess extends CountryOnboardingState {
 }
 
 class CountryOnboardingError extends CountryOnboardingState {
-  const CountryOnboardingError(this.message);
-
-  final String message;
+  const CountryOnboardingError();
 
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [];
 }
 
 /// Persiste le pays d'onboarding dans l'ordre strict backend → Hive.
@@ -91,11 +89,7 @@ class CountryOnboardingCubit extends Cubit<CountryOnboardingState> {
       );
       emit(const CountryOnboardingSuccess());
     } catch (_) {
-      emit(
-        const CountryOnboardingError(
-          'Impossible d’enregistrer le pays. Réessayez.',
-        ),
-      );
+      emit(const CountryOnboardingError());
     }
   }
 
@@ -138,11 +132,7 @@ class CountryOnboardingCubit extends Cubit<CountryOnboardingState> {
       );
       emit(const CountryOnboardingSuccess());
     } catch (_) {
-      emit(
-        const CountryOnboardingError(
-          'Impossible d’enregistrer ce choix. Réessayez.',
-        ),
-      );
+      emit(const CountryOnboardingError());
     }
   }
 }

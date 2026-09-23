@@ -841,4 +841,36 @@ void main() {
       }
     });
   });
+
+  group('ErrorCatalog — codes auth', () {
+    test('phone-already-registered en français et en anglais', () {
+      const error = NetworkException('x', code: 'phone-already-registered');
+      expect(
+        ErrorCatalog.lookup(error).message,
+        'Ce numéro est déjà associé à un compte',
+      );
+      expect(
+        ErrorCatalog.lookup(
+          error,
+          l10n: lookupAppLocalizations(AppL10n.en),
+        ).title,
+        'Number already in use',
+      );
+    });
+
+    test('guest-session-failed et auth-generic-error sont connus', () {
+      expect(
+        ErrorCatalog.isKnown(
+          const NetworkException('x', code: 'guest-session-failed'),
+        ),
+        isTrue,
+      );
+      expect(
+        ErrorCatalog.isKnown(
+          const NetworkException('x', code: 'auth-generic-error'),
+        ),
+        isTrue,
+      );
+    });
+  });
 }

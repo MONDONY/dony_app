@@ -102,7 +102,7 @@ class AppleTokenRevoker {
       // reste inatteignable.
       try {
         _logFailure(
-          'Échec de la révocation du jeton Sign in with Apple',
+          'Échec de la révocation du jeton Sign in with Apple', // i18n-ignore
           data: {
             'error_type': e.runtimeType.toString(),
             // Identifiant technique Firebase (ex. requires-recent-login,

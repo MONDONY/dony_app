@@ -8,6 +8,7 @@ import 'package:dony/features/auth/bloc/personal_info_cubit.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/auth/presentation/onboarding_step.dart';
 import 'package:dony/features/auth/presentation/widgets/auth_flow_chrome.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -121,7 +122,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
         } else if (state is PersonalInfoError) {
           DonySnackbar.show(
             context,
-            message: state.message,
+            message: context.l10n.authPersonalInfoSaveError,
             type: DonySnackbarType.error,
           );
         }

@@ -1029,4 +1029,53 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get countryZoneCentralAfrica => 'Central Africa';
+
+  @override
+  String get errorGuestSessionFailedTitle => 'Browsing unavailable';
+
+  @override
+  String get errorGuestSessionFailedMessage =>
+      'Couldn\'t start browsing without an account. Check your connection.';
+
+  @override
+  String get errorPhoneAlreadyRegisteredTitle => 'Number already in use';
+
+  @override
+  String get errorPhoneAlreadyRegisteredMessage =>
+      'This number is already linked to an account';
+
+  @override
+  String get errorAuthGenericErrorTitle => 'Something went wrong';
+
+  @override
+  String get errorAuthGenericErrorMessage => 'Something went wrong. Try again.';
+
+  @override
+  String get authCountrySaveError => 'Couldn\'t save your country. Try again.';
+
+  @override
+  String get authPersonalInfoSaveError =>
+      'Couldn\'t save your details. Try again.';
+
+  @override
+  String get authUserFallbackName => 'User';
+
+  @override
+  String get authBiometricUnlockReason =>
+      'Unlock Yadony to access your account';
+
+  @override
+  String get authStepConsent => 'Privacy';
+
+  @override
+  String get authStepCountry => 'Country';
+
+  @override
+  String get authStepIdentity => 'Identity';
+
+  @override
+  String get authStepPersonalInfo => 'Your details';
+
+  @override
+  String get authStepPayouts => 'Payments';
 }

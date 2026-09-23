@@ -1035,4 +1035,55 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get countryZoneCentralAfrica => 'Afrique centrale';
+
+  @override
+  String get errorGuestSessionFailedTitle => 'Navigation indisponible';
+
+  @override
+  String get errorGuestSessionFailedMessage =>
+      'Impossible de démarrer la navigation sans compte. Vérifiez votre connexion.';
+
+  @override
+  String get errorPhoneAlreadyRegisteredTitle => 'Numéro déjà utilisé';
+
+  @override
+  String get errorPhoneAlreadyRegisteredMessage =>
+      'Ce numéro est déjà associé à un compte';
+
+  @override
+  String get errorAuthGenericErrorTitle => 'Une erreur est survenue';
+
+  @override
+  String get errorAuthGenericErrorMessage =>
+      'Une erreur est survenue. Réessayez.';
+
+  @override
+  String get authCountrySaveError =>
+      'Impossible d’enregistrer le pays. Réessayez.';
+
+  @override
+  String get authPersonalInfoSaveError =>
+      'Impossible d\'enregistrer ces informations. Réessayez.';
+
+  @override
+  String get authUserFallbackName => 'Utilisateur';
+
+  @override
+  String get authBiometricUnlockReason =>
+      'Déverrouillez Yadony pour accéder à votre compte';
+
+  @override
+  String get authStepConsent => 'Confidentialité';
+
+  @override
+  String get authStepCountry => 'Pays';
+
+  @override
+  String get authStepIdentity => 'Identité';
+
+  @override
+  String get authStepPersonalInfo => 'Vos infos';
+
+  @override
+  String get authStepPayouts => 'Paiements';
 }

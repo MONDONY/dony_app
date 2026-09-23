@@ -279,6 +279,13 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Recherche avec carte'), findsNothing);
+    expect(
+      find.text(
+        'Impossible de démarrer la navigation sans compte. '
+        'Vérifiez votre connexion.',
+      ),
+      findsOneWidget,
+    );
 
     await bloc.close();
   });

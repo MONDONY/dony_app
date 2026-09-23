@@ -883,6 +883,26 @@ abstract final class ErrorCatalog {
       icon: Icons.check_circle_outline_rounded,
     ),
 
+    // ─── Auth (parcours de connexion) ─────────────────────────────────
+    'guest-session-failed': _Entry(
+      title: (l) => l.errorGuestSessionFailedTitle,
+      message: (l) => l.errorGuestSessionFailedMessage,
+      severity: ErrorSeverity.error,
+      icon: Icons.wifi_off_rounded,
+    ),
+    'phone-already-registered': _Entry(
+      title: (l) => l.errorPhoneAlreadyRegisteredTitle,
+      message: (l) => l.errorPhoneAlreadyRegisteredMessage,
+      severity: ErrorSeverity.warning,
+      icon: Icons.phone_disabled_rounded,
+    ),
+    'auth-generic-error': _Entry(
+      title: (l) => l.errorAuthGenericErrorTitle,
+      message: (l) => l.errorAuthGenericErrorMessage,
+      severity: ErrorSeverity.error,
+      icon: Icons.error_outline_rounded,
+    ),
+
     // ─── Utilisateur ─────────────────────────────────────────────────
     'user-not-found': _Entry(
       title: (l) => l.errorUserNotFoundTitle,

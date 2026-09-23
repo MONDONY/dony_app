@@ -353,9 +353,7 @@ void main() {
       expect: () => [
         isA<AuthLoading>(),
         predicate<AuthState>(
-          (s) =>
-              s is AuthError &&
-              s.error.message == 'Ce numéro est déjà associé à un compte',
+          (s) => s is AuthError && s.error.code == 'phone-already-registered',
         ),
       ],
     );

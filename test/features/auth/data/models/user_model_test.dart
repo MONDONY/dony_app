@@ -1,6 +1,8 @@
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 void main() {
   group('UserModel', () {
     const baseUser = UserModel(
@@ -90,6 +92,17 @@ void main() {
           status: 'ACTIVE',
         );
         expect(user.displayName, 'Utilisateur');
+      });
+
+      test('rien de disponible, en anglais → retourne "User"', () {
+        useEnglish();
+        const user = UserModel(
+          id: 'u1',
+          roles: [],
+          kycStatus: 'PENDING',
+          status: 'ACTIVE',
+        );
+        expect(user.displayName, 'User');
       });
     });
 

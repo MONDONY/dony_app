@@ -225,9 +225,7 @@ void main() {
       cubit,
       Stream.fromIterable([
         const CountryOnboardingSaving('CA'),
-        const CountryOnboardingError(
-          'Impossible d’enregistrer le pays. Réessayez.',
-        ),
+        const CountryOnboardingError(),
       ]),
       initialState: const CountryOnboardingInitial(),
     );

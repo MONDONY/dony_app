@@ -299,5 +299,20 @@
   "countryZoneEurope": "Europe",
   "countryZoneNorthAmerica": "North America",
   "countryZoneWestAfrica": "West Africa",
-  "countryZoneCentralAfrica": "Central Africa"
+  "countryZoneCentralAfrica": "Central Africa",
+  "errorGuestSessionFailedTitle": "Browsing unavailable",
+  "errorGuestSessionFailedMessage": "Couldn't start browsing without an account. Check your connection.",
+  "errorPhoneAlreadyRegisteredTitle": "Number already in use",
+  "errorPhoneAlreadyRegisteredMessage": "This number is already linked to an account",
+  "errorAuthGenericErrorTitle": "Something went wrong",
+  "errorAuthGenericErrorMessage": "Something went wrong. Try again.",
+  "authCountrySaveError": "Couldn't save your country. Try again.",
+  "authPersonalInfoSaveError": "Couldn't save your details. Try again.",
+  "authUserFallbackName": "User",
+  "authBiometricUnlockReason": "Unlock Yadony to access your account",
+  "authStepConsent": "Privacy",
+  "authStepCountry": "Country",
+  "authStepIdentity": "Identity",
+  "authStepPersonalInfo": "Your details",
+  "authStepPayouts": "Payments"
 }

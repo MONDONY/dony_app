@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 import 'package:crypto/crypto.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:local_auth/local_auth.dart';
 
@@ -87,7 +88,7 @@ class LocalAuthService {
   Future<bool> authenticateWithBiometric() async {
     try {
       return await _localAuth.authenticate(
-        localizedReason: 'Déverrouillez Yadony pour accéder à votre compte',
+        localizedReason: AppL10n.current.authBiometricUnlockReason,
         options: const AuthenticationOptions(
           biometricOnly: true,
           stickyAuth: true,

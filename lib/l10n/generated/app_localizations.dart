@@ -1897,6 +1897,96 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Afrique centrale'**
   String get countryZoneCentralAfrica;
+
+  /// No description provided for @errorGuestSessionFailedTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Navigation indisponible'**
+  String get errorGuestSessionFailedTitle;
+
+  /// No description provided for @errorGuestSessionFailedMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible de démarrer la navigation sans compte. Vérifiez votre connexion.'**
+  String get errorGuestSessionFailedMessage;
+
+  /// No description provided for @errorPhoneAlreadyRegisteredTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Numéro déjà utilisé'**
+  String get errorPhoneAlreadyRegisteredTitle;
+
+  /// No description provided for @errorPhoneAlreadyRegisteredMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce numéro est déjà associé à un compte'**
+  String get errorPhoneAlreadyRegisteredMessage;
+
+  /// No description provided for @errorAuthGenericErrorTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Une erreur est survenue'**
+  String get errorAuthGenericErrorTitle;
+
+  /// No description provided for @errorAuthGenericErrorMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Une erreur est survenue. Réessayez.'**
+  String get errorAuthGenericErrorMessage;
+
+  /// No description provided for @authCountrySaveError.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible d’enregistrer le pays. Réessayez.'**
+  String get authCountrySaveError;
+
+  /// No description provided for @authPersonalInfoSaveError.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible d\'enregistrer ces informations. Réessayez.'**
+  String get authPersonalInfoSaveError;
+
+  /// No description provided for @authUserFallbackName.
+  ///
+  /// In fr, this message translates to:
+  /// **'Utilisateur'**
+  String get authUserFallbackName;
+
+  /// No description provided for @authBiometricUnlockReason.
+  ///
+  /// In fr, this message translates to:
+  /// **'Déverrouillez Yadony pour accéder à votre compte'**
+  String get authBiometricUnlockReason;
+
+  /// No description provided for @authStepConsent.
+  ///
+  /// In fr, this message translates to:
+  /// **'Confidentialité'**
+  String get authStepConsent;
+
+  /// No description provided for @authStepCountry.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pays'**
+  String get authStepCountry;
+
+  /// No description provided for @authStepIdentity.
+  ///
+  /// In fr, this message translates to:
+  /// **'Identité'**
+  String get authStepIdentity;
+
+  /// No description provided for @authStepPersonalInfo.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vos infos'**
+  String get authStepPersonalInfo;
+
+  /// No description provided for @authStepPayouts.
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiements'**
+  String get authStepPayouts;
 }
 
 class _AppLocalizationsDelegate
