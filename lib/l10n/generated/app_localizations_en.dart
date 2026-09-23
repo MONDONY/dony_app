@@ -25,7 +25,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorMobileMoneyDisabledMessage =>
-      'Mobile money payments aren\'t open yet. Choose another payment method.';
+      'Mobile money payments aren\'t available right now. Choose another payment method.';
 
   @override
   String get errorMobileMoneyPhoneRequiredTitle => 'Phone number missing';
@@ -145,10 +145,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorUnauthorizedTitle => 'Session expired';
 
   @override
-  String get errorUnauthorizedMessage => 'Log in again to continue.';
+  String get errorUnauthorizedMessage => 'Sign in again to continue.';
 
   @override
-  String get errorReauthRequiredTitle => 'Log in again';
+  String get errorReauthRequiredTitle => 'Sign in again';
 
   @override
   String get errorReauthRequiredMessage =>
@@ -332,14 +332,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorProLimitReachedMessage =>
-      'You\'ve reached your listing limit for this month. Upgrade to PRO to publish without limits.';
+      'You\'ve reached your listing limit for this month. Upgrade to Pro to publish without limits.';
 
   @override
   String get errorDraftLimitReachedTitle => 'Draft limit reached';
 
   @override
   String get errorDraftLimitReachedMessage =>
-      'Upgrade to PRO to create more drafts.';
+      'Upgrade to Pro to create more drafts.';
 
   @override
   String get errorNotADraftTitle => 'Already published';
@@ -473,10 +473,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'This isn\'t allowed outside the scheduled time slot.';
 
   @override
-  String get errorAlreadyCancelledTitle => 'Already cancelled';
+  String get errorAlreadyCancelledTitle => 'Already canceled';
 
   @override
-  String get errorAlreadyCancelledMessage => 'This has already been cancelled.';
+  String get errorAlreadyCancelledMessage => 'This has already been canceled.';
 
   @override
   String get errorActiveTransactionsTitle => 'Can\'t do this';
@@ -591,7 +591,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorPaymentMethodNoCommissionCardMessage =>
-      'First add a card for the service fee to pay in cash without enough balance.';
+      'Add a card for the service fee first, so you can pay in cash when your balance is too low.';
 
   @override
   String get errorPaymentMethodNotInAvailableSetTitle =>
@@ -599,7 +599,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorPaymentMethodNotInAvailableSetMessage =>
-      'This payment method isn\'t offered for this offer. Choose another one.';
+      'This payment method isn\'t available for this offer. Choose another one.';
 
   @override
   String get errorPaymentMethodMobileMoneyCapabilityRequiredTitle =>
@@ -713,7 +713,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorOtpAttemptsExceededMessage =>
-      'Too many incorrect attempts. Wait a few minutes: a new code won\'t unlock entry.';
+      'Too many incorrect attempts. Wait a few minutes. Requesting a new code won\'t unlock it.';
 
   @override
   String get errorEmailAlreadyExistsTitle => 'Email already in use';
@@ -834,10 +834,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Something went wrong on our side. We\'re looking into it. Try again in a moment.';
 
   @override
-  String get errorCancelledTitle => 'Action cancelled';
+  String get errorCancelledTitle => 'Action canceled';
 
   @override
-  String get errorCancelledMessage => 'The action was cancelled.';
+  String get errorCancelledMessage => 'The action was canceled.';
 
   @override
   String get errorNotFoundTitle => 'Not found';
