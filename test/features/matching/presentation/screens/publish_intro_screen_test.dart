@@ -146,6 +146,27 @@ void main() {
       );
     });
 
+    testWidgets(
+      'non vérifié : phrase complète en français (gras + chemin '
+      'reconstitués depuis une clé unique paramétrée)',
+      (tester) async {
+        await _pump(
+          tester,
+          role: PublishIntroRole.trip,
+          kycStatus: 'NOT_STARTED',
+        );
+
+        expect(
+          find.text(
+            'Avant de publier, votre identité doit être vérifiée. '
+            'Rendez-vous dans Profil › Vérifications pour la valider '
+            '(2 min).',
+          ),
+          findsOneWidget,
+        );
+      },
+    );
+
     testWidgets('vérifié : Continuer ouvre le formulaire de trajet', (
       tester,
     ) async {
@@ -252,5 +273,25 @@ void main() {
 
       expect(find.text('Post a parcel'), findsOneWidget);
     });
+
+    testWidgets(
+      'trajet, non vérifié : phrase complète en anglais',
+      (tester) async {
+        useEnglish();
+        await _pump(
+          tester,
+          role: PublishIntroRole.trip,
+          kycStatus: 'NOT_STARTED',
+        );
+
+        expect(
+          find.text(
+            'Before you post, your identity must be verified. Go to '
+            'Profile › Verifications to verify it (2 min).',
+          ),
+          findsOneWidget,
+        );
+      },
+    );
   });
 }

@@ -398,7 +398,7 @@ void main() {
       useEnglish();
       await pump(tester);
 
-      expect(find.text('🗺️  Pickup address'), findsOneWidget);
+      expect(find.text('🗺️  Delivery address'), findsOneWidget);
     });
   });
 }

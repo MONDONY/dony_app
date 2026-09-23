@@ -2431,18 +2431,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripUrgencyLater => '14d+';
 
   @override
-  String get tripUrgencyVeryUrgentTooltip => 'Departing in less than 3 days';
-
-  @override
-  String get tripUrgencyUrgentTooltip => 'Departing in 3 to 7 days';
-
-  @override
-  String get tripUrgencySoonTooltip => 'Departing in 7 to 14 days';
-
-  @override
-  String get tripUrgencyLaterTooltip => 'Departing in more than 14 days';
-
-  @override
   String get tripCapacitySuitcase23 => '1 suitcase (23 kg)';
 
   @override
@@ -2555,7 +2543,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tripPublishHandoverDeadlineSubtitle =>
-      'Until when senders can hand you their parcels';
+      'Latest date senders can hand you their parcels';
 
   @override
   String get tripPublishHandoverDeadlineChoose => 'Choose';
@@ -2639,7 +2627,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get requestPublishIntroRuleHonest =>
-      'Describing the contents **honestly**, and its value if the traveler asks.';
+      'Describing the contents **honestly**, and their value if the traveler asks.';
 
   @override
   String get requestPublishIntroRulePackaging =>
@@ -2665,19 +2653,15 @@ class AppLocalizationsEn extends AppLocalizations {
       'QR tracking from drop-off to receipt.';
 
   @override
-  String get tripPublishIntroVerifyBefore => 'Before you post, your ';
+  String tripPublishIntroVerifyCallout(String identity, String path) {
+    return 'Before you post, your **$identity**. Go to $path to verify it (2 min).';
+  }
 
   @override
-  String get tripPublishIntroVerifyBold => 'identity must be verified';
-
-  @override
-  String get tripPublishIntroVerifyGoTo => '. Go to ';
+  String get tripPublishIntroVerifyIdentity => 'identity must be verified';
 
   @override
   String get tripPublishIntroVerifyPath => 'Profile › Verifications';
-
-  @override
-  String get tripPublishIntroVerifySuffix => ' to verify it (2 min).';
 
   @override
   String get tripPublishIntroVerifyButton => 'Verify my identity';
@@ -2755,7 +2739,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tripPublishCashSubtitle =>
-      'Service fee charged to the traveler at handover';
+      'Service fee charged to the traveler at drop-off';
 
   @override
   String get tripPublishAcceptedContentSectionLabel => 'What I accept';
@@ -2849,7 +2833,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripPublishCorridorConfirmedBadge => 'Confirmed';
 
   @override
-  String get tripPublishTrajetSectionLabel => 'Trip';
+  String get tripPublishRouteSectionLabel => 'Trip';
 
   @override
   String get tripPublishDepartureCityLabel => 'Departure city';
@@ -2936,10 +2920,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripPublishCurrencyChangeCta => 'Change';
 
   @override
-  String get tripPublishLieuxCapaciteStepLabel => 'Places & capacity';
+  String get tripPublishPlacesCapacityStepLabel => 'Locations & capacity';
 
   @override
-  String get tripPublishPrixConditionsStepLabel => 'Price & conditions';
+  String get tripPublishPriceConditionsStepLabel => 'Price & conditions';
 
   @override
   String get tripPublishHandoverLocationsLabel => 'Drop-off locations';
@@ -3043,7 +3027,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addressPickupSheetTitle => '📦  Drop-off address';
 
   @override
-  String get addressDeliverySheetTitle => '🗺️  Pickup address';
+  String get addressDeliverySheetTitle => '🗺️  Delivery address';
 
   @override
   String get addressFieldRequiredError => 'Address required';
@@ -3060,17 +3044,17 @@ class AppLocalizationsEn extends AppLocalizations {
       'Connection required to search for an address';
 
   @override
-  String get addressSelectorRemiseLabel => 'Choose a drop-off address';
+  String get addressSelectorDropoffLabel => 'Choose a drop-off address';
 
   @override
-  String get addressSelectorRemiseSubtitle =>
+  String get addressSelectorDropoffSubtitle =>
       'Where you collect parcels from senders';
 
   @override
-  String get addressSelectorLivraisonLabel => 'Choose a pickup address';
+  String get addressSelectorDeliveryLabel => 'Choose a delivery address';
 
   @override
-  String get addressSelectorLivraisonSubtitle =>
+  String get addressSelectorDeliverySubtitle =>
       'Where you drop off parcels at destination';
 
   @override
@@ -3306,10 +3290,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get tripTemplateEditTitle => 'Edit the template';
+  String get tripTemplateEditTitle => 'Edit template';
 
   @override
-  String get tripTemplateSaveButton => 'Save the template';
+  String get tripTemplateSaveButton => 'Save template';
 
   @override
   String get tripTemplateUpdatedMessage => 'Template updated';

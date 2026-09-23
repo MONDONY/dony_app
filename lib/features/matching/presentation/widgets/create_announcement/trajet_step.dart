@@ -220,7 +220,7 @@ class TrajetStep extends StatelessWidget {
 
       // ── TRAJET ────────────────────────────────────────────────────────────
       CaSectionLabel(
-        label: l.tripPublishTrajetSectionLabel,
+        label: l.tripPublishRouteSectionLabel,
         iconAsset: 'plane-takeoff',
       ),
       const SizedBox(height: DonySpacing.sm),

@@ -25,6 +25,10 @@ void main() {
   group('joinList — en', () {
     final l = lookupAppLocalizations(AppL10n.en);
 
+    test('liste vide', () {
+      expect(joinList(l, const []), '');
+    });
+
     test('un seul élément', () {
       expect(joinList(l, const ['a']), 'a');
     });

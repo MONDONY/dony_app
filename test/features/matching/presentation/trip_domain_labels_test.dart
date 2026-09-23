@@ -52,19 +52,6 @@ void main() {
       UrgencyFilter.soon: '7–14d',
       UrgencyFilter.later: '14d+',
     };
-    const frTooltips = {
-      UrgencyFilter.veryUrgent: 'Départ dans moins de 3 jours',
-      UrgencyFilter.urgent: 'Départ dans 3 à 7 jours',
-      UrgencyFilter.soon: 'Départ dans 7 à 14 jours',
-      UrgencyFilter.later: 'Départ dans plus de 14 jours',
-    };
-    const enTooltips = {
-      UrgencyFilter.veryUrgent: 'Departing in less than 3 days',
-      UrgencyFilter.urgent: 'Departing in 3 to 7 days',
-      UrgencyFilter.soon: 'Departing in 7 to 14 days',
-      UrgencyFilter.later: 'Departing in more than 14 days',
-    };
-
     for (final filter in UrgencyFilter.values) {
       test('${filter.name} — label fr égale l\'ancien', () {
         expect(filter.label(fr), frLabels[filter]);
@@ -72,14 +59,6 @@ void main() {
 
       test('${filter.name} — label en', () {
         expect(filter.label(en), enLabels[filter]);
-      });
-
-      test('${filter.name} — tooltip fr égale l\'ancien', () {
-        expect(filter.tooltip(fr), frTooltips[filter]);
-      });
-
-      test('${filter.name} — tooltip en', () {
-        expect(filter.tooltip(en), enTooltips[filter]);
       });
     }
   });

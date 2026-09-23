@@ -2434,18 +2434,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripUrgencyLater => '14j+';
 
   @override
-  String get tripUrgencyVeryUrgentTooltip => 'Départ dans moins de 3 jours';
-
-  @override
-  String get tripUrgencyUrgentTooltip => 'Départ dans 3 à 7 jours';
-
-  @override
-  String get tripUrgencySoonTooltip => 'Départ dans 7 à 14 jours';
-
-  @override
-  String get tripUrgencyLaterTooltip => 'Départ dans plus de 14 jours';
-
-  @override
   String get tripCapacitySuitcase23 => '1 valise 23 kg';
 
   @override
@@ -2675,19 +2663,15 @@ class AppLocalizationsFr extends AppLocalizations {
       'Suivi par QR de la remise jusqu\'à la réception.';
 
   @override
-  String get tripPublishIntroVerifyBefore => 'Avant de publier, votre ';
+  String tripPublishIntroVerifyCallout(String identity, String path) {
+    return 'Avant de publier, votre **$identity**. Rendez-vous dans $path pour la valider (2 min).';
+  }
 
   @override
-  String get tripPublishIntroVerifyBold => 'identité doit être vérifiée';
-
-  @override
-  String get tripPublishIntroVerifyGoTo => '. Rendez-vous dans ';
+  String get tripPublishIntroVerifyIdentity => 'identité doit être vérifiée';
 
   @override
   String get tripPublishIntroVerifyPath => 'Profil › Vérifications';
-
-  @override
-  String get tripPublishIntroVerifySuffix => ' pour la valider (2 min).';
 
   @override
   String get tripPublishIntroVerifyButton => 'Vérifier mon identité';
@@ -2862,7 +2846,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripPublishCorridorConfirmedBadge => 'Confirmé';
 
   @override
-  String get tripPublishTrajetSectionLabel => 'Trajet';
+  String get tripPublishRouteSectionLabel => 'Trajet';
 
   @override
   String get tripPublishDepartureCityLabel => 'Ville de départ';
@@ -2951,10 +2935,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripPublishCurrencyChangeCta => 'Changer';
 
   @override
-  String get tripPublishLieuxCapaciteStepLabel => 'Lieux & capacité';
+  String get tripPublishPlacesCapacityStepLabel => 'Lieux & capacité';
 
   @override
-  String get tripPublishPrixConditionsStepLabel => 'Prix & conditions';
+  String get tripPublishPriceConditionsStepLabel => 'Prix & conditions';
 
   @override
   String get tripPublishHandoverLocationsLabel => 'Lieux de remise';
@@ -3076,18 +3060,17 @@ class AppLocalizationsFr extends AppLocalizations {
       'Connexion requise pour la recherche d\'adresse';
 
   @override
-  String get addressSelectorRemiseLabel => 'Choisir une adresse de remise';
+  String get addressSelectorDropoffLabel => 'Choisir une adresse de remise';
 
   @override
-  String get addressSelectorRemiseSubtitle =>
+  String get addressSelectorDropoffSubtitle =>
       'Où tu récupères les colis des expéditeurs';
 
   @override
-  String get addressSelectorLivraisonLabel =>
-      'Choisir une adresse de livraison';
+  String get addressSelectorDeliveryLabel => 'Choisir une adresse de livraison';
 
   @override
-  String get addressSelectorLivraisonSubtitle =>
+  String get addressSelectorDeliverySubtitle =>
       'Où tu déposes les colis à destination';
 
   @override

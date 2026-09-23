@@ -49,7 +49,7 @@ void main() {
       useEnglish();
       await tester.pumpWidget(wrap(AddressSelectorType.livraison));
 
-      expect(find.text('Choose a pickup address'), findsOneWidget);
+      expect(find.text('Choose a delivery address'), findsOneWidget);
       expect(
         find.text('Where you drop off parcels at destination'),
         findsOneWidget,

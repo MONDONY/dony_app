@@ -16,20 +16,13 @@ extension TransportModeL10n on TransportMode {
   };
 }
 
-/// Libellés et infobulles traduits d'un filtre d'urgence de départ.
+/// Libellés traduits d'un filtre d'urgence de départ.
 extension UrgencyFilterL10n on UrgencyFilter {
   String label(AppLocalizations l) => switch (this) {
     UrgencyFilter.veryUrgent => l.tripUrgencyVeryUrgent,
     UrgencyFilter.urgent => l.tripUrgencyUrgent,
     UrgencyFilter.soon => l.tripUrgencySoon,
     UrgencyFilter.later => l.tripUrgencyLater,
-  };
-
-  String tooltip(AppLocalizations l) => switch (this) {
-    UrgencyFilter.veryUrgent => l.tripUrgencyVeryUrgentTooltip,
-    UrgencyFilter.urgent => l.tripUrgencyUrgentTooltip,
-    UrgencyFilter.soon => l.tripUrgencySoonTooltip,
-    UrgencyFilter.later => l.tripUrgencyLaterTooltip,
   };
 }
 

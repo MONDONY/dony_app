@@ -1090,10 +1090,6 @@
   "tripUrgencyUrgent": "3–7j",
   "tripUrgencySoon": "7–14j",
   "tripUrgencyLater": "14j+",
-  "tripUrgencyVeryUrgentTooltip": "Départ dans moins de 3 jours",
-  "tripUrgencyUrgentTooltip": "Départ dans 3 à 7 jours",
-  "tripUrgencySoonTooltip": "Départ dans 7 à 14 jours",
-  "tripUrgencyLaterTooltip": "Départ dans plus de 14 jours",
   "tripCapacitySuitcase23": "1 valise 23 kg",
   "tripCapacitySuitcase32": "1 valise 32 kg",
   "tripCapacityCustom": "Personnalisé",
@@ -1351,25 +1347,25 @@
   "@requestPublishIntroWhyBulletTracking": {
     "description": "Puce « comment ça marche », rôle expéditeur : suivi QR"
   },
-  "tripPublishIntroVerifyBefore": "Avant de publier, votre ",
-  "@tripPublishIntroVerifyBefore": {
-    "description": "Premier segment (non gras) de la phrase d'invite à vérifier son identité"
+  "tripPublishIntroVerifyCallout": "Avant de publier, votre **{identity}**. Rendez-vous dans {path} pour la valider (2 min).",
+  "@tripPublishIntroVerifyCallout": {
+    "description": "Encart d'invite à vérifier son identité avant de publier un trajet. Le segment en gras (identity) et le chemin souligné (path) sont insérés par paramètre puis découpés au rendu",
+    "placeholders": {
+      "identity": {
+        "type": "String"
+      },
+      "path": {
+        "type": "String"
+      }
+    }
   },
-  "tripPublishIntroVerifyBold": "identité doit être vérifiée",
-  "@tripPublishIntroVerifyBold": {
-    "description": "Segment en gras de la phrase d'invite à vérifier son identité"
-  },
-  "tripPublishIntroVerifyGoTo": ". Rendez-vous dans ",
-  "@tripPublishIntroVerifyGoTo": {
-    "description": "Segment (non gras) de la phrase d'invite à vérifier son identité"
+  "tripPublishIntroVerifyIdentity": "identité doit être vérifiée",
+  "@tripPublishIntroVerifyIdentity": {
+    "description": "Segment en gras (paramètre identity) de l'encart d'invite à vérifier son identité"
   },
   "tripPublishIntroVerifyPath": "Profil › Vérifications",
   "@tripPublishIntroVerifyPath": {
-    "description": "Chemin de menu en gras souligné, dans la phrase d'invite à vérifier son identité"
-  },
-  "tripPublishIntroVerifySuffix": " pour la valider (2 min).",
-  "@tripPublishIntroVerifySuffix": {
-    "description": "Dernier segment (non gras) de la phrase d'invite à vérifier son identité"
+    "description": "Chemin de menu en gras souligné (paramètre path), dans l'encart d'invite à vérifier son identité"
   },
   "tripPublishIntroVerifyButton": "Vérifier mon identité",
   "@tripPublishIntroVerifyButton": {
@@ -1591,8 +1587,8 @@
   "@tripPublishCorridorConfirmedBadge": {
     "description": "Badge sur l'aperçu du corridor une fois départ et arrivée sélectionnés"
   },
-  "tripPublishTrajetSectionLabel": "Trajet",
-  "@tripPublishTrajetSectionLabel": {
+  "tripPublishRouteSectionLabel": "Trajet",
+  "@tripPublishRouteSectionLabel": {
     "description": "Libellé de section « Trajet », aussi utilisé comme libellé d'étape du stepper"
   },
   "tripPublishDepartureCityLabel": "Ville de départ",
@@ -1704,12 +1700,12 @@
   "@tripPublishCurrencyChangeCta": {
     "description": "Bouton « Changer » de la bannière de sélection de devise"
   },
-  "tripPublishLieuxCapaciteStepLabel": "Lieux & capacité",
-  "@tripPublishLieuxCapaciteStepLabel": {
+  "tripPublishPlacesCapacityStepLabel": "Lieux & capacité",
+  "@tripPublishPlacesCapacityStepLabel": {
     "description": "Libellé d'étape du stepper de publication (étape 1)"
   },
-  "tripPublishPrixConditionsStepLabel": "Prix & conditions",
-  "@tripPublishPrixConditionsStepLabel": {
+  "tripPublishPriceConditionsStepLabel": "Prix & conditions",
+  "@tripPublishPriceConditionsStepLabel": {
     "description": "Libellé d'étape du stepper de publication (étape 2)"
   },
   "tripPublishHandoverLocationsLabel": "Lieux de remise",
@@ -1861,20 +1857,20 @@
   "@addressOfflineInlineMessage": {
     "description": "Message inline hors ligne sous le champ d'adresse (address_picker_field.dart et address_suggest_field.dart)"
   },
-  "addressSelectorRemiseLabel": "Choisir une adresse de remise",
-  "@addressSelectorRemiseLabel": {
+  "addressSelectorDropoffLabel": "Choisir une adresse de remise",
+  "@addressSelectorDropoffLabel": {
     "description": "Libellé de la carte vide du sélecteur d'adresse de remise (address_selector_field.dart)"
   },
-  "addressSelectorRemiseSubtitle": "Où tu récupères les colis des expéditeurs",
-  "@addressSelectorRemiseSubtitle": {
+  "addressSelectorDropoffSubtitle": "Où tu récupères les colis des expéditeurs",
+  "@addressSelectorDropoffSubtitle": {
     "description": "Sous-titre de la carte vide du sélecteur d'adresse de remise (address_selector_field.dart)"
   },
-  "addressSelectorLivraisonLabel": "Choisir une adresse de livraison",
-  "@addressSelectorLivraisonLabel": {
+  "addressSelectorDeliveryLabel": "Choisir une adresse de livraison",
+  "@addressSelectorDeliveryLabel": {
     "description": "Libellé de la carte vide du sélecteur d'adresse de livraison (address_selector_field.dart)"
   },
-  "addressSelectorLivraisonSubtitle": "Où tu déposes les colis à destination",
-  "@addressSelectorLivraisonSubtitle": {
+  "addressSelectorDeliverySubtitle": "Où tu déposes les colis à destination",
+  "@addressSelectorDeliverySubtitle": {
     "description": "Sous-titre de la carte vide du sélecteur d'adresse de livraison (address_selector_field.dart)"
   },
 

@@ -154,7 +154,7 @@ void main() {
       );
       await tester.pump();
       expect(find.text('Trip'), findsOneWidget);
-      expect(find.text('Places & capacity'), findsOneWidget);
+      expect(find.text('Locations & capacity'), findsOneWidget);
       expect(find.text('Price & conditions'), findsOneWidget);
     });
   });

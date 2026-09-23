@@ -4166,30 +4166,6 @@ abstract class AppLocalizations {
   /// **'14j+'**
   String get tripUrgencyLater;
 
-  /// No description provided for @tripUrgencyVeryUrgentTooltip.
-  ///
-  /// In fr, this message translates to:
-  /// **'Départ dans moins de 3 jours'**
-  String get tripUrgencyVeryUrgentTooltip;
-
-  /// No description provided for @tripUrgencyUrgentTooltip.
-  ///
-  /// In fr, this message translates to:
-  /// **'Départ dans 3 à 7 jours'**
-  String get tripUrgencyUrgentTooltip;
-
-  /// No description provided for @tripUrgencySoonTooltip.
-  ///
-  /// In fr, this message translates to:
-  /// **'Départ dans 7 à 14 jours'**
-  String get tripUrgencySoonTooltip;
-
-  /// No description provided for @tripUrgencyLaterTooltip.
-  ///
-  /// In fr, this message translates to:
-  /// **'Départ dans plus de 14 jours'**
-  String get tripUrgencyLaterTooltip;
-
   /// No description provided for @tripCapacitySuitcase23.
   ///
   /// In fr, this message translates to:
@@ -4562,35 +4538,23 @@ abstract class AppLocalizations {
   /// **'Suivi par QR de la remise jusqu\'à la réception.'**
   String get requestPublishIntroWhyBulletTracking;
 
-  /// Premier segment (non gras) de la phrase d'invite à vérifier son identité
+  /// Encart d'invite à vérifier son identité avant de publier un trajet. Le segment en gras (identity) et le chemin souligné (path) sont insérés par paramètre puis découpés au rendu
   ///
   /// In fr, this message translates to:
-  /// **'Avant de publier, votre '**
-  String get tripPublishIntroVerifyBefore;
+  /// **'Avant de publier, votre **{identity}**. Rendez-vous dans {path} pour la valider (2 min).'**
+  String tripPublishIntroVerifyCallout(String identity, String path);
 
-  /// Segment en gras de la phrase d'invite à vérifier son identité
+  /// Segment en gras (paramètre identity) de l'encart d'invite à vérifier son identité
   ///
   /// In fr, this message translates to:
   /// **'identité doit être vérifiée'**
-  String get tripPublishIntroVerifyBold;
+  String get tripPublishIntroVerifyIdentity;
 
-  /// Segment (non gras) de la phrase d'invite à vérifier son identité
-  ///
-  /// In fr, this message translates to:
-  /// **'. Rendez-vous dans '**
-  String get tripPublishIntroVerifyGoTo;
-
-  /// Chemin de menu en gras souligné, dans la phrase d'invite à vérifier son identité
+  /// Chemin de menu en gras souligné (paramètre path), dans l'encart d'invite à vérifier son identité
   ///
   /// In fr, this message translates to:
   /// **'Profil › Vérifications'**
   String get tripPublishIntroVerifyPath;
-
-  /// Dernier segment (non gras) de la phrase d'invite à vérifier son identité
-  ///
-  /// In fr, this message translates to:
-  /// **' pour la valider (2 min).'**
-  String get tripPublishIntroVerifySuffix;
 
   /// Bouton qui ouvre le portail KYC depuis l'intro de publication
   ///
@@ -4884,7 +4848,7 @@ abstract class AppLocalizations {
   ///
   /// In fr, this message translates to:
   /// **'Trajet'**
-  String get tripPublishTrajetSectionLabel;
+  String get tripPublishRouteSectionLabel;
 
   /// Libellé du champ ville de départ verrouillé (corridor fixé par une demande)
   ///
@@ -5016,13 +4980,13 @@ abstract class AppLocalizations {
   ///
   /// In fr, this message translates to:
   /// **'Lieux & capacité'**
-  String get tripPublishLieuxCapaciteStepLabel;
+  String get tripPublishPlacesCapacityStepLabel;
 
   /// Libellé d'étape du stepper de publication (étape 2)
   ///
   /// In fr, this message translates to:
   /// **'Prix & conditions'**
-  String get tripPublishPrixConditionsStepLabel;
+  String get tripPublishPriceConditionsStepLabel;
 
   /// Titre de la section lieux de remise et de récupération
   ///
@@ -5238,25 +5202,25 @@ abstract class AppLocalizations {
   ///
   /// In fr, this message translates to:
   /// **'Choisir une adresse de remise'**
-  String get addressSelectorRemiseLabel;
+  String get addressSelectorDropoffLabel;
 
   /// Sous-titre de la carte vide du sélecteur d'adresse de remise (address_selector_field.dart)
   ///
   /// In fr, this message translates to:
   /// **'Où tu récupères les colis des expéditeurs'**
-  String get addressSelectorRemiseSubtitle;
+  String get addressSelectorDropoffSubtitle;
 
   /// Libellé de la carte vide du sélecteur d'adresse de livraison (address_selector_field.dart)
   ///
   /// In fr, this message translates to:
   /// **'Choisir une adresse de livraison'**
-  String get addressSelectorLivraisonLabel;
+  String get addressSelectorDeliveryLabel;
 
   /// Sous-titre de la carte vide du sélecteur d'adresse de livraison (address_selector_field.dart)
   ///
   /// In fr, this message translates to:
   /// **'Où tu déposes les colis à destination'**
-  String get addressSelectorLivraisonSubtitle;
+  String get addressSelectorDeliverySubtitle;
 
   /// Motif intl DateFormat, pas un texte : heure de l'échéance de l'affiche du trajet (trip_poster_card.dart)
   ///

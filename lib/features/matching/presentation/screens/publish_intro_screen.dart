@@ -297,6 +297,24 @@ class _ConditionCallout extends StatelessWidget {
     }
 
     // Non vérifié : tout l'encart est tapable et lance le portail KYC.
+    //
+    // La phrase complète (segment en gras + chemin souligné) vient d'une
+    // clé unique paramétrée (tripPublishIntroVerifyCallout) plutôt que de
+    // fragments séparés : `identity` porte le mot en gras, `path` le chemin
+    // de menu souligné. On les repère dans le rendu par leur position (comme
+    // `_boldSpans` le fait pour les marqueurs `**`) pour reconstituer les
+    // styles distincts.
+    final identity = l10n.tripPublishIntroVerifyIdentity;
+    final path = l10n.tripPublishIntroVerifyPath;
+    final calloutText = l10n.tripPublishIntroVerifyCallout(identity, path);
+    final pathIndex = calloutText.indexOf(path);
+    final beforePath = pathIndex >= 0
+        ? calloutText.substring(0, pathIndex)
+        : calloutText;
+    final afterPath = pathIndex >= 0
+        ? calloutText.substring(pathIndex + path.length)
+        : '';
+
     return InkWell(
       onTap: onVerify,
       borderRadius: BorderRadius.circular(16),
@@ -308,21 +326,18 @@ class _ConditionCallout extends StatelessWidget {
           TextSpan(
             style: tt.bodyMedium?.copyWith(color: cs.onSurface, height: 1.45),
             children: [
-              TextSpan(text: l10n.tripPublishIntroVerifyBefore),
-              TextSpan(
-                text: l10n.tripPublishIntroVerifyBold,
-                style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w800),
-              ),
-              TextSpan(text: l10n.tripPublishIntroVerifyGoTo),
-              TextSpan(
-                text: l10n.tripPublishIntroVerifyPath,
-                style: tt.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: cs.warning,
-                  decoration: TextDecoration.underline,
+              _boldSpans(beforePath, tt.bodyMedium!, cs.onSurface),
+              if (pathIndex >= 0)
+                TextSpan(
+                  text: path,
+                  style: tt.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: cs.warning,
+                    decoration: TextDecoration.underline,
+                  ),
                 ),
-              ),
-              TextSpan(text: l10n.tripPublishIntroVerifySuffix),
+              if (pathIndex >= 0)
+                _boldSpans(afterPath, tt.bodyMedium!, cs.onSurface),
             ],
           ),
         ),

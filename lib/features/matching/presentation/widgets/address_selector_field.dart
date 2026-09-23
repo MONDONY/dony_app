@@ -45,11 +45,11 @@ class AddressSelectorField extends StatelessWidget {
     final l10n = context.l10n;
     return _EmptyCard(
       label: _isRemise
-          ? l10n.addressSelectorRemiseLabel
-          : l10n.addressSelectorLivraisonLabel,
+          ? l10n.addressSelectorDropoffLabel
+          : l10n.addressSelectorDeliveryLabel,
       subtitle: _isRemise
-          ? l10n.addressSelectorRemiseSubtitle
-          : l10n.addressSelectorLivraisonSubtitle,
+          ? l10n.addressSelectorDropoffSubtitle
+          : l10n.addressSelectorDeliverySubtitle,
       color: color,
       containerColor: containerColor,
       onTap: () => _openSheet(context),

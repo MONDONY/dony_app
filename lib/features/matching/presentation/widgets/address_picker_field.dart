@@ -26,6 +26,12 @@ class AddressPickerField extends FormField<AddressData> {
     FormFieldValidator<AddressData>? validator,
     super.autovalidateMode = AutovalidateMode.onUserInteraction,
   }) : super(
+         // `AppL10n.current` (hors `BuildContext`) : ce validateur est passé
+         // au constructeur `super` avant que le `FormField` n'ait un contexte
+         // à offrir. S'il est monté avant un changement de langue en cours de
+         // session, le message qu'il produit ne se met à jour qu'à la
+         // prochaine validation (perte de focus, soumission), pas
+         // immédiatement au changement de langue.
          validator:
              validator ??
              (isRequired

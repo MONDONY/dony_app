@@ -76,9 +76,9 @@ void main() {
       );
     });
 
-    // Libellé et infobulle : voir UrgencyFilterL10n dans
-    // trip_domain_labels_test.dart (les champs `label`/`tooltip` de l'enum
-    // ont été retirés au profit de cette extension traduite).
+    // Libellé : voir UrgencyFilterL10n dans trip_domain_labels_test.dart (le
+    // champ `label` de l'enum a été retiré au profit de cette extension
+    // traduite).
 
     test('each filter has a non-null color', () {
       for (final filter in UrgencyFilter.values) {

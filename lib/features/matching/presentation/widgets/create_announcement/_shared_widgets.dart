@@ -90,9 +90,9 @@ class CaStepperHeader extends StatelessWidget {
   });
 
   static List<String> _labels(AppLocalizations l) => [
-    l.tripPublishTrajetSectionLabel,
-    l.tripPublishLieuxCapaciteStepLabel,
-    l.tripPublishPrixConditionsStepLabel,
+    l.tripPublishRouteSectionLabel,
+    l.tripPublishPlacesCapacityStepLabel,
+    l.tripPublishPriceConditionsStepLabel,
   ];
 
   @override
