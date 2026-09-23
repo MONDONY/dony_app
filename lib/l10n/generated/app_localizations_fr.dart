@@ -909,4 +909,130 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get networkFallbackNetworkError => 'Erreur réseau';
+
+  @override
+  String get countryNameDe => 'Allemagne';
+
+  @override
+  String get countryNameAt => 'Autriche';
+
+  @override
+  String get countryNameBe => 'Belgique';
+
+  @override
+  String get countryNameCy => 'Chypre';
+
+  @override
+  String get countryNameHr => 'Croatie';
+
+  @override
+  String get countryNameEs => 'Espagne';
+
+  @override
+  String get countryNameEe => 'Estonie';
+
+  @override
+  String get countryNameFi => 'Finlande';
+
+  @override
+  String get countryNameFr => 'France';
+
+  @override
+  String get countryNameGr => 'Grèce';
+
+  @override
+  String get countryNameIe => 'Irlande';
+
+  @override
+  String get countryNameIt => 'Italie';
+
+  @override
+  String get countryNameLv => 'Lettonie';
+
+  @override
+  String get countryNameLt => 'Lituanie';
+
+  @override
+  String get countryNameLu => 'Luxembourg';
+
+  @override
+  String get countryNameMt => 'Malte';
+
+  @override
+  String get countryNameNl => 'Pays-Bas';
+
+  @override
+  String get countryNamePt => 'Portugal';
+
+  @override
+  String get countryNameGb => 'Royaume-Uni';
+
+  @override
+  String get countryNameSk => 'Slovaquie';
+
+  @override
+  String get countryNameSi => 'Slovénie';
+
+  @override
+  String get countryNameCh => 'Suisse';
+
+  @override
+  String get countryNameCa => 'Canada';
+
+  @override
+  String get countryNameUs => 'États-Unis';
+
+  @override
+  String get countryNameBj => 'Bénin';
+
+  @override
+  String get countryNameBf => 'Burkina Faso';
+
+  @override
+  String get countryNameCi => 'Côte d\'Ivoire';
+
+  @override
+  String get countryNameGw => 'Guinée-Bissau';
+
+  @override
+  String get countryNameMl => 'Mali';
+
+  @override
+  String get countryNameNe => 'Niger';
+
+  @override
+  String get countryNameSn => 'Sénégal';
+
+  @override
+  String get countryNameTg => 'Togo';
+
+  @override
+  String get countryNameCm => 'Cameroun';
+
+  @override
+  String get countryNameCf => 'Centrafrique';
+
+  @override
+  String get countryNameCg => 'Congo';
+
+  @override
+  String get countryNameGa => 'Gabon';
+
+  @override
+  String get countryNameGq => 'Guinée équatoriale';
+
+  @override
+  String get countryNameTd => 'Tchad';
+
+  @override
+  String get countryZoneEurope => 'Europe';
+
+  @override
+  String get countryZoneNorthAmerica => 'Amérique du Nord';
+
+  @override
+  String get countryZoneWestAfrica => 'Afrique de l\'Ouest';
+
+  @override
+  String get countryZoneCentralAfrica => 'Afrique centrale';
 }

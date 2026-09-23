@@ -1645,6 +1645,258 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Erreur réseau'**
   String get networkFallbackNetworkError;
+
+  /// No description provided for @countryNameDe.
+  ///
+  /// In fr, this message translates to:
+  /// **'Allemagne'**
+  String get countryNameDe;
+
+  /// No description provided for @countryNameAt.
+  ///
+  /// In fr, this message translates to:
+  /// **'Autriche'**
+  String get countryNameAt;
+
+  /// No description provided for @countryNameBe.
+  ///
+  /// In fr, this message translates to:
+  /// **'Belgique'**
+  String get countryNameBe;
+
+  /// No description provided for @countryNameCy.
+  ///
+  /// In fr, this message translates to:
+  /// **'Chypre'**
+  String get countryNameCy;
+
+  /// No description provided for @countryNameHr.
+  ///
+  /// In fr, this message translates to:
+  /// **'Croatie'**
+  String get countryNameHr;
+
+  /// No description provided for @countryNameEs.
+  ///
+  /// In fr, this message translates to:
+  /// **'Espagne'**
+  String get countryNameEs;
+
+  /// No description provided for @countryNameEe.
+  ///
+  /// In fr, this message translates to:
+  /// **'Estonie'**
+  String get countryNameEe;
+
+  /// No description provided for @countryNameFi.
+  ///
+  /// In fr, this message translates to:
+  /// **'Finlande'**
+  String get countryNameFi;
+
+  /// No description provided for @countryNameFr.
+  ///
+  /// In fr, this message translates to:
+  /// **'France'**
+  String get countryNameFr;
+
+  /// No description provided for @countryNameGr.
+  ///
+  /// In fr, this message translates to:
+  /// **'Grèce'**
+  String get countryNameGr;
+
+  /// No description provided for @countryNameIe.
+  ///
+  /// In fr, this message translates to:
+  /// **'Irlande'**
+  String get countryNameIe;
+
+  /// No description provided for @countryNameIt.
+  ///
+  /// In fr, this message translates to:
+  /// **'Italie'**
+  String get countryNameIt;
+
+  /// No description provided for @countryNameLv.
+  ///
+  /// In fr, this message translates to:
+  /// **'Lettonie'**
+  String get countryNameLv;
+
+  /// No description provided for @countryNameLt.
+  ///
+  /// In fr, this message translates to:
+  /// **'Lituanie'**
+  String get countryNameLt;
+
+  /// No description provided for @countryNameLu.
+  ///
+  /// In fr, this message translates to:
+  /// **'Luxembourg'**
+  String get countryNameLu;
+
+  /// No description provided for @countryNameMt.
+  ///
+  /// In fr, this message translates to:
+  /// **'Malte'**
+  String get countryNameMt;
+
+  /// No description provided for @countryNameNl.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pays-Bas'**
+  String get countryNameNl;
+
+  /// No description provided for @countryNamePt.
+  ///
+  /// In fr, this message translates to:
+  /// **'Portugal'**
+  String get countryNamePt;
+
+  /// No description provided for @countryNameGb.
+  ///
+  /// In fr, this message translates to:
+  /// **'Royaume-Uni'**
+  String get countryNameGb;
+
+  /// No description provided for @countryNameSk.
+  ///
+  /// In fr, this message translates to:
+  /// **'Slovaquie'**
+  String get countryNameSk;
+
+  /// No description provided for @countryNameSi.
+  ///
+  /// In fr, this message translates to:
+  /// **'Slovénie'**
+  String get countryNameSi;
+
+  /// No description provided for @countryNameCh.
+  ///
+  /// In fr, this message translates to:
+  /// **'Suisse'**
+  String get countryNameCh;
+
+  /// No description provided for @countryNameCa.
+  ///
+  /// In fr, this message translates to:
+  /// **'Canada'**
+  String get countryNameCa;
+
+  /// No description provided for @countryNameUs.
+  ///
+  /// In fr, this message translates to:
+  /// **'États-Unis'**
+  String get countryNameUs;
+
+  /// No description provided for @countryNameBj.
+  ///
+  /// In fr, this message translates to:
+  /// **'Bénin'**
+  String get countryNameBj;
+
+  /// No description provided for @countryNameBf.
+  ///
+  /// In fr, this message translates to:
+  /// **'Burkina Faso'**
+  String get countryNameBf;
+
+  /// No description provided for @countryNameCi.
+  ///
+  /// In fr, this message translates to:
+  /// **'Côte d\'Ivoire'**
+  String get countryNameCi;
+
+  /// No description provided for @countryNameGw.
+  ///
+  /// In fr, this message translates to:
+  /// **'Guinée-Bissau'**
+  String get countryNameGw;
+
+  /// No description provided for @countryNameMl.
+  ///
+  /// In fr, this message translates to:
+  /// **'Mali'**
+  String get countryNameMl;
+
+  /// No description provided for @countryNameNe.
+  ///
+  /// In fr, this message translates to:
+  /// **'Niger'**
+  String get countryNameNe;
+
+  /// No description provided for @countryNameSn.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sénégal'**
+  String get countryNameSn;
+
+  /// No description provided for @countryNameTg.
+  ///
+  /// In fr, this message translates to:
+  /// **'Togo'**
+  String get countryNameTg;
+
+  /// No description provided for @countryNameCm.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cameroun'**
+  String get countryNameCm;
+
+  /// No description provided for @countryNameCf.
+  ///
+  /// In fr, this message translates to:
+  /// **'Centrafrique'**
+  String get countryNameCf;
+
+  /// No description provided for @countryNameCg.
+  ///
+  /// In fr, this message translates to:
+  /// **'Congo'**
+  String get countryNameCg;
+
+  /// No description provided for @countryNameGa.
+  ///
+  /// In fr, this message translates to:
+  /// **'Gabon'**
+  String get countryNameGa;
+
+  /// No description provided for @countryNameGq.
+  ///
+  /// In fr, this message translates to:
+  /// **'Guinée équatoriale'**
+  String get countryNameGq;
+
+  /// No description provided for @countryNameTd.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tchad'**
+  String get countryNameTd;
+
+  /// No description provided for @countryZoneEurope.
+  ///
+  /// In fr, this message translates to:
+  /// **'Europe'**
+  String get countryZoneEurope;
+
+  /// No description provided for @countryZoneNorthAmerica.
+  ///
+  /// In fr, this message translates to:
+  /// **'Amérique du Nord'**
+  String get countryZoneNorthAmerica;
+
+  /// No description provided for @countryZoneWestAfrica.
+  ///
+  /// In fr, this message translates to:
+  /// **'Afrique de l\'Ouest'**
+  String get countryZoneWestAfrica;
+
+  /// No description provided for @countryZoneCentralAfrica.
+  ///
+  /// In fr, this message translates to:
+  /// **'Afrique centrale'**
+  String get countryZoneCentralAfrica;
 }
 
 class _AppLocalizationsDelegate
