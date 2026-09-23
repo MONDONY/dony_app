@@ -27,9 +27,7 @@ void main() {
   setUpAll(() => initializeDateFormatting('fr'));
 
   testWidgets('rendu français inchangé', (tester) async {
-    await tester.pumpWidget(
-      _wrap(WizardSummaryCard(state: _state())),
-    );
+    await tester.pumpWidget(_wrap(WizardSummaryCard(state: _state())));
 
     expect(find.text('Trajet'), findsOneWidget);
     expect(find.text('Paris → Dakar'), findsOneWidget);
@@ -50,9 +48,7 @@ void main() {
     tester,
   ) async {
     useEnglish();
-    await tester.pumpWidget(
-      _wrap(WizardSummaryCard(state: _state())),
-    );
+    await tester.pumpWidget(_wrap(WizardSummaryCard(state: _state())));
 
     expect(find.text('Trip'), findsOneWidget);
     expect(find.text('Date'), findsOneWidget);

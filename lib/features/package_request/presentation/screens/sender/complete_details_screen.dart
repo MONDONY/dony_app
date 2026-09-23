@@ -153,8 +153,7 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
           DonySnackbar.show(
             context,
             message:
-                state.errorMessage ??
-                context.l10n.requestListErrorFallback,
+                state.errorMessage ?? context.l10n.requestListErrorFallback,
             type: DonySnackbarType.error,
           );
         }

@@ -65,21 +65,15 @@ void main() {
       expect(threadPriceLabel(en, 50, 60.0, true), 'You receive 50,00 €');
     });
 
-    test(
-      'expéditeur sans gross : net*1.12 arrondi à 2 décimales (fr) — '
-      '100 → 112,00',
-      () {
-        expect(threadPriceLabel(fr, 100, null, false), 'Tu paies 112,00 €');
-      },
-    );
+    test('expéditeur sans gross : net*1.12 arrondi à 2 décimales (fr) — '
+        '100 → 112,00', () {
+      expect(threadPriceLabel(fr, 100, null, false), 'Tu paies 112,00 €');
+    });
 
-    test(
-      'expéditeur sans gross : net*1.12 arrondi à 2 décimales (en) — '
-      '100 → 112,00',
-      () {
-        expect(threadPriceLabel(en, 100, null, false), 'You pay 112,00 €');
-      },
-    );
+    test('expéditeur sans gross : net*1.12 arrondi à 2 décimales (en) — '
+        '100 → 112,00', () {
+      expect(threadPriceLabel(en, 100, null, false), 'You pay 112,00 €');
+    });
   });
 
   group('weightRangeLabel', () {

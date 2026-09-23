@@ -20,14 +20,8 @@ void main() {
     );
     expect(find.text('Carte'), findsOneWidget);
     expect(find.text('Espèces'), findsOneWidget);
-    expect(
-      find.byKey(const Key('payment-method-chip-stripe')),
-      findsOneWidget,
-    );
-    expect(
-      find.byKey(const Key('payment-method-chip-cash')),
-      findsOneWidget,
-    );
+    expect(find.byKey(const Key('payment-method-chip-stripe')), findsOneWidget);
+    expect(find.byKey(const Key('payment-method-chip-cash')), findsOneWidget);
   });
 
   testWidgets('anglais : moyen de paiement traduit', (tester) async {

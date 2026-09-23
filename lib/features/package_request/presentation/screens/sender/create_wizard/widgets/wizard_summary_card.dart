@@ -43,7 +43,11 @@ class WizardSummaryCard extends StatelessWidget {
           _line(context, l.requestCreateRecapPackage, _packageText(state)),
           if (state.categories.isNotEmpty) ...[
             _divider(cs),
-            _line(context, l.requestCreateContentLabel, _categoriesText(l, state)),
+            _line(
+              context,
+              l.requestCreateContentLabel,
+              _categoriesText(l, state),
+            ),
           ],
         ],
       ),

@@ -743,10 +743,7 @@ void main() {
         );
         await tester.pumpWidget(wrap());
         await tester.pumpAndSettle();
-        expect(
-          find.text('Jun 15 ±2d · 5 kg · Clo. · ≈35 €'),
-          findsOneWidget,
-        );
+        expect(find.text('Jun 15 ±2d · 5 kg · Clo. · ≈35 €'), findsOneWidget);
         expect(find.textContaining('±2j'), findsNothing);
         expect(find.textContaining('Vêt.'), findsNothing);
       },
