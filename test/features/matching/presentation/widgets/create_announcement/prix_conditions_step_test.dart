@@ -34,6 +34,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
 import '../../../../../helpers/mock_analytics_backend.dart';
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
@@ -874,6 +875,24 @@ void main() {
         find.text(CurrencyFormatter.format(10, SupportedCurrency.eur)),
         findsOneWidget,
       );
+    });
+  });
+
+  // ── Group: English (i18n) ─────────────────────────────────────────────────
+
+  group('PrixConditionsStep — English', () {
+    testWidgets('titre de section "Ce que j\'accepte" traduit', (tester) async {
+      useEnglish();
+      await _pump(tester);
+      expect(find.text('What I accept'), findsOneWidget);
+    });
+
+    testWidgets('titre du toggle de négociation traduit', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(_host(negotiableNotifier: ValueNotifier(false)));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(find.text('I accept price proposals'), findsOneWidget);
     });
   });
 }

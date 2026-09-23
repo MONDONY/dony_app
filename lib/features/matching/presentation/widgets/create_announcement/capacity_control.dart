@@ -66,17 +66,18 @@ class _CapacityControlState extends State<CapacityControl> {
           prev.availableKg != curr.availableKg,
       builder: (context, state) {
         final tt = Theme.of(context).textTheme;
+        final l = context.l10n;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Capacité disponible', style: tt.titleMedium),
+            Text(l.tripPublishCapacityAvailableLabel, style: tt.titleMedium),
             const SizedBox(height: DonySpacing.sm),
             Wrap(
               spacing: DonySpacing.sm,
               runSpacing: DonySpacing.sm,
               children: CapacityUnit.values.map((unit) {
                 return DonyChip(
-                  label: unit.label(context.l10n),
+                  label: unit.label(l),
                   selected: state.capacityUnit == unit,
                   onTap: () => context.read<AnnouncementFormBloc>().add(
                     CapacityUnitChanged(unit),
@@ -120,12 +121,12 @@ class _SuitcaseStepperCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
 
     final unitKg = state.capacityUnit.maxKg!;
     final totalKg = state.availableKg ?? unitKg;
     final quantite = ((totalKg / unitKg).round()).clamp(1, 999999);
     final totalDisplay = (quantite * unitKg).toInt();
-    final valiseLabel = quantite == 1 ? 'valise' : 'valises';
 
     return Container(
       padding: const EdgeInsets.all(DonySpacing.base),
@@ -146,9 +147,12 @@ class _SuitcaseStepperCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Vous offrez $totalDisplay kg', style: tt.titleMedium),
                     Text(
-                      '$quantite $valiseLabel de ${unitKg.toInt()} kg',
+                      l.tripPublishYouOfferKg(totalDisplay),
+                      style: tt.titleMedium,
+                    ),
+                    Text(
+                      l.tripPublishSuitcaseCount(quantite, unitKg.toInt()),
                       style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                     ),
                   ],
@@ -165,7 +169,7 @@ class _SuitcaseStepperCard extends StatelessWidget {
               _StepperButton(
                 icon: DonyIcons.minus,
                 enabled: quantite > 1,
-                semanticLabel: 'Diminuer la quantité',
+                semanticLabel: l.tripPublishDecreaseQuantityTooltip,
                 onPressed: quantite > 1
                     ? () => context.read<AnnouncementFormBloc>().add(
                         AvailableKgChanged((quantite - 1) * unitKg),
@@ -184,7 +188,7 @@ class _SuitcaseStepperCard extends StatelessWidget {
               _StepperButton(
                 icon: DonyIcons.add,
                 enabled: true,
-                semanticLabel: 'Augmenter la quantité',
+                semanticLabel: l.tripPublishIncreaseQuantityTooltip,
                 onPressed: () => context.read<AnnouncementFormBloc>().add(
                   AvailableKgChanged((quantite + 1) * unitKg),
                 ),
@@ -246,6 +250,7 @@ class _KgFreeInfoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
 
     return Container(
       padding: const EdgeInsets.all(DonySpacing.base),
@@ -264,12 +269,12 @@ class _KgFreeInfoCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Capacité illimitée',
+                  l.tripPublishUnlimitedCapacityTitle,
                   style: tt.titleMedium?.copyWith(color: cs.primary),
                 ),
                 const SizedBox(height: DonySpacing.xs),
                 Text(
-                  'Vendu au kilo · l\'expéditeur choisit son poids',
+                  l.tripPublishUnlimitedCapacitySubtitle,
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
               ],
@@ -294,6 +299,7 @@ class _CustomKgCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
 
     return Container(
       padding: const EdgeInsets.all(DonySpacing.base),
@@ -307,7 +313,7 @@ class _CustomKgCard extends StatelessWidget {
         children: [
           DonyTextField(
             controller: controller,
-            label: 'Capacité (kg)',
+            label: l.tripPublishCapacityKgFieldLabel,
             prefixIcon: DonyIcons.suitcase,
             keyboardType: TextInputType.number,
             onChanged: (value) {
@@ -321,7 +327,7 @@ class _CustomKgCard extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.xs),
           Text(
-            'Indiquez la capacité totale que vous offrez',
+            l.tripPublishCapacityKgFieldHint,
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
         ],

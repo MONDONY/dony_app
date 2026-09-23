@@ -5,6 +5,7 @@ import 'package:dony/core/currency/supported_currency.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -53,14 +54,14 @@ class CurrencySelectionBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
     return ValueListenableBuilder<SupportedCurrency>(
       valueListenable: currencyNotifier,
       builder: (context, currency, _) {
-        final semanticsLabel =
-            'Devise de publication : ${currency.displayName}, '
-            '${currency.code}. Les utilisateurs dans une autre devise voient '
-            'un prix converti. Le paiement reste dans cette devise. '
-            'Bouton, modifier la devise.';
+        final semanticsLabel = l.tripPublishCurrencySemanticsLabel(
+          currency.displayName,
+          currency.code,
+        );
         return Semantics(
           container: true,
           button: true,
@@ -87,7 +88,10 @@ class CurrencySelectionBanner extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Publié en ${currency.displayName} (${currency.code})',
+                            l.tripPublishCurrencyBannerTitle(
+                              currency.displayName,
+                              currency.code,
+                            ),
                             style: tt.titleMedium?.copyWith(
                               color: cs.onSurface,
                               fontWeight: FontWeight.w700,
@@ -95,8 +99,7 @@ class CurrencySelectionBanner extends StatelessWidget {
                           ),
                           const SizedBox(height: DonySpacing.xs),
                           Text(
-                            'Les utilisateurs dans une autre devise voient un prix '
-                            'converti. Le paiement reste dans cette devise.',
+                            l.tripPublishCurrencyBannerSubtitle,
                             style: tt.bodySmall?.copyWith(
                               color: cs.onSurfaceVariant,
                             ),
@@ -106,7 +109,7 @@ class CurrencySelectionBanner extends StatelessWidget {
                     ),
                     const SizedBox(width: DonySpacing.sm),
                     Text(
-                      'Changer',
+                      l.tripPublishCurrencyChangeCta,
                       style: tt.labelLarge?.copyWith(
                         color: cs.primary,
                         fontWeight: FontWeight.w700,

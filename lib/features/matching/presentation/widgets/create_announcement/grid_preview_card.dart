@@ -7,6 +7,7 @@ import 'package:dony/features/content_categories/data/content_category_model.dar
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_form_event.dart';
 import 'package:dony/features/matching/data/models/grid_preview_item.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -46,6 +47,7 @@ class GridPreviewCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
 
     final visible = items.take(_visibleCount).toList();
     final hidden = items.length - visible.length;
@@ -56,14 +58,14 @@ class GridPreviewCard extends StatelessWidget {
         Row(
           children: [
             Text(
-              'Votre grille',
+              l.tripPublishGridPreviewLabel,
               style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
             ),
             const Spacer(),
             TextButton(
               key: const Key('grid-preview-edit'),
               onPressed: () => openPriceGridAndRefresh(context),
-              child: const Text('Modifier'),
+              child: Text(l.commonEdit),
             ),
           ],
         ),
@@ -83,13 +85,12 @@ class GridPreviewCard extends StatelessWidget {
               key: const Key('grid-preview-see-all'),
               onPressed: () => _openSheet(context),
               icon: const DonyIcon('tag', size: 16),
-              label: Text('Voir les ${items.length} articles'),
+              label: Text(l.tripPublishGridPreviewSeeAll(items.length)),
             ),
 
           const SizedBox(height: DonySpacing.xs),
           Text(
-            'Ces prix viennent de votre profil. Les modifier les change sur '
-            'tous vos trajets.',
+            l.tripPublishGridPreviewNote,
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
         ],
@@ -134,14 +135,15 @@ abstract final class GridPreviewSheet {
     required List<GridPreviewItem> items,
     SupportedCurrency? currency,
   }) {
+    final l = context.l10n;
     return DonyBottomSheet.show<bool>(
       context,
-      title: 'Votre grille de prix',
-      subtitle: 'Valable sur tous vos trajets',
+      title: l.tripPublishGridSheetTitle,
+      subtitle: l.tripPublishGridSheetSubtitle,
       stickyBottom: Builder(
         builder: (ctx) => DonyButton(
           key: const Key('grid-sheet-edit'),
-          label: 'Modifier ma grille',
+          label: l.tripPublishGridSheetEditCta,
           iconAsset: 'square-pen',
           onPressed: () => Navigator.of(ctx, rootNavigator: true).pop(true),
         ),
@@ -161,6 +163,7 @@ class _GridPreviewSheetContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -173,8 +176,7 @@ class _GridPreviewSheetContent extends StatelessWidget {
           ),
         const SizedBox(height: DonySpacing.xs),
         Text(
-          'Prix payés par l\'expéditeur, commission Yadony de '
-          '$donyCommissionPercentLabel % comprise.',
+          l.tripPublishGridSheetCommissionNote(donyCommissionPercentLabel),
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           textAlign: TextAlign.center,
         ),
@@ -194,25 +196,25 @@ class _EmptyGridNotice extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l = context.l10n;
 
     return DonyCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'Votre grille est vide',
+            l.tripPublishGridEmptyTitle,
             style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 2),
           Text(
-            'Ajoutez au moins une étiquette pour que les expéditeurs '
-            'réservent article par article.',
+            l.tripPublishGridEmptySubtitle,
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
           const SizedBox(height: DonySpacing.md),
           DonyButton(
             key: const Key('grid-preview-create'),
-            label: 'Composer ma grille',
+            label: l.tripPublishGridComposeCta,
             iconAsset: 'plus',
             variant: DonyButtonVariant.secondary,
             onPressed: onAdd,

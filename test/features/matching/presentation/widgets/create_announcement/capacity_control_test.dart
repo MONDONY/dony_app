@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
 import '../../../../../helpers/mock_analytics_backend.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -439,6 +440,41 @@ void main() {
           reason: 'Slider trouvé pour $unit — il ne devrait pas exister',
         );
       }
+    });
+  });
+
+  // ── Group: English (i18n) ─────────────────────────────────────────────────
+
+  group('CapacityControl — English', () {
+    testWidgets('2 valises devient "2 suitcases" en anglais', (tester) async {
+      useEnglish();
+      final bloc = AnnouncementFormBloc(
+        analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+      );
+      addTearDown(bloc.close);
+
+      bloc.add(const CapacityUnitChanged(CapacityUnit.suitcase23kg));
+      bloc.add(const AvailableKgChanged(46.0));
+      await tester.pumpWidget(_hostWithBloc(bloc));
+      await tester.pump();
+
+      expect(find.text('2 suitcases of 23 kg'), findsOneWidget);
+    });
+
+    testWidgets('1 valise reste "1 suitcase" (singulier) en anglais', (
+      tester,
+    ) async {
+      useEnglish();
+      final bloc = AnnouncementFormBloc(
+        analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+      );
+      addTearDown(bloc.close);
+
+      await tester.pumpWidget(_hostWithBloc(bloc));
+      bloc.add(const CapacityUnitChanged(CapacityUnit.suitcase23kg));
+      await tester.pump();
+
+      expect(find.text('1 suitcase of 23 kg'), findsOneWidget);
     });
   });
 }

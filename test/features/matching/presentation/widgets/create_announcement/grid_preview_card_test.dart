@@ -10,6 +10,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
+
 class _MockAnnouncementFormBloc
     extends MockBloc<AnnouncementFormEvent, AnnouncementFormState>
     implements AnnouncementFormBloc {}
@@ -202,6 +204,21 @@ void main() {
       verify(
         () => bloc.add(any(that: isA<AnnouncementGridPreviewLoadRequested>())),
       ).called(1);
+    });
+  });
+
+  // ── Group: English (i18n) ─────────────────────────────────────────────────
+
+  group('GridPreviewCard — English', () {
+    testWidgets('bouton "Edit" et compteur "See all N items" traduits', (
+      tester,
+    ) async {
+      useEnglish();
+      await tester.pumpWidget(_wrap(_items));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Edit'), findsOneWidget);
+      expect(find.text('See all 5 items'), findsOneWidget);
     });
   });
 }

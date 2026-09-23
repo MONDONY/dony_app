@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
+
 Widget _wrap(Widget child) => MaterialApp(home: Scaffold(body: child));
 
 void main() {
@@ -445,6 +447,21 @@ void main() {
         ),
         findsOneWidget,
       );
+    });
+  });
+
+  // ── Group: English (i18n) ─────────────────────────────────────────────────
+
+  group('CaStepperHeader — English', () {
+    testWidgets('les 3 labels de pas sont traduits', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        _wrap(const CaStepperHeader(currentStep: 0, totalSteps: 3)),
+      );
+      await tester.pump();
+      expect(find.text('Trip'), findsOneWidget);
+      expect(find.text('Places & capacity'), findsOneWidget);
+      expect(find.text('Price & conditions'), findsOneWidget);
     });
   });
 }

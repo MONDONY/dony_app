@@ -4615,6 +4615,462 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Configurez votre compte Stripe pour que vos expéditeurs paient par carte, et recevez plus de colis.'**
   String get tripPublishIntroStripeSubtitle;
+
+  /// Option « au kilo » du toggle de mode de tarification, étape Prix & conditions
+  ///
+  /// In fr, this message translates to:
+  /// **'Au kilo'**
+  String get tripPublishPricingModeKg;
+
+  /// Option « grille + kilo » du toggle de mode de tarification
+  ///
+  /// In fr, this message translates to:
+  /// **'Grille + kilo'**
+  String get tripPublishPricingModeMixed;
+
+  /// Libellé de la section prix au kg, réutilisé comme libellé du champ de prix personnalisé
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix par kg'**
+  String get tripPublishPricePerKgSectionLabel;
+
+  /// Titre du toggle « Tarif au kilo », visible en mode grille
+  ///
+  /// In fr, this message translates to:
+  /// **'Tarif au kilo'**
+  String get tripPublishKgPriceToggleTitle;
+
+  /// Sous-titre du toggle « Tarif au kilo »
+  ///
+  /// In fr, this message translates to:
+  /// **'Optionnel en mode grille'**
+  String get tripPublishKgPriceToggleSubtitle;
+
+  /// Libellé de la puce « Autre prix » du sélecteur de prix au kg
+  ///
+  /// In fr, this message translates to:
+  /// **'Autre prix'**
+  String get tripPublishCustomPriceChipLabel;
+
+  /// Indice du champ de saisie du prix personnalisé au kg
+  ///
+  /// In fr, this message translates to:
+  /// **'ex: 12'**
+  String get tripPublishCustomPriceFieldHint;
+
+  /// Invite affichée tant qu'aucun prix au kg n'est sélectionné
+  ///
+  /// In fr, this message translates to:
+  /// **'Sélectionnez un prix pour voir l\'estimation'**
+  String get tripPublishPriceSelectPrompt;
+
+  /// Note affichée à la place de l'estimation quand la capacité est Kg libre
+  ///
+  /// In fr, this message translates to:
+  /// **'Capacité illimitée : estimation selon la demande'**
+  String get tripPublishUnlimitedCapacityEstimateNote;
+
+  /// Ligne d'estimation du prix au kg, montants déjà formatés dans la devise
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous touchez {travelerNet} · l\'expéditeur paie {senderTotal}'**
+  String tripPublishPriceEstimateLine(String travelerNet, String senderTotal);
+
+  /// Note sous l'aperçu de grille en mode mixte, percent déjà formaté
+  ///
+  /// In fr, this message translates to:
+  /// **'Yadony ajoute {percent} % sur chaque article et sur le prix au kilo'**
+  String tripPublishGridCommissionNotice(String percent);
+
+  /// Titre du toggle d'ouverture aux propositions de prix des expéditeurs
+  ///
+  /// In fr, this message translates to:
+  /// **'J\'accepte les propositions de prix'**
+  String get tripPublishNegotiableToggleTitle;
+
+  /// Sous-titre du toggle d'ouverture aux propositions de prix
+  ///
+  /// In fr, this message translates to:
+  /// **'Les expéditeurs pourront vous proposer un montant, vous restez libre de refuser'**
+  String get tripPublishNegotiableToggleSubtitle;
+
+  /// Libellé de la section des moyens de paiement acceptés
+  ///
+  /// In fr, this message translates to:
+  /// **'Modes de paiement acceptés'**
+  String get tripPublishPaymentMethodsSectionLabel;
+
+  /// Titre de la ligne paiement par carte, Stripe configuré ou non
+  ///
+  /// In fr, this message translates to:
+  /// **'Carte bancaire (Stripe)'**
+  String get tripPublishCardPaymentTitle;
+
+  /// Sous-titre de la ligne paiement par carte quand Stripe est configuré
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement sécurisé par défaut'**
+  String get tripPublishCardPaymentSubtitle;
+
+  /// Titre de la ligne paiement en espèces
+  ///
+  /// In fr, this message translates to:
+  /// **'Espèces'**
+  String get tripPublishCashLabel;
+
+  /// Sous-titre de la ligne paiement en espèces
+  ///
+  /// In fr, this message translates to:
+  /// **'Commission prélevée au voyageur à la remise'**
+  String get tripPublishCashSubtitle;
+
+  /// Libellé de la section des contenus acceptés
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce que j\'accepte'**
+  String get tripPublishAcceptedContentSectionLabel;
+
+  /// Libellé de la section des contenus refusés
+  ///
+  /// In fr, this message translates to:
+  /// **'Ce que je refuse'**
+  String get tripPublishRefusedContentSectionLabel;
+
+  /// Indice du combobox des contenus refusés
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex: Liquides, Denrées périssables…'**
+  String get tripPublishRefusedContentHint;
+
+  /// Libellé de la section note libre aux expéditeurs
+  ///
+  /// In fr, this message translates to:
+  /// **'Note aux expéditeurs'**
+  String get tripPublishNoteToSendersSectionLabel;
+
+  /// Indice du champ de note libre aux expéditeurs
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex: Je préfère les colis bien emballés. Contactez-moi avant le départ.'**
+  String get tripPublishNoteToSendersHint;
+
+  /// Bannière quand Stripe n'est pas configuré mais disponible dans le pays
+  ///
+  /// In fr, this message translates to:
+  /// **'Publiez en espèces dès maintenant. Connectez Stripe pour accepter aussi la carte.'**
+  String get tripPublishCashOnlyBannerWithConnect;
+
+  /// Bannière quand Stripe n'est pas disponible dans le pays du voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Le paiement par carte n\'est pas encore disponible dans votre pays. Vos trajets sont publiés en espèces.'**
+  String get tripPublishCashOnlyBannerNoConnect;
+
+  /// CTA vers l'onboarding Stripe Connect depuis la bannière espèces uniquement
+  ///
+  /// In fr, this message translates to:
+  /// **'Activer les paiements par carte'**
+  String get tripPublishActivateCardPaymentsCta;
+
+  /// Sous-titre de la ligne carte verrouillée quand Stripe n'est pas configuré
+  ///
+  /// In fr, this message translates to:
+  /// **'Non configuré, activez pour proposer le paiement sécurisé'**
+  String get tripPublishCardNotConfiguredSubtitle;
+
+  /// Bouton d'activation du versement mobile money
+  ///
+  /// In fr, this message translates to:
+  /// **'Activer le versement'**
+  String get tripPublishActivatePayoutCta;
+
+  /// Sous-titre mobile money quand la devise n'est pas éligible
+  ///
+  /// In fr, this message translates to:
+  /// **'Disponible pour les trajets en XOF ou XAF'**
+  String get tripPublishMobileMoneyIneligibleSubtitle;
+
+  /// Sous-titre mobile money quand le compte de versement n'est pas actif
+  ///
+  /// In fr, this message translates to:
+  /// **'Active d\'abord ton versement mobile money'**
+  String get tripPublishMobileMoneyInactiveSubtitle;
+
+  /// Titre de la note remplacant la section prix quand le prix est verrouillé
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix fixé par la négociation'**
+  String get tripPublishLockedPriceNoteTitle;
+
+  /// Sous-titre de la note prix verrouillé
+  ///
+  /// In fr, this message translates to:
+  /// **'Le montant de ce colis a été convenu avec l\'expéditeur, non modifiable ici.'**
+  String get tripPublishLockedPriceNoteSubtitle;
+
+  /// Libellé de la carte affichant le prix total convenu (trajet dédié)
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix total convenu'**
+  String get tripPublishAgreedPriceLabel;
+
+  /// Libellé au-dessus de l'aperçu de grille, étape Prix & conditions
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre grille'**
+  String get tripPublishGridPreviewLabel;
+
+  /// Bouton pour ouvrir la feuille listant tous les articles de la grille
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir les {count} articles'**
+  String tripPublishGridPreviewSeeAll(int count);
+
+  /// Note sous l'aperçu de grille rappelant que la grille est un réglage de profil
+  ///
+  /// In fr, this message translates to:
+  /// **'Ces prix viennent de votre profil. Les modifier les change sur tous vos trajets.'**
+  String get tripPublishGridPreviewNote;
+
+  /// Titre de la feuille listant tous les articles de la grille
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre grille de prix'**
+  String get tripPublishGridSheetTitle;
+
+  /// Sous-titre de la feuille de grille complète
+  ///
+  /// In fr, this message translates to:
+  /// **'Valable sur tous vos trajets'**
+  String get tripPublishGridSheetSubtitle;
+
+  /// Bouton sticky de la feuille de grille complète
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier ma grille'**
+  String get tripPublishGridSheetEditCta;
+
+  /// Note sous la liste d'articles de la feuille de grille complète
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix payés par l\'expéditeur, commission Yadony de {percent} % comprise.'**
+  String tripPublishGridSheetCommissionNote(String percent);
+
+  /// Titre de la carte affichée quand le voyageur choisit le mode grille sans étiquette
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre grille est vide'**
+  String get tripPublishGridEmptyTitle;
+
+  /// Sous-titre de la carte grille vide
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajoutez au moins une étiquette pour que les expéditeurs réservent article par article.'**
+  String get tripPublishGridEmptySubtitle;
+
+  /// Bouton de la carte grille vide, ouvre l'écran de grille du profil
+  ///
+  /// In fr, this message translates to:
+  /// **'Composer ma grille'**
+  String get tripPublishGridComposeCta;
+
+  /// Badge sur l'aperçu du corridor une fois départ et arrivée sélectionnés
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmé'**
+  String get tripPublishCorridorConfirmedBadge;
+
+  /// Libellé de section « Trajet », aussi utilisé comme libellé d'étape du stepper
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet'**
+  String get tripPublishTrajetSectionLabel;
+
+  /// Libellé du champ ville de départ verrouillé (corridor fixé par une demande)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ville de départ'**
+  String get tripPublishDepartureCityLabel;
+
+  /// Libellé du champ ville d'arrivée verrouillé (corridor fixé par une demande)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ville d\'arrivée'**
+  String get tripPublishArrivalCityLabel;
+
+  /// Libellé du champ heure de départ obligatoire
+  ///
+  /// In fr, this message translates to:
+  /// **'Heure de départ'**
+  String get tripPublishDepartureTimeLabel;
+
+  /// Libellé du champ heure d'arrivée, optionnel
+  ///
+  /// In fr, this message translates to:
+  /// **'Heure d\'arrivée (optionnel)'**
+  String get tripPublishArrivalTimeOptionalLabel;
+
+  /// Tooltip du bouton d'effacement de l'heure d'arrivée
+  ///
+  /// In fr, this message translates to:
+  /// **'Effacer l\'heure d\'arrivée'**
+  String get tripPublishClearArrivalTimeTooltip;
+
+  /// Libellé du champ date de départ
+  ///
+  /// In fr, this message translates to:
+  /// **'Date de départ'**
+  String get tripPublishDepartureDateLabel;
+
+  /// Feedback informatif sous la date de départ quand elle est proche (tiret cadratin d'origine remplacé par un point médian, interdit par les tests arb)
+  ///
+  /// In fr, this message translates to:
+  /// **'🔥 Départ proche · ce trajet sera signalé urgent'**
+  String get tripPublishUrgentDepartureWarning;
+
+  /// Titre de la section capacité disponible, réutilisé dans lieux_capacite_step
+  ///
+  /// In fr, this message translates to:
+  /// **'Capacité disponible'**
+  String get tripPublishCapacityAvailableLabel;
+
+  /// Quantité de valises et leur poids unitaire, sous le total offert (mode presets valise)
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} valise de {kg} kg} other{{count} valises de {kg} kg}}'**
+  String tripPublishSuitcaseCount(int count, int kg);
+
+  /// Titre affichant le poids total offert (mode presets valise)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous offrez {kg} kg'**
+  String tripPublishYouOfferKg(int kg);
+
+  /// Semantics du bouton moins du compteur de valises
+  ///
+  /// In fr, this message translates to:
+  /// **'Diminuer la quantité'**
+  String get tripPublishDecreaseQuantityTooltip;
+
+  /// Semantics du bouton plus du compteur de valises
+  ///
+  /// In fr, this message translates to:
+  /// **'Augmenter la quantité'**
+  String get tripPublishIncreaseQuantityTooltip;
+
+  /// Titre de la carte info capacité Kg libre
+  ///
+  /// In fr, this message translates to:
+  /// **'Capacité illimitée'**
+  String get tripPublishUnlimitedCapacityTitle;
+
+  /// Sous-titre de la carte info capacité Kg libre
+  ///
+  /// In fr, this message translates to:
+  /// **'Vendu au kilo · l\'expéditeur choisit son poids'**
+  String get tripPublishUnlimitedCapacitySubtitle;
+
+  /// Libellé du champ de saisie libre de la capacité personnalisée
+  ///
+  /// In fr, this message translates to:
+  /// **'Capacité (kg)'**
+  String get tripPublishCapacityKgFieldLabel;
+
+  /// Aide sous le champ de capacité personnalisée
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez la capacité totale que vous offrez'**
+  String get tripPublishCapacityKgFieldHint;
+
+  /// Semantics complet de la bannière de sélection de devise
+  ///
+  /// In fr, this message translates to:
+  /// **'Devise de publication : {currencyName}, {currencyCode}. Les utilisateurs dans une autre devise voient un prix converti. Le paiement reste dans cette devise. Bouton, modifier la devise.'**
+  String tripPublishCurrencySemanticsLabel(
+    String currencyName,
+    String currencyCode,
+  );
+
+  /// Titre visible de la bannière de sélection de devise
+  ///
+  /// In fr, this message translates to:
+  /// **'Publié en {currencyName} ({currencyCode})'**
+  String tripPublishCurrencyBannerTitle(
+    String currencyName,
+    String currencyCode,
+  );
+
+  /// Sous-titre visible de la bannière de sélection de devise
+  ///
+  /// In fr, this message translates to:
+  /// **'Les utilisateurs dans une autre devise voient un prix converti. Le paiement reste dans cette devise.'**
+  String get tripPublishCurrencyBannerSubtitle;
+
+  /// Bouton « Changer » de la bannière de sélection de devise
+  ///
+  /// In fr, this message translates to:
+  /// **'Changer'**
+  String get tripPublishCurrencyChangeCta;
+
+  /// Semantics du bouton d'ajout de CaInlineAddRow (widget interne, non branché en production)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter un article'**
+  String get tripPublishAddItemSemantics;
+
+  /// Tooltip du bouton d'ajout de CaInlineAddRow (widget interne, non branché en production)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter'**
+  String get tripPublishAddItemTooltip;
+
+  /// Semantics de CaRemovableChip (widget interne, non branché en production) ; le texte source échappait \$label en littéral, comportement préservé à l'identique
+  ///
+  /// In fr, this message translates to:
+  /// **'Retirer \$label'**
+  String get tripPublishRemoveItemSemanticsLiteral;
+
+  /// Libellé de CaTimeRow côté départ (widget interne, non branché en production)
+  ///
+  /// In fr, this message translates to:
+  /// **'Heure de départ (optionnel)'**
+  String get tripPublishDepartureTimeOptionalLabel;
+
+  /// Semantics du bouton d'effacement de CaTimeRow (widget interne, non branché en production)
+  ///
+  /// In fr, this message translates to:
+  /// **'Effacer l\'heure'**
+  String get tripPublishClearTimeTooltip;
+
+  /// Libellé d'étape du stepper de publication (étape 1)
+  ///
+  /// In fr, this message translates to:
+  /// **'Lieux & capacité'**
+  String get tripPublishLieuxCapaciteStepLabel;
+
+  /// Libellé d'étape du stepper de publication (étape 2)
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix & conditions'**
+  String get tripPublishPrixConditionsStepLabel;
+
+  /// Titre de la section lieux de remise et de récupération
+  ///
+  /// In fr, this message translates to:
+  /// **'Lieux de remise'**
+  String get tripPublishHandoverLocationsLabel;
+
+  /// Sous-titre de la section lieux de remise et de récupération
+  ///
+  /// In fr, this message translates to:
+  /// **'Précisez l\'endroit exact de remise et récupération'**
+  String get tripPublishHandoverLocationsSubtitle;
+
+  /// Note sous la capacité verrouillée (flux trajet dédié)
+  ///
+  /// In fr, this message translates to:
+  /// **'Capacité fixée par la demande'**
+  String get tripPublishLockedCapacityNote;
 }
 
 class _AppLocalizationsDelegate

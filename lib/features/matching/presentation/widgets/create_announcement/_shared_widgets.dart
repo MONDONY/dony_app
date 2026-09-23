@@ -158,10 +158,10 @@ class CaInlineAddRow extends StatelessWidget {
           ),
           const SizedBox(width: DonySpacing.sm),
           Semantics(
-            label: 'Ajouter un article',
+            label: context.l10n.tripPublishAddItemSemantics,
             button: true,
             child: Tooltip(
-              message: 'Ajouter',
+              message: context.l10n.tripPublishAddItemTooltip,
               child: GestureDetector(
                 onTap: onAdd,
                 child: Container(
@@ -230,7 +230,9 @@ class CaRemovableChip extends StatelessWidget {
             button: true,
             container: true,
             excludeSemantics: true,
-            label: 'Retirer \$label',
+            // Le texte source échappait \$label en littéral (bug préexistant,
+            // jamais interpolé) : comportement préservé à l'identique.
+            label: context.l10n.tripPublishRemoveItemSemanticsLiteral,
             child: GestureDetector(
               onTap: onRemove,
               child: DonyIcon('x', size: 14, color: accentColor),
@@ -262,6 +264,7 @@ class CaTimeRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     final color = isDeparture ? cs.primary : DonyColors.accent;
     return InkWell(
       onTap: onTap,
@@ -278,8 +281,8 @@ class CaTimeRow extends StatelessWidget {
               child: Text(
                 time == null
                     ? isDeparture
-                          ? 'Heure de départ (optionnel)'
-                          : 'Heure d\'arrivée (optionnel)'
+                          ? l.tripPublishDepartureTimeOptionalLabel
+                          : l.tripPublishArrivalTimeOptionalLabel
                     : '${time!.hour.toString().padLeft(2, '0')}:${time!.minute.toString().padLeft(2, '0')}',
                 style: tt.bodyMedium?.copyWith(
                   fontWeight: time != null ? FontWeight.w600 : FontWeight.w400,
@@ -292,7 +295,7 @@ class CaTimeRow extends StatelessWidget {
                 button: true,
                 container: true,
                 excludeSemantics: true,
-                label: "Effacer l'heure",
+                label: l.tripPublishClearTimeTooltip,
                 child: GestureDetector(
                   onTap: onClear,
                   child: DonyIcon('x', size: 16, color: cs.onSurfaceVariant),
@@ -319,12 +322,17 @@ class CaStepperHeader extends StatelessWidget {
     required this.totalSteps,
   });
 
-  static const _labels = ['Trajet', 'Lieux & capacité', 'Prix & conditions'];
+  static List<String> _labels(AppLocalizations l) => [
+    l.tripPublishTrajetSectionLabel,
+    l.tripPublishLieuxCapaciteStepLabel,
+    l.tripPublishPrixConditionsStepLabel,
+  ];
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final labels = _labels(context.l10n);
     return Column(
       children: [
         Padding(
@@ -350,7 +358,7 @@ class CaStepperHeader extends StatelessWidget {
           children: List.generate(totalSteps, (i) {
             return Expanded(
               child: Text(
-                i < currentStep ? '${_labels[i]} ✓' : _labels[i],
+                i < currentStep ? '${labels[i]} ✓' : labels[i],
                 textAlign: TextAlign.center,
                 style: tt.labelSmall?.copyWith(
                   color: i == currentStep
@@ -429,6 +437,7 @@ class CaDateRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l = context.l10n;
     return InkWell(
       onTap: onTap,
       child: Padding(
@@ -443,11 +452,8 @@ class CaDateRow extends StatelessWidget {
             Expanded(
               child: Text(
                 date == null
-                    ? 'Date de départ'
-                    : DateFormat(
-                        'EEE d MMM yyyy',
-                        AppL10n.localeName,
-                      ).format(date!),
+                    ? l.tripPublishDepartureDateLabel
+                    : DateFormat('EEE d MMM yyyy', l.localeName).format(date!),
                 style: tt.bodyMedium?.copyWith(
                   fontWeight: date != null ? FontWeight.w600 : FontWeight.w400,
                   color: date != null ? cs.onSurface : cs.onSurfaceVariant,

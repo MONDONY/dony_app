@@ -23,6 +23,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
 import '../../../../../helpers/mock_recent_city_store.dart';
 
 class MockCitySearchBloc extends MockBloc<CitySearchEvent, CitySearchState>
@@ -572,7 +573,7 @@ void main() {
 
       // Absent tant qu'aucune date n'est sélectionnée.
       expect(
-        find.text('🔥 Départ proche — ce trajet sera signalé urgent'),
+        find.text('🔥 Départ proche · ce trajet sera signalé urgent'),
         findsNothing,
       );
 
@@ -580,7 +581,7 @@ void main() {
       await tester.pump();
 
       expect(
-        find.text('🔥 Départ proche — ce trajet sera signalé urgent'),
+        find.text('🔥 Départ proche · ce trajet sera signalé urgent'),
         findsOneWidget,
       );
     });
@@ -622,10 +623,30 @@ void main() {
         await tester.pump();
 
         expect(
-          find.text('🔥 Départ proche — ce trajet sera signalé urgent'),
+          find.text('🔥 Départ proche · ce trajet sera signalé urgent'),
           findsNothing,
         );
       },
     );
+  });
+
+  // ── Group: English (i18n) ─────────────────────────────────────────────────
+
+  group('TrajetStep — English', () {
+    testWidgets('libellés "Trip" et "Arrival time (optional)" traduits', (
+      tester,
+    ) async {
+      useEnglish();
+      await tester.pumpWidget(
+        _buildSubject(
+          departureCityBloc: departureCityBloc,
+          arrivalCityBloc: arrivalCityBloc,
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text('Trip'), findsOneWidget);
+      expect(find.text('Arrival time (optional)'), findsOneWidget);
+    });
   });
 }

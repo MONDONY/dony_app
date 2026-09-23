@@ -1391,5 +1391,357 @@
   "tripPublishIntroStripeSubtitle": "Configurez votre compte Stripe pour que vos expéditeurs paient par carte, et recevez plus de colis.",
   "@tripPublishIntroStripeSubtitle": {
     "description": "Texte du rappel Stripe (voyageur) dans l'intro de publication d'un trajet"
+  },
+  "tripPublishPricingModeKg": "Au kilo",
+  "@tripPublishPricingModeKg": {
+    "description": "Option « au kilo » du toggle de mode de tarification, étape Prix & conditions"
+  },
+  "tripPublishPricingModeMixed": "Grille + kilo",
+  "@tripPublishPricingModeMixed": {
+    "description": "Option « grille + kilo » du toggle de mode de tarification"
+  },
+  "tripPublishPricePerKgSectionLabel": "Prix par kg",
+  "@tripPublishPricePerKgSectionLabel": {
+    "description": "Libellé de la section prix au kg, réutilisé comme libellé du champ de prix personnalisé"
+  },
+  "tripPublishKgPriceToggleTitle": "Tarif au kilo",
+  "@tripPublishKgPriceToggleTitle": {
+    "description": "Titre du toggle « Tarif au kilo », visible en mode grille"
+  },
+  "tripPublishKgPriceToggleSubtitle": "Optionnel en mode grille",
+  "@tripPublishKgPriceToggleSubtitle": {
+    "description": "Sous-titre du toggle « Tarif au kilo »"
+  },
+  "tripPublishCustomPriceChipLabel": "Autre prix",
+  "@tripPublishCustomPriceChipLabel": {
+    "description": "Libellé de la puce « Autre prix » du sélecteur de prix au kg"
+  },
+  "tripPublishCustomPriceFieldHint": "ex: 12",
+  "@tripPublishCustomPriceFieldHint": {
+    "description": "Indice du champ de saisie du prix personnalisé au kg"
+  },
+  "tripPublishPriceSelectPrompt": "Sélectionnez un prix pour voir l'estimation",
+  "@tripPublishPriceSelectPrompt": {
+    "description": "Invite affichée tant qu'aucun prix au kg n'est sélectionné"
+  },
+  "tripPublishUnlimitedCapacityEstimateNote": "Capacité illimitée : estimation selon la demande",
+  "@tripPublishUnlimitedCapacityEstimateNote": {
+    "description": "Note affichée à la place de l'estimation quand la capacité est Kg libre"
+  },
+  "tripPublishPriceEstimateLine": "Vous touchez {travelerNet} · l'expéditeur paie {senderTotal}",
+  "@tripPublishPriceEstimateLine": {
+    "description": "Ligne d'estimation du prix au kg, montants déjà formatés dans la devise",
+    "placeholders": {
+      "travelerNet": {
+        "type": "String"
+      },
+      "senderTotal": {
+        "type": "String"
+      }
+    }
+  },
+  "tripPublishGridCommissionNotice": "Yadony ajoute {percent} % sur chaque article et sur le prix au kilo",
+  "@tripPublishGridCommissionNotice": {
+    "description": "Note sous l'aperçu de grille en mode mixte, percent déjà formaté",
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "tripPublishNegotiableToggleTitle": "J'accepte les propositions de prix",
+  "@tripPublishNegotiableToggleTitle": {
+    "description": "Titre du toggle d'ouverture aux propositions de prix des expéditeurs"
+  },
+  "tripPublishNegotiableToggleSubtitle": "Les expéditeurs pourront vous proposer un montant, vous restez libre de refuser",
+  "@tripPublishNegotiableToggleSubtitle": {
+    "description": "Sous-titre du toggle d'ouverture aux propositions de prix"
+  },
+  "tripPublishPaymentMethodsSectionLabel": "Modes de paiement acceptés",
+  "@tripPublishPaymentMethodsSectionLabel": {
+    "description": "Libellé de la section des moyens de paiement acceptés"
+  },
+  "tripPublishCardPaymentTitle": "Carte bancaire (Stripe)",
+  "@tripPublishCardPaymentTitle": {
+    "description": "Titre de la ligne paiement par carte, Stripe configuré ou non"
+  },
+  "tripPublishCardPaymentSubtitle": "Paiement sécurisé par défaut",
+  "@tripPublishCardPaymentSubtitle": {
+    "description": "Sous-titre de la ligne paiement par carte quand Stripe est configuré"
+  },
+  "tripPublishCashLabel": "Espèces",
+  "@tripPublishCashLabel": {
+    "description": "Titre de la ligne paiement en espèces"
+  },
+  "tripPublishCashSubtitle": "Commission prélevée au voyageur à la remise",
+  "@tripPublishCashSubtitle": {
+    "description": "Sous-titre de la ligne paiement en espèces"
+  },
+  "tripPublishAcceptedContentSectionLabel": "Ce que j'accepte",
+  "@tripPublishAcceptedContentSectionLabel": {
+    "description": "Libellé de la section des contenus acceptés"
+  },
+  "tripPublishRefusedContentSectionLabel": "Ce que je refuse",
+  "@tripPublishRefusedContentSectionLabel": {
+    "description": "Libellé de la section des contenus refusés"
+  },
+  "tripPublishRefusedContentHint": "Ex: Liquides, Denrées périssables…",
+  "@tripPublishRefusedContentHint": {
+    "description": "Indice du combobox des contenus refusés"
+  },
+  "tripPublishNoteToSendersSectionLabel": "Note aux expéditeurs",
+  "@tripPublishNoteToSendersSectionLabel": {
+    "description": "Libellé de la section note libre aux expéditeurs"
+  },
+  "tripPublishNoteToSendersHint": "Ex: Je préfère les colis bien emballés. Contactez-moi avant le départ.",
+  "@tripPublishNoteToSendersHint": {
+    "description": "Indice du champ de note libre aux expéditeurs"
+  },
+  "tripPublishCashOnlyBannerWithConnect": "Publiez en espèces dès maintenant. Connectez Stripe pour accepter aussi la carte.",
+  "@tripPublishCashOnlyBannerWithConnect": {
+    "description": "Bannière quand Stripe n'est pas configuré mais disponible dans le pays"
+  },
+  "tripPublishCashOnlyBannerNoConnect": "Le paiement par carte n'est pas encore disponible dans votre pays. Vos trajets sont publiés en espèces.",
+  "@tripPublishCashOnlyBannerNoConnect": {
+    "description": "Bannière quand Stripe n'est pas disponible dans le pays du voyageur"
+  },
+  "tripPublishActivateCardPaymentsCta": "Activer les paiements par carte",
+  "@tripPublishActivateCardPaymentsCta": {
+    "description": "CTA vers l'onboarding Stripe Connect depuis la bannière espèces uniquement"
+  },
+  "tripPublishCardNotConfiguredSubtitle": "Non configuré, activez pour proposer le paiement sécurisé",
+  "@tripPublishCardNotConfiguredSubtitle": {
+    "description": "Sous-titre de la ligne carte verrouillée quand Stripe n'est pas configuré"
+  },
+  "tripPublishActivatePayoutCta": "Activer le versement",
+  "@tripPublishActivatePayoutCta": {
+    "description": "Bouton d'activation du versement mobile money"
+  },
+  "tripPublishMobileMoneyIneligibleSubtitle": "Disponible pour les trajets en XOF ou XAF",
+  "@tripPublishMobileMoneyIneligibleSubtitle": {
+    "description": "Sous-titre mobile money quand la devise n'est pas éligible"
+  },
+  "tripPublishMobileMoneyInactiveSubtitle": "Active d'abord ton versement mobile money",
+  "@tripPublishMobileMoneyInactiveSubtitle": {
+    "description": "Sous-titre mobile money quand le compte de versement n'est pas actif"
+  },
+  "tripPublishLockedPriceNoteTitle": "Prix fixé par la négociation",
+  "@tripPublishLockedPriceNoteTitle": {
+    "description": "Titre de la note remplacant la section prix quand le prix est verrouillé"
+  },
+  "tripPublishLockedPriceNoteSubtitle": "Le montant de ce colis a été convenu avec l'expéditeur, non modifiable ici.",
+  "@tripPublishLockedPriceNoteSubtitle": {
+    "description": "Sous-titre de la note prix verrouillé"
+  },
+  "tripPublishAgreedPriceLabel": "Prix total convenu",
+  "@tripPublishAgreedPriceLabel": {
+    "description": "Libellé de la carte affichant le prix total convenu (trajet dédié)"
+  },
+  "tripPublishGridPreviewLabel": "Votre grille",
+  "@tripPublishGridPreviewLabel": {
+    "description": "Libellé au-dessus de l'aperçu de grille, étape Prix & conditions"
+  },
+  "tripPublishGridPreviewSeeAll": "Voir les {count} articles",
+  "@tripPublishGridPreviewSeeAll": {
+    "description": "Bouton pour ouvrir la feuille listant tous les articles de la grille",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tripPublishGridPreviewNote": "Ces prix viennent de votre profil. Les modifier les change sur tous vos trajets.",
+  "@tripPublishGridPreviewNote": {
+    "description": "Note sous l'aperçu de grille rappelant que la grille est un réglage de profil"
+  },
+  "tripPublishGridSheetTitle": "Votre grille de prix",
+  "@tripPublishGridSheetTitle": {
+    "description": "Titre de la feuille listant tous les articles de la grille"
+  },
+  "tripPublishGridSheetSubtitle": "Valable sur tous vos trajets",
+  "@tripPublishGridSheetSubtitle": {
+    "description": "Sous-titre de la feuille de grille complète"
+  },
+  "tripPublishGridSheetEditCta": "Modifier ma grille",
+  "@tripPublishGridSheetEditCta": {
+    "description": "Bouton sticky de la feuille de grille complète"
+  },
+  "tripPublishGridSheetCommissionNote": "Prix payés par l'expéditeur, commission Yadony de {percent} % comprise.",
+  "@tripPublishGridSheetCommissionNote": {
+    "description": "Note sous la liste d'articles de la feuille de grille complète",
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "tripPublishGridEmptyTitle": "Votre grille est vide",
+  "@tripPublishGridEmptyTitle": {
+    "description": "Titre de la carte affichée quand le voyageur choisit le mode grille sans étiquette"
+  },
+  "tripPublishGridEmptySubtitle": "Ajoutez au moins une étiquette pour que les expéditeurs réservent article par article.",
+  "@tripPublishGridEmptySubtitle": {
+    "description": "Sous-titre de la carte grille vide"
+  },
+  "tripPublishGridComposeCta": "Composer ma grille",
+  "@tripPublishGridComposeCta": {
+    "description": "Bouton de la carte grille vide, ouvre l'écran de grille du profil"
+  },
+  "tripPublishCorridorConfirmedBadge": "Confirmé",
+  "@tripPublishCorridorConfirmedBadge": {
+    "description": "Badge sur l'aperçu du corridor une fois départ et arrivée sélectionnés"
+  },
+  "tripPublishTrajetSectionLabel": "Trajet",
+  "@tripPublishTrajetSectionLabel": {
+    "description": "Libellé de section « Trajet », aussi utilisé comme libellé d'étape du stepper"
+  },
+  "tripPublishDepartureCityLabel": "Ville de départ",
+  "@tripPublishDepartureCityLabel": {
+    "description": "Libellé du champ ville de départ verrouillé (corridor fixé par une demande)"
+  },
+  "tripPublishArrivalCityLabel": "Ville d'arrivée",
+  "@tripPublishArrivalCityLabel": {
+    "description": "Libellé du champ ville d'arrivée verrouillé (corridor fixé par une demande)"
+  },
+  "tripPublishDepartureTimeLabel": "Heure de départ",
+  "@tripPublishDepartureTimeLabel": {
+    "description": "Libellé du champ heure de départ obligatoire"
+  },
+  "tripPublishArrivalTimeOptionalLabel": "Heure d'arrivée (optionnel)",
+  "@tripPublishArrivalTimeOptionalLabel": {
+    "description": "Libellé du champ heure d'arrivée, optionnel"
+  },
+  "tripPublishClearArrivalTimeTooltip": "Effacer l'heure d'arrivée",
+  "@tripPublishClearArrivalTimeTooltip": {
+    "description": "Tooltip du bouton d'effacement de l'heure d'arrivée"
+  },
+  "tripPublishDepartureDateLabel": "Date de départ",
+  "@tripPublishDepartureDateLabel": {
+    "description": "Libellé du champ date de départ"
+  },
+  "tripPublishUrgentDepartureWarning": "🔥 Départ proche · ce trajet sera signalé urgent",
+  "@tripPublishUrgentDepartureWarning": {
+    "description": "Feedback informatif sous la date de départ quand elle est proche (tiret cadratin d'origine remplacé par un point médian, interdit par les tests arb)"
+  },
+  "tripPublishCapacityAvailableLabel": "Capacité disponible",
+  "@tripPublishCapacityAvailableLabel": {
+    "description": "Titre de la section capacité disponible, réutilisé dans lieux_capacite_step"
+  },
+  "tripPublishSuitcaseCount": "{count, plural, =1{{count} valise de {kg} kg} other{{count} valises de {kg} kg}}",
+  "@tripPublishSuitcaseCount": {
+    "description": "Quantité de valises et leur poids unitaire, sous le total offert (mode presets valise)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "kg": {
+        "type": "int"
+      }
+    }
+  },
+  "tripPublishYouOfferKg": "Vous offrez {kg} kg",
+  "@tripPublishYouOfferKg": {
+    "description": "Titre affichant le poids total offert (mode presets valise)",
+    "placeholders": {
+      "kg": {
+        "type": "int"
+      }
+    }
+  },
+  "tripPublishDecreaseQuantityTooltip": "Diminuer la quantité",
+  "@tripPublishDecreaseQuantityTooltip": {
+    "description": "Semantics du bouton moins du compteur de valises"
+  },
+  "tripPublishIncreaseQuantityTooltip": "Augmenter la quantité",
+  "@tripPublishIncreaseQuantityTooltip": {
+    "description": "Semantics du bouton plus du compteur de valises"
+  },
+  "tripPublishUnlimitedCapacityTitle": "Capacité illimitée",
+  "@tripPublishUnlimitedCapacityTitle": {
+    "description": "Titre de la carte info capacité Kg libre"
+  },
+  "tripPublishUnlimitedCapacitySubtitle": "Vendu au kilo · l'expéditeur choisit son poids",
+  "@tripPublishUnlimitedCapacitySubtitle": {
+    "description": "Sous-titre de la carte info capacité Kg libre"
+  },
+  "tripPublishCapacityKgFieldLabel": "Capacité (kg)",
+  "@tripPublishCapacityKgFieldLabel": {
+    "description": "Libellé du champ de saisie libre de la capacité personnalisée"
+  },
+  "tripPublishCapacityKgFieldHint": "Indiquez la capacité totale que vous offrez",
+  "@tripPublishCapacityKgFieldHint": {
+    "description": "Aide sous le champ de capacité personnalisée"
+  },
+  "tripPublishCurrencySemanticsLabel": "Devise de publication : {currencyName}, {currencyCode}. Les utilisateurs dans une autre devise voient un prix converti. Le paiement reste dans cette devise. Bouton, modifier la devise.",
+  "@tripPublishCurrencySemanticsLabel": {
+    "description": "Semantics complet de la bannière de sélection de devise",
+    "placeholders": {
+      "currencyName": {
+        "type": "String"
+      },
+      "currencyCode": {
+        "type": "String"
+      }
+    }
+  },
+  "tripPublishCurrencyBannerTitle": "Publié en {currencyName} ({currencyCode})",
+  "@tripPublishCurrencyBannerTitle": {
+    "description": "Titre visible de la bannière de sélection de devise",
+    "placeholders": {
+      "currencyName": {
+        "type": "String"
+      },
+      "currencyCode": {
+        "type": "String"
+      }
+    }
+  },
+  "tripPublishCurrencyBannerSubtitle": "Les utilisateurs dans une autre devise voient un prix converti. Le paiement reste dans cette devise.",
+  "@tripPublishCurrencyBannerSubtitle": {
+    "description": "Sous-titre visible de la bannière de sélection de devise"
+  },
+  "tripPublishCurrencyChangeCta": "Changer",
+  "@tripPublishCurrencyChangeCta": {
+    "description": "Bouton « Changer » de la bannière de sélection de devise"
+  },
+  "tripPublishAddItemSemantics": "Ajouter un article",
+  "@tripPublishAddItemSemantics": {
+    "description": "Semantics du bouton d'ajout de CaInlineAddRow (widget interne, non branché en production)"
+  },
+  "tripPublishAddItemTooltip": "Ajouter",
+  "@tripPublishAddItemTooltip": {
+    "description": "Tooltip du bouton d'ajout de CaInlineAddRow (widget interne, non branché en production)"
+  },
+  "tripPublishRemoveItemSemanticsLiteral": "Retirer $label",
+  "@tripPublishRemoveItemSemanticsLiteral": {
+    "description": "Semantics de CaRemovableChip (widget interne, non branché en production) ; le texte source échappait \\$label en littéral, comportement préservé à l'identique"
+  },
+  "tripPublishDepartureTimeOptionalLabel": "Heure de départ (optionnel)",
+  "@tripPublishDepartureTimeOptionalLabel": {
+    "description": "Libellé de CaTimeRow côté départ (widget interne, non branché en production)"
+  },
+  "tripPublishClearTimeTooltip": "Effacer l'heure",
+  "@tripPublishClearTimeTooltip": {
+    "description": "Semantics du bouton d'effacement de CaTimeRow (widget interne, non branché en production)"
+  },
+  "tripPublishLieuxCapaciteStepLabel": "Lieux & capacité",
+  "@tripPublishLieuxCapaciteStepLabel": {
+    "description": "Libellé d'étape du stepper de publication (étape 1)"
+  },
+  "tripPublishPrixConditionsStepLabel": "Prix & conditions",
+  "@tripPublishPrixConditionsStepLabel": {
+    "description": "Libellé d'étape du stepper de publication (étape 2)"
+  },
+  "tripPublishHandoverLocationsLabel": "Lieux de remise",
+  "@tripPublishHandoverLocationsLabel": {
+    "description": "Titre de la section lieux de remise et de récupération"
+  },
+  "tripPublishHandoverLocationsSubtitle": "Précisez l'endroit exact de remise et récupération",
+  "@tripPublishHandoverLocationsSubtitle": {
+    "description": "Sous-titre de la section lieux de remise et de récupération"
+  },
+  "tripPublishLockedCapacityNote": "Capacité fixée par la demande",
+  "@tripPublishLockedCapacityNote": {
+    "description": "Note sous la capacité verrouillée (flux trajet dédié)"
   }
 }
