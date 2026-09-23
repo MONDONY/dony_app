@@ -850,5 +850,96 @@
   },
   "homeWeightCapacityTitle": "Capacité kilo",
   "homeMaxPriceTitle": "Prix maximum",
-  "homeAnyPrice": "Tous les prix"
+  "homeAnyPrice": "Tous les prix",
+  "homeComposerTitleTrips": "Filtrer les trajets",
+  "homeComposerTitleParcels": "Filtrer les colis",
+  "homeComposerClearAll": "Tout effacer",
+  "homeComposerSectionPhrase": "EN UNE PHRASE",
+  "homeComposerSectionWhere": "OÙ",
+  "homeComposerSectionWhen": "QUAND",
+  "homeComposerSectionAroundMe": "AUTOUR DE MOI",
+  "homeComposerSearch": "Rechercher",
+  "homeComposerSearchWithCount": "Rechercher ({count})",
+  "@homeComposerSearchWithCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeComposerSectionWeightPrice": "POIDS ET PRIX",
+  "homeComposerSectionContents": "MON COLIS CONTIENT",
+  "homeComposerContentHint": "Rechercher un type de contenu…",
+  "homeComposerSectionQuickFilters": "FILTRES RAPIDES",
+  "homeComposerMinRating": "Note ≥ 4.5",
+  "homeComposerWeekend": "Week-end",
+  "homeComposerVerifiedIdentity": "Identité vérifiée",
+  "homeComposerSectionUrgency": "URGENCE DU DÉPART",
+  "homeComposerUrgencyHint": "Filtrer les trajets selon leur proximité de départ",
+  "homeComposerSectionMaxWeight": "POIDS MAXIMAL",
+  "homeComposerSectionParcelSize": "TAILLE DU COLIS",
+  "homeComposerForMyTrips": "Pour mes trajets",
+  "homeComposerAlertTip": "Astuce, tu peux être prévenu des nouveaux colis compatibles depuis Réglages, Notifications.",
+  "homeComposerAroundMe": "Autour de moi",
+  "homeComposerLocating": "Localisation en cours…",
+  "homeRecapTitle": "RÉGLÉ DEPUIS VOTRE PHRASE",
+  "homeRecapArrival": "Arrivée",
+  "homeRecapDeparture": "Départ",
+  "homeRecapWhen": "Quand",
+  "homeRecapMinWeight": "Poids minimum",
+  "homeRecapFieldLine": "{label} : {value}",
+  "@homeRecapFieldLine": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "homeUnresolvedPriceQuestion": "« {phrase} », c'est combien ?",
+  "@homeUnresolvedPriceQuestion": {
+    "placeholders": {
+      "phrase": {
+        "type": "String"
+      }
+    }
+  },
+  "homeUnresolvedCityUnknown": "Vers quelle ville ?",
+  "homeUnresolvedCityAmbiguous": "Quelle ville exactement ?",
+  "homeUnresolvedDateQuestion": "Quand voulez-vous partir ?",
+  "homeUnresolvedUpTo": "Jusqu'à {price}/kg",
+  "@homeUnresolvedUpTo": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "homeUnresolvedAnyPrice": "Peu importe le prix",
+  "homeDateThisMonth": "Ce mois",
+  "homeUnresolvedAnyTime": "Peu importe",
+  "homePhraseHint": "20 kilos à Bamako en mars",
+  "homeSectionOptional": "Facultatif",
+  "homeModeSelectorSending": "J'envoie un colis",
+  "homeModeSelectorTraveling": "Je voyage",
+  "homeModeSelectorTravelersAvailable": "{count, plural, =1{{count} voyageur disponible} other{{count} voyageurs disponibles}}",
+  "@homeModeSelectorTravelersAvailable": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeModeSelectorTravelersSubtitle": "Voyageurs disponibles",
+  "homeModeSelectorParcelsToCarry": "{count} colis à transporter",
+  "@homeModeSelectorParcelsToCarry": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeModeSelectorParcelsSubtitle": "Colis à transporter"
 }

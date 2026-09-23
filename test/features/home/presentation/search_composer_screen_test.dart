@@ -37,6 +37,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
 import '../../../helpers/mock_recent_city_store.dart';
 
 class _MockParseRepo extends Mock implements SearchParseRepository {}
@@ -532,6 +533,43 @@ void main() {
       await _settleFilterChange(tester);
 
       expect(find.textContaining('Rayon · 25 km'), findsNothing);
+    });
+  });
+
+  group('en anglais', () {
+    testWidgets('titre, action et sections traduits', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(const _Harness(count: 3));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Filter trips'), findsOneWidget);
+      expect(find.text('Clear all'), findsOneWidget);
+      expect(find.text('IN ONE SENTENCE'), findsOneWidget);
+      expect(find.text('Optional'), findsOneWidget);
+      expect(find.text('WHERE'), findsOneWidget);
+      expect(find.text('Search (3)'), findsOneWidget);
+    });
+
+    testWidgets('mode colis : titre et tailles traduits', (tester) async {
+      useEnglish();
+      _vueHaute(tester);
+      await tester.pumpWidget(const _Harness(mode: SearchMode.parcels));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Filter parcels'), findsOneWidget);
+      expect(find.text('Small'), findsOneWidget);
+      expect(find.text('Medium'), findsOneWidget);
+      expect(find.text('Large'), findsOneWidget);
+      expect(find.text('Around me'), findsOneWidget);
+    });
+
+    testWidgets('récapitulatif de phrase traduit', (tester) async {
+      useEnglish();
+      await tester.pumpWidget(const _Harness(withRecognizedArrival: true));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Arrival: Bamako'), findsOneWidget);
+      expect(find.text('SET FROM YOUR SENTENCE'), findsOneWidget);
     });
   });
 }

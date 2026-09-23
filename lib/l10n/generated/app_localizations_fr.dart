@@ -2070,4 +2070,162 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get homeAnyPrice => 'Tous les prix';
+
+  @override
+  String get homeComposerTitleTrips => 'Filtrer les trajets';
+
+  @override
+  String get homeComposerTitleParcels => 'Filtrer les colis';
+
+  @override
+  String get homeComposerClearAll => 'Tout effacer';
+
+  @override
+  String get homeComposerSectionPhrase => 'EN UNE PHRASE';
+
+  @override
+  String get homeComposerSectionWhere => 'OÙ';
+
+  @override
+  String get homeComposerSectionWhen => 'QUAND';
+
+  @override
+  String get homeComposerSectionAroundMe => 'AUTOUR DE MOI';
+
+  @override
+  String get homeComposerSearch => 'Rechercher';
+
+  @override
+  String homeComposerSearchWithCount(int count) {
+    return 'Rechercher ($count)';
+  }
+
+  @override
+  String get homeComposerSectionWeightPrice => 'POIDS ET PRIX';
+
+  @override
+  String get homeComposerSectionContents => 'MON COLIS CONTIENT';
+
+  @override
+  String get homeComposerContentHint => 'Rechercher un type de contenu…';
+
+  @override
+  String get homeComposerSectionQuickFilters => 'FILTRES RAPIDES';
+
+  @override
+  String get homeComposerMinRating => 'Note ≥ 4.5';
+
+  @override
+  String get homeComposerWeekend => 'Week-end';
+
+  @override
+  String get homeComposerVerifiedIdentity => 'Identité vérifiée';
+
+  @override
+  String get homeComposerSectionUrgency => 'URGENCE DU DÉPART';
+
+  @override
+  String get homeComposerUrgencyHint =>
+      'Filtrer les trajets selon leur proximité de départ';
+
+  @override
+  String get homeComposerSectionMaxWeight => 'POIDS MAXIMAL';
+
+  @override
+  String get homeComposerSectionParcelSize => 'TAILLE DU COLIS';
+
+  @override
+  String get homeComposerForMyTrips => 'Pour mes trajets';
+
+  @override
+  String get homeComposerAlertTip =>
+      'Astuce, tu peux être prévenu des nouveaux colis compatibles depuis Réglages, Notifications.';
+
+  @override
+  String get homeComposerAroundMe => 'Autour de moi';
+
+  @override
+  String get homeComposerLocating => 'Localisation en cours…';
+
+  @override
+  String get homeRecapTitle => 'RÉGLÉ DEPUIS VOTRE PHRASE';
+
+  @override
+  String get homeRecapArrival => 'Arrivée';
+
+  @override
+  String get homeRecapDeparture => 'Départ';
+
+  @override
+  String get homeRecapWhen => 'Quand';
+
+  @override
+  String get homeRecapMinWeight => 'Poids minimum';
+
+  @override
+  String homeRecapFieldLine(String label, String value) {
+    return '$label : $value';
+  }
+
+  @override
+  String homeUnresolvedPriceQuestion(String phrase) {
+    return '« $phrase », c\'est combien ?';
+  }
+
+  @override
+  String get homeUnresolvedCityUnknown => 'Vers quelle ville ?';
+
+  @override
+  String get homeUnresolvedCityAmbiguous => 'Quelle ville exactement ?';
+
+  @override
+  String get homeUnresolvedDateQuestion => 'Quand voulez-vous partir ?';
+
+  @override
+  String homeUnresolvedUpTo(String price) {
+    return 'Jusqu\'à $price/kg';
+  }
+
+  @override
+  String get homeUnresolvedAnyPrice => 'Peu importe le prix';
+
+  @override
+  String get homeDateThisMonth => 'Ce mois';
+
+  @override
+  String get homeUnresolvedAnyTime => 'Peu importe';
+
+  @override
+  String get homePhraseHint => '20 kilos à Bamako en mars';
+
+  @override
+  String get homeSectionOptional => 'Facultatif';
+
+  @override
+  String get homeModeSelectorSending => 'J\'envoie un colis';
+
+  @override
+  String get homeModeSelectorTraveling => 'Je voyage';
+
+  @override
+  String homeModeSelectorTravelersAvailable(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count voyageurs disponibles',
+      one: '$count voyageur disponible',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeModeSelectorTravelersSubtitle => 'Voyageurs disponibles';
+
+  @override
+  String homeModeSelectorParcelsToCarry(int count) {
+    return '$count colis à transporter';
+  }
+
+  @override
+  String get homeModeSelectorParcelsSubtitle => 'Colis à transporter';
 }

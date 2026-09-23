@@ -1,3 +1,4 @@
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// L'étiquette commune à tous les blocs de l'écran de recherche.
@@ -49,7 +50,7 @@ class SearchSectionLabel extends StatelessWidget {
                 border: Border.all(color: cs.outlineVariant),
               ),
               child: Text(
-                'Facultatif',
+                context.l10n.homeSectionOptional,
                 style: tt.labelSmall?.copyWith(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,

@@ -3,6 +3,8 @@ import 'package:dony/features/home/presentation/widgets/search_mode_selector.dar
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 const _trajetsKey = Key('search_mode_segment_trips');
 const _colisKey = Key('search_mode_segment_colis');
 const _compteurKey = Key('mode-other-count');
@@ -231,5 +233,39 @@ void main() {
     final largeur = tester.getSize(find.byType(SearchModeSelector)).width;
     final ecran = tester.getSize(find.byType(Scaffold)).width;
     expect(largeur, ecran - 32);
+  });
+
+  testWidgets('en anglais : intentions et compteur traduits', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(
+      wrap(
+        SearchModeSelector(
+          mode: SearchMode.parcels,
+          onChanged: (_) {},
+          otherModeCount: 2,
+        ),
+      ),
+    );
+
+    expect(find.text("I'm sending a parcel"), findsOneWidget);
+    expect(find.text("I'm traveling"), findsOneWidget);
+    expect(find.text('2 travelers available'), findsOneWidget);
+    expect(find.text('Parcels to carry'), findsOneWidget);
+  });
+
+  testWidgets('en anglais : compteur de colis au singulier', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(
+      wrap(
+        SearchModeSelector(
+          mode: SearchMode.trips,
+          onChanged: (_) {},
+          otherModeCount: 1,
+        ),
+      ),
+    );
+
+    expect(find.text('1 parcel to carry'), findsOneWidget);
+    expect(find.text('Travelers available'), findsOneWidget);
   });
 }

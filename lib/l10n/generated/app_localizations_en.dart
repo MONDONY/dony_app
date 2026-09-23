@@ -2063,4 +2063,167 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeAnyPrice => 'Any price';
+
+  @override
+  String get homeComposerTitleTrips => 'Filter trips';
+
+  @override
+  String get homeComposerTitleParcels => 'Filter parcels';
+
+  @override
+  String get homeComposerClearAll => 'Clear all';
+
+  @override
+  String get homeComposerSectionPhrase => 'IN ONE SENTENCE';
+
+  @override
+  String get homeComposerSectionWhere => 'WHERE';
+
+  @override
+  String get homeComposerSectionWhen => 'WHEN';
+
+  @override
+  String get homeComposerSectionAroundMe => 'AROUND ME';
+
+  @override
+  String get homeComposerSearch => 'Search';
+
+  @override
+  String homeComposerSearchWithCount(int count) {
+    return 'Search ($count)';
+  }
+
+  @override
+  String get homeComposerSectionWeightPrice => 'WEIGHT AND PRICE';
+
+  @override
+  String get homeComposerSectionContents => 'MY PARCEL CONTAINS';
+
+  @override
+  String get homeComposerContentHint => 'Search for a content type…';
+
+  @override
+  String get homeComposerSectionQuickFilters => 'QUICK FILTERS';
+
+  @override
+  String get homeComposerMinRating => 'Rating ≥ 4.5';
+
+  @override
+  String get homeComposerWeekend => 'Weekend';
+
+  @override
+  String get homeComposerVerifiedIdentity => 'Verified identity';
+
+  @override
+  String get homeComposerSectionUrgency => 'DEPARTURE URGENCY';
+
+  @override
+  String get homeComposerUrgencyHint => 'Filter trips by how soon they leave';
+
+  @override
+  String get homeComposerSectionMaxWeight => 'MAXIMUM WEIGHT';
+
+  @override
+  String get homeComposerSectionParcelSize => 'PARCEL SIZE';
+
+  @override
+  String get homeComposerForMyTrips => 'For my trips';
+
+  @override
+  String get homeComposerAlertTip =>
+      'Tip: you can get alerts for new matching parcels in Settings, Notifications.';
+
+  @override
+  String get homeComposerAroundMe => 'Around me';
+
+  @override
+  String get homeComposerLocating => 'Finding your location…';
+
+  @override
+  String get homeRecapTitle => 'SET FROM YOUR SENTENCE';
+
+  @override
+  String get homeRecapArrival => 'Arrival';
+
+  @override
+  String get homeRecapDeparture => 'Departure';
+
+  @override
+  String get homeRecapWhen => 'When';
+
+  @override
+  String get homeRecapMinWeight => 'Minimum weight';
+
+  @override
+  String homeRecapFieldLine(String label, String value) {
+    return '$label: $value';
+  }
+
+  @override
+  String homeUnresolvedPriceQuestion(String phrase) {
+    return '“$phrase”: how much?';
+  }
+
+  @override
+  String get homeUnresolvedCityUnknown => 'To which city?';
+
+  @override
+  String get homeUnresolvedCityAmbiguous => 'Which city exactly?';
+
+  @override
+  String get homeUnresolvedDateQuestion => 'When do you want to leave?';
+
+  @override
+  String homeUnresolvedUpTo(String price) {
+    return 'Up to $price/kg';
+  }
+
+  @override
+  String get homeUnresolvedAnyPrice => 'Any price';
+
+  @override
+  String get homeDateThisMonth => 'This month';
+
+  @override
+  String get homeUnresolvedAnyTime => 'Any time';
+
+  @override
+  String get homePhraseHint => '20 kg to Bamako in March';
+
+  @override
+  String get homeSectionOptional => 'Optional';
+
+  @override
+  String get homeModeSelectorSending => 'I\'m sending a parcel';
+
+  @override
+  String get homeModeSelectorTraveling => 'I\'m traveling';
+
+  @override
+  String homeModeSelectorTravelersAvailable(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count travelers available',
+      one: '$count traveler available',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeModeSelectorTravelersSubtitle => 'Travelers available';
+
+  @override
+  String homeModeSelectorParcelsToCarry(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count parcels to carry',
+      one: '$count parcel to carry',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeModeSelectorParcelsSubtitle => 'Parcels to carry';
 }

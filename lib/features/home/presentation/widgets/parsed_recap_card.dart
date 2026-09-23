@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/home/data/models/search_parse_result.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Récapitulatif de ce que le parseur a compris dans la phrase, affiché
@@ -13,12 +14,13 @@ class ParsedRecapCard extends StatelessWidget {
 
   final List<RecognizedField> fields;
 
-  static const _labels = <String, String>{
-    'arrivalCity': 'Arrivée',
-    'departureCity': 'Départ',
-    'departureDateFrom': 'Quand',
-    'minAvailableKg': 'Poids minimum',
-    'maxPricePerKg': 'Prix maximum',
+  static String? _label(AppLocalizations l, String field) => switch (field) {
+    'arrivalCity' => l.homeRecapArrival,
+    'departureCity' => l.homeRecapDeparture,
+    'departureDateFrom' => l.homeRecapWhen,
+    'minAvailableKg' => l.homeRecapMinWeight,
+    'maxPricePerKg' => l.homeMaxPriceTitle,
+    _ => null,
   };
 
   @override
@@ -26,7 +28,12 @@ class ParsedRecapCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    final known = fields.where((f) => _labels.containsKey(f.field)).toList();
+    final l = context.l10n;
+    final known = [
+      for (final f in fields)
+        if (_label(l, f.field) case final label?)
+          (label: label, value: f.value),
+    ];
     if (known.isEmpty) return const SizedBox.shrink();
 
     return Container(
@@ -40,7 +47,7 @@ class ParsedRecapCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'RÉGLÉ DEPUIS VOTRE PHRASE',
+            l.homeRecapTitle,
             style: tt.labelSmall?.copyWith(
               fontSize: 12,
               fontWeight: FontWeight.w800,
@@ -53,7 +60,7 @@ class ParsedRecapCard extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(top: 4),
               child: Text(
-                '${_labels[field.field]} : ${field.value}',
+                l.homeRecapFieldLine(field.label, field.value),
                 style: tt.bodyMedium?.copyWith(color: cs.onPrimaryContainer),
               ),
             ),
