@@ -2584,17 +2584,17 @@ class _DatePresetSheetState extends State<_DatePresetSheet> {
           ),
           const SizedBox(height: DonySpacing.md),
           _PresetOption(
-            label: context.l10n.homeDateToday,
+            label: context.l10n.commonDateToday,
             isSelected: _selected == DonyDatePreset.today,
             onTap: () => setState(() => _selected = DonyDatePreset.today),
           ),
           _PresetOption(
-            label: context.l10n.homeDateThisWeek,
+            label: context.l10n.commonDateThisWeek,
             isSelected: _selected == DonyDatePreset.thisWeek,
             onTap: () => setState(() => _selected = DonyDatePreset.thisWeek),
           ),
           _PresetOption(
-            label: context.l10n.homeDateThisMonthLong,
+            label: context.l10n.commonDateThisMonthLong,
             isSelected: _selected == DonyDatePreset.thisMonth,
             onTap: () => setState(() => _selected = DonyDatePreset.thisMonth),
           ),

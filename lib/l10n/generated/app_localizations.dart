@@ -3446,23 +3446,23 @@ abstract class AppLocalizations {
   /// **'Date de départ'**
   String get homeDepartureDateTitle;
 
-  /// No description provided for @homeDateToday.
+  /// No description provided for @commonDateToday.
   ///
   /// In fr, this message translates to:
   /// **'Aujourd\'hui'**
-  String get homeDateToday;
+  String get commonDateToday;
 
-  /// No description provided for @homeDateThisWeek.
+  /// No description provided for @commonDateThisWeek.
   ///
   /// In fr, this message translates to:
   /// **'Cette semaine'**
-  String get homeDateThisWeek;
+  String get commonDateThisWeek;
 
-  /// No description provided for @homeDateThisMonthLong.
+  /// No description provided for @commonDateThisMonthLong.
   ///
   /// In fr, this message translates to:
   /// **'Ce mois-ci'**
-  String get homeDateThisMonthLong;
+  String get commonDateThisMonthLong;
 
   /// No description provided for @homeChooseDate.
   ///
@@ -3722,11 +3722,11 @@ abstract class AppLocalizations {
   /// **'Peu importe le prix'**
   String get homeUnresolvedAnyPrice;
 
-  /// No description provided for @homeDateThisMonth.
+  /// No description provided for @commonDateThisMonth.
   ///
   /// In fr, this message translates to:
   /// **'Ce mois'**
-  String get homeDateThisMonth;
+  String get commonDateThisMonth;
 
   /// No description provided for @homeUnresolvedAnyTime.
   ///

@@ -834,9 +834,9 @@
     }
   },
   "homeDepartureDateTitle": "Date de départ",
-  "homeDateToday": "Aujourd'hui",
-  "homeDateThisWeek": "Cette semaine",
-  "homeDateThisMonthLong": "Ce mois-ci",
+  "commonDateToday": "Aujourd'hui",
+  "commonDateThisWeek": "Cette semaine",
+  "commonDateThisMonthLong": "Ce mois-ci",
   "homeChooseDate": "Choisir une date",
   "homeMinRatingTitle": "Note minimum",
   "homeRatingOnlyFive": "★ 5.0 uniquement",
@@ -918,7 +918,7 @@
     }
   },
   "homeUnresolvedAnyPrice": "Peu importe le prix",
-  "homeDateThisMonth": "Ce mois",
+  "commonDateThisMonth": "Ce mois",
   "homeUnresolvedAnyTime": "Peu importe",
   "homePhraseHint": "20 kilos à Bamako en mars",
   "homeSectionOptional": "Facultatif",

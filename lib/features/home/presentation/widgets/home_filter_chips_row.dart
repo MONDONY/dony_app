@@ -91,11 +91,11 @@ class HomeFilterChipsRow extends StatelessWidget {
   String _dateLabel(AppLocalizations l) {
     switch (filters.datePreset) {
       case DonyDatePreset.today:
-        return l.homeDateToday;
+        return l.commonDateToday;
       case DonyDatePreset.thisWeek:
-        return l.homeDateThisWeek;
+        return l.commonDateThisWeek;
       case DonyDatePreset.thisMonth:
-        return l.homeDateThisMonthLong;
+        return l.commonDateThisMonthLong;
       case DonyDatePreset.custom:
         return filters.customDate != null
             ? DateFormat('d MMM', l.localeName).format(filters.customDate!)

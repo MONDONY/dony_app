@@ -2040,13 +2040,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get homeDepartureDateTitle => 'Date de départ';
 
   @override
-  String get homeDateToday => 'Aujourd\'hui';
+  String get commonDateToday => 'Aujourd\'hui';
 
   @override
-  String get homeDateThisWeek => 'Cette semaine';
+  String get commonDateThisWeek => 'Cette semaine';
 
   @override
-  String get homeDateThisMonthLong => 'Ce mois-ci';
+  String get commonDateThisMonthLong => 'Ce mois-ci';
 
   @override
   String get homeChooseDate => 'Choisir une date';
@@ -2190,7 +2190,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get homeUnresolvedAnyPrice => 'Peu importe le prix';
 
   @override
-  String get homeDateThisMonth => 'Ce mois';
+  String get commonDateThisMonth => 'Ce mois';
 
   @override
   String get homeUnresolvedAnyTime => 'Peu importe';

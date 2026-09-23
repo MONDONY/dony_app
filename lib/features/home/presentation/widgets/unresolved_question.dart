@@ -42,8 +42,8 @@ class UnresolvedQuestion extends StatelessWidget {
           (label: l.homeUnresolvedAnyPrice, value: ''),
         ],
         UnresolvedKind.dateVague => [
-          (label: l.homeDateThisWeek, value: 'thisWeek'),
-          (label: l.homeDateThisMonth, value: 'thisMonth'),
+          (label: l.commonDateThisWeek, value: 'thisWeek'),
+          (label: l.commonDateThisMonth, value: 'thisMonth'),
           (label: l.homeUnresolvedAnyTime, value: ''),
         ],
         // Les villes viennent du serveur : pour une ambiguïté ce sont les

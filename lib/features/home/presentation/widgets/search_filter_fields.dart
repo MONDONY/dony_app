@@ -34,9 +34,9 @@ class DatePresetsField extends StatelessWidget {
   final ValueChanged<HomeSearchFilters> onChanged;
 
   static List<(DonyDatePreset, String)> _presets(AppLocalizations l) => [
-    (DonyDatePreset.today, l.homeDateToday),
-    (DonyDatePreset.thisWeek, l.homeDateThisWeek),
-    (DonyDatePreset.thisMonth, l.homeDateThisMonth),
+    (DonyDatePreset.today, l.commonDateToday),
+    (DonyDatePreset.thisWeek, l.commonDateThisWeek),
+    (DonyDatePreset.thisMonth, l.commonDateThisMonth),
   ];
 
   void _togglePreset(DonyDatePreset preset) {
