@@ -32,11 +32,19 @@ class CountryOnboardingSuccess extends CountryOnboardingState {
   const CountryOnboardingSuccess();
 }
 
+/// Distingue le texte affiché selon l'action qui a échoué : `select()`
+/// n'enregistre pas le même choix que `continueAsSenderOnly()`, et le message
+/// affiché ne doit pas prétendre qu'un pays était en jeu quand ce n'est pas
+/// le cas.
+enum CountryOnboardingFailure { saveCountry, saveChoice }
+
 class CountryOnboardingError extends CountryOnboardingState {
-  const CountryOnboardingError();
+  const CountryOnboardingError(this.failure);
+
+  final CountryOnboardingFailure failure;
 
   @override
-  List<Object?> get props => [];
+  List<Object?> get props => [failure];
 }
 
 /// Persiste le pays d'onboarding dans l'ordre strict backend → Hive.
@@ -89,7 +97,7 @@ class CountryOnboardingCubit extends Cubit<CountryOnboardingState> {
       );
       emit(const CountryOnboardingSuccess());
     } catch (_) {
-      emit(const CountryOnboardingError());
+      emit(const CountryOnboardingError(CountryOnboardingFailure.saveCountry));
     }
   }
 
@@ -132,7 +140,7 @@ class CountryOnboardingCubit extends Cubit<CountryOnboardingState> {
       );
       emit(const CountryOnboardingSuccess());
     } catch (_) {
-      emit(const CountryOnboardingError());
+      emit(const CountryOnboardingError(CountryOnboardingFailure.saveChoice));
     }
   }
 }

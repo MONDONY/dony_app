@@ -225,7 +225,7 @@ void main() {
       cubit,
       Stream.fromIterable([
         const CountryOnboardingSaving('CA'),
-        const CountryOnboardingError(),
+        const CountryOnboardingError(CountryOnboardingFailure.saveCountry),
       ]),
       initialState: const CountryOnboardingInitial(),
     );
@@ -238,6 +238,29 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets(
+    'état Error (choix « continuer sans voyager ») affiche le message propre '
+    'au choix, pas celui du pays',
+    (tester) async {
+      whenListen<CountryOnboardingState>(
+        cubit,
+        Stream.fromIterable([
+          const CountryOnboardingSaving(null),
+          const CountryOnboardingError(CountryOnboardingFailure.saveChoice),
+        ]),
+        initialState: const CountryOnboardingInitial(),
+      );
+
+      await _wrap(tester, cubit);
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Impossible d’enregistrer ce choix. Réessayez.'),
+        findsOneWidget,
+      );
+    },
+  );
 
   testWidgets(
     'état Success navigue vers l\'étape « Vos informations » en passant le '

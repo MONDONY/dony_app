@@ -1940,6 +1940,12 @@ abstract class AppLocalizations {
   /// **'Impossible d’enregistrer le pays. Réessayez.'**
   String get authCountrySaveError;
 
+  /// No description provided for @authCountryChoiceSaveError.
+  ///
+  /// In fr, this message translates to:
+  /// **'Impossible d’enregistrer ce choix. Réessayez.'**
+  String get authCountryChoiceSaveError;
+
   /// No description provided for @authPersonalInfoSaveError.
   ///
   /// In fr, this message translates to:

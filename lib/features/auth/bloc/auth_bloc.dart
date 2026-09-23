@@ -749,8 +749,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   AppException _friendlyError(Object e) {
     if (e is AppException) return e;
     if (e is DioException) return unwrapDioError(e);
-    if (e.toString().contains('Ce numéro est déjà associé')) {
-      // i18n-ignore
+    const phoneTakenMarker = 'Ce numéro est déjà associé'; // i18n-ignore
+    if (e.toString().contains(phoneTakenMarker)) {
       return const NetworkException(
         'Phone already registered',
         code: 'phone-already-registered',

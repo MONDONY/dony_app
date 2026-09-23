@@ -71,7 +71,12 @@ class _CountrySelectionScreenState extends State<CountrySelectionScreen> {
         } else if (state is CountryOnboardingError) {
           DonySnackbar.show(
             context,
-            message: context.l10n.authCountrySaveError,
+            message: switch (state.failure) {
+              CountryOnboardingFailure.saveCountry =>
+                context.l10n.authCountrySaveError,
+              CountryOnboardingFailure.saveChoice =>
+                context.l10n.authCountryChoiceSaveError,
+            },
             type: DonySnackbarType.error,
           );
         }

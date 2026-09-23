@@ -1054,6 +1054,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authCountrySaveError => 'Couldn\'t save your country. Try again.';
 
   @override
+  String get authCountryChoiceSaveError =>
+      'Couldn\'t save your choice. Try again.';
+
+  @override
   String get authPersonalInfoSaveError =>
       'Couldn\'t save your details. Try again.';
 

@@ -140,7 +140,7 @@ void main() {
     act: (cubit) => cubit.select('CI'),
     expect: () => const [
       CountryOnboardingSaving('CI'),
-      CountryOnboardingError(),
+      CountryOnboardingError(CountryOnboardingFailure.saveCountry),
     ],
     verify: (_) {
       verifyNever(() => repository.updatePrefs(any()));
@@ -167,7 +167,7 @@ void main() {
         cubit.stream.take(2),
         emitsInOrder(const [
           CountryOnboardingSaving('CA'),
-          CountryOnboardingError(),
+          CountryOnboardingError(CountryOnboardingFailure.saveCountry),
         ]),
       );
 
@@ -175,7 +175,10 @@ void main() {
 
       await failedStates;
 
-      expect(cubit.state, const CountryOnboardingError());
+      expect(
+        cubit.state,
+        const CountryOnboardingError(CountryOnboardingFailure.saveCountry),
+      );
       verifyNever(
         () => analytics.logEvent(AnalyticsEvents.countryOnboardingSelected),
       );
@@ -269,6 +272,21 @@ void main() {
         ),
       ).called(1);
     },
+  );
+
+  blocTest<CountryOnboardingCubit, CountryOnboardingState>(
+    'continueAsSenderOnly : échec Hive → erreur propre au choix, pas au pays',
+    setUp: () {
+      when(
+        () => prefs.put(HiveService.kTravelerCountryUnsupported, true),
+      ).thenThrow(StateError('hive unavailable'));
+    },
+    build: build,
+    act: (cubit) => cubit.continueAsSenderOnly(),
+    expect: () => const [
+      CountryOnboardingSaving(null),
+      CountryOnboardingError(CountryOnboardingFailure.saveChoice),
+    ],
   );
 
   blocTest<CountryOnboardingCubit, CountryOnboardingState>(

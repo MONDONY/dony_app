@@ -1062,6 +1062,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Impossible d’enregistrer le pays. Réessayez.';
 
   @override
+  String get authCountryChoiceSaveError =>
+      'Impossible d’enregistrer ce choix. Réessayez.';
+
+  @override
   String get authPersonalInfoSaveError =>
       'Impossible d\'enregistrer ces informations. Réessayez.';
 

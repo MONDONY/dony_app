@@ -307,6 +307,7 @@
   "errorAuthGenericErrorTitle": "Something went wrong",
   "errorAuthGenericErrorMessage": "Something went wrong. Try again.",
   "authCountrySaveError": "Couldn't save your country. Try again.",
+  "authCountryChoiceSaveError": "Couldn't save your choice. Try again.",
   "authPersonalInfoSaveError": "Couldn't save your details. Try again.",
   "authUserFallbackName": "User",
   "authBiometricUnlockReason": "Unlock Yadony to access your account",

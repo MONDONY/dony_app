@@ -319,6 +319,7 @@
   "errorAuthGenericErrorTitle": "Une erreur est survenue",
   "errorAuthGenericErrorMessage": "Une erreur est survenue. Réessayez.",
   "authCountrySaveError": "Impossible d’enregistrer le pays. Réessayez.",
+  "authCountryChoiceSaveError": "Impossible d’enregistrer ce choix. Réessayez.",
   "authPersonalInfoSaveError": "Impossible d'enregistrer ces informations. Réessayez.",
   "authUserFallbackName": "Utilisateur",
   "authBiometricUnlockReason": "Déverrouillez Yadony pour accéder à votre compte",
