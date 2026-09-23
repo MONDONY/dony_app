@@ -501,7 +501,6 @@
   "authPersonalInfoTitle": "Vos informations",
   "authPersonalInfoBody": "Votre nom légal, tel qu’il figure sur votre pièce d’identité. Le reste vous sera demandé une seule fois, par Stripe.",
   "authPersonalInfoFootnote": "Jamais partagées avec les autres membres, jamais affichées publiquement.",
-  "authPersonalInfoContinue": "Continuer",
   "authPersonalInfoIdentitySection": "Identité",
   "authPersonalInfoFirstName": "Prénom",
   "authPersonalInfoLastName": "Nom",
@@ -538,8 +537,6 @@
   "authConsentDecline": "Non merci",
   "authLocalSwitchAccountTitle": "Changer de compte ?",
   "authLocalSwitchAccountMessage": "Vous allez être déconnecté de ce compte. Vous devrez vous reconnecter et reconfigurer votre code PIN.",
-  "authLocalCancel": "Annuler",
-  "authLocalContinue": "Continuer",
   "authLocalOtherAccount": "Autre compte",
   "authLocalEnterPin": "Saisissez votre code PIN",
   "authLocalLastAttempt": "Dernière tentative avant blocage",
@@ -559,5 +556,7 @@
       }
     }
   },
-  "countryNameCd": "RD Congo"
+  "countryNameCd": "RD Congo",
+  "commonCancel": "Annuler",
+  "commonContinue": "Continuer"
 }

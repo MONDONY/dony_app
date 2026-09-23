@@ -1536,9 +1536,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'Jamais partagées avec les autres membres, jamais affichées publiquement.';
 
   @override
-  String get authPersonalInfoContinue => 'Continuer';
-
-  @override
   String get authPersonalInfoIdentitySection => 'Identité';
 
   @override
@@ -1639,12 +1636,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'Vous allez être déconnecté de ce compte. Vous devrez vous reconnecter et reconfigurer votre code PIN.';
 
   @override
-  String get authLocalCancel => 'Annuler';
-
-  @override
-  String get authLocalContinue => 'Continuer';
-
-  @override
   String get authLocalOtherAccount => 'Autre compte';
 
   @override
@@ -1677,4 +1668,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get countryNameCd => 'RD Congo';
+
+  @override
+  String get commonCancel => 'Annuler';
+
+  @override
+  String get commonContinue => 'Continuer';
 }

@@ -2786,12 +2786,6 @@ abstract class AppLocalizations {
   /// **'Jamais partagées avec les autres membres, jamais affichées publiquement.'**
   String get authPersonalInfoFootnote;
 
-  /// No description provided for @authPersonalInfoContinue.
-  ///
-  /// In fr, this message translates to:
-  /// **'Continuer'**
-  String get authPersonalInfoContinue;
-
   /// No description provided for @authPersonalInfoIdentitySection.
   ///
   /// In fr, this message translates to:
@@ -2966,18 +2960,6 @@ abstract class AppLocalizations {
   /// **'Vous allez être déconnecté de ce compte. Vous devrez vous reconnecter et reconfigurer votre code PIN.'**
   String get authLocalSwitchAccountMessage;
 
-  /// No description provided for @authLocalCancel.
-  ///
-  /// In fr, this message translates to:
-  /// **'Annuler'**
-  String get authLocalCancel;
-
-  /// No description provided for @authLocalContinue.
-  ///
-  /// In fr, this message translates to:
-  /// **'Continuer'**
-  String get authLocalContinue;
-
   /// No description provided for @authLocalOtherAccount.
   ///
   /// In fr, this message translates to:
@@ -3013,6 +2995,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'RD Congo'**
   String get countryNameCd;
+
+  /// No description provided for @commonCancel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler'**
+  String get commonCancel;
+
+  /// No description provided for @commonContinue.
+  ///
+  /// In fr, this message translates to:
+  /// **'Continuer'**
+  String get commonContinue;
 }
 
 class _AppLocalizationsDelegate

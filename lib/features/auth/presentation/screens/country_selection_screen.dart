@@ -391,6 +391,7 @@ class _EmptyCountryResults extends StatelessWidget {
       title: l.authCountryDeleteDialogTitle,
       message: l.authCountryDeleteDialogMessage,
       confirmLabel: l.authCountryDeleteDialogConfirm,
+      cancelLabel: l.commonCancel,
       variant: DonyDialogVariant.destructive,
       iconAsset: 'circle-alert',
     );

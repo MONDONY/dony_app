@@ -86,12 +86,12 @@ class _LocalAuthScreenState extends State<LocalAuthScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(l.authLocalCancel),
+            child: Text(l.commonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             style: TextButton.styleFrom(foregroundColor: cs.primary),
-            child: Text(l.authLocalContinue),
+            child: Text(l.commonContinue),
           ),
         ],
       ),

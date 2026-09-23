@@ -448,7 +448,6 @@
   "authPersonalInfoTitle": "Your details",
   "authPersonalInfoBody": "Your legal name, exactly as it appears on your ID. Stripe will ask for the rest, only once.",
   "authPersonalInfoFootnote": "Never shared with other members, never shown publicly.",
-  "authPersonalInfoContinue": "Continue",
   "authPersonalInfoIdentitySection": "Identity",
   "authPersonalInfoFirstName": "First name",
   "authPersonalInfoLastName": "Last name",
@@ -478,12 +477,12 @@
   "authConsentDecline": "No thanks",
   "authLocalSwitchAccountTitle": "Switch account?",
   "authLocalSwitchAccountMessage": "You'll be signed out of this account. You'll need to sign in again and set up a new PIN.",
-  "authLocalCancel": "Cancel",
-  "authLocalContinue": "Continue",
   "authLocalOtherAccount": "Other account",
   "authLocalEnterPin": "Enter your PIN",
   "authLocalLastAttempt": "Last attempt before lockout",
   "authLocalAttemptsLeft": "{count, plural, =1{{count} attempt left} other{{count} attempts left}}",
   "authLocalRetryIn": "{seconds, plural, =1{Try again in {seconds} second} other{Try again in {seconds} seconds}}",
-  "countryNameCd": "DR Congo"
+  "countryNameCd": "DR Congo",
+  "commonCancel": "Cancel",
+  "commonContinue": "Continue"
 }

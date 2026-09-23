@@ -1522,9 +1522,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Never shared with other members, never shown publicly.';
 
   @override
-  String get authPersonalInfoContinue => 'Continue';
-
-  @override
   String get authPersonalInfoIdentitySection => 'Identity';
 
   @override
@@ -1625,12 +1622,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'You\'ll be signed out of this account. You\'ll need to sign in again and set up a new PIN.';
 
   @override
-  String get authLocalCancel => 'Cancel';
-
-  @override
-  String get authLocalContinue => 'Continue';
-
-  @override
   String get authLocalOtherAccount => 'Other account';
 
   @override
@@ -1663,4 +1654,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get countryNameCd => 'DR Congo';
+
+  @override
+  String get commonCancel => 'Cancel';
+
+  @override
+  String get commonContinue => 'Continue';
 }

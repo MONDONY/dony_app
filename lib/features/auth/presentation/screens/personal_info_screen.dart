@@ -201,7 +201,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                           primary: ValueListenableBuilder<bool>(
                             valueListenable: _isValid,
                             builder: (context, hasAllFields, _) => DonyButton(
-                              label: l.authPersonalInfoContinue,
+                              label: l.commonContinue,
                               iconAsset: 'arrow-right',
                               isLoading: isSaving,
                               onPressed: hasAllFields && !isSaving
