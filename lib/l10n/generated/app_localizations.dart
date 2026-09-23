@@ -2665,6 +2665,360 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'politique de confidentialité'**
   String get authOnboardingLegalPrivacyLink;
+
+  /// No description provided for @authCountryGaugeLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pays'**
+  String get authCountryGaugeLabel;
+
+  /// No description provided for @authCountryTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Dans quel pays es-tu ?'**
+  String get authCountryTitle;
+
+  /// No description provided for @authCountrySubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Devise, trajets et disponibilité seront adaptés à ton pays.'**
+  String get authCountrySubtitle;
+
+  /// No description provided for @authCountryFieldLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pays'**
+  String get authCountryFieldLabel;
+
+  /// No description provided for @authCountryFieldHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex : Sénégal, France, Canada'**
+  String get authCountryFieldHint;
+
+  /// No description provided for @authCountryFieldHelper.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tape ton pays puis choisis une suggestion.'**
+  String get authCountryFieldHelper;
+
+  /// No description provided for @authCountrySaving.
+  ///
+  /// In fr, this message translates to:
+  /// **'Enregistrement du pays...'**
+  String get authCountrySaving;
+
+  /// No description provided for @authCountryDeleteDialogTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer définitivement le compte ?'**
+  String get authCountryDeleteDialogTitle;
+
+  /// No description provided for @authCountryDeleteDialogMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ton compte Yadony et tes données associées seront supprimés. Cette action est irréversible.'**
+  String get authCountryDeleteDialogMessage;
+
+  /// No description provided for @authCountryDeleteDialogConfirm.
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer la suppression'**
+  String get authCountryDeleteDialogConfirm;
+
+  /// No description provided for @authCountryUnavailableTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Yadony n’est pas encore disponible dans ce pays'**
+  String get authCountryUnavailableTitle;
+
+  /// No description provided for @authCountryUnavailableBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu peux continuer pour envoyer des colis. Les trajets et la prise de colis resteront indisponibles depuis ce compte.'**
+  String get authCountryUnavailableBody;
+
+  /// No description provided for @authCountryContinueAsSender.
+  ///
+  /// In fr, this message translates to:
+  /// **'Je souhaite continuer et envoyer des colis'**
+  String get authCountryContinueAsSender;
+
+  /// No description provided for @authCountryDeleteAccount.
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer mon compte'**
+  String get authCountryDeleteAccount;
+
+  /// No description provided for @authCountryOptionSavingLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pays sélectionné : {country}, devise {currency}. Enregistrement en cours.'**
+  String authCountryOptionSavingLabel(String country, String currency);
+
+  /// No description provided for @authCountryOptionSelectLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Sélectionner {country}, devise {currency}'**
+  String authCountryOptionSelectLabel(String country, String currency);
+
+  /// No description provided for @authPersonalInfoCountryNotSet.
+  ///
+  /// In fr, this message translates to:
+  /// **'Non renseigné'**
+  String get authPersonalInfoCountryNotSet;
+
+  /// No description provided for @authPersonalInfoGaugeLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Informations'**
+  String get authPersonalInfoGaugeLabel;
+
+  /// No description provided for @authPersonalInfoTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vos informations'**
+  String get authPersonalInfoTitle;
+
+  /// No description provided for @authPersonalInfoBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre nom légal, tel qu’il figure sur votre pièce d’identité. Le reste vous sera demandé une seule fois, par Stripe.'**
+  String get authPersonalInfoBody;
+
+  /// No description provided for @authPersonalInfoFootnote.
+  ///
+  /// In fr, this message translates to:
+  /// **'Jamais partagées avec les autres membres, jamais affichées publiquement.'**
+  String get authPersonalInfoFootnote;
+
+  /// No description provided for @authPersonalInfoContinue.
+  ///
+  /// In fr, this message translates to:
+  /// **'Continuer'**
+  String get authPersonalInfoContinue;
+
+  /// No description provided for @authPersonalInfoIdentitySection.
+  ///
+  /// In fr, this message translates to:
+  /// **'Identité'**
+  String get authPersonalInfoIdentitySection;
+
+  /// No description provided for @authPersonalInfoFirstName.
+  ///
+  /// In fr, this message translates to:
+  /// **'Prénom'**
+  String get authPersonalInfoFirstName;
+
+  /// No description provided for @authPersonalInfoLastName.
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom'**
+  String get authPersonalInfoLastName;
+
+  /// No description provided for @authPersonalInfoCountrySection.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pays'**
+  String get authPersonalInfoCountrySection;
+
+  /// No description provided for @authPersonalInfoCountryField.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pays'**
+  String get authPersonalInfoCountryField;
+
+  /// No description provided for @authPersonalInfoCountrySemantics.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pays de résidence : {country}. Déterminé à l’inscription, non modifiable ici.'**
+  String authPersonalInfoCountrySemantics(String country);
+
+  /// No description provided for @authPersonalInfoCountryMissingSemantics.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pays de résidence non renseigné. Déterminé à l’inscription, non modifiable ici.'**
+  String get authPersonalInfoCountryMissingSemantics;
+
+  /// No description provided for @authReferralGaugeLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Parrainage'**
+  String get authReferralGaugeLabel;
+
+  /// No description provided for @authReferralTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tu as été invité par un ami ?'**
+  String get authReferralTitle;
+
+  /// No description provided for @authReferralBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Entre son code pour qu’il soit récompensé à ta première livraison.'**
+  String get authReferralBody;
+
+  /// No description provided for @authReferralFootnote.
+  ///
+  /// In fr, this message translates to:
+  /// **'Cette étape est facultative. Tu peux entrer dans Yadony sans code.'**
+  String get authReferralFootnote;
+
+  /// No description provided for @authReferralCodeLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Code parrain'**
+  String get authReferralCodeLabel;
+
+  /// No description provided for @authReferralCodeHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex : JEAN0234'**
+  String get authReferralCodeHint;
+
+  /// No description provided for @authReferralApply.
+  ///
+  /// In fr, this message translates to:
+  /// **'Appliquer le code'**
+  String get authReferralApply;
+
+  /// No description provided for @authReferralSuccessTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Code appliqué !'**
+  String get authReferralSuccessTitle;
+
+  /// No description provided for @authReferralSuccessBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ton ami sera récompensé dès que tu complètes ta première livraison.'**
+  String get authReferralSuccessBody;
+
+  /// No description provided for @authReferralSuccessFootnote.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ton compte Yadony est prêt. Tu peux commencer à rechercher, envoyer ou suivre tes colis.'**
+  String get authReferralSuccessFootnote;
+
+  /// No description provided for @authReferralContinueHome.
+  ///
+  /// In fr, this message translates to:
+  /// **'Continuer vers l\'accueil'**
+  String get authReferralContinueHome;
+
+  /// No description provided for @authConsentGaugeLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Confidentialité'**
+  String get authConsentGaugeLabel;
+
+  /// No description provided for @authConsentTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Une dernière chose'**
+  String get authConsentTitle;
+
+  /// No description provided for @authConsentBody.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pour améliorer Yadony, on aimerait mesurer comment l\'app est utilisée. C\'est anonyme et facultatif.'**
+  String get authConsentBody;
+
+  /// No description provided for @authConsentFootnote.
+  ///
+  /// In fr, this message translates to:
+  /// **'Jamais tes paiements, ton identité ou ton numéro. Tu peux changer d’avis dans Réglages.'**
+  String get authConsentFootnote;
+
+  /// No description provided for @authConsentPointScreens.
+  ///
+  /// In fr, this message translates to:
+  /// **'Écrans visités et fonctionnalités utilisées'**
+  String get authConsentPointScreens;
+
+  /// No description provided for @authConsentPointGestures.
+  ///
+  /// In fr, this message translates to:
+  /// **'Gestes pour repérer ce qui bloque'**
+  String get authConsentPointGestures;
+
+  /// No description provided for @authConsentPointNeverPersonal.
+  ///
+  /// In fr, this message translates to:
+  /// **'Jamais tes paiements, identité ou numéro'**
+  String get authConsentPointNeverPersonal;
+
+  /// No description provided for @authConsentPointChangeAnytime.
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifiable à tout moment dans Réglages'**
+  String get authConsentPointChangeAnytime;
+
+  /// No description provided for @authConsentAccept.
+  ///
+  /// In fr, this message translates to:
+  /// **'Accepter'**
+  String get authConsentAccept;
+
+  /// No description provided for @authConsentDecline.
+  ///
+  /// In fr, this message translates to:
+  /// **'Non merci'**
+  String get authConsentDecline;
+
+  /// No description provided for @authLocalSwitchAccountTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Changer de compte ?'**
+  String get authLocalSwitchAccountTitle;
+
+  /// No description provided for @authLocalSwitchAccountMessage.
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous allez être déconnecté de ce compte. Vous devrez vous reconnecter et reconfigurer votre code PIN.'**
+  String get authLocalSwitchAccountMessage;
+
+  /// No description provided for @authLocalCancel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Annuler'**
+  String get authLocalCancel;
+
+  /// No description provided for @authLocalContinue.
+  ///
+  /// In fr, this message translates to:
+  /// **'Continuer'**
+  String get authLocalContinue;
+
+  /// No description provided for @authLocalOtherAccount.
+  ///
+  /// In fr, this message translates to:
+  /// **'Autre compte'**
+  String get authLocalOtherAccount;
+
+  /// No description provided for @authLocalEnterPin.
+  ///
+  /// In fr, this message translates to:
+  /// **'Saisissez votre code PIN'**
+  String get authLocalEnterPin;
+
+  /// No description provided for @authLocalLastAttempt.
+  ///
+  /// In fr, this message translates to:
+  /// **'Dernière tentative avant blocage'**
+  String get authLocalLastAttempt;
+
+  /// No description provided for @authLocalAttemptsLeft.
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{{count} tentative restante} other{{count} tentatives restantes}}'**
+  String authLocalAttemptsLeft(int count);
+
+  /// No description provided for @authLocalRetryIn.
+  ///
+  /// In fr, this message translates to:
+  /// **'{seconds, plural, =1{Réessayez dans {seconds} seconde} other{Réessayez dans {seconds} secondes}}'**
+  String authLocalRetryIn(int seconds);
 }
 
 class _AppLocalizationsDelegate

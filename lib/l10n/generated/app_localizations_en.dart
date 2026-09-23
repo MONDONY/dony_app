@@ -1449,4 +1449,221 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get authOnboardingLegalPrivacyLink => 'Privacy Policy';
+
+  @override
+  String get authCountryGaugeLabel => 'Country';
+
+  @override
+  String get authCountryTitle => 'Which country do you live in?';
+
+  @override
+  String get authCountrySubtitle =>
+      'We\'ll adapt the currency, trips and availability to your country.';
+
+  @override
+  String get authCountryFieldLabel => 'Country';
+
+  @override
+  String get authCountryFieldHint => 'E.g. Senegal, France, Canada';
+
+  @override
+  String get authCountryFieldHelper =>
+      'Type your country, then pick a suggestion.';
+
+  @override
+  String get authCountrySaving => 'Saving country...';
+
+  @override
+  String get authCountryDeleteDialogTitle => 'Permanently delete the account?';
+
+  @override
+  String get authCountryDeleteDialogMessage =>
+      'Your Yadony account and all related data will be deleted. This action cannot be undone.';
+
+  @override
+  String get authCountryDeleteDialogConfirm => 'Confirm deletion';
+
+  @override
+  String get authCountryUnavailableTitle =>
+      'Yadony isn\'t available in this country yet';
+
+  @override
+  String get authCountryUnavailableBody =>
+      'You can continue to send parcels. Trips and carrying parcels won\'t be available from this account.';
+
+  @override
+  String get authCountryContinueAsSender => 'Continue and send parcels';
+
+  @override
+  String get authCountryDeleteAccount => 'Delete my account';
+
+  @override
+  String authCountryOptionSavingLabel(String country, String currency) {
+    return 'Selected country: $country, currency $currency. Saving.';
+  }
+
+  @override
+  String authCountryOptionSelectLabel(String country, String currency) {
+    return 'Select $country, currency $currency';
+  }
+
+  @override
+  String get authPersonalInfoCountryNotSet => 'Not provided';
+
+  @override
+  String get authPersonalInfoGaugeLabel => 'Details';
+
+  @override
+  String get authPersonalInfoTitle => 'Your details';
+
+  @override
+  String get authPersonalInfoBody =>
+      'Your legal name, exactly as it appears on your ID. Stripe will ask for the rest, only once.';
+
+  @override
+  String get authPersonalInfoFootnote =>
+      'Never shared with other members, never shown publicly.';
+
+  @override
+  String get authPersonalInfoContinue => 'Continue';
+
+  @override
+  String get authPersonalInfoIdentitySection => 'Identity';
+
+  @override
+  String get authPersonalInfoFirstName => 'First name';
+
+  @override
+  String get authPersonalInfoLastName => 'Last name';
+
+  @override
+  String get authPersonalInfoCountrySection => 'Country';
+
+  @override
+  String get authPersonalInfoCountryField => 'Country';
+
+  @override
+  String authPersonalInfoCountrySemantics(String country) {
+    return 'Country of residence: $country. Set at sign-up, can\'t be changed here.';
+  }
+
+  @override
+  String get authPersonalInfoCountryMissingSemantics =>
+      'Country of residence not provided. Set at sign-up, can\'t be changed here.';
+
+  @override
+  String get authReferralGaugeLabel => 'Referral';
+
+  @override
+  String get authReferralTitle => 'Did a friend invite you?';
+
+  @override
+  String get authReferralBody =>
+      'Enter their code so they get a reward after your first delivery.';
+
+  @override
+  String get authReferralFootnote =>
+      'This step is optional. You can use Yadony without a code.';
+
+  @override
+  String get authReferralCodeLabel => 'Referral code';
+
+  @override
+  String get authReferralCodeHint => 'E.g. JEAN0234';
+
+  @override
+  String get authReferralApply => 'Apply code';
+
+  @override
+  String get authReferralSuccessTitle => 'Code applied!';
+
+  @override
+  String get authReferralSuccessBody =>
+      'Your friend gets a reward as soon as you complete your first delivery.';
+
+  @override
+  String get authReferralSuccessFootnote =>
+      'Your Yadony account is ready. You can start searching for, sending and tracking parcels.';
+
+  @override
+  String get authReferralContinueHome => 'Continue to home';
+
+  @override
+  String get authConsentGaugeLabel => 'Privacy';
+
+  @override
+  String get authConsentTitle => 'One last thing';
+
+  @override
+  String get authConsentBody =>
+      'To improve Yadony, we\'d like to measure how the app is used. It\'s anonymous and optional.';
+
+  @override
+  String get authConsentFootnote =>
+      'Never your payments, identity or phone number. You can change your mind in Settings.';
+
+  @override
+  String get authConsentPointScreens => 'Screens visited and features used';
+
+  @override
+  String get authConsentPointGestures =>
+      'Taps and swipes, to spot what gets in the way';
+
+  @override
+  String get authConsentPointNeverPersonal =>
+      'Never your payments, identity or phone number';
+
+  @override
+  String get authConsentPointChangeAnytime =>
+      'Can be changed anytime in Settings';
+
+  @override
+  String get authConsentAccept => 'Accept';
+
+  @override
+  String get authConsentDecline => 'No thanks';
+
+  @override
+  String get authLocalSwitchAccountTitle => 'Switch account?';
+
+  @override
+  String get authLocalSwitchAccountMessage =>
+      'You\'ll be signed out of this account. You\'ll need to sign in again and set up a new PIN.';
+
+  @override
+  String get authLocalCancel => 'Cancel';
+
+  @override
+  String get authLocalContinue => 'Continue';
+
+  @override
+  String get authLocalOtherAccount => 'Other account';
+
+  @override
+  String get authLocalEnterPin => 'Enter your PIN';
+
+  @override
+  String get authLocalLastAttempt => 'Last attempt before lockout';
+
+  @override
+  String authLocalAttemptsLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count attempts left',
+      one: '$count attempt left',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String authLocalRetryIn(int seconds) {
+    String _temp0 = intl.Intl.pluralLogic(
+      seconds,
+      locale: localeName,
+      other: 'Try again in $seconds seconds',
+      one: 'Try again in $seconds second',
+    );
+    return '$_temp0';
+  }
 }

@@ -13,6 +13,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
 
 class MockLocalAuthBloc extends MockBloc<LocalAuthEvent, LocalAuthState>
@@ -137,6 +139,57 @@ void main() {
 
       expect(find.text('Changer de compte ?'), findsNothing);
       verifyNever(() => mockAuthBloc.add(const AuthSwitchAccountRequested()));
+    });
+  });
+
+  group('LocalAuthScreen — messages de tentatives et de blocage', () {
+    testWidgets('deux tentatives restantes', (tester) async {
+      when(
+        () => mockLocalAuthBloc.state,
+      ).thenReturn(const LocalAuthPinRequired(attemptsLeft: 2));
+      await _pump(tester, mockAuthBloc, mockLocalAuthBloc);
+
+      expect(find.text('2 tentatives restantes'), findsOneWidget);
+    });
+
+    testWidgets('une seule tentative restante : dernier avertissement', (
+      tester,
+    ) async {
+      when(
+        () => mockLocalAuthBloc.state,
+      ).thenReturn(const LocalAuthPinRequired(attemptsLeft: 1));
+      await _pump(tester, mockAuthBloc, mockLocalAuthBloc);
+
+      expect(find.text('Dernière tentative avant blocage'), findsOneWidget);
+    });
+
+    testWidgets('bloqué : compte à rebours en secondes', (tester) async {
+      when(() => mockLocalAuthBloc.state).thenReturn(const LocalAuthLocked(30));
+      await _pump(tester, mockAuthBloc, mockLocalAuthBloc);
+
+      expect(find.text('Réessayez dans 30 secondes'), findsOneWidget);
+    });
+  });
+
+  group('LocalAuthScreen — en anglais', () {
+    testWidgets('titre, bouton et tentatives traduits', (tester) async {
+      useEnglish();
+      when(
+        () => mockLocalAuthBloc.state,
+      ).thenReturn(const LocalAuthPinRequired(attemptsLeft: 2));
+      await _pump(tester, mockAuthBloc, mockLocalAuthBloc);
+
+      expect(find.text('Enter your PIN'), findsOneWidget);
+      expect(find.text('Other account'), findsOneWidget);
+      expect(find.text('2 attempts left'), findsOneWidget);
+    });
+
+    testWidgets('bloqué : compte à rebours traduit', (tester) async {
+      useEnglish();
+      when(() => mockLocalAuthBloc.state).thenReturn(const LocalAuthLocked(30));
+      await _pump(tester, mockAuthBloc, mockLocalAuthBloc);
+
+      expect(find.text('Try again in 30 seconds'), findsOneWidget);
     });
   });
 }

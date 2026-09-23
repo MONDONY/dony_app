@@ -10,6 +10,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 class _MockReferralBloc extends MockBloc<ReferralEvent, ReferralState>
     implements ReferralBloc {}
 
@@ -200,4 +202,14 @@ void main() {
       expect(find.text('KYC route'), findsOneWidget);
     },
   );
+
+  testWidgets('en anglais, le formulaire est traduit', (tester) async {
+    useEnglish();
+    when(() => bloc.state).thenReturn(const ReferralInitial());
+    when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
+
+    await _wrap(tester, bloc);
+
+    expect(find.text('Apply code'), findsOneWidget);
+  });
 }

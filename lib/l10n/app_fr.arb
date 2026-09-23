@@ -460,5 +460,105 @@
   "authOnboardingLegalPrefix": "En continuant, vous acceptez nos ",
   "authOnboardingLegalTermsLink": "CGU",
   "authOnboardingLegalMiddle": " et notre ",
-  "authOnboardingLegalPrivacyLink": "politique de confidentialité"
+  "authOnboardingLegalPrivacyLink": "politique de confidentialité",
+  "authCountryGaugeLabel": "Pays",
+  "authCountryTitle": "Dans quel pays es-tu ?",
+  "authCountrySubtitle": "Devise, trajets et disponibilité seront adaptés à ton pays.",
+  "authCountryFieldLabel": "Pays",
+  "authCountryFieldHint": "Ex : Sénégal, France, Canada",
+  "authCountryFieldHelper": "Tape ton pays puis choisis une suggestion.",
+  "authCountrySaving": "Enregistrement du pays...",
+  "authCountryDeleteDialogTitle": "Supprimer définitivement le compte ?",
+  "authCountryDeleteDialogMessage": "Ton compte Yadony et tes données associées seront supprimés. Cette action est irréversible.",
+  "authCountryDeleteDialogConfirm": "Confirmer la suppression",
+  "authCountryUnavailableTitle": "Yadony n’est pas encore disponible dans ce pays",
+  "authCountryUnavailableBody": "Tu peux continuer pour envoyer des colis. Les trajets et la prise de colis resteront indisponibles depuis ce compte.",
+  "authCountryContinueAsSender": "Je souhaite continuer et envoyer des colis",
+  "authCountryDeleteAccount": "Supprimer mon compte",
+  "authCountryOptionSavingLabel": "Pays sélectionné : {country}, devise {currency}. Enregistrement en cours.",
+  "@authCountryOptionSavingLabel": {
+    "placeholders": {
+      "country": {
+        "type": "String"
+      },
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "authCountryOptionSelectLabel": "Sélectionner {country}, devise {currency}",
+  "@authCountryOptionSelectLabel": {
+    "placeholders": {
+      "country": {
+        "type": "String"
+      },
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "authPersonalInfoCountryNotSet": "Non renseigné",
+  "authPersonalInfoGaugeLabel": "Informations",
+  "authPersonalInfoTitle": "Vos informations",
+  "authPersonalInfoBody": "Votre nom légal, tel qu’il figure sur votre pièce d’identité. Le reste vous sera demandé une seule fois, par Stripe.",
+  "authPersonalInfoFootnote": "Jamais partagées avec les autres membres, jamais affichées publiquement.",
+  "authPersonalInfoContinue": "Continuer",
+  "authPersonalInfoIdentitySection": "Identité",
+  "authPersonalInfoFirstName": "Prénom",
+  "authPersonalInfoLastName": "Nom",
+  "authPersonalInfoCountrySection": "Pays",
+  "authPersonalInfoCountryField": "Pays",
+  "authPersonalInfoCountrySemantics": "Pays de résidence : {country}. Déterminé à l’inscription, non modifiable ici.",
+  "@authPersonalInfoCountrySemantics": {
+    "placeholders": {
+      "country": {
+        "type": "String"
+      }
+    }
+  },
+  "authPersonalInfoCountryMissingSemantics": "Pays de résidence non renseigné. Déterminé à l’inscription, non modifiable ici.",
+  "authReferralGaugeLabel": "Parrainage",
+  "authReferralTitle": "Tu as été invité par un ami ?",
+  "authReferralBody": "Entre son code pour qu’il soit récompensé à ta première livraison.",
+  "authReferralFootnote": "Cette étape est facultative. Tu peux entrer dans Yadony sans code.",
+  "authReferralCodeLabel": "Code parrain",
+  "authReferralCodeHint": "Ex : JEAN0234",
+  "authReferralApply": "Appliquer le code",
+  "authReferralSuccessTitle": "Code appliqué !",
+  "authReferralSuccessBody": "Ton ami sera récompensé dès que tu complètes ta première livraison.",
+  "authReferralSuccessFootnote": "Ton compte Yadony est prêt. Tu peux commencer à rechercher, envoyer ou suivre tes colis.",
+  "authReferralContinueHome": "Continuer vers l'accueil",
+  "authConsentGaugeLabel": "Confidentialité",
+  "authConsentTitle": "Une dernière chose",
+  "authConsentBody": "Pour améliorer Yadony, on aimerait mesurer comment l'app est utilisée. C'est anonyme et facultatif.",
+  "authConsentFootnote": "Jamais tes paiements, ton identité ou ton numéro. Tu peux changer d’avis dans Réglages.",
+  "authConsentPointScreens": "Écrans visités et fonctionnalités utilisées",
+  "authConsentPointGestures": "Gestes pour repérer ce qui bloque",
+  "authConsentPointNeverPersonal": "Jamais tes paiements, identité ou numéro",
+  "authConsentPointChangeAnytime": "Modifiable à tout moment dans Réglages",
+  "authConsentAccept": "Accepter",
+  "authConsentDecline": "Non merci",
+  "authLocalSwitchAccountTitle": "Changer de compte ?",
+  "authLocalSwitchAccountMessage": "Vous allez être déconnecté de ce compte. Vous devrez vous reconnecter et reconfigurer votre code PIN.",
+  "authLocalCancel": "Annuler",
+  "authLocalContinue": "Continuer",
+  "authLocalOtherAccount": "Autre compte",
+  "authLocalEnterPin": "Saisissez votre code PIN",
+  "authLocalLastAttempt": "Dernière tentative avant blocage",
+  "authLocalAttemptsLeft": "{count, plural, =1{{count} tentative restante} other{{count} tentatives restantes}}",
+  "@authLocalAttemptsLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "authLocalRetryIn": "{seconds, plural, =1{Réessayez dans {seconds} seconde} other{Réessayez dans {seconds} secondes}}",
+  "@authLocalRetryIn": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -12,6 +12,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
+
 class MockCountryOnboardingCubit extends MockCubit<CountryOnboardingState>
     implements CountryOnboardingCubit {}
 
@@ -341,4 +343,18 @@ void main() {
       verifyNever(() => authBloc.add(const AuthProfileRefreshRequested()));
     },
   );
+
+  testWidgets('en anglais, le titre et les suggestions sont traduits', (
+    tester,
+  ) async {
+    useEnglish();
+    await _wrap(tester, cubit);
+
+    expect(find.text('Which country do you live in?'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField), 'germ');
+    await tester.pumpAndSettle();
+
+    expect(find.text('Germany'), findsOneWidget);
+  });
 }
