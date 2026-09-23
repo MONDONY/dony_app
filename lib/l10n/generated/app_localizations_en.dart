@@ -879,4 +879,28 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errorGenericMessage =>
       'Try again in a moment. If the problem continues, contact support.';
+
+  @override
+  String get networkFallbackSessionExpired => 'Session expired';
+
+  @override
+  String get networkFallbackAccessDenied => 'Access denied';
+
+  @override
+  String get networkFallbackNotFound => 'Resource not found';
+
+  @override
+  String get networkFallbackConflict => 'Conflict';
+
+  @override
+  String get networkFallbackInvalidData => 'Invalid information';
+
+  @override
+  String get networkFallbackTooManyAttempts => 'Too many attempts';
+
+  @override
+  String get networkFallbackServerError => 'Server error';
+
+  @override
+  String get networkFallbackNetworkError => 'Network error';
 }

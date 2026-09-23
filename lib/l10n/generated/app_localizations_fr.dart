@@ -885,4 +885,28 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get errorGenericMessage =>
       'Réessaie dans un instant. Si le problème persiste, contacte le support.';
+
+  @override
+  String get networkFallbackSessionExpired => 'Session expirée';
+
+  @override
+  String get networkFallbackAccessDenied => 'Accès refusé';
+
+  @override
+  String get networkFallbackNotFound => 'Ressource introuvable';
+
+  @override
+  String get networkFallbackConflict => 'Conflit';
+
+  @override
+  String get networkFallbackInvalidData => 'Données invalides';
+
+  @override
+  String get networkFallbackTooManyAttempts => 'Trop de tentatives';
+
+  @override
+  String get networkFallbackServerError => 'Erreur serveur';
+
+  @override
+  String get networkFallbackNetworkError => 'Erreur réseau';
 }

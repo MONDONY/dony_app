@@ -261,5 +261,13 @@
   "errorNetworkTitle": "Erreur réseau",
   "errorNetworkMessage": "Une erreur est survenue. Vérifie ta connexion et réessaie.",
   "errorGenericTitle": "Une erreur est survenue",
-  "errorGenericMessage": "Réessaie dans un instant. Si le problème persiste, contacte le support."
+  "errorGenericMessage": "Réessaie dans un instant. Si le problème persiste, contacte le support.",
+  "networkFallbackSessionExpired": "Session expirée",
+  "networkFallbackAccessDenied": "Accès refusé",
+  "networkFallbackNotFound": "Ressource introuvable",
+  "networkFallbackConflict": "Conflit",
+  "networkFallbackInvalidData": "Données invalides",
+  "networkFallbackTooManyAttempts": "Trop de tentatives",
+  "networkFallbackServerError": "Erreur serveur",
+  "networkFallbackNetworkError": "Erreur réseau"
 }

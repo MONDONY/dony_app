@@ -249,5 +249,13 @@
   "errorNetworkTitle": "Network error",
   "errorNetworkMessage": "Something went wrong. Check your connection and try again.",
   "errorGenericTitle": "Something went wrong",
-  "errorGenericMessage": "Try again in a moment. If the problem continues, contact support."
+  "errorGenericMessage": "Try again in a moment. If the problem continues, contact support.",
+  "networkFallbackSessionExpired": "Session expired",
+  "networkFallbackAccessDenied": "Access denied",
+  "networkFallbackNotFound": "Resource not found",
+  "networkFallbackConflict": "Conflict",
+  "networkFallbackInvalidData": "Invalid information",
+  "networkFallbackTooManyAttempts": "Too many attempts",
+  "networkFallbackServerError": "Server error",
+  "networkFallbackNetworkError": "Network error"
 }

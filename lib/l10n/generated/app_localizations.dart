@@ -1597,6 +1597,54 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Réessaie dans un instant. Si le problème persiste, contacte le support.'**
   String get errorGenericMessage;
+
+  /// No description provided for @networkFallbackSessionExpired.
+  ///
+  /// In fr, this message translates to:
+  /// **'Session expirée'**
+  String get networkFallbackSessionExpired;
+
+  /// No description provided for @networkFallbackAccessDenied.
+  ///
+  /// In fr, this message translates to:
+  /// **'Accès refusé'**
+  String get networkFallbackAccessDenied;
+
+  /// No description provided for @networkFallbackNotFound.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ressource introuvable'**
+  String get networkFallbackNotFound;
+
+  /// No description provided for @networkFallbackConflict.
+  ///
+  /// In fr, this message translates to:
+  /// **'Conflit'**
+  String get networkFallbackConflict;
+
+  /// No description provided for @networkFallbackInvalidData.
+  ///
+  /// In fr, this message translates to:
+  /// **'Données invalides'**
+  String get networkFallbackInvalidData;
+
+  /// No description provided for @networkFallbackTooManyAttempts.
+  ///
+  /// In fr, this message translates to:
+  /// **'Trop de tentatives'**
+  String get networkFallbackTooManyAttempts;
+
+  /// No description provided for @networkFallbackServerError.
+  ///
+  /// In fr, this message translates to:
+  /// **'Erreur serveur'**
+  String get networkFallbackServerError;
+
+  /// No description provided for @networkFallbackNetworkError.
+  ///
+  /// In fr, this message translates to:
+  /// **'Erreur réseau'**
+  String get networkFallbackNetworkError;
 }
 
 class _AppLocalizationsDelegate
