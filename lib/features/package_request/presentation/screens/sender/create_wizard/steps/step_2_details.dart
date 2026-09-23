@@ -74,7 +74,11 @@ class Step2DetailsState extends State<Step2Details> {
   void _onCategoriesChanged(List<String> labels) {
     final catalogLabels = _predefined.map((c) => c.label).toSet();
     if (labels.length > _kMaxCategories) {
-      setState(() => _catError = 'Maximum $_kMaxCategories catégories');
+      setState(
+        () => _catError = context.l10n.requestCreateMaxCategories(
+          _kMaxCategories,
+        ),
+      );
       return;
     }
     final autreJustAdded =
@@ -86,7 +90,7 @@ class Step2DetailsState extends State<Step2Details> {
       ..clear()
       ..addAll(labels.where((l) => !catalogLabels.contains(l)));
     _catError = _allCategories.isEmpty
-        ? 'Choisissez au moins une catégorie'
+        ? context.l10n.requestCreateCategoryRequired
         : null;
     _sync(markTouched: true);
     // « Autre » seul ne dit rien au voyageur : on propose tout de suite une
@@ -100,14 +104,15 @@ class Step2DetailsState extends State<Step2Details> {
   /// Si l'expéditeur renseigne un texte, il remplace « Autre » dans la
   /// sélection (catégorie libre) ; sinon « Autre » reste tel quel.
   Future<void> _promptAutreDetail() async {
+    final l10n = context.l10n;
     VoidCallback? submitFn;
     final result = await DonyBottomSheet.show<String>(
       context,
-      title: 'Précisez le contenu (optionnel)',
-      subtitle: 'Ça aide le voyageur à savoir ce qu\'il transporte.',
+      title: l10n.requestCreateAutrePrecisionTitle,
+      subtitle: l10n.requestCreateAutrePrecisionSubtitle,
       child: _AutrePrecisionField(onSubmitReady: (fn) => submitFn = fn),
       stickyBottom: DonyButton(
-        label: 'Valider',
+        label: l10n.requestCreateAutrePrecisionValidate,
         onPressed: () => submitFn?.call(),
       ),
     );
@@ -184,7 +189,7 @@ class Step2DetailsState extends State<Step2Details> {
     final formOk = _formKey.currentState!.validate();
     final cats = _allCategories;
     if (cats.isEmpty) {
-      _catError = 'Choisissez au moins une catégorie';
+      _catError = context.l10n.requestCreateCategoryRequired;
     }
     if (!formOk || cats.isEmpty) {
       _sync(markTouched: true);
@@ -215,6 +220,7 @@ class Step2DetailsState extends State<Step2Details> {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
     return SingleChildScrollView(
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       padding: const EdgeInsets.fromLTRB(
@@ -229,7 +235,7 @@ class Step2DetailsState extends State<Step2Details> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Décrivez votre colis',
+              l10n.requestCreateStep2Title,
               style: tt.headlineMedium?.copyWith(
                 fontWeight: FontWeight.w800,
                 color: cs.onSurface,
@@ -238,8 +244,7 @@ class Step2DetailsState extends State<Step2Details> {
             ),
             const SizedBox(height: DonySpacing.xs),
             Text(
-              'Ces infos aident les voyageurs à savoir s\'ils peuvent '
-              'transporter votre envoi.',
+              l10n.requestCreateStep2Subtitle,
               style: tt.bodyMedium?.copyWith(
                 color: cs.onSurfaceVariant,
                 height: 1.4,
@@ -252,7 +257,7 @@ class Step2DetailsState extends State<Step2Details> {
             const SizedBox(height: DonySpacing.base),
 
             // ── Poids ──────────────────────────────────────────────────────
-            const _FieldLabel('Poids approximatif'),
+            _FieldLabel(l10n.requestCreateWeightLabel),
             const SizedBox(height: DonySpacing.xs),
             _WeightInput(controller: _weightCtrl),
             Padding(
@@ -269,10 +274,10 @@ class Step2DetailsState extends State<Step2Details> {
             // occupaient ~900 px et repoussaient la description hors écran.
             // Même composant que la création de trajet. « Autre » fait partie
             // du catalogue : sa sélection déclenche une précision libre.
-            const _FieldLabel('Contenu'),
+            _FieldLabel(l10n.requestCreateContentLabel),
             const SizedBox(height: DonySpacing.xs),
             Text(
-              'Tapez pour chercher, ou écrivez votre propre catégorie.',
+              l10n.requestCreateContentHint,
               style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             ),
             const SizedBox(height: DonySpacing.sm),
@@ -289,7 +294,7 @@ class Step2DetailsState extends State<Step2Details> {
             const SizedBox(height: DonySpacing.base),
 
             // ── Description (optionnel) ────────────────────────────────────
-            const _FieldLabel('Description (optionnel)'),
+            _FieldLabel(l10n.requestCreateDescriptionLabel),
             const SizedBox(height: DonySpacing.xs),
             _DescriptionInput(controller: _descriptionCtrl),
           ],
@@ -337,7 +342,7 @@ class _AutrePrecisionFieldState extends State<_AutrePrecisionField> {
     return DonyTextField(
       key: const Key('autre-detail-input'),
       controller: _ctrl,
-      hint: 'Ex. Instruments de musique',
+      hint: context.l10n.requestCreateAutrePrecisionHint,
       autofocus: true,
     );
   }
@@ -358,8 +363,7 @@ class _DescriptionInput extends StatelessWidget {
       maxLength: 500,
       textCapitalization: TextCapitalization.sentences,
       decoration: InputDecoration(
-        hintText:
-            'Précisions utiles : fragile, contenu exact, instructions de remise…',
+        hintText: context.l10n.requestCreateDescriptionHint,
         filled: true,
         fillColor: cs.surface,
         alignLabelWithHint: true,
@@ -443,7 +447,7 @@ class _WeightInput extends StatelessWidget {
       ),
       validator: (v) {
         final d = double.tryParse(v?.replaceAll(',', '.') ?? '');
-        if (d == null) return 'Valeur invalide';
+        if (d == null) return context.l10n.requestCreateWeightInvalid;
         if (!PackageRequestLimits.isWeightValid(d)) {
           return weightRangeLabel(context.l10n);
         }

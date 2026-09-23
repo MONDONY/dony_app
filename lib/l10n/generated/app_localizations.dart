@@ -5869,6 +5869,666 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Ajouter un type de contenu…'**
   String get contentCategoryHintDefault;
+
+  /// Titre du dialogue de confirmation avant d'éditer une demande en négociation (package_request_create_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier votre demande ?'**
+  String get requestCreateEditWarningTitle;
+
+  /// Message du dialogue de confirmation avant d'éditer une demande en négociation (package_request_create_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Des voyageurs négocient actuellement cette demande. La modifier annulera toutes les offres en cours. Ils devront vous reproposer un trajet.'**
+  String get requestCreateEditWarningMessage;
+
+  /// Bouton de confirmation du dialogue d'édition d'une demande en négociation (package_request_create_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier quand même'**
+  String get requestCreateEditWarningConfirm;
+
+  /// Titre de l'app bar, étape 1 en mode édition (package_request_create_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier la demande'**
+  String get requestCreateStepTitleEdit;
+
+  /// Titre de l'app bar, étape 1 en création (package_request_create_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le trajet'**
+  String get requestCreateStepTitleTrip;
+
+  /// Titre de l'app bar, étape 2 (package_request_create_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le colis'**
+  String get requestCreateStepTitlePackage;
+
+  /// Titre de l'app bar, étape 3 (package_request_create_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le budget'**
+  String get requestCreateStepTitleBudget;
+
+  /// Titre de l'écran succès après enregistrement d'un brouillon (package_request_create_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Brouillon enregistré !'**
+  String get requestCreateDraftSavedTitle;
+
+  /// Titre de l'écran succès après édition d'une demande (package_request_create_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande modifiée !'**
+  String get requestCreateEditedTitle;
+
+  /// Titre de l'écran succès après publication d'une demande (package_request_create_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Demande publiée !'**
+  String get requestCreatePublishedTitle;
+
+  /// Sous-titre de l'écran succès après enregistrement d'un brouillon (package_request_create_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vous pourrez la publier quand vous le souhaitez.'**
+  String get requestCreateDraftSavedSubtitle;
+
+  /// Sous-titre de l'écran succès après édition d'une demande (package_request_create_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vos modifications sont en ligne.'**
+  String get requestCreateEditedSubtitle;
+
+  /// Sous-titre de l'écran succès après publication d'une demande (package_request_create_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Les voyageurs sont notifiés. Vous recevrez des offres très vite.'**
+  String get requestCreatePublishedSubtitle;
+
+  /// CTA de l'écran succès, brouillon (package_request_create_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir mon brouillon'**
+  String get requestCreateViewDraftCta;
+
+  /// CTA de l'écran succès, demande publiée/modifiée (package_request_create_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir ma demande'**
+  String get requestCreateViewRequestCta;
+
+  /// Message d'erreur de repli si la soumission échoue sans exception typée (package_request_create_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Erreur lors de la création'**
+  String get requestCreateGenericError;
+
+  /// Titre du dialogue quand la limite de brouillons (compte gratuit) est atteinte (package_request_create_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Limite de brouillons atteinte'**
+  String get requestCreateDraftLimitTitle;
+
+  /// Préfixe de la mention légale au-dessus du CTA de publication (package_request_create_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'En publiant, vous acceptez les '**
+  String get requestCreateCguPrefix;
+
+  /// Lien tappable vers les CGU, dans la mention légale de publication (package_request_create_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'CGU'**
+  String get requestCreateCguLink;
+
+  /// Libellé du CTA sticky pendant la soumission (package_request_create_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Publication…'**
+  String get requestCreatePublishingLabel;
+
+  /// Libellé du CTA sticky à la dernière étape, avant soumission (package_request_create_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Aperçu'**
+  String get requestCreatePreviewButton;
+
+  /// Erreur de validation : ville de départ manquante (step_1_trajet_colis.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ville de départ obligatoire'**
+  String get requestCreateDepartureRequired;
+
+  /// Erreur de validation : ville d'arrivée manquante (step_1_trajet_colis.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ville d\'arrivée obligatoire'**
+  String get requestCreateArrivalRequired;
+
+  /// Erreur de validation : ville d'arrivée identique au départ (step_1_trajet_colis.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez une ville différente du départ'**
+  String get requestCreateArrivalSameAsDeparture;
+
+  /// Erreur de validation : date de départ manquante (step_1_trajet_colis.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Date de départ obligatoire'**
+  String get requestCreateDateRequired;
+
+  /// Explication de la tolérance de date quand elle vaut 0 (step_1_trajet_colis.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Seuls les voyageurs partant exactement ce jour-là pourront répondre.'**
+  String get requestCreateToleranceExactHint;
+
+  /// Explication de la tolérance de date avant sélection d'une date de départ (step_1_trajet_colis.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{± {count} jour autour de votre date. Plus de souplesse, plus de voyageurs.} other{± {count} jours autour de votre date. Plus de souplesse, plus de voyageurs.}}'**
+  String requestCreateToleranceGenericHint(int count);
+
+  /// Explication de la tolérance de date une fois une date de départ choisie (step_1_trajet_colis.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Les voyageurs partant du {from} au {to} pourront répondre.'**
+  String requestCreateToleranceRangeHint(String from, String to);
+
+  /// Sous-texte du bloc mode de transport verrouillé sur avion (step_1_trajet_colis.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'seul mode disponible'**
+  String get requestCreateAirplaneOnlyMode;
+
+  /// Libellé de section en tête de l'étape 1 (step_1_trajet_colis.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'TRAJET'**
+  String get requestCreateTrajetSectionLabel;
+
+  /// Titre de l'étape 1 (step_1_trajet_colis.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'D\'où vers où ?'**
+  String get requestCreateTrajetQuestion;
+
+  /// Libellé du champ date et texte de repli tant qu'aucune date n'est choisie (step_1_trajet_colis.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Date'**
+  String get requestCreateDateFieldLabel;
+
+  /// Libellé du champ de tolérance de date (step_1_trajet_colis.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Souplesse'**
+  String get requestCreateToleranceFieldLabel;
+
+  /// Feedback informatif sous la date quand elle est proche (step_1_trajet_colis.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'🔥 Date proche, cette demande sera signalée urgente'**
+  String get requestCreateUrgentDateHint;
+
+  /// Libellé compact du pill de tolérance de date sélectionnée (step_1_trajet_colis.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'± {count} j'**
+  String requestCreateToleranceShort(int count);
+
+  /// Option "tolérance 0" de la feuille de sélection de tolérance de date (step_1_trajet_colis.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Date exacte'**
+  String get requestCreateDateExact;
+
+  /// Options de tolérance de date non nulles de la feuille de sélection (step_1_trajet_colis.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'{count, plural, =1{± {count} jour} other{± {count} jours}}'**
+  String requestCreateDateFlex(int count);
+
+  /// Erreur : nombre maximal de catégories dépassé (step_2_details.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Maximum {max} catégories'**
+  String requestCreateMaxCategories(int max);
+
+  /// Erreur de validation : aucune catégorie de contenu choisie (step_2_details.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez au moins une catégorie'**
+  String get requestCreateCategoryRequired;
+
+  /// Titre de la feuille de précision libre après sélection de "Autre" (step_2_details.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Précisez le contenu (optionnel)'**
+  String get requestCreateAutrePrecisionTitle;
+
+  /// Sous-titre de la feuille de précision libre après sélection de "Autre" (step_2_details.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ça aide le voyageur à savoir ce qu\'il transporte.'**
+  String get requestCreateAutrePrecisionSubtitle;
+
+  /// Bouton de la feuille de précision libre après sélection de "Autre" (step_2_details.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Valider'**
+  String get requestCreateAutrePrecisionValidate;
+
+  /// Texte d'indication du champ de précision libre (step_2_details.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex. Instruments de musique'**
+  String get requestCreateAutrePrecisionHint;
+
+  /// Titre de l'étape 2 (step_2_details.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Décrivez votre colis'**
+  String get requestCreateStep2Title;
+
+  /// Sous-titre de l'étape 2 (step_2_details.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ces infos aident les voyageurs à savoir s\'ils peuvent transporter votre envoi.'**
+  String get requestCreateStep2Subtitle;
+
+  /// Libellé du champ poids (step_2_details.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Poids approximatif'**
+  String get requestCreateWeightLabel;
+
+  /// Libellé du champ de sélection des catégories de contenu (step_2_details.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Contenu'**
+  String get requestCreateContentLabel;
+
+  /// Texte d'aide sous le libellé "Contenu" (step_2_details.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Tapez pour chercher, ou écrivez votre propre catégorie.'**
+  String get requestCreateContentHint;
+
+  /// Libellé du champ description (step_2_details.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Description (optionnel)'**
+  String get requestCreateDescriptionLabel;
+
+  /// Texte d'indication du champ description (step_2_details.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Précisions utiles : fragile, contenu exact, instructions de remise…'**
+  String get requestCreateDescriptionHint;
+
+  /// Erreur de validation : poids non numérique (step_2_details.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Valeur invalide'**
+  String get requestCreateWeightInvalid;
+
+  /// Titre de l'étape 3, et libellé de la ligne "Budget" de la décomposition (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Budget'**
+  String get requestCreateBudgetTitle;
+
+  /// Sous-titre de l'étape 3 (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifiez votre demande, puis indiquez le budget à montrer aux voyageurs.'**
+  String get requestCreateBudgetSubtitle;
+
+  /// Libellé du choix du mode de prix (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Comment fixer le prix ?'**
+  String get requestCreatePriceModeLabel;
+
+  /// Titre de la carte "prix négociable" (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'J\'ouvre aux offres'**
+  String get requestCreatePriceModeOpenTitle;
+
+  /// Sous-titre de la carte "prix négociable" (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Les voyageurs proposent leur prix, vous choisissez.'**
+  String get requestCreatePriceModeOpenSubtitle;
+
+  /// Titre de la carte "prix ferme" (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Je fixe mon prix'**
+  String get requestCreatePriceModeFixedTitle;
+
+  /// Sous-titre de la carte "prix ferme" (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Un montant ferme, sans négociation.'**
+  String get requestCreatePriceModeFixedSubtitle;
+
+  /// Libellé du sélecteur de devise (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Devise'**
+  String get requestCreateCurrencyLabel;
+
+  /// Libellé du champ budget en mode négociable (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Budget indicatif'**
+  String get requestCreateBudgetLabelNegotiable;
+
+  /// Libellé du champ budget en mode prix ferme (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Votre prix'**
+  String get requestCreateBudgetLabelFixed;
+
+  /// Texte d'aide sous le champ budget en mode négociable (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Donnez un ordre d\'idée pour attirer plus d\'offres, sans vous engager.'**
+  String get requestCreateBudgetHintNegotiable;
+
+  /// Texte d'aide sous le champ budget en mode prix ferme (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Les voyageurs verront ce montant et pourront l\'accepter tel quel.'**
+  String get requestCreateBudgetHintFixed;
+
+  /// Libellé du champ code promo (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Code promo (optionnel)'**
+  String get requestCreatePromoLabel;
+
+  /// Texte d'indication du champ code promo (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex: WELCOME10'**
+  String get requestCreatePromoHint;
+
+  /// Message de repli quand le serveur confirme un code promo sans libellé (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Code appliqué'**
+  String get requestCreatePromoAppliedFallback;
+
+  /// Libellé de la section des moyens de paiement acceptés (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement accepté'**
+  String get requestCreatePaymentAcceptedLabel;
+
+  /// Texte d'aide sous le libellé des moyens de paiement (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisissez comment vous paierez le voyageur.'**
+  String get requestCreatePaymentHint;
+
+  /// Message quand l'expéditeur tente de décocher le dernier mode de paiement (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Gardez au moins un mode de paiement.'**
+  String get requestCreateKeepOnePaymentMethod;
+
+  /// Bandeau informatif en fin d'étape 3 (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Une fois publiée, les voyageurs sur ce trajet sont prévenus. Vous recevrez une notification à la première offre.'**
+  String get requestCreatePublishInfoBanner;
+
+  /// Texte d'indication du champ budget total (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex. 40,00'**
+  String get requestCreateBudgetInputHint;
+
+  /// Erreur de validation : champ budget vide (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Indiquez un budget'**
+  String get requestCreateBudgetEmpty;
+
+  /// Erreur de validation : budget hors bornes (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Entre {min} et {max}'**
+  String requestCreateBudgetRange(String min, String max);
+
+  /// Libellé de la ligne commission de la décomposition du budget (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Commission Yadony ({rate} %)'**
+  String requestCreateCommissionLabel(String rate);
+
+  /// Libellé de la ligne de bonus promo dans la décomposition du budget (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Grâce au code promo, le voyageur touche'**
+  String get requestCreatePromoBoostLabel;
+
+  /// Libellé de la ligne du net voyageur dans la décomposition du budget (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Le voyageur touchera'**
+  String get requestCreateTravelerReceivesLabel;
+
+  /// Libellé d'accessibilité du sélecteur de devise (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Devise de la demande : {name}, {code}. Bouton, modifier la devise.'**
+  String requestCreateCurrencySemanticLabel(String name, String code);
+
+  /// Lien de modification de la devise, dans la ligne du sélecteur (step_3_recap_budget.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Changer'**
+  String get requestCreateChangeCurrency;
+
+  /// Erreur affichée quand la photo choisie est refusée (package_request_photo_section.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Image non supportée ou trop volumineuse'**
+  String get requestCreatePhotoUnsupported;
+
+  /// Option caméra de la feuille de choix de source photo (package_request_photo_section.dart, wizard_photo_upload.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Prendre une photo'**
+  String get requestCreateTakePhoto;
+
+  /// Option galerie de la feuille de choix de source photo (package_request_photo_section.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir dans la galerie'**
+  String get requestCreatePickFromGalleryIn;
+
+  /// Titre de la section photos de l'étape 2 (package_request_photo_section.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Photos du colis'**
+  String get requestCreatePhotosLabel;
+
+  /// Texte d'aide sous le titre de la section photos (package_request_photo_section.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Visibles par les voyageurs. Ajoutées à l\'offre quand un trajet est lié.'**
+  String get requestCreatePhotosHint;
+
+  /// Libellé d'accessibilité du bouton d'ajout de photo (package_request_photo_section.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter une photo du colis'**
+  String get requestCreateAddPhotoSemantic;
+
+  /// Message d'échec d'upload sans raison connue (package_request_photo_section.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Échec de l\'upload de la photo'**
+  String get requestCreatePhotoUploadFailed;
+
+  /// Message d'échec d'upload avec raison connue (package_request_photo_section.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Échec : {reason}'**
+  String requestCreatePhotoUploadFailedWithReason(String reason);
+
+  /// Libellé d'accessibilité du bouton de réessai d'une photo en échec (package_request_photo_section.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Réessayer l\'envoi de la photo'**
+  String get requestCreateRetryPhotoUpload;
+
+  /// Titre du CTA plein largeur d'ajout de photo, aucune photo encore ajoutée (package_request_photo_section.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ajouter une photo'**
+  String get requestCreateAddPhotoTitle;
+
+  /// Sous-texte du CTA plein largeur d'ajout de photo (package_request_photo_section.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Fortement recommandé, rassure le voyageur'**
+  String get requestCreateAddPhotoSubtitle;
+
+  /// Libellé d'accessibilité du bouton de suppression d'une photo (package_request_photo_section.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Supprimer cette photo'**
+  String get requestCreateRemovePhoto;
+
+  /// Titre de l'app bar de l'écran de complétion avant paiement (complete_details_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifie & complète'**
+  String get requestCreateCompleteDetailsTitle;
+
+  /// Message de succès après soumission des détails destinataire/paiement (complete_details_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Détails enregistrés'**
+  String get requestCreateDetailsSaved;
+
+  /// Message d'erreur de repli, court, sans exception typée (complete_details_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Erreur'**
+  String get requestCreateGenericErrorShort;
+
+  /// Titre de la section destinataire (complete_details_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Destinataire'**
+  String get requestCreateRecipientSection;
+
+  /// Libellé du champ nom du destinataire (complete_details_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Nom complet'**
+  String get requestCreateRecipientNameLabel;
+
+  /// Erreur de validation générique : champ obligatoire vide (complete_details_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Requis'**
+  String get requestCreateRequiredField;
+
+  /// Libellé du champ téléphone du destinataire (complete_details_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Téléphone'**
+  String get requestCreateRecipientPhoneLabel;
+
+  /// Erreur de validation : téléphone du destinataire hors format E.164 (complete_details_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Format E.164 (+221…)'**
+  String get requestCreateRecipientPhoneFormat;
+
+  /// Libellé du champ ville du destinataire (complete_details_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ville / commune'**
+  String get requestCreateRecipientCityLabel;
+
+  /// Texte d'indication du champ ville du destinataire (complete_details_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Ex. Dakar (optionnel)'**
+  String get requestCreateRecipientCityHint;
+
+  /// Titre de la section moyen de paiement (complete_details_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Mode de paiement'**
+  String get requestCreatePaymentMethodSection;
+
+  /// Libellé du CTA pendant la soumission (complete_details_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Envoi…'**
+  String get requestCreateSendingLabel;
+
+  /// Libellé du CTA de soumission (complete_details_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Continuer vers le paiement'**
+  String get requestCreateContinueToPayment;
+
+  /// Titre de la carte récapitulative (complete_details_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Récapitulatif'**
+  String get requestCreateRecapTitle;
+
+  /// Libellé de la ligne trajet de la carte récapitulative (complete_details_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet'**
+  String get requestCreateRecapTrip;
+
+  /// Libellé de la ligne date de voyage de la carte récapitulative (complete_details_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Date du voyage'**
+  String get requestCreateRecapTravelDate;
+
+  /// Libellé de la ligne poids de la carte récapitulative (complete_details_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Poids'**
+  String get requestCreateRecapWeight;
+
+  /// Libellé de la ligne taille de la carte récapitulative (complete_details_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Taille'**
+  String get requestCreateRecapSize;
+
+  /// Libellé de la ligne contenu de la carte récapitulative (complete_details_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Contenu'**
+  String get requestCreateRecapContent;
+
+  /// Libellé de la ligne prix de la carte récapitulative (complete_details_screen.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Prix à payer'**
+  String get requestCreateRecapPrice;
 }
 
 class _AppLocalizationsDelegate

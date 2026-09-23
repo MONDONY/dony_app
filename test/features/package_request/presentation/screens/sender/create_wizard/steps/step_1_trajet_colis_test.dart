@@ -15,6 +15,7 @@ import 'package:get_it/get_it.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../../../../helpers/l10n_test_helpers.dart';
 import '../../../../../../../helpers/mock_analytics_backend.dart';
 import '../../../../../../../helpers/mock_recent_city_store.dart';
 
@@ -294,5 +295,40 @@ void main() {
         findsNothing,
       );
     });
+
+    testWidgets(
+      'la feuille de tolérance liste les options en jours (français)',
+      (tester) async {
+        await tester.pumpWidget(wrap(const Step1TrajetColis()));
+        await tester.pumpAndSettle();
+
+        // Tolérance par défaut = 2 jours : pill compact « ± 2 j ».
+        await tester.tap(find.text('± 2 j'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Date exacte'), findsOneWidget);
+        expect(find.text('± 1 jour'), findsOneWidget);
+        expect(find.text('± 3 jours'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'la feuille de tolérance (requestCreateDateFlex) est traduite en '
+      'anglais',
+      (tester) async {
+        useEnglish();
+        await tester.pumpWidget(wrap(const Step1TrajetColis()));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('± 2 d'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Exact date'), findsOneWidget);
+        expect(find.text('± 1 day'), findsOneWidget);
+        expect(find.text('± 3 days'), findsOneWidget);
+        expect(find.text('Date exacte'), findsNothing);
+        expect(find.text('± 3 jours'), findsNothing);
+      },
+    );
   });
 }

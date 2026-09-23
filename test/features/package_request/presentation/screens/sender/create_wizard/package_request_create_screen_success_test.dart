@@ -24,6 +24,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../../../helpers/currency_test_doubles.dart';
+import '../../../../../../helpers/l10n_test_helpers.dart';
 import '../../../../../../helpers/mock_analytics_backend.dart';
 import '../../../../../../helpers/mock_recent_city_store.dart';
 
@@ -686,5 +687,37 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('UpgradeToProStub'), findsOneWidget);
+  });
+
+  testWidgets('titre de l\'étape 1 traduit en anglais (création)', (
+    tester,
+  ) async {
+    useEnglish();
+    await tester.pumpWidget(buildHarness());
+    await tester.tap(find.byKey(const Key('open-create')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('The trip'), findsOneWidget);
+    expect(find.text('Le trajet'), findsNothing);
+  });
+
+  testWidgets('titre de l\'étape 1 traduit en anglais (édition)', (
+    tester,
+  ) async {
+    useEnglish();
+    await tester.pumpWidget(buildHarness());
+    await tester.tap(find.byKey(const Key('open-edit')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Edit the request'), findsOneWidget);
+  });
+
+  testWidgets('titre de l\'étape 3 (budget) traduit en anglais', (
+    tester,
+  ) async {
+    useEnglish();
+    await driveToStep3(tester);
+
+    expect(find.text('The budget'), findsOneWidget);
   });
 }

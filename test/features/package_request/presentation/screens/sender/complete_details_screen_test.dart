@@ -19,6 +19,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
+
 /// Task 10 — wiring test for `RecipientSection` inside `CompleteDetailsScreen`.
 ///
 /// The deep behaviour of `RecipientSection` (3-state picker, toggle
@@ -459,6 +461,32 @@ void main() {
 
         expect(find.text('En attente du voyageur'), findsNothing);
         expect(find.byKey(const Key('complete-pay-cash')), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'écran traduit en anglais : titre et moyens de paiement (Card, Cash)',
+      (tester) async {
+        useEnglish();
+        await pumpLoadedWithThread(
+          tester,
+          thread: _fakeThread(
+            availablePaymentMethods: const {
+              PaymentMethod.stripe,
+              PaymentMethod.cash,
+            },
+          ),
+          acceptedPaymentMethods: const {
+            PaymentMethod.stripe,
+            PaymentMethod.cash,
+          },
+        );
+
+        expect(find.text('Check & complete'), findsOneWidget);
+        expect(find.text('Card'), findsOneWidget);
+        expect(find.text('Cash'), findsOneWidget);
+        expect(find.text('Carte'), findsNothing);
+        expect(find.text('Espèces'), findsNothing);
       },
     );
   });

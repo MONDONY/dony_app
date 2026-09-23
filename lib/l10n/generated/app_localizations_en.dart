@@ -3462,4 +3462,386 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get contentCategoryHintDefault => 'Add a content type…';
+
+  @override
+  String get requestCreateEditWarningTitle => 'Edit your request?';
+
+  @override
+  String get requestCreateEditWarningMessage =>
+      'Travelers are currently negotiating this request. Editing it will cancel all pending offers. They will need to propose a new trip.';
+
+  @override
+  String get requestCreateEditWarningConfirm => 'Edit anyway';
+
+  @override
+  String get requestCreateStepTitleEdit => 'Edit the request';
+
+  @override
+  String get requestCreateStepTitleTrip => 'The trip';
+
+  @override
+  String get requestCreateStepTitlePackage => 'The parcel';
+
+  @override
+  String get requestCreateStepTitleBudget => 'The budget';
+
+  @override
+  String get requestCreateDraftSavedTitle => 'Draft saved!';
+
+  @override
+  String get requestCreateEditedTitle => 'Request updated!';
+
+  @override
+  String get requestCreatePublishedTitle => 'Request posted!';
+
+  @override
+  String get requestCreateDraftSavedSubtitle =>
+      'You can post it whenever you\'re ready.';
+
+  @override
+  String get requestCreateEditedSubtitle => 'Your changes are live.';
+
+  @override
+  String get requestCreatePublishedSubtitle =>
+      'Travelers are notified. You\'ll receive offers soon.';
+
+  @override
+  String get requestCreateViewDraftCta => 'View my draft';
+
+  @override
+  String get requestCreateViewRequestCta => 'View my request';
+
+  @override
+  String get requestCreateGenericError => 'Error while creating';
+
+  @override
+  String get requestCreateDraftLimitTitle => 'Draft limit reached';
+
+  @override
+  String get requestCreateCguPrefix => 'By posting, you accept the ';
+
+  @override
+  String get requestCreateCguLink => 'Terms of Use';
+
+  @override
+  String get requestCreatePublishingLabel => 'Posting…';
+
+  @override
+  String get requestCreatePreviewButton => 'Preview';
+
+  @override
+  String get requestCreateDepartureRequired => 'Departure city required';
+
+  @override
+  String get requestCreateArrivalRequired => 'Arrival city required';
+
+  @override
+  String get requestCreateArrivalSameAsDeparture =>
+      'Choose a different city from the departure';
+
+  @override
+  String get requestCreateDateRequired => 'Departure date required';
+
+  @override
+  String get requestCreateToleranceExactHint =>
+      'Only travelers leaving on that exact day will be able to respond.';
+
+  @override
+  String requestCreateToleranceGenericHint(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '± $count days around your date. More flexibility, more travelers.',
+      one: '± $count day around your date. More flexibility, more travelers.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String requestCreateToleranceRangeHint(String from, String to) {
+    return 'Travelers leaving between $from and $to will be able to respond.';
+  }
+
+  @override
+  String get requestCreateAirplaneOnlyMode => 'only mode available';
+
+  @override
+  String get requestCreateTrajetSectionLabel => 'TRIP';
+
+  @override
+  String get requestCreateTrajetQuestion => 'Where from, where to?';
+
+  @override
+  String get requestCreateDateFieldLabel => 'Date';
+
+  @override
+  String get requestCreateToleranceFieldLabel => 'Flexibility';
+
+  @override
+  String get requestCreateUrgentDateHint =>
+      '🔥 Date is close, this request will be marked urgent';
+
+  @override
+  String requestCreateToleranceShort(int count) {
+    return '± $count d';
+  }
+
+  @override
+  String get requestCreateDateExact => 'Exact date';
+
+  @override
+  String requestCreateDateFlex(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '± $count days',
+      one: '± $count day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String requestCreateMaxCategories(int max) {
+    return 'Maximum $max categories';
+  }
+
+  @override
+  String get requestCreateCategoryRequired => 'Choose at least one category';
+
+  @override
+  String get requestCreateAutrePrecisionTitle =>
+      'Specify the content (optional)';
+
+  @override
+  String get requestCreateAutrePrecisionSubtitle =>
+      'This helps the traveler know what they\'re carrying.';
+
+  @override
+  String get requestCreateAutrePrecisionValidate => 'Confirm';
+
+  @override
+  String get requestCreateAutrePrecisionHint => 'E.g. Musical instruments';
+
+  @override
+  String get requestCreateStep2Title => 'Describe your parcel';
+
+  @override
+  String get requestCreateStep2Subtitle =>
+      'This information helps travelers know if they can carry your shipment.';
+
+  @override
+  String get requestCreateWeightLabel => 'Approximate weight';
+
+  @override
+  String get requestCreateContentLabel => 'Content';
+
+  @override
+  String get requestCreateContentHint =>
+      'Type to search, or write your own category.';
+
+  @override
+  String get requestCreateDescriptionLabel => 'Description (optional)';
+
+  @override
+  String get requestCreateDescriptionHint =>
+      'Useful details: fragile, exact content, drop-off instructions…';
+
+  @override
+  String get requestCreateWeightInvalid => 'Invalid value';
+
+  @override
+  String get requestCreateBudgetTitle => 'Budget';
+
+  @override
+  String get requestCreateBudgetSubtitle =>
+      'Check your request, then enter the budget to show travelers.';
+
+  @override
+  String get requestCreatePriceModeLabel => 'How do you want to set the price?';
+
+  @override
+  String get requestCreatePriceModeOpenTitle => 'I\'m open to offers';
+
+  @override
+  String get requestCreatePriceModeOpenSubtitle =>
+      'Travelers propose their price, you choose.';
+
+  @override
+  String get requestCreatePriceModeFixedTitle => 'I set my price';
+
+  @override
+  String get requestCreatePriceModeFixedSubtitle =>
+      'A fixed amount, no negotiation.';
+
+  @override
+  String get requestCreateCurrencyLabel => 'Currency';
+
+  @override
+  String get requestCreateBudgetLabelNegotiable => 'Estimated budget';
+
+  @override
+  String get requestCreateBudgetLabelFixed => 'Your price';
+
+  @override
+  String get requestCreateBudgetHintNegotiable =>
+      'Give a rough idea to attract more offers, without committing.';
+
+  @override
+  String get requestCreateBudgetHintFixed =>
+      'Travelers will see this amount and can accept it as is.';
+
+  @override
+  String get requestCreatePromoLabel => 'Promo code (optional)';
+
+  @override
+  String get requestCreatePromoHint => 'E.g. WELCOME10';
+
+  @override
+  String get requestCreatePromoAppliedFallback => 'Code applied';
+
+  @override
+  String get requestCreatePaymentAcceptedLabel => 'Accepted payment';
+
+  @override
+  String get requestCreatePaymentHint => 'Choose how you\'ll pay the traveler.';
+
+  @override
+  String get requestCreateKeepOnePaymentMethod =>
+      'Keep at least one payment method.';
+
+  @override
+  String get requestCreatePublishInfoBanner =>
+      'Once posted, travelers on this trip are notified. You\'ll get a notification at the first offer.';
+
+  @override
+  String get requestCreateBudgetInputHint => 'E.g. 40.00';
+
+  @override
+  String get requestCreateBudgetEmpty => 'Enter a budget';
+
+  @override
+  String requestCreateBudgetRange(String min, String max) {
+    return 'Between $min and $max';
+  }
+
+  @override
+  String requestCreateCommissionLabel(String rate) {
+    return 'Yadony service fee ($rate%)';
+  }
+
+  @override
+  String get requestCreatePromoBoostLabel =>
+      'Thanks to the promo code, the traveler gets';
+
+  @override
+  String get requestCreateTravelerReceivesLabel => 'The traveler will receive';
+
+  @override
+  String requestCreateCurrencySemanticLabel(String name, String code) {
+    return 'Request currency: $name, $code. Button, change the currency.';
+  }
+
+  @override
+  String get requestCreateChangeCurrency => 'Change';
+
+  @override
+  String get requestCreatePhotoUnsupported => 'Unsupported or too large image';
+
+  @override
+  String get requestCreateTakePhoto => 'Take a photo';
+
+  @override
+  String get requestCreatePickFromGalleryIn => 'Choose from the gallery';
+
+  @override
+  String get requestCreatePhotosLabel => 'Parcel photos';
+
+  @override
+  String get requestCreatePhotosHint =>
+      'Visible to travelers. Added to the offer once a trip is linked.';
+
+  @override
+  String get requestCreateAddPhotoSemantic => 'Add a photo of the parcel';
+
+  @override
+  String get requestCreatePhotoUploadFailed => 'Photo upload failed';
+
+  @override
+  String requestCreatePhotoUploadFailedWithReason(String reason) {
+    return 'Failed: $reason';
+  }
+
+  @override
+  String get requestCreateRetryPhotoUpload => 'Retry sending the photo';
+
+  @override
+  String get requestCreateAddPhotoTitle => 'Add a photo';
+
+  @override
+  String get requestCreateAddPhotoSubtitle =>
+      'Strongly recommended, reassures the traveler';
+
+  @override
+  String get requestCreateRemovePhoto => 'Remove this photo';
+
+  @override
+  String get requestCreateCompleteDetailsTitle => 'Check & complete';
+
+  @override
+  String get requestCreateDetailsSaved => 'Details saved';
+
+  @override
+  String get requestCreateGenericErrorShort => 'Error';
+
+  @override
+  String get requestCreateRecipientSection => 'Recipient';
+
+  @override
+  String get requestCreateRecipientNameLabel => 'Full name';
+
+  @override
+  String get requestCreateRequiredField => 'Required';
+
+  @override
+  String get requestCreateRecipientPhoneLabel => 'Phone';
+
+  @override
+  String get requestCreateRecipientPhoneFormat => 'E.164 format (+221…)';
+
+  @override
+  String get requestCreateRecipientCityLabel => 'City / town';
+
+  @override
+  String get requestCreateRecipientCityHint => 'E.g. Dakar (optional)';
+
+  @override
+  String get requestCreatePaymentMethodSection => 'Payment method';
+
+  @override
+  String get requestCreateSendingLabel => 'Sending…';
+
+  @override
+  String get requestCreateContinueToPayment => 'Continue to payment';
+
+  @override
+  String get requestCreateRecapTitle => 'Summary';
+
+  @override
+  String get requestCreateRecapTrip => 'Trip';
+
+  @override
+  String get requestCreateRecapTravelDate => 'Travel date';
+
+  @override
+  String get requestCreateRecapWeight => 'Weight';
+
+  @override
+  String get requestCreateRecapSize => 'Size';
+
+  @override
+  String get requestCreateRecapContent => 'Content';
+
+  @override
+  String get requestCreateRecapPrice => 'Price to pay';
 }

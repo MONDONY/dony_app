@@ -41,14 +41,12 @@ abstract final class PackageRequestCreateWizard {
     PackageRequest? initial,
   }) async {
     if (requiresEditWarning(initial)) {
+      final l10n = context.l10n;
       final confirmed = await DonyDialog.show(
         context,
-        title: 'Modifier votre demande ?',
-        message:
-            'Des voyageurs négocient actuellement cette demande. La '
-            'modifier annulera toutes les offres en cours. Ils devront vous '
-            'reproposer un trajet.',
-        confirmLabel: 'Modifier quand même',
+        title: l10n.requestCreateEditWarningTitle,
+        message: l10n.requestCreateEditWarningMessage,
+        confirmLabel: l10n.requestCreateEditWarningConfirm,
         variant: DonyDialogVariant.destructive,
         icon: Icons.warning_amber_rounded,
       );
@@ -64,14 +62,12 @@ abstract final class PackageRequestCreateWizard {
     PackageRequest request,
   ) async {
     if (requiresEditWarning(request)) {
+      final l10n = context.l10n;
       final confirmed = await DonyDialog.show(
         context,
-        title: 'Modifier votre demande ?',
-        message:
-            'Des voyageurs négocient actuellement cette demande. La '
-            'modifier annulera toutes les offres en cours. Ils devront vous '
-            'reproposer un trajet.',
-        confirmLabel: 'Modifier quand même',
+        title: l10n.requestCreateEditWarningTitle,
+        message: l10n.requestCreateEditWarningMessage,
+        confirmLabel: l10n.requestCreateEditWarningConfirm,
         variant: DonyDialogVariant.destructive,
         icon: Icons.warning_amber_rounded,
       );
@@ -234,6 +230,7 @@ class _PackageRequestCreateScreenState
   void _onStateChange(BuildContext context, PackageRequestFormState state) {
     if (state.submissionStatus == FormSubmissionStatus.success &&
         state.createdRequest != null) {
+      final l10n = context.l10n;
       final isEditing = state.isEditing;
       final isDraft =
           state.createdRequest!.status == PackageRequestStatus.draft;
@@ -243,17 +240,18 @@ class _PackageRequestCreateScreenState
           builder: (routeContext) => DonySuccessScreen(
             mascotteType: DonyMascotteType.succes,
             title: isDraft
-                ? 'Brouillon enregistré !'
+                ? l10n.requestCreateDraftSavedTitle
                 : isEditing
-                ? 'Demande modifiée !'
-                : 'Demande publiée !',
+                ? l10n.requestCreateEditedTitle
+                : l10n.requestCreatePublishedTitle,
             subtitle: isDraft
-                ? 'Vous pourrez la publier quand vous le souhaitez.'
+                ? l10n.requestCreateDraftSavedSubtitle
                 : isEditing
-                ? 'Vos modifications sont en ligne.'
-                : 'Les voyageurs sont notifiés. Vous recevrez des offres '
-                      'très vite.',
-            ctaLabel: isDraft ? 'Voir mon brouillon' : 'Voir ma demande',
+                ? l10n.requestCreateEditedSubtitle
+                : l10n.requestCreatePublishedSubtitle,
+            ctaLabel: isDraft
+                ? l10n.requestCreateViewDraftCta
+                : l10n.requestCreateViewRequestCta,
             onCta: () {
               // Le contexte de la route succès (routeContext) reste monté
               // sous le Navigator racine après le pop ci-dessous — on capture
@@ -308,7 +306,9 @@ class _PackageRequestCreateScreenState
       // 422 « budget hors bornes » d'une demande en franc CFA était illisible.
       ErrorPresenter.show(
         context,
-        state.error ?? state.errorMessage ?? 'Erreur lors de la création',
+        state.error ??
+            state.errorMessage ??
+            context.l10n.requestCreateGenericError,
       );
     }
   }
@@ -319,7 +319,7 @@ class _PackageRequestCreateScreenState
   ) async {
     final goPro = await showProLimitReachedDialog(
       context,
-      title: 'Limite de brouillons atteinte',
+      title: context.l10n.requestCreateDraftLimitTitle,
       message: message,
     );
     if (goPro && context.mounted) {
@@ -330,13 +330,17 @@ class _PackageRequestCreateScreenState
   Widget _buildScaffold(BuildContext context, PackageRequestFormState state) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l10n = context.l10n;
 
     // Un titre par contenu d'étape, pas un mélange de contenu et de position :
     // le badge « 2 / 3 » dit déjà où l'on en est.
     final title = switch (state.currentStep) {
-      0 => state.isEditing ? 'Modifier la demande' : 'Le trajet',
-      1 => 'Le colis',
-      _ => 'Le budget',
+      0 =>
+        state.isEditing
+            ? l10n.requestCreateStepTitleEdit
+            : l10n.requestCreateStepTitleTrip,
+      1 => l10n.requestCreateStepTitlePackage,
+      _ => l10n.requestCreateStepTitleBudget,
     };
 
     _initialSignature ??= _signatureOf(state);
@@ -534,6 +538,7 @@ class _CguNoticeState extends State<_CguNotice> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l10n = context.l10n;
     final base = tt.bodySmall?.copyWith(
       color: cs.onSurfaceVariant,
       fontSize: 12,
@@ -542,9 +547,9 @@ class _CguNoticeState extends State<_CguNotice> {
       TextSpan(
         style: base,
         children: [
-          const TextSpan(text: 'En publiant, vous acceptez les '),
+          TextSpan(text: l10n.requestCreateCguPrefix),
           TextSpan(
-            text: 'CGU',
+            text: l10n.requestCreateCguLink,
             style: base?.copyWith(
               color: cs.primary,
               fontWeight: FontWeight.w700,
@@ -584,6 +589,7 @@ class _StickyCta extends StatelessWidget {
     final isFinalStep = currentStep == 2;
     final bottomInset = MediaQuery.of(context).viewPadding.bottom;
     final cs = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
 
     return Container(
       decoration: BoxDecoration(
@@ -616,7 +622,7 @@ class _StickyCta extends StatelessWidget {
                 SizedBox(
                   width: 112,
                   child: DonyButton(
-                    label: 'Retour',
+                    label: l10n.commonBack,
                     variant: DonyButtonVariant.secondary,
                     onPressed: isSubmitting
                         ? null
@@ -631,10 +637,10 @@ class _StickyCta extends StatelessWidget {
                     valueListenable: canContinueNotifier,
                     builder: (context, canContinue, _) => DonyButton(
                       label: isSubmitting
-                          ? 'Publication…'
+                          ? l10n.requestCreatePublishingLabel
                           : isFinalStep
-                          ? 'Aperçu'
-                          : 'Continuer',
+                          ? l10n.requestCreatePreviewButton
+                          : l10n.commonContinue,
                       iconRightAsset: 'arrow-right',
                       onPressed: (isSubmitting || !canContinue)
                           ? null
@@ -649,7 +655,9 @@ class _StickyCta extends StatelessWidget {
             ValueListenableBuilder<bool>(
               valueListenable: canContinueNotifier,
               builder: (context, canContinue, _) => DonyButton(
-                label: isSubmitting ? 'Publication…' : 'Continuer',
+                label: isSubmitting
+                    ? l10n.requestCreatePublishingLabel
+                    : l10n.commonContinue,
                 iconRightAsset: 'arrow-right',
                 onPressed: (isSubmitting || !canContinue) ? null : onPressed,
                 isLoading: isSubmitting,

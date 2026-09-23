@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/utils/format_weight.dart';
+import 'package:dony/features/content_categories/presentation/content_category_labels.dart';
 import 'package:dony/features/matching/presentation/trip_domain_labels.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -40,7 +41,7 @@ class WizardSummaryCard extends StatelessWidget {
           _line(context, 'Colis', _packageText(state)),
           if (state.categories.isNotEmpty) ...[
             _divider(cs),
-            _line(context, 'Contenu', _categoriesText(state)),
+            _line(context, 'Contenu', _categoriesText(context.l10n, state)),
           ],
         ],
       ),
@@ -100,8 +101,14 @@ class WizardSummaryCard extends StatelessWidget {
 
   /// Toutes les catégories, pas seulement la première : le récap en affichait
   /// une seule et laissait croire que les autres avaient été perdues.
-  String _categoriesText(PackageRequestFormState s) =>
-      s.categories.isEmpty ? '-' : s.categories.join(', ');
+  ///
+  /// Le libellé AFFICHÉ passe par [contentCategoryDisplayName] : la valeur
+  /// brute (envoyée au serveur, comparée dans [PackageRequestFormState])
+  /// reste [s.categories] telle quelle.
+  String _categoriesText(AppLocalizations l, PackageRequestFormState s) =>
+      s.categories.isEmpty
+      ? '-'
+      : s.categories.map((c) => contentCategoryDisplayName(l, c)).join(', ');
 }
 
 /// Date souhaitée et sa tolérance, en un libellé.

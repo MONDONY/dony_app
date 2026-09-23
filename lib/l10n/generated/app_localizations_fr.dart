@@ -3477,4 +3477,390 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get contentCategoryHintDefault => 'Ajouter un type de contenu…';
+
+  @override
+  String get requestCreateEditWarningTitle => 'Modifier votre demande ?';
+
+  @override
+  String get requestCreateEditWarningMessage =>
+      'Des voyageurs négocient actuellement cette demande. La modifier annulera toutes les offres en cours. Ils devront vous reproposer un trajet.';
+
+  @override
+  String get requestCreateEditWarningConfirm => 'Modifier quand même';
+
+  @override
+  String get requestCreateStepTitleEdit => 'Modifier la demande';
+
+  @override
+  String get requestCreateStepTitleTrip => 'Le trajet';
+
+  @override
+  String get requestCreateStepTitlePackage => 'Le colis';
+
+  @override
+  String get requestCreateStepTitleBudget => 'Le budget';
+
+  @override
+  String get requestCreateDraftSavedTitle => 'Brouillon enregistré !';
+
+  @override
+  String get requestCreateEditedTitle => 'Demande modifiée !';
+
+  @override
+  String get requestCreatePublishedTitle => 'Demande publiée !';
+
+  @override
+  String get requestCreateDraftSavedSubtitle =>
+      'Vous pourrez la publier quand vous le souhaitez.';
+
+  @override
+  String get requestCreateEditedSubtitle => 'Vos modifications sont en ligne.';
+
+  @override
+  String get requestCreatePublishedSubtitle =>
+      'Les voyageurs sont notifiés. Vous recevrez des offres très vite.';
+
+  @override
+  String get requestCreateViewDraftCta => 'Voir mon brouillon';
+
+  @override
+  String get requestCreateViewRequestCta => 'Voir ma demande';
+
+  @override
+  String get requestCreateGenericError => 'Erreur lors de la création';
+
+  @override
+  String get requestCreateDraftLimitTitle => 'Limite de brouillons atteinte';
+
+  @override
+  String get requestCreateCguPrefix => 'En publiant, vous acceptez les ';
+
+  @override
+  String get requestCreateCguLink => 'CGU';
+
+  @override
+  String get requestCreatePublishingLabel => 'Publication…';
+
+  @override
+  String get requestCreatePreviewButton => 'Aperçu';
+
+  @override
+  String get requestCreateDepartureRequired => 'Ville de départ obligatoire';
+
+  @override
+  String get requestCreateArrivalRequired => 'Ville d\'arrivée obligatoire';
+
+  @override
+  String get requestCreateArrivalSameAsDeparture =>
+      'Choisissez une ville différente du départ';
+
+  @override
+  String get requestCreateDateRequired => 'Date de départ obligatoire';
+
+  @override
+  String get requestCreateToleranceExactHint =>
+      'Seuls les voyageurs partant exactement ce jour-là pourront répondre.';
+
+  @override
+  String requestCreateToleranceGenericHint(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '± $count jours autour de votre date. Plus de souplesse, plus de voyageurs.',
+      one:
+          '± $count jour autour de votre date. Plus de souplesse, plus de voyageurs.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String requestCreateToleranceRangeHint(String from, String to) {
+    return 'Les voyageurs partant du $from au $to pourront répondre.';
+  }
+
+  @override
+  String get requestCreateAirplaneOnlyMode => 'seul mode disponible';
+
+  @override
+  String get requestCreateTrajetSectionLabel => 'TRAJET';
+
+  @override
+  String get requestCreateTrajetQuestion => 'D\'où vers où ?';
+
+  @override
+  String get requestCreateDateFieldLabel => 'Date';
+
+  @override
+  String get requestCreateToleranceFieldLabel => 'Souplesse';
+
+  @override
+  String get requestCreateUrgentDateHint =>
+      '🔥 Date proche, cette demande sera signalée urgente';
+
+  @override
+  String requestCreateToleranceShort(int count) {
+    return '± $count j';
+  }
+
+  @override
+  String get requestCreateDateExact => 'Date exacte';
+
+  @override
+  String requestCreateDateFlex(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '± $count jours',
+      one: '± $count jour',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String requestCreateMaxCategories(int max) {
+    return 'Maximum $max catégories';
+  }
+
+  @override
+  String get requestCreateCategoryRequired =>
+      'Choisissez au moins une catégorie';
+
+  @override
+  String get requestCreateAutrePrecisionTitle =>
+      'Précisez le contenu (optionnel)';
+
+  @override
+  String get requestCreateAutrePrecisionSubtitle =>
+      'Ça aide le voyageur à savoir ce qu\'il transporte.';
+
+  @override
+  String get requestCreateAutrePrecisionValidate => 'Valider';
+
+  @override
+  String get requestCreateAutrePrecisionHint => 'Ex. Instruments de musique';
+
+  @override
+  String get requestCreateStep2Title => 'Décrivez votre colis';
+
+  @override
+  String get requestCreateStep2Subtitle =>
+      'Ces infos aident les voyageurs à savoir s\'ils peuvent transporter votre envoi.';
+
+  @override
+  String get requestCreateWeightLabel => 'Poids approximatif';
+
+  @override
+  String get requestCreateContentLabel => 'Contenu';
+
+  @override
+  String get requestCreateContentHint =>
+      'Tapez pour chercher, ou écrivez votre propre catégorie.';
+
+  @override
+  String get requestCreateDescriptionLabel => 'Description (optionnel)';
+
+  @override
+  String get requestCreateDescriptionHint =>
+      'Précisions utiles : fragile, contenu exact, instructions de remise…';
+
+  @override
+  String get requestCreateWeightInvalid => 'Valeur invalide';
+
+  @override
+  String get requestCreateBudgetTitle => 'Budget';
+
+  @override
+  String get requestCreateBudgetSubtitle =>
+      'Vérifiez votre demande, puis indiquez le budget à montrer aux voyageurs.';
+
+  @override
+  String get requestCreatePriceModeLabel => 'Comment fixer le prix ?';
+
+  @override
+  String get requestCreatePriceModeOpenTitle => 'J\'ouvre aux offres';
+
+  @override
+  String get requestCreatePriceModeOpenSubtitle =>
+      'Les voyageurs proposent leur prix, vous choisissez.';
+
+  @override
+  String get requestCreatePriceModeFixedTitle => 'Je fixe mon prix';
+
+  @override
+  String get requestCreatePriceModeFixedSubtitle =>
+      'Un montant ferme, sans négociation.';
+
+  @override
+  String get requestCreateCurrencyLabel => 'Devise';
+
+  @override
+  String get requestCreateBudgetLabelNegotiable => 'Budget indicatif';
+
+  @override
+  String get requestCreateBudgetLabelFixed => 'Votre prix';
+
+  @override
+  String get requestCreateBudgetHintNegotiable =>
+      'Donnez un ordre d\'idée pour attirer plus d\'offres, sans vous engager.';
+
+  @override
+  String get requestCreateBudgetHintFixed =>
+      'Les voyageurs verront ce montant et pourront l\'accepter tel quel.';
+
+  @override
+  String get requestCreatePromoLabel => 'Code promo (optionnel)';
+
+  @override
+  String get requestCreatePromoHint => 'Ex: WELCOME10';
+
+  @override
+  String get requestCreatePromoAppliedFallback => 'Code appliqué';
+
+  @override
+  String get requestCreatePaymentAcceptedLabel => 'Paiement accepté';
+
+  @override
+  String get requestCreatePaymentHint =>
+      'Choisissez comment vous paierez le voyageur.';
+
+  @override
+  String get requestCreateKeepOnePaymentMethod =>
+      'Gardez au moins un mode de paiement.';
+
+  @override
+  String get requestCreatePublishInfoBanner =>
+      'Une fois publiée, les voyageurs sur ce trajet sont prévenus. Vous recevrez une notification à la première offre.';
+
+  @override
+  String get requestCreateBudgetInputHint => 'Ex. 40,00';
+
+  @override
+  String get requestCreateBudgetEmpty => 'Indiquez un budget';
+
+  @override
+  String requestCreateBudgetRange(String min, String max) {
+    return 'Entre $min et $max';
+  }
+
+  @override
+  String requestCreateCommissionLabel(String rate) {
+    return 'Commission Yadony ($rate %)';
+  }
+
+  @override
+  String get requestCreatePromoBoostLabel =>
+      'Grâce au code promo, le voyageur touche';
+
+  @override
+  String get requestCreateTravelerReceivesLabel => 'Le voyageur touchera';
+
+  @override
+  String requestCreateCurrencySemanticLabel(String name, String code) {
+    return 'Devise de la demande : $name, $code. Bouton, modifier la devise.';
+  }
+
+  @override
+  String get requestCreateChangeCurrency => 'Changer';
+
+  @override
+  String get requestCreatePhotoUnsupported =>
+      'Image non supportée ou trop volumineuse';
+
+  @override
+  String get requestCreateTakePhoto => 'Prendre une photo';
+
+  @override
+  String get requestCreatePickFromGalleryIn => 'Choisir dans la galerie';
+
+  @override
+  String get requestCreatePhotosLabel => 'Photos du colis';
+
+  @override
+  String get requestCreatePhotosHint =>
+      'Visibles par les voyageurs. Ajoutées à l\'offre quand un trajet est lié.';
+
+  @override
+  String get requestCreateAddPhotoSemantic => 'Ajouter une photo du colis';
+
+  @override
+  String get requestCreatePhotoUploadFailed => 'Échec de l\'upload de la photo';
+
+  @override
+  String requestCreatePhotoUploadFailedWithReason(String reason) {
+    return 'Échec : $reason';
+  }
+
+  @override
+  String get requestCreateRetryPhotoUpload => 'Réessayer l\'envoi de la photo';
+
+  @override
+  String get requestCreateAddPhotoTitle => 'Ajouter une photo';
+
+  @override
+  String get requestCreateAddPhotoSubtitle =>
+      'Fortement recommandé, rassure le voyageur';
+
+  @override
+  String get requestCreateRemovePhoto => 'Supprimer cette photo';
+
+  @override
+  String get requestCreateCompleteDetailsTitle => 'Vérifie & complète';
+
+  @override
+  String get requestCreateDetailsSaved => 'Détails enregistrés';
+
+  @override
+  String get requestCreateGenericErrorShort => 'Erreur';
+
+  @override
+  String get requestCreateRecipientSection => 'Destinataire';
+
+  @override
+  String get requestCreateRecipientNameLabel => 'Nom complet';
+
+  @override
+  String get requestCreateRequiredField => 'Requis';
+
+  @override
+  String get requestCreateRecipientPhoneLabel => 'Téléphone';
+
+  @override
+  String get requestCreateRecipientPhoneFormat => 'Format E.164 (+221…)';
+
+  @override
+  String get requestCreateRecipientCityLabel => 'Ville / commune';
+
+  @override
+  String get requestCreateRecipientCityHint => 'Ex. Dakar (optionnel)';
+
+  @override
+  String get requestCreatePaymentMethodSection => 'Mode de paiement';
+
+  @override
+  String get requestCreateSendingLabel => 'Envoi…';
+
+  @override
+  String get requestCreateContinueToPayment => 'Continuer vers le paiement';
+
+  @override
+  String get requestCreateRecapTitle => 'Récapitulatif';
+
+  @override
+  String get requestCreateRecapTrip => 'Trajet';
+
+  @override
+  String get requestCreateRecapTravelDate => 'Date du voyage';
+
+  @override
+  String get requestCreateRecapWeight => 'Poids';
+
+  @override
+  String get requestCreateRecapSize => 'Taille';
+
+  @override
+  String get requestCreateRecapContent => 'Contenu';
+
+  @override
+  String get requestCreateRecapPrice => 'Prix à payer';
 }

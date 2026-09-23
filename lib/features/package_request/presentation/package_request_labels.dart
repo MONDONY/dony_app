@@ -1,7 +1,17 @@
+import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/data/package_request_limits.dart';
 import 'package:dony/l10n/l10n.dart';
+
+/// Libellé affiché d'une taille de colis.
+extension ParcelSizeL10n on ParcelSize {
+  String label(AppLocalizations l) => switch (this) {
+    ParcelSize.small => l.parcelSizeSmall,
+    ParcelSize.medium => l.parcelSizeMedium,
+    ParcelSize.large => l.parcelSizeLarge,
+  };
+}
 
 /// Libellé affiché d'un moyen de paiement.
 extension PaymentMethodL10n on PaymentMethod {

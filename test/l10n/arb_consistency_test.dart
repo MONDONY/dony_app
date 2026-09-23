@@ -42,6 +42,8 @@ const _sameInBothLanguages = <String>{
   'tripTransportTrain', // « Train » se dit pareil
   'tripTransportBus', // « Bus » se dit pareil
   'paymentMethodMobileMoney', // « Mobile money » se dit pareil
+  'requestCreateDateFieldLabel', // « Date » se dit pareil
+  'requestCreateBudgetTitle', // « Budget » se dit pareil
 };
 
 void main() {
