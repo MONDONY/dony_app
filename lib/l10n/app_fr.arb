@@ -582,5 +582,273 @@
   "shellPlaceholderConfirmPayment": "Confirmer paiement",
   "shellPlaceholderAdmin": "Admin",
   "shellRequestsTitle": "Demandes",
-  "shellPrivacyPolicyTitle": "Politique de confidentialité"
+  "shellPrivacyPolicyTitle": "Politique de confidentialité",
+  "homeCorridorFrom": "Départ de {dep}",
+  "@homeCorridorFrom": {
+    "placeholders": {
+      "dep": {
+        "type": "String"
+      }
+    }
+  },
+  "homeCorridorTo": "Vers {arr}",
+  "@homeCorridorTo": {
+    "placeholders": {
+      "arr": {
+        "type": "String"
+      }
+    }
+  },
+  "homeCorridorAll": "Tous les corridors",
+  "homePullToList": "Tirer pour voir la liste",
+  "homePullToTravelers": "{count, plural, =1{Tirer pour voir le voyageur} other{Tirer pour voir les {count} voyageurs}}",
+  "@homePullToTravelers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homePullToParcels": "{count, plural, =1{Tirer pour voir le colis} other{Tirer pour voir les {count} colis}}",
+  "@homePullToParcels": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homePullToMap": "Tirer vers le bas pour voir la carte",
+  "homeCrossParcels": "{count, plural, =1{{count} colis cherche un voyageur} other{{count} colis cherchent un voyageur}}",
+  "@homeCrossParcels": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeCrossParcelsRoute": "{count, plural, =1{{count} colis cherche un voyageur sur {dep} → {arr}} other{{count} colis cherchent un voyageur sur {dep} → {arr}}}",
+  "@homeCrossParcelsRoute": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "dep": {
+        "type": "String"
+      },
+      "arr": {
+        "type": "String"
+      }
+    }
+  },
+  "homeCrossParcelsFrom": "{count, plural, =1{{count} colis cherche un voyageur au départ de {dep}} other{{count} colis cherchent un voyageur au départ de {dep}}}",
+  "@homeCrossParcelsFrom": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "dep": {
+        "type": "String"
+      }
+    }
+  },
+  "homeCrossParcelsTo": "{count, plural, =1{{count} colis cherche un voyageur vers {arr}} other{{count} colis cherchent un voyageur vers {arr}}}",
+  "@homeCrossParcelsTo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "arr": {
+        "type": "String"
+      }
+    }
+  },
+  "homeCrossTravelers": "{count, plural, =1{{count} voyageur passe} other{{count} voyageurs passent}}",
+  "@homeCrossTravelers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeCrossTravelersRoute": "{count, plural, =1{{count} voyageur passe sur {dep} → {arr}} other{{count} voyageurs passent sur {dep} → {arr}}}",
+  "@homeCrossTravelersRoute": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "dep": {
+        "type": "String"
+      },
+      "arr": {
+        "type": "String"
+      }
+    }
+  },
+  "homeCrossTravelersFrom": "{count, plural, =1{{count} voyageur passe au départ de {dep}} other{{count} voyageurs passent au départ de {dep}}}",
+  "@homeCrossTravelersFrom": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "dep": {
+        "type": "String"
+      }
+    }
+  },
+  "homeCrossTravelersTo": "{count, plural, =1{{count} voyageur passe vers {arr}} other{{count} voyageurs passent vers {arr}}}",
+  "@homeCrossTravelersTo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "arr": {
+        "type": "String"
+      }
+    }
+  },
+  "homeAlertTrip": "M'alerter dès qu'un trajet apparaît sur {dep} → {arr}",
+  "@homeAlertTrip": {
+    "placeholders": {
+      "dep": {
+        "type": "String"
+      },
+      "arr": {
+        "type": "String"
+      }
+    }
+  },
+  "homeAlertParcel": "M'alerter dès qu'un colis apparaît sur {dep} → {arr}",
+  "@homeAlertParcel": {
+    "placeholders": {
+      "dep": {
+        "type": "String"
+      },
+      "arr": {
+        "type": "String"
+      }
+    }
+  },
+  "homeLocateError": "Impossible de te localiser. Réessaie.",
+  "homeMaxWeightTitle": "Poids max du colis",
+  "homeParcelSizeTitle": "Taille du colis",
+  "homeListTravelersNearby": "{count, plural, =1{{count} voyageur à proximité} other{{count} voyageurs à proximité}}",
+  "@homeListTravelersNearby": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeListTravelersRoute": "{count, plural, =1{{count} voyageur pour {dep} → {arr}} other{{count} voyageurs pour {dep} → {arr}}}",
+  "@homeListTravelersRoute": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "dep": {
+        "type": "String"
+      },
+      "arr": {
+        "type": "String"
+      }
+    }
+  },
+  "homeListTravelersCorridor": "{count, plural, =1{{count} voyageur · {corridor}} other{{count} voyageurs · {corridor}}}",
+  "@homeListTravelersCorridor": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "corridor": {
+        "type": "String"
+      }
+    }
+  },
+  "homeListParcelsMatching": "{count, plural, =1{{count} colis compatible} other{{count} colis compatibles}}",
+  "@homeListParcelsMatching": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeListParcelsRoute": "{count} colis à transporter pour {dep} → {arr}",
+  "@homeListParcelsRoute": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "dep": {
+        "type": "String"
+      },
+      "arr": {
+        "type": "String"
+      }
+    }
+  },
+  "homeListParcelsCorridor": "{count} colis à transporter · {corridor}",
+  "@homeListParcelsCorridor": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "corridor": {
+        "type": "String"
+      }
+    }
+  },
+  "homeListSubtitleNoTraveler": "Personne ne propose ce trajet pour l'instant",
+  "homeListSubtitleTravelersCanCarry": "Ils peuvent emporter ton colis",
+  "homeListSubtitleActiveTripsUnknown": "Avec tes trajets actifs",
+  "homeListSubtitleActiveTrips": "{count, plural, =1{Avec ton trajet actif} other{Avec tes {count} trajets actifs}}",
+  "@homeListSubtitleActiveTrips": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeListSubtitleNoRequest": "Aucune demande d'envoi pour l'instant",
+  "homeListSubtitleYouCanCarry": "Tu peux les emporter sur ton trajet",
+  "homeSort": "Trier",
+  "homeConnectionErrorTitle": "Connexion impossible",
+  "homeRequestsLoadError": "Impossible de charger les demandes. Vérifie ta connexion puis réessaie.",
+  "homeEmptyParcelsFiltered": "Aucun colis avec ces filtres",
+  "homeEmptyParcelsSoon": "Demandes bientôt disponibles",
+  "homeEmptyParcelsFilteredHint": "Modifie ou supprime tes filtres pour voir plus de demandes.",
+  "homeEmptyParcelsSoonHint": "Tu pourras bientôt consulter les demandes d'envoi postées par les expéditeurs.",
+  "homeTripsLoadError": "Impossible de charger les trajets. Vérifie ta connexion puis réessaie.",
+  "homeEmptyTravelersNearby": "Aucun voyageur à proximité",
+  "homeEmptyTravelersFiltered": "Aucun voyageur avec ces filtres",
+  "homeEmptyTravelersRoute": "Aucun voyageur sur ce corridor",
+  "homeEmptyNearbyHint": "Élargis ta zone ou désactive \"Près de moi\"",
+  "homeEmptyTravelersFilteredHint": "Modifie tes filtres pour voir plus de voyageurs.",
+  "homeEmptyTravelersRouteHint": "De nouveaux trajets sont publiés chaque jour. Reviens bientôt.",
+  "homeMapButton": "Carte",
+  "homeRadiusKm": "Rayon · {km} km",
+  "@homeRadiusKm": {
+    "placeholders": {
+      "km": {
+        "type": "int"
+      }
+    }
+  },
+  "homeDepartureDateTitle": "Date de départ",
+  "homeDateToday": "Aujourd'hui",
+  "homeDateThisWeek": "Cette semaine",
+  "homeDateThisMonthLong": "Ce mois-ci",
+  "homeChooseDate": "Choisir une date",
+  "homeMinRatingTitle": "Note minimum",
+  "homeRatingOnlyFive": "★ 5.0 uniquement",
+  "homeRatingAndUp": "★ {rating} et plus",
+  "@homeRatingAndUp": {
+    "placeholders": {
+      "rating": {
+        "type": "String"
+      }
+    }
+  },
+  "homeWeightCapacityTitle": "Capacité kilo",
+  "homeMaxPriceTitle": "Prix maximum",
+  "homeAnyPrice": "Tous les prix"
 }

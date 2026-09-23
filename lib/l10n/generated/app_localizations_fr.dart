@@ -1746,4 +1746,328 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get shellPrivacyPolicyTitle => 'Politique de confidentialité';
+
+  @override
+  String homeCorridorFrom(String dep) {
+    return 'Départ de $dep';
+  }
+
+  @override
+  String homeCorridorTo(String arr) {
+    return 'Vers $arr';
+  }
+
+  @override
+  String get homeCorridorAll => 'Tous les corridors';
+
+  @override
+  String get homePullToList => 'Tirer pour voir la liste';
+
+  @override
+  String homePullToTravelers(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Tirer pour voir les $count voyageurs',
+      one: 'Tirer pour voir le voyageur',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homePullToParcels(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Tirer pour voir les $count colis',
+      one: 'Tirer pour voir le colis',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homePullToMap => 'Tirer vers le bas pour voir la carte';
+
+  @override
+  String homeCrossParcels(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count colis cherchent un voyageur',
+      one: '$count colis cherche un voyageur',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeCrossParcelsRoute(int count, String dep, String arr) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count colis cherchent un voyageur sur $dep → $arr',
+      one: '$count colis cherche un voyageur sur $dep → $arr',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeCrossParcelsFrom(int count, String dep) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count colis cherchent un voyageur au départ de $dep',
+      one: '$count colis cherche un voyageur au départ de $dep',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeCrossParcelsTo(int count, String arr) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count colis cherchent un voyageur vers $arr',
+      one: '$count colis cherche un voyageur vers $arr',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeCrossTravelers(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count voyageurs passent',
+      one: '$count voyageur passe',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeCrossTravelersRoute(int count, String dep, String arr) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count voyageurs passent sur $dep → $arr',
+      one: '$count voyageur passe sur $dep → $arr',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeCrossTravelersFrom(int count, String dep) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count voyageurs passent au départ de $dep',
+      one: '$count voyageur passe au départ de $dep',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeCrossTravelersTo(int count, String arr) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count voyageurs passent vers $arr',
+      one: '$count voyageur passe vers $arr',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeAlertTrip(String dep, String arr) {
+    return 'M\'alerter dès qu\'un trajet apparaît sur $dep → $arr';
+  }
+
+  @override
+  String homeAlertParcel(String dep, String arr) {
+    return 'M\'alerter dès qu\'un colis apparaît sur $dep → $arr';
+  }
+
+  @override
+  String get homeLocateError => 'Impossible de te localiser. Réessaie.';
+
+  @override
+  String get homeMaxWeightTitle => 'Poids max du colis';
+
+  @override
+  String get homeParcelSizeTitle => 'Taille du colis';
+
+  @override
+  String homeListTravelersNearby(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count voyageurs à proximité',
+      one: '$count voyageur à proximité',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeListTravelersRoute(int count, String dep, String arr) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count voyageurs pour $dep → $arr',
+      one: '$count voyageur pour $dep → $arr',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeListTravelersCorridor(int count, String corridor) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count voyageurs · $corridor',
+      one: '$count voyageur · $corridor',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeListParcelsMatching(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count colis compatibles',
+      one: '$count colis compatible',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeListParcelsRoute(int count, String dep, String arr) {
+    return '$count colis à transporter pour $dep → $arr';
+  }
+
+  @override
+  String homeListParcelsCorridor(int count, String corridor) {
+    return '$count colis à transporter · $corridor';
+  }
+
+  @override
+  String get homeListSubtitleNoTraveler =>
+      'Personne ne propose ce trajet pour l\'instant';
+
+  @override
+  String get homeListSubtitleTravelersCanCarry =>
+      'Ils peuvent emporter ton colis';
+
+  @override
+  String get homeListSubtitleActiveTripsUnknown => 'Avec tes trajets actifs';
+
+  @override
+  String homeListSubtitleActiveTrips(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Avec tes $count trajets actifs',
+      one: 'Avec ton trajet actif',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeListSubtitleNoRequest =>
+      'Aucune demande d\'envoi pour l\'instant';
+
+  @override
+  String get homeListSubtitleYouCanCarry =>
+      'Tu peux les emporter sur ton trajet';
+
+  @override
+  String get homeSort => 'Trier';
+
+  @override
+  String get homeConnectionErrorTitle => 'Connexion impossible';
+
+  @override
+  String get homeRequestsLoadError =>
+      'Impossible de charger les demandes. Vérifie ta connexion puis réessaie.';
+
+  @override
+  String get homeEmptyParcelsFiltered => 'Aucun colis avec ces filtres';
+
+  @override
+  String get homeEmptyParcelsSoon => 'Demandes bientôt disponibles';
+
+  @override
+  String get homeEmptyParcelsFilteredHint =>
+      'Modifie ou supprime tes filtres pour voir plus de demandes.';
+
+  @override
+  String get homeEmptyParcelsSoonHint =>
+      'Tu pourras bientôt consulter les demandes d\'envoi postées par les expéditeurs.';
+
+  @override
+  String get homeTripsLoadError =>
+      'Impossible de charger les trajets. Vérifie ta connexion puis réessaie.';
+
+  @override
+  String get homeEmptyTravelersNearby => 'Aucun voyageur à proximité';
+
+  @override
+  String get homeEmptyTravelersFiltered => 'Aucun voyageur avec ces filtres';
+
+  @override
+  String get homeEmptyTravelersRoute => 'Aucun voyageur sur ce corridor';
+
+  @override
+  String get homeEmptyNearbyHint =>
+      'Élargis ta zone ou désactive \"Près de moi\"';
+
+  @override
+  String get homeEmptyTravelersFilteredHint =>
+      'Modifie tes filtres pour voir plus de voyageurs.';
+
+  @override
+  String get homeEmptyTravelersRouteHint =>
+      'De nouveaux trajets sont publiés chaque jour. Reviens bientôt.';
+
+  @override
+  String get homeMapButton => 'Carte';
+
+  @override
+  String homeRadiusKm(int km) {
+    return 'Rayon · $km km';
+  }
+
+  @override
+  String get homeDepartureDateTitle => 'Date de départ';
+
+  @override
+  String get homeDateToday => 'Aujourd\'hui';
+
+  @override
+  String get homeDateThisWeek => 'Cette semaine';
+
+  @override
+  String get homeDateThisMonthLong => 'Ce mois-ci';
+
+  @override
+  String get homeChooseDate => 'Choisir une date';
+
+  @override
+  String get homeMinRatingTitle => 'Note minimum';
+
+  @override
+  String get homeRatingOnlyFive => '★ 5.0 uniquement';
+
+  @override
+  String homeRatingAndUp(String rating) {
+    return '★ $rating et plus';
+  }
+
+  @override
+  String get homeWeightCapacityTitle => 'Capacité kilo';
+
+  @override
+  String get homeMaxPriceTitle => 'Prix maximum';
+
+  @override
+  String get homeAnyPrice => 'Tous les prix';
 }

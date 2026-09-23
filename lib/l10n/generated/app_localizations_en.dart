@@ -1732,4 +1732,335 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get shellPrivacyPolicyTitle => 'Privacy Policy';
+
+  @override
+  String homeCorridorFrom(String dep) {
+    return 'From $dep';
+  }
+
+  @override
+  String homeCorridorTo(String arr) {
+    return 'To $arr';
+  }
+
+  @override
+  String get homeCorridorAll => 'All routes';
+
+  @override
+  String get homePullToList => 'Pull up to see the list';
+
+  @override
+  String homePullToTravelers(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Pull up to see the $count travelers',
+      one: 'Pull up to see the traveler',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homePullToParcels(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Pull up to see the $count parcels',
+      one: 'Pull up to see the parcel',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homePullToMap => 'Pull down to see the map';
+
+  @override
+  String homeCrossParcels(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count parcels are looking for a traveler',
+      one: '$count parcel is looking for a traveler',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeCrossParcelsRoute(int count, String dep, String arr) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count parcels are looking for a traveler on $dep → $arr',
+      one: '$count parcel is looking for a traveler on $dep → $arr',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeCrossParcelsFrom(int count, String dep) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count parcels are looking for a traveler from $dep',
+      one: '$count parcel is looking for a traveler from $dep',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeCrossParcelsTo(int count, String arr) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count parcels are looking for a traveler to $arr',
+      one: '$count parcel is looking for a traveler to $arr',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeCrossTravelers(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count travelers are going',
+      one: '$count traveler is going',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeCrossTravelersRoute(int count, String dep, String arr) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count travelers are going on $dep → $arr',
+      one: '$count traveler is going on $dep → $arr',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeCrossTravelersFrom(int count, String dep) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count travelers are going from $dep',
+      one: '$count traveler is going from $dep',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeCrossTravelersTo(int count, String arr) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count travelers are going to $arr',
+      one: '$count traveler is going to $arr',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeAlertTrip(String dep, String arr) {
+    return 'Alert me when a trip appears on $dep → $arr';
+  }
+
+  @override
+  String homeAlertParcel(String dep, String arr) {
+    return 'Alert me when a parcel appears on $dep → $arr';
+  }
+
+  @override
+  String get homeLocateError => 'Couldn\'t find your location. Try again.';
+
+  @override
+  String get homeMaxWeightTitle => 'Max parcel weight';
+
+  @override
+  String get homeParcelSizeTitle => 'Parcel size';
+
+  @override
+  String homeListTravelersNearby(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count travelers nearby',
+      one: '$count traveler nearby',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeListTravelersRoute(int count, String dep, String arr) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count travelers for $dep → $arr',
+      one: '$count traveler for $dep → $arr',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeListTravelersCorridor(int count, String corridor) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count travelers · $corridor',
+      one: '$count traveler · $corridor',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeListParcelsMatching(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count matching parcels',
+      one: '$count matching parcel',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeListParcelsRoute(int count, String dep, String arr) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count parcels to carry for $dep → $arr',
+      one: '$count parcel to carry for $dep → $arr',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeListParcelsCorridor(int count, String corridor) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count parcels to carry · $corridor',
+      one: '$count parcel to carry · $corridor',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeListSubtitleNoTraveler => 'No one offers this trip yet';
+
+  @override
+  String get homeListSubtitleTravelersCanCarry => 'They can carry your parcel';
+
+  @override
+  String get homeListSubtitleActiveTripsUnknown => 'With your active trips';
+
+  @override
+  String homeListSubtitleActiveTrips(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'With your $count active trips',
+      one: 'With your active trip',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeListSubtitleNoRequest => 'No parcel requests yet';
+
+  @override
+  String get homeListSubtitleYouCanCarry => 'You can carry them on your trip';
+
+  @override
+  String get homeSort => 'Sort';
+
+  @override
+  String get homeConnectionErrorTitle => 'Can\'t connect';
+
+  @override
+  String get homeRequestsLoadError =>
+      'Couldn\'t load parcel requests. Check your connection and try again.';
+
+  @override
+  String get homeEmptyParcelsFiltered => 'No parcels match these filters';
+
+  @override
+  String get homeEmptyParcelsSoon => 'Parcel requests coming soon';
+
+  @override
+  String get homeEmptyParcelsFilteredHint =>
+      'Change or remove your filters to see more parcel requests.';
+
+  @override
+  String get homeEmptyParcelsSoonHint =>
+      'Soon you\'ll be able to browse parcel requests posted by senders.';
+
+  @override
+  String get homeTripsLoadError =>
+      'Couldn\'t load trips. Check your connection and try again.';
+
+  @override
+  String get homeEmptyTravelersNearby => 'No travelers nearby';
+
+  @override
+  String get homeEmptyTravelersFiltered => 'No travelers match these filters';
+
+  @override
+  String get homeEmptyTravelersRoute => 'No travelers on this route';
+
+  @override
+  String get homeEmptyNearbyHint => 'Widen your area or turn off \"Near me\"';
+
+  @override
+  String get homeEmptyTravelersFilteredHint =>
+      'Change your filters to see more travelers.';
+
+  @override
+  String get homeEmptyTravelersRouteHint =>
+      'New trips are posted every day. Check back soon.';
+
+  @override
+  String get homeMapButton => 'Map';
+
+  @override
+  String homeRadiusKm(int km) {
+    return 'Radius · $km km';
+  }
+
+  @override
+  String get homeDepartureDateTitle => 'Departure date';
+
+  @override
+  String get homeDateToday => 'Today';
+
+  @override
+  String get homeDateThisWeek => 'This week';
+
+  @override
+  String get homeDateThisMonthLong => 'This month';
+
+  @override
+  String get homeChooseDate => 'Pick a date';
+
+  @override
+  String get homeMinRatingTitle => 'Minimum rating';
+
+  @override
+  String get homeRatingOnlyFive => '★ 5.0 only';
+
+  @override
+  String homeRatingAndUp(String rating) {
+    return '★ $rating and up';
+  }
+
+  @override
+  String get homeWeightCapacityTitle => 'Weight capacity';
+
+  @override
+  String get homeMaxPriceTitle => 'Maximum price';
+
+  @override
+  String get homeAnyPrice => 'Any price';
 }
