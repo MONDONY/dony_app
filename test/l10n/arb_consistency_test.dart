@@ -33,6 +33,8 @@ const _sameInBothLanguages = <String>{
   'countryNameCg',
   'countryNameGa',
   'countryZoneEurope',
+  'shellTabMessages', // « Messages » se dit pareil
+  'shellPlaceholderAdmin', // « Admin » se dit pareil
 };
 
 void main() {

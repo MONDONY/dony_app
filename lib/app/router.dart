@@ -215,6 +215,7 @@ import 'package:dony/features/trip_templates/data/models/trip_template.dart';
 import 'package:dony/features/trip_templates/presentation/screens/trip_recurrence_edit_screen.dart';
 import 'package:dony/features/trip_templates/presentation/screens/trip_template_edit_screen.dart';
 import 'package:dony/features/trip_templates/presentation/screens/trip_templates_screen.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -979,8 +980,9 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/payment/confirm',
-      builder: (context, state) =>
-          const _PlaceholderScreen(title: 'Confirmer paiement'),
+      builder: (context, state) => _PlaceholderScreen(
+        title: context.l10n.shellPlaceholderConfirmPayment,
+      ),
     ),
     // ── Stripe Connect deep-link return routes ───────────────────────────
     GoRoute(
@@ -1043,7 +1045,8 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/admin',
-      builder: (context, state) => const _PlaceholderScreen(title: 'Admin'),
+      builder: (context, state) =>
+          _PlaceholderScreen(title: context.l10n.shellPlaceholderAdmin),
     ),
 
     // ── Messagerie — archives (hors shell) ───────────────────────────────
@@ -1097,7 +1100,7 @@ final appRouter = GoRouter(
         return BidListScreen(
           announcementId: id,
           initialTabIndex: extra?['initialTabIndex'] as int? ?? 0,
-          title: extra?['title'] as String? ?? 'Demandes',
+          title: extra?['title'] as String? ?? context.l10n.shellRequestsTitle,
         );
       },
     ),
@@ -1561,8 +1564,8 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/legal/privacy',
-      builder: (context, state) => const LegalWebViewScreen(
-        title: 'Politique de confidentialité',
+      builder: (context, state) => LegalWebViewScreen(
+        title: context.l10n.shellPrivacyPolicyTitle,
         url: 'https://yadony.com/legal/privacy',
       ),
     ),

@@ -1674,4 +1674,76 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get commonContinue => 'Continuer';
+
+  @override
+  String get commonApply => 'Appliquer';
+
+  @override
+  String get commonClear => 'Effacer';
+
+  @override
+  String get commonRetry => 'Réessayer';
+
+  @override
+  String get commonConfirm => 'Confirmer';
+
+  @override
+  String get commonClearFilters => 'Effacer les filtres';
+
+  @override
+  String get parcelSizeSmall => 'Petit';
+
+  @override
+  String get parcelSizeMedium => 'Moyen';
+
+  @override
+  String get parcelSizeLarge => 'Grand';
+
+  @override
+  String get cityClearCity => 'Effacer la ville';
+
+  @override
+  String get cityChooseCity => 'Choisir une ville';
+
+  @override
+  String get cityRecentSection => 'RÉCENTS';
+
+  @override
+  String get cityDepartureLabel => 'Départ';
+
+  @override
+  String get cityArrivalLabel => 'Arrivée';
+
+  @override
+  String get citySwapLabel => 'Interchanger départ et arrivée';
+
+  @override
+  String get shellTabActivity => 'Activités';
+
+  @override
+  String get shellTabSearch => 'Rechercher';
+
+  @override
+  String get shellTabMessages => 'Messages';
+
+  @override
+  String get shellTabProfile => 'Moi';
+
+  @override
+  String get shellOrbTracking => 'Suivi';
+
+  @override
+  String get shellOrbQrScanner => 'Lecteur QR';
+
+  @override
+  String get shellPlaceholderConfirmPayment => 'Confirmer paiement';
+
+  @override
+  String get shellPlaceholderAdmin => 'Admin';
+
+  @override
+  String get shellRequestsTitle => 'Demandes';
+
+  @override
+  String get shellPrivacyPolicyTitle => 'Politique de confidentialité';
 }

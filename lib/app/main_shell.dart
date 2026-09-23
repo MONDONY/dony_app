@@ -32,6 +32,7 @@ import 'package:dony/features/ratings/presentation/widgets/rating_bottom_sheet.d
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/stripe_account/presentation/widgets/account_rejected_banner.dart';
 import 'package:dony/features/support/bloc/support_unread_cubit.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -316,7 +317,7 @@ class _DonyBottomNav extends StatelessWidget {
             // dépend plus du profil — cf. ActivitesHubScreen)
             // 'zap' remplacé par 'layout-grid' : l'éclair se lisait
             // « action rapide/boost », pas « mes trajets » — cf. audit UX bottom nav.
-            const tab1Label = 'Activités';
+            final tab1Label = context.l10n.shellTabActivity;
             const tab1IconAsset = 'layout-grid';
 
             return DecoratedBox(
@@ -353,7 +354,7 @@ class _DonyBottomNav extends StatelessWidget {
                             Expanded(
                               child: DonyNavItem(
                                 iconAsset: 'search',
-                                label: 'Rechercher',
+                                label: context.l10n.shellTabSearch,
                                 index: 0,
                                 currentIndex: currentIndex,
                                 onTap: () => onTap(0),
@@ -434,7 +435,7 @@ class _DonyBottomNav extends StatelessWidget {
                                     // (path vide invalide).
                                     return DonyNavItem(
                                       iconAsset: 'message-circle',
-                                      label: 'Messages',
+                                      label: context.l10n.shellTabMessages,
                                       index: 3,
                                       currentIndex: currentIndex,
                                       onTap: () => onTap(3),
@@ -452,7 +453,8 @@ class _DonyBottomNav extends StatelessWidget {
                                         builder: (context, supportUnread) {
                                           return DonyNavItem(
                                             iconAsset: 'message-circle',
-                                            label: 'Messages',
+                                            label:
+                                                context.l10n.shellTabMessages,
                                             index: 3,
                                             currentIndex: currentIndex,
                                             onTap: () => onTap(3),
@@ -471,7 +473,7 @@ class _DonyBottomNav extends StatelessWidget {
                             Expanded(
                               child: DonyNavItem(
                                 iconAsset: 'user',
-                                label: 'Moi',
+                                label: context.l10n.shellTabProfile,
                                 index: 4,
                                 currentIndex: currentIndex,
                                 onTap: () => onTap(4),

@@ -11,6 +11,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
+
 class MockCitySearchBloc extends MockBloc<CitySearchEvent, CitySearchState>
     implements CitySearchBloc {}
 
@@ -32,6 +34,7 @@ void main() {
     void Function(CityModel)? onSelected,
     String? initialValue,
     Widget? prefixIcon,
+    CityFieldVariant variant = CityFieldVariant.outlined,
   }) {
     return MaterialApp(
       home: Scaffold(
@@ -42,6 +45,7 @@ void main() {
             onSelected: onSelected ?? (_) {},
             initialValue: initialValue,
             prefixIcon: prefixIcon,
+            variant: variant,
           ),
         ),
       ),
@@ -352,6 +356,23 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+
+  // ── Traductions ───────────────────────────────────────────────────────────
+
+  testWidgets('bouton clear traduit en anglais (Clear city)', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(buildWidget());
+    await tester.enterText(find.byType(TextField), 'Lyon');
+    await tester.pump();
+    expect(find.byTooltip('Clear city'), findsOneWidget);
+  });
+
+  testWidgets('placeholder traduit en anglais (Choose a city)', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(buildWidget(variant: CityFieldVariant.connected));
+    await tester.pump();
+    expect(find.text('Choose a city'), findsOneWidget);
+  });
 
   // ── Dispose ───────────────────────────────────────────────────────────────
 

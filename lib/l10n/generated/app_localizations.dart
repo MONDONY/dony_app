@@ -3007,6 +3007,150 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Continuer'**
   String get commonContinue;
+
+  /// No description provided for @commonApply.
+  ///
+  /// In fr, this message translates to:
+  /// **'Appliquer'**
+  String get commonApply;
+
+  /// No description provided for @commonClear.
+  ///
+  /// In fr, this message translates to:
+  /// **'Effacer'**
+  String get commonClear;
+
+  /// No description provided for @commonRetry.
+  ///
+  /// In fr, this message translates to:
+  /// **'Réessayer'**
+  String get commonRetry;
+
+  /// No description provided for @commonConfirm.
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer'**
+  String get commonConfirm;
+
+  /// No description provided for @commonClearFilters.
+  ///
+  /// In fr, this message translates to:
+  /// **'Effacer les filtres'**
+  String get commonClearFilters;
+
+  /// No description provided for @parcelSizeSmall.
+  ///
+  /// In fr, this message translates to:
+  /// **'Petit'**
+  String get parcelSizeSmall;
+
+  /// No description provided for @parcelSizeMedium.
+  ///
+  /// In fr, this message translates to:
+  /// **'Moyen'**
+  String get parcelSizeMedium;
+
+  /// No description provided for @parcelSizeLarge.
+  ///
+  /// In fr, this message translates to:
+  /// **'Grand'**
+  String get parcelSizeLarge;
+
+  /// No description provided for @cityClearCity.
+  ///
+  /// In fr, this message translates to:
+  /// **'Effacer la ville'**
+  String get cityClearCity;
+
+  /// No description provided for @cityChooseCity.
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir une ville'**
+  String get cityChooseCity;
+
+  /// No description provided for @cityRecentSection.
+  ///
+  /// In fr, this message translates to:
+  /// **'RÉCENTS'**
+  String get cityRecentSection;
+
+  /// No description provided for @cityDepartureLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Départ'**
+  String get cityDepartureLabel;
+
+  /// No description provided for @cityArrivalLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Arrivée'**
+  String get cityArrivalLabel;
+
+  /// No description provided for @citySwapLabel.
+  ///
+  /// In fr, this message translates to:
+  /// **'Interchanger départ et arrivée'**
+  String get citySwapLabel;
+
+  /// No description provided for @shellTabActivity.
+  ///
+  /// In fr, this message translates to:
+  /// **'Activités'**
+  String get shellTabActivity;
+
+  /// No description provided for @shellTabSearch.
+  ///
+  /// In fr, this message translates to:
+  /// **'Rechercher'**
+  String get shellTabSearch;
+
+  /// No description provided for @shellTabMessages.
+  ///
+  /// In fr, this message translates to:
+  /// **'Messages'**
+  String get shellTabMessages;
+
+  /// No description provided for @shellTabProfile.
+  ///
+  /// In fr, this message translates to:
+  /// **'Moi'**
+  String get shellTabProfile;
+
+  /// No description provided for @shellOrbTracking.
+  ///
+  /// In fr, this message translates to:
+  /// **'Suivi'**
+  String get shellOrbTracking;
+
+  /// No description provided for @shellOrbQrScanner.
+  ///
+  /// In fr, this message translates to:
+  /// **'Lecteur QR'**
+  String get shellOrbQrScanner;
+
+  /// No description provided for @shellPlaceholderConfirmPayment.
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer paiement'**
+  String get shellPlaceholderConfirmPayment;
+
+  /// No description provided for @shellPlaceholderAdmin.
+  ///
+  /// In fr, this message translates to:
+  /// **'Admin'**
+  String get shellPlaceholderAdmin;
+
+  /// No description provided for @shellRequestsTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Demandes'**
+  String get shellRequestsTitle;
+
+  /// No description provided for @shellPrivacyPolicyTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Politique de confidentialité'**
+  String get shellPrivacyPolicyTitle;
 }
 
 class _AppLocalizationsDelegate

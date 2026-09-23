@@ -1660,4 +1660,76 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get commonContinue => 'Continue';
+
+  @override
+  String get commonApply => 'Apply';
+
+  @override
+  String get commonClear => 'Clear';
+
+  @override
+  String get commonRetry => 'Try again';
+
+  @override
+  String get commonConfirm => 'Confirm';
+
+  @override
+  String get commonClearFilters => 'Clear filters';
+
+  @override
+  String get parcelSizeSmall => 'Small';
+
+  @override
+  String get parcelSizeMedium => 'Medium';
+
+  @override
+  String get parcelSizeLarge => 'Large';
+
+  @override
+  String get cityClearCity => 'Clear city';
+
+  @override
+  String get cityChooseCity => 'Choose a city';
+
+  @override
+  String get cityRecentSection => 'RECENT';
+
+  @override
+  String get cityDepartureLabel => 'Departure';
+
+  @override
+  String get cityArrivalLabel => 'Arrival';
+
+  @override
+  String get citySwapLabel => 'Swap departure and arrival';
+
+  @override
+  String get shellTabActivity => 'Activity';
+
+  @override
+  String get shellTabSearch => 'Search';
+
+  @override
+  String get shellTabMessages => 'Messages';
+
+  @override
+  String get shellTabProfile => 'Profile';
+
+  @override
+  String get shellOrbTracking => 'Tracking';
+
+  @override
+  String get shellOrbQrScanner => 'QR scanner';
+
+  @override
+  String get shellPlaceholderConfirmPayment => 'Confirm payment';
+
+  @override
+  String get shellPlaceholderAdmin => 'Admin';
+
+  @override
+  String get shellRequestsTitle => 'Requests';
+
+  @override
+  String get shellPrivacyPolicyTitle => 'Privacy Policy';
 }

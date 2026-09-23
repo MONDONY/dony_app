@@ -20,6 +20,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../helpers/l10n_test_helpers.dart';
 import '../../../helpers/mock_recent_city_store.dart';
 
 class MockCitySearchBloc extends MockBloc<CitySearchEvent, CitySearchState>
@@ -141,6 +142,17 @@ void main() {
       await tester.pump();
 
       expect(swapped, 1);
+    });
+
+    testWidgets('labels traduits en anglais (Departure / Arrival)', (
+      tester,
+    ) async {
+      useEnglish();
+      await tester.pumpWidget(build());
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text('DEPARTURE'), findsOneWidget);
+      expect(find.text('ARRIVAL'), findsOneWidget);
     });
   });
 
