@@ -1096,5 +1096,300 @@
   "tripUrgencyLaterTooltip": "Départ dans plus de 14 jours",
   "tripCapacitySuitcase23": "1 valise 23 kg",
   "tripCapacitySuitcase32": "1 valise 32 kg",
-  "tripCapacityCustom": "Personnalisé"
+  "tripCapacityCustom": "Personnalisé",
+  "tripPublishTitle": "Publier un trajet",
+  "@tripPublishTitle": {
+    "description": "Titre de l'écran de publication d'un trajet (AppBar en création, et intro voyageur)"
+  },
+  "tripPublishEditTitle": "Modifier le trajet",
+  "@tripPublishEditTitle": {
+    "description": "Titre de l'AppBar en mode édition d'un trajet"
+  },
+  "tripPublishDedicatedTitle": "Créer le trajet pour cette demande",
+  "@tripPublishDedicatedTitle": {
+    "description": "Titre de l'AppBar quand le trajet est créé pour une demande de colis verrouillée"
+  },
+  "tripPublishSubmitDedicated": "Confirmer le trajet",
+  "@tripPublishSubmitDedicated": {
+    "description": "Bouton de soumission du trajet dédié à une demande de colis"
+  },
+  "tripPublishPreviewButton": "Aperçu",
+  "@tripPublishPreviewButton": {
+    "description": "Bouton qui ouvre l'aperçu du trajet avant publication"
+  },
+  "tripPublishFieldDepartureCityRequired": "Ville de départ obligatoire",
+  "@tripPublishFieldDepartureCityRequired": {
+    "description": "Erreur de validation : ville de départ manquante à l'étape Trajet"
+  },
+  "tripPublishFieldArrivalCityRequired": "Ville d'arrivée obligatoire",
+  "@tripPublishFieldArrivalCityRequired": {
+    "description": "Erreur de validation : ville d'arrivée manquante à l'étape Trajet"
+  },
+  "tripPublishFieldDepartureDateRequired": "Date de départ obligatoire",
+  "@tripPublishFieldDepartureDateRequired": {
+    "description": "Erreur de validation : date de départ manquante à l'étape Trajet"
+  },
+  "tripPublishFieldDepartureTimeRequired": "Heure de départ obligatoire",
+  "@tripPublishFieldDepartureTimeRequired": {
+    "description": "Erreur de validation : heure de départ manquante à l'étape Trajet"
+  },
+  "tripPublishFieldTransportModeRequired": "Mode de transport obligatoire",
+  "@tripPublishFieldTransportModeRequired": {
+    "description": "Erreur de validation : mode de transport manquant à l'étape Trajet"
+  },
+  "tripPublishFieldHandoverDeadlineRequired": "Date limite de dépôt obligatoire",
+  "@tripPublishFieldHandoverDeadlineRequired": {
+    "description": "Erreur de validation : date limite de dépôt des colis manquante à l'étape Trajet"
+  },
+  "tripPublishFieldPickupAddressRequired": "Lieu de remise du colis obligatoire",
+  "@tripPublishFieldPickupAddressRequired": {
+    "description": "Erreur de validation : lieu de remise du colis manquant à l'étape Lieux & Capacité"
+  },
+  "tripPublishFieldDeliveryAddressRequired": "Lieu de récupération obligatoire",
+  "@tripPublishFieldDeliveryAddressRequired": {
+    "description": "Erreur de validation : lieu de récupération du colis manquant à l'étape Lieux & Capacité"
+  },
+  "tripPublishHandoverDeadlineInvalid": "La date limite doit précéder le départ.",
+  "@tripPublishHandoverDeadlineInvalid": {
+    "description": "Erreur affichée sous la ligne date limite de dépôt quand elle est postérieure au départ"
+  },
+  "tripPublishHandoverDeadlineBeforeDeparture": "La date limite de dépôt doit précéder le départ",
+  "@tripPublishHandoverDeadlineBeforeDeparture": {
+    "description": "Snackbar d'erreur à la soumission quand la date limite de dépôt est postérieure au départ"
+  },
+  "tripPublishOfferSentWithTrip": "Offre envoyée avec le trajet associé.",
+  "@tripPublishOfferSentWithTrip": {
+    "description": "Confirmation quand un trajet dédié est créé avec une nouvelle offre, sans fil de négociation existant"
+  },
+  "tripPublishTripLinked": "Trajet lié. L'expéditeur peut désormais payer.",
+  "@tripPublishTripLinked": {
+    "description": "Confirmation quand un trajet dédié est lié à un fil de négociation existant"
+  },
+  "tripPublishSuccessTitleEdit": "Trajet modifié !",
+  "@tripPublishSuccessTitleEdit": {
+    "description": "Titre de l'écran de succès après modification d'un trajet"
+  },
+  "tripPublishSuccessTitleCreate": "Trajet publié !",
+  "@tripPublishSuccessTitleCreate": {
+    "description": "Titre de l'écran de succès après publication d'un trajet"
+  },
+  "tripPublishSuccessSubtitle": "Ton trajet {departureCity} → {arrivalCity} est en ligne.",
+  "@tripPublishSuccessSubtitle": {
+    "description": "Sous-titre de l'écran de succès, avec le corridor du trajet publié",
+    "placeholders": {
+      "departureCity": {
+        "type": "String"
+      },
+      "arrivalCity": {
+        "type": "String"
+      }
+    }
+  },
+  "tripPublishSuccessCta": "Voir mon trajet",
+  "@tripPublishSuccessCta": {
+    "description": "CTA principal de l'écran de succès de publication d'un trajet"
+  },
+  "tripPublishSuccessShareCta": "Partager mon affiche",
+  "@tripPublishSuccessShareCta": {
+    "description": "CTA secondaire de l'écran de succès (partager l'affiche du trajet), absent en mode édition"
+  },
+  "tripPublishMonthlyLimitTitle": "Limite mensuelle atteinte",
+  "@tripPublishMonthlyLimitTitle": {
+    "description": "Titre du dialogue quand la limite mensuelle de publications PRO est atteinte"
+  },
+  "tripPublishDraftLimitTitle": "Limite de brouillons atteinte",
+  "@tripPublishDraftLimitTitle": {
+    "description": "Titre du dialogue quand la limite de brouillons est atteinte"
+  },
+  "tripPublishTemplatesLabel": "Mes modèles",
+  "@tripPublishTemplatesLabel": {
+    "description": "Titre de la barre de suggestion des modèles de trajet enregistrés"
+  },
+  "tripPublishTemplatesHint": "Applique un modèle pour pré-remplir le trajet",
+  "@tripPublishTemplatesHint": {
+    "description": "Texte d'aide sous le titre de la barre de suggestion des modèles de trajet"
+  },
+  "tripPublishTemplateAppliedMessage": "Modèle « {label} » appliqué",
+  "@tripPublishTemplateAppliedMessage": {
+    "description": "Confirmation après application d'un modèle de trajet, avec son nom",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "tripPublishTemplateChipGrid": "{label} · grille",
+  "@tripPublishTemplateChipGrid": {
+    "description": "Puce d'un modèle de trajet tarifé par la grille de prix, avec son nom",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "tripPublishDropoffSectionLabel": "DÉPÔT DES COLIS",
+  "@tripPublishDropoffSectionLabel": {
+    "description": "Titre de section (étape Trajet) pour la date limite de dépôt des colis"
+  },
+  "tripPublishHandoverDeadlineLabel": "Date limite de dépôt",
+  "@tripPublishHandoverDeadlineLabel": {
+    "description": "Libellé de la ligne date limite de dépôt des colis"
+  },
+  "tripPublishHandoverDeadlineSubtitle": "Jusqu'à quand les expéditeurs peuvent te remettre leurs colis",
+  "@tripPublishHandoverDeadlineSubtitle": {
+    "description": "Sous-titre de la ligne date limite de dépôt des colis"
+  },
+  "tripPublishHandoverDeadlineChoose": "Choisir",
+  "@tripPublishHandoverDeadlineChoose": {
+    "description": "Valeur affichée sur la ligne date limite de dépôt tant qu'aucune date n'est choisie"
+  },
+  "tripPublishLockedBannerTitle": "Trajet dédié à la demande",
+  "@tripPublishLockedBannerTitle": {
+    "description": "Titre du bandeau affiché quand le trajet est créé pour une demande de colis verrouillée"
+  },
+  "tripPublishLockedBannerSubtitle": "Corridor, capacité et prix sont verrouillés. La date doit rester dans la fenêtre de tolérance de l'expéditeur.",
+  "@tripPublishLockedBannerSubtitle": {
+    "description": "Texte du bandeau affiché quand le trajet est créé pour une demande de colis verrouillée"
+  },
+  "tripPublishIntroTitleParcel": "Publier un colis",
+  "@tripPublishIntroTitleParcel": {
+    "description": "Titre de l'intro de publication, rôle expéditeur"
+  },
+  "tripPublishIntroVerifiedTextTrip": "Identité vérifiée. Vous pouvez publier votre trajet en toute sécurité.",
+  "@tripPublishIntroVerifiedTextTrip": {
+    "description": "Encart vert de l'intro quand l'identité est déjà vérifiée, rôle voyageur"
+  },
+  "tripPublishIntroVerifiedTextParcel": "Identité vérifiée. Vous pouvez publier votre demande d'envoi en toute sécurité.",
+  "@tripPublishIntroVerifiedTextParcel": {
+    "description": "Encart vert de l'intro quand l'identité est déjà vérifiée, rôle expéditeur"
+  },
+  "tripPublishIntroEngagementsTitleTrip": "Vos engagements de voyageur",
+  "@tripPublishIntroEngagementsTitleTrip": {
+    "description": "Titre de la section des engagements de l'intro, rôle voyageur"
+  },
+  "tripPublishIntroEngagementsIntroTrip": "En publiant, vous vous engagez à :",
+  "@tripPublishIntroEngagementsIntroTrip": {
+    "description": "Phrase d'introduction de la liste des engagements, rôle voyageur"
+  },
+  "tripPublishIntroRuleTripCarry": "Transporter le colis **vous-même**, sans le confier à un tiers.",
+  "@tripPublishIntroRuleTripCarry": {
+    "description": "Engagement voyageur : transporter le colis soi-même (** = segment en gras)"
+  },
+  "tripPublishIntroRuleTripSchedule": "Respecter la **date** et l'**itinéraire** annoncés.",
+  "@tripPublishIntroRuleTripSchedule": {
+    "description": "Engagement voyageur : respecter la date et l'itinéraire (** = segments en gras)"
+  },
+  "tripPublishIntroRuleTripScan": "**Lire le QR** à la remise et à la livraison.",
+  "@tripPublishIntroRuleTripScan": {
+    "description": "Engagement voyageur : scanner le QR à la remise et à la livraison (** = segment en gras)"
+  },
+  "tripPublishIntroRuleTripContent": "N'accepter que des **contenus autorisés**, jamais d'objet illicite.",
+  "@tripPublishIntroRuleTripContent": {
+    "description": "Engagement voyageur : n'accepter que des contenus autorisés (** = segment en gras)"
+  },
+  "tripPublishIntroRuleTripHandover": "Remettre le colis **au bon destinataire**, en main propre.",
+  "@tripPublishIntroRuleTripHandover": {
+    "description": "Engagement voyageur : remettre le colis au bon destinataire (** = segment en gras)"
+  },
+  "tripPublishIntroWhyTitleTrip": "Pourquoi publier",
+  "@tripPublishIntroWhyTitleTrip": {
+    "description": "Titre de la section « pourquoi publier », rôle voyageur"
+  },
+  "tripPublishIntroWhyBulletTripVisibility": "Visible par des milliers d'expéditeurs de la diaspora.",
+  "@tripPublishIntroWhyBulletTripVisibility": {
+    "description": "Puce « pourquoi publier », rôle voyageur : visibilité"
+  },
+  "tripPublishIntroWhyBulletTripEarnings": "Rentabilisez vos kilos libres à chaque voyage.",
+  "@tripPublishIntroWhyBulletTripEarnings": {
+    "description": "Puce « pourquoi publier », rôle voyageur : revenus"
+  },
+  "tripPublishIntroWhyBulletTripReputation": "Bâtissez une réputation avec les avis reçus.",
+  "@tripPublishIntroWhyBulletTripReputation": {
+    "description": "Puce « pourquoi publier », rôle voyageur : réputation"
+  },
+  "tripPublishIntroEngagementsTitleParcel": "Vos engagements d'expéditeur",
+  "@tripPublishIntroEngagementsTitleParcel": {
+    "description": "Titre de la section des engagements de l'intro, rôle expéditeur"
+  },
+  "tripPublishIntroEngagementsIntroParcel": "En envoyant un colis, vous certifiez :",
+  "@tripPublishIntroEngagementsIntroParcel": {
+    "description": "Phrase d'introduction de la liste des engagements, rôle expéditeur"
+  },
+  "tripPublishIntroRuleParcelLicit": "N'envoyer que des **contenus licites** et autorisés.",
+  "@tripPublishIntroRuleParcelLicit": {
+    "description": "Engagement expéditeur : contenus licites uniquement (** = segment en gras)"
+  },
+  "tripPublishIntroRuleParcelForbidden": "Aucun **objet interdit** (espèces, armes, produits dangereux…).",
+  "@tripPublishIntroRuleParcelForbidden": {
+    "description": "Engagement expéditeur : aucun objet interdit (** = segment en gras)"
+  },
+  "tripPublishIntroRuleParcelHonest": "Décrire **honnêtement** le contenu et sa valeur si le voyageur la demande.",
+  "@tripPublishIntroRuleParcelHonest": {
+    "description": "Engagement expéditeur : description honnête du contenu (** = segment en gras)"
+  },
+  "tripPublishIntroRuleParcelPackaging": "**Emballer soigneusement** et décrire précisément le contenu.",
+  "@tripPublishIntroRuleParcelPackaging": {
+    "description": "Engagement expéditeur : emballage soigné (** = segment en gras)"
+  },
+  "tripPublishIntroRuleParcelHandover": "Être présent à la **remise** et indiquer le bon destinataire.",
+  "@tripPublishIntroRuleParcelHandover": {
+    "description": "Engagement expéditeur : présence à la remise (** = segment en gras)"
+  },
+  "tripPublishIntroWhyTitleParcel": "Comment ça marche",
+  "@tripPublishIntroWhyTitleParcel": {
+    "description": "Titre de la section « comment ça marche », rôle expéditeur"
+  },
+  "tripPublishIntroWhyBulletParcelCarried": "Un voyageur transporte votre colis dans ses bagages.",
+  "@tripPublishIntroWhyBulletParcelCarried": {
+    "description": "Puce « comment ça marche », rôle expéditeur : transport"
+  },
+  "tripPublishIntroWhyBulletParcelPayment": "Paiement sécurisé, libéré à la livraison confirmée.",
+  "@tripPublishIntroWhyBulletParcelPayment": {
+    "description": "Puce « comment ça marche », rôle expéditeur : paiement séquestré"
+  },
+  "tripPublishIntroWhyBulletParcelTracking": "Suivi par QR de la remise jusqu'à la réception.",
+  "@tripPublishIntroWhyBulletParcelTracking": {
+    "description": "Puce « comment ça marche », rôle expéditeur : suivi QR"
+  },
+  "tripPublishIntroVerifyBefore": "Avant de publier, votre ",
+  "@tripPublishIntroVerifyBefore": {
+    "description": "Premier segment (non gras) de la phrase d'invite à vérifier son identité"
+  },
+  "tripPublishIntroVerifyBold": "identité doit être vérifiée",
+  "@tripPublishIntroVerifyBold": {
+    "description": "Segment en gras de la phrase d'invite à vérifier son identité"
+  },
+  "tripPublishIntroVerifyGoTo": ". Rendez-vous dans ",
+  "@tripPublishIntroVerifyGoTo": {
+    "description": "Segment (non gras) de la phrase d'invite à vérifier son identité"
+  },
+  "tripPublishIntroVerifyPath": "Profil › Vérifications",
+  "@tripPublishIntroVerifyPath": {
+    "description": "Chemin de menu en gras souligné, dans la phrase d'invite à vérifier son identité"
+  },
+  "tripPublishIntroVerifySuffix": " pour la valider (2 min).",
+  "@tripPublishIntroVerifySuffix": {
+    "description": "Dernier segment (non gras) de la phrase d'invite à vérifier son identité"
+  },
+  "tripPublishIntroVerifyButton": "Vérifier mon identité",
+  "@tripPublishIntroVerifyButton": {
+    "description": "Bouton qui ouvre le portail KYC depuis l'intro de publication"
+  },
+  "tripPublishIntroVerifyHint": "Le bouton devient « {continueLabel} » une fois l'identité vérifiée.",
+  "@tripPublishIntroVerifyHint": {
+    "description": "Texte sous le bouton de vérification, tant que l'identité n'est pas vérifiée",
+    "placeholders": {
+      "continueLabel": {
+        "type": "String"
+      }
+    }
+  },
+  "tripPublishIntroStripeTitle": "Activez les paiements par carte",
+  "@tripPublishIntroStripeTitle": {
+    "description": "Titre du rappel Stripe (voyageur) dans l'intro de publication d'un trajet"
+  },
+  "tripPublishIntroStripeSubtitle": "Configurez votre compte Stripe pour que vos expéditeurs paient par carte, et recevez plus de colis.",
+  "@tripPublishIntroStripeSubtitle": {
+    "description": "Texte du rappel Stripe (voyageur) dans l'intro de publication d'un trajet"
+  }
 }

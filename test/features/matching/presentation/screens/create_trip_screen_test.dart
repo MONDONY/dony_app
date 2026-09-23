@@ -67,6 +67,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/currency_test_doubles.dart';
+import '../../../../helpers/l10n_test_helpers.dart';
 import '../../../../helpers/mock_analytics_backend.dart';
 import '../../../../helpers/mock_recent_city_store.dart';
 
@@ -3289,6 +3290,32 @@ void main() {
       );
     },
   );
+
+  // ── Group: English (i18n) ─────────────────────────────────────────────────
+
+  group('CreateTripScreen — English', () {
+    testWidgets('mode création : titre et bouton "Continue" traduits', (
+      tester,
+    ) async {
+      useEnglish();
+      setupViewport(tester);
+
+      await pumpAndDrain(tester, _wrapWithRouter(const CreateTripScreen()));
+
+      expect(find.text('Post a trip'), findsOneWidget);
+      expect(find.text('Continue'), findsOneWidget);
+    });
+
+    testWidgets('mode édition : titre traduit', (tester) async {
+      useEnglish();
+      setupViewport(tester);
+
+      final args = CreateTripArgs(announcement: _makeAnnouncement());
+      await pumpAndDrain(tester, _wrapWithRouter(CreateTripScreen(args: args)));
+
+      expect(find.text('Edit trip'), findsOneWidget);
+    });
+  });
 }
 
 // ── Route observer for navigation tests ──────────────────────────────────────

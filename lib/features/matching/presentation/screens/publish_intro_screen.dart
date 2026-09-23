@@ -12,6 +12,7 @@ import 'package:dony/features/kyc/presentation/widgets/kyc_required_bottom_sheet
 import 'package:dony/features/matching/presentation/screens/create_trip_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/package_request_create_screen.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -36,7 +37,8 @@ class PublishIntroScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final config = _IntroConfig.of(role, cs);
+    final l10n = context.l10n;
+    final config = _IntroConfig.of(role, cs, l10n);
 
     final authState = context.watch<AuthBloc>().state;
     final user = switch (authState) {
@@ -172,103 +174,63 @@ class _IntroConfig {
   final List<String> whyBullets;
   final void Function(BuildContext) onContinue;
 
-  static _IntroConfig of(PublishIntroRole role, ColorScheme cs) {
+  static _IntroConfig of(
+    PublishIntroRole role,
+    ColorScheme cs,
+    AppLocalizations l10n,
+  ) {
     switch (role) {
       case PublishIntroRole.trip:
         return _IntroConfig(
-          title: 'Publier un trajet',
+          title: l10n.tripPublishTitle,
           asset: 'assets/illustrations/publier_trajet.png',
           accent: cs.primary,
           buttonVariant: DonyButtonVariant.primary,
-          verifiedText:
-              'Identité vérifiée. Vous pouvez publier votre trajet en toute '
-              'sécurité.',
+          verifiedText: l10n.tripPublishIntroVerifiedTextTrip,
           sectionIcon: 'route',
-          engagementsTitle: 'Vos engagements de voyageur',
-          engagementsIntro: 'En publiant, vous vous engagez à :',
-          rules: const [
-            _Rule(
-              'user',
-              'Transporter le colis **vous-même**, sans le '
-                  'confier à un tiers.',
-            ),
-            _Rule(
-              'calendar',
-              'Respecter la **date** et l\'**itinéraire** '
-                  'annoncés.',
-            ),
-            _Rule(
-              'qr-code',
-              '**Lire le QR** à la remise et à la '
-                  'livraison.',
-            ),
-            _Rule(
-              'shield-check',
-              'N\'accepter que des **contenus autorisés**, '
-                  'jamais d\'objet illicite.',
-            ),
-            _Rule(
-              'handshake',
-              'Remettre le colis **au bon destinataire**, en '
-                  'main propre.',
-            ),
+          engagementsTitle: l10n.tripPublishIntroEngagementsTitleTrip,
+          engagementsIntro: l10n.tripPublishIntroEngagementsIntroTrip,
+          rules: [
+            _Rule('user', l10n.tripPublishIntroRuleTripCarry),
+            _Rule('calendar', l10n.tripPublishIntroRuleTripSchedule),
+            _Rule('qr-code', l10n.tripPublishIntroRuleTripScan),
+            _Rule('shield-check', l10n.tripPublishIntroRuleTripContent),
+            _Rule('handshake', l10n.tripPublishIntroRuleTripHandover),
           ],
-          whyTitle: 'Pourquoi publier',
-          whyBullets: const [
-            'Visible par des milliers d\'expéditeurs de la diaspora.',
-            'Rentabilisez vos kilos libres à chaque voyage.',
-            'Bâtissez une réputation avec les avis reçus.',
+          whyTitle: l10n.tripPublishIntroWhyTitleTrip,
+          whyBullets: [
+            l10n.tripPublishIntroWhyBulletTripVisibility,
+            l10n.tripPublishIntroWhyBulletTripEarnings,
+            l10n.tripPublishIntroWhyBulletTripReputation,
           ],
           onContinue: (context) =>
               context.push('/trips/create', extra: const CreateTripArgs()),
         );
       case PublishIntroRole.parcel:
         return _IntroConfig(
-          title: 'Publier un colis',
+          title: l10n.tripPublishIntroTitleParcel,
           asset: 'assets/illustrations/envoie_colis.png',
           accent: cs.secondary,
           buttonVariant: DonyButtonVariant.accent,
-          verifiedText:
-              'Identité vérifiée. Vous pouvez publier votre demande d\'envoi '
-              'en toute sécurité.',
+          verifiedText: l10n.tripPublishIntroVerifiedTextParcel,
           sectionIcon: 'package',
-          engagementsTitle: 'Vos engagements d\'expéditeur',
-          engagementsIntro: 'En envoyant un colis, vous certifiez :',
-          rules: const [
-            _Rule(
-              'circle-check',
-              'N\'envoyer que des **contenus licites** et '
-                  'autorisés.',
-            ),
-            _Rule(
-              'ban',
-              'Aucun **objet interdit** (espèces, armes, produits '
-                  'dangereux…).',
-            ),
+          engagementsTitle: l10n.tripPublishIntroEngagementsTitleParcel,
+          engagementsIntro: l10n.tripPublishIntroEngagementsIntroParcel,
+          rules: [
+            _Rule('circle-check', l10n.tripPublishIntroRuleParcelLicit),
+            _Rule('ban', l10n.tripPublishIntroRuleParcelForbidden),
             // La valeur déclarée n'est jamais demandée dans le wizard : la
             // promettre ici laissait chercher un champ qui n'existe pas, et le
             // « max 500 € » se confondait avec le plafond du budget voyageur.
-            _Rule(
-              'tag',
-              'Décrire **honnêtement** le contenu et sa valeur si '
-                  'le voyageur la demande.',
-            ),
-            _Rule(
-              'square-pen',
-              '**Emballer soigneusement** et décrire '
-                  'précisément le contenu.',
-            ),
-            _Rule(
-              'handshake',
-              'Être présent à la **remise** et indiquer le '
-                  'bon destinataire.',
-            ),
+            _Rule('tag', l10n.tripPublishIntroRuleParcelHonest),
+            _Rule('square-pen', l10n.tripPublishIntroRuleParcelPackaging),
+            _Rule('handshake', l10n.tripPublishIntroRuleParcelHandover),
           ],
-          whyTitle: 'Comment ça marche',
-          whyBullets: const [
-            'Un voyageur transporte votre colis dans ses bagages.',
-            'Paiement sécurisé, libéré à la livraison confirmée.',
-            'Suivi par QR de la remise jusqu\'à la réception.',
+          whyTitle: l10n.tripPublishIntroWhyTitleParcel,
+          whyBullets: [
+            l10n.tripPublishIntroWhyBulletParcelCarried,
+            l10n.tripPublishIntroWhyBulletParcelPayment,
+            l10n.tripPublishIntroWhyBulletParcelTracking,
           ],
           onContinue: (context) => PackageRequestCreateWizard.show(context),
         );
@@ -320,6 +282,7 @@ class _ConditionCallout extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l10n = context.l10n;
 
     if (verified) {
       return _CalloutShell(
@@ -345,21 +308,21 @@ class _ConditionCallout extends StatelessWidget {
           TextSpan(
             style: tt.bodyMedium?.copyWith(color: cs.onSurface, height: 1.45),
             children: [
-              const TextSpan(text: 'Avant de publier, votre '),
+              TextSpan(text: l10n.tripPublishIntroVerifyBefore),
               TextSpan(
-                text: 'identité doit être vérifiée',
+                text: l10n.tripPublishIntroVerifyBold,
                 style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w800),
               ),
-              const TextSpan(text: '. Rendez-vous dans '),
+              TextSpan(text: l10n.tripPublishIntroVerifyGoTo),
               TextSpan(
-                text: 'Profil › Vérifications',
+                text: l10n.tripPublishIntroVerifyPath,
                 style: tt.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w800,
                   color: cs.warning,
                   decoration: TextDecoration.underline,
                 ),
               ),
-              const TextSpan(text: ' pour la valider (2 min).'),
+              TextSpan(text: l10n.tripPublishIntroVerifySuffix),
             ],
           ),
         ),
@@ -432,6 +395,7 @@ class _StripeReminder extends StatelessWidget {
 
         final cs = Theme.of(context).colorScheme;
         final tt = Theme.of(context).textTheme;
+        final l10n = context.l10n;
         final radius = BorderRadius.circular(16);
 
         return Padding(
@@ -481,7 +445,7 @@ class _StripeReminder extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Activez les paiements par carte',
+                              l10n.tripPublishIntroStripeTitle,
                               style: tt.titleSmall?.copyWith(
                                 fontWeight: FontWeight.w800,
                                 color: cs.onSurface,
@@ -489,9 +453,7 @@ class _StripeReminder extends StatelessWidget {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              'Configurez votre compte Stripe pour que vos '
-                              'expéditeurs paient par carte, et recevez plus de '
-                              'colis.',
+                              l10n.tripPublishIntroStripeSubtitle,
                               style: tt.bodySmall?.copyWith(
                                 color: cs.onSurfaceVariant,
                                 height: 1.4,
@@ -678,6 +640,7 @@ class _CtaBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l10n = context.l10n;
 
     return Container(
       decoration: BoxDecoration(
@@ -698,22 +661,21 @@ class _CtaBar extends StatelessWidget {
             children: [
               if (verified)
                 DonyButton(
-                  label: 'Continuer',
+                  label: l10n.commonContinue,
                   iconRightAsset: 'arrow-right',
                   variant: accentVariant,
                   onPressed: onContinue,
                 )
               else ...[
                 DonyButton(
-                  label: 'Vérifier mon identité',
+                  label: l10n.tripPublishIntroVerifyButton,
                   iconAsset: 'lock',
                   variant: accentVariant,
                   onPressed: onVerify,
                 ),
                 const SizedBox(height: DonySpacing.sm),
                 Text(
-                  'Le bouton devient « Continuer » une fois l\'identité '
-                  'vérifiée.',
+                  l10n.tripPublishIntroVerifyHint(l10n.commonContinue),
                   textAlign: TextAlign.center,
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),

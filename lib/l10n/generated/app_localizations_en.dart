@@ -2450,4 +2450,247 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tripCapacityCustom => 'Custom';
+
+  @override
+  String get tripPublishTitle => 'Post a trip';
+
+  @override
+  String get tripPublishEditTitle => 'Edit trip';
+
+  @override
+  String get tripPublishDedicatedTitle => 'Create the trip for this request';
+
+  @override
+  String get tripPublishSubmitDedicated => 'Confirm the trip';
+
+  @override
+  String get tripPublishPreviewButton => 'Preview';
+
+  @override
+  String get tripPublishFieldDepartureCityRequired => 'Departure city required';
+
+  @override
+  String get tripPublishFieldArrivalCityRequired => 'Arrival city required';
+
+  @override
+  String get tripPublishFieldDepartureDateRequired => 'Departure date required';
+
+  @override
+  String get tripPublishFieldDepartureTimeRequired => 'Departure time required';
+
+  @override
+  String get tripPublishFieldTransportModeRequired => 'Transport mode required';
+
+  @override
+  String get tripPublishFieldHandoverDeadlineRequired =>
+      'Drop-off deadline required';
+
+  @override
+  String get tripPublishFieldPickupAddressRequired =>
+      'Parcel drop-off location required';
+
+  @override
+  String get tripPublishFieldDeliveryAddressRequired =>
+      'Pickup location required';
+
+  @override
+  String get tripPublishHandoverDeadlineInvalid =>
+      'The deadline must be before departure.';
+
+  @override
+  String get tripPublishHandoverDeadlineBeforeDeparture =>
+      'The drop-off deadline must be before departure';
+
+  @override
+  String get tripPublishOfferSentWithTrip => 'Offer sent with the linked trip.';
+
+  @override
+  String get tripPublishTripLinked => 'Trip linked. The sender can now pay.';
+
+  @override
+  String get tripPublishSuccessTitleEdit => 'Trip updated!';
+
+  @override
+  String get tripPublishSuccessTitleCreate => 'Trip posted!';
+
+  @override
+  String tripPublishSuccessSubtitle(String departureCity, String arrivalCity) {
+    return 'Your trip $departureCity → $arrivalCity is live.';
+  }
+
+  @override
+  String get tripPublishSuccessCta => 'View my trip';
+
+  @override
+  String get tripPublishSuccessShareCta => 'Share my poster';
+
+  @override
+  String get tripPublishMonthlyLimitTitle => 'Monthly limit reached';
+
+  @override
+  String get tripPublishDraftLimitTitle => 'Draft limit reached';
+
+  @override
+  String get tripPublishTemplatesLabel => 'My templates';
+
+  @override
+  String get tripPublishTemplatesHint =>
+      'Apply a template to pre-fill the trip';
+
+  @override
+  String tripPublishTemplateAppliedMessage(String label) {
+    return 'Template “$label” applied';
+  }
+
+  @override
+  String tripPublishTemplateChipGrid(String label) {
+    return '$label · price grid';
+  }
+
+  @override
+  String get tripPublishDropoffSectionLabel => 'PARCEL DROP-OFF';
+
+  @override
+  String get tripPublishHandoverDeadlineLabel => 'Drop-off deadline';
+
+  @override
+  String get tripPublishHandoverDeadlineSubtitle =>
+      'Until when senders can hand you their parcels';
+
+  @override
+  String get tripPublishHandoverDeadlineChoose => 'Choose';
+
+  @override
+  String get tripPublishLockedBannerTitle => 'Trip dedicated to the request';
+
+  @override
+  String get tripPublishLockedBannerSubtitle =>
+      'Corridor, capacity and price are locked. The date must stay within the sender\'s tolerance window.';
+
+  @override
+  String get tripPublishIntroTitleParcel => 'Post a parcel';
+
+  @override
+  String get tripPublishIntroVerifiedTextTrip =>
+      'Identity verified. You can post your trip safely.';
+
+  @override
+  String get tripPublishIntroVerifiedTextParcel =>
+      'Identity verified. You can post your shipping request safely.';
+
+  @override
+  String get tripPublishIntroEngagementsTitleTrip =>
+      'Your commitments as a traveler';
+
+  @override
+  String get tripPublishIntroEngagementsIntroTrip =>
+      'By posting, you commit to:';
+
+  @override
+  String get tripPublishIntroRuleTripCarry =>
+      'Carrying the parcel **yourself**, never handing it off to a third party.';
+
+  @override
+  String get tripPublishIntroRuleTripSchedule =>
+      'Sticking to the announced **date** and **route**.';
+
+  @override
+  String get tripPublishIntroRuleTripScan =>
+      '**Scanning the QR code** at drop-off and delivery.';
+
+  @override
+  String get tripPublishIntroRuleTripContent =>
+      'Only accepting **allowed contents**, never an illegal item.';
+
+  @override
+  String get tripPublishIntroRuleTripHandover =>
+      'Handing the parcel to **the right recipient**, in person.';
+
+  @override
+  String get tripPublishIntroWhyTitleTrip => 'Why post a trip';
+
+  @override
+  String get tripPublishIntroWhyBulletTripVisibility =>
+      'Seen by thousands of senders in the diaspora.';
+
+  @override
+  String get tripPublishIntroWhyBulletTripEarnings =>
+      'Turn your spare kilos into earnings on every trip.';
+
+  @override
+  String get tripPublishIntroWhyBulletTripReputation =>
+      'Build a reputation through the reviews you receive.';
+
+  @override
+  String get tripPublishIntroEngagementsTitleParcel =>
+      'Your commitments as a sender';
+
+  @override
+  String get tripPublishIntroEngagementsIntroParcel =>
+      'By sending a parcel, you certify:';
+
+  @override
+  String get tripPublishIntroRuleParcelLicit =>
+      'Only sending **lawful** and allowed contents.';
+
+  @override
+  String get tripPublishIntroRuleParcelForbidden =>
+      'No **forbidden item** (cash, weapons, dangerous goods…).';
+
+  @override
+  String get tripPublishIntroRuleParcelHonest =>
+      'Describing the contents **honestly**, and its value if the traveler asks.';
+
+  @override
+  String get tripPublishIntroRuleParcelPackaging =>
+      '**Packing it carefully** and describing the contents precisely.';
+
+  @override
+  String get tripPublishIntroRuleParcelHandover =>
+      'Being present at the **drop-off** and stating the right recipient.';
+
+  @override
+  String get tripPublishIntroWhyTitleParcel => 'How it works';
+
+  @override
+  String get tripPublishIntroWhyBulletParcelCarried =>
+      'A traveler carries your parcel in their luggage.';
+
+  @override
+  String get tripPublishIntroWhyBulletParcelPayment =>
+      'Secure payment, released once delivery is confirmed.';
+
+  @override
+  String get tripPublishIntroWhyBulletParcelTracking =>
+      'QR tracking from drop-off to receipt.';
+
+  @override
+  String get tripPublishIntroVerifyBefore => 'Before you post, your ';
+
+  @override
+  String get tripPublishIntroVerifyBold => 'identity must be verified';
+
+  @override
+  String get tripPublishIntroVerifyGoTo => '. Go to ';
+
+  @override
+  String get tripPublishIntroVerifyPath => 'Profile › Verifications';
+
+  @override
+  String get tripPublishIntroVerifySuffix => ' to verify it (2 min).';
+
+  @override
+  String get tripPublishIntroVerifyButton => 'Verify my identity';
+
+  @override
+  String tripPublishIntroVerifyHint(String continueLabel) {
+    return 'The button becomes “$continueLabel” once your identity is verified.';
+  }
+
+  @override
+  String get tripPublishIntroStripeTitle => 'Turn on card payments';
+
+  @override
+  String get tripPublishIntroStripeSubtitle =>
+      'Set up your Stripe account so your senders can pay by card, and get more parcels.';
 }

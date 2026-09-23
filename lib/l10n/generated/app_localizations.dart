@@ -4207,6 +4207,414 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Personnalisé'**
   String get tripCapacityCustom;
+
+  /// Titre de l'écran de publication d'un trajet (AppBar en création, et intro voyageur)
+  ///
+  /// In fr, this message translates to:
+  /// **'Publier un trajet'**
+  String get tripPublishTitle;
+
+  /// Titre de l'AppBar en mode édition d'un trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier le trajet'**
+  String get tripPublishEditTitle;
+
+  /// Titre de l'AppBar quand le trajet est créé pour une demande de colis verrouillée
+  ///
+  /// In fr, this message translates to:
+  /// **'Créer le trajet pour cette demande'**
+  String get tripPublishDedicatedTitle;
+
+  /// Bouton de soumission du trajet dédié à une demande de colis
+  ///
+  /// In fr, this message translates to:
+  /// **'Confirmer le trajet'**
+  String get tripPublishSubmitDedicated;
+
+  /// Bouton qui ouvre l'aperçu du trajet avant publication
+  ///
+  /// In fr, this message translates to:
+  /// **'Aperçu'**
+  String get tripPublishPreviewButton;
+
+  /// Erreur de validation : ville de départ manquante à l'étape Trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Ville de départ obligatoire'**
+  String get tripPublishFieldDepartureCityRequired;
+
+  /// Erreur de validation : ville d'arrivée manquante à l'étape Trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Ville d\'arrivée obligatoire'**
+  String get tripPublishFieldArrivalCityRequired;
+
+  /// Erreur de validation : date de départ manquante à l'étape Trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Date de départ obligatoire'**
+  String get tripPublishFieldDepartureDateRequired;
+
+  /// Erreur de validation : heure de départ manquante à l'étape Trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Heure de départ obligatoire'**
+  String get tripPublishFieldDepartureTimeRequired;
+
+  /// Erreur de validation : mode de transport manquant à l'étape Trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Mode de transport obligatoire'**
+  String get tripPublishFieldTransportModeRequired;
+
+  /// Erreur de validation : date limite de dépôt des colis manquante à l'étape Trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Date limite de dépôt obligatoire'**
+  String get tripPublishFieldHandoverDeadlineRequired;
+
+  /// Erreur de validation : lieu de remise du colis manquant à l'étape Lieux & Capacité
+  ///
+  /// In fr, this message translates to:
+  /// **'Lieu de remise du colis obligatoire'**
+  String get tripPublishFieldPickupAddressRequired;
+
+  /// Erreur de validation : lieu de récupération du colis manquant à l'étape Lieux & Capacité
+  ///
+  /// In fr, this message translates to:
+  /// **'Lieu de récupération obligatoire'**
+  String get tripPublishFieldDeliveryAddressRequired;
+
+  /// Erreur affichée sous la ligne date limite de dépôt quand elle est postérieure au départ
+  ///
+  /// In fr, this message translates to:
+  /// **'La date limite doit précéder le départ.'**
+  String get tripPublishHandoverDeadlineInvalid;
+
+  /// Snackbar d'erreur à la soumission quand la date limite de dépôt est postérieure au départ
+  ///
+  /// In fr, this message translates to:
+  /// **'La date limite de dépôt doit précéder le départ'**
+  String get tripPublishHandoverDeadlineBeforeDeparture;
+
+  /// Confirmation quand un trajet dédié est créé avec une nouvelle offre, sans fil de négociation existant
+  ///
+  /// In fr, this message translates to:
+  /// **'Offre envoyée avec le trajet associé.'**
+  String get tripPublishOfferSentWithTrip;
+
+  /// Confirmation quand un trajet dédié est lié à un fil de négociation existant
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet lié. L\'expéditeur peut désormais payer.'**
+  String get tripPublishTripLinked;
+
+  /// Titre de l'écran de succès après modification d'un trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet modifié !'**
+  String get tripPublishSuccessTitleEdit;
+
+  /// Titre de l'écran de succès après publication d'un trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet publié !'**
+  String get tripPublishSuccessTitleCreate;
+
+  /// Sous-titre de l'écran de succès, avec le corridor du trajet publié
+  ///
+  /// In fr, this message translates to:
+  /// **'Ton trajet {departureCity} → {arrivalCity} est en ligne.'**
+  String tripPublishSuccessSubtitle(String departureCity, String arrivalCity);
+
+  /// CTA principal de l'écran de succès de publication d'un trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Voir mon trajet'**
+  String get tripPublishSuccessCta;
+
+  /// CTA secondaire de l'écran de succès (partager l'affiche du trajet), absent en mode édition
+  ///
+  /// In fr, this message translates to:
+  /// **'Partager mon affiche'**
+  String get tripPublishSuccessShareCta;
+
+  /// Titre du dialogue quand la limite mensuelle de publications PRO est atteinte
+  ///
+  /// In fr, this message translates to:
+  /// **'Limite mensuelle atteinte'**
+  String get tripPublishMonthlyLimitTitle;
+
+  /// Titre du dialogue quand la limite de brouillons est atteinte
+  ///
+  /// In fr, this message translates to:
+  /// **'Limite de brouillons atteinte'**
+  String get tripPublishDraftLimitTitle;
+
+  /// Titre de la barre de suggestion des modèles de trajet enregistrés
+  ///
+  /// In fr, this message translates to:
+  /// **'Mes modèles'**
+  String get tripPublishTemplatesLabel;
+
+  /// Texte d'aide sous le titre de la barre de suggestion des modèles de trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Applique un modèle pour pré-remplir le trajet'**
+  String get tripPublishTemplatesHint;
+
+  /// Confirmation après application d'un modèle de trajet, avec son nom
+  ///
+  /// In fr, this message translates to:
+  /// **'Modèle « {label} » appliqué'**
+  String tripPublishTemplateAppliedMessage(String label);
+
+  /// Puce d'un modèle de trajet tarifé par la grille de prix, avec son nom
+  ///
+  /// In fr, this message translates to:
+  /// **'{label} · grille'**
+  String tripPublishTemplateChipGrid(String label);
+
+  /// Titre de section (étape Trajet) pour la date limite de dépôt des colis
+  ///
+  /// In fr, this message translates to:
+  /// **'DÉPÔT DES COLIS'**
+  String get tripPublishDropoffSectionLabel;
+
+  /// Libellé de la ligne date limite de dépôt des colis
+  ///
+  /// In fr, this message translates to:
+  /// **'Date limite de dépôt'**
+  String get tripPublishHandoverDeadlineLabel;
+
+  /// Sous-titre de la ligne date limite de dépôt des colis
+  ///
+  /// In fr, this message translates to:
+  /// **'Jusqu\'à quand les expéditeurs peuvent te remettre leurs colis'**
+  String get tripPublishHandoverDeadlineSubtitle;
+
+  /// Valeur affichée sur la ligne date limite de dépôt tant qu'aucune date n'est choisie
+  ///
+  /// In fr, this message translates to:
+  /// **'Choisir'**
+  String get tripPublishHandoverDeadlineChoose;
+
+  /// Titre du bandeau affiché quand le trajet est créé pour une demande de colis verrouillée
+  ///
+  /// In fr, this message translates to:
+  /// **'Trajet dédié à la demande'**
+  String get tripPublishLockedBannerTitle;
+
+  /// Texte du bandeau affiché quand le trajet est créé pour une demande de colis verrouillée
+  ///
+  /// In fr, this message translates to:
+  /// **'Corridor, capacité et prix sont verrouillés. La date doit rester dans la fenêtre de tolérance de l\'expéditeur.'**
+  String get tripPublishLockedBannerSubtitle;
+
+  /// Titre de l'intro de publication, rôle expéditeur
+  ///
+  /// In fr, this message translates to:
+  /// **'Publier un colis'**
+  String get tripPublishIntroTitleParcel;
+
+  /// Encart vert de l'intro quand l'identité est déjà vérifiée, rôle voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Identité vérifiée. Vous pouvez publier votre trajet en toute sécurité.'**
+  String get tripPublishIntroVerifiedTextTrip;
+
+  /// Encart vert de l'intro quand l'identité est déjà vérifiée, rôle expéditeur
+  ///
+  /// In fr, this message translates to:
+  /// **'Identité vérifiée. Vous pouvez publier votre demande d\'envoi en toute sécurité.'**
+  String get tripPublishIntroVerifiedTextParcel;
+
+  /// Titre de la section des engagements de l'intro, rôle voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Vos engagements de voyageur'**
+  String get tripPublishIntroEngagementsTitleTrip;
+
+  /// Phrase d'introduction de la liste des engagements, rôle voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'En publiant, vous vous engagez à :'**
+  String get tripPublishIntroEngagementsIntroTrip;
+
+  /// Engagement voyageur : transporter le colis soi-même (** = segment en gras)
+  ///
+  /// In fr, this message translates to:
+  /// **'Transporter le colis **vous-même**, sans le confier à un tiers.'**
+  String get tripPublishIntroRuleTripCarry;
+
+  /// Engagement voyageur : respecter la date et l'itinéraire (** = segments en gras)
+  ///
+  /// In fr, this message translates to:
+  /// **'Respecter la **date** et l\'**itinéraire** annoncés.'**
+  String get tripPublishIntroRuleTripSchedule;
+
+  /// Engagement voyageur : scanner le QR à la remise et à la livraison (** = segment en gras)
+  ///
+  /// In fr, this message translates to:
+  /// **'**Lire le QR** à la remise et à la livraison.'**
+  String get tripPublishIntroRuleTripScan;
+
+  /// Engagement voyageur : n'accepter que des contenus autorisés (** = segment en gras)
+  ///
+  /// In fr, this message translates to:
+  /// **'N\'accepter que des **contenus autorisés**, jamais d\'objet illicite.'**
+  String get tripPublishIntroRuleTripContent;
+
+  /// Engagement voyageur : remettre le colis au bon destinataire (** = segment en gras)
+  ///
+  /// In fr, this message translates to:
+  /// **'Remettre le colis **au bon destinataire**, en main propre.'**
+  String get tripPublishIntroRuleTripHandover;
+
+  /// Titre de la section « pourquoi publier », rôle voyageur
+  ///
+  /// In fr, this message translates to:
+  /// **'Pourquoi publier'**
+  String get tripPublishIntroWhyTitleTrip;
+
+  /// Puce « pourquoi publier », rôle voyageur : visibilité
+  ///
+  /// In fr, this message translates to:
+  /// **'Visible par des milliers d\'expéditeurs de la diaspora.'**
+  String get tripPublishIntroWhyBulletTripVisibility;
+
+  /// Puce « pourquoi publier », rôle voyageur : revenus
+  ///
+  /// In fr, this message translates to:
+  /// **'Rentabilisez vos kilos libres à chaque voyage.'**
+  String get tripPublishIntroWhyBulletTripEarnings;
+
+  /// Puce « pourquoi publier », rôle voyageur : réputation
+  ///
+  /// In fr, this message translates to:
+  /// **'Bâtissez une réputation avec les avis reçus.'**
+  String get tripPublishIntroWhyBulletTripReputation;
+
+  /// Titre de la section des engagements de l'intro, rôle expéditeur
+  ///
+  /// In fr, this message translates to:
+  /// **'Vos engagements d\'expéditeur'**
+  String get tripPublishIntroEngagementsTitleParcel;
+
+  /// Phrase d'introduction de la liste des engagements, rôle expéditeur
+  ///
+  /// In fr, this message translates to:
+  /// **'En envoyant un colis, vous certifiez :'**
+  String get tripPublishIntroEngagementsIntroParcel;
+
+  /// Engagement expéditeur : contenus licites uniquement (** = segment en gras)
+  ///
+  /// In fr, this message translates to:
+  /// **'N\'envoyer que des **contenus licites** et autorisés.'**
+  String get tripPublishIntroRuleParcelLicit;
+
+  /// Engagement expéditeur : aucun objet interdit (** = segment en gras)
+  ///
+  /// In fr, this message translates to:
+  /// **'Aucun **objet interdit** (espèces, armes, produits dangereux…).'**
+  String get tripPublishIntroRuleParcelForbidden;
+
+  /// Engagement expéditeur : description honnête du contenu (** = segment en gras)
+  ///
+  /// In fr, this message translates to:
+  /// **'Décrire **honnêtement** le contenu et sa valeur si le voyageur la demande.'**
+  String get tripPublishIntroRuleParcelHonest;
+
+  /// Engagement expéditeur : emballage soigné (** = segment en gras)
+  ///
+  /// In fr, this message translates to:
+  /// **'**Emballer soigneusement** et décrire précisément le contenu.'**
+  String get tripPublishIntroRuleParcelPackaging;
+
+  /// Engagement expéditeur : présence à la remise (** = segment en gras)
+  ///
+  /// In fr, this message translates to:
+  /// **'Être présent à la **remise** et indiquer le bon destinataire.'**
+  String get tripPublishIntroRuleParcelHandover;
+
+  /// Titre de la section « comment ça marche », rôle expéditeur
+  ///
+  /// In fr, this message translates to:
+  /// **'Comment ça marche'**
+  String get tripPublishIntroWhyTitleParcel;
+
+  /// Puce « comment ça marche », rôle expéditeur : transport
+  ///
+  /// In fr, this message translates to:
+  /// **'Un voyageur transporte votre colis dans ses bagages.'**
+  String get tripPublishIntroWhyBulletParcelCarried;
+
+  /// Puce « comment ça marche », rôle expéditeur : paiement séquestré
+  ///
+  /// In fr, this message translates to:
+  /// **'Paiement sécurisé, libéré à la livraison confirmée.'**
+  String get tripPublishIntroWhyBulletParcelPayment;
+
+  /// Puce « comment ça marche », rôle expéditeur : suivi QR
+  ///
+  /// In fr, this message translates to:
+  /// **'Suivi par QR de la remise jusqu\'à la réception.'**
+  String get tripPublishIntroWhyBulletParcelTracking;
+
+  /// Premier segment (non gras) de la phrase d'invite à vérifier son identité
+  ///
+  /// In fr, this message translates to:
+  /// **'Avant de publier, votre '**
+  String get tripPublishIntroVerifyBefore;
+
+  /// Segment en gras de la phrase d'invite à vérifier son identité
+  ///
+  /// In fr, this message translates to:
+  /// **'identité doit être vérifiée'**
+  String get tripPublishIntroVerifyBold;
+
+  /// Segment (non gras) de la phrase d'invite à vérifier son identité
+  ///
+  /// In fr, this message translates to:
+  /// **'. Rendez-vous dans '**
+  String get tripPublishIntroVerifyGoTo;
+
+  /// Chemin de menu en gras souligné, dans la phrase d'invite à vérifier son identité
+  ///
+  /// In fr, this message translates to:
+  /// **'Profil › Vérifications'**
+  String get tripPublishIntroVerifyPath;
+
+  /// Dernier segment (non gras) de la phrase d'invite à vérifier son identité
+  ///
+  /// In fr, this message translates to:
+  /// **' pour la valider (2 min).'**
+  String get tripPublishIntroVerifySuffix;
+
+  /// Bouton qui ouvre le portail KYC depuis l'intro de publication
+  ///
+  /// In fr, this message translates to:
+  /// **'Vérifier mon identité'**
+  String get tripPublishIntroVerifyButton;
+
+  /// Texte sous le bouton de vérification, tant que l'identité n'est pas vérifiée
+  ///
+  /// In fr, this message translates to:
+  /// **'Le bouton devient « {continueLabel} » une fois l\'identité vérifiée.'**
+  String tripPublishIntroVerifyHint(String continueLabel);
+
+  /// Titre du rappel Stripe (voyageur) dans l'intro de publication d'un trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Activez les paiements par carte'**
+  String get tripPublishIntroStripeTitle;
+
+  /// Texte du rappel Stripe (voyageur) dans l'intro de publication d'un trajet
+  ///
+  /// In fr, this message translates to:
+  /// **'Configurez votre compte Stripe pour que vos expéditeurs paient par carte, et recevez plus de colis.'**
+  String get tripPublishIntroStripeSubtitle;
 }
 
 class _AppLocalizationsDelegate

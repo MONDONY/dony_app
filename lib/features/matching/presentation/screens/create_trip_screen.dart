@@ -246,8 +246,10 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
             ),
             title: Text(
               isLocked
-                  ? 'Créer le trajet pour cette demande'
-                  : (isEdit ? 'Modifier le trajet' : 'Publier un trajet'),
+                  ? context.l10n.tripPublishDedicatedTitle
+                  : (isEdit
+                        ? context.l10n.tripPublishEditTitle
+                        : context.l10n.tripPublishTitle),
             ),
           ),
           resizeToAvoidBottomInset: true,
@@ -321,7 +323,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                             if (step > 0) ...[
                               Expanded(
                                 child: DonyButton(
-                                  label: 'Retour',
+                                  label: ctx.l10n.commonBack,
                                   variant: DonyButtonVariant.secondary,
                                   icon: DonyIcons.back,
                                   onPressed: () =>
@@ -332,7 +334,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                             ],
                             Expanded(
                               child: DonyButton(
-                                label: 'Continuer',
+                                label: ctx.l10n.commonContinue,
                                 iconRight: DonyIcons.arrowRight,
                                 onPressed:
                                     ((step == 0 && !canContinue) ||
@@ -357,7 +359,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                               children: [
                                 Expanded(
                                   child: DonyButton(
-                                    label: 'Retour',
+                                    label: ctx.l10n.commonBack,
                                     variant: DonyButtonVariant.secondary,
                                     icon: DonyIcons.back,
                                     onPressed: () =>
@@ -370,7 +372,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                                     key: const Key(
                                       'create-dedicated-trip-submit',
                                     ),
-                                    label: 'Confirmer le trajet',
+                                    label: ctx.l10n.tripPublishSubmitDedicated,
                                     isLoading: isLoading,
                                     onPressed: (canSubmit && !isLoading)
                                         ? () => _submit?.call()
@@ -392,7 +394,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                               children: [
                                 Expanded(
                                   child: DonyButton(
-                                    label: 'Retour',
+                                    label: ctx.l10n.commonBack,
                                     variant: DonyButtonVariant.secondary,
                                     icon: DonyIcons.back,
                                     onPressed: () =>
@@ -405,7 +407,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                                     key: const Key(
                                       'create-announcement-submit',
                                     ),
-                                    label: 'Enregistrer',
+                                    label: ctx.l10n.commonSave,
                                     isLoading: isLoading,
                                     onPressed: (canSubmit && !isLoading)
                                         ? () => _submit?.call()
@@ -434,7 +436,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                                 children: [
                                   Expanded(
                                     child: DonyButton(
-                                      label: 'Retour',
+                                      label: ctx2.l10n.commonBack,
                                       variant: DonyButtonVariant.secondary,
                                       icon: DonyIcons.back,
                                       onPressed: () =>
@@ -447,7 +449,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                                       key: const Key(
                                         'create-announcement-preview',
                                       ),
-                                      label: 'Aperçu',
+                                      label: ctx2.l10n.tripPublishPreviewButton,
                                       iconRight: DonyIcons.arrowRight,
                                       isLoading: isLoading,
                                       onPressed: (canSubmit && !isLoading)
@@ -924,8 +926,11 @@ class _TripFormContentState extends State<_TripFormContent> {
   }
 
   /// Message du champ [f] s'il fait partie des manquants, sinon null.
-  static String? _msg(Set<_Step0Field> missing, _Step0Field f) =>
-      missing.contains(f) ? f.message : null;
+  static String? _msg(
+    AppLocalizations l10n,
+    Set<_Step0Field> missing,
+    _Step0Field f,
+  ) => missing.contains(f) ? _step0FieldMessage(l10n, f) : null;
 
   void _markStep0Touched() {
     if (_step0Touched) return;
@@ -1080,7 +1085,11 @@ class _TripFormContentState extends State<_TripFormContent> {
     final deadlineDay = DateTime(deadline.year, deadline.month, deadline.day);
     final departureDay = DateTime(date.year, date.month, date.day);
     if (deadlineDay.isAfter(departureDay)) {
-      return 'La date limite doit précéder le départ.';
+      // AppL10n.current, pas context.l10n : cette méthode est aussi appelée
+      // depuis _updateCanContinue() dans initState(), où dépendre d'un
+      // InheritedWidget lève « dependOnInheritedWidgetOfExactType() was
+      // called before initState() completed ».
+      return AppL10n.current.tripPublishHandoverDeadlineInvalid;
     }
     return null;
   }
@@ -1337,35 +1346,35 @@ class _TripFormContentState extends State<_TripFormContent> {
     final arrivalTimeVal = _arrivalTimeNotifier.value;
 
     if (departureCity == null) {
-      _showError('Ville de départ obligatoire');
+      _showError(_step0FieldMessage(context.l10n, _Step0Field.departureCity));
       return;
     }
     if (arrivalCity == null) {
-      _showError('Ville d\'arrivée obligatoire');
+      _showError(_step0FieldMessage(context.l10n, _Step0Field.arrivalCity));
       return;
     }
     if (departureDate == null) {
-      _showError('Date de départ obligatoire');
+      _showError(_step0FieldMessage(context.l10n, _Step0Field.departureDate));
       return;
     }
     // D1 : l'heure de départ est obligatoire (backstop du verrou d'annulation).
     if (departureTimeVal == null) {
-      _showError('Heure de départ obligatoire');
+      _showError(_step0FieldMessage(context.l10n, _Step0Field.departureTime));
       return;
     }
 
     _formKey.currentState!.save();
 
     if (_pickupAddress == null) {
-      _showError('Lieu de remise du colis obligatoire');
+      _showError(_step1FieldMessage(context.l10n, _Step1Field.pickupAddress));
       return;
     }
     if (_deliveryAddress == null) {
-      _showError('Lieu de récupération obligatoire');
+      _showError(_step1FieldMessage(context.l10n, _Step1Field.deliveryAddress));
       return;
     }
     if (_transportModeNotifier.value == null) {
-      _showError('Mode de transport obligatoire');
+      _showError(_step0FieldMessage(context.l10n, _Step0Field.transportMode));
       return;
     }
 
@@ -1466,7 +1475,9 @@ class _TripFormContentState extends State<_TripFormContent> {
 
     final handoverDeadline = _resolveHandoverDeadline();
     if (handoverDeadline == null) {
-      _showError('Date limite de dépôt obligatoire');
+      _showError(
+        _step0FieldMessage(context.l10n, _Step0Field.handoverDeadline),
+      );
       return;
     }
     final departureBound = DateTime(
@@ -1477,7 +1488,7 @@ class _TripFormContentState extends State<_TripFormContent> {
       departureTimeVal.minute,
     );
     if (handoverDeadline.isAfter(departureBound)) {
-      _showError('La date limite de dépôt doit précéder le départ');
+      _showError(context.l10n.tripPublishHandoverDeadlineBeforeDeparture);
       return;
     }
 
@@ -1667,7 +1678,7 @@ class _TripFormContentState extends State<_TripFormContent> {
             context.pop(true);
             DonySnackbar.show(
               context,
-              message: 'Offre envoyée avec le trajet associé.',
+              message: context.l10n.tripPublishOfferSentWithTrip,
               type: DonySnackbarType.success,
             );
           } else if (state is NegotiationLoaded &&
@@ -1675,7 +1686,7 @@ class _TripFormContentState extends State<_TripFormContent> {
             context.pop(true);
             DonySnackbar.show(
               context,
-              message: 'Trajet lié. L\'expéditeur peut désormais payer.',
+              message: context.l10n.tripPublishTripLinked,
               type: DonySnackbarType.success,
             );
           } else if (state is NegotiationError) {
@@ -1721,10 +1732,14 @@ class _TripFormContentState extends State<_TripFormContent> {
                 MaterialPageRoute(
                   builder: (routeContext) => DonySuccessScreen(
                     mascotteType: DonyMascotteType.succes,
-                    title: isEdit ? 'Trajet modifié !' : 'Trajet publié !',
-                    subtitle:
-                        'Ton trajet ${announcement.departureCity} → ${announcement.arrivalCity} est en ligne.',
-                    ctaLabel: 'Voir mon trajet',
+                    title: isEdit
+                        ? routeContext.l10n.tripPublishSuccessTitleEdit
+                        : routeContext.l10n.tripPublishSuccessTitleCreate,
+                    subtitle: routeContext.l10n.tripPublishSuccessSubtitle(
+                      announcement.departureCity,
+                      announcement.arrivalCity,
+                    ),
+                    ctaLabel: routeContext.l10n.tripPublishSuccessCta,
                     ctaVariant: DonyButtonVariant.accent,
                     onCta: () {
                       // Le contexte de la route succès (routeContext) reste monté
@@ -1742,7 +1757,9 @@ class _TripFormContentState extends State<_TripFormContent> {
                       router.push('/announcements/${announcement.id}/trip');
                     },
                     analyticsContext: 'trip_published',
-                    secondaryLabel: isEdit ? null : 'Partager mon affiche',
+                    secondaryLabel: isEdit
+                        ? null
+                        : routeContext.l10n.tripPublishSuccessShareCta,
                     // Le partage de texte seul ne convertit pas : sur Facebook,
                     // c'est le visuel qui arrête le regard, et le lien doit
                     // vivre dans la légende pour rester cliquable. On envoie
@@ -1771,7 +1788,7 @@ class _TripFormContentState extends State<_TripFormContent> {
             if (context.mounted) {
               final goPro = await showProLimitReachedDialog(
                 context,
-                title: 'Limite mensuelle atteinte',
+                title: context.l10n.tripPublishMonthlyLimitTitle,
                 message: state.message,
               );
               if (goPro && context.mounted) {
@@ -1783,7 +1800,7 @@ class _TripFormContentState extends State<_TripFormContent> {
             if (context.mounted) {
               final goPro = await showProLimitReachedDialog(
                 context,
-                title: 'Limite de brouillons atteinte',
+                title: context.l10n.tripPublishDraftLimitTitle,
                 message: state.message,
               );
               if (goPro && context.mounted) {
@@ -1901,7 +1918,7 @@ class _TripFormContentState extends State<_TripFormContent> {
 
     DonySnackbar.show(
       context,
-      message: 'Modèle « ${t.label} » appliqué',
+      message: context.l10n.tripPublishTemplateAppliedMessage(t.label),
       type: DonySnackbarType.success,
     );
   }
@@ -1942,10 +1959,13 @@ class _TripFormContentState extends State<_TripFormContent> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const CaSectionLabel(label: 'Mes modèles', iconAsset: 'bookmark'),
+            CaSectionLabel(
+              label: context.l10n.tripPublishTemplatesLabel,
+              iconAsset: 'bookmark',
+            ),
             const SizedBox(height: DonySpacing.xs),
             Text(
-              'Applique un modèle pour pré-remplir le trajet',
+              context.l10n.tripPublishTemplatesHint,
               style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             ),
             const SizedBox(height: DonySpacing.sm),
@@ -1964,7 +1984,7 @@ class _TripFormContentState extends State<_TripFormContent> {
                         : DonyIcon('bookmark', size: 16, color: cs.primary),
                     label: Text(
                       t.pricePerKg == null
-                          ? '${t.label} · grille'
+                          ? context.l10n.tripPublishTemplateChipGrid(t.label)
                           : '${t.label} · ${CurrencyFormatter.formatOrPlain(t.pricePerKg!, SupportedCurrency.fromCodeOrDefault(t.currency), compact: true)}/kg',
                     ),
                     onPressed: () => _applyTemplate(t),
@@ -2005,10 +2025,26 @@ class _TripFormContentState extends State<_TripFormContent> {
           onSelectDepartureTime: _selectDepartureTime,
           onSelectArrivalTime: _selectArrivalTime,
           onSelectDate: _selectDate,
-          departureCityError: _msg(missing, _Step0Field.departureCity),
-          arrivalCityError: _msg(missing, _Step0Field.arrivalCity),
-          departureDateError: _msg(missing, _Step0Field.departureDate),
-          departureTimeError: _msg(missing, _Step0Field.departureTime),
+          departureCityError: _msg(
+            context.l10n,
+            missing,
+            _Step0Field.departureCity,
+          ),
+          arrivalCityError: _msg(
+            context.l10n,
+            missing,
+            _Step0Field.arrivalCity,
+          ),
+          departureDateError: _msg(
+            context.l10n,
+            missing,
+            _Step0Field.departureDate,
+          ),
+          departureTimeError: _msg(
+            context.l10n,
+            missing,
+            _Step0Field.departureTime,
+          ),
           // Corridor verrouillé en modification (Q1) ET en trajet dédié (lockContext).
           // Date verrouillée seulement en modification ; le dédié la garde éditable
           // dans la fenêtre de tolérance.
@@ -2016,7 +2052,10 @@ class _TripFormContentState extends State<_TripFormContent> {
           lockDate: widget.lockCorridorAndDate,
         ),
       ),
-      const CaSectionLabel(label: 'DÉPÔT DES COLIS', iconAsset: 'package'),
+      CaSectionLabel(
+        label: context.l10n.tripPublishDropoffSectionLabel,
+        iconAsset: 'package',
+      ),
       const SizedBox(height: DonySpacing.xs),
       CaSectionCard(
         child: Column(
@@ -2034,14 +2073,14 @@ class _TripFormContentState extends State<_TripFormContent> {
                   size: 20,
                   color: Theme.of(context).colorScheme.primary,
                 ),
-                title: const Text('Date limite de dépôt'),
-                subtitle: const Text(
-                  'Jusqu\'à quand les expéditeurs peuvent te remettre leurs colis',
+                title: Text(context.l10n.tripPublishHandoverDeadlineLabel),
+                subtitle: Text(
+                  context.l10n.tripPublishHandoverDeadlineSubtitle,
                 ),
                 trailing: Text(
                   dt != null
-                      ? DateFormat('d MMM', AppL10n.localeName).format(dt)
-                      : 'Choisir',
+                      ? DateFormat.MMMd(context.l10n.localeName).format(dt)
+                      : context.l10n.tripPublishHandoverDeadlineChoose,
                 ),
                 onTap: _selectHandoverDeadline,
               ),
@@ -2062,7 +2101,10 @@ class _TripFormContentState extends State<_TripFormContent> {
                     (_step0ErrorsNotifier.value.contains(
                           _Step0Field.handoverDeadline,
                         )
-                        ? _Step0Field.handoverDeadline.message
+                        ? _step0FieldMessage(
+                            context.l10n,
+                            _Step0Field.handoverDeadline,
+                          )
                         : null);
                 return DonyFieldError(
                   message: err,
@@ -2096,10 +2138,10 @@ class _TripFormContentState extends State<_TripFormContent> {
             _updateCanContinueStep1();
           },
           pickupAddressError: missing.contains(_Step1Field.pickupAddress)
-              ? _Step1Field.pickupAddress.message
+              ? _step1FieldMessage(context.l10n, _Step1Field.pickupAddress)
               : null,
           deliveryAddressError: missing.contains(_Step1Field.deliveryAddress)
-              ? _Step1Field.deliveryAddress.message
+              ? _step1FieldMessage(context.l10n, _Step1Field.deliveryAddress)
               : null,
           // Trajet dédié : capacité fixée par la demande → affichage verrouillé.
           lockedCapacityKg: _isLocked ? widget.lockContext!.weightKg : null,
@@ -2218,28 +2260,44 @@ class _TripFormContentState extends State<_TripFormContent> {
 /// Toute entrée ajoutée ici bloque « Continuer » ET affiche son message sous
 /// le champ concerné : impossible d'ajouter l'un sans l'autre.
 enum _Step0Field {
-  departureCity('Ville de départ obligatoire'),
-  arrivalCity('Ville d\'arrivée obligatoire'),
-  departureDate('Date de départ obligatoire'),
-  departureTime('Heure de départ obligatoire'),
-  transportMode('Mode de transport obligatoire'),
-  handoverDeadline('Date limite de dépôt obligatoire');
+  departureCity,
+  arrivalCity,
+  departureDate,
+  departureTime,
+  transportMode,
+  handoverDeadline,
+}
 
-  const _Step0Field(this.message);
-
-  /// Message affiché sous le champ. Repris mot pour mot des gardes de
-  /// `_submit()` pour que l'utilisateur lise la même chose aux deux endroits.
-  final String message;
+/// Message affiché sous le champ [f]. Repris mot pour mot des gardes de
+/// `_submit()` pour que l'utilisateur lise la même chose aux deux endroits.
+String _step0FieldMessage(AppLocalizations l10n, _Step0Field f) {
+  switch (f) {
+    case _Step0Field.departureCity:
+      return l10n.tripPublishFieldDepartureCityRequired;
+    case _Step0Field.arrivalCity:
+      return l10n.tripPublishFieldArrivalCityRequired;
+    case _Step0Field.departureDate:
+      return l10n.tripPublishFieldDepartureDateRequired;
+    case _Step0Field.departureTime:
+      return l10n.tripPublishFieldDepartureTimeRequired;
+    case _Step0Field.transportMode:
+      return l10n.tripPublishFieldTransportModeRequired;
+    case _Step0Field.handoverDeadline:
+      return l10n.tripPublishFieldHandoverDeadlineRequired;
+  }
 }
 
 /// Champs obligatoires de l'étape 1.
-enum _Step1Field {
-  pickupAddress('Lieu de remise du colis obligatoire'),
-  deliveryAddress('Lieu de récupération obligatoire');
+enum _Step1Field { pickupAddress, deliveryAddress }
 
-  const _Step1Field(this.message);
-
-  final String message;
+/// Message affiché sous le champ [f], même principe que [_step0FieldMessage].
+String _step1FieldMessage(AppLocalizations l10n, _Step1Field f) {
+  switch (f) {
+    case _Step1Field.pickupAddress:
+      return l10n.tripPublishFieldPickupAddressRequired;
+    case _Step1Field.deliveryAddress:
+      return l10n.tripPublishFieldDeliveryAddressRequired;
+  }
 }
 
 // ─── Locked banner & locked-mode helpers ─────────────────────────────────────
@@ -2252,6 +2310,7 @@ class _LockedBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
     return Container(
       padding: const EdgeInsets.all(DonySpacing.base),
       decoration: BoxDecoration(
@@ -2269,7 +2328,7 @@ class _LockedBanner extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Trajet dédié à la demande',
+                  l10n.tripPublishLockedBannerTitle,
                   style: tt.titleMedium?.copyWith(
                     color: cs.onSurface,
                     fontWeight: FontWeight.w700,
@@ -2277,8 +2336,7 @@ class _LockedBanner extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Corridor, capacité et prix sont verrouillés. '
-                  'La date doit rester dans la fenêtre de tolérance de l\'expéditeur.',
+                  l10n.tripPublishLockedBannerSubtitle,
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
               ],
