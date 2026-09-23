@@ -73,7 +73,7 @@ void main() {
     useEnglish();
     var invites = 0;
     await _pump(tester, TravelerInviteState.idle, onInvite: () => invites++);
-    expect(find.text('8 kg free'), findsOneWidget);
+    expect(find.text('8 kg available'), findsOneWidget);
     expect(find.text('your parcel: 2 kg'), findsOneWidget);
     await tester.tap(find.text('Invite'));
     expect(invites, 1);

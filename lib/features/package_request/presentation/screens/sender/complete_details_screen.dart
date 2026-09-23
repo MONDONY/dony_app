@@ -154,7 +154,7 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
             context,
             message:
                 state.errorMessage ??
-                context.l10n.requestCreateGenericErrorShort,
+                context.l10n.requestListErrorFallback,
             type: DonySnackbarType.error,
           );
         }
@@ -342,7 +342,7 @@ class _RecapCard extends StatelessWidget {
       (l10n.requestCreateRecapSize, request.parcelSize.label(l10n)),
       if (request.categories.isNotEmpty)
         (
-          l10n.requestCreateRecapContent,
+          l10n.requestCreateContentLabel,
           request.categories
               .map((c) => contentCategoryDisplayName(l10n, c))
               .join(', '),

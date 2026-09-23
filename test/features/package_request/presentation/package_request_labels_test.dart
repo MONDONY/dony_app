@@ -56,6 +56,30 @@ void main() {
     test('expéditeur sans gross : calcule depuis le net (en)', () {
       expect(threadPriceLabel(en, 35, null, false), 'You pay 39,20 €');
     });
+
+    test('le voyageur ignore le brut fourni (fr)', () {
+      expect(threadPriceLabel(fr, 50, 60.0, true), 'Tu reçois 50,00 €');
+    });
+
+    test('le voyageur ignore le brut fourni (en)', () {
+      expect(threadPriceLabel(en, 50, 60.0, true), 'You receive 50,00 €');
+    });
+
+    test(
+      'expéditeur sans gross : net*1.12 arrondi à 2 décimales (fr) — '
+      '100 → 112,00',
+      () {
+        expect(threadPriceLabel(fr, 100, null, false), 'Tu paies 112,00 €');
+      },
+    );
+
+    test(
+      'expéditeur sans gross : net*1.12 arrondi à 2 décimales (en) — '
+      '100 → 112,00',
+      () {
+        expect(threadPriceLabel(en, 100, null, false), 'You pay 112,00 €');
+      },
+    );
   });
 
   group('weightRangeLabel', () {
@@ -64,7 +88,7 @@ void main() {
     });
 
     test('en', () {
-      expect(weightRangeLabel(en), 'Between 0,5 and 32 kg');
+      expect(weightRangeLabel(en), 'Between 0.5 and 32 kg');
     });
   });
 

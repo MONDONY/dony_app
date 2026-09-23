@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dony/core/widgets/dony_icon.dart';
+import 'package:dony/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 /// Photos du colis en plein écran, balayables.
@@ -44,7 +45,7 @@ abstract final class RequestPhotoViewer {
             top: MediaQuery.of(ctx).padding.top + 8,
             right: 8,
             child: IconButton(
-              tooltip: 'Fermer',
+              tooltip: ctx.l10n.commonClose,
               onPressed: () => Navigator.of(ctx).pop(),
               icon: const DonyIcon('x', color: Colors.white),
             ),

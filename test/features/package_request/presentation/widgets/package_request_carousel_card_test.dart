@@ -72,7 +72,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Open'), findsOneWidget);
+    expect(find.text('Open price'), findsOneWidget);
     expect(find.text('My request'), findsOneWidget);
     expect(find.text('Yadony user'), findsOneWidget);
     expect(find.text('Libre'), findsNothing);

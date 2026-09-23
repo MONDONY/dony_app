@@ -9,6 +9,7 @@ import 'package:dony/features/content_categories/presentation/content_category_l
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
 import 'package:dony/features/package_request/bloc/request_filter_cubit.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
+import 'package:dony/features/package_request/presentation/package_request_labels.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/package_request_create_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/package_request_detail_screen.dart';
 import 'package:dony/l10n/l10n.dart';
@@ -753,7 +754,7 @@ String _timeAgo(AppLocalizations l, DateTime dt) {
 String _buildDetails(AppLocalizations l, PackageRequest r) {
   final date = DateFormat.MMMd(l.localeName).format(r.desiredDate);
   final parts = [
-    '$date ±${r.dateToleranceDays}j',
+    '$date ${toleranceCompactLabel(l, r.dateToleranceDays)}',
     '${r.weightKg.toStringAsFixed(0)} kg',
     if (r.categories.isNotEmpty)
       _shortCat(contentCategoryDisplayName(l, r.categories.first)),

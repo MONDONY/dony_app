@@ -54,16 +54,15 @@ String threadPriceLabel(
 /// Fourchette de poids autorisée pour une demande d'envoi, dérivée de
 /// [PackageRequestLimits] plutôt que retapée en dur.
 String weightRangeLabel(AppLocalizations l) => l.requestWeightRange(
-  formatKg(PackageRequestLimits.minWeightKg),
-  formatKg(PackageRequestLimits.maxWeightKg),
+  formatKg(l, PackageRequestLimits.minWeightKg),
+  formatKg(l, PackageRequestLimits.maxWeightKg),
 );
 
-/// Formate un poids en kilos — inchangé depuis l'ancien `PackageRequestLimits
-/// ._fr` (déplacé ici, rendu public). Décimale unique avec virgule, entier
-/// sans décimale, quelle que soit la langue.
-String formatKg(double v) => (v.truncateToDouble() == v
-    ? v.toStringAsFixed(0)
-    : v.toStringAsFixed(1).replaceFirst('.', ','));
+/// Formate un poids en kilos — décimale unique avec le séparateur de la
+/// langue (virgule en français, point en anglais), entier sans décimale.
+/// Anciennement figé sur la virgule quelle que soit la langue.
+String formatKg(AppLocalizations l, double v) =>
+    NumberFormat('#0.#', l.localeName).format(v);
 
 /// Nom de repli affiché quand le profil expéditeur n'a pas de nom (compte
 /// invité, ancien payload sans `senderDisplayName`).

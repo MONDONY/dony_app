@@ -729,5 +729,27 @@ void main() {
       expect(find.text('+ Post my first request'), findsOneWidget);
       expect(find.text("You haven't sent anything yet"), findsOneWidget);
     });
+
+    testWidgets(
+      'anglais : tolérance de date sans « j » et catégorie du catalogue '
+      'traduite',
+      (tester) async {
+        useEnglish();
+        when(() => bloc.state).thenReturn(
+          PackageRequestState(
+            status: PackageRequestListStatus.loaded,
+            requests: [_request()],
+          ),
+        );
+        await tester.pumpWidget(wrap());
+        await tester.pumpAndSettle();
+        expect(
+          find.text('Jun 15 ±2d · 5 kg · Clo. · ≈35 €'),
+          findsOneWidget,
+        );
+        expect(find.textContaining('±2j'), findsNothing);
+        expect(find.textContaining('Vêt.'), findsNothing);
+      },
+    );
   });
 }

@@ -222,7 +222,7 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  l10n.requestCreateBudgetTitle,
+                  l10n.requestPublicBudget,
                   style: tt.headlineMedium?.copyWith(
                     fontWeight: FontWeight.w800,
                     color: cs.onSurface,
@@ -731,7 +731,7 @@ class _BudgetBreakdown extends StatelessWidget {
           _line(
             tt,
             cs,
-            l10n.requestCreateBudgetTitle,
+            l10n.requestPublicBudget,
             CurrencyFormatter.formatOrPlain(budgetEur, currency),
           ),
           const SizedBox(height: DonySpacing.xs),

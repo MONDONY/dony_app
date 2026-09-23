@@ -176,4 +176,19 @@ void main() {
     expect(find.text('fixed price'), findsOneWidget);
     expect(find.text('prix ferme'), findsNothing);
   });
+
+  testWidgets('anglais : tolérance de date sans « j »', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(
+      _wrap(
+        RequestTicketCard(
+          request: _req(),
+          statusPill: const Text('Live'),
+          metaLabel: '',
+        ),
+      ),
+    );
+    expect(find.text('Sep 27 ± 2 d'), findsOneWidget);
+    expect(find.textContaining('± 2 j'), findsNothing);
+  });
 }

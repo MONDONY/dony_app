@@ -3,6 +3,8 @@ import 'package:dony/features/package_request/presentation/widgets/request_detai
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../../../helpers/l10n_test_helpers.dart';
+
 void main() {
   // Le harnais `flutter test` renvoie systématiquement 400 sur tout
   // HttpClient sans jamais faire de vraie requête (avertissement du binding)
@@ -43,6 +45,37 @@ void main() {
         findsNothing,
       ); // tooltip, pas un texte affiché
       expect(find.byTooltip('Fermer'), findsOneWidget);
+    },
+    timeout: const Timeout(Duration(seconds: 30)),
+  );
+
+  testWidgets(
+    'anglais : infobulle Close',
+    (tester) async {
+      useEnglish();
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => ElevatedButton(
+                onPressed: () => RequestPhotoViewer.show(
+                  context,
+                  urls: const ['https://host.invalid/introuvable.jpg'],
+                ),
+                child: const Text('ouvrir'),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('ouvrir'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.byTooltip('Close'), findsOneWidget);
+      expect(find.byTooltip('Fermer'), findsNothing);
     },
     timeout: const Timeout(Duration(seconds: 30)),
   );

@@ -86,7 +86,7 @@ class _PreviewBody extends StatelessWidget {
         if (s.desiredDate != null) ...[
           const SizedBox(height: DonySpacing.xs),
           Text(
-            formatDesiredDate(s.desiredDate, s.dateToleranceDays, long: true),
+            formatDesiredDate(l, s.desiredDate, s.dateToleranceDays, long: true),
             style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
           ),
         ],

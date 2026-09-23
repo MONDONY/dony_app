@@ -2661,7 +2661,7 @@
   },
   "requestCreateContentLabel": "Contenu",
   "@requestCreateContentLabel": {
-    "description": "Libellé du champ de sélection des catégories de contenu (step_2_details.dart)"
+    "description": "Libellé du champ de sélection des catégories de contenu (step_2_details.dart) ; réutilisé pour la ligne contenu de l'aperçu et des cartes récapitulatives (package_request_preview_sheet.dart, wizard_summary_card.dart, complete_details_screen.dart)"
   },
   "requestCreateContentHint": "Tapez pour chercher, ou écrivez votre propre catégorie.",
   "@requestCreateContentHint": {
@@ -2680,10 +2680,6 @@
     "description": "Erreur de validation : poids non numérique (step_2_details.dart)"
   },
 
-  "requestCreateBudgetTitle": "Budget",
-  "@requestCreateBudgetTitle": {
-    "description": "Titre de l'étape 3, et libellé de la ligne \"Budget\" de la décomposition (step_3_recap_budget.dart)"
-  },
   "requestCreateBudgetSubtitle": "Vérifiez votre demande, puis indiquez le budget à montrer aux voyageurs.",
   "@requestCreateBudgetSubtitle": {
     "description": "Sous-titre de l'étape 3 (step_3_recap_budget.dart)"
@@ -2818,8 +2814,8 @@
   "@requestCreateTakePhoto": {
     "description": "Option caméra de la feuille de choix de source photo (package_request_photo_section.dart)"
   },
-  "requestCreatePickFromGalleryIn": "Choisir dans la galerie",
-  "@requestCreatePickFromGalleryIn": {
+  "requestCreatePickFromGallery": "Choisir dans la galerie",
+  "@requestCreatePickFromGallery": {
     "description": "Option galerie de la feuille de choix de source photo (package_request_photo_section.dart)"
   },
   "requestCreatePhotosLabel": "Photos du colis",
@@ -2871,10 +2867,6 @@
   "requestCreateDetailsSaved": "Détails enregistrés",
   "@requestCreateDetailsSaved": {
     "description": "Message de succès après soumission des détails destinataire/paiement (complete_details_screen.dart)"
-  },
-  "requestCreateGenericErrorShort": "Erreur",
-  "@requestCreateGenericErrorShort": {
-    "description": "Message d'erreur de repli, court, sans exception typée (complete_details_screen.dart)"
   },
   "requestCreateRecipientSection": "Destinataire",
   "@requestCreateRecipientSection": {
@@ -2935,10 +2927,6 @@
   "requestCreateRecapSize": "Taille",
   "@requestCreateRecapSize": {
     "description": "Libellé de la ligne taille de la carte récapitulative (complete_details_screen.dart)"
-  },
-  "requestCreateRecapContent": "Contenu",
-  "@requestCreateRecapContent": {
-    "description": "Libellé de la ligne contenu de la carte récapitulative (complete_details_screen.dart)"
   },
   "requestCreateRecapPrice": "Prix à payer",
   "@requestCreateRecapPrice": {
@@ -3025,7 +3013,7 @@
   },
   "requestListErrorFallback": "Erreur",
   "@requestListErrorFallback": {
-    "description": "Message d'erreur de repli, sans détail serveur (my_package_requests_screen.dart)"
+    "description": "Message d'erreur de repli, sans détail serveur (my_package_requests_screen.dart, package_request_search_screen.dart, complete_details_screen.dart)"
   },
   "requestListEmptyTitle": "Tu n'as encore rien envoyé",
   "@requestListEmptyTitle": {
@@ -3664,7 +3652,7 @@
   },
   "requestPublicBudget": "Budget",
   "@requestPublicBudget": {
-    "description": "Titre de la carte budget et libellé quand la demande est négociable (package_request_public_detail_screen.dart)"
+    "description": "Titre de la carte budget et libellé quand la demande est négociable (package_request_public_detail_screen.dart) ; réutilisé pour le titre de l'étape 3 et la ligne budget de la décomposition (step_3_recap_budget.dart)"
   },
   "requestPublicZonesLabel": "Zones",
   "@requestPublicZonesLabel": {
@@ -3915,5 +3903,13 @@
   "requestPreviewPhotosLabel": "Photos",
   "@requestPreviewPhotosLabel": {
     "description": "Libellé de la ligne nombre de photos dans l'aperçu (package_request_preview_sheet.dart)"
+  },
+  "requestCreateRecapTransport": "Transport",
+  "@requestCreateRecapTransport": {
+    "description": "Libellé de la ligne transport de la carte récapitulative de l'étape 3 (wizard_summary_card.dart)"
+  },
+  "requestCreateRecapPackage": "Colis",
+  "@requestCreateRecapPackage": {
+    "description": "Libellé de la ligne colis (poids) de la carte récapitulative de l'étape 3 (wizard_summary_card.dart)"
   }
 }

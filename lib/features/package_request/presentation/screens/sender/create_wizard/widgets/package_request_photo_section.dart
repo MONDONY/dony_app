@@ -56,7 +56,7 @@ class PackageRequestPhotoSection extends StatelessWidget {
               ),
               ListTile(
                 leading: Icon(Icons.photo_library_rounded, color: cs.primary),
-                title: Text(l10n.requestCreatePickFromGalleryIn),
+                title: Text(l10n.requestCreatePickFromGallery),
                 onTap: () {
                   Navigator.of(sheetCtx).pop();
                   _pick(context, ImageSource.gallery);

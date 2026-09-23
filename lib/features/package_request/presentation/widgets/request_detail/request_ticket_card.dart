@@ -100,7 +100,7 @@ class _Route extends StatelessWidget {
     final l = context.l10n;
     final date = DateFormat.MMMd(l.localeName).format(request.desiredDate);
     final dateLabel = request.dateToleranceDays > 0
-        ? '$date ± ${request.dateToleranceDays} j'
+        ? '$date ${l.requestCreateToleranceShort(request.dateToleranceDays)}'
         : date;
     const codeStyle = TextStyle(
       fontSize: 30,

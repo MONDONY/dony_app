@@ -48,9 +48,11 @@ class Step2DetailsState extends State<Step2Details> {
   /// Catégories libres ajoutées par l'utilisateur (ordonnées).
   final List<String> _customCats = [];
 
-  /// Message d'erreur si aucune catégorie n'est choisie (ou si la limite de
-  /// sélection est atteinte).
-  String? _catError;
+  /// Motif d'erreur si aucune catégorie n'est choisie (ou si la limite de
+  /// sélection est atteinte). Un indicateur, pas un texte déjà traduit : le
+  /// message ne serait plus à jour si la langue change pendant que l'état
+  /// reste affiché.
+  _CategoryError? _catError;
 
   /// Les messages rouges n'apparaissent qu'après une première interaction.
   bool _touched = false;
@@ -74,11 +76,7 @@ class Step2DetailsState extends State<Step2Details> {
   void _onCategoriesChanged(List<String> labels) {
     final catalogLabels = _predefined.map((c) => c.label).toSet();
     if (labels.length > _kMaxCategories) {
-      setState(
-        () => _catError = context.l10n.requestCreateMaxCategories(
-          _kMaxCategories,
-        ),
-      );
+      setState(() => _catError = _CategoryError.maxExceeded);
       return;
     }
     final autreJustAdded =
@@ -89,9 +87,7 @@ class Step2DetailsState extends State<Step2Details> {
     _customCats
       ..clear()
       ..addAll(labels.where((l) => !catalogLabels.contains(l)));
-    _catError = _allCategories.isEmpty
-        ? context.l10n.requestCreateCategoryRequired
-        : null;
+    _catError = _allCategories.isEmpty ? _CategoryError.required : null;
     _sync(markTouched: true);
     // « Autre » seul ne dit rien au voyageur : on propose tout de suite une
     // précision libre, sans l'imposer (bottom sheet annulable).
@@ -184,12 +180,23 @@ class Step2DetailsState extends State<Step2Details> {
 
   List<String> get _allCategories => [..._selectedCats, ..._customCats];
 
+  /// Traduit [_catError] au moment de l'affichage (jamais mis en cache dans
+  /// l'état) : le message reste correct si la langue change pendant que
+  /// l'erreur est visible.
+  String? _catErrorText(AppLocalizations l10n) => switch (_catError) {
+    null => null,
+    _CategoryError.required => l10n.requestCreateCategoryRequired,
+    _CategoryError.maxExceeded => l10n.requestCreateMaxCategories(
+      _kMaxCategories,
+    ),
+  };
+
   void submit() {
     // Backstop : « Continuer » est déjà grisé tant que l'étape est incomplète.
     final formOk = _formKey.currentState!.validate();
     final cats = _allCategories;
     if (cats.isEmpty) {
-      _catError = context.l10n.requestCreateCategoryRequired;
+      _catError = _CategoryError.required;
     }
     if (!formOk || cats.isEmpty) {
       _sync(markTouched: true);
@@ -288,7 +295,7 @@ class Step2DetailsState extends State<Step2Details> {
               onChanged: _onCategoriesChanged,
             ),
             DonyFieldError(
-              message: _touched ? _catError : null,
+              message: _touched ? _catErrorText(l10n) : null,
               textKey: const Key('categories-error'),
             ),
             const SizedBox(height: DonySpacing.base),
@@ -455,4 +462,14 @@ class _WeightInput extends StatelessWidget {
       },
     );
   }
+}
+
+/// Motif de l'erreur de sélection des catégories — traduit uniquement dans
+/// `build()`, jamais stocké déjà traduit dans l'état.
+enum _CategoryError {
+  /// Aucune catégorie sélectionnée.
+  required,
+
+  /// Plus de [Step2DetailsState._kMaxCategories] catégories sélectionnées.
+  maxExceeded,
 }

@@ -179,7 +179,7 @@ void main() {
       key.currentState!.submit();
       await tester.pump();
 
-      expect(find.text('Between 0,5 and 32 kg'), findsOneWidget);
+      expect(find.text('Between 0.5 and 32 kg'), findsOneWidget);
       expect(find.text('Entre 0,5 et 32 kg'), findsNothing);
     });
 

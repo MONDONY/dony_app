@@ -985,7 +985,7 @@
   "requestCreatePublishedSubtitle": "Travelers are notified. You'll receive offers soon.",
   "requestCreateViewDraftCta": "View my draft",
   "requestCreateViewRequestCta": "View my request",
-  "requestCreateGenericError": "Error while creating",
+  "requestCreateGenericError": "Couldn't create the request",
   "requestCreateDraftLimitTitle": "Draft limit reached",
   "requestCreateCguPrefix": "By posting, you accept the ",
   "requestCreateCguLink": "Terms of Use",
@@ -1024,7 +1024,6 @@
   "requestCreateDescriptionHint": "Useful details: fragile, exact content, drop-off instructions…",
   "requestCreateWeightInvalid": "Invalid value",
 
-  "requestCreateBudgetTitle": "Budget",
   "requestCreateBudgetSubtitle": "Check your request, then enter the budget to show travelers.",
   "requestCreatePriceModeLabel": "How do you want to set the price?",
   "requestCreatePriceModeOpenTitle": "I'm open to offers",
@@ -1054,7 +1053,7 @@
 
   "requestCreatePhotoUnsupported": "Unsupported or too large image",
   "requestCreateTakePhoto": "Take a photo",
-  "requestCreatePickFromGalleryIn": "Choose from the gallery",
+  "requestCreatePickFromGallery": "Choose from the gallery",
   "requestCreatePhotosLabel": "Parcel photos",
   "requestCreatePhotosHint": "Visible to travelers. Added to the offer once a trip is linked.",
   "requestCreateAddPhotoSemantic": "Add a photo of the parcel",
@@ -1067,7 +1066,6 @@
 
   "requestCreateCompleteDetailsTitle": "Check & complete",
   "requestCreateDetailsSaved": "Details saved",
-  "requestCreateGenericErrorShort": "Error",
   "requestCreateRecipientSection": "Recipient",
   "requestCreateRecipientNameLabel": "Full name",
   "requestCreateRequiredField": "Required",
@@ -1083,7 +1081,6 @@
   "requestCreateRecapTravelDate": "Travel date",
   "requestCreateRecapWeight": "Weight",
   "requestCreateRecapSize": "Size",
-  "requestCreateRecapContent": "Content",
   "requestCreateRecapPrice": "Price to pay",
 
   "requestDetailTitle": "My request",
@@ -1169,7 +1166,7 @@
   "requestOfferRespondCta": "Respond",
   "requestOfferWaitingFor": "Waiting for {name}",
   "requestOfferYouPayCaption": "you pay",
-  "requestAvailableKg": "{weight} kg free",
+  "requestAvailableKg": "{weight} kg available",
   "requestDetailMenuUnpublishLabel": "Unpublish",
   "requestDetailMenuUnpublishConsequence": "Becomes a draft again, hidden from travelers",
   "requestDetailMenuDuplicateLabel": "Duplicate the request",
@@ -1234,7 +1231,7 @@
   "requestPublicCategoriesLabel": "CATEGORIES",
   "requestPublicBudget": "Budget",
   "requestPublicZonesLabel": "Zones",
-  "requestPublicPickupLabel": "Pickup",
+  "requestPublicPickupLabel": "Drop-off",
   "requestPublicDeliveryLabel": "Delivery",
   "requestPublicPaymentTitle": "Preferred payment method",
   "requestPublicPaymentSubtitle": "Accepted by the sender",
@@ -1281,6 +1278,8 @@
   "requestPickerMatchingTitle": "Your matching trips",
   "requestPickerEmptyCreateHint": "Create a trip that matches this request",
   "requestPickerCreateTripCta": "Create a new trip",
-  "requestCarouselCardPriceFree": "Open",
-  "requestPreviewPhotosLabel": "Photos"
+  "requestCarouselCardPriceFree": "Open price",
+  "requestPreviewPhotosLabel": "Photos",
+  "requestCreateRecapTransport": "Transport",
+  "requestCreateRecapPackage": "Parcel"
 }

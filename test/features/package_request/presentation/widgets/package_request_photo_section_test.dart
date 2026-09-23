@@ -7,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/l10n_test_helpers.dart';
 import '../../../../helpers/mock_analytics_backend.dart';
 
 class _MockRepo extends Mock implements PackageRequestRepository {}
@@ -45,5 +46,13 @@ void main() {
     // on vérifie plutôt le compteur passe à mesure. Avec 0 photo, bouton présent.
     await tester.pumpWidget(wrap());
     expect(find.byKey(const Key('pr-add-photo')), findsOneWidget);
+  });
+
+  testWidgets('anglais : titre de section et CTA d\'ajout', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(wrap());
+    expect(find.text('Parcel photos'), findsOneWidget);
+    expect(find.text('Add a photo'), findsOneWidget);
+    expect(find.text('Photos du colis'), findsNothing);
   });
 }

@@ -6146,7 +6146,7 @@ abstract class AppLocalizations {
   /// **'Poids approximatif'**
   String get requestCreateWeightLabel;
 
-  /// Libellé du champ de sélection des catégories de contenu (step_2_details.dart)
+  /// Libellé du champ de sélection des catégories de contenu (step_2_details.dart) ; réutilisé pour la ligne contenu de l'aperçu et des cartes récapitulatives (package_request_preview_sheet.dart, wizard_summary_card.dart, complete_details_screen.dart)
   ///
   /// In fr, this message translates to:
   /// **'Contenu'**
@@ -6175,12 +6175,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Valeur invalide'**
   String get requestCreateWeightInvalid;
-
-  /// Titre de l'étape 3, et libellé de la ligne "Budget" de la décomposition (step_3_recap_budget.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Budget'**
-  String get requestCreateBudgetTitle;
 
   /// Sous-titre de l'étape 3 (step_3_recap_budget.dart)
   ///
@@ -6354,7 +6348,7 @@ abstract class AppLocalizations {
   ///
   /// In fr, this message translates to:
   /// **'Choisir dans la galerie'**
-  String get requestCreatePickFromGalleryIn;
+  String get requestCreatePickFromGallery;
 
   /// Titre de la section photos de l'étape 2 (package_request_photo_section.dart)
   ///
@@ -6421,12 +6415,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Détails enregistrés'**
   String get requestCreateDetailsSaved;
-
-  /// Message d'erreur de repli, court, sans exception typée (complete_details_screen.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Erreur'**
-  String get requestCreateGenericErrorShort;
 
   /// Titre de la section destinataire (complete_details_screen.dart)
   ///
@@ -6517,12 +6505,6 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Taille'**
   String get requestCreateRecapSize;
-
-  /// Libellé de la ligne contenu de la carte récapitulative (complete_details_screen.dart)
-  ///
-  /// In fr, this message translates to:
-  /// **'Contenu'**
-  String get requestCreateRecapContent;
 
   /// Libellé de la ligne prix de la carte récapitulative (complete_details_screen.dart)
   ///
@@ -6631,7 +6613,7 @@ abstract class AppLocalizations {
   /// **'Mes demandes'**
   String get requestListTitle;
 
-  /// Message d'erreur de repli, sans détail serveur (my_package_requests_screen.dart)
+  /// Message d'erreur de repli, sans détail serveur (my_package_requests_screen.dart, package_request_search_screen.dart, complete_details_screen.dart)
   ///
   /// In fr, this message translates to:
   /// **'Erreur'**
@@ -7415,7 +7397,7 @@ abstract class AppLocalizations {
   /// **'CATÉGORIES'**
   String get requestPublicCategoriesLabel;
 
-  /// Titre de la carte budget et libellé quand la demande est négociable (package_request_public_detail_screen.dart)
+  /// Titre de la carte budget et libellé quand la demande est négociable (package_request_public_detail_screen.dart) ; réutilisé pour le titre de l'étape 3 et la ligne budget de la décomposition (step_3_recap_budget.dart)
   ///
   /// In fr, this message translates to:
   /// **'Budget'**
@@ -7720,6 +7702,18 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Photos'**
   String get requestPreviewPhotosLabel;
+
+  /// Libellé de la ligne transport de la carte récapitulative de l'étape 3 (wizard_summary_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Transport'**
+  String get requestCreateRecapTransport;
+
+  /// Libellé de la ligne colis (poids) de la carte récapitulative de l'étape 3 (wizard_summary_card.dart)
+  ///
+  /// In fr, this message translates to:
+  /// **'Colis'**
+  String get requestCreateRecapPackage;
 }
 
 class _AppLocalizationsDelegate

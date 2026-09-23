@@ -3668,9 +3668,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get requestCreateWeightInvalid => 'Valeur invalide';
 
   @override
-  String get requestCreateBudgetTitle => 'Budget';
-
-  @override
   String get requestCreateBudgetSubtitle =>
       'Vérifiez votre demande, puis indiquez le budget à montrer aux voyageurs.';
 
@@ -3771,7 +3768,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get requestCreateTakePhoto => 'Prendre une photo';
 
   @override
-  String get requestCreatePickFromGalleryIn => 'Choisir dans la galerie';
+  String get requestCreatePickFromGallery => 'Choisir dans la galerie';
 
   @override
   String get requestCreatePhotosLabel => 'Photos du colis';
@@ -3809,9 +3806,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get requestCreateDetailsSaved => 'Détails enregistrés';
-
-  @override
-  String get requestCreateGenericErrorShort => 'Erreur';
 
   @override
   String get requestCreateRecipientSection => 'Destinataire';
@@ -3857,9 +3851,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get requestCreateRecapSize => 'Taille';
-
-  @override
-  String get requestCreateRecapContent => 'Contenu';
 
   @override
   String get requestCreateRecapPrice => 'Prix à payer';
@@ -4611,4 +4602,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get requestPreviewPhotosLabel => 'Photos';
+
+  @override
+  String get requestCreateRecapTransport => 'Transport';
+
+  @override
+  String get requestCreateRecapPackage => 'Colis';
 }

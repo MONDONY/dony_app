@@ -3512,7 +3512,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get requestCreateViewRequestCta => 'View my request';
 
   @override
-  String get requestCreateGenericError => 'Error while creating';
+  String get requestCreateGenericError => 'Couldn\'t create the request';
 
   @override
   String get requestCreateDraftLimitTitle => 'Draft limit reached';
@@ -3651,9 +3651,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get requestCreateWeightInvalid => 'Invalid value';
 
   @override
-  String get requestCreateBudgetTitle => 'Budget';
-
-  @override
   String get requestCreateBudgetSubtitle =>
       'Check your request, then enter the budget to show travelers.';
 
@@ -3752,7 +3749,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get requestCreateTakePhoto => 'Take a photo';
 
   @override
-  String get requestCreatePickFromGalleryIn => 'Choose from the gallery';
+  String get requestCreatePickFromGallery => 'Choose from the gallery';
 
   @override
   String get requestCreatePhotosLabel => 'Parcel photos';
@@ -3790,9 +3787,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get requestCreateDetailsSaved => 'Details saved';
-
-  @override
-  String get requestCreateGenericErrorShort => 'Error';
 
   @override
   String get requestCreateRecipientSection => 'Recipient';
@@ -3838,9 +3832,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get requestCreateRecapSize => 'Size';
-
-  @override
-  String get requestCreateRecapContent => 'Content';
 
   @override
   String get requestCreateRecapPrice => 'Price to pay';
@@ -4159,7 +4150,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String requestAvailableKg(String weight) {
-    return '$weight kg free';
+    return '$weight kg available';
   }
 
   @override
@@ -4404,7 +4395,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get requestPublicZonesLabel => 'Zones';
 
   @override
-  String get requestPublicPickupLabel => 'Pickup';
+  String get requestPublicPickupLabel => 'Drop-off';
 
   @override
   String get requestPublicDeliveryLabel => 'Delivery';
@@ -4584,8 +4575,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get requestPickerCreateTripCta => 'Create a new trip';
 
   @override
-  String get requestCarouselCardPriceFree => 'Open';
+  String get requestCarouselCardPriceFree => 'Open price';
 
   @override
   String get requestPreviewPhotosLabel => 'Photos';
+
+  @override
+  String get requestCreateRecapTransport => 'Transport';
+
+  @override
+  String get requestCreateRecapPackage => 'Parcel';
 }
