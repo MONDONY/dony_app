@@ -34,7 +34,7 @@ class HiveService {
 
   // ── Préférences app ──────────────────────────────────────────────────────
   static const String kThemeMode = 'theme_mode'; // 'system' | 'light' | 'dark'
-  static const String kLanguageCode = 'language_code'; // 'fr' | 'en'
+  static const String kLanguageCode = 'language_code'; // 'system' | 'fr' | 'en'
   static const String kFavDestinations =
       'fav_destinations'; // List<String> ex: ['SN','CI']
 
