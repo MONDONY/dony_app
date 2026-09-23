@@ -934,7 +934,7 @@
 
   "tripTemplateRecurrenceActivatedMessage": "Recurring trip activated. Your trips will be posted automatically.",
   "tripTemplateRecurrenceTitle": "Recurring trip",
-  "tripTemplateActivateRecurrenceButton": "Activate the recurring trip",
+  "tripTemplateActivateRecurrenceButton": "Make it a recurring trip",
   "tripTemplateNoPricePerKgWarning": "This template has no price per kg",
   "tripTemplateRepeatDaysSectionLabel": "REPEAT DAYS",
   "tripTemplateRecurrenceDepartureTimeSectionLabel": "DEPARTURE TIME",
@@ -943,6 +943,6 @@
   "tripTemplateLocationsSectionLabel": "LOCATIONS",
   "tripTemplatePickupFieldLabel": "Parcel drop-off location *",
   "tripTemplateDeliveryFieldLabel": "Pickup location *",
-  "tripTemplateActiveLabel": "Recurring trip active",
+  "tripTemplateActiveLabel": "Recurring trip on",
   "tripTemplateActiveDescription": "Automatically posts upcoming trips"
 }

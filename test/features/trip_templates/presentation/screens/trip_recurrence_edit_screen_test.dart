@@ -108,4 +108,65 @@ void main() {
     expect(find.text('Recurring trip'), findsOneWidget);
     expect(find.text('This template has no price per kg'), findsOneWidget);
   });
+
+  testWidgets('anglais : bouton et bloc actif traduits', (tester) async {
+    useEnglish();
+    await tester.pumpWidget(
+      _wrap(
+        TripRecurrenceEditScreen(template: _template(pricePerKg: 8.0)),
+        bloc,
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('Make it a recurring trip'), findsOneWidget);
+    expect(find.text('Recurring trip on'), findsOneWidget);
+    expect(find.text('Automatically posts upcoming trips'), findsOneWidget);
+  });
+
+  /// `_weekdayLabels` (initiales des jours, lundi → dimanche) est calculé via
+  /// `DateFormat.EEEEE(locale)` : ce test fige le rendu français (identique à
+  /// l'ancien motif codé en dur `['L', 'M', 'M', 'J', 'V', 'S', 'D']`).
+  testWidgets('initiales des jours en français : L, M, M, J, V, S, D', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrap(
+        TripRecurrenceEditScreen(template: _template(pricePerKg: 8.0)),
+        bloc,
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 300));
+
+    final letters = tester
+        .widgetList<Text>(find.byType(Text))
+        .map((t) => t.data)
+        .whereType<String>()
+        .where((s) => s.length == 1)
+        .toList();
+
+    expect(letters, ['L', 'M', 'M', 'J', 'V', 'S', 'D']);
+  });
+
+  testWidgets('initiales des jours en anglais : M, T, W, T, F, S, S', (
+    tester,
+  ) async {
+    useEnglish();
+    await tester.pumpWidget(
+      _wrap(
+        TripRecurrenceEditScreen(template: _template(pricePerKg: 8.0)),
+        bloc,
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 300));
+
+    final letters = tester
+        .widgetList<Text>(find.byType(Text))
+        .map((t) => t.data)
+        .whereType<String>()
+        .where((s) => s.length == 1)
+        .toList();
+
+    expect(letters, ['M', 'T', 'W', 'T', 'F', 'S', 'S']);
+  });
 }

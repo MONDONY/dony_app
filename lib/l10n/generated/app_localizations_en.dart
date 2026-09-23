@@ -3325,8 +3325,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripTemplateRecurrenceTitle => 'Recurring trip';
 
   @override
-  String get tripTemplateActivateRecurrenceButton =>
-      'Activate the recurring trip';
+  String get tripTemplateActivateRecurrenceButton => 'Make it a recurring trip';
 
   @override
   String get tripTemplateNoPricePerKgWarning =>
@@ -3355,7 +3354,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripTemplateDeliveryFieldLabel => 'Pickup location *';
 
   @override
-  String get tripTemplateActiveLabel => 'Recurring trip active';
+  String get tripTemplateActiveLabel => 'Recurring trip on';
 
   @override
   String get tripTemplateActiveDescription =>
