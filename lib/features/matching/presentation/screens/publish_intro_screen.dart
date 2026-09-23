@@ -208,29 +208,29 @@ class _IntroConfig {
         );
       case PublishIntroRole.parcel:
         return _IntroConfig(
-          title: l10n.tripPublishIntroTitleParcel,
+          title: l10n.requestPublishIntroTitle,
           asset: 'assets/illustrations/envoie_colis.png',
           accent: cs.secondary,
           buttonVariant: DonyButtonVariant.accent,
-          verifiedText: l10n.tripPublishIntroVerifiedTextParcel,
+          verifiedText: l10n.requestPublishIntroVerifiedText,
           sectionIcon: 'package',
-          engagementsTitle: l10n.tripPublishIntroEngagementsTitleParcel,
-          engagementsIntro: l10n.tripPublishIntroEngagementsIntroParcel,
+          engagementsTitle: l10n.requestPublishIntroEngagementsTitle,
+          engagementsIntro: l10n.requestPublishIntroEngagementsIntro,
           rules: [
-            _Rule('circle-check', l10n.tripPublishIntroRuleParcelLicit),
-            _Rule('ban', l10n.tripPublishIntroRuleParcelForbidden),
+            _Rule('circle-check', l10n.requestPublishIntroRuleLicit),
+            _Rule('ban', l10n.requestPublishIntroRuleForbidden),
             // La valeur déclarée n'est jamais demandée dans le wizard : la
             // promettre ici laissait chercher un champ qui n'existe pas, et le
             // « max 500 € » se confondait avec le plafond du budget voyageur.
-            _Rule('tag', l10n.tripPublishIntroRuleParcelHonest),
-            _Rule('square-pen', l10n.tripPublishIntroRuleParcelPackaging),
-            _Rule('handshake', l10n.tripPublishIntroRuleParcelHandover),
+            _Rule('tag', l10n.requestPublishIntroRuleHonest),
+            _Rule('square-pen', l10n.requestPublishIntroRulePackaging),
+            _Rule('handshake', l10n.requestPublishIntroRuleHandover),
           ],
-          whyTitle: l10n.tripPublishIntroWhyTitleParcel,
+          whyTitle: l10n.requestPublishIntroWhyTitle,
           whyBullets: [
-            l10n.tripPublishIntroWhyBulletParcelCarried,
-            l10n.tripPublishIntroWhyBulletParcelPayment,
-            l10n.tripPublishIntroWhyBulletParcelTracking,
+            l10n.requestPublishIntroWhyBulletCarried,
+            l10n.requestPublishIntroWhyBulletPayment,
+            l10n.requestPublishIntroWhyBulletTracking,
           ],
           onContinue: (context) => PackageRequestCreateWizard.show(context),
         );

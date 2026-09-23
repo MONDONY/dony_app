@@ -902,7 +902,7 @@ class _TripFormContentState extends State<_TripFormContent> {
   void _updateCanContinue() {
     final missing = _missingStep0Fields;
     widget.canContinueNotifier?.value =
-        missing.isEmpty && _handoverDeadlineError() == null;
+        missing.isEmpty && !_isHandoverDeadlineInvalid();
     _refreshStep0Errors(missing);
   }
 
@@ -1074,24 +1074,24 @@ class _TripFormContentState extends State<_TripFormContent> {
 
   /// Valide les champs obligatoires de l'étape 0 (Trajet).
   /// Affiche un snackbar d'erreur si un champ manque et retourne false.
-  /// Raison pour laquelle la date limite de dépôt saisie est invalide, ou null
-  /// si elle est correcte (ou pas encore renseignée). Affichée en direct sous
-  /// la ligne, utilisée pour bloquer le passage à l'étape suivante.
-  String? _handoverDeadlineError() {
+  /// Vrai si la date limite de dépôt saisie est postérieure au départ,
+  /// faux si elle est correcte (ou pas encore renseignée).
+  ///
+  /// Fonction pure, sans texte : appelée depuis `_updateCanContinue()` (donc
+  /// potentiellement depuis `initState()`, où dépendre d'un `Localizations`
+  /// via `context.l10n` lève « dependOnInheritedWidgetOfExactType() was
+  /// called before initState() completed »). Le message localisé n'est
+  /// résolu qu'à l'affichage, dans l'`AnimatedBuilder` qui le montre — seul
+  /// endroit qui a besoin de se réabonner à `Localizations` pour rester
+  /// réactif à un changement de langue à chaud.
+  bool _isHandoverDeadlineInvalid() {
     final deadline = _handoverDeadlineNotifier.value;
-    if (deadline == null) return null;
+    if (deadline == null) return false;
     final date = _departureDateNotifier.value;
-    if (date == null) return null;
+    if (date == null) return false;
     final deadlineDay = DateTime(deadline.year, deadline.month, deadline.day);
     final departureDay = DateTime(date.year, date.month, date.day);
-    if (deadlineDay.isAfter(departureDay)) {
-      // AppL10n.current, pas context.l10n : cette méthode est aussi appelée
-      // depuis _updateCanContinue() dans initState(), où dépendre d'un
-      // InheritedWidget lève « dependOnInheritedWidgetOfExactType() was
-      // called before initState() completed ».
-      return AppL10n.current.tripPublishHandoverDeadlineInvalid;
-    }
-    return null;
+    return deadlineDay.isAfter(departureDay);
   }
 
   /// Convertit le jour choisi en instant envoyé au backend.
@@ -2096,16 +2096,16 @@ class _TripFormContentState extends State<_TripFormContent> {
                 // incohérente » (postérieure au départ) et « date limite
                 // absente » (rien de choisi). La seconde n'apparaît qu'après
                 // une première interaction avec l'étape.
-                final err =
-                    _handoverDeadlineError() ??
-                    (_step0ErrorsNotifier.value.contains(
-                          _Step0Field.handoverDeadline,
-                        )
-                        ? _step0FieldMessage(
-                            context.l10n,
+                final err = _isHandoverDeadlineInvalid()
+                    ? context.l10n.tripPublishHandoverDeadlineInvalid
+                    : (_step0ErrorsNotifier.value.contains(
                             _Step0Field.handoverDeadline,
                           )
-                        : null);
+                          ? _step0FieldMessage(
+                              context.l10n,
+                              _Step0Field.handoverDeadline,
+                            )
+                          : null);
                 return DonyFieldError(
                   message: err,
                   textKey: const Key('sheet-handover-error'),

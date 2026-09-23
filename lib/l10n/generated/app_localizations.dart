@@ -4416,7 +4416,7 @@ abstract class AppLocalizations {
   ///
   /// In fr, this message translates to:
   /// **'Publier un colis'**
-  String get tripPublishIntroTitleParcel;
+  String get requestPublishIntroTitle;
 
   /// Encart vert de l'intro quand l'identité est déjà vérifiée, rôle voyageur
   ///
@@ -4428,7 +4428,7 @@ abstract class AppLocalizations {
   ///
   /// In fr, this message translates to:
   /// **'Identité vérifiée. Vous pouvez publier votre demande d\'envoi en toute sécurité.'**
-  String get tripPublishIntroVerifiedTextParcel;
+  String get requestPublishIntroVerifiedText;
 
   /// Titre de la section des engagements de l'intro, rôle voyageur
   ///
@@ -4500,67 +4500,67 @@ abstract class AppLocalizations {
   ///
   /// In fr, this message translates to:
   /// **'Vos engagements d\'expéditeur'**
-  String get tripPublishIntroEngagementsTitleParcel;
+  String get requestPublishIntroEngagementsTitle;
 
   /// Phrase d'introduction de la liste des engagements, rôle expéditeur
   ///
   /// In fr, this message translates to:
   /// **'En envoyant un colis, vous certifiez :'**
-  String get tripPublishIntroEngagementsIntroParcel;
+  String get requestPublishIntroEngagementsIntro;
 
   /// Engagement expéditeur : contenus licites uniquement (** = segment en gras)
   ///
   /// In fr, this message translates to:
   /// **'N\'envoyer que des **contenus licites** et autorisés.'**
-  String get tripPublishIntroRuleParcelLicit;
+  String get requestPublishIntroRuleLicit;
 
   /// Engagement expéditeur : aucun objet interdit (** = segment en gras)
   ///
   /// In fr, this message translates to:
   /// **'Aucun **objet interdit** (espèces, armes, produits dangereux…).'**
-  String get tripPublishIntroRuleParcelForbidden;
+  String get requestPublishIntroRuleForbidden;
 
   /// Engagement expéditeur : description honnête du contenu (** = segment en gras)
   ///
   /// In fr, this message translates to:
   /// **'Décrire **honnêtement** le contenu et sa valeur si le voyageur la demande.'**
-  String get tripPublishIntroRuleParcelHonest;
+  String get requestPublishIntroRuleHonest;
 
   /// Engagement expéditeur : emballage soigné (** = segment en gras)
   ///
   /// In fr, this message translates to:
   /// **'**Emballer soigneusement** et décrire précisément le contenu.'**
-  String get tripPublishIntroRuleParcelPackaging;
+  String get requestPublishIntroRulePackaging;
 
   /// Engagement expéditeur : présence à la remise (** = segment en gras)
   ///
   /// In fr, this message translates to:
   /// **'Être présent à la **remise** et indiquer le bon destinataire.'**
-  String get tripPublishIntroRuleParcelHandover;
+  String get requestPublishIntroRuleHandover;
 
   /// Titre de la section « comment ça marche », rôle expéditeur
   ///
   /// In fr, this message translates to:
   /// **'Comment ça marche'**
-  String get tripPublishIntroWhyTitleParcel;
+  String get requestPublishIntroWhyTitle;
 
   /// Puce « comment ça marche », rôle expéditeur : transport
   ///
   /// In fr, this message translates to:
   /// **'Un voyageur transporte votre colis dans ses bagages.'**
-  String get tripPublishIntroWhyBulletParcelCarried;
+  String get requestPublishIntroWhyBulletCarried;
 
   /// Puce « comment ça marche », rôle expéditeur : paiement séquestré
   ///
   /// In fr, this message translates to:
   /// **'Paiement sécurisé, libéré à la livraison confirmée.'**
-  String get tripPublishIntroWhyBulletParcelPayment;
+  String get requestPublishIntroWhyBulletPayment;
 
   /// Puce « comment ça marche », rôle expéditeur : suivi QR
   ///
   /// In fr, this message translates to:
   /// **'Suivi par QR de la remise jusqu\'à la réception.'**
-  String get tripPublishIntroWhyBulletParcelTracking;
+  String get requestPublishIntroWhyBulletTracking;
 
   /// Premier segment (non gras) de la phrase d'invite à vérifier son identité
   ///

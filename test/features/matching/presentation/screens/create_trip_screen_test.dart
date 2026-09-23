@@ -1421,7 +1421,7 @@ void main() {
     ) async {
       setupViewport(tester);
 
-      // date limite (2 août) > date de départ (1er août) → _handoverDeadlineError non-null
+      // date limite (2 août) > date de départ (1er août) → _isHandoverDeadlineInvalid() vrai
       final ann = AnnouncementModel(
         id: 'ann-handover-err',
         travelerId: 'trav-1',

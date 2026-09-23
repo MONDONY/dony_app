@@ -2568,14 +2568,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Corridor, capacity and price are locked. The date must stay within the sender\'s tolerance window.';
 
   @override
-  String get tripPublishIntroTitleParcel => 'Post a parcel';
+  String get requestPublishIntroTitle => 'Post a parcel';
 
   @override
   String get tripPublishIntroVerifiedTextTrip =>
       'Identity verified. You can post your trip safely.';
 
   @override
-  String get tripPublishIntroVerifiedTextParcel =>
+  String get requestPublishIntroVerifiedText =>
       'Identity verified. You can post your shipping request safely.';
 
   @override
@@ -2622,46 +2622,46 @@ class AppLocalizationsEn extends AppLocalizations {
       'Build a reputation through the reviews you receive.';
 
   @override
-  String get tripPublishIntroEngagementsTitleParcel =>
+  String get requestPublishIntroEngagementsTitle =>
       'Your commitments as a sender';
 
   @override
-  String get tripPublishIntroEngagementsIntroParcel =>
+  String get requestPublishIntroEngagementsIntro =>
       'By sending a parcel, you certify:';
 
   @override
-  String get tripPublishIntroRuleParcelLicit =>
+  String get requestPublishIntroRuleLicit =>
       'Only sending **lawful** and allowed contents.';
 
   @override
-  String get tripPublishIntroRuleParcelForbidden =>
+  String get requestPublishIntroRuleForbidden =>
       'No **forbidden item** (cash, weapons, dangerous goods…).';
 
   @override
-  String get tripPublishIntroRuleParcelHonest =>
+  String get requestPublishIntroRuleHonest =>
       'Describing the contents **honestly**, and its value if the traveler asks.';
 
   @override
-  String get tripPublishIntroRuleParcelPackaging =>
+  String get requestPublishIntroRulePackaging =>
       '**Packing it carefully** and describing the contents precisely.';
 
   @override
-  String get tripPublishIntroRuleParcelHandover =>
+  String get requestPublishIntroRuleHandover =>
       'Being present at the **drop-off** and stating the right recipient.';
 
   @override
-  String get tripPublishIntroWhyTitleParcel => 'How it works';
+  String get requestPublishIntroWhyTitle => 'How it works';
 
   @override
-  String get tripPublishIntroWhyBulletParcelCarried =>
+  String get requestPublishIntroWhyBulletCarried =>
       'A traveler carries your parcel in their luggage.';
 
   @override
-  String get tripPublishIntroWhyBulletParcelPayment =>
+  String get requestPublishIntroWhyBulletPayment =>
       'Secure payment, released once delivery is confirmed.';
 
   @override
-  String get tripPublishIntroWhyBulletParcelTracking =>
+  String get requestPublishIntroWhyBulletTracking =>
       'QR tracking from drop-off to receipt.';
 
   @override

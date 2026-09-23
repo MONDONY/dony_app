@@ -1251,16 +1251,16 @@
   "@tripPublishLockedBannerSubtitle": {
     "description": "Texte du bandeau affiché quand le trajet est créé pour une demande de colis verrouillée"
   },
-  "tripPublishIntroTitleParcel": "Publier un colis",
-  "@tripPublishIntroTitleParcel": {
+  "requestPublishIntroTitle": "Publier un colis",
+  "@requestPublishIntroTitle": {
     "description": "Titre de l'intro de publication, rôle expéditeur"
   },
   "tripPublishIntroVerifiedTextTrip": "Identité vérifiée. Vous pouvez publier votre trajet en toute sécurité.",
   "@tripPublishIntroVerifiedTextTrip": {
     "description": "Encart vert de l'intro quand l'identité est déjà vérifiée, rôle voyageur"
   },
-  "tripPublishIntroVerifiedTextParcel": "Identité vérifiée. Vous pouvez publier votre demande d'envoi en toute sécurité.",
-  "@tripPublishIntroVerifiedTextParcel": {
+  "requestPublishIntroVerifiedText": "Identité vérifiée. Vous pouvez publier votre demande d'envoi en toute sécurité.",
+  "@requestPublishIntroVerifiedText": {
     "description": "Encart vert de l'intro quand l'identité est déjà vérifiée, rôle expéditeur"
   },
   "tripPublishIntroEngagementsTitleTrip": "Vos engagements de voyageur",
@@ -1307,48 +1307,48 @@
   "@tripPublishIntroWhyBulletTripReputation": {
     "description": "Puce « pourquoi publier », rôle voyageur : réputation"
   },
-  "tripPublishIntroEngagementsTitleParcel": "Vos engagements d'expéditeur",
-  "@tripPublishIntroEngagementsTitleParcel": {
+  "requestPublishIntroEngagementsTitle": "Vos engagements d'expéditeur",
+  "@requestPublishIntroEngagementsTitle": {
     "description": "Titre de la section des engagements de l'intro, rôle expéditeur"
   },
-  "tripPublishIntroEngagementsIntroParcel": "En envoyant un colis, vous certifiez :",
-  "@tripPublishIntroEngagementsIntroParcel": {
+  "requestPublishIntroEngagementsIntro": "En envoyant un colis, vous certifiez :",
+  "@requestPublishIntroEngagementsIntro": {
     "description": "Phrase d'introduction de la liste des engagements, rôle expéditeur"
   },
-  "tripPublishIntroRuleParcelLicit": "N'envoyer que des **contenus licites** et autorisés.",
-  "@tripPublishIntroRuleParcelLicit": {
+  "requestPublishIntroRuleLicit": "N'envoyer que des **contenus licites** et autorisés.",
+  "@requestPublishIntroRuleLicit": {
     "description": "Engagement expéditeur : contenus licites uniquement (** = segment en gras)"
   },
-  "tripPublishIntroRuleParcelForbidden": "Aucun **objet interdit** (espèces, armes, produits dangereux…).",
-  "@tripPublishIntroRuleParcelForbidden": {
+  "requestPublishIntroRuleForbidden": "Aucun **objet interdit** (espèces, armes, produits dangereux…).",
+  "@requestPublishIntroRuleForbidden": {
     "description": "Engagement expéditeur : aucun objet interdit (** = segment en gras)"
   },
-  "tripPublishIntroRuleParcelHonest": "Décrire **honnêtement** le contenu et sa valeur si le voyageur la demande.",
-  "@tripPublishIntroRuleParcelHonest": {
+  "requestPublishIntroRuleHonest": "Décrire **honnêtement** le contenu et sa valeur si le voyageur la demande.",
+  "@requestPublishIntroRuleHonest": {
     "description": "Engagement expéditeur : description honnête du contenu (** = segment en gras)"
   },
-  "tripPublishIntroRuleParcelPackaging": "**Emballer soigneusement** et décrire précisément le contenu.",
-  "@tripPublishIntroRuleParcelPackaging": {
+  "requestPublishIntroRulePackaging": "**Emballer soigneusement** et décrire précisément le contenu.",
+  "@requestPublishIntroRulePackaging": {
     "description": "Engagement expéditeur : emballage soigné (** = segment en gras)"
   },
-  "tripPublishIntroRuleParcelHandover": "Être présent à la **remise** et indiquer le bon destinataire.",
-  "@tripPublishIntroRuleParcelHandover": {
+  "requestPublishIntroRuleHandover": "Être présent à la **remise** et indiquer le bon destinataire.",
+  "@requestPublishIntroRuleHandover": {
     "description": "Engagement expéditeur : présence à la remise (** = segment en gras)"
   },
-  "tripPublishIntroWhyTitleParcel": "Comment ça marche",
-  "@tripPublishIntroWhyTitleParcel": {
+  "requestPublishIntroWhyTitle": "Comment ça marche",
+  "@requestPublishIntroWhyTitle": {
     "description": "Titre de la section « comment ça marche », rôle expéditeur"
   },
-  "tripPublishIntroWhyBulletParcelCarried": "Un voyageur transporte votre colis dans ses bagages.",
-  "@tripPublishIntroWhyBulletParcelCarried": {
+  "requestPublishIntroWhyBulletCarried": "Un voyageur transporte votre colis dans ses bagages.",
+  "@requestPublishIntroWhyBulletCarried": {
     "description": "Puce « comment ça marche », rôle expéditeur : transport"
   },
-  "tripPublishIntroWhyBulletParcelPayment": "Paiement sécurisé, libéré à la livraison confirmée.",
-  "@tripPublishIntroWhyBulletParcelPayment": {
+  "requestPublishIntroWhyBulletPayment": "Paiement sécurisé, libéré à la livraison confirmée.",
+  "@requestPublishIntroWhyBulletPayment": {
     "description": "Puce « comment ça marche », rôle expéditeur : paiement séquestré"
   },
-  "tripPublishIntroWhyBulletParcelTracking": "Suivi par QR de la remise jusqu'à la réception.",
-  "@tripPublishIntroWhyBulletParcelTracking": {
+  "requestPublishIntroWhyBulletTracking": "Suivi par QR de la remise jusqu'à la réception.",
+  "@requestPublishIntroWhyBulletTracking": {
     "description": "Puce « comment ça marche », rôle expéditeur : suivi QR"
   },
   "tripPublishIntroVerifyBefore": "Avant de publier, votre ",
